@@ -31,6 +31,10 @@ jobs:
         run: python3 tests/test_keyword_compile.py
       - name: Product metric scorer
         run: python3 tests/test_eval.py
+      - name: Real-artifact board benchmark contract
+        run: python3 tests/test_board_bench.py --runner ./build/kws_board_bench
+      - name: Release qualification manifest and gate
+        run: python3 tests/test_release_qualification.py
       - name: Hosted benchmark signal
         run: ./build/kws_bench
       - name: Install SDK
@@ -82,7 +86,7 @@ jobs:
           -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
           -DKWS_BUILD_TESTS=OFF
           -DKWS_BUILD_BENCH=OFF
-          -DKWS_BUILD_TOOLS=OFF
+          -DKWS_BUILD_TOOLS=ON
           -DKWS_STRICT=ON
-      - name: Cross build
+      - name: Cross build core and target qualification tools
         run: cmake --build build-arm --parallel
