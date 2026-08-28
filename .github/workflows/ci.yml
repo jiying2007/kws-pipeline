@@ -27,6 +27,10 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
+      - name: Frontend C/spec parity
+        run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
+      - name: Dataset split leakage audit
+        run: python3 tests/test_dataset_audit.py
       - name: Keyword compiler
         run: python3 tests/test_keyword_compile.py
       - name: Product metric scorer
@@ -72,6 +76,30 @@ jobs:
       - name: Test
         run: ctest --test-dir build-san --output-on-failure
 
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure Clang libFuzzer + ASan/UBSan
+        env:
+          CC: clang
+        run: >-
+          cmake -S . -B build-fuzz -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF
+          -DKWS_BUILD_FUZZ=ON -DKWS_STRICT=ON
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build fuzz targets
+        run: cmake --build build-fuzz --parallel
+      - name: Generate canonical fuzz seeds
+        run: python3 tests/generate_fuzz_seeds.py --output build-fuzz/corpus
+      - name: Fuzz model parser smoke
+        run: ./build-fuzz/kws_fuzz_model -runs=2000 -max_len=4096 -timeout=5 build-fuzz/corpus/model
+      - name: Fuzz keyword-pack parser smoke
+        run: ./build-fuzz/kws_fuzz_keyword_pack -runs=2000 -max_len=2048 -timeout=5 build-fuzz/corpus/keyword_pack
+
   armv7-cross:
     runs-on: ubuntu-latest
     steps:
@@ -89,6 +117,7 @@ jobs:
           -DKWS_BUILD_TESTS=OFF
           -DKWS_BUILD_BENCH=OFF
           -DKWS_BUILD_TOOLS=ON
+          -DKWS_BUILD_FUZZ=OFF
           -DKWS_STRICT=ON
       - name: Cross build core and target qualification tools
         run: cmake --build build-arm --parallel
