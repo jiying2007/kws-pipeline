@@ -1,11 +1,68 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import pathlib, subprocess, sys, tempfile
-ROOT=pathlib.Path(__file__).resolve().parents[1]
-def main()->int:
+
+import json
+import pathlib
+import struct
+import subprocess
+import sys
+import tempfile
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def main() -> int:
     with tempfile.TemporaryDirectory() as td:
-        out=pathlib.Path(td)/'keywords.h'; manifest=pathlib.Path(td)/'keywords.json'
-        subprocess.check_call([sys.executable,str(ROOT/'tools'/'compile_keywords.py'),'--tokens',str(ROOT/'keywords'/'tokens.example.txt'),'--keywords',str(ROOT/'keywords'/'zh_cn_example.tsv'),'--out-header',str(out),'--out-json',str(manifest)])
-        text=out.read_text(encoding='utf-8'); assert 'kws_generated_keyword_count' in text; assert '{1u, 2u, 3u, 4u}' in text; assert manifest.exists()
-    print('test_keyword_compile: ok'); return 0
-if __name__=='__main__': raise SystemExit(main())
+        root = pathlib.Path(td)
+        header = root / "keywords.h"
+        manifest = root / "keywords.json"
+        pack = root / "keywords.kwk"
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "compile_keywords.py"),
+                "--tokens",
+                str(ROOT / "keywords" / "tokens.example.txt"),
+                "--keywords",
+                str(ROOT / "keywords" / "zh_cn_example.tsv"),
+                "--out-header",
+                str(header),
+                "--out-json",
+                str(manifest),
+                "--out-pack",
+                str(pack),
+            ]
+        )
+
+        text = header.read_text(encoding="utf-8")
+        assert "kws_generated_keyword_count" in text
+        assert "{1u, 2u, 3u, 4u}" in text
+
+        items = json.loads(manifest.read_text(encoding="utf-8"))
+        blob = pack.read_bytes()
+        magic, version, header_bytes, count, vocab_size, total_bytes = struct.unpack(
+            "<4sHHHHI", blob[:16]
+        )
+        assert magic == b"KWKP"
+        assert version == 1
+        assert header_bytes == 16
+        assert count == len(items) == 2
+        assert vocab_size == 5
+        assert total_bytes == len(blob) == 16 + count * 44
+
+        kid, threshold, num_tokens, reserved, *tokens = struct.unpack(
+            "<IfHH16H", blob[16:60]
+        )
+        assert kid == items[0]["id"]
+        assert abs(threshold - items[0]["threshold"]) < 1.0e-6
+        assert num_tokens == 4
+        assert reserved == 0
+        assert tokens[:4] == [1, 2, 3, 4]
+        assert tokens[4:] == [0] * 12
+
+    print("test_keyword_compile: ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
