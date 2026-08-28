@@ -1,64 +1,43 @@
 # Release qualification
 
-Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, keyword pack, vocabulary, runtime config, continuous-audio corpus, target board, board benchmark binary, board audio and final audio front-end.
-
-The qualification path is deterministic and hash-bound:
+Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, keyword pack, vocabulary, runtime config, evaluation runner, reference annotations, detections, target-board benchmark binary, board audio and measured board evidence.
 
 ```text
-model.kwm + keywords.kwk + tokens.txt + runtime config
-                         |
-                         +-> continuous corpus -> detections.jsonl
-                         |                    -> detections.provenance.json
-                         |                    -> eval-summary.json
-                         |
-                         +-> exact target runner + board WAV
-                         |                    -> board-summary.json
-                         |
-                         +-> target evidence -> evidence.json
-                                                |
-                                                v
-                                    qualification-manifest.json
-                                                |
-                                     qualification policy
-                                                |
-                                                v
-                                          PASS / FAIL
+model + pack + tokens + runtime config
+        |
+        +-> exact kws_wav + references -> detections + provenance + metrics
+        |
+        +-> exact target kws_board_bench + board WAV -> board summary
+        |
+        +-> target resource/soak/thermal/power evidence
+                            |
+                            v
+                 qualification_manifest.py
+                            |
+                      SKU policy
+                            |
+                            v
+                   qualification_gate.py
 ```
 
 ## 1. Freeze release artifacts
 
-A release candidate must pin:
+Pin the source Git SHA, ABI-v2 `.kwm`, ABI-v2 `.kwk`, continuous token vocabulary, shipping runtime config, corpus identity/version and final BF/AEC/RES/NS/AGC configuration. Model, pack and vocabulary must carry the same 64-bit vocabulary fingerprint.
 
-- source Git SHA;
-- ABI-v2 `.kwm` model;
-- ABI-v2 `.kwk` keyword pack;
-- continuous token vocabulary;
-- runtime config used by the product;
-- corpus identity/version;
-- final `audio-pipeline`/AEC/NS/AGC configuration.
+## 2. Run the held-out continuous-audio corpus
 
-The model, pack, and vocabulary must carry the same 64-bit vocabulary fingerprint. The release manifest rechecks this identity and stores SHA256 for every artifact.
-
-## 2. Run the continuous-audio corpus
-
-Build `kws_wav`, then execute the exact release artifacts across the held-out corpus:
+Use the exact `kws_wav` binary that will be retained as evaluation evidence:
 
 ```bash
 python3 eval/run_corpus.py \
-  --runner ./build/kws_wav \
+  --runner qualification/kws_wav.eval \
   --model release/base.kwm \
   --keywords release/xiaowo.kwk \
   --references qualification/references.jsonl \
   --audio-root qualification/audio \
   --detections qualification/detections.jsonl \
   --provenance qualification/detections.provenance.json
-```
 
-The provenance sidecar binds the runner binary, model, keyword pack, reference annotations, and generated detections by SHA256.
-
-Score the same files:
-
-```bash
 python3 eval/score_events.py \
   --references qualification/references.jsonl \
   --detections qualification/detections.jsonl \
@@ -66,15 +45,13 @@ python3 eval/score_events.py \
   --false-positives qualification/false-positives.jsonl
 ```
 
-The summary stores the reference and detection SHA256 values, so it cannot be substituted silently into another qualification bundle.
-
-Do not mine hard negatives from the final held-out qualification corpus and then report the same corpus as unbiased release evidence.
+The provenance sidecar binds evaluation runner, model, keyword pack, references and detections by SHA256. The summary also embeds the reference/detection hashes. The final held-out corpus must remain isolated from hard-negative mining and training.
 
 ## 3. Run the real target-board benchmark
 
-`kws_board_bench` is a hosted/target Linux tool, not part of the real-time library. It loads the real `.kwm` and `.kwk`, reads mono PCM16 16-kHz WAV, and times one ABI-v2 hop (320 samples / 20 ms) per call with `CLOCK_MONOTONIC`.
+`kws_board_bench` loads the real `.kwm/.kwk`, reads mono PCM16 16-kHz WAV and times one 320-sample/20-ms runtime call using `CLOCK_MONOTONIC`.
 
-Cross-build it with the same target toolchain used for the SDK, copy it and the release artifacts to the board, pin the intended governor/DVFS state, and run representative post-AEC/post-NS audio:
+Cross-build it with the target toolchain, copy it to the target board, select the shipping/qualification governor and DVFS policy, then run representative post-AEC/post-NS audio:
 
 ```bash
 ./kws_board_bench \
@@ -84,55 +61,27 @@ Cross-build it with the same target toolchain used for the SDK, copy it and the 
   10 > qualification/board-summary.json
 ```
 
-Retain the exact target `kws_board_bench` executable used for the run (for example as `qualification/kws_board_bench.target`). The JSON report self-identifies by SHA256:
+Retain the **exact target executable used for that run** as `qualification/kws_board_bench.target`. The report SHA256-identifies the runner, model, keyword pack and complete board WAV, and records model/pack/arena bytes, block count, mean/p50/p95/p99/max process time, RTF and p99 scheduling headroom.
 
-- the board benchmark executable;
-- `.kwm` model;
-- `.kwk` keyword pack;
-- complete board WAV file.
+Hosted x86 output remains a regression signal only and cannot replace target-board evidence.
 
-It also contains:
+## 4. Record non-benchmark target evidence
 
-- actual model/keyword-pack/engine bytes;
-- block count and repeated audio duration;
-- total/mean, p50, p95, p99 and max process time;
-- real-time factor (RTF);
-- p99 headroom relative to the 20-ms hop deadline.
+Copy `configs/qualification.evidence.example.json` and replace every placeholder with measurements from the candidate. Required evidence includes target/board revision/SoC/toolchain/compiler flags/governor/audio-front-end identity plus soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power.
 
-Hosted x86 output is useful only as a regression signal. It must never be presented as Cortex-A32/A7 performance evidence.
+The example numbers are schema examples only. `qualification_manifest.py` rejects `REPLACE_ME` placeholders.
 
-## 4. Record non-benchmark board evidence
-
-Copy `configs/qualification.evidence.example.json` and replace every placeholder with measurements from the release candidate:
-
-```json
-{
-  "target": "product-sku-board",
-  "board_revision": "EVT2",
-  "soc": "target SoC",
-  "toolchain": "arm-linux-gnueabihf-gcc ...",
-  "compiler_flags": "-O3 ...",
-  "governor": "performance",
-  "audio_frontend": "shipping BF/AEC/RES/NS/AGC config id",
-  "soak_hours": 8.0,
-  "cpu_percent": 4.2,
-  "rss_kib": 640.0,
-  "stack_high_water_bytes": 32768.0,
-  "max_temp_c": 58.0,
-  "average_power_mw": 135.0
-}
-```
-
-The numbers above illustrate the schema only. They are not project targets or measured results. `release_manifest.py` rejects an evidence file that still contains `REPLACE_ME`.
-
-## 5. Create the deterministic qualification manifest
+## 5. Build the deterministic byte-complete manifest
 
 ```bash
-python3 tools/release_manifest.py \
+python3 tools/qualification_manifest.py \
   --model release/base.kwm \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
+  --eval-runner qualification/kws_wav.eval \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
   --board-summary qualification/board-summary.json \
@@ -144,22 +93,27 @@ python3 tools/release_manifest.py \
   --output qualification/qualification-manifest.json
 ```
 
-The manifest is deterministic: it intentionally contains no generated timestamp. Rebuilding it from byte-identical evidence produces byte-identical JSON.
+The manifest intentionally contains no generated timestamp. Byte-identical inputs produce byte-identical JSON.
 
-It independently verifies:
+The verifier independently checks:
 
-- canonical model/pack ABI, dimensions, fixed 16-kHz/400/320 geometry, finite biases/thresholds, token bounds, record padding and duplicate paths;
+- canonical ABI-v2 `.kwm/.kwk`, fixed 16-kHz/400/320 geometry, dimensions, finite scales/biases/thresholds, token bounds, zero padding and duplicate paths;
+- runtime config geometry/dimensions and finite runtime parameters;
 - model/pack/token vocabulary identity;
-- SHA256 binding between evaluation provenance and the selected model/pack;
-- SHA256 binding between evaluation summary and reference/detection files;
-- exact SHA256 binding between board report and board runner/model/pack/audio;
-- acoustic count/rate identities (`matched + FR = expected`, `matched + FA = detections`, FRR/FAR formula);
-- board timing identities (mean from total/blocks, RTF from total/audio, p99 headroom from deadline/p99) and monotonic percentiles;
-- required target/toolchain/governor/audio-front-end/soak/resource evidence.
+- SHA256 of the **actual** model, pack, token file, config, evaluation runner, references, detections, target benchmark runner and board audio;
+- evaluation provenance hashes against those actual files;
+- reference JSONL itself: unique recordings, durations, expected-event bounds, recording count, expected-wake count and total audio hours;
+- detections JSONL itself: recording membership, finite times/confidences and actual detection count;
+- evaluation identities: `matched + FR = expected`, `matched + FA = detections`, plus FRR/FAR formulas and latency ordering;
+- board WAV itself: mono 16-kHz PCM16, actual duration and actual 20-ms block count;
+- board report hashes, artifact sizes, monotonic percentiles, mean/RTF/headroom formulas;
+- required target/toolchain/governor/audio-front-end/resource evidence.
 
-## 6. Apply an explicit product policy
+This prevents a matching sidecar/summary pair from being reused after the underlying runner, annotations, detections or board audio has changed.
 
-Qualification thresholds live outside the manifest because different SKUs can have different requirements. Copy `configs/qualification.policy.example.json` and replace it with the approved SKU policy.
+## 6. Apply an explicit SKU policy
+
+Qualification thresholds live outside the evidence manifest:
 
 ```bash
 python3 tools/qualification_gate.py \
@@ -168,34 +122,29 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-The gate result includes SHA256 for the exact manifest and policy it evaluated.
+The policy can gate acoustic data volume, expected wake count, FRR, FAR/hour, p95 wake latency, p99 runtime, RTF, p99 headroom, soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power. The gate also validates manifest-internal artifact cross-links and SHA256-binds its result to the exact manifest and policy.
 
 Exit codes:
 
-- `0`: all policy gates passed;
-- `1`: valid evidence, but one or more qualification thresholds failed;
-- `2`: malformed/inconsistent/tampered evidence or policy.
+- `0`: valid evidence and all approved policy gates passed;
+- `1`: valid evidence but one or more thresholds failed;
+- `2`: malformed, inconsistent or tampered evidence/policy.
 
-The repository example policy is deliberately named `example-not-a-shipping-policy`. Its numbers are examples, not product commitments.
+`configs/qualification.policy.example.json` is deliberately named `example-not-a-shipping-policy`; its numeric values are examples, not product commitments.
 
-## 7. Release evidence retention
+## 7. Retain the complete release tuple
 
-For every released SKU/model/keyword-pack tuple retain together:
+For each SKU/model/keyword-pack tuple retain together:
 
-- source commit SHA;
-- `.kwm`, `.kwk`, token vocabulary and runtime config;
-- corpus reference annotations and corpus version/identity;
-- exact evaluation runner;
-- detections, evaluation provenance, evaluation summary and false-positive list;
-- exact target board benchmark executable;
-- board benchmark WAV and board summary;
-- evidence JSON;
-- approved qualification policy;
+- source SHA, `.kwm`, `.kwk`, token vocabulary and runtime config;
+- exact evaluation runner, reference annotations, detections, provenance, evaluation summary and false-positive list;
+- exact target benchmark runner, board WAV and board summary;
+- target evidence JSON and approved SKU policy;
 - qualification manifest and gate result;
-- SHA256 of the final distributable/evidence bundle.
+- SHA256 of the final retained evidence/distributable bundle.
 
-A later L0 keyword-only update is a new qualification tuple because the `.kwk` hash changed, even when the acoustic `.kwm` stays unchanged.
+An L0 keyword-only update creates a new qualification tuple because the `.kwk` bytes changed even if `.kwm` did not.
 
 ## Software baseline vs shipping qualification
 
-The repository may publish a **software baseline** when source CI is green. That does not mean a Mandarin wake-word SKU is acoustically qualified. Shipping claims remain blocked until real model/data/board evidence exists; repository issue #2 tracks that external evidence gate.
+A green repository can be a **software baseline** without being an acoustically qualified Mandarin SKU. Shipping claims remain blocked until real model/data/target-board evidence exists; repository issue #2 tracks that external evidence gate.
