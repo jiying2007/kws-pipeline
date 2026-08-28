@@ -90,6 +90,8 @@ kws_status_t kws_model_open(const void *blob,
 
   if (total_bytes != blob_bytes ||
       out_model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
+      out_model->frame_length_samples != KWS_FRAME_LENGTH_SAMPLES ||
+      out_model->frame_hop_samples != KWS_FRAME_HOP_SAMPLES ||
       out_model->feature_dim == 0u ||
       out_model->feature_dim > KWS_MAX_FEATURE_DIM ||
       out_model->hidden_dim == 0u ||
@@ -97,10 +99,6 @@ kws_status_t kws_model_open(const void *blob,
       out_model->vocab_size < 2u ||
       out_model->vocab_size > KWS_MAX_VOCAB_SIZE ||
       out_model->vocab_fingerprint == 0u ||
-      out_model->frame_length_samples < 2u ||
-      out_model->frame_length_samples > 512u ||
-      out_model->frame_hop_samples == 0u ||
-      out_model->frame_hop_samples > out_model->frame_length_samples ||
       !isfinite(out_model->wx_scale) || !isfinite(out_model->wh_scale) ||
       !isfinite(out_model->wo_scale) || out_model->wx_scale <= 0.0f ||
       out_model->wh_scale <= 0.0f || out_model->wo_scale <= 0.0f) {
