@@ -77,6 +77,10 @@ static void test_model_and_engine(void) {
   kws_config_t config = kws_default_config();
   const uint16_t sequence[] = {1u, 2u};
   const kws_keyword_t keyword = {42u, sequence, 2u, 0.30f};
+  const kws_keyword_t ambiguous[] = {
+      {100u, sequence, 2u, 0.30f},
+      {101u, sequence, 2u, 0.40f},
+  };
   int16_t pcm[1200];
   int detected = 0;
   kws_detection_t detection;
@@ -90,6 +94,7 @@ static void test_model_and_engine(void) {
   CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) ==
         KWS_OK);
   CHECK(kws_engine_set_keywords(engine, &keyword, 1u) == KWS_OK);
+  CHECK(kws_engine_set_keywords(engine, ambiguous, 2u) == KWS_EINVAL);
 
   for (size_t i = 0u; i < sample_count; ++i) {
     pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
@@ -112,11 +117,21 @@ static void test_validation(void) {
   size_t bytes = make_test_model(blob, sizeof(blob));
   const uint16_t invalid_sequence[] = {99u};
   const kws_keyword_t invalid_keyword = {1u, invalid_sequence, 1u, 0.5f};
+  const uint16_t seq_a[] = {1u};
+  const uint16_t seq_b[] = {2u};
+  const kws_keyword_t duplicate_ids[] = {
+      {7u, seq_a, 1u, 0.5f},
+      {7u, seq_b, 1u, 0.5f},
+  };
 
   CHECK(kws_model_open(blob, bytes - 1u, &model) == KWS_EFORMAT);
+  put32(blob + 20u, 1u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  put32(blob + 20u, 400u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
   CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u) == KWS_EBOUNDS);
+  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u) == KWS_EINVAL);
 }
 
 int main(void) {
