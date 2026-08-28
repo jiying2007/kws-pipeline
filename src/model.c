@@ -1,10 +1,15 @@
 #include "model.h"
 
+#include <float.h>
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
 
 #define KWS_HEADER_BYTES 72u
+
+_Static_assert(sizeof(float) == 4u, "kws model ABI requires 32-bit float");
+_Static_assert(FLT_RADIX == 2 && FLT_MANT_DIG == 24 && FLT_MAX_EXP == 128,
+               "kws model ABI requires IEEE-754 binary32 float");
 
 static uint16_t rd16(const uint8_t *p) {
   return (uint16_t)((uint16_t)p[0] | (uint16_t)((uint16_t)p[1] << 8u));
