@@ -1,8 +1,8 @@
 # Release qualification
 
-Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, keyword pack, vocabulary, runtime config, continuous-audio corpus, target board, and final audio front-end.
+Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, keyword pack, vocabulary, runtime config, continuous-audio corpus, target board, board benchmark binary, board audio and final audio front-end.
 
-The qualification path is intentionally deterministic and hash-bound:
+The qualification path is deterministic and hash-bound:
 
 ```text
 model.kwm + keywords.kwk + tokens.txt + runtime config
@@ -11,7 +11,8 @@ model.kwm + keywords.kwk + tokens.txt + runtime config
                          |                    -> detections.provenance.json
                          |                    -> eval-summary.json
                          |
-                         +-> target-board WAV -> board-summary.json
+                         +-> exact target runner + board WAV
+                         |                    -> board-summary.json
                          |
                          +-> target evidence -> evidence.json
                                                 |
@@ -83,11 +84,18 @@ Cross-build it with the same target toolchain used for the SDK, copy it and the 
   10 > qualification/board-summary.json
 ```
 
-The JSON report contains:
+Retain the exact target `kws_board_bench` executable used for the run (for example as `qualification/kws_board_bench.target`). The JSON report self-identifies by SHA256:
+
+- the board benchmark executable;
+- `.kwm` model;
+- `.kwk` keyword pack;
+- complete board WAV file.
+
+It also contains:
 
 - actual model/keyword-pack/engine bytes;
 - block count and repeated audio duration;
-- mean, p50, p95, p99 and max process time;
+- total/mean, p50, p95, p99 and max process time;
 - real-time factor (RTF);
 - p99 headroom relative to the 20-ms hop deadline.
 
@@ -115,7 +123,7 @@ Copy `configs/qualification.evidence.example.json` and replace every placeholder
 }
 ```
 
-The numbers above illustrate the schema only. They are not project targets or measured results.
+The numbers above illustrate the schema only. They are not project targets or measured results. `release_manifest.py` rejects an evidence file that still contains `REPLACE_ME`.
 
 ## 5. Create the deterministic qualification manifest
 
@@ -128,6 +136,8 @@ python3 tools/release_manifest.py \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
   --board-summary qualification/board-summary.json \
+  --board-runner qualification/kws_board_bench.target \
+  --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
@@ -136,14 +146,15 @@ python3 tools/release_manifest.py \
 
 The manifest is deterministic: it intentionally contains no generated timestamp. Rebuilding it from byte-identical evidence produces byte-identical JSON.
 
-It verifies:
+It independently verifies:
 
-- model/pack ABI and fixed 16-kHz/400/320 geometry;
+- canonical model/pack ABI, dimensions, fixed 16-kHz/400/320 geometry, finite biases/thresholds, token bounds, record padding and duplicate paths;
 - model/pack/token vocabulary identity;
 - SHA256 binding between evaluation provenance and the selected model/pack;
 - SHA256 binding between evaluation summary and reference/detection files;
-- board-summary model/pack sizes;
-- finite/consistent evaluation and performance values;
+- exact SHA256 binding between board report and board runner/model/pack/audio;
+- acoustic count/rate identities (`matched + FR = expected`, `matched + FA = detections`, FRR/FAR formula);
+- board timing identities (mean from total/blocks, RTF from total/audio, p99 headroom from deadline/p99) and monotonic percentiles;
 - required target/toolchain/governor/audio-front-end/soak/resource evidence.
 
 ## 6. Apply an explicit product policy
@@ -156,6 +167,8 @@ python3 tools/qualification_gate.py \
   --policy qualification/sku-policy.json \
   --output qualification/gate-result.json
 ```
+
+The gate result includes SHA256 for the exact manifest and policy it evaluated.
 
 Exit codes:
 
@@ -172,12 +185,14 @@ For every released SKU/model/keyword-pack tuple retain together:
 - source commit SHA;
 - `.kwm`, `.kwk`, token vocabulary and runtime config;
 - corpus reference annotations and corpus version/identity;
+- exact evaluation runner;
 - detections, evaluation provenance, evaluation summary and false-positive list;
+- exact target board benchmark executable;
 - board benchmark WAV and board summary;
 - evidence JSON;
 - approved qualification policy;
 - qualification manifest and gate result;
-- SHA256 of the final distributable bundle.
+- SHA256 of the final distributable/evidence bundle.
 
 A later L0 keyword-only update is a new qualification tuple because the `.kwk` hash changed, even when the acoustic `.kwm` stays unchanged.
 
