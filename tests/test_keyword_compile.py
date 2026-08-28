@@ -38,6 +38,7 @@ def main() -> int:
 
         text = header.read_text(encoding="utf-8")
         assert "kws_generated_keyword_count" in text
+        assert "kws_generated_vocab_fingerprint" in text
         assert "{1u, 2u, 3u, 4u}" in text
 
         metadata = json.loads(manifest.read_text(encoding="utf-8"))
@@ -89,6 +90,15 @@ def main() -> int:
             encoding="utf-8",
         )
         assert vocab_fingerprint(load_tokens(changed)) != expected_fingerprint
+
+        sparse = root / "tokens-sparse.txt"
+        sparse.write_text("<blk> 0\nni3 2\n", encoding="utf-8")
+        try:
+            load_tokens(sparse)
+        except ValueError as exc:
+            assert "contiguous" in str(exc)
+        else:
+            raise AssertionError("sparse token IDs must be rejected")
 
     print("test_keyword_compile: ok")
     return 0
