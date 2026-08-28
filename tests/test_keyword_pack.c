@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
+#define TEST_VOCAB_FINGERPRINT UINT64_C(0x1122334455667788)
 
 static void put16(uint8_t *p, uint16_t v) {
   p[0] = (uint8_t)(v & 0xffu);
@@ -19,6 +20,11 @@ static void put32(uint8_t *p, uint32_t v) {
   p[3] = (uint8_t)((v >> 24u) & 0xffu);
 }
 
+static void put64(uint8_t *p, uint64_t v) {
+  put32(p, (uint32_t)(v & UINT64_C(0xffffffff)));
+  put32(p + 4u, (uint32_t)(v >> 32u));
+}
+
 static void putf(uint8_t *p, float v) {
   uint32_t u = 0u;
   memcpy(&u, &v, sizeof(u));
@@ -27,19 +33,20 @@ static void putf(uint8_t *p, float v) {
 
 static size_t make_pack(uint8_t *blob, size_t cap) {
   const uint16_t count = 2u;
-  const uint32_t total = 16u + 44u * (uint32_t)count;
+  const uint32_t total = 24u + 44u * (uint32_t)count;
   uint8_t *r0;
   uint8_t *r1;
   CHECK(cap >= total);
   memset(blob, 0, total);
   memcpy(blob, "KWKP", 4u);
   put16(blob + 4u, KWS_KEYWORD_PACK_VERSION);
-  put16(blob + 6u, 16u);
+  put16(blob + 6u, 24u);
   put16(blob + 8u, count);
   put16(blob + 10u, 8u);
   put32(blob + 12u, total);
+  put64(blob + 16u, TEST_VOCAB_FINGERPRINT);
 
-  r0 = blob + 16u;
+  r0 = blob + 24u;
   put32(r0 + 0u, 100u);
   putf(r0 + 4u, 0.55f);
   put16(r0 + 8u, 4u);
@@ -48,7 +55,7 @@ static size_t make_pack(uint8_t *blob, size_t cap) {
   put16(r0 + 16u, 3u);
   put16(r0 + 18u, 4u);
 
-  r1 = blob + 60u;
+  r1 = blob + 68u;
   put32(r1 + 0u, 101u);
   putf(r1 + 4u, 0.65f);
   put16(r1 + 8u, 2u);
@@ -67,6 +74,7 @@ int main(void) {
 
   memset(&model, 0, sizeof(model));
   model.vocab_size = 8u;
+  model.vocab_fingerprint = TEST_VOCAB_FINGERPRINT;
   model.feature_dim = 32u;
   model.hidden_dim = 1u;
   model.sample_rate_hz = 16000u;
@@ -76,6 +84,7 @@ int main(void) {
 
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_OK);
   CHECK(pack.keyword_count == 2u);
+  CHECK(pack.vocab_fingerprint == TEST_VOCAB_FINGERPRINT);
   CHECK(pack.keywords[0].id == 100u);
   CHECK(pack.keywords[0].num_tokens == 4u);
   CHECK(pack.keywords[0].tokens[3] == 4u);
@@ -89,16 +98,34 @@ int main(void) {
 
   CHECK(kws_keyword_pack_open(blob, bytes - 1u, &model, &pack) == KWS_EFORMAT);
 
+  put16(blob + 4u, 1u);
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  put16(blob + 4u, KWS_KEYWORD_PACK_VERSION);
+
+  put64(blob + 16u, UINT64_C(0x8877665544332211));
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  put64(blob + 16u, TEST_VOCAB_FINGERPRINT);
+
   put16(blob + 10u, 7u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
   put16(blob + 10u, 8u);
 
-  put32(blob + 60u, 100u);
+  put32(blob + 68u, 100u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
-  put32(blob + 60u, 101u);
+  put32(blob + 68u, 101u);
 
-  put16(blob + 28u, 8u);
+  put16(blob + 34u, 1u);
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  put16(blob + 34u, 0u);
+
+  put16(blob + 36u, 8u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EBOUNDS);
+  put16(blob + 36u, 1u);
+
+  put16(blob + 80u, 1u);
+  put16(blob + 82u, 2u);
+  put16(blob + 76u, 4u);
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
 
   puts("kws_keyword_pack_tests: ok");
   return 0;
