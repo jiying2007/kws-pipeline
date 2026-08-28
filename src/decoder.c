@@ -47,7 +47,6 @@ static float approx_logsumexp(const float *x, uint16_t n) {
     sum += fast_exp_nonpos(x[i] - max_value);
   }
 
-  /* The maximum term contributes exactly 1, so sum is always >= 1. */
   return max_value + logf(sum);
 }
 
@@ -94,17 +93,58 @@ static uint16_t find_or_add_child(kws_decoder_t *d,
   return child;
 }
 
-kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
-                                      const kws_keyword_t *keywords,
+static int same_sequence(const kws_keyword_t *a, const kws_keyword_t *b) {
+  if (a->num_tokens != b->num_tokens) {
+    return 0;
+  }
+  return memcmp(a->tokens, b->tokens,
+                (size_t)a->num_tokens * sizeof(a->tokens[0])) == 0;
+}
+
+static kws_status_t validate_keywords(const kws_keyword_t *keywords,
                                       size_t count,
                                       uint16_t vocab_size) {
-  float boost = d->token_boost;
-  float retention = expf(d->retention_log);
-
   if ((keywords == NULL && count != 0u) || count > KWS_MAX_KEYWORDS) {
     return KWS_EINVAL;
   }
 
+  for (size_t k = 0u; k < count; ++k) {
+    if (keywords[k].tokens == NULL || keywords[k].num_tokens == 0u ||
+        keywords[k].num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
+        keywords[k].threshold <= 0.0f || keywords[k].threshold >= 1.0f) {
+      return KWS_EINVAL;
+    }
+    for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
+      uint16_t token = keywords[k].tokens[i];
+      if (token == 0u || token >= vocab_size) {
+        return KWS_EBOUNDS;
+      }
+    }
+    for (size_t prior = 0u; prior < k; ++prior) {
+      if (keywords[prior].id == keywords[k].id ||
+          same_sequence(&keywords[prior], &keywords[k]) != 0) {
+        return KWS_EINVAL;
+      }
+    }
+  }
+  return KWS_OK;
+}
+
+kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
+                                      const kws_keyword_t *keywords,
+                                      size_t count,
+                                      uint16_t vocab_size) {
+  float boost;
+  float retention;
+  kws_status_t validation;
+
+  validation = validate_keywords(keywords, count, vocab_size);
+  if (validation != KWS_OK) {
+    return validation;
+  }
+
+  boost = d->token_boost;
+  retention = expf(d->retention_log);
   kws_decoder_init(d, boost, retention);
   d->keyword_count = (uint16_t)count;
 
@@ -112,21 +152,11 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
     uint16_t node = 0u;
     int ok = 1;
 
-    if (keywords[k].tokens == NULL || keywords[k].num_tokens == 0u ||
-        keywords[k].num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
-        keywords[k].threshold <= 0.0f || keywords[k].threshold >= 1.0f) {
-      return KWS_EINVAL;
-    }
-
     d->keyword_ids[k] = keywords[k].id;
     d->thresholds[k] = keywords[k].threshold;
 
     for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
-      uint16_t token = keywords[k].tokens[i];
-      if (token == 0u || token >= vocab_size) {
-        return KWS_EBOUNDS;
-      }
-      node = find_or_add_child(d, node, token, &ok);
+      node = find_or_add_child(d, node, keywords[k].tokens[i], &ok);
       if (!ok) {
         return KWS_ENOMEM;
       }
