@@ -10,6 +10,7 @@ add_library(kws_pipeline STATIC
   src/frontend.c
   src/model.c
   src/decoder.c
+  src/keyword_pack.c
 )
 add_library(KwsPipeline::core ALIAS kws_pipeline)
 
@@ -30,10 +31,14 @@ if(KWS_BUILD_TESTS)
   enable_testing()
   add_executable(kws_tests tests/test_kws.c)
   target_link_libraries(kws_tests PRIVATE KwsPipeline::core)
+  add_executable(kws_keyword_pack_tests tests/test_keyword_pack.c)
+  target_link_libraries(kws_keyword_pack_tests PRIVATE KwsPipeline::core)
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(kws_keyword_pack_tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
   add_test(NAME kws_tests COMMAND kws_tests)
+  add_test(NAME kws_keyword_pack_tests COMMAND kws_keyword_pack_tests)
 endif()
 
 if(KWS_BUILD_BENCH)
