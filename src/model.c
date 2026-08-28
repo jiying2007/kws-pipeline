@@ -1,5 +1,6 @@
 #include "model.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -27,6 +28,15 @@ static float rdf32(const uint8_t *p) {
 
 static size_t align4(size_t value) {
   return (value + 3u) & ~(size_t)3u;
+}
+
+static int float_array_finite(const uint8_t *p, uint32_t offset, uint16_t count) {
+  for (uint16_t i = 0u; i < count; ++i) {
+    if (!isfinite(rdf32(p + offset + (size_t)i * sizeof(float)))) {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 kws_status_t kws_model_open(const void *blob,
@@ -91,8 +101,9 @@ kws_status_t kws_model_open(const void *blob,
       out_model->frame_length_samples > 512u ||
       out_model->frame_hop_samples == 0u ||
       out_model->frame_hop_samples > out_model->frame_length_samples ||
-      out_model->wx_scale <= 0.0f || out_model->wh_scale <= 0.0f ||
-      out_model->wo_scale <= 0.0f) {
+      !isfinite(out_model->wx_scale) || !isfinite(out_model->wh_scale) ||
+      !isfinite(out_model->wo_scale) || out_model->wx_scale <= 0.0f ||
+      out_model->wh_scale <= 0.0f || out_model->wo_scale <= 0.0f) {
     return KWS_EFORMAT;
   }
 
@@ -112,8 +123,10 @@ kws_status_t kws_model_open(const void *blob,
   if ((size_t)wx_off != expected_wx || (size_t)wh_off != expected_wh ||
       (size_t)bh_off != expected_bh || (size_t)wo_off != expected_wo ||
       (size_t)bo_off != expected_bo || (size_t)total_bytes != expected_total ||
-      (((uintptr_t)(p + bh_off)) & 3u) != 0u ||
-      (((uintptr_t)(p + bo_off)) & 3u) != 0u) {
+      (((uintptr_t)(p + bh_off)) % _Alignof(float)) != 0u ||
+      (((uintptr_t)(p + bo_off)) % _Alignof(float)) != 0u ||
+      float_array_finite(p, bh_off, out_model->hidden_dim) == 0 ||
+      float_array_finite(p, bo_off, out_model->vocab_size) == 0) {
     return KWS_EFORMAT;
   }
 
