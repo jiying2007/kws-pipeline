@@ -93,7 +93,8 @@ kws_status_t kws_engine_init(void *arena,
 
 kws_status_t kws_engine_set_keywords(kws_engine_t *engine,
                                      const kws_keyword_t *keywords,
-                                     size_t keyword_count);
+                                     size_t keyword_count,
+                                     uint64_t vocab_fingerprint);
 
 kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
                                          const kws_keyword_pack_t *pack);
