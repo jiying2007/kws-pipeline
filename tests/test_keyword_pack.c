@@ -1,11 +1,20 @@
 #include "kws_pipeline/kws.h"
 
+#include <math.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define CHECK(x) do { if (!(x)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
+#define CHECK(x)                                                               \
+  do {                                                                         \
+    if (!(x)) {                                                                \
+      fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #x);  \
+      exit(1);                                                                 \
+    }                                                                          \
+  } while (0)
+
 #define TEST_VOCAB_FINGERPRINT UINT64_C(0x1122334455667788)
 
 static void put16(uint8_t *p, uint16_t v) {
@@ -36,6 +45,7 @@ static size_t make_pack(uint8_t *blob, size_t cap) {
   const uint32_t total = 24u + 44u * (uint32_t)count;
   uint8_t *r0;
   uint8_t *r1;
+
   CHECK(cap >= total);
   memset(blob, 0, total);
   memcpy(blob, "KWKP", 4u);
@@ -65,8 +75,13 @@ static size_t make_pack(uint8_t *blob, size_t cap) {
 }
 
 int main(void) {
-  _Alignas(8) uint8_t arena[65536];
+  _Alignas(max_align_t) uint8_t arena[65536];
   uint8_t blob[128];
+  int8_t wx[32] = {0};
+  int8_t wh[1] = {0};
+  int8_t wo[8] = {0};
+  float bh[1] = {0.0f};
+  float bo[8] = {0.0f};
   kws_model_t model;
   kws_keyword_pack_t pack;
   kws_engine_t *engine = NULL;
@@ -77,9 +92,17 @@ int main(void) {
   model.vocab_fingerprint = TEST_VOCAB_FINGERPRINT;
   model.feature_dim = 32u;
   model.hidden_dim = 1u;
-  model.sample_rate_hz = 16000u;
+  model.sample_rate_hz = KWS_SAMPLE_RATE_HZ;
   model.frame_length_samples = 400u;
   model.frame_hop_samples = 320u;
+  model.wx_scale = 0.01f;
+  model.wh_scale = 0.01f;
+  model.wo_scale = 0.01f;
+  model.wx = wx;
+  model.wh = wh;
+  model.bh = bh;
+  model.wo = wo;
+  model.bo = bo;
   bytes = make_pack(blob, sizeof(blob));
 
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_OK);
@@ -117,6 +140,14 @@ int main(void) {
   put16(blob + 34u, 1u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
   put16(blob + 34u, 0u);
+
+  putf(blob + 28u, NAN);
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  putf(blob + 28u, 0.55f);
+
+  put16(blob + 44u, 1u);
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  put16(blob + 44u, 0u);
 
   put16(blob + 36u, 8u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EBOUNDS);
