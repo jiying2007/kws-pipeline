@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  hosted:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Keyword compiler
+        run: python3 tests/test_keyword_compile.py
+      - name: Python syntax
+        run: python3 -m py_compile tools/*.py training/*.py
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure ASan/UBSan
+        run: >-
+          cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build
+        run: cmake --build build-san --parallel
+      - name: Test
+        run: ctest --test-dir build-san --output-on-failure
+
+  armv7-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
+      - name: Configure Cortex-A32
+        run: >-
+          cmake -S . -B build-arm
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc
+          -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+          -DKWS_BUILD_TESTS=OFF
+          -DKWS_BUILD_BENCH=OFF
+          -DKWS_STRICT=ON
+      - name: Cross build
+        run: cmake --build build-arm --parallel
