@@ -13,6 +13,7 @@ from qualification_fixture import (
     write_model,
     write_pack,
     write_tokens,
+    write_wav,
 )
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -29,6 +30,8 @@ def main() -> int:
         detections = root / "detections.jsonl"
         eval_summary = root / "eval-summary.json"
         eval_provenance = root / "eval-provenance.json"
+        board_runner = root / "kws_board_bench"
+        board_audio = root / "board-audio.wav"
         board_summary = root / "board-summary.json"
         evidence = root / "evidence.json"
         manifest = root / "qualification-manifest.json"
@@ -41,16 +44,22 @@ def main() -> int:
         config.write_text('{"min_speech_dbfs":-55.0}\n', encoding="utf-8")
         references.write_text("reference fixture\n", encoding="utf-8")
         detections.write_text("detection fixture\n", encoding="utf-8")
+        board_runner.write_bytes(b"board-runner-fixture")
+        write_wav(board_audio, seconds=1)
 
         refs_hash = sha256_file(references)
         detections_hash = sha256_file(detections)
+        model_hash = sha256_file(model)
+        pack_hash = sha256_file(pack)
+        board_runner_hash = sha256_file(board_runner)
+        board_audio_hash = sha256_file(board_audio)
         write_json(
             eval_provenance,
             {
                 "schema_version": 1,
                 "runner_sha256": "1" * 64,
-                "model_sha256": sha256_file(model),
-                "keyword_pack_sha256": sha256_file(pack),
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
                 "references_sha256": refs_hash,
                 "detections_sha256": detections_hash,
                 "recordings": 24,
@@ -79,6 +88,10 @@ def main() -> int:
             board_summary,
             {
                 "schema_version": 1,
+                "runner_sha256": board_runner_hash,
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
+                "audio_sha256": board_audio_hash,
                 "block_samples": 320,
                 "block_deadline_us": 20000.0,
                 "audio_seconds": 60.0,
@@ -149,6 +162,10 @@ def main() -> int:
             str(eval_provenance),
             "--board-summary",
             str(board_summary),
+            "--board-runner",
+            str(board_runner),
+            "--board-audio",
+            str(board_audio),
             "--evidence",
             str(evidence),
             "--source-sha",
@@ -163,8 +180,12 @@ def main() -> int:
         assert result["schema_version"] == 1
         assert result["source_sha"] == "a" * 40
         assert result["vocabulary"]["fingerprint"] == f"0x{fingerprint:016x}"
-        assert result["artifacts"]["model"]["sha256"] == sha256_file(model)
+        assert result["artifacts"]["model"]["sha256"] == model_hash
+        assert result["artifacts"]["board_runner"]["sha256"] == board_runner_hash
+        assert result["artifacts"]["board_audio"]["sha256"] == board_audio_hash
         assert result["evaluation"]["references_sha256"] == refs_hash
+        assert result["board"]["model_sha256"] == model_hash
+        assert result["board"]["audio_sha256"] == board_audio_hash
         assert result["board"]["p99_process_us"] == 3000.0
         assert result["evidence"]["soak_hours"] == 8.0
 
@@ -203,8 +224,16 @@ def main() -> int:
         provenance = json.loads(eval_provenance.read_text(encoding="utf-8"))
         provenance["model_sha256"] = "0" * 64
         write_json(eval_provenance, provenance)
-        tampered = subprocess.run(command, check=False)
-        assert tampered.returncode == 2
+        tampered_eval = subprocess.run(command, check=False)
+        assert tampered_eval.returncode == 2
+        provenance["model_sha256"] = model_hash
+        write_json(eval_provenance, provenance)
+
+        board = json.loads(board_summary.read_text(encoding="utf-8"))
+        board["audio_sha256"] = "0" * 64
+        write_json(board_summary, board)
+        tampered_board = subprocess.run(command, check=False)
+        assert tampered_board.returncode == 2
 
     print("test_release_qualification: ok")
     return 0
