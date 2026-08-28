@@ -9,5 +9,10 @@
   "max_p99_process_us": 5000.0,
   "max_rtf": 0.25,
   "min_p99_headroom": 4.0,
-  "min_soak_hours": 8.0
+  "min_soak_hours": 8.0,
+  "max_cpu_percent": 10.0,
+  "max_rss_kib": 2048.0,
+  "max_stack_high_water_bytes": 65536.0,
+  "max_temp_c": 70.0,
+  "max_average_power_mw": 250.0
 }
