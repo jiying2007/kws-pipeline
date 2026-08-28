@@ -63,9 +63,14 @@ kws_status_t kws_engine_init(void *arena,
 
 kws_status_t kws_engine_set_keywords(kws_engine_t *engine,
                                      const kws_keyword_t *keywords,
-                                     size_t keyword_count) {
+                                     size_t keyword_count,
+                                     uint64_t vocab_fingerprint) {
   if (engine == NULL) {
     return KWS_EINVAL;
+  }
+  if (vocab_fingerprint == 0u ||
+      vocab_fingerprint != engine->model.vocab_fingerprint) {
+    return KWS_EFORMAT;
   }
   return kws_decoder_set_keywords(&engine->decoder, keywords, keyword_count,
                                   engine->model.vocab_size);
@@ -76,7 +81,8 @@ kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
   if (engine == NULL || pack == NULL) {
     return KWS_EINVAL;
   }
-  return kws_engine_set_keywords(engine, pack->keywords, pack->keyword_count);
+  return kws_engine_set_keywords(engine, pack->keywords, pack->keyword_count,
+                                 pack->vocab_fingerprint);
 }
 
 void kws_engine_reset(kws_engine_t *engine) {
