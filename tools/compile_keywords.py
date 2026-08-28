@@ -8,43 +8,13 @@ import re
 import struct
 import sys
 
+from kws_vocab import load_tokens, vocab_fingerprint, vocab_size
+
 MAX_KEYWORDS = 16
 MAX_TOKENS_PER_KEYWORD = 16
-MAX_VOCAB_SIZE = 512
-PACK_VERSION = 1
-PACK_HEADER_BYTES = 16
+PACK_VERSION = 2
+PACK_HEADER_BYTES = 24
 PACK_RECORD_BYTES = 44
-
-
-def load_tokens(path: pathlib.Path) -> dict[str, int]:
-    out: dict[str, int] = {}
-    used_ids: set[int] = set()
-    next_id = 0
-    for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split()
-        if len(parts) == 1:
-            token, token_id = parts[0], next_id
-        elif len(parts) == 2:
-            token, token_id = parts[0], int(parts[1])
-        else:
-            raise ValueError(f"{path}:{n}: invalid token line")
-        if token in out:
-            raise ValueError(f"{path}:{n}: duplicate token {token}")
-        if token_id < 0 or token_id >= MAX_VOCAB_SIZE:
-            raise ValueError(f"{path}:{n}: token id must be 0..{MAX_VOCAB_SIZE - 1}")
-        if token_id in used_ids:
-            raise ValueError(f"{path}:{n}: duplicate token id {token_id}")
-        out[token] = token_id
-        used_ids.add(token_id)
-        next_id = max(next_id, token_id + 1)
-    if out.get("<blk>") != 0:
-        raise ValueError("tokens file must map <blk> to id 0")
-    if not out:
-        raise ValueError("tokens file is empty")
-    return out
 
 
 def text_to_pinyin(text: str) -> list[str]:
@@ -155,17 +125,19 @@ def emit_header(items: list[dict], out: pathlib.Path) -> None:
 def emit_pack(
     items: list[dict], token_map: dict[str, int], out: pathlib.Path
 ) -> None:
-    vocab_size = max(token_map.values()) + 1
+    size = vocab_size(token_map)
+    fingerprint = vocab_fingerprint(token_map)
     total_bytes = PACK_HEADER_BYTES + len(items) * PACK_RECORD_BYTES
     blob = bytearray(
         struct.pack(
-            "<4sHHHHI",
+            "<4sHHHHIQ",
             b"KWKP",
             PACK_VERSION,
             PACK_HEADER_BYTES,
             len(items),
-            vocab_size,
+            size,
             total_bytes,
+            fingerprint,
         )
     )
     for item in items:
@@ -208,10 +180,22 @@ def main() -> int:
     if args.out_json:
         args.out_json.parent.mkdir(parents=True, exist_ok=True)
         args.out_json.write_text(
-            json.dumps(items, ensure_ascii=False, indent=2) + "\n",
+            json.dumps(
+                {
+                    "vocab_size": vocab_size(token_map),
+                    "vocab_fingerprint": f"0x{vocab_fingerprint(token_map):016x}",
+                    "keywords": items,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
             encoding="utf-8",
         )
-    print(f"compiled {len(items)} keyword(s), vocab={max(token_map.values()) + 1}")
+    print(
+        f"compiled {len(items)} keyword(s), vocab={vocab_size(token_map)}, "
+        f"fingerprint=0x{vocab_fingerprint(token_map):016x}"
+    )
     return 0
 
 
