@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 #define KWS_MODEL_VERSION 1u
+#define KWS_KEYWORD_PACK_VERSION 1u
 #define KWS_SAMPLE_RATE_HZ 16000u
 #define KWS_MAX_KEYWORDS 16u
 #define KWS_MAX_TOKENS_PER_KEYWORD 16u
@@ -49,6 +50,12 @@ typedef struct kws_keyword {
   float threshold;
 } kws_keyword_t;
 
+typedef struct kws_keyword_pack {
+  kws_keyword_t keywords[KWS_MAX_KEYWORDS];
+  uint16_t token_storage[KWS_MAX_KEYWORDS][KWS_MAX_TOKENS_PER_KEYWORD];
+  size_t keyword_count;
+} kws_keyword_pack_t;
+
 typedef struct kws_config {
   float min_speech_dbfs;
   float token_boost;
@@ -64,13 +71,36 @@ typedef struct kws_detection {
 
 typedef struct kws_engine kws_engine_t;
 
-kws_status_t kws_model_open(const void *blob, size_t blob_bytes, kws_model_t *out_model);
+kws_status_t kws_model_open(const void *blob,
+                            size_t blob_bytes,
+                            kws_model_t *out_model);
+
+kws_status_t kws_keyword_pack_open(const void *blob,
+                                   size_t blob_bytes,
+                                   const kws_model_t *model,
+                                   kws_keyword_pack_t *out_pack);
+
 kws_config_t kws_default_config(void);
 size_t kws_engine_required_bytes(const kws_model_t *model);
-kws_status_t kws_engine_init(void *arena, size_t arena_bytes, const kws_model_t *model, const kws_config_t *config, kws_engine_t **out_engine);
-kws_status_t kws_engine_set_keywords(kws_engine_t *engine, const kws_keyword_t *keywords, size_t keyword_count);
+
+kws_status_t kws_engine_init(void *arena,
+                             size_t arena_bytes,
+                             const kws_model_t *model,
+                             const kws_config_t *config,
+                             kws_engine_t **out_engine);
+
+kws_status_t kws_engine_set_keywords(kws_engine_t *engine,
+                                     const kws_keyword_t *keywords,
+                                     size_t keyword_count);
+
 void kws_engine_reset(kws_engine_t *engine);
-kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine, const int16_t *samples, size_t sample_count, kws_detection_t *out_detection, int *out_detected);
+
+kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
+                                     const int16_t *samples,
+                                     size_t sample_count,
+                                     kws_detection_t *out_detection,
+                                     int *out_detected);
+
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine);
 
 #ifdef __cplusplus
