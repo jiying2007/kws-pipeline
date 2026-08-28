@@ -93,6 +93,9 @@ kws_status_t kws_engine_set_keywords(kws_engine_t *engine,
                                      const kws_keyword_t *keywords,
                                      size_t keyword_count);
 
+kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
+                                         const kws_keyword_pack_t *pack);
+
 void kws_engine_reset(kws_engine_t *engine);
 
 kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
