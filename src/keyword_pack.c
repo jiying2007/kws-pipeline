@@ -1,5 +1,6 @@
 #include "kws_pipeline/kws.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -55,8 +56,7 @@ kws_status_t kws_keyword_pack_open(const void *blob,
                    (size_t)count * KWS_KEYWORD_PACK_RECORD_BYTES;
 
   if (count == 0u || count > KWS_MAX_KEYWORDS ||
-      vocab_size != model->vocab_size ||
-      vocab_fingerprint == 0u ||
+      vocab_size != model->vocab_size || vocab_fingerprint == 0u ||
       vocab_fingerprint != model->vocab_fingerprint ||
       total_bytes != blob_bytes || expected_bytes != blob_bytes) {
     return KWS_EFORMAT;
@@ -76,7 +76,8 @@ kws_status_t kws_keyword_pack_open(const void *blob,
     uint16_t reserved = rd16(record + 10u);
 
     if (num_tokens == 0u || num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
-        threshold <= 0.0f || threshold >= 1.0f || reserved != 0u) {
+        !isfinite(threshold) || threshold <= 0.0f || threshold >= 1.0f ||
+        reserved != 0u) {
       return KWS_EFORMAT;
     }
 
@@ -92,6 +93,11 @@ kws_status_t kws_keyword_pack_open(const void *blob,
         return KWS_EBOUNDS;
       }
       out_pack->token_storage[k][i] = token;
+    }
+    for (uint16_t i = num_tokens; i < KWS_MAX_TOKENS_PER_KEYWORD; ++i) {
+      if (rd16(record + 12u + (size_t)i * 2u) != 0u) {
+        return KWS_EFORMAT;
+      }
     }
 
     for (uint16_t prior = 0u; prior < k; ++prior) {
