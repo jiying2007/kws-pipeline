@@ -84,6 +84,7 @@ kws_status_t kws_keyword_pack_open(const void *blob,
 
 kws_config_t kws_default_config(void);
 size_t kws_engine_required_bytes(const kws_model_t *model);
+size_t kws_engine_required_alignment(void);
 
 kws_status_t kws_engine_init(void *arena,
                              size_t arena_bytes,
