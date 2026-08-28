@@ -1,58 +1,218 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, pathlib, re, sys
 
-def load_tokens(path: pathlib.Path) -> dict[str,int]:
-    out={}
-    for n,raw in enumerate(path.read_text(encoding='utf-8').splitlines(),1):
-        line=raw.strip()
-        if not line or line.startswith('#'): continue
-        p=line.split();
-        if len(p)==1: out[p[0]]=len(out)
-        elif len(p)==2: out[p[0]]=int(p[1])
-        else: raise ValueError(f'{path}:{n}: invalid token line')
-    if out.get('<blk>') != 0: raise ValueError('tokens file must map <blk> to id 0')
+import argparse
+import json
+import pathlib
+import re
+import struct
+import sys
+
+MAX_KEYWORDS = 16
+MAX_TOKENS_PER_KEYWORD = 16
+MAX_VOCAB_SIZE = 512
+PACK_VERSION = 1
+PACK_HEADER_BYTES = 16
+PACK_RECORD_BYTES = 44
+
+
+def load_tokens(path: pathlib.Path) -> dict[str, int]:
+    out: dict[str, int] = {}
+    used_ids: set[int] = set()
+    next_id = 0
+    for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) == 1:
+            token, token_id = parts[0], next_id
+        elif len(parts) == 2:
+            token, token_id = parts[0], int(parts[1])
+        else:
+            raise ValueError(f"{path}:{n}: invalid token line")
+        if token in out:
+            raise ValueError(f"{path}:{n}: duplicate token {token}")
+        if token_id < 0 or token_id >= MAX_VOCAB_SIZE:
+            raise ValueError(f"{path}:{n}: token id must be 0..{MAX_VOCAB_SIZE - 1}")
+        if token_id in used_ids:
+            raise ValueError(f"{path}:{n}: duplicate token id {token_id}")
+        out[token] = token_id
+        used_ids.add(token_id)
+        next_id = max(next_id, token_id + 1)
+    if out.get("<blk>") != 0:
+        raise ValueError("tokens file must map <blk> to id 0")
+    if not out:
+        raise ValueError("tokens file is empty")
     return out
 
+
 def text_to_pinyin(text: str) -> list[str]:
-    if not re.search(r'[\u3400-\u9fff]', text): return text.strip().split()
+    if not re.search(r"[\u3400-\u9fff]", text):
+        return text.strip().split()
     try:
         from pypinyin import Style, lazy_pinyin
     except ImportError as exc:
-        raise RuntimeError('pypinyin required for implicit Chinese conversion; use explicit TSV tokens for production') from exc
-    return lazy_pinyin(text, style=Style.TONE3, neutral_tone_with_five=True, errors='default')
+        raise RuntimeError(
+            "pypinyin required for implicit Chinese conversion; "
+            "use explicit TSV tokens for production"
+        ) from exc
+    return lazy_pinyin(
+        text,
+        style=Style.TONE3,
+        neutral_tone_with_five=True,
+        errors="default",
+    )
 
-def parse_keywords(path: pathlib.Path, token_map: dict[str,int]) -> list[dict]:
-    result=[]; seen=set()
-    for n,raw in enumerate(path.read_text(encoding='utf-8').splitlines(),1):
-        if not raw.strip() or raw.lstrip().startswith('#'): continue
-        cols=raw.split('\t')
-        if len(cols) not in (3,4): raise ValueError(f'{path}:{n}: expected 3 or 4 TSV columns')
-        kid=int(cols[0]); text=cols[1].strip(); threshold=float(cols[2]); tokens=cols[3].split() if len(cols)==4 and cols[3].strip() else text_to_pinyin(text)
-        if kid in seen: raise ValueError(f'duplicate keyword id {kid}')
-        if not 0.0 < threshold < 1.0: raise ValueError(f'{text}: threshold must be in (0,1)')
-        if not 1 <= len(tokens) <= 16: raise ValueError(f'{text}: token length must be 1..16')
-        missing=[t for t in tokens if t not in token_map]
-        if missing: raise ValueError(f'{text}: unknown tokens: {", ".join(missing)}')
-        ids=[token_map[t] for t in tokens]
-        if any(i==0 for i in ids): raise ValueError('blank token cannot appear in keyword')
-        seen.add(kid); result.append({'id':kid,'text':text,'threshold':threshold,'tokens':tokens,'token_ids':ids})
-    if len(result)>16: raise ValueError('runtime supports at most 16 keywords')
+
+def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
+    result: list[dict] = []
+    seen: set[int] = set()
+    for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        if len(cols) not in (3, 4):
+            raise ValueError(f"{path}:{n}: expected 3 or 4 TSV columns")
+        kid = int(cols[0])
+        text = cols[1].strip()
+        threshold = float(cols[2])
+        tokens = (
+            cols[3].split()
+            if len(cols) == 4 and cols[3].strip()
+            else text_to_pinyin(text)
+        )
+        if kid in seen:
+            raise ValueError(f"duplicate keyword id {kid}")
+        if kid < 0 or kid > 0xFFFFFFFF:
+            raise ValueError(f"{text}: keyword id must fit uint32")
+        if not 0.0 < threshold < 1.0:
+            raise ValueError(f"{text}: threshold must be in (0,1)")
+        if not 1 <= len(tokens) <= MAX_TOKENS_PER_KEYWORD:
+            raise ValueError(
+                f"{text}: token length must be 1..{MAX_TOKENS_PER_KEYWORD}"
+            )
+        missing = [token for token in tokens if token not in token_map]
+        if missing:
+            raise ValueError(f"{text}: unknown tokens: {', '.join(missing)}")
+        ids = [token_map[token] for token in tokens]
+        if any(token_id == 0 for token_id in ids):
+            raise ValueError("blank token cannot appear in keyword")
+        seen.add(kid)
+        result.append(
+            {
+                "id": kid,
+                "text": text,
+                "threshold": threshold,
+                "tokens": tokens,
+                "token_ids": ids,
+            }
+        )
+    if not result:
+        raise ValueError("keyword file contains no keywords")
+    if len(result) > MAX_KEYWORDS:
+        raise ValueError(f"runtime supports at most {MAX_KEYWORDS} keywords")
     return result
 
+
 def emit_header(items: list[dict], out: pathlib.Path) -> None:
-    lines=['/* Generated by tools/compile_keywords.py. Do not edit. */','#ifndef KWS_GENERATED_KEYWORDS_H','#define KWS_GENERATED_KEYWORDS_H','#include <stddef.h>','#include <stdint.h>','#include "kws_pipeline/kws.h"','']
-    for n,item in enumerate(items): lines.append(f'static const uint16_t kws_kw_{n}_tokens[] = {{{", ".join(f"{v}u" for v in item["token_ids"])}}};')
-    lines += ['', 'static const kws_keyword_t kws_generated_keywords[] = {']
-    for n,item in enumerate(items): lines.append(f'  {{{item["id"]}u, kws_kw_{n}_tokens, (uint16_t)(sizeof(kws_kw_{n}_tokens) / sizeof(kws_kw_{n}_tokens[0])), {item["threshold"]:.6f}f}}, /* {item["text"]} */')
-    lines += ['};','static const size_t kws_generated_keyword_count = sizeof(kws_generated_keywords) / sizeof(kws_generated_keywords[0]);','','#endif','']
-    out.parent.mkdir(parents=True,exist_ok=True); out.write_text('\n'.join(lines),encoding='utf-8')
+    lines = [
+        "/* Generated by tools/compile_keywords.py. Do not edit. */",
+        "#ifndef KWS_GENERATED_KEYWORDS_H",
+        "#define KWS_GENERATED_KEYWORDS_H",
+        "#include <stddef.h>",
+        "#include <stdint.h>",
+        '#include "kws_pipeline/kws.h"',
+        "",
+    ]
+    for n, item in enumerate(items):
+        values = ", ".join(f"{value}u" for value in item["token_ids"])
+        lines.append(f"static const uint16_t kws_kw_{n}_tokens[] = {{{values}}};")
+    lines += ["", "static const kws_keyword_t kws_generated_keywords[] = {"]
+    for n, item in enumerate(items):
+        lines.append(
+            f"  {{{item['id']}u, kws_kw_{n}_tokens, "
+            f"(uint16_t)(sizeof(kws_kw_{n}_tokens) / sizeof(kws_kw_{n}_tokens[0])), "
+            f"{item['threshold']:.6f}f}}, /* {item['text']} */"
+        )
+    lines += [
+        "};",
+        "static const size_t kws_generated_keyword_count = "
+        "sizeof(kws_generated_keywords) / sizeof(kws_generated_keywords[0]);",
+        "",
+        "#endif",
+        "",
+    ]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(lines), encoding="utf-8")
+
+
+def emit_pack(
+    items: list[dict], token_map: dict[str, int], out: pathlib.Path
+) -> None:
+    vocab_size = max(token_map.values()) + 1
+    total_bytes = PACK_HEADER_BYTES + len(items) * PACK_RECORD_BYTES
+    blob = bytearray(
+        struct.pack(
+            "<4sHHHHI",
+            b"KWKP",
+            PACK_VERSION,
+            PACK_HEADER_BYTES,
+            len(items),
+            vocab_size,
+            total_bytes,
+        )
+    )
+    for item in items:
+        padded = list(item["token_ids"]) + [0] * (
+            MAX_TOKENS_PER_KEYWORD - len(item["token_ids"])
+        )
+        blob.extend(
+            struct.pack(
+                "<IfHH16H",
+                item["id"],
+                item["threshold"],
+                len(item["token_ids"]),
+                0,
+                *padded,
+            )
+        )
+    if len(blob) != total_bytes:
+        raise RuntimeError("internal keyword-pack size mismatch")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(blob)
+
 
 def main() -> int:
-    ap=argparse.ArgumentParser(); ap.add_argument('--tokens',required=True,type=pathlib.Path); ap.add_argument('--keywords',required=True,type=pathlib.Path); ap.add_argument('--out-header',required=True,type=pathlib.Path); ap.add_argument('--out-json',type=pathlib.Path); a=ap.parse_args()
-    items=parse_keywords(a.keywords,load_tokens(a.tokens)); emit_header(items,a.out_header)
-    if a.out_json: a.out_json.parent.mkdir(parents=True,exist_ok=True); a.out_json.write_text(json.dumps(items,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print(f'compiled {len(items)} keyword(s)'); return 0
-if __name__=='__main__':
-    try: raise SystemExit(main())
-    except (ValueError,RuntimeError) as exc: print(f'error: {exc}',file=sys.stderr); raise SystemExit(2)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tokens", required=True, type=pathlib.Path)
+    parser.add_argument("--keywords", required=True, type=pathlib.Path)
+    parser.add_argument("--out-header", type=pathlib.Path)
+    parser.add_argument("--out-pack", type=pathlib.Path)
+    parser.add_argument("--out-json", type=pathlib.Path)
+    args = parser.parse_args()
+    if not (args.out_header or args.out_pack or args.out_json):
+        parser.error("at least one of --out-header, --out-pack or --out-json is required")
+
+    token_map = load_tokens(args.tokens)
+    items = parse_keywords(args.keywords, token_map)
+    if args.out_header:
+        emit_header(items, args.out_header)
+    if args.out_pack:
+        emit_pack(items, token_map, args.out_pack)
+    if args.out_json:
+        args.out_json.parent.mkdir(parents=True, exist_ok=True)
+        args.out_json.write_text(
+            json.dumps(items, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    print(f"compiled {len(items)} keyword(s), vocab={max(token_map.values()) + 1}")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (ValueError, RuntimeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2)
