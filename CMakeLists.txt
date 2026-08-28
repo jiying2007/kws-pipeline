@@ -3,6 +3,7 @@ project(kws_pipeline VERSION 0.1.0 LANGUAGES C)
 
 option(KWS_BUILD_TESTS "Build hosted tests" ON)
 option(KWS_BUILD_BENCH "Build hosted benchmark" ON)
+option(KWS_BUILD_TOOLS "Build hosted evaluation tools" ON)
 option(KWS_STRICT "Enable strict warnings" ON)
 
 add_library(kws_pipeline STATIC
@@ -44,4 +45,12 @@ endif()
 if(KWS_BUILD_BENCH)
   add_executable(kws_bench bench/bench_kws.c)
   target_link_libraries(kws_bench PRIVATE KwsPipeline::core)
+endif()
+
+if(KWS_BUILD_TOOLS)
+  add_executable(kws_wav tools/kws_wav.c)
+  target_link_libraries(kws_wav PRIVATE KwsPipeline::core)
+  if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(kws_wav PRIVATE -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow)
+  endif()
 endif()
