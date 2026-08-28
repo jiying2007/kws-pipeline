@@ -1,0 +1,9 @@
+prefix=${pcfiledir}/../..
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: kws-pipeline
+Description: Low-compute streaming keyword spotting runtime
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -lkws_pipeline -lm
+Cflags: -I${includedir}
