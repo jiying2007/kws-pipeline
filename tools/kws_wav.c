@@ -97,6 +97,33 @@ static int open_wav(FILE *stream, uint32_t *out_data_bytes) {
   }
 }
 
+static void print_json_string(const char *text) {
+  const unsigned char *p = (const unsigned char *)(const void *)text;
+  fputc('"', stdout);
+  while (*p != 0u) {
+    unsigned char ch = *p++;
+    if (ch == (unsigned char)'"' || ch == (unsigned char)'\\') {
+      fputc('\\', stdout);
+      fputc((int)ch, stdout);
+    } else if (ch == (unsigned char)'\b') {
+      fputs("\\b", stdout);
+    } else if (ch == (unsigned char)'\f') {
+      fputs("\\f", stdout);
+    } else if (ch == (unsigned char)'\n') {
+      fputs("\\n", stdout);
+    } else if (ch == (unsigned char)'\r') {
+      fputs("\\r", stdout);
+    } else if (ch == (unsigned char)'\t') {
+      fputs("\\t", stdout);
+    } else if (ch < 0x20u) {
+      fprintf(stdout, "\\u%04x", (unsigned)ch);
+    } else {
+      fputc((int)ch, stdout);
+    }
+  }
+  fputc('"', stdout);
+}
+
 int main(int argc, char **argv) {
   uint8_t *model_blob = NULL;
   uint8_t *pack_blob = NULL;
@@ -163,13 +190,16 @@ int main(int argc, char **argv) {
       goto cleanup;
     }
     if (detected != 0) {
-      printf("{\"recording\":\"%s\",\"keyword_id\":%u,\"time_s\":%.6f,\"confidence\":%.6f}\n",
-             argv[4], hit.keyword_id,
-             (double)hit.end_sample / (double)KWS_SAMPLE_RATE_HZ,
-             (double)hit.confidence);
+      fputs("{\"recording\":", stdout);
+      print_json_string(argv[4]);
+      fprintf(stdout,
+              ",\"keyword_id\":%u,\"time_s\":%.6f,\"confidence\":%.6f}\n",
+              hit.keyword_id,
+              (double)hit.end_sample / (double)KWS_SAMPLE_RATE_HZ,
+              (double)hit.confidence);
     }
   }
-  exit_code = 0;
+  exit_code = ferror(stdout) != 0 ? 1 : 0;
 
 cleanup:
   if (wav != NULL) {
