@@ -7,6 +7,7 @@ include(CMakePackageConfigHelpers)
 option(KWS_BUILD_TESTS "Build hosted tests" ON)
 option(KWS_BUILD_BENCH "Build hosted benchmark" ON)
 option(KWS_BUILD_TOOLS "Build hosted evaluation tools" ON)
+option(KWS_BUILD_FUZZ "Build Clang/libFuzzer parser targets" OFF)
 option(KWS_STRICT "Enable strict warnings" ON)
 
 set(KWS_STRICT_OPTIONS -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow)
@@ -36,16 +37,26 @@ endif()
 
 if(KWS_BUILD_TESTS)
   enable_testing()
+
   add_executable(kws_tests tests/test_kws.c)
   target_link_libraries(kws_tests PRIVATE KwsPipeline::core)
+
   add_executable(kws_keyword_pack_tests tests/test_keyword_pack.c)
   target_link_libraries(kws_keyword_pack_tests PRIVATE KwsPipeline::core)
+
+  add_executable(kws_decoder_tests tests/test_decoder.c)
+  target_include_directories(kws_decoder_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_decoder_tests PRIVATE KwsPipeline::core)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_keyword_pack_tests PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_decoder_tests PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
+
   add_test(NAME kws_tests COMMAND kws_tests)
   add_test(NAME kws_keyword_pack_tests COMMAND kws_keyword_pack_tests)
+  add_test(NAME kws_decoder_tests COMMAND kws_decoder_tests)
 endif()
 
 if(KWS_BUILD_BENCH)
@@ -70,10 +81,36 @@ if(KWS_BUILD_TOOLS)
   add_executable(kws_board_bench tools/kws_board_bench.c)
   target_link_libraries(kws_board_bench PRIVATE KwsPipeline::core kws_tool_io)
 
+  add_executable(kws_feature_dump tools/kws_feature_dump.c)
+  target_include_directories(kws_feature_dump PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_feature_dump PRIVATE KwsPipeline::core kws_tool_io)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tool_io PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_wav PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_board_bench PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_feature_dump PRIVATE ${KWS_STRICT_OPTIONS})
+  endif()
+endif()
+
+if(KWS_BUILD_FUZZ)
+  if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "KWS_BUILD_FUZZ requires Clang/libFuzzer")
+  endif()
+
+  add_executable(kws_fuzz_model fuzz/fuzz_model.c)
+  target_link_libraries(kws_fuzz_model PRIVATE KwsPipeline::core)
+  target_compile_options(kws_fuzz_model PRIVATE -fsanitize=fuzzer-no-link)
+  target_link_options(kws_fuzz_model PRIVATE -fsanitize=fuzzer)
+
+  add_executable(kws_fuzz_keyword_pack fuzz/fuzz_keyword_pack.c)
+  target_link_libraries(kws_fuzz_keyword_pack PRIVATE KwsPipeline::core)
+  target_compile_options(kws_fuzz_keyword_pack PRIVATE -fsanitize=fuzzer-no-link)
+  target_link_options(kws_fuzz_keyword_pack PRIVATE -fsanitize=fuzzer)
+
+  if(KWS_STRICT)
+    target_compile_options(kws_fuzz_model PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_fuzz_keyword_pack PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 endif()
 
