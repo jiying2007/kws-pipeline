@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import math
 import pathlib
 import random
 import wave
@@ -13,11 +14,23 @@ from torch.utils.data import DataLoader, Dataset
 from frontend import features
 from model import TinyStreamingRNN
 
+MAX_FEATURE_DIM = 40
+MAX_HIDDEN_DIM = 64
+MAX_VOCAB_SIZE = 512
+FRAME_LENGTH_SAMPLES = 400
+FRAME_HOP_SAMPLES = 320
+
 
 class Manifest(Dataset):
-    def __init__(self, paths: list[pathlib.Path], feature_dim: int):
+    def __init__(
+        self,
+        paths: list[pathlib.Path],
+        feature_dim: int,
+        vocab_size: int,
+    ):
         self.rows: list[tuple[pathlib.Path, list[int]]] = []
         self.feature_dim = feature_dim
+        self.vocab_size = vocab_size
         for path in paths:
             root = path.parent
             for line_no, raw in enumerate(
@@ -34,9 +47,9 @@ class Manifest(Dataset):
                 wav = pathlib.Path(wav_path)
                 wav = wav if wav.is_absolute() else root / wav
                 tokens = [int(value) for value in token_text.split()]
-                if any(token <= 0 for token in tokens):
+                if any(token <= 0 or token >= vocab_size for token in tokens):
                     raise ValueError(
-                        f"{path}:{line_no}: targets must contain positive non-blank token ids"
+                        f"{path}:{line_no}: targets must be in 1..{vocab_size - 1}"
                     )
                 self.rows.append((wav, tokens))
         if not self.rows:
@@ -57,7 +70,22 @@ class Manifest(Dataset):
                 raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
             raw = wf.readframes(wf.getnframes())
         pcm = torch.frombuffer(bytearray(raw), dtype=torch.int16).float() / 32768.0
-        return features(pcm, self.feature_dim), torch.tensor(tokens, dtype=torch.long)
+        acoustic = features(
+            pcm,
+            self.feature_dim,
+            frame_len=FRAME_LENGTH_SAMPLES,
+            hop=FRAME_HOP_SAMPLES,
+        )
+        repeated_neighbors = sum(
+            1 for left, right in zip(tokens, tokens[1:]) if left == right
+        )
+        minimum_ctc_steps = len(tokens) + repeated_neighbors
+        if acoustic.shape[0] < minimum_ctc_steps:
+            raise ValueError(
+                f"{path}: {acoustic.shape[0]} acoustic step(s) cannot align "
+                f"CTC target requiring at least {minimum_ctc_steps} step(s)"
+            )
+        return acoustic, torch.tensor(tokens, dtype=torch.long)
 
 
 def collate(batch):
@@ -69,8 +97,27 @@ def collate(batch):
     padded = torch.zeros((len(xs), max_t, feature_dim))
     for index, x in enumerate(xs):
         padded[index, : x.shape[0]] = x
-    targets = torch.cat(ys) if any(y.numel() for y in ys) else torch.empty(0, dtype=torch.long)
+    targets = (
+        torch.cat(ys)
+        if any(y.numel() for y in ys)
+        else torch.empty(0, dtype=torch.long)
+    )
     return padded, targets, xlen, ylen
+
+
+def validate_warm_start(checkpoint: dict, args: argparse.Namespace) -> None:
+    expected = {
+        "feature_dim": args.feature_dim,
+        "hidden_dim": args.hidden_dim,
+        "vocab_size": args.vocab_size,
+        "frame_length_samples": FRAME_LENGTH_SAMPLES,
+        "frame_hop_samples": FRAME_HOP_SAMPLES,
+    }
+    for key, value in expected.items():
+        if int(checkpoint.get(key, -1)) != value:
+            raise ValueError(
+                f"warm-start {key}={checkpoint.get(key)!r} does not match {value}"
+            )
 
 
 def main() -> None:
@@ -88,14 +135,24 @@ def main() -> None:
     parser.add_argument("--head-only", action="store_true")
     args = parser.parse_args()
 
-    if args.vocab_size <= 1:
-        parser.error("--vocab-size must be > 1")
+    if not 2 <= args.vocab_size <= MAX_VOCAB_SIZE:
+        parser.error(f"--vocab-size must be 2..{MAX_VOCAB_SIZE}")
+    if not 1 <= args.feature_dim <= MAX_FEATURE_DIM:
+        parser.error(f"--feature-dim must be 1..{MAX_FEATURE_DIM}")
+    if not 1 <= args.hidden_dim <= MAX_HIDDEN_DIM:
+        parser.error(f"--hidden-dim must be 1..{MAX_HIDDEN_DIM}")
+    if args.epochs <= 0:
+        parser.error("--epochs must be > 0")
+    if args.batch_size <= 0:
+        parser.error("--batch-size must be > 0")
+    if not math.isfinite(args.lr) or args.lr <= 0.0:
+        parser.error("--lr must be finite and > 0")
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
-    dataset = Manifest(args.manifest, args.feature_dim)
+    dataset = Manifest(args.manifest, args.feature_dim, args.vocab_size)
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -105,6 +162,7 @@ def main() -> None:
     model = TinyStreamingRNN(args.feature_dim, args.hidden_dim, args.vocab_size)
     if args.warm_start:
         checkpoint = torch.load(args.warm_start, map_location="cpu", weights_only=True)
+        validate_warm_start(checkpoint, args)
         model.load_state_dict(checkpoint["state_dict"], strict=True)
     if args.head_only:
         for parameter in model.in_proj.parameters():
@@ -135,8 +193,8 @@ def main() -> None:
             "feature_dim": args.feature_dim,
             "hidden_dim": args.hidden_dim,
             "vocab_size": args.vocab_size,
-            "frame_length_samples": 400,
-            "frame_hop_samples": 320,
+            "frame_length_samples": FRAME_LENGTH_SAMPLES,
+            "frame_hop_samples": FRAME_HOP_SAMPLES,
             "training_examples": len(dataset),
             "hard_negative_capable": True,
         },
