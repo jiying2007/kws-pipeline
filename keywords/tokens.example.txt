@@ -1,0 +1,5 @@
+<blk> 0
+ni3 1
+hao3 2
+xiao3 3
+wo1 4
