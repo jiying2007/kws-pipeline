@@ -7,7 +7,13 @@ import pathlib
 import subprocess
 import tempfile
 
-from qualification_fixture import write_model, write_pack, write_tokens, write_wav
+from qualification_fixture import (
+    sha256_file,
+    write_model,
+    write_pack,
+    write_tokens,
+    write_wav,
+)
 
 
 def main() -> int:
@@ -34,6 +40,10 @@ def main() -> int:
         )
         result = json.loads(completed.stdout)
         assert result["schema_version"] == 1
+        assert result["runner_sha256"] == sha256_file(args.runner)
+        assert result["model_sha256"] == sha256_file(model)
+        assert result["keyword_pack_sha256"] == sha256_file(pack)
+        assert result["audio_sha256"] == sha256_file(wav)
         assert result["block_samples"] == 320
         assert result["block_deadline_us"] == 20000.0
         assert result["audio_seconds"] == 1.0
@@ -42,6 +52,8 @@ def main() -> int:
         assert result["model_bytes"] == model_bytes
         assert result["keyword_pack_bytes"] == pack_bytes
         assert result["arena_bytes"] > 0
+        assert result["total_process_us"] >= 0.0
+        assert result["mean_process_us"] >= 0.0
         assert 0.0 <= result["p50_process_us"] <= result["p95_process_us"]
         assert result["p95_process_us"] <= result["p99_process_us"]
         assert result["p99_process_us"] <= result["max_process_us"]
