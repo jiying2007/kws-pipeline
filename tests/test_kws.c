@@ -101,7 +101,7 @@ static void test_model_and_engine(void) {
   };
   int16_t pcm[1200];
   int detected_any = 0;
-  kws_detection_t first_detection;
+  kws_detection_t first_detection = {0u, 0.0f, 0u};
   size_t bytes = make_test_model(blob, sizeof(blob));
   const size_t sample_count = sizeof(pcm) / sizeof(pcm[0]);
 
