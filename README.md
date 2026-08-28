@@ -127,7 +127,7 @@ For firmware-linked generated tables, call `kws_engine_set_keywords()` with `kws
 
 ## Continuous-audio qualification
 
-`kws_wav` runs the **real C runtime** on mono 16-kHz PCM16 WAV files. `run_corpus.py` applies it to a reference corpus and can emit a SHA256 provenance sidecar binding the runner, model, keyword pack, references and detections. `score_events.py` computes FAR/hour, FRR and wake latency and stores the reference/detection hashes in its summary:
+`kws_wav` runs the **real C runtime** on mono 16-kHz PCM16 WAV files. `run_corpus.py` applies it to a reference corpus and emits a SHA256 provenance sidecar binding the runner, model, keyword pack, references and detections. `score_events.py` computes FAR/hour, FRR and wake latency and stores the reference/detection hashes in its summary:
 
 ```bash
 python3 eval/run_corpus.py \
@@ -150,23 +150,27 @@ False accepts can be converted to empty-target CTC training clips with `eval/min
 
 ## Artifact-bound release qualification
 
-A green source CI is a **software baseline**, not a shipping acoustic claim. The repository also provides a target-board release gate that binds the real artifacts and evidence together:
+A green source CI is a **software baseline**, not a shipping acoustic claim. The target-board qualification path binds every selected evidence file by SHA256 and recomputes corpus/board statistics rather than trusting sidecars alone:
 
 ```bash
-./build/kws_board_bench \
+./kws_board_bench \
   release/base.kwm \
   release/xiaowo.kwk \
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
 # Retain the exact target binary that produced board-summary.json.
-cp ./build/kws_board_bench qualification/kws_board_bench.target
+cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
+cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 
-python3 tools/release_manifest.py \
+python3 tools/qualification_manifest.py \
   --model release/base.kwm \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
+  --eval-runner qualification/kws_wav.eval \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
   --board-summary qualification/board-summary.json \
@@ -183,7 +187,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` times the real release `.kwm/.kwk` on the target Linux board and reports exact runner/model/pack/audio SHA256, mean/p50/p95/p99/max process time, RTF and p99 headroom for the 20-ms hop. `release_manifest.py` independently revalidates canonical ABI layouts, vocabulary identity, acoustic count/rate formulas, board timing formulas and all SHA256 relationships. `qualification_gate.py` applies the explicit SKU policy and binds its result to the exact manifest and policy hashes. The repository example policy is intentionally named `example-not-a-shipping-policy`.
+`kws_board_bench` reports exact runner/model/pack/audio hashes plus mean/p50/p95/p99/max process time, RTF and p99 headroom. `qualification_manifest.py` independently revalidates canonical ABI layouts, the runtime config, vocabulary identity, the actual evaluation runner/references/detections, reference/detection counts and audio hours, the actual board WAV duration/block count, board timing formulas and all cross-artifact SHA256 relationships. `qualification_gate.py` then applies the explicit SKU policy to acoustic, latency, CPU, RSS, stack, soak, thermal and power evidence and binds the result to the exact manifest and policy hashes. The repository example policy is intentionally named `example-not-a-shipping-policy`.
 
 See `docs/RELEASE_QUALIFICATION.md` for the complete evidence schema and release procedure.
 
@@ -199,7 +203,7 @@ Avoid a second resampler when `audio-pipeline` already emits 16 kHz. Re-evaluate
 
 ## Validation
 
-CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract including C-vs-Python SHA256 verification, deterministic release-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
+CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract including C-vs-Python SHA256 verification, deterministic qualification-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
 
 Hosted CI numbers are regression signals only. Shipping qualification still requires the real trained model, held-out corpus and target SoC evidence for FAR/hour, FRR, wake latency, p95/p99 processing time, CPU, memory, thermal/power and long-duration background-noise behavior. Repository issue #2 tracks that evidence gate.
 
