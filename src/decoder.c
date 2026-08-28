@@ -111,7 +111,8 @@ static kws_status_t validate_keywords(const kws_keyword_t *keywords,
   for (size_t k = 0u; k < count; ++k) {
     if (keywords[k].tokens == NULL || keywords[k].num_tokens == 0u ||
         keywords[k].num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
-        keywords[k].threshold <= 0.0f || keywords[k].threshold >= 1.0f) {
+        !isfinite(keywords[k].threshold) || keywords[k].threshold <= 0.0f ||
+        keywords[k].threshold >= 1.0f) {
       return KWS_EINVAL;
     }
     for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
