@@ -127,7 +127,7 @@ For firmware-linked generated tables, call `kws_engine_set_keywords()` with `kws
 
 ## Continuous-audio qualification
 
-`kws_wav` runs the **real C runtime** on mono 16-kHz PCM16 WAV files. `run_corpus.py` applies it to a reference corpus and `score_events.py` computes FAR/hour, FRR and wake latency:
+`kws_wav` runs the **real C runtime** on mono 16-kHz PCM16 WAV files. `run_corpus.py` applies it to a reference corpus and can emit a SHA256 provenance sidecar binding the runner, model, keyword pack, references and detections. `score_events.py` computes FAR/hour, FRR and wake latency and stores the reference/detection hashes in its summary:
 
 ```bash
 python3 eval/run_corpus.py \
@@ -136,19 +136,51 @@ python3 eval/run_corpus.py \
   --keywords build/xiaowo.kwk \
   --references data/eval/references.jsonl \
   --audio-root data/eval \
-  --detections build/detections.jsonl
+  --detections build/detections.jsonl \
+  --provenance build/detections.provenance.json
 
 python3 eval/score_events.py \
   --references data/eval/references.jsonl \
   --detections build/detections.jsonl \
   --summary build/summary.json \
-  --false-positives build/false-positives.jsonl \
-  --max-far-per-hour 0.2 \
-  --max-frr 0.05 \
-  --max-p95-latency-ms 500
+  --false-positives build/false-positives.jsonl
 ```
 
 False accepts can be converted to empty-target CTC training clips with `eval/mine_hard_negatives.py`. Never mine from the final held-out qualification corpus and then reuse it as unbiased release evidence.
+
+## Artifact-bound release qualification
+
+A green source CI is a **software baseline**, not a shipping acoustic claim. The repository also provides a target-board release gate that binds the real artifacts and evidence together:
+
+```bash
+./build/kws_board_bench \
+  release/base.kwm \
+  release/xiaowo.kwk \
+  qualification/board-audio.wav \
+  10 > qualification/board-summary.json
+
+python3 tools/release_manifest.py \
+  --model release/base.kwm \
+  --keywords release/xiaowo.kwk \
+  --tokens release/tokens.txt \
+  --config release/runtime.json \
+  --eval-summary qualification/eval-summary.json \
+  --eval-provenance qualification/detections.provenance.json \
+  --board-summary qualification/board-summary.json \
+  --evidence qualification/evidence.json \
+  --source-sha "$(git rev-parse HEAD)" \
+  --corpus-id home-kws-heldout-v1 \
+  --output qualification/qualification-manifest.json
+
+python3 tools/qualification_gate.py \
+  --manifest qualification/qualification-manifest.json \
+  --policy qualification/sku-policy.json \
+  --output qualification/gate-result.json
+```
+
+`kws_board_bench` times the real release `.kwm/.kwk` on the target Linux board and reports mean/p50/p95/p99/max process time, RTF and p99 headroom for the 20-ms hop. `release_manifest.py` verifies vocabulary identity and SHA256 relationships across the acoustic report, board report and target evidence. `qualification_gate.py` then applies an explicit SKU policy. The repository example policy is intentionally named `example-not-a-shipping-policy`.
+
+See `docs/RELEASE_QUALIFICATION.md` for the complete evidence schema and release procedure.
 
 ## audio-pipeline integration
 
@@ -162,11 +194,11 @@ Avoid a second resampler when `audio-pipeline` already emits 16 kHz. Re-evaluate
 
 ## Validation
 
-CI currently gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, continuous-audio metric scoring, a real default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build.
+CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract, deterministic release-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
 
-Hosted CI numbers are regression signals only. Release qualification still requires the real trained model and target SoC to record FAR/hour, FRR, wake latency, p95/p99 processing time, CPU, memory, thermal/power and long-duration background-noise results.
+Hosted CI numbers are regression signals only. Shipping qualification still requires the real trained model, held-out corpus and target SoC evidence for FAR/hour, FRR, wake latency, p95/p99 processing time, CPU, memory, thermal/power and long-duration background-noise behavior. Repository issue #2 tracks that evidence gate.
 
-See `docs/ARCHITECTURE.md`, `docs/CUSTOMIZATION.md`, `docs/PERFORMANCE.md`, `docs/INTEGRATION.md` and `THIRD_PARTY.md`.
+See `docs/ARCHITECTURE.md`, `docs/CUSTOMIZATION.md`, `docs/EVALUATION.md`, `docs/PERFORMANCE.md`, `docs/INTEGRATION.md`, `docs/RELEASE_QUALIFICATION.md` and `THIRD_PARTY.md`.
 
 ## License
 
