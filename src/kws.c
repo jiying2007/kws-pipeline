@@ -71,6 +71,14 @@ kws_status_t kws_engine_set_keywords(kws_engine_t *engine,
                                   engine->model.vocab_size);
 }
 
+kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
+                                         const kws_keyword_pack_t *pack) {
+  if (engine == NULL || pack == NULL) {
+    return KWS_EINVAL;
+  }
+  return kws_engine_set_keywords(engine, pack->keywords, pack->keyword_count);
+}
+
 void kws_engine_reset(kws_engine_t *engine) {
   if (engine == NULL) {
     return;
