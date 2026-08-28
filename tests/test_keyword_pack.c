@@ -58,13 +58,20 @@ static size_t make_pack(uint8_t *blob, size_t cap) {
 }
 
 int main(void) {
+  _Alignas(8) uint8_t arena[65536];
   uint8_t blob[128];
   kws_model_t model;
   kws_keyword_pack_t pack;
+  kws_engine_t *engine = NULL;
   size_t bytes;
 
   memset(&model, 0, sizeof(model));
   model.vocab_size = 8u;
+  model.feature_dim = 32u;
+  model.hidden_dim = 1u;
+  model.sample_rate_hz = 16000u;
+  model.frame_length_samples = 400u;
+  model.frame_hop_samples = 320u;
   bytes = make_pack(blob, sizeof(blob));
 
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_OK);
@@ -74,6 +81,11 @@ int main(void) {
   CHECK(pack.keywords[0].tokens[3] == 4u);
   CHECK(pack.keywords[1].id == 101u);
   CHECK(pack.keywords[1].tokens[0] == 4u);
+  CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+  CHECK(kws_engine_set_keyword_pack(engine, &pack) == KWS_OK);
+  CHECK(kws_engine_set_keyword_pack(NULL, &pack) == KWS_EINVAL);
+  CHECK(kws_engine_set_keyword_pack(engine, NULL) == KWS_EINVAL);
 
   CHECK(kws_keyword_pack_open(blob, bytes - 1u, &model, &pack) == KWS_EFORMAT);
 
@@ -85,7 +97,7 @@ int main(void) {
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
   put32(blob + 60u, 101u);
 
-  put16(blob + 12u + 32u, 8u);
+  put16(blob + 28u, 8u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EBOUNDS);
 
   puts("kws_keyword_pack_tests: ok");
