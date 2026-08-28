@@ -127,7 +127,7 @@ kws_engine_accept_pcm16(engine, pcm, samples, &hit, &detected);
 
 ## 连续音频量产评测
 
-`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 批量执行语料，`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟：
+`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 批量执行语料，并生成 SHA256 provenance sidecar，将 runner、model、keyword pack、references 和 detections 固定到同一次评测；`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟，并把 references/detections hash 写入 summary：
 
 ```bash
 python3 eval/run_corpus.py \
@@ -136,19 +136,60 @@ python3 eval/run_corpus.py \
   --keywords build/xiaowo.kwk \
   --references data/eval/references.jsonl \
   --audio-root data/eval \
-  --detections build/detections.jsonl
+  --detections build/detections.jsonl \
+  --provenance build/detections.provenance.json
 
 python3 eval/score_events.py \
   --references data/eval/references.jsonl \
   --detections build/detections.jsonl \
   --summary build/summary.json \
-  --false-positives build/false-positives.jsonl \
-  --max-far-per-hour 0.2 \
-  --max-frr 0.05 \
-  --max-p95-latency-ms 500
+  --false-positives build/false-positives.jsonl
 ```
 
 误唤醒可以通过 `eval/mine_hard_negatives.py` 转为 empty-target CTC 训练片段。最终 held-out 量产认证集不能先拿去挖 hard negative，再继续当作无偏发布证据。
+
+## 制品绑定的发布认证
+
+源码 CI 全绿只表示**软件基线可用**，不能直接等价为量产声学指标。正式认证路径会重新读取实际文件并重算语料/板端统计，而不是只相信 sidecar：
+
+```bash
+./kws_board_bench \
+  release/base.kwm \
+  release/xiaowo.kwk \
+  qualification/board-audio.wav \
+  10 > qualification/board-summary.json
+
+# 保留实际在目标板执行的同一个 benchmark 二进制，以及实际评测 runner。
+cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
+cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
+
+python3 tools/qualification_manifest.py \
+  --model release/base.kwm \
+  --keywords release/xiaowo.kwk \
+  --tokens release/tokens.txt \
+  --config release/runtime.json \
+  --eval-runner qualification/kws_wav.eval \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
+  --eval-summary qualification/eval-summary.json \
+  --eval-provenance qualification/detections.provenance.json \
+  --board-summary qualification/board-summary.json \
+  --board-runner qualification/kws_board_bench.target \
+  --board-audio qualification/board-audio.wav \
+  --evidence qualification/evidence.json \
+  --source-sha "$(git rev-parse HEAD)" \
+  --corpus-id home-kws-heldout-v1 \
+  --output qualification/qualification-manifest.json
+
+python3 tools/qualification_gate.py \
+  --manifest qualification/qualification-manifest.json \
+  --policy qualification/sku-policy.json \
+  --output qualification/gate-result.json
+```
+
+`kws_board_bench` 输出精确 runner/model/pack/board-audio SHA256、mean/p50/p95/p99/max、RTF 和 p99 headroom；`qualification_manifest.py` 独立重验 canonical ABI、runtime config、vocabulary identity，并重新哈希实际 eval runner/references/detections，重算 reference 的 recording/expected/audio-hours、detection 数量、board WAV 时长和 block 数，再验证所有统计公式与 SHA256 交叉引用；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，并把 gate result 绑定到精确 manifest/policy hash。
+
+仓库的 `configs/qualification.policy.example.json` 明确命名为 `example-not-a-shipping-policy`，其中数字只用于展示 gate 结构，不能直接拿来做产品承诺。完整流程见 `docs/RELEASE_QUALIFICATION.md`。
 
 ## 与 audio-pipeline 对接
 
@@ -165,11 +206,11 @@ python3 eval/score_events.py \
 
 ## 验证
 
-CI 当前覆盖 GCC/Clang strict build、CTest、ASan/UBSan、关键词包/工具测试、continuous-audio metric scorer、真实默认几何 hosted benchmark、SDK install + pkg-config + 独立 `find_package` consumer、Python 语法，以及 Cortex-A32 ARMv7 hard-float cross-build。
+CI 当前门禁包括 GCC/Clang strict build、CTest、ASan/UBSan、关键词包/工具测试、corpus provenance、continuous-audio metric scorer、包含 C/Python SHA256 交叉校验的真实制品 board-benchmark contract、byte-complete qualification manifest/policy gate、默认几何 hosted benchmark、SDK install + pkg-config + 独立 `find_package` consumer、Python 语法，以及 Cortex-A32 ARMv7 hard-float 对 core 和 target qualification tools 的交叉编译。
 
-Hosted CI 数据只作为回归信号。真正量产必须在真实训练模型和目标 SoC 上记录 FAR/hour、FRR、唤醒延迟、p95/p99 处理时间、CPU、内存、热/功耗和长时间连续背景音频结果。
+Hosted CI 数据只作为回归信号。真正量产仍必须使用真实训练模型、最终 held-out corpus 和目标 SoC，记录 FAR/hour、FRR、唤醒延迟、p95/p99 处理时间、CPU、内存、热/功耗和长时间连续背景音频结果。仓库 issue #2 专门跟踪这道真实证据 gate。
 
-详细说明见 `docs/ARCHITECTURE.md`、`docs/CUSTOMIZATION.md`、`docs/PERFORMANCE.md`、`docs/INTEGRATION.md`、`THIRD_PARTY.md`。
+详细说明见 `docs/ARCHITECTURE.md`、`docs/CUSTOMIZATION.md`、`docs/EVALUATION.md`、`docs/PERFORMANCE.md`、`docs/INTEGRATION.md`、`docs/RELEASE_QUALIFICATION.md`、`THIRD_PARTY.md`。
 
 ## License
 

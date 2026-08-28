@@ -1,0 +1,15 @@
+{
+  "target": "REPLACE_ME",
+  "board_revision": "REPLACE_ME",
+  "soc": "REPLACE_ME",
+  "toolchain": "REPLACE_ME",
+  "compiler_flags": "REPLACE_ME",
+  "governor": "REPLACE_ME",
+  "audio_frontend": "REPLACE_ME",
+  "soak_hours": 0.0,
+  "cpu_percent": 0.0,
+  "rss_kib": 0.0,
+  "stack_high_water_bytes": 0.0,
+  "max_temp_c": 0.0,
+  "average_power_mw": 0.0
+}

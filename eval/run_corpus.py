@@ -2,10 +2,19 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import pathlib
 import subprocess
 import sys
+
+
+def sha256_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_references(path: pathlib.Path) -> list[dict]:
@@ -38,6 +47,7 @@ def main() -> int:
     parser.add_argument("--references", required=True, type=pathlib.Path)
     parser.add_argument("--audio-root", type=pathlib.Path, default=pathlib.Path("."))
     parser.add_argument("--detections", required=True, type=pathlib.Path)
+    parser.add_argument("--provenance", type=pathlib.Path)
     args = parser.parse_args()
 
     rows = load_references(args.references)
@@ -68,18 +78,43 @@ def main() -> int:
                 raise ValueError(
                     f"runner emitted invalid JSON for {recording}:{line_no}: {exc}"
                 ) from exc
+            if not isinstance(detection, dict):
+                raise ValueError(
+                    f"runner emitted non-object JSON for {recording}:{line_no}"
+                )
             if detection.get("recording") != recording:
                 raise ValueError(
                     f"runner recording mismatch: expected {recording}, "
                     f"got {detection.get('recording')}"
                 )
-            output_lines.append(json.dumps(detection, ensure_ascii=False))
+            output_lines.append(
+                json.dumps(detection, ensure_ascii=False, allow_nan=False)
+            )
 
     args.detections.parent.mkdir(parents=True, exist_ok=True)
     args.detections.write_text(
         "\n".join(output_lines) + ("\n" if output_lines else ""),
         encoding="utf-8",
     )
+
+    if args.provenance:
+        provenance = {
+            "schema_version": 1,
+            "runner_sha256": sha256_file(args.runner),
+            "model_sha256": sha256_file(args.model),
+            "keyword_pack_sha256": sha256_file(args.keywords),
+            "references_sha256": sha256_file(args.references),
+            "detections_sha256": sha256_file(args.detections),
+            "recordings": len(rows),
+            "detections": len(output_lines),
+        }
+        args.provenance.parent.mkdir(parents=True, exist_ok=True)
+        args.provenance.write_text(
+            json.dumps(provenance, ensure_ascii=False, indent=2, allow_nan=False)
+            + "\n",
+            encoding="utf-8",
+        )
+
     print(
         f"processed {len(rows)} recording(s), emitted {len(output_lines)} detection(s)"
     )

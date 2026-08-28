@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import pathlib
@@ -9,6 +10,14 @@ import sys
 from collections import defaultdict
 
 UINT32_MAX = 0xFFFFFFFF
+
+
+def sha256_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_jsonl(path: pathlib.Path) -> list[dict]:
@@ -335,6 +344,8 @@ def main() -> int:
         args.pre_tolerance_ms / 1000.0,
         args.post_tolerance_ms / 1000.0,
     )
+    summary["references_sha256"] = sha256_file(args.references)
+    summary["detections_sha256"] = sha256_file(args.detections)
     rendered = json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False)
     print(rendered)
 

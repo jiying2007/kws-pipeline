@@ -57,10 +57,23 @@ if(KWS_BUILD_BENCH)
 endif()
 
 if(KWS_BUILD_TOOLS)
+  add_library(kws_tool_io STATIC tools/tool_io.c tools/sha256.c)
+  target_include_directories(kws_tool_io
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+  target_compile_features(kws_tool_io PUBLIC c_std_11)
+
   add_executable(kws_wav tools/kws_wav.c)
-  target_link_libraries(kws_wav PRIVATE KwsPipeline::core)
+  target_link_libraries(kws_wav PRIVATE KwsPipeline::core kws_tool_io)
+
+  add_executable(kws_board_bench tools/kws_board_bench.c)
+  target_link_libraries(kws_board_bench PRIVATE KwsPipeline::core kws_tool_io)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(kws_tool_io PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_wav PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_board_bench PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 endif()
 
