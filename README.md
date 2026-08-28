@@ -159,6 +159,9 @@ A green source CI is a **software baseline**, not a shipping acoustic claim. The
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
+# Retain the exact target binary that produced board-summary.json.
+cp ./build/kws_board_bench qualification/kws_board_bench.target
+
 python3 tools/release_manifest.py \
   --model release/base.kwm \
   --keywords release/xiaowo.kwk \
@@ -167,6 +170,8 @@ python3 tools/release_manifest.py \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
   --board-summary qualification/board-summary.json \
+  --board-runner qualification/kws_board_bench.target \
+  --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
@@ -178,7 +183,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` times the real release `.kwm/.kwk` on the target Linux board and reports mean/p50/p95/p99/max process time, RTF and p99 headroom for the 20-ms hop. `release_manifest.py` verifies vocabulary identity and SHA256 relationships across the acoustic report, board report and target evidence. `qualification_gate.py` then applies an explicit SKU policy. The repository example policy is intentionally named `example-not-a-shipping-policy`.
+`kws_board_bench` times the real release `.kwm/.kwk` on the target Linux board and reports exact runner/model/pack/audio SHA256, mean/p50/p95/p99/max process time, RTF and p99 headroom for the 20-ms hop. `release_manifest.py` independently revalidates canonical ABI layouts, vocabulary identity, acoustic count/rate formulas, board timing formulas and all SHA256 relationships. `qualification_gate.py` applies the explicit SKU policy and binds its result to the exact manifest and policy hashes. The repository example policy is intentionally named `example-not-a-shipping-policy`.
 
 See `docs/RELEASE_QUALIFICATION.md` for the complete evidence schema and release procedure.
 
@@ -194,7 +199,7 @@ Avoid a second resampler when `audio-pipeline` already emits 16 kHz. Re-evaluate
 
 ## Validation
 
-CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract, deterministic release-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
+CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract including C-vs-Python SHA256 verification, deterministic release-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
 
 Hosted CI numbers are regression signals only. Shipping qualification still requires the real trained model, held-out corpus and target SoC evidence for FAR/hour, FRR, wake latency, p95/p99 processing time, CPU, memory, thermal/power and long-duration background-noise behavior. Repository issue #2 tracks that evidence gate.
 
