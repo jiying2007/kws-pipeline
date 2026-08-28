@@ -1,0 +1,14 @@
+{
+  "sample_rate_hz": 16000,
+  "frame_length_samples": 400,
+  "frame_hop_samples": 320,
+  "feature_dim": 32,
+  "hidden_dim": 48,
+  "vocab_target": "full-pinyin-tone3",
+  "runtime": {
+    "min_speech_dbfs": -55.0,
+    "token_boost": 1.5,
+    "state_retention": 0.94,
+    "refractory_ms": 1200
+  }
+}
