@@ -128,22 +128,20 @@ def main() -> int:
                 "average_power_mw": 120.0,
             },
         )
-        write_json(
-            policy,
-            {
-                "schema_version": 1,
-                "name": "fixture-policy",
-                "min_audio_hours": 24.0,
-                "min_expected_wakes": 1000,
-                "max_frr": 0.05,
-                "max_far_per_hour": 0.1,
-                "max_p95_latency_ms": 500.0,
-                "max_p99_process_us": 5000.0,
-                "max_rtf": 0.25,
-                "min_p99_headroom": 4.0,
-                "min_soak_hours": 8.0,
-            },
-        )
+        valid_policy = {
+            "schema_version": 1,
+            "name": "fixture-policy",
+            "min_audio_hours": 24.0,
+            "min_expected_wakes": 1000,
+            "max_frr": 0.05,
+            "max_far_per_hour": 0.1,
+            "max_p95_latency_ms": 500.0,
+            "max_p99_process_us": 5000.0,
+            "max_rtf": 0.25,
+            "min_p99_headroom": 4.0,
+            "min_soak_hours": 8.0,
+        }
+        write_json(policy, valid_policy)
 
         command = [
             sys.executable,
@@ -204,8 +202,10 @@ def main() -> int:
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
         assert gate_result["qualified"] is True
         assert gate_result["violations"] == []
+        assert gate_result["manifest_sha256"] == sha256_file(manifest)
+        assert gate_result["policy_sha256"] == sha256_file(policy)
 
-        failing_policy = json.loads(policy.read_text(encoding="utf-8"))
+        failing_policy = dict(valid_policy)
         failing_policy["max_frr"] = 0.01
         write_json(policy, failing_policy)
         failed = subprocess.run(
@@ -220,6 +220,23 @@ def main() -> int:
             check=False,
         )
         assert failed.returncode == 1
+
+        invalid_policy = dict(valid_policy)
+        invalid_policy["min_expected_wakes"] = 1000.5
+        write_json(policy, invalid_policy)
+        invalid = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "qualification_gate.py"),
+                "--manifest",
+                str(manifest),
+                "--policy",
+                str(policy),
+            ],
+            check=False,
+        )
+        assert invalid.returncode == 2
+        write_json(policy, valid_policy)
 
         provenance = json.loads(eval_provenance.read_text(encoding="utf-8"))
         provenance["model_sha256"] = "0" * 64
