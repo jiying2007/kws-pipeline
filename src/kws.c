@@ -20,13 +20,51 @@ struct kws_engine {
   uint64_t suppress_until_sample;
 };
 
+static int model_contract_valid(const kws_model_t *model) {
+  if (model == NULL || model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
+      model->feature_dim == 0u || model->feature_dim > KWS_MAX_FEATURE_DIM ||
+      model->hidden_dim == 0u || model->hidden_dim > KWS_MAX_HIDDEN_DIM ||
+      model->vocab_size < 2u || model->vocab_size > KWS_MAX_VOCAB_SIZE ||
+      model->vocab_fingerprint == 0u || model->frame_length_samples < 2u ||
+      model->frame_length_samples > 512u || model->frame_hop_samples == 0u ||
+      model->frame_hop_samples > model->frame_length_samples ||
+      !isfinite(model->wx_scale) || !isfinite(model->wh_scale) ||
+      !isfinite(model->wo_scale) || model->wx_scale <= 0.0f ||
+      model->wh_scale <= 0.0f || model->wo_scale <= 0.0f ||
+      model->wx == NULL || model->wh == NULL || model->bh == NULL ||
+      model->wo == NULL || model->bo == NULL) {
+    return 0;
+  }
+
+  if (((uintptr_t)model->bh % _Alignof(float)) != 0u ||
+      ((uintptr_t)model->bo % _Alignof(float)) != 0u) {
+    return 0;
+  }
+
+  for (uint16_t h = 0u; h < model->hidden_dim; ++h) {
+    if (!isfinite(model->bh[h])) {
+      return 0;
+    }
+  }
+  for (uint16_t v = 0u; v < model->vocab_size; ++v) {
+    if (!isfinite(model->bo[v])) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 kws_config_t kws_default_config(void) {
   kws_config_t c = {-55.0f, 1.5f, 0.94f, 1200u};
   return c;
 }
 
 size_t kws_engine_required_bytes(const kws_model_t *model) {
-  return model == NULL ? 0u : sizeof(kws_engine_t);
+  return model_contract_valid(model) != 0 ? sizeof(kws_engine_t) : 0u;
+}
+
+size_t kws_engine_required_alignment(void) {
+  return _Alignof(kws_engine_t);
 }
 
 kws_status_t kws_engine_init(void *arena,
@@ -37,17 +75,19 @@ kws_status_t kws_engine_init(void *arena,
   kws_config_t c;
   kws_engine_t *e;
 
-  if (arena == NULL || model == NULL || out_engine == NULL ||
+  if (arena == NULL || out_engine == NULL || model_contract_valid(model) == 0 ||
       arena_bytes < sizeof(kws_engine_t)) {
     return KWS_EINVAL;
   }
-  if ((((uintptr_t)arena) & (sizeof(void *) - 1u)) != 0u) {
+  if (((uintptr_t)arena % _Alignof(kws_engine_t)) != 0u) {
     return KWS_EINVAL;
   }
 
   c = config != NULL ? *config : kws_default_config();
-  if (c.state_retention <= 0.0f || c.state_retention >= 1.0f ||
-      c.token_boost < 0.0f || c.refractory_ms > 10000u) {
+  if (!isfinite(c.min_speech_dbfs) || !isfinite(c.token_boost) ||
+      !isfinite(c.state_retention) || c.state_retention <= 0.0f ||
+      c.state_retention >= 1.0f || c.token_boost < 0.0f ||
+      c.refractory_ms > 10000u) {
     return KWS_EINVAL;
   }
 
