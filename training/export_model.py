@@ -17,6 +17,7 @@ MODEL_HEADER_BYTES = 72
 SAMPLE_RATE_HZ = 16000
 FRAME_LENGTH_SAMPLES = 400
 FRAME_HOP_SAMPLES = 320
+FRONTEND_SPEC_VERSION = 1
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
 MAX_VOCAB_SIZE = 512
@@ -66,6 +67,8 @@ def main() -> None:
     feature_dim = int(checkpoint["feature_dim"])
     hidden_dim = int(checkpoint["hidden_dim"])
     checkpoint_vocab_size = int(checkpoint["vocab_size"])
+    checkpoint_fingerprint = int(checkpoint.get("vocab_fingerprint", -1))
+    frontend_spec_version = int(checkpoint.get("frontend_spec_version", -1))
     frame_length = int(checkpoint["frame_length_samples"])
     frame_hop = int(checkpoint["frame_hop_samples"])
 
@@ -75,6 +78,11 @@ def main() -> None:
         raise ValueError(f"hidden_dim must be 1..{MAX_HIDDEN_DIM}")
     if not 2 <= checkpoint_vocab_size <= MAX_VOCAB_SIZE:
         raise ValueError(f"vocab_size must be 2..{MAX_VOCAB_SIZE}")
+    if frontend_spec_version != FRONTEND_SPEC_VERSION:
+        raise ValueError(
+            f"checkpoint frontend_spec_version={frontend_spec_version} does not match "
+            f"required {FRONTEND_SPEC_VERSION}"
+        )
     if frame_length != FRAME_LENGTH_SAMPLES or frame_hop != FRAME_HOP_SAMPLES:
         raise ValueError(
             f"ABI v2 requires frame_length/frame_hop "
@@ -89,12 +97,17 @@ def main() -> None:
 
     token_map = load_tokens(args.tokens)
     token_vocab_size = vocab_size(token_map)
+    fingerprint = vocab_fingerprint(token_map)
     if token_vocab_size != checkpoint_vocab_size:
         raise ValueError(
             f"token vocabulary size {token_vocab_size} does not match "
             f"checkpoint vocab_size {checkpoint_vocab_size}"
         )
-    fingerprint = vocab_fingerprint(token_map)
+    if checkpoint_fingerprint != fingerprint:
+        raise ValueError(
+            "checkpoint vocabulary fingerprint does not match --tokens; "
+            "refusing to bind weights to a different token-to-ID mapping"
+        )
 
     wx, sx = q8(state_dict["in_proj.weight"], "in_proj.weight")
     wh, sh = q8(state_dict["rec_proj.weight"], "rec_proj.weight")
