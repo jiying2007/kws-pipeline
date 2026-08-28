@@ -18,6 +18,7 @@
 #define TEST_VOCAB_FINGERPRINT UINT64_C(0x1122334455667788)
 #define TEST_BH_OFFSET 216u
 #define TEST_BO_OFFSET 248u
+#define TEST_BLOCK_SAMPLES 160u
 
 static void put16(uint8_t *p, uint16_t v) {
   p[0] = (uint8_t)(v & 0xffu);
@@ -64,8 +65,8 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   put16(blob + 10u, h);
   put16(blob + 12u, v);
   put32(blob + 16u, KWS_SAMPLE_RATE_HZ);
-  put32(blob + 20u, 400u);
-  put32(blob + 24u, 320u);
+  put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES);
+  put32(blob + 24u, KWS_FRAME_HOP_SAMPLES);
   putf(blob + 28u, 0.01f);
   putf(blob + 32u, 0.01f);
   putf(blob + 36u, 0.01f);
@@ -99,8 +100,8 @@ static void test_model_and_engine(void) {
       {101u, sequence, 2u, 0.40f},
   };
   int16_t pcm[1200];
-  int detected = 0;
-  kws_detection_t detection;
+  int detected_any = 0;
+  kws_detection_t first_detection;
   size_t bytes = make_test_model(blob, sizeof(blob));
   const size_t sample_count = sizeof(pcm) / sizeof(pcm[0]);
 
@@ -116,6 +117,10 @@ static void test_model_and_engine(void) {
   CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
   CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) ==
         KWS_EINVAL);
+
+  invalid_model = model;
+  invalid_model.frame_hop_samples = KWS_FRAME_HOP_SAMPLES / 2u;
+  CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
 
   invalid_model = model;
   invalid_model.wx_scale = NAN;
@@ -149,12 +154,34 @@ static void test_model_and_engine(void) {
     pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
   }
 
-  CHECK(kws_engine_accept_pcm16(engine, pcm, sample_count, &detection,
-                                &detected) == KWS_OK);
-  CHECK(detected == 1);
-  CHECK(detection.keyword_id == 42u);
-  CHECK(detection.confidence > 0.30f);
-  CHECK(detection.end_sample > 0u);
+  {
+    int detected = 7;
+    uint64_t before = kws_engine_processed_samples(engine);
+    CHECK(kws_engine_accept_pcm16(engine, pcm, KWS_MAX_PCM_BLOCK_SAMPLES + 1u,
+                                  NULL, &detected) == KWS_EBOUNDS);
+    CHECK(detected == 0);
+    CHECK(kws_engine_processed_samples(engine) == before);
+  }
+
+  for (size_t offset = 0u; offset < sample_count; offset += TEST_BLOCK_SAMPLES) {
+    size_t count = sample_count - offset;
+    int detected = 0;
+    kws_detection_t detection;
+    if (count > TEST_BLOCK_SAMPLES) {
+      count = TEST_BLOCK_SAMPLES;
+    }
+    CHECK(kws_engine_accept_pcm16(engine, pcm + offset, count, &detection,
+                                  &detected) == KWS_OK);
+    if (detected != 0 && detected_any == 0) {
+      first_detection = detection;
+      detected_any = 1;
+    }
+  }
+
+  CHECK(detected_any == 1);
+  CHECK(first_detection.keyword_id == 42u);
+  CHECK(first_detection.confidence > 0.30f);
+  CHECK(first_detection.end_sample > 0u);
   CHECK(kws_engine_processed_samples(engine) == sample_count);
 }
 
@@ -183,9 +210,13 @@ static void test_validation(void) {
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put64(blob + 40u, TEST_VOCAB_FINGERPRINT);
 
-  put32(blob + 20u, 1u);
+  put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES - 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
-  put32(blob + 20u, 400u);
+  put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES);
+
+  put32(blob + 24u, KWS_FRAME_HOP_SAMPLES - 1u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  put32(blob + 24u, KWS_FRAME_HOP_SAMPLES);
 
   putf(blob + 28u, NAN);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
