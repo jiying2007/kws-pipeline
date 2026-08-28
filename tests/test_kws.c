@@ -102,8 +102,12 @@ static void test_model_and_engine(void) {
   config.refractory_ms = 100u;
   CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) ==
         KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, &keyword, 1u) == KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, ambiguous, 2u) == KWS_EINVAL);
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_OK);
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
+                                UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
+  CHECK(kws_engine_set_keywords(engine, ambiguous, 2u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 
   for (size_t i = 0u; i < sample_count; ++i) {
     pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
@@ -149,8 +153,10 @@ static void test_validation(void) {
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u) == KWS_EBOUNDS);
-  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u) == KWS_EINVAL);
+  CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_EBOUNDS);
+  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 }
 
 int main(void) {
