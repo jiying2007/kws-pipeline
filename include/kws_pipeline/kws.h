@@ -1,0 +1,80 @@
+#ifndef KWS_PIPELINE_KWS_H
+#define KWS_PIPELINE_KWS_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define KWS_MODEL_VERSION 1u
+#define KWS_SAMPLE_RATE_HZ 16000u
+#define KWS_MAX_KEYWORDS 16u
+#define KWS_MAX_TOKENS_PER_KEYWORD 16u
+#define KWS_MAX_TRIE_NODES (1u + KWS_MAX_KEYWORDS * KWS_MAX_TOKENS_PER_KEYWORD)
+#define KWS_MAX_FEATURE_DIM 40u
+#define KWS_MAX_HIDDEN_DIM 64u
+#define KWS_MAX_VOCAB_SIZE 512u
+
+typedef enum kws_status {
+  KWS_OK = 0,
+  KWS_EINVAL = -1,
+  KWS_EFORMAT = -2,
+  KWS_ENOMEM = -3,
+  KWS_EBOUNDS = -4
+} kws_status_t;
+
+typedef struct kws_model {
+  uint16_t feature_dim;
+  uint16_t hidden_dim;
+  uint16_t vocab_size;
+  uint32_t sample_rate_hz;
+  uint32_t frame_length_samples;
+  uint32_t frame_hop_samples;
+  float wx_scale;
+  float wh_scale;
+  float wo_scale;
+  const int8_t *wx;
+  const int8_t *wh;
+  const float *bh;
+  const int8_t *wo;
+  const float *bo;
+} kws_model_t;
+
+typedef struct kws_keyword {
+  uint32_t id;
+  const uint16_t *tokens;
+  uint16_t num_tokens;
+  float threshold;
+} kws_keyword_t;
+
+typedef struct kws_config {
+  float min_speech_dbfs;
+  float token_boost;
+  float state_retention;
+  uint32_t refractory_ms;
+} kws_config_t;
+
+typedef struct kws_detection {
+  uint32_t keyword_id;
+  float confidence;
+  uint64_t end_sample;
+} kws_detection_t;
+
+typedef struct kws_engine kws_engine_t;
+
+kws_status_t kws_model_open(const void *blob, size_t blob_bytes, kws_model_t *out_model);
+kws_config_t kws_default_config(void);
+size_t kws_engine_required_bytes(const kws_model_t *model);
+kws_status_t kws_engine_init(void *arena, size_t arena_bytes, const kws_model_t *model, const kws_config_t *config, kws_engine_t **out_engine);
+kws_status_t kws_engine_set_keywords(kws_engine_t *engine, const kws_keyword_t *keywords, size_t keyword_count);
+void kws_engine_reset(kws_engine_t *engine);
+kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine, const int16_t *samples, size_t sample_count, kws_detection_t *out_detection, int *out_detected);
+uint64_t kws_engine_processed_samples(const kws_engine_t *engine);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
