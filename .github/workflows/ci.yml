@@ -16,7 +16,9 @@ jobs:
       matrix:
         cc: [gcc, clang]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Configure
         env:
           CC: ${{ matrix.cc }}
@@ -51,7 +53,9 @@ jobs:
   sanitizers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Configure ASan/UBSan
         run: >-
           cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
@@ -65,7 +69,9 @@ jobs:
   armv7-cross:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install cross compiler
         run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
       - name: Configure Cortex-A32
