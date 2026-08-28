@@ -127,7 +127,7 @@ kws_engine_accept_pcm16(engine, pcm, samples, &hit, &detected);
 
 ## 连续音频量产评测
 
-`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 批量执行语料，并可生成 SHA256 provenance sidecar，将 runner、model、keyword pack、reference 和 detection 固定到同一次评测；`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟，并把 references/detections hash 写入 summary：
+`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 批量执行语料，并生成 SHA256 provenance sidecar，将 runner、model、keyword pack、references 和 detections 固定到同一次评测；`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟，并把 references/detections hash 写入 summary：
 
 ```bash
 python3 eval/run_corpus.py \
@@ -150,7 +150,7 @@ python3 eval/score_events.py \
 
 ## 制品绑定的发布认证
 
-源码 CI 全绿只表示**软件基线可用**，不能直接等价为量产声学指标。仓库还提供完整 target-board 发布 gate，把真实模型、关键词包、评测语料和实板证据绑定起来：
+源码 CI 全绿只表示**软件基线可用**，不能直接等价为量产声学指标。正式认证路径会重新读取实际文件并重算语料/板端统计，而不是只相信 sidecar：
 
 ```bash
 ./kws_board_bench \
@@ -159,14 +159,18 @@ python3 eval/score_events.py \
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
-# 将实际在目标板执行的同一个二进制复制回证据目录。
+# 保留实际在目标板执行的同一个 benchmark 二进制，以及实际评测 runner。
 cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
+cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 
-python3 tools/release_manifest.py \
+python3 tools/qualification_manifest.py \
   --model release/base.kwm \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
+  --eval-runner qualification/kws_wav.eval \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
   --board-summary qualification/board-summary.json \
@@ -183,7 +187,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` 在目标 Linux 板上直接加载发布 `.kwm/.kwk`，输出精确 runner/model/pack/board-audio SHA256、mean/p50/p95/p99/max、RTF 和 p99 headroom；`release_manifest.py` 独立重验 canonical ABI、vocabulary identity、声学计数/比率公式、板端 timing 公式以及全部 SHA256 关联；`qualification_gate.py` 再应用明确的 SKU policy，并把 gate result 绑定到精确 manifest/policy hash。
+`kws_board_bench` 输出精确 runner/model/pack/board-audio SHA256、mean/p50/p95/p99/max、RTF 和 p99 headroom；`qualification_manifest.py` 独立重验 canonical ABI、runtime config、vocabulary identity，并重新哈希实际 eval runner/references/detections，重算 reference 的 recording/expected/audio-hours、detection 数量、board WAV 时长和 block 数，再验证所有统计公式与 SHA256 交叉引用；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，并把 gate result 绑定到精确 manifest/policy hash。
 
 仓库的 `configs/qualification.policy.example.json` 明确命名为 `example-not-a-shipping-policy`，其中数字只用于展示 gate 结构，不能直接拿来做产品承诺。完整流程见 `docs/RELEASE_QUALIFICATION.md`。
 
@@ -202,7 +206,7 @@ python3 tools/qualification_gate.py \
 
 ## 验证
 
-CI 当前门禁包括 GCC/Clang strict build、CTest、ASan/UBSan、关键词包/工具测试、corpus provenance、continuous-audio metric scorer、包含 C/Python SHA256 交叉校验的真实制品 board-benchmark contract、确定性 release manifest/policy gate、默认几何 hosted benchmark、SDK install + pkg-config + 独立 `find_package` consumer、Python 语法，以及 Cortex-A32 ARMv7 hard-float 对 core 和 target qualification tools 的交叉编译。
+CI 当前门禁包括 GCC/Clang strict build、CTest、ASan/UBSan、关键词包/工具测试、corpus provenance、continuous-audio metric scorer、包含 C/Python SHA256 交叉校验的真实制品 board-benchmark contract、byte-complete qualification manifest/policy gate、默认几何 hosted benchmark、SDK install + pkg-config + 独立 `find_package` consumer、Python 语法，以及 Cortex-A32 ARMv7 hard-float 对 core 和 target qualification tools 的交叉编译。
 
 Hosted CI 数据只作为回归信号。真正量产仍必须使用真实训练模型、最终 held-out corpus 和目标 SoC，记录 FAR/hour、FRR、唤醒延迟、p95/p99 处理时间、CPU、内存、热/功耗和长时间连续背景音频结果。仓库 issue #2 专门跟踪这道真实证据 gate。
 
