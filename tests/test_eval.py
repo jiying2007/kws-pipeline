@@ -8,6 +8,25 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+SCORER = ROOT / "eval" / "score_events.py"
+
+
+def run_score(references: pathlib.Path, detections: pathlib.Path, summary: pathlib.Path):
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SCORER),
+            "--references",
+            str(references),
+            "--detections",
+            str(detections),
+            "--summary",
+            str(summary),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
 
 
 def main() -> int:
@@ -61,7 +80,7 @@ def main() -> int:
         subprocess.check_call(
             [
                 sys.executable,
-                str(ROOT / "eval" / "score_events.py"),
+                str(SCORER),
                 "--references",
                 str(references),
                 "--detections",
@@ -95,6 +114,66 @@ def main() -> int:
         assert len(fp) == 1
         assert fp[0]["time_s"] == 100.0
         assert fp[0]["path"] == "room-1.wav"
+
+        overlap_refs = root / "overlap-references.jsonl"
+        overlap_dets = root / "overlap-detections.jsonl"
+        overlap_summary = root / "overlap-summary.json"
+        overlap_refs.write_text(
+            json.dumps(
+                {
+                    "recording": "overlap",
+                    "duration_s": 100.0,
+                    "expected": [
+                        {"keyword_id": 1, "start_s": 4.0, "end_s": 5.45},
+                        {"keyword_id": 1, "start_s": 5.4, "end_s": 5.8},
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        overlap_dets.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "recording": "overlap",
+                            "keyword_id": 1,
+                            "time_s": 5.2,
+                            "confidence": 0.8,
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "recording": "overlap",
+                            "keyword_id": 1,
+                            "time_s": 5.5,
+                            "confidence": 0.8,
+                        }
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        completed = run_score(overlap_refs, overlap_dets, overlap_summary)
+        assert completed.returncode == 0, completed.stderr
+        overlap_result = json.loads(overlap_summary.read_text(encoding="utf-8"))
+        assert overlap_result["matched"] == 2
+        assert overlap_result["false_rejects"] == 0
+        assert overlap_result["false_accepts"] == 0
+
+        invalid_refs = root / "invalid-references.jsonl"
+        empty_dets = root / "empty-detections.jsonl"
+        invalid_summary = root / "invalid-summary.json"
+        invalid_refs.write_text(
+            '{"recording":"bad","duration_s":NaN,"expected":[]}\n',
+            encoding="utf-8",
+        )
+        empty_dets.write_text("", encoding="utf-8")
+        completed = run_score(invalid_refs, empty_dets, invalid_summary)
+        assert completed.returncode == 2
+        assert "finite" in completed.stderr
 
     print("test_eval: ok")
     return 0
