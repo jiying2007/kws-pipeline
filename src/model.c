@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define KWS_HEADER_BYTES 64u
+#define KWS_HEADER_BYTES 72u
 
 static uint16_t rd16(const uint8_t *p) {
   return (uint16_t)((uint16_t)p[0] | (uint16_t)((uint16_t)p[1] << 8u));
@@ -12,6 +12,10 @@ static uint16_t rd16(const uint8_t *p) {
 static uint32_t rd32(const uint8_t *p) {
   return (uint32_t)p[0] | ((uint32_t)p[1] << 8u) |
          ((uint32_t)p[2] << 16u) | ((uint32_t)p[3] << 24u);
+}
+
+static uint64_t rd64(const uint8_t *p) {
+  return (uint64_t)rd32(p) | ((uint64_t)rd32(p + 4u) << 32u);
 }
 
 static float rdf32(const uint8_t *p) {
@@ -60,12 +64,13 @@ kws_status_t kws_model_open(const void *blob,
   out_model->wx_scale = rdf32(p + 28u);
   out_model->wh_scale = rdf32(p + 32u);
   out_model->wo_scale = rdf32(p + 36u);
-  wx_off = rd32(p + 40u);
-  wh_off = rd32(p + 44u);
-  bh_off = rd32(p + 48u);
-  wo_off = rd32(p + 52u);
-  bo_off = rd32(p + 56u);
-  total_bytes = rd32(p + 60u);
+  out_model->vocab_fingerprint = rd64(p + 40u);
+  wx_off = rd32(p + 48u);
+  wh_off = rd32(p + 52u);
+  bh_off = rd32(p + 56u);
+  wo_off = rd32(p + 60u);
+  bo_off = rd32(p + 64u);
+  total_bytes = rd32(p + 68u);
 
   if (total_bytes != blob_bytes ||
       out_model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
@@ -75,6 +80,7 @@ kws_status_t kws_model_open(const void *blob,
       out_model->hidden_dim > KWS_MAX_HIDDEN_DIM ||
       out_model->vocab_size < 2u ||
       out_model->vocab_size > KWS_MAX_VOCAB_SIZE ||
+      out_model->vocab_fingerprint == 0u ||
       out_model->frame_length_samples < 2u ||
       out_model->frame_length_samples > 512u ||
       out_model->frame_hop_samples == 0u ||
