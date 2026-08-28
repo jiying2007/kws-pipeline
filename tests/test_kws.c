@@ -13,6 +13,8 @@
     }                                                                          \
   } while (0)
 
+#define TEST_VOCAB_FINGERPRINT UINT64_C(0x1122334455667788)
+
 static void put16(uint8_t *p, uint16_t v) {
   p[0] = (uint8_t)(v & 0xffu);
   p[1] = (uint8_t)(v >> 8u);
@@ -25,6 +27,11 @@ static void put32(uint8_t *p, uint32_t v) {
   p[3] = (uint8_t)((v >> 24u) & 0xffu);
 }
 
+static void put64(uint8_t *p, uint64_t v) {
+  put32(p, (uint32_t)(v & UINT64_C(0xffffffff)));
+  put32(p + 4u, (uint32_t)(v >> 32u));
+}
+
 static void putf(uint8_t *p, float v) {
   uint32_t u = 0u;
   memcpy(&u, &v, sizeof(u));
@@ -35,7 +42,7 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   const uint16_t f = 32u;
   const uint16_t h = 4u;
   const uint16_t v = 4u;
-  const uint32_t wx = 64u;
+  const uint32_t wx = 72u;
   const uint32_t wh = wx + (uint32_t)f * (uint32_t)h;
   const uint32_t bh = wh + (uint32_t)h * (uint32_t)h;
   const uint32_t wo = bh + (uint32_t)h * 4u;
@@ -45,8 +52,8 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   CHECK(cap >= total);
   memset(blob, 0, total);
   memcpy(blob, "KWSP", 4u);
-  put16(blob + 4u, 1u);
-  put16(blob + 6u, 64u);
+  put16(blob + 4u, KWS_MODEL_VERSION);
+  put16(blob + 6u, 72u);
   put16(blob + 8u, f);
   put16(blob + 10u, h);
   put16(blob + 12u, v);
@@ -56,12 +63,13 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   putf(blob + 28u, 0.01f);
   putf(blob + 32u, 0.01f);
   putf(blob + 36u, 0.01f);
-  put32(blob + 40u, wx);
-  put32(blob + 44u, wh);
-  put32(blob + 48u, bh);
-  put32(blob + 52u, wo);
-  put32(blob + 56u, bo);
-  put32(blob + 60u, total);
+  put64(blob + 40u, TEST_VOCAB_FINGERPRINT);
+  put32(blob + 48u, wx);
+  put32(blob + 52u, wh);
+  put32(blob + 56u, bh);
+  put32(blob + 60u, wo);
+  put32(blob + 64u, bo);
+  put32(blob + 68u, total);
   putf(blob + bo + 0u, -4.0f);
   putf(blob + bo + 4u, 4.0f);
   putf(blob + bo + 8u, 4.0f);
@@ -88,6 +96,7 @@ static void test_model_and_engine(void) {
   const size_t sample_count = sizeof(pcm) / sizeof(pcm[0]);
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(model.vocab_fingerprint == TEST_VOCAB_FINGERPRINT);
   CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
   config.min_speech_dbfs = -80.0f;
   config.refractory_ms = 100u;
@@ -125,9 +134,19 @@ static void test_validation(void) {
   };
 
   CHECK(kws_model_open(blob, bytes - 1u, &model) == KWS_EFORMAT);
+
+  put16(blob + 4u, 1u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  put16(blob + 4u, KWS_MODEL_VERSION);
+
+  put64(blob + 40u, 0u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  put64(blob + 40u, TEST_VOCAB_FINGERPRINT);
+
   put32(blob + 20u, 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put32(blob + 20u, 400u);
+
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
   CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u) == KWS_EBOUNDS);
