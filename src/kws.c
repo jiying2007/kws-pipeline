@@ -22,17 +22,16 @@ struct kws_engine {
 
 static int model_contract_valid(const kws_model_t *model) {
   if (model == NULL || model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
+      model->frame_length_samples != KWS_FRAME_LENGTH_SAMPLES ||
+      model->frame_hop_samples != KWS_FRAME_HOP_SAMPLES ||
       model->feature_dim == 0u || model->feature_dim > KWS_MAX_FEATURE_DIM ||
       model->hidden_dim == 0u || model->hidden_dim > KWS_MAX_HIDDEN_DIM ||
       model->vocab_size < 2u || model->vocab_size > KWS_MAX_VOCAB_SIZE ||
-      model->vocab_fingerprint == 0u || model->frame_length_samples < 2u ||
-      model->frame_length_samples > 512u || model->frame_hop_samples == 0u ||
-      model->frame_hop_samples > model->frame_length_samples ||
-      !isfinite(model->wx_scale) || !isfinite(model->wh_scale) ||
-      !isfinite(model->wo_scale) || model->wx_scale <= 0.0f ||
-      model->wh_scale <= 0.0f || model->wo_scale <= 0.0f ||
-      model->wx == NULL || model->wh == NULL || model->bh == NULL ||
-      model->wo == NULL || model->bo == NULL) {
+      model->vocab_fingerprint == 0u || !isfinite(model->wx_scale) ||
+      !isfinite(model->wh_scale) || !isfinite(model->wo_scale) ||
+      model->wx_scale <= 0.0f || model->wh_scale <= 0.0f ||
+      model->wo_scale <= 0.0f || model->wx == NULL || model->wh == NULL ||
+      model->bh == NULL || model->wo == NULL || model->bo == NULL) {
     return 0;
   }
 
@@ -180,6 +179,10 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
   }
 
   *out_detected = 0;
+  if (sample_count > KWS_MAX_PCM_BLOCK_SAMPLES) {
+    return KWS_EBOUNDS;
+  }
+
   for (size_t i = 0u; i < sample_count; ++i) {
     engine->processed_samples++;
     if (kws_frontend_push(&engine->frontend, samples[i],
@@ -205,13 +208,11 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
         engine->suppress_until_sample =
             engine->processed_samples + refractory_samples;
 
-        if (*out_detected == 0) {
-          *out_detected = 1;
-          if (out_detection != NULL) {
-            out_detection->keyword_id = keyword_id;
-            out_detection->confidence = confidence;
-            out_detection->end_sample = engine->processed_samples;
-          }
+        *out_detected = 1;
+        if (out_detection != NULL) {
+          out_detection->keyword_id = keyword_id;
+          out_detection->confidence = confidence;
+          out_detection->end_sample = engine->processed_samples;
         }
       }
     }
