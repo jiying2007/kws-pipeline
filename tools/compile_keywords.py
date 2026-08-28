@@ -67,7 +67,8 @@ def text_to_pinyin(text: str) -> list[str]:
 
 def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
     result: list[dict] = []
-    seen: set[int] = set()
+    seen_ids: set[int] = set()
+    seen_sequences: set[tuple[int, ...]] = set()
     for n, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
@@ -82,7 +83,7 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
             if len(cols) == 4 and cols[3].strip()
             else text_to_pinyin(text)
         )
-        if kid in seen:
+        if kid in seen_ids:
             raise ValueError(f"duplicate keyword id {kid}")
         if kid < 0 or kid > 0xFFFFFFFF:
             raise ValueError(f"{text}: keyword id must fit uint32")
@@ -98,7 +99,11 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
         ids = [token_map[token] for token in tokens]
         if any(token_id == 0 for token_id in ids):
             raise ValueError("blank token cannot appear in keyword")
-        seen.add(kid)
+        sequence = tuple(ids)
+        if sequence in seen_sequences:
+            raise ValueError(f"{text}: duplicate acoustic token path")
+        seen_ids.add(kid)
+        seen_sequences.add(sequence)
         result.append(
             {
                 "id": kid,
