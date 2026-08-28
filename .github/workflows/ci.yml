@@ -27,8 +27,10 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Keyword compiler
         run: python3 tests/test_keyword_compile.py
+      - name: Product metric scorer
+        run: python3 tests/test_eval.py
       - name: Python syntax
-        run: python3 -m py_compile tools/*.py training/*.py
+        run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
 
   sanitizers:
     runs-on: ubuntu-latest
