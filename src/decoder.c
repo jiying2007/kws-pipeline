@@ -50,17 +50,23 @@ static float approx_logsumexp(const float *x, uint16_t n) {
   return max_value + logf(sum);
 }
 
-void kws_decoder_init(kws_decoder_t *d,
-                      float token_boost,
-                      float state_retention) {
+static void init_structure(kws_decoder_t *d,
+                           float token_boost,
+                           float retention_log) {
   memset(d, 0, sizeof(*d));
   d->token_boost = token_boost;
-  d->retention_log = logf(state_retention);
+  d->retention_log = retention_log;
   d->node_count = 1u;
   d->nodes[0].first_child = UINT16_MAX;
   d->nodes[0].next_sibling = UINT16_MAX;
   d->nodes[0].terminal_keyword = -1;
   d->nodes[0].score = 0.0f;
+}
+
+void kws_decoder_init(kws_decoder_t *d,
+                      float token_boost,
+                      float state_retention) {
+  init_structure(d, token_boost, logf(state_retention));
 }
 
 static uint16_t find_or_add_child(kws_decoder_t *d,
@@ -136,7 +142,7 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
                                       size_t count,
                                       uint16_t vocab_size) {
   float boost;
-  float retention;
+  float retention_log;
   kws_status_t validation;
 
   validation = validate_keywords(keywords, count, vocab_size);
@@ -145,8 +151,8 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
   }
 
   boost = d->token_boost;
-  retention = expf(d->retention_log);
-  kws_decoder_init(d, boost, retention);
+  retention_log = d->retention_log;
+  init_structure(d, boost, retention_log);
   d->keyword_count = (uint16_t)count;
 
   for (size_t k = 0u; k < count; ++k) {
