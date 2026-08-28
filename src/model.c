@@ -25,8 +25,8 @@ static float rdf32(const uint8_t *p) {
   return f;
 }
 
-static int range_ok(uint32_t off, size_t bytes, size_t total) {
-  return (size_t)off <= total && bytes <= total - (size_t)off;
+static size_t align4(size_t value) {
+  return (value + 3u) & ~(size_t)3u;
 }
 
 kws_status_t kws_model_open(const void *blob,
@@ -44,13 +44,19 @@ kws_status_t kws_model_open(const void *blob,
   size_t bh_bytes;
   size_t wo_bytes;
   size_t bo_bytes;
+  size_t expected_wx;
+  size_t expected_wh;
+  size_t expected_bh;
+  size_t expected_wo;
+  size_t expected_bo;
+  size_t expected_total;
 
   if (p == NULL || out_model == NULL || blob_bytes < KWS_HEADER_BYTES) {
     return KWS_EINVAL;
   }
   if (memcmp(p, "KWSP", 4u) != 0 ||
       rd16(p + 4u) != KWS_MODEL_VERSION ||
-      rd16(p + 6u) != KWS_HEADER_BYTES) {
+      rd16(p + 6u) != KWS_HEADER_BYTES || rd16(p + 14u) != 0u) {
     return KWS_EFORMAT;
   }
 
@@ -96,12 +102,16 @@ kws_status_t kws_model_open(const void *blob,
   wo_bytes = (size_t)out_model->vocab_size * (size_t)out_model->hidden_dim;
   bo_bytes = (size_t)out_model->vocab_size * sizeof(float);
 
-  if (!range_ok(wx_off, wx_bytes, blob_bytes) ||
-      !range_ok(wh_off, wh_bytes, blob_bytes) ||
-      !range_ok(bh_off, bh_bytes, blob_bytes) ||
-      !range_ok(wo_off, wo_bytes, blob_bytes) ||
-      !range_ok(bo_off, bo_bytes, blob_bytes) ||
-      (bh_off & 3u) != 0u || (bo_off & 3u) != 0u ||
+  expected_wx = align4(KWS_HEADER_BYTES);
+  expected_wh = align4(expected_wx + wx_bytes);
+  expected_bh = align4(expected_wh + wh_bytes);
+  expected_wo = align4(expected_bh + bh_bytes);
+  expected_bo = align4(expected_wo + wo_bytes);
+  expected_total = expected_bo + bo_bytes;
+
+  if ((size_t)wx_off != expected_wx || (size_t)wh_off != expected_wh ||
+      (size_t)bh_off != expected_bh || (size_t)wo_off != expected_wo ||
+      (size_t)bo_off != expected_bo || (size_t)total_bytes != expected_total ||
       (((uintptr_t)(p + bh_off)) & 3u) != 0u ||
       (((uintptr_t)(p + bo_off)) & 3u) != 0u) {
     return KWS_EFORMAT;
