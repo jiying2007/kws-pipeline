@@ -122,9 +122,11 @@ int main(void) {
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EBOUNDS);
   put16(blob + 36u, 1u);
 
+  put16(blob + 76u, 4u);
   put16(blob + 80u, 1u);
   put16(blob + 82u, 2u);
-  put16(blob + 76u, 4u);
+  put16(blob + 84u, 3u);
+  put16(blob + 86u, 4u);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
 
   puts("kws_keyword_pack_tests: ok");
