@@ -15,9 +15,10 @@ static float mel_to_hz(float mel) {
   return 700.0f * (powf(10.0f, mel / 2595.0f) - 1.0f);
 }
 
-static void fft512(float *re, float *im) {
+static void fft512(kws_frontend_t *fe) {
   unsigned i;
   unsigned j = 0u;
+  unsigned stage = 0u;
 
   for (i = 1u; i < 512u; ++i) {
     unsigned bit = 256u;
@@ -27,33 +28,32 @@ static void fft512(float *re, float *im) {
     }
     j ^= bit;
     if (i < j) {
-      float tr = re[i];
-      float ti = im[i];
-      re[i] = re[j];
-      im[i] = im[j];
-      re[j] = tr;
-      im[j] = ti;
+      float tr = fe->re[i];
+      float ti = fe->im[i];
+      fe->re[i] = fe->re[j];
+      fe->im[i] = fe->im[j];
+      fe->re[j] = tr;
+      fe->im[j] = ti;
     }
   }
 
   for (unsigned len = 2u; len <= 512u; len <<= 1u) {
-    float angle = -2.0f * (float)M_PI / (float)len;
-    float wlen_r = cosf(angle);
-    float wlen_i = sinf(angle);
+    float wlen_r = fe->fft_wlen_re[stage];
+    float wlen_i = fe->fft_wlen_im[stage];
     for (i = 0u; i < 512u; i += len) {
       float wr = 1.0f;
       float wi = 0.0f;
       for (unsigned k = 0u; k < len / 2u; ++k) {
         unsigned a = i + k;
         unsigned b = a + len / 2u;
-        float vr = re[b] * wr - im[b] * wi;
-        float vi = re[b] * wi + im[b] * wr;
-        float ur = re[a];
-        float ui = im[a];
-        re[a] = ur + vr;
-        im[a] = ui + vi;
-        re[b] = ur - vr;
-        im[b] = ui - vi;
+        float vr = fe->re[b] * wr - fe->im[b] * wi;
+        float vi = fe->re[b] * wi + fe->im[b] * wr;
+        float ur = fe->re[a];
+        float ui = fe->im[a];
+        fe->re[a] = ur + vr;
+        fe->im[a] = ui + vi;
+        fe->re[b] = ur - vr;
+        fe->im[b] = ui - vi;
         {
           float nwr = wr * wlen_r - wi * wlen_i;
           wi = wr * wlen_i + wi * wlen_r;
@@ -61,12 +61,14 @@ static void fft512(float *re, float *im) {
         }
       }
     }
+    stage++;
   }
 }
 
 void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
   float mel_lo = hz_to_mel(80.0f);
   float mel_hi = hz_to_mel(7600.0f);
+  unsigned stage = 0u;
 
   memset(fe, 0, sizeof(*fe));
   fe->frame_len = model->frame_length_samples;
@@ -76,6 +78,13 @@ void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
   for (uint32_t i = 0u; i < fe->frame_len; ++i) {
     fe->window[i] = 0.5f - 0.5f * cosf((2.0f * (float)M_PI * (float)i) /
                                       (float)(fe->frame_len - 1u));
+  }
+
+  for (unsigned len = 2u; len <= 512u; len <<= 1u) {
+    float angle = -2.0f * (float)M_PI / (float)len;
+    fe->fft_wlen_re[stage] = cosf(angle);
+    fe->fft_wlen_im[stage] = sinf(angle);
+    stage++;
   }
 
   for (uint16_t m = 0u; m < (uint16_t)(fe->feature_dim + 2u); ++m) {
@@ -111,7 +120,7 @@ static void make_features(kws_frontend_t *fe, float *out) {
   }
 
   fe->last_dbfs = 10.0f * log10f((float)(sumsq / (double)fe->frame_len) + 1.0e-12f);
-  fft512(fe->re, fe->im);
+  fft512(fe);
 
   for (uint16_t m = 0u; m < fe->feature_dim; ++m) {
     uint16_t l = fe->mel_bins[m];
