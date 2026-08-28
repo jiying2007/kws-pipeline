@@ -1,0 +1,9 @@
+build/
+build-*/
+*.kwm
+*.pt
+*.pth
+*.onnx
+__pycache__/
+*.pyc
+.generated/
