@@ -38,6 +38,15 @@ def load_tokens(path: pathlib.Path) -> dict[str, int]:
         raise ValueError("tokens file must map <blk> to id 0")
     if not out:
         raise ValueError("tokens file is empty")
+
+    maximum = max(used_ids)
+    expected_ids = set(range(maximum + 1))
+    if used_ids != expected_ids:
+        missing = sorted(expected_ids - used_ids)
+        rendered = ", ".join(str(value) for value in missing[:8])
+        if len(missing) > 8:
+            rendered += ", ..."
+        raise ValueError(f"token ids must be contiguous from 0; missing: {rendered}")
     return out
 
 
