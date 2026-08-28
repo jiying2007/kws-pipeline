@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "kws_pipeline/kws.h"
+#include "sha256.h"
 #include "tool_io.h"
 
 #include <errno.h>
@@ -74,6 +75,10 @@ int main(int argc, char **argv) {
   size_t sample_index = 0u;
   double total_process_us = 0.0;
   double max_process_us = 0.0;
+  char runner_sha256[65];
+  char model_sha256[65];
+  char pack_sha256[65];
+  char audio_sha256[65];
   int exit_code = 1;
 
   if (argc != 4 && argc != 5) {
@@ -96,6 +101,13 @@ int main(int argc, char **argv) {
     fprintf(stderr, "model/keyword pack validation failed\n");
     goto cleanup;
   }
+  if (kws_sha256_file_hex(argv[0], runner_sha256) == 0 ||
+      kws_sha256_file_hex(argv[3], audio_sha256) == 0) {
+    fprintf(stderr, "cannot hash benchmark runner or WAV input\n");
+    goto cleanup;
+  }
+  kws_sha256_memory_hex(model_blob, model_bytes, model_sha256);
+  kws_sha256_memory_hex(pack_blob, pack_bytes, pack_sha256);
 
   arena = malloc(kws_engine_required_bytes(&model));
   if (arena == NULL ||
@@ -203,7 +215,9 @@ int main(int argc, char **argv) {
     const double p99_headroom = p99_us > 0.0 ? deadline_us / p99_us : 0.0;
 
     fprintf(stdout,
-            "{\"schema_version\":1,\"block_samples\":%u,"
+            "{\"schema_version\":1,\"runner_sha256\":\"%s\","
+            "\"model_sha256\":\"%s\",\"keyword_pack_sha256\":\"%s\","
+            "\"audio_sha256\":\"%s\",\"block_samples\":%u,"
             "\"block_deadline_us\":%.3f,\"audio_seconds\":%.6f,"
             "\"repeats\":%u,\"blocks\":%zu,\"model_bytes\":%zu,"
             "\"keyword_pack_bytes\":%zu,\"arena_bytes\":%zu,"
@@ -211,6 +225,7 @@ int main(int argc, char **argv) {
             "\"p50_process_us\":%.3f,\"p95_process_us\":%.3f,"
             "\"p99_process_us\":%.3f,\"max_process_us\":%.3f,"
             "\"rtf\":%.9f,\"p99_headroom\":%.6f}\n",
+            runner_sha256, model_sha256, pack_sha256, audio_sha256,
             (unsigned)BENCH_BLOCK_SAMPLES, deadline_us, audio_seconds, repeats,
             total_blocks, model_bytes, pack_bytes,
             kws_engine_required_bytes(&model), total_process_us, mean_us,
