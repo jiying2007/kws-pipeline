@@ -57,7 +57,7 @@ if(KWS_BUILD_BENCH)
 endif()
 
 if(KWS_BUILD_TOOLS)
-  add_library(kws_tool_io STATIC tools/tool_io.c)
+  add_library(kws_tool_io STATIC tools/tool_io.c tools/sha256.c)
   target_include_directories(kws_tool_io
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
