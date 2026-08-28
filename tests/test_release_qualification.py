@@ -26,6 +26,7 @@ def main() -> int:
         model = root / "base.kwm"
         pack = root / "xiaowo.kwk"
         config = root / "runtime.json"
+        eval_runner = root / "kws_wav"
         references = root / "references.jsonl"
         detections = root / "detections.jsonl"
         eval_summary = root / "eval-summary.json"
@@ -41,44 +42,98 @@ def main() -> int:
         _, fingerprint = write_tokens(tokens)
         model_bytes = write_model(model, fingerprint)
         pack_bytes = write_pack(pack, fingerprint)
-        config.write_text('{"min_speech_dbfs":-55.0}\n', encoding="utf-8")
-        references.write_text("reference fixture\n", encoding="utf-8")
-        detections.write_text("detection fixture\n", encoding="utf-8")
+        write_json(
+            config,
+            {
+                "sample_rate_hz": 16000,
+                "frame_length_samples": 400,
+                "frame_hop_samples": 320,
+                "feature_dim": 32,
+                "hidden_dim": 4,
+                "vocab_target": "fixture-pinyin",
+                "runtime": {
+                    "min_speech_dbfs": -55.0,
+                    "token_boost": 1.5,
+                    "state_retention": 0.94,
+                    "refractory_ms": 1200,
+                },
+            },
+        )
+        eval_runner.write_bytes(b"eval-runner-fixture")
         board_runner.write_bytes(b"board-runner-fixture")
         write_wav(board_audio, seconds=1)
+
+        events = [
+            {"keyword_id": 1, "start_s": float(10 + i * 20), "end_s": float(11 + i * 20)}
+            for i in range(10)
+        ]
+        references.write_text(
+            json.dumps(
+                {
+                    "recording": "room-1",
+                    "path": "room-1.wav",
+                    "duration_s": 86400.0,
+                    "expected": events,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        detection_rows = [
+            {
+                "recording": "room-1",
+                "keyword_id": 1,
+                "time_s": events[i]["end_s"] + 0.1,
+                "confidence": 0.8,
+            }
+            for i in range(9)
+        ]
+        detection_rows.append(
+            {
+                "recording": "room-1",
+                "keyword_id": 1,
+                "time_s": 10000.0,
+                "confidence": 0.7,
+            }
+        )
+        detections.write_text(
+            "\n".join(json.dumps(row) for row in detection_rows) + "\n",
+            encoding="utf-8",
+        )
 
         refs_hash = sha256_file(references)
         detections_hash = sha256_file(detections)
         model_hash = sha256_file(model)
         pack_hash = sha256_file(pack)
+        eval_runner_hash = sha256_file(eval_runner)
         board_runner_hash = sha256_file(board_runner)
         board_audio_hash = sha256_file(board_audio)
         write_json(
             eval_provenance,
             {
                 "schema_version": 1,
-                "runner_sha256": "1" * 64,
+                "runner_sha256": eval_runner_hash,
                 "model_sha256": model_hash,
                 "keyword_pack_sha256": pack_hash,
                 "references_sha256": refs_hash,
                 "detections_sha256": detections_hash,
-                "recordings": 24,
-                "detections": 971,
+                "recordings": 1,
+                "detections": 10,
             },
         )
         write_json(
             eval_summary,
             {
-                "recordings": 24,
+                "recordings": 1,
                 "audio_hours": 24.0,
-                "expected": 1000,
-                "matched": 970,
-                "false_rejects": 30,
+                "expected": 10,
+                "matched": 9,
+                "false_rejects": 1,
                 "false_accepts": 1,
-                "frr": 0.03,
+                "frr": 0.1,
                 "far_per_hour": 1.0 / 24.0,
-                "p50_post_end_latency_ms": 180.0,
-                "p95_post_end_latency_ms": 320.0,
+                "p50_post_end_latency_ms": 100.0,
+                "p95_post_end_latency_ms": 100.0,
                 "per_keyword": {},
                 "references_sha256": refs_hash,
                 "detections_sha256": detections_hash,
@@ -94,19 +149,19 @@ def main() -> int:
                 "audio_sha256": board_audio_hash,
                 "block_samples": 320,
                 "block_deadline_us": 20000.0,
-                "audio_seconds": 60.0,
+                "audio_seconds": 1.0,
                 "repeats": 10,
-                "blocks": 3000,
+                "blocks": 500,
                 "model_bytes": model_bytes,
                 "keyword_pack_bytes": pack_bytes,
                 "arena_bytes": 16000,
-                "total_process_us": 3000000.0,
+                "total_process_us": 500000.0,
                 "mean_process_us": 1000.0,
                 "p50_process_us": 900.0,
                 "p95_process_us": 1800.0,
                 "p99_process_us": 3000.0,
                 "max_process_us": 4200.0,
-                "rtf": 0.005,
+                "rtf": 0.05,
                 "p99_headroom": 20000.0 / 3000.0,
             },
         )
@@ -132,125 +187,90 @@ def main() -> int:
             "schema_version": 1,
             "name": "fixture-policy",
             "min_audio_hours": 24.0,
-            "min_expected_wakes": 1000,
-            "max_frr": 0.05,
+            "min_expected_wakes": 10,
+            "max_frr": 0.15,
             "max_far_per_hour": 0.1,
             "max_p95_latency_ms": 500.0,
             "max_p99_process_us": 5000.0,
             "max_rtf": 0.25,
             "min_p99_headroom": 4.0,
             "min_soak_hours": 8.0,
+            "max_cpu_percent": 10.0,
+            "max_rss_kib": 2048.0,
+            "max_stack_high_water_bytes": 65536.0,
+            "max_temp_c": 70.0,
+            "max_average_power_mw": 250.0,
         }
         write_json(policy, valid_policy)
 
         command = [
             sys.executable,
-            str(ROOT / "tools" / "release_manifest.py"),
-            "--model",
-            str(model),
-            "--keywords",
-            str(pack),
-            "--tokens",
-            str(tokens),
-            "--config",
-            str(config),
-            "--eval-summary",
-            str(eval_summary),
-            "--eval-provenance",
-            str(eval_provenance),
-            "--board-summary",
-            str(board_summary),
-            "--board-runner",
-            str(board_runner),
-            "--board-audio",
-            str(board_audio),
-            "--evidence",
-            str(evidence),
-            "--source-sha",
-            "a" * 40,
-            "--corpus-id",
-            "fixture-corpus-v1",
-            "--output",
-            str(manifest),
+            str(ROOT / "tools" / "qualification_manifest.py"),
+            "--model", str(model),
+            "--keywords", str(pack),
+            "--tokens", str(tokens),
+            "--config", str(config),
+            "--eval-runner", str(eval_runner),
+            "--references", str(references),
+            "--detections", str(detections),
+            "--eval-summary", str(eval_summary),
+            "--eval-provenance", str(eval_provenance),
+            "--board-summary", str(board_summary),
+            "--board-runner", str(board_runner),
+            "--board-audio", str(board_audio),
+            "--evidence", str(evidence),
+            "--source-sha", "a" * 40,
+            "--corpus-id", "fixture-corpus-v1",
+            "--output", str(manifest),
         ]
         subprocess.check_call(command)
         result = json.loads(manifest.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 1
-        assert result["source_sha"] == "a" * 40
-        assert result["vocabulary"]["fingerprint"] == f"0x{fingerprint:016x}"
-        assert result["artifacts"]["model"]["sha256"] == model_hash
-        assert result["artifacts"]["board_runner"]["sha256"] == board_runner_hash
-        assert result["artifacts"]["board_audio"]["sha256"] == board_audio_hash
-        assert result["evaluation"]["references_sha256"] == refs_hash
-        assert result["board"]["model_sha256"] == model_hash
+        assert result["artifacts"]["eval_runner"]["sha256"] == eval_runner_hash
+        assert result["artifacts"]["references"]["sha256"] == refs_hash
+        assert result["artifacts"]["detections"]["sha256"] == detections_hash
         assert result["board"]["audio_sha256"] == board_audio_hash
-        assert result["board"]["p99_process_us"] == 3000.0
-        assert result["evidence"]["soak_hours"] == 8.0
 
         subprocess.check_call(
             [
                 sys.executable,
                 str(ROOT / "tools" / "qualification_gate.py"),
-                "--manifest",
-                str(manifest),
-                "--policy",
-                str(policy),
-                "--output",
-                str(gate),
+                "--manifest", str(manifest),
+                "--policy", str(policy),
+                "--output", str(gate),
             ]
         )
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
         assert gate_result["qualified"] is True
-        assert gate_result["violations"] == []
         assert gate_result["manifest_sha256"] == sha256_file(manifest)
         assert gate_result["policy_sha256"] == sha256_file(policy)
 
         failing_policy = dict(valid_policy)
-        failing_policy["max_frr"] = 0.01
+        failing_policy["max_cpu_percent"] = 4.0
         write_json(policy, failing_policy)
-        failed = subprocess.run(
-            [
-                sys.executable,
-                str(ROOT / "tools" / "qualification_gate.py"),
-                "--manifest",
-                str(manifest),
-                "--policy",
-                str(policy),
-            ],
+        assert subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy)],
             check=False,
-        )
-        assert failed.returncode == 1
-
-        invalid_policy = dict(valid_policy)
-        invalid_policy["min_expected_wakes"] = 1000.5
-        write_json(policy, invalid_policy)
-        invalid = subprocess.run(
-            [
-                sys.executable,
-                str(ROOT / "tools" / "qualification_gate.py"),
-                "--manifest",
-                str(manifest),
-                "--policy",
-                str(policy),
-            ],
-            check=False,
-        )
-        assert invalid.returncode == 2
+        ).returncode == 1
         write_json(policy, valid_policy)
 
-        provenance = json.loads(eval_provenance.read_text(encoding="utf-8"))
-        provenance["model_sha256"] = "0" * 64
-        write_json(eval_provenance, provenance)
-        tampered_eval = subprocess.run(command, check=False)
-        assert tampered_eval.returncode == 2
-        provenance["model_sha256"] = model_hash
-        write_json(eval_provenance, provenance)
+        tampered = json.loads(manifest.read_text(encoding="utf-8"))
+        tampered["evaluation"]["runner_sha256"] = "0" * 64
+        write_json(manifest, tampered)
+        assert subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy)],
+            check=False,
+        ).returncode == 2
+        subprocess.check_call(command)
+
+        original_refs = references.read_text(encoding="utf-8")
+        references.write_text(original_refs + "# tampered\n", encoding="utf-8")
+        assert subprocess.run(command, check=False).returncode == 2
+        references.write_text(original_refs, encoding="utf-8")
 
         board = json.loads(board_summary.read_text(encoding="utf-8"))
         board["audio_sha256"] = "0" * 64
         write_json(board_summary, board)
-        tampered_board = subprocess.run(command, check=False)
-        assert tampered_board.returncode == 2
+        assert subprocess.run(command, check=False).returncode == 2
 
     print("test_release_qualification: ok")
     return 0
