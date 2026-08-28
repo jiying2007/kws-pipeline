@@ -1,6 +1,6 @@
 # Performance and release gates
 
-Hosted results are regression signals only. Shipping claims require the exact SoC, compiler flags, DVFS governor, thermal policy, audio route and model artifact.
+Hosted results are regression signals only. Shipping claims require the exact SoC, compiler flags, DVFS governor, thermal policy, audio route, model artifact, keyword pack and held-out corpus.
 
 ## Default design envelope
 
@@ -17,52 +17,81 @@ These are arithmetic/format estimates, not Cortex-A32 measurements.
 
 ## Hosted regression signal
 
-The CI benchmark runs the actual C frontend + model + decoder for 30 seconds of synthetic 16-kHz audio using 32 features, 48 hidden units and 420 output tokens. On one GitHub Ubuntu runner for commit `61d9c4bf6903512fd57323204cdcec60889538b4`, GCC reported:
+`kws_bench` runs the actual C frontend + model + decoder for synthetic 16-kHz audio using the default 32-feature / 48-hidden / 420-token geometry. CI executes it under both GCC and Clang so model/arena byte accounting and gross real-time regressions remain visible.
 
-```text
-model_bytes=25944
-engine_bytes=15464
-audio_s=30
-cpu_s=0.044281
-rtf=0.001476
-```
-
-Clang on another hosted runner reported RTF `0.001573`. These values prove the benchmark and size accounting are live and provide a regression baseline; they are **not** Cortex-A32 performance claims and should not be converted into target-device CPU percentages.
+The resulting x86 RTF is intentionally **not a gate for target Cortex-A32/A7 performance**. Runner type, clock frequency, cache hierarchy and compiler differ too much to convert hosted utilization into target-device CPU percentages.
 
 ## Acoustic release gate
 
-Release qualification uses the real runtime, model and keyword pack over continuous audio:
+Release qualification runs the real runtime, model and keyword pack over continuous audio:
 
 ```text
 references.jsonl + WAV corpus
  -> eval/run_corpus.py + kws_wav
- -> detections.jsonl
+ -> detections.jsonl + detections.provenance.json
  -> eval/score_events.py
+ -> eval-summary.json
  -> FAR/hour, FRR, p50/p95 latency, per-keyword metrics
 ```
 
-The scorer can fail CI/qualification runs through `--max-far-per-hour`, `--max-frr` and `--max-p95-latency-ms`. Threshold values are product requirements and must not be copied blindly from examples.
+`run_corpus.py --provenance` SHA256-binds the runner binary, model, keyword pack, reference annotations and generated detections. `score_events.py` stores reference/detection SHA256 values in its summary, so the release manifest can detect a report copied from a different corpus run.
 
-False accepts are exported to `false-positives.jsonl` and may be converted to hard-negative clips. The final held-out qualification set must remain isolated from hard-negative mining and model tuning.
+False accepts may be converted to hard-negative clips. The final held-out qualification set must remain isolated from hard-negative mining and model tuning.
 
-## Target-board certification
+## Real-artifact target-board benchmark
 
-For every shipping SKU record:
+Build `kws_board_bench` for the target Linux toolchain and execute the **shipping `.kwm` and `.kwk`** on representative post-AEC/post-NS 16-kHz PCM16 audio:
 
-- exact `.kwm`, `.kwk` and token-vocabulary SHA-256 plus ABI version/fingerprint;
+```bash
+./kws_board_bench release/base.kwm release/xiaowo.kwk board-audio.wav 10 \
+  > board-summary.json
+```
+
+The tool measures one ABI-v2 hop (320 samples / 20 ms) per call using `CLOCK_MONOTONIC` and emits:
+
+- model, keyword-pack and engine bytes;
+- audio duration, repeat count and block count;
+- mean/p50/p95/p99/max process time;
+- real-time factor (RTF);
+- p99 headroom relative to the 20-ms hop deadline.
+
+For low-end Cortex-A devices, a useful scheduling objective is at least 4x p99 headroom when the product's complete audio thread architecture permits it. The actual shipping policy is SKU-specific and belongs in the approved qualification policy, not in source code.
+
+The Cortex-A32 CI cross-build compiles this tool together with the core, which proves compiler/ISA compatibility. It does not generate target-board timing evidence.
+
+## Artifact-bound qualification manifest
+
+`tools/release_manifest.py` combines:
+
+- exact `.kwm`, `.kwk`, token vocabulary and runtime config hashes;
+- evaluation summary + evaluation provenance;
+- target-board benchmark summary;
+- target/board/toolchain/governor/audio-front-end identity;
+- soak duration, CPU, RSS, stack high-water, temperature and power measurements.
+
+It rejects mismatched vocabulary fingerprints, evaluation provenance from different model/pack artifacts, summary/reference/detection hash mismatches, board reports with different artifact sizes, malformed/non-finite values and missing target evidence.
+
+`tools/qualification_gate.py` then applies a separate SKU policy. This separation keeps evidence immutable while allowing requirements to vary by product. See `docs/RELEASE_QUALIFICATION.md`.
+
+## Target-board certification checklist
+
+For every shipping SKU retain:
+
+- exact `.kwm`, `.kwk`, token vocabulary and runtime-config SHA256 plus ABI/fingerprint;
+- source commit SHA and corpus identity/version;
 - compiler/toolchain, CPU flags and optimization flags;
 - CPU topology, affinity, governor/DVFS and thermal policy;
-- mean/p95/p99 process time per 20-ms hop;
-- at least 4x p99 scheduling headroom against the 20-ms hop where practical;
-- CPU percentage in a 30-minute always-on run;
-- resident/private memory and thread-stack high-water mark;
+- mean/p50/p95/p99/max process time and RTF from `kws_board_bench`;
+- CPU percentage in a sustained always-on run;
+- RSS/private memory and stack high-water mark;
 - wake latency from keyword end;
-- thermal/power impact in an 8-hour soak;
+- thermal/power impact in an extended soak;
 - FRR by speaker, distance, angle, SPL/SNR and acoustic bucket;
 - false accepts/hour on long continuous negative audio;
 - TV/music/speech playback, near-homophones and partial-phrase negatives;
 - AEC/NS/AGC configuration and local-speaker playback conditions;
 - motor/fan/gear/mechanical-noise scenarios relevant to the product;
-- audio XRUN/backpressure evidence from the complete product pipeline.
+- audio XRUN/backpressure evidence from the complete product pipeline;
+- qualification manifest, approved policy and gate result.
 
-Cross-build proves compiler/ISA compatibility only. Hosted execution and QEMU-style signals must never be presented as real-board latency, CPU, thermal or power data.
+Hosted execution, synthetic models, cross-build and QEMU-style signals must never be presented as real-board latency, acoustic quality, CPU, thermal or power data.
