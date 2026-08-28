@@ -1,5 +1,7 @@
 #include "kws_pipeline/kws.h"
 
+#include <math.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +16,8 @@
   } while (0)
 
 #define TEST_VOCAB_FINGERPRINT UINT64_C(0x1122334455667788)
+#define TEST_BH_OFFSET 216u
+#define TEST_BO_OFFSET 248u
 
 static void put16(uint8_t *p, uint16_t v) {
   p[0] = (uint8_t)(v & 0xffu);
@@ -49,6 +53,8 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   const uint32_t bo = wo + (uint32_t)v * (uint32_t)h;
   const uint32_t total = bo + (uint32_t)v * 4u;
 
+  CHECK(bh == TEST_BH_OFFSET);
+  CHECK(bo == TEST_BO_OFFSET);
   CHECK(cap >= total);
   memset(blob, 0, total);
   memcpy(blob, "KWSP", 4u);
@@ -57,7 +63,7 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   put16(blob + 8u, f);
   put16(blob + 10u, h);
   put16(blob + 12u, v);
-  put32(blob + 16u, 16000u);
+  put32(blob + 16u, KWS_SAMPLE_RATE_HZ);
   put32(blob + 20u, 400u);
   put32(blob + 24u, 320u);
   putf(blob + 28u, 0.01f);
@@ -78,13 +84,16 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
 }
 
 static void test_model_and_engine(void) {
-  _Alignas(8) uint8_t blob[512];
-  _Alignas(8) uint8_t arena[65536];
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
   kws_model_t model;
+  kws_model_t invalid_model;
   kws_engine_t *engine = NULL;
   kws_config_t config = kws_default_config();
+  kws_config_t invalid_config;
   const uint16_t sequence[] = {1u, 2u};
   const kws_keyword_t keyword = {42u, sequence, 2u, 0.30f};
+  const kws_keyword_t nan_keyword = {43u, sequence, 2u, NAN};
   const kws_keyword_t ambiguous[] = {
       {100u, sequence, 2u, 0.30f},
       {101u, sequence, 2u, 0.40f},
@@ -97,7 +106,32 @@ static void test_model_and_engine(void) {
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(model.vocab_fingerprint == TEST_VOCAB_FINGERPRINT);
+  CHECK(kws_engine_required_alignment() >= _Alignof(uint64_t));
   CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
+  CHECK(kws_engine_init(arena + 1u, sizeof(arena) - 1u, &model, NULL, &engine) ==
+        KWS_EINVAL);
+
+  invalid_model = model;
+  invalid_model.feature_dim = (uint16_t)(KWS_MAX_FEATURE_DIM + 1u);
+  CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
+  CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) ==
+        KWS_EINVAL);
+
+  invalid_model = model;
+  invalid_model.wx_scale = NAN;
+  CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
+  CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) ==
+        KWS_EINVAL);
+
+  invalid_config = kws_default_config();
+  invalid_config.token_boost = NAN;
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) ==
+        KWS_EINVAL);
+  invalid_config = kws_default_config();
+  invalid_config.min_speech_dbfs = INFINITY;
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) ==
+        KWS_EINVAL);
+
   config.min_speech_dbfs = -80.0f;
   config.refractory_ms = 100u;
   CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) ==
@@ -106,6 +140,8 @@ static void test_model_and_engine(void) {
                                 TEST_VOCAB_FINGERPRINT) == KWS_OK);
   CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
                                 UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
+  CHECK(kws_engine_set_keywords(engine, &nan_keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
   CHECK(kws_engine_set_keywords(engine, ambiguous, 2u,
                                 TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 
@@ -123,8 +159,8 @@ static void test_model_and_engine(void) {
 }
 
 static void test_validation(void) {
-  _Alignas(8) uint8_t blob[512];
-  _Alignas(8) uint8_t arena[65536];
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
   kws_model_t model;
   kws_engine_t *engine = NULL;
   size_t bytes = make_test_model(blob, sizeof(blob));
@@ -150,6 +186,18 @@ static void test_validation(void) {
   put32(blob + 20u, 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put32(blob + 20u, 400u);
+
+  putf(blob + 28u, NAN);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  putf(blob + 28u, 0.01f);
+
+  putf(blob + TEST_BH_OFFSET, INFINITY);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  putf(blob + TEST_BH_OFFSET, 0.0f);
+
+  putf(blob + TEST_BO_OFFSET, NAN);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  putf(blob + TEST_BO_OFFSET, -4.0f);
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
