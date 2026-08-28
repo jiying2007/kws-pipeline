@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#define KWS_MODEL_VERSION 1u
-#define KWS_KEYWORD_PACK_VERSION 1u
+#define KWS_MODEL_VERSION 2u
+#define KWS_KEYWORD_PACK_VERSION 2u
 #define KWS_SAMPLE_RATE_HZ 16000u
 #define KWS_MAX_KEYWORDS 16u
 #define KWS_MAX_TOKENS_PER_KEYWORD 16u
@@ -33,6 +33,7 @@ typedef struct kws_model {
   uint32_t sample_rate_hz;
   uint32_t frame_length_samples;
   uint32_t frame_hop_samples;
+  uint64_t vocab_fingerprint;
   float wx_scale;
   float wh_scale;
   float wo_scale;
@@ -54,6 +55,7 @@ typedef struct kws_keyword_pack {
   kws_keyword_t keywords[KWS_MAX_KEYWORDS];
   uint16_t token_storage[KWS_MAX_KEYWORDS][KWS_MAX_TOKENS_PER_KEYWORD];
   size_t keyword_count;
+  uint64_t vocab_fingerprint;
 } kws_keyword_pack_t;
 
 typedef struct kws_config {
