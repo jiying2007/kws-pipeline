@@ -16,12 +16,23 @@ MODEL_VERSION = 2
 MODEL_HEADER_BYTES = 72
 
 
-def q8(tensor: torch.Tensor) -> tuple[bytes, float]:
+def finite_tensor(tensor: torch.Tensor, name: str) -> torch.Tensor:
     tensor = tensor.detach().cpu().float().contiguous()
+    if not bool(torch.isfinite(tensor).all()):
+        raise ValueError(f"{name} contains NaN or Inf")
+    return tensor
+
+
+def q8(tensor: torch.Tensor, name: str) -> tuple[bytes, float]:
+    tensor = finite_tensor(tensor, name)
     maximum = max(float(tensor.abs().max()), 1.0e-8)
     scale = maximum / 127.0
     quantized = torch.clamp(torch.round(tensor / scale), -127, 127).to(torch.int8)
     return quantized.numpy().tobytes(), scale
+
+
+def float_bytes(tensor: torch.Tensor, name: str) -> bytes:
+    return finite_tensor(tensor, name).numpy().tobytes()
 
 
 def align4(buffer: bytearray) -> None:
@@ -48,27 +59,11 @@ def main() -> None:
         )
     fingerprint = vocab_fingerprint(token_map)
 
-    wx, sx = q8(state_dict["in_proj.weight"])
-    wh, sh = q8(state_dict["rec_proj.weight"])
-    wo, so = q8(state_dict["out_proj.weight"])
-    bh = (
-        state_dict["in_proj.bias"]
-        .detach()
-        .cpu()
-        .float()
-        .contiguous()
-        .numpy()
-        .tobytes()
-    )
-    bo = (
-        state_dict["out_proj.bias"]
-        .detach()
-        .cpu()
-        .float()
-        .contiguous()
-        .numpy()
-        .tobytes()
-    )
+    wx, sx = q8(state_dict["in_proj.weight"], "in_proj.weight")
+    wh, sh = q8(state_dict["rec_proj.weight"], "rec_proj.weight")
+    wo, so = q8(state_dict["out_proj.weight"], "out_proj.weight")
+    bh = float_bytes(state_dict["in_proj.bias"], "in_proj.bias")
+    bo = float_bytes(state_dict["out_proj.bias"], "out_proj.bias")
 
     buffer = bytearray(b"\x00" * MODEL_HEADER_BYTES)
     offsets: list[int] = []
