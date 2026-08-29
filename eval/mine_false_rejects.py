@@ -101,6 +101,11 @@ def extract_event(
         ):
             raise ValueError(f"{source}: expected mono 16-kHz PCM16 WAV")
         total = reader.getnframes()
+        duration_s = total / SAMPLE_RATE_HZ
+        if start_s > duration_s or end_s > duration_s:
+            raise ValueError(
+                f"{source}: false-reject event window exceeds source duration"
+            )
         start = max(0, int(round((start_s - context_s) * SAMPLE_RATE_HZ)))
         end = min(total, int(round((end_s + context_s) * SAMPLE_RATE_HZ)))
         if end <= start:
@@ -161,6 +166,13 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError, wave.Error) as exc:
+    except (
+        json.JSONDecodeError,
+        KeyError,
+        OSError,
+        TypeError,
+        ValueError,
+        wave.Error,
+    ) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)
