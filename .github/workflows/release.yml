@@ -68,6 +68,7 @@ jobs:
           python3 tests/test_run_corpus.py
           python3 tests/test_board_bench.py --runner ./build/kws_board_bench
           python3 tests/test_release_qualification.py
+          python3 tests/test_runtime_soak.py
           python3 tests/test_target_evidence.py
           python3 tests/test_audio_discontinuity_contract.py
           python3 tests/test_training_supply_chain.py
