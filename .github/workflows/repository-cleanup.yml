@@ -31,7 +31,8 @@ jobs:
     name: sweep merged ephemeral branches
     if: >-
       github.event_name != 'pull_request' ||
-      github.event.pull_request.merged == true
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     steps:
       - name: Delete only provably merged ephemeral branches
@@ -70,6 +71,17 @@ jobs:
             exit 2
           fi
 
+          graph="${RUNNER_TEMP}/repository-cleanup-graph"
+          git init -q "${graph}"
+          git -C "${graph}" remote add origin "${remote}"
+          git -C "${graph}" fetch --quiet --no-tags --prune origin \
+            '+refs/heads/*:refs/remotes/origin/*'
+          default_ref="refs/remotes/origin/${default_branch}"
+          if ! git -C "${graph}" show-ref --verify --quiet "${default_ref}"; then
+            echo "error: default branch ref '${default_ref}' was not fetched" >&2
+            exit 2
+          fi
+
           deleted=0
           candidates=0
           mapfile -t branch_rows < <(
@@ -93,8 +105,10 @@ jobs:
             fi
 
             reason=""
-            if [[ "${sha}" == "${default_sha}" ]]; then
-              reason="same SHA as ${default_branch}"
+            branch_ref="refs/remotes/origin/${branch}"
+            if git -C "${graph}" show-ref --verify --quiet "${branch_ref}" && \
+               git -C "${graph}" merge-base --is-ancestor "${branch_ref}" "${default_ref}"; then
+              reason="branch tip is already contained in ${default_branch}"
             else
               merged_same_head="$(
                 gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
