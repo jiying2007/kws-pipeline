@@ -99,7 +99,7 @@ python3 training/export_model.py \
 
 checkpoint 会固化 vocabulary fingerprint、token 文件 hash、训练 manifest hash、frontend spec 版本、seed 和 optimizer 参数；warm-start 必须匹配同一 fingerprint，exporter 也会拒绝把 checkpoint 绑定到“数量相同但 token→ID 映射不同”的词表。
 
-exporter 还会自动生成 `build/base.kwm.provenance.json`，把最终 `.kwm` SHA256 绑定到 checkpoint SHA256、训练/导出 token identity、训练 manifest hashes、训练参数，以及三组 int8 权重矩阵的 scale / max error / RMSE / SNR。量产 qualification 必须把这份 model provenance 与 `.kwm` 一起保留。
+exporter 还会自动生成 `build/base.kwm.provenance.json`，把最终 `.kwm` SHA256 绑定到 checkpoint SHA256、训练/导出 token identity、训练 manifest hashes、训练参数，以及三组 int8 权重矩阵的 scale / max error / RMSE / SNR。量产 qualification 不只保留这份 JSON，还必须保留并重新哈希**实际 checkpoint、训练时 token 文件和所有 training manifests**，避免 lineage 退化成不可验证的 hash 声明。
 
 浅定制可以把正常样本和挖掘出的 hard negatives 一起训练，并冻结 input/recurrent backbone：
 
@@ -181,6 +181,9 @@ cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 python3 tools/qualification_manifest.py \
   --model release/base.kwm \
   --model-provenance release/base.kwm.provenance.json \
+  --checkpoint release/base.pt \
+  --training-tokens release/training-tokens.txt \
+  --training-manifest release/train.tsv \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
@@ -203,7 +206,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`qualification_manifest.py` 会独立重验 canonical ABI、runtime config、vocabulary identity、**模型训练/导出 lineage**、实际 eval runner/references/detections、reference/detection 数量、board WAV 时长和所有 SHA256/统计公式；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，同时把 gate result 绑定到 manifest/policy hash 并记录源 model checkpoint SHA256。
+如果训练时使用了多个 manifest（例如正常训练集 + hard-negative manifest），必须重复传入 `--training-manifest`。`qualification_manifest.py` 会独立重验 canonical ABI、runtime config、vocabulary identity、**模型 lineage 对应的实际 checkpoint / training tokens / training manifests 字节**、实际 eval runner/references/detections、reference/detection 数量、board WAV 时长和所有 SHA256/统计公式；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，同时把 gate result 绑定到 manifest/policy hash 并记录源 model checkpoint SHA256。
 
 ## 与 audio-pipeline 对接
 
