@@ -21,6 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import evaluation_corpus_identity  # noqa: E402
 
+CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+
 
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
@@ -44,7 +46,9 @@ def main() -> int:
         board_audio = root / "board-audio.wav"
         board_summary = root / "board-summary.json"
         evidence = root / "evidence.json"
+        runtime_soak = root / "runtime-soak.json"
         raw_evidence = root / "target-raw.txt"
+        power_raw = root / "power.csv"
         dataset_audit = root / "dataset-audit.json"
         manifest = root / "qualification-manifest.json"
         policy = root / "policy.json"
@@ -206,58 +210,75 @@ def main() -> int:
                 "p99_headroom": 20000.0 / 3000.0,
             },
         )
-        raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
+
         write_json(
-            evidence,
+            runtime_soak,
             {
                 "schema_version": 2,
-                "collector": collector.name,
-                "collector_sha256": sha256_file(collector),
-                "collector_source_sha": "a" * 40,
-                "collected_unix_s": 1.0,
-                "target": "fixture-board",
-                "board_revision": "A",
-                "soc": "cortex-a32-fixture",
-                "toolchain": "fixture-gcc",
-                "compiler_flags": "-O3 -mcpu=cortex-a32",
-                "governor": "performance",
-                "audio_frontend": "audio-pipeline-fixture",
-                "kernel": "fixture-kernel",
-                "machine": "armv7l",
-                "cpu_online": "0-1",
-                "uptime_s": 1000.0,
-                "soak_hours": 8.0,
-                "cpu_percent": 5.0,
-                "rss_kib": 512.0,
-                "stack_high_water_bytes": 32768.0,
-                "max_temp_c": 55.0,
-                "average_power_mw": 120.0,
-                "raw_evidence": [
+                "command": ["fixture-kws"],
+                "pid": 123,
+                "cpu_capacity_count": 2,
+                "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
+                "requested_hours": 8.0,
+                "elapsed_seconds": 28800.0,
+                "elapsed_hours": 8.0,
+                "completed_requested_duration": True,
+                "termination_returncode": -15,
+                "sample_seconds": 60.0,
+                "initial_cpu_seconds": 10.0,
+                "samples": [
                     {
-                        "name": raw_evidence.name,
-                        "sha256": sha256_file(raw_evidence),
-                        "bytes": raw_evidence.stat().st_size,
-                    }
+                        "elapsed_s": 0.0,
+                        "rss_kib": 500.0,
+                        "cpu_seconds": 10.0,
+                        "temp_c": 50.0,
+                    },
+                    {
+                        "elapsed_s": 28800.0,
+                        "rss_kib": 512.0,
+                        "cpu_seconds": 2890.0,
+                        "temp_c": 55.0,
+                    },
                 ],
+                "max_rss_kib": 512.0,
+                "average_cpu_percent": 5.0,
+                "max_temp_c": 55.0,
             },
         )
+        raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
+        power_raw.write_text("t,power_mw\n0,120\n", encoding="utf-8")
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(collector),
+                "--output", str(evidence),
+                "--target", "fixture-board",
+                "--board-revision", "A",
+                "--soc", "cortex-a32-fixture",
+                "--toolchain", "fixture-gcc",
+                "--compiler-flags=-O3 -mcpu=cortex-a32",
+                "--audio-frontend", "audio-pipeline-fixture",
+                "--runtime-soak", str(runtime_soak),
+                "--stack-high-water-bytes", "32768",
+                "--average-power-mw", "120",
+                "--raw-evidence", str(raw_evidence),
+                "--power-raw", str(power_raw),
+                "--instrument-id", "fixture-meter",
+                "--calibration-id", "fixture-cal",
+            ]
+        )
+
         subprocess.check_call(
             [
                 sys.executable,
                 str(ROOT / "training" / "audit_dataset.py"),
-                "--split",
-                f"train={training_manifest}",
-                "--split",
-                f"qualification={references}",
-                "--require-metadata",
-                "speaker_id",
-                "--require-metadata",
-                "session_id",
-                "--require-metadata",
-                "source_id",
+                "--split", f"train={training_manifest}",
+                "--split", f"qualification={references}",
+                "--require-metadata", "speaker_id",
+                "--require-metadata", "session_id",
+                "--require-metadata", "source_id",
                 "--fail-within-split",
-                "--report",
-                str(dataset_audit),
+                "--report", str(dataset_audit),
             ]
         )
 
@@ -307,7 +328,9 @@ def main() -> int:
             "--board-audio", str(board_audio),
             "--evidence", str(evidence),
             "--evidence-collector", str(collector),
+            "--raw-evidence", str(runtime_soak),
             "--raw-evidence", str(raw_evidence),
+            "--raw-evidence", str(power_raw),
             "--source-sha", "a" * 40,
             "--corpus-id", "home-kws-heldout-fixture-v2",
             "--output", str(manifest),
@@ -319,15 +342,30 @@ def main() -> int:
         assert result["model_lineage"]["training_corpus_sha256"]
         assert result["evaluation"]["audio_corpus_sha256"] == eval_corpus["corpus_sha256"]
         assert result["dataset_audit"]["sha256"] == sha256_file(dataset_audit)
+        assert result["evidence"]["cpu_percent"] == 5.0
+        assert result["evidence"]["rss_kib"] == 512.0
 
         subprocess.check_call(
-            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy), "--output", str(gate)]
+            [
+                sys.executable,
+                str(ROOT / "tools" / "qualification_gate.py"),
+                "--manifest", str(manifest),
+                "--policy", str(policy),
+                "--output", str(gate),
+            ]
         )
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
         assert gate_result["schema_version"] == 3
         assert gate_result["qualified"] is True
         assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
         assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
+
+        original_evidence = evidence.read_text(encoding="utf-8")
+        tampered_evidence = json.loads(original_evidence)
+        tampered_evidence["cpu_percent"] = 6.0
+        write_json(evidence, tampered_evidence)
+        assert subprocess.run(command, check=False).returncode == 2
+        evidence.write_text(original_evidence, encoding="utf-8")
 
         original_eval = eval_audio.read_bytes()
         eval_audio.write_bytes(original_eval[:-2] + b"\x00\x00")
@@ -350,7 +388,12 @@ def main() -> int:
         failing_policy["max_cpu_percent"] = 4.0
         write_json(policy, failing_policy)
         assert subprocess.run(
-            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy)],
+            [
+                sys.executable,
+                str(ROOT / "tools" / "qualification_gate.py"),
+                "--manifest", str(manifest),
+                "--policy", str(policy),
+            ],
             check=False,
         ).returncode == 1
 
