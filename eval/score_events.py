@@ -43,6 +43,10 @@ def finite_float(value, label: str) -> float:
 
 
 def uint32_value(value, label: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be an integer")
+    if isinstance(value, float) and not value.is_integer():
+        raise ValueError(f"{label} must be an integer")
     result = int(value)
     if result < 0 or result > UINT32_MAX:
         raise ValueError(f"{label} must fit uint32")
@@ -216,10 +220,11 @@ def score(
     detections: dict[str, list[dict]],
     pre_tolerance_s: float,
     post_tolerance_s: float,
-) -> tuple[dict, list[dict]]:
+) -> tuple[dict, list[dict], list[dict]]:
     expected_total = 0
     matched_total = 0
-    false_rejects = 0
+    false_reject_count = 0
+    false_rejects: list[dict] = []
     false_accepts: list[dict] = []
     latency_ms: list[float] = []
     by_keyword: dict[int, dict[str, int]] = defaultdict(
@@ -268,8 +273,18 @@ def score(
 
         for event_index, event in enumerate(events):
             if event_index not in matched_events:
-                false_rejects += 1
+                false_reject_count += 1
                 by_keyword[event["keyword_id"]]["false_rejects"] += 1
+                item = {
+                    "recording": name,
+                    "keyword_id": event["keyword_id"],
+                    "start_s": event["start_s"],
+                    "end_s": event["end_s"],
+                    "duration_s": recording["duration_s"],
+                }
+                if recording.get("path") is not None:
+                    item["path"] = recording["path"]
+                false_rejects.append(item)
 
         for detection_index, detection in enumerate(dets):
             if detection_index in used_detections:
@@ -284,7 +299,7 @@ def score(
     total_seconds = sum(item["duration_s"] for item in recordings.values())
     total_hours = total_seconds / 3600.0
     far_per_hour = len(false_accepts) / total_hours
-    frr = false_rejects / expected_total if expected_total else 0.0
+    frr = false_reject_count / expected_total if expected_total else 0.0
     per_keyword = {}
     for keyword_id, stats in sorted(by_keyword.items()):
         expected = stats["expected"]
@@ -298,7 +313,7 @@ def score(
         "audio_hours": total_hours,
         "expected": expected_total,
         "matched": matched_total,
-        "false_rejects": false_rejects,
+        "false_rejects": false_reject_count,
         "false_accepts": len(false_accepts),
         "frr": frr,
         "far_per_hour": far_per_hour,
@@ -306,15 +321,24 @@ def score(
         "p95_post_end_latency_ms": percentile(latency_ms, 0.95),
         "per_keyword": per_keyword,
     }
-    return summary, false_accepts
+    return summary, false_accepts, false_rejects
 
 
 def validate_gate(value: float | None, label: str, upper: float | None = None) -> None:
     if value is None:
         return
-    if not math.isfinite(value) or value < 0.0 or (upper is not None and value > upper):
+    if not math.isfinite(value) or value < 0.0 or (
+        upper is not None and value > upper
+    ):
         suffix = f"..{upper}" if upper is not None else " or greater"
         raise ValueError(f"{label} must be finite and in 0{suffix}")
+
+
+def write_jsonl(path: pathlib.Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as stream:
+        for row in rows:
+            stream.write(json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n")
 
 
 def main() -> int:
@@ -325,6 +349,7 @@ def main() -> int:
     parser.add_argument("--post-tolerance-ms", type=float, default=500.0)
     parser.add_argument("--summary", type=pathlib.Path)
     parser.add_argument("--false-positives", type=pathlib.Path)
+    parser.add_argument("--false-rejects", type=pathlib.Path)
     parser.add_argument("--max-far-per-hour", type=float)
     parser.add_argument("--max-frr", type=float)
     parser.add_argument("--max-p95-latency-ms", type=float)
@@ -338,7 +363,7 @@ def main() -> int:
 
     recordings = validate_recordings(load_jsonl(args.references))
     detections = validate_detections(load_jsonl(args.detections), recordings)
-    summary, false_accepts = score(
+    summary, false_accepts, false_rejects = score(
         recordings,
         detections,
         args.pre_tolerance_ms / 1000.0,
@@ -353,10 +378,9 @@ def main() -> int:
         args.summary.parent.mkdir(parents=True, exist_ok=True)
         args.summary.write_text(rendered + "\n", encoding="utf-8")
     if args.false_positives:
-        args.false_positives.parent.mkdir(parents=True, exist_ok=True)
-        with args.false_positives.open("w", encoding="utf-8") as stream:
-            for row in false_accepts:
-                stream.write(json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n")
+        write_jsonl(args.false_positives, false_accepts)
+    if args.false_rejects:
+        write_jsonl(args.false_rejects, false_rejects)
 
     failed = False
     if (
