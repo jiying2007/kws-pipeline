@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "name": "xiaowo-synthetic-bootstrap-v1",
+  "seed": 1337,
+  "tokens": "keywords/tokens.example.txt",
+  "keywords": "keywords/zh_cn_example.tsv",
+  "work_dir": "build/synthetic-loop",
+  "generator": {
+    "tts": {
+      "backend": "tone",
+      "token_ms": 180.0,
+      "token_ms_jitter": 18.0,
+      "gap_ms": 85.0,
+      "lead_ms": 180.0,
+      "tail_ms": 200.0,
+      "amplitude": 12500.0,
+      "pitch_jitter": 0.006
+    },
+    "augment": {
+      "gain_db_min": -2.5,
+      "gain_db_max": 2.0,
+      "snr_db_min": 28.0,
+      "snr_db_max": 42.0,
+      "echo_max_ms": 25.0,
+      "echo_gain_max": 0.08,
+      "noise_profiles": ["white", "fan", "motor", "media"]
+    }
+  },
+  "dataset": {
+    "train": {
+      "positive_families_per_keyword": 4,
+      "confusable_families_per_keyword": 3,
+      "random_negative_families": 6,
+      "variants_per_family": 2
+    },
+    "calibration": {
+      "positive_families_per_keyword": 3,
+      "confusable_families_per_keyword": 3,
+      "random_negative_families": 6,
+      "variants_per_family": 1
+    },
+    "test": {
+      "positive_families_per_keyword": 3,
+      "confusable_families_per_keyword": 3,
+      "random_negative_families": 6,
+      "variants_per_family": 1
+    },
+    "qualification": {
+      "positive_families_per_keyword": 4,
+      "confusable_families_per_keyword": 4,
+      "random_negative_families": 8,
+      "variants_per_family": 1
+    }
+  },
+  "model": {
+    "feature_dim": 32,
+    "hidden_dim": 48,
+    "prototype_candidates": [
+      {
+        "input_scale": 0.009,
+        "output_scale": 0.045,
+        "blank_bias": 1.9,
+        "token_bias": -1.25
+      },
+      {
+        "input_scale": 0.010,
+        "output_scale": 0.050,
+        "blank_bias": 1.8,
+        "token_bias": -1.2
+      },
+      {
+        "input_scale": 0.011,
+        "output_scale": 0.055,
+        "blank_bias": 1.8,
+        "token_bias": -1.15
+      }
+    ]
+  },
+  "train": {
+    "epochs": 12,
+    "batch_size": 16,
+    "lr": 0.001
+  },
+  "calibration": {
+    "thresholds": [0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85],
+    "coordinate_rounds": 2
+  },
+  "iteration": {
+    "backend": "prototype",
+    "max_rounds": 3,
+    "min_rounds": 2,
+    "patience": 2,
+    "stop_on_gate": true
+  },
+  "synthetic_gates": {
+    "max_frr": 0.05,
+    "max_far_per_hour": 0.0,
+    "max_p95_latency_ms": 800.0
+  }
+}
