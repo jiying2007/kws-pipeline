@@ -29,20 +29,32 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def run(argv: list[str], *, allow_gate_failure: bool = False) -> int:
+def run(argv: list[str]) -> None:
     completed = subprocess.run(argv, check=False)
-    if completed.returncode != 0 and not (
-        allow_gate_failure and completed.returncode == 1
-    ):
+    if completed.returncode != 0:
         raise RuntimeError(
             f"command failed ({completed.returncode}): {' '.join(argv)}"
         )
-    return completed.returncode
 
 
 def resolve_repo_path(value: str) -> pathlib.Path:
     path = pathlib.Path(value)
     return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
+def safe_reset_workdir(path: pathlib.Path) -> pathlib.Path:
+    work = path.resolve()
+    home = pathlib.Path.home().resolve()
+    anchor = pathlib.Path(work.anchor).resolve()
+    forbidden = {anchor, home, ROOT.resolve(), ROOT.parent.resolve()}
+    if work in forbidden or len(work.parts) < 3:
+        raise ValueError(f"refusing unsafe synthetic work directory: {work}")
+    if work.exists() and not work.is_dir():
+        raise ValueError(f"synthetic work path is not a directory: {work}")
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    return work
 
 
 def keyword_rows(path: pathlib.Path) -> list[dict]:
@@ -53,14 +65,19 @@ def keyword_rows(path: pathlib.Path) -> list[dict]:
         cols = raw.split("\t")
         if len(cols) != 4:
             raise ValueError(f"{path}:{line_no}: expected 4 TSV columns")
+        threshold = float(cols[2])
+        if not math.isfinite(threshold) or not 0.0 < threshold < 1.0:
+            raise ValueError(f"{path}:{line_no}: threshold must be finite and in (0,1)")
         rows.append(
             {
                 "id": int(cols[0]),
                 "text": cols[1].strip(),
-                "threshold": float(cols[2]),
+                "threshold": threshold,
                 "tokens": cols[3].strip(),
             }
         )
+    if not rows:
+        raise ValueError(f"{path}: no keyword rows")
     return rows
 
 
@@ -150,6 +167,18 @@ def evaluate(
     return result
 
 
+def validate_gates(raw: dict) -> dict[str, float]:
+    required = ("max_frr", "max_far_per_hour", "max_p95_latency_ms")
+    if not isinstance(raw, dict) or any(key not in raw for key in required):
+        raise ValueError("synthetic_gates is incomplete")
+    gates = {key: float(raw[key]) for key in required}
+    if any(not math.isfinite(value) or value < 0.0 for value in gates.values()):
+        raise ValueError("synthetic gate values must be finite and >= 0")
+    if gates["max_frr"] > 1.0:
+        raise ValueError("synthetic max_frr must be <= 1")
+    return gates
+
+
 def gate_ok(metrics: dict, gates: dict) -> bool:
     return (
         float(metrics["frr"]) <= float(gates["max_frr"])
@@ -168,6 +197,12 @@ def metric_score(metrics: dict, gates: dict) -> float:
     violation += max(0.0, far - float(gates["max_far_per_hour"])) * 100.0
     violation += max(0.0, latency - float(gates["max_p95_latency_ms"])) * 0.1
     return violation + frr * 100.0 + far * 0.1 + latency * 0.001
+
+
+def candidate_score(calibration: dict, test: dict, gates: dict) -> tuple[float, float, float]:
+    calibration_score = metric_score(calibration, gates)
+    test_score = metric_score(test, gates)
+    return calibration_score + test_score, calibration_score, test_score
 
 
 def calibrate_thresholds(
@@ -298,6 +333,14 @@ def build_torch_candidate(
     return model, checkpoint
 
 
+def model_provenance_path(model: pathlib.Path, backend: str) -> pathlib.Path:
+    suffix = ".synthetic-provenance.json" if backend == "prototype" else ".provenance.json"
+    provenance = pathlib.Path(str(model) + suffix)
+    if not provenance.is_file():
+        raise RuntimeError(f"model provenance was not produced: {provenance}")
+    return provenance
+
+
 def mine_hard_negatives(
     false_positives: pathlib.Path,
     audio_root: pathlib.Path,
@@ -370,6 +413,26 @@ def merge_manifests(destination: pathlib.Path, sources: list[pathlib.Path]) -> N
     )
 
 
+def copy_best_artifacts(best: dict, best_dir: pathlib.Path) -> dict[str, pathlib.Path | None]:
+    best_dir.mkdir()
+    artifacts: dict[str, pathlib.Path | None] = {
+        "model": best_dir / "model.kwm",
+        "pack": best_dir / "keywords.kwk",
+        "keywords": best_dir / "keywords.tsv",
+        "model_provenance": best_dir / "model-provenance.json",
+        "checkpoint": None,
+    }
+    shutil.copy2(best["model"], artifacts["model"])
+    shutil.copy2(best["pack"], artifacts["pack"])
+    shutil.copy2(best["keywords"], artifacts["keywords"])
+    shutil.copy2(best["model_provenance"], artifacts["model_provenance"])
+    if best.get("checkpoint"):
+        checkpoint = best_dir / "model.pt"
+        shutil.copy2(best["checkpoint"], checkpoint)
+        artifacts["checkpoint"] = checkpoint
+    return artifacts
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, type=pathlib.Path)
@@ -382,13 +445,10 @@ def main() -> int:
     runner = args.runner.resolve()
     if not runner.is_file():
         raise ValueError(f"runtime runner does not exist: {runner}")
-    work = (
-        args.work_dir
-        or pathlib.Path(cfg.get("work_dir", "build/synthetic-loop"))
-    ).resolve()
-    if work.exists():
-        shutil.rmtree(work)
-    work.mkdir(parents=True)
+    requested_work = args.work_dir or pathlib.Path(
+        cfg.get("work_dir", "build/synthetic-loop")
+    )
+    work = safe_reset_workdir(requested_work)
 
     tokens = resolve_repo_path(str(cfg["tokens"]))
     keywords = resolve_repo_path(str(cfg["keywords"]))
@@ -409,30 +469,40 @@ def main() -> int:
     configured_ids = {
         value for item in parsed_keywords for value in item["token_ids"]
     }
-    if max(configured_ids) >= vocab_size(token_map):
-        raise ValueError("keyword token IDs exceed vocabulary")
+    if not configured_ids or max(configured_ids) >= vocab_size(token_map):
+        raise ValueError("keyword token IDs are empty or exceed vocabulary")
 
     iteration_cfg = cfg.get("iteration", {})
     backend = str(iteration_cfg.get("backend", "prototype"))
+    if backend not in {"prototype", "torch_ctc"}:
+        raise ValueError(f"unsupported iteration backend: {backend}")
     max_rounds = int(iteration_cfg.get("max_rounds", 3))
     min_rounds = int(iteration_cfg.get("min_rounds", 2))
     patience = int(iteration_cfg.get("patience", 2))
+    if max_rounds <= 0 or min_rounds <= 0 or min_rounds > max_rounds:
+        raise ValueError("iteration rounds must satisfy 0 < min_rounds <= max_rounds")
+    if patience < 0:
+        raise ValueError("iteration patience must be >= 0")
+
     thresholds = [
         float(value)
         for value in cfg.get("calibration", {}).get("thresholds", [])
     ]
-    if not thresholds or any(not 0.0 < value < 1.0 for value in thresholds):
-        raise ValueError("calibration.thresholds must contain values in (0,1)")
+    if not thresholds or any(
+        not math.isfinite(value) or not 0.0 < value < 1.0 for value in thresholds
+    ):
+        raise ValueError("calibration.thresholds must contain finite values in (0,1)")
     coordinate_rounds = int(
         cfg.get("calibration", {}).get("coordinate_rounds", 1)
     )
-    gates = cfg.get("synthetic_gates", {})
-    required_gates = ("max_frr", "max_far_per_hour", "max_p95_latency_ms")
-    if any(key not in gates for key in required_gates):
-        raise ValueError("synthetic_gates is incomplete")
+    if coordinate_rounds <= 0:
+        raise ValueError("calibration.coordinate_rounds must be > 0")
+    gates = validate_gates(cfg.get("synthetic_gates", {}))
 
     prototype_candidates = cfg.get("model", {}).get("prototype_candidates", [])
-    if backend == "prototype" and not prototype_candidates:
+    if backend == "prototype" and (
+        not isinstance(prototype_candidates, list) or not prototype_candidates
+    ):
         raise ValueError("prototype backend requires model.prototype_candidates")
 
     rounds: list[dict] = []
@@ -452,6 +522,8 @@ def main() -> int:
             params = prototype_candidates[
                 min(round_index, len(prototype_candidates) - 1)
             ]
+            if not isinstance(params, dict):
+                raise ValueError("prototype candidate must be an object")
             model = candidate_dir / "model.kwm"
             build_prototype(
                 tokens_path=tokens,
@@ -463,7 +535,7 @@ def main() -> int:
                 blank_bias=float(params.get("blank_bias", 1.8)),
                 token_bias=float(params.get("token_bias", -1.2)),
             )
-        elif backend == "torch_ctc":
+        else:
             model, checkpoint = build_torch_candidate(
                 cfg=cfg,
                 tokens=tokens,
@@ -473,8 +545,7 @@ def main() -> int:
                 hard_negative_manifest=cumulative_hard_negatives,
                 positive_replay_manifest=cumulative_missed_positives,
             )
-        else:
-            raise ValueError(f"unsupported iteration backend: {backend}")
+        provenance = model_provenance_path(model, backend)
 
         calibrated_tsv, pack, calibration_metrics = calibrate_thresholds(
             runner=runner,
@@ -496,20 +567,29 @@ def main() -> int:
             audio_root=dataset_dir,
             output=candidate_dir / "test",
         )
-        score = metric_score(calibration_metrics, gates)
+        score, calibration_score, test_score = candidate_score(
+            calibration_metrics, test_metrics, gates
+        )
         record = {
             "round": round_index,
             "model": str(model),
             "model_sha256": sha256_file(model),
+            "model_provenance": str(provenance),
+            "model_provenance_sha256": sha256_file(provenance),
             "pack": str(pack),
             "pack_sha256": sha256_file(pack),
             "keywords": str(calibrated_tsv),
             "calibration": calibration_metrics,
             "test": test_metrics,
             "score": score,
+            "calibration_score": calibration_score,
+            "test_score": test_score,
             "calibration_gate": gate_ok(calibration_metrics, gates),
             "test_gate": gate_ok(test_metrics, gates),
         }
+        if checkpoint is not None:
+            record["checkpoint"] = str(checkpoint)
+            record["checkpoint_sha256"] = sha256_file(checkpoint)
         rounds.append(record)
 
         improved = best is None or score < float(best["score"]) - 1.0e-12
@@ -565,13 +645,16 @@ def main() -> int:
         raise RuntimeError("iteration produced no candidate")
 
     best_dir = work / "best"
-    best_dir.mkdir()
-    best_model = best_dir / "model.kwm"
-    best_pack = best_dir / "keywords.kwk"
-    best_keywords = best_dir / "keywords.tsv"
-    shutil.copy2(best["model"], best_model)
-    shutil.copy2(best["pack"], best_pack)
-    shutil.copy2(best["keywords"], best_keywords)
+    artifacts = copy_best_artifacts(best, best_dir)
+    best_model = artifacts["model"]
+    best_pack = artifacts["pack"]
+    best_keywords = artifacts["keywords"]
+    best_provenance = artifacts["model_provenance"]
+    best_checkpoint = artifacts["checkpoint"]
+    assert best_model is not None
+    assert best_pack is not None
+    assert best_keywords is not None
+    assert best_provenance is not None
 
     qualification_metrics = evaluate(
         runner=runner,
@@ -583,7 +666,7 @@ def main() -> int:
     )
     qualified = gate_ok(qualification_metrics, gates)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-only",
         "qualified": qualified,
         "name": str(cfg.get("name", "synthetic-loop")),
@@ -594,9 +677,15 @@ def main() -> int:
             dataset_dir / "dataset-summary.json"
         ),
         "dataset_audit_sha256": sha256_file(audit_report),
+        "best_round": int(best["round"]),
+        "best_score": float(best["score"]),
         "best_model_sha256": sha256_file(best_model),
+        "best_model_provenance_sha256": sha256_file(best_provenance),
         "best_pack_sha256": sha256_file(best_pack),
         "best_keywords_sha256": sha256_file(best_keywords),
+        "best_checkpoint_sha256": (
+            sha256_file(best_checkpoint) if best_checkpoint is not None else None
+        ),
         "rounds": rounds,
         "replay": {
             "hard_negative_count": sum(
