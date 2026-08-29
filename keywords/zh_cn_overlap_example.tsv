@@ -1,0 +1,5 @@
+# id	text	threshold	explicit-pinyin-tokens	min_trailing_blanks	priority	prefix_policy	grace_frames
+# The short keyword is delayed so the shared prefix can resolve to 小窝小窝.
+1	小窝	0.58	xiao3 wo1	1	10	grace	3
+2	小窝小窝	0.55	xiao3 wo1 xiao3 wo1	1	20	longest	0
+3	你好小窝	0.55	ni3 hao3 xiao3 wo1	1	15	immediate	0
