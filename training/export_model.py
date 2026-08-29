@@ -28,6 +28,8 @@ MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
 MAX_VOCAB_SIZE = 512
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
+IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
+SOURCE_SHA_RE = re.compile(r"[0-9a-f]{40,64}")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -91,6 +93,56 @@ def checkpoint_sha(value, label: str) -> str:
     return value
 
 
+def training_environment(checkpoint: dict) -> dict:
+    value = checkpoint.get("training_environment")
+    if value is None:
+        # Synthetic/fixture checkpoints created outside train_ctc.py are still
+        # accepted, but the absence is explicit in provenance and can be rejected
+        # by a shipping qualification policy.
+        return {"recorded": False}
+    if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
+        raise ValueError("checkpoint training_environment must be schema_version 1")
+    required_text = (
+        "python_version",
+        "python_implementation",
+        "platform",
+        "machine",
+        "torch_version",
+    )
+    result: dict = {"recorded": True, "schema_version": 1}
+    for key in required_text:
+        item = value.get(key)
+        if not isinstance(item, str) or not item:
+            raise ValueError(f"checkpoint training_environment.{key} is invalid")
+        result[key] = item
+    for key in ("cuda_version", "repository_sha", "training_image_digest"):
+        item = value.get(key)
+        if item is not None and not isinstance(item, str):
+            raise ValueError(f"checkpoint training_environment.{key} is invalid")
+        result[key] = item
+    if result["repository_sha"] is not None and SOURCE_SHA_RE.fullmatch(result["repository_sha"]) is None:
+        raise ValueError("checkpoint training_environment.repository_sha is invalid")
+    if result["training_image_digest"] is not None and IMAGE_DIGEST_RE.fullmatch(result["training_image_digest"]) is None:
+        raise ValueError("checkpoint training_environment.training_image_digest is invalid")
+    result["cudnn_version"] = value.get("cudnn_version")
+    result["torch_num_threads"] = int(value.get("torch_num_threads", 0))
+    result["torch_num_interop_threads"] = int(value.get("torch_num_interop_threads", 0))
+    result["container_declared"] = bool(value.get("container_declared", False))
+    for key in ("requirements_lock_sha256", "dockerfile_sha256"):
+        item = value.get(key)
+        result[key] = None if item is None else checkpoint_sha(item, f"training_environment.{key}")
+    code = value.get("training_code_sha256")
+    if not isinstance(code, dict) or not code:
+        raise ValueError("checkpoint training_environment.training_code_sha256 is missing")
+    normalized_code = {}
+    for name, digest in code.items():
+        if not isinstance(name, str) or not name:
+            raise ValueError("checkpoint training code path is invalid")
+        normalized_code[name] = checkpoint_sha(digest, f"training_code_sha256.{name}")
+    result["training_code_sha256"] = dict(sorted(normalized_code.items()))
+    return result
+
+
 def training_metadata(checkpoint: dict) -> dict:
     manifests = checkpoint.get("training_manifests")
     if not isinstance(manifests, list) or not manifests:
@@ -118,6 +170,7 @@ def training_metadata(checkpoint: dict) -> dict:
         "optimizer": str(checkpoint["optimizer"]),
         "weight_decay": float(checkpoint["weight_decay"]),
         "grad_clip_norm": float(checkpoint["grad_clip_norm"]),
+        "environment": training_environment(checkpoint),
     }
     if result["examples"] <= 0 or result["epochs"] <= 0 or result["batch_size"] <= 0:
         raise ValueError("checkpoint training counts must be positive")
