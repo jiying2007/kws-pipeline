@@ -24,9 +24,19 @@ typedef struct kws_decoder {
   uint16_t node_count;
   uint16_t keyword_count;
   uint32_t keyword_ids[KWS_MAX_KEYWORDS];
+  uint16_t terminal_nodes[KWS_MAX_KEYWORDS];
   float thresholds[KWS_MAX_KEYWORDS];
+  uint8_t min_trailing_blanks[KWS_MAX_KEYWORDS];
+  uint8_t priorities[KWS_MAX_KEYWORDS];
+  uint8_t prefix_policies[KWS_MAX_KEYWORDS];
+  uint8_t grace_frames[KWS_MAX_KEYWORDS];
   float token_boost;
   float retention_log;
+  int16_t pending_keyword;
+  float pending_confidence;
+  uint16_t pending_depth;
+  uint16_t pending_age_frames;
+  uint16_t pending_blank_frames;
 } kws_decoder_t;
 
 void kws_decoder_init(kws_decoder_t *d,
