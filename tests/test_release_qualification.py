@@ -207,12 +207,15 @@ def main() -> int:
             },
         )
         valid_policy = {
-            "schema_version": 1,
+            "schema_version": 2,
             "name": "fixture-policy",
+            "confidence_level": 0.95,
             "min_audio_hours": 24.0,
             "min_expected_wakes": 10,
             "max_frr": 0.15,
+            "max_frr_upper_bound": 0.40,
             "max_far_per_hour": 0.1,
+            "max_far_upper_bound_per_hour": 0.21,
             "max_p95_latency_ms": 500.0,
             "max_p99_process_us": 5000.0,
             "max_rtf": 0.25,
@@ -304,10 +307,30 @@ def main() -> int:
             ]
         )
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
+        assert gate_result["schema_version"] == 2
         assert gate_result["qualified"] is True
         assert gate_result["manifest_sha256"] == sha256_file(manifest)
         assert gate_result["policy_sha256"] == sha256_file(policy)
         assert gate_result["model_checkpoint_sha256"] == checkpoint_hash
+        assert gate_result["statistics"]["frr_upper_bound"] > 0.1
+        assert gate_result["statistics"]["far_upper_bound_per_hour"] > 1.0 / 24.0
+
+        statistical_failure = dict(valid_policy)
+        statistical_failure["max_frr_upper_bound"] = 0.20
+        write_json(policy, statistical_failure)
+        failed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "qualification_gate.py"),
+                "--manifest",
+                str(manifest),
+                "--policy",
+                str(policy),
+            ],
+            check=False,
+        )
+        assert failed.returncode == 1
+        write_json(policy, valid_policy)
 
         frontend_tampered = json.loads(manifest.read_text(encoding="utf-8"))
         tampered_kind = 1 if int(frontend_tampered["runtime"]["frontend_kind"]) == 0 else 0
