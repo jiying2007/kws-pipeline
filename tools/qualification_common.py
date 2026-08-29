@@ -11,9 +11,9 @@ from kws_vocab import load_tokens, vocab_fingerprint, vocab_size
 
 MODEL_HEADER = struct.Struct("<4sHHHHHHIIIfffQIIIIII")
 PACK_HEADER = struct.Struct("<4sHHHHIQ")
-PACK_RECORD = struct.Struct("<IfHH16H")
+PACK_RECORD = struct.Struct("<IfHBBBBH16H")
 MODEL_VERSION = 2
-PACK_VERSION = 2
+PACK_VERSION = 3
 MODEL_HEADER_BYTES = 72
 PACK_HEADER_BYTES = 24
 SAMPLE_RATE_HZ = 16000
@@ -24,6 +24,7 @@ MAX_HIDDEN_DIM = 64
 MAX_VOCAB_SIZE = 512
 MAX_KEYWORDS = 16
 MAX_TOKENS_PER_KEYWORD = 16
+FRONTEND_KINDS = {0: "logmel", 1: "pcen-lite"}
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
@@ -95,12 +96,12 @@ def read_model(path: pathlib.Path) -> dict:
         raise ValueError(f"{path}: model is shorter than ABI-v2 header")
     fields = MODEL_HEADER.unpack(blob[:MODEL_HEADER_BYTES])
     (magic, version, header_bytes, feature_dim, hidden_dim, model_vocab_size,
-     reserved, sample_rate, frame_length, frame_hop, wx_scale, wh_scale,
+     frontend_kind, sample_rate, frame_length, frame_hop, wx_scale, wh_scale,
      wo_scale, fingerprint, wx_off, wh_off, bh_off, wo_off, bo_off,
      total_bytes) = fields
     if magic != b"KWSP" or version != MODEL_VERSION or header_bytes != MODEL_HEADER_BYTES:
         raise ValueError(f"{path}: expected canonical KWSP ABI v{MODEL_VERSION}")
-    if reserved != 0 or total_bytes != len(blob):
+    if frontend_kind not in FRONTEND_KINDS or total_bytes != len(blob):
         raise ValueError(f"{path}: non-canonical model header")
     if (sample_rate, frame_length, frame_hop) != (
         SAMPLE_RATE_HZ, FRAME_LENGTH_SAMPLES, FRAME_HOP_SAMPLES
@@ -128,13 +129,14 @@ def read_model(path: pathlib.Path) -> dict:
     return {
         "bytes": len(blob), "feature_dim": feature_dim, "hidden_dim": hidden_dim,
         "vocab_size": model_vocab_size, "vocab_fingerprint": fingerprint,
+        "frontend_kind": frontend_kind, "frontend_name": FRONTEND_KINDS[frontend_kind],
     }
 
 
 def read_pack(path: pathlib.Path) -> dict:
     blob = path.read_bytes()
     if len(blob) < PACK_HEADER_BYTES:
-        raise ValueError(f"{path}: keyword pack is shorter than ABI-v2 header")
+        raise ValueError(f"{path}: keyword pack is shorter than ABI-v3 header")
     magic, version, header_bytes, count, pack_vocab_size, total_bytes, fingerprint = PACK_HEADER.unpack(blob[:PACK_HEADER_BYTES])
     if magic != b"KWKP" or version != PACK_VERSION or header_bytes != PACK_HEADER_BYTES:
         raise ValueError(f"{path}: expected canonical KWKP ABI v{PACK_VERSION}")
@@ -145,11 +147,16 @@ def read_pack(path: pathlib.Path) -> dict:
     seen_ids: set[int] = set()
     seen_paths: set[tuple[int, ...]] = set()
     for index in range(count):
-        keyword_id, threshold, num_tokens, reserved, *tokens = PACK_RECORD.unpack_from(blob, PACK_HEADER_BYTES + index * PACK_RECORD.size)
+        fields = PACK_RECORD.unpack_from(blob, PACK_HEADER_BYTES + index * PACK_RECORD.size)
+        keyword_id, threshold, num_tokens, min_blanks, priority, policy, grace_frames, reserved, *tokens = fields
         if not math.isfinite(threshold) or not (0.0 < threshold < 1.0):
             raise ValueError(f"{path}: keyword[{index}] threshold is invalid")
-        if not (1 <= num_tokens <= MAX_TOKENS_PER_KEYWORD) or reserved != 0:
+        if not (1 <= num_tokens <= MAX_TOKENS_PER_KEYWORD) or reserved != 0 or policy > 2:
             raise ValueError(f"{path}: keyword[{index}] record is non-canonical")
+        if policy == 1 and min_blanks == 0:
+            raise ValueError(f"{path}: longest keyword policy requires trailing blank")
+        if policy == 2 and grace_frames == 0:
+            raise ValueError(f"{path}: grace keyword policy requires grace frames")
         active = tuple(tokens[:num_tokens])
         if any(token <= 0 or token >= pack_vocab_size for token in active) or any(tokens[num_tokens:]):
             raise ValueError(f"{path}: keyword[{index}] token/padding is invalid")
@@ -180,6 +187,9 @@ def validate_runtime_config(path: pathlib.Path, model: dict) -> dict:
         raise ValueError("runtime config frame geometry does not match ABI-v2")
     if json_int(config.get("feature_dim"), "config.feature_dim", 1) != model["feature_dim"] or json_int(config.get("hidden_dim"), "config.hidden_dim", 1) != model["hidden_dim"]:
         raise ValueError("runtime config dimensions do not match model")
+    config_frontend = config.get("frontend")
+    if config_frontend is not None and config_frontend != model["frontend_name"]:
+        raise ValueError("runtime config frontend does not match model")
     required_text(config, "vocab_target", "config")
     runtime = config.get("runtime")
     if not isinstance(runtime, dict):
