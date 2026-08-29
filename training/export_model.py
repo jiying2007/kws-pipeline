@@ -14,6 +14,7 @@ import torch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend_spec import FRONTEND_IDS
@@ -30,6 +31,7 @@ MAX_VOCAB_SIZE = 512
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"[0-9a-f]{40,64}")
+IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -96,9 +98,6 @@ def checkpoint_sha(value, label: str) -> str:
 def training_environment(checkpoint: dict) -> dict:
     value = checkpoint.get("training_environment")
     if value is None:
-        # Synthetic/fixture checkpoints created outside train_ctc.py are still
-        # accepted, but the absence is explicit in provenance and can be rejected
-        # by a shipping qualification policy.
         return {"recorded": False}
     if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
         raise ValueError("checkpoint training_environment must be schema_version 1")
@@ -143,6 +142,41 @@ def training_environment(checkpoint: dict) -> dict:
     return result
 
 
+def normalize_training_corpus(checkpoint: dict) -> dict:
+    value = checkpoint.get("training_corpus_identity")
+    if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
+        raise ValueError("checkpoint training_corpus_identity must be schema_version 1")
+    recordings = value.get("recordings")
+    if not isinstance(recordings, list) or not recordings:
+        raise ValueError("checkpoint training_corpus_identity.recordings must be non-empty")
+    normalized: list[dict] = []
+    for index, row in enumerate(recordings):
+        if not isinstance(row, dict):
+            raise ValueError(f"training corpus recording[{index}] must be an object")
+        item = {
+            "recording": str(row.get("recording", "")),
+            "manifest": str(row.get("manifest", "")),
+            "path": str(row.get("path", "")),
+            "file_sha256": checkpoint_sha(row.get("file_sha256"), f"training corpus[{index}].file_sha256"),
+            "pcm_sha256": checkpoint_sha(row.get("pcm_sha256"), f"training corpus[{index}].pcm_sha256"),
+            "frames": int(row.get("frames", -1)),
+            "duration_s": float(row.get("duration_s", -1.0)),
+        }
+        if not item["recording"] or not item["manifest"] or not item["path"] or item["frames"] <= 0 or not math.isfinite(item["duration_s"]) or item["duration_s"] <= 0.0:
+            raise ValueError(f"training corpus recording[{index}] contains invalid identity")
+        for field in IDENTITY_FIELDS:
+            if field in row:
+                field_value = row[field]
+                if not isinstance(field_value, str) or not field_value:
+                    raise ValueError(f"training corpus recording[{index}].{field} is invalid")
+                item[field] = field_value
+        normalized.append(item)
+    digest = corpus_digest(normalized)
+    if value.get("corpus_sha256") != digest:
+        raise ValueError("checkpoint training corpus canonical digest is inconsistent")
+    return {"schema_version": 1, "corpus_sha256": digest, "recordings": normalized}
+
+
 def training_metadata(checkpoint: dict) -> dict:
     manifests = checkpoint.get("training_manifests")
     if not isinstance(manifests, list) or not manifests:
@@ -159,9 +193,9 @@ def training_metadata(checkpoint: dict) -> dict:
                 ),
             }
         )
-
     result = {
         "manifests": normalized_manifests,
+        "corpus_identity": normalize_training_corpus(checkpoint),
         "examples": int(checkpoint["training_examples"]),
         "seed": int(checkpoint["seed"]),
         "epochs": int(checkpoint["epochs"]),
@@ -187,11 +221,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
-    parser.add_argument(
-        "--provenance",
-        type=pathlib.Path,
-        help="default: OUTPUT.provenance.json",
-    )
+    parser.add_argument("--provenance", type=pathlib.Path, help="default: OUTPUT.provenance.json")
     args = parser.parse_args()
 
     checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
@@ -200,9 +230,7 @@ def main() -> None:
     hidden_dim = int(checkpoint["hidden_dim"])
     checkpoint_vocab_size = int(checkpoint["vocab_size"])
     checkpoint_fingerprint = int(checkpoint.get("vocab_fingerprint", -1))
-    checkpoint_tokens_sha256 = checkpoint_sha(
-        checkpoint.get("tokens_sha256"), "tokens_sha256"
-    )
+    checkpoint_tokens_sha256 = checkpoint_sha(checkpoint.get("tokens_sha256"), "tokens_sha256")
     frontend_spec_version = int(checkpoint.get("frontend_spec_version", -1))
     frontend_name = str(checkpoint.get("frontend_name", ""))
     frontend_kind = int(checkpoint.get("frontend_kind", -1))
@@ -217,17 +245,11 @@ def main() -> None:
     if not 2 <= checkpoint_vocab_size <= MAX_VOCAB_SIZE:
         raise ValueError(f"vocab_size must be 2..{MAX_VOCAB_SIZE}")
     if frontend_spec_version != FRONTEND_SPEC_VERSION:
-        raise ValueError(
-            f"checkpoint frontend_spec_version={frontend_spec_version} does not match "
-            f"required {FRONTEND_SPEC_VERSION}"
-        )
+        raise ValueError(f"checkpoint frontend_spec_version={frontend_spec_version} does not match required {FRONTEND_SPEC_VERSION}")
     if frontend_name not in FRONTEND_IDS or FRONTEND_IDS[frontend_name] != frontend_kind:
         raise ValueError("checkpoint frontend name/kind identity is invalid")
     if frame_length != FRAME_LENGTH_SAMPLES or frame_hop != FRAME_HOP_SAMPLES:
-        raise ValueError(
-            f"ABI v2 requires frame_length/frame_hop "
-            f"{FRAME_LENGTH_SAMPLES}/{FRAME_HOP_SAMPLES}"
-        )
+        raise ValueError(f"ABI v2 requires frame_length/frame_hop {FRAME_LENGTH_SAMPLES}/{FRAME_HOP_SAMPLES}")
 
     require_shape(state_dict, "in_proj.weight", (hidden_dim, feature_dim))
     require_shape(state_dict, "in_proj.bias", (hidden_dim,))
@@ -240,15 +262,9 @@ def main() -> None:
     fingerprint = vocab_fingerprint(token_map)
     tokens_sha256 = sha256_file(args.tokens)
     if token_vocab_size != checkpoint_vocab_size:
-        raise ValueError(
-            f"token vocabulary size {token_vocab_size} does not match "
-            f"checkpoint vocab_size {checkpoint_vocab_size}"
-        )
+        raise ValueError(f"token vocabulary size {token_vocab_size} does not match checkpoint vocab_size {checkpoint_vocab_size}")
     if checkpoint_fingerprint != fingerprint:
-        raise ValueError(
-            "checkpoint vocabulary fingerprint does not match --tokens; "
-            "refusing to bind weights to a different token-to-ID mapping"
-        )
+        raise ValueError("checkpoint vocabulary fingerprint does not match --tokens")
 
     wx, sx, wx_stats = q8(state_dict["in_proj.weight"], "in_proj.weight")
     wh, sh, wh_stats = q8(state_dict["rec_proj.weight"], "rec_proj.weight")
@@ -262,7 +278,6 @@ def main() -> None:
         align4(buffer)
         offsets.append(len(buffer))
         buffer += block
-
     total = len(buffer)
     header = struct.pack(
         "<4sHHHHHHIIIfffQIIIIII",
@@ -288,11 +303,9 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(buffer)
 
-    provenance_path = args.provenance
-    if provenance_path is None:
-        provenance_path = pathlib.Path(str(args.output) + ".provenance.json")
+    provenance_path = args.provenance or pathlib.Path(str(args.output) + ".provenance.json")
     provenance = {
-        "schema_version": 2,
+        "schema_version": 3,
         "model": {
             "name": args.output.name,
             "sha256": sha256_file(args.output),
@@ -306,10 +319,7 @@ def main() -> None:
             "frontend_name": frontend_name,
             "frontend_kind": frontend_kind,
         },
-        "checkpoint": {
-            "name": args.checkpoint.name,
-            "sha256": sha256_file(args.checkpoint),
-        },
+        "checkpoint": {"name": args.checkpoint.name, "sha256": sha256_file(args.checkpoint)},
         "tokens": {
             "name": args.tokens.name,
             "sha256": tokens_sha256,
@@ -326,13 +336,12 @@ def main() -> None:
     }
     provenance_path.parent.mkdir(parents=True, exist_ok=True)
     provenance_path.write_text(
-        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
-        + "\n",
+        json.dumps(provenance, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
     print(
         f"wrote {args.output}: {total} bytes, frontend={frontend_name}, "
-        f"vocab_fingerprint=0x{fingerprint:016x}; provenance={provenance_path}"
+        f"vocab_fingerprint=0x{fingerprint:016x}; corpus={training['corpus_identity']['corpus_sha256']}; provenance={provenance_path}"
     )
 
 
