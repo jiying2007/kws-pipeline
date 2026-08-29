@@ -1,0 +1,69 @@
+name: far-nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 18 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  streaming-far:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        frontend: [logmel, pcen-lite]
+        seed: [1103, 2207, 3301, 4409]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+      - name: Build streaming runtime
+        run: cmake --build build --parallel --target kws_raw_stream
+      - name: Generate pinned synthetic carriers
+        run: >-
+          python3 training/synthetic_audio.py
+          --config configs/training/xiaowo.domain.json
+          --output build/far-data
+      - name: Train domain prototype
+        run: >-
+          python3 training/build_domain_prototype.py
+          --config configs/training/xiaowo.domain.json
+          --tokens keywords/tokens.example.txt
+          --carriers build/far-data/token-carriers.json
+          --output build/far-model.kwm
+          --training-output build/far-fit
+          --frontend ${{ matrix.frontend }}
+          --variants-per-token 24
+          --seed ${{ matrix.seed }}
+      - name: Compile keyword pack
+        run: >-
+          python3 tools/compile_keywords.py
+          --tokens keywords/tokens.example.txt
+          --keywords keywords/zh_cn_example.tsv
+          --out-pack build/far-keywords.kwk
+      - name: Stream two hours of negative audio
+        run: >-
+          python3 eval/long_far_stream.py
+          --runner build/kws_raw_stream
+          --model build/far-model.kwm
+          --keywords build/far-keywords.kwk
+          --seconds 7200
+          --seed ${{ matrix.seed }}
+          --output-dir build/far-run
+          --max-far-per-hour 0
+      - name: Retain FAR evidence and captures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: far-${{ matrix.frontend }}-${{ matrix.seed }}
+          path: |
+            build/far-run
+            build/far-fit/domain-softmax-diagnostics.json
+            build/far-model.kwm.synthetic-domain-provenance.json
+          if-no-files-found: warn
+          retention-days: 30
