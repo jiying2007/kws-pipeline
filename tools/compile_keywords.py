@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import re
 import struct
@@ -12,9 +13,10 @@ from kws_vocab import load_tokens, vocab_fingerprint, vocab_size
 
 MAX_KEYWORDS = 16
 MAX_TOKENS_PER_KEYWORD = 16
-PACK_VERSION = 2
+PACK_VERSION = 3
 PACK_HEADER_BYTES = 24
-PACK_RECORD_BYTES = 44
+PACK_RECORD_BYTES = 48
+PREFIX_POLICIES = {"immediate": 0, "longest": 1, "grace": 2}
 
 
 def text_to_pinyin(text: str) -> list[str]:
@@ -35,6 +37,13 @@ def text_to_pinyin(text: str) -> list[str]:
     )
 
 
+def byte_value(value: str, label: str) -> int:
+    result = int(value)
+    if result < 0 or result > 255:
+        raise ValueError(f"{label} must be in 0..255")
+    return result
+
+
 def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
     result: list[dict] = []
     seen_ids: set[int] = set()
@@ -43,16 +52,29 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
         cols = raw.split("\t")
-        if len(cols) not in (3, 4):
-            raise ValueError(f"{path}:{n}: expected 3 or 4 TSV columns")
+        if len(cols) not in (3, 4, 5, 6, 7, 8):
+            raise ValueError(f"{path}:{n}: expected 3..8 TSV columns")
         kid = int(cols[0])
         text = cols[1].strip()
         threshold = float(cols[2])
+        if not math.isfinite(threshold):
+            raise ValueError(f"{text}: threshold must be finite")
         tokens = (
             cols[3].split()
-            if len(cols) == 4 and cols[3].strip()
+            if len(cols) >= 4 and cols[3].strip()
             else text_to_pinyin(text)
         )
+        min_trailing_blanks = byte_value(cols[4], f"{text}: min_trailing_blanks") if len(cols) >= 5 and cols[4].strip() else 0
+        priority = byte_value(cols[5], f"{text}: priority") if len(cols) >= 6 and cols[5].strip() else 0
+        policy_name = cols[6].strip().lower() if len(cols) >= 7 and cols[6].strip() else "immediate"
+        if policy_name not in PREFIX_POLICIES:
+            raise ValueError(f"{text}: prefix_policy must be immediate, longest or grace")
+        grace_frames = byte_value(cols[7], f"{text}: grace_frames") if len(cols) >= 8 and cols[7].strip() else 0
+        prefix_policy = PREFIX_POLICIES[policy_name]
+        if prefix_policy == PREFIX_POLICIES["longest"] and min_trailing_blanks == 0:
+            min_trailing_blanks = 1
+        if prefix_policy == PREFIX_POLICIES["grace"] and grace_frames == 0:
+            grace_frames = 3
         if kid in seen_ids:
             raise ValueError(f"duplicate keyword id {kid}")
         if kid < 0 or kid > 0xFFFFFFFF:
@@ -81,6 +103,11 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
                 "threshold": threshold,
                 "tokens": tokens,
                 "token_ids": ids,
+                "min_trailing_blanks": min_trailing_blanks,
+                "priority": priority,
+                "prefix_policy": policy_name,
+                "prefix_policy_id": prefix_policy,
+                "grace_frames": grace_frames,
             }
         )
     if not result:
@@ -109,9 +136,12 @@ def emit_header(items: list[dict], fingerprint: int, out: pathlib.Path) -> None:
     lines += ["", "static const kws_keyword_t kws_generated_keywords[] = {"]
     for n, item in enumerate(items):
         lines.append(
-            f"  {{{item['id']}u, kws_kw_{n}_tokens, "
+            "  {"
+            f"{item['id']}u, kws_kw_{n}_tokens, "
             f"(uint16_t)(sizeof(kws_kw_{n}_tokens) / sizeof(kws_kw_{n}_tokens[0])), "
-            f"{item['threshold']:.6f}f}}, /* {item['text']} */"
+            f"{item['threshold']:.6f}f, {item['min_trailing_blanks']}u, "
+            f"{item['priority']}u, {item['prefix_policy_id']}u, {item['grace_frames']}u"
+            f"}}, /* {item['text']} */"
         )
     lines += [
         "};",
@@ -149,10 +179,14 @@ def emit_pack(
         )
         blob.extend(
             struct.pack(
-                "<IfHH16H",
+                "<IfHBBBBH16H",
                 item["id"],
                 item["threshold"],
                 len(item["token_ids"]),
+                item["min_trailing_blanks"],
+                item["priority"],
+                item["prefix_policy_id"],
+                item["grace_frames"],
                 0,
                 *padded,
             )
