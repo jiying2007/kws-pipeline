@@ -154,10 +154,12 @@ def main() -> int:
             "process_cpu_time / elapsed / online_cpu_capacity * 100"
         ),
         "requested_hours": args.hours,
+        "elapsed_seconds": elapsed_s,
         "elapsed_hours": elapsed_s / 3600.0,
         "completed_requested_duration": completed_requested_duration,
         "termination_returncode": process.returncode,
         "sample_seconds": args.sample_seconds,
+        "initial_cpu_seconds": initial_cpu,
         "samples": samples,
         "max_rss_kib": max(rss_values) if rss_values else None,
         "average_cpu_percent": average_cpu_percent,
