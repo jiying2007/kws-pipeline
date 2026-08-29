@@ -42,10 +42,19 @@ jobs:
         run: cmake --build build --parallel
       - name: C tests
         run: ctest --test-dir build --output-on-failure
+      - name: Clang static analysis
+        if: matrix.cc == 'clang'
+        run: |
+          set -euo pipefail
+          for source in src/*.c; do
+            clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
+              -Iinclude -Isrc "$source"
+          done
       - name: Python/product tests
         run: |
           python3 tests/test_frontend_parity.py ./build/kws_feature_dump
           python3 tests/test_dataset_audit.py
+          python3 tests/test_corpus_identity.py
           python3 tests/test_false_reject_mining.py
           python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
           python3 tests/test_domain_scene.py
@@ -59,10 +68,62 @@ jobs:
           python3 tests/test_run_corpus.py
           python3 tests/test_board_bench.py --runner ./build/kws_board_bench
           python3 tests/test_release_qualification.py
+          python3 tests/test_target_evidence.py
+          python3 tests/test_audio_discontinuity_contract.py
+          python3 tests/test_training_supply_chain.py
+          python3 tests/test_reproducible_sdk.py
+          python3 tests/test_terminal_docs.py
+          python3 tests/test_test_inventory.py
       - name: Hosted benchmark signal
         run: ./build/kws_bench
+      - name: Python test inventory
+        run: >-
+          python3 tools/test_inventory.py
+          --workflow .github/workflows/ci.yml
+          --workflow .github/workflows/training-integration.yml
+          --workflow .github/workflows/release.yml
       - name: Python syntax
         run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify release ref matches SDK version
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/tags/v*) release_tag="$GITHUB_REF_NAME" ;;
+            refs/heads/release/v*) release_tag="${GITHUB_REF_NAME#release/}" ;;
+            *) exit 2 ;;
+          esac
+          expected="${release_tag#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test "$expected" = "$actual"
+      - name: Configure coverage build
+        run: >-
+          cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF -DKWS_BUILD_FUZZ=OFF
+          -DCMAKE_C_FLAGS="-O0 --coverage"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+      - name: Build and run C tests
+        run: |
+          cmake --build build-coverage --parallel
+          ctest --test-dir build-coverage --output-on-failure
+      - name: Generate gcov reports
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          data=(build-coverage/CMakeFiles/kws_pipeline.dir/src/*.gcda)
+          test "${#data[@]}" -gt 0
+          for file in "${data[@]}"; do
+            gcov "$file" >/dev/null
+          done
+      - name: C line coverage gate
+        run: python3 tools/check_gcov.py --root . --minimum 55
 
   sanitizers:
     runs-on: ubuntu-latest
@@ -158,7 +219,7 @@ jobs:
         run: cmake --build build-arm --parallel
 
   publish:
-    needs: [hosted, sanitizers, fuzz, armv7-cross]
+    needs: [hosted, coverage, sanitizers, fuzz, armv7-cross]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -200,7 +261,7 @@ jobs:
             echo "release already exists: $RELEASE_TAG" >&2
             exit 2
           fi
-      - name: Build installable SDK
+      - name: Build installable SDK twice
         env:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
@@ -209,6 +270,10 @@ jobs:
           cmake --build build --parallel
           ctest --test-dir build --output-on-failure
           cmake --install build --prefix "$RUNNER_TEMP/sdk"
+          cmake -S . -B build-repro -DCMAKE_BUILD_TYPE=Release -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+          cmake --build build-repro --parallel
+          cmake --install build-repro --prefix "$RUNNER_TEMP/sdk-repro"
+          python3 tools/check_reproducible_sdk.py "$RUNNER_TEMP/sdk" "$RUNNER_TEMP/sdk-repro"
           mkdir -p dist
           tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
             -C "$RUNNER_TEMP/sdk" -czf "dist/kws-pipeline-${VERSION}-sdk.tar.gz" .
@@ -275,7 +340,7 @@ jobs:
             --title "kws-pipeline $RELEASE_TAG"
 
   cleanup-bootstrap-branch:
-    needs: [hosted, sanitizers, fuzz, armv7-cross, publish]
+    needs: [hosted, coverage, sanitizers, fuzz, armv7-cross, publish]
     if: ${{ always() && startsWith(github.ref, 'refs/heads/release/v') }}
     runs-on: ubuntu-latest
     permissions:
