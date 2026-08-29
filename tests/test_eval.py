@@ -36,6 +36,7 @@ def main() -> int:
         detections = root / "detections.jsonl"
         summary = root / "summary.json"
         false_positives = root / "false_positives.jsonl"
+        false_rejects = root / "false_rejects.jsonl"
 
         references.write_text(
             json.dumps(
@@ -89,6 +90,8 @@ def main() -> int:
                 str(summary),
                 "--false-positives",
                 str(false_positives),
+                "--false-rejects",
+                str(false_rejects),
                 "--max-far-per-hour",
                 "1.0",
                 "--max-frr",
@@ -114,6 +117,16 @@ def main() -> int:
         assert len(fp) == 1
         assert fp[0]["time_s"] == 100.0
         assert fp[0]["path"] == "room-1.wav"
+
+        fr = [
+            json.loads(line)
+            for line in false_rejects.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(fr) == 1
+        assert fr[0]["keyword_id"] == 2
+        assert fr[0]["start_s"] == 19.0
+        assert fr[0]["end_s"] == 20.0
+        assert fr[0]["path"] == "room-1.wav"
 
         overlap_refs = root / "overlap-references.jsonl"
         overlap_dets = root / "overlap-detections.jsonl"
