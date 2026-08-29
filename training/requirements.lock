@@ -1,4 +1,5 @@
-# Pinned real-training environment for kws-pipeline v0.2.x.
-# PyTorch 2.13.0 is the current stable minor baseline selected for this repo;
-# do not float this file during a qualification run.
+# Expected runtime inside the immutable qualification training base image.
+# The entire transitive dependency/filesystem state is locked by the OCI base
+# image digest; this file asserts the product-facing Python/PyTorch contract.
+python==3.12.11
 torch==2.13.0
