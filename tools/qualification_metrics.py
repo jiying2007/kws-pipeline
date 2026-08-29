@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from corpus_identity import corpus_digest
 from qualification_common import (
     FRAME_HOP_SAMPLES,
     close_enough,
@@ -10,9 +11,14 @@ from qualification_common import (
 )
 
 
-def validate_eval(summary: dict, provenance: dict, actual_hashes: dict[str, str]) -> dict:
-    if json_int(provenance.get("schema_version"), "evaluation provenance schema_version") != 1:
-        raise ValueError("evaluation provenance schema_version must be 1")
+def validate_eval(
+    summary: dict,
+    provenance: dict,
+    actual_hashes: dict[str, str],
+    actual_corpus: dict,
+) -> dict:
+    if json_int(provenance.get("schema_version"), "evaluation provenance schema_version") != 2:
+        raise ValueError("evaluation provenance schema_version must be 2")
     measured_hashes = {
         key: sha256_value(provenance.get(key), f"evaluation provenance {key}")
         for key in actual_hashes
@@ -24,6 +30,18 @@ def validate_eval(summary: dict, provenance: dict, actual_hashes: dict[str, str]
     detections = json_int(provenance.get("detections"), "evaluation provenance detections", 0)
     if summary.get("references_sha256") != actual_hashes["references_sha256"] or summary.get("detections_sha256") != actual_hashes["detections_sha256"]:
         raise ValueError("evaluation summary does not match selected files")
+
+    audio_files = provenance.get("audio_files")
+    if not isinstance(audio_files, list) or not audio_files:
+        raise ValueError("evaluation provenance audio_files must be non-empty")
+    measured_corpus = sha256_value(
+        provenance.get("audio_corpus_sha256"), "evaluation provenance audio_corpus_sha256"
+    )
+    if measured_corpus != corpus_digest(audio_files):
+        raise ValueError("evaluation provenance audio corpus digest is internally inconsistent")
+    if measured_corpus != actual_corpus.get("corpus_sha256") or audio_files != actual_corpus.get("recordings"):
+        raise ValueError("evaluation provenance does not match selected qualification WAV bytes")
+
     result = {
         "recordings": json_int(summary["recordings"], "evaluation.recordings", 1),
         "audio_hours": finite(summary["audio_hours"], "evaluation.audio_hours", 0.0),
@@ -35,9 +53,11 @@ def validate_eval(summary: dict, provenance: dict, actual_hashes: dict[str, str]
         "far_per_hour": finite(summary["far_per_hour"], "evaluation.far_per_hour", 0.0),
         "p50_post_end_latency_ms": finite(summary["p50_post_end_latency_ms"], "evaluation.p50_post_end_latency_ms", 0.0),
         "p95_post_end_latency_ms": finite(summary["p95_post_end_latency_ms"], "evaluation.p95_post_end_latency_ms", 0.0),
+        "audio_corpus_sha256": measured_corpus,
+        "audio_files": audio_files,
         **actual_hashes,
     }
-    if result["audio_hours"] <= 0.0 or result["recordings"] != recordings:
+    if result["audio_hours"] <= 0.0 or result["recordings"] != recordings or result["recordings"] != len(audio_files):
         raise ValueError("evaluation duration/recording count is invalid")
     if result["matched"] + result["false_rejects"] != result["expected"]:
         raise ValueError("evaluation expected/matched/false-reject counts disagree")
@@ -90,8 +110,30 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
     return result
 
 
-def validate_evidence(evidence: dict) -> dict:
+def validate_evidence(evidence: dict, collector_sha256: str) -> dict:
+    if json_int(evidence.get("schema_version"), "evidence.schema_version") != 2:
+        raise ValueError("target evidence schema_version must be 2")
+    if required_text(evidence, "collector", "evidence") != "collect_target_evidence.py":
+        raise ValueError("target evidence must be produced by collect_target_evidence.py")
+    if sha256_value(evidence.get("collector_sha256"), "evidence.collector_sha256") != collector_sha256:
+        raise ValueError("target evidence collector hash does not match retained collector")
+    raw = evidence.get("raw_evidence")
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("target evidence must bind at least one raw evidence artifact")
+    normalized_raw = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"evidence.raw_evidence[{index}] must be an object")
+        normalized_raw.append(
+            {
+                "name": required_text(item, "name", f"evidence.raw_evidence[{index}]"),
+                "sha256": sha256_value(item.get("sha256"), f"evidence.raw_evidence[{index}].sha256"),
+                "bytes": json_int(item.get("bytes"), f"evidence.raw_evidence[{index}].bytes", 1),
+            }
+        )
     result = {
+        "collector": "collect_target_evidence.py",
+        "collector_sha256": collector_sha256,
         "target": required_text(evidence, "target", "evidence"),
         "board_revision": required_text(evidence, "board_revision", "evidence"),
         "soc": required_text(evidence, "soc", "evidence"),
@@ -99,13 +141,23 @@ def validate_evidence(evidence: dict) -> dict:
         "compiler_flags": required_text(evidence, "compiler_flags", "evidence"),
         "governor": required_text(evidence, "governor", "evidence"),
         "audio_frontend": required_text(evidence, "audio_frontend", "evidence"),
+        "kernel": required_text(evidence, "kernel", "evidence"),
+        "machine": required_text(evidence, "machine", "evidence"),
+        "cpu_online": required_text(evidence, "cpu_online", "evidence"),
+        "uptime_s": finite(evidence["uptime_s"], "evidence.uptime_s", 0.0),
         "soak_hours": finite(evidence["soak_hours"], "evidence.soak_hours", 0.0),
         "cpu_percent": finite(evidence["cpu_percent"], "evidence.cpu_percent", 0.0),
         "rss_kib": finite(evidence["rss_kib"], "evidence.rss_kib", 0.0),
         "stack_high_water_bytes": finite(evidence["stack_high_water_bytes"], "evidence.stack_high_water_bytes", 0.0),
         "max_temp_c": finite(evidence["max_temp_c"], "evidence.max_temp_c"),
         "average_power_mw": finite(evidence["average_power_mw"], "evidence.average_power_mw", 0.0),
+        "raw_evidence": normalized_raw,
     }
     if result["cpu_percent"] > 100.0:
         raise ValueError("evidence.cpu_percent must be <= 100")
+    power_raw = evidence.get("power_raw_sha256")
+    if power_raw is not None:
+        result["power_raw_sha256"] = sha256_value(power_raw, "evidence.power_raw_sha256")
+        result["instrument_id"] = required_text(evidence, "instrument_id", "evidence")
+        result["calibration_id"] = required_text(evidence, "calibration_id", "evidence")
     return result
