@@ -102,7 +102,10 @@ def validate_manifest(manifest: dict) -> dict:
     board = manifest.get("board")
     evidence = manifest.get("evidence")
     artifacts = manifest.get("artifacts")
-    if not all(isinstance(item, dict) for item in (runtime, vocabulary, lineage, evaluation, board, evidence, artifacts)):
+    if not all(
+        isinstance(item, dict)
+        for item in (runtime, vocabulary, lineage, evaluation, board, evidence, artifacts)
+    ):
         raise ValueError("manifest is missing required object sections")
     if integer(runtime.get("model_abi"), "runtime.model_abi") != 2:
         raise ValueError("qualification gate requires model ABI v2")
@@ -123,15 +126,30 @@ def validate_manifest(manifest: dict) -> dict:
         raise ValueError("manifest vocabulary fingerprint is invalid")
 
     names = (
-        "model", "model_provenance", "model_checkpoint", "training_tokens",
-        "keyword_pack", "tokens", "config", "eval_runner", "references",
-        "detections", "board_runner", "board_audio",
+        "model",
+        "model_provenance",
+        "model_checkpoint",
+        "training_tokens",
+        "keyword_pack",
+        "tokens",
+        "config",
+        "eval_runner",
+        "references",
+        "detections",
+        "board_runner",
+        "board_audio",
     )
-    hashes = {name: validate_artifact(artifacts.get(name), f"artifacts.{name}") for name in names}
+    hashes = {
+        name: validate_artifact(artifacts.get(name), f"artifacts.{name}")
+        for name in names
+    }
     training_artifacts = artifacts.get("training_manifests")
     if not isinstance(training_artifacts, list) or not training_artifacts:
         raise ValueError("artifacts.training_manifests must be non-empty")
-    training_hashes = [validate_artifact(item, f"training_manifests[{i}]") for i, item in enumerate(training_artifacts)]
+    training_hashes = [
+        validate_artifact(item, f"training_manifests[{i}]")
+        for i, item in enumerate(training_artifacts)
+    ]
 
     if validate_sha(vocabulary.get("sha256"), "vocabulary.sha256") != hashes["tokens"]:
         raise ValueError("manifest vocabulary hash does not match token artifact")
@@ -146,14 +164,26 @@ def validate_manifest(manifest: dict) -> dict:
         if validate_sha(lineage.get(key), f"model_lineage.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest model-lineage {key} is inconsistent")
     identical = lineage.get("token_bytes_identical_to_training")
-    if not isinstance(identical, bool) or identical != (hashes["tokens"] == hashes["training_tokens"]):
+    if not isinstance(identical, bool) or identical != (
+        hashes["tokens"] == hashes["training_tokens"]
+    ):
         raise ValueError("manifest model-lineage token-byte identity is inconsistent")
-    if integer(lineage.get("frontend_spec_version"), "model_lineage.frontend_spec_version") != 2:
+    if integer(
+        lineage.get("frontend_spec_version"), "model_lineage.frontend_spec_version"
+    ) != 2:
         raise ValueError("manifest model-lineage frontend spec is unsupported")
     frontend_kind = integer(lineage.get("frontend_kind"), "model_lineage.frontend_kind")
     frontend_name = lineage.get("frontend_name")
     if frontend_kind not in FRONTEND_NAMES or frontend_name != FRONTEND_NAMES[frontend_kind]:
         raise ValueError("manifest model-lineage frontend identity is invalid")
+    runtime_frontend_kind = integer(runtime.get("frontend_kind"), "runtime.frontend_kind")
+    runtime_frontend_name = runtime.get("frontend_name")
+    if (
+        runtime_frontend_kind != frontend_kind
+        or runtime_frontend_name != frontend_name
+        or runtime_frontend_name != FRONTEND_NAMES.get(runtime_frontend_kind)
+    ):
+        raise ValueError("manifest runtime frontend does not match model lineage")
 
     training = lineage.get("training")
     quantization = lineage.get("quantization")
@@ -166,21 +196,29 @@ def validate_manifest(manifest: dict) -> dict:
     for index, item in enumerate(recorded):
         if not isinstance(item, dict):
             raise ValueError("manifest model-lineage training manifest must be an object")
-        recorded_hashes.append(validate_sha(item.get("sha256"), f"training.manifests[{index}].sha256"))
+        recorded_hashes.append(
+            validate_sha(
+                item.get("sha256"), f"training.manifests[{index}].sha256"
+            )
+        )
     if Counter(recorded_hashes) != Counter(training_hashes):
         raise ValueError("manifest model-lineage training-manifest hashes are inconsistent")
 
     eval_links = {
-        "runner_sha256": "eval_runner", "model_sha256": "model",
-        "keyword_pack_sha256": "keyword_pack", "references_sha256": "references",
+        "runner_sha256": "eval_runner",
+        "model_sha256": "model",
+        "keyword_pack_sha256": "keyword_pack",
+        "references_sha256": "references",
         "detections_sha256": "detections",
     }
     for key, artifact_name in eval_links.items():
         if validate_sha(evaluation.get(key), f"evaluation.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest evaluation {key} cross-link is inconsistent")
     board_links = {
-        "runner_sha256": "board_runner", "model_sha256": "model",
-        "keyword_pack_sha256": "keyword_pack", "audio_sha256": "board_audio",
+        "runner_sha256": "board_runner",
+        "model_sha256": "model",
+        "keyword_pack_sha256": "keyword_pack",
+        "audio_sha256": "board_audio",
     }
     for key, artifact_name in board_links.items():
         if validate_sha(board.get(key), f"board.{key}") != hashes[artifact_name]:
@@ -194,20 +232,44 @@ def validate_manifest(manifest: dict) -> dict:
         "source_sha": source_sha,
         "vocab_fingerprint": fingerprint,
         "model_checkpoint_sha256": hashes["model_checkpoint"],
-        "audio_hours": finite(evaluation.get("audio_hours"), "evaluation.audio_hours", 0.0),
+        "frontend_kind": frontend_kind,
+        "frontend_name": frontend_name,
+        "audio_hours": finite(
+            evaluation.get("audio_hours"), "evaluation.audio_hours", 0.0
+        ),
         "expected": integer(evaluation.get("expected"), "evaluation.expected", 0),
         "frr": finite(evaluation.get("frr"), "evaluation.frr", 0.0),
-        "far_per_hour": finite(evaluation.get("far_per_hour"), "evaluation.far_per_hour", 0.0),
-        "p95_latency_ms": finite(evaluation.get("p95_post_end_latency_ms"), "evaluation.p95_post_end_latency_ms", 0.0),
-        "p99_process_us": finite(board.get("p99_process_us"), "board.p99_process_us", 0.0),
+        "far_per_hour": finite(
+            evaluation.get("far_per_hour"), "evaluation.far_per_hour", 0.0
+        ),
+        "p95_latency_ms": finite(
+            evaluation.get("p95_post_end_latency_ms"),
+            "evaluation.p95_post_end_latency_ms",
+            0.0,
+        ),
+        "p99_process_us": finite(
+            board.get("p99_process_us"), "board.p99_process_us", 0.0
+        ),
         "rtf": finite(board.get("rtf"), "board.rtf", 0.0),
-        "p99_headroom": finite(board.get("p99_headroom"), "board.p99_headroom", 0.0),
-        "soak_hours": finite(evidence.get("soak_hours"), "evidence.soak_hours", 0.0),
-        "cpu_percent": finite(evidence.get("cpu_percent"), "evidence.cpu_percent", 0.0),
+        "p99_headroom": finite(
+            board.get("p99_headroom"), "board.p99_headroom", 0.0
+        ),
+        "soak_hours": finite(
+            evidence.get("soak_hours"), "evidence.soak_hours", 0.0
+        ),
+        "cpu_percent": finite(
+            evidence.get("cpu_percent"), "evidence.cpu_percent", 0.0
+        ),
         "rss_kib": finite(evidence.get("rss_kib"), "evidence.rss_kib", 0.0),
-        "stack_high_water_bytes": finite(evidence.get("stack_high_water_bytes"), "evidence.stack_high_water_bytes", 0.0),
+        "stack_high_water_bytes": finite(
+            evidence.get("stack_high_water_bytes"),
+            "evidence.stack_high_water_bytes",
+            0.0,
+        ),
         "max_temp_c": finite(evidence.get("max_temp_c"), "evidence.max_temp_c"),
-        "average_power_mw": finite(evidence.get("average_power_mw"), "evidence.average_power_mw", 0.0),
+        "average_power_mw": finite(
+            evidence.get("average_power_mw"), "evidence.average_power_mw", 0.0
+        ),
     }
     if result["frr"] > 1.0 or result["cpu_percent"] > 100.0:
         raise ValueError("manifest contains impossible FRR/CPU values")
@@ -224,20 +286,57 @@ def main() -> int:
     policy = validate_policy(load_json(args.policy))
     measured = validate_manifest(manifest)
     checks = (
-        (measured["audio_hours"] < policy["min_audio_hours"], "evaluation.audio_hours below minimum"),
-        (measured["expected"] < policy["min_expected_wakes"], "evaluation.expected below minimum"),
+        (
+            measured["audio_hours"] < policy["min_audio_hours"],
+            "evaluation.audio_hours below minimum",
+        ),
+        (
+            measured["expected"] < policy["min_expected_wakes"],
+            "evaluation.expected below minimum",
+        ),
         (measured["frr"] > policy["max_frr"], "evaluation.frr above maximum"),
-        (measured["far_per_hour"] > policy["max_far_per_hour"], "evaluation.far_per_hour above maximum"),
-        (measured["p95_latency_ms"] > policy["max_p95_latency_ms"], "evaluation.p95_post_end_latency_ms above maximum"),
-        (measured["p99_process_us"] > policy["max_p99_process_us"], "board.p99_process_us above maximum"),
+        (
+            measured["far_per_hour"] > policy["max_far_per_hour"],
+            "evaluation.far_per_hour above maximum",
+        ),
+        (
+            measured["p95_latency_ms"] > policy["max_p95_latency_ms"],
+            "evaluation.p95_post_end_latency_ms above maximum",
+        ),
+        (
+            measured["p99_process_us"] > policy["max_p99_process_us"],
+            "board.p99_process_us above maximum",
+        ),
         (measured["rtf"] > policy["max_rtf"], "board.rtf above maximum"),
-        (measured["p99_headroom"] < policy["min_p99_headroom"], "board.p99_headroom below minimum"),
-        (measured["soak_hours"] < policy["min_soak_hours"], "evidence.soak_hours below minimum"),
-        (measured["cpu_percent"] > policy["max_cpu_percent"], "evidence.cpu_percent above maximum"),
-        (measured["rss_kib"] > policy["max_rss_kib"], "evidence.rss_kib above maximum"),
-        (measured["stack_high_water_bytes"] > policy["max_stack_high_water_bytes"], "evidence.stack_high_water_bytes above maximum"),
-        (measured["max_temp_c"] > policy["max_temp_c"], "evidence.max_temp_c above maximum"),
-        (measured["average_power_mw"] > policy["max_average_power_mw"], "evidence.average_power_mw above maximum"),
+        (
+            measured["p99_headroom"] < policy["min_p99_headroom"],
+            "board.p99_headroom below minimum",
+        ),
+        (
+            measured["soak_hours"] < policy["min_soak_hours"],
+            "evidence.soak_hours below minimum",
+        ),
+        (
+            measured["cpu_percent"] > policy["max_cpu_percent"],
+            "evidence.cpu_percent above maximum",
+        ),
+        (
+            measured["rss_kib"] > policy["max_rss_kib"],
+            "evidence.rss_kib above maximum",
+        ),
+        (
+            measured["stack_high_water_bytes"]
+            > policy["max_stack_high_water_bytes"],
+            "evidence.stack_high_water_bytes above maximum",
+        ),
+        (
+            measured["max_temp_c"] > policy["max_temp_c"],
+            "evidence.max_temp_c above maximum",
+        ),
+        (
+            measured["average_power_mw"] > policy["max_average_power_mw"],
+            "evidence.average_power_mw above maximum",
+        ),
     )
     violations = [message for failed, message in checks if failed]
     result = {
@@ -249,9 +348,13 @@ def main() -> int:
         "source_sha": measured["source_sha"],
         "vocab_fingerprint": measured["vocab_fingerprint"],
         "model_checkpoint_sha256": measured["model_checkpoint_sha256"],
+        "frontend_kind": measured["frontend_kind"],
+        "frontend_name": measured["frontend_name"],
         "violations": violations,
     }
-    rendered = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+    rendered = json.dumps(
+        result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False
+    )
     print(rendered)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
