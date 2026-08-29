@@ -6,6 +6,7 @@
   "keywords": "keywords/zh_cn_example.tsv",
   "work_dir": "build/synthetic-loop",
   "generator": {
+    "continuous_gap_ms": 1600.0,
     "tts": {
       "backend": "tone",
       "token_ms": 180.0,
