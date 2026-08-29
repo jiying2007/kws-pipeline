@@ -23,7 +23,7 @@ python3 training/iterate.py \
   --runner build/kws_wav
 ```
 
-The loop creates its workspace under `build/synthetic-loop` by default and replaces that workspace on each run.
+The loop creates its workspace under `build/synthetic-loop` by default and replaces that workspace on each run. `--work-dir` is guarded against destructive roots such as the filesystem root, HOME, repository root and repository parent; an unsafe path is rejected before dataset generation or deletion.
 
 ## Four isolated data pools
 
@@ -118,7 +118,7 @@ That backend uses the repository's `training/train_ctc.py` and `training/export_
 
 Each candidate is evaluated on the calibration continuous recording through the real `kws_wav` executable. `iterate.py` performs per-keyword coordinate search across `calibration.thresholds`, recompiles `.kwk`, and scores every trial with `eval/score_events.py`.
 
-Candidate selection uses calibration metrics. Test is a regression gate. Qualification remains untouched until after the best candidate is frozen.
+Threshold tuning uses calibration only. After calibration is frozen for that candidate, **candidate ranking combines calibration and test regression scores**; this prevents a marginal calibration-only win from replacing a candidate that generalizes better to the independent test split. Qualification remains untouched until the retained best candidate is frozen.
 
 The example synthetic policy keeps strict gates:
 
@@ -128,7 +128,7 @@ FAR/hour == 0
 p95 post-end latency <= 800 ms
 ```
 
-Do not relax these limits merely to make CI green. Fix data labeling, isolation, acoustic classification or decoder behavior instead.
+All iteration counts and gate values are range-checked before use: `0 < min_rounds <= max_rounds`, `patience >= 0`, `coordinate_rounds > 0`, finite nonnegative gates, and `max_frr <= 1`. Do not relax these limits merely to make CI green. Fix data labeling, isolation, acoustic classification or decoder behavior instead.
 
 ## Bidirectional failure replay
 
@@ -152,15 +152,15 @@ The dependency-free prototype always refits from its isolated token/background f
 
 ## Candidate selection and stopping
 
-A candidate score heavily penalizes synthetic policy violations, then ranks FRR, FAR/hour and latency. A new candidate never overwrites the retained best candidate merely because it is newer.
+For each candidate, `calibration_score` and `test_score` use the same gate-aware FRR/FAR/latency penalty function; the retained candidate score is their sum. A newer model therefore never replaces the retained best merely because it is newer or because it overfits calibration.
 
 The loop stops when either:
 
 - the minimum round count is reached and the best candidate passes calibration + test gates while `stop_on_gate` is enabled; or
-- no score improvement is observed for `patience` rounds; or
+- no joint-score improvement is observed for `patience` rounds; or
 - `max_rounds` is reached.
 
-Only then is the retained best `.kwm/.kwk` evaluated on synthetic qualification.
+Only then are the retained model, keyword pack, calibrated keyword TSV and **model provenance** copied into `best/`. The `torch_ctc` backend also freezes the selected checkpoint. The final synthetic qualification therefore has a stable lineage bundle rather than only detached model bytes.
 
 ## Output contract
 
@@ -187,19 +187,23 @@ build/synthetic-loop/
   candidates/
     round-*/
       model.kwm
-      model.kwm.synthetic-provenance.json
+      model.kwm.synthetic-provenance.json   # prototype
+      model.kwm.provenance.json             # torch_ctc
+      model.pt                              # torch_ctc
       prototype-fit/
         token-fit-samples.jsonl
         softmax-diagnostics.json
   best/
     model.kwm
+    model-provenance.json
+    model.pt                                # torch_ctc only
     keywords.kwk
     keywords.tsv
     synthetic-qualification/
   synthetic-loop-manifest.json
 ```
 
-The final manifest uses `evidence_class: "synthetic-only"`, records selected artifact/data hashes, candidate metrics, replay hashes and explicit limitations. CI additionally checks the model fitting provenance and post-quantization confusion diagnostics. A successful run may be described as **synthetic-qualified** only.
+The final manifest uses `schema_version: 2` and `evidence_class: "synthetic-only"`. It records the selected round/joint score, best model/provenance/pack/keyword hashes, the selected checkpoint hash when applicable, candidate calibration/test metrics, replay hashes and explicit limitations. CI independently checks the frozen lineage, model fitting provenance and post-quantization confusion diagnostics. A successful run may be described as **synthetic-qualified** only.
 
 ## Promotion to real evidence
 
