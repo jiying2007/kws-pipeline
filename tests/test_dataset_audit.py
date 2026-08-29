@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -24,6 +24,15 @@ def run(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def add_junk_chunk(source: pathlib.Path, destination: pathlib.Path) -> None:
+    data = bytearray(source.read_bytes())
+    assert data[:4] == b"RIFF" and data[8:12] == b"WAVE"
+    chunk = b"JUNK" + struct.pack("<I", 4) + b"meta"
+    riff_size = struct.unpack_from("<I", data, 4)[0]
+    struct.pack_into("<I", data, 4, riff_size + len(chunk))
+    destination.write_bytes(data[:12] + chunk + data[12:])
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
@@ -34,7 +43,6 @@ def main() -> int:
 
         write_wav(train_dir / "a.wav", seconds=1)
         write_wav(train_dir / "b.wav", seconds=1)
-        # Make b byte-distinct while preserving valid PCM16 WAV format.
         data = bytearray((train_dir / "b.wav").read_bytes())
         data[-2:] = (123).to_bytes(2, "little", signed=True)
         (train_dir / "b.wav").write_bytes(data)
@@ -70,17 +78,22 @@ def main() -> int:
         )
         assert clean.returncode == 0, clean.stderr
         result = json.loads(report.read_text(encoding="utf-8"))
+        assert result["schema_version"] == 2
+        assert result["identity"] == "decoded-mono-16khz-pcm16-sha256"
         assert result["clean"] is True
         assert result["cross_split_leaks"] == []
         assert result["splits"]["train"]["examples"] == 2
         assert result["splits"]["eval"]["examples"] == 1
 
-        shutil.copyfile(train_dir / "a.wav", eval_dir / "leaked.wav")
+        # Re-wrap identical PCM with an extra RIFF metadata chunk. Container
+        # bytes differ, but decoded audio identity must still catch leakage.
+        add_junk_chunk(train_dir / "a.wav", eval_dir / "rewrapped.wav")
+        assert (train_dir / "a.wav").read_bytes() != (eval_dir / "rewrapped.wav").read_bytes()
         eval_manifest.write_text(
             json.dumps(
                 {
-                    "recording": "leaked",
-                    "path": "eval/leaked.wav",
+                    "recording": "rewrapped-leak",
+                    "path": "eval/rewrapped.wav",
                     "duration_s": 1.0,
                     "expected": [],
                 }
@@ -94,11 +107,14 @@ def main() -> int:
             "--split",
             f"eval={eval_manifest}",
         )
-        assert leaked.returncode == 1
+        assert leaked.returncode == 1, leaked.stderr
         leaked_result = json.loads(leaked.stdout)
         assert leaked_result["clean"] is False
         assert len(leaked_result["cross_split_leaks"]) == 1
-        assert leaked_result["cross_split_leaks"][0]["splits"] == ["eval", "train"]
+        leak = leaked_result["cross_split_leaks"][0]
+        assert leak["splits"] == ["eval", "train"]
+        assert len(leak["file_sha256"]) == 2
+        assert isinstance(leak["pcm_sha256"], str) and len(leak["pcm_sha256"]) == 64
 
         duplicate_manifest = root / "dup.tsv"
         duplicate_manifest.write_text(
@@ -112,6 +128,7 @@ def main() -> int:
         assert duplicate.returncode == 1
         duplicate_result = json.loads(duplicate.stdout)
         assert len(duplicate_result["within_split_duplicates"]) == 1
+        assert "pcm_sha256" in duplicate_result["within_split_duplicates"][0]
 
     print("test_dataset_audit: ok")
     return 0
