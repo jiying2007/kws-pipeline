@@ -1,6 +1,8 @@
 name: repository-cleanup
 
 on:
+  push:
+    branches: [main]
   pull_request:
     types: [closed]
   workflow_dispatch:
@@ -25,82 +27,11 @@ env:
   SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/"
 
 jobs:
-  cleanup-merged-pr-branch:
-    name: delete merged PR branch
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Delete source branch when still at merged head
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          is_safe_prefix() {
-            local candidate="$1"
-            local prefix
-            for prefix in ${SAFE_BRANCH_PREFIXES}; do
-              [[ "${candidate}" == "${prefix}"* ]] && return 0
-            done
-            return 1
-          }
-
-          if ! is_safe_prefix "${BRANCH}"; then
-            echo "skip: branch '${BRANCH}' is outside the ephemeral-prefix allowlist"
-            exit 0
-          fi
-
-          default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
-          if [[ "${BRANCH}" == "${default_branch}" ]]; then
-            echo "skip: refusing to delete default branch '${default_branch}'"
-            exit 0
-          fi
-
-          branches_json="$(gh api --paginate --slurp \
-            "repos/${GITHUB_REPOSITORY}/branches?per_page=100")"
-          branch_json="$(jq -c --arg name "${BRANCH}" \
-            '[.[][] | select(.name == $name)][0] // empty' <<<"${branches_json}")"
-          if [[ -z "${branch_json}" ]]; then
-            echo "ok: source branch '${BRANCH}' is already absent"
-            exit 0
-          fi
-          if [[ "$(jq -r '.protected' <<<"${branch_json}")" == "true" ]]; then
-            echo "skip: branch '${BRANCH}' is protected"
-            exit 0
-          fi
-
-          gh auth setup-git >/dev/null
-          remote="https://github.com/${GITHUB_REPOSITORY}.git"
-          current_sha="$(git ls-remote --heads "${remote}" "refs/heads/${BRANCH}" | awk '{print $1}')"
-          if [[ -z "${current_sha}" ]]; then
-            echo "ok: source branch '${BRANCH}' is already absent"
-            exit 0
-          fi
-          if [[ "${current_sha}" != "${EXPECTED_SHA}" ]]; then
-            echo "skip: branch advanced after merge (${current_sha} != ${EXPECTED_SHA})"
-            exit 0
-          fi
-
-          owner="${GITHUB_REPOSITORY_OWNER}"
-          open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
-            -f state=open -f head="${owner}:${BRANCH}" -f per_page=100 --jq 'length')"
-          if (( open_prs != 0 )); then
-            echo "skip: branch '${BRANCH}' is referenced by ${open_prs} open PR(s)"
-            exit 0
-          fi
-
-          echo "delete: '${BRANCH}' at merged head ${EXPECTED_SHA}"
-          git push --quiet "${remote}" ":refs/heads/${BRANCH}"
-
   sweep-merged-branches:
     name: sweep merged ephemeral branches
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.merged == true
     runs-on: ubuntu-24.04
     steps:
       - name: Delete only provably merged ephemeral branches
