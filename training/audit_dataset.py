@@ -9,6 +9,8 @@ import sys
 import wave
 from collections import defaultdict
 
+SAMPLE_RATE_HZ = 16000
+
 
 def split_assignment(text: str, label: str) -> tuple[str, pathlib.Path]:
     if "=" not in text:
@@ -28,20 +30,23 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def inspect_wav(path: pathlib.Path) -> tuple[int, float]:
+def inspect_wav(path: pathlib.Path) -> tuple[int, float, str]:
     try:
         with wave.open(str(path), "rb") as wf:
             if (
                 wf.getnchannels() != 1
-                or wf.getframerate() != 16000
+                or wf.getframerate() != SAMPLE_RATE_HZ
                 or wf.getsampwidth() != 2
                 or wf.getcomptype() != "NONE"
             ):
                 raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
             frames = wf.getnframes()
+            pcm = wf.readframes(frames)
+            if len(pcm) != frames * 2:
+                raise ValueError(f"{path}: truncated PCM payload")
     except (EOFError, wave.Error) as exc:
         raise ValueError(f"{path}: invalid WAV: {exc}") from exc
-    return frames, frames / 16000.0
+    return frames, frames / SAMPLE_RATE_HZ, hashlib.sha256(pcm).hexdigest()
 
 
 def parse_tsv(path: pathlib.Path) -> list[str]:
@@ -84,7 +89,11 @@ def manifest_paths(path: pathlib.Path) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Detect exact WAV leakage across training/calibration/evaluation splits."
+        description=(
+            "Detect decoded-PCM leakage across training/calibration/evaluation splits. "
+            "WAV container SHA256 is retained as provenance, but split identity uses "
+            "the canonical PCM16 payload so metadata/repackaging cannot hide leakage."
+        )
     )
     parser.add_argument(
         "--split",
@@ -121,7 +130,7 @@ def main() -> int:
     if unknown_roots:
         raise ValueError(f"audio roots reference unknown split(s): {', '.join(unknown_roots)}")
 
-    by_hash: dict[str, list[dict]] = defaultdict(list)
+    by_pcm_hash: dict[str, list[dict]] = defaultdict(list)
     split_summaries: dict[str, dict] = {}
     within_duplicates: list[dict] = []
 
@@ -132,7 +141,7 @@ def main() -> int:
         rows = manifest_paths(manifest)
         if not rows:
             raise ValueError(f"{manifest}: split contains no audio rows")
-        local_hashes: dict[str, list[str]] = defaultdict(list)
+        local_pcm_hashes: dict[str, list[str]] = defaultdict(list)
         total_frames = 0
         resolved_rows: list[dict] = []
 
@@ -144,47 +153,50 @@ def main() -> int:
                 resolved = wav_path.resolve(strict=True)
             except FileNotFoundError as exc:
                 raise ValueError(f"{wav_path}: audio file does not exist") from exc
-            frames, duration_s = inspect_wav(resolved)
-            digest = sha256_file(resolved)
+            frames, duration_s, pcm_sha256 = inspect_wav(resolved)
+            file_sha256 = sha256_file(resolved)
             total_frames += frames
             entry = {
                 "split": name,
                 "path": str(resolved),
-                "sha256": digest,
+                "pcm_sha256": pcm_sha256,
+                "file_sha256": file_sha256,
                 "frames": frames,
                 "duration_s": duration_s,
             }
             resolved_rows.append(entry)
-            local_hashes[digest].append(str(resolved))
-            by_hash[digest].append(entry)
+            local_pcm_hashes[pcm_sha256].append(str(resolved))
+            by_pcm_hash[pcm_sha256].append(entry)
 
-        for digest, paths in sorted(local_hashes.items()):
+        for digest, paths in sorted(local_pcm_hashes.items()):
             if len(paths) > 1:
                 within_duplicates.append(
-                    {"split": name, "sha256": digest, "paths": sorted(paths)}
+                    {"split": name, "pcm_sha256": digest, "paths": sorted(paths)}
                 )
         split_summaries[name] = {
             "manifest": str(manifest.resolve()),
             "manifest_sha256": sha256_file(manifest),
             "examples": len(resolved_rows),
-            "unique_audio": len(local_hashes),
-            "audio_hours": total_frames / 16000.0 / 3600.0,
+            "unique_pcm": len(local_pcm_hashes),
+            "audio_hours": total_frames / SAMPLE_RATE_HZ / 3600.0,
         }
 
     cross_split_leaks: list[dict] = []
-    for digest, entries in sorted(by_hash.items()):
+    for digest, entries in sorted(by_pcm_hash.items()):
         splits = sorted({entry["split"] for entry in entries})
         if len(splits) > 1:
             cross_split_leaks.append(
                 {
-                    "sha256": digest,
+                    "pcm_sha256": digest,
                     "splits": splits,
                     "paths": sorted({entry["path"] for entry in entries}),
+                    "file_sha256": sorted({entry["file_sha256"] for entry in entries}),
                 }
             )
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "identity": "decoded-mono-16khz-pcm16-sha256",
         "splits": split_summaries,
         "cross_split_leaks": cross_split_leaks,
         "within_split_duplicates": within_duplicates,
@@ -199,13 +211,13 @@ def main() -> int:
 
     if cross_split_leaks:
         print(
-            f"dataset audit failed: {len(cross_split_leaks)} cross-split duplicate audio hash(es)",
+            f"dataset audit failed: {len(cross_split_leaks)} cross-split duplicate PCM hash(es)",
             file=sys.stderr,
         )
         return 1
     if args.fail_within_split and within_duplicates:
         print(
-            f"dataset audit failed: {len(within_duplicates)} within-split duplicate audio hash(es)",
+            f"dataset audit failed: {len(within_duplicates)} within-split duplicate PCM hash(es)",
             file=sys.stderr,
         )
         return 1
