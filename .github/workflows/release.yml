@@ -121,6 +121,7 @@ jobs:
       contents: write
       id-token: write
       attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -144,8 +145,13 @@ jobs:
             --version "$version" \
             --source-sha "$GITHUB_SHA" \
             --output "dist/kws-pipeline-${version}.spdx.json"
-          (cd dist && sha256sum *.tar.gz *.spdx.json > SHA256SUMS)
-      - name: Attest SDK and SBOM
+          python3 -m json.tool "dist/kws-pipeline-${version}.spdx.json" >/dev/null
+          (cd dist && sha256sum *.tar.gz *.spdx.json > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Attest release provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: dist/SHA256SUMS
+      - name: Attest SDK SBOM
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: dist/kws-pipeline-*-sdk.tar.gz
