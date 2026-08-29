@@ -5,7 +5,6 @@ import argparse
 import json
 import math
 import pathlib
-import struct
 import sys
 import wave
 
@@ -14,6 +13,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
 
 SAMPLE_RATE_HZ = 16000
+UINT32_MAX = 0xFFFFFFFF
 
 
 def load_jsonl(path: pathlib.Path) -> list[dict]:
@@ -28,6 +28,17 @@ def load_jsonl(path: pathlib.Path) -> list[dict]:
     return rows
 
 
+def uint32_value(value, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be an integer")
+    if isinstance(value, float) and not value.is_integer():
+        raise ValueError(f"{label} must be an integer")
+    result = int(value)
+    if result < 0 or result > UINT32_MAX:
+        raise ValueError(f"{label} must fit uint32")
+    return result
+
+
 def parse_keyword_targets(
     keywords: pathlib.Path, tokens: pathlib.Path
 ) -> dict[int, list[int]]:
@@ -39,7 +50,7 @@ def parse_keyword_targets(
         cols = raw.split("\t")
         if len(cols) != 4:
             raise ValueError(f"{keywords}:{line_no}: expected 4 TSV columns")
-        keyword_id = int(cols[0])
+        keyword_id = uint32_value(int(cols[0]), f"{keywords}:{line_no}: keyword_id")
         token_names = cols[3].split()
         if keyword_id in result or not token_names:
             raise ValueError(f"{keywords}:{line_no}: duplicate/empty keyword")
@@ -66,6 +77,8 @@ def resolve_source(row: dict, audio_root: pathlib.Path) -> pathlib.Path:
 
 
 def finite(value, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be numeric")
     result = float(value)
     if not math.isfinite(result):
         raise ValueError(f"{label} must be finite")
@@ -120,11 +133,13 @@ def main() -> int:
     rows = load_jsonl(args.false_rejects)
     manifest_lines: list[str] = []
     for index, row in enumerate(rows):
-        keyword_id = int(row["keyword_id"])
+        keyword_id = uint32_value(
+            row.get("keyword_id"), f"false-reject[{index}].keyword_id"
+        )
         if keyword_id not in targets:
             raise ValueError(f"false-reject keyword_id {keyword_id} is not configured")
-        start_s = finite(row["start_s"], f"false-reject[{index}].start_s")
-        end_s = finite(row["end_s"], f"false-reject[{index}].end_s")
+        start_s = finite(row.get("start_s"), f"false-reject[{index}].start_s")
+        end_s = finite(row.get("end_s"), f"false-reject[{index}].end_s")
         if start_s < 0.0 or end_s < start_s:
             raise ValueError(f"false-reject[{index}] has invalid event window")
         source = resolve_source(row, args.audio_root)
@@ -146,6 +161,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (json.JSONDecodeError, OSError, TypeError, ValueError, wave.Error) as exc:
+    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError, wave.Error) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)
