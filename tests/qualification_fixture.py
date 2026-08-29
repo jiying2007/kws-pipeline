@@ -4,9 +4,12 @@ import hashlib
 import json
 import pathlib
 import struct
+import sys
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from corpus_identity import training_corpus_identity  # noqa: E402
 
 
 def fnv1a64_token_fingerprint(tokens: list[str]) -> int:
@@ -26,8 +29,7 @@ def sha256_file(path: pathlib.Path) -> str:
 def write_tokens(path: pathlib.Path) -> tuple[list[str], int]:
     tokens = ["<blk>", "ni3", "hao3", "xiao3", "wo1"]
     path.write_text(
-        "\n".join(f"{token} {index}" for index, token in enumerate(tokens))
-        + "\n",
+        "\n".join(f"{token} {index}" for index, token in enumerate(tokens)) + "\n",
         encoding="utf-8",
     )
     return tokens, fnv1a64_token_fingerprint(tokens)
@@ -93,10 +95,11 @@ def write_model_provenance(
         "snr_db": 47.0,
     }
     frontend_name = "logmel" if frontend_kind == 0 else "pcen-lite"
+    corpus = training_corpus_identity(training_manifests)
     write_json(
         path,
         {
-            "schema_version": 2,
+            "schema_version": 3,
             "model": {
                 "name": model.name,
                 "sha256": sha256_file(model),
@@ -110,10 +113,7 @@ def write_model_provenance(
                 "frontend_name": frontend_name,
                 "frontend_kind": frontend_kind,
             },
-            "checkpoint": {
-                "name": checkpoint.name,
-                "sha256": checkpoint_hash,
-            },
+            "checkpoint": {"name": checkpoint.name, "sha256": checkpoint_hash},
             "tokens": {
                 "name": export_tokens.name,
                 "sha256": export_token_hash,
@@ -125,7 +125,8 @@ def write_model_provenance(
                     {"name": manifest.name, "sha256": sha256_file(manifest)}
                     for manifest in training_manifests
                 ],
-                "examples": 100,
+                "corpus_identity": corpus,
+                "examples": len(corpus["recordings"]),
                 "seed": 1337,
                 "epochs": 3,
                 "batch_size": 8,
