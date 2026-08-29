@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main, "feature/**"]
+    branches: [main, "feature/**", "codex/**"]
   pull_request:
 
 permissions:
@@ -27,10 +27,20 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
+      - name: Clang static analysis
+        if: matrix.cc == 'clang'
+        run: |
+          set -euo pipefail
+          for source in src/*.c; do
+            clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
+              -Iinclude -Isrc "$source"
+          done
       - name: Frontend C/spec parity
         run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
       - name: Dataset split leakage audit
         run: python3 tests/test_dataset_audit.py
+      - name: Corpus byte identity
+        run: python3 tests/test_corpus_identity.py
       - name: False reject positive replay
         run: python3 tests/test_false_reject_mining.py
       - name: Synthetic model self-training loop
@@ -57,6 +67,18 @@ jobs:
         run: python3 tests/test_board_bench.py --runner ./build/kws_board_bench
       - name: Release qualification manifest and gate
         run: python3 tests/test_release_qualification.py
+      - name: Target evidence collector contract
+        run: python3 tests/test_target_evidence.py
+      - name: Audio discontinuity contract
+        run: python3 tests/test_audio_discontinuity_contract.py
+      - name: Training supply-chain contract
+        run: python3 tests/test_training_supply_chain.py
+      - name: Reproducibility tool contract
+        run: python3 tests/test_reproducible_sdk.py
+      - name: Terminal documentation contract
+        run: python3 tests/test_terminal_docs.py
+      - name: Test inventory tool contract
+        run: python3 tests/test_test_inventory.py
       - name: Hosted benchmark signal
         run: ./build/kws_bench
       - name: Install SDK
@@ -73,8 +95,49 @@ jobs:
         run: cmake --build build-consumer --parallel
       - name: Run clean SDK consumer
         run: ./build-consumer/kws_pipeline_consumer
+      - name: Independent second SDK build
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          cmake -S . -B build-repro -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build-repro --parallel
+          cmake --install build-repro --prefix "$RUNNER_TEMP/kws-install-repro"
+      - name: Reproducible installed SDK gate
+        run: >-
+          python3 tools/check_reproducible_sdk.py
+          "$RUNNER_TEMP/kws-install" "$RUNNER_TEMP/kws-install-repro"
+      - name: Python test inventory
+        run: >-
+          python3 tools/test_inventory.py
+          --workflow .github/workflows/ci.yml
+          --workflow .github/workflows/training-integration.yml
       - name: Python syntax
         run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure coverage build
+        run: >-
+          cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF -DKWS_BUILD_FUZZ=OFF
+          -DCMAKE_C_FLAGS="-O0 --coverage"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
+      - name: Build and run C tests
+        run: |
+          cmake --build build-coverage --parallel
+          ctest --test-dir build-coverage --output-on-failure
+      - name: Generate gcov reports
+        run: |
+          set -euo pipefail
+          for source in src/*.c; do
+            gcov -o build-coverage/CMakeFiles/kws_pipeline.dir/src "$source" >/dev/null
+          done
+      - name: C line coverage gate
+        run: python3 tools/check_gcov.py --root . --minimum 55
 
   sanitizers:
     runs-on: ubuntu-latest
