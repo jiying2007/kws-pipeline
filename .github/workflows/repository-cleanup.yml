@@ -62,17 +62,24 @@ jobs:
             exit 0
           fi
 
-          encoded="$(jq -rn --arg value "${BRANCH}" '$value|@uri')"
-          branch_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${encoded}" 2>/dev/null || true)"
+          branches_json="$(gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/branches?per_page=100")"
+          branch_json="$(jq -c --arg name "${BRANCH}" \
+            '[.[][] | select(.name == $name)][0] // empty' <<<"${branches_json}")"
           if [[ -z "${branch_json}" ]]; then
             echo "ok: source branch '${BRANCH}' is already absent"
             exit 0
           fi
-
-          current_sha="$(jq -r '.commit.sha' <<<"${branch_json}")"
-          protected="$(jq -r '.protected' <<<"${branch_json}")"
-          if [[ "${protected}" == "true" ]]; then
+          if [[ "$(jq -r '.protected' <<<"${branch_json}")" == "true" ]]; then
             echo "skip: branch '${BRANCH}' is protected"
+            exit 0
+          fi
+
+          gh auth setup-git >/dev/null
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
+          current_sha="$(git ls-remote --heads "${remote}" "refs/heads/${BRANCH}" | awk '{print $1}')"
+          if [[ -z "${current_sha}" ]]; then
+            echo "ok: source branch '${BRANCH}' is already absent"
             exit 0
           fi
           if [[ "${current_sha}" != "${EXPECTED_SHA}" ]]; then
@@ -89,7 +96,7 @@ jobs:
           fi
 
           echo "delete: '${BRANCH}' at merged head ${EXPECTED_SHA}"
-          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${encoded}"
+          git push --quiet "${remote}" ":refs/heads/${BRANCH}"
 
   sweep-merged-branches:
     name: sweep merged ephemeral branches
@@ -119,23 +126,29 @@ jobs:
           fi
 
           default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
-          default_sha="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${default_branch}" --jq '.commit.sha')"
           owner="${GITHUB_REPOSITORY_OWNER}"
+          gh auth setup-git >/dev/null
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
+
+          branches_json="$(gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/branches?per_page=100")"
+          default_sha="$(jq -r --arg name "${default_branch}" \
+            '[.[][] | select(.name == $name)][0].commit.sha // empty' <<<"${branches_json}")"
+          if [[ -z "${default_sha}" ]]; then
+            echo "error: default branch '${default_branch}' was not returned by branches API" >&2
+            exit 2
+          fi
+
           deleted=0
           candidates=0
-
-          mapfile -t branches < <(
-            gh api --paginate "repos/${GITHUB_REPOSITORY}/branches?per_page=100" --jq '.[].name'
+          mapfile -t branch_rows < <(
+            jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
           )
 
-          for branch in "${branches[@]}"; do
+          for row in "${branch_rows[@]}"; do
+            IFS=$'\t' read -r branch sha protected <<<"${row}"
             [[ "${branch}" == "${default_branch}" ]] && continue
             is_safe_prefix "${branch}" || continue
-
-            encoded="$(jq -rn --arg value "${branch}" '$value|@uri')"
-            branch_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${encoded}")"
-            sha="$(jq -r '.commit.sha' <<<"${branch_json}")"
-            protected="$(jq -r '.protected' <<<"${branch_json}")"
             if [[ "${protected}" == "true" ]]; then
               echo "skip protected: ${branch}"
               continue
@@ -171,7 +184,7 @@ jobs:
 
             # Re-read both safety conditions immediately before deletion to avoid
             # racing a new push or PR created during the sweep.
-            latest_sha="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${encoded}" --jq '.commit.sha')"
+            latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
             latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
             if [[ "${latest_sha}" != "${sha}" || "${latest_open_prs}" != "0" ]]; then
@@ -179,7 +192,7 @@ jobs:
               continue
             fi
 
-            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${encoded}"
+            git push --quiet "${remote}" ":refs/heads/${branch}"
             deleted=$((deleted + 1))
             echo "deleted: ${branch}"
           done
