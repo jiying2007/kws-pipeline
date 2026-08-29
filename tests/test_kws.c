@@ -155,6 +155,8 @@ static void test_model_and_engine(void) {
   CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
   CHECK(stats.processed_samples == 0u);
   CHECK(stats.processed_frames == 0u);
+  CHECK(stats.discontinuities == 0u);
+  CHECK(stats.last_discontinuity_reason == 0u);
   CHECK(stats.keyword_count == 0u);
   CHECK(stats.trie_nodes == 1u);
   CHECK(stats.pending_keyword_index == -1);
@@ -167,6 +169,25 @@ static void test_model_and_engine(void) {
   for (size_t i = 0u; i < sample_count; ++i) {
     pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
   }
+
+  CHECK(kws_engine_notify_discontinuity(NULL, KWS_DISCONTINUITY_XRUN) == KWS_EINVAL);
+  CHECK(kws_engine_notify_discontinuity(engine, (kws_discontinuity_reason_t)0) == KWS_EINVAL);
+  {
+    int detected = 0;
+    CHECK(kws_engine_accept_pcm16(engine, pcm, 100u, NULL, &detected) == KWS_OK);
+    CHECK(detected == 0);
+    CHECK(kws_engine_notify_discontinuity(engine, KWS_DISCONTINUITY_XRUN) == KWS_OK);
+    CHECK(kws_engine_accept_pcm16(engine, pcm + 100u, 300u, NULL, &detected) == KWS_OK);
+    CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
+    CHECK(stats.processed_samples == 400u);
+    CHECK(stats.processed_frames == 0u);
+    CHECK(stats.discontinuities == 1u);
+    CHECK(stats.last_discontinuity_reason == (uint32_t)KWS_DISCONTINUITY_XRUN);
+    CHECK(stats.keyword_count == 1u);
+    CHECK(stats.trie_nodes == 2u);
+    CHECK(kws_engine_notify_discontinuity(engine, KWS_DISCONTINUITY_ROUTE_CHANGE) == KWS_OK);
+  }
+
   {
     int detected = 7;
     uint64_t before = kws_engine_processed_samples(engine);
@@ -190,14 +211,16 @@ static void test_model_and_engine(void) {
   CHECK(detected_any == 1);
   CHECK(first_detection.keyword_id == 42u);
   CHECK(first_detection.confidence > 0.30f);
-  CHECK(first_detection.end_sample > 0u);
-  CHECK(kws_engine_processed_samples(engine) == sample_count);
+  CHECK(first_detection.end_sample > 400u);
+  CHECK(kws_engine_processed_samples(engine) == sample_count + 400u);
 
   CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
-  CHECK(stats.processed_samples == sample_count);
+  CHECK(stats.processed_samples == sample_count + 400u);
   CHECK(stats.processed_frames == 3u);
   CHECK(stats.speech_frames == 3u);
   CHECK(stats.blank_top1_frames == 0u);
+  CHECK(stats.discontinuities == 2u);
+  CHECK(stats.last_discontinuity_reason == (uint32_t)KWS_DISCONTINUITY_ROUTE_CHANGE);
   CHECK(stats.keyword_count == 1u);
   CHECK(stats.trie_nodes == 2u);
   CHECK(stats.decoder_hits >= stats.detections);
