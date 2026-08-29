@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import math
 import os
 import pathlib
@@ -19,6 +20,7 @@ from torch.utils.data import DataLoader, Dataset
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend import features
@@ -34,6 +36,7 @@ FRONTEND_SPEC_VERSION = 2
 WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
+IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -67,6 +70,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend.py",
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
+        ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
         path.relative_to(ROOT).as_posix(): sha256_file(path)
@@ -101,6 +105,66 @@ def training_environment() -> dict:
     }
 
 
+def parse_token_ids(value, label: str) -> list[int]:
+    if isinstance(value, str):
+        try:
+            return [int(item) for item in value.split()]
+        except ValueError as exc:
+            raise ValueError(f"{label}: token ids must be integers") from exc
+    if isinstance(value, list) and all(isinstance(item, int) and not isinstance(item, bool) for item in value):
+        return list(value)
+    raise ValueError(f"{label}: expected token id string/list")
+
+
+def manifest_rows(path: pathlib.Path) -> list[dict]:
+    rows: list[dict] = []
+    if path.suffix.lower() == ".jsonl":
+        for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            try:
+                value = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
+            if not isinstance(value, dict):
+                raise ValueError(f"{path}:{line_no}: expected JSON object")
+            audio = value.get("audio", value.get("path"))
+            targets = value.get("tokens", value.get("target_ids"))
+            if not isinstance(audio, str) or not audio.strip():
+                raise ValueError(f"{path}:{line_no}: audio/path must be non-empty")
+            metadata = {}
+            for field in IDENTITY_FIELDS:
+                item = value.get(field)
+                if item is not None:
+                    if not isinstance(item, str) or not item.strip():
+                        raise ValueError(f"{path}:{line_no}: {field} must be non-empty text")
+                    metadata[field] = item.strip()
+            rows.append(
+                {
+                    "audio": audio.strip(),
+                    "tokens": parse_token_ids(targets, f"{path}:{line_no}"),
+                    "metadata": metadata,
+                }
+            )
+    else:
+        for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            if "\t" not in raw:
+                raise ValueError(f"{path}:{line_no}: expected WAV<TAB>token_ids")
+            audio, token_text = raw.split("\t", 1)
+            if not audio.strip():
+                raise ValueError(f"{path}:{line_no}: empty WAV path")
+            rows.append(
+                {
+                    "audio": audio.strip(),
+                    "tokens": parse_token_ids(token_text, f"{path}:{line_no}"),
+                    "metadata": {},
+                }
+            )
+    return rows
+
+
 class Manifest(Dataset):
     def __init__(
         self,
@@ -110,32 +174,38 @@ class Manifest(Dataset):
         frontend: str,
     ):
         self.rows: list[tuple[pathlib.Path, list[int]]] = []
+        self.identity_rows: list[dict] = []
         self.feature_dim = feature_dim
         self.vocab_size = vocab_size_value
         self.frontend = frontend
-        for path in paths:
+        for manifest_index, path in enumerate(paths):
             root = path.parent
-            for line_no, raw in enumerate(
-                path.read_text(encoding="utf-8").splitlines(), 1
-            ):
-                if not raw.strip() or raw.lstrip().startswith("#"):
-                    continue
-                if "\t" not in raw:
-                    raise ValueError(f"{path}:{line_no}: expected WAV<TAB>token_ids")
-                wav_path, token_text = raw.split("\t", 1)
-                wav_path = wav_path.strip()
-                if not wav_path:
-                    raise ValueError(f"{path}:{line_no}: empty WAV path")
-                wav = pathlib.Path(wav_path)
-                wav = wav if wav.is_absolute() else root / wav
-                tokens = [int(value) for value in token_text.split()]
+            for row_index, row in enumerate(manifest_rows(path), 1):
+                raw_path = str(row["audio"])
+                wav = pathlib.Path(raw_path)
+                resolved = (wav if wav.is_absolute() else root / wav).resolve(strict=True)
+                tokens = list(row["tokens"])
                 if any(token <= 0 or token >= vocab_size_value for token in tokens):
                     raise ValueError(
-                        f"{path}:{line_no}: targets must be in 1..{vocab_size_value - 1}"
+                        f"{path}:{row_index}: targets must be in 1..{vocab_size_value - 1}"
                     )
-                self.rows.append((wav, tokens))
+                measured = inspect_pcm16_wav(resolved)
+                identity = {
+                    "recording": f"manifest-{manifest_index}:{row_index}",
+                    "manifest": path.name,
+                    "path": raw_path,
+                    **measured,
+                    **row["metadata"],
+                }
+                self.identity_rows.append(identity)
+                self.rows.append((resolved, tokens))
         if not self.rows:
             raise ValueError("training manifests contain no examples")
+        self.corpus_identity = {
+            "schema_version": 1,
+            "corpus_sha256": corpus_digest(self.identity_rows),
+            "recordings": self.identity_rows,
+        }
 
     def __len__(self) -> int:
         return len(self.rows)
@@ -298,11 +368,7 @@ def main() -> None:
         print(f"epoch={epoch + 1} loss={total / max(1, len(loader)):.6f}")
 
     manifest_metadata = [
-        {
-            "name": path.name,
-            "sha256": sha256_file(path),
-        }
-        for path in args.manifest
+        {"name": path.name, "sha256": sha256_file(path)} for path in args.manifest
     ]
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -320,6 +386,7 @@ def main() -> None:
             "frontend_kind": frontend_id(args.frontend),
             "training_examples": len(dataset),
             "training_manifests": manifest_metadata,
+            "training_corpus_identity": dataset.corpus_identity,
             "seed": args.seed,
             "epochs": args.epochs,
             "batch_size": args.batch_size,
@@ -335,6 +402,7 @@ def main() -> None:
     print(
         f"saved {args.output}: examples={len(dataset)} vocab={vocab_size_value} "
         f"frontend={args.frontend} fingerprint=0x{fingerprint:016x} "
+        f"corpus={dataset.corpus_identity['corpus_sha256']} "
         f"repo_sha={environment['repository_sha']} image={environment['training_image_digest']}"
     )
 
