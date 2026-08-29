@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import pathlib
 import sys
 import wave
 
+from corpus_identity import evaluation_corpus_identity, training_corpus_identity
 from model_provenance import validate_model_provenance
 from qualification_common import (
     FRAME_HOP_SAMPLES,
@@ -26,6 +28,8 @@ from qualification_common import (
     validate_runtime_config,
 )
 from qualification_metrics import validate_board, validate_evidence, validate_eval
+
+REQUIRED_HUMAN_IDENTITY = {"speaker_id", "session_id", "source_id"}
 
 
 def artifact(path: pathlib.Path, digest: str) -> dict:
@@ -54,12 +58,8 @@ def reference_stats(path: pathlib.Path) -> tuple[dict[str, float], int, float]:
     for index, row in enumerate(load_jsonl(path, "references")):
         name = row.get("recording")
         if not isinstance(name, str) or not name or name in recordings:
-            raise ValueError(
-                f"references[{index}]: recording must be non-empty and unique"
-            )
-        duration = finite(
-            row.get("duration_s"), f"references[{index}].duration_s", 0.0
-        )
+            raise ValueError(f"references[{index}]: recording must be non-empty and unique")
+        duration = finite(row.get("duration_s"), f"references[{index}].duration_s", 0.0)
         if duration <= 0.0:
             raise ValueError(f"references[{index}].duration_s must be > 0")
         expected = row.get("expected")
@@ -67,9 +67,7 @@ def reference_stats(path: pathlib.Path) -> tuple[dict[str, float], int, float]:
             raise ValueError(f"references[{index}].expected must be a list")
         for event_index, event in enumerate(expected):
             if not isinstance(event, dict):
-                raise ValueError(
-                    f"references[{index}].expected[{event_index}] must be an object"
-                )
+                raise ValueError(f"references[{index}].expected[{event_index}] must be an object")
             json_int(event.get("keyword_id"), "reference keyword_id", 0)
             start_s = finite(event.get("start_s"), "reference start_s", 0.0)
             end_s = finite(event.get("end_s"), "reference end_s", 0.0)
@@ -114,23 +112,52 @@ def board_wav_stats(path: pathlib.Path) -> tuple[float, int]:
     return seconds, blocks
 
 
+def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> dict:
+    audit = load_json(path)
+    if json_int(audit.get("schema_version"), "dataset audit schema_version") != 3:
+        raise ValueError("dataset audit schema_version must be 3")
+    if audit.get("clean") is not True:
+        raise ValueError("dataset audit is not clean")
+    policy = audit.get("identity_policy")
+    splits = audit.get("splits")
+    if not isinstance(policy, dict) or not isinstance(splits, dict) or not splits:
+        raise ValueError("dataset audit policy/splits are missing")
+    required_metadata = set(policy.get("required_metadata", []))
+    if not REQUIRED_HUMAN_IDENTITY.issubset(required_metadata):
+        raise ValueError("dataset audit must require speaker_id/session_id/source_id")
+    audited_hashes = []
+    for name, split in splits.items():
+        if not isinstance(split, dict):
+            raise ValueError(f"dataset audit split {name} is invalid")
+        digest = split.get("manifest_sha256")
+        if not isinstance(digest, str):
+            raise ValueError(f"dataset audit split {name} manifest hash is invalid")
+        audited_hashes.append(digest)
+    missing = Counter(required_hashes) - Counter(audited_hashes)
+    if missing:
+        raise ValueError("dataset audit does not cover every selected training/qualification manifest")
+    return {
+        "schema_version": 3,
+        "sha256": sha256_file(path),
+        "required_metadata": sorted(required_metadata),
+        "audited_manifest_sha256s": sorted(audited_hashes),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--model-provenance", required=True, type=pathlib.Path)
     parser.add_argument("--checkpoint", required=True, type=pathlib.Path)
     parser.add_argument("--training-tokens", required=True, type=pathlib.Path)
-    parser.add_argument(
-        "--training-manifest",
-        required=True,
-        action="append",
-        type=pathlib.Path,
-    )
+    parser.add_argument("--training-manifest", required=True, action="append", type=pathlib.Path)
+    parser.add_argument("--dataset-audit", required=True, type=pathlib.Path)
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--eval-runner", required=True, type=pathlib.Path)
     parser.add_argument("--references", required=True, type=pathlib.Path)
+    parser.add_argument("--eval-audio-root", required=True, type=pathlib.Path)
     parser.add_argument("--detections", required=True, type=pathlib.Path)
     parser.add_argument("--eval-summary", required=True, type=pathlib.Path)
     parser.add_argument("--eval-provenance", required=True, type=pathlib.Path)
@@ -138,6 +165,8 @@ def main() -> int:
     parser.add_argument("--board-runner", required=True, type=pathlib.Path)
     parser.add_argument("--board-audio", required=True, type=pathlib.Path)
     parser.add_argument("--evidence", required=True, type=pathlib.Path)
+    parser.add_argument("--evidence-collector", required=True, type=pathlib.Path)
+    parser.add_argument("--raw-evidence", required=True, action="append", type=pathlib.Path)
     parser.add_argument("--source-sha", required=True)
     parser.add_argument("--corpus-id", required=True)
     parser.add_argument("--output", required=True, type=pathlib.Path)
@@ -156,18 +185,11 @@ def main() -> int:
     training_vocabulary = read_vocabulary(args.training_tokens)
     if not (
         model["vocab_size"] == pack["vocab_size"] == vocabulary["size"]
-        and model["vocab_fingerprint"]
-        == pack["vocab_fingerprint"]
-        == vocabulary["fingerprint"]
+        and model["vocab_fingerprint"] == pack["vocab_fingerprint"] == vocabulary["fingerprint"]
     ):
         raise ValueError("model, keyword pack, and token vocabulary identity differ")
-    if (
-        training_vocabulary["size"] != vocabulary["size"]
-        or training_vocabulary["fingerprint"] != vocabulary["fingerprint"]
-    ):
-        raise ValueError(
-            "training token vocabulary mapping differs from release token vocabulary"
-        )
+    if training_vocabulary["size"] != vocabulary["size"] or training_vocabulary["fingerprint"] != vocabulary["fingerprint"]:
+        raise ValueError("training token vocabulary mapping differs from release token vocabulary")
     runtime = validate_runtime_config(args.config, model)
 
     paths = {
@@ -187,9 +209,13 @@ def main() -> int:
         "board_audio": args.board_audio,
         "board_summary": args.board_summary,
         "evidence": args.evidence,
+        "evidence_collector": args.evidence_collector,
+        "dataset_audit": args.dataset_audit,
     }
     hashes = {name: sha256_file(path) for name, path in paths.items()}
     training_manifest_hashes = [sha256_file(path) for path in args.training_manifest]
+    training_corpus = training_corpus_identity(args.training_manifest)
+    eval_corpus = evaluation_corpus_identity(args.references, args.eval_audio_root)
 
     model_lineage = validate_model_provenance(
         args.model_provenance,
@@ -203,21 +229,16 @@ def main() -> int:
         checkpoint_sha256=hashes["model_checkpoint"],
         training_tokens_sha256=hashes["training_tokens"],
         training_manifest_sha256s=training_manifest_hashes,
+        training_corpus_sha256=training_corpus["corpus_sha256"],
     )
 
     recordings, expected_count, audio_hours = reference_stats(args.references)
     detections_count = detection_count(args.detections, recordings)
     eval_summary = load_json(args.eval_summary)
     eval_provenance = load_json(args.eval_provenance)
-    if (
-        json_int(eval_summary.get("recordings"), "evaluation.recordings", 1)
-        != len(recordings)
-    ):
+    if json_int(eval_summary.get("recordings"), "evaluation.recordings", 1) != len(recordings):
         raise ValueError("evaluation recording count does not match reference file")
-    if (
-        json_int(eval_summary.get("expected"), "evaluation.expected", 0)
-        != expected_count
-    ):
+    if json_int(eval_summary.get("expected"), "evaluation.expected", 0) != expected_count:
         raise ValueError("evaluation expected count does not match reference file")
     close_enough(
         finite(eval_summary.get("audio_hours"), "evaluation.audio_hours", 0.0),
@@ -226,12 +247,7 @@ def main() -> int:
         1e-12,
         1e-12,
     )
-    if (
-        json_int(eval_provenance.get("recordings"), "provenance.recordings", 1)
-        != len(recordings)
-        or json_int(eval_provenance.get("detections"), "provenance.detections", 0)
-        != detections_count
-    ):
+    if json_int(eval_provenance.get("recordings"), "provenance.recordings", 1) != len(recordings) or json_int(eval_provenance.get("detections"), "provenance.detections", 0) != detections_count:
         raise ValueError("evaluation provenance counts do not match selected files")
     evaluation = validate_eval(
         eval_summary,
@@ -243,6 +259,7 @@ def main() -> int:
             "references_sha256": hashes["references"],
             "detections_sha256": hashes["detections"],
         },
+        eval_corpus,
     )
 
     board_summary = load_json(args.board_summary)
@@ -258,37 +275,34 @@ def main() -> int:
         },
     )
     board_seconds, board_blocks = board_wav_stats(args.board_audio)
-    close_enough(
-        board["audio_seconds"], board_seconds, "board.audio_seconds", 1e-9, 1e-6
-    )
+    close_enough(board["audio_seconds"], board_seconds, "board.audio_seconds", 1e-9, 1e-6)
     if board["blocks"] != board_blocks * board["repeats"]:
         raise ValueError("board block count does not match board WAV and repeats")
-    evidence = validate_evidence(load_json(args.evidence))
+
+    evidence_json = load_json(args.evidence)
+    evidence = validate_evidence(evidence_json, hashes["evidence_collector"])
+    raw_hashes = {(path.name, sha256_file(path), path.stat().st_size) for path in args.raw_evidence}
+    declared_raw = {(item["name"], item["sha256"], item["bytes"]) for item in evidence["raw_evidence"]}
+    if raw_hashes != declared_raw:
+        raise ValueError("target evidence raw artifacts do not match selected --raw-evidence files")
+
+    dataset_audit = validate_dataset_audit(
+        args.dataset_audit,
+        [*training_manifest_hashes, hashes["references"]],
+    )
 
     training_manifest_artifacts = [
-        artifact(path, digest)
-        for path, digest in zip(args.training_manifest, training_manifest_hashes)
+        artifact(path, digest) for path, digest in zip(args.training_manifest, training_manifest_hashes)
     ]
+    raw_evidence_artifacts = [artifact(path, sha256_file(path)) for path in args.raw_evidence]
     artifacts = {
-        "model": {
-            **artifact(args.model, hashes["model"]),
-            "feature_dim": model["feature_dim"],
-            "hidden_dim": model["hidden_dim"],
-        },
-        "model_provenance": artifact(
-            args.model_provenance, hashes["model_provenance"]
-        ),
-        "model_checkpoint": artifact(
-            args.checkpoint, hashes["model_checkpoint"]
-        ),
-        "training_tokens": artifact(
-            args.training_tokens, hashes["training_tokens"]
-        ),
+        "model": {**artifact(args.model, hashes["model"]), "feature_dim": model["feature_dim"], "hidden_dim": model["hidden_dim"]},
+        "model_provenance": artifact(args.model_provenance, hashes["model_provenance"]),
+        "model_checkpoint": artifact(args.checkpoint, hashes["model_checkpoint"]),
+        "training_tokens": artifact(args.training_tokens, hashes["training_tokens"]),
         "training_manifests": training_manifest_artifacts,
-        "keyword_pack": {
-            **artifact(args.keywords, hashes["keyword_pack"]),
-            "keyword_count": pack["keyword_count"],
-        },
+        "dataset_audit": artifact(args.dataset_audit, hashes["dataset_audit"]),
+        "keyword_pack": {**artifact(args.keywords, hashes["keyword_pack"]), "keyword_count": pack["keyword_count"]},
         "tokens": artifact(args.tokens, hashes["tokens"]),
         "config": artifact(args.config, hashes["config"]),
         "eval_runner": artifact(args.eval_runner, hashes["eval_runner"]),
@@ -296,10 +310,12 @@ def main() -> int:
         "detections": artifact(args.detections, hashes["detections"]),
         "board_runner": artifact(args.board_runner, hashes["board_runner"]),
         "board_audio": artifact(args.board_audio, hashes["board_audio"]),
+        "evidence_collector": artifact(args.evidence_collector, hashes["evidence_collector"]),
+        "raw_evidence": raw_evidence_artifacts,
     }
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "source_sha": source_sha,
         "corpus_id": corpus_id,
         "runtime": {
@@ -316,32 +332,22 @@ def main() -> int:
             "sha256": vocabulary["sha256"],
         },
         "artifacts": artifacts,
-        "model_lineage": {
-            "provenance_sha256": hashes["model_provenance"],
-            **model_lineage,
-        },
-        "evaluation": {
-            "summary_sha256": hashes["eval_summary"],
-            "provenance_sha256": hashes["eval_provenance"],
-            **evaluation,
-        },
+        "dataset_audit": dataset_audit,
+        "model_lineage": {"provenance_sha256": hashes["model_provenance"], **model_lineage},
+        "evaluation": {"summary_sha256": hashes["eval_summary"], "provenance_sha256": hashes["eval_provenance"], **evaluation},
         "board": {"summary_sha256": hashes["board_summary"], **board},
         "evidence": {"sha256": hashes["evidence"], **evidence},
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
-        json.dumps(
-            manifest,
-            ensure_ascii=False,
-            indent=2,
-            sort_keys=True,
-            allow_nan=False,
-        )
-        + "\n",
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    print(f"wrote qualification manifest: {args.output}")
+    print(
+        f"wrote qualification manifest: {args.output}; "
+        f"training_corpus={training_corpus['corpus_sha256']} eval_corpus={eval_corpus['corpus_sha256']}"
+    )
     return 0
 
 
