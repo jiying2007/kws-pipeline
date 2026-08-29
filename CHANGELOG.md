@@ -10,7 +10,7 @@ All notable source-level changes are recorded here. A source/software version do
 - Dependency-free C SHA256 support so board results self-identify the exact benchmark runner, model, keyword pack and board audio.
 - Evaluation provenance sidecars binding the exact evaluation runner/model/keyword-pack/references/detections by SHA256.
 - Deterministic `qualification_manifest.py` that independently re-hashes all selected evidence files, revalidates canonical ABI-v2 model/pack/config/vocabulary identity, recomputes corpus and board-WAV statistics, and verifies acoustic/board formulas and cross-artifact hashes.
-- Model-export provenance (`.kwm.provenance.json`) binding each `.kwm` to its source checkpoint hash, training/export vocabulary identities, training-manifest hashes/hyperparameters and per-matrix int8 quantization scale/error/RMSE/SNR. Release qualification now requires and validates this lineage.
+- Model-export provenance (`.kwm.provenance.json`) binding each `.kwm` to its source checkpoint hash, training/export vocabulary identities, training-manifest hashes/hyperparameters and per-matrix int8 quantization scale/error/RMSE/SNR. Release qualification now requires the actual checkpoint, training token file and every training manifest so those lineage hashes are recomputed from bytes.
 - `qualification_gate.py` with an explicit external SKU policy, manifest/policy hash binding, strict type checking, source model-checkpoint traceability, and pass/fail/invalid exit semantics.
 - Policy gates for FAR/FRR/latency/runtime headroom plus soak, CPU, RSS, stack high-water mark, maximum temperature and average power.
 - Dependency-free frontend feature specification plus `kws_feature_dump`; GCC/Clang CI compares multiple real C frontend fixtures against the reference with a tight numerical tolerance.
@@ -25,11 +25,12 @@ All notable source-level changes are recorded here. A source/software version do
 - The keyword Trie now keeps independent nonblank and blank-separated Viterbi scores. Adjacent identical acoustic tokens can advance only from a blank-separated state, matching the structural CTC repeated-label rule without introducing a general prefix beam.
 - Training now requires the exact token vocabulary instead of a size-only `--vocab-size`. Checkpoints retain vocabulary fingerprint/token SHA256, training-manifest hashes, frontend-spec version, seed and optimizer settings; warm starts verify the same identity.
 - Model export refuses to bind checkpoint weights to a same-sized but differently mapped token vocabulary.
+- Shipping qualification hard-cuts model lineage to byte-complete inputs: source checkpoint, training token file and the complete multiset of training manifests must match exporter provenance exactly.
 - PyTorch frontend geometry imports the same FFT/mel/scale constants as the dependency-free frontend spec.
 - Continuous-audio metric summaries include SHA256 for the exact reference and detection inputs.
 - Hosted tool WAV/file helpers are shared by `kws_wav` and board qualification tooling.
 - Performance documentation distinguishes hosted regression signals from artifact-bound shipping evidence.
-- `models/README.md` is corrected to the current `KWSP` ABI v2 contract and requires the model-provenance sidecar in release tuples.
+- `models/README.md` is corrected to the current `KWSP` ABI v2 contract and requires the model-provenance sidecar plus concrete training-lineage artifacts in release tuples.
 - The earlier weaker release-manifest path was removed; `qualification_manifest.py` is the single supported qualification-manifest generator.
 
 ### Current hosted regression signal
