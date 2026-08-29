@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import pathlib
 import sys
 import wave
 
+from model_provenance import validate_model_provenance
 from qualification_common import (
     FRAME_HOP_SAMPLES,
     FRAME_LENGTH_SAMPLES,
@@ -111,6 +111,7 @@ def board_wav_stats(path: pathlib.Path) -> tuple[float, int]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, type=pathlib.Path)
+    parser.add_argument("--model-provenance", required=True, type=pathlib.Path)
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--config", required=True, type=pathlib.Path)
@@ -149,6 +150,7 @@ def main() -> int:
 
     paths = {
         "model": args.model,
+        "model_provenance": args.model_provenance,
         "keyword_pack": args.keywords,
         "tokens": args.tokens,
         "config": args.config,
@@ -163,6 +165,17 @@ def main() -> int:
         "evidence": args.evidence,
     }
     hashes = {name: sha256_file(path) for name, path in paths.items()}
+
+    model_lineage = validate_model_provenance(
+        args.model_provenance,
+        model_sha256=hashes["model"],
+        model_bytes=model["bytes"],
+        feature_dim=model["feature_dim"],
+        hidden_dim=model["hidden_dim"],
+        vocab_size=model["vocab_size"],
+        vocab_fingerprint=model["vocab_fingerprint"],
+        tokens_sha256=hashes["tokens"],
+    )
 
     recordings, expected_count, audio_hours = reference_stats(args.references)
     detections_count = detection_count(args.detections, recordings)
@@ -179,7 +192,12 @@ def main() -> int:
         1e-12,
         1e-12,
     )
-    if json_int(eval_provenance.get("recordings"), "provenance.recordings", 1) != len(recordings) or json_int(eval_provenance.get("detections"), "provenance.detections", 0) != detections_count:
+    if (
+        json_int(eval_provenance.get("recordings"), "provenance.recordings", 1)
+        != len(recordings)
+        or json_int(eval_provenance.get("detections"), "provenance.detections", 0)
+        != detections_count
+    ):
         raise ValueError("evaluation provenance counts do not match selected files")
     evaluation = validate_eval(
         eval_summary,
@@ -217,6 +235,9 @@ def main() -> int:
             "feature_dim": model["feature_dim"],
             "hidden_dim": model["hidden_dim"],
         },
+        "model_provenance": artifact(
+            args.model_provenance, hashes["model_provenance"]
+        ),
         "keyword_pack": {
             **artifact(args.keywords, hashes["keyword_pack"]),
             "keyword_count": pack["keyword_count"],
@@ -248,6 +269,10 @@ def main() -> int:
             "sha256": vocabulary["sha256"],
         },
         "artifacts": artifacts,
+        "model_lineage": {
+            "provenance_sha256": hashes["model_provenance"],
+            **model_lineage,
+        },
         "evaluation": {
             "summary_sha256": hashes["eval_summary"],
             "provenance_sha256": hashes["eval_provenance"],
