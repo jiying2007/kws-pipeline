@@ -6,12 +6,6 @@
 #define NEG_INF (-1.0e30f)
 #define SILENCE_RETENTION_LOG (-0.3566749439f)
 
-/*
- * Approximate exp(x) for x in [-8, 0] without calling libm expf().
- * (1 + x / 256)^256 converges closely enough for decoder normalization,
- * while reducing the always-on cost to multiplies. Values below -8 have
- * negligible contribution to the softmax denominator and are dropped.
- */
 static float fast_exp_nonpos(float x) {
   float y;
 
@@ -59,14 +53,6 @@ static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
   return 1;
 }
 
-/*
- * The trie is intentionally not a full CTC prefix beam. Advancing every child
- * with any non-zero posterior lets low-probability transition-frame labels
- * fabricate missing/reordered keyword tokens, especially after token_boost.
- * Admit exactly the greedy CTC nonblank label, and only when it beats blank.
- * Existing prefix state is still retained, so unrelated dominant labels may be
- * skipped without destroying a partially matched keyword.
- */
 static uint16_t admitted_nonblank_token(const float *logits,
                                         uint16_t vocab_size) {
   uint16_t best = 1u;
@@ -90,6 +76,14 @@ static void max_assign(float *dst, float value) {
   }
 }
 
+static void clear_pending(kws_decoder_t *d) {
+  d->pending_keyword = -1;
+  d->pending_confidence = 0.0f;
+  d->pending_depth = 0u;
+  d->pending_age_frames = 0u;
+  d->pending_blank_frames = 0u;
+}
+
 static void init_structure(kws_decoder_t *d,
                            float token_boost,
                            float retention_log) {
@@ -104,6 +98,7 @@ static void init_structure(kws_decoder_t *d,
   d->nodes[0].blank_score = NEG_INF;
   d->nodes[0].next_score = NEG_INF;
   d->nodes[0].next_blank_score = NEG_INF;
+  clear_pending(d);
 }
 
 void kws_decoder_init(kws_decoder_t *d,
@@ -164,7 +159,12 @@ static kws_status_t validate_keywords(const kws_keyword_t *keywords,
     if (keywords[k].tokens == NULL || keywords[k].num_tokens == 0u ||
         keywords[k].num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
         !isfinite(keywords[k].threshold) || keywords[k].threshold <= 0.0f ||
-        keywords[k].threshold >= 1.0f) {
+        keywords[k].threshold >= 1.0f ||
+        keywords[k].prefix_policy > (uint8_t)KWS_PREFIX_GRACE ||
+        (keywords[k].prefix_policy == (uint8_t)KWS_PREFIX_LONGEST &&
+         keywords[k].min_trailing_blanks == 0u) ||
+        (keywords[k].prefix_policy == (uint8_t)KWS_PREFIX_GRACE &&
+         keywords[k].grace_frames == 0u)) {
       return KWS_EINVAL;
     }
     for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
@@ -207,6 +207,10 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
 
     d->keyword_ids[k] = keywords[k].id;
     d->thresholds[k] = keywords[k].threshold;
+    d->min_trailing_blanks[k] = keywords[k].min_trailing_blanks;
+    d->priorities[k] = keywords[k].priority;
+    d->prefix_policies[k] = keywords[k].prefix_policy;
+    d->grace_frames[k] = keywords[k].grace_frames;
 
     for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
       node = find_or_add_child(d, node, keywords[k].tokens[i], &ok);
@@ -215,6 +219,7 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
       }
     }
     d->nodes[node].terminal_keyword = (int16_t)k;
+    d->terminal_nodes[k] = node;
   }
 
   return KWS_OK;
@@ -227,6 +232,81 @@ void kws_decoder_reset(kws_decoder_t *d) {
     d->nodes[i].next_score = NEG_INF;
     d->nodes[i].next_blank_score = NEG_INF;
   }
+  clear_pending(d);
+}
+
+static int immediate_better(const kws_decoder_t *d,
+                            int candidate,
+                            float candidate_conf,
+                            uint16_t candidate_depth,
+                            int current,
+                            float current_conf,
+                            uint16_t current_depth) {
+  if (current < 0) {
+    return 1;
+  }
+  if (d->priorities[candidate] != d->priorities[current]) {
+    return d->priorities[candidate] > d->priorities[current];
+  }
+  if (candidate_depth != current_depth) {
+    return candidate_depth > current_depth;
+  }
+  return candidate_conf > current_conf;
+}
+
+static int pending_better(const kws_decoder_t *d,
+                          int candidate,
+                          float candidate_conf,
+                          uint16_t candidate_depth) {
+  int current = d->pending_keyword;
+  if (current < 0) {
+    return 1;
+  }
+  if (candidate_depth != d->pending_depth) {
+    return candidate_depth > d->pending_depth;
+  }
+  if (d->priorities[candidate] != d->priorities[current]) {
+    return d->priorities[candidate] > d->priorities[current];
+  }
+  return candidate_conf > d->pending_confidence;
+}
+
+static void offer_pending(kws_decoder_t *d,
+                          int kw,
+                          float conf,
+                          uint16_t depth) {
+  if (d->pending_keyword == kw) {
+    if (conf > d->pending_confidence) {
+      d->pending_confidence = conf;
+    }
+    return;
+  }
+  if (pending_better(d, kw, conf, depth) != 0) {
+    d->pending_keyword = (int16_t)kw;
+    d->pending_confidence = conf;
+    d->pending_depth = depth;
+    d->pending_age_frames = 0u;
+    d->pending_blank_frames = 0u;
+  }
+}
+
+static int pending_ready(const kws_decoder_t *d) {
+  int kw = d->pending_keyword;
+  uint8_t policy;
+  if (kw < 0) {
+    return 0;
+  }
+  policy = d->prefix_policies[kw];
+  if (d->pending_blank_frames < d->min_trailing_blanks[kw]) {
+    return 0;
+  }
+  if (policy == (uint8_t)KWS_PREFIX_LONGEST) {
+    return 1;
+  }
+  if (policy == (uint8_t)KWS_PREFIX_GRACE) {
+    return d->pending_age_frames >= d->grace_frames[kw];
+  }
+  return 1;
 }
 
 int kws_decoder_step(kws_decoder_t *d,
@@ -236,11 +316,25 @@ int kws_decoder_step(kws_decoder_t *d,
                      uint32_t *keyword_id,
                      float *confidence) {
   float norm = approx_logsumexp(logits, vocab_size);
-  float best_conf = 0.0f;
+  float immediate_conf = 0.0f;
+  uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : SILENCE_RETENTION_LOG;
   int blank_dominant = blank_is_dominant(logits, vocab_size);
   uint16_t admitted_token = admitted_nonblank_token(logits, vocab_size);
-  int best_kw = -1;
+  int immediate_kw = -1;
+
+  if (d->pending_keyword >= 0) {
+    if (d->pending_age_frames != UINT16_MAX) {
+      d->pending_age_frames++;
+    }
+    if (blank_dominant != 0) {
+      if (d->pending_blank_frames != UINT16_MAX) {
+        d->pending_blank_frames++;
+      }
+    } else {
+      d->pending_blank_frames = 0u;
+    }
+  }
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     d->nodes[i].next_score = NEG_INF;
@@ -262,9 +356,6 @@ int kws_decoder_step(kws_decoder_t *d,
         }
       }
       if (separated > NEG_INF / 2.0f) {
-        /* Once a blank has separated the last emitted token, a retained gap
-         * remains eligible for a repeated-token transition until a new token
-         * is emitted. */
         max_assign(&d->nodes[i].next_blank_score, separated + decay);
       }
     }
@@ -295,16 +386,33 @@ int kws_decoder_step(kws_decoder_t *d,
       if (conf > 1.0f) {
         conf = 1.0f;
       }
-      if (conf >= d->thresholds[kw] && conf > best_conf) {
-        best_conf = conf;
-        best_kw = kw;
+      if (conf >= d->thresholds[kw]) {
+        if (d->prefix_policies[kw] == (uint8_t)KWS_PREFIX_IMMEDIATE) {
+          if (immediate_better(d, kw, conf, d->nodes[i].depth,
+                               immediate_kw, immediate_conf,
+                               immediate_depth) != 0) {
+            immediate_kw = kw;
+            immediate_conf = conf;
+            immediate_depth = d->nodes[i].depth;
+          }
+        } else {
+          offer_pending(d, kw, conf, d->nodes[i].depth);
+        }
       }
     }
   }
 
-  if (best_kw >= 0) {
-    *keyword_id = d->keyword_ids[best_kw];
-    *confidence = best_conf;
+  if (immediate_kw >= 0) {
+    *keyword_id = d->keyword_ids[immediate_kw];
+    *confidence = immediate_conf;
+    kws_decoder_reset(d);
+    return 1;
+  }
+
+  if (pending_ready(d) != 0) {
+    int kw = d->pending_keyword;
+    *keyword_id = d->keyword_ids[kw];
+    *confidence = d->pending_confidence;
     kws_decoder_reset(d);
     return 1;
   }

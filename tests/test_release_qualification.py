@@ -284,6 +284,8 @@ def main() -> int:
         )
         assert result["model_lineage"]["checkpoint_sha256"] == checkpoint_hash
         assert result["model_lineage"]["model_sha256"] == model_hash
+        assert result["runtime"]["frontend_kind"] == result["model_lineage"]["frontend_kind"]
+        assert result["runtime"]["frontend_name"] == result["model_lineage"]["frontend_name"]
         assert result["artifacts"]["eval_runner"]["sha256"] == eval_runner_hash
         assert result["artifacts"]["references"]["sha256"] == refs_hash
         assert result["artifacts"]["detections"]["sha256"] == detections_hash
@@ -306,6 +308,27 @@ def main() -> int:
         assert gate_result["manifest_sha256"] == sha256_file(manifest)
         assert gate_result["policy_sha256"] == sha256_file(policy)
         assert gate_result["model_checkpoint_sha256"] == checkpoint_hash
+
+        frontend_tampered = json.loads(manifest.read_text(encoding="utf-8"))
+        tampered_kind = 1 if int(frontend_tampered["runtime"]["frontend_kind"]) == 0 else 0
+        frontend_tampered["runtime"]["frontend_kind"] = tampered_kind
+        frontend_tampered["runtime"]["frontend_name"] = {0: "logmel", 1: "pcen-lite"}[tampered_kind]
+        write_json(manifest, frontend_tampered)
+        assert (
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools" / "qualification_gate.py"),
+                    "--manifest",
+                    str(manifest),
+                    "--policy",
+                    str(policy),
+                ],
+                check=False,
+            ).returncode
+            == 2
+        )
+        subprocess.check_call(command)
 
         failing_policy = dict(valid_policy)
         failing_policy["max_cpu_percent"] = 4.0

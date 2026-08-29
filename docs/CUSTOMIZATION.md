@@ -2,25 +2,30 @@
 
 The product uses three levels so teams do not retrain when a cheaper intervention is sufficient.
 
-## ABI-v2 vocabulary identity
+## Artifact identity
 
-The acoustic model, training checkpoints, field-updatable keyword packs and generated C keyword tables are all bound to one token vocabulary. Training stores the exact vocabulary fingerprint; export refuses to attach a checkpoint to another same-sized token-to-ID mapping. The deployed `.kwm`, `.kwk` and generated C tables retain the same 64-bit fingerprint.
+The deployed acoustic model is `KWSP` ABI v2 and the field-updatable keyword pack is `KWKP` ABI v3. Both carry the same vocabulary size/fingerprint. Training checkpoints and generated C keyword tables bind to that vocabulary identity as well.
 
-The fingerprint is computed from canonical token-ID order, so line reordering in the vocabulary file is harmless, while changing a token string or token ID changes the identity. A `.kwm` and `.kwk` with the same `vocab_size` but different mappings are rejected.
-
-## Repeated-token semantics
-
-The acoustic model is trained with CTC. Adjacent identical target labels therefore require a blank separator. The runtime trie enforces the same structural rule: each prefix retains separate nonblank and blank-separated Viterbi scores, and an identical child token can advance only from the blank-separated score.
-
-For example, a future keyword tokenized as `bao3 bao3` cannot be completed from two consecutive `bao3`-dominant acoustic frames; a blank-separated prefix is required. Non-repeated paths such as `ni3 hao3 xiao3 wo1` retain the normal low-latency path.
-
-This decoder is deliberately a small keyword-path Viterbi scorer, not a general CTC prefix-beam decoder.
+Model ABI v2 also binds the frontend kind (`logmel` or `pcen-lite`). Warm starts, export provenance and release qualification reject a frontend mismatch.
 
 ## L0: keyword-only update
 
-Compile text/pinyin to acoustic token IDs and tune the per-keyword threshold. No model weights change.
+The keyword TSV accepts:
 
-For firmware-linked products, generate a C header. For field-updatable products, generate a binary `.kwk` pack:
+```text
+id  text  threshold  explicit-pinyin  min_trailing_blanks  priority  prefix_policy  grace_frames
+```
+
+Production should provide explicit pinyin in column 4. Columns 5–8 are optional bounded runtime policy metadata.
+
+Example:
+
+```text
+1	小窝	0.55	xiao3 wo1	1	10	grace	3
+2	小窝小窝	0.55	xiao3 wo1 xiao3 wo1	1	20	longest
+```
+
+Compile:
 
 ```bash
 python3 tools/compile_keywords.py \
@@ -31,56 +36,52 @@ python3 tools/compile_keywords.py \
   --out-json build/keywords.json
 ```
 
-The runtime validates `.kwk` magic, ABI version, canonical size, vocabulary size/fingerprint, reserved fields, duplicate IDs, duplicate acoustic token paths, thresholds and token bounds before accepting it.
+Policy semantics:
 
-Production keyword manifests should carry explicit pinyin in the fourth TSV column so a dependency update cannot silently alter tokenization.
+- `immediate`: emit a qualifying terminal immediately; simultaneous immediate candidates use priority, depth and confidence.
+- `longest`: delay a terminal until the configured trailing-blank condition, allowing a longer shared-prefix path to replace it.
+- `grace`: hold a terminal for a bounded grace window plus trailing-blank condition.
 
-Typical runtime flow:
-
-```c
-kws_model_t model;
-kws_keyword_pack_t pack;
-kws_engine_t *engine;
-
-kws_model_open(model_blob, model_bytes, &model);
-kws_keyword_pack_open(pack_blob, pack_bytes, &model, &pack);
-kws_engine_init(arena, arena_bytes, &model, NULL, &engine);
-kws_engine_set_keyword_pack(engine, &pack);
-```
-
-`kws_engine_set_keyword_pack()` copies the token paths into the decoder trie, so the parsed pack object itself does not have to remain live after the setter returns. The underlying `.kwm` model blob must remain valid for the lifetime of the engine because model tensors are zero-copy views into that blob.
+`compile_keywords.py` defaults `longest` to one trailing blank when not supplied, and `grace` to three grace frames when not supplied. The runtime independently validates those requirements.
 
 Keyword updates are validated before the active trie is rebuilt. A rejected update leaves the previous valid configuration intact.
 
-## L1: calibration + hard negatives
+## Repeated-token semantics
 
-Keep the model fixed and tune threshold, token boost, state retention and speech-energy gate using held-out positives plus long continuous negatives. Include near-homophones, partial phrases, TV/speaker playback, AEC residuals and the product's motor/fan/gear noise.
+Adjacent identical CTC target labels require a blank separator. The runtime keeps independent nonblank and blank-separated prefix scores, so a target such as `bao3 bao3` cannot complete from two consecutive `bao3`-dominant frames without a blank-separated state.
 
-Release evaluation must report FRR and false accepts/hour; clip accuracy alone is not a KWS release metric. The official path is:
+## L1: calibration and replay
+
+Keep model weights fixed and tune keyword thresholds using held-out positives and continuous negatives. Include near-homophones, partial phrases, TV/speaker playback, AEC residuals, motor/fan/gear noise and the final AFE settings.
+
+The product path is:
 
 ```text
-.kwm + .kwk + reference corpus
- -> kws_wav / eval/run_corpus.py
- -> detections.jsonl
- -> eval/score_events.py
- -> FAR/hour + FRR + latency + false-positives.jsonl
+.kwm + .kwk + continuous references
+ -> kws_wav / run_corpus.py
+ -> detections
+ -> score_events.py + domain_metrics.py
+ -> FAR/hour + FRR + latency + domain buckets
+ -> false-positive / false-reject replay
 ```
 
-`eval/mine_hard_negatives.py` converts false positives into empty-target CTC clips for retraining.
+`eval/mine_hard_negatives.py` produces empty-target clips from false accepts. `eval/mine_false_rejects.py` replays missed positives with the configured token target. Neither may consume the final qualification-heldout set if that set will remain unbiased release evidence.
 
 ## L2: shallow acoustic customization
 
-Before any base or shallow training, audit train/tuning/final qualification audio using decoded PCM hashes:
+Audit split leakage first:
 
 ```bash
 python3 training/audit_dataset.py \
   --split train=data/custom/train.tsv \
-  --split qualification=data/eval/references.jsonl \
-  --audio-root qualification=data/eval \
-  --report build/dataset-audit.json
+  --split calibration=data/custom/calibration.tsv \
+  --split test=data/custom/test.tsv \
+  --split qualification=data/custom/qualification.tsv \
+  --report build/dataset-audit.json \
+  --fail-within-split
 ```
 
-Warm-start the base model and freeze the input/recurrent backbone. Multiple `--manifest` options can mix normal training data with mined hard negatives, but all manifests and the warm start must use the exact same `--tokens` vocabulary:
+Warm-start and freeze the input/recurrent backbone:
 
 ```bash
 python3 training/train_ctc.py \
@@ -98,8 +99,23 @@ python3 training/export_model.py \
   --output build/xiaowo-head.kwm
 ```
 
-Empty targets are intentional negative CTC examples. `--head-only` requires `--warm-start` and is this repository's default meaning of "shallow customization". Full-model fine-tuning is possible by omitting `--head-only`, but it requires a much wider regression corpus because unrelated keywords can regress.
+The warm start must match vocabulary, feature/hidden geometry, frontend identity and frontend-spec contract.
 
-Training checkpoints record the vocabulary fingerprint, token-file hash, manifest hashes, frontend spec version, seed and optimizer settings. Warm-start validation rejects incompatible metadata before loading weights.
+## Domain-aware adaptation
 
-Do not share the same decoded audio across train/calibration/evaluation splits. Rewrapping or renaming a WAV does not make it independent. Do not mine hard negatives from the final held-out qualification corpus and then reuse that corpus as unbiased release evidence.
+For deterministic software/domain iteration:
+
+```bash
+python3 training/iterate_domain.py \
+  --config configs/training/xiaowo.domain.json \
+  --runner build/kws_wav \
+  --work-dir build/domain-loop
+```
+
+The loop can compare `logmel` and `pcen-lite`, render nominal near/mid/far acoustic scenes, calibrate each candidate with the real C runtime, score worst domains, reweight the next training round and freeze the best candidate before an untouched synthetic qualification pass.
+
+The example's 0.3–5 m distances are simulation parameters, not a claim that real human speech at those distances has passed. Real recordings from the shipping microphones, enclosure, rooms, speaker playback and `audio-pipeline` configuration are still required.
+
+## Release rule
+
+Any change to `.kwm`, `.kwk`, token vocabulary, runtime config or shipping AFE configuration creates a new release qualification tuple. See `docs/RELEASE_QUALIFICATION.md`.

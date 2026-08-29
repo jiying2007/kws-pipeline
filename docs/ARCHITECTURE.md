@@ -1,78 +1,125 @@
 # Architecture
 
-`kws-pipeline` separates the offline/control plane from the always-on real-time plane.
+`kws-pipeline` separates the offline/control plane from the bounded always-on C runtime.
 
 ## Real-time data path
 
 ```text
 mono PCM16 @ 16 kHz
- -> fixed 25-ms Hann / 20-ms hop
- -> 512 FFT
- -> 32-bin log-mel + per-frame mean normalization
+ -> fixed 25-ms Hann / 20-ms hop / FFT512 / mel bank
+ -> model-selected frontend: logmel or pcen-lite
+ -> 32-d feature normalization
  -> int8-weight tiny recurrent acoustic model
  -> blank + pinyin token logits
  -> dominant-token CTC admission
  -> shared-prefix keyword trie
- -> speech gate + threshold + refractory gate
+ -> prefix-policy arbitration
+ -> speech / threshold / refractory gates
  -> detection {keyword_id, confidence, end_sample}
 ```
 
-ABI v2 fixes the acoustic geometry to 400-sample frames and 320-sample hops. A call to `kws_engine_accept_pcm16()` may contain at most `KWS_MAX_PCM_BLOCK_SAMPLES` (320) samples. This guarantees that one call can produce at most one acoustic step, matching the API's single detection output while still allowing the engine to consume the complete accepted block. The preferred `audio-pipeline` integration uses its normal 10-ms / 160-sample output blocks.
+The model ABI fixes 400-sample analysis frames and 320-sample acoustic hops. `kws_engine_accept_pcm16()` accepts at most `KWS_MAX_PCM_BLOCK_SAMPLES` (320) samples per call, so one call can produce at most one acoustic step and one detection. A 10-ms/160-sample upstream audio block is therefore safe without another resampler.
 
-The runtime is C11, uses no heap, owns no worker thread, does no filesystem I/O and performs no Chinese text/pinyin conversion. The caller supplies one aligned arena and keeps the model blob alive for the engine lifetime.
+The runtime is C11 + libm, owns no worker thread, performs no heap allocation or filesystem I/O and does no text/pinyin conversion. The caller owns one aligned arena and keeps the model blob alive for the engine lifetime.
 
-## Open-token KWS
+## Artifact ABIs
 
-A fixed-word binary classifier is cheap but normally needs a new model for every phrase. This engine instead learns reusable pinyin acoustics and decodes only configured token paths. A phrase such as `你好小窝` (`ni3 hao3 xiao3 wo1`) can therefore be introduced without retraining when the generic acoustic model already separates its tokens well enough.
+The two deployable binary contracts are intentionally versioned separately:
 
-The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s for the dense acoustic network and about 26 KB for weights+biases. These are design calculations, not target-board measurements.
+- **`KWSP` model ABI v2**, 72-byte canonical header. It binds feature/hidden/vocabulary dimensions, frontend kind, 16-kHz/400/320 geometry, quantization scales, 64-bit vocabulary fingerprint and tensor offsets.
+- **`KWKP` keyword-pack ABI v3**, 24-byte header + 48-byte records. Each record binds keyword id, threshold, token sequence, `min_trailing_blanks`, priority, prefix policy and grace frames to the same vocabulary fingerprint.
 
-## Keyword decoder state model
-
-The decoder is a bounded shared-prefix Trie with a lightweight Viterbi-style path scorer. It is intentionally not a general-purpose CTC prefix-beam search.
-
-Before a Trie edge may advance, the frame is reduced to one **admitted CTC label**: the highest-logit nonblank token, but only when that token also beats blank. A blank-dominant frame admits no nonblank token. Other non-dominant token posteriors still contribute to the frame normalization/confidence denominator, but they cannot advance keyword structure.
-
-This dominant-token admission rule is deliberate. Allowing every Trie child with any nonzero posterior to advance lets transition-frame tails plus `token_boost` fabricate missing or reordered labels. For example, a strongly decoded `ni3 hao3 wo1 xiao3` sequence must not complete `ni3 hao3 xiao3 wo1` merely because `xiao3`/`wo1` had weak secondary posterior on neighboring frames.
-
-Each non-root Trie node retains two independent scores:
-
-- `score`: best prefix path whose latest token has not subsequently been separated by a blank;
-- `blank_score`: best prefix path after at least one blank-dominant acoustic frame since the latest emitted token.
-
-A non-repeated child can advance from the better of those two states, but only when that child is the admitted dominant label for the frame. If the child token is identical to the current node token, it can advance **only** from `blank_score`. This mirrors the structural CTC rule that adjacent identical target labels require a blank separator without carrying a general beam over the entire vocabulary.
-
-Blank and nonblank scores must remain separate. Collapsing them into one score plus a boolean would either discard a lower-scoring but valid separated path or incorrectly grant blank readiness to a higher-scoring unseparated path.
-
-State retention remains a product-oriented gap heuristic rather than exact CTC probability accumulation: a blank-dominant frame moves retained nonblank state into the separated state, while an already separated state remains separated until another token is emitted. An unrelated dominant token does not destroy an existing partial prefix; it simply cannot advance an incompatible edge. This keeps the decoder bounded and inexpensive while preserving the repeated-label constraint and ordered-token contract.
+A pack with a mismatched vocabulary cannot attach to a model. Unsupported versions, non-canonical sizes/layouts, duplicate ids/paths, invalid token ids, NaN/Inf values or invalid prefix-policy metadata are rejected before the active trie is replaced.
 
 ## Frontend contract
 
-The device frontend and training frontend are treated as one versioned feature contract. `training/frontend_spec.py` defines the dependency-free reference geometry and constants; `kws_feature_dump` runs the actual C implementation on WAV input; CI compares C output frame-by-frame against the reference with a tight float tolerance. The PyTorch frontend imports the same FFT/mel/scale constants from the reference module.
+`training/frontend_spec.py` is the dependency-free reference for both supported frontends:
 
-A frontend geometry, windowing, mel-bin or normalization change therefore requires an explicit contract update rather than silently changing training features independently of the embedded runtime.
+- `frontend_kind=0`: `logmel`;
+- `frontend_kind=1`: `pcen-lite`.
 
-## Training provenance
+Both share sample rate, frame/hop, window, FFT and mel geometry. PCEN-lite keeps a fixed-size per-mel smoothing state and applies bounded gain normalization before the common feature normalization. No dynamic allocation is introduced.
 
-Training does not accept an unqualified vocabulary size. `training/train_ctc.py` requires the actual token vocabulary and stores its 64-bit fingerprint plus token-file SHA256 in the checkpoint. Warm starts verify the fingerprint before loading weights, and `training/export_model.py` refuses to bind a checkpoint to a same-sized but differently mapped vocabulary.
+The model header selects the frontend. Training checkpoints and export provenance record the same frontend identity and frontend-spec version. `qualification_manifest.py` carries runtime frontend identity into the release manifest and `qualification_gate.py` requires it to match model lineage. A PCEN model therefore cannot silently be released with a logmel runtime configuration, or vice versa.
 
-Checkpoints additionally retain training-manifest hashes, frontend-spec version, seed and optimizer settings so the acoustic artifact has a reproducible lineage before `.kwm` export.
+CI runs the actual C frontend through `kws_feature_dump` and compares both modes against the reference implementation.
 
-The dependency-free synthetic CI backend also emits explicit fitting provenance. Its competitive softmax acoustic head is trained only from deterministic token/background fitting samples, quantized to the same ABI-v2 int8 format used by the C runtime, and then re-evaluated after quantization. CI requires the held-out token-fit validation accuracy to remain at least 99.5% before the candidate can participate in the end-to-end synthetic gate.
+## Open-token KWS
 
-## Ownership contract
+The acoustic network learns reusable pinyin-token acoustics. Configured wake phrases are bounded token paths, not dedicated binary classifiers. A normal L0 phrase change can therefore update `.kwk` only when the acoustic model already separates the required tokens.
 
-- model blob: caller-owned, read-only, stable address and at least float-aligned because model biases are zero-copy float views;
-- engine arena: caller-owned, exclusive to one engine, with at least `kws_engine_required_alignment()` alignment;
-- keyword arrays: required only during `kws_engine_set_keywords()`; the internal trie retains token IDs, not caller pointers;
-- parsed keyword pack: required only until `kws_engine_set_keyword_pack()` returns;
+The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s and about 26 KB of model weights+biases. These are design calculations, not physical target-board measurements.
+
+## Decoder state and CTC admission
+
+The decoder is a bounded shared-prefix Trie with a lightweight Viterbi-style scorer; it is not a general CTC prefix-beam search.
+
+Each frame admits at most one nonblank structural label: the highest-logit nonblank token only when it also beats blank. Non-dominant token posteriors still contribute to normalization/confidence but cannot fabricate Trie transitions.
+
+Each non-root Trie node retains two independent states:
+
+- `score`: best path whose latest token has not subsequently observed a blank;
+- `blank_score`: best path after at least one blank-dominant frame since the latest token.
+
+A repeated child token can advance only from `blank_score`. Non-repeated children may advance from the better state. This preserves the structural CTC requirement for adjacent identical labels without carrying a vocabulary-wide beam.
+
+## Shared-prefix arbitration
+
+`KWKP` v3 makes prefix conflicts explicit instead of depending on keyword order.
+
+Per keyword:
+
+- `immediate`: qualifying terminal can emit in the current step. If several immediate terminals compete, higher priority wins, then deeper path, then confidence.
+- `longest`: terminal is offered to bounded pending state and releases only after `min_trailing_blanks`; a deeper shared-prefix candidate can replace it before release.
+- `grace`: terminal is held for at least `grace_frames` and its trailing-blank condition; deeper/higher-priority pending candidates can replace it during the grace window.
+
+The pending state is fixed-size. Emission resets decoder state, preserving one-detection-per-call semantics.
+
+## Domain-aware offline loop
+
+`training/iterate_domain.py` is an offline orchestration layer around the same deployable runtime:
+
+```text
+base synthetic examples
+ -> acoustic scene renderer
+ -> split leakage audit
+ -> frontend candidate fit/train
+ -> quantize/export KWSP
+ -> threshold search + KWKP v3 compile
+ -> real C runtime on calibration/test
+ -> domain metrics + worst-domain objective
+ -> adaptive distance curriculum
+ -> candidate selection
+ -> untouched qualification render/evaluation
+ -> frozen best bundle
+```
+
+`configs/training/xiaowo.domain.json` models nominal near/mid/far distance bands (0.3–1 m, 1–3 m, 3–5 m), azimuth, RT60, SNR, noise profile and optional playback/AEC residual. The AFE layer can be the repository proxy or an external command wrapper around the shipping audio pipeline.
+
+Training domains are weighted stochastic samples and may be reweighted by worst-domain curriculum. Evaluation positives are deterministically rotated `far -> mid -> near`; this guarantees that a far-field FRR gate is backed by an actual far positive rather than by random domain presence/absence. Negative scenes remain independently sampled.
+
+The dependency-free domain prototype has a 98.5% post-quantization token-core validation floor before it participates. That internal floor is not the product metric: complete rendered utterances still run through the real C runtime for calibration/test/qualification and domain FAR/FRR/latency scoring.
+
+The older generic synthetic prototype uses its own stricter 99.5% token-fit floor. These are two distinct offline smoke contracts, not shipping acoustic thresholds.
+
+## Long continuous background path
+
+`kws_raw_stream` feeds raw PCM16 blocks through the same runtime without WAV/clip resets. `eval/long_far_stream.py` uses it to exercise long continuous negative streams and record false accepts. The nightly workflow is a hosted/synthetic regression watch, not evidence for a production FAR/hour claim.
+
+## Provenance and qualification
+
+Training requires the actual token vocabulary. Checkpoints retain vocabulary fingerprint/token hash, manifest hashes, frontend identity/spec, seed and optimizer settings. Export refuses incompatible vocabulary/frontend metadata and emits deterministic model provenance with quantization diagnostics.
+
+Shipping qualification then re-hashes the concrete checkpoint, training tokens, complete manifest multiset, exported model, pack, release tokens/config, evaluation artifacts and target-board artifacts. Runtime frontend identity must equal model-lineage frontend identity. The SKU policy is applied only after these byte-complete consistency checks.
+
+## Ownership and hard bounds
+
+- model blob: caller-owned, read-only, stable address;
+- engine arena: caller-owned, exclusive, aligned;
+- parsed keyword pack: needed only until `kws_engine_set_keyword_pack()` returns;
 - engine: single-thread owner; serialize externally;
-- no global mutable state, heap, locks or runtime plugins.
+- no global mutable state, runtime plugins, heap or locks.
 
-`kws_engine_required_bytes()` returns zero for a model that violates the public model contract. `kws_engine_init()` repeats geometry, pointer, finite-float and config checks even when a caller manually constructs the public `kws_model_t` rather than using `kws_model_open()`.
+Current limits are 16 keywords, 16 tokens per keyword, 40 features, 64 recurrent units and 512 acoustic tokens. Model ABI v2 fixes the acoustic geometry; keyword-pack ABI v3 fixes the prefix-policy record contract.
 
-## Hard bounds
-
-Current limits are 16 keywords, 16 tokens per keyword, 40 features, 64 recurrent units and 512 acoustic tokens. Model/keyword ABI v2 additionally fixes 16-kHz input, 400-sample analysis frames and 320-sample acoustic hops. These are product bounds that keep resident memory and per-call event semantics deterministic.
-
-Parser attack-surface hardening is exercised by deterministic contract tests plus Clang libFuzzer/ASan/UBSan smoke jobs for `.kwm` and `.kwk` inputs. Fuzzing is a software safety gate; it does not replace authentication/signing of production update artifacts.
+Parser attack-surface hardening is covered by deterministic tests and Clang libFuzzer/ASan/UBSan smoke for `.kwm`/`.kwk`. It does not replace signing/authentication of production update artifacts.

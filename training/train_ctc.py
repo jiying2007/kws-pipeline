@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend import features
+from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 
 MAX_FEATURE_DIM = 40
@@ -25,7 +26,7 @@ MAX_HIDDEN_DIM = 64
 MAX_VOCAB_SIZE = 512
 FRAME_LENGTH_SAMPLES = 400
 FRAME_HOP_SAMPLES = 320
-FRONTEND_SPEC_VERSION = 1
+FRONTEND_SPEC_VERSION = 2
 WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
 
@@ -44,10 +45,12 @@ class Manifest(Dataset):
         paths: list[pathlib.Path],
         feature_dim: int,
         vocab_size_value: int,
+        frontend: str,
     ):
         self.rows: list[tuple[pathlib.Path, list[int]]] = []
         self.feature_dim = feature_dim
         self.vocab_size = vocab_size_value
+        self.frontend = frontend
         for path in paths:
             root = path.parent
             for line_no, raw in enumerate(
@@ -92,6 +95,7 @@ class Manifest(Dataset):
             self.feature_dim,
             frame_len=FRAME_LENGTH_SAMPLES,
             hop=FRAME_HOP_SAMPLES,
+            frontend=self.frontend,
         )
         repeated_neighbors = sum(
             1 for left, right in zip(tokens, tokens[1:]) if left == right
@@ -136,6 +140,7 @@ def validate_warm_start(
         "frame_hop_samples": FRAME_HOP_SAMPLES,
         "frontend_spec_version": FRONTEND_SPEC_VERSION,
         "vocab_fingerprint": fingerprint,
+        "frontend_kind": frontend_id(args.frontend),
     }
     for key, value in expected.items():
         if int(checkpoint.get(key, -1)) != value:
@@ -151,6 +156,7 @@ def main() -> None:
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--feature-dim", type=int, default=32)
     parser.add_argument("--hidden-dim", type=int, default=48)
+    parser.add_argument("--frontend", choices=sorted(FRONTEND_IDS), default=FRONTEND_LOGMEL)
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -183,7 +189,7 @@ def main() -> None:
     shuffle_generator = torch.Generator()
     shuffle_generator.manual_seed(args.seed)
 
-    dataset = Manifest(args.manifest, args.feature_dim, vocab_size_value)
+    dataset = Manifest(args.manifest, args.feature_dim, vocab_size_value, args.frontend)
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -237,6 +243,8 @@ def main() -> None:
             "frame_length_samples": FRAME_LENGTH_SAMPLES,
             "frame_hop_samples": FRAME_HOP_SAMPLES,
             "frontend_spec_version": FRONTEND_SPEC_VERSION,
+            "frontend_name": args.frontend,
+            "frontend_kind": frontend_id(args.frontend),
             "training_examples": len(dataset),
             "training_manifests": manifest_metadata,
             "seed": args.seed,
@@ -252,7 +260,7 @@ def main() -> None:
     )
     print(
         f"saved {args.output}: examples={len(dataset)} vocab={vocab_size_value} "
-        f"fingerprint=0x{fingerprint:016x}"
+        f"frontend={args.frontend} fingerprint=0x{fingerprint:016x}"
     )
 
 

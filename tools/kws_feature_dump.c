@@ -21,6 +21,18 @@ static int parse_feature_dim(const char *text, uint16_t *out_value) {
   return 1;
 }
 
+static int parse_frontend(const char *text, uint16_t *out_value) {
+  if (strcmp(text, "logmel") == 0) {
+    *out_value = KWS_FRONTEND_LOGMEL;
+    return 1;
+  }
+  if (strcmp(text, "pcen-lite") == 0) {
+    *out_value = KWS_FRONTEND_PCEN_LITE;
+    return 1;
+  }
+  return 0;
+}
+
 int main(int argc, char **argv) {
   FILE *wav = NULL;
   uint32_t wav_bytes = 0u;
@@ -28,22 +40,28 @@ int main(int argc, char **argv) {
   kws_model_t model;
   kws_frontend_t frontend;
   uint16_t feature_dim = 32u;
+  uint16_t frontend_kind = KWS_FRONTEND_LOGMEL;
   float features[KWS_MAX_FEATURE_DIM];
   uint32_t remaining;
   size_t frame_index = 0u;
   int exit_code = 1;
 
-  if (argc != 2 && argc != 3) {
-    fprintf(stderr, "usage: %s audio.wav [feature-dim]\n", argv[0]);
+  if (argc < 2 || argc > 4) {
+    fprintf(stderr, "usage: %s audio.wav [feature-dim] [logmel|pcen-lite]\n", argv[0]);
     return 2;
   }
-  if (argc == 3 && parse_feature_dim(argv[2], &feature_dim) == 0) {
+  if (argc >= 3 && parse_feature_dim(argv[2], &feature_dim) == 0) {
     fprintf(stderr, "feature-dim must be 1..%u\n", KWS_MAX_FEATURE_DIM);
+    return 2;
+  }
+  if (argc == 4 && parse_frontend(argv[3], &frontend_kind) == 0) {
+    fprintf(stderr, "frontend must be logmel or pcen-lite\n");
     return 2;
   }
 
   memset(&model, 0, sizeof(model));
   model.feature_dim = feature_dim;
+  model.frontend_kind = frontend_kind;
   model.frame_length_samples = KWS_FRAME_LENGTH_SAMPLES;
   model.frame_hop_samples = KWS_FRAME_HOP_SAMPLES;
   kws_frontend_init(&frontend, &model);

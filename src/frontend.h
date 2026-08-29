@@ -12,6 +12,7 @@ typedef struct kws_frontend {
   uint32_t hop;
   uint32_t fill;
   uint16_t feature_dim;
+  uint16_t frontend_kind;
   int16_t pcm[512];
   float window[512];
   float re[512];
@@ -19,6 +20,8 @@ typedef struct kws_frontend {
   float fft_wlen_re[KWS_FFT_STAGES];
   float fft_wlen_im[KWS_FFT_STAGES];
   uint16_t mel_bins[KWS_MAX_FEATURE_DIM + 2u];
+  float pcen_smooth[KWS_MAX_FEATURE_DIM];
+  uint8_t pcen_initialized;
   float last_dbfs;
 } kws_frontend_t;
 

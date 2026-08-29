@@ -13,6 +13,7 @@ import sys
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 FINGERPRINT_RE = re.compile(r"0x[0-9a-f]{16}")
+FRONTEND_NAMES = {0: "logmel", 1: "pcen-lite"}
 
 
 def reject_constant(value: str):
@@ -35,10 +36,8 @@ def sha256_file(path: pathlib.Path) -> str:
 
 
 def integer(value, label: str, minimum: int = 0) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{label} must be an integer")
-    if value < minimum:
-        raise ValueError(f"{label} must be >= {minimum}")
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise ValueError(f"{label} must be an integer >= {minimum}")
     return value
 
 
@@ -65,42 +64,20 @@ def validate_policy(policy: dict) -> dict:
         raise ValueError("policy name must be non-empty text")
     result = {
         "name": name.strip(),
-        "min_audio_hours": finite(
-            policy["min_audio_hours"], "policy.min_audio_hours", 0.0
-        ),
-        "min_expected_wakes": integer(
-            policy["min_expected_wakes"], "policy.min_expected_wakes", 0
-        ),
+        "min_audio_hours": finite(policy["min_audio_hours"], "policy.min_audio_hours", 0.0),
+        "min_expected_wakes": integer(policy["min_expected_wakes"], "policy.min_expected_wakes", 0),
         "max_frr": finite(policy["max_frr"], "policy.max_frr", 0.0),
-        "max_far_per_hour": finite(
-            policy["max_far_per_hour"], "policy.max_far_per_hour", 0.0
-        ),
-        "max_p95_latency_ms": finite(
-            policy["max_p95_latency_ms"], "policy.max_p95_latency_ms", 0.0
-        ),
-        "max_p99_process_us": finite(
-            policy["max_p99_process_us"], "policy.max_p99_process_us", 0.0
-        ),
+        "max_far_per_hour": finite(policy["max_far_per_hour"], "policy.max_far_per_hour", 0.0),
+        "max_p95_latency_ms": finite(policy["max_p95_latency_ms"], "policy.max_p95_latency_ms", 0.0),
+        "max_p99_process_us": finite(policy["max_p99_process_us"], "policy.max_p99_process_us", 0.0),
         "max_rtf": finite(policy["max_rtf"], "policy.max_rtf", 0.0),
-        "min_p99_headroom": finite(
-            policy["min_p99_headroom"], "policy.min_p99_headroom", 0.0
-        ),
-        "min_soak_hours": finite(
-            policy["min_soak_hours"], "policy.min_soak_hours", 0.0
-        ),
-        "max_cpu_percent": finite(
-            policy["max_cpu_percent"], "policy.max_cpu_percent", 0.0
-        ),
+        "min_p99_headroom": finite(policy["min_p99_headroom"], "policy.min_p99_headroom", 0.0),
+        "min_soak_hours": finite(policy["min_soak_hours"], "policy.min_soak_hours", 0.0),
+        "max_cpu_percent": finite(policy["max_cpu_percent"], "policy.max_cpu_percent", 0.0),
         "max_rss_kib": finite(policy["max_rss_kib"], "policy.max_rss_kib", 0.0),
-        "max_stack_high_water_bytes": finite(
-            policy["max_stack_high_water_bytes"],
-            "policy.max_stack_high_water_bytes",
-            0.0,
-        ),
+        "max_stack_high_water_bytes": finite(policy["max_stack_high_water_bytes"], "policy.max_stack_high_water_bytes", 0.0),
         "max_temp_c": finite(policy["max_temp_c"], "policy.max_temp_c"),
-        "max_average_power_mw": finite(
-            policy["max_average_power_mw"], "policy.max_average_power_mw", 0.0
-        ),
+        "max_average_power_mw": finite(policy["max_average_power_mw"], "policy.max_average_power_mw", 0.0),
     }
     if result["max_frr"] > 1.0 or result["max_cpu_percent"] > 100.0:
         raise ValueError("policy FRR/CPU limits exceed valid ranges")
@@ -120,34 +97,26 @@ def validate_manifest(manifest: dict) -> dict:
         raise ValueError("manifest schema_version must be 1")
     runtime = manifest.get("runtime")
     vocabulary = manifest.get("vocabulary")
-    model_lineage = manifest.get("model_lineage")
+    lineage = manifest.get("model_lineage")
     evaluation = manifest.get("evaluation")
     board = manifest.get("board")
     evidence = manifest.get("evidence")
     artifacts = manifest.get("artifacts")
     if not all(
         isinstance(item, dict)
-        for item in (
-            runtime,
-            vocabulary,
-            model_lineage,
-            evaluation,
-            board,
-            evidence,
-            artifacts,
-        )
+        for item in (runtime, vocabulary, lineage, evaluation, board, evidence, artifacts)
     ):
         raise ValueError("manifest is missing required object sections")
-    if integer(runtime["model_abi"], "manifest.runtime.model_abi") != 2 or integer(
-        runtime["keyword_pack_abi"], "manifest.runtime.keyword_pack_abi"
-    ) != 2:
-        raise ValueError("qualification gate requires ABI v2 model and keyword pack")
+    if integer(runtime.get("model_abi"), "runtime.model_abi") != 2:
+        raise ValueError("qualification gate requires model ABI v2")
+    if integer(runtime.get("keyword_pack_abi"), "runtime.keyword_pack_abi") != 3:
+        raise ValueError("qualification gate requires keyword-pack ABI v3")
     if (
-        integer(runtime["sample_rate_hz"], "manifest.runtime.sample_rate_hz"),
-        integer(runtime["frame_length_samples"], "manifest.runtime.frame_length_samples"),
-        integer(runtime["frame_hop_samples"], "manifest.runtime.frame_hop_samples"),
+        integer(runtime.get("sample_rate_hz"), "runtime.sample_rate_hz"),
+        integer(runtime.get("frame_length_samples"), "runtime.frame_length_samples"),
+        integer(runtime.get("frame_hop_samples"), "runtime.frame_hop_samples"),
     ) != (16000, 400, 320):
-        raise ValueError("manifest runtime geometry is not ABI-v2")
+        raise ValueError("manifest runtime geometry is unsupported")
 
     source_sha = manifest.get("source_sha")
     fingerprint = vocabulary.get("fingerprint")
@@ -156,8 +125,7 @@ def validate_manifest(manifest: dict) -> dict:
     if not isinstance(fingerprint, str) or FINGERPRINT_RE.fullmatch(fingerprint) is None:
         raise ValueError("manifest vocabulary fingerprint is invalid")
 
-    artifact_hashes: dict[str, str] = {}
-    for name in (
+    names = (
         "model",
         "model_provenance",
         "model_checkpoint",
@@ -170,105 +138,71 @@ def validate_manifest(manifest: dict) -> dict:
         "detections",
         "board_runner",
         "board_audio",
-    ):
-        artifact_hashes[name] = validate_artifact(
-            artifacts.get(name), f"manifest.artifacts.{name}"
-        )
-
-    training_manifest_artifacts = artifacts.get("training_manifests")
-    if not isinstance(training_manifest_artifacts, list) or not training_manifest_artifacts:
-        raise ValueError("manifest.artifacts.training_manifests must be non-empty")
-    training_manifest_hashes = [
-        validate_artifact(item, f"manifest.artifacts.training_manifests[{index}]")
-        for index, item in enumerate(training_manifest_artifacts)
+    )
+    hashes = {
+        name: validate_artifact(artifacts.get(name), f"artifacts.{name}")
+        for name in names
+    }
+    training_artifacts = artifacts.get("training_manifests")
+    if not isinstance(training_artifacts, list) or not training_artifacts:
+        raise ValueError("artifacts.training_manifests must be non-empty")
+    training_hashes = [
+        validate_artifact(item, f"training_manifests[{i}]")
+        for i, item in enumerate(training_artifacts)
     ]
 
-    if (
-        validate_sha(vocabulary["sha256"], "manifest.vocabulary.sha256")
-        != artifact_hashes["tokens"]
-    ):
+    if validate_sha(vocabulary.get("sha256"), "vocabulary.sha256") != hashes["tokens"]:
         raise ValueError("manifest vocabulary hash does not match token artifact")
-
-    if (
-        validate_sha(
-            model_lineage.get("provenance_sha256"),
-            "manifest.model_lineage.provenance_sha256",
-        )
-        != artifact_hashes["model_provenance"]
-    ):
-        raise ValueError("manifest model-lineage provenance hash is inconsistent")
-    if (
-        validate_sha(
-            model_lineage.get("model_sha256"),
-            "manifest.model_lineage.model_sha256",
-        )
-        != artifact_hashes["model"]
-    ):
-        raise ValueError("manifest model-lineage model hash is inconsistent")
-    if (
-        validate_sha(
-            model_lineage.get("tokens_sha256"),
-            "manifest.model_lineage.tokens_sha256",
-        )
-        != artifact_hashes["tokens"]
-    ):
-        raise ValueError("manifest model-lineage token hash is inconsistent")
-    checkpoint_sha256 = validate_sha(
-        model_lineage.get("checkpoint_sha256"),
-        "manifest.model_lineage.checkpoint_sha256",
-    )
-    if checkpoint_sha256 != artifact_hashes["model_checkpoint"]:
-        raise ValueError("manifest model-lineage checkpoint hash is inconsistent")
-    training_tokens_sha256 = validate_sha(
-        model_lineage.get("training_tokens_sha256"),
-        "manifest.model_lineage.training_tokens_sha256",
-    )
-    if training_tokens_sha256 != artifact_hashes["training_tokens"]:
-        raise ValueError("manifest model-lineage training-token hash is inconsistent")
-
-    token_bytes_identical = model_lineage.get("token_bytes_identical_to_training")
-    if not isinstance(token_bytes_identical, bool):
-        raise ValueError("manifest model-lineage token-byte identity flag must be boolean")
-    if token_bytes_identical != (
-        artifact_hashes["tokens"] == artifact_hashes["training_tokens"]
+    cross = {
+        "provenance_sha256": "model_provenance",
+        "model_sha256": "model",
+        "tokens_sha256": "tokens",
+        "checkpoint_sha256": "model_checkpoint",
+        "training_tokens_sha256": "training_tokens",
+    }
+    for key, artifact_name in cross.items():
+        if validate_sha(lineage.get(key), f"model_lineage.{key}") != hashes[artifact_name]:
+            raise ValueError(f"manifest model-lineage {key} is inconsistent")
+    identical = lineage.get("token_bytes_identical_to_training")
+    if not isinstance(identical, bool) or identical != (
+        hashes["tokens"] == hashes["training_tokens"]
     ):
         raise ValueError("manifest model-lineage token-byte identity is inconsistent")
+    if integer(
+        lineage.get("frontend_spec_version"), "model_lineage.frontend_spec_version"
+    ) != 2:
+        raise ValueError("manifest model-lineage frontend spec is unsupported")
+    frontend_kind = integer(lineage.get("frontend_kind"), "model_lineage.frontend_kind")
+    frontend_name = lineage.get("frontend_name")
+    if frontend_kind not in FRONTEND_NAMES or frontend_name != FRONTEND_NAMES[frontend_kind]:
+        raise ValueError("manifest model-lineage frontend identity is invalid")
+    runtime_frontend_kind = integer(runtime.get("frontend_kind"), "runtime.frontend_kind")
+    runtime_frontend_name = runtime.get("frontend_name")
+    if (
+        runtime_frontend_kind != frontend_kind
+        or runtime_frontend_name != frontend_name
+        or runtime_frontend_name != FRONTEND_NAMES.get(runtime_frontend_kind)
+    ):
+        raise ValueError("manifest runtime frontend does not match model lineage")
 
-    training = model_lineage.get("training")
-    quantization = model_lineage.get("quantization")
+    training = lineage.get("training")
+    quantization = lineage.get("quantization")
     if not isinstance(training, dict) or not isinstance(quantization, dict):
         raise ValueError("manifest model-lineage training/quantization is missing")
-    recorded_manifests = training.get("manifests")
-    if not isinstance(recorded_manifests, list) or not recorded_manifests:
+    recorded = training.get("manifests")
+    if not isinstance(recorded, list) or not recorded:
         raise ValueError("manifest model-lineage training manifests are missing")
-    recorded_manifest_hashes = []
-    for index, item in enumerate(recorded_manifests):
+    recorded_hashes = []
+    for index, item in enumerate(recorded):
         if not isinstance(item, dict):
-            raise ValueError(
-                f"manifest.model_lineage.training.manifests[{index}] must be an object"
-            )
-        recorded_manifest_hashes.append(
+            raise ValueError("manifest model-lineage training manifest must be an object")
+        recorded_hashes.append(
             validate_sha(
-                item.get("sha256"),
-                f"manifest.model_lineage.training.manifests[{index}].sha256",
+                item.get("sha256"), f"training.manifests[{index}].sha256"
             )
         )
-    if Counter(recorded_manifest_hashes) != Counter(training_manifest_hashes):
+    if Counter(recorded_hashes) != Counter(training_hashes):
         raise ValueError("manifest model-lineage training-manifest hashes are inconsistent")
-
-    if (
-        integer(
-            model_lineage.get("frontend_spec_version"),
-            "manifest.model_lineage.frontend_spec_version",
-        )
-        != 1
-    ):
-        raise ValueError("manifest model-lineage frontend spec is unsupported")
-
-    for key in ("summary_sha256", "provenance_sha256"):
-        validate_sha(evaluation[key], f"manifest.evaluation.{key}")
-    validate_sha(board["summary_sha256"], "manifest.board.summary_sha256")
-    validate_sha(evidence["sha256"], "manifest.evidence.sha256")
 
     eval_links = {
         "runner_sha256": "eval_runner",
@@ -278,10 +212,7 @@ def validate_manifest(manifest: dict) -> dict:
         "detections_sha256": "detections",
     }
     for key, artifact_name in eval_links.items():
-        if (
-            validate_sha(evaluation[key], f"manifest.evaluation.{key}")
-            != artifact_hashes[artifact_name]
-        ):
+        if validate_sha(evaluation.get(key), f"evaluation.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest evaluation {key} cross-link is inconsistent")
     board_links = {
         "runner_sha256": "board_runner",
@@ -290,51 +221,54 @@ def validate_manifest(manifest: dict) -> dict:
         "audio_sha256": "board_audio",
     }
     for key, artifact_name in board_links.items():
-        if (
-            validate_sha(board[key], f"manifest.board.{key}")
-            != artifact_hashes[artifact_name]
-        ):
+        if validate_sha(board.get(key), f"board.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest board {key} cross-link is inconsistent")
+    validate_sha(evaluation.get("summary_sha256"), "evaluation.summary_sha256")
+    validate_sha(evaluation.get("provenance_sha256"), "evaluation.provenance_sha256")
+    validate_sha(board.get("summary_sha256"), "board.summary_sha256")
+    validate_sha(evidence.get("sha256"), "evidence.sha256")
 
     result = {
         "source_sha": source_sha,
         "vocab_fingerprint": fingerprint,
-        "model_checkpoint_sha256": checkpoint_sha256,
+        "model_checkpoint_sha256": hashes["model_checkpoint"],
+        "frontend_kind": frontend_kind,
+        "frontend_name": frontend_name,
         "audio_hours": finite(
-            evaluation["audio_hours"], "manifest.evaluation.audio_hours", 0.0
+            evaluation.get("audio_hours"), "evaluation.audio_hours", 0.0
         ),
-        "expected": integer(evaluation["expected"], "manifest.evaluation.expected", 0),
-        "frr": finite(evaluation["frr"], "manifest.evaluation.frr", 0.0),
+        "expected": integer(evaluation.get("expected"), "evaluation.expected", 0),
+        "frr": finite(evaluation.get("frr"), "evaluation.frr", 0.0),
         "far_per_hour": finite(
-            evaluation["far_per_hour"], "manifest.evaluation.far_per_hour", 0.0
+            evaluation.get("far_per_hour"), "evaluation.far_per_hour", 0.0
         ),
         "p95_latency_ms": finite(
-            evaluation["p95_post_end_latency_ms"],
-            "manifest.evaluation.p95_post_end_latency_ms",
+            evaluation.get("p95_post_end_latency_ms"),
+            "evaluation.p95_post_end_latency_ms",
             0.0,
         ),
         "p99_process_us": finite(
-            board["p99_process_us"], "manifest.board.p99_process_us", 0.0
+            board.get("p99_process_us"), "board.p99_process_us", 0.0
         ),
-        "rtf": finite(board["rtf"], "manifest.board.rtf", 0.0),
+        "rtf": finite(board.get("rtf"), "board.rtf", 0.0),
         "p99_headroom": finite(
-            board["p99_headroom"], "manifest.board.p99_headroom", 0.0
+            board.get("p99_headroom"), "board.p99_headroom", 0.0
         ),
         "soak_hours": finite(
-            evidence["soak_hours"], "manifest.evidence.soak_hours", 0.0
+            evidence.get("soak_hours"), "evidence.soak_hours", 0.0
         ),
         "cpu_percent": finite(
-            evidence["cpu_percent"], "manifest.evidence.cpu_percent", 0.0
+            evidence.get("cpu_percent"), "evidence.cpu_percent", 0.0
         ),
-        "rss_kib": finite(evidence["rss_kib"], "manifest.evidence.rss_kib", 0.0),
+        "rss_kib": finite(evidence.get("rss_kib"), "evidence.rss_kib", 0.0),
         "stack_high_water_bytes": finite(
-            evidence["stack_high_water_bytes"],
-            "manifest.evidence.stack_high_water_bytes",
+            evidence.get("stack_high_water_bytes"),
+            "evidence.stack_high_water_bytes",
             0.0,
         ),
-        "max_temp_c": finite(evidence["max_temp_c"], "manifest.evidence.max_temp_c"),
+        "max_temp_c": finite(evidence.get("max_temp_c"), "evidence.max_temp_c"),
         "average_power_mw": finite(
-            evidence["average_power_mw"], "manifest.evidence.average_power_mw", 0.0
+            evidence.get("average_power_mw"), "evidence.average_power_mw", 0.0
         ),
     }
     if result["frr"] > 1.0 or result["cpu_percent"] > 100.0:
@@ -348,7 +282,6 @@ def main() -> int:
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
-
     manifest = load_json(args.manifest)
     policy = validate_policy(load_json(args.policy))
     measured = validate_manifest(manifest)
@@ -406,7 +339,6 @@ def main() -> int:
         ),
     )
     violations = [message for failed, message in checks if failed]
-
     result = {
         "schema_version": 1,
         "qualified": not violations,
@@ -416,9 +348,13 @@ def main() -> int:
         "source_sha": measured["source_sha"],
         "vocab_fingerprint": measured["vocab_fingerprint"],
         "model_checkpoint_sha256": measured["model_checkpoint_sha256"],
+        "frontend_kind": measured["frontend_kind"],
+        "frontend_name": measured["frontend_name"],
         "violations": violations,
     }
-    rendered = json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False)
+    rendered = json.dumps(
+        result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False
+    )
     print(rendered)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -429,6 +365,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (KeyError, OSError, TypeError, ValueError) as exc:
+    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

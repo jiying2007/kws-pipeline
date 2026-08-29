@@ -16,12 +16,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
+from frontend_spec import FRONTEND_IDS
+
 MODEL_VERSION = 2
 MODEL_HEADER_BYTES = 72
 SAMPLE_RATE_HZ = 16000
 FRAME_LENGTH_SAMPLES = 400
 FRAME_HOP_SAMPLES = 320
-FRONTEND_SPEC_VERSION = 1
+FRONTEND_SPEC_VERSION = 2
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
 MAX_VOCAB_SIZE = 512
@@ -149,6 +151,8 @@ def main() -> None:
         checkpoint.get("tokens_sha256"), "tokens_sha256"
     )
     frontend_spec_version = int(checkpoint.get("frontend_spec_version", -1))
+    frontend_name = str(checkpoint.get("frontend_name", ""))
+    frontend_kind = int(checkpoint.get("frontend_kind", -1))
     frame_length = int(checkpoint["frame_length_samples"])
     frame_hop = int(checkpoint["frame_hop_samples"])
     training = training_metadata(checkpoint)
@@ -164,6 +168,8 @@ def main() -> None:
             f"checkpoint frontend_spec_version={frontend_spec_version} does not match "
             f"required {FRONTEND_SPEC_VERSION}"
         )
+    if frontend_name not in FRONTEND_IDS or FRONTEND_IDS[frontend_name] != frontend_kind:
+        raise ValueError("checkpoint frontend name/kind identity is invalid")
     if frame_length != FRAME_LENGTH_SAMPLES or frame_hop != FRAME_HOP_SAMPLES:
         raise ValueError(
             f"ABI v2 requires frame_length/frame_hop "
@@ -213,7 +219,7 @@ def main() -> None:
         feature_dim,
         hidden_dim,
         checkpoint_vocab_size,
-        0,
+        frontend_kind,
         SAMPLE_RATE_HZ,
         frame_length,
         frame_hop,
@@ -233,7 +239,7 @@ def main() -> None:
     if provenance_path is None:
         provenance_path = pathlib.Path(str(args.output) + ".provenance.json")
     provenance = {
-        "schema_version": 1,
+        "schema_version": 2,
         "model": {
             "name": args.output.name,
             "sha256": sha256_file(args.output),
@@ -244,6 +250,8 @@ def main() -> None:
             "vocab_size": checkpoint_vocab_size,
             "vocab_fingerprint": f"0x{fingerprint:016x}",
             "frontend_spec_version": frontend_spec_version,
+            "frontend_name": frontend_name,
+            "frontend_kind": frontend_kind,
         },
         "checkpoint": {
             "name": args.checkpoint.name,
@@ -270,7 +278,7 @@ def main() -> None:
         encoding="utf-8",
     )
     print(
-        f"wrote {args.output}: {total} bytes, "
+        f"wrote {args.output}: {total} bytes, frontend={frontend_name}, "
         f"vocab_fingerprint=0x{fingerprint:016x}; provenance={provenance_path}"
     )
 

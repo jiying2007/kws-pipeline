@@ -33,7 +33,7 @@ def write_tokens(path: pathlib.Path) -> tuple[list[str], int]:
     return tokens, fnv1a64_token_fingerprint(tokens)
 
 
-def write_model(path: pathlib.Path, fingerprint: int) -> int:
+def write_model(path: pathlib.Path, fingerprint: int, frontend_kind: int = 0) -> int:
     feature_dim = 32
     hidden_dim = 4
     vocab_size = 5
@@ -52,7 +52,7 @@ def write_model(path: pathlib.Path, fingerprint: int) -> int:
         feature_dim,
         hidden_dim,
         vocab_size,
-        0,
+        frontend_kind,
         16000,
         400,
         320,
@@ -80,6 +80,7 @@ def write_model_provenance(
     checkpoint: pathlib.Path,
     training_manifests: list[pathlib.Path],
     fingerprint: int,
+    frontend_kind: int = 0,
 ) -> str:
     checkpoint_hash = sha256_file(checkpoint)
     export_token_hash = sha256_file(export_tokens)
@@ -91,10 +92,11 @@ def write_model_provenance(
         "signal_rms": 0.25,
         "snr_db": 47.0,
     }
+    frontend_name = "logmel" if frontend_kind == 0 else "pcen-lite"
     write_json(
         path,
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "model": {
                 "name": model.name,
                 "sha256": sha256_file(model),
@@ -104,7 +106,9 @@ def write_model_provenance(
                 "hidden_dim": 4,
                 "vocab_size": 5,
                 "vocab_fingerprint": f"0x{fingerprint:016x}",
-                "frontend_spec_version": 1,
+                "frontend_spec_version": 2,
+                "frontend_name": frontend_name,
+                "frontend_kind": frontend_kind,
             },
             "checkpoint": {
                 "name": checkpoint.name,
@@ -114,9 +118,7 @@ def write_model_provenance(
                 "name": export_tokens.name,
                 "sha256": export_token_hash,
                 "checkpoint_sha256": training_token_hash,
-                "byte_identical_to_training": (
-                    export_token_hash == training_token_hash
-                ),
+                "byte_identical_to_training": export_token_hash == training_token_hash,
             },
             "training": {
                 "manifests": [
@@ -145,9 +147,9 @@ def write_model_provenance(
 
 def write_pack(path: pathlib.Path, fingerprint: int) -> int:
     token_ids = [1, 2] + [0] * 14
-    record = struct.pack("<IfHH16H", 1, 0.99, 2, 0, *token_ids)
+    record = struct.pack("<IfHBBBBH16H", 1, 0.99, 2, 0, 0, 0, 0, 0, *token_ids)
     total = 24 + len(record)
-    header = struct.pack("<4sHHHHIQ", b"KWKP", 2, 24, 1, 5, total, fingerprint)
+    header = struct.pack("<4sHHHHIQ", b"KWKP", 3, 24, 1, 5, total, fingerprint)
     path.write_bytes(header + record)
     return total
 

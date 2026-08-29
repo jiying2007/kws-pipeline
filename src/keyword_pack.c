@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define KWS_KEYWORD_PACK_HEADER_BYTES 24u
-#define KWS_KEYWORD_PACK_RECORD_BYTES 44u
+#define KWS_KEYWORD_PACK_RECORD_BYTES 48u
 
 static uint16_t rd16(const uint8_t *p) {
   return (uint16_t)((uint16_t)p[0] | (uint16_t)((uint16_t)p[1] << 8u));
@@ -73,11 +73,22 @@ kws_status_t kws_keyword_pack_open(const void *blob,
     uint32_t id = rd32(record + 0u);
     float threshold = rdf32(record + 4u);
     uint16_t num_tokens = rd16(record + 8u);
-    uint16_t reserved = rd16(record + 10u);
+    uint8_t min_trailing_blanks = record[10u];
+    uint8_t priority = record[11u];
+    uint8_t prefix_policy = record[12u];
+    uint8_t grace_frames = record[13u];
+    uint16_t reserved = rd16(record + 14u);
 
     if (num_tokens == 0u || num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
         !isfinite(threshold) || threshold <= 0.0f || threshold >= 1.0f ||
-        reserved != 0u) {
+        prefix_policy > (uint8_t)KWS_PREFIX_GRACE || reserved != 0u) {
+      return KWS_EFORMAT;
+    }
+    if (prefix_policy == (uint8_t)KWS_PREFIX_LONGEST &&
+        min_trailing_blanks == 0u) {
+      return KWS_EFORMAT;
+    }
+    if (prefix_policy == (uint8_t)KWS_PREFIX_GRACE && grace_frames == 0u) {
       return KWS_EFORMAT;
     }
 
@@ -88,14 +99,14 @@ kws_status_t kws_keyword_pack_open(const void *blob,
     }
 
     for (uint16_t i = 0u; i < num_tokens; ++i) {
-      uint16_t token = rd16(record + 12u + (size_t)i * 2u);
+      uint16_t token = rd16(record + 16u + (size_t)i * 2u);
       if (token == 0u || token >= model->vocab_size) {
         return KWS_EBOUNDS;
       }
       out_pack->token_storage[k][i] = token;
     }
     for (uint16_t i = num_tokens; i < KWS_MAX_TOKENS_PER_KEYWORD; ++i) {
-      if (rd16(record + 12u + (size_t)i * 2u) != 0u) {
+      if (rd16(record + 16u + (size_t)i * 2u) != 0u) {
         return KWS_EFORMAT;
       }
     }
@@ -112,6 +123,10 @@ kws_status_t kws_keyword_pack_open(const void *blob,
     out_pack->keywords[k].tokens = out_pack->token_storage[k];
     out_pack->keywords[k].num_tokens = num_tokens;
     out_pack->keywords[k].threshold = threshold;
+    out_pack->keywords[k].min_trailing_blanks = min_trailing_blanks;
+    out_pack->keywords[k].priority = priority;
+    out_pack->keywords[k].prefix_policy = prefix_policy;
+    out_pack->keywords[k].grace_frames = grace_frames;
   }
 
   return KWS_OK;

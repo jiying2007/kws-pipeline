@@ -7,6 +7,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#define PCEN_SMOOTHING 0.025f
+#define PCEN_ALPHA 0.98f
+#define PCEN_DELTA 2.0f
+#define PCEN_ROOT 0.5f
+#define PCEN_EPSILON 1.0e-6f
+
 static float hz_to_mel(float hz) {
   return 2595.0f * log10f(1.0f + hz / 700.0f);
 }
@@ -74,6 +80,7 @@ void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
   fe->frame_len = model->frame_length_samples;
   fe->hop = model->frame_hop_samples;
   fe->feature_dim = model->feature_dim;
+  fe->frontend_kind = model->frontend_kind;
 
   for (uint32_t i = 0u; i < fe->frame_len; ++i) {
     fe->window[i] = 0.5f - 0.5f * cosf((2.0f * (float)M_PI * (float)i) /
@@ -101,7 +108,28 @@ void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
 void kws_frontend_reset(kws_frontend_t *fe) {
   fe->fill = 0u;
   fe->last_dbfs = -120.0f;
+  fe->pcen_initialized = 0u;
   memset(fe->pcm, 0, sizeof(fe->pcm));
+  memset(fe->pcen_smooth, 0, sizeof(fe->pcen_smooth));
+}
+
+static float transform_energy(kws_frontend_t *fe, uint16_t channel, float energy) {
+  if (fe->frontend_kind == KWS_FRONTEND_PCEN_LITE) {
+    float smooth;
+    float normalized;
+    if (fe->pcen_initialized == 0u) {
+      fe->pcen_smooth[channel] = energy;
+    } else {
+      fe->pcen_smooth[channel] =
+          (1.0f - PCEN_SMOOTHING) * fe->pcen_smooth[channel] +
+          PCEN_SMOOTHING * energy;
+    }
+    smooth = fe->pcen_smooth[channel];
+    normalized = energy / powf(PCEN_EPSILON + smooth, PCEN_ALPHA);
+    return powf(normalized + PCEN_DELTA, PCEN_ROOT) -
+           powf(PCEN_DELTA, PCEN_ROOT);
+  }
+  return log1pf(32.0f * energy);
 }
 
 static void make_features(kws_frontend_t *fe, float *out) {
@@ -149,8 +177,11 @@ static void make_features(kws_frontend_t *fe, float *out) {
       e += w * p;
     }
 
-    out[m] = log1pf(32.0f * e);
+    out[m] = transform_energy(fe, m, e);
     mean += out[m];
+  }
+  if (fe->frontend_kind == KWS_FRONTEND_PCEN_LITE) {
+    fe->pcen_initialized = 1u;
   }
 
   mean /= (float)fe->feature_dim;

@@ -2,16 +2,20 @@
 
 Trained `.pt` checkpoints, exported `.kwm` binaries and export-provenance JSON files are build/release artifacts and are intentionally not committed here.
 
-The runtime model format is little-endian **`KWSP` ABI v2**. It stores int8 input/recurrent/output matrices, float32 biases, fixed 16-kHz / 400-sample / 320-sample frontend geometry and the 64-bit token-vocabulary fingerprint. `training/export_model.py` is the canonical writer; `kws_model_open()` is the canonical device-side reader.
+The runtime model format is little-endian **`KWSP` ABI v2** with a canonical 72-byte header. It stores int8 input/recurrent/output matrices, float32 biases, fixed 16-kHz / 400-sample / 320-sample geometry, 64-bit vocabulary fingerprint and a model-bound frontend kind:
+
+- `0`: `logmel`;
+- `1`: `pcen-lite`.
+
+`training/export_model.py` is the canonical writer; `kws_model_open()` is the canonical device-side reader.
 
 ## Required export tuple
-
-Training requires the exact token vocabulary:
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/train.tsv \
   --tokens keywords/tokens.zh.txt \
+  --frontend logmel \
   --output build/base.pt
 
 python3 training/export_model.py \
@@ -20,21 +24,22 @@ python3 training/export_model.py \
   --output build/base.kwm
 ```
 
-The exporter writes two artifacts:
+Use `--frontend pcen-lite` to train a PCEN-lite model. A warm start cannot switch frontend identity.
 
-- `base.kwm` — the deployable ABI-v2 model;
-- `base.kwm.provenance.json` — deterministic lineage for that model export.
+The exporter writes:
 
-The provenance records the exact `.kwm` SHA256, checkpoint SHA256, export token SHA256, token hash retained by the training checkpoint, vocabulary fingerprint, frontend-spec version, training-manifest hashes, seed/optimizer settings, and per-matrix int8 quantization scale/error/RMSE/SNR statistics.
+- `base.kwm` — deployable model ABI v2;
+- `base.kwm.provenance.json` — deterministic model lineage.
 
-`training/export_model.py` refuses to bind a checkpoint to a same-sized but differently mapped vocabulary. A release qualification bundle must retain **all concrete lineage inputs**, not only their hashes:
+Provenance records model/checkpoint SHA256, export/training token identities, vocabulary fingerprint, frontend kind/name, frontend-spec version, training manifests, seed/optimizer settings and per-matrix int8 quantization diagnostics.
 
-- the exported `.kwm` and `.kwm.provenance.json`;
-- the exact source `.pt` checkpoint;
-- the exact token file used during training;
+A release qualification bundle must retain all concrete lineage inputs:
+
+- exported `.kwm` and provenance;
+- exact source `.pt` checkpoint;
+- exact training token file;
 - every training manifest recorded by the checkpoint;
-- the release token file used for export/keyword compilation.
+- release token file;
+- matching KWKP v3 keyword pack and runtime config.
 
-`tools/qualification_manifest.py` receives these through `--model-provenance`, `--checkpoint`, `--training-tokens`, repeated `--training-manifest`, and `--tokens`. It re-hashes the actual files, verifies the training/release token mappings are identical, and rejects any mismatch with the exporter provenance.
-
-A production release should therefore pin the complete tuple: source SHA, `.kwm`, model provenance, checkpoint, training token/manifests, release token vocabulary, `.kwk`, runtime config, evaluation artifacts, target-board evidence, approved policy, qualification manifest and gate result. See `docs/RELEASE_QUALIFICATION.md`.
+`qualification_manifest.py` re-hashes these files and `qualification_gate.py` additionally requires the runtime frontend identity to match the model lineage. See `docs/RELEASE_QUALIFICATION.md`.

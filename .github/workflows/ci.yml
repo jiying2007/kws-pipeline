@@ -35,6 +35,16 @@ jobs:
         run: python3 tests/test_false_reject_mining.py
       - name: Synthetic model self-training loop
         run: python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
+      - name: Acoustic scene renderer
+        run: python3 tests/test_domain_scene.py
+      - name: Domain metric scorer
+        run: python3 tests/test_domain_metrics.py
+      - name: Adaptive domain curriculum
+        run: python3 tests/test_domain_curriculum.py
+      - name: Domain-aware multi-frontend training loop
+        run: python3 tests/test_domain_loop.py --runner ./build/kws_wav
+      - name: Streaming long-FAR smoke
+        run: python3 tests/test_long_far.py --runner ./build/kws_raw_stream
       - name: Keyword compiler
         run: python3 tests/test_keyword_compile.py
       - name: Product metric scorer

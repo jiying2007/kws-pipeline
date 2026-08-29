@@ -8,6 +8,20 @@ MEL_LOW_HZ = 80.0
 MEL_HIGH_HZ = 7600.0
 ENERGY_SCALE = 32.0
 FEATURE_SCALE = 0.25
+FRONTEND_LOGMEL = "logmel"
+FRONTEND_PCEN_LITE = "pcen-lite"
+FRONTEND_IDS = {FRONTEND_LOGMEL: 0, FRONTEND_PCEN_LITE: 1}
+PCEN_SMOOTHING = 0.025
+PCEN_ALPHA = 0.98
+PCEN_DELTA = 2.0
+PCEN_ROOT = 0.5
+PCEN_EPSILON = 1.0e-6
+
+
+def frontend_id(name: str) -> int:
+    if name not in FRONTEND_IDS:
+        raise ValueError(f"unsupported frontend: {name}")
+    return FRONTEND_IDS[name]
 
 
 def hz_to_mel(hz: float) -> float:
@@ -72,7 +86,7 @@ def fft512_real(values: list[float]) -> list[complex]:
     return data[: FFT_SIZE // 2 + 1]
 
 
-def frame_features_pcm16(samples: list[int], feature_dim: int = 32) -> list[float]:
+def mel_energies_pcm16(samples: list[int], feature_dim: int = 32) -> list[float]:
     frame_len = len(samples)
     window = hann_window(frame_len)
     normalized = [sample / 32768.0 for sample in samples]
@@ -81,7 +95,7 @@ def frame_features_pcm16(samples: list[int], feature_dim: int = 32) -> list[floa
     )
     power = [value.real * value.real + value.imag * value.imag for value in spectrum]
     bins = mel_bins(feature_dim)
-    features: list[float] = []
+    energies: list[float] = []
     for mel_index in range(feature_dim):
         left, center, right = bins[mel_index : mel_index + 3]
         center = max(center, left + 1)
@@ -93,9 +107,18 @@ def frame_features_pcm16(samples: list[int], feature_dim: int = 32) -> list[floa
         for bin_index in range(center, right):
             weight = (right - bin_index) / (right - center)
             energy += weight * power[bin_index]
-        features.append(math.log1p(ENERGY_SCALE * energy))
-    mean = sum(features) / feature_dim
-    return [(value - mean) * FEATURE_SCALE for value in features]
+        energies.append(energy)
+    return energies
+
+
+def normalize_frame(values: list[float]) -> list[float]:
+    mean = sum(values) / len(values)
+    return [(value - mean) * FEATURE_SCALE for value in values]
+
+
+def frame_features_pcm16(samples: list[int], feature_dim: int = 32) -> list[float]:
+    energies = mel_energies_pcm16(samples, feature_dim)
+    return normalize_frame([math.log1p(ENERGY_SCALE * energy) for energy in energies])
 
 
 def features_pcm16(
@@ -103,14 +126,38 @@ def features_pcm16(
     feature_dim: int = 32,
     frame_len: int = 400,
     hop: int = 320,
+    frontend: str = FRONTEND_LOGMEL,
 ) -> list[list[float]]:
+    frontend_id(frontend)
     if frame_len < 2 or frame_len > FFT_SIZE or hop <= 0 or hop > frame_len:
         raise ValueError("invalid frontend geometry")
     if len(samples) < frame_len:
         samples = samples + [0] * (frame_len - len(samples))
     result: list[list[float]] = []
+    smooth = [0.0] * feature_dim
+    initialized = False
     offset = 0
     while offset + frame_len <= len(samples):
-        result.append(frame_features_pcm16(samples[offset : offset + frame_len], feature_dim))
+        frame = samples[offset : offset + frame_len]
+        energies = mel_energies_pcm16(frame, feature_dim)
+        if frontend == FRONTEND_LOGMEL:
+            values = [math.log1p(ENERGY_SCALE * energy) for energy in energies]
+        else:
+            values = []
+            for index, energy in enumerate(energies):
+                if not initialized:
+                    smooth[index] = energy
+                else:
+                    smooth[index] = (
+                        (1.0 - PCEN_SMOOTHING) * smooth[index]
+                        + PCEN_SMOOTHING * energy
+                    )
+                normalized = energy / ((PCEN_EPSILON + smooth[index]) ** PCEN_ALPHA)
+                values.append(
+                    (normalized + PCEN_DELTA) ** PCEN_ROOT
+                    - PCEN_DELTA**PCEN_ROOT
+                )
+            initialized = True
+        result.append(normalize_frame(values))
         offset += hop
     return result
