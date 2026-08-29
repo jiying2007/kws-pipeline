@@ -16,19 +16,28 @@
   "machine": "REPLACE_ME",
   "cpu_online": "REPLACE_ME",
   "uptime_s": 0.0,
-  "soak_hours": 0.0,
+  "soak_hours": 24.0,
   "cpu_percent": 0.0,
   "rss_kib": 0.0,
   "stack_high_water_bytes": 0.0,
   "max_temp_c": 0.0,
   "average_power_mw": 0.0,
+  "runtime_soak_name": "runtime-soak.json",
+  "runtime_soak_sha256": "REPLACE_WITH_RUNTIME_SOAK_SHA256",
+  "power_raw_name": "power.csv",
+  "power_raw_sha256": "REPLACE_WITH_POWER_RAW_SHA256",
   "raw_evidence": [
     {
-      "name": "REPLACE_ME",
-      "sha256": "REPLACE_WITH_RAW_EVIDENCE_SHA256",
+      "name": "runtime-soak.json",
+      "sha256": "REPLACE_WITH_RUNTIME_SOAK_SHA256",
+      "bytes": 1
+    },
+    {
+      "name": "power.csv",
+      "sha256": "REPLACE_WITH_POWER_RAW_SHA256",
       "bytes": 1
     }
   ],
-  "instrument_id": null,
-  "calibration_id": null
+  "instrument_id": "REPLACE_WITH_INSTRUMENT_ID",
+  "calibration_id": "REPLACE_WITH_CALIBRATION_ID"
 }
