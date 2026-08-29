@@ -73,20 +73,32 @@ Example shape:
 
 Keep the exact TTS engine/model/voice identity in the experiment configuration or wrapper provenance when a real synthetic speech backend is connected. Do not silently replace one voice/model with another while comparing candidates.
 
-## Dependency-free fitted prototype
+## Dependency-free trained prototype
 
-Hosted CI cannot depend on a large training framework, so the `prototype` backend is a real lightweight fitting path rather than a hand-written constant model:
+Hosted CI must not depend on a large training framework, so the `prototype` backend is a real deterministic learning path rather than a hand-written constant model:
 
-1. generate isolated, augmented training-token samples only;
-2. extract the exact dependency-free frontend spec used by the C parity gate;
-3. retain energetic token frames;
-4. estimate a one-vs-rest feature discriminant for every active token;
-5. quantize those discriminants into the ABI-v2 int8 input projection;
-6. export a canonical `.kwm` and synthetic fitting provenance.
+1. generate isolated augmented token-fitting samples from training-only seeds;
+2. extract features with the same dependency-free frontend specification used by the C parity gate;
+3. split energetic token frames from lead/tail background frames;
+4. add independent white/fan/motor/media background frames for the explicit blank class;
+5. project the 32 frontend features through an ABI-v2 int8 identity input matrix and `tanh`;
+6. train a class-balanced multiclass softmax acoustic head over blank + active tokens;
+7. quantize the learned output head to int8 using the actual ABI-v2 global output scale;
+8. rerun held-out token-fit validation **after quantization**;
+9. reject the model if quantized validation accuracy falls below 99.5%;
+10. export canonical `.kwm`, fitting sample hashes, optimizer diagnostics and a confusion matrix.
 
-Calibration, test and qualification audio are not read during weight fitting.
+Calibration, test and qualification audio are never read by this optimizer. The emitted provenance uses `evidence_class: synthetic-trained-softmax-prototype` and binds the model hash to its fitting samples and diagnostics.
 
-The fitted prototype exists to prove the training/export/runtime/control loop without PyTorch. It is deliberately small and is not a substitute for a generic Mandarin acoustic model.
+The prototype exists to prove a true train → quantize → ABI-v2 model → C runtime → calibration → replay → held-out qualification loop without PyTorch. It is deliberately synthetic and is not a substitute for a generic Mandarin acoustic model.
+
+## Decoder admission contract
+
+The runtime keyword Trie does not advance from every token with a small posterior. Each acoustic frame admits at most one nonblank label: the highest-logit nonblank token, and only when it also beats blank. Non-dominant token probabilities remain in normalization/confidence but cannot create a structural Trie transition.
+
+This is important for synthetic confusable negatives such as reordered or missing-token sequences. Without the admission gate, low-probability transition-frame tails combined with `token_boost` can fabricate a keyword path that was never the greedy acoustic sequence. Prefix retention still permits gaps/unrelated dominant labels, and repeated identical keyword tokens still require a blank-separated state.
+
+The decoder remains a bounded product-oriented Viterbi/greedy CTC hybrid, not a full CTC prefix beam search.
 
 ## Learning backend
 
@@ -116,7 +128,7 @@ FAR/hour == 0
 p95 post-end latency <= 800 ms
 ```
 
-Do not relax these limits merely to make CI green. Fix data labeling, isolation or model behavior instead.
+Do not relax these limits merely to make CI green. Fix data labeling, isolation, acoustic classification or decoder behavior instead.
 
 ## Bidirectional failure replay
 
@@ -136,7 +148,7 @@ false reject
 
 Replay clips are cumulative and de-duplicated by manifest line. Their final counts and hashes are written into `synthetic-loop-manifest.json`.
 
-The dependency-free fitted prototype refits from its isolated token-training examples on each candidate; replay affects actual weight updates in the `torch_ctc` backend. Both backends still exercise FP/FN mining, provenance and stopping logic.
+The dependency-free prototype always refits from its isolated token/background fitting domain; replay affects actual weight updates in the `torch_ctc` backend. Both backends still exercise FP/FN mining, candidate selection, provenance and stopping logic.
 
 ## Candidate selection and stopping
 
@@ -173,6 +185,12 @@ build/synthetic-loop/
     hard-negatives.tsv
     missed-positives.tsv
   candidates/
+    round-*/
+      model.kwm
+      model.kwm.synthetic-provenance.json
+      prototype-fit/
+        token-fit-samples.jsonl
+        softmax-diagnostics.json
   best/
     model.kwm
     keywords.kwk
@@ -181,7 +199,7 @@ build/synthetic-loop/
   synthetic-loop-manifest.json
 ```
 
-The final manifest uses `evidence_class: "synthetic-only"`, records all selected artifact/data hashes, candidate metrics, replay hashes and explicit limitations. A successful run may be described as **synthetic-qualified** only.
+The final manifest uses `evidence_class: "synthetic-only"`, records selected artifact/data hashes, candidate metrics, replay hashes and explicit limitations. CI additionally checks the model fitting provenance and post-quantization confusion diagnostics. A successful run may be described as **synthetic-qualified** only.
 
 ## Promotion to real evidence
 
