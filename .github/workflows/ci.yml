@@ -31,6 +31,8 @@ jobs:
         run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
       - name: Dataset split leakage audit
         run: python3 tests/test_dataset_audit.py
+      - name: False reject positive replay
+        run: python3 tests/test_false_reject_mining.py
       - name: Synthetic model self-training loop
         run: python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
       - name: Keyword compiler
