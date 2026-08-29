@@ -1,48 +1,51 @@
 # Release qualification
 
-Repository CI proves software contracts. A shipping wake-word claim requires a separate artifact-bound qualification bundle built from the exact model lineage, the exact original audio bytes, the final runtime/AFE artifacts and machine-verifiable physical-target evidence.
+Repository CI proves software contracts. A shipping wake-word claim requires a separate artifact-bound qualification bundle built from the exact model lineage, exact original audio bytes, final runtime/AFE artifacts and machine/raw physical-target evidence.
 
-`v0.3.x` deliberately hard-cuts the qualification evidence schemas. Older qualification manifests/provenance are not accepted as v0.3 shipping evidence.
+`v0.3.x` deliberately hard-cuts the evidence schemas. Older qualification manifests/provenance are not accepted as v0.3 shipping evidence.
 
-## v0.3 artifact and evidence contracts
+## v0.3 contracts
 
 - deployable model: **KWSP ABI v2**;
 - deployable keyword pack: **KWKP ABI v3**;
-- frontend lineage: **frontend-spec v2** (`logmel` or `pcen-lite`);
+- frontend lineage: **frontend-spec v2**;
 - model provenance: **schema v3**;
 - evaluation provenance: **schema v2**;
 - dataset audit: **schema v3**;
+- runtime-soak evidence: **schema v2**;
 - target evidence: **schema v2**;
 - qualification manifest: **schema v2**;
 - qualification policy: **schema v2**;
 - qualification gate result: **schema v3**.
 
-The software release version may change while KWSP/KWKP remain unchanged. v0.3 changes the public runtime API and evidence contracts, not the on-device model/keyword binary layouts.
+The software/API version may change while KWSP/KWKP remain unchanged. v0.3 changes the public discontinuity API and evidence contracts, not the on-device model/keyword binary layouts.
 
 ## Evidence graph
 
 ```text
 immutable training OCI image
-        +
-training JSONL/TSV + every training WAV byte/decoded-PCM identity
-        +
-clean dataset audit (speaker/session/source isolation)
+ + training manifests + every training WAV/decoded-PCM identity
+ + clean dataset audit that includes final references.jsonl
         |
         v
 train_ctc.py -> checkpoint with canonical training corpus identity
         |
-        v
 export_model.py -> KWSP v2 + model provenance schema v3
 
-KWSP + KWKP + runtime config + final AFE
+KWSP + KWKP + exact runtime/AFE
         |
-        +-> exact kws_wav + held-out references + every held-out WAV
-        |       -> detections + evaluation provenance schema v2 + metrics
+        +-> exact kws_wav + final references.jsonl + every held-out WAV
+        |       -> evaluation provenance schema v2 + metrics
         |
         +-> exact target kws_board_bench + representative board WAV
-        |       -> board timing summary
+        |       -> timing summary
         |
-        +-> collect_target_evidence.py + raw measurements
+        +-> collect_runtime_soak.py supervising the real process
+        |       -> runtime-soak schema v2 (CPU/RSS/temp/soak)
+        |
+        +-> raw stack evidence + raw power trace/instrument identity
+                |
+        collect_target_evidence.py
                 -> target evidence schema v2
                          |
                          v
@@ -56,13 +59,13 @@ KWSP + KWKP + runtime config + final AFE
 
 ## 1. Freeze the training environment
 
-`training/Dockerfile` no longer resolves or upgrades Python packages from the network. It requires a prebuilt base image referenced by immutable OCI digest:
+`training/Dockerfile` performs no network package installation. It requires a prebuilt training base referenced by immutable OCI digest:
 
 ```text
 registry.example/kws-training-base@sha256:<64 hex>
 ```
 
-Build the repository wrapper with:
+Build the repository wrapper:
 
 ```bash
 python3 training/build_container.py \
@@ -70,7 +73,7 @@ python3 training/build_container.py \
   --tag kws-training:v0.3
 ```
 
-The base image must already contain the Python/PyTorch versions declared by `training/requirements.lock`. Pass the final image digest into training:
+Pass the final image digest into shipping training:
 
 ```bash
 KWS_TRAINING_IMAGE_DIGEST=sha256:<final-image-digest> \
@@ -82,36 +85,28 @@ python3 training/train_ctc.py \
   --output release/base.pt
 ```
 
-The checkpoint records repository/training-code hashes, lock/Dockerfile hashes, Python/PyTorch/platform identity and the final training image digest. `.github/workflows/training-integration.yml` can periodically exercise the real `torch_ctc` path when `KWS_TRAINING_BASE_IMAGE` is configured.
+The checkpoint records repository/training-code hashes, lock/Dockerfile hashes, Python/PyTorch/platform identity and final training image digest. `.github/workflows/training-integration.yml` can periodically exercise the real `torch_ctc` path when a digest-pinned `KWS_TRAINING_BASE_IMAGE` is configured.
 
 ## 2. Bind the real training corpus
 
-`train_ctc.py` accepts either TSV (`WAV<TAB>token_ids`) or JSONL. Human qualification projects should use JSONL so identity metadata is retained:
+`train_ctc.py` accepts TSV (`WAV<TAB>token_ids`) or JSONL. Human qualification projects should use JSONL identity metadata:
 
 ```json
 {"audio":"audio/u001.wav","tokens":[1,2,3],"speaker_id":"spk001","session_id":"s01","source_id":"src001","room_id":"living-room-a","device_id":"robot-a"}
 ```
 
-At checkpoint save time the trainer reopens every WAV and records:
+At checkpoint save time the trainer reopens every WAV and records file SHA256, decoded mono-16-kHz PCM16 SHA256, frame count/duration, stable path/metadata and canonical whole-corpus SHA256. Replacing a WAV underneath an unchanged manifest therefore changes model lineage.
 
-- file SHA256;
-- decoded mono-16-kHz PCM16 SHA256;
-- frame count and duration;
-- stable manifest-relative path;
-- identity metadata when present;
-- canonical whole-corpus SHA256.
+## 3. Audit the exact final held-out manifest
 
-Changing a WAV without changing the manifest therefore changes model lineage and is detectable.
-
-## 3. Audit split isolation
-
-Before final training/qualification run:
+The final dataset audit must include the **same `qualification/references.jsonl`** later supplied to `qualification_manifest.py`:
 
 ```bash
 python3 training/audit_dataset.py \
   --split train=data/train.jsonl \
   --split calibration=data/calibration.jsonl \
-  --split qualification=data/qualification.jsonl \
+  --split qualification=qualification/references.jsonl \
+  --audio-root qualification=qualification/audio \
   --require-metadata speaker_id \
   --require-metadata session_id \
   --require-metadata source_id \
@@ -119,9 +114,9 @@ python3 training/audit_dataset.py \
   --fail-within-split
 ```
 
-Speaker/session/source overlap across splits is always a hard violation for final human qualification. Room/device overlap is reported and may be promoted to a hard failure for the SKU. The final qualification-heldout corpus must never be mined into replay and then still be called independent heldout.
+This is not interchangeable with a separate “qualification manifest” that merely points to similar files. v0.3 qualification hashes the selected training manifests plus the exact references file and requires dataset-audit coverage of those exact bytes.
 
-The v0.3 qualification manifest requires the audit to be `clean=true`, schema v3, to require speaker/session/source metadata, and to cover the selected training/qualification manifests.
+Speaker/session/source overlap is a hard violation for final human qualification. Room/device overlap is reported and may be promoted to a hard failure by product policy. A final held-out recording must never be mined into replay/tuning and then reused as unbiased evidence.
 
 ## 4. Export and freeze the model
 
@@ -132,17 +127,7 @@ python3 training/export_model.py \
   --output release/base.kwm
 ```
 
-Model provenance schema v3 binds:
-
-- exact KWSP bytes;
-- exact checkpoint;
-- training/export token mappings;
-- frontend identity/spec;
-- training hyperparameters/environment;
-- quantization diagnostics;
-- canonical real training-corpus identity.
-
-Training and release token files may differ byte-for-byte only when their canonical token→ID mapping/fingerprint is identical.
+Model provenance schema v3 binds the exact KWSP bytes, checkpoint, token mappings, frontend identity/spec, training environment/hyperparameters, quantization diagnostics and canonical real training-corpus identity.
 
 ## 5. Compile and freeze KWKP v3
 
@@ -154,13 +139,11 @@ python3 tools/compile_keywords.py \
   --out-json release/keywords.json
 ```
 
-A pack change creates a new release tuple even when `.kwm` is unchanged. Shared-prefix phrases must use explicit `min_trailing_blanks`, priority and `immediate`/`longest`/`grace` policy as appropriate.
+Any pack change creates a new release qualification tuple even when `.kwm` is unchanged.
 
-## 6. Bind the final audio-pipeline/AFE
+## 6. Bind the final AFE
 
-The final KWS threshold and acoustic qualification must use the exact shipping audio chain. When the domain renderer invokes `audio-pipeline` through the command backend, retain the executable/config SHA256 and reported latency. AFE latency is part of wake-latency accounting.
-
-Any change to shipping microphones, enclosure, BF/AEC/RES/NS/AGC configuration, gain policy or AFE executable creates a new qualification tuple.
+Final thresholds and qualification must use the exact shipping microphones, enclosure and audio-pipeline configuration. When using the command AFE adapter, retain executable/config SHA256 and reported latency. Any change to BF/AEC/RES/NS/AGC/gain policy or the physical sound path creates a new qualification tuple.
 
 ## 7. Run held-out continuous audio
 
@@ -187,30 +170,17 @@ python3 eval/domain_metrics.py \
   --output qualification/domain-metrics.json
 ```
 
-Evaluation provenance schema v2 reopens every referenced WAV and binds file SHA256, decoded PCM SHA256, frames and canonical corpus SHA256. Every `references.duration_s` must equal the real WAV duration derived from frames/sample-rate. Declaring a one-second WAV as many hours of negative exposure is rejected.
-
-Shipping FAR/hour therefore comes from the real continuous WAV bytes, not from a self-reported duration field.
+Evaluation provenance schema v2 reopens every referenced WAV and binds file SHA256, decoded PCM SHA256, frame count and canonical corpus SHA256. Every declared `duration_s` must equal real WAV duration. FAR exposure therefore comes from actual audio bytes, not a self-reported duration.
 
 ## 8. Real far-field coverage
 
-A product 3–5 m claim requires genuine human positives through the final microphones/enclosure/AFE. Synthetic distance rendering, TTS or measured-RIR/TTS data remain useful development evidence but cannot substitute for real held-out far-field positives.
+A 3–5 m product claim requires genuine human positives through the final microphones/enclosure/AFE. Synthetic distance rendering, TTS or measured-RIR/TTS remain development evidence only.
 
-At minimum cover:
+At minimum include near/mid/far distance, expected azimuth, RT60/SNR, home conversation, near-homophones, TV/phone/smart-speaker playback, local-device playback through shipping AEC, double-talk/AEC residual, motor/fan/gear/pump/chassis noise, moving/static states and final AGC/AEC/NS modes.
 
-- near/mid/far distance buckets including the claimed 3–5 m region;
-- expected azimuths;
-- representative RT60 and SNR;
-- normal home conversation and near-homophones;
-- TV/phone/smart-speaker playback;
-- local-device TTS/music through shipping AEC;
-- double-talk/AEC residual;
-- motor/fan/gear/pump/chassis noise;
-- moving/static device states;
-- final AGC/AEC/NS modes.
+## 9. Physical target-board timing
 
-## 9. Physical target-board benchmark
-
-Cross-build `kws_board_bench` with the real target toolchain and run the exact `.kwm/.kwk`:
+Run the exact target binary/model/pack:
 
 ```bash
 ./kws_board_bench \
@@ -220,11 +190,35 @@ Cross-build `kws_board_bench` with the real target toolchain and run the exact `
   10 > qualification/board-summary.json
 ```
 
-Retain the target executable. The summary binds runner/model/pack/audio and records mean/p50/p95/p99/max process time, RTF and p99 scheduling headroom. Hosted x86 or ARM cross-build success is not target-board timing evidence.
+Retain the benchmark executable and board audio. Hosted x86 or cross-build success is not target timing evidence.
 
-## 10. Capture target evidence with the repository collector
+## 10. Measure the real runtime process
 
-Use the exact retained collector from the released source tree:
+Supervise the actual product/KWS qualification process:
+
+```bash
+python3 tools/collect_runtime_soak.py \
+  --hours 24 \
+  --sample-seconds 60 \
+  --output qualification/runtime-soak.json \
+  --command ./product-kws-soak --config qualification/product-config.json
+```
+
+Runtime-soak schema v2 derives from the child process:
+
+- actual/requested soak duration and early-exit status;
+- max child-process RSS;
+- average child-process CPU percentage from `/proc/<pid>/stat` CPU-time deltas;
+- thermal samples/max temperature when available;
+- raw time-series samples.
+
+If the process exits early, the soak collector fails. This prevents the later evidence collector from measuring its own Python process and calling that product RSS/CPU.
+
+Also retain audio-pipeline XRUN/backpressure counters and KWS discontinuity/telemetry evidence where the SKU requires them.
+
+## 11. Assemble target evidence
+
+Stack high-water remains product-harness specific and must have retained raw evidence. Power requires an external raw instrument trace plus instrument/calibration identity.
 
 ```bash
 python3 tools/collect_target_evidence.py \
@@ -235,18 +229,18 @@ python3 tools/collect_target_evidence.py \
   --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
   --audio-frontend audio-pipeline-vX \
   --audio-frontend-sha256 <sha256> \
-  --soak-hours 24 \
-  --cpu-percent <measured> \
+  --runtime-soak qualification/runtime-soak.json \
   --stack-high-water-bytes <measured> \
   --average-power-mw <measured> \
+  --raw-evidence qualification/stack-watermark.txt \
   --power-raw qualification/power.csv \
   --instrument-id <meter-id> \
   --calibration-id <calibration-id>
 ```
 
-The collector records machine/kernel/CPU/governor/RSS/thermal identity where available and SHA256-binds raw evidence files. External instrument measurements must retain instrument/calibration identity and raw measurement bytes. Do not type a final power/CPU/thermal claim into an otherwise unbound JSON and call it qualified evidence.
+`soak_hours`, CPU, RSS and max temperature are imported from the retained runtime-soak JSON rather than command-line declarations. The target-evidence JSON automatically binds runtime-soak and power raw files and also binds any additional `--raw-evidence` inputs.
 
-## 11. Build the byte-complete manifest
+## 12. Build the byte-complete manifest
 
 ```bash
 python3 tools/qualification_manifest.py \
@@ -254,7 +248,7 @@ python3 tools/qualification_manifest.py \
   --model-provenance release/base.kwm.provenance.json \
   --checkpoint release/base.pt \
   --training-tokens release/training-tokens.txt \
-  --training-manifest release/train.jsonl \
+  --training-manifest data/train.jsonl \
   --dataset-audit qualification/dataset-audit.json \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
@@ -270,17 +264,19 @@ python3 tools/qualification_manifest.py \
   --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
   --evidence-collector qualification/collect_target_evidence.py \
+  --raw-evidence qualification/runtime-soak.json \
+  --raw-evidence qualification/stack-watermark.txt \
   --raw-evidence qualification/power.csv \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
   --output qualification/qualification-manifest.json
 ```
 
-Repeat `--training-manifest` and `--raw-evidence` for every participating artifact.
+Repeat `--training-manifest` and `--raw-evidence` for all participating artifacts. The selected raw files must exactly match the evidence JSON’s declared raw-evidence tuple.
 
-The verifier independently checks the deployable ABIs, vocabulary/frontend lineage, actual training WAV identity, dataset-audit coverage, actual held-out WAV identity and duration, evaluation formulas/provenance, board benchmark formulas/artifacts, evidence collector identity and raw target evidence hashes.
+The verifier independently checks deployable ABIs, vocabulary/frontend lineage, actual training WAV identity, exact dataset-audit coverage, actual held-out WAV identity/duration, evaluation formulas/provenance, board benchmark formulas/artifacts, evidence collector identity and raw target evidence hashes.
 
-## 12. Apply the SKU policy
+## 13. Apply the SKU policy
 
 ```bash
 python3 tools/qualification_gate.py \
@@ -289,37 +285,22 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-Policy schema v2 gates point estimates and one-sided statistical confidence bounds for FAR/FRR, plus latency, p99 processing time, RTF/headroom, minimum evidence exposure, soak, CPU, RSS, stack, temperature and power.
+Policy schema v2 gates FAR/FRR point estimates and one-sided confidence bounds plus latency, p99 process time, RTF/headroom, evidence exposure, soak, CPU, RSS, stack, temperature and power.
 
 Exit codes:
 
 - `0`: structurally valid evidence and all policy gates passed;
-- `1`: structurally valid evidence but one or more SKU thresholds failed;
+- `1`: structurally valid evidence but thresholds failed;
 - `2`: malformed, inconsistent or tampered evidence/policy.
 
-The gate result is schema v3 and binds the exact manifest/policy identity.
+Gate result schema v3 binds the exact manifest/policy identity.
 
-## 13. Retain the complete release tuple
+## 14. Retain the complete release tuple
 
-Retain together:
-
-- source SHA and released version/tag;
-- `.kwm` + model provenance schema v3;
-- source checkpoint and training image digest;
-- training vocabulary/manifests and original training corpus bytes or immutable storage identities;
-- dataset audit report;
-- release vocabulary and KWKP v3;
-- shipping runtime/AFE config and exact AFE executable/config identity;
-- measured RIR manifest/RIR hashes if used;
-- exact evaluation runner/references/original held-out WAVs/detections/provenance/summary/domain metrics;
-- exact target benchmark runner/board WAV/board summary;
-- exact target evidence collector, target evidence JSON and every raw evidence file;
-- approved SKU policy;
-- qualification manifest + gate result;
-- final distribution bundle hash/signature/attestation.
+Retain source SHA/version/tag, KWSP/model provenance/checkpoint/training image digest, training manifests/original training audio identity, clean dataset audit, KWKP/release vocabulary/config, final AFE identity, exact evaluation runner/references/original held-out WAVs/detections/provenance/metrics, exact board runner/audio/summary, runtime-soak raw trace, stack raw evidence, power raw trace/instrument/calibration identity, exact target evidence collector/JSON, approved SKU policy, qualification manifest/gate result and final distribution signature/attestation.
 
 ## Software baseline vs shipping qualification
 
-A green v0.3 repository can be a mature software baseline without being an acoustically qualified Mandarin SKU. CI proves parser/runtime contracts, synthetic regressions, corpus/evidence integrity mechanisms, cross-build compatibility, coverage/static-analysis gates and reproducible SDK output. It cannot prove final Mandarin FAR/FRR, real 3–5 m wake performance or physical Cortex-A32 CPU/thermal/power behavior.
+A green v0.3 repository can be a mature software baseline without being an acoustically qualified Mandarin SKU. CI proves parser/runtime contracts, synthetic regressions, corpus/evidence integrity mechanisms, cross-build compatibility, coverage/static-analysis gates and reproducible SDK output. It cannot prove final Mandarin FAR/FRR, real 3–5 m wake performance or physical Cortex-A32 product behavior.
 
 Issue #2 remains open until independent human/device acoustic evidence and physical target-board evidence exist and pass the approved SKU policy.
