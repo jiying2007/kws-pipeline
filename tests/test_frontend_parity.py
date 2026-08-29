@@ -12,7 +12,7 @@ import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
-from frontend_spec import features_pcm16  # noqa: E402
+from frontend_spec import FRONTEND_LOGMEL, FRONTEND_PCEN_LITE, features_pcm16  # noqa: E402
 
 SAMPLE_RATE_HZ = 16000
 FRAME_LEN = 400
@@ -40,19 +40,13 @@ def fixtures() -> dict[str, list[int]]:
         tone = 9000 if ((index // 13) & 1) else -7000
         ramp = (index % 37) * 41 - 740
         wideband.append(max(-32768, min(32767, tone + ramp)))
-
         value = (
             7000.0 * math.sin(2.0 * math.pi * 440.0 * index / SAMPLE_RATE_HZ)
             + 4500.0 * math.sin(2.0 * math.pi * 1234.0 * index / SAMPLE_RATE_HZ)
             + 2500.0 * math.sin(2.0 * math.pi * 3111.0 * index / SAMPLE_RATE_HZ)
         )
         multitone.append(int(round(value)))
-
-    return {
-        "wideband": wideband,
-        "multitone": multitone,
-        "impulse": impulse,
-    }
+    return {"wideband": wideband, "multitone": multitone, "impulse": impulse}
 
 
 def frame_dbfs(samples: list[int]) -> float:
@@ -61,23 +55,29 @@ def frame_dbfs(samples: list[int]) -> float:
     return 10.0 * math.log10(mean_square + 1.0e-12)
 
 
-def verify_fixture(runner: pathlib.Path, root: pathlib.Path, name: str, samples: list[int]) -> float:
-    wav = root / f"{name}.wav"
+def verify_fixture(
+    runner: pathlib.Path,
+    root: pathlib.Path,
+    name: str,
+    samples: list[int],
+    frontend: str,
+) -> float:
+    wav = root / f"{name}-{frontend}.wav"
     write_wav(wav, samples)
     expected = features_pcm16(
         samples,
         feature_dim=FEATURE_DIM,
         frame_len=FRAME_LEN,
         hop=HOP,
+        frontend=frontend,
     )
     completed = subprocess.run(
-        [str(runner), str(wav), str(FEATURE_DIM)],
+        [str(runner), str(wav), str(FEATURE_DIM), frontend],
         check=True,
         text=True,
         stdout=subprocess.PIPE,
     )
     actual = [json.loads(line) for line in completed.stdout.splitlines() if line]
-
     assert len(actual) == len(expected) == 3
     max_abs_error = 0.0
     for frame_index, (row, reference) in enumerate(zip(actual, expected)):
@@ -96,18 +96,27 @@ def main() -> int:
         print(f"usage: {sys.argv[0]} /path/to/kws_feature_dump", file=sys.stderr)
         return 2
     runner = pathlib.Path(sys.argv[1])
-
-    maximum = 0.0
+    maxima: dict[str, float] = {}
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
-        for name, samples in fixtures().items():
-            maximum = max(maximum, verify_fixture(runner, root, name, samples))
+        for frontend in (FRONTEND_LOGMEL, FRONTEND_PCEN_LITE):
+            maximum = 0.0
+            for name, samples in fixtures().items():
+                maximum = max(
+                    maximum,
+                    verify_fixture(runner, root, name, samples, frontend),
+                )
+            maxima[frontend] = maximum
 
-    # C uses float32 FFT arithmetic while the dependency-free spec uses Python
-    # double precision. Observed hosted error is a few e-6; 1e-4 keeps healthy
-    # compiler latitude while still catching practical frontend drift.
-    assert maximum <= 1.0e-4, maximum
-    print(f"test_frontend_parity: ok max_abs_error={maximum:.6g}")
+    assert maxima[FRONTEND_LOGMEL] <= 1.0e-4, maxima
+    # PCEN contains powf/EMA state and therefore has slightly more float32 vs
+    # Python-double drift. This still catches practical formula/state mismatch.
+    assert maxima[FRONTEND_PCEN_LITE] <= 5.0e-4, maxima
+    print(
+        "test_frontend_parity: ok "
+        f"logmel={maxima[FRONTEND_LOGMEL]:.6g} "
+        f"pcen_lite={maxima[FRONTEND_PCEN_LITE]:.6g}"
+    )
     return 0
 
 
