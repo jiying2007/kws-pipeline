@@ -49,6 +49,8 @@ jobs:
         run: python3 tests/test_keyword_compile.py
       - name: Product metric scorer
         run: python3 tests/test_eval.py
+      - name: Statistical qualification bounds
+        run: python3 tests/test_statistical_bounds.py
       - name: Corpus provenance sidecar
         run: python3 tests/test_run_corpus.py
       - name: Real-artifact board benchmark contract
