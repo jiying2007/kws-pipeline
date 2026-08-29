@@ -1,97 +1,111 @@
 # Release qualification
 
-Repository CI proves software contracts. A shipping wake-word claim requires a separate artifact-bound qualification bundle built from the exact model, model-export provenance, source checkpoint, training vocabulary/manifests/environment, keyword pack, release vocabulary, runtime config, evaluation runner/corpus, target-board benchmark binary/audio and measured board evidence.
+Repository CI proves software contracts. A shipping wake-word claim requires a separate artifact-bound qualification bundle built from the exact model lineage, the exact original audio bytes, the final runtime/AFE artifacts and machine-verifiable physical-target evidence.
 
-## Artifact contract
+`v0.3.x` deliberately hard-cuts the qualification evidence schemas. Older qualification manifests/provenance are not accepted as v0.3 shipping evidence.
 
-Shipping artifacts use separate ABIs:
+## v0.3 artifact and evidence contracts
 
-- model: **`KWSP` ABI v2**;
-- keyword pack: **`KWKP` ABI v3**;
-- model lineage/frontend contract: **frontend-spec v2**, with `frontend_kind=0` logmel or `frontend_kind=1` pcen-lite;
-- qualification policy: **schema v2**, including statistical FAR/FRR bounds.
+- deployable model: **KWSP ABI v2**;
+- deployable keyword pack: **KWKP ABI v3**;
+- frontend lineage: **frontend-spec v2** (`logmel` or `pcen-lite`);
+- model provenance: **schema v3**;
+- evaluation provenance: **schema v2**;
+- dataset audit: **schema v3**;
+- target evidence: **schema v2**;
+- qualification manifest: **schema v2**;
+- qualification policy: **schema v2**;
+- qualification gate result: **schema v3**.
 
-The release manifest carries runtime frontend identity, and the gate requires it to match model lineage exactly.
+The software release version may change while KWSP/KWKP remain unchanged. v0.3 changes the public runtime API and evidence contracts, not the on-device model/keyword binary layouts.
+
+## Evidence graph
 
 ```text
-locked training env + checkpoint + training tokens + training manifests
-                 |
-                 v
-        export_model.py -> model.kwm + model.kwm.provenance.json
-                                  |
-model/provenance + concrete lineage + KWKP v3 + release tokens/config
-                                  |
-                                  +-> exact kws_wav + held-out references
-                                  |      -> detections + provenance + metrics
-                                  |
-                                  +-> exact target kws_board_bench + board WAV
-                                  |      -> board summary
-                                  |
-                                  +-> target resource/soak/thermal/power evidence
-                                                       |
-                                                       v
-                                            qualification_manifest.py
-                                                       |
-                                             SKU policy schema v2
-                                                       |
-                                                       v
-                                            qualification_gate.py
+immutable training OCI image
+        +
+training JSONL/TSV + every training WAV byte/decoded-PCM identity
+        +
+clean dataset audit (speaker/session/source isolation)
+        |
+        v
+train_ctc.py -> checkpoint with canonical training corpus identity
+        |
+        v
+export_model.py -> KWSP v2 + model provenance schema v3
+
+KWSP + KWKP + runtime config + final AFE
+        |
+        +-> exact kws_wav + held-out references + every held-out WAV
+        |       -> detections + evaluation provenance schema v2 + metrics
+        |
+        +-> exact target kws_board_bench + representative board WAV
+        |       -> board timing summary
+        |
+        +-> collect_target_evidence.py + raw measurements
+                -> target evidence schema v2
+                         |
+                         v
+                qualification_manifest.py schema v2
+                         |
+                  SKU policy schema v2
+                         |
+                         v
+                qualification_gate.py -> schema v3 PASS/FAIL
 ```
 
-## 1. Freeze the training environment and model lineage
+## 1. Freeze the training environment
 
-`training/requirements.lock` pins the real CTC dependency set and `training/Dockerfile` defines the repository training container. Build/deploy the training image by immutable digest and expose that digest as `KWS_TRAINING_IMAGE_DIGEST=sha256:<digest>`.
+`training/Dockerfile` no longer resolves or upgrades Python packages from the network. It requires a prebuilt base image referenced by immutable OCI digest:
 
-For a shipping candidate, require the digest at training time:
+```text
+registry.example/kws-training-base@sha256:<64 hex>
+```
+
+Build the repository wrapper with:
 
 ```bash
-KWS_TRAINING_IMAGE_DIGEST=sha256:<image-digest> \
+python3 training/build_container.py \
+  --base-image "$KWS_TRAINING_BASE_IMAGE" \
+  --tag kws-training:v0.3
+```
+
+The base image must already contain the Python/PyTorch versions declared by `training/requirements.lock`. Pass the final image digest into training:
+
+```bash
+KWS_TRAINING_IMAGE_DIGEST=sha256:<final-image-digest> \
 python3 training/train_ctc.py \
   --manifest data/train.jsonl \
   --tokens release/training-tokens.txt \
   --frontend logmel \
   --require-container-digest \
   --output release/base.pt
-
-python3 training/export_model.py \
-  --checkpoint release/base.pt \
-  --tokens release/tokens.txt \
-  --output release/base.kwm
 ```
 
-Use `--frontend pcen-lite` when that is the selected model frontend. Warm start/export must not change frontend identity silently.
+The checkpoint records repository/training-code hashes, lock/Dockerfile hashes, Python/PyTorch/platform identity and the final training image digest. `.github/workflows/training-integration.yml` can periodically exercise the real `torch_ctc` path when `KWS_TRAINING_BASE_IMAGE` is configured.
 
-The checkpoint records Python/PyTorch/platform/CUDA/cuDNN identity when present, repository SHA, training-code hashes, requirements-lock/Dockerfile hashes and container image digest. The exporter carries that environment into `base.kwm.provenance.json` together with checkpoint hash, training/export vocabulary identities, training-manifest hashes, frontend identity/spec, hyperparameters and per-matrix int8 quantization diagnostics.
+## 2. Bind the real training corpus
 
-Retain the **actual checkpoint**, **actual training token file** and **every training manifest** referenced by the checkpoint. Qualification re-hashes these bytes; provenance hashes are not treated as self-authenticating declarations.
+`train_ctc.py` accepts either TSV (`WAV<TAB>token_ids`) or JSONL. Human qualification projects should use JSONL so identity metadata is retained:
 
-Training and release token files may differ byte-for-byte only when their canonical token→ID mapping/fingerprint is identical.
-
-## 2. Compile and freeze KWKP v3
-
-Compile the exact release keywords:
-
-```bash
-python3 tools/compile_keywords.py \
-  --tokens release/tokens.txt \
-  --keywords release/keywords.tsv \
-  --out-pack release/xiaowo.kwk \
-  --out-json release/keywords.json
+```json
+{"audio":"audio/u001.wav","tokens":[1,2,3],"speaker_id":"spk001","session_id":"s01","source_id":"src001","room_id":"living-room-a","device_id":"robot-a"}
 ```
 
-The pack stores per-keyword threshold, token path, trailing-blank requirement, priority and prefix policy. A pack change creates a new release tuple even when `.kwm` is unchanged. For prefix-overlapping phrases, use the explicit policy columns shown in `keywords/zh_cn_overlap_example.tsv`.
+At checkpoint save time the trainer reopens every WAV and records:
+
+- file SHA256;
+- decoded mono-16-kHz PCM16 SHA256;
+- frame count and duration;
+- stable manifest-relative path;
+- identity metadata when present;
+- canonical whole-corpus SHA256.
+
+Changing a WAV without changing the manifest therefore changes model lineage and is detectable.
 
 ## 3. Audit split isolation
 
-Run `training/audit_dataset.py` before training/tuning/final qualification. It always gates exact decoded mono-16-kHz PCM16 duplication, including rewrapped/renamed WAVs.
-
-Real-human JSONL should use the richer identity schema:
-
-```json
-{"audio":"audio/u001.wav","speaker_id":"spk001","session_id":"s01","source_id":"src001","room_id":"living-room-a","device_id":"robot-a","target_ids":[1,2]}
-```
-
-For independent human qualification, require identity metadata explicitly:
+Before final training/qualification run:
 
 ```bash
 python3 training/audit_dataset.py \
@@ -101,45 +115,54 @@ python3 training/audit_dataset.py \
   --require-metadata speaker_id \
   --require-metadata session_id \
   --require-metadata source_id \
-  --report qualification/dataset-audit.json
+  --report qualification/dataset-audit.json \
+  --fail-within-split
 ```
 
-Speaker/session/source overlap across splits is always a hard failure. Room and device overlap are reported and can be made hard gates with `--fail-room-overlap` / `--fail-device-overlap` according to the SKU evidence design.
+Speaker/session/source overlap across splits is always a hard violation for final human qualification. Room/device overlap is reported and may be promoted to a hard failure for the SKU. The final qualification-heldout corpus must never be mined into replay and then still be called independent heldout.
 
-The final qualification-heldout corpus must never be mined into replay and then still be called independent heldout.
+The v0.3 qualification manifest requires the audit to be `clean=true`, schema v3, to require speaker/session/source metadata, and to cover the selected training/qualification manifests.
 
-## 4. Use measured dual-mic RIR before human far-field collection is complete
+## 4. Export and freeze the model
 
-The domain renderer can consume a real robot/room dual-mic RIR JSONL manifest. Each entry identifies room/position/distance/azimuth/RT60/device pose and both RIR WAVs; file hashes and a canonical entry hash are validated. A qualification-capable measured-RIR manifest must cover near/mid/far bands.
-
-Example fields:
-
-```json
-{"room_id":"room-a","position_id":"p4m-front","distance_m":4.0,"azimuth_deg":0.0,"rt60_s":0.46,"device_pose":"normal","mic1_rir":"rir/p4m-front-mic1.wav","mic2_rir":"rir/p4m-front-mic2.wav"}
+```bash
+python3 training/export_model.py \
+  --checkpoint release/base.pt \
+  --tokens release/tokens.txt \
+  --output release/base.kwm
 ```
 
-Set `domains.rir_manifest` in the training config. The renderer convolves clean speech/TTS with the exact two RIRs, records RIR manifest/entry/file SHA256, onset/ITD and then passes the dual-mic result through the selected AFE backend.
+Model provenance schema v3 binds:
 
-Measured RIR makes the room/enclosure/mic transfer function real, but **does not make synthetic speech a human held-out corpus**.
+- exact KWSP bytes;
+- exact checkpoint;
+- training/export token mappings;
+- frontend identity/spec;
+- training hyperparameters/environment;
+- quantization diagnostics;
+- canonical real training-corpus identity.
 
-## 5. Bind the shipping audio-pipeline adapter
+Training and release token files may differ byte-for-byte only when their canonical token→ID mapping/fingerprint is identical.
 
-For the final AFE chain use `domains.afe.backend=command`. The command must write `{output}` and `{result}`. The sidecar must report integer `latency_samples >= 0`; it may report `pipeline_sha256`, `source_sha` and `toolchain`.
+## 5. Compile and freeze KWKP v3
 
-The AFE provenance identity binds:
+```bash
+python3 tools/compile_keywords.py \
+  --tokens release/tokens.txt \
+  --keywords release/keywords.tsv \
+  --out-pack release/xiaowo.kwk \
+  --out-json release/keywords.json
+```
 
-- command template SHA256 (not temporary expanded paths);
-- actual invoked executable SHA256;
-- declared configuration bundle SHA256;
-- left/right input hashes;
-- output and result-sidecar hashes;
-- reported latency and optional pipeline/source/toolchain identity.
+A pack change creates a new release tuple even when `.kwm` is unchanged. Shared-prefix phrases must use explicit `min_trailing_blanks`, priority and `immediate`/`longest`/`grace` policy as appropriate.
 
-This prevents a random temporary directory from changing identity and prevents an un-hashed `audio-pipeline` binary from silently participating in qualification. AFE latency is added to expected event timing before wake-latency scoring.
+## 6. Bind the final audio-pipeline/AFE
 
-## 6. Run held-out continuous audio
+The final KWS threshold and acoustic qualification must use the exact shipping audio chain. When the domain renderer invokes `audio-pipeline` through the command backend, retain the executable/config SHA256 and reported latency. AFE latency is part of wake-latency accounting.
 
-Use the exact retained `kws_wav` binary:
+Any change to shipping microphones, enclosure, BF/AEC/RES/NS/AGC configuration, gain policy or AFE executable creates a new qualification tuple.
+
+## 7. Run held-out continuous audio
 
 ```bash
 python3 eval/run_corpus.py \
@@ -164,19 +187,30 @@ python3 eval/domain_metrics.py \
   --output qualification/domain-metrics.json
 ```
 
-Domain metrics use a global monotonic one-to-one event/detection assignment for keyword confusion. A negative-only domain remains eligible for hard-domain FAR based on negative exposure even when it contains zero expected wake events.
+Evaluation provenance schema v2 reopens every referenced WAV and binds file SHA256, decoded PCM SHA256, frames and canonical corpus SHA256. Every `references.duration_s` must equal the real WAV duration derived from frames/sample-rate. Declaring a one-second WAV as many hours of negative exposure is rejected.
 
-A product far-field claim requires real far positives in the held-out corpus; synthetic deterministic or measured-RIR/TTS far coverage is not a substitute.
+Shipping FAR/hour therefore comes from the real continuous WAV bytes, not from a self-reported duration field.
 
-## 7. Run frozen-model long-FAR regression
+## 8. Real far-field coverage
 
-`far-nightly.yml` freezes one model/pack per frontend and runs multiple independent negative shards against that exact tuple. `eval/aggregate_far.py` refuses to combine hours from different runner/model/pack hashes and computes a one-sided Poisson FAR upper bound.
+A product 3–5 m claim requires genuine human positives through the final microphones/enclosure/AFE. Synthetic distance rendering, TTS or measured-RIR/TTS data remain useful development evidence but cannot substitute for real held-out far-field positives.
 
-This is useful regression evidence, but its evidence class remains synthetic streaming FAR. Training-seed robustness must be evaluated separately and never counted as additional negative exposure hours for one model.
+At minimum cover:
 
-## 8. Run the physical target-board benchmark
+- near/mid/far distance buckets including the claimed 3–5 m region;
+- expected azimuths;
+- representative RT60 and SNR;
+- normal home conversation and near-homophones;
+- TV/phone/smart-speaker playback;
+- local-device TTS/music through shipping AEC;
+- double-talk/AEC residual;
+- motor/fan/gear/pump/chassis noise;
+- moving/static device states;
+- final AGC/AEC/NS modes.
 
-Cross-build `kws_board_bench` with the target toolchain and run the exact `.kwm/.kwk` with representative post-AEC/post-NS audio:
+## 9. Physical target-board benchmark
+
+Cross-build `kws_board_bench` with the real target toolchain and run the exact `.kwm/.kwk`:
 
 ```bash
 ./kws_board_bench \
@@ -186,17 +220,33 @@ Cross-build `kws_board_bench` with the target toolchain and run the exact `.kwm/
   10 > qualification/board-summary.json
 ```
 
-Retain the exact target executable as `qualification/kws_board_bench.target`. The report binds runner/model/pack/audio hashes and records model/pack/arena bytes, mean/p50/p95/p99/max processing time, RTF and p99 scheduling headroom.
+Retain the target executable. The summary binds runner/model/pack/audio and records mean/p50/p95/p99/max process time, RTF and p99 scheduling headroom. Hosted x86 or ARM cross-build success is not target-board timing evidence.
 
-Hosted x86 or cross-build success is not a target-board measurement. The v0.2 Cortex-A32 build enables the guarded NEON int8-weight × float-activation GEMV path but still requires physical-board timing/thermal/power evidence.
+## 10. Capture target evidence with the repository collector
 
-## 9. Record target evidence
+Use the exact retained collector from the released source tree:
 
-Copy `configs/qualification.evidence.example.json` and replace all placeholders with candidate measurements. Required evidence covers target/board revision/SoC/toolchain/compiler flags/governor/audio-front-end identity, soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power.
+```bash
+python3 tools/collect_target_evidence.py \
+  --output qualification/evidence.json \
+  --target product-sku-a \
+  --board-revision A \
+  --toolchain arm-linux-gnueabihf-gcc-... \
+  --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
+  --audio-frontend audio-pipeline-vX \
+  --audio-frontend-sha256 <sha256> \
+  --soak-hours 24 \
+  --cpu-percent <measured> \
+  --stack-high-water-bytes <measured> \
+  --average-power-mw <measured> \
+  --power-raw qualification/power.csv \
+  --instrument-id <meter-id> \
+  --calibration-id <calibration-id>
+```
 
-Use `kws_engine_get_stats()` for zero-I/O runtime counters when diagnosing long soaks; publish/snapshot the struct from the control path rather than adding logging or filesystem I/O to the real-time callback.
+The collector records machine/kernel/CPU/governor/RSS/thermal identity where available and SHA256-binds raw evidence files. External instrument measurements must retain instrument/calibration identity and raw measurement bytes. Do not type a final power/CPU/thermal claim into an otherwise unbound JSON and call it qualified evidence.
 
-## 10. Build the byte-complete manifest
+## 11. Build the byte-complete manifest
 
 ```bash
 python3 tools/qualification_manifest.py \
@@ -205,11 +255,13 @@ python3 tools/qualification_manifest.py \
   --checkpoint release/base.pt \
   --training-tokens release/training-tokens.txt \
   --training-manifest release/train.jsonl \
+  --dataset-audit qualification/dataset-audit.json \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
   --eval-runner qualification/kws_wav.eval \
   --references qualification/references.jsonl \
+  --eval-audio-root qualification/audio \
   --detections qualification/detections.jsonl \
   --eval-summary qualification/eval-summary.json \
   --eval-provenance qualification/detections.provenance.json \
@@ -217,30 +269,18 @@ python3 tools/qualification_manifest.py \
   --board-runner qualification/kws_board_bench.target \
   --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
+  --evidence-collector qualification/collect_target_evidence.py \
+  --raw-evidence qualification/power.csv \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
   --output qualification/qualification-manifest.json
 ```
 
-Repeat `--training-manifest` for every manifest used by the checkpoint.
+Repeat `--training-manifest` and `--raw-evidence` for every participating artifact.
 
-The verifier independently checks:
+The verifier independently checks the deployable ABIs, vocabulary/frontend lineage, actual training WAV identity, dataset-audit coverage, actual held-out WAV identity and duration, evaluation formulas/provenance, board benchmark formulas/artifacts, evidence collector identity and raw target evidence hashes.
 
-- canonical KWSP model ABI v2 and KWKP keyword-pack ABI v3 layouts;
-- fixed 16-kHz/400/320 geometry, dimensions, finite values, token bounds, padding and duplicate paths;
-- model/pack/release-token vocabulary identity;
-- training-token mapping against release tokens;
-- actual checkpoint/training tokens/training-manifest multiset against model provenance;
-- model frontend kind/name and frontend-spec v2 lineage;
-- runtime frontend kind/name against model lineage;
-- actual model/provenance/checkpoint/tokens/manifests/pack/config/eval/board SHA256 relationships;
-- reference/detection counts, event bounds, audio hours and FAR/FRR/latency formulas;
-- board WAV geometry, block count and benchmark formulas;
-- target/toolchain/governor/audio-front-end/resource evidence.
-
-The manifest contains no generated timestamp; identical inputs produce identical JSON.
-
-## 11. Apply an explicit SKU policy with statistical bounds
+## 12. Apply the SKU policy
 
 ```bash
 python3 tools/qualification_gate.py \
@@ -249,44 +289,37 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
+Policy schema v2 gates point estimates and one-sided statistical confidence bounds for FAR/FRR, plus latency, p99 processing time, RTF/headroom, minimum evidence exposure, soak, CPU, RSS, stack, temperature and power.
+
 Exit codes:
 
-- `0`: valid evidence and all policy gates passed;
-- `1`: valid evidence but one or more thresholds failed;
-- `2`: malformed, inconsistent or tampered evidence/policy, including runtime/model frontend mismatch.
+- `0`: structurally valid evidence and all policy gates passed;
+- `1`: structurally valid evidence but one or more SKU thresholds failed;
+- `2`: malformed, inconsistent or tampered evidence/policy.
 
-Policy schema v2 gates both point estimates and one-sided confidence bounds:
+The gate result is schema v3 and binds the exact manifest/policy identity.
 
-- `confidence_level`;
-- `max_frr` and `max_frr_upper_bound`;
-- `max_far_per_hour` and `max_far_upper_bound_per_hour`;
-- minimum audio hours and expected wakes;
-- p95 wake latency, p99 runtime, RTF/headroom, soak, CPU, RSS, stack, temperature and power.
-
-FRR upper bounds use Wilson binomial bounds. FAR upper bounds use exact one-sided Poisson rate bounds. Therefore `0 FA / 24 h` is **not** treated as true FAR=0; at 95% confidence its upper rate is about 0.125 FA/hour. Evidence duration/event count must be large enough for the approved SKU bound.
-
-`configs/qualification.policy.example.json` is an example schema, not a shipping commitment.
-
-## 12. Retain the complete release tuple
+## 13. Retain the complete release tuple
 
 Retain together:
 
-- source SHA;
-- `.kwm` + `.kwm.provenance.json`;
-- source checkpoint, training tokens and every training manifest;
-- training container digest plus lock/Dockerfile/code hashes;
-- release token vocabulary;
-- KWKP v3 `.kwk` + keyword source TSV;
-- shipping runtime config and exact frontend identity;
-- measured RIR manifest/RIR hashes if used;
-- shipping AFE executable/config/input/output/latency provenance;
-- exact evaluation runner/references/detections/provenance/summary/domain metrics;
-- exact target benchmark runner/board WAV/board summary;
-- target evidence JSON and approved SKU policy;
+- source SHA and released version/tag;
+- `.kwm` + model provenance schema v3;
+- source checkpoint and training image digest;
+- training vocabulary/manifests and original training corpus bytes or immutable storage identities;
 - dataset audit report;
+- release vocabulary and KWKP v3;
+- shipping runtime/AFE config and exact AFE executable/config identity;
+- measured RIR manifest/RIR hashes if used;
+- exact evaluation runner/references/original held-out WAVs/detections/provenance/summary/domain metrics;
+- exact target benchmark runner/board WAV/board summary;
+- exact target evidence collector, target evidence JSON and every raw evidence file;
+- approved SKU policy;
 - qualification manifest + gate result;
-- final bundle SHA256.
+- final distribution bundle hash/signature/attestation.
 
 ## Software baseline vs shipping qualification
 
-A green repository can be a mature **software baseline** without being an acoustically qualified Mandarin SKU. The domain-aware loop, measured-RIR adapter and frozen-model nightly long-FAR provide strong deterministic/regression evidence, but shipping claims remain blocked until a real Mandarin model, independent human/device held-out corpus, shipping audio-pipeline evidence and physical target-board evidence exist. Repository issue #2 tracks that external evidence gate.
+A green v0.3 repository can be a mature software baseline without being an acoustically qualified Mandarin SKU. CI proves parser/runtime contracts, synthetic regressions, corpus/evidence integrity mechanisms, cross-build compatibility, coverage/static-analysis gates and reproducible SDK output. It cannot prove final Mandarin FAR/FRR, real 3–5 m wake performance or physical Cortex-A32 CPU/thermal/power behavior.
+
+Issue #2 remains open until independent human/device acoustic evidence and physical target-board evidence exist and pass the approved SKU policy.
