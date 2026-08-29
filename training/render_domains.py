@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import pathlib
@@ -12,6 +11,7 @@ import wave
 
 from acoustic_scene import render_scene, sha256_file
 from frontend_spec import SAMPLE_RATE_HZ
+from rir_manifest import load_rir_manifest
 from synthetic_audio import SPLITS, generate_dataset, load_config, write_wav
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -32,7 +32,12 @@ def load_jsonl(path: pathlib.Path) -> list[dict]:
 
 def read_wav(path: pathlib.Path) -> list[int]:
     with wave.open(str(path), "rb") as reader:
-        if reader.getnchannels() != 1 or reader.getframerate() != SAMPLE_RATE_HZ or reader.getsampwidth() != 2 or reader.getcomptype() != "NONE":
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != SAMPLE_RATE_HZ
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+        ):
             raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
         raw = reader.readframes(reader.getnframes())
     return list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
@@ -57,6 +62,11 @@ def range_pair(value, label: str, minimum: float | None = None) -> tuple[float, 
     return low, high
 
 
+def _repo_path(value: str) -> pathlib.Path:
+    path = pathlib.Path(value)
+    return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
 def validate_domains(config: dict) -> dict:
     domains = config.get("domains")
     if not isinstance(domains, dict):
@@ -69,11 +79,14 @@ def validate_domains(config: dict) -> dict:
         item = bands[name]
         if not isinstance(item, dict):
             raise ValueError(f"domains.distance_bands.{name} must be an object")
-        low, high = range_pair(item.get("distance_m"), f"distance_bands.{name}.distance_m", 0.05)
+        low, high = range_pair(
+            item.get("distance_m"), f"distance_bands.{name}.distance_m", 0.05
+        )
         weight = finite(item.get("weight", 1.0), f"distance_bands.{name}.weight")
         if weight <= 0.0:
             raise ValueError("distance band weights must be > 0")
         normalized_bands[name] = {"distance_m": [low, high], "weight": weight}
+
     azimuths = domains.get("azimuth_deg")
     if not isinstance(azimuths, list) or not azimuths:
         raise ValueError("domains.azimuth_deg must be non-empty")
@@ -83,11 +96,17 @@ def validate_domains(config: dict) -> dict:
     playback = domains.get("playback", {})
     if not isinstance(playback, dict):
         raise ValueError("domains.playback must be an object")
-    probability = finite(playback.get("probability", 0.0), "domains.playback.probability")
+    probability = finite(
+        playback.get("probability", 0.0), "domains.playback.probability"
+    )
     if not 0.0 <= probability <= 1.0:
         raise ValueError("playback probability must be in [0,1]")
-    sir = range_pair(playback.get("sir_db", [-5.0, 20.0]), "domains.playback.sir_db")
-    noise_profiles = domains.get("noise_profiles", ["white", "fan", "motor", "media"])
+    sir = range_pair(
+        playback.get("sir_db", [-5.0, 20.0]), "domains.playback.sir_db"
+    )
+    noise_profiles = domains.get(
+        "noise_profiles", ["white", "fan", "motor", "media"]
+    )
     if not isinstance(noise_profiles, list) or not noise_profiles:
         raise ValueError("domains.noise_profiles must be non-empty")
     scenes_per_split = domains.get("scenes_per_example", {})
@@ -104,6 +123,24 @@ def validate_domains(config: dict) -> dict:
         raise ValueError("domains.afe must be an object")
     if str(afe.get("backend", "proxy")) not in {"proxy", "command"}:
         raise ValueError("domains.afe.backend must be proxy or command")
+
+    rir_manifest = None
+    manifest_value = domains.get("rir_manifest")
+    if manifest_value is not None:
+        if not isinstance(manifest_value, str) or not manifest_value.strip():
+            raise ValueError("domains.rir_manifest must be a non-empty path")
+        rir_manifest = load_rir_manifest(_repo_path(manifest_value))
+        missing = [
+            band
+            for band in EVAL_DISTANCE_ORDER
+            if int(rir_manifest["distance_histogram"].get(band, 0)) <= 0
+        ]
+        if missing:
+            raise ValueError(
+                "measured RIR manifest must cover near/mid/far for qualification; "
+                f"missing: {','.join(missing)}"
+            )
+
     return {
         "distance_bands": normalized_bands,
         "azimuth_deg": normalized_azimuths,
@@ -113,8 +150,11 @@ def validate_domains(config: dict) -> dict:
         "playback_sir_db": sir,
         "noise_profiles": [str(value) for value in noise_profiles],
         "scenes_per_example": counts,
-        "mic_spacing_m": finite(domains.get("mic_spacing_m", 0.06), "domains.mic_spacing_m"),
+        "mic_spacing_m": finite(
+            domains.get("mic_spacing_m", 0.06), "domains.mic_spacing_m"
+        ),
         "afe": afe,
+        "rir_manifest": rir_manifest,
     }
 
 
@@ -177,7 +217,9 @@ def _composite_value(scene: dict) -> str:
     )
 
 
-def choose_band(rng: random.Random, bands: dict[str, dict], curriculum: dict | None = None) -> str:
+def choose_band(
+    rng: random.Random, bands: dict[str, dict], curriculum: dict | None = None
+) -> str:
     names = ["near", "mid", "far"]
     adaptive = _dimension_weights(curriculum, "distance")
     values = [bands[name]["weight"] * adaptive.get(name, 1.0) for name in names]
@@ -195,9 +237,39 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     available = [name for name, (a, b) in intervals.items() if b > a]
     if not available:
         return rng.uniform(low, high)
-    band = str(_weighted_choice(rng, available, [adaptive.get(name, 1.0) for name in available]))
+    band = str(
+        _weighted_choice(
+            rng, available, [adaptive.get(name, 1.0) for name in available]
+        )
+    )
     a, b = intervals[band]
     return rng.uniform(a, b)
+
+
+def _sample_rir_entry(
+    domains: dict,
+    rng: random.Random,
+    curriculum: dict | None,
+    forced_band: str | None,
+) -> dict | None:
+    manifest = domains.get("rir_manifest")
+    if not isinstance(manifest, dict):
+        return None
+    entries = list(manifest["entries"])
+    if forced_band is not None:
+        entries = [item for item in entries if item["distance_band"] == forced_band]
+    if not entries:
+        raise ValueError(f"measured RIR manifest has no entries for {forced_band}")
+    distance = _dimension_weights(curriculum, "distance")
+    azimuth = _dimension_weights(curriculum, "azimuth")
+    rt60 = _dimension_weights(curriculum, "rt60")
+    weights = []
+    for item in entries:
+        weight = distance.get(str(item["distance_band"]), 1.0)
+        weight *= azimuth.get(_azimuth_band(float(item["azimuth_deg"])), 1.0)
+        weight *= rt60.get(_rt60_band(float(item["rt60_s"])), 1.0)
+        weights.append(weight)
+    return dict(_weighted_choice(rng, entries, weights))
 
 
 def _sample_candidate(
@@ -209,27 +281,56 @@ def _sample_candidate(
 ) -> dict:
     if forced_band is not None and forced_band not in domains["distance_bands"]:
         raise ValueError(f"unsupported forced distance band: {forced_band}")
-    band = forced_band or choose_band(rng, domains["distance_bands"], curriculum)
-    low, high = domains["distance_bands"][band]["distance_m"]
-    snr_low, snr_high = domains["snr_db"]
 
-    az_weights = _dimension_weights(curriculum, "azimuth")
-    azimuth = float(
-        _weighted_choice(
-            rng,
-            domains["azimuth_deg"],
-            [az_weights.get(_azimuth_band(float(value)), 1.0) for value in domains["azimuth_deg"]],
+    rir_entry = _sample_rir_entry(domains, rng, curriculum, forced_band)
+    if rir_entry is None:
+        band = forced_band or choose_band(rng, domains["distance_bands"], curriculum)
+        low, high = domains["distance_bands"][band]["distance_m"]
+        az_weights = _dimension_weights(curriculum, "azimuth")
+        azimuth = float(
+            _weighted_choice(
+                rng,
+                domains["azimuth_deg"],
+                [
+                    az_weights.get(_azimuth_band(float(value)), 1.0)
+                    for value in domains["azimuth_deg"]
+                ],
+            )
         )
-    )
+        distance_m = rng.uniform(low, high)
+        rt60_s = _sample_rt60(domains, rng, curriculum)
+        room_id = f"sim-{band}"
+        rir_id = f"sim-{band}"
+        measured_rir = None
+    else:
+        band = str(rir_entry["distance_band"])
+        distance_m = float(rir_entry["distance_m"])
+        azimuth = float(rir_entry["azimuth_deg"])
+        rt60_s = float(rir_entry["rt60_s"])
+        room_id = str(rir_entry["room_id"])
+        rir_id = str(rir_entry["position_id"])
+        manifest = domains["rir_manifest"]
+        measured_rir = {
+            "mic1": str(rir_entry["mic1"]),
+            "mic2": str(rir_entry["mic2"]),
+            "position_id": str(rir_entry["position_id"]),
+            "device_pose": str(rir_entry["device_pose"]),
+            "manifest_sha256": str(manifest["sha256"]),
+            "entry_sha256": str(rir_entry["entry_sha256"]),
+        }
+
+    snr_low, snr_high = domains["snr_db"]
     noise_weights = _dimension_weights(curriculum, "noise")
     noise = str(
         _weighted_choice(
             rng,
             domains["noise_profiles"],
-            [noise_weights.get(str(value), 1.0) for value in domains["noise_profiles"]],
+            [
+                noise_weights.get(str(value), 1.0)
+                for value in domains["noise_profiles"]
+            ],
         )
     )
-
     playback_weights = _dimension_weights(curriculum, "playback")
     base_on = domains["playback_probability"]
     playback_on = bool(
@@ -247,18 +348,21 @@ def _sample_candidate(
         sir_low, sir_high = domains["playback_sir_db"]
         playback = rng.uniform(sir_low, sir_high)
 
-    return {
-        "distance_m": rng.uniform(low, high),
+    scene = {
+        "distance_m": distance_m,
         "azimuth_deg": azimuth,
-        "rt60_s": _sample_rt60(domains, rng, curriculum),
+        "rt60_s": rt60_s,
         "snr_db": rng.uniform(snr_low, snr_high),
         "noise_profile": noise,
         "playback_sir_db": playback,
         "mic_spacing_m": domains["mic_spacing_m"],
-        "room_id": f"sim-{band}",
-        "rir_id": f"sim-{band}",
+        "room_id": room_id,
+        "rir_id": rir_id,
         "distance_band": band,
     }
+    if measured_rir is not None:
+        scene["measured_rir"] = measured_rir
+    return scene
 
 
 def sample_scene(
@@ -268,9 +372,6 @@ def sample_scene(
     curriculum_weights: dict | None = None,
     forced_band: str | None = None,
 ) -> dict:
-    # Independent dimensions are sampled with their own adaptive weights. A final
-    # bounded candidate choice applies composite-domain hardness without turning
-    # scene generation into an unbounded rejection loop.
     candidates = [
         _sample_candidate(
             domains,
@@ -314,7 +415,12 @@ def render_domain_dataset(
         source = pathlib.Path(row["path"])
         clean = read_wav(source)
         for scene_index in range(domains["scenes_per_example"][split]):
-            scene_seed = seed + base_index * 1_000_003 + scene_index * 65_537 + SPLITS.index(split) * 9_000_001
+            scene_seed = (
+                seed
+                + base_index * 1_000_003
+                + scene_index * 65_537
+                + SPLITS.index(split) * 9_000_001
+            )
             rng = random.Random(scene_seed)
             forced_band = None
             if split != "train" and row["kind"] == "positive":
@@ -327,8 +433,12 @@ def render_domain_dataset(
                 curriculum_weights=curriculum_weights if split == "train" else None,
                 forced_band=forced_band,
             )
-            mono, scene_meta = render_scene(clean, scene, seed=scene_seed, afe=domains["afe"])
-            target = output / "clips" / split / f"d{base_index:05d}-s{scene_index:02d}.wav"
+            mono, scene_meta = render_scene(
+                clean, scene, seed=scene_seed, afe=domains["afe"]
+            )
+            target = (
+                output / "clips" / split / f"d{base_index:05d}-s{scene_index:02d}.wav"
+            )
             write_wav(target, mono)
             meta = {
                 **row,
@@ -367,8 +477,16 @@ def render_domain_dataset(
             samples = read_wav(pathlib.Path(row["path"]))
             expected: list[dict] = []
             if row["kind"] == "positive":
-                start = int(row["event_start_frame"]) + int(row["scene"]["direct_delay_samples"]) + int(row["scene"]["afe_latency_samples"])
-                end = int(row["event_end_frame"]) + int(row["scene"]["direct_delay_samples"]) + int(row["scene"]["afe_latency_samples"])
+                start = (
+                    int(row["event_start_frame"])
+                    + int(row["scene"]["direct_delay_samples"])
+                    + int(row["scene"]["afe_latency_samples"])
+                )
+                end = (
+                    int(row["event_end_frame"])
+                    + int(row["scene"]["direct_delay_samples"])
+                    + int(row["scene"]["afe_latency_samples"])
+                )
                 start = max(0, min(start, len(samples) - 1))
                 end = max(start + 1, min(end, len(samples)))
                 expected.append(
@@ -400,7 +518,11 @@ def render_domain_dataset(
 
     index_path = output / "domain-index.jsonl"
     index_path.write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False) for row in domain_rows) + "\n",
+        "\n".join(
+            json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)
+            for row in domain_rows
+        )
+        + "\n",
         encoding="utf-8",
     )
     histogram: dict[str, int] = {}
@@ -411,17 +533,31 @@ def render_domain_dataset(
         histogram[key] = histogram.get(key, 0) + 1
         split_histogram = histogram_by_split[split]
         split_histogram[key] = split_histogram.get(key, 0) + 1
+    rir_manifest = domains.get("rir_manifest")
     summary = {
-        "schema_version": 2,
-        "evidence_class": "synthetic-domain",
+        "schema_version": 3,
+        "evidence_class": (
+            "measured-rir-domain" if isinstance(rir_manifest, dict) else "synthetic-domain"
+        ),
         "config_sha256": sha256_file(config_path),
-        "base_dataset_summary_sha256": sha256_file(base_dir / "dataset-summary.json"),
+        "base_dataset_summary_sha256": sha256_file(
+            base_dir / "dataset-summary.json"
+        ),
         "domain_index_sha256": sha256_file(index_path),
         "distance_histogram": histogram,
         "distance_histogram_by_split": histogram_by_split,
         "evaluation_positive_distance_order": list(EVAL_DISTANCE_ORDER),
         "curriculum": curriculum_weights or {},
         "afe": domains["afe"],
+        "rir_manifest": (
+            {
+                "sha256": rir_manifest["sha256"],
+                "entries": len(rir_manifest["entries"]),
+                "distance_histogram": rir_manifest["distance_histogram"],
+            }
+            if isinstance(rir_manifest, dict)
+            else None
+        ),
         "splits": {
             split: {
                 "examples": len(rows_by_split[split]),
@@ -440,7 +576,17 @@ def render_domain_dataset(
         },
     }
     summary_path = output / "domain-summary.json"
-    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    summary_path.write_text(
+        json.dumps(
+            summary,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return summary
 
 
@@ -463,7 +609,11 @@ def main() -> int:
         args.output.resolve(),
         curriculum_weights=curriculum,
     )
-    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+    print(
+        json.dumps(
+            result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False
+        )
+    )
     return 0
 
 
