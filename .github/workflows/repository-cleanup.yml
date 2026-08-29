@@ -137,7 +137,7 @@ jobs:
               continue
             fi
 
-            git push --quiet "${remote}" ":refs/heads/${branch}"
+            git -C "${graph}" push --quiet origin ":refs/heads/${branch}"
             deleted=$((deleted + 1))
             echo "deleted: ${branch}"
           done
