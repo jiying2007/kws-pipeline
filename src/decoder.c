@@ -59,6 +59,14 @@ static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
   return 1;
 }
 
+static float max_score(float a, float b) { return a > b ? a : b; }
+
+static void max_assign(float *dst, float value) {
+  if (value > *dst) {
+    *dst = value;
+  }
+}
+
 static void init_structure(kws_decoder_t *d,
                            float token_boost,
                            float retention_log) {
@@ -70,6 +78,9 @@ static void init_structure(kws_decoder_t *d,
   d->nodes[0].next_sibling = UINT16_MAX;
   d->nodes[0].terminal_keyword = -1;
   d->nodes[0].score = 0.0f;
+  d->nodes[0].blank_score = NEG_INF;
+  d->nodes[0].next_score = NEG_INF;
+  d->nodes[0].next_blank_score = NEG_INF;
 }
 
 void kws_decoder_init(kws_decoder_t *d,
@@ -104,7 +115,9 @@ static uint16_t find_or_add_child(kws_decoder_t *d,
   d->nodes[child].terminal_keyword = -1;
   d->nodes[child].depth = (uint16_t)(d->nodes[parent].depth + 1u);
   d->nodes[child].score = NEG_INF;
+  d->nodes[child].blank_score = NEG_INF;
   d->nodes[child].next_score = NEG_INF;
+  d->nodes[child].next_blank_score = NEG_INF;
   d->nodes[parent].first_child = child;
   return child;
 }
@@ -187,20 +200,9 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
 void kws_decoder_reset(kws_decoder_t *d) {
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     d->nodes[i].score = (i == 0u) ? 0.0f : NEG_INF;
+    d->nodes[i].blank_score = NEG_INF;
     d->nodes[i].next_score = NEG_INF;
-    d->nodes[i].blank_ready = 0u;
-    d->nodes[i].next_blank_ready = 0u;
-  }
-}
-
-static void max_assign_state(kws_trie_node_t *node,
-                             float value,
-                             uint8_t blank_ready) {
-  if (value > node->next_score) {
-    node->next_score = value;
-    node->next_blank_ready = blank_ready;
-  } else if (value == node->next_score && blank_ready != 0u) {
-    node->next_blank_ready = 1u;
+    d->nodes[i].next_blank_score = NEG_INF;
   }
 }
 
@@ -218,46 +220,54 @@ int kws_decoder_step(kws_decoder_t *d,
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     d->nodes[i].next_score = NEG_INF;
-    d->nodes[i].next_blank_ready = 0u;
+    d->nodes[i].next_blank_score = NEG_INF;
   }
   d->nodes[0].next_score = 0.0f;
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
-    float base = (i == 0u) ? 0.0f : d->nodes[i].score;
-    uint8_t base_blank_ready =
-        (i == 0u) ? 1u : d->nodes[i].blank_ready;
+    float nonblank = (i == 0u) ? 0.0f : d->nodes[i].score;
+    float separated = (i == 0u) ? NEG_INF : d->nodes[i].blank_score;
     uint16_t child;
 
-    if (i != 0u && base > NEG_INF / 2.0f) {
-      uint8_t retained_blank_ready = base_blank_ready;
-      if (blank_dominant != 0) {
-        retained_blank_ready = 1u;
+    if (i != 0u) {
+      if (nonblank > NEG_INF / 2.0f) {
+        if (blank_dominant != 0) {
+          max_assign(&d->nodes[i].next_blank_score, nonblank + decay);
+        } else {
+          max_assign(&d->nodes[i].next_score, nonblank + decay);
+        }
       }
-      max_assign_state(&d->nodes[i], base + decay, retained_blank_ready);
-    }
-    if (base <= NEG_INF / 2.0f) {
-      continue;
+      if (separated > NEG_INF / 2.0f) {
+        /* Once a blank has separated the last emitted token, a retained gap
+         * remains eligible for a repeated-token transition until a new token
+         * is emitted. */
+        max_assign(&d->nodes[i].next_blank_score, separated + decay);
+      }
     }
 
     child = d->nodes[i].first_child;
     while (child != UINT16_MAX) {
       uint16_t token = d->nodes[child].token;
       int repeated_token = i != 0u && token == d->nodes[i].token;
-      if (repeated_token == 0 || base_blank_ready != 0u) {
+      float base = repeated_token != 0 ? separated : max_score(nonblank, separated);
+
+      if (base > NEG_INF / 2.0f) {
         float log_probability = logits[token] - norm + d->token_boost;
-        max_assign_state(&d->nodes[child], base + log_probability, 0u);
+        max_assign(&d->nodes[child].next_score, base + log_probability);
       }
       child = d->nodes[child].next_sibling;
     }
   }
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
+    float terminal_score;
     d->nodes[i].score = d->nodes[i].next_score;
-    d->nodes[i].blank_ready = d->nodes[i].next_blank_ready;
+    d->nodes[i].blank_score = d->nodes[i].next_blank_score;
+    terminal_score = max_score(d->nodes[i].score, d->nodes[i].blank_score);
     if (speech_active && d->nodes[i].terminal_keyword >= 0 &&
-        d->nodes[i].score > NEG_INF / 2.0f) {
+        terminal_score > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float conf = expf(d->nodes[i].score / (float)d->nodes[i].depth);
+      float conf = expf(terminal_score / (float)d->nodes[i].depth);
       if (conf > 1.0f) {
         conf = 1.0f;
       }
