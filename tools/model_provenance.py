@@ -30,12 +30,12 @@ def validate_model_provenance(
     hidden_dim: int,
     vocab_size: int,
     vocab_fingerprint: int,
-    frontend_kind: int,
-    frontend_name: str,
     tokens_sha256: str,
     checkpoint_sha256: str,
     training_tokens_sha256: str,
     training_manifest_sha256s: list[str],
+    frontend_kind: int | None = None,
+    frontend_name: str | None = None,
 ) -> dict:
     provenance = load_json(path)
     if json_int(provenance.get("schema_version"), "model provenance schema_version") != 2:
@@ -46,10 +46,7 @@ def validate_model_provenance(
     tokens = provenance.get("tokens")
     training = provenance.get("training")
     quantization = provenance.get("quantization")
-    if not all(
-        isinstance(item, dict)
-        for item in (model, checkpoint, tokens, training, quantization)
-    ):
+    if not all(isinstance(item, dict) for item in (model, checkpoint, tokens, training, quantization)):
         raise ValueError("model provenance is missing required object sections")
 
     if sha256_value(model.get("sha256"), "model provenance model.sha256") != model_sha256:
@@ -69,18 +66,19 @@ def validate_model_provenance(
         raise ValueError("model provenance vocabulary fingerprint does not match .kwm")
     if json_int(model.get("frontend_spec_version"), "model provenance model.frontend_spec_version") != FRONTEND_SPEC_VERSION:
         raise ValueError("model provenance frontend spec is unsupported")
-    if frontend_kind not in FRONTEND_NAMES or FRONTEND_NAMES[frontend_kind] != frontend_name:
-        raise ValueError("selected model frontend identity is invalid")
-    if json_int(model.get("frontend_kind"), "model provenance model.frontend_kind") != frontend_kind:
+    recorded_frontend_kind = json_int(model.get("frontend_kind"), "model provenance model.frontend_kind", 0, 1)
+    recorded_frontend_name = text(model.get("frontend_name"), "model provenance model.frontend_name")
+    if FRONTEND_NAMES[recorded_frontend_kind] != recorded_frontend_name:
+        raise ValueError("model provenance frontend name/kind is inconsistent")
+    if frontend_kind is not None and recorded_frontend_kind != frontend_kind:
         raise ValueError("model provenance frontend kind does not match .kwm")
-    if model.get("frontend_name") != frontend_name:
+    if frontend_name is not None and recorded_frontend_name != frontend_name:
         raise ValueError("model provenance frontend name does not match .kwm")
 
     checkpoint_name = text(checkpoint.get("name"), "model provenance checkpoint.name")
     checkpoint_hash = sha256_value(checkpoint.get("sha256"), "model provenance checkpoint.sha256")
     if checkpoint_hash != checkpoint_sha256:
         raise ValueError("model provenance checkpoint hash does not match selected checkpoint")
-
     if sha256_value(tokens.get("sha256"), "model provenance tokens.sha256") != tokens_sha256:
         raise ValueError("model provenance export token file differs from release vocabulary")
     training_tokens_hash = sha256_value(tokens.get("checkpoint_sha256"), "model provenance tokens.checkpoint_sha256")
@@ -103,8 +101,7 @@ def validate_model_provenance(
                 "sha256": sha256_value(item.get("sha256"), f"model provenance training.manifests[{index}].sha256"),
             }
         )
-    recorded_manifest_hashes = [item["sha256"] for item in normalized_manifests]
-    if Counter(recorded_manifest_hashes) != Counter(training_manifest_sha256s):
+    if Counter(item["sha256"] for item in normalized_manifests) != Counter(training_manifest_sha256s):
         raise ValueError("model provenance training manifests do not match selected manifest files")
 
     normalized_training = {
@@ -135,8 +132,7 @@ def validate_model_provenance(
             "signal_rms": finite(stats.get("signal_rms"), f"model provenance quantization.{matrix}.signal_rms", 0.0),
             "snr_db": finite(stats.get("snr_db"), f"model provenance quantization.{matrix}.snr_db"),
         }
-        matrix_stats = normalized_quantization[matrix]
-        if not isinstance(matrix_stats, dict) or matrix_stats["scale"] <= 0.0:
+        if not isinstance(normalized_quantization[matrix], dict) or normalized_quantization[matrix]["scale"] <= 0.0:
             raise ValueError(f"model provenance quantization.{matrix}.scale must be > 0")
 
     return {
@@ -147,8 +143,8 @@ def validate_model_provenance(
         "training_tokens_sha256": training_tokens_hash,
         "token_bytes_identical_to_training": byte_identical,
         "frontend_spec_version": FRONTEND_SPEC_VERSION,
-        "frontend_kind": frontend_kind,
-        "frontend_name": frontend_name,
+        "frontend_kind": recorded_frontend_kind,
+        "frontend_name": recorded_frontend_name,
         "training": normalized_training,
         "quantization": normalized_quantization,
     }
