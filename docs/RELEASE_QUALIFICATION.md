@@ -192,7 +192,11 @@ Hosted x86 or cross-build success is not a target-board measurement. The v0.2 Co
 
 ## 9. Record target evidence
 
-Copy `configs/qualification.evidence.example.json` and replace all placeholders with candidate measurements. Required evidence covers target/board revision/SoC/toolchain/compiler flags/governor/audio-front-end identity, soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power.
+Copy `configs/qualification.evidence.example.json` and replace all placeholders with candidate measurements.
+The v2 record must be produced by a retained collector, bind the exact raw evidence and external
+attestation-verification result, use distinct builder/DUT identities, and match the selected source,
+model, keyword pack, board runner/audio and SKU. Handwritten summary numbers without these byte-complete
+artifacts fail closed.
 
 Use `kws_engine_get_stats()` for zero-I/O runtime counters when diagnosing long soaks; publish/snapshot the struct from the control path rather than adding logging or filesystem I/O to the real-time callback.
 
@@ -217,6 +221,10 @@ python3 tools/qualification_manifest.py \
   --board-runner qualification/kws_board_bench.target \
   --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
+  --evidence-raw qualification/evidence.raw.jsonl \
+  --collector qualification/kws-evidence-collector \
+  --attestation-verification qualification/attestation-verification.json \
+  --sku pcr02-ssc305 \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
   --output qualification/qualification-manifest.json
@@ -255,7 +263,9 @@ Exit codes:
 - `1`: valid evidence but one or more thresholds failed;
 - `2`: malformed, inconsistent or tampered evidence/policy, including runtime/model frontend mismatch.
 
-Policy schema v2 gates both point estimates and one-sided confidence bounds:
+Policy schema v2 must carry `policy_id`, `sku` and `shipping_approved=true`; the gate rejects example,
+unapproved or cross-SKU policies before evaluating thresholds. It then gates both point estimates and
+one-sided confidence bounds:
 
 - `confidence_level`;
 - `max_frr` and `max_frr_upper_bound`;
@@ -265,7 +275,8 @@ Policy schema v2 gates both point estimates and one-sided confidence bounds:
 
 FRR upper bounds use Wilson binomial bounds. FAR upper bounds use exact one-sided Poisson rate bounds. Therefore `0 FA / 24 h` is **not** treated as true FAR=0; at 95% confidence its upper rate is about 0.125 FA/hour. Evidence duration/event count must be large enough for the approved SKU bound.
 
-`configs/qualification.policy.example.json` is an example schema, not a shipping commitment.
+`configs/qualification.policy.example.json` has `shipping_approved=false` and is intentionally rejected
+by the product qualification gate.
 
 ## 12. Retain the complete release tuple
 

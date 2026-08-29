@@ -255,9 +255,70 @@ static void test_validation(void) {
   CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u, TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 }
 
+static void test_metadata_and_build_identity(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  kws_frame_metadata_t metadata;
+  kws_engine_stats_v2_t stats;
+  const kws_build_info_t *build = kws_build_info();
+  int16_t pcm[320] = {0};
+  int detected = 0;
+  size_t bytes = make_test_model(blob, sizeof(blob));
+
+  CHECK(build != NULL);
+  CHECK(build->struct_size == sizeof(*build));
+  CHECK(build->api_version == KWS_BUILD_INFO_API_VERSION);
+  CHECK(build->version != NULL && build->version[0] != '\0');
+  CHECK(build->source_revision != NULL && build->source_revision[0] != '\0');
+  CHECK(build->config_digest != NULL && strlen(build->config_digest) == 64u);
+
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+
+  memset(&metadata, 0, sizeof(metadata));
+  metadata.struct_size = sizeof(metadata);
+  metadata.api_version = KWS_FRAME_METADATA_API_VERSION;
+  metadata.flags = KWS_FRAME_EXTERNAL_VAD_VALID;
+  metadata.external_vad_probability = 0.0f;
+  CHECK(kws_engine_accept_pcm16_ex(engine, pcm, 320u, &metadata, NULL, &detected) == KWS_OK);
+  CHECK(kws_engine_accept_pcm16_ex(engine, pcm, 80u, &metadata, NULL, &detected) == KWS_OK);
+
+  memset(&metadata, 0, sizeof(metadata));
+  metadata.struct_size = sizeof(metadata);
+  metadata.api_version = KWS_FRAME_METADATA_API_VERSION;
+  metadata.flags = KWS_FRAME_DISCONTINUITY;
+  metadata.lost_samples = 160u;
+  metadata.stream_sequence = 7u;
+  metadata.capture_timestamp_ns = UINT64_C(123456789);
+  metadata.afe_latency_samples = 320u;
+  memset(metadata.afe_config_sha256, 0x5a, sizeof(metadata.afe_config_sha256));
+  CHECK(kws_engine_accept_pcm16_ex(engine, NULL, 0u, &metadata, NULL, &detected) == KWS_OK);
+
+  memset(&stats, 0, sizeof(stats));
+  stats.struct_size = sizeof(stats);
+  stats.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
+  CHECK(kws_engine_get_stats_v2(engine, &stats) == KWS_OK);
+  CHECK(stats.processed_samples == 400u);
+  CHECK(stats.processed_frames == 1u);
+  CHECK(stats.speech_frames == 0u);
+  CHECK(stats.external_vad_frames == 1u);
+  CHECK(stats.discontinuities == 1u);
+  CHECK(stats.lost_samples == 160u);
+  CHECK(stats.last_stream_sequence == 7u);
+  CHECK(stats.last_capture_timestamp_ns == UINT64_C(123456789));
+  CHECK(stats.afe_latency_samples == 320u);
+  CHECK(stats.afe_config_sha256[0] == 0x5au);
+
+  metadata.api_version = 0u;
+  CHECK(kws_engine_accept_pcm16_ex(engine, NULL, 0u, &metadata, NULL, &detected) == KWS_EINVAL);
+}
+
 int main(void) {
   test_model_and_engine();
   test_validation();
+  test_metadata_and_build_identity();
   puts("kws_tests: ok");
   return 0;
 }

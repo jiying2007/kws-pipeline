@@ -556,7 +556,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                     "event_start_frame": event_start,
                     "event_end_frame": event_end,
                 }
-                index_rows.append(meta | {"path": str(clip.resolve())})
+                index_rows.append({**meta, "path": str(clip.resolve())})
                 split_rows[split].append((clip, target_ids, meta))
 
         def add_background(profile: str, profile_index: int) -> None:
@@ -588,7 +588,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                     "event_start_frame": None,
                     "event_end_frame": None,
                 }
-                index_rows.append(meta | {"path": str(clip.resolve())})
+                index_rows.append({**meta, "path": str(clip.resolve())})
                 split_rows[split].append((clip, [], meta))
 
         for keyword in keywords:

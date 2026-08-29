@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from qualification_common import (
     FRAME_HOP_SAMPLES,
     close_enough,
@@ -52,7 +54,13 @@ def validate_eval(summary: dict, provenance: dict, actual_hashes: dict[str, str]
     return result
 
 
-def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hashes: dict[str, str]) -> dict:
+def validate_board(
+    summary: dict,
+    model_bytes: int,
+    pack_bytes: int,
+    source_sha: str,
+    actual_hashes: dict[str, str],
+) -> dict:
     if json_int(summary.get("schema_version"), "board.schema_version") != 1:
         raise ValueError("board benchmark schema_version must be 1")
     for key, expected in actual_hashes.items():
@@ -65,6 +73,14 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
         raise ValueError("board benchmark artifact sizes do not match selected artifacts")
     result = {
         **actual_hashes,
+        "runtime_version": required_text(summary, "runtime_version", "board"),
+        "runtime_source_revision": required_text(
+            summary, "runtime_source_revision", "board"
+        ),
+        "runtime_config_digest": sha256_value(
+            summary.get("runtime_config_digest"), "board.runtime_config_digest"
+        ),
+        "runtime_target": required_text(summary, "runtime_target", "board"),
         "audio_seconds": finite(summary["audio_seconds"], "board.audio_seconds", 0.0),
         "repeats": json_int(summary["repeats"], "board.repeats", 1),
         "blocks": json_int(summary["blocks"], "board.blocks", 1),
@@ -81,6 +97,8 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
     }
     if result["audio_seconds"] <= 0.0 or result["block_deadline_us"] != 20000.0:
         raise ValueError("board benchmark audio/deadline is invalid")
+    if result["runtime_source_revision"] != source_sha:
+        raise ValueError("board benchmark runtime source does not match qualification source")
     if not result["p50_process_us"] <= result["p95_process_us"] <= result["p99_process_us"] <= result["max_process_us"]:
         raise ValueError("board benchmark percentiles are not monotonic")
     close_enough(result["mean_process_us"], result["total_process_us"] / result["blocks"], "board.mean_process_us", 1e-6, 0.01)
@@ -90,8 +108,43 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
     return result
 
 
-def validate_evidence(evidence: dict) -> dict:
+UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+
+
+def validate_evidence(
+    evidence: dict,
+    *,
+    sku: str,
+    source_sha: str,
+    actual_hashes: dict[str, str],
+) -> dict:
+    if json_int(evidence.get("schema_version"), "evidence.schema_version") != 2:
+        raise ValueError("evidence schema_version must be 2")
+    if evidence.get("evidence_class") != "product-board":
+        raise ValueError("evidence_class must be product-board")
+    if required_text(evidence, "sku", "evidence") != sku:
+        raise ValueError("evidence SKU does not match qualification SKU")
+    if required_text(evidence, "source_sha", "evidence") != source_sha:
+        raise ValueError("evidence source_sha does not match qualification source")
+    collected_at = required_text(evidence, "collected_at_utc", "evidence")
+    if UTC_RE.fullmatch(collected_at) is None:
+        raise ValueError("evidence.collected_at_utc must be UTC YYYY-MM-DDTHH:MM:SSZ")
+    measured_hashes = {
+        key: sha256_value(evidence.get(key), f"evidence.{key}")
+        for key in actual_hashes
+    }
+    for key, expected in actual_hashes.items():
+        if measured_hashes[key] != expected:
+            raise ValueError(f"evidence {key} does not match selected artifact")
     result = {
+        "schema_version": 2,
+        "evidence_class": "product-board",
+        "sku": sku,
+        "source_sha": source_sha,
+        "collected_at_utc": collected_at,
+        "builder_id": required_text(evidence, "builder_id", "evidence"),
+        "dut_id": required_text(evidence, "dut_id", "evidence"),
+        "collector_id": required_text(evidence, "collector_id", "evidence"),
         "target": required_text(evidence, "target", "evidence"),
         "board_revision": required_text(evidence, "board_revision", "evidence"),
         "soc": required_text(evidence, "soc", "evidence"),
@@ -105,7 +158,10 @@ def validate_evidence(evidence: dict) -> dict:
         "stack_high_water_bytes": finite(evidence["stack_high_water_bytes"], "evidence.stack_high_water_bytes", 0.0),
         "max_temp_c": finite(evidence["max_temp_c"], "evidence.max_temp_c"),
         "average_power_mw": finite(evidence["average_power_mw"], "evidence.average_power_mw", 0.0),
+        **measured_hashes,
     }
+    if result["builder_id"] == result["dut_id"]:
+        raise ValueError("evidence builder_id and dut_id must be distinct")
     if result["cpu_percent"] > 100.0:
         raise ValueError("evidence.cpu_percent must be <= 100")
     return result

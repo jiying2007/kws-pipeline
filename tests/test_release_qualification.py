@@ -40,6 +40,9 @@ def main() -> int:
         board_audio = root / "board-audio.wav"
         board_summary = root / "board-summary.json"
         evidence = root / "evidence.json"
+        evidence_raw = root / "evidence.raw.jsonl"
+        collector = root / "kws-evidence-collector"
+        attestation_verification = root / "attestation-verification.json"
         manifest = root / "qualification-manifest.json"
         policy = root / "policy.json"
         gate = root / "gate.json"
@@ -80,6 +83,8 @@ def main() -> int:
         )
         eval_runner.write_bytes(b"eval-runner-fixture")
         board_runner.write_bytes(b"board-runner-fixture")
+        collector.write_bytes(b"collector-fixture")
+        evidence_raw.write_bytes(b'{"sample":"fixture"}\n')
         write_wav(board_audio, seconds=1)
 
         events = [
@@ -132,6 +137,22 @@ def main() -> int:
         board_runner_hash = sha256_file(board_runner)
         board_audio_hash = sha256_file(board_audio)
         write_json(
+            attestation_verification,
+            {
+                "schema_version": 1,
+                "verified": True,
+                "subject_kind": "kws-target-evidence",
+                "issuer": "fixture-trusted-attestor",
+                "trust_policy": "fixture-product-policy",
+                "verified_at_utc": "2026-08-30T00:00:00Z",
+                "subject_sha256": sha256_file(evidence_raw),
+                "collector_sha256": sha256_file(collector),
+                "board_runner_sha256": board_runner_hash,
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
+            },
+        )
+        write_json(
             eval_provenance,
             {
                 "schema_version": 1,
@@ -166,6 +187,10 @@ def main() -> int:
             board_summary,
             {
                 "schema_version": 1,
+                "runtime_version": "0.2.0",
+                "runtime_source_revision": "a" * 40,
+                "runtime_config_digest": "b" * 64,
+                "runtime_target": "arm-linux-gnueabihf",
                 "runner_sha256": board_runner_hash,
                 "model_sha256": model_hash,
                 "keyword_pack_sha256": pack_hash,
@@ -192,6 +217,21 @@ def main() -> int:
             evidence,
             {
                 "target": "fixture-board",
+                "schema_version": 2,
+                "evidence_class": "product-board",
+                "sku": "fixture-sku",
+                "source_sha": "a" * 40,
+                "collected_at_utc": "2026-08-30T00:00:00Z",
+                "builder_id": "fixture-builder",
+                "dut_id": "fixture-dut",
+                "collector_id": "fixture-collector-v1",
+                "collector_sha256": sha256_file(collector),
+                "raw_evidence_sha256": sha256_file(evidence_raw),
+                "attestation_verification_sha256": sha256_file(attestation_verification),
+                "board_runner_sha256": board_runner_hash,
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
+                "board_audio_sha256": board_audio_hash,
                 "board_revision": "A",
                 "soc": "cortex-a32-fixture",
                 "toolchain": "fixture-gcc",
@@ -208,7 +248,10 @@ def main() -> int:
         )
         valid_policy = {
             "schema_version": 2,
+            "policy_id": "fixture-policy-v1",
             "name": "fixture-policy",
+            "sku": "fixture-sku",
+            "shipping_approved": True,
             "confidence_level": 0.95,
             "min_audio_hours": 24.0,
             "min_expected_wakes": 10,
@@ -266,6 +309,14 @@ def main() -> int:
             str(board_audio),
             "--evidence",
             str(evidence),
+            "--evidence-raw",
+            str(evidence_raw),
+            "--collector",
+            str(collector),
+            "--attestation-verification",
+            str(attestation_verification),
+            "--sku",
+            "fixture-sku",
             "--source-sha",
             "a" * 40,
             "--corpus-id",
@@ -309,11 +360,30 @@ def main() -> int:
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
         assert gate_result["schema_version"] == 2
         assert gate_result["qualified"] is True
+        assert gate_result["qualification_level"] == "product-certified"
+        assert gate_result["sku"] == "fixture-sku"
         assert gate_result["manifest_sha256"] == sha256_file(manifest)
         assert gate_result["policy_sha256"] == sha256_file(policy)
         assert gate_result["model_checkpoint_sha256"] == checkpoint_hash
         assert gate_result["statistics"]["frr_upper_bound"] > 0.1
         assert gate_result["statistics"]["far_upper_bound_per_hour"] > 1.0 / 24.0
+
+        non_shipping = dict(valid_policy)
+        non_shipping["shipping_approved"] = False
+        write_json(policy, non_shipping)
+        rejected = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "tools" / "qualification_gate.py"),
+                "--manifest",
+                str(manifest),
+                "--policy",
+                str(policy),
+            ],
+            check=False,
+        )
+        assert rejected.returncode == 2
+        write_json(policy, valid_policy)
 
         statistical_failure = dict(valid_policy)
         statistical_failure["max_frr_upper_bound"] = 0.20
@@ -331,6 +401,25 @@ def main() -> int:
         )
         assert failed.returncode == 1
         write_json(policy, valid_policy)
+
+        attestation_tampered = json.loads(manifest.read_text(encoding="utf-8"))
+        attestation_tampered["evidence"]["attestation"]["verified"] = False
+        write_json(manifest, attestation_tampered)
+        assert (
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools" / "qualification_gate.py"),
+                    "--manifest",
+                    str(manifest),
+                    "--policy",
+                    str(policy),
+                ],
+                check=False,
+            ).returncode
+            == 2
+        )
+        subprocess.check_call(command)
 
         frontend_tampered = json.loads(manifest.read_text(encoding="utf-8"))
         tampered_kind = 1 if int(frontend_tampered["runtime"]["frontend_kind"]) == 0 else 0

@@ -4,6 +4,9 @@
 
 `kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. It targets Cortex-A32/A7-class CPU budgets, supports configurable Mandarin wake phrases such as **“你好小窝”**, **“小窝”** and **“小窝小窝”**, and is designed to consume mono PCM16 16-kHz audio after a lightweight BF/AEC/RES/NS/AGC chain such as [`jiying2007/audio-pipeline`](https://github.com/jiying2007/audio-pipeline).
 
+Offline training/evaluation tools support Python 3.8+; the canonical locked training container uses
+Python 3.12. Device runtime code remains C11 and does not depend on Python.
+
 The runtime is open-token KWS rather than one classifier per wake phrase:
 
 ```text
@@ -210,6 +213,10 @@ python3 tools/qualification_manifest.py \
   --board-runner qualification/kws_board_bench.target \
   --board-audio qualification/board-audio.wav \
   --evidence qualification/evidence.json \
+  --evidence-raw qualification/evidence.raw.jsonl \
+  --collector qualification/kws-evidence-collector \
+  --attestation-verification qualification/attestation-verification.json \
+  --sku pcr02-ssc305 \
   --source-sha "$(git rev-parse HEAD)" \
   --corpus-id home-kws-heldout-v1 \
   --output qualification/qualification-manifest.json
@@ -220,7 +227,9 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-Repeat `--training-manifest` for every manifest used. The gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2 and exact runtime↔model-lineage frontend identity in addition to the existing acoustic/performance/resource policy checks.
+Repeat `--training-manifest` for every manifest used. Product qualification requires an explicitly
+`shipping_approved=true` policy bound to the same SKU, distinct builder/DUT identities, and exact hashes
+for the collector, raw evidence and attestation-verification result. Example policies fail closed.
 
 ## Validation boundary
 

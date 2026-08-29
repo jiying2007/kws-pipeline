@@ -54,6 +54,15 @@ The recommended integration is to pass each normal `audio-pipeline` 10-ms output
 160 samples @ 16 kHz -> kws_engine_accept_pcm16(...)
 ```
 
+Products with capture metadata should use `kws_engine_accept_pcm16_ex()`. The versioned metadata carries
+stream sequence/timestamp, discontinuity/XRUN/codec-reopen/clock-reset flags, lost samples, optional
+external AFE VAD probability, AFE latency and the exact AFE configuration SHA-256. A discontinuity
+deterministically clears frontend/RNN/decoder/refractory state without clearing keywords or monotonic
+telemetry. Passing `sample_count == 0` is valid for a metadata-only discontinuity notification.
+
+When `KWS_FRAME_EXTERNAL_VAD_VALID` is present, the final AFE VAD is authoritative for that block;
+otherwise KWS falls back to its configured post-AGC dBFS gate. Do not mix unrelated VAD and PCM timelines.
+
 This one-hop upper bound guarantees one call can produce at most one acoustic step, so the single `kws_detection_t` output cannot silently discard multiple wake events. Accepted blocks are always consumed completely, including a block in which a wake event occurs.
 
 One engine is single-owner. If capture and assistant state machines run on different threads, publish only the small wake event across a queue rather than calling one engine concurrently.
@@ -69,7 +78,14 @@ if (kws_engine_get_stats(kws, &stats) == KWS_OK) {
 }
 ```
 
-The snapshot exposes processed/speech/blank frames, decoder hits, refractory suppressions, accepted detections, current keyword/Trie size, pending prefix state and maximum detection confidence. Counters are cumulative for the engine lifetime; `kws_engine_reset()` resets acoustic/decoder/refractory state but intentionally keeps monotonic runtime telemetry.
+The original snapshot exposes processed/speech/blank frames, decoder hits, refractory suppressions,
+accepted detections, current keyword/Trie size, pending prefix state and maximum detection confidence.
+`kws_engine_get_stats_v2()` additionally exposes discontinuity/lost-sample/external-VAD counters and the
+last AFE identity/timing metadata. Counters are cumulative for the engine lifetime; `kws_engine_reset()`
+resets acoustic/decoder/refractory state but intentionally keeps monotonic runtime telemetry.
+
+Log `kws_build_info()` together with the model/keyword hashes. It binds runtime version, source revision,
+compiler, target triple, build type and configuration digest.
 
 ## Runtime ownership
 

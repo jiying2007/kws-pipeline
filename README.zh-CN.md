@@ -4,6 +4,8 @@
 
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。它支持“**你好小窝**”“**小窝**”“**小窝小窝**”等可配置中文唤醒词，并设计为直接消费 [`jiying2007/audio-pipeline`](https://github.com/jiying2007/audio-pipeline) 等 BF/AEC/RES/NS/AGC 前端输出的 16 kHz 单声道 PCM16。
 
+离线训练/评测工具支持 Python 3.8+；锁定的标准训练容器使用 Python 3.12。设备实时运行时仍为 C11，不依赖 Python。
+
 核心采用**开放 token KWS**，不是“一个唤醒词一个二分类模型”：
 
 ```text

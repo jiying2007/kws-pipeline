@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
   char pack_sha256[65];
   char audio_sha256[65];
   int exit_code = 1;
+  const kws_build_info_t *build_info = kws_build_info();
 
   if (argc != 4 && argc != 5) {
     fprintf(stderr,
@@ -216,6 +217,8 @@ int main(int argc, char **argv) {
 
     fprintf(stdout,
             "{\"schema_version\":1,\"runner_sha256\":\"%s\","
+            "\"runtime_version\":\"%s\",\"runtime_source_revision\":\"%s\","
+            "\"runtime_config_digest\":\"%s\",\"runtime_target\":\"%s\","
             "\"model_sha256\":\"%s\",\"keyword_pack_sha256\":\"%s\","
             "\"audio_sha256\":\"%s\",\"block_samples\":%u,"
             "\"block_deadline_us\":%.3f,\"audio_seconds\":%.6f,"
@@ -225,7 +228,9 @@ int main(int argc, char **argv) {
             "\"p50_process_us\":%.3f,\"p95_process_us\":%.3f,"
             "\"p99_process_us\":%.3f,\"max_process_us\":%.3f,"
             "\"rtf\":%.9f,\"p99_headroom\":%.6f}\n",
-            runner_sha256, model_sha256, pack_sha256, audio_sha256,
+            runner_sha256, build_info->version, build_info->source_revision,
+            build_info->config_digest, build_info->target_triple,
+            model_sha256, pack_sha256, audio_sha256,
             (unsigned)BENCH_BLOCK_SAMPLES, deadline_us, audio_seconds, repeats,
             total_blocks, model_bytes, pack_bytes,
             kws_engine_required_bytes(&model), total_process_us, mean_us,
