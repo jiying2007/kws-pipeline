@@ -133,8 +133,11 @@ jobs:
       - name: Generate gcov reports
         run: |
           set -euo pipefail
-          for source in src/*.c; do
-            gcov -o build-coverage/CMakeFiles/kws_pipeline.dir/src "$source" >/dev/null
+          shopt -s nullglob
+          data=(build-coverage/CMakeFiles/kws_pipeline.dir/src/*.gcda)
+          test "${#data[@]}" -gt 0
+          for file in "${data[@]}"; do
+            gcov "$file" >/dev/null
           done
       - name: C line coverage gate
         run: python3 tools/check_gcov.py --root . --minimum 55
