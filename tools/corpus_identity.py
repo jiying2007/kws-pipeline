@@ -50,12 +50,6 @@ def canonical_hash(value: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def artifact(path: pathlib.Path) -> dict:
-    resolved = path.resolve(strict=True)
-    stats = inspect_pcm16_wav(resolved)
-    return {"path": str(resolved), **stats}
-
-
 def corpus_digest(rows: list[dict]) -> str:
     normalized = []
     for row in rows:
@@ -71,3 +65,99 @@ def corpus_digest(rows: list[dict]) -> str:
                 item[field] = row[field]
         normalized.append(item)
     return canonical_hash(normalized)
+
+
+def identity_bundle(rows: list[dict]) -> dict:
+    if not rows:
+        raise ValueError("corpus identity requires at least one recording")
+    return {
+        "schema_version": 1,
+        "corpus_sha256": corpus_digest(rows),
+        "recordings": rows,
+    }
+
+
+def _metadata(row: dict, label: str) -> dict:
+    result = {}
+    for field in IDENTITY_FIELDS:
+        value = row.get(field)
+        if value is not None:
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{label}: {field} must be non-empty text")
+            result[field] = value.strip()
+    return result
+
+
+def training_manifest_rows(path: pathlib.Path) -> list[dict]:
+    rows: list[dict] = []
+    if path.suffix.lower() == ".jsonl":
+        for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            value = json.loads(raw)
+            if not isinstance(value, dict):
+                raise ValueError(f"{path}:{line_no}: expected JSON object")
+            audio = value.get("audio", value.get("path"))
+            if not isinstance(audio, str) or not audio.strip():
+                raise ValueError(f"{path}:{line_no}: audio/path must be non-empty")
+            rows.append({"audio": audio.strip(), "metadata": _metadata(value, f"{path}:{line_no}")})
+    else:
+        for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            if "\t" not in raw:
+                raise ValueError(f"{path}:{line_no}: expected WAV<TAB>token_ids")
+            audio = raw.split("\t", 1)[0].strip()
+            if not audio:
+                raise ValueError(f"{path}:{line_no}: empty WAV path")
+            rows.append({"audio": audio, "metadata": {}})
+    return rows
+
+
+def training_corpus_identity(manifests: list[pathlib.Path]) -> dict:
+    identities: list[dict] = []
+    for manifest_index, manifest in enumerate(manifests):
+        root = manifest.parent
+        for row_index, row in enumerate(training_manifest_rows(manifest), 1):
+            raw_path = row["audio"]
+            path = pathlib.Path(raw_path)
+            resolved = (path if path.is_absolute() else root / path).resolve(strict=True)
+            identities.append(
+                {
+                    "recording": f"manifest-{manifest_index}:{row_index}",
+                    "manifest": manifest.name,
+                    "path": raw_path,
+                    **inspect_pcm16_wav(resolved),
+                    **row["metadata"],
+                }
+            )
+    return identity_bundle(identities)
+
+
+def evaluation_corpus_identity(references: pathlib.Path, audio_root: pathlib.Path) -> dict:
+    identities: list[dict] = []
+    seen: set[str] = set()
+    for line_no, raw in enumerate(references.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        row = json.loads(raw)
+        if not isinstance(row, dict):
+            raise ValueError(f"{references}:{line_no}: expected JSON object")
+        recording = row.get("recording")
+        raw_path = row.get("audio_path", row.get("path"))
+        if not isinstance(recording, str) or not recording or recording in seen:
+            raise ValueError(f"{references}:{line_no}: recording must be unique non-empty text")
+        if not isinstance(raw_path, str) or not raw_path.strip():
+            raise ValueError(f"{references}:{line_no}: path/audio_path must be non-empty")
+        path = pathlib.Path(raw_path.strip())
+        resolved = (path if path.is_absolute() else audio_root / path).resolve(strict=True)
+        identities.append(
+            {
+                "recording": recording,
+                "path": raw_path.strip(),
+                **inspect_pcm16_wav(resolved),
+                **_metadata(row, f"{references}:{line_no}"),
+            }
+        )
+        seen.add(recording)
+    return identity_bundle(identities)
