@@ -32,24 +32,28 @@
       "positive_families_per_keyword": 4,
       "confusable_families_per_keyword": 3,
       "random_negative_families": 6,
+      "background_seconds_per_profile": 2.0,
       "variants_per_family": 2
     },
     "calibration": {
       "positive_families_per_keyword": 3,
       "confusable_families_per_keyword": 3,
       "random_negative_families": 6,
+      "background_seconds_per_profile": 5.0,
       "variants_per_family": 1
     },
     "test": {
       "positive_families_per_keyword": 3,
       "confusable_families_per_keyword": 3,
       "random_negative_families": 6,
+      "background_seconds_per_profile": 7.5,
       "variants_per_family": 1
     },
     "qualification": {
       "positive_families_per_keyword": 4,
       "confusable_families_per_keyword": 4,
       "random_negative_families": 8,
+      "background_seconds_per_profile": 30.0,
       "variants_per_family": 1
     }
   },
