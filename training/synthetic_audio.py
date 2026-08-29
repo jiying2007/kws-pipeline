@@ -6,7 +6,6 @@ import json
 import math
 import pathlib
 import random
-import shlex
 import struct
 import subprocess
 import sys
@@ -44,7 +43,9 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
             continue
         cols = raw.split("\t")
         if len(cols) != 4:
-            raise ValueError(f"{path}:{line_no}: production synthetic input requires 4 TSV columns")
+            raise ValueError(
+                f"{path}:{line_no}: production synthetic input requires 4 TSV columns"
+            )
         keyword_id = int(cols[0])
         text = cols[1].strip()
         tokens = cols[3].split()
@@ -156,7 +157,9 @@ def noise_profile(profile: str, count: int, rng: random.Random) -> list[float]:
 def augment(samples: list[int], rng: random.Random, cfg: dict) -> list[int]:
     if not samples:
         return samples
-    gain_db = rng.uniform(float(cfg.get("gain_db_min", -4.0)), float(cfg.get("gain_db_max", 3.0)))
+    gain_db = rng.uniform(
+        float(cfg.get("gain_db_min", -4.0)), float(cfg.get("gain_db_max", 3.0))
+    )
     gain = 10.0 ** (gain_db / 20.0)
     result = [float(sample) * gain for sample in samples]
 
@@ -201,8 +204,12 @@ def render_tone_tokens(
     for index, token in enumerate(token_names):
         carrier = carriers[token]["frequency_hz"]
         frequency = carrier * (1.0 + rng.uniform(-pitch_jitter, pitch_jitter))
-        seconds = max(0.09, (token_ms + rng.uniform(-token_jitter, token_jitter)) / 1000.0)
-        samples.extend(tone_segment(frequency, seconds, amplitude, rng.uniform(0.0, math.pi)))
+        seconds = max(
+            0.09, (token_ms + rng.uniform(-token_jitter, token_jitter)) / 1000.0
+        )
+        samples.extend(
+            tone_segment(frequency, seconds, amplitude, rng.uniform(0.0, math.pi))
+        )
         if index + 1 != len(token_names):
             samples.extend(silence(gap_ms / 1000.0))
     samples.extend(silence(tail_ms / 1000.0))
@@ -236,34 +243,63 @@ def write_wav(path: pathlib.Path, samples: list[int]) -> None:
         writer.writeframes(b"".join(struct.pack("<h", sample) for sample in samples))
 
 
-def confusable_sequence(tokens: list[str], active: list[str], rng: random.Random) -> list[str]:
+def contains_subsequence(sequence: list[str], pattern: list[str]) -> bool:
+    if not pattern:
+        return True
+    pattern_index = 0
+    for token in sequence:
+        if token == pattern[pattern_index]:
+            pattern_index += 1
+            if pattern_index == len(pattern):
+                return True
+    return False
+
+
+def safe_negative(sequence: list[str], forbidden: list[list[str]]) -> bool:
+    return not any(contains_subsequence(sequence, pattern) for pattern in forbidden)
+
+
+def confusable_sequence(
+    tokens: list[str],
+    active: list[str],
+    forbidden: list[list[str]],
+    rng: random.Random,
+) -> list[str]:
     if not tokens:
-        return tokens
-    mode = rng.choice(("drop", "substitute", "swap", "partial"))
-    result = list(tokens)
-    if mode == "drop" and len(result) > 1:
-        del result[rng.randrange(len(result))]
-    elif mode == "substitute":
-        index = rng.randrange(len(result))
-        choices = [token for token in active if token != result[index]]
-        if choices:
-            result[index] = rng.choice(choices)
-    elif mode == "swap" and len(result) > 1:
-        index = rng.randrange(len(result) - 1)
-        result[index], result[index + 1] = result[index + 1], result[index]
-    elif len(result) > 1:
-        result = result[: rng.randrange(1, len(result))]
-    return result
+        return []
+    for _ in range(128):
+        mode = rng.choice(("drop", "substitute", "swap", "partial"))
+        result = list(tokens)
+        if mode == "drop" and len(result) > 1:
+            del result[rng.randrange(len(result))]
+        elif mode == "substitute":
+            index = rng.randrange(len(result))
+            choices = [token for token in active if token != result[index]]
+            if choices:
+                result[index] = rng.choice(choices)
+        elif mode == "swap" and len(result) > 1:
+            index = rng.randrange(len(result) - 1)
+            result[index], result[index + 1] = result[index + 1], result[index]
+        elif len(result) > 1:
+            result = result[: rng.randrange(1, len(result))]
+        if result != tokens and safe_negative(result, forbidden):
+            return result
+    return []
 
 
-def random_negative(active: list[str], rng: random.Random) -> list[str]:
-    length = rng.randint(1, max(1, min(5, len(active) + 1)))
-    return [rng.choice(active) for _ in range(length)]
+def random_negative(
+    active: list[str], forbidden: list[list[str]], rng: random.Random
+) -> list[str]:
+    for _ in range(256):
+        length = rng.randint(1, max(1, min(5, len(active) + 1)))
+        result = [rng.choice(active) for _ in range(length)]
+        if safe_negative(result, forbidden):
+            return result
+    return []
 
 
 def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
     config = load_config(config_path)
-    base = config_path.parent
     tokens_path = pathlib.Path(config["tokens"])
     keywords_path = pathlib.Path(config["keywords"])
     if not tokens_path.is_absolute():
@@ -275,16 +311,25 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
     feature_dim = int(config.get("model", {}).get("feature_dim", 32))
     carriers = token_carriers(keywords, feature_dim)
     active = list(carriers)
+    forbidden = [list(keyword["tokens"]) for keyword in keywords]
     seed = int(config.get("seed", 1337))
     generator_cfg = config.get("generator", {})
     tts_cfg = generator_cfg.get("tts", {"backend": "tone"})
     backend = str(tts_cfg.get("backend", "tone"))
     augment_cfg = generator_cfg.get("augment", {})
     split_cfg = config.get("dataset", {})
+    continuous_gap_ms = float(generator_cfg.get("continuous_gap_ms", 1600.0))
+    if continuous_gap_ms < 1300.0:
+        raise ValueError(
+            "generator.continuous_gap_ms must be >= 1300 to isolate the default "
+            "1200-ms refractory and decoder carry-over between synthetic clips"
+        )
 
     output.mkdir(parents=True, exist_ok=True)
     index_rows: list[dict] = []
-    split_rows: dict[str, list[tuple[pathlib.Path, list[int], dict]]] = {name: [] for name in SPLITS}
+    split_rows: dict[str, list[tuple[pathlib.Path, list[int], dict]]] = {
+        name: [] for name in SPLITS
+    }
 
     for split_index, split in enumerate(SPLITS):
         cfg = split_cfg.get(split)
@@ -297,12 +342,29 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         if min(positive, confusable, random_count, variants) < 0 or variants <= 0:
             raise ValueError(f"dataset.{split}: invalid counts")
 
-        def add_family(kind: str, keyword: dict | None, family_index: int, token_names: list[str], target_ids: list[int]) -> None:
-            family_id = f"{split}-{kind}-{keyword['id'] if keyword else 0}-{family_index}"
+        def add_family(
+            kind: str,
+            keyword: dict | None,
+            family_index: int,
+            token_names: list[str],
+            target_ids: list[int],
+        ) -> None:
+            if kind != "positive" and not safe_negative(token_names, forbidden):
+                raise ValueError(f"{kind} family accidentally contains a wake path")
+            family_id = (
+                f"{split}-{kind}-{keyword['id'] if keyword else 0}-{family_index}"
+            )
             for variant in range(variants):
-                family_seed = seed + split_index * 1_000_003 + family_index * 997 + variant * 37
+                family_seed = (
+                    seed
+                    + split_index * 1_000_003
+                    + family_index * 997
+                    + variant * 37
+                )
                 if keyword is not None:
-                    family_seed += int(keyword["id"]) * 7919 + (0 if kind == "positive" else 313)
+                    family_seed += int(keyword["id"]) * 7919 + (
+                        0 if kind == "positive" else 313
+                    )
                 rng = random.Random(family_seed)
                 clip = output / "clips" / split / f"{family_id}-v{variant}.wav"
                 if backend == "tone":
@@ -332,17 +394,34 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
 
         for keyword in keywords:
             for family in range(positive):
-                add_family("positive", keyword, family, list(keyword["tokens"]), list(keyword["token_ids"]))
+                add_family(
+                    "positive",
+                    keyword,
+                    family,
+                    list(keyword["tokens"]),
+                    list(keyword["token_ids"]),
+                )
             for family in range(confusable):
-                rng = random.Random(seed + split_index * 100_003 + keyword["id"] * 1009 + family)
-                sequence = confusable_sequence(list(keyword["tokens"]), active, rng)
+                rng = random.Random(
+                    seed + split_index * 100_003 + keyword["id"] * 1009 + family
+                )
+                sequence = confusable_sequence(
+                    list(keyword["tokens"]), active, forbidden, rng
+                )
                 add_family("confusable", keyword, family, sequence, [])
         for family in range(random_count):
             rng = random.Random(seed + split_index * 200_003 + family * 1237)
-            add_family("negative", None, family, random_negative(active, rng), [])
+            add_family(
+                "negative",
+                None,
+                family,
+                random_negative(active, forbidden, rng),
+                [],
+            )
 
     manifest_paths: dict[str, pathlib.Path] = {}
     reference_paths: dict[str, pathlib.Path] = {}
+    gap_samples = int(round(continuous_gap_ms * SAMPLE_RATE_HZ / 1000.0))
     for split in SPLITS:
         manifest = output / f"{split}.tsv"
         manifest.write_text(
@@ -356,11 +435,9 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
 
         if split == "train":
             continue
-        continuous: list[int] = []
+        continuous: list[int] = [0] * gap_samples
         expected: list[dict] = []
-        pre_gap = int(0.25 * SAMPLE_RATE_HZ)
-        continuous.extend([0] * pre_gap)
-        for clip, targets, meta in split_rows[split]:
+        for clip, _, meta in split_rows[split]:
             with wave.open(str(clip), "rb") as reader:
                 raw = reader.readframes(reader.getnframes())
                 samples = list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
@@ -375,7 +452,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                         "end_s": end_sample / SAMPLE_RATE_HZ,
                     }
                 )
-            continuous.extend([0] * pre_gap)
+            continuous.extend([0] * gap_samples)
         wav_path = output / f"{split}.continuous.wav"
         write_wav(wav_path, continuous)
         references = output / f"{split}.references.jsonl"
@@ -398,7 +475,9 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
 
     index_path = output / "dataset-index.jsonl"
     index_path.write_text(
-        "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in index_rows)
+        "\n".join(
+            json.dumps(row, ensure_ascii=False, sort_keys=True) for row in index_rows
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -412,6 +491,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         "evidence_class": "synthetic-only",
         "seed": seed,
         "backend": backend,
+        "continuous_gap_ms": continuous_gap_ms,
         "tokens_sha256": sha256_file(tokens_path),
         "keywords_sha256": sha256_file(keywords_path),
         "config_sha256": sha256_file(config_path),
