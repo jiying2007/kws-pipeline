@@ -118,42 +118,141 @@ def validate_domains(config: dict) -> dict:
     }
 
 
-def choose_band(rng: random.Random, bands: dict[str, dict], weights: dict[str, float] | None = None) -> str:
-    names = ["near", "mid", "far"]
-    values = [bands[name]["weight"] * (weights or {}).get(name, 1.0) for name in names]
-    total = sum(values)
+def _dimension_weights(curriculum: dict | None, dimension: str) -> dict[str, float]:
+    if not isinstance(curriculum, dict):
+        return {}
+    dimensions = curriculum.get("dimension_weights")
+    if not isinstance(dimensions, dict):
+        return {}
+    raw = dimensions.get(dimension, {})
+    if not isinstance(raw, dict):
+        return {}
+    result: dict[str, float] = {}
+    for key, value in raw.items():
+        weight = finite(value, f"curriculum.{dimension}.{key}")
+        if weight <= 0.0:
+            raise ValueError("curriculum weights must be > 0")
+        result[str(key)] = weight
+    return result
+
+
+def _weighted_choice(rng: random.Random, values: list, weights: list[float]):
+    if not values or len(values) != len(weights):
+        raise ValueError("weighted choice requires aligned non-empty values/weights")
+    if any(weight < 0.0 or not math.isfinite(weight) for weight in weights):
+        raise ValueError("weighted choice contains invalid weight")
+    total = sum(weights)
+    if total <= 0.0:
+        raise ValueError("weighted choice total weight must be > 0")
     pick = rng.random() * total
     accumulated = 0.0
-    for name, value in zip(names, values):
-        accumulated += value
+    for value, weight in zip(values, weights):
+        accumulated += weight
         if pick <= accumulated:
-            return name
-    return names[-1]
+            return value
+    return values[-1]
 
 
-def sample_scene(
+def _azimuth_band(value: float) -> str:
+    if abs(value) <= 30.0:
+        return "front"
+    if abs(value) <= 90.0:
+        return "side"
+    return "rear"
+
+
+def _rt60_band(value: float) -> str:
+    if value < 0.30:
+        return "dry"
+    if value < 0.55:
+        return "medium"
+    return "reverb"
+
+
+def _composite_value(scene: dict) -> str:
+    playback = "playback" if scene["playback_sir_db"] is not None else "no-playback"
+    return (
+        f"distance={scene['distance_band']}|az={_azimuth_band(float(scene['azimuth_deg']))}|"
+        f"rt60={_rt60_band(float(scene['rt60_s']))}|noise={scene['noise_profile']}|{playback}"
+    )
+
+
+def choose_band(rng: random.Random, bands: dict[str, dict], curriculum: dict | None = None) -> str:
+    names = ["near", "mid", "far"]
+    adaptive = _dimension_weights(curriculum, "distance")
+    values = [bands[name]["weight"] * adaptive.get(name, 1.0) for name in names]
+    return str(_weighted_choice(rng, names, values))
+
+
+def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> float:
+    low, high = domains["rt60_s"]
+    adaptive = _dimension_weights(curriculum, "rt60")
+    intervals = {
+        "dry": (low, min(high, 0.30)),
+        "medium": (max(low, 0.30), min(high, 0.55)),
+        "reverb": (max(low, 0.55), high),
+    }
+    available = [name for name, (a, b) in intervals.items() if b > a]
+    if not available:
+        return rng.uniform(low, high)
+    band = str(_weighted_choice(rng, available, [adaptive.get(name, 1.0) for name in available]))
+    a, b = intervals[band]
+    return rng.uniform(a, b)
+
+
+def _sample_candidate(
     domains: dict,
     rng: random.Random,
     *,
-    curriculum_weights: dict[str, float] | None = None,
-    forced_band: str | None = None,
+    curriculum: dict | None,
+    forced_band: str | None,
 ) -> dict:
     if forced_band is not None and forced_band not in domains["distance_bands"]:
         raise ValueError(f"unsupported forced distance band: {forced_band}")
-    band = forced_band or choose_band(rng, domains["distance_bands"], curriculum_weights)
+    band = forced_band or choose_band(rng, domains["distance_bands"], curriculum)
     low, high = domains["distance_bands"][band]["distance_m"]
-    rt60_low, rt60_high = domains["rt60_s"]
     snr_low, snr_high = domains["snr_db"]
+
+    az_weights = _dimension_weights(curriculum, "azimuth")
+    azimuth = float(
+        _weighted_choice(
+            rng,
+            domains["azimuth_deg"],
+            [az_weights.get(_azimuth_band(float(value)), 1.0) for value in domains["azimuth_deg"]],
+        )
+    )
+    noise_weights = _dimension_weights(curriculum, "noise")
+    noise = str(
+        _weighted_choice(
+            rng,
+            domains["noise_profiles"],
+            [noise_weights.get(str(value), 1.0) for value in domains["noise_profiles"]],
+        )
+    )
+
+    playback_weights = _dimension_weights(curriculum, "playback")
+    base_on = domains["playback_probability"]
+    playback_on = bool(
+        _weighted_choice(
+            rng,
+            [False, True],
+            [
+                (1.0 - base_on) * playback_weights.get("no-playback", 1.0),
+                base_on * playback_weights.get("playback", 1.0),
+            ],
+        )
+    )
     playback = None
-    if rng.random() < domains["playback_probability"]:
+    if playback_on:
         sir_low, sir_high = domains["playback_sir_db"]
         playback = rng.uniform(sir_low, sir_high)
+
     return {
         "distance_m": rng.uniform(low, high),
-        "azimuth_deg": rng.choice(domains["azimuth_deg"]),
-        "rt60_s": rng.uniform(rt60_low, rt60_high),
+        "azimuth_deg": azimuth,
+        "rt60_s": _sample_rt60(domains, rng, curriculum),
         "snr_db": rng.uniform(snr_low, snr_high),
-        "noise_profile": rng.choice(domains["noise_profiles"]),
+        "noise_profile": noise,
         "playback_sir_db": playback,
         "mic_spacing_m": domains["mic_spacing_m"],
         "room_id": f"sim-{band}",
@@ -162,11 +261,40 @@ def sample_scene(
     }
 
 
+def sample_scene(
+    domains: dict,
+    rng: random.Random,
+    *,
+    curriculum_weights: dict | None = None,
+    forced_band: str | None = None,
+) -> dict:
+    # Independent dimensions are sampled with their own adaptive weights. A final
+    # bounded candidate choice applies composite-domain hardness without turning
+    # scene generation into an unbounded rejection loop.
+    candidates = [
+        _sample_candidate(
+            domains,
+            rng,
+            curriculum=curriculum_weights,
+            forced_band=forced_band,
+        )
+        for _ in range(4)
+    ]
+    composite = _dimension_weights(curriculum_weights, "composite")
+    if not composite:
+        return candidates[0]
+    return _weighted_choice(
+        rng,
+        candidates,
+        [composite.get(_composite_value(scene), 1.0) for scene in candidates],
+    )
+
+
 def render_domain_dataset(
     config_path: pathlib.Path,
     output: pathlib.Path,
     *,
-    curriculum_weights: dict[str, float] | None = None,
+    curriculum_weights: dict | None = None,
 ) -> dict:
     config = load_config(config_path)
     domains = validate_domains(config)
@@ -284,7 +412,7 @@ def render_domain_dataset(
         split_histogram = histogram_by_split[split]
         split_histogram[key] = split_histogram.get(key, 0) + 1
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-domain",
         "config_sha256": sha256_file(config_path),
         "base_dataset_summary_sha256": sha256_file(base_dir / "dataset-summary.json"),
@@ -292,7 +420,7 @@ def render_domain_dataset(
         "distance_histogram": histogram,
         "distance_histogram_by_split": histogram_by_split,
         "evaluation_positive_distance_order": list(EVAL_DISTANCE_ORDER),
-        "curriculum_weights": curriculum_weights or {},
+        "curriculum": curriculum_weights or {},
         "afe": domains["afe"],
         "splits": {
             split: {
@@ -322,13 +450,19 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--curriculum", type=pathlib.Path)
     args = parser.parse_args()
-    weights = None
+    curriculum = None
     if args.curriculum:
         value = json.loads(args.curriculum.read_text(encoding="utf-8"))
-        if not isinstance(value, dict) or not isinstance(value.get("distance_band_weights"), dict):
-            raise ValueError("curriculum must contain distance_band_weights")
-        weights = {str(k): float(v) for k, v in value["distance_band_weights"].items()}
-    result = render_domain_dataset(args.config.resolve(), args.output.resolve(), curriculum_weights=weights)
+        if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 2:
+            raise ValueError("curriculum must be schema_version 2")
+        if not isinstance(value.get("dimension_weights"), dict):
+            raise ValueError("curriculum must contain dimension_weights")
+        curriculum = value
+    result = render_domain_dataset(
+        args.config.resolve(),
+        args.output.resolve(),
+        curriculum_weights=curriculum,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
     return 0
 
