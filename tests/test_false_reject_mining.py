@@ -25,6 +25,40 @@ def write_wav(path: pathlib.Path, seconds: int = 3) -> None:
         writer.writeframes(frames)
 
 
+def run_miner(
+    false_rejects: pathlib.Path,
+    keywords: pathlib.Path,
+    tokens: pathlib.Path,
+    root: pathlib.Path,
+    output_dir: pathlib.Path,
+    manifest: pathlib.Path,
+    *extra: str,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(MINER),
+            "--false-rejects",
+            str(false_rejects),
+            "--keywords",
+            str(keywords),
+            "--tokens",
+            str(tokens),
+            "--audio-root",
+            str(root),
+            "--output-dir",
+            str(output_dir),
+            "--manifest",
+            str(manifest),
+            *extra,
+        ],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
@@ -54,29 +88,15 @@ def main() -> int:
         )
         output_dir = root / "replay"
         manifest = root / "replay.tsv"
-        completed = subprocess.run(
-            [
-                sys.executable,
-                str(MINER),
-                "--false-rejects",
-                str(false_rejects),
-                "--keywords",
-                str(keywords),
-                "--tokens",
-                str(tokens),
-                "--audio-root",
-                str(root),
-                "--output-dir",
-                str(output_dir),
-                "--manifest",
-                str(manifest),
-                "--context-s",
-                "0.2",
-            ],
-            check=False,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        completed = run_miner(
+            false_rejects,
+            keywords,
+            tokens,
+            root,
+            output_dir,
+            manifest,
+            "--context-s",
+            "0.2",
         )
         assert completed.returncode == 0, completed.stderr
         rows = [line for line in manifest.read_text(encoding="utf-8").splitlines() if line]
@@ -89,30 +109,42 @@ def main() -> int:
             assert reader.getsampwidth() == 2
             assert 19190 <= reader.getnframes() <= 19210
 
+        invalid = root / "invalid.jsonl"
+        invalid.write_text(
+            json.dumps(
+                {
+                    "recording": "r1",
+                    "path": source.name,
+                    "keyword_id": 1,
+                    "start_s": 2.8,
+                    "end_s": 3.2,
+                    "duration_s": 3.0,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        completed = run_miner(
+            invalid,
+            keywords,
+            tokens,
+            root,
+            root / "invalid-replay",
+            root / "invalid.tsv",
+        )
+        assert completed.returncode == 2
+        assert "exceeds source duration" in completed.stderr
+
         empty = root / "empty.jsonl"
         empty.write_text("", encoding="utf-8")
         empty_manifest = root / "empty.tsv"
-        completed = subprocess.run(
-            [
-                sys.executable,
-                str(MINER),
-                "--false-rejects",
-                str(empty),
-                "--keywords",
-                str(keywords),
-                "--tokens",
-                str(tokens),
-                "--audio-root",
-                str(root),
-                "--output-dir",
-                str(root / "empty-replay"),
-                "--manifest",
-                str(empty_manifest),
-            ],
-            check=False,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        completed = run_miner(
+            empty,
+            keywords,
+            tokens,
+            root,
+            root / "empty-replay",
+            empty_manifest,
         )
         assert completed.returncode == 0, completed.stderr
         assert empty_manifest.read_text(encoding="utf-8") == ""
