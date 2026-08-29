@@ -71,7 +71,7 @@ kws_status_t kws_model_open(const void *blob,
   }
   if (memcmp(p, "KWSP", 4u) != 0 ||
       rd16(p + 4u) != KWS_MODEL_VERSION ||
-      rd16(p + 6u) != KWS_HEADER_BYTES || rd16(p + 14u) != 0u) {
+      rd16(p + 6u) != KWS_HEADER_BYTES) {
     return KWS_EFORMAT;
   }
 
@@ -79,6 +79,7 @@ kws_status_t kws_model_open(const void *blob,
   out_model->feature_dim = rd16(p + 8u);
   out_model->hidden_dim = rd16(p + 10u);
   out_model->vocab_size = rd16(p + 12u);
+  out_model->frontend_kind = rd16(p + 14u);
   out_model->sample_rate_hz = rd32(p + 16u);
   out_model->frame_length_samples = rd32(p + 20u);
   out_model->frame_hop_samples = rd32(p + 24u);
@@ -97,6 +98,8 @@ kws_status_t kws_model_open(const void *blob,
       out_model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
       out_model->frame_length_samples != KWS_FRAME_LENGTH_SAMPLES ||
       out_model->frame_hop_samples != KWS_FRAME_HOP_SAMPLES ||
+      (out_model->frontend_kind != KWS_FRONTEND_LOGMEL &&
+       out_model->frontend_kind != KWS_FRONTEND_PCEN_LITE) ||
       out_model->feature_dim == 0u ||
       out_model->feature_dim > KWS_MAX_FEATURE_DIM ||
       out_model->hidden_dim == 0u ||
