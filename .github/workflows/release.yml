@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - "release/v*"
 
 permissions:
   contents: read
@@ -19,11 +21,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify tag matches SDK version
+      - name: Verify release ref matches SDK version
         shell: bash
         run: |
           set -euo pipefail
-          expected="${GITHUB_REF_NAME#v}"
+          case "$GITHUB_REF" in
+            refs/tags/v*) release_tag="$GITHUB_REF_NAME" ;;
+            refs/heads/release/v*) release_tag="${GITHUB_REF_NAME#release/}" ;;
+            *) echo "unsupported release ref: $GITHUB_REF" >&2; exit 2 ;;
+          esac
+          expected="${release_tag#v}"
           actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
           test -n "$actual"
           test "$expected" = "$actual"
@@ -63,6 +70,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify release ref matches SDK version
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/tags/v*) release_tag="$GITHUB_REF_NAME" ;;
+            refs/heads/release/v*) release_tag="${GITHUB_REF_NAME#release/}" ;;
+            *) exit 2 ;;
+          esac
+          expected="${release_tag#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test "$expected" = "$actual"
       - name: Configure ASan/UBSan
         run: >-
           cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
@@ -79,6 +98,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify release ref matches SDK version
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/tags/v*) release_tag="$GITHUB_REF_NAME" ;;
+            refs/heads/release/v*) release_tag="${GITHUB_REF_NAME#release/}" ;;
+            *) exit 2 ;;
+          esac
+          expected="${release_tag#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test "$expected" = "$actual"
       - name: Configure libFuzzer
         env:
           CC: clang
@@ -102,6 +133,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify release ref matches SDK version
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$GITHUB_REF" in
+            refs/tags/v*) release_tag="$GITHUB_REF_NAME" ;;
+            refs/heads/release/v*) release_tag="${GITHUB_REF_NAME#release/}" ;;
+            *) exit 2 ;;
+          esac
+          expected="${release_tag#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test "$expected" = "$actual"
       - name: Install Cortex-A32 cross compiler
         run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
       - name: Configure
@@ -126,26 +169,58 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build installable SDK
+      - name: Resolve release identity
+        id: release
+        shell: bash
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          case "$GITHUB_REF" in
+            refs/tags/v*)
+              release_tag="$GITHUB_REF_NAME"
+              bootstrap=false
+              ;;
+            refs/heads/release/v*)
+              release_tag="${GITHUB_REF_NAME#release/}"
+              bootstrap=true
+              ;;
+            *) echo "unsupported release ref: $GITHUB_REF" >&2; exit 2 ;;
+          esac
+          version="${release_tag#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test -n "$actual"
+          test "$version" = "$actual"
+          printf 'tag=%s\nversion=%s\nbootstrap=%s\n' "$release_tag" "$version" "$bootstrap" >> "$GITHUB_OUTPUT"
+      - name: Refuse duplicate release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "release already exists: $RELEASE_TAG" >&2
+            exit 2
+          fi
+      - name: Build installable SDK
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
           cmake --build build --parallel
           ctest --test-dir build --output-on-failure
           cmake --install build --prefix "$RUNNER_TEMP/sdk"
           mkdir -p dist
           tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
-            -C "$RUNNER_TEMP/sdk" -czf "dist/kws-pipeline-${version}-sdk.tar.gz" .
-          git archive --format=tar.gz --prefix="kws-pipeline-${version}/" \
-            -o "dist/kws-pipeline-${version}-source.tar.gz" "$GITHUB_SHA"
+            -C "$RUNNER_TEMP/sdk" -czf "dist/kws-pipeline-${VERSION}-sdk.tar.gz" .
+          git archive --format=tar.gz --prefix="kws-pipeline-${VERSION}/" \
+            -o "dist/kws-pipeline-${VERSION}-source.tar.gz" "$GITHUB_SHA"
           python3 tools/generate_sbom.py \
             --root "$RUNNER_TEMP/sdk" \
             --name kws-pipeline \
-            --version "$version" \
+            --version "$VERSION" \
             --source-sha "$GITHUB_SHA" \
-            --output "dist/kws-pipeline-${version}.spdx.json"
-          python3 -m json.tool "dist/kws-pipeline-${version}.spdx.json" >/dev/null
+            --output "dist/kws-pipeline-${VERSION}.spdx.json"
+          python3 -m json.tool "dist/kws-pipeline-${VERSION}.spdx.json" >/dev/null
           (cd dist && sha256sum *.tar.gz *.spdx.json > SHA256SUMS && sha256sum -c SHA256SUMS)
       - name: Attest release provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
@@ -156,15 +231,46 @@ jobs:
         with:
           subject-path: dist/kws-pipeline-*-sdk.tar.gz
           sbom-path: dist/kws-pipeline-*.spdx.json
-      - name: Publish GitHub Release
+      - name: Publish existing-tag release
+        if: steps.release.outputs.bootstrap != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: >-
-          gh release create "$GITHUB_REF_NAME"
+          gh release create "$RELEASE_TAG"
           dist/kws-pipeline-*-sdk.tar.gz
           dist/kws-pipeline-*-source.tar.gz
           dist/kws-pipeline-*.spdx.json
           dist/SHA256SUMS
           --verify-tag
           --generate-notes
-          --title "kws-pipeline $GITHUB_REF_NAME"
+          --title "kws-pipeline $RELEASE_TAG"
+      - name: Publish bootstrap release and tag
+        if: steps.release.outputs.bootstrap == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: >-
+          gh release create "$RELEASE_TAG"
+          dist/kws-pipeline-*-sdk.tar.gz
+          dist/kws-pipeline-*-source.tar.gz
+          dist/kws-pipeline-*.spdx.json
+          dist/SHA256SUMS
+          --target "$GITHUB_SHA"
+          --generate-notes
+          --title "kws-pipeline $RELEASE_TAG"
+
+  cleanup-bootstrap-branch:
+    needs: [hosted, sanitizers, fuzz, armv7-cross, publish]
+    if: ${{ always() && startsWith(github.ref, 'refs/heads/release/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete release bootstrap branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}"
