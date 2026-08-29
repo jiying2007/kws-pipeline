@@ -5,12 +5,14 @@ import json
 import math
 import pathlib
 import random
+import shutil
 import struct
 import subprocess
 import tempfile
 import wave
 
 from frontend_spec import SAMPLE_RATE_HZ
+from measured_rir import render_measured_rir
 from synthetic_audio import clamp16, noise_profile, write_wav
 
 SPEED_OF_SOUND_MPS = 343.0
@@ -23,6 +25,17 @@ def sha256_file(path: pathlib.Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sha256_json(value) -> str:
+    raw = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
 
 
 def finite(value, label: str) -> float:
@@ -91,19 +104,13 @@ def _simulated_rir(
     left_delay += common_shift
     right_delay += common_shift
 
-    # Distance attenuation is bounded so AGC remains testable without clipping the
-    # synthetic carrier into numerical silence. Reverberation still gets stronger
-    # relative to the direct path as distance grows.
     direct_gain = min(1.0, 0.75 / max(distance_m, 0.25))
     left = [value * direct_gain for value in _delay(base, left_delay)]
     right = [value * direct_gain for value in _delay(base, right_delay)]
 
-    # Sparse exponentially decaying reflection cloud. It is deterministic from the
-    # scene seed and keeps the renderer dependency-free while covering DRR/RT60
-    # mismatch. Measured RIRs can replace this path through render_measured_rir().
     reflection_count = 8 + int(round(rt60_s * 16.0))
     reflection_gain_total = min(1.8, 0.18 + 0.22 * distance_m + 0.55 * rt60_s)
-    for reflection in range(reflection_count):
+    for _ in range(reflection_count):
         delay_s = rng.uniform(0.008, max(0.012, min(rt60_s, 0.75)))
         decay = 10.0 ** (-3.0 * delay_s / rt60_s)
         gain = reflection_gain_total * decay / math.sqrt(reflection_count)
@@ -116,6 +123,7 @@ def _simulated_rir(
         _mix_at(right, rref, 0, gain)
 
     return left, right, {
+        "rir_backend": "simulated-sparse-v1",
         "direct_delay_samples": int(round((direct_delay_s * SAMPLE_RATE_HZ) + common_shift)),
         "itd_samples": itd_s * SAMPLE_RATE_HZ,
         "direct_gain": direct_gain,
@@ -150,9 +158,6 @@ def _add_noise_and_playback(
         right[index] += value * noise_scale * rng.uniform(0.97, 1.03)
 
     if playback_sir_db is not None:
-        # Deterministic colored playback proxy. Its delayed, spectrally dense
-        # residue models post-AEC double-talk/residual energy without pretending to
-        # be a full echo canceller.
         playback = noise_profile("media", count, rng)
         playback_rms = math.sqrt(sum(value * value for value in playback) / count + 1.0e-9)
         scale = signal_rms / max(1.0e-9, 10.0 ** (playback_sir_db / 20.0) * playback_rms)
@@ -163,7 +168,11 @@ def _add_noise_and_playback(
             right[index] += residue * 0.92
 
 
-def _normalize_pair(left: list[float], right: list[float], peak_target: float = 25000.0) -> tuple[list[int], list[int]]:
+def _normalize_pair(
+    left: list[float], right: list[float], peak_target: float = 25000.0
+) -> tuple[list[int], list[int]]:
+    if not left or not right:
+        raise ValueError("rendered dual-mic signals must be non-empty")
     peak = max(1.0, max(abs(value) for value in left), max(abs(value) for value in right))
     scale = min(1.0, peak_target / peak)
     return (
@@ -172,10 +181,9 @@ def _normalize_pair(left: list[float], right: list[float], peak_target: float = 
     )
 
 
-def afe_proxy(left: list[int], right: list[int], *, azimuth_deg: float, mic_spacing_m: float) -> tuple[list[int], int]:
-    # Delay-and-sum beamformer aligned to the known synthetic source direction,
-    # followed by conservative peak normalization. The product path can swap this
-    # for the real audio-pipeline command adapter without changing domain metadata.
+def afe_proxy(
+    left: list[int], right: list[int], *, azimuth_deg: float, mic_spacing_m: float
+) -> tuple[list[int], int]:
     itd = mic_spacing_m * math.sin(math.radians(azimuth_deg)) / SPEED_OF_SOUND_MPS
     shift = itd * SAMPLE_RATE_HZ
     left_f = [float(value) for value in left]
@@ -196,42 +204,147 @@ def afe_proxy(left: list[int], right: list[int], *, azimuth_deg: float, mic_spac
 
 def _read_wav(path: pathlib.Path) -> list[int]:
     with wave.open(str(path), "rb") as reader:
-        if reader.getnchannels() != 1 or reader.getframerate() != SAMPLE_RATE_HZ or reader.getsampwidth() != 2 or reader.getcomptype() != "NONE":
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != SAMPLE_RATE_HZ
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+        ):
             raise ValueError(f"{path}: expected mono 16-kHz PCM16 WAV")
         raw = reader.readframes(reader.getnframes())
     return list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
 
 
+def _resolve_executable(value: str) -> pathlib.Path:
+    candidate = pathlib.Path(value)
+    if candidate.is_absolute() or "/" in value:
+        resolved = candidate.resolve()
+    else:
+        located = shutil.which(value)
+        if located is None:
+            raise ValueError(f"AFE executable not found: {value}")
+        resolved = pathlib.Path(located).resolve()
+    if not resolved.is_file():
+        raise ValueError(f"AFE executable is not a file: {resolved}")
+    return resolved
+
+
+def _sha256_value(value, label: str) -> str:
+    if not isinstance(value, str) or len(value) != 64:
+        raise ValueError(f"{label} must be SHA256 hex")
+    try:
+        int(value, 16)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be SHA256 hex") from exc
+    return value.lower()
+
+
 def afe_command(
     left: list[int],
     right: list[int],
-    command: list[str],
+    afe: dict,
     *,
     metadata: dict,
-) -> tuple[list[int], int, str]:
-    if not command:
-        raise ValueError("AFE command must be a non-empty argv list")
+) -> tuple[list[int], int, dict]:
+    command = afe.get("command")
+    if not isinstance(command, list) or not command:
+        raise ValueError("command AFE backend requires a non-empty afe.command argv list")
+    template = [str(part) for part in command]
+    executable_value = str(afe.get("executable", template[0]))
+    executable = _resolve_executable(executable_value)
+    executable_sha256 = sha256_file(executable)
+
+    config_files = afe.get("config_files", [])
+    if not isinstance(config_files, list):
+        raise ValueError("afe.config_files must be a list")
+    config_hashes: list[dict] = []
+    for index, raw in enumerate(config_files):
+        path = pathlib.Path(str(raw)).resolve()
+        if not path.is_file():
+            raise ValueError(f"AFE config file does not exist: {path}")
+        config_hashes.append(
+            {
+                "index": index,
+                "sha256": sha256_file(path),
+                "bytes": path.stat().st_size,
+            }
+        )
+    config_bundle_sha256 = sha256_json(config_hashes)
+    command_template_sha256 = sha256_json(template)
+    identity = sha256_json(
+        {
+            "schema_version": 1,
+            "command_template_sha256": command_template_sha256,
+            "executable_sha256": executable_sha256,
+            "config_bundle_sha256": config_bundle_sha256,
+        }
+    )
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         left_path = root / "left.wav"
         right_path = root / "right.wav"
         output_path = root / "afe.wav"
         meta_path = root / "scene.json"
+        result_path = root / "afe-result.json"
         write_wav(left_path, left)
         write_wav(right_path, right)
-        meta_path.write_text(json.dumps(metadata, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+        meta_path.write_text(
+            json.dumps(metadata, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
         substitutions = {
             "left": str(left_path),
             "right": str(right_path),
             "output": str(output_path),
             "metadata": str(meta_path),
+            "result": str(result_path),
         }
-        argv = [str(part).format(**substitutions) for part in command]
+        argv = [part.format(**substitutions) for part in template]
         subprocess.run(argv, check=True)
         if not output_path.is_file():
             raise ValueError("AFE command did not produce output WAV")
+        if not result_path.is_file():
+            raise ValueError(
+                "AFE command must produce {result} JSON with latency_samples and provenance"
+            )
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        if not isinstance(result, dict):
+            raise ValueError("AFE result sidecar must be a JSON object")
+        latency = result.get("latency_samples")
+        if isinstance(latency, bool) or not isinstance(latency, int) or latency < 0:
+            raise ValueError("AFE result latency_samples must be an integer >= 0")
+        if "executable_sha256" in result and _sha256_value(
+            result["executable_sha256"], "AFE result executable_sha256"
+        ) != executable_sha256:
+            raise ValueError("AFE sidecar executable hash disagrees with invoked binary")
+        if "config_bundle_sha256" in result and _sha256_value(
+            result["config_bundle_sha256"], "AFE result config_bundle_sha256"
+        ) != config_bundle_sha256:
+            raise ValueError("AFE sidecar config hash disagrees with declared config files")
+        pipeline_sha256 = None
+        if result.get("pipeline_sha256") is not None:
+            pipeline_sha256 = _sha256_value(
+                result["pipeline_sha256"], "AFE result pipeline_sha256"
+            )
         mono = _read_wav(output_path)
-        return mono, int(metadata.get("afe_latency_samples", 0)), hashlib.sha256("\0".join(argv).encode()).hexdigest()
+        provenance = {
+            "schema_version": 1,
+            "identity_sha256": identity,
+            "command_template_sha256": command_template_sha256,
+            "executable_sha256": executable_sha256,
+            "config_bundle_sha256": config_bundle_sha256,
+            "config_files": config_hashes,
+            "left_input_sha256": sha256_file(left_path),
+            "right_input_sha256": sha256_file(right_path),
+            "output_sha256": sha256_file(output_path),
+            "result_sha256": sha256_file(result_path),
+            "latency_samples": latency,
+            "pipeline_sha256": pipeline_sha256,
+            "source_sha": result.get("source_sha"),
+            "toolchain": result.get("toolchain"),
+        }
+        return mono, latency, provenance
 
 
 def render_scene(
@@ -249,16 +362,37 @@ def render_scene(
     mic_spacing_m = finite(scene.get("mic_spacing_m", 0.06), "scene.mic_spacing_m")
     noise_name = str(scene.get("noise_profile", "white"))
     playback_value = scene.get("playback_sir_db")
-    playback_sir_db = None if playback_value is None else finite(playback_value, "scene.playback_sir_db")
-
-    left_f, right_f, rir_meta = _simulated_rir(
-        clean,
-        distance_m=distance_m,
-        azimuth_deg=azimuth_deg,
-        rt60_s=rt60_s,
-        mic_spacing_m=mic_spacing_m,
-        rng=rng,
+    playback_sir_db = (
+        None
+        if playback_value is None
+        else finite(playback_value, "scene.playback_sir_db")
     )
+
+    measured = scene.get("measured_rir")
+    if measured is None:
+        left_f, right_f, rir_meta = _simulated_rir(
+            clean,
+            distance_m=distance_m,
+            azimuth_deg=azimuth_deg,
+            rt60_s=rt60_s,
+            mic_spacing_m=mic_spacing_m,
+            rng=rng,
+        )
+    else:
+        if not isinstance(measured, dict):
+            raise ValueError("scene.measured_rir must be an object")
+        mic1 = pathlib.Path(str(measured.get("mic1", "")))
+        mic2 = pathlib.Path(str(measured.get("mic2", "")))
+        left_f, right_f, rir_meta = render_measured_rir(clean, mic1, mic2)
+        rir_meta.update(
+            {
+                "rir_manifest_sha256": measured.get("manifest_sha256"),
+                "rir_entry_sha256": measured.get("entry_sha256"),
+                "position_id": measured.get("position_id"),
+                "device_pose": measured.get("device_pose"),
+            }
+        )
+
     _add_noise_and_playback(
         left_f,
         right_f,
@@ -277,16 +411,19 @@ def render_scene(
             mic_spacing_m=mic_spacing_m,
         )
         afe_identity = "builtin-delay-and-sum-v1"
+        afe_provenance = {
+            "schema_version": 1,
+            "identity_sha256": hashlib.sha256(afe_identity.encode()).hexdigest(),
+            "latency_samples": afe_latency,
+        }
     elif afe_backend == "command":
-        command = afe.get("command")
-        if not isinstance(command, list) or not command:
-            raise ValueError("command AFE backend requires afe.command argv list")
-        mono, afe_latency, afe_identity = afe_command(
+        mono, afe_latency, afe_provenance = afe_command(
             left,
             right,
-            [str(value) for value in command],
+            afe,
             metadata=scene,
         )
+        afe_identity = str(afe_provenance["identity_sha256"])
     else:
         raise ValueError(f"unsupported AFE backend: {afe_backend}")
 
@@ -303,6 +440,7 @@ def render_scene(
         "room_id": str(scene.get("room_id", "sim-room")),
         "afe_backend": afe_backend,
         "afe_identity": afe_identity,
+        "afe_provenance": afe_provenance,
         "afe_latency_samples": afe_latency,
         **rir_meta,
     }
