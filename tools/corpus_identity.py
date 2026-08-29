@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import pathlib
 import wave
 
@@ -151,11 +152,21 @@ def evaluation_corpus_identity(references: pathlib.Path, audio_root: pathlib.Pat
             raise ValueError(f"{references}:{line_no}: path/audio_path must be non-empty")
         path = pathlib.Path(raw_path.strip())
         resolved = (path if path.is_absolute() else audio_root / path).resolve(strict=True)
+        measured = inspect_pcm16_wav(resolved)
+        declared_duration = row.get("duration_s")
+        if isinstance(declared_duration, bool) or not isinstance(declared_duration, (int, float)):
+            raise ValueError(f"{references}:{line_no}: duration_s must be numeric")
+        if not math.isfinite(float(declared_duration)) or not math.isclose(
+            float(declared_duration), measured["duration_s"], rel_tol=0.0, abs_tol=1.0 / SAMPLE_RATE_HZ
+        ):
+            raise ValueError(
+                f"{references}:{line_no}: duration_s={declared_duration} does not match WAV duration {measured['duration_s']}"
+            )
         identities.append(
             {
                 "recording": recording,
                 "path": raw_path.strip(),
-                **inspect_pcm16_wav(resolved),
+                **measured,
                 **_metadata(row, f"{references}:{line_no}"),
             }
         )
