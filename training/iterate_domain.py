@@ -381,7 +381,7 @@ def main() -> int:
 
     best = None
     records: list[dict] = []
-    curriculum: dict[str, float] | None = None
+    curriculum: dict | None = None
     stale = 0
     previous_checkpoints: dict[str, pathlib.Path] = {}
     for round_index in range(max_rounds):
@@ -497,7 +497,7 @@ def main() -> int:
             strength=float(iteration.get("curriculum_strength", 2.0)),
             max_weight=float(iteration.get("max_domain_weight", 6.0)),
         )
-        curriculum = curriculum_result["distance_band_weights"]
+        curriculum = curriculum_result
         curriculum_path = work / "curriculum" / f"round-{round_index:02d}.json"
         curriculum_path.parent.mkdir(parents=True, exist_ok=True)
         curriculum_path.write_text(json.dumps(curriculum_result, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
@@ -538,7 +538,7 @@ def main() -> int:
     )
     qualified = base_gate(qualification_base, gates) and domain_gate(qualification_domains, gates)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-domain-qualified",
         "qualified": qualified,
         "config_sha256": sha256_file(config_path),
