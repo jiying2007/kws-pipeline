@@ -1,28 +1,50 @@
 # Release qualification
 
-Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, keyword pack, vocabulary, runtime config, evaluation runner, reference annotations, detections, target-board benchmark binary, board audio and measured board evidence.
+Repository CI proves software contracts. A shipping wake-word claim requires a second, artifact-bound qualification bundle built from the exact model, model-export provenance, keyword pack, vocabulary, runtime config, evaluation runner, reference annotations, detections, target-board benchmark binary, board audio and measured board evidence.
 
 ```text
-model + pack + tokens + runtime config
-        |
-        +-> exact kws_wav + references -> detections + provenance + metrics
-        |
-        +-> exact target kws_board_bench + board WAV -> board summary
-        |
-        +-> target resource/soak/thermal/power evidence
-                            |
-                            v
-                 qualification_manifest.py
-                            |
-                      SKU policy
-                            |
-                            v
-                   qualification_gate.py
+checkpoint + tokens + training manifests
+                 |
+                 v
+        export_model.py -> model.kwm + model.kwm.provenance.json
+                                  |
+model + model provenance + pack + tokens + runtime config
+                                  |
+                                  +-> exact kws_wav + references
+                                  |      -> detections + provenance + metrics
+                                  |
+                                  +-> exact target kws_board_bench + board WAV
+                                  |      -> board summary
+                                  |
+                                  +-> target resource/soak/thermal/power evidence
+                                                       |
+                                                       v
+                                            qualification_manifest.py
+                                                       |
+                                                 SKU policy
+                                                       |
+                                                       v
+                                            qualification_gate.py
 ```
 
-## 1. Freeze release artifacts
+## 1. Freeze model lineage and release artifacts
 
-Pin the source Git SHA, ABI-v2 `.kwm`, ABI-v2 `.kwk`, continuous token vocabulary, shipping runtime config, corpus identity/version and final BF/AEC/RES/NS/AGC configuration. Model, pack and vocabulary must carry the same 64-bit vocabulary fingerprint.
+Train with the exact token vocabulary used by the eventual `.kwm/.kwk` pair. `training/train_ctc.py` stores vocabulary fingerprint/token hash, training-manifest hashes, frontend-spec version, seed and optimizer metadata in the checkpoint.
+
+Export the candidate model with the same vocabulary:
+
+```bash
+python3 training/export_model.py \
+  --checkpoint build/base.pt \
+  --tokens release/tokens.txt \
+  --output release/base.kwm
+```
+
+The exporter automatically writes `release/base.kwm.provenance.json`. It binds the exported `.kwm` to the checkpoint hash, vocabulary/training token identities, training metadata and per-matrix int8 quantization scale/error/RMSE/SNR statistics.
+
+Pin the source Git SHA, `base.kwm`, `base.kwm.provenance.json`, ABI-v2 `.kwk`, continuous token vocabulary, shipping runtime config, corpus identity/version and final BF/AEC/RES/NS/AGC configuration. Model, pack and vocabulary must carry the same 64-bit vocabulary fingerprint.
+
+Before training/tuning/final qualification, run `training/audit_dataset.py` across those splits. It detects leakage by decoded mono-16-kHz PCM16 SHA256, so renaming or rewrapping the same audio does not make it independent.
 
 ## 2. Run the held-out continuous-audio corpus
 
@@ -76,6 +98,7 @@ The example numbers are schema examples only. `qualification_manifest.py` reject
 ```bash
 python3 tools/qualification_manifest.py \
   --model release/base.kwm \
+  --model-provenance release/base.kwm.provenance.json \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
@@ -100,7 +123,8 @@ The verifier independently checks:
 - canonical ABI-v2 `.kwm/.kwk`, fixed 16-kHz/400/320 geometry, dimensions, finite scales/biases/thresholds, token bounds, zero padding and duplicate paths;
 - runtime config geometry/dimensions and finite runtime parameters;
 - model/pack/token vocabulary identity;
-- SHA256 of the **actual** model, pack, token file, config, evaluation runner, references, detections, target benchmark runner and board audio;
+- model provenance against the actual `.kwm` and release token file, including model dimensions/fingerprint/frontend-spec identity, checkpoint SHA256, training token SHA256, training-manifest hashes and quantization-stat schema;
+- SHA256 of the **actual** model, model provenance, pack, token file, config, evaluation runner, references, detections, target benchmark runner and board audio;
 - evaluation provenance hashes against those actual files;
 - reference JSONL itself: unique recordings, durations, expected-event bounds, recording count, expected-wake count and total audio hours;
 - detections JSONL itself: recording membership, finite times/confidences and actual detection count;
@@ -109,7 +133,7 @@ The verifier independently checks:
 - board report hashes, artifact sizes, monotonic percentiles, mean/RTF/headroom formulas;
 - required target/toolchain/governor/audio-front-end/resource evidence.
 
-This prevents a matching sidecar/summary pair from being reused after the underlying runner, annotations, detections or board audio has changed.
+This prevents a matching sidecar/summary pair from being reused after the underlying model lineage, runner, annotations, detections or board audio has changed.
 
 ## 6. Apply an explicit SKU policy
 
@@ -122,7 +146,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-The policy can gate acoustic data volume, expected wake count, FRR, FAR/hour, p95 wake latency, p99 runtime, RTF, p99 headroom, soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power. The gate also validates manifest-internal artifact cross-links and SHA256-binds its result to the exact manifest and policy.
+The policy can gate acoustic data volume, expected wake count, FRR, FAR/hour, p95 wake latency, p99 runtime, RTF, p99 headroom, soak duration, CPU, RSS, stack high-water mark, maximum temperature and average power. The gate also validates manifest-internal artifact/model-lineage cross-links and SHA256-binds its result to the exact manifest and policy. The gate result includes the source model checkpoint SHA256 for traceability.
 
 Exit codes:
 
@@ -136,7 +160,8 @@ Exit codes:
 
 For each SKU/model/keyword-pack tuple retain together:
 
-- source SHA, `.kwm`, `.kwk`, token vocabulary and runtime config;
+- source SHA, `.kwm`, `.kwm.provenance.json`, `.kwk`, token vocabulary and runtime config;
+- the source training checkpoint hash and training-manifest hashes recorded by model provenance;
 - exact evaluation runner, reference annotations, detections, provenance, evaluation summary and false-positive list;
 - exact target benchmark runner, board WAV and board summary;
 - target evidence JSON and approved SKU policy;
