@@ -10,7 +10,8 @@ All notable source-level changes are recorded here. A source/software version do
 - Dependency-free C SHA256 support so board results self-identify the exact benchmark runner, model, keyword pack and board audio.
 - Evaluation provenance sidecars binding the exact evaluation runner/model/keyword-pack/references/detections by SHA256.
 - Deterministic `qualification_manifest.py` that independently re-hashes all selected evidence files, revalidates canonical ABI-v2 model/pack/config/vocabulary identity, recomputes corpus and board-WAV statistics, and verifies acoustic/board formulas and cross-artifact hashes.
-- `qualification_gate.py` with an explicit external SKU policy, manifest/policy hash binding, strict type checking, and pass/fail/invalid exit semantics.
+- Model-export provenance (`.kwm.provenance.json`) binding each `.kwm` to its source checkpoint hash, training/export vocabulary identities, training-manifest hashes/hyperparameters and per-matrix int8 quantization scale/error/RMSE/SNR. Release qualification now requires and validates this lineage.
+- `qualification_gate.py` with an explicit external SKU policy, manifest/policy hash binding, strict type checking, source model-checkpoint traceability, and pass/fail/invalid exit semantics.
 - Policy gates for FAR/FRR/latency/runtime headroom plus soak, CPU, RSS, stack high-water mark, maximum temperature and average power.
 - Dependency-free frontend feature specification plus `kws_feature_dump`; GCC/Clang CI compares multiple real C frontend fixtures against the reference with a tight numerical tolerance.
 - Dataset split auditor that detects leakage by decoded mono-16-kHz PCM16 SHA256 while retaining WAV-container hashes for provenance, including rewrapped/renamed copies.
@@ -28,6 +29,7 @@ All notable source-level changes are recorded here. A source/software version do
 - Continuous-audio metric summaries include SHA256 for the exact reference and detection inputs.
 - Hosted tool WAV/file helpers are shared by `kws_wav` and board qualification tooling.
 - Performance documentation distinguishes hosted regression signals from artifact-bound shipping evidence.
+- `models/README.md` is corrected to the current `KWSP` ABI v2 contract and requires the model-provenance sidecar in release tuples.
 - The earlier weaker release-manifest path was removed; `qualification_manifest.py` is the single supported qualification-manifest generator.
 
 ### Current hosted regression signal
