@@ -27,11 +27,12 @@ def load_references(path: pathlib.Path) -> list[dict]:
         if not isinstance(row, dict):
             raise ValueError(f"{path}:{line_no}: expected JSON object")
         recording = str(row.get("recording", ""))
-        audio_path = row.get("path")
+        audio_path = row.get("audio_path") or row.get("path")
         if not recording or recording in seen:
             raise ValueError(f"{path}:{line_no}: recording must be non-empty and unique")
         if not audio_path:
             raise ValueError(f"{path}:{line_no}: path is required for corpus execution")
+        row["_execution_path"] = audio_path
         seen.add(recording)
         rows.append(row)
     if not rows:
@@ -54,7 +55,7 @@ def main() -> int:
     output_lines: list[str] = []
     for row in rows:
         recording = str(row["recording"])
-        audio = pathlib.Path(str(row["path"]))
+        audio = pathlib.Path(str(row["_execution_path"]))
         if not audio.is_absolute():
             audio = args.audio_root / audio
         completed = subprocess.run(
