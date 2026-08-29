@@ -29,7 +29,7 @@ static void put32(uint8_t *p, uint32_t v) {
   p[0] = (uint8_t)(v & 0xffu);
   p[1] = (uint8_t)((v >> 8u) & 0xffu);
   p[2] = (uint8_t)((v >> 16u) & 0xffu);
-  p[3] = (uint8_t)((v >> 24u) & 0xffu);
+  p[3] = (uint8_t)(v >> 24u);
 }
 
 static void put64(uint8_t *p, uint64_t v) {
@@ -79,7 +79,7 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   put32(blob + 68u, total);
   putf(blob + bo + 0u, -4.0f);
   putf(blob + bo + 4u, 4.0f);
-  putf(blob + bo + 8u, 4.0f);
+  putf(blob + bo + 8u, 3.0f);
   putf(blob + bo + 12u, -4.0f);
   return total;
 }
@@ -92,12 +92,13 @@ static void test_model_and_engine(void) {
   kws_engine_t *engine = NULL;
   kws_config_t config = kws_default_config();
   kws_config_t invalid_config;
-  const uint16_t sequence[] = {1u, 2u};
-  const kws_keyword_t keyword = {42u, sequence, 2u, 0.30f};
-  const kws_keyword_t nan_keyword = {43u, sequence, 2u, NAN};
-  const kws_keyword_t ambiguous[] = {
-      {100u, sequence, 2u, 0.30f},
-      {101u, sequence, 2u, 0.40f},
+  const uint16_t sequence[] = {1u};
+  const kws_keyword_t keyword = {42u, sequence, 1u, 0.30f};
+  const kws_keyword_t nan_keyword = {43u, sequence, 1u, NAN};
+  const uint16_t alternate_sequence[] = {2u};
+  const kws_keyword_t duplicate_ids[] = {
+      {100u, sequence, 1u, 0.30f},
+      {100u, alternate_sequence, 1u, 0.40f},
   };
   int16_t pcm[1200];
   int detected_any = 0;
@@ -147,7 +148,7 @@ static void test_model_and_engine(void) {
                                 UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
   CHECK(kws_engine_set_keywords(engine, &nan_keyword, 1u,
                                 TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
-  CHECK(kws_engine_set_keywords(engine, ambiguous, 2u,
+  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u,
                                 TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 
   for (size_t i = 0u; i < sample_count; ++i) {
