@@ -230,8 +230,6 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     low, high = domains["rt60_s"]
     adaptive = _dimension_weights(curriculum, "rt60")
     if not adaptive:
-        # Preserve the pre-curriculum deterministic baseline exactly. Curriculum
-        # must be an opt-in reweighting, not a silent change to round-0 data.
         return rng.uniform(low, high)
     intervals = {
         "dry": (low, min(high, 0.30)),
@@ -241,8 +239,6 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     available = [name for name, (a, b) in intervals.items() if b > a]
     if not available:
         return rng.uniform(low, high)
-    # Weight by interval width so all adaptive weights == 1 still reproduces a
-    # uniform density over the original continuous RT60 range.
     band = str(
         _weighted_choice(
             rng,
@@ -282,6 +278,34 @@ def _sample_rir_entry(
         weight *= rt60.get(_rt60_band(float(item["rt60_s"])), 1.0)
         weights.append(weight)
     return dict(_weighted_choice(rng, entries, weights))
+
+
+def _sample_legacy_scene(
+    domains: dict, rng: random.Random, forced_band: str | None
+) -> dict:
+    """Exact pre-v0.2 sampling order when adaptive curriculum is absent."""
+    if forced_band is not None and forced_band not in domains["distance_bands"]:
+        raise ValueError(f"unsupported forced distance band: {forced_band}")
+    band = forced_band or choose_band(rng, domains["distance_bands"], None)
+    low, high = domains["distance_bands"][band]["distance_m"]
+    rt60_low, rt60_high = domains["rt60_s"]
+    snr_low, snr_high = domains["snr_db"]
+    playback = None
+    if rng.random() < domains["playback_probability"]:
+        sir_low, sir_high = domains["playback_sir_db"]
+        playback = rng.uniform(sir_low, sir_high)
+    return {
+        "distance_m": rng.uniform(low, high),
+        "azimuth_deg": rng.choice(domains["azimuth_deg"]),
+        "rt60_s": rng.uniform(rt60_low, rt60_high),
+        "snr_db": rng.uniform(snr_low, snr_high),
+        "noise_profile": rng.choice(domains["noise_profiles"]),
+        "playback_sir_db": playback,
+        "mic_spacing_m": domains["mic_spacing_m"],
+        "room_id": f"sim-{band}",
+        "rir_id": f"sim-{band}",
+        "distance_band": band,
+    }
 
 
 def _sample_candidate(
@@ -394,10 +418,10 @@ def sample_scene(
     curriculum_weights: dict | None = None,
     forced_band: str | None = None,
 ) -> dict:
+    if curriculum_weights is None and not isinstance(domains.get("rir_manifest"), dict):
+        return _sample_legacy_scene(domains, rng, forced_band)
     composite = _dimension_weights(curriculum_weights, "composite")
     if not composite:
-        # Do not consume additional RNG draws when composite hard mining is off;
-        # this preserves the deterministic pre-curriculum scene sequence.
         return _sample_candidate(
             domains,
             rng,
