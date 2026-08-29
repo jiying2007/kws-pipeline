@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import pathlib
 import random
 import struct
@@ -21,7 +22,7 @@ from fit_prototype import (
     runtime_hidden,
     train_softmax,
 )
-from frontend_spec import FRONTEND_LOGMEL, features_pcm16, frontend_id
+from frontend_spec import FRONTEND_LOGMEL, FRONTEND_PCEN_LITE, features_pcm16, frontend_id
 from render_domains import sample_scene, validate_domains
 from synthetic_audio import render_tone_tokens
 
@@ -38,6 +39,55 @@ def sha256_file(path: pathlib.Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def select_token_supervision_frames(
+    frames: list[list[float]],
+    *,
+    token_feature_index: int,
+    competing_feature_indices: list[int],
+    frontend: str,
+) -> tuple[list[list[float]], list[list[float]], str]:
+    """Split one token scene into supervised token cores and true background.
+
+    Log-mel keeps the historical energetic partition. PCEN is deliberately
+    stateful: its onset enhancement and gain normalization make transition/tail
+    frames poor frame-level token labels even when the whole utterance remains
+    an excellent CTC example. For the dependency-free frame-classifier backend,
+    supervise only the two most discriminative energetic frames in each PCEN
+    scene. Ambiguous energetic frames are ignored rather than mislabeled blank;
+    lead/tail background remains blank supervision.
+
+    This does not weaken the product-facing gate: complete rendered utterances,
+    including every transition frame, still run through the real C runtime for
+    calibration/test/qualification and far-field domain scoring.
+    """
+    energetic, background = energetic_partition(frames)
+    if frontend == FRONTEND_LOGMEL or len(energetic) <= 2:
+        return energetic, background, "all-energetic"
+    if frontend != FRONTEND_PCEN_LITE:
+        raise ValueError(f"unsupported domain prototype frontend: {frontend}")
+    if token_feature_index < 0 or any(
+        token_feature_index >= len(frame) for frame in energetic
+    ):
+        raise ValueError("token feature index is outside frontend feature vector")
+
+    competitors = [
+        index
+        for index in competing_feature_indices
+        if index != token_feature_index and 0 <= index < len(energetic[0])
+    ]
+
+    def discrimination(frame: list[float]) -> tuple[float, float]:
+        target = frame[token_feature_index]
+        strongest_other = max((frame[index] for index in competitors), default=0.0)
+        return target - strongest_other, target
+
+    ranked = sorted(energetic, key=discrimination, reverse=True)
+    # Two token-core frames per scene provide enough temporal diversity while
+    # excluding PCEN onset/tail frames whose correct CTC interpretation is
+    # context-dependent rather than a stable frame-level class.
+    return ranked[:2], background, "pcen-top2-carrier-margin"
 
 
 def fit_domain_prototype(
@@ -77,6 +127,7 @@ def fit_domain_prototype(
     tts_cfg = dict(generator_cfg.get("tts", {}))
     tts_cfg["lead_ms"] = max(120.0, float(tts_cfg.get("lead_ms", 160.0)))
     tts_cfg["tail_ms"] = max(120.0, float(tts_cfg.get("tail_ms", 180.0)))
+    carrier_indices = [int(carriers[token]["feature_index"]) for token in active]
 
     training_output.mkdir(parents=True, exist_ok=True)
     fit_examples: list[tuple[list[float], int]] = []
@@ -84,9 +135,11 @@ def fit_domain_prototype(
     rows: list[dict] = []
     histogram = {"near": 0, "mid": 0, "far": 0}
     fit_variants = max(6, (variants_per_token * 3) // 4)
+    partition_policy = "all-energetic"
 
     for token_index, token in enumerate(active):
         token_id = token_map[token]
+        token_feature_index = int(carriers[token]["feature_index"])
         for variant in range(variants_per_token):
             sample_seed = seed + token_index * 1_000_003 + variant * 65_537
             rng = random.Random(sample_seed)
@@ -104,9 +157,15 @@ def fit_domain_prototype(
             )
             histogram[scene_meta["distance_band"]] += 1
             frames = features_pcm16(mono, feature_dim=feature_dim, frontend=frontend)
-            energetic, background = energetic_partition(frames)
+            token_frames, background, policy = select_token_supervision_frames(
+                frames,
+                token_feature_index=token_feature_index,
+                competing_feature_indices=carrier_indices,
+                frontend=frontend,
+            )
+            partition_policy = policy
             destination = fit_examples if variant < fit_variants else validation_examples
-            for frame in energetic:
+            for frame in token_frames:
                 destination.append((runtime_hidden(frame, input_scale), token_id))
             if variant < fit_variants:
                 for frame in background:
@@ -118,11 +177,15 @@ def fit_domain_prototype(
                     "token_id": token_id,
                     "variant": variant,
                     "partition": "fit" if variant < fit_variants else "validation",
+                    "supervision_policy": policy,
                     "seed": sample_seed,
                     "pcm_sha256": hashlib.sha256(pcm).hexdigest(),
                     "domain": scene_meta,
-                    "energetic_frames": len(energetic),
+                    "token_core_frames": len(token_frames),
                     "background_frames": len(background),
+                    "ignored_transition_frames": max(
+                        0, len(frames) - len(token_frames) - len(background)
+                    ),
                 }
             )
 
@@ -134,7 +197,9 @@ def fit_domain_prototype(
         rng = random.Random(sample_seed)
         scene = sample_scene(domains, rng, curriculum_weights=curriculum_weights)
         silence = [0] * (FRAME_LENGTH_SAMPLES + 4 * FRAME_HOP_SAMPLES)
-        mono, scene_meta = render_scene(silence, scene, seed=sample_seed + 29, afe=domains["afe"])
+        mono, scene_meta = render_scene(
+            silence, scene, seed=sample_seed + 29, afe=domains["afe"]
+        )
         frames = features_pcm16(mono, feature_dim=feature_dim, frontend=frontend)
         for frame in frames:
             fit_examples.append((runtime_hidden(frame, input_scale), 0))
@@ -145,10 +210,12 @@ def fit_domain_prototype(
                 "token_id": 0,
                 "variant": variant,
                 "partition": "fit-background",
+                "supervision_policy": "all-background",
                 "seed": sample_seed,
                 "domain": scene_meta,
-                "energetic_frames": 0,
+                "token_core_frames": 0,
                 "background_frames": len(frames),
+                "ignored_transition_frames": 0,
             }
         )
 
@@ -163,11 +230,15 @@ def fit_domain_prototype(
         l2=l2,
     )
     quantized, actual_output_scale, maximum = quantize_softmax(weights, output_scale)
-    train_confusion = evaluate_confusion(fit_examples, classes, quantized, biases, actual_output_scale)
-    validation_confusion = evaluate_confusion(validation_examples, classes, quantized, biases, actual_output_scale)
+    train_confusion = evaluate_confusion(
+        fit_examples, classes, quantized, biases, actual_output_scale
+    )
+    validation_confusion = evaluate_confusion(
+        validation_examples, classes, quantized, biases, actual_output_scale
+    )
     if validation_confusion["accuracy"] < 0.985:
         raise ValueError(
-            "quantized domain prototype token validation accuracy is below 98.5%; "
+            "quantized domain prototype token-core validation accuracy is below 98.5%; "
             f"got {validation_confusion['accuracy']:.6f}"
         )
 
@@ -186,7 +257,13 @@ def fit_domain_prototype(
 
     buffer = bytearray(b"\x00" * HEADER_BYTES)
     offsets: list[int] = []
-    for block in (bytes(wx), bytes(wh), float_bytes(bh), bytes(wo), float_bytes(bo)):
+    for block in (
+        bytes(wx),
+        bytes(wh),
+        float_bytes(bh),
+        bytes(wo),
+        float_bytes(bo),
+    ):
         align4(buffer)
         offsets.append(len(buffer))
         buffer.extend(block)
@@ -216,12 +293,14 @@ def fit_domain_prototype(
 
     sample_path = training_output / "domain-fit-samples.jsonl"
     sample_path.write_text(
-        "\n".join(json.dumps(row, sort_keys=True, allow_nan=False) for row in rows) + "\n",
+        "\n".join(json.dumps(row, sort_keys=True, allow_nan=False) for row in rows)
+        + "\n",
         encoding="utf-8",
     )
     diagnostics = {
-        "schema_version": 1,
+        "schema_version": 2,
         "frontend": frontend,
+        "token_supervision_policy": partition_policy,
         "distance_histogram": histogram,
         "curriculum_weights": curriculum_weights or {},
         "optimizer": {
@@ -235,9 +314,12 @@ def fit_domain_prototype(
         "validation_confusion": validation_confusion,
     }
     diagnostics_path = training_output / "domain-softmax-diagnostics.json"
-    diagnostics_path.write_text(json.dumps(diagnostics, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    diagnostics_path.write_text(
+        json.dumps(diagnostics, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     provenance = {
-        "schema_version": 3,
+        "schema_version": 4,
         "evidence_class": "synthetic-domain-trained-softmax-prototype",
         "model_sha256": sha256_file(output),
         "model_bytes": total,
@@ -248,13 +330,23 @@ def fit_domain_prototype(
         "vocab_fingerprint": f"0x{fingerprint:016x}",
         "frontend_name": frontend,
         "frontend_kind": frontend_id(frontend),
+        "token_supervision_policy": partition_policy,
         "distance_histogram": histogram,
         "curriculum_weights": curriculum_weights or {},
         "actual_output_scale": actual_output_scale,
         "float_output_weight_max_abs": maximum,
         "validation_confusion": validation_confusion,
-        "note": "All optimizer samples are synthetic acoustic-domain scenes; evaluation and qualification splits are never used for fitting.",
+        "note": (
+            "Optimizer samples are synthetic train-only acoustic-domain scenes. "
+            "PCEN frame supervision uses discriminative token cores; complete "
+            "utterances remain subject to real-C-runtime calibration/test/qualification."
+        ),
     }
-    provenance_path = pathlib.Path(str(output) + ".synthetic-domain-provenance.json")
-    provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    provenance_path = pathlib.Path(
+        str(output) + ".synthetic-domain-provenance.json"
+    )
+    provenance_path.write_text(
+        json.dumps(provenance, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     return provenance
