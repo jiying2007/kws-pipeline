@@ -1,4 +1,9 @@
 {
+  "schema_version": 2,
+  "collector": "collect_target_evidence.py",
+  "collector_sha256": "REPLACE_WITH_COLLECTOR_SHA256",
+  "collector_source_sha": "REPLACE_WITH_SOURCE_SHA",
+  "collected_unix_s": 0.0,
   "target": "REPLACE_ME",
   "board_revision": "REPLACE_ME",
   "soc": "REPLACE_ME",
@@ -6,10 +11,24 @@
   "compiler_flags": "REPLACE_ME",
   "governor": "REPLACE_ME",
   "audio_frontend": "REPLACE_ME",
+  "audio_frontend_sha256": null,
+  "kernel": "REPLACE_ME",
+  "machine": "REPLACE_ME",
+  "cpu_online": "REPLACE_ME",
+  "uptime_s": 0.0,
   "soak_hours": 0.0,
   "cpu_percent": 0.0,
   "rss_kib": 0.0,
   "stack_high_water_bytes": 0.0,
   "max_temp_c": 0.0,
-  "average_power_mw": 0.0
+  "average_power_mw": 0.0,
+  "raw_evidence": [
+    {
+      "name": "REPLACE_ME",
+      "sha256": "REPLACE_WITH_RAW_EVIDENCE_SHA256",
+      "bytes": 1
+    }
+  ],
+  "instrument_id": null,
+  "calibration_id": null
 }
