@@ -411,6 +411,17 @@ def random_negative(
     raise ValueError("failed to generate a safe random negative")
 
 
+def generate_background(
+    profile: str,
+    seconds: float,
+    rng: random.Random,
+) -> list[int]:
+    count = max(1, int(round(seconds * SAMPLE_RATE_HZ)))
+    noise = noise_profile(profile, count, rng)
+    amplitude = rng.uniform(900.0, 7000.0)
+    return [clamp16(value * amplitude) for value in noise]
+
+
 def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
     config = load_config(config_path)
     tokens_path = pathlib.Path(config["tokens"])
@@ -442,6 +453,12 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
             raise ValueError("command TTS backend requires generator.tts.command argv list")
     augment_cfg = generator_cfg.get("augment", {})
     validate_augment_config(augment_cfg)
+    noise_profiles = [
+        str(profile)
+        for profile in augment_cfg.get(
+            "noise_profiles", ["white", "fan", "motor", "media"]
+        )
+    ]
     split_cfg = config.get("dataset", {})
     if not isinstance(split_cfg, dict):
         raise ValueError("dataset must be an object")
@@ -469,10 +486,18 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         confusable = int(cfg.get("confusable_families_per_keyword", 0))
         random_count = int(cfg.get("random_negative_families", 0))
         variants = int(cfg.get("variants_per_family", 1))
+        background_seconds = finite_number(
+            cfg.get("background_seconds_per_profile", 0.0),
+            f"dataset.{split}.background_seconds_per_profile",
+        )
         if positive <= 0 or confusable < 0 or random_count < 0 or variants <= 0:
             raise ValueError(f"dataset.{split}: invalid counts")
         if confusable + random_count <= 0:
-            raise ValueError(f"dataset.{split}: at least one negative family is required")
+            raise ValueError(f"dataset.{split}: at least one token negative family is required")
+        if background_seconds <= 0.0:
+            raise ValueError(
+                f"dataset.{split}.background_seconds_per_profile must be > 0"
+            )
 
         def add_family(
             kind: str,
@@ -534,6 +559,38 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                 index_rows.append(meta | {"path": str(clip.resolve())})
                 split_rows[split].append((clip, target_ids, meta))
 
+        def add_background(profile: str, profile_index: int) -> None:
+            for variant in range(variants):
+                family_seed = (
+                    seed
+                    + split_index * 1_000_003
+                    + 9_000_001
+                    + profile_index * 65_537
+                    + variant * 4099
+                )
+                rng = random.Random(family_seed)
+                duration = background_seconds * rng.uniform(0.92, 1.08)
+                samples = generate_background(profile, duration, rng)
+                family_id = f"{split}-background-{profile}-{variant}"
+                clip = output / "clips" / split / f"{family_id}.wav"
+                write_wav(clip, samples)
+                meta = {
+                    "split": split,
+                    "kind": "background",
+                    "family_id": family_id,
+                    "variant": variant,
+                    "keyword_id": None,
+                    "tokens": [],
+                    "target_ids": [],
+                    "noise_profile": profile,
+                    "wav_sha256": sha256_file(clip),
+                    "frames": len(samples),
+                    "event_start_frame": None,
+                    "event_end_frame": None,
+                }
+                index_rows.append(meta | {"path": str(clip.resolve())})
+                split_rows[split].append((clip, [], meta))
+
         for keyword in keywords:
             for family in range(positive):
                 add_family(
@@ -560,6 +617,8 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                 random_negative(active, forbidden, rng),
                 [],
             )
+        for profile_index, profile in enumerate(noise_profiles):
+            add_background(profile, profile_index)
 
     manifest_paths: dict[str, pathlib.Path] = {}
     reference_paths: dict[str, pathlib.Path] = {}
@@ -644,6 +703,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         "backend": backend,
         "continuous_gap_ms": continuous_gap_ms,
         "event_boundary": "pre-augmentation-active-signal",
+        "background_profiles": noise_profiles,
         "tokens_sha256": sha256_file(tokens_path),
         "keywords_sha256": sha256_file(keywords_path),
         "config_sha256": sha256_file(config_path),
@@ -655,8 +715,13 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                 "positive_examples": sum(
                     1 for _, _, meta in split_rows[split] if meta["kind"] == "positive"
                 ),
-                "negative_examples": sum(
-                    1 for _, _, meta in split_rows[split] if meta["kind"] != "positive"
+                "token_negative_examples": sum(
+                    1
+                    for _, _, meta in split_rows[split]
+                    if meta["kind"] in {"confusable", "negative"}
+                ),
+                "background_examples": sum(
+                    1 for _, _, meta in split_rows[split] if meta["kind"] == "background"
                 ),
                 "manifest": str(manifest_paths[split]),
                 "manifest_sha256": sha256_file(manifest_paths[split]),
