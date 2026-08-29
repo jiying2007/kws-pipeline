@@ -88,7 +88,8 @@ def main() -> int:
         assert manifest["evidence_class"] == "synthetic-domain-qualified"
         assert manifest["best_frontend"] in {"logmel", "pcen-lite"}
         assert {row["frontend"] for row in manifest["records"]} == {"logmel", "pcen-lite"}
-        assert "distance:far" in manifest["qualification_domains"]["domains"]
+        far = manifest["qualification_domains"]["domains"]["distance:far"]
+        assert int(far["expected"]) >= 1
         assert pathlib.Path(work / "best" / "model.kwm").is_file()
         assert pathlib.Path(work / "best" / "keywords.kwk").is_file()
 
