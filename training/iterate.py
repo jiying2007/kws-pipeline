@@ -31,8 +31,12 @@ def sha256_file(path: pathlib.Path) -> str:
 
 def run(argv: list[str], *, allow_gate_failure: bool = False) -> int:
     completed = subprocess.run(argv, check=False)
-    if completed.returncode != 0 and not (allow_gate_failure and completed.returncode == 1):
-        raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(argv)}")
+    if completed.returncode != 0 and not (
+        allow_gate_failure and completed.returncode == 1
+    ):
+        raise RuntimeError(
+            f"command failed ({completed.returncode}): {' '.join(argv)}"
+        )
     return completed.returncode
 
 
@@ -65,12 +69,15 @@ def write_keyword_tsv(rows: list[dict], path: pathlib.Path) -> None:
     lines = ["# id\ttext\tthreshold\texplicit-pinyin-tokens"]
     for row in rows:
         lines.append(
-            f"{int(row['id'])}\t{row['text']}\t{float(row['threshold']):.6f}\t{row['tokens']}"
+            f"{int(row['id'])}\t{row['text']}\t"
+            f"{float(row['threshold']):.6f}\t{row['tokens']}"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def compile_pack(tokens: pathlib.Path, keyword_tsv: pathlib.Path, pack: pathlib.Path) -> None:
+def compile_pack(
+    tokens: pathlib.Path, keyword_tsv: pathlib.Path, pack: pathlib.Path
+) -> None:
     run(
         [
             sys.executable,
@@ -99,6 +106,7 @@ def evaluate(
     provenance = output / "detections.provenance.json"
     summary = output / "summary.json"
     false_positives = output / "false-positives.jsonl"
+    false_rejects = output / "false-rejects.jsonl"
     run(
         [
             sys.executable,
@@ -131,11 +139,14 @@ def evaluate(
             str(summary),
             "--false-positives",
             str(false_positives),
+            "--false-rejects",
+            str(false_rejects),
         ]
     )
     result = json.loads(summary.read_text(encoding="utf-8"))
     result["summary_sha256"] = sha256_file(summary)
     result["false_positives_path"] = str(false_positives)
+    result["false_rejects_path"] = str(false_rejects)
     return result
 
 
@@ -181,7 +192,10 @@ def calibrate_thresholds(
             for threshold in thresholds:
                 trial = [dict(item) for item in current]
                 trial[row_index]["threshold"] = threshold
-                trial_dir = output / f"coord{round_index}-kw{row['id']}-t{threshold:.3f}"
+                trial_dir = (
+                    output
+                    / f"coord{round_index}-kw{row['id']}-t{threshold:.3f}"
+                )
                 tsv = trial_dir / "keywords.tsv"
                 pack = trial_dir / "keywords.kwk"
                 write_keyword_tsv(trial, tsv)
@@ -223,6 +237,10 @@ def calibrate_thresholds(
     return final_tsv, final_pack, metrics
 
 
+def nonempty(path: pathlib.Path | None) -> bool:
+    return path is not None and path.is_file() and path.stat().st_size > 0
+
+
 def build_torch_candidate(
     *,
     cfg: dict,
@@ -231,6 +249,7 @@ def build_torch_candidate(
     candidate_dir: pathlib.Path,
     previous_checkpoint: pathlib.Path | None,
     hard_negative_manifest: pathlib.Path | None,
+    positive_replay_manifest: pathlib.Path | None,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     checkpoint = candidate_dir / "model.pt"
     model = candidate_dir / "model.kwm"
@@ -257,8 +276,10 @@ def build_torch_candidate(
         "--output",
         str(checkpoint),
     ]
-    if hard_negative_manifest is not None and hard_negative_manifest.stat().st_size > 0:
+    if nonempty(hard_negative_manifest):
         command.extend(["--manifest", str(hard_negative_manifest)])
+    if nonempty(positive_replay_manifest):
+        command.extend(["--manifest", str(positive_replay_manifest)])
     if previous_checkpoint is not None:
         command.extend(["--warm-start", str(previous_checkpoint), "--head-only"])
     run(command)
@@ -301,6 +322,54 @@ def mine_hard_negatives(
     return manifest
 
 
+def mine_false_rejects(
+    false_rejects: pathlib.Path,
+    keywords: pathlib.Path,
+    tokens: pathlib.Path,
+    audio_root: pathlib.Path,
+    output: pathlib.Path,
+) -> pathlib.Path:
+    manifest = output / "missed-positives.tsv"
+    output_dir = output / "wav"
+    run(
+        [
+            sys.executable,
+            str(EVAL / "mine_false_rejects.py"),
+            "--false-rejects",
+            str(false_rejects),
+            "--keywords",
+            str(keywords),
+            "--tokens",
+            str(tokens),
+            "--audio-root",
+            str(audio_root),
+            "--output-dir",
+            str(output_dir),
+            "--manifest",
+            str(manifest),
+        ]
+    )
+    return manifest
+
+
+def merge_manifests(destination: pathlib.Path, sources: list[pathlib.Path]) -> None:
+    unique: list[str] = []
+    seen: set[str] = set()
+    for source in sources:
+        if not source.is_file():
+            continue
+        for raw in source.read_text(encoding="utf-8").splitlines():
+            line = raw.strip("\n")
+            if not line or line in seen:
+                continue
+            seen.add(line)
+            unique.append(line)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        "\n".join(unique) + ("\n" if unique else ""), encoding="utf-8"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True, type=pathlib.Path)
@@ -313,7 +382,10 @@ def main() -> int:
     runner = args.runner.resolve()
     if not runner.is_file():
         raise ValueError(f"runtime runner does not exist: {runner}")
-    work = (args.work_dir or pathlib.Path(cfg.get("work_dir", "build/synthetic-loop"))).resolve()
+    work = (
+        args.work_dir
+        or pathlib.Path(cfg.get("work_dir", "build/synthetic-loop"))
+    ).resolve()
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
@@ -321,21 +393,22 @@ def main() -> int:
     tokens = resolve_repo_path(str(cfg["tokens"]))
     keywords = resolve_repo_path(str(cfg["keywords"]))
     dataset_dir = work / "dataset"
-    dataset_summary = generate_dataset(config_path, dataset_dir)
+    generate_dataset(config_path, dataset_dir)
 
-    audit_args = [
-        sys.executable,
-        str(TRAINING / "audit_dataset.py"),
-    ]
+    audit_args = [sys.executable, str(TRAINING / "audit_dataset.py")]
     for split in ("train", "calibration", "test", "qualification"):
-        audit_args.extend(["--split", f"{split}={dataset_dir / (split + '.tsv')}"])
+        audit_args.extend(
+            ["--split", f"{split}={dataset_dir / (split + '.tsv')}"]
+        )
     audit_report = work / "dataset-audit.json"
     audit_args.extend(["--report", str(audit_report), "--fail-within-split"])
     run(audit_args)
 
     token_map = load_tokens(tokens)
     parsed_keywords = parse_keywords(keywords, token_map)
-    configured_ids = {value for item in parsed_keywords for value in item["token_ids"]}
+    configured_ids = {
+        value for item in parsed_keywords for value in item["token_ids"]
+    }
     if max(configured_ids) >= vocab_size(token_map):
         raise ValueError("keyword token IDs exceed vocabulary")
 
@@ -344,10 +417,15 @@ def main() -> int:
     max_rounds = int(iteration_cfg.get("max_rounds", 3))
     min_rounds = int(iteration_cfg.get("min_rounds", 2))
     patience = int(iteration_cfg.get("patience", 2))
-    thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
+    thresholds = [
+        float(value)
+        for value in cfg.get("calibration", {}).get("thresholds", [])
+    ]
     if not thresholds or any(not 0.0 < value < 1.0 for value in thresholds):
         raise ValueError("calibration.thresholds must contain values in (0,1)")
-    coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
+    coordinate_rounds = int(
+        cfg.get("calibration", {}).get("coordinate_rounds", 1)
+    )
     gates = cfg.get("synthetic_gates", {})
     required_gates = ("max_frr", "max_far_per_hour", "max_p95_latency_ms")
     if any(key not in gates for key in required_gates):
@@ -361,14 +439,19 @@ def main() -> int:
     best: dict | None = None
     stale = 0
     previous_checkpoint: pathlib.Path | None = None
-    hard_negative_manifest: pathlib.Path | None = None
+    cumulative_hard_negatives = work / "replay" / "hard-negatives.tsv"
+    cumulative_missed_positives = work / "replay" / "missed-positives.tsv"
+    hard_negative_sources: list[pathlib.Path] = []
+    positive_replay_sources: list[pathlib.Path] = []
 
     for round_index in range(max_rounds):
         candidate_dir = work / "candidates" / f"round-{round_index:02d}"
         candidate_dir.mkdir(parents=True)
         checkpoint: pathlib.Path | None = None
         if backend == "prototype":
-            params = prototype_candidates[min(round_index, len(prototype_candidates) - 1)]
+            params = prototype_candidates[
+                min(round_index, len(prototype_candidates) - 1)
+            ]
             model = candidate_dir / "model.kwm"
             build_prototype(
                 tokens_path=tokens,
@@ -387,7 +470,8 @@ def main() -> int:
                 train_manifest=dataset_dir / "train.tsv",
                 candidate_dir=candidate_dir,
                 previous_checkpoint=previous_checkpoint,
-                hard_negative_manifest=hard_negative_manifest,
+                hard_negative_manifest=cumulative_hard_negatives,
+                positive_replay_manifest=cumulative_missed_positives,
             )
         else:
             raise ValueError(f"unsupported iteration backend: {backend}")
@@ -435,11 +519,33 @@ def main() -> int:
         else:
             stale += 1
 
-        false_positive_path = pathlib.Path(calibration_metrics["false_positives_path"])
-        hard_negative_manifest = mine_hard_negatives(
-            false_positive_path,
-            dataset_dir,
-            candidate_dir / "mined",
+        hard_negative_sources.append(
+            mine_hard_negatives(
+                pathlib.Path(calibration_metrics["false_positives_path"]),
+                dataset_dir,
+                candidate_dir / "mined-hard-negatives",
+            )
+        )
+        positive_replay_sources.append(
+            mine_false_rejects(
+                pathlib.Path(calibration_metrics["false_rejects_path"]),
+                calibrated_tsv,
+                tokens,
+                dataset_dir,
+                candidate_dir / "mined-missed-positives",
+            )
+        )
+        merge_manifests(cumulative_hard_negatives, hard_negative_sources)
+        merge_manifests(cumulative_missed_positives, positive_replay_sources)
+        record["cumulative_hard_negatives"] = sum(
+            1
+            for line in cumulative_hard_negatives.read_text(encoding="utf-8").splitlines()
+            if line
+        )
+        record["cumulative_missed_positives"] = sum(
+            1
+            for line in cumulative_missed_positives.read_text(encoding="utf-8").splitlines()
+            if line
         )
         if checkpoint is not None:
             previous_checkpoint = checkpoint
@@ -481,14 +587,35 @@ def main() -> int:
         "evidence_class": "synthetic-only",
         "qualified": qualified,
         "name": str(cfg.get("name", "synthetic-loop")),
+        "backend": backend,
         "config_sha256": sha256_file(config_path),
         "runner_sha256": sha256_file(runner),
-        "dataset_summary_sha256": sha256_file(dataset_dir / "dataset-summary.json"),
+        "dataset_summary_sha256": sha256_file(
+            dataset_dir / "dataset-summary.json"
+        ),
         "dataset_audit_sha256": sha256_file(audit_report),
         "best_model_sha256": sha256_file(best_model),
         "best_pack_sha256": sha256_file(best_pack),
         "best_keywords_sha256": sha256_file(best_keywords),
         "rounds": rounds,
+        "replay": {
+            "hard_negative_count": sum(
+                1
+                for line in cumulative_hard_negatives.read_text(
+                    encoding="utf-8"
+                ).splitlines()
+                if line
+            ),
+            "missed_positive_count": sum(
+                1
+                for line in cumulative_missed_positives.read_text(
+                    encoding="utf-8"
+                ).splitlines()
+                if line
+            ),
+            "hard_negatives_sha256": sha256_file(cumulative_hard_negatives),
+            "missed_positives_sha256": sha256_file(cumulative_missed_positives),
+        },
         "synthetic_qualification": qualification_metrics,
         "gates": gates,
         "limitations": [
@@ -499,11 +626,25 @@ def main() -> int:
     }
     manifest_path = work / "synthetic-loop-manifest.json"
     manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
         + "\n",
         encoding="utf-8",
     )
-    print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+    print(
+        json.dumps(
+            manifest,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+    )
     return 0 if qualified else 1
 
 
