@@ -99,6 +99,8 @@ python3 training/export_model.py \
 
 The checkpoint records the vocabulary fingerprint/token-file hash, training-manifest hashes, frontend-spec version, seed and optimizer settings. Warm starts require the exact same fingerprint, and the exporter refuses to bind a checkpoint to a different same-sized token-to-ID mapping.
 
+The exporter also writes `build/base.kwm.provenance.json`. It binds the final `.kwm` hash to the checkpoint hash, export/training token identities, training-manifest hashes and hyperparameters, plus per-matrix int8 quantization scale, max error, RMSE and SNR. Shipping qualification requires this provenance beside the model.
+
 For shallow customization, combine normal data with mined negatives and freeze the input/recurrent backbone:
 
 ```bash
@@ -175,12 +177,13 @@ A green source CI is a **software baseline**, not a shipping acoustic claim. The
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
-# Retain the exact target binary that produced board-summary.json.
+# Retain the exact binaries that produced the evidence.
 cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
 cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 
 python3 tools/qualification_manifest.py \
   --model release/base.kwm \
+  --model-provenance release/base.kwm.provenance.json \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
@@ -203,7 +206,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` reports exact runner/model/pack/audio hashes plus mean/p50/p95/p99/max process time, RTF and p99 headroom. `qualification_manifest.py` independently revalidates canonical ABI layouts, the runtime config, vocabulary identity, the actual evaluation runner/references/detections, reference/detection counts and audio hours, the actual board WAV duration/block count, board timing formulas and all cross-artifact SHA256 relationships. `qualification_gate.py` then applies the explicit SKU policy to acoustic, latency, CPU, RSS, stack, soak, thermal and power evidence and binds the result to the exact manifest and policy hashes. The repository example policy is intentionally named `example-not-a-shipping-policy`.
+`kws_board_bench` reports exact runner/model/pack/audio hashes plus mean/p50/p95/p99/max process time, RTF and p99 headroom. `qualification_manifest.py` independently revalidates canonical ABI layouts, runtime config, vocabulary identity, **model training/export lineage**, the actual evaluation runner/references/detections, reference/detection counts and audio hours, the actual board WAV duration/block count, board timing formulas and all cross-artifact SHA256 relationships. `qualification_gate.py` then applies the explicit SKU policy to acoustic, latency, CPU, RSS, stack, soak, thermal and power evidence, binds the result to the exact manifest/policy hashes, and carries the source model-checkpoint SHA256 for traceability. The repository example policy is intentionally named `example-not-a-shipping-policy`.
 
 See `docs/RELEASE_QUALIFICATION.md` for the complete evidence schema and release procedure.
 
