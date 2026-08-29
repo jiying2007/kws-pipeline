@@ -39,7 +39,12 @@ def main() -> int:
         config["domains"]["snr_db"] = [22.0, 34.0]
         config["domains"]["playback"]["probability"] = 0.1
         config["model"]["frontends"] = ["logmel", "pcen-lite"]
-        config["model"]["domain_variants_per_token"] = 8
+        # Keep the production minimum here. With only 8 variants the 75/25
+        # train/validation split leaves two validation scenes per token; PCEN's
+        # stateful compression makes that unnecessarily high-variance while not
+        # exercising a different contract. Sixteen gives 12 train + 4 held-out
+        # domain scenes per token and retains the hard 98.5% quantized-fit gate.
+        config["model"]["domain_variants_per_token"] = 16
         config["model"]["prototype_candidates"] = [
             {"input_scale": 0.010, "output_scale": 0.050, "blank_bias": 1.8, "token_bias": -1.2}
         ]
