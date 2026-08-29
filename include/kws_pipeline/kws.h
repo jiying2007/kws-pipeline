@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #define KWS_MODEL_VERSION 2u
-#define KWS_KEYWORD_PACK_VERSION 2u
+#define KWS_KEYWORD_PACK_VERSION 3u
 #define KWS_SAMPLE_RATE_HZ 16000u
 #define KWS_FRAME_LENGTH_SAMPLES 400u
 #define KWS_FRAME_HOP_SAMPLES 320u
@@ -20,6 +20,15 @@ extern "C" {
 #define KWS_MAX_FEATURE_DIM 40u
 #define KWS_MAX_HIDDEN_DIM 64u
 #define KWS_MAX_VOCAB_SIZE 512u
+
+#define KWS_FRONTEND_LOGMEL 0u
+#define KWS_FRONTEND_PCEN_LITE 1u
+
+typedef enum kws_prefix_policy {
+  KWS_PREFIX_IMMEDIATE = 0,
+  KWS_PREFIX_LONGEST = 1,
+  KWS_PREFIX_GRACE = 2
+} kws_prefix_policy_t;
 
 typedef enum kws_status {
   KWS_OK = 0,
@@ -33,6 +42,7 @@ typedef struct kws_model {
   uint16_t feature_dim;
   uint16_t hidden_dim;
   uint16_t vocab_size;
+  uint16_t frontend_kind;
   uint32_t sample_rate_hz;
   uint32_t frame_length_samples;
   uint32_t frame_hop_samples;
@@ -52,6 +62,10 @@ typedef struct kws_keyword {
   const uint16_t *tokens;
   uint16_t num_tokens;
   float threshold;
+  uint8_t min_trailing_blanks;
+  uint8_t priority;
+  uint8_t prefix_policy;
+  uint8_t grace_frames;
 } kws_keyword_t;
 
 typedef struct kws_keyword_pack {
