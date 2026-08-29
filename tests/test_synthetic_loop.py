@@ -36,7 +36,10 @@ def main() -> int:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        assert completed.returncode == 0, completed.stderr
+        assert completed.returncode == 0, (
+            f"iterate rc={completed.returncode}\nSTDOUT:\n{completed.stdout}\n"
+            f"STDERR:\n{completed.stderr}"
+        )
         manifest_path = work / "synthetic-loop-manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         assert manifest["evidence_class"] == "synthetic-only"
