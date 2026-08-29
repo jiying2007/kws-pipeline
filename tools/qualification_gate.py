@@ -10,6 +10,8 @@ import pathlib
 import re
 import sys
 
+from statistical_bounds import qualification_bounds
+
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 FINGERPRINT_RE = re.compile(r"0x[0-9a-f]{16}")
@@ -57,30 +59,73 @@ def validate_sha(value, label: str) -> str:
 
 
 def validate_policy(policy: dict) -> dict:
-    if integer(policy.get("schema_version"), "policy.schema_version") != 1:
-        raise ValueError("policy schema_version must be 1")
+    if integer(policy.get("schema_version"), "policy.schema_version") != 2:
+        raise ValueError("policy schema_version must be 2")
     name = policy.get("name")
     if not isinstance(name, str) or not name.strip():
         raise ValueError("policy name must be non-empty text")
     result = {
         "name": name.strip(),
-        "min_audio_hours": finite(policy["min_audio_hours"], "policy.min_audio_hours", 0.0),
-        "min_expected_wakes": integer(policy["min_expected_wakes"], "policy.min_expected_wakes", 0),
+        "confidence_level": finite(
+            policy["confidence_level"], "policy.confidence_level"
+        ),
+        "min_audio_hours": finite(
+            policy["min_audio_hours"], "policy.min_audio_hours", 0.0
+        ),
+        "min_expected_wakes": integer(
+            policy["min_expected_wakes"], "policy.min_expected_wakes", 1
+        ),
         "max_frr": finite(policy["max_frr"], "policy.max_frr", 0.0),
-        "max_far_per_hour": finite(policy["max_far_per_hour"], "policy.max_far_per_hour", 0.0),
-        "max_p95_latency_ms": finite(policy["max_p95_latency_ms"], "policy.max_p95_latency_ms", 0.0),
-        "max_p99_process_us": finite(policy["max_p99_process_us"], "policy.max_p99_process_us", 0.0),
+        "max_frr_upper_bound": finite(
+            policy["max_frr_upper_bound"], "policy.max_frr_upper_bound", 0.0
+        ),
+        "max_far_per_hour": finite(
+            policy["max_far_per_hour"], "policy.max_far_per_hour", 0.0
+        ),
+        "max_far_upper_bound_per_hour": finite(
+            policy["max_far_upper_bound_per_hour"],
+            "policy.max_far_upper_bound_per_hour",
+            0.0,
+        ),
+        "max_p95_latency_ms": finite(
+            policy["max_p95_latency_ms"], "policy.max_p95_latency_ms", 0.0
+        ),
+        "max_p99_process_us": finite(
+            policy["max_p99_process_us"], "policy.max_p99_process_us", 0.0
+        ),
         "max_rtf": finite(policy["max_rtf"], "policy.max_rtf", 0.0),
-        "min_p99_headroom": finite(policy["min_p99_headroom"], "policy.min_p99_headroom", 0.0),
-        "min_soak_hours": finite(policy["min_soak_hours"], "policy.min_soak_hours", 0.0),
-        "max_cpu_percent": finite(policy["max_cpu_percent"], "policy.max_cpu_percent", 0.0),
+        "min_p99_headroom": finite(
+            policy["min_p99_headroom"], "policy.min_p99_headroom", 0.0
+        ),
+        "min_soak_hours": finite(
+            policy["min_soak_hours"], "policy.min_soak_hours", 0.0
+        ),
+        "max_cpu_percent": finite(
+            policy["max_cpu_percent"], "policy.max_cpu_percent", 0.0
+        ),
         "max_rss_kib": finite(policy["max_rss_kib"], "policy.max_rss_kib", 0.0),
-        "max_stack_high_water_bytes": finite(policy["max_stack_high_water_bytes"], "policy.max_stack_high_water_bytes", 0.0),
+        "max_stack_high_water_bytes": finite(
+            policy["max_stack_high_water_bytes"],
+            "policy.max_stack_high_water_bytes",
+            0.0,
+        ),
         "max_temp_c": finite(policy["max_temp_c"], "policy.max_temp_c"),
-        "max_average_power_mw": finite(policy["max_average_power_mw"], "policy.max_average_power_mw", 0.0),
+        "max_average_power_mw": finite(
+            policy["max_average_power_mw"], "policy.max_average_power_mw", 0.0
+        ),
     }
-    if result["max_frr"] > 1.0 or result["max_cpu_percent"] > 100.0:
+    if not 0.5 < result["confidence_level"] < 1.0:
+        raise ValueError("policy confidence_level must be in (0.5,1)")
+    if (
+        result["max_frr"] > 1.0
+        or result["max_frr_upper_bound"] > 1.0
+        or result["max_cpu_percent"] > 100.0
+    ):
         raise ValueError("policy FRR/CPU limits exceed valid ranges")
+    if result["max_frr_upper_bound"] < result["max_frr"]:
+        raise ValueError("statistical FRR upper-bound limit cannot be below point limit")
+    if result["max_far_upper_bound_per_hour"] < result["max_far_per_hour"]:
+        raise ValueError("statistical FAR upper-bound limit cannot be below point limit")
     return result
 
 
@@ -228,6 +273,17 @@ def validate_manifest(manifest: dict) -> dict:
     validate_sha(board.get("summary_sha256"), "board.summary_sha256")
     validate_sha(evidence.get("sha256"), "evidence.sha256")
 
+    expected = integer(evaluation.get("expected"), "evaluation.expected", 1)
+    matched = integer(evaluation.get("matched"), "evaluation.matched", 0)
+    false_rejects = integer(
+        evaluation.get("false_rejects"), "evaluation.false_rejects", 0
+    )
+    false_accepts = integer(
+        evaluation.get("false_accepts"), "evaluation.false_accepts", 0
+    )
+    if matched + false_rejects != expected:
+        raise ValueError("manifest evaluation matched/false-reject counts disagree")
+
     result = {
         "source_sha": source_sha,
         "vocab_fingerprint": fingerprint,
@@ -237,7 +293,10 @@ def validate_manifest(manifest: dict) -> dict:
         "audio_hours": finite(
             evaluation.get("audio_hours"), "evaluation.audio_hours", 0.0
         ),
-        "expected": integer(evaluation.get("expected"), "evaluation.expected", 0),
+        "expected": expected,
+        "matched": matched,
+        "false_rejects": false_rejects,
+        "false_accepts": false_accepts,
         "frr": finite(evaluation.get("frr"), "evaluation.frr", 0.0),
         "far_per_hour": finite(
             evaluation.get("far_per_hour"), "evaluation.far_per_hour", 0.0
@@ -271,8 +330,18 @@ def validate_manifest(manifest: dict) -> dict:
             evidence.get("average_power_mw"), "evidence.average_power_mw", 0.0
         ),
     }
+    if result["audio_hours"] <= 0.0:
+        raise ValueError("manifest evaluation audio_hours must be > 0")
     if result["frr"] > 1.0 or result["cpu_percent"] > 100.0:
         raise ValueError("manifest contains impossible FRR/CPU values")
+    expected_frr = false_rejects / expected
+    expected_far = false_accepts / result["audio_hours"]
+    if not math.isclose(result["frr"], expected_frr, rel_tol=1e-9, abs_tol=1e-12):
+        raise ValueError("manifest evaluation FRR disagrees with counts")
+    if not math.isclose(
+        result["far_per_hour"], expected_far, rel_tol=1e-9, abs_tol=1e-12
+    ):
+        raise ValueError("manifest evaluation FAR disagrees with count/exposure")
     return result
 
 
@@ -285,6 +354,13 @@ def main() -> int:
     manifest = load_json(args.manifest)
     policy = validate_policy(load_json(args.policy))
     measured = validate_manifest(manifest)
+    statistics = qualification_bounds(
+        false_rejects=measured["false_rejects"],
+        expected_wakes=measured["expected"],
+        false_accepts=measured["false_accepts"],
+        audio_hours=measured["audio_hours"],
+        confidence=policy["confidence_level"],
+    )
     checks = (
         (
             measured["audio_hours"] < policy["min_audio_hours"],
@@ -296,8 +372,17 @@ def main() -> int:
         ),
         (measured["frr"] > policy["max_frr"], "evaluation.frr above maximum"),
         (
+            statistics["frr_upper_bound"] > policy["max_frr_upper_bound"],
+            "evaluation.frr statistical upper bound above maximum",
+        ),
+        (
             measured["far_per_hour"] > policy["max_far_per_hour"],
             "evaluation.far_per_hour above maximum",
+        ),
+        (
+            statistics["far_upper_bound_per_hour"]
+            > policy["max_far_upper_bound_per_hour"],
+            "evaluation.far statistical upper bound above maximum",
         ),
         (
             measured["p95_latency_ms"] > policy["max_p95_latency_ms"],
@@ -340,7 +425,7 @@ def main() -> int:
     )
     violations = [message for failed, message in checks if failed]
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "qualified": not violations,
         "policy": policy["name"],
         "manifest_sha256": sha256_file(args.manifest),
@@ -350,6 +435,7 @@ def main() -> int:
         "model_checkpoint_sha256": measured["model_checkpoint_sha256"],
         "frontend_kind": measured["frontend_kind"],
         "frontend_name": measured["frontend_name"],
+        "statistics": statistics,
         "violations": violations,
     }
     rendered = json.dumps(

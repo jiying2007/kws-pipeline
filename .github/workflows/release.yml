@@ -1,0 +1,170 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  hosted:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify tag matches SDK version
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="${GITHUB_REF_NAME#v}"
+          actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test -n "$actual"
+          test "$expected" = "$actual"
+      - name: Configure
+        env:
+          CC: ${{ matrix.cc }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: C tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Python/product tests
+        run: |
+          python3 tests/test_frontend_parity.py ./build/kws_feature_dump
+          python3 tests/test_dataset_audit.py
+          python3 tests/test_false_reject_mining.py
+          python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
+          python3 tests/test_domain_scene.py
+          python3 tests/test_domain_metrics.py
+          python3 tests/test_domain_curriculum.py
+          python3 tests/test_domain_loop.py --runner ./build/kws_wav
+          python3 tests/test_long_far.py --runner ./build/kws_raw_stream
+          python3 tests/test_keyword_compile.py
+          python3 tests/test_eval.py
+          python3 tests/test_statistical_bounds.py
+          python3 tests/test_run_corpus.py
+          python3 tests/test_board_bench.py --runner ./build/kws_board_bench
+          python3 tests/test_release_qualification.py
+      - name: Hosted benchmark signal
+        run: ./build/kws_bench
+      - name: Python syntax
+        run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure ASan/UBSan
+        run: >-
+          cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build
+        run: cmake --build build-san --parallel
+      - name: Test
+        run: ctest --test-dir build-san --output-on-failure
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Configure libFuzzer
+        env:
+          CC: clang
+        run: >-
+          cmake -S . -B build-fuzz -DCMAKE_BUILD_TYPE=Debug
+          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF -DKWS_BUILD_TOOLS=OFF
+          -DKWS_BUILD_FUZZ=ON -DKWS_STRICT=ON
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+      - name: Build
+        run: cmake --build build-fuzz --parallel
+      - name: Seed and fuzz parsers
+        run: |
+          python3 tests/generate_fuzz_seeds.py --output build-fuzz/corpus
+          ./build-fuzz/kws_fuzz_model -runs=5000 -max_len=4096 -timeout=5 build-fuzz/corpus/model
+          ./build-fuzz/kws_fuzz_keyword_pack -runs=5000 -max_len=2048 -timeout=5 build-fuzz/corpus/keyword_pack
+
+  armv7-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Cortex-A32 cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
+      - name: Configure
+        run: >-
+          cmake -S . -B build-arm -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc
+          -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF
+          -DKWS_BUILD_TOOLS=ON -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+      - name: Cross build
+        run: cmake --build build-arm --parallel
+
+  publish:
+    needs: [hosted, sanitizers, fuzz, armv7-cross]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build installable SDK
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+          cmake --build build --parallel
+          ctest --test-dir build --output-on-failure
+          cmake --install build --prefix "$RUNNER_TEMP/sdk"
+          mkdir -p dist
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -C "$RUNNER_TEMP/sdk" -czf "dist/kws-pipeline-${version}-sdk.tar.gz" .
+          git archive --format=tar.gz --prefix="kws-pipeline-${version}/" \
+            -o "dist/kws-pipeline-${version}-source.tar.gz" "$GITHUB_SHA"
+          python3 tools/generate_sbom.py \
+            --root "$RUNNER_TEMP/sdk" \
+            --name kws-pipeline \
+            --version "$version" \
+            --source-sha "$GITHUB_SHA" \
+            --output "dist/kws-pipeline-${version}.spdx.json"
+          python3 -m json.tool "dist/kws-pipeline-${version}.spdx.json" >/dev/null
+          (cd dist && sha256sum *.tar.gz *.spdx.json > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Attest release provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: dist/SHA256SUMS
+      - name: Attest SDK SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/kws-pipeline-*-sdk.tar.gz
+          sbom-path: dist/kws-pipeline-*.spdx.json
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          dist/kws-pipeline-*-sdk.tar.gz
+          dist/kws-pipeline-*-source.tar.gz
+          dist/kws-pipeline-*.spdx.json
+          dist/SHA256SUMS
+          --verify-tag
+          --generate-notes
+          --title "kws-pipeline $GITHUB_REF_NAME"

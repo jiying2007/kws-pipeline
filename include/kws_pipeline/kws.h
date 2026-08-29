@@ -88,6 +88,21 @@ typedef struct kws_detection {
   uint64_t end_sample;
 } kws_detection_t;
 
+typedef struct kws_engine_stats {
+  uint64_t processed_samples;
+  uint64_t processed_frames;
+  uint64_t speech_frames;
+  uint64_t blank_top1_frames;
+  uint64_t decoder_hits;
+  uint64_t refractory_suppressed;
+  uint64_t detections;
+  uint16_t keyword_count;
+  uint16_t trie_nodes;
+  int16_t pending_keyword_index;
+  uint16_t pending_age_frames;
+  float max_detection_confidence;
+} kws_engine_stats_t;
+
 typedef struct kws_engine kws_engine_t;
 
 kws_status_t kws_model_open(const void *blob,
@@ -126,6 +141,9 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
                                      int *out_detected);
 
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine);
+
+kws_status_t kws_engine_get_stats(const kws_engine_t *engine,
+                                  kws_engine_stats_t *out_stats);
 
 #ifdef __cplusplus
 }

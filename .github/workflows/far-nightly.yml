@@ -15,7 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         frontend: [logmel, pcen-lite]
-        seed: [1103, 2207, 3301, 4409]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,7 +28,7 @@ jobs:
           python3 training/synthetic_audio.py
           --config configs/training/xiaowo.domain.json
           --output build/far-data
-      - name: Train domain prototype
+      - name: Train one frozen domain prototype
         run: >-
           python3 training/build_domain_prototype.py
           --config configs/training/xiaowo.domain.json
@@ -39,30 +38,46 @@ jobs:
           --training-output build/far-fit
           --frontend ${{ matrix.frontend }}
           --variants-per-token 24
-          --seed ${{ matrix.seed }}
-      - name: Compile keyword pack
+          --seed 1103
+      - name: Compile one frozen keyword pack
         run: >-
           python3 tools/compile_keywords.py
           --tokens keywords/tokens.example.txt
           --keywords keywords/zh_cn_example.tsv
           --out-pack build/far-keywords.kwk
-      - name: Stream two hours of negative audio
+      - name: Stream four independent negative shards against the same model SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          for seed in 1103 2207 3301 4409; do
+            python3 eval/long_far_stream.py \
+              --runner build/kws_raw_stream \
+              --model build/far-model.kwm \
+              --keywords build/far-keywords.kwk \
+              --seconds 7200 \
+              --seed "$seed" \
+              --output-dir "build/far-run-$seed" \
+              --max-far-per-hour 1000000
+          done
+      - name: Aggregate eight hours for the frozen model only
         run: >-
-          python3 eval/long_far_stream.py
-          --runner build/kws_raw_stream
-          --model build/far-model.kwm
-          --keywords build/far-keywords.kwk
-          --seconds 7200
-          --seed ${{ matrix.seed }}
-          --output-dir build/far-run
+          python3 eval/aggregate_far.py
+          --summary build/far-run-1103/summary.json
+          --summary build/far-run-2207/summary.json
+          --summary build/far-run-3301/summary.json
+          --summary build/far-run-4409/summary.json
+          --output build/far-aggregate.json
+          --confidence 0.95
           --max-far-per-hour 0
+          --max-upper-bound-per-hour 0.40
       - name: Retain FAR evidence and captures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: far-${{ matrix.frontend }}-${{ matrix.seed }}
+          name: far-${{ matrix.frontend }}
           path: |
-            build/far-run
+            build/far-run-*/
+            build/far-aggregate.json
             build/far-fit/domain-softmax-diagnostics.json
             build/far-model.kwm.synthetic-domain-provenance.json
           if-no-files-found: warn

@@ -117,6 +117,7 @@ static void test_model_and_engine(void) {
   int16_t pcm[1200];
   int detected_any = 0;
   kws_detection_t first_detection = {0u, 0.0f, 0u};
+  kws_engine_stats_t stats;
   size_t bytes = make_test_model(blob, sizeof(blob));
   const size_t sample_count = sizeof(pcm) / sizeof(pcm[0]);
 
@@ -126,6 +127,7 @@ static void test_model_and_engine(void) {
   CHECK(kws_engine_required_alignment() >= _Alignof(uint64_t));
   CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
   CHECK(kws_engine_init(arena + 1u, sizeof(arena) - 1u, &model, NULL, &engine) == KWS_EINVAL);
+  CHECK(kws_engine_get_stats(NULL, &stats) == KWS_EINVAL);
 
   invalid_model = model;
   invalid_model.feature_dim = (uint16_t)(KWS_MAX_FEATURE_DIM + 1u);
@@ -149,6 +151,14 @@ static void test_model_and_engine(void) {
   config.min_speech_dbfs = -80.0f;
   config.refractory_ms = 100u;
   CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) == KWS_OK);
+  CHECK(kws_engine_get_stats(engine, NULL) == KWS_EINVAL);
+  CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
+  CHECK(stats.processed_samples == 0u);
+  CHECK(stats.processed_frames == 0u);
+  CHECK(stats.keyword_count == 0u);
+  CHECK(stats.trie_nodes == 1u);
+  CHECK(stats.pending_keyword_index == -1);
+
   CHECK(kws_engine_set_keywords(engine, &keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_OK);
   CHECK(kws_engine_set_keywords(engine, &keyword, 1u, UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
   CHECK(kws_engine_set_keywords(engine, &nan_keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
@@ -182,6 +192,17 @@ static void test_model_and_engine(void) {
   CHECK(first_detection.confidence > 0.30f);
   CHECK(first_detection.end_sample > 0u);
   CHECK(kws_engine_processed_samples(engine) == sample_count);
+
+  CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
+  CHECK(stats.processed_samples == sample_count);
+  CHECK(stats.processed_frames == 3u);
+  CHECK(stats.speech_frames == 3u);
+  CHECK(stats.blank_top1_frames == 0u);
+  CHECK(stats.keyword_count == 1u);
+  CHECK(stats.trie_nodes == 2u);
+  CHECK(stats.decoder_hits >= stats.detections);
+  CHECK(stats.detections >= 1u);
+  CHECK(stats.max_detection_confidence >= first_detection.confidence);
 }
 
 static void test_validation(void) {

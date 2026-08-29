@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from score_events import (
     load_jsonl,
+    match_keyword_events,
     score,
     validate_detections,
     validate_recordings,
@@ -58,6 +59,21 @@ def domain_keys(row: dict) -> list[str]:
     ]
 
 
+def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float]:
+    positive_seconds = 0.0
+    negative_seconds = 0.0
+    for name in names:
+        recording = recordings[name]
+        if recording["expected"]:
+            positive_seconds += float(recording["duration_s"])
+        else:
+            negative_seconds += float(recording["duration_s"])
+    return {
+        "positive_audio_hours": positive_seconds / 3600.0,
+        "negative_audio_hours": negative_seconds / 3600.0,
+    }
+
+
 def subset_score(
     names: list[str],
     recordings: dict[str, dict],
@@ -75,53 +91,69 @@ def subset_score(
         pre_tolerance_s,
         post_tolerance_s,
     )
-    return summary
+    return {**summary, **exposure_stats(names, recordings)}
 
 
 def confusion_matrix(
-    raw_rows: list[dict],
+    recordings: dict[str, dict],
     detections: dict[str, list[dict]],
     pre_tolerance_s: float,
     post_tolerance_s: float,
 ) -> dict:
+    """Build keyword confusion from one global monotonic assignment per recording.
+
+    The assignment is intentionally keyword-agnostic. This makes a wrong-keyword
+    trigger consume exactly one expected event and exactly one detection, matching
+    the one-to-one event semantics used by the product scorer instead of allowing a
+    single detection to explain multiple overlapping expected windows.
+    """
     matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     exact = 0
     wrong = 0
     missing = 0
-    for row in raw_rows:
-        name = str(row["recording"])
-        dets = detections.get(name, [])
-        for event in row.get("expected", []):
+    for name, recording in recordings.items():
+        events = list(enumerate(recording["expected"]))
+        dets = list(enumerate(detections.get(name, [])))
+        pairs = match_keyword_events(events, dets, pre_tolerance_s, post_tolerance_s)
+        matched_events = {event_index for event_index, _ in pairs}
+        for event_index, detection_index in pairs:
+            event = recording["expected"][event_index]
+            detection = detections.get(name, [])[detection_index]
             expected_id = int(event["keyword_id"])
-            lower = float(event["start_s"]) - pre_tolerance_s
-            upper = float(event["end_s"]) + post_tolerance_s
-            candidates = [
-                item for item in dets if lower <= float(item["time_s"]) <= upper
-            ]
-            if not candidates:
-                matrix[str(expected_id)]["<miss>"] += 1
-                missing += 1
-                continue
-            best = min(
-                candidates,
-                key=lambda item: (
-                    abs(float(item["time_s"]) - float(event["end_s"])),
-                    -float(item["confidence"]),
-                ),
-            )
-            detected_id = int(best["keyword_id"])
+            detected_id = int(detection["keyword_id"])
             matrix[str(expected_id)][str(detected_id)] += 1
             if detected_id == expected_id:
                 exact += 1
             else:
                 wrong += 1
+        for event_index, event in enumerate(recording["expected"]):
+            if event_index in matched_events:
+                continue
+            expected_id = int(event["keyword_id"])
+            matrix[str(expected_id)]["<miss>"] += 1
+            missing += 1
     return {
+        "assignment": "global-monotonic-one-to-one-v1",
         "expected_events": exact + wrong + missing,
         "correct_keyword": exact,
         "wrong_keyword": wrong,
         "missed": missing,
         "matrix": {key: dict(value) for key, value in sorted(matrix.items())},
     }
+
+
+def domain_is_eligible(
+    summary: dict,
+    *,
+    min_expected: int,
+    min_negative_hours: float,
+) -> bool:
+    positive_supported = int(summary["expected"]) >= min_expected and int(summary["expected"]) > 0
+    negative_supported = (
+        float(summary["negative_audio_hours"]) >= min_negative_hours
+        and float(summary["negative_audio_hours"]) > 0.0
+    )
+    return positive_supported or negative_supported
 
 
 def main() -> int:
@@ -132,11 +164,13 @@ def main() -> int:
     parser.add_argument("--pre-tolerance-ms", type=float, default=150.0)
     parser.add_argument("--post-tolerance-ms", type=float, default=500.0)
     parser.add_argument("--min-domain-expected", type=int, default=1)
+    parser.add_argument("--min-domain-negative-hours", type=float, default=0.0)
     args = parser.parse_args()
     pre = finite(args.pre_tolerance_ms, "pre tolerance") / 1000.0
     post = finite(args.post_tolerance_ms, "post tolerance") / 1000.0
-    if pre < 0.0 or post < 0.0 or args.min_domain_expected < 0:
-        raise ValueError("domain metric tolerances/counts must be non-negative")
+    min_negative_hours = finite(args.min_domain_negative_hours, "min domain negative hours")
+    if pre < 0.0 or post < 0.0 or args.min_domain_expected < 0 or min_negative_hours < 0.0:
+        raise ValueError("domain metric tolerances/counts/exposure must be non-negative")
 
     raw_rows = load_jsonl(args.references)
     recordings = validate_recordings(raw_rows)
@@ -148,17 +182,22 @@ def main() -> int:
             groups[key].append(name)
 
     metrics: dict[str, dict] = {}
+    eligible: dict[str, dict] = {}
     for key, names in sorted(groups.items()):
         summary = subset_score(names, recordings, detections, pre, post)
-        if key != "all" and int(summary["expected"]) < args.min_domain_expected:
-            continue
-        metrics[key] = summary
+        if key == "all" or domain_is_eligible(
+            summary,
+            min_expected=args.min_domain_expected,
+            min_negative_hours=min_negative_hours,
+        ):
+            metrics[key] = summary
+        if key != "all" and domain_is_eligible(
+            summary,
+            min_expected=args.min_domain_expected,
+            min_negative_hours=min_negative_hours,
+        ):
+            eligible[key] = summary
 
-    eligible = {
-        key: value
-        for key, value in metrics.items()
-        if key != "all" and int(value["expected"]) >= args.min_domain_expected
-    }
     worst_key = None
     worst_score = -1.0
     for key, value in eligible.items():
@@ -172,12 +211,17 @@ def main() -> int:
             worst_key = key
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "support_policy": {
+            "min_domain_expected_wakes": args.min_domain_expected,
+            "min_domain_negative_hours": min_negative_hours,
+            "eligibility": "positive-wake-support OR negative-exposure-support",
+        },
         "overall": metrics.get("all", {}),
         "domains": metrics,
         "worst_domain": worst_key,
         "worst_domain_score": max(0.0, worst_score),
-        "keyword_confusion": confusion_matrix(raw_rows, detections, pre, post),
+        "keyword_confusion": confusion_matrix(recordings, detections, pre, post),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

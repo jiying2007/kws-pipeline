@@ -10,8 +10,8 @@
 #define PCEN_SMOOTHING 0.025f
 #define PCEN_ALPHA 0.98f
 #define PCEN_DELTA 2.0f
-#define PCEN_ROOT 0.5f
 #define PCEN_EPSILON 1.0e-6f
+#define PCEN_DELTA_ROOT 1.4142135623730950488f
 
 static float hz_to_mel(float hz) {
   return 2595.0f * log10f(1.0f + hz / 700.0f);
@@ -126,8 +126,7 @@ static float transform_energy(kws_frontend_t *fe, uint16_t channel, float energy
     }
     smooth = fe->pcen_smooth[channel];
     normalized = energy / powf(PCEN_EPSILON + smooth, PCEN_ALPHA);
-    return powf(normalized + PCEN_DELTA, PCEN_ROOT) -
-           powf(PCEN_DELTA, PCEN_ROOT);
+    return sqrtf(normalized + PCEN_DELTA) - PCEN_DELTA_ROOT;
   }
   return log1pf(32.0f * energy);
 }
