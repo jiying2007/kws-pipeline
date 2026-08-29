@@ -20,6 +20,19 @@
 #define TEST_BO_OFFSET 248u
 #define TEST_BLOCK_SAMPLES 160u
 
+static kws_keyword_t make_keyword(uint32_t id,
+                                  const uint16_t *tokens,
+                                  uint16_t count,
+                                  float threshold) {
+  kws_keyword_t value = {0};
+  value.id = id;
+  value.tokens = tokens;
+  value.num_tokens = count;
+  value.threshold = threshold;
+  value.prefix_policy = (uint8_t)KWS_PREFIX_IMMEDIATE;
+  return value;
+}
+
 static void put16(uint8_t *p, uint16_t v) {
   p[0] = (uint8_t)(v & 0xffu);
   p[1] = (uint8_t)(v >> 8u);
@@ -64,6 +77,7 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   put16(blob + 8u, f);
   put16(blob + 10u, h);
   put16(blob + 12u, v);
+  put16(blob + 14u, KWS_FRONTEND_LOGMEL);
   put32(blob + 16u, KWS_SAMPLE_RATE_HZ);
   put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES);
   put32(blob + 24u, KWS_FRAME_HOP_SAMPLES);
@@ -93,12 +107,12 @@ static void test_model_and_engine(void) {
   kws_config_t config = kws_default_config();
   kws_config_t invalid_config;
   const uint16_t sequence[] = {1u};
-  const kws_keyword_t keyword = {42u, sequence, 1u, 0.30f};
-  const kws_keyword_t nan_keyword = {43u, sequence, 1u, NAN};
   const uint16_t alternate_sequence[] = {2u};
-  const kws_keyword_t duplicate_ids[] = {
-      {100u, sequence, 1u, 0.30f},
-      {100u, alternate_sequence, 1u, 0.40f},
+  kws_keyword_t keyword = make_keyword(42u, sequence, 1u, 0.30f);
+  kws_keyword_t nan_keyword = make_keyword(43u, sequence, 1u, NAN);
+  kws_keyword_t duplicate_ids[] = {
+      make_keyword(100u, sequence, 1u, 0.30f),
+      make_keyword(100u, alternate_sequence, 1u, 0.40f),
   };
   int16_t pcm[1200];
   int detected_any = 0;
@@ -108,62 +122,48 @@ static void test_model_and_engine(void) {
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(model.vocab_fingerprint == TEST_VOCAB_FINGERPRINT);
+  CHECK(model.frontend_kind == KWS_FRONTEND_LOGMEL);
   CHECK(kws_engine_required_alignment() >= _Alignof(uint64_t));
   CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
-  CHECK(kws_engine_init(arena + 1u, sizeof(arena) - 1u, &model, NULL, &engine) ==
-        KWS_EINVAL);
+  CHECK(kws_engine_init(arena + 1u, sizeof(arena) - 1u, &model, NULL, &engine) == KWS_EINVAL);
 
   invalid_model = model;
   invalid_model.feature_dim = (uint16_t)(KWS_MAX_FEATURE_DIM + 1u);
   CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
-  CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) ==
-        KWS_EINVAL);
+  CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) == KWS_EINVAL);
 
   invalid_model = model;
   invalid_model.frame_hop_samples = KWS_FRAME_HOP_SAMPLES / 2u;
   CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
-
   invalid_model = model;
   invalid_model.wx_scale = NAN;
   CHECK(kws_engine_required_bytes(&invalid_model) == 0u);
-  CHECK(kws_engine_init(arena, sizeof(arena), &invalid_model, NULL, &engine) ==
-        KWS_EINVAL);
 
   invalid_config = kws_default_config();
   invalid_config.token_boost = NAN;
-  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) ==
-        KWS_EINVAL);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) == KWS_EINVAL);
   invalid_config = kws_default_config();
   invalid_config.min_speech_dbfs = INFINITY;
-  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) ==
-        KWS_EINVAL);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &invalid_config, &engine) == KWS_EINVAL);
 
   config.min_speech_dbfs = -80.0f;
   config.refractory_ms = 100u;
-  CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) ==
-        KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
-                                TEST_VOCAB_FINGERPRINT) == KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
-                                UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
-  CHECK(kws_engine_set_keywords(engine, &nan_keyword, 1u,
-                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
-  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u,
-                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) == KWS_OK);
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_OK);
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u, UINT64_C(0x8877665544332211)) == KWS_EFORMAT);
+  CHECK(kws_engine_set_keywords(engine, &nan_keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
+  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u, TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 
   for (size_t i = 0u; i < sample_count; ++i) {
     pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
   }
-
   {
     int detected = 7;
     uint64_t before = kws_engine_processed_samples(engine);
-    CHECK(kws_engine_accept_pcm16(engine, pcm, KWS_MAX_PCM_BLOCK_SAMPLES + 1u,
-                                  NULL, &detected) == KWS_EBOUNDS);
+    CHECK(kws_engine_accept_pcm16(engine, pcm, KWS_MAX_PCM_BLOCK_SAMPLES + 1u, NULL, &detected) == KWS_EBOUNDS);
     CHECK(detected == 0);
     CHECK(kws_engine_processed_samples(engine) == before);
   }
-
   for (size_t offset = 0u; offset < sample_count; offset += TEST_BLOCK_SAMPLES) {
     size_t count = sample_count - offset;
     int detected = 0;
@@ -171,14 +171,12 @@ static void test_model_and_engine(void) {
     if (count > TEST_BLOCK_SAMPLES) {
       count = TEST_BLOCK_SAMPLES;
     }
-    CHECK(kws_engine_accept_pcm16(engine, pcm + offset, count, &detection,
-                                  &detected) == KWS_OK);
+    CHECK(kws_engine_accept_pcm16(engine, pcm + offset, count, &detection, &detected) == KWS_OK);
     if (detected != 0 && detected_any == 0) {
       first_detection = detection;
       detected_any = 1;
     }
   }
-
   CHECK(detected_any == 1);
   CHECK(first_detection.keyword_id == 42u);
   CHECK(first_detection.confidence > 0.30f);
@@ -193,50 +191,47 @@ static void test_validation(void) {
   kws_engine_t *engine = NULL;
   size_t bytes = make_test_model(blob, sizeof(blob));
   const uint16_t invalid_sequence[] = {99u};
-  const kws_keyword_t invalid_keyword = {1u, invalid_sequence, 1u, 0.5f};
   const uint16_t seq_a[] = {1u};
   const uint16_t seq_b[] = {2u};
-  const kws_keyword_t duplicate_ids[] = {
-      {7u, seq_a, 1u, 0.5f},
-      {7u, seq_b, 1u, 0.5f},
+  kws_keyword_t invalid_keyword = make_keyword(1u, invalid_sequence, 1u, 0.5f);
+  kws_keyword_t duplicate_ids[] = {
+      make_keyword(7u, seq_a, 1u, 0.5f),
+      make_keyword(7u, seq_b, 1u, 0.5f),
   };
 
   CHECK(kws_model_open(blob, bytes - 1u, &model) == KWS_EFORMAT);
-
   put16(blob + 4u, 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put16(blob + 4u, KWS_MODEL_VERSION);
-
+  put16(blob + 14u, 9u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
+  put16(blob + 14u, KWS_FRONTEND_PCEN_LITE);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(model.frontend_kind == KWS_FRONTEND_PCEN_LITE);
+  put16(blob + 14u, KWS_FRONTEND_LOGMEL);
   put64(blob + 40u, 0u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put64(blob + 40u, TEST_VOCAB_FINGERPRINT);
-
   put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES - 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES);
-
   put32(blob + 24u, KWS_FRAME_HOP_SAMPLES - 1u);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   put32(blob + 24u, KWS_FRAME_HOP_SAMPLES);
-
   putf(blob + 28u, NAN);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   putf(blob + 28u, 0.01f);
-
   putf(blob + TEST_BH_OFFSET, INFINITY);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   putf(blob + TEST_BH_OFFSET, 0.0f);
-
   putf(blob + TEST_BO_OFFSET, NAN);
   CHECK(kws_model_open(blob, bytes, &model) == KWS_EFORMAT);
   putf(blob + TEST_BO_OFFSET, -4.0f);
 
   CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
-  CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u,
-                                TEST_VOCAB_FINGERPRINT) == KWS_EBOUNDS);
-  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u,
-                                TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
+  CHECK(kws_engine_set_keywords(engine, &invalid_keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_EBOUNDS);
+  CHECK(kws_engine_set_keywords(engine, duplicate_ids, 2u, TEST_VOCAB_FINGERPRINT) == KWS_EINVAL);
 }
 
 int main(void) {
