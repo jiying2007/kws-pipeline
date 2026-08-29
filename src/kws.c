@@ -28,6 +28,8 @@ struct kws_engine {
   uint64_t decoder_hits;
   uint64_t refractory_suppressed;
   uint64_t detections;
+  uint64_t discontinuities;
+  uint32_t last_discontinuity_reason;
   float max_detection_confidence;
 };
 
@@ -135,15 +137,32 @@ kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
                                  pack->vocab_fingerprint);
 }
 
-void kws_engine_reset(kws_engine_t *engine) {
-  if (engine == NULL) {
-    return;
-  }
+static void reset_streaming_state(kws_engine_t *engine) {
   memset(engine->hidden, 0, sizeof(engine->hidden));
   memset(engine->next_hidden, 0, sizeof(engine->next_hidden));
   kws_frontend_reset(&engine->frontend);
   kws_decoder_reset(&engine->decoder);
   engine->suppress_until_sample = 0u;
+}
+
+void kws_engine_reset(kws_engine_t *engine) {
+  if (engine == NULL) {
+    return;
+  }
+  reset_streaming_state(engine);
+}
+
+kws_status_t kws_engine_notify_discontinuity(
+    kws_engine_t *engine,
+    kws_discontinuity_reason_t reason) {
+  if (engine == NULL || reason < KWS_DISCONTINUITY_XRUN ||
+      reason > KWS_DISCONTINUITY_SUSPEND_RESUME) {
+    return KWS_EINVAL;
+  }
+  reset_streaming_state(engine);
+  engine->discontinuities++;
+  engine->last_discontinuity_reason = (uint32_t)reason;
+  return KWS_OK;
 }
 
 static float dot_i8_f32(const int8_t *weights,
@@ -295,10 +314,12 @@ kws_status_t kws_engine_get_stats(const kws_engine_t *engine,
   out_stats->decoder_hits = engine->decoder_hits;
   out_stats->refractory_suppressed = engine->refractory_suppressed;
   out_stats->detections = engine->detections;
+  out_stats->discontinuities = engine->discontinuities;
   out_stats->keyword_count = engine->decoder.keyword_count;
   out_stats->trie_nodes = engine->decoder.node_count;
   out_stats->pending_keyword_index = engine->decoder.pending_keyword;
   out_stats->pending_age_frames = engine->decoder.pending_age_frames;
+  out_stats->last_discontinuity_reason = engine->last_discontinuity_reason;
   out_stats->max_detection_confidence = engine->max_detection_confidence;
   return KWS_OK;
 }
