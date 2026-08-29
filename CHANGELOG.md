@@ -12,16 +12,27 @@ All notable source-level changes are recorded here. A source/software version do
 - Deterministic `qualification_manifest.py` that independently re-hashes all selected evidence files, revalidates canonical ABI-v2 model/pack/config/vocabulary identity, recomputes corpus and board-WAV statistics, and verifies acoustic/board formulas and cross-artifact hashes.
 - `qualification_gate.py` with an explicit external SKU policy, manifest/policy hash binding, strict type checking, and pass/fail/invalid exit semantics.
 - Policy gates for FAR/FRR/latency/runtime headroom plus soak, CPU, RSS, stack high-water mark, maximum temperature and average power.
+- Dependency-free frontend feature specification plus `kws_feature_dump`; GCC/Clang CI compares multiple real C frontend fixtures against the reference with a tight numerical tolerance.
+- Dataset split auditor that detects leakage by decoded mono-16-kHz PCM16 SHA256 while retaining WAV-container hashes for provenance, including rewrapped/renamed copies.
+- Direct decoder contracts for adjacent repeated CTC tokens.
+- Clang libFuzzer + ASan/UBSan parser smoke targets for `.kwm` and `.kwk` using canonical corpus seeds.
 - Target-board evidence and qualification-policy templates.
 - Release-qualification, contribution and security documentation.
-- CI coverage for corpus provenance, C-vs-Python SHA256, real-artifact board benchmark, byte-complete qualification manifest/policy gate, and Cortex-A32 cross-build of target qualification tools.
 
 ### Changed
 
-- Continuous-audio metric summaries now include SHA256 for the exact reference and detection inputs.
+- The keyword Trie now keeps independent nonblank and blank-separated Viterbi scores. Adjacent identical acoustic tokens can advance only from a blank-separated state, matching the structural CTC repeated-label rule without introducing a general prefix beam.
+- Training now requires the exact token vocabulary instead of a size-only `--vocab-size`. Checkpoints retain vocabulary fingerprint/token SHA256, training-manifest hashes, frontend-spec version, seed and optimizer settings; warm starts verify the same identity.
+- Model export refuses to bind checkpoint weights to a same-sized but differently mapped token vocabulary.
+- PyTorch frontend geometry imports the same FFT/mel/scale constants as the dependency-free frontend spec.
+- Continuous-audio metric summaries include SHA256 for the exact reference and detection inputs.
 - Hosted tool WAV/file helpers are shared by `kws_wav` and board qualification tooling.
-- Performance documentation now distinguishes hosted regression signals from artifact-bound shipping evidence.
+- Performance documentation distinguishes hosted regression signals from artifact-bound shipping evidence.
 - The earlier weaker release-manifest path was removed; `qualification_manifest.py` is the single supported qualification-manifest generator.
+
+### Current hosted regression signal
+
+On the GitHub GCC runner used by CI #208, the default 32x48x420 benchmark reported `model_bytes=25944`, `engine_bytes=17520` and RTF `0.001447`. The larger engine arena reflects the independent blank/nonblank Trie states. These hosted numbers are regression signals only, not Cortex-A32 measurements.
 
 ## 0.1.0 source baseline — 2026-08-29
 
