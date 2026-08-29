@@ -37,7 +37,7 @@ def process_cpu_seconds(pid: int) -> float | None:
     if end < 0 or end + 2 >= len(text):
         return None
     fields = text[end + 2 :].split()
-    # After removing pid/comm, fields[0] is proc-stat field 3 (state).
+    # After pid/comm, fields[0] is proc-stat field 3 (state).
     # utime/stime are fields 14/15, therefore indexes 11/12 here.
     if len(fields) <= 12:
         return None
@@ -47,6 +47,11 @@ def process_cpu_seconds(pid: int) -> float | None:
     except (OSError, ValueError):
         return None
     return ticks / float(hz) if hz > 0 else None
+
+
+def online_cpu_count() -> int:
+    value = os.cpu_count()
+    return value if isinstance(value, int) and value > 0 else 1
 
 
 def thermal_max_c() -> float | None:
@@ -72,6 +77,7 @@ def main() -> int:
     if args.hours <= 0.0 or args.sample_seconds <= 0.0:
         raise ValueError("hours and sample-seconds must be > 0")
 
+    capacity_cpus = online_cpu_count()
     started = time.monotonic()
     process = subprocess.Popen(args.command)
     initial_cpu = process_cpu_seconds(process.pid)
@@ -96,14 +102,12 @@ def main() -> int:
             )
             time.sleep(min(args.sample_seconds, max(0.0, deadline - time.monotonic())))
 
-        # Capture one final sample at the requested deadline before terminating.
         final_now = time.monotonic()
-        final_cpu = process_cpu_seconds(process.pid)
         samples.append(
             {
                 "elapsed_s": final_now - started,
                 "rss_kib": process_rss_kib(process.pid),
-                "cpu_seconds": final_cpu,
+                "cpu_seconds": process_cpu_seconds(process.pid),
                 "temp_c": thermal_max_c(),
             }
         )
@@ -121,7 +125,8 @@ def main() -> int:
     last_cpu = final_cpu_values[-1] if final_cpu_values else None
     average_cpu_percent = None
     if initial_cpu is not None and last_cpu is not None and elapsed_s > 0.0:
-        average_cpu_percent = max(0.0, (last_cpu - initial_cpu) / elapsed_s * 100.0)
+        one_core_fraction = max(0.0, (last_cpu - initial_cpu) / elapsed_s)
+        average_cpu_percent = min(100.0, one_core_fraction / capacity_cpus * 100.0)
 
     rss_values = [row["rss_kib"] for row in samples if row["rss_kib"] is not None]
     temp_values = [row["temp_c"] for row in samples if row["temp_c"] is not None]
@@ -129,6 +134,8 @@ def main() -> int:
         "schema_version": 2,
         "command": args.command,
         "pid": process.pid,
+        "cpu_capacity_count": capacity_cpus,
+        "cpu_percent_semantics": "process_cpu_time / elapsed / online_cpu_capacity * 100",
         "requested_hours": args.hours,
         "elapsed_hours": elapsed_s / 3600.0,
         "completed_requested_duration": completed_requested_duration,
