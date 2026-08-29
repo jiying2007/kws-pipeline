@@ -54,7 +54,7 @@ def select_token_supervision_frames(
     stateful: its onset enhancement and gain normalization make transition/tail
     frames poor frame-level token labels even when the whole utterance remains
     an excellent CTC example. For the dependency-free frame-classifier backend,
-    supervise only the two most discriminative energetic frames in each PCEN
+    supervise only the single most discriminative energetic frame in each PCEN
     scene. Ambiguous energetic frames are ignored rather than mislabeled blank;
     lead/tail background remains blank supervision.
 
@@ -63,10 +63,12 @@ def select_token_supervision_frames(
     calibration/test/qualification and far-field domain scoring.
     """
     energetic, background = energetic_partition(frames)
-    if frontend == FRONTEND_LOGMEL or len(energetic) <= 2:
+    if frontend == FRONTEND_LOGMEL:
         return energetic, background, "all-energetic"
     if frontend != FRONTEND_PCEN_LITE:
         raise ValueError(f"unsupported domain prototype frontend: {frontend}")
+    if not energetic:
+        raise ValueError("PCEN token scene contains no energetic frame")
     if token_feature_index < 0 or any(
         token_feature_index >= len(frame) for frame in energetic
     ):
@@ -84,10 +86,11 @@ def select_token_supervision_frames(
         return target - strongest_other, target
 
     ranked = sorted(energetic, key=discrimination, reverse=True)
-    # Two token-core frames per scene provide enough temporal diversity while
-    # excluding PCEN onset/tail frames whose correct CTC interpretation is
-    # context-dependent rather than a stable frame-level class.
-    return ranked[:2], background, "pcen-top2-carrier-margin"
+    # One stable token-core frame per scene is the frame-level identity anchor.
+    # Sequence quality is still decided from the full rendered utterance by the
+    # real C runtime, so transitions are neither discarded from evaluation nor
+    # falsely taught as blank.
+    return ranked[:1], background, "pcen-top1-carrier-margin"
 
 
 def fit_domain_prototype(
@@ -189,9 +192,6 @@ def fit_domain_prototype(
                 }
             )
 
-    # Explicit pure-background domain scenes teach blank across near/mid/far
-    # spectral conditions. The clean carrier is silence, while the renderer still
-    # contributes room/noise/playback and AFE transformations.
     for variant in range(max(12, variants_per_token)):
         sample_seed = seed + 50_000_003 + variant * 4099
         rng = random.Random(sample_seed)
@@ -338,13 +338,11 @@ def fit_domain_prototype(
         "validation_confusion": validation_confusion,
         "note": (
             "Optimizer samples are synthetic train-only acoustic-domain scenes. "
-            "PCEN frame supervision uses discriminative token cores; complete "
-            "utterances remain subject to real-C-runtime calibration/test/qualification."
+            "PCEN frame supervision uses one stable discriminative token core; "
+            "complete utterances remain subject to real-C-runtime calibration/test/qualification."
         ),
     }
-    provenance_path = pathlib.Path(
-        str(output) + ".synthetic-domain-provenance.json"
-    )
+    provenance_path = pathlib.Path(str(output) + ".synthetic-domain-provenance.json")
     provenance_path.write_text(
         json.dumps(provenance, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
