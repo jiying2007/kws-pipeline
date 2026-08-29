@@ -69,13 +69,20 @@ def thermal_max_c() -> float | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--command", required=True, nargs="+")
     parser.add_argument("--hours", required=True, type=float)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--sample-seconds", type=float, default=60.0)
+    parser.add_argument(
+        "--command",
+        required=True,
+        nargs=argparse.REMAINDER,
+        help="child command and all remaining arguments; place this option last",
+    )
     args = parser.parse_args()
     if args.hours <= 0.0 or args.sample_seconds <= 0.0:
         raise ValueError("hours and sample-seconds must be > 0")
+    if not args.command:
+        parser.error("--command requires a child executable")
 
     capacity_cpus = online_cpu_count()
     started = time.monotonic()
@@ -121,21 +128,31 @@ def main() -> int:
                 process.wait()
 
     elapsed_s = time.monotonic() - started
-    final_cpu_values = [row["cpu_seconds"] for row in samples if row["cpu_seconds"] is not None]
+    final_cpu_values = [
+        row["cpu_seconds"] for row in samples if row["cpu_seconds"] is not None
+    ]
     last_cpu = final_cpu_values[-1] if final_cpu_values else None
     average_cpu_percent = None
     if initial_cpu is not None and last_cpu is not None and elapsed_s > 0.0:
         one_core_fraction = max(0.0, (last_cpu - initial_cpu) / elapsed_s)
-        average_cpu_percent = min(100.0, one_core_fraction / capacity_cpus * 100.0)
+        average_cpu_percent = min(
+            100.0, one_core_fraction / capacity_cpus * 100.0
+        )
 
-    rss_values = [row["rss_kib"] for row in samples if row["rss_kib"] is not None]
-    temp_values = [row["temp_c"] for row in samples if row["temp_c"] is not None]
+    rss_values = [
+        row["rss_kib"] for row in samples if row["rss_kib"] is not None
+    ]
+    temp_values = [
+        row["temp_c"] for row in samples if row["temp_c"] is not None
+    ]
     result = {
         "schema_version": 2,
         "command": args.command,
         "pid": process.pid,
         "cpu_capacity_count": capacity_cpus,
-        "cpu_percent_semantics": "process_cpu_time / elapsed / online_cpu_capacity * 100",
+        "cpu_percent_semantics": (
+            "process_cpu_time / elapsed / online_cpu_capacity * 100"
+        ),
         "requested_hours": args.hours,
         "elapsed_hours": elapsed_s / 3600.0,
         "completed_requested_duration": completed_requested_duration,
