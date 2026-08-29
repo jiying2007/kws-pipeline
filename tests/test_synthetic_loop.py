@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -10,6 +11,14 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE_RATE_HZ = 16000
+
+
+def sha256_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def metric_line(label: str, metrics: dict) -> str:
@@ -122,6 +131,7 @@ def validate_prototype_evidence(work: pathlib.Path, manifest: dict) -> dict:
     assert provenance["schema_version"] == 2
     assert provenance["evidence_class"] == "synthetic-trained-softmax-prototype"
     assert provenance["model_sha256"] == first_round["model_sha256"]
+    assert first_round["model_provenance_sha256"] == sha256_file(provenance_path)
     validation = provenance["validation_confusion"]
     assert int(validation["examples"]) > 0
     assert float(validation["accuracy"]) >= 0.995
@@ -141,12 +151,55 @@ def validate_prototype_evidence(work: pathlib.Path, manifest: dict) -> dict:
     return provenance
 
 
+def validate_best_freeze(work: pathlib.Path, manifest: dict) -> None:
+    best_dir = work / "best"
+    model = best_dir / "model.kwm"
+    provenance_path = best_dir / "model-provenance.json"
+    assert model.is_file() and model.stat().st_size > 72
+    assert provenance_path.is_file() and provenance_path.stat().st_size > 0
+    assert manifest["best_model_sha256"] == sha256_file(model)
+    assert manifest["best_model_provenance_sha256"] == sha256_file(provenance_path)
+    assert manifest["best_checkpoint_sha256"] is None
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    assert provenance["model_sha256"] == manifest["best_model_sha256"]
+    assert int(manifest["best_round"]) < len(manifest["rounds"])
+
+    for round_record in manifest["rounds"]:
+        expected = float(round_record["calibration_score"]) + float(
+            round_record["test_score"]
+        )
+        assert abs(float(round_record["score"]) - expected) < 1.0e-9
+
+
+def assert_unsafe_workdir_rejected(runner: pathlib.Path) -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "training" / "iterate.py"),
+            "--config",
+            str(ROOT / "configs" / "training" / "xiaowo.synthetic.json"),
+            "--runner",
+            str(runner),
+            "--work-dir",
+            pathlib.Path("/").anchor,
+        ],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert completed.returncode == 2
+    assert "refusing unsafe synthetic work directory" in completed.stderr
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
     runner = args.runner.resolve()
     assert runner.is_file(), runner
+
+    assert_unsafe_workdir_rejected(runner)
 
     with tempfile.TemporaryDirectory() as td:
         work = pathlib.Path(td) / "loop"
@@ -169,6 +222,7 @@ def main() -> int:
         assert completed.returncode == 0, failure_diagnostic(work, completed)
         manifest_path = work / "synthetic-loop-manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        assert manifest["schema_version"] == 2
         assert manifest["evidence_class"] == "synthetic-only"
         assert manifest["qualified"] is True
         assert len(manifest["rounds"]) >= 2
@@ -179,7 +233,6 @@ def main() -> int:
         assert "replay" in manifest
         assert len(manifest["replay"]["hard_negatives_sha256"]) == 64
         assert len(manifest["replay"]["missed_positives_sha256"]) == 64
-        assert (work / "best" / "model.kwm").stat().st_size > 72
         assert (work / "best" / "keywords.kwk").stat().st_size > 24
         assert (work / "dataset" / "train.tsv").stat().st_size > 0
         assert (work / "dataset" / "calibration.tsv").stat().st_size > 0
@@ -188,12 +241,18 @@ def main() -> int:
         audit = json.loads((work / "dataset-audit.json").read_text(encoding="utf-8"))
         assert audit["clean"] is True
         provenance = validate_prototype_evidence(work, manifest)
+        validate_best_freeze(work, manifest)
 
         print(metric_line("synthetic_qualification", qualification))
         print(
             "prototype_quantized_validation: "
             f"accuracy={float(provenance['validation_confusion']['accuracy']):.6f} "
             f"min_margin={float(provenance['validation_confusion']['min_top1_margin']):.6f}"
+        )
+        print(
+            "best_candidate: "
+            f"round={int(manifest['best_round'])} score={float(manifest['best_score']):.6f} "
+            "lineage=frozen"
         )
 
     print("test_synthetic_loop: ok")
