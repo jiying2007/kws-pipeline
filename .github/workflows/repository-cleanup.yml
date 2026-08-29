@@ -1,0 +1,145 @@
+name: repository-cleanup
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report deletable merged branches without deleting them"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "23 3 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: repository-cleanup
+  cancel-in-progress: false
+
+env:
+  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/"
+
+jobs:
+  sweep-merged-branches:
+    name: sweep merged ephemeral branches
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Delete only provably merged ephemeral branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          is_safe_prefix() {
+            local candidate="$1"
+            local prefix
+            for prefix in ${SAFE_BRANCH_PREFIXES}; do
+              [[ "${candidate}" == "${prefix}"* ]] && return 0
+            done
+            return 1
+          }
+
+          dry_run=false
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${INPUT_DRY_RUN:-false}" == "true" ]]; then
+            dry_run=true
+          fi
+
+          default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          gh auth setup-git >/dev/null
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
+
+          branches_json="$(gh api --paginate --slurp \
+            "repos/${GITHUB_REPOSITORY}/branches?per_page=100")"
+          default_sha="$(jq -r --arg name "${default_branch}" \
+            '[.[][] | select(.name == $name)][0].commit.sha // empty' <<<"${branches_json}")"
+          if [[ -z "${default_sha}" ]]; then
+            echo "error: default branch '${default_branch}' was not returned by branches API" >&2
+            exit 2
+          fi
+
+          graph="${RUNNER_TEMP}/repository-cleanup-graph"
+          git init -q "${graph}"
+          git -C "${graph}" remote add origin "${remote}"
+          git -C "${graph}" fetch --quiet --no-tags --prune origin \
+            '+refs/heads/*:refs/remotes/origin/*'
+          default_ref="refs/remotes/origin/${default_branch}"
+          if ! git -C "${graph}" show-ref --verify --quiet "${default_ref}"; then
+            echo "error: default branch ref '${default_ref}' was not fetched" >&2
+            exit 2
+          fi
+
+          deleted=0
+          candidates=0
+          mapfile -t branch_rows < <(
+            jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
+          )
+
+          for row in "${branch_rows[@]}"; do
+            IFS=$'\t' read -r branch sha protected <<<"${row}"
+            [[ "${branch}" == "${default_branch}" ]] && continue
+            is_safe_prefix "${branch}" || continue
+            if [[ "${protected}" == "true" ]]; then
+              echo "skip protected: ${branch}"
+              continue
+            fi
+
+            open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
+              -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
+            if (( open_prs != 0 )); then
+              echo "skip open PR: ${branch}"
+              continue
+            fi
+
+            reason=""
+            branch_ref="refs/remotes/origin/${branch}"
+            if git -C "${graph}" show-ref --verify --quiet "${branch_ref}" && \
+               git -C "${graph}" merge-base --is-ancestor "${branch_ref}" "${default_ref}"; then
+              reason="branch tip is already contained in ${default_branch}"
+            else
+              merged_same_head="$(
+                gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
+                  -f state=closed -f head="${owner}:${branch}" -f per_page=100 |
+                  jq --arg sha "${sha}" '[.[] | select(.merged_at != null and .head.sha == $sha)] | length'
+              )"
+              if (( merged_same_head > 0 )); then
+                reason="current SHA is an already-merged PR head"
+              fi
+            fi
+
+            [[ -n "${reason}" ]] || continue
+            candidates=$((candidates + 1))
+            echo "candidate: ${branch} (${reason})"
+            if [[ "${dry_run}" == "true" ]]; then
+              continue
+            fi
+
+            # Re-read both safety conditions immediately before deletion to avoid
+            # racing a new push or PR created during the sweep.
+            latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
+            latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
+              -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
+            if [[ "${latest_sha}" != "${sha}" || "${latest_open_prs}" != "0" ]]; then
+              echo "skip race: ${branch} changed while cleanup was running"
+              continue
+            fi
+
+            git push --quiet "${remote}" ":refs/heads/${branch}"
+            deleted=$((deleted + 1))
+            echo "deleted: ${branch}"
+          done
+
+          echo "summary: candidates=${candidates} deleted=${deleted} dry_run=${dry_run}"
