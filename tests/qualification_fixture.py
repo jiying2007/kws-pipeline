@@ -72,6 +72,70 @@ def write_model(path: pathlib.Path, fingerprint: int) -> int:
     return total
 
 
+def write_model_provenance(
+    path: pathlib.Path,
+    model: pathlib.Path,
+    tokens: pathlib.Path,
+    fingerprint: int,
+) -> str:
+    checkpoint_hash = "c" * 64
+    token_hash = sha256_file(tokens)
+    quant = {
+        "scale": 0.01,
+        "max_abs_error": 0.004,
+        "rmse": 0.001,
+        "signal_rms": 0.25,
+        "snr_db": 47.0,
+    }
+    write_json(
+        path,
+        {
+            "schema_version": 1,
+            "model": {
+                "name": model.name,
+                "sha256": sha256_file(model),
+                "bytes": model.stat().st_size,
+                "abi": 2,
+                "feature_dim": 32,
+                "hidden_dim": 4,
+                "vocab_size": 5,
+                "vocab_fingerprint": f"0x{fingerprint:016x}",
+                "frontend_spec_version": 1,
+            },
+            "checkpoint": {
+                "name": "fixture.pt",
+                "sha256": checkpoint_hash,
+            },
+            "tokens": {
+                "name": tokens.name,
+                "sha256": token_hash,
+                "checkpoint_sha256": token_hash,
+                "byte_identical_to_training": True,
+            },
+            "training": {
+                "manifests": [
+                    {"name": "train.tsv", "sha256": "d" * 64}
+                ],
+                "examples": 100,
+                "seed": 1337,
+                "epochs": 3,
+                "batch_size": 8,
+                "learning_rate": 0.001,
+                "optimizer": "AdamW",
+                "weight_decay": 0.0001,
+                "grad_clip_norm": 5.0,
+            },
+            "quantization": {
+                "scheme": "symmetric-int8-per-matrix",
+                "in_proj": dict(quant),
+                "rec_proj": dict(quant),
+                "out_proj": dict(quant),
+            },
+        },
+    )
+    return checkpoint_hash
+
+
 def write_pack(path: pathlib.Path, fingerprint: int) -> int:
     token_ids = [1, 2] + [0] * 14
     record = struct.pack("<IfHH16H", 1, 0.99, 2, 0, *token_ids)
