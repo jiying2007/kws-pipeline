@@ -15,6 +15,7 @@ from frontend_spec import SAMPLE_RATE_HZ
 from synthetic_audio import SPLITS, generate_dataset, load_config, write_wav
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+EVAL_DISTANCE_ORDER = ("far", "mid", "near")
 
 
 def load_jsonl(path: pathlib.Path) -> list[dict]:
@@ -135,8 +136,11 @@ def sample_scene(
     rng: random.Random,
     *,
     curriculum_weights: dict[str, float] | None = None,
+    forced_band: str | None = None,
 ) -> dict:
-    band = choose_band(rng, domains["distance_bands"], curriculum_weights)
+    if forced_band is not None and forced_band not in domains["distance_bands"]:
+        raise ValueError(f"unsupported forced distance band: {forced_band}")
+    band = forced_band or choose_band(rng, domains["distance_bands"], curriculum_weights)
     low, high = domains["distance_bands"][band]["distance_m"]
     rt60_low, rt60_high = domains["rt60_s"]
     snr_low, snr_high = domains["snr_db"]
@@ -174,6 +178,7 @@ def render_domain_dataset(
     output.mkdir(parents=True, exist_ok=True)
     rows_by_split: dict[str, list[dict]] = {split: [] for split in SPLITS}
     domain_rows: list[dict] = []
+    positive_scene_ordinals = {split: 0 for split in SPLITS}
     for base_index, row in enumerate(base_rows):
         split = str(row["split"])
         if split not in rows_by_split:
@@ -183,7 +188,17 @@ def render_domain_dataset(
         for scene_index in range(domains["scenes_per_example"][split]):
             scene_seed = seed + base_index * 1_000_003 + scene_index * 65_537 + SPLITS.index(split) * 9_000_001
             rng = random.Random(scene_seed)
-            scene = sample_scene(domains, rng, curriculum_weights=curriculum_weights if split == "train" else None)
+            forced_band = None
+            if split != "train" and row["kind"] == "positive":
+                ordinal = positive_scene_ordinals[split]
+                forced_band = EVAL_DISTANCE_ORDER[ordinal % len(EVAL_DISTANCE_ORDER)]
+                positive_scene_ordinals[split] = ordinal + 1
+            scene = sample_scene(
+                domains,
+                rng,
+                curriculum_weights=curriculum_weights if split == "train" else None,
+                forced_band=forced_band,
+            )
             mono, scene_meta = render_scene(clean, scene, seed=scene_seed, afe=domains["afe"])
             target = output / "clips" / split / f"d{base_index:05d}-s{scene_index:02d}.wav"
             write_wav(target, mono)
@@ -261,9 +276,13 @@ def render_domain_dataset(
         encoding="utf-8",
     )
     histogram: dict[str, int] = {}
+    histogram_by_split: dict[str, dict[str, int]] = {split: {} for split in SPLITS}
     for row in domain_rows:
         key = str(row["scene"]["distance_band"])
+        split = str(row["split"])
         histogram[key] = histogram.get(key, 0) + 1
+        split_histogram = histogram_by_split[split]
+        split_histogram[key] = split_histogram.get(key, 0) + 1
     summary = {
         "schema_version": 1,
         "evidence_class": "synthetic-domain",
@@ -271,6 +290,8 @@ def render_domain_dataset(
         "base_dataset_summary_sha256": sha256_file(base_dir / "dataset-summary.json"),
         "domain_index_sha256": sha256_file(index_path),
         "distance_histogram": histogram,
+        "distance_histogram_by_split": histogram_by_split,
+        "evaluation_positive_distance_order": list(EVAL_DISTANCE_ORDER),
         "curriculum_weights": curriculum_weights or {},
         "afe": domains["afe"],
         "splits": {
