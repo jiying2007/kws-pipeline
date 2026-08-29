@@ -1,0 +1,4 @@
+# Pinned real-training environment for kws-pipeline v0.2.x.
+# PyTorch 2.13.0 is the current stable minor baseline selected for this repo;
+# do not float this file during a qualification run.
+torch==2.13.0
