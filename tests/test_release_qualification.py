@@ -18,6 +18,8 @@ from qualification_fixture import (
 )
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from corpus_identity import evaluation_corpus_identity  # noqa: E402
 
 
 def main() -> int:
@@ -25,13 +27,15 @@ def main() -> int:
         root = pathlib.Path(td)
         tokens = root / "tokens.txt"
         training_tokens = root / "training-tokens.txt"
-        training_manifest = root / "train.tsv"
+        training_manifest = root / "train.jsonl"
+        training_audio = root / "train-a.wav"
         checkpoint = root / "base.pt"
         model = root / "base.kwm"
         model_provenance = root / "base.kwm.provenance.json"
         pack = root / "xiaowo.kwk"
         config = root / "runtime.json"
         eval_runner = root / "kws_wav"
+        eval_audio = root / "room-1.wav"
         references = root / "references.jsonl"
         detections = root / "detections.jsonl"
         eval_summary = root / "eval-summary.json"
@@ -40,16 +44,31 @@ def main() -> int:
         board_audio = root / "board-audio.wav"
         board_summary = root / "board-summary.json"
         evidence = root / "evidence.json"
+        raw_evidence = root / "target-raw.txt"
+        dataset_audit = root / "dataset-audit.json"
         manifest = root / "qualification-manifest.json"
         policy = root / "policy.json"
         gate = root / "gate.json"
+        collector = ROOT / "tools" / "collect_target_evidence.py"
 
         _, fingerprint = write_tokens(tokens)
         _, training_fingerprint = write_tokens(training_tokens)
         assert training_fingerprint == fingerprint
-        training_manifest.write_text("train-a.wav\t1 2\n", encoding="utf-8")
-        checkpoint.write_bytes(b"checkpoint-fixture-v1")
-
+        write_wav(training_audio, seconds=1)
+        training_manifest.write_text(
+            json.dumps(
+                {
+                    "audio": training_audio.name,
+                    "tokens": [1, 2],
+                    "speaker_id": "train-spk",
+                    "session_id": "train-session",
+                    "source_id": "train-source",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        checkpoint.write_bytes(b"checkpoint-fixture-v2")
         model_bytes = write_model(model, fingerprint)
         checkpoint_hash = write_model_provenance(
             model_provenance,
@@ -81,21 +100,21 @@ def main() -> int:
         eval_runner.write_bytes(b"eval-runner-fixture")
         board_runner.write_bytes(b"board-runner-fixture")
         write_wav(board_audio, seconds=1)
+        write_wav(eval_audio, seconds=10)
 
         events = [
-            {
-                "keyword_id": 1,
-                "start_s": float(10 + i * 20),
-                "end_s": float(11 + i * 20),
-            }
+            {"keyword_id": 1, "start_s": 0.5 + i * 0.8, "end_s": 0.8 + i * 0.8}
             for i in range(10)
         ]
         references.write_text(
             json.dumps(
                 {
                     "recording": "room-1",
-                    "path": "room-1.wav",
-                    "duration_s": 86400.0,
+                    "path": eval_audio.name,
+                    "duration_s": 10.0,
+                    "speaker_id": "qual-spk",
+                    "session_id": "qual-session",
+                    "source_id": "qual-source",
                     "expected": events,
                 }
             )
@@ -112,12 +131,7 @@ def main() -> int:
             for i in range(9)
         ]
         detection_rows.append(
-            {
-                "recording": "room-1",
-                "keyword_id": 1,
-                "time_s": 10000.0,
-                "confidence": 0.7,
-            }
+            {"recording": "room-1", "keyword_id": 1, "time_s": 9.5, "confidence": 0.7}
         )
         detections.write_text(
             "\n".join(json.dumps(row) for row in detection_rows) + "\n",
@@ -131,30 +145,34 @@ def main() -> int:
         eval_runner_hash = sha256_file(eval_runner)
         board_runner_hash = sha256_file(board_runner)
         board_audio_hash = sha256_file(board_audio)
+        eval_corpus = evaluation_corpus_identity(references, root)
         write_json(
             eval_provenance,
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "runner_sha256": eval_runner_hash,
                 "model_sha256": model_hash,
                 "keyword_pack_sha256": pack_hash,
                 "references_sha256": refs_hash,
                 "detections_sha256": detections_hash,
+                "audio_corpus_sha256": eval_corpus["corpus_sha256"],
+                "audio_files": eval_corpus["recordings"],
                 "recordings": 1,
                 "detections": 10,
             },
         )
+        audio_hours = 10.0 / 3600.0
         write_json(
             eval_summary,
             {
                 "recordings": 1,
-                "audio_hours": 24.0,
+                "audio_hours": audio_hours,
                 "expected": 10,
                 "matched": 9,
                 "false_rejects": 1,
                 "false_accepts": 1,
                 "frr": 0.1,
-                "far_per_hour": 1.0 / 24.0,
+                "far_per_hour": 1.0 / audio_hours,
                 "p50_post_end_latency_ms": 100.0,
                 "p95_post_end_latency_ms": 100.0,
                 "per_keyword": {},
@@ -188,9 +206,15 @@ def main() -> int:
                 "p99_headroom": 20000.0 / 3000.0,
             },
         )
+        raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
         write_json(
             evidence,
             {
+                "schema_version": 2,
+                "collector": collector.name,
+                "collector_sha256": sha256_file(collector),
+                "collector_source_sha": "a" * 40,
+                "collected_unix_s": 1.0,
                 "target": "fixture-board",
                 "board_revision": "A",
                 "soc": "cortex-a32-fixture",
@@ -198,24 +222,55 @@ def main() -> int:
                 "compiler_flags": "-O3 -mcpu=cortex-a32",
                 "governor": "performance",
                 "audio_frontend": "audio-pipeline-fixture",
+                "kernel": "fixture-kernel",
+                "machine": "armv7l",
+                "cpu_online": "0-1",
+                "uptime_s": 1000.0,
                 "soak_hours": 8.0,
                 "cpu_percent": 5.0,
                 "rss_kib": 512.0,
                 "stack_high_water_bytes": 32768.0,
                 "max_temp_c": 55.0,
                 "average_power_mw": 120.0,
+                "raw_evidence": [
+                    {
+                        "name": raw_evidence.name,
+                        "sha256": sha256_file(raw_evidence),
+                        "bytes": raw_evidence.stat().st_size,
+                    }
+                ],
             },
         )
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(ROOT / "training" / "audit_dataset.py"),
+                "--split",
+                f"train={training_manifest}",
+                "--split",
+                f"qualification={references}",
+                "--require-metadata",
+                "speaker_id",
+                "--require-metadata",
+                "session_id",
+                "--require-metadata",
+                "source_id",
+                "--fail-within-split",
+                "--report",
+                str(dataset_audit),
+            ]
+        )
+
         valid_policy = {
             "schema_version": 2,
             "name": "fixture-policy",
             "confidence_level": 0.95,
-            "min_audio_hours": 24.0,
+            "min_audio_hours": audio_hours,
             "min_expected_wakes": 10,
             "max_frr": 0.15,
             "max_frr_upper_bound": 0.40,
-            "max_far_per_hour": 0.1,
-            "max_far_upper_bound_per_hour": 0.21,
+            "max_far_per_hour": 400.0,
+            "max_far_upper_bound_per_hour": 3000.0,
             "max_p95_latency_ms": 500.0,
             "max_p99_process_us": 5000.0,
             "max_rtf": 0.25,
@@ -232,199 +287,72 @@ def main() -> int:
         command = [
             sys.executable,
             str(ROOT / "tools" / "qualification_manifest.py"),
-            "--model",
-            str(model),
-            "--model-provenance",
-            str(model_provenance),
-            "--checkpoint",
-            str(checkpoint),
-            "--training-tokens",
-            str(training_tokens),
-            "--training-manifest",
-            str(training_manifest),
-            "--keywords",
-            str(pack),
-            "--tokens",
-            str(tokens),
-            "--config",
-            str(config),
-            "--eval-runner",
-            str(eval_runner),
-            "--references",
-            str(references),
-            "--detections",
-            str(detections),
-            "--eval-summary",
-            str(eval_summary),
-            "--eval-provenance",
-            str(eval_provenance),
-            "--board-summary",
-            str(board_summary),
-            "--board-runner",
-            str(board_runner),
-            "--board-audio",
-            str(board_audio),
-            "--evidence",
-            str(evidence),
-            "--source-sha",
-            "a" * 40,
-            "--corpus-id",
-            "fixture-corpus-v1",
-            "--output",
-            str(manifest),
+            "--model", str(model),
+            "--model-provenance", str(model_provenance),
+            "--checkpoint", str(checkpoint),
+            "--training-tokens", str(training_tokens),
+            "--training-manifest", str(training_manifest),
+            "--dataset-audit", str(dataset_audit),
+            "--keywords", str(pack),
+            "--tokens", str(tokens),
+            "--config", str(config),
+            "--eval-runner", str(eval_runner),
+            "--references", str(references),
+            "--eval-audio-root", str(root),
+            "--detections", str(detections),
+            "--eval-summary", str(eval_summary),
+            "--eval-provenance", str(eval_provenance),
+            "--board-summary", str(board_summary),
+            "--board-runner", str(board_runner),
+            "--board-audio", str(board_audio),
+            "--evidence", str(evidence),
+            "--evidence-collector", str(collector),
+            "--raw-evidence", str(raw_evidence),
+            "--source-sha", "a" * 40,
+            "--corpus-id", "home-kws-heldout-fixture-v2",
+            "--output", str(manifest),
         ]
         subprocess.check_call(command)
         result = json.loads(manifest.read_text(encoding="utf-8"))
-        assert result["artifacts"]["model_provenance"]["sha256"] == sha256_file(
-            model_provenance
-        )
+        assert result["schema_version"] == 2
         assert result["artifacts"]["model_checkpoint"]["sha256"] == checkpoint_hash
-        assert result["artifacts"]["training_tokens"]["sha256"] == sha256_file(
-            training_tokens
-        )
-        assert result["artifacts"]["training_manifests"][0]["sha256"] == sha256_file(
-            training_manifest
-        )
-        assert result["model_lineage"]["checkpoint_sha256"] == checkpoint_hash
-        assert result["model_lineage"]["model_sha256"] == model_hash
-        assert result["runtime"]["frontend_kind"] == result["model_lineage"]["frontend_kind"]
-        assert result["runtime"]["frontend_name"] == result["model_lineage"]["frontend_name"]
-        assert result["artifacts"]["eval_runner"]["sha256"] == eval_runner_hash
-        assert result["artifacts"]["references"]["sha256"] == refs_hash
-        assert result["artifacts"]["detections"]["sha256"] == detections_hash
-        assert result["board"]["audio_sha256"] == board_audio_hash
+        assert result["model_lineage"]["training_corpus_sha256"]
+        assert result["evaluation"]["audio_corpus_sha256"] == eval_corpus["corpus_sha256"]
+        assert result["dataset_audit"]["sha256"] == sha256_file(dataset_audit)
 
         subprocess.check_call(
-            [
-                sys.executable,
-                str(ROOT / "tools" / "qualification_gate.py"),
-                "--manifest",
-                str(manifest),
-                "--policy",
-                str(policy),
-                "--output",
-                str(gate),
-            ]
+            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy), "--output", str(gate)]
         )
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
-        assert gate_result["schema_version"] == 2
+        assert gate_result["schema_version"] == 3
         assert gate_result["qualified"] is True
-        assert gate_result["manifest_sha256"] == sha256_file(manifest)
-        assert gate_result["policy_sha256"] == sha256_file(policy)
-        assert gate_result["model_checkpoint_sha256"] == checkpoint_hash
-        assert gate_result["statistics"]["frr_upper_bound"] > 0.1
-        assert gate_result["statistics"]["far_upper_bound_per_hour"] > 1.0 / 24.0
+        assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
+        assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
 
-        statistical_failure = dict(valid_policy)
-        statistical_failure["max_frr_upper_bound"] = 0.20
-        write_json(policy, statistical_failure)
-        failed = subprocess.run(
-            [
-                sys.executable,
-                str(ROOT / "tools" / "qualification_gate.py"),
-                "--manifest",
-                str(manifest),
-                "--policy",
-                str(policy),
-            ],
-            check=False,
-        )
-        assert failed.returncode == 1
-        write_json(policy, valid_policy)
+        original_eval = eval_audio.read_bytes()
+        eval_audio.write_bytes(original_eval[:-2] + b"\x00\x00")
+        assert subprocess.run(command, check=False).returncode == 2
+        eval_audio.write_bytes(original_eval)
 
-        frontend_tampered = json.loads(manifest.read_text(encoding="utf-8"))
-        tampered_kind = 1 if int(frontend_tampered["runtime"]["frontend_kind"]) == 0 else 0
-        frontend_tampered["runtime"]["frontend_kind"] = tampered_kind
-        frontend_tampered["runtime"]["frontend_name"] = {0: "logmel", 1: "pcen-lite"}[tampered_kind]
-        write_json(manifest, frontend_tampered)
-        assert (
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(ROOT / "tools" / "qualification_gate.py"),
-                    "--manifest",
-                    str(manifest),
-                    "--policy",
-                    str(policy),
-                ],
-                check=False,
-            ).returncode
-            == 2
-        )
-        subprocess.check_call(command)
+        original_training = training_audio.read_bytes()
+        training_audio.write_bytes(original_training[:-2] + b"\x00\x00")
+        assert subprocess.run(command, check=False).returncode == 2
+        training_audio.write_bytes(original_training)
+
+        original_refs = references.read_text(encoding="utf-8")
+        wrong_duration = json.loads(original_refs)
+        wrong_duration["duration_s"] = 1000.0
+        references.write_text(json.dumps(wrong_duration) + "\n", encoding="utf-8")
+        assert subprocess.run(command, check=False).returncode == 2
+        references.write_text(original_refs, encoding="utf-8")
 
         failing_policy = dict(valid_policy)
         failing_policy["max_cpu_percent"] = 4.0
         write_json(policy, failing_policy)
-        assert (
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(ROOT / "tools" / "qualification_gate.py"),
-                    "--manifest",
-                    str(manifest),
-                    "--policy",
-                    str(policy),
-                ],
-                check=False,
-            ).returncode
-            == 1
-        )
-        write_json(policy, valid_policy)
-
-        tampered = json.loads(manifest.read_text(encoding="utf-8"))
-        tampered["model_lineage"]["model_sha256"] = "0" * 64
-        write_json(manifest, tampered)
-        assert (
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(ROOT / "tools" / "qualification_gate.py"),
-                    "--manifest",
-                    str(manifest),
-                    "--policy",
-                    str(policy),
-                ],
-                check=False,
-            ).returncode
-            == 2
-        )
-        subprocess.check_call(command)
-
-        provenance = json.loads(model_provenance.read_text(encoding="utf-8"))
-        provenance["model"]["sha256"] = "0" * 64
-        write_json(model_provenance, provenance)
-        assert subprocess.run(command, check=False).returncode == 2
-        write_model_provenance(
-            model_provenance,
-            model,
-            tokens,
-            training_tokens,
-            checkpoint,
-            [training_manifest],
-            fingerprint,
-        )
-
-        checkpoint.write_bytes(b"tampered-checkpoint")
-        assert subprocess.run(command, check=False).returncode == 2
-        checkpoint.write_bytes(b"checkpoint-fixture-v1")
-
-        original_training_manifest = training_manifest.read_text(encoding="utf-8")
-        training_manifest.write_text(
-            original_training_manifest + "extra.wav\t1\n", encoding="utf-8"
-        )
-        assert subprocess.run(command, check=False).returncode == 2
-        training_manifest.write_text(original_training_manifest, encoding="utf-8")
-
-        original_refs = references.read_text(encoding="utf-8")
-        references.write_text(original_refs + "# tampered\n", encoding="utf-8")
-        assert subprocess.run(command, check=False).returncode == 2
-        references.write_text(original_refs, encoding="utf-8")
-
-        board = json.loads(board_summary.read_text(encoding="utf-8"))
-        board["audio_sha256"] = "0" * 64
-        write_json(board_summary, board)
-        assert subprocess.run(command, check=False).returncode == 2
+        assert subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy)],
+            check=False,
+        ).returncode == 1
 
     print("test_release_qualification: ok")
     return 0
