@@ -1,0 +1,109 @@
+name: training-integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      training_image:
+        description: Immutable training image (name@sha256:...); defaults to repository variable
+        required: false
+        type: string
+  schedule:
+    - cron: "23 17 * * 3"
+
+permissions:
+  contents: read
+
+jobs:
+  torch-ctc-e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.KWS_TRAINING_IMAGE != '' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Resolve immutable training image
+        id: image
+        shell: bash
+        env:
+          INPUT_IMAGE: ${{ inputs.training_image }}
+          DEFAULT_IMAGE: ${{ vars.KWS_TRAINING_IMAGE }}
+        run: |
+          set -euo pipefail
+          image="${INPUT_IMAGE:-$DEFAULT_IMAGE}"
+          if [[ ! "$image" =~ ^[^[:space:]@]+@sha256:[0-9a-f]{64}$ ]]; then
+            echo "training image must be configured as name@sha256:<64 lowercase hex>" >&2
+            exit 2
+          fi
+          printf 'image=%s\ndigest=%s\n' "$image" "${image##*@}" >> "$GITHUB_OUTPUT"
+      - name: Build real C runtime runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav
+      - name: Create bounded torch_ctc integration config
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          src = Path('configs/training/xiaowo.domain.json')
+          cfg = json.loads(src.read_text(encoding='utf-8'))
+          for split in ('train', 'calibration', 'test', 'qualification'):
+              cfg['dataset'][split] = {
+                  'positive_families_per_keyword': 1,
+                  'confusable_families_per_keyword': 1,
+                  'random_negative_families': 1,
+                  'background_seconds_per_profile': 0.1,
+                  'variants_per_family': 1,
+              }
+              cfg['domains']['scenes_per_example'][split] = 1
+          cfg['domains']['distance_bands'] = {
+              'near': {'distance_m': [0.4, 0.8], 'weight': 1.0},
+              'mid': {'distance_m': [1.2, 1.8], 'weight': 1.0},
+              'far': {'distance_m': [3.0, 3.6], 'weight': 2.0},
+          }
+          cfg['domains']['azimuth_deg'] = [-60, 0, 60]
+          cfg['domains']['rt60_s'] = [0.12, 0.28]
+          cfg['domains']['snr_db'] = [22.0, 34.0]
+          cfg['model']['frontends'] = ['logmel']
+          cfg['train'] = {'epochs': 1, 'batch_size': 8, 'lr': 0.001}
+          cfg['calibration'] = {'thresholds': [0.25, 0.55], 'coordinate_rounds': 1}
+          cfg['domain_iteration'] = {
+              'backend': 'torch_ctc',
+              'max_rounds': 1,
+              'min_rounds': 1,
+              'patience': 0,
+              'curriculum_strength': 2.0,
+              'max_domain_weight': 4.0,
+              'stop_on_gate': True,
+          }
+          cfg['domain_gates'] = {
+              'max_frr': 1.0,
+              'max_far_per_hour': 1000000.0,
+              'max_p95_latency_ms': 1000000.0,
+              'max_far_frr': 1.0,
+          }
+          Path('build/torch-ctc-integration.json').write_text(
+              json.dumps(cfg, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+      - name: Run real train export quantize calibrate evaluate path
+        env:
+          TRAINING_IMAGE: ${{ steps.image.outputs.image }}
+          TRAINING_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --entrypoint python \
+            -e KWS_TRAINING_IMAGE_DIGEST="$TRAINING_DIGEST" \
+            -v "$PWD:/workspace" -w /workspace \
+            "$TRAINING_IMAGE" \
+            training/iterate_domain.py \
+              --config build/torch-ctc-integration.json \
+              --runner build/kws_wav \
+              --work-dir build/torch-ctc-e2e
+      - name: Validate real-backend outputs
+        run: |
+          test -s build/torch-ctc-e2e/best/model.kwm
+          test -s build/torch-ctc-e2e/best/model.pt
+          test -s build/torch-ctc-e2e/best/model.kwm.provenance.json
+          test -s build/torch-ctc-e2e/best/keywords.kwk
+          python3 -m json.tool build/torch-ctc-e2e/domain-loop-manifest.json >/dev/null
