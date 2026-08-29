@@ -61,6 +61,7 @@ static size_t make_model(uint8_t *blob, size_t capacity) {
   put16(blob + 8u, BENCH_FEATURE_DIM);
   put16(blob + 10u, BENCH_HIDDEN_DIM);
   put16(blob + 12u, BENCH_VOCAB_SIZE);
+  put16(blob + 14u, KWS_FRONTEND_LOGMEL);
   put32(blob + 16u, KWS_SAMPLE_RATE_HZ);
   put32(blob + 20u, 400u);
   put32(blob + 24u, 320u);
@@ -85,7 +86,8 @@ int main(void) {
   kws_engine_t *engine = NULL;
   kws_config_t config = kws_default_config();
   const uint16_t tokens[] = {1u, 2u, 3u, 4u};
-  const kws_keyword_t keyword = {1u, tokens, 4u, 0.99f};
+  const kws_keyword_t keyword = {
+      1u, tokens, 4u, 0.99f, 0u, 0u, KWS_PREFIX_IMMEDIATE, 0u};
   const uint64_t total_samples =
       (uint64_t)BENCH_SECONDS * (uint64_t)KWS_SAMPLE_RATE_HZ;
   uint64_t consumed = 0u;
