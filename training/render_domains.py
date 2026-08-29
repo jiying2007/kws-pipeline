@@ -229,6 +229,10 @@ def choose_band(
 def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> float:
     low, high = domains["rt60_s"]
     adaptive = _dimension_weights(curriculum, "rt60")
+    if not adaptive:
+        # Preserve the pre-curriculum deterministic baseline exactly. Curriculum
+        # must be an opt-in reweighting, not a silent change to round-0 data.
+        return rng.uniform(low, high)
     intervals = {
         "dry": (low, min(high, 0.30)),
         "medium": (max(low, 0.30), min(high, 0.55)),
@@ -237,9 +241,17 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     available = [name for name, (a, b) in intervals.items() if b > a]
     if not available:
         return rng.uniform(low, high)
+    # Weight by interval width so all adaptive weights == 1 still reproduces a
+    # uniform density over the original continuous RT60 range.
     band = str(
         _weighted_choice(
-            rng, available, [adaptive.get(name, 1.0) for name in available]
+            rng,
+            available,
+            [
+                (intervals[name][1] - intervals[name][0])
+                * adaptive.get(name, 1.0)
+                for name in available
+            ],
         )
     )
     a, b = intervals[band]
@@ -287,16 +299,19 @@ def _sample_candidate(
         band = forced_band or choose_band(rng, domains["distance_bands"], curriculum)
         low, high = domains["distance_bands"][band]["distance_m"]
         az_weights = _dimension_weights(curriculum, "azimuth")
-        azimuth = float(
-            _weighted_choice(
-                rng,
-                domains["azimuth_deg"],
-                [
-                    az_weights.get(_azimuth_band(float(value)), 1.0)
-                    for value in domains["azimuth_deg"]
-                ],
+        if az_weights:
+            azimuth = float(
+                _weighted_choice(
+                    rng,
+                    domains["azimuth_deg"],
+                    [
+                        az_weights.get(_azimuth_band(float(value)), 1.0)
+                        for value in domains["azimuth_deg"]
+                    ],
+                )
             )
-        )
+        else:
+            azimuth = float(rng.choice(domains["azimuth_deg"]))
         distance_m = rng.uniform(low, high)
         rt60_s = _sample_rt60(domains, rng, curriculum)
         room_id = f"sim-{band}"
@@ -321,28 +336,35 @@ def _sample_candidate(
 
     snr_low, snr_high = domains["snr_db"]
     noise_weights = _dimension_weights(curriculum, "noise")
-    noise = str(
-        _weighted_choice(
-            rng,
-            domains["noise_profiles"],
-            [
-                noise_weights.get(str(value), 1.0)
-                for value in domains["noise_profiles"]
-            ],
+    if noise_weights:
+        noise = str(
+            _weighted_choice(
+                rng,
+                domains["noise_profiles"],
+                [
+                    noise_weights.get(str(value), 1.0)
+                    for value in domains["noise_profiles"]
+                ],
+            )
         )
-    )
+    else:
+        noise = str(rng.choice(domains["noise_profiles"]))
+
     playback_weights = _dimension_weights(curriculum, "playback")
     base_on = domains["playback_probability"]
-    playback_on = bool(
-        _weighted_choice(
-            rng,
-            [False, True],
-            [
-                (1.0 - base_on) * playback_weights.get("no-playback", 1.0),
-                base_on * playback_weights.get("playback", 1.0),
-            ],
+    if playback_weights:
+        playback_on = bool(
+            _weighted_choice(
+                rng,
+                [False, True],
+                [
+                    (1.0 - base_on) * playback_weights.get("no-playback", 1.0),
+                    base_on * playback_weights.get("playback", 1.0),
+                ],
+            )
         )
-    )
+    else:
+        playback_on = rng.random() < base_on
     playback = None
     if playback_on:
         sir_low, sir_high = domains["playback_sir_db"]
@@ -372,6 +394,16 @@ def sample_scene(
     curriculum_weights: dict | None = None,
     forced_band: str | None = None,
 ) -> dict:
+    composite = _dimension_weights(curriculum_weights, "composite")
+    if not composite:
+        # Do not consume additional RNG draws when composite hard mining is off;
+        # this preserves the deterministic pre-curriculum scene sequence.
+        return _sample_candidate(
+            domains,
+            rng,
+            curriculum=curriculum_weights,
+            forced_band=forced_band,
+        )
     candidates = [
         _sample_candidate(
             domains,
@@ -381,9 +413,6 @@ def sample_scene(
         )
         for _ in range(4)
     ]
-    composite = _dimension_weights(curriculum_weights, "composite")
-    if not composite:
-        return candidates[0]
     return _weighted_choice(
         rng,
         candidates,
