@@ -9,6 +9,7 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+SAMPLE_RATE_HZ = 16000
 
 
 def metric_line(label: str, metrics: dict) -> str:
@@ -21,6 +22,62 @@ def metric_line(label: str, metrics: dict) -> str:
     )
 
 
+def jsonl(path: pathlib.Path) -> list[dict]:
+    if not path.is_file():
+        return []
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+
+def false_accept_details(work: pathlib.Path, metrics: dict, split: str) -> list[str]:
+    false_path = pathlib.Path(str(metrics.get("false_positives_path", "")))
+    rows = jsonl(false_path)
+    if not rows:
+        return []
+    dataset_dir = work / "dataset"
+    summary_path = dataset_dir / "dataset-summary.json"
+    index_path = dataset_dir / "dataset-index.jsonl"
+    if not summary_path.is_file() or not index_path.is_file():
+        return [f"{split}.fp raw={row}" for row in rows[:12]]
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    gap_samples = int(
+        round(float(summary.get("continuous_gap_ms", 1600.0)) * SAMPLE_RATE_HZ / 1000.0)
+    )
+    clips = [row for row in jsonl(index_path) if row.get("split") == split]
+    intervals: list[tuple[int, int, dict]] = []
+    cursor = gap_samples
+    for clip in clips:
+        start = cursor
+        end = start + int(clip["frames"])
+        intervals.append((start, end, clip))
+        cursor = end + gap_samples
+
+    details: list[str] = []
+    for row in rows[:20]:
+        sample = int(round(float(row["time_s"]) * SAMPLE_RATE_HZ))
+        source = None
+        for start, end, clip in intervals:
+            if start <= sample <= end:
+                source = clip
+                break
+        if source is None:
+            details.append(
+                f"{split}.fp kw={row.get('keyword_id')} t={float(row['time_s']):.3f} "
+                f"conf={float(row.get('confidence', 0.0)):.4f} source=gap"
+            )
+        else:
+            details.append(
+                f"{split}.fp kw={row.get('keyword_id')} t={float(row['time_s']):.3f} "
+                f"conf={float(row.get('confidence', 0.0)):.4f} "
+                f"source={source.get('kind')} family={source.get('family_id')} "
+                f"tokens={' '.join(source.get('tokens', []))}"
+            )
+    return details
+
+
 def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProcess[str]) -> str:
     lines = [f"iterate rc={completed.returncode}"]
     manifest_path = work / "synthetic-loop-manifest.json"
@@ -31,18 +88,19 @@ def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProces
                 round_index = int(item.get("round", -1))
                 lines.append(metric_line(f"round{round_index}.calibration", item["calibration"]))
                 lines.append(metric_line(f"round{round_index}.test", item["test"]))
+                if round_index == 0:
+                    lines.extend(false_accept_details(work, item["calibration"], "calibration"))
+                    lines.extend(false_accept_details(work, item["test"], "test"))
                 lines.append(
                     f"round{round_index}.replay: hard_negatives="
                     f"{int(item.get('cumulative_hard_negatives', 0))} "
                     f"missed_positives={int(item.get('cumulative_missed_positives', 0))}"
                 )
             if isinstance(manifest.get("synthetic_qualification"), dict):
-                lines.append(
-                    metric_line(
-                        "qualification", manifest["synthetic_qualification"]
-                    )
-                )
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                qualification = manifest["synthetic_qualification"]
+                lines.append(metric_line("qualification", qualification))
+                lines.extend(false_accept_details(work, qualification, "qualification"))
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             lines.append(f"manifest diagnostic failed: {exc}")
     else:
         generated = sorted(
