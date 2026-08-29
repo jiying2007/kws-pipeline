@@ -26,6 +26,33 @@ A fixed-word binary classifier is cheap but normally needs a new model for every
 
 The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s for the dense acoustic network and about 26 KB for weights+biases. These are design calculations, not target-board measurements.
 
+## Keyword decoder state model
+
+The decoder is a bounded shared-prefix Trie with a lightweight Viterbi-style path scorer. It is intentionally not a general-purpose CTC prefix-beam search.
+
+Each non-root Trie node retains two independent scores:
+
+- `score`: best prefix path whose latest token has not subsequently been separated by a blank;
+- `blank_score`: best prefix path after at least one blank-dominant acoustic frame since the latest emitted token.
+
+A non-repeated child can advance from the better of those two states. If the child token is identical to the current node token, it can advance **only** from `blank_score`. This mirrors the structural CTC rule that adjacent identical target labels require a blank separator without carrying a general beam over the entire vocabulary.
+
+Blank and nonblank scores must remain separate. Collapsing them into one score plus a boolean would either discard a lower-scoring but valid separated path or incorrectly grant blank readiness to a higher-scoring unseparated path.
+
+State retention remains a product-oriented gap heuristic rather than exact CTC probability accumulation: a blank-dominant frame moves retained nonblank state into the separated state, while an already separated state remains separated until another token is emitted. This keeps the decoder bounded and inexpensive while preserving the repeated-label constraint.
+
+## Frontend contract
+
+The device frontend and training frontend are treated as one versioned feature contract. `training/frontend_spec.py` defines the dependency-free reference geometry and constants; `kws_feature_dump` runs the actual C implementation on WAV input; CI compares C output frame-by-frame against the reference with a tight float tolerance. The PyTorch frontend imports the same FFT/mel/scale constants from the reference module.
+
+A frontend geometry, windowing, mel-bin or normalization change therefore requires an explicit contract update rather than silently changing training features independently of the embedded runtime.
+
+## Training provenance
+
+Training does not accept an unqualified vocabulary size. `training/train_ctc.py` requires the actual token vocabulary and stores its 64-bit fingerprint plus token-file SHA256 in the checkpoint. Warm starts verify the fingerprint before loading weights, and `training/export_model.py` refuses to bind a checkpoint to a same-sized but differently mapped vocabulary.
+
+Checkpoints additionally retain training-manifest hashes, frontend-spec version, seed and optimizer settings so the acoustic artifact has a reproducible lineage before `.kwm` export.
+
 ## Ownership contract
 
 - model blob: caller-owned, read-only, stable address and at least float-aligned because model biases are zero-copy float views;
@@ -40,3 +67,5 @@ The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s for
 ## Hard bounds
 
 Current limits are 16 keywords, 16 tokens per keyword, 40 features, 64 recurrent units and 512 acoustic tokens. Model/keyword ABI v2 additionally fixes 16-kHz input, 400-sample analysis frames and 320-sample acoustic hops. These are product bounds that keep resident memory and per-call event semantics deterministic.
+
+Parser attack-surface hardening is exercised by deterministic contract tests plus Clang libFuzzer/ASan/UBSan smoke jobs for `.kwm` and `.kwk` inputs. Fuzzing is a software safety gate; it does not replace authentication/signing of production update artifacts.

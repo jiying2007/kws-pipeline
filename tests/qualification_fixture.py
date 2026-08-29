@@ -72,6 +72,77 @@ def write_model(path: pathlib.Path, fingerprint: int) -> int:
     return total
 
 
+def write_model_provenance(
+    path: pathlib.Path,
+    model: pathlib.Path,
+    export_tokens: pathlib.Path,
+    training_tokens: pathlib.Path,
+    checkpoint: pathlib.Path,
+    training_manifests: list[pathlib.Path],
+    fingerprint: int,
+) -> str:
+    checkpoint_hash = sha256_file(checkpoint)
+    export_token_hash = sha256_file(export_tokens)
+    training_token_hash = sha256_file(training_tokens)
+    quant = {
+        "scale": 0.01,
+        "max_abs_error": 0.004,
+        "rmse": 0.001,
+        "signal_rms": 0.25,
+        "snr_db": 47.0,
+    }
+    write_json(
+        path,
+        {
+            "schema_version": 1,
+            "model": {
+                "name": model.name,
+                "sha256": sha256_file(model),
+                "bytes": model.stat().st_size,
+                "abi": 2,
+                "feature_dim": 32,
+                "hidden_dim": 4,
+                "vocab_size": 5,
+                "vocab_fingerprint": f"0x{fingerprint:016x}",
+                "frontend_spec_version": 1,
+            },
+            "checkpoint": {
+                "name": checkpoint.name,
+                "sha256": checkpoint_hash,
+            },
+            "tokens": {
+                "name": export_tokens.name,
+                "sha256": export_token_hash,
+                "checkpoint_sha256": training_token_hash,
+                "byte_identical_to_training": (
+                    export_token_hash == training_token_hash
+                ),
+            },
+            "training": {
+                "manifests": [
+                    {"name": manifest.name, "sha256": sha256_file(manifest)}
+                    for manifest in training_manifests
+                ],
+                "examples": 100,
+                "seed": 1337,
+                "epochs": 3,
+                "batch_size": 8,
+                "learning_rate": 0.001,
+                "optimizer": "AdamW",
+                "weight_decay": 0.0001,
+                "grad_clip_norm": 5.0,
+            },
+            "quantization": {
+                "scheme": "symmetric-int8-per-matrix",
+                "in_proj": dict(quant),
+                "rec_proj": dict(quant),
+                "out_proj": dict(quant),
+            },
+        },
+    )
+    return checkpoint_hash
+
+
 def write_pack(path: pathlib.Path, fingerprint: int) -> int:
     token_ids = [1, 2] + [0] * 14
     record = struct.pack("<IfHH16H", 1, 0.99, 2, 0, *token_ids)

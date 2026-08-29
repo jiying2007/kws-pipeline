@@ -24,8 +24,9 @@ PCM16 16 kHz
 - 实时路径无 heap、隐藏线程、锁、文件系统和中文/拼音转换。
 - 调用方提供对齐 engine arena；模型 tensor 零拷贝引用只读 `.kwm` blob。
 - 支持现场更新 `.kwk` 关键词包；改变唤醒词不需要重新链接 firmware。
-- ABI v2 使用同一份 **64-bit vocabulary fingerprint** 绑定 `.kwm`、`.kwk` 和生成的 C 关键词表；即使词表数量相同，只要 token→ID 映射不同也会拒绝。
+- ABI v2 使用同一份 **token vocabulary identity** 绑定 `.kwm`、`.kwk`、训练 checkpoint 和生成的 C 关键词表；即使词表数量相同，只要 token→ID 映射不同也会拒绝。
 - 关键词更新先完整验证，再替换活动 Trie；错误配置不会破坏上一份有效配置。
+- 相邻重复声学 token 遵守 CTC 结构语义：必须从已经观察到 blank separator 的 prefix 状态才能继续相同 token；decoder 独立保留 nonblank / blank-separated 两个 Viterbi 子状态。
 - L0 换关键词、L1 阈值/hard-negative 校准、L2 `--head-only` 浅定制。
 - 默认 32 feature / 48 hidden / 约 420 token 的声学 dense 计算约 **1.2 MMAC/s**，模型权重与 bias 约 **26 KB**；这是设计预算，不是 Cortex-A32 实板数据。
 
@@ -71,12 +72,23 @@ python3 tools/compile_keywords.py \
 
 ## 基础训练与浅定制
 
-基础 CTC 模型训练完成后，导出 ABI-v2 `.kwm` 时必须提供与关键词包完全相同的 token vocabulary：
+训练前先按**解码后的 PCM 内容**审计 train / calibration / qualification 数据，而不是只比较文件名或 WAV 容器字节。这样即使同一段录音被改名、复制或重新封装并增加 RIFF metadata，也会被检测为跨 split 泄漏：
+
+```bash
+python3 training/audit_dataset.py \
+  --split train=data/train.tsv \
+  --split calibration=data/calibration.tsv \
+  --split qualification=data/eval/references.jsonl \
+  --audio-root qualification=data/eval \
+  --report build/dataset-audit.json
+```
+
+基础 CTC 模型训练时必须直接提供后续 `.kwm/.kwk` 使用的 exact token vocabulary：
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/train.tsv \
-  --vocab-size 420 \
+  --tokens keywords/tokens.zh.txt \
   --output build/base.pt
 
 python3 training/export_model.py \
@@ -85,20 +97,26 @@ python3 training/export_model.py \
   --output build/base.kwm
 ```
 
+checkpoint 会固化 vocabulary fingerprint、token 文件 hash、训练 manifest hash、frontend spec 版本、seed 和 optimizer 参数；warm-start 必须匹配同一 fingerprint，exporter 也会拒绝把 checkpoint 绑定到“数量相同但 token→ID 映射不同”的词表。
+
+exporter 还会自动生成 `build/base.kwm.provenance.json`，把最终 `.kwm` SHA256 绑定到 checkpoint SHA256、训练/导出 token identity、训练 manifest hashes、训练参数，以及三组 int8 权重矩阵的 scale / max error / RMSE / SNR。量产 qualification 不只保留这份 JSON，还必须保留并重新哈希**实际 checkpoint、训练时 token 文件和所有 training manifests**，避免 lineage 退化成不可验证的 hash 声明。
+
 浅定制可以把正常样本和挖掘出的 hard negatives 一起训练，并冻结 input/recurrent backbone：
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/xiaowo.tsv \
   --manifest build/hard-negatives.tsv \
-  --vocab-size 420 \
+  --tokens keywords/tokens.zh.txt \
   --warm-start build/base.pt \
   --head-only \
   --epochs 10 \
   --output build/xiaowo.pt
 ```
 
-`--head-only` 必须配合 warm start，只更新声学输出 head，是本仓库默认的“浅定制”。完整模型微调也支持，但需要更宽的回归语料。
+`--head-only` 必须配合 warm start，只更新声学输出 head。完整模型微调也支持，但需要更宽的回归语料。
+
+`training/frontend_spec.py` 是 dependency-free 特征规范；CI 会通过真实 C frontend 的 `kws_feature_dump` 逐维对比该规范，PyTorch frontend 也复用同一套 mel/FFT/scale 常量，避免训练端与设备端特征慢慢漂移。
 
 ## Runtime API
 
@@ -123,11 +141,9 @@ kws_engine_accept_pcm16(engine, pcm, samples, &hit, &detected);
 
 `kws_engine_set_keyword_pack()` 返回后，解析后的 pack 对象可以释放；`.kwm` 模型 blob 必须在 engine 整个生命周期内保持有效。
 
-如果使用编译进固件的生成 C 表，则调用 `kws_engine_set_keywords()` 时必须同时传入 `kws_generated_vocab_fingerprint`，仍然不能绕过 vocabulary identity 检查。
-
 ## 连续音频量产评测
 
-`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 批量执行语料，并生成 SHA256 provenance sidecar，将 runner、model、keyword pack、references 和 detections 固定到同一次评测；`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟，并把 references/detections hash 写入 summary：
+`kws_wav` 使用**真实 C runtime**处理 16 kHz 单声道 PCM16 WAV；`run_corpus.py` 生成 SHA256 provenance sidecar；`score_events.py` 计算 FAR/hour、FRR 和唤醒延迟：
 
 ```bash
 python3 eval/run_corpus.py \
@@ -159,12 +175,15 @@ python3 eval/score_events.py \
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
-# 保留实际在目标板执行的同一个 benchmark 二进制，以及实际评测 runner。
 cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
 cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 
 python3 tools/qualification_manifest.py \
   --model release/base.kwm \
+  --model-provenance release/base.kwm.provenance.json \
+  --checkpoint release/base.pt \
+  --training-tokens release/training-tokens.txt \
+  --training-manifest release/train.tsv \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
@@ -187,9 +206,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` 输出精确 runner/model/pack/board-audio SHA256、mean/p50/p95/p99/max、RTF 和 p99 headroom；`qualification_manifest.py` 独立重验 canonical ABI、runtime config、vocabulary identity，并重新哈希实际 eval runner/references/detections，重算 reference 的 recording/expected/audio-hours、detection 数量、board WAV 时长和 block 数，再验证所有统计公式与 SHA256 交叉引用；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，并把 gate result 绑定到精确 manifest/policy hash。
-
-仓库的 `configs/qualification.policy.example.json` 明确命名为 `example-not-a-shipping-policy`，其中数字只用于展示 gate 结构，不能直接拿来做产品承诺。完整流程见 `docs/RELEASE_QUALIFICATION.md`。
+如果训练时使用了多个 manifest（例如正常训练集 + hard-negative manifest），必须重复传入 `--training-manifest`。`qualification_manifest.py` 会独立重验 canonical ABI、runtime config、vocabulary identity、**模型 lineage 对应的实际 checkpoint / training tokens / training manifests 字节**、实际 eval runner/references/detections、reference/detection 数量、board WAV 时长和所有 SHA256/统计公式；`qualification_gate.py` 对 FAR/FRR/latency/p99/RTF/headroom、CPU、RSS、stack、soak、温度和功耗应用明确 SKU policy，同时把 gate result 绑定到 manifest/policy hash 并记录源 model checkpoint SHA256。
 
 ## 与 audio-pipeline 对接
 
@@ -206,7 +223,7 @@ python3 tools/qualification_gate.py \
 
 ## 验证
 
-CI 当前门禁包括 GCC/Clang strict build、CTest、ASan/UBSan、关键词包/工具测试、corpus provenance、continuous-audio metric scorer、包含 C/Python SHA256 交叉校验的真实制品 board-benchmark contract、byte-complete qualification manifest/policy gate、默认几何 hosted benchmark、SDK install + pkg-config + 独立 `find_package` consumer、Python 语法，以及 Cortex-A32 ARMv7 hard-float 对 core 和 target qualification tools 的交叉编译。
+CI 当前门禁包括 GCC/Clang strict build、CTest、ASan/UBSan、decoder CTC-repeat contract、C/reference frontend 数值一致性、decoded-PCM 数据泄漏审计、关键词/评测/provenance/qualification 测试、真实制品 board benchmark、SDK install + clean consumer，以及 Cortex-A32 ARMv7 hard-float 交叉编译。独立 Clang **libFuzzer + ASan/UBSan** job 会持续从 canonical seed 变异 `.kwm/.kwk` parser 输入。
 
 Hosted CI 数据只作为回归信号。真正量产仍必须使用真实训练模型、最终 held-out corpus 和目标 SoC，记录 FAR/hour、FRR、唤醒延迟、p95/p99 处理时间、CPU、内存、热/功耗和长时间连续背景音频结果。仓库 issue #2 专门跟踪这道真实证据 gate。
 

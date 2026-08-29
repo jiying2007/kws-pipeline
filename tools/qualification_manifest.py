@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import pathlib
 import sys
 import wave
 
+from model_provenance import validate_model_provenance
 from qualification_common import (
     FRAME_HOP_SAMPLES,
     FRAME_LENGTH_SAMPLES,
@@ -54,8 +54,12 @@ def reference_stats(path: pathlib.Path) -> tuple[dict[str, float], int, float]:
     for index, row in enumerate(load_jsonl(path, "references")):
         name = row.get("recording")
         if not isinstance(name, str) or not name or name in recordings:
-            raise ValueError(f"references[{index}]: recording must be non-empty and unique")
-        duration = finite(row.get("duration_s"), f"references[{index}].duration_s", 0.0)
+            raise ValueError(
+                f"references[{index}]: recording must be non-empty and unique"
+            )
+        duration = finite(
+            row.get("duration_s"), f"references[{index}].duration_s", 0.0
+        )
         if duration <= 0.0:
             raise ValueError(f"references[{index}].duration_s must be > 0")
         expected = row.get("expected")
@@ -63,7 +67,9 @@ def reference_stats(path: pathlib.Path) -> tuple[dict[str, float], int, float]:
             raise ValueError(f"references[{index}].expected must be a list")
         for event_index, event in enumerate(expected):
             if not isinstance(event, dict):
-                raise ValueError(f"references[{index}].expected[{event_index}] must be an object")
+                raise ValueError(
+                    f"references[{index}].expected[{event_index}] must be an object"
+                )
             json_int(event.get("keyword_id"), "reference keyword_id", 0)
             start_s = finite(event.get("start_s"), "reference start_s", 0.0)
             end_s = finite(event.get("end_s"), "reference end_s", 0.0)
@@ -111,6 +117,15 @@ def board_wav_stats(path: pathlib.Path) -> tuple[float, int]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, type=pathlib.Path)
+    parser.add_argument("--model-provenance", required=True, type=pathlib.Path)
+    parser.add_argument("--checkpoint", required=True, type=pathlib.Path)
+    parser.add_argument("--training-tokens", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--training-manifest",
+        required=True,
+        action="append",
+        type=pathlib.Path,
+    )
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--config", required=True, type=pathlib.Path)
@@ -138,6 +153,7 @@ def main() -> int:
     model = read_model(args.model)
     pack = read_pack(args.keywords)
     vocabulary = read_vocabulary(args.tokens)
+    training_vocabulary = read_vocabulary(args.training_tokens)
     if not (
         model["vocab_size"] == pack["vocab_size"] == vocabulary["size"]
         and model["vocab_fingerprint"]
@@ -145,10 +161,20 @@ def main() -> int:
         == vocabulary["fingerprint"]
     ):
         raise ValueError("model, keyword pack, and token vocabulary identity differ")
+    if (
+        training_vocabulary["size"] != vocabulary["size"]
+        or training_vocabulary["fingerprint"] != vocabulary["fingerprint"]
+    ):
+        raise ValueError(
+            "training token vocabulary mapping differs from release token vocabulary"
+        )
     runtime = validate_runtime_config(args.config, model)
 
     paths = {
         "model": args.model,
+        "model_provenance": args.model_provenance,
+        "model_checkpoint": args.checkpoint,
+        "training_tokens": args.training_tokens,
         "keyword_pack": args.keywords,
         "tokens": args.tokens,
         "config": args.config,
@@ -163,14 +189,35 @@ def main() -> int:
         "evidence": args.evidence,
     }
     hashes = {name: sha256_file(path) for name, path in paths.items()}
+    training_manifest_hashes = [sha256_file(path) for path in args.training_manifest]
+
+    model_lineage = validate_model_provenance(
+        args.model_provenance,
+        model_sha256=hashes["model"],
+        model_bytes=model["bytes"],
+        feature_dim=model["feature_dim"],
+        hidden_dim=model["hidden_dim"],
+        vocab_size=model["vocab_size"],
+        vocab_fingerprint=model["vocab_fingerprint"],
+        tokens_sha256=hashes["tokens"],
+        checkpoint_sha256=hashes["model_checkpoint"],
+        training_tokens_sha256=hashes["training_tokens"],
+        training_manifest_sha256s=training_manifest_hashes,
+    )
 
     recordings, expected_count, audio_hours = reference_stats(args.references)
     detections_count = detection_count(args.detections, recordings)
     eval_summary = load_json(args.eval_summary)
     eval_provenance = load_json(args.eval_provenance)
-    if json_int(eval_summary.get("recordings"), "evaluation.recordings", 1) != len(recordings):
+    if (
+        json_int(eval_summary.get("recordings"), "evaluation.recordings", 1)
+        != len(recordings)
+    ):
         raise ValueError("evaluation recording count does not match reference file")
-    if json_int(eval_summary.get("expected"), "evaluation.expected", 0) != expected_count:
+    if (
+        json_int(eval_summary.get("expected"), "evaluation.expected", 0)
+        != expected_count
+    ):
         raise ValueError("evaluation expected count does not match reference file")
     close_enough(
         finite(eval_summary.get("audio_hours"), "evaluation.audio_hours", 0.0),
@@ -179,7 +226,12 @@ def main() -> int:
         1e-12,
         1e-12,
     )
-    if json_int(eval_provenance.get("recordings"), "provenance.recordings", 1) != len(recordings) or json_int(eval_provenance.get("detections"), "provenance.detections", 0) != detections_count:
+    if (
+        json_int(eval_provenance.get("recordings"), "provenance.recordings", 1)
+        != len(recordings)
+        or json_int(eval_provenance.get("detections"), "provenance.detections", 0)
+        != detections_count
+    ):
         raise ValueError("evaluation provenance counts do not match selected files")
     evaluation = validate_eval(
         eval_summary,
@@ -206,17 +258,33 @@ def main() -> int:
         },
     )
     board_seconds, board_blocks = board_wav_stats(args.board_audio)
-    close_enough(board["audio_seconds"], board_seconds, "board.audio_seconds", 1e-9, 1e-6)
+    close_enough(
+        board["audio_seconds"], board_seconds, "board.audio_seconds", 1e-9, 1e-6
+    )
     if board["blocks"] != board_blocks * board["repeats"]:
         raise ValueError("board block count does not match board WAV and repeats")
     evidence = validate_evidence(load_json(args.evidence))
 
+    training_manifest_artifacts = [
+        artifact(path, digest)
+        for path, digest in zip(args.training_manifest, training_manifest_hashes)
+    ]
     artifacts = {
         "model": {
             **artifact(args.model, hashes["model"]),
             "feature_dim": model["feature_dim"],
             "hidden_dim": model["hidden_dim"],
         },
+        "model_provenance": artifact(
+            args.model_provenance, hashes["model_provenance"]
+        ),
+        "model_checkpoint": artifact(
+            args.checkpoint, hashes["model_checkpoint"]
+        ),
+        "training_tokens": artifact(
+            args.training_tokens, hashes["training_tokens"]
+        ),
+        "training_manifests": training_manifest_artifacts,
         "keyword_pack": {
             **artifact(args.keywords, hashes["keyword_pack"]),
             "keyword_count": pack["keyword_count"],
@@ -248,6 +316,10 @@ def main() -> int:
             "sha256": vocabulary["sha256"],
         },
         "artifacts": artifacts,
+        "model_lineage": {
+            "provenance_sha256": hashes["model_provenance"],
+            **model_lineage,
+        },
         "evaluation": {
             "summary_sha256": hashes["eval_summary"],
             "provenance_sha256": hashes["eval_provenance"],
@@ -276,6 +348,13 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError, wave.Error) as exc:
+    except (
+        json.JSONDecodeError,
+        KeyError,
+        OSError,
+        TypeError,
+        ValueError,
+        wave.Error,
+    ) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

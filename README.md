@@ -24,8 +24,9 @@ A normal phrase change is an L0 configuration update, not a model retrain. If fi
 - No heap, hidden thread, lock, filesystem or text/pinyin conversion in the real-time path.
 - Caller-owned aligned engine arena; model tensors are zero-copy views into a read-only `.kwm` blob.
 - Field-updatable `.kwk` keyword packs; changing a wake phrase does not require relinking firmware.
-- ABI v2 binds `.kwm`, `.kwk` and generated C keyword tables to the **same 64-bit vocabulary fingerprint**. Same-sized but differently mapped vocabularies are rejected.
+- ABI v2 binds `.kwm`, `.kwk`, training checkpoints and generated C keyword tables to the **same token vocabulary identity**. Same-sized but differently mapped vocabularies are rejected.
 - Keyword updates are validated before the active trie is replaced, so a bad update does not destroy the previous valid configuration.
+- Adjacent repeated acoustic tokens use CTC-compatible structural semantics: a repeated token can advance only from a prefix state that has observed a blank separator. Blank-separated and nonblank Viterbi states are retained independently.
 - L0 keyword-only update, L1 threshold/hard-negative calibration, L2 `--head-only` shallow customization.
 - Default 32-feature / 48-hidden / ~420-token geometry is about **1.2 MMAC/s** for dense acoustic inference and about **26 KB** for model weights+biases. These are design estimates, not Cortex-A32 board measurements.
 
@@ -71,12 +72,23 @@ During exploration the fourth TSV column may be omitted and `pypinyin` can gener
 
 ## Base training and shallow customization
 
-Train a base CTC model and export ABI-v2 `.kwm` with the exact token vocabulary used by keyword packs:
+Before training, audit train/calibration/qualification splits by **decoded PCM identity**, not filenames or WAV-container bytes. This catches an identical recording even if it is copied, renamed or rewrapped with different RIFF metadata:
+
+```bash
+python3 training/audit_dataset.py \
+  --split train=data/train.tsv \
+  --split calibration=data/calibration.tsv \
+  --split qualification=data/eval/references.jsonl \
+  --audio-root qualification=data/eval \
+  --report build/dataset-audit.json
+```
+
+Train a base CTC model with the exact token vocabulary that will later be used by `.kwm` and `.kwk` artifacts:
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/train.tsv \
-  --vocab-size 420 \
+  --tokens keywords/tokens.zh.txt \
   --output build/base.pt
 
 python3 training/export_model.py \
@@ -85,13 +97,17 @@ python3 training/export_model.py \
   --output build/base.kwm
 ```
 
+The checkpoint records the vocabulary fingerprint/token-file hash, training-manifest hashes, frontend-spec version, seed and optimizer settings. Warm starts require the exact same fingerprint, and the exporter refuses to bind a checkpoint to a different same-sized token-to-ID mapping.
+
+The exporter also writes `build/base.kwm.provenance.json`. It binds the final `.kwm` hash to the checkpoint hash, export/training token identities, training-manifest hashes and hyperparameters, plus per-matrix int8 quantization scale, max error, RMSE and SNR. Shipping qualification requires this provenance **and the actual checkpoint, training token file, and every training manifest referenced by it**, so lineage hashes are recomputed from bytes rather than trusted as declarations.
+
 For shallow customization, combine normal data with mined negatives and freeze the input/recurrent backbone:
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/xiaowo.tsv \
   --manifest build/hard-negatives.tsv \
-  --vocab-size 420 \
+  --tokens keywords/tokens.zh.txt \
   --warm-start build/base.pt \
   --head-only \
   --epochs 10 \
@@ -99,6 +115,8 @@ python3 training/train_ctc.py \
 ```
 
 `--head-only` requires a warm start and changes only the acoustic output head. Full-model tuning is possible but needs a broader regression corpus.
+
+The dependency-free `training/frontend_spec.py` is the feature contract. CI runs the real C frontend through `kws_feature_dump` and compares every emitted feature against that spec, while the PyTorch frontend imports the same mel/FFT/scale constants.
 
 ## Runtime API
 
@@ -159,12 +177,16 @@ A green source CI is a **software baseline**, not a shipping acoustic claim. The
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 
-# Retain the exact target binary that produced board-summary.json.
+# Retain the exact binaries that produced the evidence.
 cp /path/to/exact-target-kws_board_bench qualification/kws_board_bench.target
 cp /path/to/exact-eval-kws_wav qualification/kws_wav.eval
 
 python3 tools/qualification_manifest.py \
   --model release/base.kwm \
+  --model-provenance release/base.kwm.provenance.json \
+  --checkpoint release/base.pt \
+  --training-tokens release/training-tokens.txt \
+  --training-manifest release/train.tsv \
   --keywords release/xiaowo.kwk \
   --tokens release/tokens.txt \
   --config release/runtime.json \
@@ -187,7 +209,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-`kws_board_bench` reports exact runner/model/pack/audio hashes plus mean/p50/p95/p99/max process time, RTF and p99 headroom. `qualification_manifest.py` independently revalidates canonical ABI layouts, the runtime config, vocabulary identity, the actual evaluation runner/references/detections, reference/detection counts and audio hours, the actual board WAV duration/block count, board timing formulas and all cross-artifact SHA256 relationships. `qualification_gate.py` then applies the explicit SKU policy to acoustic, latency, CPU, RSS, stack, soak, thermal and power evidence and binds the result to the exact manifest and policy hashes. The repository example policy is intentionally named `example-not-a-shipping-policy`.
+Repeat `--training-manifest` for every manifest used by the checkpoint, including mined-hard-negative manifests when applicable. `kws_board_bench` reports exact runner/model/pack/audio hashes plus mean/p50/p95/p99/max process time, RTF and p99 headroom. `qualification_manifest.py` independently revalidates canonical ABI layouts, runtime config, vocabulary identity, **the actual checkpoint/training-token/training-manifest bytes behind model lineage**, the actual evaluation runner/references/detections, reference/detection counts and audio hours, the actual board WAV duration/block count, board timing formulas and all cross-artifact SHA256 relationships. `qualification_gate.py` then applies the explicit SKU policy to acoustic, latency, CPU, RSS, stack, soak, thermal and power evidence, binds the result to the exact manifest/policy hashes, and carries the source model-checkpoint SHA256 for traceability. The repository example policy is intentionally named `example-not-a-shipping-policy`.
 
 See `docs/RELEASE_QUALIFICATION.md` for the complete evidence schema and release procedure.
 
@@ -203,7 +225,7 @@ Avoid a second resampler when `audio-pipeline` already emits 16 kHz. Re-evaluate
 
 ## Validation
 
-CI gates strict GCC and Clang builds, CTest, ASan/UBSan, keyword-pack/tool tests, corpus provenance, continuous-audio metric scoring, a real-artifact board-benchmark contract including C-vs-Python SHA256 verification, deterministic qualification-manifest/policy-gate tests, a default-geometry hosted benchmark, SDK install + pkg-config + clean `find_package` consumer, Python syntax, and Cortex-A32 ARMv7 hard-float cross-build of both the core and target qualification tools.
+CI gates strict GCC and Clang builds, CTest, ASan/UBSan, direct decoder CTC-repeat contracts, C-vs-reference frontend parity, decoded-PCM dataset leakage tests, keyword/tool/evaluation tests, continuous-audio provenance, real-artifact board benchmarking, qualification manifest/policy gates, SDK install + clean consumer checks, and Cortex-A32 ARMv7 hard-float cross-build of the core and target tools. A separate Clang **libFuzzer + ASan/UBSan** job continuously mutates `.kwm` and `.kwk` parser inputs from canonical seeds.
 
 Hosted CI numbers are regression signals only. Shipping qualification still requires the real trained model, held-out corpus and target SoC evidence for FAR/hour, FRR, wake latency, p95/p99 processing time, CPU, memory, thermal/power and long-duration background-noise behavior. Repository issue #2 tracks that evidence gate.
 
