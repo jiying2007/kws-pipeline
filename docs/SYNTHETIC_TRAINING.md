@@ -1,21 +1,12 @@
-# Synthetic self-training loop
+# Synthetic and domain-aware self-training loops
 
-This workflow exists to close the **software, data and model-control loop before real human speech is available**. Its strongest successful result is named **`synthetic-qualified`**.
+These workflows close the **software, data and model-control loop before complete real product data is available**. They deliberately separate synthetic evidence from shipping acoustic evidence.
 
-`synthetic-qualified` means that the repository can deterministically generate independent data splits, fit/export a real ABI-v2 model, compile a real keyword pack, run the actual C runtime over continuous audio, calibrate thresholds, mine false accepts/rejects, iterate candidates, select a best candidate and pass a previously unseen synthetic-heldout gate.
+A successful synthetic loop can prove deterministic split isolation, model fitting/export, keyword-pack compilation, C-runtime evaluation, threshold calibration, failure replay, candidate selection and held-out synthetic qualification. It cannot prove Mandarin human-speech quality, real-room 3–5 m performance or physical Cortex-A32 performance.
 
-It does **not** mean that Mandarin human speech, real speakers, real rooms or the shipping Cortex-A32 SKU have been acoustically qualified. Repository issue #2 remains the separate real-evidence gate.
+Repository issue #2 remains the real-evidence gate.
 
-## One-command loop
-
-Build the hosted runtime first:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-cmake --build build --parallel
-```
-
-Then run:
+## Generic synthetic loop
 
 ```bash
 python3 training/iterate.py \
@@ -23,188 +14,107 @@ python3 training/iterate.py \
   --runner build/kws_wav
 ```
 
-The loop creates its workspace under `build/synthetic-loop` by default and replaces that workspace on each run. `--work-dir` is guarded against destructive roots such as the filesystem root, HOME, repository root and repository parent; an unsafe path is rejected before dataset generation or deletion.
+The four data pools are `train`, `calibration`, `test` and untouched `qualification`. `training/audit_dataset.py` checks decoded PCM SHA256 isolation.
 
-## Four isolated data pools
+The dependency-free generic prototype is a real deterministic softmax learning path. It extracts train-only token/background frames, trains and int8-quantizes the acoustic head, then requires **99.5% post-quantization held-out token-fit accuracy** before the candidate can enter end-to-end synthetic qualification. Complete candidates still run through the C runtime.
 
-The generator creates four distinct pools from different deterministic seeds:
+The alternative `torch_ctc` backend uses `train_ctc.py`/`export_model.py` and supports head-only replay in later rounds.
 
-- `train`: model fitting / CTC training only;
-- `calibration`: keyword threshold search and FP/FN mining;
-- `test`: candidate regression comparison after calibration;
-- `qualification`: evaluated only after the best candidate has been selected.
+## Domain-aware multi-frontend loop
 
-Every split is passed through `training/audit_dataset.py`; decoded PCM SHA256 must not overlap across splits. Synthetic continuous recordings use a configurable clip gap. The shipped example pins `continuous_gap_ms=1600`, which is longer than the default 1200-ms runtime refractory period and prevents one synthetic clip from suppressing or completing another clip's decoder state.
+Build `kws_wav`, then run:
 
-## Positive and negative generation
-
-Positive families are generated from the explicit pinyin path in the four-column keyword TSV. The dependency-free `tone` backend gives every active acoustic token a deterministic spectral carrier. Gain, pitch, SNR, simple echo and generated `white` / `fan` / `motor` / `media` noise vary by seed.
-
-Negative families include:
-
-- partial wake paths;
-- token substitutions;
-- adjacent-token swaps;
-- random token strings;
-- synthetic noise profiles.
-
-A negative is rejected during generation if it contains any complete configured wake path as an ordered subsequence. This prevents a mislabeled negative from teaching or testing an impossible contract.
-
-## TTS adapter
-
-`training/synthetic_audio.py` also supports a generic command backend. The command is an argv list and may use `{text}` and `{output}` placeholders. The command must produce uncompressed mono PCM16 WAV at 16 kHz.
-
-Example shape:
-
-```json
-{
-  "generator": {
-    "tts": {
-      "backend": "command",
-      "command": [
-        "/path/to/offline-tts-wrapper",
-        "--text", "{text}",
-        "--output", "{output}"
-      ]
-    }
-  }
-}
+```bash
+python3 training/iterate_domain.py \
+  --config configs/training/xiaowo.domain.json \
+  --runner build/kws_wav \
+  --work-dir build/domain-loop
 ```
 
-Keep the exact TTS engine/model/voice identity in the experiment configuration or wrapper provenance when a real synthetic speech backend is connected. Do not silently replace one voice/model with another while comparing candidates.
+The default domain config models nominal:
 
-## Dependency-free trained prototype
+- near: 0.3–1.0 m;
+- mid: 1.0–3.0 m;
+- far: 3.0–5.0 m;
+- azimuth from front/side/back directions;
+- RT60 0.15–0.80 s;
+- SNR -5 to 30 dB;
+- white/fan/motor/media noise;
+- optional local playback and AEC residual;
+- 60-mm nominal dual-mic spacing;
+- proxy AFE or a command adapter for an external shipping audio pipeline.
 
-Hosted CI must not depend on a large training framework, so the `prototype` backend is a real deterministic learning path rather than a hand-written constant model:
+These are simulation parameters, not measured product coverage.
 
-1. generate isolated augmented token-fitting samples from training-only seeds;
-2. extract features with the same dependency-free frontend specification used by the C parity gate;
-3. split energetic token frames from lead/tail background frames;
-4. add independent white/fan/motor/media background frames for the explicit blank class;
-5. project the 32 frontend features through an ABI-v2 int8 identity input matrix and `tanh`;
-6. train a class-balanced multiclass softmax acoustic head over blank + active tokens;
-7. quantize the learned output head to int8 using the actual ABI-v2 global output scale;
-8. rerun held-out token-fit validation **after quantization**;
-9. reject the model if quantized validation accuracy falls below 99.5%;
-10. export canonical `.kwm`, fitting sample hashes, optimizer diagnostics and a confusion matrix.
+### Split semantics
 
-Calibration, test and qualification audio are never read by this optimizer. The emitted provenance uses `evidence_class: synthetic-trained-softmax-prototype` and binds the model hash to its fitting samples and diagnostics.
+The domain renderer first creates independent base splits and then renders acoustic scenes. Decoded PCM leakage is audited across all four splits.
 
-The prototype exists to prove a true train → quantize → ABI-v2 model → C runtime → calibration → replay → held-out qualification loop without PyTorch. It is deliberately synthetic and is not a substitute for a generic Mandarin acoustic model.
-
-## Decoder admission contract
-
-The runtime keyword Trie does not advance from every token with a small posterior. Each acoustic frame admits at most one nonblank label: the highest-logit nonblank token, and only when it also beats blank. Non-dominant token probabilities remain in normalization/confidence but cannot create a structural Trie transition.
-
-This is important for synthetic confusable negatives such as reordered or missing-token sequences. Without the admission gate, low-probability transition-frame tails combined with `token_boost` can fabricate a keyword path that was never the greedy acoustic sequence. Prefix retention still permits gaps/unrelated dominant labels, and repeated identical keyword tokens still require a blank-separated state.
-
-The decoder remains a bounded product-oriented Viterbi/greedy CTC hybrid, not a full CTC prefix beam search.
-
-## Learning backend
-
-For actual CTC weight learning, set:
-
-```json
-{
-  "iteration": {
-    "backend": "torch_ctc"
-  }
-}
-```
-
-That backend uses the repository's `training/train_ctc.py` and `training/export_model.py`. Round 0 trains from the synthetic train manifest. Later rounds warm-start the previous checkpoint with `--head-only` and additionally consume accumulated replay manifests.
-
-## Automatic threshold calibration
-
-Each candidate is evaluated on the calibration continuous recording through the real `kws_wav` executable. `iterate.py` performs per-keyword coordinate search across `calibration.thresholds`, recompiles `.kwk`, and scores every trial with `eval/score_events.py`.
-
-Threshold tuning uses calibration only. After calibration is frozen for that candidate, **candidate ranking combines calibration and test regression scores**; this prevents a marginal calibration-only win from replacing a candidate that generalizes better to the independent test split. Qualification remains untouched until the retained best candidate is frozen.
-
-The example synthetic policy keeps strict gates:
+Training scenes remain weighted stochastic samples and can be reweighted by adaptive curriculum. Evaluation positives are deterministic:
 
 ```text
-FRR <= 5%
-FAR/hour == 0
-p95 post-end latency <= 800 ms
+far -> mid -> near -> far -> ...
 ```
 
-All iteration counts and gate values are range-checked before use: `0 < min_rounds <= max_rounds`, `patience >= 0`, `coordinate_rounds > 0`, finite nonnegative gates, and `max_frr <= 1`. Do not relax these limits merely to make CI green. Fix data labeling, isolation, acoustic classification or decoder behavior instead.
+The first positive in calibration, test and qualification is therefore always far. This prevents a far-field gate from passing/failing only because weighted random sampling happened to omit the far positive class. The domain summary records overall and per-split distance histograms plus the evaluation positive order.
 
-## Bidirectional failure replay
+### Frontend A/B
 
-Calibration failures feed the next learning round in both directions:
+The domain loop can evaluate both model-bound frontends:
+
+- `logmel` (`frontend_kind=0`);
+- `pcen-lite` (`frontend_kind=1`).
+
+Every candidate receives its own model, calibration thresholds, KWKP v3 pack, calibration/test metrics and domain report. Candidate ranking is based on the same gate-aware objective; qualification remains untouched until the best candidate is frozen.
+
+### Dependency-free domain prototype
+
+The hosted domain prototype uses deterministic synthetic token scenes. For logmel it supervises energetic token frames. PCEN-lite is stateful, so the prototype uses one stable discriminative token-core frame per synthetic token scene for this **internal frame-classifier fit only**; transition frames are not mislabeled as blank.
+
+The quantized domain prototype must achieve at least **98.5% token-core validation accuracy** before it can participate.
+
+That 98.5% value is not a product FRR target. Every complete rendered calibration/test/qualification utterance—including all transition frames—still runs through the real C runtime, decoder and keyword pack. The final domain metrics therefore remain sequence/runtime metrics rather than frame-fit metrics.
+
+### Adaptive curriculum
+
+After a round, `domain_curriculum.py` converts worst-domain results into bounded distance-band weights. The next **training** render may emphasize weak distance bands. Calibration/test/qualification are not reweighted from their results.
+
+### Evidence class
+
+The domain loop emits `evidence_class: synthetic-domain-qualified` only when the frozen best candidate passes the synthetic qualification gates. Its manifest also lists explicit limitations:
+
+- no real human speech;
+- simulated acoustic scenes are not production far-field qualification;
+- the shipping AFE must be evaluated through the command adapter or real recordings;
+- physical target-board and independent human held-out evidence remain issue #2 gates.
+
+## Long-FAR synthetic regression
+
+`eval/long_far_stream.py` drives `kws_raw_stream` over long continuous negative PCM without resetting runtime state between clips. The nightly workflow uses this as a regression watch for state accumulation, false accepts and parser/runtime changes.
+
+Do not convert hosted/generated hours into a product FAR claim. Production FAR requires long real recordings through the final microphones/enclosure/AEC/NS/AGC configuration.
+
+## Failure replay
+
+Calibration failures can feed the next learning round:
 
 ```text
-false accept
-  -> false-positives.jsonl
-  -> mine_hard_negatives.py
-  -> empty-target CTC replay
-
-false reject
-  -> false-rejects.jsonl
-  -> mine_false_rejects.py
-  -> positive replay with the configured token target
+false accept -> mine_hard_negatives.py -> empty-target replay
+false reject -> mine_false_rejects.py -> positive replay
 ```
 
-Replay clips are cumulative and de-duplicated by manifest line. Their final counts and hashes are written into `synthetic-loop-manifest.json`.
-
-The dependency-free prototype always refits from its isolated token/background fitting domain; replay affects actual weight updates in the `torch_ctc` backend. Both backends still exercise FP/FN mining, candidate selection, provenance and stopping logic.
-
-## Candidate selection and stopping
-
-For each candidate, `calibration_score` and `test_score` use the same gate-aware FRR/FAR/latency penalty function; the retained candidate score is their sum. A newer model therefore never replaces the retained best merely because it is newer or because it overfits calibration.
-
-The loop stops when either:
-
-- the minimum round count is reached and the best candidate passes calibration + test gates while `stop_on_gate` is enabled; or
-- no joint-score improvement is observed for `patience` rounds; or
-- `max_rounds` is reached.
-
-Only then are the retained model, keyword pack, calibrated keyword TSV and **model provenance** copied into `best/`. The `torch_ctc` backend also freezes the selected checkpoint. The final synthetic qualification therefore has a stable lineage bundle rather than only detached model bytes.
-
-## Output contract
-
-Important retained outputs include:
-
-```text
-build/synthetic-loop/
-  dataset/
-    train.tsv
-    calibration.tsv
-    test.tsv
-    qualification.tsv
-    calibration.continuous.wav
-    test.continuous.wav
-    qualification.continuous.wav
-    *.references.jsonl
-    dataset-index.jsonl
-    dataset-summary.json
-    token-carriers.json
-  dataset-audit.json
-  replay/
-    hard-negatives.tsv
-    missed-positives.tsv
-  candidates/
-    round-*/
-      model.kwm
-      model.kwm.synthetic-provenance.json   # prototype
-      model.kwm.provenance.json             # torch_ctc
-      model.pt                              # torch_ctc
-      prototype-fit/
-        token-fit-samples.jsonl
-        softmax-diagnostics.json
-  best/
-    model.kwm
-    model-provenance.json
-    model.pt                                # torch_ctc only
-    keywords.kwk
-    keywords.tsv
-    synthetic-qualification/
-  synthetic-loop-manifest.json
-```
-
-The final manifest uses `schema_version: 2` and `evidence_class: "synthetic-only"`. It records the selected round/joint score, best model/provenance/pack/keyword hashes, the selected checkpoint hash when applicable, candidate calibration/test metrics, replay hashes and explicit limitations. CI independently checks the frozen lineage, model fitting provenance and post-quantization confusion diagnostics. A successful run may be described as **synthetic-qualified** only.
+The final qualification pool is never a mining source. Once a held-out sample is deliberately fed back into training/calibration, it is no longer eligible as independent held-out evidence.
 
 ## Promotion to real evidence
 
-When human speech becomes available, do not delete or weaken this loop. Add real train/calibration/test pools and keep a new real held-out qualification pool isolated from replay. The production release path remains `docs/RELEASE_QUALIFICATION.md`, including target-board measurements and issue #2 closure criteria.
+Keep the same orchestration when product data arrives, but replace synthetic-only claims with real split identities:
+
+1. real train data;
+2. real calibration data for threshold/replay;
+3. independent real test data for candidate comparison;
+4. frozen real qualification-heldout data;
+5. final `audio-pipeline` configuration;
+6. physical target-board benchmark/resource evidence;
+7. byte-complete `qualification_manifest.py` + `qualification_gate.py`.
+
+Only that release path can close issue #2.

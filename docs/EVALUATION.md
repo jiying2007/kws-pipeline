@@ -2,23 +2,23 @@
 
 KWS release quality is measured on continuous recordings, not isolated clip accuracy.
 
-## Inputs
+## Reference and detection contract
 
-Reference recordings are JSONL rows that own the full duration of one continuous source:
+Reference JSONL owns the full duration of each recording:
 
 ```json
-{"recording":"living-room-001","path":"living-room-001.wav","duration_s":3600.0,"expected":[{"keyword_id":1,"start_s":91.2,"end_s":92.1}]}
+{"recording":"living-room-001","path":"living-room-001.wav","duration_s":3600.0,"expected":[{"keyword_id":1,"start_s":91.2,"end_s":92.1}],"domain":{"distance_band":"far"}}
 ```
 
-Negative-only recordings use an empty `expected` list. Keep speakers, sessions and source recordings disjoint between train/calibration/final evaluation splits.
+Negative-only recordings use `"expected": []`. Keep speakers, sessions, TTS voices, source recordings and device sessions disjoint across train/calibration/test/qualification.
 
-Detections emitted by the real C runtime are JSONL rows:
+Runtime detections are JSONL:
 
 ```json
 {"recording":"living-room-001","keyword_id":1,"time_s":92.25,"confidence":0.73}
 ```
 
-## Run the real runtime and preserve provenance
+## Run the real C runtime
 
 ```bash
 python3 eval/run_corpus.py \
@@ -29,101 +29,118 @@ python3 eval/run_corpus.py \
   --audio-root qualification/audio \
   --detections qualification/detections.jsonl \
   --provenance qualification/detections.provenance.json
-```
 
-The provenance sidecar contains SHA256 for:
-
-- the `kws_wav` runner binary;
-- `.kwm` model;
-- `.kwk` keyword pack;
-- reference JSONL;
-- generated detection JSONL;
-- recording and detection counts.
-
-This prevents a metric report from being silently reused with a different model/keyword pack or edited detection file.
-
-## Product metrics
-
-```bash
 python3 eval/score_events.py \
   --references qualification/references.jsonl \
   --detections qualification/detections.jsonl \
   --summary qualification/eval-summary.json \
-  --false-positives qualification/false-positives.jsonl
+  --false-positives qualification/false-positives.jsonl \
+  --false-rejects qualification/false-rejects.jsonl
 ```
+
+The provenance sidecar binds runner, model, keyword pack, references and detections by SHA256.
 
 The scorer reports:
 
-- `FAR/hour`: unmatched detections divided by total continuous audio hours;
-- `FRR`: unmatched expected wake events divided by expected wake events;
+- FAR/hour;
+- FRR;
 - per-keyword expected/matched/false-reject/false-accept counts;
-- p50/p95 detection delay after the annotated phrase end; detections before phrase end contribute zero post-end delay;
-- SHA256 of the exact reference and detection files used for the report.
+- p50/p95 post-end detection latency;
+- exact reference/detection SHA256.
 
-All durations, timestamps, confidences and gate values must be finite. Invalid `NaN`/`Inf` input is rejected rather than allowed to bypass a numerical threshold.
+Matching is monotonic per keyword: first maximize valid matches, then minimize total distance to annotated keyword end. Invalid NaN/Inf values are rejected.
 
-### Matching semantics
+## Domain metrics
 
-Expected events and detections are matched independently per keyword with a monotonic dynamic-programming assignment. The scorer first maximizes the number of valid matches and then minimizes the total distance between detection time and annotated keyword end. This avoids greedy misassignment when tolerance windows overlap.
+When reference rows contain domain metadata, add:
 
-Default tolerance is 150 ms before the annotated start and 500 ms after the annotated end. These are scorer defaults, not a product acceptance policy.
+```bash
+python3 eval/domain_metrics.py \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
+  --output qualification/domain-metrics.json
+```
 
-The scorer can apply immediate exploratory gates through `--max-far-per-hour`, `--max-frr` and `--max-p95-latency-ms`. Formal product release uses the separate qualification policy described in `docs/RELEASE_QUALIFICATION.md` so the measured evidence remains immutable.
+The report includes overall metrics plus available domain buckets such as:
 
-## Required negative domains
+- `distance:near`, `distance:mid`, `distance:far`;
+- azimuth;
+- RT60 state;
+- noise profile;
+- local playback state;
+- composite domain ids;
+- keyword confusion/miss matrix;
+- deterministic worst-domain score.
 
-A production corpus should include at least:
+Aggregate FRR must not hide a weak far/side/reverb/motor/playback domain. Product policy should set minimum corpus coverage separately from the scorer.
 
-- normal home conversation and near-homophones;
-- partial wake phrases and repeated syllables;
-- television, phone and smart-speaker playback;
-- own-device TTS/music playback through the shipping AEC path;
+The synthetic domain renderer guarantees that every calibration/test/qualification split containing positives begins with a far positive and then rotates `far -> mid -> near`. This is only a deterministic CI/data-orchestration contract. A real product corpus must independently contain enough genuine samples in every required bucket.
+
+## Long continuous FAR
+
+`kws_raw_stream` consumes raw PCM16 blocks through the same C engine without per-clip resets. `eval/long_far_stream.py` uses it to exercise continuous negative streams and preserve false-accept evidence.
+
+`.github/workflows/far-nightly.yml` provides a recurring hosted synthetic regression. It is useful for detecting a decoder/frontend regression that only appears after long state accumulation, but its generated/hosted FAR is **not** a shipping FAR/hour measurement.
+
+Shipping FAR needs long real continuous background audio through the final microphone/enclosure/AFE path.
+
+## Required product domains
+
+At minimum include:
+
+- normal home conversation, near-homophones and partial wake phrases;
+- repeated syllables and shared-prefix phrases;
+- television/phone/smart-speaker playback;
+- own-device TTS/music through shipping AEC;
+- AEC residual/double-talk;
 - robot motor, gearbox, fan, pump and chassis vibration;
-- silence, impulsive noise and microphone handling;
-- far-field speech across expected angles/distances;
-- day/night gain states and representative AGC/AEC/NS configurations.
+- silence/impulses/microphone handling;
+- expected angles and distances, including the product far-field requirement;
+- representative RT60/room states;
+- day/night gain and final AGC/AEC/NS modes.
 
-Positive coverage should be bucketed by speaker, distance, angle, SPL/SNR, speaking rate, device state and relevant acoustic-front-end modes so aggregate FRR cannot hide a weak field domain.
+Positive coverage should be bucketed by speaker, session, distance, angle, SPL/SNR, speaking rate and device state.
 
-## Hard-negative feedback
+## Failure replay
 
-False wakes should feed the next calibration/training iteration rather than being manually forgotten:
+False accepts can feed training:
 
 ```bash
 python3 eval/mine_hard_negatives.py \
-  --false-positives qualification/false-positives.jsonl \
-  --audio-root qualification/audio \
+  --false-positives build/false-positives.jsonl \
+  --audio-root data/calibration \
   --output-dir build/hard-negatives \
   --manifest build/hard-negatives.tsv
 ```
 
-The generated TSV contains empty CTC targets and can be mixed directly with normal training data:
+Retrain with the exact token vocabulary; the removed size-only interface must not be used:
 
 ```bash
 python3 training/train_ctc.py \
   --manifest data/base-train.tsv \
   --manifest build/hard-negatives.tsv \
-  --vocab-size 420 \
+  --tokens keywords/tokens.zh.txt \
   --warm-start models/base.pt \
   --head-only \
   --epochs 5 \
   --output build/base-hardneg.pt
 ```
 
-Do not mine from the final held-out release corpus and then report that same corpus as unbiased validation.
+False rejects may be replayed with `eval/mine_false_rejects.py`. Never mine from the final held-out qualification corpus and then report the same samples as unbiased final evidence.
 
 ## Release evidence
 
-For every shipping model/keyword-pack tuple retain:
+For every shipping model/pack tuple retain:
 
-- model/keyword-pack/token/config SHA256 and vocabulary fingerprint;
-- evaluation runner SHA256;
-- references and detections plus their hashes;
-- evaluation provenance and summary;
-- false-positive output;
-- corpus version/identity;
-- target-board performance and resource evidence;
-- approved product qualification policy;
+- model ABI v2 and model provenance;
+- keyword-pack ABI v3;
+- exact checkpoint/training tokens/training manifests;
+- release tokens/config and frontend identity;
+- exact evaluation runner/references/detections/provenance/summary;
+- domain metrics and false-positive/false-reject outputs;
+- corpus identity/version;
+- target-board benchmark/resource evidence;
+- approved qualification policy;
 - qualification manifest and gate result.
 
-Hosted CI and cross compilation are correctness signals, not target-board acoustic qualification.
+Hosted CI and cross compilation are software correctness signals, not target-board acoustic qualification.
