@@ -75,11 +75,15 @@ def write_model(path: pathlib.Path, fingerprint: int) -> int:
 def write_model_provenance(
     path: pathlib.Path,
     model: pathlib.Path,
-    tokens: pathlib.Path,
+    export_tokens: pathlib.Path,
+    training_tokens: pathlib.Path,
+    checkpoint: pathlib.Path,
+    training_manifests: list[pathlib.Path],
     fingerprint: int,
 ) -> str:
-    checkpoint_hash = "c" * 64
-    token_hash = sha256_file(tokens)
+    checkpoint_hash = sha256_file(checkpoint)
+    export_token_hash = sha256_file(export_tokens)
+    training_token_hash = sha256_file(training_tokens)
     quant = {
         "scale": 0.01,
         "max_abs_error": 0.004,
@@ -103,18 +107,21 @@ def write_model_provenance(
                 "frontend_spec_version": 1,
             },
             "checkpoint": {
-                "name": "fixture.pt",
+                "name": checkpoint.name,
                 "sha256": checkpoint_hash,
             },
             "tokens": {
-                "name": tokens.name,
-                "sha256": token_hash,
-                "checkpoint_sha256": token_hash,
-                "byte_identical_to_training": True,
+                "name": export_tokens.name,
+                "sha256": export_token_hash,
+                "checkpoint_sha256": training_token_hash,
+                "byte_identical_to_training": (
+                    export_token_hash == training_token_hash
+                ),
             },
             "training": {
                 "manifests": [
-                    {"name": "train.tsv", "sha256": "d" * 64}
+                    {"name": manifest.name, "sha256": sha256_file(manifest)}
+                    for manifest in training_manifests
                 ],
                 "examples": 100,
                 "seed": 1337,
