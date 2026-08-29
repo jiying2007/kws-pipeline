@@ -171,6 +171,36 @@ def validate_best_freeze(work: pathlib.Path, manifest: dict) -> None:
         assert abs(float(round_record["score"]) - expected) < 1.0e-9
 
 
+def validate_dataset_contract(work: pathlib.Path) -> dict:
+    dataset = work / "dataset"
+    summary = json.loads((dataset / "dataset-summary.json").read_text(encoding="utf-8"))
+    assert summary["schema_version"] == 2
+    assert summary["evidence_class"] == "synthetic-only"
+    assert summary["event_boundary"] == "pre-augmentation-active-signal"
+    assert set(summary["background_profiles"]) == {"white", "fan", "motor", "media"}
+    for split in ("train", "calibration", "test", "qualification"):
+        stats = summary["splits"][split]
+        assert int(stats["positive_examples"]) > 0
+        assert int(stats["token_negative_examples"]) > 0
+        assert int(stats["background_examples"]) > 0
+
+    positives = [
+        row for row in jsonl(dataset / "dataset-index.jsonl") if row["kind"] == "positive"
+    ]
+    assert positives
+    for row in positives:
+        assert isinstance(row["event_start_frame"], int)
+        assert isinstance(row["event_end_frame"], int)
+        assert 0 <= row["event_start_frame"] < row["event_end_frame"] < row["frames"]
+
+    qualification_ref = jsonl(dataset / "qualification.references.jsonl")
+    assert len(qualification_ref) == 1
+    # The profile intentionally contributes at least two minutes of pure
+    # background before token/confusable clips and isolation gaps are counted.
+    assert float(qualification_ref[0]["duration_s"]) > 120.0
+    return summary
+
+
 def assert_unsafe_workdir_rejected(runner: pathlib.Path) -> None:
     completed = subprocess.run(
         [
@@ -240,6 +270,7 @@ def main() -> int:
         assert (work / "dataset" / "qualification.tsv").stat().st_size > 0
         audit = json.loads((work / "dataset-audit.json").read_text(encoding="utf-8"))
         assert audit["clean"] is True
+        dataset_summary = validate_dataset_contract(work)
         provenance = validate_prototype_evidence(work, manifest)
         validate_best_freeze(work, manifest)
 
@@ -248,6 +279,11 @@ def main() -> int:
             "prototype_quantized_validation: "
             f"accuracy={float(provenance['validation_confusion']['accuracy']):.6f} "
             f"min_margin={float(provenance['validation_confusion']['min_top1_margin']):.6f}"
+        )
+        print(
+            "synthetic_background: "
+            f"qualification_examples={int(dataset_summary['splits']['qualification']['background_examples'])} "
+            f"audio_hours={float(qualification['audio_hours']):.6f}"
         )
         print(
             "best_candidate: "
