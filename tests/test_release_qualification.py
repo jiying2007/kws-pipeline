@@ -24,6 +24,9 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         tokens = root / "tokens.txt"
+        training_tokens = root / "training-tokens.txt"
+        training_manifest = root / "train.tsv"
+        checkpoint = root / "base.pt"
         model = root / "base.kwm"
         model_provenance = root / "base.kwm.provenance.json"
         pack = root / "xiaowo.kwk"
@@ -42,9 +45,20 @@ def main() -> int:
         gate = root / "gate.json"
 
         _, fingerprint = write_tokens(tokens)
+        _, training_fingerprint = write_tokens(training_tokens)
+        assert training_fingerprint == fingerprint
+        training_manifest.write_text("train-a.wav\t1 2\n", encoding="utf-8")
+        checkpoint.write_bytes(b"checkpoint-fixture-v1")
+
         model_bytes = write_model(model, fingerprint)
         checkpoint_hash = write_model_provenance(
-            model_provenance, model, tokens, fingerprint
+            model_provenance,
+            model,
+            tokens,
+            training_tokens,
+            checkpoint,
+            [training_manifest],
+            fingerprint,
         )
         pack_bytes = write_pack(pack, fingerprint)
         write_json(
@@ -219,6 +233,12 @@ def main() -> int:
             str(model),
             "--model-provenance",
             str(model_provenance),
+            "--checkpoint",
+            str(checkpoint),
+            "--training-tokens",
+            str(training_tokens),
+            "--training-manifest",
+            str(training_manifest),
             "--keywords",
             str(pack),
             "--tokens",
@@ -254,6 +274,13 @@ def main() -> int:
         result = json.loads(manifest.read_text(encoding="utf-8"))
         assert result["artifacts"]["model_provenance"]["sha256"] == sha256_file(
             model_provenance
+        )
+        assert result["artifacts"]["model_checkpoint"]["sha256"] == checkpoint_hash
+        assert result["artifacts"]["training_tokens"]["sha256"] == sha256_file(
+            training_tokens
+        )
+        assert result["artifacts"]["training_manifests"][0]["sha256"] == sha256_file(
+            training_manifest
         )
         assert result["model_lineage"]["checkpoint_sha256"] == checkpoint_hash
         assert result["model_lineage"]["model_sha256"] == model_hash
@@ -322,7 +349,26 @@ def main() -> int:
         provenance["model"]["sha256"] = "0" * 64
         write_json(model_provenance, provenance)
         assert subprocess.run(command, check=False).returncode == 2
-        write_model_provenance(model_provenance, model, tokens, fingerprint)
+        write_model_provenance(
+            model_provenance,
+            model,
+            tokens,
+            training_tokens,
+            checkpoint,
+            [training_manifest],
+            fingerprint,
+        )
+
+        checkpoint.write_bytes(b"tampered-checkpoint")
+        assert subprocess.run(command, check=False).returncode == 2
+        checkpoint.write_bytes(b"checkpoint-fixture-v1")
+
+        original_training_manifest = training_manifest.read_text(encoding="utf-8")
+        training_manifest.write_text(
+            original_training_manifest + "extra.wav\t1\n", encoding="utf-8"
+        )
+        assert subprocess.run(command, check=False).returncode == 2
+        training_manifest.write_text(original_training_manifest, encoding="utf-8")
 
         original_refs = references.read_text(encoding="utf-8")
         references.write_text(original_refs + "# tampered\n", encoding="utf-8")
