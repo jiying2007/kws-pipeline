@@ -4,8 +4,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import math
+import os
 import pathlib
+import platform
 import random
+import re
+import subprocess
 import sys
 import wave
 
@@ -29,6 +33,7 @@ FRAME_HOP_SAMPLES = 320
 FRONTEND_SPEC_VERSION = 2
 WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
+IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -37,6 +42,63 @@ def sha256_file(path: pathlib.Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def optional_sha256(path: pathlib.Path) -> str | None:
+    return sha256_file(path) if path.is_file() else None
+
+
+def repository_sha() -> str | None:
+    try:
+        value = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=ROOT,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return value if re.fullmatch(r"[0-9a-f]{40,64}", value) else None
+
+
+def training_environment() -> dict:
+    code_paths = [
+        pathlib.Path(__file__).resolve(),
+        ROOT / "training" / "frontend.py",
+        ROOT / "training" / "frontend_spec.py",
+        ROOT / "training" / "model.py",
+    ]
+    code = {
+        path.relative_to(ROOT).as_posix(): sha256_file(path)
+        for path in code_paths
+        if path.is_file()
+    }
+    image_digest = os.environ.get("KWS_TRAINING_IMAGE_DIGEST")
+    if image_digest is not None and IMAGE_DIGEST_RE.fullmatch(image_digest) is None:
+        raise ValueError(
+            "KWS_TRAINING_IMAGE_DIGEST must be sha256:<64 lowercase hex>"
+        )
+    cudnn = torch.backends.cudnn.version() if torch.backends.cudnn.is_available() else None
+    return {
+        "schema_version": 1,
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "torch_version": str(torch.__version__),
+        "cuda_version": str(torch.version.cuda) if torch.version.cuda is not None else None,
+        "cudnn_version": int(cudnn) if cudnn is not None else None,
+        "torch_num_threads": int(torch.get_num_threads()),
+        "torch_num_interop_threads": int(torch.get_num_interop_threads()),
+        "repository_sha": repository_sha(),
+        "training_image_digest": image_digest,
+        "container_declared": os.environ.get("KWS_TRAINING_CONTAINER") == "1",
+        "requirements_lock_sha256": optional_sha256(
+            ROOT / "training" / "requirements.lock"
+        ),
+        "dockerfile_sha256": optional_sha256(ROOT / "training" / "Dockerfile"),
+        "training_code_sha256": code,
+    }
 
 
 class Manifest(Dataset):
@@ -163,6 +225,11 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
     parser.add_argument("--head-only", action="store_true")
+    parser.add_argument(
+        "--require-container-digest",
+        action="store_true",
+        help="fail unless KWS_TRAINING_IMAGE_DIGEST is a pinned sha256 digest",
+    )
     args = parser.parse_args()
 
     token_map = load_tokens(args.tokens)
@@ -182,6 +249,12 @@ def main() -> None:
         parser.error("--lr must be finite and > 0")
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
+
+    environment = training_environment()
+    if args.require_container_digest and environment["training_image_digest"] is None:
+        parser.error(
+            "--require-container-digest requires KWS_TRAINING_IMAGE_DIGEST=sha256:<digest>"
+        )
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -255,12 +328,14 @@ def main() -> None:
             "weight_decay": WEIGHT_DECAY,
             "grad_clip_norm": GRAD_CLIP_NORM,
             "hard_negative_capable": True,
+            "training_environment": environment,
         },
         args.output,
     )
     print(
         f"saved {args.output}: examples={len(dataset)} vocab={vocab_size_value} "
-        f"frontend={args.frontend} fingerprint=0x{fingerprint:016x}"
+        f"frontend={args.frontend} fingerprint=0x{fingerprint:016x} "
+        f"repo_sha={environment['repository_sha']} image={environment['training_image_digest']}"
     )
 
 
