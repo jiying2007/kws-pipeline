@@ -54,7 +54,7 @@ def main() -> int:
             {"recording": "near", "keyword_id": 1, "time_s": 2.1, "confidence": 0.9},
             {"recording": "far", "keyword_id": 2, "time_s": 2.1, "confidence": 0.8},
             {"recording": "far-bg", "keyword_id": 1, "time_s": 5.0, "confidence": 0.7},
-            {"recording": "overlap", "keyword_id": 2, "time_s": 5.05, "confidence": 0.95},
+            {"recording": "overlap", "keyword_id": 2, "time_s": 5.1, "confidence": 0.95},
         ]
         dets.write_text("\n".join(json.dumps(item) for item in detections) + "\n", encoding="utf-8")
         subprocess.check_call(
