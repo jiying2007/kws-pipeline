@@ -2,6 +2,8 @@
 
 `kws-pipeline` is an always-on embedded audio component. Changes are reviewed against product invariants, not only functional correctness.
 
+Repository merge/release policy is defined in [`docs/REPOSITORY_GOVERNANCE.md`](docs/REPOSITORY_GOVERNANCE.md). Product acoustic and physical-board evidence remains a separate qualification boundary.
+
 ## Required local checks
 
 ```bash
