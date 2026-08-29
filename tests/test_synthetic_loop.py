@@ -113,6 +113,34 @@ def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProces
     return "\n".join(lines)
 
 
+def validate_prototype_evidence(work: pathlib.Path, manifest: dict) -> dict:
+    first_round = manifest["rounds"][0]
+    model_path = pathlib.Path(first_round["model"])
+    provenance_path = pathlib.Path(str(model_path) + ".synthetic-provenance.json")
+    assert provenance_path.is_file(), provenance_path
+    provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+    assert provenance["schema_version"] == 2
+    assert provenance["evidence_class"] == "synthetic-trained-softmax-prototype"
+    assert provenance["model_sha256"] == first_round["model_sha256"]
+    validation = provenance["validation_confusion"]
+    assert int(validation["examples"]) > 0
+    assert float(validation["accuracy"]) >= 0.995
+    assert float(validation["min_top1_margin"]) > 0.0
+
+    diagnostics_path = model_path.parent / "prototype-fit" / "softmax-diagnostics.json"
+    samples_path = model_path.parent / "prototype-fit" / "token-fit-samples.jsonl"
+    assert diagnostics_path.is_file(), diagnostics_path
+    assert samples_path.is_file() and samples_path.stat().st_size > 0
+    diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+    assert diagnostics["validation_confusion"] == validation
+    assert float(diagnostics["optimizer"]["final_loss"]) < float(
+        diagnostics["optimizer"]["initial_loss"]
+    )
+    assert len(str(provenance["fit_samples_sha256"])) == 64
+    assert len(str(provenance["diagnostics_sha256"])) == 64
+    return provenance
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -144,8 +172,10 @@ def main() -> int:
         assert manifest["evidence_class"] == "synthetic-only"
         assert manifest["qualified"] is True
         assert len(manifest["rounds"]) >= 2
-        assert manifest["synthetic_qualification"]["frr"] <= 0.05
-        assert manifest["synthetic_qualification"]["far_per_hour"] == 0.0
+        qualification = manifest["synthetic_qualification"]
+        assert qualification["frr"] <= 0.05
+        assert qualification["far_per_hour"] == 0.0
+        assert qualification["p95_post_end_latency_ms"] <= 800.0
         assert "replay" in manifest
         assert len(manifest["replay"]["hard_negatives_sha256"]) == 64
         assert len(manifest["replay"]["missed_positives_sha256"]) == 64
@@ -157,6 +187,14 @@ def main() -> int:
         assert (work / "dataset" / "qualification.tsv").stat().st_size > 0
         audit = json.loads((work / "dataset-audit.json").read_text(encoding="utf-8"))
         assert audit["clean"] is True
+        provenance = validate_prototype_evidence(work, manifest)
+
+        print(metric_line("synthetic_qualification", qualification))
+        print(
+            "prototype_quantized_validation: "
+            f"accuracy={float(provenance['validation_confusion']['accuracy']):.6f} "
+            f"min_margin={float(provenance['validation_confusion']['min_top1_margin']):.6f}"
+        )
 
     print("test_synthetic_loop: ok")
     return 0
