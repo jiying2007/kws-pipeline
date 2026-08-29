@@ -10,6 +10,7 @@ references.jsonl + WAV corpus
        v
 build/kws_wav  (real C runtime, .kwm + .kwk)
        |
+       +--> detections.provenance.json
        v
 detections.jsonl
        |
@@ -38,6 +39,21 @@ One JSON object per recording:
 
 Recording IDs must be unique. WAV inputs must be uncompressed mono PCM16 at 16 kHz. `expected` may be empty for negative recordings.
 
+## Audit split isolation first
+
+Before tuning or final qualification, check that training/mining, calibration and final evaluation do not contain the same decoded PCM under different filenames or WAV wrappers:
+
+```bash
+python3 training/audit_dataset.py \
+  --split train=data/train.tsv \
+  --split calibration=data/calibration.tsv \
+  --split qualification=data/eval/references.jsonl \
+  --audio-root qualification=data/eval \
+  --report build/dataset-audit.json
+```
+
+The auditor validates mono 16-kHz PCM16 and hashes the decoded PCM payload. It also retains container-file hashes for provenance. A copied/renamed recording or a WAV rewrapped with different RIFF metadata is still treated as the same audio.
+
 ## Run the real runtime
 
 ```bash
@@ -47,10 +63,11 @@ python3 eval/run_corpus.py \
   --keywords build/xiaowo.kwk \
   --references data/eval/references.jsonl \
   --audio-root data/eval \
-  --detections build/detections.jsonl
+  --detections build/detections.jsonl \
+  --provenance build/detections.provenance.json
 ```
 
-`kws_wav` is a hosted file-I/O wrapper around the same C engine used by the product. Heap and filesystem use in this executable do not enter the real-time library.
+`kws_wav` is a hosted file-I/O wrapper around the same C engine used by the product. Heap and filesystem use in this executable do not enter the real-time library. The provenance sidecar binds the exact runner/model/pack/reference/detection bytes.
 
 ## Score release metrics
 
@@ -74,9 +91,10 @@ The scorer reports:
 - FRR;
 - false accepts/hour;
 - p50/p95 post-keyword-end latency;
-- per-keyword expected/matched/FRR/false-accept counts.
+- per-keyword expected/matched/FRR/false-accept counts;
+- SHA256 identity for the exact references and detections files.
 
-A detection is matched only to an expected event with the same keyword ID and within the configured pre/post tolerance window. Each detection can match at most one expected event.
+A detection is matched only to an expected event with the same keyword ID and within the configured pre/post tolerance window. Matching is monotonic and maximizes match count before minimizing total phrase-end timing error, so overlapping windows cannot reuse one detection or cause a simple greedy misassignment.
 
 ## Mine hard negatives
 
@@ -88,7 +106,17 @@ python3 eval/mine_hard_negatives.py \
   --manifest build/hard-negatives.tsv
 ```
 
-The generated manifest contains empty CTC targets intentionally. Add it as another `--manifest` to `training/train_ctc.py`.
+The generated manifest contains empty CTC targets intentionally. Add it as another `--manifest` to `training/train_ctc.py`, using the **same `--tokens` vocabulary** as the base checkpoint:
+
+```bash
+python3 training/train_ctc.py \
+  --manifest data/train.tsv \
+  --manifest build/hard-negatives.tsv \
+  --tokens keywords/tokens.zh.txt \
+  --warm-start build/base.pt \
+  --head-only \
+  --output build/base-hardneg.pt
+```
 
 Never mine from the final held-out certification corpus and then reuse the same corpus as unbiased release evidence. Keep at least three distinct pools: training/mining, tuning/calibration and final qualification.
 
@@ -99,6 +127,7 @@ At minimum include:
 - clean positives from many speakers;
 - near/far field, angle and SPL/SNR variation;
 - near-homophones and partial keyword phrases;
+- repeated-syllable and repeated-token confusables;
 - ordinary conversational Mandarin;
 - TV/music/podcast playback;
 - local TTS/speaker playback through the shipped AEC path;
