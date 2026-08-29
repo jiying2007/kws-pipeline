@@ -14,9 +14,9 @@ typedef struct kws_trie_node {
   int16_t terminal_keyword;
   uint16_t depth;
   float score;
+  float blank_score;
   float next_score;
-  uint8_t blank_ready;
-  uint8_t next_blank_ready;
+  float next_blank_score;
 } kws_trie_node_t;
 
 typedef struct kws_decoder {
