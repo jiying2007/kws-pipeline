@@ -221,7 +221,17 @@ jobs:
             --source-sha "$GITHUB_SHA" \
             --output "dist/kws-pipeline-${VERSION}.spdx.json"
           python3 -m json.tool "dist/kws-pipeline-${VERSION}.spdx.json" >/dev/null
-          (cd dist && sha256sum *.tar.gz *.spdx.json > SHA256SUMS && sha256sum -c SHA256SUMS)
+          (cd dist && sha256sum "kws-pipeline-${VERSION}-sdk.tar.gz" "kws-pipeline-${VERSION}-source.tar.gz" "kws-pipeline-${VERSION}.spdx.json" > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Validate release artifacts
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          test -s "dist/kws-pipeline-${VERSION}-sdk.tar.gz"
+          test -s "dist/kws-pipeline-${VERSION}-source.tar.gz"
+          test -s "dist/kws-pipeline-${VERSION}.spdx.json"
+          test -s dist/SHA256SUMS
+          (cd dist && sha256sum -c SHA256SUMS)
       - name: Attest release provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
@@ -229,36 +239,40 @@ jobs:
       - name: Attest SDK SBOM
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
-          subject-path: dist/kws-pipeline-*-sdk.tar.gz
-          sbom-path: dist/kws-pipeline-*.spdx.json
+          subject-path: dist/kws-pipeline-${{ steps.release.outputs.version }}-sdk.tar.gz
+          sbom-path: dist/kws-pipeline-${{ steps.release.outputs.version }}.spdx.json
       - name: Publish existing-tag release
         if: steps.release.outputs.bootstrap != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          dist/kws-pipeline-*-sdk.tar.gz
-          dist/kws-pipeline-*-source.tar.gz
-          dist/kws-pipeline-*.spdx.json
-          dist/SHA256SUMS
-          --verify-tag
-          --generate-notes
-          --title "kws-pipeline $RELEASE_TAG"
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            "dist/kws-pipeline-${VERSION}-sdk.tar.gz" \
+            "dist/kws-pipeline-${VERSION}-source.tar.gz" \
+            "dist/kws-pipeline-${VERSION}.spdx.json" \
+            dist/SHA256SUMS \
+            --verify-tag \
+            --generate-notes \
+            --title "kws-pipeline $RELEASE_TAG"
       - name: Publish bootstrap release and tag
         if: steps.release.outputs.bootstrap == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          dist/kws-pipeline-*-sdk.tar.gz
-          dist/kws-pipeline-*-source.tar.gz
-          dist/kws-pipeline-*.spdx.json
-          dist/SHA256SUMS
-          --target "$GITHUB_SHA"
-          --generate-notes
-          --title "kws-pipeline $RELEASE_TAG"
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            "dist/kws-pipeline-${VERSION}-sdk.tar.gz" \
+            "dist/kws-pipeline-${VERSION}-source.tar.gz" \
+            "dist/kws-pipeline-${VERSION}.spdx.json" \
+            dist/SHA256SUMS \
+            --target "$GITHUB_SHA" \
+            --generate-notes \
+            --title "kws-pipeline $RELEASE_TAG"
 
   cleanup-bootstrap-branch:
     needs: [hosted, sanitizers, fuzz, armv7-cross, publish]
