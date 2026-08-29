@@ -9,6 +9,8 @@ import platform
 import subprocess
 import time
 
+CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+
 
 def read_text(path: pathlib.Path) -> str | None:
     try:
@@ -20,7 +22,7 @@ def read_text(path: pathlib.Path) -> str | None:
 def sha256_file(path: pathlib.Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024, ), b""):
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
 
@@ -67,24 +69,109 @@ def finite_number(value, label: str, minimum: float = 0.0) -> float:
     return result
 
 
+def close_enough(actual: float, expected: float, label: str) -> None:
+    tolerance = max(1.0e-9, abs(expected) * 1.0e-9)
+    if abs(actual - expected) > tolerance:
+        raise ValueError(f"{label} is inconsistent with runtime soak samples")
+
+
 def load_runtime_soak(path: pathlib.Path) -> dict:
     value = load_json(path)
     if value.get("schema_version") != 2:
         raise ValueError("runtime soak schema_version must be 2")
     if value.get("completed_requested_duration") is not True:
         raise ValueError("runtime soak did not complete the requested duration")
-    elapsed_hours = finite_number(value.get("elapsed_hours"), "runtime soak elapsed_hours")
-    requested_hours = finite_number(value.get("requested_hours"), "runtime soak requested_hours")
-    cpu_percent = finite_number(value.get("average_cpu_percent"), "runtime soak average_cpu_percent")
-    rss_kib = finite_number(value.get("max_rss_kib"), "runtime soak max_rss_kib")
-    max_temp_c = finite_number(value.get("max_temp_c"), "runtime soak max_temp_c", -273.15)
+    if value.get("cpu_percent_semantics") != CPU_PERCENT_SEMANTICS:
+        raise ValueError("runtime soak CPU percentage semantics are unsupported")
+
+    capacity = value.get("cpu_capacity_count")
+    if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity <= 0:
+        raise ValueError("runtime soak cpu_capacity_count must be a positive integer")
+    requested_hours = finite_number(
+        value.get("requested_hours"), "runtime soak requested_hours"
+    )
+    elapsed_seconds = finite_number(
+        value.get("elapsed_seconds"), "runtime soak elapsed_seconds"
+    )
+    elapsed_hours = finite_number(
+        value.get("elapsed_hours"), "runtime soak elapsed_hours"
+    )
+    if requested_hours <= 0.0 or elapsed_seconds <= 0.0:
+        raise ValueError("runtime soak requested/elapsed duration must be > 0")
+    close_enough(elapsed_hours, elapsed_seconds / 3600.0, "runtime soak elapsed_hours")
     if elapsed_hours + 1.0e-6 < requested_hours:
         raise ValueError("runtime soak elapsed_hours is shorter than requested_hours")
+
+    initial_cpu = finite_number(
+        value.get("initial_cpu_seconds"), "runtime soak initial_cpu_seconds"
+    )
+    samples = value.get("samples")
+    if not isinstance(samples, list) or not samples:
+        raise ValueError("runtime soak samples must be non-empty")
+
+    rss_values: list[float] = []
+    cpu_values: list[float] = []
+    temp_values: list[float] = []
+    for index, sample in enumerate(samples):
+        if not isinstance(sample, dict):
+            raise ValueError(f"runtime soak samples[{index}] must be an object")
+        finite_number(sample.get("elapsed_s"), f"runtime soak samples[{index}].elapsed_s")
+        if sample.get("rss_kib") is not None:
+            rss_values.append(
+                finite_number(sample["rss_kib"], f"runtime soak samples[{index}].rss_kib")
+            )
+        if sample.get("cpu_seconds") is not None:
+            cpu_values.append(
+                finite_number(
+                    sample["cpu_seconds"],
+                    f"runtime soak samples[{index}].cpu_seconds",
+                )
+            )
+        if sample.get("temp_c") is not None:
+            temp_values.append(
+                finite_number(
+                    sample["temp_c"],
+                    f"runtime soak samples[{index}].temp_c",
+                    -273.15,
+                )
+            )
+    if not rss_values or not cpu_values or not temp_values:
+        raise ValueError("runtime soak must retain RSS, CPU and thermal samples")
+    if cpu_values[-1] < initial_cpu:
+        raise ValueError("runtime soak CPU time regressed")
+
+    expected_cpu = min(
+        100.0,
+        max(0.0, (cpu_values[-1] - initial_cpu) / elapsed_seconds)
+        / capacity
+        * 100.0,
+    )
+    expected_rss = max(rss_values)
+    expected_temp = max(temp_values)
+    close_enough(
+        finite_number(
+            value.get("average_cpu_percent"), "runtime soak average_cpu_percent"
+        ),
+        expected_cpu,
+        "runtime soak average_cpu_percent",
+    )
+    close_enough(
+        finite_number(value.get("max_rss_kib"), "runtime soak max_rss_kib"),
+        expected_rss,
+        "runtime soak max_rss_kib",
+    )
+    close_enough(
+        finite_number(
+            value.get("max_temp_c"), "runtime soak max_temp_c", -273.15
+        ),
+        expected_temp,
+        "runtime soak max_temp_c",
+    )
     return {
         "soak_hours": elapsed_hours,
-        "cpu_percent": cpu_percent,
-        "rss_kib": rss_kib,
-        "max_temp_c": max_temp_c,
+        "cpu_percent": expected_cpu,
+        "rss_kib": expected_rss,
+        "max_temp_c": expected_temp,
     }
 
 
@@ -111,6 +198,7 @@ def main() -> int:
         raise ValueError("stack/power measurements must be non-negative")
 
     runtime_soak_path = args.runtime_soak.resolve(strict=True)
+    runtime_soak_raw = runtime_soak_path.read_text(encoding="utf-8")
     runtime = load_runtime_soak(runtime_soak_path)
 
     raw_paths = [runtime_soak_path, *[path.resolve(strict=True) for path in args.raw_evidence]]
@@ -155,6 +243,7 @@ def main() -> int:
         "average_power_mw": args.average_power_mw,
         "runtime_soak_name": runtime_soak_path.name,
         "runtime_soak_sha256": sha256_file(runtime_soak_path),
+        "runtime_soak_raw": runtime_soak_raw,
         "power_raw_name": power_path.name,
         "power_raw_sha256": sha256_file(power_path),
         "raw_evidence": raw_artifacts,
