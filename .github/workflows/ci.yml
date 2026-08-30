@@ -33,7 +33,7 @@ jobs:
           set -euo pipefail
           for source in src/*.c; do
             clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
-              -Iinclude -Isrc "$source"
+              -Iinclude -Isrc -Ibuild/generated "$source"
           done
       - name: Frontend C/spec parity
         run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
