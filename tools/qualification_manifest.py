@@ -171,6 +171,24 @@ def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> di
     }
 
 
+def raw_manifest_identity(path: pathlib.Path) -> set[tuple[str, str, int]]:
+    result: set[tuple[str, str, int]] = set()
+    rows = load_jsonl(path, "evidence-raw")
+    for index, row in enumerate(rows):
+        name = required_text(row, "name", f"evidence-raw[{index}]")
+        digest = sha256_value(row.get("sha256"), f"evidence-raw[{index}].sha256")
+        size = json_int(row.get("bytes"), f"evidence-raw[{index}].bytes", 1)
+        item = (name, digest, size)
+        if item in result:
+            raise ValueError("canonical evidence-raw manifest contains duplicate rows")
+        result.add(item)
+    if not result:
+        raise ValueError("canonical evidence-raw manifest must be non-empty")
+    if len(result) != len(rows):
+        raise ValueError("canonical evidence-raw manifest contains duplicate rows")
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, type=pathlib.Path)
@@ -193,8 +211,11 @@ def main() -> int:
     parser.add_argument("--board-audio", required=True, type=pathlib.Path)
     parser.add_argument("--evidence", required=True, type=pathlib.Path)
     parser.add_argument("--evidence-collector", required=True, type=pathlib.Path)
+    parser.add_argument("--evidence-raw", required=True, type=pathlib.Path)
+    parser.add_argument("--attestation-verification", required=True, type=pathlib.Path)
     parser.add_argument("--raw-evidence", required=True, action="append", type=pathlib.Path)
     parser.add_argument("--source-sha", required=True)
+    parser.add_argument("--sku", required=True)
     parser.add_argument("--corpus-id", required=True)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
@@ -240,6 +261,8 @@ def main() -> int:
         "board_summary": args.board_summary,
         "evidence": args.evidence,
         "evidence_collector": args.evidence_collector,
+        "evidence_raw": args.evidence_raw,
+        "attestation_verification": args.attestation_verification,
         "dataset_audit": args.dataset_audit,
     }
     hashes = {name: sha256_file(path) for name, path in paths.items()}
@@ -311,11 +334,37 @@ def main() -> int:
         raise ValueError("board block count does not match board WAV and repeats")
 
     evidence_json = load_json(args.evidence)
-    evidence = validate_evidence(evidence_json, hashes["evidence_collector"])
+    evidence = validate_evidence(
+        evidence_json,
+        sku=sku,
+        source_sha=source_sha,
+        actual_hashes={
+            "collector_sha256": hashes["evidence_collector"],
+            "raw_evidence_sha256": hashes["evidence_raw"],
+            "attestation_verification_sha256": hashes["attestation_verification"],
+            "board_runner_sha256": hashes["board_runner"],
+            "model_sha256": hashes["model"],
+            "keyword_pack_sha256": hashes["keyword_pack"],
+            "board_audio_sha256": hashes["board_audio"],
+        },
+    )
     raw_hashes = {(path.name, sha256_file(path), path.stat().st_size) for path in args.raw_evidence}
     declared_raw = {(item["name"], item["sha256"], item["bytes"]) for item in evidence["raw_evidence"]}
     if raw_hashes != declared_raw:
         raise ValueError("target evidence raw artifacts do not match selected --raw-evidence files")
+    if raw_manifest_identity(args.evidence_raw) != raw_hashes:
+        raise ValueError("canonical evidence-raw manifest does not match selected raw evidence")
+
+    attestation = validate_attestation_verification(
+        load_json(args.attestation_verification),
+        {
+            "subject_sha256": hashes["evidence_raw"],
+            "collector_sha256": hashes["evidence_collector"],
+            "board_runner_sha256": hashes["board_runner"],
+            "model_sha256": hashes["model"],
+            "keyword_pack_sha256": hashes["keyword_pack"],
+        },
+    )
 
     dataset_audit = validate_dataset_audit(
         args.dataset_audit,
@@ -342,11 +391,15 @@ def main() -> int:
         "board_runner": artifact(args.board_runner, hashes["board_runner"]),
         "board_audio": artifact(args.board_audio, hashes["board_audio"]),
         "evidence_collector": artifact(args.evidence_collector, hashes["evidence_collector"]),
+        "evidence_raw": artifact(args.evidence_raw, hashes["evidence_raw"]),
+        "attestation_verification": artifact(args.attestation_verification, hashes["attestation_verification"]),
+        "evidence": artifact(args.evidence, hashes["evidence"]),
         "raw_evidence": raw_evidence_artifacts,
     }
 
     manifest = {
         "schema_version": 2,
+        "sku": sku,
         "source_sha": source_sha,
         "corpus_id": corpus_id,
         "runtime": {
