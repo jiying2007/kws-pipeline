@@ -48,7 +48,7 @@ jobs:
           set -euo pipefail
           for source in src/*.c; do
             clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
-              -Iinclude -Isrc "$source"
+              -Iinclude -Isrc -Ibuild/generated "$source"
           done
       - name: Python/product tests
         run: |
