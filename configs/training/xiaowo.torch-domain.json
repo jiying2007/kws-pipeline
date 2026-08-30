@@ -64,13 +64,13 @@
       "far": {"distance_m": [3.0, 5.0], "weight": 2.5}
     },
     "azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
-    "rt60_s": [0.15, 0.35, 0.60, 0.80],
-    "snr_db": [5.0, 10.0, 20.0, 30.0],
+    "rt60_s": [0.15, 0.80],
+    "snr_db": [5.0, 30.0],
     "noise_profiles": ["white", "fan", "motor", "media"],
     "mic_spacing_m": 0.06,
     "playback": {
       "probability": 0.25,
-      "sir_db": [-5.0, 5.0, 15.0, 20.0]
+      "sir_db": [-5.0, 20.0]
     },
     "afe": {
       "backend": "proxy"
