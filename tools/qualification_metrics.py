@@ -138,7 +138,9 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
 
 
 def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict[str, float]:
-    raw_text = required_text(evidence, "runtime_soak_raw", "evidence")
+    raw_text = evidence.get("runtime_soak_raw")
+    if not isinstance(raw_text, str) or not raw_text.strip():
+        raise ValueError("evidence.runtime_soak_raw must be non-empty text")
     if hashlib.sha256(raw_text.encode("utf-8")).hexdigest() != runtime_soak_sha256:
         raise ValueError("embedded runtime soak bytes do not match retained raw evidence identity")
     try:
