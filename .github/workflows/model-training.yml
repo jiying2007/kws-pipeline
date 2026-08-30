@@ -24,13 +24,17 @@ jobs:
       - name: Install pinned CPU training runtime
         run: |
           python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
           .venv/bin/python - <<'PY'
           import platform
+          import numpy
           import torch
           print('python', platform.python_version())
+          print('numpy', numpy.__version__)
           print('torch', torch.__version__)
+          assert numpy.__version__ == '2.3.2'
           assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
           PY
       - name: Train and iterate three domain rounds
