@@ -29,28 +29,28 @@
   },
   "dataset": {
     "train": {
-      "positive_families_per_keyword": 3,
+      "positive_families_per_keyword": 12,
       "confusable_families_per_keyword": 2,
       "random_negative_families": 4,
       "background_seconds_per_profile": 1.0,
       "variants_per_family": 2
     },
     "calibration": {
-      "positive_families_per_keyword": 2,
+      "positive_families_per_keyword": 4,
       "confusable_families_per_keyword": 2,
       "random_negative_families": 4,
       "background_seconds_per_profile": 2.0,
       "variants_per_family": 1
     },
     "test": {
-      "positive_families_per_keyword": 2,
+      "positive_families_per_keyword": 4,
       "confusable_families_per_keyword": 2,
       "random_negative_families": 4,
       "background_seconds_per_profile": 3.0,
       "variants_per_family": 1
     },
     "qualification": {
-      "positive_families_per_keyword": 3,
+      "positive_families_per_keyword": 6,
       "confusable_families_per_keyword": 3,
       "random_negative_families": 6,
       "background_seconds_per_profile": 10.0,
@@ -84,21 +84,21 @@
   },
   "model": {
     "feature_dim": 32,
-    "hidden_dim": 48,
-    "frontends": ["logmel", "pcen-lite"],
-    "domain_variants_per_token": 16,
+    "hidden_dim": 64,
+    "frontends": ["logmel"],
+    "domain_variants_per_token": 24,
     "prototype_candidates": [
       {"input_scale": 0.010, "output_scale": 0.050, "blank_bias": 1.8, "token_bias": -1.2}
     ]
   },
   "train": {
-    "epochs": 4,
+    "epochs": 12,
     "batch_size": 16,
     "lr": 0.001
   },
   "calibration": {
-    "thresholds": [0.25, 0.40, 0.55, 0.70, 0.85],
-    "coordinate_rounds": 1
+    "thresholds": [0.01, 0.03, 0.05, 0.10, 0.15, 0.25, 0.40, 0.55, 0.70, 0.85],
+    "coordinate_rounds": 2
   },
   "domain_iteration": {
     "backend": "torch_ctc",
