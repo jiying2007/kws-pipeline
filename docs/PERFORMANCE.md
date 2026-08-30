@@ -1,6 +1,6 @@
 # Performance and release gates
 
-Hosted results are regression signals only. Shipping claims require the exact SoC, compiler flags, DVFS governor, thermal policy, audio route, model artifact, keyword pack and held-out corpus.
+Hosted results are regression signals only. Shipping claims require the exact SoC, compiler flags, DVFS governor, thermal policy, audio route, model/keyword artifacts, held-out corpus and trusted product-board evidence.
 
 ## Default design envelope
 
@@ -8,122 +8,165 @@ Hosted results are regression signals only. Shipping claims require the exact So
 - 25-ms window, 20-ms hop (50 acoustic steps/s);
 - 32 log-mel or PCEN-lite features;
 - 48 recurrent units;
-- target Mandarin full-pinyin vocabulary roughly 350-450 tokens;
+- target Mandarin full-pinyin vocabulary roughly 350–450 tokens;
 - dense acoustic work about 1.2 MMAC/s at 420 tokens;
-- KWSP model ABI v2 default-geometry `.kwm` is roughly 26 KB;
-- engine memory is fixed and queryable with `kws_engine_required_bytes()`.
+- KWSP ABI v2 default `.kwm` roughly 26 KB;
+- fixed/queryable engine memory through `kws_engine_required_bytes()`.
 
-The `.kwm` stores int8 matrices, but v0.2.x intentionally keeps float activations and accumulation. Cortex-A32 NEON accelerates the int8-weight × float-activation dot products without changing model/training semantics. Full-int8 activation/requantization remains a separate model-format/accuracy decision and must not be introduced without retraining and parity qualification.
-
-These are arithmetic/format estimates, not Cortex-A32 measurements.
+The `.kwm` stores int8 matrices while v0.3 uses float activations/accumulation. Cortex-A32 NEON accelerates int8-weight × float-activation dot products without changing model/training semantics. These are arithmetic/format estimates, not physical Cortex-A32 measurements.
 
 ## Hosted regression matrix
 
-`kws_bench` runs the actual C frontend + model + decoder for synthetic 16-kHz audio using the default 32-feature / 48-hidden / 420-token geometry. It now exercises four deterministic envelopes:
+`kws_bench` runs the actual C frontend + model + decoder. CI runs GCC/Clang, static analysis, C coverage, sanitizers, fuzzing and Cortex-A32 cross-build. Hosted x86 timing must never be converted into target-device CPU percentage.
 
-| Case | Frontend | Keywords | Purpose |
-| --- | --- | ---: | --- |
-| baseline | logmel | 1 | minimum decoder load |
-| product | logmel | 4 | normal multi-keyword load |
-| pcen-product | pcen-lite | 4 | PCEN frontend cost |
-| worst-case | pcen-lite | 16 | maximum keyword count + shared-prefix Trie |
+## Optimization policy
 
-Each line reports model/engine bytes, Trie nodes, estimated dense MACs/frame, RTF and CPU microseconds per audio second. CI executes the matrix under GCC and Clang. The Cortex-A32 cross-build separately proves the NEON path compiles for the shipping ISA family.
+PCEN-lite and frontend nonlinear work may dominate runtime on a small Cortex-A device even when dense RNN MAC count is low. Optimize in this order:
 
-The resulting x86 RTF is intentionally **not a gate for target Cortex-A32/A7 performance**. Runner type, clock frequency, cache hierarchy and compiler differ too much to convert hosted utilization into target-device CPU percentages.
+1. measure the exact shipping model/frontend on the physical target;
+2. profile the complete KWS path including FFT/nonlinear/frontend work;
+3. optimize the measured hotspot;
+4. preserve C/reference/training parity;
+5. rerun the SKU acoustic/resource qualification.
 
-## PCEN cost control
+Any LUT/polynomial approximation or future full-int8 conversion requires measured target motivation and requalification.
 
-PCEN-lite keeps its trained alpha normalization but avoids generic powers where the exponent is fixed: square root uses `sqrtf()` and `sqrt(2)` is a compile-time constant. Frontend C/Python/Torch parity remains the authority; any further approximation/LUT optimization must first preserve that parity before it can enter the target kernel.
-
-## Acoustic release gate
-
-Release qualification runs the real runtime, model and keyword pack over continuous audio:
+## Acoustic gate
 
 ```text
-references.jsonl + WAV corpus
- -> eval/run_corpus.py + kws_wav
- -> detections.jsonl + detections.provenance.json
+references.jsonl + real WAV corpus
+ -> eval/run_corpus.py + exact kws_wav
+ -> detections + evaluation provenance schema v2
  -> eval/score_events.py
- -> eval-summary.json
- -> FAR/hour, FRR, p50/p95 latency, per-keyword metrics
+ -> FAR/hour, FRR, latency and per-keyword metrics
 ```
 
-`run_corpus.py --provenance` SHA256-binds the runner binary, model, keyword pack, reference annotations and generated detections. `score_events.py` stores reference/detection SHA256 values in its summary, so the qualification manifest can detect a report copied from a different corpus run.
+v0.3 binds every original WAV by file SHA256 + decoded PCM SHA256 + frame count. `references.duration_s` must equal the real WAV duration, so FAR exposure comes from actual audio bytes.
 
-False accepts may be converted to hard-negative clips. The final held-out qualification set must remain isolated from hard-negative mining and model tuning.
+Policy schema v2 gates point estimates and one-sided confidence bounds:
 
-### Statistical qualification
+- FRR: one-sided Wilson binomial upper bound;
+- FAR: one-sided exact Poisson rate upper bound.
 
-Point estimates alone are not a shipping gate. Qualification policy schema v2 additionally sets a confidence level plus one-sided maximum bounds for FAR and FRR:
+Zero observed false accepts over finite exposure is not proof of zero underlying FAR.
 
-- FRR: one-sided Wilson binomial upper bound from false rejects / expected wakes;
-- FAR: one-sided exact Poisson rate upper bound from false accepts / negative exposure hours.
+## Synthetic long-FAR regression
 
-For example, observing zero false accepts in 24 hours still has a non-zero 95% upper rate bound (about 0.125 FA/hour). Increasing evidence hours/events is therefore part of passing the gate, rather than declaring a zero point estimate to be proof of zero underlying error rate.
+Nightly regression freezes one runner/model/pack identity and streams independent synthetic negative shards. This is **synthetic streaming FAR regression**, not real-room acoustic qualification or physical-board evidence.
 
-## Frozen-model long-FAR regression
+## Target-board benchmark
 
-The nightly workflow trains one model per frontend, freezes that exact model/pack SHA tuple, then streams four independent two-hour negative shards through the same tuple. `eval/aggregate_far.py` refuses to add exposure from different runner/model/pack identities and computes aggregate point and confidence-bound FAR.
-
-This remains **synthetic streaming FAR regression evidence**, not real-room acoustic qualification. Training-seed robustness is a different experiment and must not be counted as additional FAR hours.
-
-## Real-artifact target-board benchmark
-
-Build `kws_board_bench` for the target Linux toolchain and execute the **shipping `.kwm` and `.kwk`** on representative post-AEC/post-NS 16-kHz PCM16 audio:
+Build `kws_board_bench` with the shipping target toolchain and execute the exact `.kwm/.kwk` on representative post-AFE audio:
 
 ```bash
-./kws_board_bench release/base.kwm release/xiaowo.kwk board-audio.wav 10 \
-  > board-summary.json
+./kws_board_bench release/base.kwm release/xiaowo.kwk qualification/board-audio.wav 10 \
+  > qualification/board-summary.json
 ```
 
-The tool measures one KWSP-v2 hop (320 samples / 20 ms) per call using `CLOCK_MONOTONIC` and emits:
+The summary binds runtime source/config identity, board runner, model, pack and audio, and reports model/pack/engine bytes, mean/p50/p95/p99/max processing time, RTF and p99 headroom. Cross-build success proves compiler/ISA compatibility only; it is not target timing evidence.
 
-- model, keyword-pack and engine bytes;
-- audio duration, repeat count and block count;
-- mean/p50/p95/p99/max process time;
-- real-time factor (RTF);
-- p99 headroom relative to the 20-ms hop deadline.
+## Sustained process evidence
 
-For low-end Cortex-A devices, a useful scheduling objective is at least 4x p99 headroom when the product's complete audio thread architecture permits it. The actual shipping policy is SKU-specific and belongs in the approved qualification policy, not in source code.
+Per-hop timing and sustained product-process behavior are different measurements. Supervise the actual process:
 
-The Cortex-A32 CI cross-build compiles this tool together with the core, which proves compiler/ISA compatibility. It does not generate target-board timing evidence.
+```bash
+python3 tools/collect_runtime_soak.py \
+  --hours 24 \
+  --sample-seconds 60 \
+  --output qualification/runtime-soak.json \
+  --command ./product-kws-soak --config qualification/product-config.json
+```
 
-## Artifact-bound qualification manifest
+Runtime-soak schema v2 retains actual/requested duration, early-exit state, child-process CPU-time/RSS/thermal samples and summary fields. Later verification independently recomputes CPU/RSS/max temperature from the retained samples.
 
-`tools/qualification_manifest.py` combines:
+## Canonical raw measurement identity
 
-- exact `.kwm`, `.kwk`, token vocabulary and runtime config hashes;
-- model-export provenance, source checkpoint, training vocabulary/manifests;
-- evaluation summary + evaluation provenance;
-- target-board benchmark summary;
-- target/board/toolchain/governor/audio-front-end identity;
-- soak duration, CPU, RSS, stack high-water, temperature and power measurements.
+Freeze runtime-soak, stack, power and any other target measurement files into `qualification/evidence-raw.jsonl` using exact `{name, sha256, bytes}` rows. The row set must exactly equal runtime-soak + repeated `--raw-evidence` + `--power-raw`.
 
-It rejects mismatched vocabulary fingerprints, evaluation provenance from different model/pack artifacts, summary/reference/detection hash mismatches, board reports with different artifact sizes, malformed/non-finite values and missing target evidence.
+Power requires the original instrument export plus instrument/calibration identity. Stack high-water remains product-harness specific and must have retained raw evidence.
 
-`tools/qualification_gate.py` then applies a separate SKU policy, including statistical FAR/FRR bounds. This separation keeps evidence immutable while allowing requirements to vary by product. See `docs/RELEASE_QUALIFICATION.md`.
+The controlled product trust layer must also produce `qualification/attestation-verification.json`, schema v1, verifying the canonical raw manifest plus exact collector/board-runner/model/keyword-pack identities.
+
+## Product-board evidence assembly
+
+```bash
+python3 tools/collect_target_evidence.py \
+  --output qualification/evidence.json \
+  --target product-sku-a \
+  --board-revision A \
+  --soc cortex-a32 \
+  --toolchain arm-linux-gnueabihf-gcc-... \
+  --compiler-flags '-O3 -mcpu=cortex-a32 ...' \
+  --audio-frontend audio-pipeline-vX \
+  --audio-frontend-sha256 <sha256> \
+  --runtime-soak qualification/runtime-soak.json \
+  --stack-high-water-bytes <measured> \
+  --average-power-mw <measured> \
+  --raw-evidence qualification/stack-watermark.txt \
+  --power-raw qualification/power.csv \
+  --evidence-raw qualification/evidence-raw.jsonl \
+  --attestation-verification qualification/attestation-verification.json \
+  --board-runner qualification/kws_board_bench.target \
+  --model release/base.kwm \
+  --keyword-pack release/xiaowo.kwk \
+  --board-audio qualification/board-audio.wav \
+  --sku product-sku-a \
+  --source-sha "$(git rev-parse HEAD)" \
+  --builder-id qualification-builder-01 \
+  --dut-id product-dut-01 \
+  --collector-id qualification-station-01 \
+  --instrument-id <meter-id> \
+  --calibration-id <calibration-id>
+```
+
+`builder-id` and `dut-id` must be distinct. Accepted shipping resource evidence is schema v2 with `evidence_class=product-board` and exact SKU/source/artifact/raw/attestation identity.
+
+## Audio continuity and soak
+
+A realistic always-on performance qualification also retains:
+
+- audio-pipeline XRUN/backpressure counts;
+- KWS discontinuity counters;
+- sustained load under expected concurrency;
+- thermal/power stabilization;
+- RSS and stack high-water;
+- route/suspend/resume behavior where supported.
+
+When capture continuity breaks, integration must call `kws_engine_notify_discontinuity()` so acoustic state does not cross a sample gap.
+
+## Artifact-bound qualification
+
+`qualification_manifest.py` independently verifies:
+
+- exact `.kwm`, `.kwk`, vocabulary/config/checkpoint/model provenance;
+- actual training WAV corpus identity;
+- clean dataset-audit coverage;
+- evaluation summary/provenance plus actual held-out WAV identity/duration;
+- target board runner/audio/summary;
+- product-board evidence schema v2;
+- exact collector, canonical `--evidence-raw`, `--attestation-verification` and every raw evidence file;
+- exact `--sku` and `--source-sha`.
+
+`qualification_gate.py` then applies the matching `shipping_approved=true` SKU policy.
 
 ## Target-board certification checklist
 
 For every shipping SKU retain:
 
-- exact `.kwm`, `.kwk`, token vocabulary and runtime-config SHA256 plus ABI/fingerprint;
-- source commit SHA and corpus identity/version;
-- compiler/toolchain, CPU flags and optimization flags;
-- CPU topology, affinity, governor/DVFS and thermal policy;
-- mean/p50/p95/p99/max process time and RTF from `kws_board_bench`;
-- CPU percentage in a sustained always-on run;
-- RSS/private memory and stack high-water mark;
-- wake latency from keyword end;
-- thermal/power impact in an extended soak;
-- FRR by speaker, distance, angle, SPL/SNR and acoustic bucket;
-- false accepts/hour on long continuous negative audio plus the policy confidence bound;
-- TV/music/speech playback, near-homophones and partial-phrase negatives;
-- AEC/NS/AGC configuration and local-speaker playback conditions;
-- motor/fan/gear/mechanical-noise scenarios relevant to the product;
-- audio XRUN/backpressure evidence from the complete product pipeline;
-- measured dual-mic RIR manifest/hash when RIR augmentation is part of the candidate lineage;
-- qualification manifest, approved policy and gate result.
+- exact source/tag/runtime build identity and model/pack/token/config artifacts;
+- model provenance + checkpoint + training image digest + training-corpus identity;
+- clean dataset audit covering exact final references;
+- compiler/toolchain, CPU topology/affinity/governor/DVFS/thermal policy;
+- target benchmark timing/RTF/headroom;
+- runtime-soak raw CPU/RSS/thermal/elapsed samples;
+- product-harness stack raw evidence;
+- power raw trace + instrument/calibration identity;
+- canonical raw-evidence manifest and external attestation-verification result;
+- SKU/source/builder/DUT/collector identities;
+- wake latency, FRR by domain, real continuous FAR/hour + confidence bounds;
+- playback/near-homophone/AEC residual/mechanical-noise scenarios;
+- XRUN/backpressure/discontinuity evidence;
+- original held-out WAV identity;
+- qualification manifest v2, policy v2 and gate result v3.
 
-Hosted execution, synthetic models, simulated RIR, cross-build and QEMU-style signals must never be presented as real-board latency, acoustic quality, CPU, thermal or power data.
+Hosted execution, synthetic models, simulated RIR, cross-build or QEMU-style signals must never be presented as real-board latency, acoustic quality, CPU, thermal or power data.

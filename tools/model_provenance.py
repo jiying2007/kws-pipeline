@@ -3,10 +3,12 @@ from __future__ import annotations
 from collections import Counter
 import pathlib
 
+from corpus_identity import corpus_digest
 from qualification_common import finite, json_int, load_json, sha256_value
 
 FRONTEND_SPEC_VERSION = 2
 FRONTEND_NAMES = {0: "logmel", 1: "pcen-lite"}
+IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
 
 def text(value, label: str) -> str:
@@ -19,6 +21,38 @@ def boolean(value, label: str) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be boolean")
     return value
+
+
+def normalize_corpus(value: object, expected_digest: str) -> dict:
+    if not isinstance(value, dict) or json_int(value.get("schema_version"), "training corpus schema_version") != 1:
+        raise ValueError("model provenance training corpus must be schema_version 1")
+    recordings = value.get("recordings")
+    if not isinstance(recordings, list) or not recordings:
+        raise ValueError("model provenance training corpus recordings must be non-empty")
+    normalized: list[dict] = []
+    for index, row in enumerate(recordings):
+        if not isinstance(row, dict):
+            raise ValueError(f"training corpus[{index}] must be an object")
+        item = {
+            "recording": text(row.get("recording"), f"training corpus[{index}].recording"),
+            "manifest": text(row.get("manifest"), f"training corpus[{index}].manifest"),
+            "path": text(row.get("path"), f"training corpus[{index}].path"),
+            "file_sha256": sha256_value(row.get("file_sha256"), f"training corpus[{index}].file_sha256"),
+            "pcm_sha256": sha256_value(row.get("pcm_sha256"), f"training corpus[{index}].pcm_sha256"),
+            "frames": json_int(row.get("frames"), f"training corpus[{index}].frames", 1),
+            "duration_s": finite(row.get("duration_s"), f"training corpus[{index}].duration_s", 0.0),
+        }
+        if item["duration_s"] <= 0.0:
+            raise ValueError(f"training corpus[{index}].duration_s must be > 0")
+        for field in IDENTITY_FIELDS:
+            if field in row:
+                item[field] = text(row[field], f"training corpus[{index}].{field}")
+        normalized.append(item)
+    digest = corpus_digest(normalized)
+    declared = sha256_value(value.get("corpus_sha256"), "training corpus corpus_sha256")
+    if digest != declared or declared != expected_digest:
+        raise ValueError("model provenance training corpus does not match selected training audio")
+    return {"schema_version": 1, "corpus_sha256": digest, "recordings": normalized}
 
 
 def validate_model_provenance(
@@ -34,12 +68,13 @@ def validate_model_provenance(
     checkpoint_sha256: str,
     training_tokens_sha256: str,
     training_manifest_sha256s: list[str],
+    training_corpus_sha256: str,
     frontend_kind: int | None = None,
     frontend_name: str | None = None,
 ) -> dict:
     provenance = load_json(path)
-    if json_int(provenance.get("schema_version"), "model provenance schema_version") != 2:
-        raise ValueError("model provenance schema_version must be 2")
+    if json_int(provenance.get("schema_version"), "model provenance schema_version") != 3:
+        raise ValueError("model provenance schema_version must be 3")
 
     model = provenance.get("model")
     checkpoint = provenance.get("checkpoint")
@@ -106,6 +141,7 @@ def validate_model_provenance(
 
     normalized_training = {
         "manifests": normalized_manifests,
+        "corpus_identity": normalize_corpus(training.get("corpus_identity"), training_corpus_sha256),
         "examples": json_int(training.get("examples"), "model provenance training.examples", 1),
         "seed": json_int(training.get("seed"), "model provenance training.seed", 0),
         "epochs": json_int(training.get("epochs"), "model provenance training.epochs", 1),
@@ -141,6 +177,7 @@ def validate_model_provenance(
         "checkpoint_name": checkpoint_name,
         "checkpoint_sha256": checkpoint_hash,
         "training_tokens_sha256": training_tokens_hash,
+        "training_corpus_sha256": normalized_training["corpus_identity"]["corpus_sha256"],
         "token_bytes_identical_to_training": byte_identical,
         "frontend_spec_version": FRONTEND_SPEC_VERSION,
         "frontend_kind": recorded_frontend_kind,

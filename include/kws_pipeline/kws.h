@@ -33,6 +33,13 @@ typedef enum kws_prefix_policy {
   KWS_PREFIX_GRACE = 2
 } kws_prefix_policy_t;
 
+typedef enum kws_discontinuity_reason {
+  KWS_DISCONTINUITY_XRUN = 1,
+  KWS_DISCONTINUITY_ROUTE_CHANGE = 2,
+  KWS_DISCONTINUITY_CLOCK_RESET = 3,
+  KWS_DISCONTINUITY_SUSPEND_RESUME = 4
+} kws_discontinuity_reason_t;
+
 typedef enum kws_status {
   KWS_OK = 0,
   KWS_EINVAL = -1,
@@ -99,10 +106,12 @@ typedef struct kws_engine_stats {
   uint64_t decoder_hits;
   uint64_t refractory_suppressed;
   uint64_t detections;
+  uint64_t discontinuities;
   uint16_t keyword_count;
   uint16_t trie_nodes;
   int16_t pending_keyword_index;
   uint16_t pending_age_frames;
+  uint32_t last_discontinuity_reason;
   float max_detection_confidence;
 } kws_engine_stats_t;
 
@@ -196,6 +205,10 @@ kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
                                          const kws_keyword_pack_t *pack);
 
 void kws_engine_reset(kws_engine_t *engine);
+
+kws_status_t kws_engine_notify_discontinuity(
+    kws_engine_t *engine,
+    kws_discontinuity_reason_t reason);
 
 kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
                                      const int16_t *samples,

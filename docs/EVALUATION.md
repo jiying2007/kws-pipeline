@@ -1,16 +1,29 @@
 # Continuous-audio evaluation
 
-KWS release quality is measured on continuous recordings, not isolated clip accuracy.
+KWS release quality is measured on continuous recordings, not isolated clip accuracy. In `v0.3.x`, evaluation evidence is also bound to the **actual WAV bytes**, not only to a reference JSONL file.
 
-## Reference and detection contract
+## Reference and audio contract
 
-Reference JSONL owns the full duration of each recording:
+Reference JSONL owns the expected events and declared duration of each recording:
 
 ```json
-{"recording":"living-room-001","path":"living-room-001.wav","duration_s":3600.0,"expected":[{"keyword_id":1,"start_s":91.2,"end_s":92.1}],"domain":{"distance_band":"far"}}
+{"recording":"living-room-001","path":"living-room-001.wav","duration_s":3600.0,"expected":[{"keyword_id":1,"start_s":91.2,"end_s":92.1}],"speaker_id":"spk101","session_id":"sess08","source_id":"field-2026-08","domain":{"distance_band":"far"}}
 ```
 
-Negative-only recordings use `"expected": []`. Keep speakers, sessions, TTS voices, source recordings and device sessions disjoint across train/calibration/test/qualification.
+Negative-only recordings use `"expected": []`.
+
+For every row, `run_corpus.py` reopens the referenced WAV and records:
+
+- file SHA256;
+- decoded mono-16-kHz PCM16 SHA256;
+- frame count;
+- real duration from frames/sample-rate;
+- stable recording/path identity;
+- speaker/session/source/room/device metadata when supplied.
+
+The declared `duration_s` must match the real WAV duration. This prevents FAR exposure from being inflated by declaring a short file as many hours of audio.
+
+Keep speakers, sessions, source recordings and device sessions disjoint across train/calibration/test/qualification. Final human qualification should require speaker/session/source metadata through `training/audit_dataset.py`.
 
 Runtime detections are JSONL:
 
@@ -38,21 +51,20 @@ python3 eval/score_events.py \
   --false-rejects qualification/false-rejects.jsonl
 ```
 
-The provenance sidecar binds runner, model, keyword pack, references and detections by SHA256.
+Evaluation provenance schema v2 binds:
 
-The scorer reports:
+- exact runner;
+- model;
+- keyword pack;
+- references;
+- detections;
+- canonical evaluation-corpus identity containing every real WAV hash/PCM hash/frame count.
 
-- FAR/hour;
-- FRR;
-- per-keyword expected/matched/false-reject/false-accept counts;
-- p50/p95 post-end detection latency;
-- exact reference/detection SHA256.
-
-Matching is monotonic per keyword: first maximize valid matches, then minimize total distance to annotated keyword end. Invalid NaN/Inf values are rejected.
+The scorer reports FAR/hour, FRR, per-keyword counts and p50/p95 post-end latency. Matching is monotonic per keyword: maximize valid matches first, then minimize total distance to annotated keyword end. NaN/Inf and out-of-range values are rejected.
 
 ## Domain metrics
 
-When reference rows contain domain metadata, add:
+When references contain domain metadata:
 
 ```bash
 python3 eval/domain_metrics.py \
@@ -61,28 +73,21 @@ python3 eval/domain_metrics.py \
   --output qualification/domain-metrics.json
 ```
 
-The report includes overall metrics plus available domain buckets such as:
+The report includes available buckets such as distance, azimuth, RT60, noise, local playback, composite domain ids and keyword confusion/miss matrices. Aggregate FRR must not hide a weak far/side/reverb/motor/playback domain.
 
-- `distance:near`, `distance:mid`, `distance:far`;
-- azimuth;
-- RT60 state;
-- noise profile;
-- local playback state;
-- composite domain ids;
-- keyword confusion/miss matrix;
-- deterministic worst-domain score.
-
-Aggregate FRR must not hide a weak far/side/reverb/motor/playback domain. Product policy should set minimum corpus coverage separately from the scorer.
-
-The synthetic domain renderer guarantees that every calibration/test/qualification split containing positives begins with a far positive and then rotates `far -> mid -> near`. This is only a deterministic CI/data-orchestration contract. A real product corpus must independently contain enough genuine samples in every required bucket.
+Synthetic calibration/test/qualification rendering rotates positive domains `far -> mid -> near` to prevent accidental absence of far positives. That is a deterministic software/data-orchestration contract only; a real product corpus must independently contain enough genuine samples in every claimed bucket.
 
 ## Long continuous FAR
 
-`kws_raw_stream` consumes raw PCM16 blocks through the same C engine without per-clip resets. `eval/long_far_stream.py` uses it to exercise continuous negative streams and preserve false-accept evidence.
+`kws_raw_stream` consumes raw PCM16 blocks through the same C engine without per-clip resets. `eval/long_far_stream.py` exercises continuous negative streams and preserves false-accept evidence.
 
-`.github/workflows/far-nightly.yml` provides a recurring hosted synthetic regression. It is useful for detecting a decoder/frontend regression that only appears after long state accumulation, but its generated/hosted FAR is **not** a shipping FAR/hour measurement.
+`.github/workflows/far-nightly.yml` is a recurring hosted/synthetic regression. It may detect state accumulation regressions, but its generated exposure is **not** a shipping FAR/hour measurement. Shipping FAR needs long real continuous background audio through the final microphone/enclosure/AFE path and those original WAV bytes must be retained/bound by evaluation provenance.
 
-Shipping FAR needs long real continuous background audio through the final microphone/enclosure/AFE path.
+## Audio discontinuities
+
+A production capture pipeline can lose timeline continuity because of XRUN, device/route changes, clock resets or suspend/resume. The product integration must call `kws_engine_notify_discontinuity()` at those boundaries so pre-gap frontend/RNN/decoder state cannot be joined to post-gap audio.
+
+A qualification recording itself must represent the intended continuous timeline. If the capture system reports an XRUN, retain that event in the acquisition metadata and either reject the recording from strict qualification or replay the exact discontinuity behavior through the product integration path.
 
 ## Required product domains
 
@@ -95,8 +100,9 @@ At minimum include:
 - AEC residual/double-talk;
 - robot motor, gearbox, fan, pump and chassis vibration;
 - silence/impulses/microphone handling;
-- expected angles and distances, including the product far-field requirement;
+- expected angles and distances, including the claimed 3–5 m far-field region;
 - representative RT60/room states;
+- moving/static device states;
 - day/night gain and final AGC/AEC/NS modes.
 
 Positive coverage should be bucketed by speaker, session, distance, angle, SPL/SNR, speaking rate and device state.
@@ -113,34 +119,24 @@ python3 eval/mine_hard_negatives.py \
   --manifest build/hard-negatives.tsv
 ```
 
-Retrain with the exact token vocabulary; the removed size-only interface must not be used:
+False rejects may be replayed with `eval/mine_false_rejects.py`. Retraining must use the exact token vocabulary and a compatible warm start when `--head-only` is selected.
 
-```bash
-python3 training/train_ctc.py \
-  --manifest data/base-train.tsv \
-  --manifest build/hard-negatives.tsv \
-  --tokens keywords/tokens.zh.txt \
-  --warm-start models/base.pt \
-  --head-only \
-  --epochs 5 \
-  --output build/base-hardneg.pt
-```
-
-False rejects may be replayed with `eval/mine_false_rejects.py`. Never mine from the final held-out qualification corpus and then report the same samples as unbiased final evidence.
+Never mine from the final qualification-heldout corpus and then report those same source recordings as unbiased final evidence. A held-out corpus stops being held-out once its failures influence model, threshold or keyword-policy tuning.
 
 ## Release evidence
 
 For every shipping model/pack tuple retain:
 
-- model ABI v2 and model provenance;
-- keyword-pack ABI v3;
-- exact checkpoint/training tokens/training manifests;
+- KWSP v2 + model provenance schema v3;
+- KWKP v3;
+- exact checkpoint/training tokens/training manifests and real training-corpus identity;
+- clean dataset audit;
 - release tokens/config and frontend identity;
-- exact evaluation runner/references/detections/provenance/summary;
-- domain metrics and false-positive/false-reject outputs;
+- exact evaluation runner/references/**original evaluation WAVs**/detections/provenance/summary;
+- domain metrics and failure-replay outputs;
 - corpus identity/version;
-- target-board benchmark/resource evidence;
-- approved qualification policy;
-- qualification manifest and gate result.
+- target-board benchmark and machine/raw target evidence;
+- approved SKU policy;
+- qualification manifest schema v2 and gate result schema v3.
 
 Hosted CI and cross compilation are software correctness signals, not target-board acoustic qualification.
