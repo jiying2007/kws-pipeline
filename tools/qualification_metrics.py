@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 
 from corpus_identity import corpus_digest
 from qualification_common import (
@@ -14,6 +15,7 @@ from qualification_common import (
 )
 
 CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
 def validate_eval(
@@ -107,12 +109,8 @@ def validate_board(
     result = {
         **actual_hashes,
         "runtime_version": required_text(summary, "runtime_version", "board"),
-        "runtime_source_revision": required_text(
-            summary, "runtime_source_revision", "board"
-        ),
-        "runtime_config_digest": sha256_value(
-            summary.get("runtime_config_digest"), "board.runtime_config_digest"
-        ),
+        "runtime_source_revision": required_text(summary, "runtime_source_revision", "board"),
+        "runtime_config_digest": sha256_value(summary.get("runtime_config_digest"), "board.runtime_config_digest"),
         "runtime_target": required_text(summary, "runtime_target", "board"),
         "audio_seconds": finite(summary["audio_seconds"], "board.audio_seconds", 0.0),
         "repeats": json_int(summary["repeats"], "board.repeats", 1),
@@ -134,13 +132,7 @@ def validate_board(
         raise ValueError("board benchmark runtime source does not match qualification source")
     if not result["p50_process_us"] <= result["p95_process_us"] <= result["p99_process_us"] <= result["max_process_us"]:
         raise ValueError("board benchmark percentiles are not monotonic")
-    close_enough(
-        result["mean_process_us"],
-        result["total_process_us"] / result["blocks"],
-        "board.mean_process_us",
-        1e-6,
-        0.01,
-    )
+    close_enough(result["mean_process_us"], result["total_process_us"] / result["blocks"], "board.mean_process_us", 1e-6, 0.01)
     close_enough(
         result["rtf"],
         result["total_process_us"] / (result["audio_seconds"] * result["repeats"] * 1_000_000.0),
@@ -207,27 +199,9 @@ def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict[str,
     expected_cpu = min(100.0, max(0.0, (cpu_values[-1] - initial_cpu) / elapsed_seconds) / capacity * 100.0)
     expected_rss = max(rss_values)
     expected_temp = max(temp_values)
-    close_enough(
-        finite(value.get("average_cpu_percent"), "runtime soak average_cpu_percent", 0.0),
-        expected_cpu,
-        "runtime soak average_cpu_percent",
-        1e-9,
-        1e-9,
-    )
-    close_enough(
-        finite(value.get("max_rss_kib"), "runtime soak max_rss_kib", 0.0),
-        expected_rss,
-        "runtime soak max_rss_kib",
-        1e-9,
-        1e-9,
-    )
-    close_enough(
-        finite(value.get("max_temp_c"), "runtime soak max_temp_c"),
-        expected_temp,
-        "runtime soak max_temp_c",
-        1e-9,
-        1e-9,
-    )
+    close_enough(finite(value.get("average_cpu_percent"), "runtime soak average_cpu_percent", 0.0), expected_cpu, "runtime soak average_cpu_percent", 1e-9, 1e-9)
+    close_enough(finite(value.get("max_rss_kib"), "runtime soak max_rss_kib", 0.0), expected_rss, "runtime soak max_rss_kib", 1e-9, 1e-9)
+    close_enough(finite(value.get("max_temp_c"), "runtime soak max_temp_c"), expected_temp, "runtime soak max_temp_c", 1e-9, 1e-9)
     return {
         "soak_hours": elapsed_hours,
         "cpu_percent": expected_cpu,
@@ -236,13 +210,34 @@ def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict[str,
     }
 
 
-def validate_evidence(evidence: dict, collector_sha256: str) -> dict:
+def validate_evidence(
+    evidence: dict,
+    *,
+    sku: str,
+    source_sha: str,
+    actual_hashes: dict[str, str],
+) -> dict:
     if json_int(evidence.get("schema_version"), "evidence.schema_version") != 2:
         raise ValueError("target evidence schema_version must be 2")
+    if evidence.get("evidence_class") != "product-board":
+        raise ValueError("evidence_class must be product-board")
     if required_text(evidence, "collector", "evidence") != "collect_target_evidence.py":
         raise ValueError("target evidence must be produced by collect_target_evidence.py")
-    if sha256_value(evidence.get("collector_sha256"), "evidence.collector_sha256") != collector_sha256:
-        raise ValueError("target evidence collector hash does not match retained collector")
+    if required_text(evidence, "sku", "evidence") != sku:
+        raise ValueError("evidence SKU does not match qualification SKU")
+    if required_text(evidence, "source_sha", "evidence") != source_sha:
+        raise ValueError("evidence source_sha does not match qualification source")
+    collected_at = required_text(evidence, "collected_at_utc", "evidence")
+    if UTC_RE.fullmatch(collected_at) is None:
+        raise ValueError("evidence.collected_at_utc must be UTC YYYY-MM-DDTHH:MM:SSZ")
+
+    measured_hashes = {
+        key: sha256_value(evidence.get(key), f"evidence.{key}")
+        for key in actual_hashes
+    }
+    for key, expected in actual_hashes.items():
+        if measured_hashes[key] != expected:
+            raise ValueError(f"evidence {key} does not match selected artifact")
 
     raw = evidence.get("raw_evidence")
     if not isinstance(raw, list) or not raw:
@@ -276,8 +271,15 @@ def validate_evidence(evidence: dict, collector_sha256: str) -> dict:
 
     raw_metrics = _runtime_soak_metrics(evidence, runtime_soak_sha256)
     result = {
+        "schema_version": 2,
+        "evidence_class": "product-board",
+        "sku": sku,
+        "source_sha": source_sha,
+        "collected_at_utc": collected_at,
+        "builder_id": required_text(evidence, "builder_id", "evidence"),
+        "dut_id": required_text(evidence, "dut_id", "evidence"),
+        "collector_id": required_text(evidence, "collector_id", "evidence"),
         "collector": "collect_target_evidence.py",
-        "collector_sha256": collector_sha256,
         "target": required_text(evidence, "target", "evidence"),
         "board_revision": required_text(evidence, "board_revision", "evidence"),
         "soc": required_text(evidence, "soc", "evidence"),
@@ -302,6 +304,7 @@ def validate_evidence(evidence: dict, collector_sha256: str) -> dict:
         "instrument_id": required_text(evidence, "instrument_id", "evidence"),
         "calibration_id": required_text(evidence, "calibration_id", "evidence"),
         "raw_evidence": normalized_raw,
+        **measured_hashes,
     }
     if result["builder_id"] == result["dut_id"]:
         raise ValueError("evidence builder_id and dut_id must be distinct")
