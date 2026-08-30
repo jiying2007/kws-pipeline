@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "name": "xiaowo-torch-synthetic-factory-v1",
+  "seed": 1337,
+  "tokens": "keywords/tokens.example.txt",
+  "keywords": "keywords/zh_cn_xiaowo_train.tsv",
+  "runtime_keywords": "keywords/zh_cn_xiaowo_runtime.tsv",
+  "generator": {
+    "continuous_gap_ms": 1600.0,
+    "tts": {
+      "backend": "tone",
+      "token_ms": 180.0,
+      "token_ms_jitter": 22.0,
+      "gap_ms": 85.0,
+      "lead_ms": 180.0,
+      "tail_ms": 220.0,
+      "amplitude": 12500.0,
+      "pitch_jitter": 0.008
+    },
+    "augment": {
+      "gain_db_min": -3.5,
+      "gain_db_max": 2.5,
+      "snr_db_min": 24.0,
+      "snr_db_max": 42.0,
+      "echo_max_ms": 30.0,
+      "echo_gain_max": 0.10,
+      "noise_profiles": ["white", "fan", "motor", "media"]
+    }
+  },
+  "dataset": {
+    "train": {
+      "positive_families_per_keyword": 6,
+      "confusable_families_per_keyword": 5,
+      "random_negative_families": 10,
+      "background_seconds_per_profile": 3.0,
+      "variants_per_family": 2
+    },
+    "calibration": {
+      "positive_families_per_keyword": 2,
+      "confusable_families_per_keyword": 2,
+      "random_negative_families": 4,
+      "background_seconds_per_profile": 2.0,
+      "variants_per_family": 1
+    },
+    "test": {
+      "positive_families_per_keyword": 3,
+      "confusable_families_per_keyword": 3,
+      "random_negative_families": 6,
+      "background_seconds_per_profile": 5.0,
+      "variants_per_family": 1
+    },
+    "qualification": {
+      "positive_families_per_keyword": 4,
+      "confusable_families_per_keyword": 4,
+      "random_negative_families": 8,
+      "background_seconds_per_profile": 30.0,
+      "variants_per_family": 1
+    }
+  },
+  "domains": {
+    "distance_bands": {
+      "near": {"distance_m": [0.3, 1.0], "weight": 1.0},
+      "mid": {"distance_m": [1.0, 3.0], "weight": 1.7},
+      "far": {"distance_m": [3.0, 5.0], "weight": 3.0}
+    },
+    "azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
+    "rt60_s": [0.15, 0.85],
+    "snr_db": [-8.0, 30.0],
+    "noise_profiles": ["white", "fan", "motor", "media"],
+    "mic_spacing_m": 0.06,
+    "playback": {
+      "probability": 0.30,
+      "sir_db": [-8.0, 20.0]
+    },
+    "afe": {"backend": "proxy"},
+    "scenes_per_example": {
+      "train": 2,
+      "calibration": 1,
+      "test": 1,
+      "qualification": 2
+    }
+  },
+  "model": {
+    "feature_dim": 32,
+    "hidden_dim": 48,
+    "frontends": ["logmel", "pcen-lite"]
+  },
+  "train": {
+    "initial_epochs": 16,
+    "finetune_epochs": 8,
+    "batch_size": 16,
+    "initial_lr": 0.001,
+    "finetune_lr": 0.00035
+  },
+  "calibration": {
+    "thresholds": [0.25, 0.40, 0.55, 0.70, 0.85],
+    "coordinate_rounds": 1
+  },
+  "model_factory": {
+    "max_rounds": 4,
+    "min_rounds": 3,
+    "patience": 2,
+    "warm_start_mode": "full",
+    "curriculum_strength": 3.0,
+    "max_domain_weight": 8.0,
+    "stop_on_gate": true,
+    "replay": {
+      "max_hard_negatives": 256,
+      "max_missed_positives": 256
+    }
+  },
+  "domain_gates": {
+    "max_frr": 0.08,
+    "max_far_per_hour": 0.0,
+    "max_p95_latency_ms": 800.0,
+    "max_far_frr": 0.12
+  }
+}

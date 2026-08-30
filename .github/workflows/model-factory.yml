@@ -1,0 +1,117 @@
+name: model-factory
+
+on:
+  push:
+    branches: ["codex/model-factory-v0.3"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-factory-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TRAINING_IMAGE: pytorch/pytorch@sha256:6acf597eeb8e376a96580dde4952f37cc017fef732bb40bfc73f28f25e3f64b4
+  TRAINING_DIGEST: sha256:6acf597eeb8e376a96580dde4952f37cc017fef732bb40bfc73f28f25e3f64b4
+
+jobs:
+  train-and-iterate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build real C runtime runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav
+      - name: Pull and verify immutable PyTorch environment
+        run: |
+          set -euo pipefail
+          docker pull "$TRAINING_IMAGE"
+          docker run --rm --network none "$TRAINING_IMAGE" python -c \
+            'import platform, torch; assert platform.python_version_tuple()[:2] == ("3", "12"); assert torch.__version__.split("+")[0] == "2.13.0"; print(platform.python_version(), torch.__version__)'
+      - name: Train, calibrate, replay and iterate
+        id: factory
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          set +e
+          docker run --rm --network none \
+            --entrypoint python \
+            -e KWS_TRAINING_IMAGE_DIGEST="$TRAINING_DIGEST" \
+            -e KWS_TRAINING_CONTAINER=1 \
+            -e OMP_NUM_THREADS=2 \
+            -e MKL_NUM_THREADS=2 \
+            -v "$PWD:/workspace" -w /workspace \
+            "$TRAINING_IMAGE" \
+            training/model_factory.py \
+              --config configs/training/xiaowo.factory.json \
+              --runner build/kws_wav \
+              --work-dir build/model-factory
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > build/model-factory.exit-code
+          exit 0
+      - name: Summarize model result
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('build/model-factory/model-factory-manifest.json')
+          if not path.is_file():
+              print('model factory manifest was not produced')
+              raise SystemExit(0)
+          value = json.loads(path.read_text(encoding='utf-8'))
+          q = value['qualification']
+          far = value['qualification_domains'].get('domains', {}).get('distance:far', {})
+          print('qualified=', value['qualified'])
+          print('best_round=', value['best_round'], 'frontend=', value['best_frontend'])
+          print('model_sha256=', value['best_model_sha256'])
+          print('pack_sha256=', value['best_pack_sha256'])
+          print('qualification_frr=', q['frr'])
+          print('qualification_far_per_hour=', q['far_per_hour'])
+          print('qualification_p95_latency_ms=', q['p95_post_end_latency_ms'])
+          print('far_frr=', far.get('frr'))
+          print('replay=', value['replay'])
+          PY
+      - name: Package retained model evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          if test -f build/model-factory/model-factory-manifest.json; then
+            rm -rf build/model-artifact
+            mkdir -p build/model-artifact
+            cp -a build/model-factory/best build/model-artifact/best
+            cp build/model-factory/model-factory-manifest.json build/model-artifact/
+            if test -d build/model-factory/curriculum; then cp -a build/model-factory/curriculum build/model-artifact/; fi
+            if test -d build/model-factory/replay; then cp -a build/model-factory/replay build/model-artifact/; fi
+            cp build/model-factory.exit-code build/model-artifact/
+            tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+              -C build/model-artifact -czf build/xiaowo-model-factory.tar.gz .
+            sha256sum build/xiaowo-model-factory.tar.gz > build/xiaowo-model-factory.tar.gz.sha256
+          else
+            printf 'model factory did not produce a manifest\n' > build/model-factory-error.txt
+          fi
+      - name: Upload model factory artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-model-${{ github.sha }}
+          path: |
+            build/xiaowo-model-factory.tar.gz
+            build/xiaowo-model-factory.tar.gz.sha256
+            build/model-factory-error.txt
+          if-no-files-found: warn
+          retention-days: 30
+          compression-level: 0
+      - name: Enforce synthetic qualification gate
+        run: |
+          set -euo pipefail
+          test -f build/model-factory.exit-code
+          test "$(cat build/model-factory.exit-code)" = "0"
