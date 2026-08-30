@@ -29,6 +29,10 @@ struct kws_engine {
   uint64_t refractory_suppressed;
   uint64_t detections;
   uint64_t discontinuities;
+  uint64_t lost_samples;
+  uint64_t external_vad_frames;
+  uint64_t last_stream_sequence;
+  uint64_t last_capture_timestamp_ns;
   uint32_t last_discontinuity_reason;
   float max_detection_confidence;
   float block_external_vad_probability;
@@ -141,7 +145,7 @@ kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
                                  pack->vocab_fingerprint);
 }
 
-static void reset_streaming_state(kws_engine_t *engine) {
+static void reset_algorithm_state(kws_engine_t *engine) {
   memset(engine->hidden, 0, sizeof(engine->hidden));
   memset(engine->next_hidden, 0, sizeof(engine->next_hidden));
   kws_frontend_reset(&engine->frontend);
@@ -158,13 +162,6 @@ void kws_engine_reset(kws_engine_t *engine) {
   reset_algorithm_state(engine);
 }
 
-void kws_engine_reset(kws_engine_t *engine) {
-  if (engine == NULL) {
-    return;
-  }
-  reset_streaming_state(engine);
-}
-
 kws_status_t kws_engine_notify_discontinuity(
     kws_engine_t *engine,
     kws_discontinuity_reason_t reason) {
@@ -172,7 +169,7 @@ kws_status_t kws_engine_notify_discontinuity(
       reason > KWS_DISCONTINUITY_SUSPEND_RESUME) {
     return KWS_EINVAL;
   }
-  reset_streaming_state(engine);
+  reset_algorithm_state(engine);
   engine->discontinuities++;
   engine->last_discontinuity_reason = (uint32_t)reason;
   return KWS_OK;
@@ -274,11 +271,25 @@ static void apply_frame_metadata(kws_engine_t *engine,
       KWS_FRAME_CLOCK_RESET;
   engine->block_external_vad_valid = 0u;
   engine->block_external_vad_probability = 0.0f;
-  if (metadata == NULL) return;
+  if (metadata == NULL) {
+    return;
+  }
 
   if ((metadata->flags & reset_flags) != 0u) {
     reset_algorithm_state(engine);
     engine->discontinuities++;
+    if ((metadata->flags & KWS_FRAME_XRUN) != 0u) {
+      engine->last_discontinuity_reason = (uint32_t)KWS_DISCONTINUITY_XRUN;
+    } else if ((metadata->flags & KWS_FRAME_CLOCK_RESET) != 0u) {
+      engine->last_discontinuity_reason =
+          (uint32_t)KWS_DISCONTINUITY_CLOCK_RESET;
+    } else if ((metadata->flags & KWS_FRAME_CODEC_REOPEN) != 0u) {
+      engine->last_discontinuity_reason =
+          (uint32_t)KWS_DISCONTINUITY_ROUTE_CHANGE;
+    } else {
+      engine->last_discontinuity_reason =
+          (uint32_t)KWS_DISCONTINUITY_SUSPEND_RESUME;
+    }
     engine->lost_samples += metadata->lost_samples;
   }
   if ((metadata->flags & KWS_FRAME_EXTERNAL_VAD_VALID) != 0u) {
@@ -307,7 +318,9 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
   if (sample_count > KWS_MAX_PCM_BLOCK_SAMPLES) {
     return KWS_EBOUNDS;
   }
-  if (validate_frame_metadata(metadata) != KWS_OK) return KWS_EINVAL;
+  if (validate_frame_metadata(metadata) != KWS_OK) {
+    return KWS_EINVAL;
+  }
   apply_frame_metadata(engine, metadata);
 
   for (size_t i = 0u; i < sample_count; ++i) {
