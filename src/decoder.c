@@ -53,21 +53,6 @@ static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
   return 1;
 }
 
-static uint16_t admitted_nonblank_token(const float *logits,
-                                        uint16_t vocab_size) {
-  uint16_t best = 1u;
-
-  if (vocab_size < 2u) {
-    return 0u;
-  }
-  for (uint16_t i = 2u; i < vocab_size; ++i) {
-    if (logits[i] > logits[best]) {
-      best = i;
-    }
-  }
-  return logits[best] > logits[0] ? best : 0u;
-}
-
 static float max_score(float a, float b) { return a > b ? a : b; }
 
 static void max_assign(float *dst, float value) {
@@ -320,7 +305,6 @@ int kws_decoder_step(kws_decoder_t *d,
   uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : SILENCE_RETENTION_LOG;
   int blank_dominant = blank_is_dominant(logits, vocab_size);
-  uint16_t admitted_token = admitted_nonblank_token(logits, vocab_size);
   int immediate_kw = -1;
 
   if (d->pending_keyword >= 0) {
@@ -366,7 +350,7 @@ int kws_decoder_step(kws_decoder_t *d,
       int repeated_token = i != 0u && token == d->nodes[i].token;
       float base = repeated_token != 0 ? separated : max_score(nonblank, separated);
 
-      if (token == admitted_token && base > NEG_INF / 2.0f) {
+      if (base > NEG_INF / 2.0f) {
         float log_probability = logits[token] - norm + d->token_boost;
         max_assign(&d->nodes[child].next_score, base + log_probability);
       }

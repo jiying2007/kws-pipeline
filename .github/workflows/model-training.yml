@@ -17,10 +17,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build real C runtime runner
+      - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target kws_wav
+          cmake --build build --parallel --target kws_wav kws_decoder_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
       - name: Install pinned CPU training runtime
         run: |
           python3 -m venv .venv
@@ -132,12 +133,23 @@ jobs:
             build/model-training/datasets/*/audit.json
           if-no-files-found: error
           retention-days: 30
-      - name: Report synthetic qualification status
+      - name: Enforce synthetic qualification gate
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
+
           summary = json.loads(Path('build/model-training/training-run-summary.json').read_text(encoding='utf-8'))
-          print(f"qualified={summary['qualified']} best_round={summary['best_round']} frontend={summary['best_frontend']}")
+          qualified = bool(summary['qualified'])
+          train_exit = int(summary['training_exit_code'])
+          print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
+          if train_exit not in (0, 1):
+              raise SystemExit(f'training infrastructure failed with exit code {train_exit}')
+          if qualified != (train_exit == 0):
+              raise SystemExit(
+                  f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
+              )
+          if not qualified:
+              raise SystemExit('synthetic qualification gates were not met')
           PY
