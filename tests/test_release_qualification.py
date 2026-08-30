@@ -49,6 +49,8 @@ def main() -> int:
         runtime_soak = root / "runtime-soak.json"
         raw_evidence = root / "target-raw.txt"
         power_raw = root / "power.csv"
+        evidence_raw = root / "evidence-raw.jsonl"
+        attestation_verification = root / "attestation-verification.json"
         dataset_audit = root / "dataset-audit.json"
         manifest = root / "qualification-manifest.json"
         policy = root / "policy.json"
@@ -103,8 +105,6 @@ def main() -> int:
         )
         eval_runner.write_bytes(b"eval-runner-fixture")
         board_runner.write_bytes(b"board-runner-fixture")
-        collector.write_bytes(b"collector-fixture")
-        evidence_raw.write_bytes(b'{"sample":"fixture"}\n')
         write_wav(board_audio, seconds=1)
         write_wav(eval_audio, seconds=10)
 
@@ -153,22 +153,6 @@ def main() -> int:
         board_audio_hash = sha256_file(board_audio)
         eval_corpus = evaluation_corpus_identity(references, root)
         write_json(
-            attestation_verification,
-            {
-                "schema_version": 1,
-                "verified": True,
-                "subject_kind": "kws-target-evidence",
-                "issuer": "fixture-trusted-attestor",
-                "trust_policy": "fixture-product-policy",
-                "verified_at_utc": "2026-08-30T00:00:00Z",
-                "subject_sha256": sha256_file(evidence_raw),
-                "collector_sha256": sha256_file(collector),
-                "board_runner_sha256": board_runner_hash,
-                "model_sha256": model_hash,
-                "keyword_pack_sha256": pack_hash,
-            },
-        )
-        write_json(
             eval_provenance,
             {
                 "schema_version": 2,
@@ -206,7 +190,7 @@ def main() -> int:
             board_summary,
             {
                 "schema_version": 1,
-                "runtime_version": "0.2.0",
+                "runtime_version": "0.3.0",
                 "runtime_source_revision": "a" * 40,
                 "runtime_config_digest": "b" * 64,
                 "runtime_target": "arm-linux-gnueabihf",
@@ -269,6 +253,38 @@ def main() -> int:
         )
         raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
         power_raw.write_text("t,power_mw\n0,120\n", encoding="utf-8")
+        raw_paths = [runtime_soak, raw_evidence, power_raw]
+        evidence_raw.write_text(
+            "".join(
+                json.dumps(
+                    {
+                        "name": path.name,
+                        "sha256": sha256_file(path),
+                        "bytes": path.stat().st_size,
+                    },
+                    sort_keys=True,
+                )
+                + "\n"
+                for path in raw_paths
+            ),
+            encoding="utf-8",
+        )
+        write_json(
+            attestation_verification,
+            {
+                "schema_version": 1,
+                "verified": True,
+                "subject_kind": "kws-target-evidence",
+                "issuer": "fixture-trusted-attestor",
+                "trust_policy": "fixture-product-policy",
+                "verified_at_utc": "2026-08-30T00:00:00Z",
+                "subject_sha256": sha256_file(evidence_raw),
+                "collector_sha256": sha256_file(collector),
+                "board_runner_sha256": board_runner_hash,
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
+            },
+        )
         subprocess.check_call(
             [
                 sys.executable,
@@ -285,6 +301,17 @@ def main() -> int:
                 "--average-power-mw", "120",
                 "--raw-evidence", str(raw_evidence),
                 "--power-raw", str(power_raw),
+                "--evidence-raw", str(evidence_raw),
+                "--attestation-verification", str(attestation_verification),
+                "--board-runner", str(board_runner),
+                "--model", str(model),
+                "--keyword-pack", str(pack),
+                "--board-audio", str(board_audio),
+                "--sku", "fixture-sku",
+                "--source-sha", "a" * 40,
+                "--builder-id", "fixture-builder",
+                "--dut-id", "fixture-dut",
+                "--collector-id", "fixture-collector",
                 "--instrument-id", "fixture-meter",
                 "--calibration-id", "fixture-cal",
             ]
@@ -353,22 +380,28 @@ def main() -> int:
             "--board-audio", str(board_audio),
             "--evidence", str(evidence),
             "--evidence-collector", str(collector),
+            "--evidence-raw", str(evidence_raw),
+            "--attestation-verification", str(attestation_verification),
             "--raw-evidence", str(runtime_soak),
             "--raw-evidence", str(raw_evidence),
             "--raw-evidence", str(power_raw),
             "--source-sha", "a" * 40,
+            "--sku", "fixture-sku",
             "--corpus-id", "home-kws-heldout-fixture-v2",
             "--output", str(manifest),
         ]
         subprocess.check_call(command)
         result = json.loads(manifest.read_text(encoding="utf-8"))
         assert result["schema_version"] == 2
+        assert result["sku"] == "fixture-sku"
         assert result["artifacts"]["model_checkpoint"]["sha256"] == checkpoint_hash
         assert result["model_lineage"]["training_corpus_sha256"]
         assert result["evaluation"]["audio_corpus_sha256"] == eval_corpus["corpus_sha256"]
         assert result["dataset_audit"]["sha256"] == sha256_file(dataset_audit)
         assert result["evidence"]["cpu_percent"] == 5.0
         assert result["evidence"]["rss_kib"] == 512.0
+        assert result["evidence"]["raw_evidence_sha256"] == sha256_file(evidence_raw)
+        assert result["evidence"]["attestation"]["verified"] is True
 
         subprocess.check_call(
             [
