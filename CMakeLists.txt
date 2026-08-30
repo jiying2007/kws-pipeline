@@ -25,7 +25,7 @@ if(KWS_SOURCE_REVISION STREQUAL "")
     set(KWS_SOURCE_REVISION "unknown")
   else()
     execute_process(
-      COMMAND git status --porcelain
+      COMMAND git status --porcelain --untracked-files=no
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       OUTPUT_VARIABLE KWS_GIT_DIRTY
       OUTPUT_STRIP_TRAILING_WHITESPACE
