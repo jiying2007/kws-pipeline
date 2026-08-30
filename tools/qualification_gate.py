@@ -178,6 +178,9 @@ def validate_manifest(manifest: dict) -> dict:
         "board_runner",
         "board_audio",
         "evidence_collector",
+        "evidence_raw",
+        "attestation_verification",
+        "evidence",
     )
     hashes = {name: validate_artifact(artifacts.get(name), f"artifacts.{name}") for name in names}
     training_artifacts = artifacts.get("training_manifests")
@@ -284,18 +287,15 @@ def validate_manifest(manifest: dict) -> dict:
     builder_id = evidence.get("builder_id")
     dut_id = evidence.get("dut_id")
     collector_id = evidence.get("collector_id")
-    if not all(isinstance(value, str) and value.strip()
-               for value in (builder_id, dut_id, collector_id)):
+    if not all(isinstance(value, str) and value.strip() for value in (builder_id, dut_id, collector_id)):
         raise ValueError("manifest evidence runner identities are invalid")
     if builder_id == dut_id:
         raise ValueError("manifest evidence builder and DUT must be distinct")
     collected_at = evidence.get("collected_at_utc")
-    if not isinstance(collected_at, str) or re.fullmatch(
-        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", collected_at
-    ) is None:
+    if not isinstance(collected_at, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", collected_at) is None:
         raise ValueError("manifest evidence timestamp is invalid")
     evidence_links = {
-        "collector_sha256": "collector",
+        "collector_sha256": "evidence_collector",
         "raw_evidence_sha256": "evidence_raw",
         "attestation_verification_sha256": "attestation_verification",
         "board_runner_sha256": "board_runner",
@@ -307,15 +307,13 @@ def validate_manifest(manifest: dict) -> dict:
         if validate_sha(evidence.get(key), f"evidence.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest evidence {key} cross-link is inconsistent")
     attestation = evidence.get("attestation")
-    if not isinstance(attestation, dict) or attestation.get("verified") is not True or \
-       attestation.get("subject_kind") != "kws-target-evidence":
+    if not isinstance(attestation, dict) or attestation.get("verified") is not True or attestation.get("subject_kind") != "kws-target-evidence":
         raise ValueError("manifest attestation verification is invalid")
-    if not all(isinstance(attestation.get(key), str) and attestation.get(key).strip()
-               for key in ("issuer", "trust_policy", "verified_at_utc")):
+    if not all(isinstance(attestation.get(key), str) and attestation.get(key).strip() for key in ("issuer", "trust_policy", "verified_at_utc")):
         raise ValueError("manifest attestation trust identity is incomplete")
     attestation_links = {
         "subject_sha256": "evidence_raw",
-        "collector_sha256": "collector",
+        "collector_sha256": "evidence_collector",
         "board_runner_sha256": "board_runner",
         "model_sha256": "model",
         "keyword_pack_sha256": "keyword_pack",
