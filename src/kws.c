@@ -31,6 +31,10 @@ struct kws_engine {
   uint64_t discontinuities;
   uint32_t last_discontinuity_reason;
   float max_detection_confidence;
+  float block_external_vad_probability;
+  uint32_t afe_latency_samples;
+  uint8_t block_external_vad_valid;
+  uint8_t afe_config_sha256[32];
 };
 
 static int model_contract_valid(const kws_model_t *model) {
@@ -143,6 +147,15 @@ static void reset_streaming_state(kws_engine_t *engine) {
   kws_frontend_reset(&engine->frontend);
   kws_decoder_reset(&engine->decoder);
   engine->suppress_until_sample = 0u;
+  engine->block_external_vad_valid = 0u;
+  engine->block_external_vad_probability = 0.0f;
+}
+
+void kws_engine_reset(kws_engine_t *engine) {
+  if (engine == NULL) {
+    return;
+  }
+  reset_algorithm_state(engine);
 }
 
 void kws_engine_reset(kws_engine_t *engine) {
@@ -228,11 +241,63 @@ static uint16_t infer_frame(kws_engine_t *e) {
   return top_index;
 }
 
-kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
-                                     const int16_t *samples,
-                                     size_t sample_count,
-                                     kws_detection_t *out_detection,
-                                     int *out_detected) {
+static kws_status_t validate_frame_metadata(const kws_frame_metadata_t *metadata) {
+  const kws_frame_flags_t all_flags =
+      KWS_FRAME_DISCONTINUITY | KWS_FRAME_XRUN | KWS_FRAME_CODEC_REOPEN |
+      KWS_FRAME_CLOCK_RESET | KWS_FRAME_EXTERNAL_VAD_VALID;
+  if (metadata == NULL) {
+    return KWS_OK;
+  }
+  if (metadata->struct_size < sizeof(*metadata) ||
+      metadata->api_version != KWS_FRAME_METADATA_API_VERSION ||
+      (metadata->flags & ~all_flags) != 0u) {
+    return KWS_EINVAL;
+  }
+  if ((metadata->flags & KWS_FRAME_EXTERNAL_VAD_VALID) != 0u &&
+      (!isfinite(metadata->external_vad_probability) ||
+       metadata->external_vad_probability < 0.0f ||
+       metadata->external_vad_probability > 1.0f)) {
+    return KWS_EINVAL;
+  }
+  if (metadata->lost_samples != 0u &&
+      (metadata->flags & (KWS_FRAME_DISCONTINUITY | KWS_FRAME_XRUN |
+                          KWS_FRAME_CODEC_REOPEN | KWS_FRAME_CLOCK_RESET)) == 0u) {
+    return KWS_EINVAL;
+  }
+  return KWS_OK;
+}
+
+static void apply_frame_metadata(kws_engine_t *engine,
+                                 const kws_frame_metadata_t *metadata) {
+  const kws_frame_flags_t reset_flags =
+      KWS_FRAME_DISCONTINUITY | KWS_FRAME_XRUN | KWS_FRAME_CODEC_REOPEN |
+      KWS_FRAME_CLOCK_RESET;
+  engine->block_external_vad_valid = 0u;
+  engine->block_external_vad_probability = 0.0f;
+  if (metadata == NULL) return;
+
+  if ((metadata->flags & reset_flags) != 0u) {
+    reset_algorithm_state(engine);
+    engine->discontinuities++;
+    engine->lost_samples += metadata->lost_samples;
+  }
+  if ((metadata->flags & KWS_FRAME_EXTERNAL_VAD_VALID) != 0u) {
+    engine->block_external_vad_valid = 1u;
+    engine->block_external_vad_probability = metadata->external_vad_probability;
+  }
+  engine->last_stream_sequence = metadata->stream_sequence;
+  engine->last_capture_timestamp_ns = metadata->capture_timestamp_ns;
+  engine->afe_latency_samples = metadata->afe_latency_samples;
+  memcpy(engine->afe_config_sha256, metadata->afe_config_sha256,
+         sizeof(engine->afe_config_sha256));
+}
+
+kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
+                                        const int16_t *samples,
+                                        size_t sample_count,
+                                        const kws_frame_metadata_t *metadata,
+                                        kws_detection_t *out_detection,
+                                        int *out_detected) {
   if (engine == NULL || (samples == NULL && sample_count != 0u) ||
       out_detected == NULL) {
     return KWS_EINVAL;
@@ -242,6 +307,8 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
   if (sample_count > KWS_MAX_PCM_BLOCK_SAMPLES) {
     return KWS_EBOUNDS;
   }
+  if (validate_frame_metadata(metadata) != KWS_OK) return KWS_EINVAL;
+  apply_frame_metadata(engine, metadata);
 
   for (size_t i = 0u; i < sample_count; ++i) {
     engine->processed_samples++;
@@ -249,13 +316,18 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
                           engine->features) != 0) {
       uint32_t keyword_id = 0u;
       float confidence = 0.0f;
-      int speech_active =
-          kws_frontend_last_dbfs(&engine->frontend) >=
-          engine->config.min_speech_dbfs;
+      int speech_active;
       int decoder_hit;
       uint16_t top_index;
 
       engine->processed_frames++;
+      if (engine->block_external_vad_valid != 0u) {
+        engine->external_vad_frames++;
+        speech_active = engine->block_external_vad_probability >= 0.45f;
+      } else {
+        speech_active = kws_frontend_last_dbfs(&engine->frontend) >=
+                        engine->config.min_speech_dbfs;
+      }
       if (speech_active != 0) {
         engine->speech_frames++;
       }
@@ -297,6 +369,15 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
   return KWS_OK;
 }
 
+kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
+                                     const int16_t *samples,
+                                     size_t sample_count,
+                                     kws_detection_t *out_detection,
+                                     int *out_detected) {
+  return kws_engine_accept_pcm16_ex(engine, samples, sample_count, NULL,
+                                    out_detection, out_detected);
+}
+
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine) {
   return engine != NULL ? engine->processed_samples : 0u;
 }
@@ -321,5 +402,35 @@ kws_status_t kws_engine_get_stats(const kws_engine_t *engine,
   out_stats->pending_age_frames = engine->decoder.pending_age_frames;
   out_stats->last_discontinuity_reason = engine->last_discontinuity_reason;
   out_stats->max_detection_confidence = engine->max_detection_confidence;
+  return KWS_OK;
+}
+
+kws_status_t kws_engine_get_stats_v2(const kws_engine_t *engine,
+                                     kws_engine_stats_v2_t *out_stats) {
+  if (engine == NULL || out_stats == NULL ||
+      out_stats->struct_size < sizeof(*out_stats) ||
+      out_stats->api_version != KWS_ENGINE_STATS_V2_API_VERSION) {
+    return KWS_EINVAL;
+  }
+  out_stats->processed_samples = engine->processed_samples;
+  out_stats->processed_frames = engine->processed_frames;
+  out_stats->speech_frames = engine->speech_frames;
+  out_stats->blank_top1_frames = engine->blank_top1_frames;
+  out_stats->decoder_hits = engine->decoder_hits;
+  out_stats->refractory_suppressed = engine->refractory_suppressed;
+  out_stats->detections = engine->detections;
+  out_stats->discontinuities = engine->discontinuities;
+  out_stats->lost_samples = engine->lost_samples;
+  out_stats->external_vad_frames = engine->external_vad_frames;
+  out_stats->last_stream_sequence = engine->last_stream_sequence;
+  out_stats->last_capture_timestamp_ns = engine->last_capture_timestamp_ns;
+  out_stats->afe_latency_samples = engine->afe_latency_samples;
+  out_stats->keyword_count = engine->decoder.keyword_count;
+  out_stats->trie_nodes = engine->decoder.node_count;
+  out_stats->pending_keyword_index = engine->decoder.pending_keyword;
+  out_stats->pending_age_frames = engine->decoder.pending_age_frames;
+  out_stats->max_detection_confidence = engine->max_detection_confidence;
+  memcpy(out_stats->afe_config_sha256, engine->afe_config_sha256,
+         sizeof(out_stats->afe_config_sha256));
   return KWS_OK;
 }

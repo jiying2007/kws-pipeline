@@ -23,6 +23,9 @@ extern "C" {
 
 #define KWS_FRONTEND_LOGMEL 0u
 #define KWS_FRONTEND_PCEN_LITE 1u
+#define KWS_FRAME_METADATA_API_VERSION 1u
+#define KWS_ENGINE_STATS_V2_API_VERSION 1u
+#define KWS_BUILD_INFO_API_VERSION 1u
 
 typedef enum kws_prefix_policy {
   KWS_PREFIX_IMMEDIATE = 0,
@@ -112,6 +115,66 @@ typedef struct kws_engine_stats {
   float max_detection_confidence;
 } kws_engine_stats_t;
 
+typedef uint32_t kws_frame_flags_t;
+enum {
+  KWS_FRAME_DISCONTINUITY = 1u << 0,
+  KWS_FRAME_XRUN = 1u << 1,
+  KWS_FRAME_CODEC_REOPEN = 1u << 2,
+  KWS_FRAME_CLOCK_RESET = 1u << 3,
+  KWS_FRAME_EXTERNAL_VAD_VALID = 1u << 4
+};
+
+typedef struct kws_frame_metadata {
+  uint32_t struct_size;
+  uint32_t api_version;
+  kws_frame_flags_t flags;
+  uint32_t lost_samples;
+  uint64_t stream_sequence;
+  uint64_t capture_timestamp_ns;
+  float external_vad_probability;
+  uint32_t afe_latency_samples;
+  uint8_t afe_config_sha256[32];
+  uint32_t reserved[8];
+} kws_frame_metadata_t;
+
+typedef struct kws_engine_stats_v2 {
+  uint32_t struct_size;
+  uint32_t api_version;
+  uint64_t processed_samples;
+  uint64_t processed_frames;
+  uint64_t speech_frames;
+  uint64_t blank_top1_frames;
+  uint64_t decoder_hits;
+  uint64_t refractory_suppressed;
+  uint64_t detections;
+  uint64_t discontinuities;
+  uint64_t lost_samples;
+  uint64_t external_vad_frames;
+  uint64_t last_stream_sequence;
+  uint64_t last_capture_timestamp_ns;
+  uint32_t afe_latency_samples;
+  uint16_t keyword_count;
+  uint16_t trie_nodes;
+  int16_t pending_keyword_index;
+  uint16_t pending_age_frames;
+  float max_detection_confidence;
+  uint8_t afe_config_sha256[32];
+  uint32_t reserved[8];
+} kws_engine_stats_v2_t;
+
+typedef struct kws_build_info {
+  uint32_t struct_size;
+  uint32_t api_version;
+  const char *version;
+  const char *source_revision;
+  const char *compiler_id;
+  const char *compiler_version;
+  const char *target_triple;
+  const char *build_type;
+  const char *config_digest;
+  uint32_t reserved[8];
+} kws_build_info_t;
+
 typedef struct kws_engine kws_engine_t;
 
 kws_status_t kws_model_open(const void *blob,
@@ -153,10 +216,22 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
                                      kws_detection_t *out_detection,
                                      int *out_detected);
 
+kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
+                                        const int16_t *samples,
+                                        size_t sample_count,
+                                        const kws_frame_metadata_t *metadata,
+                                        kws_detection_t *out_detection,
+                                        int *out_detected);
+
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine);
 
 kws_status_t kws_engine_get_stats(const kws_engine_t *engine,
                                   kws_engine_stats_t *out_stats);
+
+kws_status_t kws_engine_get_stats_v2(const kws_engine_t *engine,
+                                     kws_engine_stats_v2_t *out_stats);
+
+const kws_build_info_t *kws_build_info(void);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add versioned discontinuity/external-AFE metadata and v2 runtime telemetry.
+- Add exact build identity and dirty-source marking.
+- Require shipping-approved SKU policies and byte-bound collector/raw/attestation evidence.
+- Add runtime source/config identity to target board benchmark output.
+- Restore Python 3.8 compatibility for synthetic domain generation.
+
 All notable source-level changes are recorded here. A source/software version does **not** imply that a particular Mandarin wake-word SKU has passed acoustic or target-board qualification.
 
 ## 0.3.0 software evidence hardening — 2026-08-29

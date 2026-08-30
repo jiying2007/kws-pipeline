@@ -84,7 +84,13 @@ def validate_eval(
     return result
 
 
-def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hashes: dict[str, str]) -> dict:
+def validate_board(
+    summary: dict,
+    model_bytes: int,
+    pack_bytes: int,
+    source_sha: str,
+    actual_hashes: dict[str, str],
+) -> dict:
     if json_int(summary.get("schema_version"), "board.schema_version") != 1:
         raise ValueError("board benchmark schema_version must be 1")
     for key, expected in actual_hashes.items():
@@ -100,6 +106,14 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
         raise ValueError("board benchmark artifact sizes do not match selected artifacts")
     result = {
         **actual_hashes,
+        "runtime_version": required_text(summary, "runtime_version", "board"),
+        "runtime_source_revision": required_text(
+            summary, "runtime_source_revision", "board"
+        ),
+        "runtime_config_digest": sha256_value(
+            summary.get("runtime_config_digest"), "board.runtime_config_digest"
+        ),
+        "runtime_target": required_text(summary, "runtime_target", "board"),
         "audio_seconds": finite(summary["audio_seconds"], "board.audio_seconds", 0.0),
         "repeats": json_int(summary["repeats"], "board.repeats", 1),
         "blocks": json_int(summary["blocks"], "board.blocks", 1),
@@ -116,6 +130,8 @@ def validate_board(summary: dict, model_bytes: int, pack_bytes: int, actual_hash
     }
     if result["audio_seconds"] <= 0.0 or result["block_deadline_us"] != 20000.0:
         raise ValueError("board benchmark audio/deadline is invalid")
+    if result["runtime_source_revision"] != source_sha:
+        raise ValueError("board benchmark runtime source does not match qualification source")
     if not result["p50_process_us"] <= result["p95_process_us"] <= result["p99_process_us"] <= result["max_process_us"]:
         raise ValueError("board benchmark percentiles are not monotonic")
     close_enough(
@@ -287,6 +303,8 @@ def validate_evidence(evidence: dict, collector_sha256: str) -> dict:
         "calibration_id": required_text(evidence, "calibration_id", "evidence"),
         "raw_evidence": normalized_raw,
     }
+    if result["builder_id"] == result["dut_id"]:
+        raise ValueError("evidence builder_id and dut_id must be distinct")
     if result["cpu_percent"] > 100.0:
         raise ValueError("evidence.cpu_percent must be <= 100")
     for key, expected in raw_metrics.items():

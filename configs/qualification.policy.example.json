@@ -1,6 +1,9 @@
 {
   "schema_version": 2,
+  "policy_id": "example-not-for-shipping-v1",
   "name": "example-not-a-shipping-policy",
+  "sku": "REPLACE_ME",
+  "shipping_approved": false,
   "confidence_level": 0.95,
   "min_audio_hours": 24.0,
   "min_expected_wakes": 1000,

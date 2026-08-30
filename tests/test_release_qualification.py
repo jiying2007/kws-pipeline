@@ -103,6 +103,8 @@ def main() -> int:
         )
         eval_runner.write_bytes(b"eval-runner-fixture")
         board_runner.write_bytes(b"board-runner-fixture")
+        collector.write_bytes(b"collector-fixture")
+        evidence_raw.write_bytes(b'{"sample":"fixture"}\n')
         write_wav(board_audio, seconds=1)
         write_wav(eval_audio, seconds=10)
 
@@ -151,6 +153,22 @@ def main() -> int:
         board_audio_hash = sha256_file(board_audio)
         eval_corpus = evaluation_corpus_identity(references, root)
         write_json(
+            attestation_verification,
+            {
+                "schema_version": 1,
+                "verified": True,
+                "subject_kind": "kws-target-evidence",
+                "issuer": "fixture-trusted-attestor",
+                "trust_policy": "fixture-product-policy",
+                "verified_at_utc": "2026-08-30T00:00:00Z",
+                "subject_sha256": sha256_file(evidence_raw),
+                "collector_sha256": sha256_file(collector),
+                "board_runner_sha256": board_runner_hash,
+                "model_sha256": model_hash,
+                "keyword_pack_sha256": pack_hash,
+            },
+        )
+        write_json(
             eval_provenance,
             {
                 "schema_version": 2,
@@ -188,6 +206,10 @@ def main() -> int:
             board_summary,
             {
                 "schema_version": 1,
+                "runtime_version": "0.2.0",
+                "runtime_source_revision": "a" * 40,
+                "runtime_config_digest": "b" * 64,
+                "runtime_target": "arm-linux-gnueabihf",
                 "runner_sha256": board_runner_hash,
                 "model_sha256": model_hash,
                 "keyword_pack_sha256": pack_hash,
@@ -284,7 +306,10 @@ def main() -> int:
 
         valid_policy = {
             "schema_version": 2,
+            "policy_id": "fixture-policy-v1",
             "name": "fixture-policy",
+            "sku": "fixture-sku",
+            "shipping_approved": True,
             "confidence_level": 0.95,
             "min_audio_hours": audio_hours,
             "min_expected_wakes": 10,

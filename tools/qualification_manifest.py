@@ -24,7 +24,9 @@ from qualification_common import (
     read_model,
     read_pack,
     read_vocabulary,
+    required_text,
     sha256_file,
+    sha256_value,
     validate_runtime_config,
 )
 from qualification_metrics import validate_board, validate_evidence, validate_eval
@@ -37,6 +39,31 @@ def artifact(path: pathlib.Path, digest: str) -> dict:
     if size <= 0:
         raise ValueError(f"{path}: release artifact must be non-empty")
     return {"name": path.name, "sha256": digest, "bytes": size}
+
+
+def validate_attestation_verification(value: dict, expected: dict[str, str]) -> dict:
+    if json_int(value.get("schema_version"), "attestation.schema_version") != 1:
+        raise ValueError("attestation verification schema_version must be 1")
+    if value.get("verified") is not True:
+        raise ValueError("attestation verification must report verified=true")
+    if value.get("subject_kind") != "kws-target-evidence":
+        raise ValueError("attestation subject_kind must be kws-target-evidence")
+    result = {
+        "schema_version": 1,
+        "verified": True,
+        "subject_kind": "kws-target-evidence",
+        "issuer": required_text(value, "issuer", "attestation"),
+        "trust_policy": required_text(value, "trust_policy", "attestation"),
+        "verified_at_utc": required_text(value, "verified_at_utc", "attestation"),
+    }
+    if not result["verified_at_utc"].endswith("Z"):
+        raise ValueError("attestation verified_at_utc must be UTC")
+    for key, expected_hash in expected.items():
+        measured = sha256_value(value.get(key), f"attestation.{key}")
+        if measured != expected_hash:
+            raise ValueError(f"attestation {key} does not match selected artifact")
+        result[key] = measured
+    return result
 
 
 def load_jsonl(path: pathlib.Path, label: str) -> list[dict]:
@@ -176,8 +203,11 @@ def main() -> int:
     if SOURCE_SHA_RE.fullmatch(source_sha) is None:
         raise ValueError("--source-sha must be a 40- or 64-character hex Git object id")
     corpus_id = args.corpus_id.strip()
+    sku = args.sku.strip()
     if not corpus_id:
         raise ValueError("--corpus-id must be non-empty")
+    if not sku:
+        raise ValueError("--sku must be non-empty")
 
     model = read_model(args.model)
     pack = read_pack(args.keywords)
@@ -267,6 +297,7 @@ def main() -> int:
         board_summary,
         model["bytes"],
         pack["bytes"],
+        source_sha,
         {
             "runner_sha256": hashes["board_runner"],
             "model_sha256": hashes["model"],
@@ -336,7 +367,11 @@ def main() -> int:
         "model_lineage": {"provenance_sha256": hashes["model_provenance"], **model_lineage},
         "evaluation": {"summary_sha256": hashes["eval_summary"], "provenance_sha256": hashes["eval_provenance"], **evaluation},
         "board": {"summary_sha256": hashes["board_summary"], **board},
-        "evidence": {"sha256": hashes["evidence"], **evidence},
+        "evidence": {
+            "sha256": hashes["evidence"],
+            "attestation": attestation,
+            **evidence,
+        },
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

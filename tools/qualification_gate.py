@@ -66,7 +66,19 @@ def validate_policy(policy: dict) -> dict:
     name = policy.get("name")
     if not isinstance(name, str) or not name.strip():
         raise ValueError("policy name must be non-empty text")
+    policy_id = policy.get("policy_id")
+    sku = policy.get("sku")
+    shipping_approved = policy.get("shipping_approved")
+    if not isinstance(policy_id, str) or not policy_id.strip():
+        raise ValueError("policy_id must be non-empty text")
+    if not isinstance(sku, str) or not sku.strip():
+        raise ValueError("policy sku must be non-empty text")
+    if shipping_approved is not True:
+        raise ValueError("qualification gate requires shipping_approved=true")
     result = {
+        "policy_id": policy_id.strip(),
+        "sku": sku.strip(),
+        "shipping_approved": True,
         "name": name.strip(),
         "confidence_level": finite(policy["confidence_level"], "policy.confidence_level"),
         "min_audio_hours": finite(policy["min_audio_hours"], "policy.min_audio_hours", 0.0),
@@ -142,9 +154,12 @@ def validate_manifest(manifest: dict) -> dict:
         raise ValueError("manifest runtime geometry is unsupported")
 
     source_sha = manifest.get("source_sha")
+    sku = manifest.get("sku")
     fingerprint = vocabulary.get("fingerprint")
     if not isinstance(source_sha, str) or SOURCE_SHA_RE.fullmatch(source_sha) is None:
         raise ValueError("manifest source_sha is invalid")
+    if not isinstance(sku, str) or not sku.strip():
+        raise ValueError("manifest sku is invalid")
     if not isinstance(fingerprint, str) or FINGERPRINT_RE.fullmatch(fingerprint) is None:
         raise ValueError("manifest vocabulary fingerprint is invalid")
 
@@ -258,7 +273,56 @@ def validate_manifest(manifest: dict) -> dict:
     validate_sha(evaluation.get("summary_sha256"), "evaluation.summary_sha256")
     validate_sha(evaluation.get("provenance_sha256"), "evaluation.provenance_sha256")
     validate_sha(board.get("summary_sha256"), "board.summary_sha256")
-    validate_sha(evidence.get("sha256"), "evidence.sha256")
+    if validate_sha(evidence.get("sha256"), "evidence.sha256") != hashes["evidence"]:
+        raise ValueError("manifest evidence hash does not match evidence artifact")
+    if integer(evidence.get("schema_version"), "evidence.schema_version") != 2:
+        raise ValueError("manifest evidence schema_version must be 2")
+    if evidence.get("evidence_class") != "product-board":
+        raise ValueError("manifest evidence_class must be product-board")
+    if evidence.get("sku") != sku or evidence.get("source_sha") != source_sha:
+        raise ValueError("manifest evidence identity does not match SKU/source")
+    builder_id = evidence.get("builder_id")
+    dut_id = evidence.get("dut_id")
+    collector_id = evidence.get("collector_id")
+    if not all(isinstance(value, str) and value.strip()
+               for value in (builder_id, dut_id, collector_id)):
+        raise ValueError("manifest evidence runner identities are invalid")
+    if builder_id == dut_id:
+        raise ValueError("manifest evidence builder and DUT must be distinct")
+    collected_at = evidence.get("collected_at_utc")
+    if not isinstance(collected_at, str) or re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", collected_at
+    ) is None:
+        raise ValueError("manifest evidence timestamp is invalid")
+    evidence_links = {
+        "collector_sha256": "collector",
+        "raw_evidence_sha256": "evidence_raw",
+        "attestation_verification_sha256": "attestation_verification",
+        "board_runner_sha256": "board_runner",
+        "model_sha256": "model",
+        "keyword_pack_sha256": "keyword_pack",
+        "board_audio_sha256": "board_audio",
+    }
+    for key, artifact_name in evidence_links.items():
+        if validate_sha(evidence.get(key), f"evidence.{key}") != hashes[artifact_name]:
+            raise ValueError(f"manifest evidence {key} cross-link is inconsistent")
+    attestation = evidence.get("attestation")
+    if not isinstance(attestation, dict) or attestation.get("verified") is not True or \
+       attestation.get("subject_kind") != "kws-target-evidence":
+        raise ValueError("manifest attestation verification is invalid")
+    if not all(isinstance(attestation.get(key), str) and attestation.get(key).strip()
+               for key in ("issuer", "trust_policy", "verified_at_utc")):
+        raise ValueError("manifest attestation trust identity is incomplete")
+    attestation_links = {
+        "subject_sha256": "evidence_raw",
+        "collector_sha256": "collector",
+        "board_runner_sha256": "board_runner",
+        "model_sha256": "model",
+        "keyword_pack_sha256": "keyword_pack",
+    }
+    for key, artifact_name in attestation_links.items():
+        if validate_sha(attestation.get(key), f"attestation.{key}") != hashes[artifact_name]:
+            raise ValueError(f"manifest attestation {key} cross-link is inconsistent")
 
     expected = integer(evaluation.get("expected"), "evaluation.expected", 1)
     matched = integer(evaluation.get("matched"), "evaluation.matched", 0)
@@ -268,6 +332,7 @@ def validate_manifest(manifest: dict) -> dict:
         raise ValueError("manifest evaluation matched/false-reject counts disagree")
 
     result = {
+        "sku": sku.strip(),
         "source_sha": source_sha,
         "vocab_fingerprint": fingerprint,
         "model_checkpoint_sha256": hashes["model_checkpoint"],
@@ -313,6 +378,8 @@ def main() -> int:
     manifest = load_json(args.manifest)
     policy = validate_policy(load_json(args.policy))
     measured = validate_manifest(manifest)
+    if measured["sku"] != policy["sku"]:
+        raise ValueError("manifest SKU does not match shipping policy SKU")
     statistics = qualification_bounds(
         false_rejects=measured["false_rejects"],
         expected_wakes=measured["expected"],
@@ -343,6 +410,9 @@ def main() -> int:
         "schema_version": 3,
         "qualified": not violations,
         "policy": policy["name"],
+        "policy_id": policy["policy_id"],
+        "sku": policy["sku"],
+        "qualification_level": "product-certified",
         "manifest_sha256": sha256_file(args.manifest),
         "policy_sha256": sha256_file(args.policy),
         "source_sha": measured["source_sha"],
