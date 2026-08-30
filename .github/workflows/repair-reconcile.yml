@@ -1,0 +1,668 @@
+name: repair-reconcile-once
+
+on:
+  push:
+    branches:
+      - codex/terminal-hardening-v0.3
+    paths:
+      - .github/workflows/repair-reconcile.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Reconcile runtime and qualification contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+          # Start the runtime implementation from current main and keep the already
+          # combined public header. Start the release qualification test from the
+          # last fully-green v0.3 head to avoid retaining textual half-merges.
+          git show 41fb5106240e665538c19f4861fcb747a58afbbc:src/kws.c > src/kws.c
+          git show 58d69d0c8f2a527c790f385b257e8790b6add8fc:tests/test_release_qualification.py > tests/test_release_qualification.py
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def must_replace(text: str, old: str, new: str, label: str) -> str:
+              if old not in text:
+                  raise SystemExit(f"missing patch anchor: {label}")
+              return text.replace(old, new, 1)
+
+          # Runtime: main's versioned metadata/build identity is authoritative;
+          # retain the v0.3 convenience discontinuity API and telemetry.
+          p = Path("src/kws.c")
+          s = p.read_text()
+          s = must_replace(
+              s,
+              "  uint64_t last_capture_timestamp_ns;\n  float max_detection_confidence;",
+              "  uint64_t last_capture_timestamp_ns;\n  uint32_t last_discontinuity_reason;\n  float max_detection_confidence;",
+              "runtime state reason",
+          )
+          reset = '''void kws_engine_reset(kws_engine_t *engine) {
+            if (engine == NULL) {
+              return;
+            }
+            reset_algorithm_state(engine);
+          }
+          '''
+          notify = reset + '''
+          kws_status_t kws_engine_notify_discontinuity(
+              kws_engine_t *engine,
+              kws_discontinuity_reason_t reason) {
+            if (engine == NULL || reason < KWS_DISCONTINUITY_XRUN ||
+                reason > KWS_DISCONTINUITY_SUSPEND_RESUME) {
+              return KWS_EINVAL;
+            }
+            reset_algorithm_state(engine);
+            engine->discontinuities++;
+            engine->last_discontinuity_reason = (uint32_t)reason;
+            return KWS_OK;
+          }
+          '''
+          s = must_replace(s, reset, notify, "runtime notify API")
+          s = must_replace(
+              s,
+              "    engine->discontinuities++;\n    engine->lost_samples += metadata->lost_samples;",
+              '''    engine->discontinuities++;
+              if ((metadata->flags & KWS_FRAME_XRUN) != 0u) {
+                engine->last_discontinuity_reason = (uint32_t)KWS_DISCONTINUITY_XRUN;
+              } else if ((metadata->flags & KWS_FRAME_CLOCK_RESET) != 0u) {
+                engine->last_discontinuity_reason = (uint32_t)KWS_DISCONTINUITY_CLOCK_RESET;
+              } else if ((metadata->flags & KWS_FRAME_CODEC_REOPEN) != 0u) {
+                engine->last_discontinuity_reason = (uint32_t)KWS_DISCONTINUITY_ROUTE_CHANGE;
+              } else {
+                engine->last_discontinuity_reason = (uint32_t)KWS_DISCONTINUITY_SUSPEND_RESUME;
+              }
+              engine->lost_samples += metadata->lost_samples;''',
+              "metadata discontinuity reason",
+          )
+          s = must_replace(
+              s,
+              "  out_stats->detections = engine->detections;\n  out_stats->keyword_count = engine->decoder.keyword_count;",
+              "  out_stats->detections = engine->detections;\n  out_stats->discontinuities = engine->discontinuities;\n  out_stats->keyword_count = engine->decoder.keyword_count;",
+              "v1 discontinuity count",
+          )
+          s = must_replace(
+              s,
+              "  out_stats->pending_age_frames = engine->decoder.pending_age_frames;\n  out_stats->max_detection_confidence = engine->max_detection_confidence;\n  return KWS_OK;\n}\n\nkws_status_t kws_engine_get_stats_v2",
+              "  out_stats->pending_age_frames = engine->decoder.pending_age_frames;\n  out_stats->last_discontinuity_reason = engine->last_discontinuity_reason;\n  out_stats->max_detection_confidence = engine->max_detection_confidence;\n  return KWS_OK;\n}\n\nkws_status_t kws_engine_get_stats_v2",
+              "v1 discontinuity reason",
+          )
+          p.write_text(s)
+
+          # Qualification metrics: keep exact raw-soak re-computation and add the
+          # main product/SKU/source/attestation identity contract.
+          p = Path("tools/qualification_metrics.py")
+          s = p.read_text()
+          if "import re\n" not in s:
+              s = must_replace(s, "import json\n", "import json\nimport re\n", "metrics re import")
+          start = s.index("def validate_evidence(")
+          s = s[:start] + r'''UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+
+
+def validate_evidence(
+    evidence: dict,
+    *,
+    sku: str,
+    source_sha: str,
+    actual_hashes: dict[str, str],
+) -> dict:
+    if json_int(evidence.get("schema_version"), "evidence.schema_version") != 2:
+        raise ValueError("target evidence schema_version must be 2")
+    if evidence.get("evidence_class") != "product-board":
+        raise ValueError("evidence_class must be product-board")
+    if required_text(evidence, "collector", "evidence") != "collect_target_evidence.py":
+        raise ValueError("target evidence must be produced by collect_target_evidence.py")
+    if required_text(evidence, "sku", "evidence") != sku:
+        raise ValueError("evidence SKU does not match qualification SKU")
+    if required_text(evidence, "source_sha", "evidence") != source_sha:
+        raise ValueError("evidence source_sha does not match qualification source")
+    collected_at = required_text(evidence, "collected_at_utc", "evidence")
+    if UTC_RE.fullmatch(collected_at) is None:
+        raise ValueError("evidence.collected_at_utc must be UTC YYYY-MM-DDTHH:MM:SSZ")
+
+    measured_hashes = {
+        key: sha256_value(evidence.get(key), f"evidence.{key}")
+        for key in actual_hashes
+    }
+    for key, expected in actual_hashes.items():
+        if measured_hashes[key] != expected:
+            raise ValueError(f"evidence {key} does not match selected artifact")
+
+    raw = evidence.get("raw_evidence")
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("target evidence must bind at least one raw evidence artifact")
+    normalized_raw = []
+    seen_names: set[str] = set()
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"evidence.raw_evidence[{index}] must be an object")
+        name = required_text(item, "name", f"evidence.raw_evidence[{index}]")
+        if name in seen_names:
+            raise ValueError("target evidence raw artifact names must be unique")
+        seen_names.add(name)
+        normalized_raw.append({
+            "name": name,
+            "sha256": sha256_value(item.get("sha256"), f"evidence.raw_evidence[{index}].sha256"),
+            "bytes": json_int(item.get("bytes"), f"evidence.raw_evidence[{index}].bytes", 1),
+        })
+
+    runtime_soak_name = required_text(evidence, "runtime_soak_name", "evidence")
+    runtime_soak_sha256 = sha256_value(evidence.get("runtime_soak_sha256"), "evidence.runtime_soak_sha256")
+    power_raw_name = required_text(evidence, "power_raw_name", "evidence")
+    power_raw_sha256 = sha256_value(evidence.get("power_raw_sha256"), "evidence.power_raw_sha256")
+    raw_by_name = {item["name"]: item for item in normalized_raw}
+    if runtime_soak_name not in raw_by_name or raw_by_name[runtime_soak_name]["sha256"] != runtime_soak_sha256:
+        raise ValueError("target evidence runtime soak identity is missing from raw evidence")
+    if power_raw_name not in raw_by_name or raw_by_name[power_raw_name]["sha256"] != power_raw_sha256:
+        raise ValueError("target evidence power raw identity is missing from raw evidence")
+
+    raw_metrics = _runtime_soak_metrics(evidence, runtime_soak_sha256)
+    result = {
+        "schema_version": 2,
+        "evidence_class": "product-board",
+        "sku": sku,
+        "source_sha": source_sha,
+        "collected_at_utc": collected_at,
+        "builder_id": required_text(evidence, "builder_id", "evidence"),
+        "dut_id": required_text(evidence, "dut_id", "evidence"),
+        "collector_id": required_text(evidence, "collector_id", "evidence"),
+        "collector": "collect_target_evidence.py",
+        "target": required_text(evidence, "target", "evidence"),
+        "board_revision": required_text(evidence, "board_revision", "evidence"),
+        "soc": required_text(evidence, "soc", "evidence"),
+        "toolchain": required_text(evidence, "toolchain", "evidence"),
+        "compiler_flags": required_text(evidence, "compiler_flags", "evidence"),
+        "governor": required_text(evidence, "governor", "evidence"),
+        "audio_frontend": required_text(evidence, "audio_frontend", "evidence"),
+        "kernel": required_text(evidence, "kernel", "evidence"),
+        "machine": required_text(evidence, "machine", "evidence"),
+        "cpu_online": required_text(evidence, "cpu_online", "evidence"),
+        "uptime_s": finite(evidence["uptime_s"], "evidence.uptime_s", 0.0),
+        "soak_hours": finite(evidence["soak_hours"], "evidence.soak_hours", 0.0),
+        "cpu_percent": finite(evidence["cpu_percent"], "evidence.cpu_percent", 0.0),
+        "rss_kib": finite(evidence["rss_kib"], "evidence.rss_kib", 0.0),
+        "stack_high_water_bytes": finite(evidence["stack_high_water_bytes"], "evidence.stack_high_water_bytes", 0.0),
+        "max_temp_c": finite(evidence["max_temp_c"], "evidence.max_temp_c"),
+        "average_power_mw": finite(evidence["average_power_mw"], "evidence.average_power_mw", 0.0),
+        "runtime_soak_name": runtime_soak_name,
+        "runtime_soak_sha256": runtime_soak_sha256,
+        "power_raw_name": power_raw_name,
+        "power_raw_sha256": power_raw_sha256,
+        "instrument_id": required_text(evidence, "instrument_id", "evidence"),
+        "calibration_id": required_text(evidence, "calibration_id", "evidence"),
+        "raw_evidence": normalized_raw,
+        **measured_hashes,
+    }
+    if result["builder_id"] == result["dut_id"]:
+        raise ValueError("evidence builder_id and dut_id must be distinct")
+    if result["cpu_percent"] > 100.0:
+        raise ValueError("evidence.cpu_percent must be <= 100")
+    for key, expected in raw_metrics.items():
+        close_enough(result[key], expected, f"evidence.{key}", 1e-9, 1e-9)
+    return result
+'''
+          p.write_text(s)
+
+          # Manifest: combine branch corpus/dataset/raw tuple checks with main's
+          # SKU + attestation + canonical raw-manifest bindings.
+          p = Path("tools/qualification_manifest.py")
+          s = p.read_text()
+          s = must_replace(
+              s,
+              '    parser.add_argument("--raw-evidence", required=True, action="append", type=pathlib.Path)\n',
+              '    parser.add_argument("--raw-evidence", required=True, action="append", type=pathlib.Path)\n'
+              '    parser.add_argument("--evidence-raw", required=True, type=pathlib.Path)\n'
+              '    parser.add_argument("--attestation-verification", required=True, type=pathlib.Path)\n'
+              '    parser.add_argument("--sku", required=True)\n',
+              "manifest product args",
+          )
+          s = must_replace(
+              s,
+              '        "evidence_collector": args.evidence_collector,\n        "dataset_audit": args.dataset_audit,',
+              '        "evidence_collector": args.evidence_collector,\n'
+              '        "evidence_raw": args.evidence_raw,\n'
+              '        "attestation_verification": args.attestation_verification,\n'
+              '        "dataset_audit": args.dataset_audit,',
+              "manifest product paths",
+          )
+          old = '''    evidence_json = load_json(args.evidence)
+          evidence = validate_evidence(evidence_json, hashes["evidence_collector"])
+          raw_hashes = {(path.name, sha256_file(path), path.stat().st_size) for path in args.raw_evidence}
+          declared_raw = {(item["name"], item["sha256"], item["bytes"]) for item in evidence["raw_evidence"]}
+          if raw_hashes != declared_raw:
+              raise ValueError("target evidence raw artifacts do not match selected --raw-evidence files")
+          '''
+          new = '''    evidence_json = load_json(args.evidence)
+          evidence = validate_evidence(
+              evidence_json,
+              sku=sku,
+              source_sha=source_sha,
+              actual_hashes={
+                  "collector_sha256": hashes["evidence_collector"],
+                  "raw_evidence_sha256": hashes["evidence_raw"],
+                  "attestation_verification_sha256": hashes["attestation_verification"],
+                  "board_runner_sha256": hashes["board_runner"],
+                  "model_sha256": hashes["model"],
+                  "keyword_pack_sha256": hashes["keyword_pack"],
+                  "board_audio_sha256": hashes["board_audio"],
+              },
+          )
+          raw_hashes = {(path.name, sha256_file(path), path.stat().st_size) for path in args.raw_evidence}
+          declared_raw = {(item["name"], item["sha256"], item["bytes"]) for item in evidence["raw_evidence"]}
+          if raw_hashes != declared_raw:
+              raise ValueError("target evidence raw artifacts do not match selected --raw-evidence files")
+          raw_manifest_rows = load_jsonl(args.evidence_raw, "evidence-raw")
+          raw_manifest = {
+              (required_text(item, "name", "evidence-raw"),
+               sha256_value(item.get("sha256"), "evidence-raw.sha256"),
+               json_int(item.get("bytes"), "evidence-raw.bytes", 1))
+              for item in raw_manifest_rows
+          }
+          if raw_manifest != raw_hashes or len(raw_manifest_rows) != len(raw_hashes):
+              raise ValueError("canonical evidence-raw manifest does not match selected raw evidence")
+          attestation = validate_attestation_verification(
+              load_json(args.attestation_verification),
+              {
+                  "subject_sha256": hashes["evidence_raw"],
+                  "collector_sha256": hashes["evidence_collector"],
+                  "board_runner_sha256": hashes["board_runner"],
+                  "model_sha256": hashes["model"],
+                  "keyword_pack_sha256": hashes["keyword_pack"],
+              },
+          )
+          '''
+          s = must_replace(s, old, new, "manifest evidence validation")
+          s = must_replace(
+              s,
+              '        "evidence_collector": artifact(args.evidence_collector, hashes["evidence_collector"]),\n        "raw_evidence": raw_evidence_artifacts,',
+              '        "evidence_collector": artifact(args.evidence_collector, hashes["evidence_collector"]),\n'
+              '        "evidence_raw": artifact(args.evidence_raw, hashes["evidence_raw"]),\n'
+              '        "attestation_verification": artifact(args.attestation_verification, hashes["attestation_verification"]),\n'
+              '        "evidence": artifact(args.evidence, hashes["evidence"]),\n'
+              '        "raw_evidence": raw_evidence_artifacts,',
+              "manifest product artifacts",
+          )
+          s = must_replace(
+              s,
+              '        "schema_version": 2,\n        "source_sha": source_sha,',
+              '        "schema_version": 2,\n        "sku": sku,\n        "source_sha": source_sha,',
+              "manifest sku",
+          )
+          p.write_text(s)
+
+          # Gate: retain branch schema/corpus/raw checks and make the main product
+          # identity links use the branch's retained collector artifact naming.
+          p = Path("tools/qualification_gate.py")
+          s = p.read_text()
+          s = must_replace(
+              s,
+              '        "board_audio",\n        "evidence_collector",\n    )',
+              '        "board_audio",\n        "evidence_collector",\n        "evidence_raw",\n        "attestation_verification",\n        "evidence",\n    )',
+              "gate product artifacts",
+          )
+          s = s.replace('"collector_sha256": "collector"', '"collector_sha256": "evidence_collector"')
+          p.write_text(s)
+
+          # Collector: derive point summaries from raw soak samples, validate the
+          # canonical raw tuple and external attestation, then bind all product IDs.
+          p = Path("tools/collect_target_evidence.py")
+          s = p.read_text()
+          if "import re\n" not in s:
+              s = must_replace(s, "import platform\n", "import platform\nimport re\n", "collector re import")
+          if "from datetime import datetime, timezone\n" not in s:
+              s = must_replace(s, "import argparse\n", "import argparse\nfrom datetime import datetime, timezone\n", "collector datetime import")
+          start = s.index("def main() -> int:")
+          s = s[:start] + r'''def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument("--target", required=True)
+    parser.add_argument("--board-revision", required=True)
+    parser.add_argument("--soc")
+    parser.add_argument("--toolchain", required=True)
+    parser.add_argument("--compiler-flags", required=True)
+    parser.add_argument("--audio-frontend", required=True)
+    parser.add_argument("--audio-frontend-sha256")
+    parser.add_argument("--runtime-soak", required=True, type=pathlib.Path)
+    parser.add_argument("--stack-high-water-bytes", type=float, required=True)
+    parser.add_argument("--average-power-mw", type=float, required=True)
+    parser.add_argument("--raw-evidence", action="append", type=pathlib.Path, default=[])
+    parser.add_argument("--power-raw", required=True, type=pathlib.Path)
+    parser.add_argument("--evidence-raw", required=True, type=pathlib.Path)
+    parser.add_argument("--attestation-verification", required=True, type=pathlib.Path)
+    parser.add_argument("--board-runner", required=True, type=pathlib.Path)
+    parser.add_argument("--model", required=True, type=pathlib.Path)
+    parser.add_argument("--keyword-pack", required=True, type=pathlib.Path)
+    parser.add_argument("--board-audio", required=True, type=pathlib.Path)
+    parser.add_argument("--sku", required=True)
+    parser.add_argument("--source-sha", required=True)
+    parser.add_argument("--builder-id", required=True)
+    parser.add_argument("--dut-id", required=True)
+    parser.add_argument("--collector-id", required=True)
+    parser.add_argument("--instrument-id", required=True)
+    parser.add_argument("--calibration-id", required=True)
+    args = parser.parse_args()
+
+    source_sha = args.source_sha.strip().lower()
+    sku = args.sku.strip()
+    if re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", source_sha) is None:
+        raise ValueError("--source-sha must be lowercase 40- or 64-character hex")
+    if not sku or not args.builder_id.strip() or not args.dut_id.strip() or not args.collector_id.strip():
+        raise ValueError("SKU/builder/DUT/collector identity must be non-empty")
+    if args.builder_id.strip() == args.dut_id.strip():
+        raise ValueError("builder-id and dut-id must be distinct")
+    if args.stack_high_water_bytes < 0.0 or args.average_power_mw < 0.0:
+        raise ValueError("stack/power measurements must be non-negative")
+
+    runtime_soak_path = args.runtime_soak.resolve(strict=True)
+    runtime_soak_raw = runtime_soak_path.read_text(encoding="utf-8")
+    runtime = load_runtime_soak(runtime_soak_path)
+    raw_paths = [runtime_soak_path, *[path.resolve(strict=True) for path in args.raw_evidence]]
+    power_path = args.power_raw.resolve(strict=True)
+    raw_paths.append(power_path)
+    names = [path.name for path in raw_paths]
+    if len(names) != len(set(names)):
+        raise ValueError("raw evidence file names must be unique")
+    raw_artifacts = [
+        {"name": path.name, "sha256": sha256_file(path), "bytes": path.stat().st_size}
+        for path in raw_paths
+    ]
+
+    evidence_raw_path = args.evidence_raw.resolve(strict=True)
+    rows = []
+    for line_no, raw in enumerate(evidence_raw_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        item = json.loads(raw)
+        if not isinstance(item, dict):
+            raise ValueError(f"evidence-raw:{line_no}: expected JSON object")
+        rows.append(item)
+    declared = {(item.get("name"), item.get("sha256"), item.get("bytes")) for item in rows}
+    actual = {(item["name"], item["sha256"], item["bytes"]) for item in raw_artifacts}
+    if declared != actual or len(rows) != len(raw_artifacts):
+        raise ValueError("canonical evidence-raw manifest does not match raw artifacts")
+
+    collector = pathlib.Path(__file__).resolve()
+    collector_hash = sha256_file(collector)
+    board_runner_hash = sha256_file(args.board_runner.resolve(strict=True))
+    model_hash = sha256_file(args.model.resolve(strict=True))
+    keyword_pack_hash = sha256_file(args.keyword_pack.resolve(strict=True))
+    board_audio_hash = sha256_file(args.board_audio.resolve(strict=True))
+    evidence_raw_hash = sha256_file(evidence_raw_path)
+    attestation_path = args.attestation_verification.resolve(strict=True)
+    attestation = load_json(attestation_path)
+    expected_attestation = {
+        "subject_sha256": evidence_raw_hash,
+        "collector_sha256": collector_hash,
+        "board_runner_sha256": board_runner_hash,
+        "model_sha256": model_hash,
+        "keyword_pack_sha256": keyword_pack_hash,
+    }
+    if attestation.get("schema_version") != 1 or attestation.get("verified") is not True or attestation.get("subject_kind") != "kws-target-evidence":
+        raise ValueError("attestation verification identity is invalid")
+    for key, expected in expected_attestation.items():
+        if attestation.get(key) != expected:
+            raise ValueError(f"attestation {key} does not match selected artifact")
+
+    governor = first_existing(
+        list(pathlib.Path("/sys/devices/system/cpu").glob("cpu*/cpufreq/scaling_governor"))
+    ) or "unknown"
+    evidence = {
+        "schema_version": 2,
+        "evidence_class": "product-board",
+        "sku": sku,
+        "source_sha": source_sha,
+        "collected_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "builder_id": args.builder_id.strip(),
+        "dut_id": args.dut_id.strip(),
+        "collector_id": args.collector_id.strip(),
+        "collector": collector.name,
+        "collector_sha256": collector_hash,
+        "collector_source_sha": git_sha(),
+        "collected_unix_s": time.time(),
+        "raw_evidence_sha256": evidence_raw_hash,
+        "attestation_verification_sha256": sha256_file(attestation_path),
+        "board_runner_sha256": board_runner_hash,
+        "model_sha256": model_hash,
+        "keyword_pack_sha256": keyword_pack_hash,
+        "board_audio_sha256": board_audio_hash,
+        "target": args.target,
+        "board_revision": args.board_revision,
+        "soc": args.soc or cpu_model(),
+        "toolchain": args.toolchain,
+        "compiler_flags": args.compiler_flags,
+        "governor": governor,
+        "audio_frontend": args.audio_frontend,
+        "audio_frontend_sha256": args.audio_frontend_sha256,
+        "kernel": platform.release(),
+        "machine": platform.machine(),
+        "cpu_online": read_text(pathlib.Path("/sys/devices/system/cpu/online")) or "unknown",
+        "uptime_s": float((read_text(pathlib.Path("/proc/uptime")) or "0").split()[0]),
+        **runtime,
+        "stack_high_water_bytes": args.stack_high_water_bytes,
+        "average_power_mw": args.average_power_mw,
+        "runtime_soak_name": runtime_soak_path.name,
+        "runtime_soak_sha256": sha256_file(runtime_soak_path),
+        "runtime_soak_raw": runtime_soak_raw,
+        "power_raw_name": power_path.name,
+        "power_raw_sha256": sha256_file(power_path),
+        "raw_evidence": raw_artifacts,
+        "instrument_id": args.instrument_id,
+        "calibration_id": args.calibration_id,
+    }
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    print(f"wrote target evidence: {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
+          p.write_text(s)
+
+          # Release qualification fixture: add the product identity tuple to the
+          # previously-green branch test instead of keeping the broken text merge.
+          p = Path("tests/test_release_qualification.py")
+          s = p.read_text()
+          s = must_replace(
+              s,
+              '        evidence = root / "evidence.json"\n',
+              '        evidence = root / "evidence.json"\n'
+              '        evidence_raw_manifest = root / "evidence.raw.jsonl"\n'
+              '        attestation_verification = root / "attestation-verification.json"\n',
+              "qualification product files",
+          )
+          s = must_replace(
+              s,
+              '                "schema_version": 1,\n                "runner_sha256": board_runner_hash,',
+              '                "schema_version": 1,\n'
+              '                "runtime_version": "0.3.0",\n'
+              '                "runtime_source_revision": "a" * 40,\n'
+              '                "runtime_config_digest": "b" * 64,\n'
+              '                "runtime_target": "arm-linux-gnueabihf",\n'
+              '                "runner_sha256": board_runner_hash,',
+              "qualification board identity",
+          )
+          anchor = '        power_raw.write_text("t,power_mw\\n0,120\\n", encoding="utf-8")\n'
+          product_setup = anchor + '''        raw_paths = [runtime_soak, raw_evidence, power_raw]
+          evidence_raw_manifest.write_text(
+              "".join(
+                  json.dumps({"name": path.name, "sha256": sha256_file(path), "bytes": path.stat().st_size}, sort_keys=True) + "\\n"
+                  for path in raw_paths
+              ),
+              encoding="utf-8",
+          )
+          write_json(
+              attestation_verification,
+              {
+                  "schema_version": 1,
+                  "verified": True,
+                  "subject_kind": "kws-target-evidence",
+                  "issuer": "fixture-trusted-attestor",
+                  "trust_policy": "fixture-product-policy",
+                  "verified_at_utc": "2026-08-30T00:00:00Z",
+                  "subject_sha256": sha256_file(evidence_raw_manifest),
+                  "collector_sha256": sha256_file(collector),
+                  "board_runner_sha256": board_runner_hash,
+                  "model_sha256": model_hash,
+                  "keyword_pack_sha256": pack_hash,
+              },
+          )
+          '''
+          s = must_replace(s, anchor, product_setup, "qualification raw product tuple")
+          s = must_replace(
+              s,
+              '                "--power-raw", str(power_raw),\n                "--instrument-id", "fixture-meter",',
+              '                "--power-raw", str(power_raw),\n'
+              '                "--evidence-raw", str(evidence_raw_manifest),\n'
+              '                "--attestation-verification", str(attestation_verification),\n'
+              '                "--board-runner", str(board_runner),\n'
+              '                "--model", str(model),\n'
+              '                "--keyword-pack", str(pack),\n'
+              '                "--board-audio", str(board_audio),\n'
+              '                "--sku", "fixture-sku",\n'
+              '                "--source-sha", "a" * 40,\n'
+              '                "--builder-id", "fixture-builder",\n'
+              '                "--dut-id", "fixture-dut",\n'
+              '                "--collector-id", "fixture-collector-v1",\n'
+              '                "--instrument-id", "fixture-meter",',
+              "qualification collector product args",
+          )
+          s = must_replace(
+              s,
+              '            "--raw-evidence", str(power_raw),\n            "--source-sha", "a" * 40,',
+              '            "--raw-evidence", str(power_raw),\n'
+              '            "--evidence-raw", str(evidence_raw_manifest),\n'
+              '            "--attestation-verification", str(attestation_verification),\n'
+              '            "--sku", "fixture-sku",\n'
+              '            "--source-sha", "a" * 40,',
+              "manifest product args fixture",
+          )
+          s = must_replace(
+              s,
+              '            "schema_version": 2,\n            "name": "fixture-policy",',
+              '            "schema_version": 2,\n'
+              '            "policy_id": "fixture-policy-v1",\n'
+              '            "name": "fixture-policy",\n'
+              '            "sku": "fixture-sku",\n'
+              '            "shipping_approved": True,',
+              "shipping policy fixture",
+          )
+          gate_anchor = '        assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]\n'
+          gate_extra = gate_anchor + '''
+          non_shipping = dict(valid_policy)
+          non_shipping["shipping_approved"] = False
+          write_json(policy, non_shipping)
+          assert subprocess.run(
+              [sys.executable, str(ROOT / "tools" / "qualification_gate.py"), "--manifest", str(manifest), "--policy", str(policy)],
+              check=False,
+          ).returncode == 2
+          write_json(policy, valid_policy)
+          '''
+          s = must_replace(s, gate_anchor, gate_extra, "shipping policy negative test")
+          p.write_text(s)
+
+          # Target-evidence test: exercise the new canonical raw/attestation/product
+          # binding directly through the real collector.
+          p = Path("tests/test_target_evidence.py")
+          s = p.read_text()
+          s = must_replace(
+              s,
+              '        output = root / "evidence.json"\n        subprocess.check_call(',
+              '''        raw_manifest = root / "evidence.raw.jsonl"
+              collector = ROOT / "tools" / "collect_target_evidence.py"
+              board_runner = root / "kws_board_bench"
+              model = root / "model.kwm"
+              keyword_pack = root / "keywords.kwk"
+              board_audio = root / "board.wav"
+              attestation = root / "attestation-verification.json"
+              board_runner.write_bytes(b"board-runner")
+              model.write_bytes(b"model")
+              keyword_pack.write_bytes(b"pack")
+              board_audio.write_bytes(b"audio")
+              raw_manifest.write_text(
+                  "".join(
+                      json.dumps({"name": path.name, "sha256": __import__("hashlib").sha256(path.read_bytes()).hexdigest(), "bytes": path.stat().st_size}, sort_keys=True) + "\\n"
+                      for path in (soak, power)
+                  ),
+                  encoding="utf-8",
+              )
+              def digest(path):
+                  return __import__("hashlib").sha256(path.read_bytes()).hexdigest()
+              attestation.write_text(json.dumps({
+                  "schema_version": 1,
+                  "verified": True,
+                  "subject_kind": "kws-target-evidence",
+                  "issuer": "fixture-attestor",
+                  "trust_policy": "fixture-policy",
+                  "verified_at_utc": "2026-08-30T00:00:00Z",
+                  "subject_sha256": digest(raw_manifest),
+                  "collector_sha256": digest(collector),
+                  "board_runner_sha256": digest(board_runner),
+                  "model_sha256": digest(model),
+                  "keyword_pack_sha256": digest(keyword_pack),
+              }, sort_keys=True) + "\\n", encoding="utf-8")
+              output = root / "evidence.json"
+              subprocess.check_call(''',
+              "target evidence product setup",
+          )
+          s = must_replace(
+              s,
+              '                "--power-raw", str(power),\n                "--instrument-id", "meter-1",',
+              '                "--power-raw", str(power),\n'
+              '                "--evidence-raw", str(raw_manifest),\n'
+              '                "--attestation-verification", str(attestation),\n'
+              '                "--board-runner", str(board_runner),\n'
+              '                "--model", str(model),\n'
+              '                "--keyword-pack", str(keyword_pack),\n'
+              '                "--board-audio", str(board_audio),\n'
+              '                "--sku", "fixture-sku",\n'
+              '                "--source-sha", "a" * 40,\n'
+              '                "--builder-id", "fixture-builder",\n'
+              '                "--dut-id", "fixture-dut",\n'
+              '                "--collector-id", "fixture-collector-v1",\n'
+              '                "--instrument-id", "meter-1",',
+              "target evidence product args",
+          )
+          s = must_replace(
+              s,
+              '        assert value["schema_version"] == 2\n        assert value["target"] == "fixture"',
+              '        assert value["schema_version"] == 2\n'
+              '        assert value["evidence_class"] == "product-board"\n'
+              '        assert value["sku"] == "fixture-sku"\n'
+              '        assert value["builder_id"] != value["dut_id"]\n'
+              '        assert value["raw_evidence_sha256"] == digest(raw_manifest)\n'
+              '        assert value["target"] == "fixture"',
+              "target evidence product asserts",
+          )
+          p.write_text(s)
+          PY
+
+          rm -f .github/workflows/repair-reconcile.yml
+
+          python3 -m py_compile tools/qualification_metrics.py tools/qualification_manifest.py tools/qualification_gate.py tools/collect_target_evidence.py tests/test_release_qualification.py tests/test_target_evidence.py
+          cmake -S . -B build-reconcile -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build-reconcile --parallel
+          ctest --test-dir build-reconcile --output-on-failure
+          python3 tests/test_runtime_soak.py
+          python3 tests/test_target_evidence.py
+          python3 tests/test_release_qualification.py
+
+          git add -A
+          git commit -m "fix: reconcile runtime and qualification terminal contracts"
+          git push origin HEAD:codex/terminal-hardening-v0.3
