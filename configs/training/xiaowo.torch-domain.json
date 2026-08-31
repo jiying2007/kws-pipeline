@@ -29,31 +29,31 @@
   },
   "dataset": {
     "train": {
-      "positive_families_per_keyword": 12,
-      "confusable_families_per_keyword": 2,
-      "random_negative_families": 4,
-      "background_seconds_per_profile": 1.0,
-      "variants_per_family": 2
+      "positive_families_per_keyword": 24,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 8,
+      "background_seconds_per_profile": 2.0,
+      "variants_per_family": 3
     },
     "calibration": {
-      "positive_families_per_keyword": 4,
-      "confusable_families_per_keyword": 2,
-      "random_negative_families": 4,
-      "background_seconds_per_profile": 2.0,
-      "variants_per_family": 1
-    },
-    "test": {
-      "positive_families_per_keyword": 4,
-      "confusable_families_per_keyword": 2,
-      "random_negative_families": 4,
+      "positive_families_per_keyword": 8,
+      "confusable_families_per_keyword": 4,
+      "random_negative_families": 8,
       "background_seconds_per_profile": 3.0,
       "variants_per_family": 1
     },
+    "test": {
+      "positive_families_per_keyword": 10,
+      "confusable_families_per_keyword": 5,
+      "random_negative_families": 10,
+      "background_seconds_per_profile": 5.0,
+      "variants_per_family": 1
+    },
     "qualification": {
-      "positive_families_per_keyword": 6,
-      "confusable_families_per_keyword": 3,
-      "random_negative_families": 6,
-      "background_seconds_per_profile": 10.0,
+      "positive_families_per_keyword": 12,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 15.0,
       "variants_per_family": 1
     }
   },
@@ -92,7 +92,7 @@
     ]
   },
   "train": {
-    "epochs": 12,
+    "epochs": 30,
     "batch_size": 16,
     "lr": 0.001
   },
