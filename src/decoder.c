@@ -366,7 +366,8 @@ int kws_decoder_step(kws_decoder_t *d,
     if (speech_active && d->nodes[i].terminal_keyword >= 0 &&
         terminal_score > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float conf = expf(terminal_score / (float)d->nodes[i].depth);
+      float conf =
+          expf(terminal_score / (float)d->nodes[i].depth - d->token_boost);
       if (conf > 1.0f) {
         conf = 1.0f;
       }
