@@ -10,50 +10,50 @@
     "tts": {
       "backend": "tone",
       "token_ms": 180.0,
-      "token_ms_jitter": 18.0,
+      "token_ms_jitter": 30.0,
       "gap_ms": 85.0,
       "lead_ms": 180.0,
       "tail_ms": 200.0,
       "amplitude": 12500.0,
-      "pitch_jitter": 0.006
+      "pitch_jitter": 0.012
     },
     "augment": {
-      "gain_db_min": -3.0,
-      "gain_db_max": 2.0,
-      "snr_db_min": 10.0,
+      "gain_db_min": -5.0,
+      "gain_db_max": 3.0,
+      "snr_db_min": 5.0,
       "snr_db_max": 36.0,
-      "echo_max_ms": 35.0,
-      "echo_gain_max": 0.10,
+      "echo_max_ms": 70.0,
+      "echo_gain_max": 0.18,
       "noise_profiles": ["white", "fan", "motor", "media"]
     }
   },
   "dataset": {
     "train": {
       "positive_families_per_keyword": 24,
-      "confusable_families_per_keyword": 6,
-      "random_negative_families": 8,
-      "background_seconds_per_profile": 2.0,
-      "variants_per_family": 3
+      "confusable_families_per_keyword": 16,
+      "random_negative_families": 24,
+      "background_seconds_per_profile": 4.0,
+      "variants_per_family": 4
     },
     "calibration": {
       "positive_families_per_keyword": 8,
-      "confusable_families_per_keyword": 4,
-      "random_negative_families": 8,
-      "background_seconds_per_profile": 3.0,
+      "confusable_families_per_keyword": 8,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 4.0,
       "variants_per_family": 1
     },
     "test": {
-      "positive_families_per_keyword": 10,
-      "confusable_families_per_keyword": 5,
-      "random_negative_families": 10,
-      "background_seconds_per_profile": 5.0,
+      "positive_families_per_keyword": 12,
+      "confusable_families_per_keyword": 10,
+      "random_negative_families": 16,
+      "background_seconds_per_profile": 8.0,
       "variants_per_family": 1
     },
     "qualification": {
-      "positive_families_per_keyword": 12,
-      "confusable_families_per_keyword": 6,
-      "random_negative_families": 12,
-      "background_seconds_per_profile": 15.0,
+      "positive_families_per_keyword": 16,
+      "confusable_families_per_keyword": 12,
+      "random_negative_families": 20,
+      "background_seconds_per_profile": 30.0,
       "variants_per_family": 1
     }
   },
@@ -65,12 +65,12 @@
     },
     "azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
     "rt60_s": [0.15, 0.80],
-    "snr_db": [5.0, 30.0],
+    "snr_db": [3.0, 30.0],
     "noise_profiles": ["white", "fan", "motor", "media"],
     "mic_spacing_m": 0.06,
     "playback": {
-      "probability": 0.25,
-      "sir_db": [-5.0, 20.0]
+      "probability": 0.35,
+      "sir_db": [-8.0, 20.0]
     },
     "afe": {
       "backend": "proxy"
@@ -92,12 +92,12 @@
     ]
   },
   "train": {
-    "epochs": 30,
+    "epochs": 36,
     "batch_size": 16,
     "lr": 0.001
   },
   "calibration": {
-    "thresholds": [0.01, 0.03, 0.05, 0.10, 0.15, 0.25, 0.40, 0.55, 0.70, 0.85],
+    "thresholds": [0.01, 0.03, 0.05, 0.10, 0.15, 0.25, 0.40, 0.55, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.93, 0.95],
     "coordinate_rounds": 2
   },
   "domain_iteration": {
