@@ -107,7 +107,22 @@
     "patience": 3,
     "curriculum_strength": 2.5,
     "max_domain_weight": 6.0,
-    "stop_on_gate": false
+    "stop_on_gate": false,
+    "warm_start_strategy": "full",
+    "hard_negative_replay": [
+      {
+        "tokens": ["hao3", "ni3", "xiao3", "wo1"],
+        "examples": 24
+      },
+      {
+        "tokens": ["hao3", "hao3", "xiao3", "wo1"],
+        "examples": 16
+      },
+      {
+        "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
+        "examples": 16
+      }
+    ]
   },
   "domain_gates": {
     "max_frr": 0.05,

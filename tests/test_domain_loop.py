@@ -9,12 +9,68 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from hard_negative_replay import normalize_hard_negative_replay  # noqa: E402
+from iterate_domain import parse_warm_start_strategy, warm_start_args  # noqa: E402
+
+
+def validate_torch_iteration_policy() -> None:
+    assert parse_warm_start_strategy({}) == "full"
+    assert parse_warm_start_strategy({"warm_start_strategy": "full"}) == "full"
+    assert parse_warm_start_strategy({"warm_start_strategy": "head-only"}) == "head-only"
+    previous = pathlib.Path("previous.pt")
+    assert warm_start_args(None, "full") == []
+    assert warm_start_args(previous, "full") == ["--warm-start", "previous.pt"]
+    assert warm_start_args(previous, "head-only") == [
+        "--warm-start",
+        "previous.pt",
+        "--head-only",
+    ]
+    try:
+        parse_warm_start_strategy({"warm_start_strategy": "frozen"})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid warm-start strategy was accepted")
+
+    active = ["ni3", "hao3", "xiao3", "wo1"]
+    token_map = {"<blank>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}
+    forbidden = [
+        ["ni3", "hao3", "xiao3", "wo1"],
+        ["xiao3", "wo1", "xiao3", "wo1"],
+    ]
+    replay = normalize_hard_negative_replay(
+        [
+            {"tokens": ["hao3", "ni3", "xiao3", "wo1"], "examples": 24},
+            {"tokens": ["hao3", "hao3", "xiao3", "wo1"], "examples": 16},
+            {"tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"], "examples": 16},
+        ],
+        active_tokens=active,
+        forbidden=forbidden,
+        token_map=token_map,
+    )
+    assert [item["examples"] for item in replay] == [24, 16, 16]
+    assert replay[0]["target_ids"] == [2, 1, 3, 4]
+    assert replay[2]["target_ids"] == [2, 4, 3, 4, 1]
+    try:
+        normalize_hard_negative_replay(
+            [{"tokens": ["ni3", "hao3", "xiao3", "wo1"], "examples": 1}],
+            active_tokens=active,
+            forbidden=forbidden,
+            token_map=token_map,
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("wake path was accepted as a hard negative")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    validate_torch_iteration_policy()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         config = json.loads(
