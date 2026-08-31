@@ -39,14 +39,14 @@
       "positive_families_per_keyword": 8,
       "confusable_families_per_keyword": 8,
       "random_negative_families": 12,
-      "background_seconds_per_profile": 4.0,
+      "background_seconds_per_profile": 30.0,
       "variants_per_family": 1
     },
     "test": {
       "positive_families_per_keyword": 12,
       "confusable_families_per_keyword": 10,
       "random_negative_families": 16,
-      "background_seconds_per_profile": 8.0,
+      "background_seconds_per_profile": 15.0,
       "variants_per_family": 1
     },
     "qualification": {
