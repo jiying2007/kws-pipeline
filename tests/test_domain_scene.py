@@ -114,6 +114,16 @@ def test_deterministic_robustness_axes() -> None:
     assert len(azimuth_snr) == 12 * 4
     assert len(distance_snr) == 5 * 4
 
+    # Calibration has only a small number of positive base examples. Its early
+    # prefix must still see every marginal axis, rather than walking several
+    # consecutive examples through only rear-facing azimuths.
+    early = scenes[:16]
+    assert {float(scene["azimuth_deg"]) for scene in early} == set(axes["azimuth_deg"])
+    assert {float(scene["distance_m"]) for scene in early} == set(axes["distance_m"])
+    assert {round(float(scene["snr_db"]), 6) for scene in early} == {
+        round(float(value), 6) for value in axes["snr_db"]
+    }
+
     # The same ordinal must preserve the matrix coordinates even when the
     # randomized nuisance dimensions (RT60/noise/playback) use a different seed.
     first_a = _deterministic_eval_scene(domains, axes, 17, random.Random(1))
