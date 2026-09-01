@@ -139,6 +139,9 @@
     "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
     "required_azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
     "required_snr_bands": ["critical", "low", "mid", "high"],
+    "required_rt60_bands": ["dry", "medium", "reverb"],
+    "required_noise_profiles": ["white", "fan", "motor", "media"],
+    "required_playback_states": ["no-playback", "playback"],
     "required_stress_slices": [
       "distance_azimuth:distance_bin=5m|azimuth=rear",
       "distance_snr:distance_bin=5m|snr=critical",
