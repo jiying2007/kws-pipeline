@@ -7,6 +7,12 @@ import math
 import pathlib
 import sys
 
+STRESS_PREFIXES = (
+    "distance_azimuth:",
+    "distance_snr:",
+    "azimuth_snr:",
+)
+
 
 def finite(value, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -17,17 +23,20 @@ def finite(value, label: str) -> float:
     return result
 
 
-def required_keys(config: dict) -> list[tuple[str, str]]:
+def required_keys(config: dict) -> list[str]:
     gates = config.get("robustness_gates")
     if not isinstance(gates, dict):
         raise ValueError("robustness_gates config is required")
-    result: list[tuple[str, str]] = []
-    for value in gates.get("required_distance_bins", []):
-        result.append(("distance_bin", str(value)))
-    for value in gates.get("required_azimuth_deg", []):
-        result.append(("azimuth_deg", str(int(value))))
-    for value in gates.get("required_snr_bands", []):
-        result.append(("snr", str(value)))
+    result: list[str] = []
+    result.extend(f"distance_bin:{value}" for value in gates.get("required_distance_bins", []))
+    result.extend(f"azimuth_deg:{int(value)}" for value in gates.get("required_azimuth_deg", []))
+    result.extend(f"snr:{value}" for value in gates.get("required_snr_bands", []))
+    for raw in gates.get("required_stress_slices", []):
+        key = str(raw)
+        if not key.startswith(STRESS_PREFIXES):
+            raise ValueError(f"unsupported robustness stress slice: {key}")
+        result.append(key)
+    result = list(dict.fromkeys(result))
     if not result:
         raise ValueError("robustness_gates must require at least one slice")
     return result
@@ -62,8 +71,7 @@ def evaluate(summary: dict, config: dict) -> dict:
 
     failures: list[dict] = []
     slices: dict[str, dict] = {}
-    for prefix, value in required_keys(config):
-        key = f"{prefix}:{value}"
+    for key in required_keys(config):
         metrics = domains.get(key)
         if not isinstance(metrics, dict):
             failures.append({"slice": key, "reason": "missing-slice"})
@@ -133,8 +141,9 @@ def evaluate(summary: dict, config: dict) -> dict:
                 }
             )
 
+    stress = [key for key in required_keys(config) if key.startswith(STRESS_PREFIXES)]
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "evidence_class": "synthetic-domain-robustness-matrix",
         "qualified": not failures,
         "gates": {
@@ -143,11 +152,13 @@ def evaluate(summary: dict, config: dict) -> dict:
             "min_expected_wakes": min_expected,
             "min_negative_recordings": min_negative_recordings,
             "min_negative_audio_hours": min_negative_hours,
+            "required_stress_slices": stress,
         },
         "slices": slices,
         "failures": failures,
         "limitations": [
             "Per-slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
+            "Pairwise stress slices validate modeled interactions but do not replace physical room/device qualification.",
             "Long-duration/statistical FAR confidence remains the responsibility of the dedicated qualification evidence.",
             "Physical rooms, real Mandarin speakers, shipping microphones and shipping AFE remain external qualification gates.",
         ],
