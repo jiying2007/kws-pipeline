@@ -1,14 +1,28 @@
 name: model-training
 
 on:
-  push:
+  pull_request:
     branches:
-      - codex/model-training-20260830
-      - codex/kws-robustness-matrix-20260901
+      - main
+    paths:
+      - '.github/workflows/model-training.yml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'configs/training/**'
+      - 'eval/**'
+      - 'include/**'
+      - 'keywords/**'
+      - 'src/**'
+      - 'tools/**'
+      - 'training/**'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: model-training-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   torch-domain-iteration:
