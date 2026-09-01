@@ -3,11 +3,19 @@ from __future__ import annotations
 
 import json
 import pathlib
+import random
 import subprocess
 import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from render_domains import (  # noqa: E402
+    _deterministic_eval_scene,
+    _evaluation_axes,
+    validate_domains,
+)
 
 
 def row(name: str, band: str, expected: list[dict], *, azimuth: float | None = None) -> dict:
@@ -80,7 +88,71 @@ def run_gate_case(
     return completed.returncode, result
 
 
+def assert_formal_triple_stress_support() -> None:
+    config = json.loads(
+        (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    gates = config["robustness_gates"]
+    triple = "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+    assert triple in gates["required_stress_slices"]
+    domains = validate_domains(config)
+    axes = _evaluation_axes(config, domains)
+    assert axes is not None
+
+    keyword_path = ROOT / str(config["keywords"])
+    keyword_count = sum(
+        1
+        for raw in keyword_path.read_text(encoding="utf-8").splitlines()
+        if raw.strip() and not raw.lstrip().startswith("#")
+    )
+    qualification = config["dataset"]["qualification"]
+    variants = int(qualification["variants_per_family"])
+    scenes_per_example = int(config["domains"]["scenes_per_example"]["qualification"])
+    positive_scenes = (
+        int(qualification["positive_families_per_keyword"])
+        * keyword_count
+        * variants
+        * scenes_per_example
+    )
+    negative_scenes = (
+        (
+            int(qualification["confusable_families_per_keyword"]) * keyword_count
+            + int(qualification["random_negative_families"])
+        )
+        * variants
+        * scenes_per_example
+    )
+
+    def triple_count(count: int) -> tuple[int, set[float]]:
+        matches = []
+        for index in range(count):
+            scene = _deterministic_eval_scene(
+                domains,
+                axes,
+                index,
+                random.Random(100_000 + index),
+            )
+            if (
+                float(scene["distance_m"]) > 4.0
+                and abs(float(scene["azimuth_deg"])) > 90.0
+                and float(scene["snr_db"]) <= 6.0
+            ):
+                matches.append(scene)
+        return len(matches), {float(scene["azimuth_deg"]) for scene in matches}
+
+    positive_count, positive_azimuths = triple_count(positive_scenes)
+    negative_count, _ = triple_count(negative_scenes)
+    assert positive_count >= int(gates["min_expected_wakes"])
+    assert negative_count >= int(gates["min_negative_recordings"])
+    # Current formal support is not four copies of one rear direction: the first
+    # four triple-stress positives cover all four configured rear azimuth points.
+    assert {-150.0, -120.0, 150.0, 180.0}.issubset(positive_azimuths)
+
+
 def main() -> int:
+    assert_formal_triple_stress_support()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         refs = root / "refs.jsonl"
@@ -120,7 +192,7 @@ def main() -> int:
             ]
         )
         result = json.loads(out.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 4
+        assert result["schema_version"] == 5
         assert result["domains"]["distance:near"]["frr"] > 0.0
         assert result["domains"]["distance:far"]["frr"] == 1.0
         assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
@@ -138,9 +210,13 @@ def main() -> int:
         assert result["domains"]["distance_azimuth:distance_bin=5m|azimuth=rear"]["false_accepts"] == 1
         assert result["domains"]["distance_snr:distance_bin=5m|snr=critical"]["false_accepts"] == 2
         assert result["domains"]["azimuth_snr:azimuth=rear|snr=critical"]["negative_recordings"] == 1
+        triple = "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+        assert result["domains"][triple]["false_accepts"] == 1
+        assert result["domains"][triple]["negative_recordings"] == 1
         assert result["worst_domain"] is not None
         assert result["slice_contract"]["azimuth_quantization_deg"] == 30
         assert "distance_snr" in result["slice_contract"]["pairwise"]
+        assert "distance_azimuth_snr" in result["slice_contract"]["triple"]
         confusion = result["keyword_confusion"]
         assert confusion["assignment"] == "global-monotonic-one-to-one-v1"
         assert confusion["expected_events"] == 4
@@ -153,6 +229,7 @@ def main() -> int:
             "distance_azimuth:distance_bin=5m|azimuth=rear",
             "distance_snr:distance_bin=5m|snr=critical",
             "azimuth_snr:azimuth=rear|snr=critical",
+            triple,
         ]
         gate_config = {
             "robustness_gates": {
@@ -180,32 +257,32 @@ def main() -> int:
 
         code, gate_result = run_gate_case(root, gate_summary, gate_config, "pass")
         assert code == 0
-        assert gate_result["schema_version"] == 3
+        assert gate_result["schema_version"] == 4
         assert gate_result["qualified"] is True
         assert not gate_result["failures"]
         assert gate_result["slices"]["distance_bin:5m"]["wake_rate"] == 1.0
         assert gate_result["gates"]["required_stress_slices"] == stress
 
         failing = json.loads(json.dumps(gate_summary))
-        failing["qualification_domains"]["domains"][stress[1]]["frr"] = 0.25
-        failing["qualification_domains"]["domains"][stress[1]]["wake_rate"] = 0.75
-        code, gate_result = run_gate_case(root, failing, gate_config, "stress-frr-fail")
+        failing["qualification_domains"]["domains"][triple]["frr"] = 0.25
+        failing["qualification_domains"]["domains"][triple]["wake_rate"] = 0.75
+        code, gate_result = run_gate_case(root, failing, gate_config, "triple-frr-fail")
         assert code == 1
         assert gate_result["qualified"] is False
         assert any(
-            item["slice"] == stress[1] and item["reason"] == "frr"
+            item["slice"] == triple and item["reason"] == "frr"
             for item in gate_result["failures"]
         )
 
         unsupported = json.loads(json.dumps(gate_summary))
-        unsupported["qualification_domains"]["domains"][stress[0]]["expected"] = 2
-        unsupported["qualification_domains"]["domains"][stress[0]]["negative_recordings"] = 2
+        unsupported["qualification_domains"]["domains"][triple]["expected"] = 2
+        unsupported["qualification_domains"]["domains"][triple]["negative_recordings"] = 2
         code, gate_result = run_gate_case(root, unsupported, gate_config, "support-fail")
         assert code == 1
         reasons = {
             item["reason"]
             for item in gate_result["failures"]
-            if item["slice"] == stress[0]
+            if item["slice"] == triple
         }
         assert reasons == {"insufficient-positive-support", "insufficient-negative-recordings"}
 
