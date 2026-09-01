@@ -76,7 +76,7 @@ def _normalize_azimuth(value: float) -> float:
     return normalized
 
 
-def _snr_point_for_band(name: str, limits: tuple[float, float]) -> float:
+def _snr_interval(name: str, limits: tuple[float, float]) -> tuple[float, float]:
     low, high = limits
     epsilon = 1.0e-3
     if name == "critical":
@@ -93,6 +93,11 @@ def _snr_point_for_band(name: str, limits: tuple[float, float]) -> float:
         raise ValueError(
             f"domains.snr_db does not cover required robustness SNR band: {name}"
         )
+    return start, end
+
+
+def _snr_point_for_band(name: str, limits: tuple[float, float]) -> float:
+    start, end = _snr_interval(name, limits)
     return (start + end) * 0.5
 
 
@@ -354,6 +359,30 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     return rng.uniform(a, b)
 
 
+def _sample_snr(domains: dict, rng: random.Random, curriculum: dict | None) -> float:
+    low, high = domains["snr_db"]
+    adaptive = _dimension_weights(curriculum, "snr")
+    if not adaptive:
+        return rng.uniform(low, high)
+    names: list[str] = []
+    intervals: list[tuple[float, float]] = []
+    weights: list[float] = []
+    for name in ("critical", "low", "mid", "high"):
+        try:
+            start, end = _snr_interval(name, (low, high))
+        except ValueError:
+            continue
+        names.append(name)
+        intervals.append((start, end))
+        weights.append(max(end - start, 1.0e-3) * adaptive.get(name, 1.0))
+    if not names:
+        return rng.uniform(low, high)
+    selected = str(_weighted_choice(rng, names, weights))
+    index = names.index(selected)
+    start, end = intervals[index]
+    return rng.uniform(start, end)
+
+
 def _sample_rir_entry(
     domains: dict,
     rng: random.Random,
@@ -417,9 +446,12 @@ def _deterministic_eval_scene(
     distance_points = axes["distance_m"]
     azimuth_points = axes["azimuth_deg"]
     snr_points = axes["snr_db"]
-    distance_m = float(distance_points[ordinal % len(distance_points)])
-    azimuth_deg = float(azimuth_points[ordinal % len(azimuth_points)])
-    snr_db = float(snr_points[ordinal % len(snr_points)])
+    distance_count = len(distance_points)
+    azimuth_count = len(azimuth_points)
+    distance_m = float(distance_points[ordinal % distance_count])
+    azimuth_deg = float(azimuth_points[(ordinal // distance_count) % azimuth_count])
+    pair_cycle = ordinal // (distance_count * azimuth_count)
+    snr_db = float(snr_points[(ordinal + pair_cycle) % len(snr_points)])
     band = _distance_band_for_value(domains, distance_m)
     scene = _sample_legacy_scene(domains, rng, band)
     scene.update(
@@ -485,7 +517,6 @@ def _sample_candidate(
             "entry_sha256": str(rir_entry["entry_sha256"]),
         }
 
-    snr_low, snr_high = domains["snr_db"]
     noise_weights = _dimension_weights(curriculum, "noise")
     if noise_weights:
         noise = str(
@@ -525,7 +556,7 @@ def _sample_candidate(
         "distance_m": distance_m,
         "azimuth_deg": azimuth,
         "rt60_s": rt60_s,
-        "snr_db": rng.uniform(snr_low, snr_high),
+        "snr_db": _sample_snr(domains, rng, curriculum),
         "noise_profile": noise,
         "playback_sir_db": playback,
         "mic_spacing_m": domains["mic_spacing_m"],
@@ -732,7 +763,7 @@ def render_domain_dataset(
         split_histogram[key] = split_histogram.get(key, 0) + 1
     rir_manifest = domains.get("rir_manifest")
     summary = {
-        "schema_version": 4,
+        "schema_version": 3,
         "evidence_class": (
             "measured-rir-domain" if isinstance(rir_manifest, dict) else "synthetic-domain"
         ),
@@ -746,7 +777,7 @@ def render_domain_dataset(
         "evaluation_positive_distance_order": list(EVAL_DISTANCE_ORDER),
         "evaluation_sampling": (
             {
-                "mode": "deterministic-marginal-v1",
+                "mode": "deterministic-pairwise-v2",
                 "positive_and_negative_separate": True,
                 "distance_m": evaluation_axes["distance_m"],
                 "azimuth_deg": evaluation_axes["azimuth_deg"],
