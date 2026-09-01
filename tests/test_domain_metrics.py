@@ -31,12 +31,16 @@ def row(name: str, band: str, expected: list[dict], *, azimuth: float | None = N
 def gate_metric(
     *,
     expected: int = 4,
+    positive_recordings: int = 4,
+    negative_recordings: int = 4,
     negative_hours: float = 0.01,
     frr: float = 0.0,
     far: float = 0.0,
 ) -> dict:
     return {
         "expected": expected,
+        "positive_recordings": positive_recordings,
+        "negative_recordings": negative_recordings,
         "negative_audio_hours": negative_hours,
         "frr": frr,
         "far_per_hour": far,
@@ -118,8 +122,10 @@ def main() -> int:
         assert result["domains"]["distance:far"]["frr"] == 1.0
         assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
         assert result["domains"]["distance_bin:5m"]["false_accepts"] == 2
+        assert result["domains"]["distance_bin:5m"]["negative_recordings"] == 1
         assert result["domains"]["azimuth_deg:0"]["expected"] == 3
         assert result["domains"]["azimuth_deg:180"]["negative_audio_hours"] > 0.0
+        assert result["domains"]["azimuth_deg:180"]["negative_recordings"] == 1
         assert result["domains"]["snr:critical"]["false_accepts"] == 2
         assert result["domains"]["snr:mid"]["expected"] == 3
         assert 0.0 <= result["domains"]["distance_bin:0.5m"]["wake_rate"] <= 1.0
@@ -141,7 +147,8 @@ def main() -> int:
                 "max_frr": 0.0,
                 "max_far_per_hour": 0.0,
                 "min_expected_wakes": 4,
-                "min_negative_audio_hours": 0.005,
+                "min_negative_recordings": 4,
+                "min_negative_audio_hours": 0.0,
                 "required_distance_bins": ["0.5m", "5m"],
                 "required_azimuth_deg": [0, 180],
                 "required_snr_bands": ["critical", "high"],
@@ -159,6 +166,7 @@ def main() -> int:
 
         code, gate_result = run_gate_case(root, gate_summary, gate_config, "pass")
         assert code == 0
+        assert gate_result["schema_version"] == 2
         assert gate_result["qualified"] is True
         assert not gate_result["failures"]
         assert gate_result["slices"]["distance_bin:5m"]["wake_rate"] == 1.0
@@ -176,7 +184,7 @@ def main() -> int:
 
         unsupported = json.loads(json.dumps(gate_summary))
         unsupported["qualification_domains"]["domains"]["distance_bin:5m"]["expected"] = 2
-        unsupported["qualification_domains"]["domains"]["distance_bin:5m"]["negative_audio_hours"] = 0.001
+        unsupported["qualification_domains"]["domains"]["distance_bin:5m"]["negative_recordings"] = 2
         code, gate_result = run_gate_case(root, unsupported, gate_config, "support-fail")
         assert code == 1
         reasons = {
@@ -184,7 +192,7 @@ def main() -> int:
             for item in gate_result["failures"]
             if item["slice"] == "distance_bin:5m"
         }
-        assert reasons == {"insufficient-positive-support", "insufficient-negative-support"}
+        assert reasons == {"insufficient-positive-support", "insufficient-negative-recordings"}
 
     print("test_domain_metrics: ok")
     return 0
