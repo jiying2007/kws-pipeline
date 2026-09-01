@@ -17,6 +17,21 @@ from score_events import (
 )
 
 
+DISTANCE_BIN_CONTRACT = {
+    "0.5m": "distance_m <= 0.75",
+    "1m": "0.75 < distance_m <= 1.50",
+    "2m": "1.50 < distance_m <= 2.50",
+    "3m": "2.50 < distance_m <= 4.00",
+    "5m": "distance_m > 4.00",
+}
+SNR_BAND_CONTRACT = {
+    "critical": "snr_db <= 6",
+    "low": "6 < snr_db <= 12",
+    "mid": "12 < snr_db <= 20",
+    "high": "snr_db > 20",
+}
+
+
 def finite(value, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{label} must be numeric")
@@ -26,13 +41,46 @@ def finite(value, label: str) -> float:
     return result
 
 
+def distance_bin(distance_m: float) -> str:
+    if distance_m <= 0.75:
+        return "0.5m"
+    if distance_m <= 1.50:
+        return "1m"
+    if distance_m <= 2.50:
+        return "2m"
+    if distance_m <= 4.00:
+        return "3m"
+    return "5m"
+
+
+def azimuth_point(azimuth_deg: float) -> str:
+    normalized = ((azimuth_deg + 180.0) % 360.0) - 180.0
+    quantized = int(round(normalized / 30.0) * 30)
+    quantized = max(-180, min(180, quantized))
+    if quantized == -180:
+        quantized = 180
+    return str(quantized)
+
+
+def snr_band(snr_db: float) -> str:
+    if snr_db <= 6.0:
+        return "critical"
+    if snr_db <= 12.0:
+        return "low"
+    if snr_db <= 20.0:
+        return "mid"
+    return "high"
+
+
 def domain_keys(row: dict) -> list[str]:
     domain = row.get("domain")
     if not isinstance(domain, dict):
         return ["all"]
     distance = str(domain.get("distance_band", "unknown"))
-    azimuth = float(domain.get("azimuth_deg", 0.0))
-    rt60 = float(domain.get("rt60_s", 0.0))
+    distance_m = finite(domain.get("distance_m", 0.0), "domain.distance_m")
+    azimuth = finite(domain.get("azimuth_deg", 0.0), "domain.azimuth_deg")
+    rt60 = finite(domain.get("rt60_s", 0.0), "domain.rt60_s")
+    snr_db = finite(domain.get("snr_db", 0.0), "domain.snr_db")
     noise = str(domain.get("noise_profile", "unknown"))
     playback = "playback" if domain.get("playback_sir_db") is not None else "no-playback"
     if abs(azimuth) <= 30.0:
@@ -51,7 +99,10 @@ def domain_keys(row: dict) -> list[str]:
     return [
         "all",
         f"distance:{distance}",
+        f"distance_bin:{distance_bin(distance_m)}",
         f"azimuth:{az_band}",
+        f"azimuth_deg:{azimuth_point(azimuth)}",
+        f"snr:{snr_band(snr_db)}",
         f"rt60:{rt_band}",
         f"noise:{noise}",
         f"playback:{playback}",
@@ -59,16 +110,22 @@ def domain_keys(row: dict) -> list[str]:
     ]
 
 
-def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float]:
+def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float | int]:
     positive_seconds = 0.0
     negative_seconds = 0.0
+    positive_recordings = 0
+    negative_recordings = 0
     for name in names:
         recording = recordings[name]
         if recording["expected"]:
+            positive_recordings += 1
             positive_seconds += float(recording["duration_s"])
         else:
+            negative_recordings += 1
             negative_seconds += float(recording["duration_s"])
     return {
+        "positive_recordings": positive_recordings,
+        "negative_recordings": negative_recordings,
         "positive_audio_hours": positive_seconds / 3600.0,
         "negative_audio_hours": negative_seconds / 3600.0,
     }
@@ -91,7 +148,14 @@ def subset_score(
         pre_tolerance_s,
         post_tolerance_s,
     )
-    return {**summary, **exposure_stats(names, recordings)}
+    frr = float(summary["frr"])
+    far_per_hour = float(summary["far_per_hour"])
+    return {
+        **summary,
+        "wake_rate": max(0.0, min(1.0, 1.0 - frr)),
+        "false_wake_rate_per_hour": far_per_hour,
+        **exposure_stats(names, recordings),
+    }
 
 
 def confusion_matrix(
@@ -151,7 +215,7 @@ def domain_is_eligible(
     positive_supported = int(summary["expected"]) >= min_expected and int(summary["expected"]) > 0
     negative_supported = (
         float(summary["negative_audio_hours"]) >= min_negative_hours
-        and float(summary["negative_audio_hours"]) > 0.0
+        and int(summary["negative_recordings"]) > 0
     )
     return positive_supported or negative_supported
 
@@ -211,11 +275,16 @@ def main() -> int:
             worst_key = key
 
     result = {
-        "schema_version": 2,
+        "schema_version": 3,
         "support_policy": {
             "min_domain_expected_wakes": args.min_domain_expected,
             "min_domain_negative_hours": min_negative_hours,
-            "eligibility": "positive-wake-support OR negative-exposure-support",
+            "eligibility": "positive-wake-support OR negative-recording-support",
+        },
+        "slice_contract": {
+            "distance_bins": DISTANCE_BIN_CONTRACT,
+            "azimuth_quantization_deg": 30,
+            "snr_bands": SNR_BAND_CONTRACT,
         },
         "overall": metrics.get("all", {}),
         "domains": metrics,

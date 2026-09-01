@@ -16,6 +16,13 @@ from synthetic_audio import SPLITS, generate_dataset, load_config, write_wav
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL_DISTANCE_ORDER = ("far", "mid", "near")
+EVAL_DISTANCE_POINTS_M = {
+    "0.5m": 0.5,
+    "1m": 1.0,
+    "2m": 2.0,
+    "3m": 3.0,
+    "5m": 5.0,
+}
 
 
 def load_jsonl(path: pathlib.Path) -> list[dict]:
@@ -60,6 +67,104 @@ def range_pair(value, label: str, minimum: float | None = None) -> tuple[float, 
     if low > high or (minimum is not None and low < minimum):
         raise ValueError(f"{label} range is invalid")
     return low, high
+
+
+def _normalize_azimuth(value: float) -> float:
+    normalized = ((value + 180.0) % 360.0) - 180.0
+    if math.isclose(normalized, -180.0, rel_tol=0.0, abs_tol=1.0e-9):
+        return 180.0
+    return normalized
+
+
+def _snr_interval(name: str, limits: tuple[float, float]) -> tuple[float, float]:
+    low, high = limits
+    epsilon = 1.0e-3
+    if name == "critical":
+        start, end = low, min(high, 6.0)
+    elif name == "low":
+        start, end = max(low, 6.0 + epsilon), min(high, 12.0)
+    elif name == "mid":
+        start, end = max(low, 12.0 + epsilon), min(high, 20.0)
+    elif name == "high":
+        start, end = max(low, 20.0 + epsilon), high
+    else:
+        raise ValueError(f"unsupported robustness SNR band: {name}")
+    if start > end:
+        raise ValueError(
+            f"domains.snr_db does not cover required robustness SNR band: {name}"
+        )
+    return start, end
+
+
+def _snr_point_for_band(name: str, limits: tuple[float, float]) -> float:
+    start, end = _snr_interval(name, limits)
+    return (start + end) * 0.5
+
+
+def _distance_band_for_value(domains: dict, distance_m: float) -> str:
+    candidates: list[tuple[float, int, str]] = []
+    order = {name: index for index, name in enumerate(("near", "mid", "far"))}
+    for name, item in domains["distance_bands"].items():
+        low, high = item["distance_m"]
+        if low - 1.0e-9 <= distance_m <= high + 1.0e-9:
+            center = (low + high) * 0.5
+            candidates.append((abs(center - distance_m), order[str(name)], str(name)))
+    if not candidates:
+        raise ValueError(
+            f"required robustness distance {distance_m:.3f}m is outside configured distance bands"
+        )
+    return min(candidates)[2]
+
+
+def _evaluation_axes(config: dict, domains: dict) -> dict | None:
+    gates = config.get("robustness_gates")
+    if not isinstance(gates, dict):
+        return None
+    # Measured-RIR evaluation must be driven by the measured manifest positions;
+    # do not fabricate distance/azimuth coordinates that the RIR never measured.
+    if isinstance(domains.get("rir_manifest"), dict):
+        return None
+
+    required_distance = gates.get("required_distance_bins", [])
+    required_azimuth = gates.get("required_azimuth_deg", [])
+    required_snr = gates.get("required_snr_bands", [])
+    if not required_distance or not required_azimuth or not required_snr:
+        raise ValueError(
+            "robustness_gates must define distance, azimuth and SNR axes for deterministic evaluation"
+        )
+
+    distance_points: list[float] = []
+    for raw in required_distance:
+        key = str(raw)
+        if key not in EVAL_DISTANCE_POINTS_M:
+            raise ValueError(f"unsupported robustness distance bin: {key}")
+        value = EVAL_DISTANCE_POINTS_M[key]
+        _distance_band_for_value(domains, value)
+        distance_points.append(value)
+
+    available_azimuth = {
+        _normalize_azimuth(float(value)): float(value)
+        for value in domains["azimuth_deg"]
+    }
+    azimuth_points: list[float] = []
+    for raw in required_azimuth:
+        normalized = _normalize_azimuth(finite(raw, "robustness_gates.required_azimuth_deg"))
+        if normalized not in available_azimuth:
+            raise ValueError(
+                f"required robustness azimuth {normalized:g} is not present in domains.azimuth_deg"
+            )
+        azimuth_points.append(available_azimuth[normalized])
+
+    snr_points = [
+        _snr_point_for_band(str(name), domains["snr_db"])
+        for name in required_snr
+    ]
+    return {
+        "distance_m": distance_points,
+        "azimuth_deg": azimuth_points,
+        "snr_db": snr_points,
+        "snr_bands": [str(name) for name in required_snr],
+    }
 
 
 def _repo_path(value: str) -> pathlib.Path:
@@ -254,6 +359,30 @@ def _sample_rt60(domains: dict, rng: random.Random, curriculum: dict | None) -> 
     return rng.uniform(a, b)
 
 
+def _sample_snr(domains: dict, rng: random.Random, curriculum: dict | None) -> float:
+    low, high = domains["snr_db"]
+    adaptive = _dimension_weights(curriculum, "snr")
+    if not adaptive:
+        return rng.uniform(low, high)
+    names: list[str] = []
+    intervals: list[tuple[float, float]] = []
+    weights: list[float] = []
+    for name in ("critical", "low", "mid", "high"):
+        try:
+            start, end = _snr_interval(name, (low, high))
+        except ValueError:
+            continue
+        names.append(name)
+        intervals.append((start, end))
+        weights.append(max(end - start, 1.0e-3) * adaptive.get(name, 1.0))
+    if not names:
+        return rng.uniform(low, high)
+    selected = str(_weighted_choice(rng, names, weights))
+    index = names.index(selected)
+    start, end = intervals[index]
+    return rng.uniform(start, end)
+
+
 def _sample_rir_entry(
     domains: dict,
     rng: random.Random,
@@ -308,6 +437,36 @@ def _sample_legacy_scene(
     }
 
 
+def _deterministic_eval_scene(
+    domains: dict,
+    axes: dict,
+    ordinal: int,
+    rng: random.Random,
+) -> dict:
+    distance_points = axes["distance_m"]
+    azimuth_points = axes["azimuth_deg"]
+    snr_points = axes["snr_db"]
+    distance_count = len(distance_points)
+    azimuth_count = len(azimuth_points)
+    distance_m = float(distance_points[ordinal % distance_count])
+    azimuth_deg = float(azimuth_points[ordinal % azimuth_count])
+    azimuth_cycle = ordinal // azimuth_count
+    snr_db = float(snr_points[(ordinal + azimuth_cycle) % len(snr_points)])
+    band = _distance_band_for_value(domains, distance_m)
+    scene = _sample_legacy_scene(domains, rng, band)
+    scene.update(
+        {
+            "distance_m": distance_m,
+            "azimuth_deg": azimuth_deg,
+            "snr_db": snr_db,
+            "room_id": f"sim-{band}-eval",
+            "rir_id": f"sim-{band}-eval",
+            "distance_band": band,
+        }
+    )
+    return scene
+
+
 def _sample_candidate(
     domains: dict,
     rng: random.Random,
@@ -358,7 +517,6 @@ def _sample_candidate(
             "entry_sha256": str(rir_entry["entry_sha256"]),
         }
 
-    snr_low, snr_high = domains["snr_db"]
     noise_weights = _dimension_weights(curriculum, "noise")
     if noise_weights:
         noise = str(
@@ -398,7 +556,7 @@ def _sample_candidate(
         "distance_m": distance_m,
         "azimuth_deg": azimuth,
         "rt60_s": rt60_s,
-        "snr_db": rng.uniform(snr_low, snr_high),
+        "snr_db": _sample_snr(domains, rng, curriculum),
         "noise_profile": noise,
         "playback_sir_db": playback,
         "mic_spacing_m": domains["mic_spacing_m"],
@@ -452,6 +610,7 @@ def render_domain_dataset(
 ) -> dict:
     config = load_config(config_path)
     domains = validate_domains(config)
+    evaluation_axes = _evaluation_axes(config, domains)
     base_dir = output / "base"
     base_summary = generate_dataset(config_path, base_dir)
     base_rows = load_jsonl(base_dir / "dataset-index.jsonl")
@@ -461,6 +620,9 @@ def render_domain_dataset(
     rows_by_split: dict[str, list[dict]] = {split: [] for split in SPLITS}
     domain_rows: list[dict] = []
     positive_scene_ordinals = {split: 0 for split in SPLITS}
+    evaluation_scene_ordinals = {
+        split: {"positive": 0, "negative": 0} for split in SPLITS
+    }
     for base_index, row in enumerate(base_rows):
         split = str(row["split"])
         if split not in rows_by_split:
@@ -475,17 +637,30 @@ def render_domain_dataset(
                 + SPLITS.index(split) * 9_000_001
             )
             rng = random.Random(scene_seed)
-            forced_band = None
-            if split != "train" and row["kind"] == "positive":
-                ordinal = positive_scene_ordinals[split]
-                forced_band = EVAL_DISTANCE_ORDER[ordinal % len(EVAL_DISTANCE_ORDER)]
-                positive_scene_ordinals[split] = ordinal + 1
-            scene = sample_scene(
-                domains,
-                rng,
-                curriculum_weights=curriculum_weights if split == "train" else None,
-                forced_band=forced_band,
-            )
+            if split != "train" and evaluation_axes is not None:
+                support = "positive" if row["kind"] == "positive" else "negative"
+                ordinal = evaluation_scene_ordinals[split][support]
+                evaluation_scene_ordinals[split][support] = ordinal + 1
+                scene = _deterministic_eval_scene(
+                    domains,
+                    evaluation_axes,
+                    ordinal,
+                    rng,
+                )
+            else:
+                forced_band = None
+                if split != "train" and row["kind"] == "positive":
+                    ordinal = positive_scene_ordinals[split]
+                    forced_band = EVAL_DISTANCE_ORDER[
+                        ordinal % len(EVAL_DISTANCE_ORDER)
+                    ]
+                    positive_scene_ordinals[split] = ordinal + 1
+                scene = sample_scene(
+                    domains,
+                    rng,
+                    curriculum_weights=curriculum_weights if split == "train" else None,
+                    forced_band=forced_band,
+                )
             mono, scene_meta = render_scene(
                 clean, scene, seed=scene_seed, afe=domains["afe"]
             )
@@ -600,6 +775,18 @@ def render_domain_dataset(
         "distance_histogram": histogram,
         "distance_histogram_by_split": histogram_by_split,
         "evaluation_positive_distance_order": list(EVAL_DISTANCE_ORDER),
+        "evaluation_sampling": (
+            {
+                "mode": "deterministic-pairwise-v2",
+                "positive_and_negative_separate": True,
+                "distance_m": evaluation_axes["distance_m"],
+                "azimuth_deg": evaluation_axes["azimuth_deg"],
+                "snr_db": evaluation_axes["snr_db"],
+                "snr_bands": evaluation_axes["snr_bands"],
+            }
+            if evaluation_axes is not None
+            else {"mode": "legacy-domain-sampling-v1"}
+        ),
         "curriculum": curriculum_weights or {},
         "afe": domains["afe"],
         "rir_manifest": (

@@ -10,6 +10,7 @@ import sys
 DIMENSION_PREFIXES = {
     "distance": "distance:",
     "azimuth": "azimuth:",
+    "snr": "snr:",
     "rt60": "rt60:",
     "noise": "noise:",
     "playback": "playback:",
