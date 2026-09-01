@@ -70,6 +70,39 @@ def run_far(
     return json.loads((output / "summary.json").read_text(encoding="utf-8"))
 
 
+def aggregate_far(
+    *,
+    outputs: list[pathlib.Path],
+    target: pathlib.Path,
+    min_injections: int,
+    min_audio_seconds: float,
+) -> tuple[int, dict]:
+    command = [
+        sys.executable,
+        str(ROOT / "eval" / "aggregate_far.py"),
+    ]
+    for output in outputs:
+        command.extend(["--summary", str(output / "summary.json")])
+    command.extend(
+        [
+            "--output",
+            str(target),
+            "--confidence",
+            "0.95",
+            "--max-far-per-hour",
+            "0",
+            "--max-upper-bound-per-hour",
+            "2000",
+            "--min-hard-negative-injections",
+            str(min_injections),
+            "--min-hard-negative-audio-seconds",
+            str(min_audio_seconds),
+        ]
+    )
+    completed = subprocess.run(command, check=False)
+    return completed.returncode, json.loads(target.read_text(encoding="utf-8"))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -137,25 +170,14 @@ def main() -> int:
             assert len(injections) == 3
 
         aggregate = root / "far-aggregate.json"
-        subprocess.check_call(
-            [
-                sys.executable,
-                str(ROOT / "eval" / "aggregate_far.py"),
-                "--summary",
-                str(stressed_outputs[0] / "summary.json"),
-                "--summary",
-                str(stressed_outputs[1] / "summary.json"),
-                "--output",
-                str(aggregate),
-                "--confidence",
-                "0.95",
-                "--max-far-per-hour",
-                "0",
-                "--max-upper-bound-per-hour",
-                "2000",
-            ]
+        code, aggregate_summary = aggregate_far(
+            outputs=stressed_outputs,
+            target=aggregate,
+            min_injections=6,
+            min_audio_seconds=6.0,
         )
-        aggregate_summary = json.loads(aggregate.read_text(encoding="utf-8"))
+        assert code == 0
+        assert aggregate_summary["schema_version"] == 1
         assert aggregate_summary["qualified"] is True
         assert aggregate_summary["false_accepts"] == 0
         assert aggregate_summary["negative_manifest_sha256"] == sha256_file(
@@ -164,6 +186,22 @@ def main() -> int:
         assert aggregate_summary["hard_negative_rate_per_minute"] == 60.0
         assert aggregate_summary["hard_negative_injections"] == 6
         assert aggregate_summary["hard_negative_audio_seconds"] == 6.0
+        assert aggregate_summary["min_hard_negative_injections"] == 6
+        assert aggregate_summary["min_hard_negative_audio_seconds"] == 6.0
+
+        insufficient = root / "far-insufficient.json"
+        code, insufficient_summary = aggregate_far(
+            outputs=stressed_outputs,
+            target=insufficient,
+            min_injections=7,
+            min_audio_seconds=7.0,
+        )
+        assert code == 1
+        assert insufficient_summary["qualified"] is False
+        assert {
+            "aggregate hard-negative injection count below minimum",
+            "aggregate hard-negative audio exposure below minimum",
+        }.issubset(set(insufficient_summary["violations"]))
 
     print("test_long_far: ok")
     return 0
