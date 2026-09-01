@@ -53,15 +53,28 @@ def main() -> int:
         row = load(path)
         if int(row.get("schema_version", 0)) != 1:
             raise ValueError(f"{path}: unsupported FAR summary schema")
+        negative_manifest = row.get("negative_manifest_sha256")
+        if negative_manifest is not None and not isinstance(negative_manifest, str):
+            raise ValueError(f"{path}: negative_manifest_sha256 must be a string or null")
+        hard_negative_rate = finite(
+            row.get("hard_negative_rate_per_minute", 0.0),
+            "hard_negative_rate_per_minute",
+        )
+        if hard_negative_rate < 0.0:
+            raise ValueError(f"{path}: hard-negative injection rate must be non-negative")
         current = (
             str(row.get("runner_sha256")),
             str(row.get("model_sha256")),
             str(row.get("keyword_pack_sha256")),
+            negative_manifest or "",
+            hard_negative_rate,
         )
         if identity is None:
             identity = current
         elif current != identity:
-            raise ValueError("cannot aggregate FAR exposure across different runner/model/pack")
+            raise ValueError(
+                "cannot aggregate FAR exposure across different runner/model/pack/hard-negative inputs"
+            )
         seed = int(row["seed"])
         if seed in seeds:
             raise ValueError("FAR shard seeds must be unique")
@@ -70,8 +83,15 @@ def main() -> int:
 
     audio_hours = sum(finite(row["audio_hours"], "audio_hours") for _, row in rows)
     false_accepts = sum(int(row["false_accepts"]) for _, row in rows)
+    hard_negative_injections = sum(int(row.get("hard_negative_injections", 0)) for _, row in rows)
+    hard_negative_audio_seconds = sum(
+        finite(row.get("hard_negative_audio_seconds", 0.0), "hard_negative_audio_seconds")
+        for _, row in rows
+    )
     if audio_hours <= 0.0 or false_accepts < 0:
         raise ValueError("invalid aggregate FAR count/exposure")
+    if hard_negative_injections < 0 or hard_negative_audio_seconds < 0.0:
+        raise ValueError("invalid aggregate hard-negative exposure")
     far = false_accepts / audio_hours
     upper = poisson_rate_upper(false_accepts, audio_hours, args.confidence)
     assert identity is not None
@@ -96,6 +116,10 @@ def main() -> int:
         "runner_sha256": identity[0],
         "model_sha256": identity[1],
         "keyword_pack_sha256": identity[2],
+        "negative_manifest_sha256": identity[3] or None,
+        "hard_negative_rate_per_minute": identity[4],
+        "hard_negative_injections": hard_negative_injections,
+        "hard_negative_audio_seconds": hard_negative_audio_seconds,
         "inputs": [
             {"path": str(path), "sha256": sha256_file(path)} for path, _ in rows
         ],
