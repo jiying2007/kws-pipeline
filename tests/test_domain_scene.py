@@ -124,6 +124,29 @@ def test_deterministic_robustness_axes() -> None:
         round(float(value), 6) for value in axes["snr_db"]
     }
 
+    # Formal qualification uses 32 positive and 48 negative base recordings.
+    # At six scenes/example, the pinned deterministic schedule must provide at
+    # least the common 4/4 support floor for the highest-value triple stress:
+    # 5m x rear x critical-SNR. Lock the exact current support counts so a
+    # future sampling change cannot silently weaken the gate.
+    def triple_stress(scene: dict) -> bool:
+        return (
+            abs(float(scene["distance_m"]) - 5.0) <= 1.0e-9
+            and abs(float(scene["azimuth_deg"])) > 90.0
+            and float(scene["snr_db"]) <= 6.0
+        )
+
+    qualification_positive = [
+        _deterministic_eval_scene(domains, axes, index, random.Random(3000 + index))
+        for index in range(32 * 6)
+    ]
+    qualification_negative = [
+        _deterministic_eval_scene(domains, axes, index, random.Random(6000 + index))
+        for index in range(48 * 6)
+    ]
+    assert sum(triple_stress(scene) for scene in qualification_positive) == 4
+    assert sum(triple_stress(scene) for scene in qualification_negative) == 6
+
     # The same ordinal must preserve the matrix coordinates even when the
     # randomized nuisance dimensions (RT60/noise/playback) use a different seed.
     first_a = _deterministic_eval_scene(domains, axes, 17, random.Random(1))
