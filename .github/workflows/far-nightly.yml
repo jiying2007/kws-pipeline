@@ -48,6 +48,7 @@ jobs:
           .venv/bin/python - <<'PY'
           import hashlib
           import json
+          import shutil
           from pathlib import Path
 
           root = Path('build/far-training')
@@ -56,7 +57,12 @@ jobs:
               raise SystemExit('canonical domain model is not qualified')
           model = root / 'best/model.kwm'
           keywords = root / 'best/keywords.kwk'
-          replay = root / 'hard-negative-replay/round-02/hard-negatives.tsv'
+          replay_candidates = sorted(
+              (root / 'hard-negative-replay').glob('round-*/hard-negatives.tsv')
+          )
+          if not replay_candidates:
+              raise SystemExit('canonical training produced no hard-negative replay manifest')
+          replay = replay_candidates[-1]
           for path in (model, keywords, replay):
               if not path.is_file() or path.stat().st_size == 0:
                   raise SystemExit(f'missing frozen FAR input: {path}')
@@ -72,19 +78,22 @@ jobs:
               raise SystemExit('best model hash does not match domain-loop manifest')
           if sha256(keywords) != manifest['best_pack_sha256']:
               raise SystemExit('best keyword pack hash does not match domain-loop manifest')
+          frozen_replay = root / 'best/hard-negatives.tsv'
+          shutil.copy2(replay, frozen_replay)
           print(json.dumps({
               'best_round': manifest['best_round'],
               'best_frontend': manifest['best_frontend'],
               'model_sha256': sha256(model),
               'keyword_pack_sha256': sha256(keywords),
-              'hard_negative_manifest_sha256': sha256(replay),
+              'hard_negative_source': str(replay),
+              'hard_negative_manifest_sha256': sha256(frozen_replay),
           }, indent=2, sort_keys=True))
           PY
       - name: Stream four independent negative shards against the frozen canonical model
         shell: bash
         run: |
           set -euo pipefail
-          replay=build/far-training/hard-negative-replay/round-02/hard-negatives.tsv
+          replay=build/far-training/best/hard-negatives.tsv
           for seed in 1103 2207 3301 4409; do
             .venv/bin/python eval/long_far_stream.py \
               --runner build/kws_raw_stream \
@@ -116,7 +125,7 @@ jobs:
           path: |
             build/far-training/best/
             build/far-training/domain-loop-manifest.json
-            build/far-training/hard-negative-replay/round-02/
+            build/far-training/hard-negative-replay/
             build/far-run-*/
             build/far-aggregate.json
           if-no-files-found: warn
