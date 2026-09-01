@@ -70,13 +70,21 @@ def main() -> int:
             ]
         )
         result = json.loads(out.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 2
+        assert result["schema_version"] == 3
         assert result["domains"]["distance:near"]["frr"] > 0.0
         assert result["domains"]["distance:far"]["frr"] == 1.0
+        assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
+        assert result["domains"]["distance_bin:5m"]["false_accepts"] == 1
+        assert result["domains"]["azimuth_deg:0"]["expected"] == 3
+        assert result["domains"]["azimuth_deg:180"]["negative_audio_hours"] > 0.0
+        assert result["domains"]["snr:critical"]["false_accepts"] == 1
+        assert result["domains"]["snr:mid"]["expected"] == 3
+        assert 0.0 <= result["domains"]["distance_bin:0.5m"]["wake_rate"] <= 1.0
         assert result["domains"]["azimuth:rear"]["expected"] == 0
         assert result["domains"]["azimuth:rear"]["negative_audio_hours"] > 0.0
         assert result["domains"]["azimuth:rear"]["false_accepts"] == 1
         assert result["worst_domain"] is not None
+        assert result["slice_contract"]["azimuth_quantization_deg"] == 30
         confusion = result["keyword_confusion"]
         assert confusion["assignment"] == "global-monotonic-one-to-one-v1"
         assert confusion["expected_events"] == 4
