@@ -110,16 +110,22 @@ def domain_keys(row: dict) -> list[str]:
     ]
 
 
-def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float]:
+def exposure_stats(names: list[str], recordings: dict[str, dict]) -> dict[str, float | int]:
     positive_seconds = 0.0
     negative_seconds = 0.0
+    positive_recordings = 0
+    negative_recordings = 0
     for name in names:
         recording = recordings[name]
         if recording["expected"]:
+            positive_recordings += 1
             positive_seconds += float(recording["duration_s"])
         else:
+            negative_recordings += 1
             negative_seconds += float(recording["duration_s"])
     return {
+        "positive_recordings": positive_recordings,
+        "negative_recordings": negative_recordings,
         "positive_audio_hours": positive_seconds / 3600.0,
         "negative_audio_hours": negative_seconds / 3600.0,
     }
@@ -209,7 +215,7 @@ def domain_is_eligible(
     positive_supported = int(summary["expected"]) >= min_expected and int(summary["expected"]) > 0
     negative_supported = (
         float(summary["negative_audio_hours"]) >= min_negative_hours
-        and float(summary["negative_audio_hours"]) > 0.0
+        and int(summary["negative_recordings"]) > 0
     )
     return positive_supported or negative_supported
 
@@ -273,7 +279,7 @@ def main() -> int:
         "support_policy": {
             "min_domain_expected_wakes": args.min_domain_expected,
             "min_domain_negative_hours": min_negative_hours,
-            "eligibility": "positive-wake-support OR negative-exposure-support",
+            "eligibility": "positive-wake-support OR negative-recording-support",
         },
         "slice_contract": {
             "distance_bins": DISTANCE_BIN_CONTRACT,
