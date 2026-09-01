@@ -449,9 +449,9 @@ def _deterministic_eval_scene(
     distance_count = len(distance_points)
     azimuth_count = len(azimuth_points)
     distance_m = float(distance_points[ordinal % distance_count])
-    azimuth_deg = float(azimuth_points[(ordinal // distance_count) % azimuth_count])
-    pair_cycle = ordinal // (distance_count * azimuth_count)
-    snr_db = float(snr_points[(ordinal + pair_cycle) % len(snr_points)])
+    azimuth_deg = float(azimuth_points[ordinal % azimuth_count])
+    azimuth_cycle = ordinal // azimuth_count
+    snr_db = float(snr_points[(ordinal + azimuth_cycle) % len(snr_points)])
     band = _distance_band_for_value(domains, distance_m)
     scene = _sample_legacy_scene(domains, rng, band)
     scene.update(
