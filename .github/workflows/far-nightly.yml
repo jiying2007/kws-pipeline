@@ -117,6 +117,8 @@ jobs:
           --confidence 0.95
           --max-far-per-hour 0
           --max-upper-bound-per-hour 0.40
+          --min-hard-negative-injections 800
+          --min-hard-negative-audio-seconds 800
       - name: Retain canonical FAR evidence and captures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

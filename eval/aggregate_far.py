@@ -40,11 +40,19 @@ def main() -> int:
     parser.add_argument("--confidence", type=float, default=0.95)
     parser.add_argument("--max-far-per-hour", required=True, type=float)
     parser.add_argument("--max-upper-bound-per-hour", required=True, type=float)
+    parser.add_argument("--min-hard-negative-injections", type=int, default=0)
+    parser.add_argument("--min-hard-negative-audio-seconds", type=float, default=0.0)
     args = parser.parse_args()
     if len(args.summary) < 2:
         raise ValueError("FAR aggregation requires at least two independent shards")
     if args.max_far_per_hour < 0.0 or args.max_upper_bound_per_hour < 0.0:
         raise ValueError("FAR limits must be non-negative")
+    min_hn_audio = finite(
+        args.min_hard_negative_audio_seconds,
+        "min hard-negative audio seconds",
+    )
+    if args.min_hard_negative_injections < 0 or min_hn_audio < 0.0:
+        raise ValueError("hard-negative exposure limits must be non-negative")
 
     rows = []
     identity = None
@@ -100,6 +108,10 @@ def main() -> int:
         violations.append("aggregate FAR/hour above maximum")
     if upper > args.max_upper_bound_per_hour:
         violations.append("aggregate FAR statistical upper bound above maximum")
+    if hard_negative_injections < args.min_hard_negative_injections:
+        violations.append("aggregate hard-negative injection count below minimum")
+    if hard_negative_audio_seconds + 1.0e-12 < min_hn_audio:
+        violations.append("aggregate hard-negative audio exposure below minimum")
     result = {
         "schema_version": 1,
         "evidence_class": "synthetic-streaming-far-aggregate",
@@ -120,6 +132,8 @@ def main() -> int:
         "hard_negative_rate_per_minute": identity[4],
         "hard_negative_injections": hard_negative_injections,
         "hard_negative_audio_seconds": hard_negative_audio_seconds,
+        "min_hard_negative_injections": args.min_hard_negative_injections,
+        "min_hard_negative_audio_seconds": min_hn_audio,
         "inputs": [
             {"path": str(path), "sha256": sha256_file(path)} for path, _ in rows
         ],
