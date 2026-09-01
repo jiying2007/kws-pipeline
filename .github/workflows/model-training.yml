@@ -1,6 +1,20 @@
 name: model-training
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/model-training.yml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'configs/training/**'
+      - 'eval/**'
+      - 'include/**'
+      - 'keywords/**'
+      - 'src/**'
+      - 'tools/**'
+      - 'training/**'
   pull_request:
     branches:
       - main
