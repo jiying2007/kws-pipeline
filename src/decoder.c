@@ -53,11 +53,13 @@ static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
   return 1;
 }
 
-static float max_score(float a, float b) { return a > b ? a : b; }
-
-static void max_assign(float *dst, float value) {
-  if (value > *dst) {
-    *dst = value;
+static void max_assign_pair(float *dst_score,
+                            float *dst_acoustic,
+                            float score,
+                            float acoustic) {
+  if (score > *dst_score) {
+    *dst_score = score;
+    *dst_acoustic = acoustic;
   }
 }
 
@@ -67,6 +69,17 @@ static void clear_pending(kws_decoder_t *d) {
   d->pending_depth = 0u;
   d->pending_age_frames = 0u;
   d->pending_blank_frames = 0u;
+}
+
+static void init_node_scores(kws_trie_node_t *node, int root) {
+  node->score = root != 0 ? 0.0f : NEG_INF;
+  node->blank_score = NEG_INF;
+  node->next_score = NEG_INF;
+  node->next_blank_score = NEG_INF;
+  node->acoustic_score = root != 0 ? 0.0f : NEG_INF;
+  node->blank_acoustic_score = NEG_INF;
+  node->next_acoustic_score = NEG_INF;
+  node->next_blank_acoustic_score = NEG_INF;
 }
 
 static void init_structure(kws_decoder_t *d,
@@ -79,10 +92,7 @@ static void init_structure(kws_decoder_t *d,
   d->nodes[0].first_child = UINT16_MAX;
   d->nodes[0].next_sibling = UINT16_MAX;
   d->nodes[0].terminal_keyword = -1;
-  d->nodes[0].score = 0.0f;
-  d->nodes[0].blank_score = NEG_INF;
-  d->nodes[0].next_score = NEG_INF;
-  d->nodes[0].next_blank_score = NEG_INF;
+  init_node_scores(&d->nodes[0], 1);
   clear_pending(d);
 }
 
@@ -117,10 +127,7 @@ static uint16_t find_or_add_child(kws_decoder_t *d,
   d->nodes[child].next_sibling = d->nodes[parent].first_child;
   d->nodes[child].terminal_keyword = -1;
   d->nodes[child].depth = (uint16_t)(d->nodes[parent].depth + 1u);
-  d->nodes[child].score = NEG_INF;
-  d->nodes[child].blank_score = NEG_INF;
-  d->nodes[child].next_score = NEG_INF;
-  d->nodes[child].next_blank_score = NEG_INF;
+  init_node_scores(&d->nodes[child], 0);
   d->nodes[parent].first_child = child;
   return child;
 }
@@ -212,10 +219,7 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
 
 void kws_decoder_reset(kws_decoder_t *d) {
   for (uint16_t i = 0u; i < d->node_count; ++i) {
-    d->nodes[i].score = (i == 0u) ? 0.0f : NEG_INF;
-    d->nodes[i].blank_score = NEG_INF;
-    d->nodes[i].next_score = NEG_INF;
-    d->nodes[i].next_blank_score = NEG_INF;
+    init_node_scores(&d->nodes[i], i == 0u);
   }
   clear_pending(d);
 }
@@ -323,24 +327,37 @@ int kws_decoder_step(kws_decoder_t *d,
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     d->nodes[i].next_score = NEG_INF;
     d->nodes[i].next_blank_score = NEG_INF;
+    d->nodes[i].next_acoustic_score = NEG_INF;
+    d->nodes[i].next_blank_acoustic_score = NEG_INF;
   }
   d->nodes[0].next_score = 0.0f;
+  d->nodes[0].next_acoustic_score = 0.0f;
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     float nonblank = (i == 0u) ? 0.0f : d->nodes[i].score;
     float separated = (i == 0u) ? NEG_INF : d->nodes[i].blank_score;
+    float nonblank_acoustic =
+        (i == 0u) ? 0.0f : d->nodes[i].acoustic_score;
+    float separated_acoustic =
+        (i == 0u) ? NEG_INF : d->nodes[i].blank_acoustic_score;
     uint16_t child;
 
     if (i != 0u) {
       if (nonblank > NEG_INF / 2.0f) {
         if (blank_dominant != 0) {
-          max_assign(&d->nodes[i].next_blank_score, nonblank + decay);
+          max_assign_pair(&d->nodes[i].next_blank_score,
+                          &d->nodes[i].next_blank_acoustic_score,
+                          nonblank + decay, nonblank_acoustic);
         } else {
-          max_assign(&d->nodes[i].next_score, nonblank + decay);
+          max_assign_pair(&d->nodes[i].next_score,
+                          &d->nodes[i].next_acoustic_score,
+                          nonblank + decay, nonblank_acoustic);
         }
       }
       if (separated > NEG_INF / 2.0f) {
-        max_assign(&d->nodes[i].next_blank_score, separated + decay);
+        max_assign_pair(&d->nodes[i].next_blank_score,
+                        &d->nodes[i].next_blank_acoustic_score,
+                        separated + decay, separated_acoustic);
       }
     }
 
@@ -348,11 +365,28 @@ int kws_decoder_step(kws_decoder_t *d,
     while (child != UINT16_MAX) {
       uint16_t token = d->nodes[child].token;
       int repeated_token = i != 0u && token == d->nodes[i].token;
-      float base = repeated_token != 0 ? separated : max_score(nonblank, separated);
+      float base;
+      float base_acoustic;
+
+      if (repeated_token != 0) {
+        base = separated;
+        base_acoustic = separated_acoustic;
+      } else if (nonblank >= separated) {
+        base = nonblank;
+        base_acoustic = nonblank_acoustic;
+      } else {
+        base = separated;
+        base_acoustic = separated_acoustic;
+      }
 
       if (base > NEG_INF / 2.0f) {
-        float log_probability = logits[token] - norm + d->token_boost;
-        max_assign(&d->nodes[child].next_score, base + log_probability);
+        float acoustic_log_probability = logits[token] - norm;
+        float search_log_probability =
+            acoustic_log_probability + d->token_boost;
+        max_assign_pair(&d->nodes[child].next_score,
+                        &d->nodes[child].next_acoustic_score,
+                        base + search_log_probability,
+                        base_acoustic + acoustic_log_probability);
       }
       child = d->nodes[child].next_sibling;
     }
@@ -360,14 +394,24 @@ int kws_decoder_step(kws_decoder_t *d,
 
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     float terminal_score;
+    float terminal_acoustic;
     d->nodes[i].score = d->nodes[i].next_score;
     d->nodes[i].blank_score = d->nodes[i].next_blank_score;
-    terminal_score = max_score(d->nodes[i].score, d->nodes[i].blank_score);
+    d->nodes[i].acoustic_score = d->nodes[i].next_acoustic_score;
+    d->nodes[i].blank_acoustic_score =
+        d->nodes[i].next_blank_acoustic_score;
+    if (d->nodes[i].score >= d->nodes[i].blank_score) {
+      terminal_score = d->nodes[i].score;
+      terminal_acoustic = d->nodes[i].acoustic_score;
+    } else {
+      terminal_score = d->nodes[i].blank_score;
+      terminal_acoustic = d->nodes[i].blank_acoustic_score;
+    }
     if (speech_active && d->nodes[i].terminal_keyword >= 0 &&
-        terminal_score > NEG_INF / 2.0f) {
+        terminal_score > NEG_INF / 2.0f &&
+        terminal_acoustic > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float conf =
-          expf(terminal_score / (float)d->nodes[i].depth - d->token_boost);
+      float conf = expf(terminal_acoustic / (float)d->nodes[i].depth);
       if (conf > 1.0f) {
         conf = 1.0f;
       }

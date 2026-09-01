@@ -41,16 +41,12 @@ def jsonl(path: pathlib.Path) -> list[dict]:
     ]
 
 
-def false_accept_details(work: pathlib.Path, metrics: dict, split: str) -> list[str]:
-    false_path = pathlib.Path(str(metrics.get("false_positives_path", "")))
-    rows = jsonl(false_path)
-    if not rows:
-        return []
+def split_intervals(work: pathlib.Path, split: str) -> list[tuple[int, int, dict]]:
     dataset_dir = work / "dataset"
     summary_path = dataset_dir / "dataset-summary.json"
     index_path = dataset_dir / "dataset-index.jsonl"
     if not summary_path.is_file() or not index_path.is_file():
-        return [f"{split}.fp raw={row}" for row in rows[:12]]
+        return []
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     gap_samples = int(
         round(float(summary.get("continuous_gap_ms", 1600.0)) * SAMPLE_RATE_HZ / 1000.0)
@@ -63,6 +59,17 @@ def false_accept_details(work: pathlib.Path, metrics: dict, split: str) -> list[
         end = start + int(clip["frames"])
         intervals.append((start, end, clip))
         cursor = end + gap_samples
+    return intervals
+
+
+def false_accept_details(work: pathlib.Path, metrics: dict, split: str) -> list[str]:
+    false_path = pathlib.Path(str(metrics.get("false_positives_path", "")))
+    rows = jsonl(false_path)
+    if not rows:
+        return []
+    intervals = split_intervals(work, split)
+    if not intervals:
+        return [f"{split}.fp raw={row}" for row in rows[:12]]
 
     details: list[str] = []
     for row in rows[:20]:
@@ -87,6 +94,52 @@ def false_accept_details(work: pathlib.Path, metrics: dict, split: str) -> list[
     return details
 
 
+def false_reject_details(work: pathlib.Path, metrics: dict, split: str) -> list[str]:
+    false_path = pathlib.Path(str(metrics.get("false_rejects_path", "")))
+    rows = jsonl(false_path)
+    if not rows:
+        return []
+    intervals = split_intervals(work, split)
+    if not intervals:
+        return [f"{split}.fr raw={row}" for row in rows[:12]]
+
+    detections_path = false_path.parent / "detections.jsonl"
+    detections = jsonl(detections_path)
+    details: list[str] = []
+    for row in rows[:20]:
+        event_start = float(row["start_s"])
+        event_end = float(row["end_s"])
+        event_mid_sample = int(round((event_start + event_end) * 0.5 * SAMPLE_RATE_HZ))
+        source = None
+        for start, end, clip in intervals:
+            if start <= event_mid_sample <= end:
+                source = clip
+                break
+
+        nearby = [
+            item
+            for item in detections
+            if abs(float(item.get("time_s", 0.0)) - event_end) <= 2.0
+        ]
+        nearby_text = ",".join(
+            f"kw{int(item.get('keyword_id', -1))}@{float(item.get('time_s', 0.0)):.3f}"
+            f"/{float(item.get('confidence', 0.0)):.4f}"
+            for item in nearby[:8]
+        ) or "none"
+        if source is None:
+            details.append(
+                f"{split}.fr kw={row.get('keyword_id')} window={event_start:.3f}..{event_end:.3f} "
+                f"source=unmapped nearby={nearby_text}"
+            )
+        else:
+            details.append(
+                f"{split}.fr kw={row.get('keyword_id')} window={event_start:.3f}..{event_end:.3f} "
+                f"family={source.get('family_id')} variant={source.get('variant')} "
+                f"tokens={' '.join(source.get('tokens', []))} nearby={nearby_text}"
+            )
+    return details
+
+
 def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProcess[str]) -> str:
     lines = [f"iterate rc={completed.returncode}"]
     manifest_path = work / "synthetic-loop-manifest.json"
@@ -99,7 +152,9 @@ def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProces
                 lines.append(metric_line(f"round{round_index}.test", item["test"]))
                 if round_index == 0:
                     lines.extend(false_accept_details(work, item["calibration"], "calibration"))
+                    lines.extend(false_reject_details(work, item["calibration"], "calibration"))
                     lines.extend(false_accept_details(work, item["test"], "test"))
+                    lines.extend(false_reject_details(work, item["test"], "test"))
                 lines.append(
                     f"round{round_index}.replay: hard_negatives="
                     f"{int(item.get('cumulative_hard_negatives', 0))} "
@@ -109,6 +164,7 @@ def failure_diagnostic(work: pathlib.Path, completed: subprocess.CompletedProces
                 qualification = manifest["synthetic_qualification"]
                 lines.append(metric_line("qualification", qualification))
                 lines.extend(false_accept_details(work, qualification, "qualification"))
+                lines.extend(false_reject_details(work, qualification, "qualification"))
         except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
             lines.append(f"manifest diagnostic failed: {exc}")
     else:
