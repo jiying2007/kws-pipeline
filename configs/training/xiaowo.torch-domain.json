@@ -78,8 +78,8 @@
     "scenes_per_example": {
       "train": 2,
       "calibration": 1,
-      "test": 1,
-      "qualification": 1
+      "test": 2,
+      "qualification": 4
     }
   },
   "model": {
@@ -129,5 +129,14 @@
     "max_far_per_hour": 0.0,
     "max_p95_latency_ms": 800.0,
     "max_far_frr": 0.0
+  },
+  "robustness_gates": {
+    "max_frr": 0.0,
+    "max_far_per_hour": 0.0,
+    "min_expected_wakes": 4,
+    "min_negative_audio_hours": 0.005,
+    "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
+    "required_azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
+    "required_snr_bands": ["critical", "low", "mid", "high"]
   }
 }
