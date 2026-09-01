@@ -12,7 +12,11 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from hard_negative_replay import normalize_hard_negative_replay  # noqa: E402
-from iterate_domain import parse_warm_start_strategy, warm_start_args  # noqa: E402
+from iterate_domain import (  # noqa: E402
+    parse_warm_start_strategy,
+    select_calibration_threshold,
+    warm_start_args,
+)
 
 
 def validate_torch_iteration_policy() -> None:
@@ -33,6 +37,50 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("invalid warm-start strategy was accepted")
+
+    thresholds = [
+        0.01,
+        0.03,
+        0.05,
+        0.10,
+        0.15,
+        0.25,
+        0.40,
+        0.55,
+        0.65,
+        0.70,
+        0.75,
+        0.80,
+        0.85,
+        0.90,
+        0.93,
+        0.95,
+    ]
+    zero_error_key = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    assert select_calibration_threshold([(value, zero_error_key) for value in thresholds]) == 0.55
+    worse_key = (1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    plateau = [
+        (0.10, worse_key),
+        (0.25, zero_error_key),
+        (0.40, zero_error_key),
+        (0.55, zero_error_key),
+        (0.70, zero_error_key),
+        (0.85, worse_key),
+    ]
+    assert select_calibration_threshold(plateau) == 0.40
+    try:
+        select_calibration_threshold([])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("empty calibration candidate set was accepted")
+
+    formal = json.loads(
+        (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
+    )
+    assert float(formal["domain_gates"]["max_far_per_hour"]) == 0.0
+    assert float(formal["domain_gates"]["max_frr"]) == 0.0
+    assert float(formal["domain_gates"]["max_far_frr"]) == 0.0
 
     active = ["ni3", "hao3", "xiao3", "wo1"]
     token_map = {"<blank>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}

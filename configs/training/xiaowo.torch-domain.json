@@ -125,9 +125,9 @@
     ]
   },
   "domain_gates": {
-    "max_frr": 0.05,
+    "max_frr": 0.0,
     "max_far_per_hour": 0.0,
     "max_p95_latency_ms": 800.0,
-    "max_far_frr": 0.08
+    "max_far_frr": 0.0
   }
 }

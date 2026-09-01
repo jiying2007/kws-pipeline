@@ -236,6 +236,41 @@ def objective(base: dict, domains: dict, gates: dict) -> float:
     )
 
 
+def calibration_behavior_key(base: dict, domains: dict, gates: dict) -> tuple[float, ...]:
+    far = domains.get("domains", {}).get("distance:far", {})
+    frr = float(base["frr"])
+    far_per_hour = float(base["far_per_hour"])
+    latency = float(base["p95_post_end_latency_ms"])
+    far_frr = float(far.get("frr", 1.0))
+    gate_failed = 0.0 if base_gate(base, gates) and domain_gate(domains, gates) else 1.0
+    return (
+        gate_failed,
+        max(0.0, far_per_hour - gates["max_far_per_hour"]),
+        max(0.0, frr - gates["max_frr"]),
+        max(0.0, far_frr - gates["max_far_frr"]),
+        max(0.0, latency - gates["max_p95_latency_ms"]),
+        far_per_hour,
+        frr,
+        far_frr,
+    )
+
+
+def select_calibration_threshold(
+    candidates: list[tuple[float, tuple[float, ...]]],
+) -> float:
+    if not candidates:
+        raise ValueError("calibration threshold candidates must not be empty")
+    ordered = sorted(candidates, key=lambda item: item[0])
+    if any(not math.isfinite(threshold) or not 0.0 < threshold < 1.0 for threshold, _ in ordered):
+        raise ValueError("calibration threshold candidates must be finite and in (0,1)")
+    best_key = min(key for _, key in ordered)
+    plateau = [threshold for threshold, key in ordered if key == best_key]
+    # Choose the lower median of the empirically equivalent operating plateau.
+    # This preserves both false-accept margin and recall reserve instead of
+    # pinning calibration to the highest-threshold edge of the plateau.
+    return plateau[(len(plateau) - 1) // 2]
+
+
 def calibrate(
     *,
     runner: pathlib.Path,
@@ -252,7 +287,7 @@ def calibrate(
     for coordinate in range(rounds):
         changed = False
         for index, row in enumerate(current):
-            best = None
+            candidates: list[tuple[float, tuple[float, ...]]] = []
             for threshold in thresholds:
                 trial = [dict(item) for item in current]
                 trial[index]["threshold"] = threshold
@@ -268,13 +303,11 @@ def calibrate(
                     references=references,
                     output=trial_dir / "eval",
                 )
-                key = (objective(base, domains, gates), float(base["frr"]), -threshold)
-                if best is None or key < best[0]:
-                    best = (key, threshold)
-            assert best is not None
-            if not math.isclose(float(current[index]["threshold"]), best[1]):
+                candidates.append((threshold, calibration_behavior_key(base, domains, gates)))
+            selected = select_calibration_threshold(candidates)
+            if not math.isclose(float(current[index]["threshold"]), selected):
                 changed = True
-            current[index]["threshold"] = best[1]
+            current[index]["threshold"] = selected
         if not changed:
             break
     tsv = output / "calibrated-keywords.tsv"
