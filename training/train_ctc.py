@@ -35,6 +35,8 @@ FRAME_HOP_SAMPLES = 320
 FRONTEND_SPEC_VERSION = 2
 WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
+POSITIVE_EXAMPLE_WEIGHT = 2.0
+ORDERED_TOKEN_LOSS_WEIGHT = 0.35
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -258,6 +260,51 @@ def collate(batch):
     return padded, targets, xlen, ylen
 
 
+def ordered_token_loss(
+    log_probs: torch.Tensor,
+    targets: torch.Tensor,
+    input_lengths: torch.Tensor,
+    target_lengths: torch.Tensor,
+) -> tuple[torch.Tensor, int, int]:
+    """Encourage each target occurrence to own a chronological region.
+
+    CTC remains the primary sequence objective. This auxiliary term prevents
+    blank-only/token-starvation collapse on mixed positive + empty-target
+    batches while preserving CTC's freedom to choose the exact alignment.
+    """
+    losses: list[torch.Tensor] = []
+    correct = 0
+    total = 0
+    offset = 0
+    for batch_index, target_length in enumerate(target_lengths.tolist()):
+        count = int(target_length)
+        sample_targets = targets[offset : offset + count]
+        offset += count
+        if count == 0:
+            continue
+        steps = int(input_lengths[batch_index])
+        if steps <= 0:
+            raise ValueError("input length must be positive")
+        sample_losses: list[torch.Tensor] = []
+        for occurrence, token_tensor in enumerate(sample_targets):
+            token = int(token_tensor)
+            start = (occurrence * steps) // count
+            stop = max(start + 1, ((occurrence + 1) * steps) // count)
+            stop = min(stop, steps)
+            region = log_probs[start:stop, batch_index, token]
+            sample_losses.append(-region.max())
+            best_frame = int(region.argmax()) + start
+            predicted = int(log_probs[best_frame, batch_index].argmax())
+            correct += int(predicted == token)
+            total += 1
+        losses.append(torch.stack(sample_losses).mean())
+    if offset != int(targets.numel()):
+        raise ValueError("flattened CTC targets do not match target lengths")
+    if not losses:
+        return log_probs.sum() * 0.0, correct, total
+    return torch.stack(losses).mean(), correct, total
+
+
 def validate_warm_start(
     checkpoint: dict,
     args: argparse.Namespace,
@@ -295,6 +342,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
     parser.add_argument("--head-only", action="store_true")
+    parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
+    parser.add_argument("--ordered-token-loss-weight", type=float, default=ORDERED_TOKEN_LOSS_WEIGHT)
     parser.add_argument(
         "--require-container-digest",
         action="store_true",
@@ -317,6 +366,10 @@ def main() -> None:
         parser.error("--batch-size must be > 0")
     if not math.isfinite(args.lr) or args.lr <= 0.0:
         parser.error("--lr must be finite and > 0")
+    if not math.isfinite(args.positive_example_weight) or args.positive_example_weight <= 0.0:
+        parser.error("--positive-example-weight must be finite and > 0")
+    if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
+        parser.error("--ordered-token-loss-weight must be finite and >= 0")
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
 
@@ -353,19 +406,44 @@ def main() -> None:
 
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=WEIGHT_DECAY)
-    loss_fn = nn.CTCLoss(blank=0, zero_infinity=True)
+    loss_fn = nn.CTCLoss(blank=0, zero_infinity=True, reduction="none")
     model.train()
     for epoch in range(args.epochs):
         total = 0.0
+        total_ctc = 0.0
+        total_ordered = 0.0
+        ordered_correct = 0
+        ordered_total = 0
         for x, y, xlen, ylen in loader:
-            logits = model(x).log_softmax(dim=2)
-            loss = loss_fn(logits, y, xlen, ylen)
+            log_probs = model(x).log_softmax(dim=2)
+            raw_ctc = loss_fn(log_probs, y, xlen, ylen)
+            sample_weights = torch.where(
+                ylen > 0,
+                torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
+                torch.ones_like(ylen, dtype=torch.float32),
+            )
+            normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
+            ctc_loss = (normalized_ctc * sample_weights).sum() / sample_weights.sum()
+            ordered_loss, batch_correct, batch_total = ordered_token_loss(
+                log_probs, y, xlen, ylen
+            )
+            loss = ctc_loss + args.ordered_token_loss_weight * ordered_loss
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             nn.utils.clip_grad_norm_(trainable, GRAD_CLIP_NORM)
             optimizer.step()
             total += float(loss.detach())
-        print(f"epoch={epoch + 1} loss={total / max(1, len(loader)):.6f}")
+            total_ctc += float(ctc_loss.detach())
+            total_ordered += float(ordered_loss.detach())
+            ordered_correct += batch_correct
+            ordered_total += batch_total
+        batches = max(1, len(loader))
+        ordered_accuracy = ordered_correct / max(1, ordered_total)
+        print(
+            f"epoch={epoch + 1} loss={total / batches:.6f} "
+            f"ctc={total_ctc / batches:.6f} ordered={total_ordered / batches:.6f} "
+            f"ordered_token_acc={ordered_accuracy:.6f}"
+        )
 
     manifest_metadata = [
         {"name": path.name, "sha256": sha256_file(path)} for path in args.manifest
@@ -394,6 +472,9 @@ def main() -> None:
             "optimizer": "AdamW",
             "weight_decay": WEIGHT_DECAY,
             "grad_clip_norm": GRAD_CLIP_NORM,
+            "ctc_reduction": "per-frame-weighted",
+            "positive_example_weight": args.positive_example_weight,
+            "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "hard_negative_capable": True,
             "training_environment": environment,
         },

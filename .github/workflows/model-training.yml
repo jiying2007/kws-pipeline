@@ -1,0 +1,155 @@
+name: model-training
+
+on:
+  push:
+    branches:
+      - codex/model-training-20260830
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  torch-domain-iteration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and verify real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_decoder_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          .venv/bin/python - <<'PY'
+          import platform
+          import numpy
+          import torch
+          print('python', platform.python_version())
+          print('numpy', numpy.__version__)
+          print('torch', torch.__version__)
+          assert numpy.__version__ == '2.3.2'
+          assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
+          PY
+      - name: Train and iterate three domain rounds
+        id: train
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/model-training
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Finalize best checkpoint and run summary
+        shell: bash
+        env:
+          TRAIN_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+        run: |
+          .venv/bin/python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import shutil
+
+          root = pathlib.Path('build/model-training')
+          manifest_path = root / 'domain-loop-manifest.json'
+          if not manifest_path.is_file():
+              raise SystemExit('training did not produce domain-loop-manifest.json')
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          best_round = int(manifest['best_round'])
+          best_frontend = str(manifest['best_frontend'])
+          matches = [
+              row for row in manifest['records']
+              if int(row['round']) == best_round
+              and str(row['frontend']) == best_frontend
+              and 'checkpoint' in row
+          ]
+          if not matches:
+              raise SystemExit('best torch candidate has no checkpoint record')
+          best = min(matches, key=lambda row: float(row['score']))
+          checkpoint = pathlib.Path(best['checkpoint'])
+          if not checkpoint.is_file():
+              raise SystemExit(f'missing best checkpoint: {checkpoint}')
+          best_dir = root / 'best'
+          best_dir.mkdir(parents=True, exist_ok=True)
+          shutil.copy2(checkpoint, best_dir / 'model.pt')
+
+          def sha256(path: pathlib.Path) -> str:
+              digest = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          required = [
+              best_dir / 'model.kwm',
+              best_dir / 'model.pt',
+              best_dir / 'keywords.kwk',
+              best_dir / 'keywords.tsv',
+              best_dir / 'model-provenance.json',
+          ]
+          for path in required:
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing training artifact: {path}')
+          summary = {
+              'schema_version': 1,
+              'training_exit_code': int(os.environ.get('TRAIN_EXIT_CODE', '2')),
+              'qualified': bool(manifest['qualified']),
+              'best_round': best_round,
+              'best_frontend': best_frontend,
+              'best_score': float(manifest['best_score']),
+              'qualification': manifest['qualification'],
+              'qualification_domains': manifest['qualification_domains'],
+              'artifacts': {path.name: sha256(path) for path in required},
+              'limitations': manifest['limitations'],
+          }
+          (root / 'training-run-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
+          PY
+      - name: Retain trained model and iteration evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-torch-domain-model
+          path: |
+            build/model-training/best/
+            build/model-training/domain-loop-manifest.json
+            build/model-training/training-run-summary.json
+            build/model-training/curriculum/
+            build/model-training/datasets/*/audit.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Enforce synthetic qualification gate
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary = json.loads(Path('build/model-training/training-run-summary.json').read_text(encoding='utf-8'))
+          qualified = bool(summary['qualified'])
+          train_exit = int(summary['training_exit_code'])
+          print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
+          print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
+          if train_exit not in (0, 1):
+              raise SystemExit(f'training infrastructure failed with exit code {train_exit}')
+          if qualified != (train_exit == 0):
+              raise SystemExit(
+                  f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
+              )
+          if not qualified:
+              raise SystemExit('synthetic qualification gates were not met')
+          PY

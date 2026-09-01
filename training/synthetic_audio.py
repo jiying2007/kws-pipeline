@@ -607,15 +607,22 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                 sequence = confusable_sequence(
                     list(keyword["tokens"]), active, forbidden, rng
                 )
-                add_family("confusable", keyword, family, sequence, [])
+                add_family(
+                    "confusable",
+                    keyword,
+                    family,
+                    sequence,
+                    [token_map[token] for token in sequence],
+                )
         for family in range(random_count):
             rng = random.Random(seed + split_index * 200_003 + family * 1237)
+            sequence = random_negative(active, forbidden, rng)
             add_family(
                 "negative",
                 None,
                 family,
-                random_negative(active, forbidden, rng),
-                [],
+                sequence,
+                [token_map[token] for token in sequence],
             )
         for profile_index, profile in enumerate(noise_profiles):
             add_background(profile, profile_index)

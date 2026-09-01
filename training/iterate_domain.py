@@ -19,6 +19,7 @@ sys.path.insert(0, str(TOOLS))
 from domain_curriculum import update_curriculum  # noqa: E402
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
+from hard_negative_replay import render_hard_negative_replay  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
 
@@ -235,6 +236,41 @@ def objective(base: dict, domains: dict, gates: dict) -> float:
     )
 
 
+def calibration_behavior_key(base: dict, domains: dict, gates: dict) -> tuple[float, ...]:
+    far = domains.get("domains", {}).get("distance:far", {})
+    frr = float(base["frr"])
+    far_per_hour = float(base["far_per_hour"])
+    latency = float(base["p95_post_end_latency_ms"])
+    far_frr = float(far.get("frr", 1.0))
+    gate_failed = 0.0 if base_gate(base, gates) and domain_gate(domains, gates) else 1.0
+    return (
+        gate_failed,
+        max(0.0, far_per_hour - gates["max_far_per_hour"]),
+        max(0.0, frr - gates["max_frr"]),
+        max(0.0, far_frr - gates["max_far_frr"]),
+        max(0.0, latency - gates["max_p95_latency_ms"]),
+        far_per_hour,
+        frr,
+        far_frr,
+    )
+
+
+def select_calibration_threshold(
+    candidates: list[tuple[float, tuple[float, ...]]],
+) -> float:
+    if not candidates:
+        raise ValueError("calibration threshold candidates must not be empty")
+    ordered = sorted(candidates, key=lambda item: item[0])
+    if any(not math.isfinite(threshold) or not 0.0 < threshold < 1.0 for threshold, _ in ordered):
+        raise ValueError("calibration threshold candidates must be finite and in (0,1)")
+    best_key = min(key for _, key in ordered)
+    plateau = [threshold for threshold, key in ordered if key == best_key]
+    # Choose the lower median of the empirically equivalent operating plateau.
+    # This preserves both false-accept margin and recall reserve instead of
+    # pinning calibration to the highest-threshold edge of the plateau.
+    return plateau[(len(plateau) - 1) // 2]
+
+
 def calibrate(
     *,
     runner: pathlib.Path,
@@ -251,7 +287,7 @@ def calibrate(
     for coordinate in range(rounds):
         changed = False
         for index, row in enumerate(current):
-            best = None
+            candidates: list[tuple[float, tuple[float, ...]]] = []
             for threshold in thresholds:
                 trial = [dict(item) for item in current]
                 trial[index]["threshold"] = threshold
@@ -267,13 +303,11 @@ def calibrate(
                     references=references,
                     output=trial_dir / "eval",
                 )
-                key = (objective(base, domains, gates), float(base["frr"]), -threshold)
-                if best is None or key < best[0]:
-                    best = (key, threshold)
-            assert best is not None
-            if not math.isclose(float(current[index]["threshold"]), best[1]):
+                candidates.append((threshold, calibration_behavior_key(base, domains, gates)))
+            selected = select_calibration_threshold(candidates)
+            if not math.isclose(float(current[index]["threshold"]), selected):
                 changed = True
-            current[index]["threshold"] = best[1]
+            current[index]["threshold"] = selected
         if not changed:
             break
     tsv = output / "calibrated-keywords.tsv"
@@ -290,6 +324,24 @@ def calibrate(
     return tsv, pack, base, domains
 
 
+def parse_warm_start_strategy(iteration: dict) -> str:
+    value = str(iteration.get("warm_start_strategy", "full"))
+    if value not in {"full", "head-only"}:
+        raise ValueError("domain_iteration.warm_start_strategy must be full or head-only")
+    return value
+
+
+def warm_start_args(previous: pathlib.Path | None, strategy: str) -> list[str]:
+    if strategy not in {"full", "head-only"}:
+        raise ValueError("warm-start strategy must be full or head-only")
+    if previous is None:
+        return []
+    result = ["--warm-start", str(previous)]
+    if strategy == "head-only":
+        result.append("--head-only")
+    return result
+
+
 def build_torch(
     *,
     cfg: dict,
@@ -298,6 +350,8 @@ def build_torch(
     manifest: pathlib.Path,
     output: pathlib.Path,
     previous: pathlib.Path | None,
+    hard_negative_manifest: pathlib.Path | None,
+    warm_start_strategy: str,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     checkpoint = output / "model.pt"
     model = output / "model.kwm"
@@ -326,8 +380,13 @@ def build_torch(
         "--output",
         str(checkpoint),
     ]
-    if previous is not None:
-        command.extend(["--warm-start", str(previous), "--head-only"])
+    if (
+        hard_negative_manifest is not None
+        and hard_negative_manifest.is_file()
+        and hard_negative_manifest.stat().st_size > 0
+    ):
+        command.extend(["--manifest", str(hard_negative_manifest)])
+    command.extend(warm_start_args(previous, warm_start_strategy))
     run(command)
     run(
         [
@@ -362,6 +421,7 @@ def main() -> int:
     backend = str(iteration.get("backend", "prototype"))
     if backend not in {"prototype", "torch_ctc"}:
         raise ValueError("domain_iteration.backend must be prototype or torch_ctc")
+    warm_start_strategy = parse_warm_start_strategy(iteration)
     max_rounds = int(iteration.get("max_rounds", 3))
     min_rounds = int(iteration.get("min_rounds", 2))
     patience = int(iteration.get("patience", 2))
@@ -404,6 +464,14 @@ def main() -> int:
                 "--fail-within-split",
             ]
         )
+        replay = None
+        if backend == "torch_ctc":
+            replay = render_hard_negative_replay(
+                config_path,
+                work / "hard-negative-replay" / f"round-{round_index:02d}",
+                round_index=round_index,
+                curriculum_weights=curriculum,
+            )
         round_best = None
         for frontend_value in frontends:
             frontend = str(frontend_value)
@@ -412,6 +480,7 @@ def main() -> int:
                 candidate_dir = work / "candidates" / f"r{round_index:02d}-{frontend}-{candidate_index:02d}"
                 candidate_dir.mkdir(parents=True)
                 checkpoint = None
+                previous_checkpoint = previous_checkpoints.get(frontend)
                 if backend == "prototype":
                     model = candidate_dir / "model.kwm"
                     fit_domain_prototype(
@@ -432,13 +501,20 @@ def main() -> int:
                     )
                     provenance = pathlib.Path(str(model) + ".synthetic-domain-provenance.json")
                 else:
+                    replay_manifest = (
+                        pathlib.Path(str(replay["manifest"]))
+                        if isinstance(replay, dict) and int(replay.get("examples", 0)) > 0
+                        else None
+                    )
                     model, checkpoint = build_torch(
                         cfg=cfg,
                         frontend=frontend,
                         tokens=tokens,
                         manifest=dataset_dir / "train.tsv",
                         output=candidate_dir,
-                        previous=previous_checkpoints.get(frontend),
+                        previous=previous_checkpoint,
+                        hard_negative_manifest=replay_manifest,
+                        warm_start_strategy=warm_start_strategy,
                     )
                     provenance = pathlib.Path(str(model) + ".provenance.json")
                 calibrated, pack, cal_base, cal_domains = calibrate(
@@ -480,6 +556,18 @@ def main() -> int:
                 }
                 if checkpoint is not None:
                     record["checkpoint"] = str(checkpoint)
+                    record["warm_started"] = previous_checkpoint is not None
+                    record["warm_start_strategy"] = (
+                        warm_start_strategy if previous_checkpoint is not None else "cold-start"
+                    )
+                    record["hard_negative_replay_examples"] = int(
+                        replay.get("examples", 0) if isinstance(replay, dict) else 0
+                    )
+                    record["hard_negative_replay_manifest_sha256"] = (
+                        str(replay.get("manifest_sha256"))
+                        if isinstance(replay, dict)
+                        else None
+                    )
                 records.append(record)
                 if round_best is None or score_value < round_best["score"]:
                     round_best = record
@@ -526,7 +614,7 @@ def main() -> int:
     shutil.copy2(best["provenance"], best_provenance)
 
     # Qualification is regenerated from the same pinned config but never used by
-    # candidate selection or curriculum updates.
+    # candidate selection, curriculum updates, or hard-negative replay.
     qualification_dataset = work / "qualification-dataset"
     render_domain_dataset(config_path, qualification_dataset, curriculum_weights=None)
     qualification_base, qualification_domains = evaluate(
@@ -548,6 +636,7 @@ def main() -> int:
         "best_score": best["score"],
         "best_model_sha256": sha256_file(best_model),
         "best_pack_sha256": sha256_file(best_pack),
+        "warm_start_strategy": warm_start_strategy if backend == "torch_ctc" else None,
         "records": records,
         "final_curriculum": curriculum or {},
         "qualification": qualification_base,

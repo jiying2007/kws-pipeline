@@ -17,6 +17,13 @@ typedef struct kws_trie_node {
   float blank_score;
   float next_score;
   float next_blank_score;
+  /* Acoustic evidence follows the winning search path but excludes search-only
+   * token boost and retention decay. It is therefore safe to use for emitted
+   * confidence without making confidence depend on token duration or blanks. */
+  float acoustic_score;
+  float blank_acoustic_score;
+  float next_acoustic_score;
+  float next_blank_acoustic_score;
 } kws_trie_node_t;
 
 typedef struct kws_decoder {
