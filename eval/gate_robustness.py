@@ -50,13 +50,14 @@ def evaluate(summary: dict, config: dict) -> dict:
         "robustness_gates.max_far_per_hour",
     )
     min_expected = int(gates.get("min_expected_wakes", 1))
+    min_negative_recordings = int(gates.get("min_negative_recordings", 1))
     min_negative_hours = finite(
         gates.get("min_negative_audio_hours", 0.0),
         "robustness_gates.min_negative_audio_hours",
     )
     if not 0.0 <= max_frr <= 1.0 or max_far < 0.0:
         raise ValueError("robustness FRR/FAR gates are invalid")
-    if min_expected <= 0 or min_negative_hours < 0.0:
+    if min_expected <= 0 or min_negative_recordings <= 0 or min_negative_hours < 0.0:
         raise ValueError("robustness support gates are invalid")
 
     failures: list[dict] = []
@@ -68,6 +69,8 @@ def evaluate(summary: dict, config: dict) -> dict:
             failures.append({"slice": key, "reason": "missing-slice"})
             continue
         expected = int(metrics.get("expected", 0))
+        positive_recordings = int(metrics.get("positive_recordings", 0))
+        negative_recordings = int(metrics.get("negative_recordings", 0))
         negative_hours = finite(
             metrics.get("negative_audio_hours", 0.0), f"{key}.negative_audio_hours"
         )
@@ -76,6 +79,8 @@ def evaluate(summary: dict, config: dict) -> dict:
         wake_rate = finite(metrics.get("wake_rate", 1.0 - frr), f"{key}.wake_rate")
         item = {
             "expected": expected,
+            "positive_recordings": positive_recordings,
+            "negative_recordings": negative_recordings,
             "negative_audio_hours": negative_hours,
             "wake_rate": wake_rate,
             "frr": frr,
@@ -91,11 +96,20 @@ def evaluate(summary: dict, config: dict) -> dict:
                     "required": min_expected,
                 }
             )
+        if negative_recordings < min_negative_recordings:
+            failures.append(
+                {
+                    "slice": key,
+                    "reason": "insufficient-negative-recordings",
+                    "actual": negative_recordings,
+                    "required": min_negative_recordings,
+                }
+            )
         if negative_hours + 1.0e-12 < min_negative_hours:
             failures.append(
                 {
                     "slice": key,
-                    "reason": "insufficient-negative-support",
+                    "reason": "insufficient-negative-hours",
                     "actual": negative_hours,
                     "required": min_negative_hours,
                 }
@@ -120,19 +134,21 @@ def evaluate(summary: dict, config: dict) -> dict:
             )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-domain-robustness-matrix",
         "qualified": not failures,
         "gates": {
             "max_frr": max_frr,
             "max_far_per_hour": max_far,
             "min_expected_wakes": min_expected,
+            "min_negative_recordings": min_negative_recordings,
             "min_negative_audio_hours": min_negative_hours,
         },
         "slices": slices,
         "failures": failures,
         "limitations": [
-            "Slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
+            "Per-slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
+            "Long-duration/statistical FAR confidence remains the responsibility of the dedicated qualification evidence.",
             "Physical rooms, real Mandarin speakers, shipping microphones and shipping AFE remain external qualification gates.",
         ],
     }
