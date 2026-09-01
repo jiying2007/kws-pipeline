@@ -37,6 +37,51 @@ def write_wav(path: pathlib.Path, samples: list[int]) -> None:
         writer.writeframes(b"".join(struct.pack("<h", value) for value in samples))
 
 
+def read_wav(path: pathlib.Path) -> list[int]:
+    with wave.open(str(path), "rb") as reader:
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != SAMPLE_RATE_HZ
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+        ):
+            raise ValueError(f"hard-negative WAV must be mono 16-kHz PCM16: {path}")
+        raw = reader.readframes(reader.getnframes())
+    if not raw:
+        raise ValueError(f"hard-negative WAV is empty: {path}")
+    return list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
+
+
+def load_negative_manifest(path: pathlib.Path) -> list[dict]:
+    manifest = path.resolve()
+    if not manifest.is_file():
+        raise ValueError(f"hard-negative manifest does not exist: {manifest}")
+    clips: list[dict] = []
+    for line_no, raw in enumerate(manifest.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        source = pathlib.Path(cols[0])
+        if not source.is_absolute():
+            source = (manifest.parent / source).resolve()
+        else:
+            source = source.resolve()
+        if not source.is_file():
+            raise ValueError(f"{manifest}:{line_no}: hard-negative WAV is missing: {source}")
+        samples = read_wav(source)
+        clips.append(
+            {
+                "path": str(source),
+                "sha256": sha256_file(source),
+                "samples": samples,
+                "seconds": len(samples) / SAMPLE_RATE_HZ,
+            }
+        )
+    if not clips:
+        raise ValueError("hard-negative manifest contains no WAV clips")
+    return clips
+
+
 def reader_thread(stream, output: queue.Queue) -> None:
     try:
         for raw in stream:
@@ -94,6 +139,8 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, type=pathlib.Path)
     parser.add_argument("--max-far-per-hour", type=float, default=0.0)
     parser.add_argument("--capture-context-seconds", type=float, default=2.0)
+    parser.add_argument("--negative-manifest", type=pathlib.Path)
+    parser.add_argument("--hard-negative-rate-per-minute", type=float, default=0.0)
     args = parser.parse_args()
     if args.seconds <= 0:
         parser.error("--seconds must be > 0")
@@ -101,10 +148,20 @@ def main() -> int:
         parser.error("--max-far-per-hour must be finite and >= 0")
     if args.capture_context_seconds < 0.0 or args.capture_context_seconds > 10.0:
         parser.error("--capture-context-seconds must be in [0,10]")
+    if (
+        args.hard_negative_rate_per_minute < 0.0
+        or args.hard_negative_rate_per_minute > 60.0
+        or not math.isfinite(args.hard_negative_rate_per_minute)
+    ):
+        parser.error("--hard-negative-rate-per-minute must be finite and in [0,60]")
+    if args.hard_negative_rate_per_minute > 0.0 and args.negative_manifest is None:
+        parser.error("--negative-manifest is required when hard-negative injection is enabled")
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     rng = random.Random(args.seed)
+    negative_manifest = args.negative_manifest.resolve() if args.negative_manifest else None
+    negative_clips = load_negative_manifest(negative_manifest) if negative_manifest else []
     process = subprocess.Popen(
         [
             str(args.runner.resolve()),
@@ -134,11 +191,46 @@ def main() -> int:
     pending: list[dict] = []
     captures: list[dict] = []
     profile_seconds: dict[str, int] = {}
+    injections: list[dict] = []
+    active_clip: dict | None = None
+    active_offset = 0
+    active_gain = 1.0
+    injected_samples = 0
+    injection_probability = args.hard_negative_rate_per_minute / 60.0
 
     try:
         for second in range(args.seconds):
             samples, scene = generate_second(rng, second)
             profile_seconds[scene["profile"]] = profile_seconds.get(scene["profile"], 0) + 1
+            if active_clip is None and negative_clips and rng.random() < injection_probability:
+                active_clip = rng.choice(negative_clips)
+                active_offset = 0
+                active_gain = rng.uniform(0.65, 1.0)
+                injections.append(
+                    {
+                        "start_second": second,
+                        "source_path": active_clip["path"],
+                        "source_sha256": active_clip["sha256"],
+                        "source_seconds": active_clip["seconds"],
+                        "gain": active_gain,
+                    }
+                )
+            if active_clip is not None:
+                source_samples = active_clip["samples"]
+                mix_count = min(len(samples), len(source_samples) - active_offset)
+                samples = [
+                    clamp16(value + source_samples[active_offset + index] * active_gain)
+                    if index < mix_count
+                    else value
+                    for index, value in enumerate(samples)
+                ]
+                injected_samples += mix_count
+                active_offset += mix_count
+                if active_offset >= len(source_samples):
+                    active_clip = None
+                    active_offset = 0
+                    active_gain = 1.0
+
             process.stdin.write(struct.pack("<" + "h" * len(samples), *samples))
             process.stdin.flush()
             history.extend(samples)
@@ -194,8 +286,14 @@ def main() -> int:
         + ("\n" if captures else ""),
         encoding="utf-8",
     )
+    injections_path = output / "hard-negative-injections.jsonl"
+    injections_path.write_text(
+        "\n".join(json.dumps(row, sort_keys=True, allow_nan=False) for row in injections)
+        + ("\n" if injections else ""),
+        encoding="utf-8",
+    )
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-streaming-far",
         "seconds": args.seconds,
         "audio_hours": audio_hours,
@@ -205,11 +303,16 @@ def main() -> int:
         "max_far_per_hour": args.max_far_per_hour,
         "qualified": far <= args.max_far_per_hour,
         "profile_seconds": profile_seconds,
+        "hard_negative_rate_per_minute": args.hard_negative_rate_per_minute,
+        "hard_negative_injections": len(injections),
+        "hard_negative_audio_seconds": injected_samples / SAMPLE_RATE_HZ,
+        "negative_manifest_sha256": sha256_file(negative_manifest) if negative_manifest else None,
         "runner_sha256": sha256_file(args.runner),
         "model_sha256": sha256_file(args.model),
         "keyword_pack_sha256": sha256_file(args.keywords),
         "detections_sha256": sha256_file(detections_path),
         "captures_sha256": sha256_file(captures_path),
+        "hard_negative_injections_sha256": sha256_file(injections_path),
     }
     (output / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
