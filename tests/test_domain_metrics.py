@@ -85,8 +85,6 @@ def main() -> int:
             row("near", "near", [{"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}]),
             row("far", "far", [{"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}]),
             row("far-bg", "far", [], azimuth=180.0),
-            # Two overlapping expected windows validate that one detection can be
-            # consumed by only one event in the confusion assignment.
             row(
                 "overlap",
                 "near",
@@ -117,7 +115,7 @@ def main() -> int:
             ]
         )
         result = json.loads(out.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 3
+        assert result["schema_version"] == 4
         assert result["domains"]["distance:near"]["frr"] > 0.0
         assert result["domains"]["distance:far"]["frr"] == 1.0
         assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
@@ -132,8 +130,12 @@ def main() -> int:
         assert result["domains"]["azimuth:rear"]["expected"] == 0
         assert result["domains"]["azimuth:rear"]["negative_audio_hours"] > 0.0
         assert result["domains"]["azimuth:rear"]["false_accepts"] == 1
+        assert result["domains"]["distance_azimuth:distance_bin=5m|azimuth=rear"]["false_accepts"] == 1
+        assert result["domains"]["distance_snr:distance_bin=5m|snr=critical"]["false_accepts"] == 2
+        assert result["domains"]["azimuth_snr:azimuth=rear|snr=critical"]["negative_recordings"] == 1
         assert result["worst_domain"] is not None
         assert result["slice_contract"]["azimuth_quantization_deg"] == 30
+        assert "distance_snr" in result["slice_contract"]["pairwise"]
         confusion = result["keyword_confusion"]
         assert confusion["assignment"] == "global-monotonic-one-to-one-v1"
         assert confusion["expected_events"] == 4
@@ -142,6 +144,11 @@ def main() -> int:
         assert confusion["missed"] == 1
         assert confusion["matrix"]["1"]["2"] >= 1
 
+        stress = [
+            "distance_azimuth:distance_bin=5m|azimuth=rear",
+            "distance_snr:distance_bin=5m|snr=critical",
+            "azimuth_snr:azimuth=rear|snr=critical",
+        ]
         gate_config = {
             "robustness_gates": {
                 "max_frr": 0.0,
@@ -152,6 +159,7 @@ def main() -> int:
                 "required_distance_bins": ["0.5m", "5m"],
                 "required_azimuth_deg": [0, 180],
                 "required_snr_bands": ["critical", "high"],
+                "required_stress_slices": stress,
             }
         }
         gate_domains = {
@@ -161,38 +169,45 @@ def main() -> int:
             "azimuth_deg:180": gate_metric(),
             "snr:critical": gate_metric(),
             "snr:high": gate_metric(),
+            **{key: gate_metric() for key in stress},
         }
         gate_summary = {"qualification_domains": {"domains": gate_domains}}
 
         code, gate_result = run_gate_case(root, gate_summary, gate_config, "pass")
         assert code == 0
-        assert gate_result["schema_version"] == 2
+        assert gate_result["schema_version"] == 3
         assert gate_result["qualified"] is True
         assert not gate_result["failures"]
         assert gate_result["slices"]["distance_bin:5m"]["wake_rate"] == 1.0
+        assert gate_result["gates"]["required_stress_slices"] == stress
 
         failing = json.loads(json.dumps(gate_summary))
-        failing["qualification_domains"]["domains"]["azimuth_deg:180"]["frr"] = 0.25
-        failing["qualification_domains"]["domains"]["azimuth_deg:180"]["wake_rate"] = 0.75
-        code, gate_result = run_gate_case(root, failing, gate_config, "frr-fail")
+        failing["qualification_domains"]["domains"][stress[1]]["frr"] = 0.25
+        failing["qualification_domains"]["domains"][stress[1]]["wake_rate"] = 0.75
+        code, gate_result = run_gate_case(root, failing, gate_config, "stress-frr-fail")
         assert code == 1
         assert gate_result["qualified"] is False
         assert any(
-            item["slice"] == "azimuth_deg:180" and item["reason"] == "frr"
+            item["slice"] == stress[1] and item["reason"] == "frr"
             for item in gate_result["failures"]
         )
 
         unsupported = json.loads(json.dumps(gate_summary))
-        unsupported["qualification_domains"]["domains"]["distance_bin:5m"]["expected"] = 2
-        unsupported["qualification_domains"]["domains"]["distance_bin:5m"]["negative_recordings"] = 2
+        unsupported["qualification_domains"]["domains"][stress[0]]["expected"] = 2
+        unsupported["qualification_domains"]["domains"][stress[0]]["negative_recordings"] = 2
         code, gate_result = run_gate_case(root, unsupported, gate_config, "support-fail")
         assert code == 1
         reasons = {
             item["reason"]
             for item in gate_result["failures"]
-            if item["slice"] == "distance_bin:5m"
+            if item["slice"] == stress[0]
         }
         assert reasons == {"insufficient-positive-support", "insufficient-negative-recordings"}
+
+        invalid_config = json.loads(json.dumps(gate_config))
+        invalid_config["robustness_gates"]["required_stress_slices"] = ["composite:anything"]
+        code, _ = run_gate_case(root, gate_summary, invalid_config, "invalid-stress")
+        assert code == 2
 
     print("test_domain_metrics: ok")
     return 0
