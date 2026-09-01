@@ -79,7 +79,7 @@
       "train": 2,
       "calibration": 1,
       "test": 2,
-      "qualification": 4
+      "qualification": 6
     }
   },
   "model": {
@@ -142,7 +142,8 @@
     "required_stress_slices": [
       "distance_azimuth:distance_bin=5m|azimuth=rear",
       "distance_snr:distance_bin=5m|snr=critical",
-      "azimuth_snr:azimuth=rear|snr=critical"
+      "azimuth_snr:azimuth=rear|snr=critical",
+      "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
     ]
   }
 }
