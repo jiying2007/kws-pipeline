@@ -63,7 +63,7 @@
       "mid": {"distance_m": [1.0, 3.0], "weight": 1.5},
       "far": {"distance_m": [3.0, 5.0], "weight": 2.5}
     },
-    "azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
+    "azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
     "rt60_s": [0.15, 0.80],
     "snr_db": [3.0, 30.0],
     "noise_profiles": ["white", "fan", "motor", "media"],
@@ -134,9 +134,10 @@
     "max_frr": 0.0,
     "max_far_per_hour": 0.0,
     "min_expected_wakes": 4,
-    "min_negative_audio_hours": 0.005,
+    "min_negative_recordings": 4,
+    "min_negative_audio_hours": 0.0,
     "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
-    "required_azimuth_deg": [-90, -60, -30, 0, 30, 60, 90, 180],
+    "required_azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
     "required_snr_bands": ["critical", "low", "mid", "high"]
   }
 }
