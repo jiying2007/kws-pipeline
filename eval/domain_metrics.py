@@ -35,6 +35,11 @@ PAIRWISE_SLICE_CONTRACT = {
     "distance_snr": "distance_bin:<bin> x snr:<critical|low|mid|high>",
     "azimuth_snr": "azimuth:<front|side|rear> x snr:<critical|low|mid|high>",
 }
+TRIPLE_SLICE_CONTRACT = {
+    "distance_azimuth_snr": (
+        "distance_bin:<bin> x azimuth:<front|side|rear> x snr:<critical|low|mid|high>"
+    ),
+}
 
 
 def finite(value, label: str) -> float:
@@ -116,6 +121,10 @@ def domain_keys(row: dict) -> list[str]:
         f"distance_azimuth:distance_bin={distance_value}|azimuth={az_band}",
         f"distance_snr:distance_bin={distance_value}|snr={snr_value}",
         f"azimuth_snr:azimuth={az_band}|snr={snr_value}",
+        (
+            "distance_azimuth_snr:"
+            f"distance_bin={distance_value}|azimuth={az_band}|snr={snr_value}"
+        ),
         f"rt60:{rt_band}",
         f"noise:{noise}",
         f"playback:{playback}",
@@ -282,7 +291,7 @@ def main() -> int:
             worst_key = key
 
     result = {
-        "schema_version": 4,
+        "schema_version": 5,
         "support_policy": {
             "min_domain_expected_wakes": args.min_domain_expected,
             "min_domain_negative_hours": min_negative_hours,
@@ -293,6 +302,7 @@ def main() -> int:
             "azimuth_quantization_deg": 30,
             "snr_bands": SNR_BAND_CONTRACT,
             "pairwise": PAIRWISE_SLICE_CONTRACT,
+            "triple": TRIPLE_SLICE_CONTRACT,
         },
         "overall": metrics.get("all", {}),
         "domains": metrics,
