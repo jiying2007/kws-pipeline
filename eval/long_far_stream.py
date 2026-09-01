@@ -293,7 +293,7 @@ def main() -> int:
         encoding="utf-8",
     )
     summary = {
-        "schema_version": 2,
+        "schema_version": 1,
         "evidence_class": "synthetic-streaming-far",
         "seconds": args.seconds,
         "audio_hours": audio_hours,
