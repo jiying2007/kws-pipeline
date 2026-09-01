@@ -1,6 +1,11 @@
 name: far-nightly
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/far-nightly.yml'
   workflow_dispatch:
   schedule:
     - cron: "47 18 * * *"
@@ -8,58 +13,112 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: far-nightly-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   streaming-far:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        frontend: [logmel, pcen-lite]
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-      - name: Build streaming runtime
-        run: cmake --build build --parallel --target kws_raw_stream
-      - name: Generate pinned synthetic carriers
-        run: >-
-          python3 training/synthetic_audio.py
-          --config configs/training/xiaowo.domain.json
-          --output build/far-data
-      - name: Train one frozen domain prototype
-        run: >-
-          python3 training/build_domain_prototype.py
-          --config configs/training/xiaowo.domain.json
-          --tokens keywords/tokens.example.txt
-          --carriers build/far-data/token-carriers.json
-          --output build/far-model.kwm
-          --training-output build/far-fit
-          --frontend ${{ matrix.frontend }}
-          --variants-per-token 24
-          --seed 1103
-      - name: Compile one frozen keyword pack
-        run: >-
-          python3 tools/compile_keywords.py
-          --tokens keywords/tokens.example.txt
-          --keywords keywords/zh_cn_example.tsv
-          --out-pack build/far-keywords.kwk
-      - name: Stream four independent negative shards against the same model SHA
+      - name: Build and verify real C runtimes
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_raw_stream kws_decoder_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          .venv/bin/python - <<'PY'
+          import platform
+          import numpy
+          import torch
+          print('python', platform.python_version())
+          print('numpy', numpy.__version__)
+          print('torch', torch.__version__)
+          assert numpy.__version__ == '2.3.2'
+          assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
+          PY
+      - name: Train the canonical qualified domain model
+        run: |
+          .venv/bin/python training/iterate_domain.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/far-training
+      - name: Enforce the same robustness matrix
+        run: |
+          .venv/bin/python eval/gate_robustness.py \
+            --summary build/far-training/domain-loop-manifest.json \
+            --config configs/training/xiaowo.torch-domain.json \
+            --output build/far-training/robustness-summary.json
+      - name: Bind nightly evidence to the qualified model
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          .venv/bin/python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path('build/far-training')
+          manifest = json.loads((root / 'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          robustness = json.loads((root / 'robustness-summary.json').read_text(encoding='utf-8'))
+          config = Path('configs/training/xiaowo.torch-domain.json')
+          model = root / 'best/model.kwm'
+          keywords = root / 'best/keywords.kwk'
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          if not bool(manifest.get('qualified')):
+              raise SystemExit('canonical domain model is not qualified')
+          if not bool(robustness.get('qualified')):
+              raise SystemExit('canonical robustness matrix is not qualified')
+          binding = {
+              'schema_version': 1,
+              'evidence_class': 'synthetic-streaming-far-model-binding',
+              'source_sha': os.environ['SOURCE_SHA'],
+              'config_sha256': sha256(config),
+              'model_sha256': sha256(model),
+              'keyword_pack_sha256': sha256(keywords),
+              'best_round': int(manifest['best_round']),
+              'best_frontend': str(manifest['best_frontend']),
+              'domain_qualified': True,
+              'robustness_qualified': True,
+          }
+          (root / 'nightly-model-binding.json').write_text(
+              json.dumps(binding, indent=2, sort_keys=True, allow_nan=False) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(binding, indent=2, sort_keys=True))
+          PY
+      - name: Stream four independent negative shards against the qualified model
         shell: bash
         run: |
           set -euo pipefail
           for seed in 1103 2207 3301 4409; do
             python3 eval/long_far_stream.py \
               --runner build/kws_raw_stream \
-              --model build/far-model.kwm \
-              --keywords build/far-keywords.kwk \
+              --model build/far-training/best/model.kwm \
+              --keywords build/far-training/best/keywords.kwk \
               --seconds 7200 \
               --seed "$seed" \
               --output-dir "build/far-run-$seed" \
               --max-far-per-hour 1000000
           done
-      - name: Aggregate eight hours for the frozen model only
+      - name: Aggregate eight hours for the qualified model only
         run: >-
           python3 eval/aggregate_far.py
           --summary build/far-run-1103/summary.json
@@ -70,15 +129,19 @@ jobs:
           --confidence 0.95
           --max-far-per-hour 0
           --max-upper-bound-per-hour 0.40
-      - name: Retain FAR evidence and captures
+      - name: Retain canonical model and FAR evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: far-${{ matrix.frontend }}
+          name: far-canonical
           path: |
+            build/far-training/best/
+            build/far-training/domain-loop-manifest.json
+            build/far-training/robustness-summary.json
+            build/far-training/nightly-model-binding.json
+            build/far-training/curriculum/
+            build/far-training/datasets/*/audit.json
             build/far-run-*/
             build/far-aggregate.json
-            build/far-fit/domain-softmax-diagnostics.json
-            build/far-model.kwm.synthetic-domain-provenance.json
           if-no-files-found: warn
           retention-days: 30
