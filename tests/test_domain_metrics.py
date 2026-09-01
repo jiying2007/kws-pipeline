@@ -72,7 +72,12 @@ def run_gate_case(
         ],
         check=False,
     )
-    return completed.returncode, json.loads(output_path.read_text(encoding="utf-8"))
+    result = (
+        json.loads(output_path.read_text(encoding="utf-8"))
+        if output_path.is_file()
+        else {}
+    )
+    return completed.returncode, result
 
 
 def main() -> int:
@@ -206,8 +211,9 @@ def main() -> int:
 
         invalid_config = json.loads(json.dumps(gate_config))
         invalid_config["robustness_gates"]["required_stress_slices"] = ["composite:anything"]
-        code, _ = run_gate_case(root, gate_summary, invalid_config, "invalid-stress")
+        code, gate_result = run_gate_case(root, gate_summary, invalid_config, "invalid-stress")
         assert code == 2
+        assert gate_result == {}
 
     print("test_domain_metrics: ok")
     return 0
