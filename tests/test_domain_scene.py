@@ -18,6 +18,7 @@ from acoustic_scene import render_scene  # noqa: E402
 from render_domains import (  # noqa: E402
     _deterministic_eval_scene,
     _evaluation_axes,
+    _sample_snr,
     validate_domains,
 )
 
@@ -98,12 +99,41 @@ def test_deterministic_robustness_axes() -> None:
     assert {round(float(scene["snr_db"]), 6) for scene in scenes} == {
         round(float(value), 6) for value in axes["snr_db"]
     }
+    distance_azimuth = {
+        (float(scene["distance_m"]), float(scene["azimuth_deg"])) for scene in scenes
+    }
+    azimuth_snr = {
+        (float(scene["azimuth_deg"]), round(float(scene["snr_db"]), 6))
+        for scene in scenes
+    }
+    distance_snr = {
+        (float(scene["distance_m"]), round(float(scene["snr_db"]), 6))
+        for scene in scenes
+    }
+    assert len(distance_azimuth) == 5 * 12
+    assert len(azimuth_snr) == 12 * 4
+    assert len(distance_snr) == 5 * 4
+
     # The same ordinal must preserve the matrix coordinates even when the
     # randomized nuisance dimensions (RT60/noise/playback) use a different seed.
     first_a = _deterministic_eval_scene(domains, axes, 17, random.Random(1))
     first_b = _deterministic_eval_scene(domains, axes, 17, random.Random(2))
     for key in ("distance_m", "azimuth_deg", "snr_db", "distance_band"):
         assert first_a[key] == first_b[key]
+
+    adaptive = {
+        "dimension_weights": {
+            "snr": {"critical": 10.0, "low": 1.0, "mid": 1.0, "high": 1.0}
+        }
+    }
+    samples = [
+        _sample_snr(domains, random.Random(9000 + index), adaptive)
+        for index in range(400)
+    ]
+    critical = sum(value <= 6.0 for value in samples)
+    high = sum(value > 20.0 for value in samples)
+    assert critical > high
+    assert critical >= 160
 
 
 def main() -> int:
