@@ -11,6 +11,7 @@ STRESS_PREFIXES = (
     "distance_azimuth:",
     "distance_snr:",
     "azimuth_snr:",
+    "distance_azimuth_snr:",
 )
 
 
@@ -143,7 +144,7 @@ def evaluate(summary: dict, config: dict) -> dict:
 
     stress = [key for key in required_keys(config) if key.startswith(STRESS_PREFIXES)]
     return {
-        "schema_version": 3,
+        "schema_version": 4,
         "evidence_class": "synthetic-domain-robustness-matrix",
         "qualified": not failures,
         "gates": {
@@ -158,7 +159,7 @@ def evaluate(summary: dict, config: dict) -> dict:
         "failures": failures,
         "limitations": [
             "Per-slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
-            "Pairwise stress slices validate modeled interactions but do not replace physical room/device qualification.",
+            "Interaction stress slices validate modeled pairwise/triple conditions but do not replace physical room/device qualification.",
             "Long-duration/statistical FAR confidence remains the responsibility of the dedicated qualification evidence.",
             "Physical rooms, real Mandarin speakers, shipping microphones and shipping AFE remain external qualification gates.",
         ],
