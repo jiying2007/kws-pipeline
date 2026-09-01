@@ -120,7 +120,7 @@ def main() -> int:
             ]
         )
         result = json.loads(out.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 4
+        assert result["schema_version"] == 5
         assert result["domains"]["distance:near"]["frr"] > 0.0
         assert result["domains"]["distance:far"]["frr"] == 1.0
         assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
@@ -138,9 +138,13 @@ def main() -> int:
         assert result["domains"]["distance_azimuth:distance_bin=5m|azimuth=rear"]["false_accepts"] == 1
         assert result["domains"]["distance_snr:distance_bin=5m|snr=critical"]["false_accepts"] == 2
         assert result["domains"]["azimuth_snr:azimuth=rear|snr=critical"]["negative_recordings"] == 1
+        triple = "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+        assert result["domains"][triple]["false_accepts"] == 1
+        assert result["domains"][triple]["negative_recordings"] == 1
         assert result["worst_domain"] is not None
         assert result["slice_contract"]["azimuth_quantization_deg"] == 30
         assert "distance_snr" in result["slice_contract"]["pairwise"]
+        assert "distance_azimuth_snr" in result["slice_contract"]["triple"]
         confusion = result["keyword_confusion"]
         assert confusion["assignment"] == "global-monotonic-one-to-one-v1"
         assert confusion["expected_events"] == 4
@@ -153,6 +157,7 @@ def main() -> int:
             "distance_azimuth:distance_bin=5m|azimuth=rear",
             "distance_snr:distance_bin=5m|snr=critical",
             "azimuth_snr:azimuth=rear|snr=critical",
+            triple,
         ]
         gate_config = {
             "robustness_gates": {
@@ -180,32 +185,32 @@ def main() -> int:
 
         code, gate_result = run_gate_case(root, gate_summary, gate_config, "pass")
         assert code == 0
-        assert gate_result["schema_version"] == 3
+        assert gate_result["schema_version"] == 4
         assert gate_result["qualified"] is True
         assert not gate_result["failures"]
         assert gate_result["slices"]["distance_bin:5m"]["wake_rate"] == 1.0
         assert gate_result["gates"]["required_stress_slices"] == stress
 
         failing = json.loads(json.dumps(gate_summary))
-        failing["qualification_domains"]["domains"][stress[1]]["frr"] = 0.25
-        failing["qualification_domains"]["domains"][stress[1]]["wake_rate"] = 0.75
-        code, gate_result = run_gate_case(root, failing, gate_config, "stress-frr-fail")
+        failing["qualification_domains"]["domains"][triple]["frr"] = 0.25
+        failing["qualification_domains"]["domains"][triple]["wake_rate"] = 0.75
+        code, gate_result = run_gate_case(root, failing, gate_config, "triple-frr-fail")
         assert code == 1
         assert gate_result["qualified"] is False
         assert any(
-            item["slice"] == stress[1] and item["reason"] == "frr"
+            item["slice"] == triple and item["reason"] == "frr"
             for item in gate_result["failures"]
         )
 
         unsupported = json.loads(json.dumps(gate_summary))
-        unsupported["qualification_domains"]["domains"][stress[0]]["expected"] = 2
-        unsupported["qualification_domains"]["domains"][stress[0]]["negative_recordings"] = 2
-        code, gate_result = run_gate_case(root, unsupported, gate_config, "support-fail")
+        unsupported["qualification_domains"]["domains"][triple]["expected"] = 2
+        unsupported["qualification_domains"]["domains"][triple]["negative_recordings"] = 2
+        code, gate_result = run_gate_case(root, unsupported, gate_config, "triple-support-fail")
         assert code == 1
         reasons = {
             item["reason"]
             for item in gate_result["failures"]
-            if item["slice"] == stress[0]
+            if item["slice"] == triple
         }
         assert reasons == {"insufficient-positive-support", "insufficient-negative-recordings"}
 
