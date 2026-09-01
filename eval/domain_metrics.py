@@ -30,6 +30,11 @@ SNR_BAND_CONTRACT = {
     "mid": "12 < snr_db <= 20",
     "high": "snr_db > 20",
 }
+PAIRWISE_SLICE_CONTRACT = {
+    "distance_azimuth": "distance_bin:<bin> x azimuth:<front|side|rear>",
+    "distance_snr": "distance_bin:<bin> x snr:<critical|low|mid|high>",
+    "azimuth_snr": "azimuth:<front|side|rear> x snr:<critical|low|mid|high>",
+}
 
 
 def finite(value, label: str) -> float:
@@ -62,6 +67,14 @@ def azimuth_point(azimuth_deg: float) -> str:
     return str(quantized)
 
 
+def azimuth_band(azimuth_deg: float) -> str:
+    if abs(azimuth_deg) <= 30.0:
+        return "front"
+    if abs(azimuth_deg) <= 90.0:
+        return "side"
+    return "rear"
+
+
 def snr_band(snr_db: float) -> str:
     if snr_db <= 6.0:
         return "critical"
@@ -83,12 +96,9 @@ def domain_keys(row: dict) -> list[str]:
     snr_db = finite(domain.get("snr_db", 0.0), "domain.snr_db")
     noise = str(domain.get("noise_profile", "unknown"))
     playback = "playback" if domain.get("playback_sir_db") is not None else "no-playback"
-    if abs(azimuth) <= 30.0:
-        az_band = "front"
-    elif abs(azimuth) <= 90.0:
-        az_band = "side"
-    else:
-        az_band = "rear"
+    distance_value = distance_bin(distance_m)
+    az_band = azimuth_band(azimuth)
+    snr_value = snr_band(snr_db)
     if rt60 < 0.30:
         rt_band = "dry"
     elif rt60 < 0.55:
@@ -99,10 +109,13 @@ def domain_keys(row: dict) -> list[str]:
     return [
         "all",
         f"distance:{distance}",
-        f"distance_bin:{distance_bin(distance_m)}",
+        f"distance_bin:{distance_value}",
         f"azimuth:{az_band}",
         f"azimuth_deg:{azimuth_point(azimuth)}",
-        f"snr:{snr_band(snr_db)}",
+        f"snr:{snr_value}",
+        f"distance_azimuth:distance_bin={distance_value}|azimuth={az_band}",
+        f"distance_snr:distance_bin={distance_value}|snr={snr_value}",
+        f"azimuth_snr:azimuth={az_band}|snr={snr_value}",
         f"rt60:{rt_band}",
         f"noise:{noise}",
         f"playback:{playback}",
@@ -164,13 +177,7 @@ def confusion_matrix(
     pre_tolerance_s: float,
     post_tolerance_s: float,
 ) -> dict:
-    """Build keyword confusion from one global monotonic assignment per recording.
-
-    The assignment is intentionally keyword-agnostic. This makes a wrong-keyword
-    trigger consume exactly one expected event and exactly one detection, matching
-    the one-to-one event semantics used by the product scorer instead of allowing a
-    single detection to explain multiple overlapping expected windows.
-    """
+    """Build keyword confusion from one global monotonic assignment per recording."""
     matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     exact = 0
     wrong = 0
@@ -275,7 +282,7 @@ def main() -> int:
             worst_key = key
 
     result = {
-        "schema_version": 3,
+        "schema_version": 4,
         "support_policy": {
             "min_domain_expected_wakes": args.min_domain_expected,
             "min_domain_negative_hours": min_negative_hours,
@@ -285,6 +292,7 @@ def main() -> int:
             "distance_bins": DISTANCE_BIN_CONTRACT,
             "azimuth_quantization_deg": 30,
             "snr_bands": SNR_BAND_CONTRACT,
+            "pairwise": PAIRWISE_SLICE_CONTRACT,
         },
         "overall": metrics.get("all", {}),
         "domains": metrics,
