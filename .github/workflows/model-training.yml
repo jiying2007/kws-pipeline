@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/model-training-20260830
+      - codex/kws-robustness-matrix-20260901
   workflow_dispatch:
 
 permissions:
@@ -120,19 +121,6 @@ jobs:
           )
           print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
           PY
-      - name: Retain trained model and iteration evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: xiaowo-torch-domain-model
-          path: |
-            build/model-training/best/
-            build/model-training/domain-loop-manifest.json
-            build/model-training/training-run-summary.json
-            build/model-training/curriculum/
-            build/model-training/datasets/*/audit.json
-          if-no-files-found: error
-          retention-days: 30
       - name: Enforce synthetic qualification gate
         run: |
           python3 - <<'PY'
@@ -153,3 +141,24 @@ jobs:
           if not qualified:
               raise SystemExit('synthetic qualification gates were not met')
           PY
+      - name: Enforce robustness matrix gate
+        if: always()
+        run: |
+          python3 eval/gate_robustness.py \
+            --summary build/model-training/training-run-summary.json \
+            --config configs/training/xiaowo.torch-domain.json \
+            --output build/model-training/robustness-summary.json
+      - name: Retain trained model and iteration evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-torch-domain-model
+          path: |
+            build/model-training/best/
+            build/model-training/domain-loop-manifest.json
+            build/model-training/training-run-summary.json
+            build/model-training/robustness-summary.json
+            build/model-training/curriculum/
+            build/model-training/datasets/*/audit.json
+          if-no-files-found: error
+          retention-days: 30
