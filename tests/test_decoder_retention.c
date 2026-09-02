@@ -98,6 +98,46 @@ static void verify_unrelated_nonblank_breaks_prefix(void) {
   verify_fresh_sequence_recovers(&decoder);
 }
 
+static void verify_subdominant_root_cannot_start(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+
+  /* token 1 is acoustically strong enough that the old fuzzy transition would
+   * start the keyword, but token 3 is actually dominant and must win. */
+  set_logits(logits, -8.0f, 7.0f, -8.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+
+  verify_fresh_sequence_recovers(&decoder);
+}
+
+static void verify_subdominant_child_cannot_advance(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  /* token 2 is a high secondary peak and would complete the old fuzzy path,
+   * but token 3 is dominant so the trie must not advance. */
+  set_logits(logits, -8.0f, -8.0f, 7.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+
+  verify_fresh_sequence_recovers(&decoder);
+}
+
 int main(void) {
   /* state_retention=0.94 gives log-retention ~= -0.0619 per speech frame, so
    * 320 frames exceed the -16 path budget. Silence uses the stronger fixed
@@ -105,6 +145,8 @@ int main(void) {
   verify_stale_prefix_expires(1, 320);
   verify_stale_prefix_expires(0, 80);
   verify_unrelated_nonblank_breaks_prefix();
+  verify_subdominant_root_cannot_start();
+  verify_subdominant_child_cannot_advance();
 
   puts("test_decoder_retention: ok");
   return 0;
