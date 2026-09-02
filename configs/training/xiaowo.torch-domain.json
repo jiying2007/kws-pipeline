@@ -109,6 +109,7 @@
     "max_domain_weight": 6.0,
     "stop_on_gate": false,
     "warm_start_strategy": "full",
+    "gate_equivalent_score_epsilon": 0.05,
     "hard_negative_replay": [
       {
         "tokens": ["hao3", "ni3", "xiao3", "wo1"],
