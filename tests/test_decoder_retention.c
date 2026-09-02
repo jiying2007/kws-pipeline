@@ -36,6 +36,26 @@ static void configure_two_token_keyword(kws_decoder_t *decoder,
   CHECK(kws_decoder_set_keywords(decoder, item, 1u, 4u) == KWS_OK);
 }
 
+static void configure_competing_root_keywords(kws_decoder_t *decoder,
+                                               kws_keyword_t items[2],
+                                               const uint16_t first[2],
+                                               const uint16_t second[2]) {
+  items[0].id = 77u;
+  items[0].tokens = first;
+  items[0].num_tokens = 2u;
+  items[0].threshold = 0.50f;
+  items[0].prefix_policy = (uint8_t)KWS_PREFIX_IMMEDIATE;
+
+  items[1].id = 88u;
+  items[1].tokens = second;
+  items[1].num_tokens = 2u;
+  items[1].threshold = 0.50f;
+  items[1].prefix_policy = (uint8_t)KWS_PREFIX_IMMEDIATE;
+
+  kws_decoder_init(decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(decoder, items, 2u, 4u) == KWS_OK);
+}
+
 static void verify_fresh_sequence_recovers(kws_decoder_t *decoder) {
   float logits[4];
   uint32_t keyword_id = 0u;
@@ -109,8 +129,8 @@ static void verify_subdominant_root_cannot_start(void) {
   configure_two_token_keyword(&decoder, &item, tokens);
 
   /* token 1 is acoustically strong enough that unrestricted fuzzy transition
-   * would start the keyword, but token 3 is a full logit stronger and must
-   * block that root start. */
+   * would start the keyword, but unrelated token 3 is a full logit stronger
+   * and must block that root start. */
   set_logits(logits, -8.0f, 7.0f, -8.0f, 8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
@@ -119,7 +139,7 @@ static void verify_subdominant_root_cannot_start(void) {
   verify_fresh_sequence_recovers(&decoder);
 }
 
-static void verify_near_tied_root_can_start(void) {
+static void verify_near_tied_nonroot_cannot_start(void) {
   kws_decoder_t decoder;
   const uint16_t tokens[] = {1u, 2u};
   kws_keyword_t item = {0};
@@ -129,15 +149,56 @@ static void verify_near_tied_root_can_start(void) {
 
   configure_two_token_keyword(&decoder, &item, tokens);
 
-  /* A 0.4-logit nonblank ambiguity is plausible acoustic competition rather
-   * than a strong contradictory token. Preserve this near-tied root path so
-   * noisy/far-field first-token evidence can still recover. */
+  /* A near-tied arbitrary non-root peak must still be contradictory evidence.
+   * This directly prevents h02-style hard negatives from shadow-starting a
+   * wake path via a strong secondary keyword-root posterior. */
+  set_logits(logits, -8.0f, 7.6f, -8.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+
+  verify_fresh_sequence_recovers(&decoder);
+}
+
+static void verify_near_tied_keyword_root_can_start(void) {
+  kws_decoder_t decoder;
+  const uint16_t first[] = {1u, 2u};
+  const uint16_t second[] = {3u, 3u};
+  kws_keyword_t items[2] = {{0}, {0}};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_competing_root_keywords(&decoder, items, first, second);
+
+  /* A 0.4-logit ambiguity between two configured keyword roots is plausible
+   * first-token competition. Preserve the secondary root so noisy/far-field
+   * evidence can recover without admitting arbitrary non-root shadow starts. */
   set_logits(logits, -8.0f, 7.6f, -8.0f, 8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
   CHECK(keyword_id == 77u);
   CHECK(confidence > 0.50f);
+}
+
+static void verify_strong_keyword_root_competitor_blocks(void) {
+  kws_decoder_t decoder;
+  const uint16_t first[] = {1u, 2u};
+  const uint16_t second[] = {3u, 3u};
+  kws_keyword_t items[2] = {{0}, {0}};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_competing_root_keywords(&decoder, items, first, second);
+
+  /* Even a configured competing root cannot authorize a secondary start when
+   * it is clearly stronger than the candidate root. */
+  set_logits(logits, -8.0f, 7.0f, -8.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
 }
 
 int main(void) {
@@ -148,7 +209,9 @@ int main(void) {
   verify_stale_prefix_expires(0, 80);
   verify_unrelated_nonblank_breaks_prefix();
   verify_subdominant_root_cannot_start();
-  verify_near_tied_root_can_start();
+  verify_near_tied_nonroot_cannot_start();
+  verify_near_tied_keyword_root_can_start();
+  verify_strong_keyword_root_competitor_blocks();
 
   puts("test_decoder_retention: ok");
   return 0;
