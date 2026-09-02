@@ -5,6 +5,11 @@
 
 #define NEG_INF (-1.0e30f)
 #define SILENCE_RETENTION_LOG (-0.3566749439f)
+/* Prevent partial keyword prefixes from surviving indefinitely in continuous
+ * streams. search_score includes token boost + acoustic evidence + retention
+ * decay, while acoustic_score intentionally excludes retention. Their
+ * difference therefore gives the exact cumulative retention penalty. */
+#define MIN_PATH_RETENTION_LOG (-4.0f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -411,7 +416,16 @@ int kws_decoder_step(kws_decoder_t *d,
         terminal_score > NEG_INF / 2.0f &&
         terminal_acoustic > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float conf = expf(terminal_acoustic / (float)d->nodes[i].depth);
+      float retention_log =
+          terminal_score - terminal_acoustic -
+          d->token_boost * (float)d->nodes[i].depth;
+      float conf;
+
+      if (retention_log < MIN_PATH_RETENTION_LOG) {
+        continue;
+      }
+
+      conf = expf(terminal_acoustic / (float)d->nodes[i].depth);
       if (conf > 1.0f) {
         conf = 1.0f;
       }
