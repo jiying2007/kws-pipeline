@@ -23,6 +23,32 @@ static void set_logits(float logits[4],
   logits[3] = other;
 }
 
+static void configure_two_token_keyword(kws_decoder_t *decoder,
+                                        kws_keyword_t *item,
+                                        const uint16_t tokens[2]) {
+  item->id = 77u;
+  item->tokens = tokens;
+  item->num_tokens = 2u;
+  item->threshold = 0.50f;
+  item->prefix_policy = (uint8_t)KWS_PREFIX_IMMEDIATE;
+
+  kws_decoder_init(decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(decoder, item, 1u, 4u) == KWS_OK);
+}
+
+static void verify_fresh_sequence_recovers(kws_decoder_t *decoder) {
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 77u);
+  CHECK(confidence > 0.50f);
+}
+
 static void verify_stale_prefix_expires(int gap_speech_active, int gap_frames) {
   kws_decoder_t decoder;
   const uint16_t tokens[] = {1u, 2u};
@@ -31,14 +57,7 @@ static void verify_stale_prefix_expires(int gap_speech_active, int gap_frames) {
   uint32_t keyword_id = 0u;
   float confidence = 0.0f;
 
-  item.id = 77u;
-  item.tokens = tokens;
-  item.num_tokens = 2u;
-  item.threshold = 0.50f;
-  item.prefix_policy = (uint8_t)KWS_PREFIX_IMMEDIATE;
-
-  kws_decoder_init(&decoder, 0.0f, 0.94f);
-  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+  configure_two_token_keyword(&decoder, &item, tokens);
 
   /* Start a valid prefix, then leave it blank-dominant long enough that its
    * cumulative retention cost exceeds the decoder path budget. */
@@ -52,14 +71,31 @@ static void verify_stale_prefix_expires(int gap_speech_active, int gap_frames) {
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
 
-  /* The stale path must not poison recovery: a fresh contiguous sequence still
-   * qualifies immediately with the same threshold. */
+  /* The stale path must not poison recovery. */
+  verify_fresh_sequence_recovers(&decoder);
+}
+
+static void verify_unrelated_nonblank_breaks_prefix(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+
+  /* A strong unrelated nonblank token must invalidate the old prefix instead
+   * of letting token 1 survive and combine with a later token 2. This is the
+   * deterministic analogue of the continuous hard-negative failure. */
   set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, -8.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
-  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
-  CHECK(keyword_id == 77u);
-  CHECK(confidence > 0.50f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+
+  verify_fresh_sequence_recovers(&decoder);
 }
 
 int main(void) {
@@ -68,6 +104,7 @@ int main(void) {
    * retention decay and expires well within 80 frames. */
   verify_stale_prefix_expires(1, 320);
   verify_stale_prefix_expires(0, 80);
+  verify_unrelated_nonblank_breaks_prefix();
 
   puts("test_decoder_retention: ok");
   return 0;
