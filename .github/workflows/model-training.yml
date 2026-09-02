@@ -90,7 +90,7 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
-      - name: Finalize gate-equivalent candidate and run summary
+      - name: Finalize latest strict gate-passing candidate and run summary
         shell: bash
         env:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
@@ -115,10 +115,6 @@ jobs:
           config = json.loads(
               pathlib.Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8')
           )
-          epsilon = float(config.get('domain_iteration', {}).get('gate_equivalent_score_epsilon', 0.0))
-          if epsilon < 0.0:
-              raise SystemExit('gate_equivalent_score_epsilon must be non-negative')
-
           eligible = [
               row for row in manifest['records']
               if bool(row.get('calibration_gate'))
@@ -127,24 +123,30 @@ jobs:
           ]
           if not eligible:
               raise SystemExit('no calibration/test gate-passing torch candidate')
-          score_floor = min(float(row['score']) for row in eligible)
-          plateau = [
-              row for row in eligible
-              if float(row['score']) <= score_floor + epsilon + 1.0e-12
-          ]
-          selected = max(
-              plateau,
-              key=lambda row: (int(row['round']), -float(row['score']), str(row['frontend'])),
+
+          # Every full warm-start round incorporates a newly rendered targeted
+          # hard-negative replay set. Selecting an earlier round solely because
+          # of a tiny in-gate latency/objective difference leaves the final model
+          # stale relative to the newest replay used by the continuous FAR gate.
+          # Therefore select the latest strict gate-passing curriculum round;
+          # objective remains the tie-breaker only among candidates in that round.
+          latest_round = max(int(row['round']) for row in eligible)
+          latest = [row for row in eligible if int(row['round']) == latest_round]
+          selected = min(
+              latest,
+              key=lambda row: (float(row['score']), str(row['frontend'])),
           )
           selected_round = int(selected['round'])
           selected_frontend = str(selected['frontend'])
           selected_score = float(selected['score'])
+          score_floor = min(float(row['score']) for row in eligible)
           original_round = int(manifest['best_round'])
           original_frontend = str(manifest['best_frontend'])
           reselected = (selected_round, selected_frontend) != (original_round, original_frontend)
+          eligible_rounds = sorted({int(row['round']) for row in eligible})
           print(
-              f'candidate-selection floor={score_floor:.9f} epsilon={epsilon:.9f} '
-              f'original={original_round}/{original_frontend} '
+              f'candidate-selection eligible_rounds={eligible_rounds} '
+              f'score_floor={score_floor:.9f} original={original_round}/{original_frontend} '
               f'selected={selected_round}/{selected_frontend} score={selected_score:.9f}'
           )
 
@@ -200,9 +202,9 @@ jobs:
           manifest['qualification_domains'] = qualification_domains
           manifest['qualified'] = bool(qualified)
           manifest['candidate_selection'] = {
-              'policy': 'latest-gate-equivalent-within-score-epsilon',
+              'policy': 'latest-strict-gate-passing-round',
+              'eligible_rounds': eligible_rounds,
               'score_floor': score_floor,
-              'score_epsilon': epsilon,
               'original_round': original_round,
               'original_frontend': original_frontend,
               'selected_round': selected_round,
