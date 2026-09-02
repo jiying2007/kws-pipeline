@@ -90,10 +90,10 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
-      - name: Finalize best checkpoint and run summary
+      - name: Finalize gate-equivalent candidate and run summary
         shell: bash
         env:
-          TRAIN_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
         run: |
           .venv/bin/python - <<'PY'
           import hashlib
@@ -101,29 +101,66 @@ jobs:
           import os
           import pathlib
           import shutil
+          import sys
 
           root = pathlib.Path('build/model-training')
           manifest_path = root / 'domain-loop-manifest.json'
           if not manifest_path.is_file():
               raise SystemExit('training did not produce domain-loop-manifest.json')
+          iteration_exit = int(os.environ.get('ITERATION_EXIT_CODE', '2'))
+          if iteration_exit not in (0, 1):
+              raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
+
           manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-          best_round = int(manifest['best_round'])
-          best_frontend = str(manifest['best_frontend'])
-          matches = [
+          config = json.loads(
+              pathlib.Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8')
+          )
+          epsilon = float(config.get('domain_iteration', {}).get('gate_equivalent_score_epsilon', 0.0))
+          if epsilon < 0.0:
+              raise SystemExit('gate_equivalent_score_epsilon must be non-negative')
+
+          eligible = [
               row for row in manifest['records']
-              if int(row['round']) == best_round
-              and str(row['frontend']) == best_frontend
+              if bool(row.get('calibration_gate'))
+              and bool(row.get('test_gate'))
               and 'checkpoint' in row
           ]
-          if not matches:
-              raise SystemExit('best torch candidate has no checkpoint record')
-          best = min(matches, key=lambda row: float(row['score']))
-          checkpoint = pathlib.Path(best['checkpoint'])
-          if not checkpoint.is_file():
-              raise SystemExit(f'missing best checkpoint: {checkpoint}')
+          if not eligible:
+              raise SystemExit('no calibration/test gate-passing torch candidate')
+          score_floor = min(float(row['score']) for row in eligible)
+          plateau = [
+              row for row in eligible
+              if float(row['score']) <= score_floor + epsilon + 1.0e-12
+          ]
+          selected = max(
+              plateau,
+              key=lambda row: (int(row['round']), -float(row['score']), str(row['frontend'])),
+          )
+          selected_round = int(selected['round'])
+          selected_frontend = str(selected['frontend'])
+          selected_score = float(selected['score'])
+          original_round = int(manifest['best_round'])
+          original_frontend = str(manifest['best_frontend'])
+          reselected = (selected_round, selected_frontend) != (original_round, original_frontend)
+          print(
+              f'candidate-selection floor={score_floor:.9f} epsilon={epsilon:.9f} '
+              f'original={original_round}/{original_frontend} '
+              f'selected={selected_round}/{selected_frontend} score={selected_score:.9f}'
+          )
+
           best_dir = root / 'best'
           best_dir.mkdir(parents=True, exist_ok=True)
-          shutil.copy2(checkpoint, best_dir / 'model.pt')
+          copies = {
+              pathlib.Path(selected['model']): best_dir / 'model.kwm',
+              pathlib.Path(selected['checkpoint']): best_dir / 'model.pt',
+              pathlib.Path(selected['pack']): best_dir / 'keywords.kwk',
+              pathlib.Path(selected['keywords']): best_dir / 'keywords.tsv',
+              pathlib.Path(selected['provenance']): best_dir / 'model-provenance.json',
+          }
+          for source, destination in copies.items():
+              if not source.is_file() or source.stat().st_size == 0:
+                  raise SystemExit(f'missing selected candidate artifact: {source}')
+              shutil.copy2(source, destination)
 
           def sha256(path: pathlib.Path) -> str:
               digest = hashlib.sha256()
@@ -131,6 +168,53 @@ jobs:
                   for chunk in iter(lambda: stream.read(1024 * 1024), b''):
                       digest.update(chunk)
               return digest.hexdigest()
+
+          # Candidate selection above uses calibration/test evidence only. Re-run
+          # the untouched qualification holdout after selection so qualification
+          # cannot influence candidate choice or curriculum/replay.
+          sys.path.insert(0, str(pathlib.Path('training').resolve()))
+          from iterate_domain import base_gate, domain_gate, evaluate, gate_values
+
+          qualification_dir = best_dir / 'qualification'
+          if qualification_dir.exists():
+              shutil.rmtree(qualification_dir)
+          references = root / 'qualification-dataset' / 'qualification.references.jsonl'
+          if not references.is_file():
+              raise SystemExit(f'missing qualification holdout: {references}')
+          qualification, qualification_domains = evaluate(
+              runner=pathlib.Path('build/kws_wav').resolve(),
+              model=(best_dir / 'model.kwm').resolve(),
+              pack=(best_dir / 'keywords.kwk').resolve(),
+              references=references.resolve(),
+              output=qualification_dir.resolve(),
+          )
+          gates = gate_values(config.get('domain_gates', {}))
+          qualified = base_gate(qualification, gates) and domain_gate(qualification_domains, gates)
+
+          manifest['best_round'] = selected_round
+          manifest['best_frontend'] = selected_frontend
+          manifest['best_score'] = selected_score
+          manifest['best_model_sha256'] = sha256(best_dir / 'model.kwm')
+          manifest['best_pack_sha256'] = sha256(best_dir / 'keywords.kwk')
+          manifest['qualification'] = qualification
+          manifest['qualification_domains'] = qualification_domains
+          manifest['qualified'] = bool(qualified)
+          manifest['candidate_selection'] = {
+              'policy': 'latest-gate-equivalent-within-score-epsilon',
+              'score_floor': score_floor,
+              'score_epsilon': epsilon,
+              'original_round': original_round,
+              'original_frontend': original_frontend,
+              'selected_round': selected_round,
+              'selected_frontend': selected_frontend,
+              'selected_score': selected_score,
+              'reselected': reselected,
+              'qualification_used_for_selection': False,
+          }
+          manifest_path.write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + '\n',
+              encoding='utf-8',
+          )
 
           required = [
               best_dir / 'model.kwm',
@@ -143,14 +227,16 @@ jobs:
               if not path.is_file() or path.stat().st_size == 0:
                   raise SystemExit(f'missing training artifact: {path}')
           summary = {
-              'schema_version': 1,
-              'training_exit_code': int(os.environ.get('TRAIN_EXIT_CODE', '2')),
-              'qualified': bool(manifest['qualified']),
-              'best_round': best_round,
-              'best_frontend': best_frontend,
-              'best_score': float(manifest['best_score']),
-              'qualification': manifest['qualification'],
-              'qualification_domains': manifest['qualification_domains'],
+              'schema_version': 2,
+              'iteration_exit_code': iteration_exit,
+              'training_exit_code': 0 if qualified else 1,
+              'qualified': bool(qualified),
+              'best_round': selected_round,
+              'best_frontend': selected_frontend,
+              'best_score': selected_score,
+              'candidate_selection': manifest['candidate_selection'],
+              'qualification': qualification,
+              'qualification_domains': qualification_domains,
               'artifacts': {path.name: sha256(path) for path in required},
               'limitations': manifest['limitations'],
           }
@@ -169,10 +255,12 @@ jobs:
           summary = json.loads(Path('build/model-training/training-run-summary.json').read_text(encoding='utf-8'))
           qualified = bool(summary['qualified'])
           train_exit = int(summary['training_exit_code'])
+          iteration_exit = int(summary['iteration_exit_code'])
           print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
+          print(json.dumps(summary['candidate_selection'], indent=2, sort_keys=True))
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
-          if train_exit not in (0, 1):
-              raise SystemExit(f'training infrastructure failed with exit code {train_exit}')
+          if iteration_exit not in (0, 1):
+              raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
           if qualified != (train_exit == 0):
               raise SystemExit(
                   f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
