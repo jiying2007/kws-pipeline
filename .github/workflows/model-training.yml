@@ -59,12 +59,9 @@ jobs:
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target kws_wav kws_raw_stream kws_decoder_tests
-          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
-          cc -std=c11 -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow \
-            -Iinclude -Isrc tests/test_decoder_retention.c src/decoder.c -lm \
-            -o build/kws_decoder_retention_test
-          ./build/kws_decoder_retention_test
+          cmake --build build --parallel --target \
+            kws_wav kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
       - name: Install pinned CPU training runtime
         run: |
           python3 -m venv .venv
