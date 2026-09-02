@@ -14,11 +14,11 @@
  * bounded ambiguity between configured wake starts without reopening the
  * continuous hard-negative false starts caused by arbitrary secondary peaks. */
 #define ROOT_START_LOGIT_MARGIN (0.5f)
-/* Once a real prefix exists, preserve fuzzy child competition only for
- * near-tied nonblank evidence. An unrelated dominant token must not let a
- * much weaker expected child consume another trie depth; otherwise one hard
- * negative can race through multiple keyword tokens on secondary posteriors. */
-#define CHILD_ADVANCE_LOGIT_MARGIN (0.5f)
+/* Keep one fuzzy child transition available for noisy/far-field recovery, but
+ * charge it against the existing cumulative path-retention budget. Two fuzzy
+ * child advances then exceed MIN_PATH_RETENTION_LOG and cannot synthesize a
+ * full keyword from secondary posteriors across an unrelated hard negative. */
+#define FUZZY_CHILD_RETENTION_COST_LOG (-8.25f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -78,15 +78,6 @@ static int is_keyword_root_token(const kws_decoder_t *d, uint16_t token) {
     child = d->nodes[child].next_sibling;
   }
   return 0;
-}
-
-static int child_transition_allowed(const float *logits,
-                                    uint16_t top_token,
-                                    uint16_t token) {
-  if (top_token == 0u || top_token == token) {
-    return 1;
-  }
-  return logits[top_token] - logits[token] <= CHILD_ADVANCE_LOGIT_MARGIN;
 }
 
 static void max_assign_pair(float *dst_score,
@@ -406,7 +397,6 @@ int kws_decoder_step(kws_decoder_t *d,
       int repeated_token = i != 0u && token == d->nodes[i].token;
       float base;
       float base_acoustic;
-      int transition_allowed;
 
       if (repeated_token != 0) {
         base = separated;
@@ -419,24 +409,21 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      if (i == 0u) {
-        transition_allowed =
-            top_token == token ||
-            (top_is_keyword_root != 0 &&
-             logits[top_token] - logits[token] <= ROOT_START_LOGIT_MARGIN);
-      } else {
-        transition_allowed =
-            child_transition_allowed(logits, top_token, token);
-      }
-
-      /* Root admission is restricted to configured wake-start ambiguity. Once
-       * a prefix exists, blank-dominant CTC competition is preserved, while a
-       * nonblank competitor may advance the child only when it is near-tied.
-       * This prevents secondary posteriors from racing through trie depths. */
-      if (base > NEG_INF / 2.0f && transition_allowed != 0) {
+      /* Starting a keyword from the root requires either dominant evidence or
+       * a near-tied competing token that is itself a configured keyword root.
+       * Once a prefix exists, preserve fuzzy child competition, but charge a
+       * non-top child against the cumulative path budget so repeated secondary
+       * posterior advances cannot synthesize a full wake sequence. */
+      if (base > NEG_INF / 2.0f &&
+          (i != 0u || top_token == token ||
+           (top_is_keyword_root != 0 &&
+            logits[top_token] - logits[token] <= ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
+        if (i != 0u && top_token != token) {
+          search_log_probability += FUZZY_CHILD_RETENTION_COST_LOG;
+        }
         max_assign_pair(&d->nodes[child].next_score,
                         &d->nodes[child].next_acoustic_score,
                         base + search_log_probability,
