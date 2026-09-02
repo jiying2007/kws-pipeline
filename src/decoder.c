@@ -385,7 +385,11 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      if (base > NEG_INF / 2.0f) {
+      /* Token probability still drives confidence, but only the dominant
+       * nonblank token may advance the trie. This prevents a secondary-token
+       * acoustic peak from starting or completing a keyword across a directly
+       * observed near-confusable token sequence. */
+      if (base > NEG_INF / 2.0f && top_token == token) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
