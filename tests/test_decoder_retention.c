@@ -23,7 +23,7 @@ static void set_logits(float logits[4],
   logits[3] = other;
 }
 
-int main(void) {
+static void verify_stale_prefix_expires(int gap_speech_active, int gap_frames) {
   kws_decoder_t decoder;
   const uint16_t tokens[] = {1u, 2u};
   kws_keyword_t item = {0};
@@ -45,8 +45,9 @@ int main(void) {
   set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
-  for (int frame = 0; frame < 80; ++frame) {
-    CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  for (int frame = 0; frame < gap_frames; ++frame) {
+    CHECK(kws_decoder_step(&decoder, logits, 4u, gap_speech_active, &keyword_id,
+                           &confidence) == 0);
   }
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
@@ -59,6 +60,14 @@ int main(void) {
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
   CHECK(keyword_id == 77u);
   CHECK(confidence > 0.50f);
+}
+
+int main(void) {
+  /* state_retention=0.94 gives log-retention ~= -0.0619 per speech frame, so
+   * 320 frames exceed the -16 path budget. Silence uses the stronger fixed
+   * retention decay and expires well within 80 frames. */
+  verify_stale_prefix_expires(1, 320);
+  verify_stale_prefix_expires(0, 80);
 
   puts("test_decoder_retention: ok");
   return 0;
