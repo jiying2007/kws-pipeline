@@ -97,8 +97,8 @@
     "lr": 0.001
   },
   "calibration": {
-    "thresholds": [0.01, 0.03, 0.05, 0.10, 0.15, 0.25, 0.40, 0.55],
-    "coordinate_rounds": 2
+    "thresholds": [0.55],
+    "coordinate_rounds": 1
   },
   "domain_iteration": {
     "backend": "torch_ctc",
@@ -116,7 +116,7 @@
       },
       {
         "tokens": ["hao3", "hao3", "xiao3", "wo1"],
-        "examples": 20
+        "examples": 24
       },
       {
         "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
