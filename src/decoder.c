@@ -5,11 +5,10 @@
 
 #define NEG_INF (-1.0e30f)
 #define SILENCE_RETENTION_LOG (-0.3566749439f)
-/* Prevent partial keyword prefixes from surviving indefinitely in continuous
- * streams. search_score includes token boost + acoustic evidence + retention
- * decay, while acoustic_score intentionally excludes retention. Their
- * difference therefore gives the exact cumulative retention penalty. */
-#define MIN_PATH_RETENTION_LOG (-4.0f)
+/* Bound partial keyword lifetime without narrowing normal phrase timing. The
+ * search/acoustic score delta isolates cumulative retention decay because
+ * token boost is added exactly once per trie depth. */
+#define MIN_PATH_RETENTION_LOG (-16.0f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -49,13 +48,14 @@ static float approx_logsumexp(const float *x, uint16_t n) {
   return max_value + logf(sum);
 }
 
-static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
+static uint16_t dominant_token(const float *logits, uint16_t vocab_size) {
+  uint16_t top = 0u;
   for (uint16_t i = 1u; i < vocab_size; ++i) {
-    if (logits[i] > logits[0]) {
-      return 0;
+    if (logits[i] > logits[top]) {
+      top = i;
     }
   }
-  return 1;
+  return top;
 }
 
 static void max_assign_pair(float *dst_score,
@@ -313,7 +313,8 @@ int kws_decoder_step(kws_decoder_t *d,
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : SILENCE_RETENTION_LOG;
-  int blank_dominant = blank_is_dominant(logits, vocab_size);
+  uint16_t top_token = dominant_token(logits, vocab_size);
+  int blank_dominant = top_token == 0u;
   int immediate_kw = -1;
 
   if (d->pending_keyword >= 0) {
@@ -353,13 +354,13 @@ int kws_decoder_step(kws_decoder_t *d,
           max_assign_pair(&d->nodes[i].next_blank_score,
                           &d->nodes[i].next_blank_acoustic_score,
                           nonblank + decay, nonblank_acoustic);
-        } else {
+        } else if (top_token == d->nodes[i].token) {
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
                           nonblank + decay, nonblank_acoustic);
         }
       }
-      if (separated > NEG_INF / 2.0f) {
+      if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
         max_assign_pair(&d->nodes[i].next_blank_score,
                         &d->nodes[i].next_blank_acoustic_score,
                         separated + decay, separated_acoustic);
