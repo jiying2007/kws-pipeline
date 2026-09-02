@@ -9,6 +9,11 @@
  * search/acoustic score delta isolates cumulative retention decay because
  * token boost is added exactly once per trie depth. */
 #define MIN_PATH_RETENTION_LOG (-16.0f)
+/* A keyword root may follow a near-tied nonblank acoustic competitor, but a
+ * clearly stronger competing token must block the start. This keeps the
+ * continuous-stream false-start fix while tolerating first-token ambiguity
+ * from noise, distance and reverberation. */
+#define ROOT_START_LOGIT_MARGIN (0.5f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -385,10 +390,13 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      /* Starting a keyword from the root requires direct acoustic evidence for
-       * its first token. Once a prefix exists, preserve the original fuzzy
-       * child competition needed for noisy/far-field recall. */
-      if (base > NEG_INF / 2.0f && (i != 0u || top_token == token)) {
+      /* Starting a keyword from the root requires either dominant evidence or
+       * a near-tied nonblank competitor. Once a prefix exists, preserve the
+       * original fuzzy child competition needed for noisy/far-field recall. */
+      if (base > NEG_INF / 2.0f &&
+          (i != 0u || top_token == token ||
+           (top_token != 0u &&
+            logits[top_token] - logits[token] <= ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
