@@ -32,6 +32,9 @@ def required_keys(config: dict) -> list[str]:
     result.extend(f"distance_bin:{value}" for value in gates.get("required_distance_bins", []))
     result.extend(f"azimuth_deg:{int(value)}" for value in gates.get("required_azimuth_deg", []))
     result.extend(f"snr:{value}" for value in gates.get("required_snr_bands", []))
+    result.extend(f"rt60:{value}" for value in gates.get("required_rt60_bands", []))
+    result.extend(f"noise:{value}" for value in gates.get("required_noise_profiles", []))
+    result.extend(f"playback:{value}" for value in gates.get("required_playback_states", []))
     for raw in gates.get("required_stress_slices", []):
         key = str(raw)
         if not key.startswith(STRESS_PREFIXES):
@@ -154,12 +157,16 @@ def evaluate(summary: dict, config: dict) -> dict:
             "min_expected_wakes": min_expected,
             "min_negative_recordings": min_negative_recordings,
             "min_negative_audio_hours": min_negative_hours,
+            "required_rt60_bands": list(gates.get("required_rt60_bands", [])),
+            "required_noise_profiles": list(gates.get("required_noise_profiles", [])),
+            "required_playback_states": list(gates.get("required_playback_states", [])),
             "required_stress_slices": stress,
         },
         "slices": slices,
         "failures": failures,
         "limitations": [
             "Per-slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
+            "Distance, direction, SNR, RT60, noise and playback slices validate modeled nuisance coverage but do not replace physical room/device qualification.",
             "Pairwise and triple stress slices validate modeled interactions but do not replace physical room/device qualification.",
             "Long-duration/statistical FAR confidence remains the responsibility of the dedicated qualification evidence.",
             "Physical rooms, real Mandarin speakers, shipping microphones and shipping AFE remain external qualification gates.",
