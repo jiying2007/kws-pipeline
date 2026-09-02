@@ -108,14 +108,36 @@ static void verify_subdominant_root_cannot_start(void) {
 
   configure_two_token_keyword(&decoder, &item, tokens);
 
-  /* token 1 is acoustically strong enough that the old fuzzy transition would
-   * start the keyword, but token 3 is actually dominant and must win. */
+  /* token 1 is acoustically strong enough that unrestricted fuzzy transition
+   * would start the keyword, but token 3 is a full logit stronger and must
+   * block that root start. */
   set_logits(logits, -8.0f, 7.0f, -8.0f, 8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
 
   verify_fresh_sequence_recovers(&decoder);
+}
+
+static void verify_near_tied_root_can_start(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+
+  /* A 0.4-logit nonblank ambiguity is plausible acoustic competition rather
+   * than a strong contradictory token. Preserve this near-tied root path so
+   * noisy/far-field first-token evidence can still recover. */
+  set_logits(logits, -8.0f, 7.6f, -8.0f, 8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 77u);
+  CHECK(confidence > 0.50f);
 }
 
 int main(void) {
@@ -126,6 +148,7 @@ int main(void) {
   verify_stale_prefix_expires(0, 80);
   verify_unrelated_nonblank_breaks_prefix();
   verify_subdominant_root_cannot_start();
+  verify_near_tied_root_can_start();
 
   puts("test_decoder_retention: ok");
   return 0;
