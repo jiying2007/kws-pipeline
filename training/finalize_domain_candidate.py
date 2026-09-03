@@ -12,7 +12,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 sys.path.insert(0, str(TRAINING))
 
+from hard_negative_replay import render_hard_negative_replay  # noqa: E402
 from iterate_domain import base_gate, domain_gate, evaluate, gate_values  # noqa: E402
+
+# render_hard_negative_replay uses round_index only as deterministic seed input
+# plus evidence metadata. Keep FAR holdout synthesis in a disjoint seed namespace
+# while preserving the selected round's acoustic curriculum distribution.
+FAR_HOLDOUT_ROUND_NAMESPACE = 1_000_000
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -31,8 +37,8 @@ def repo_path(value: str) -> pathlib.Path:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Finalize the latest calibration/test strict-gate-passing domain candidate "
-            "and bind it to the hard-negative replay used to train that same round."
+            "Finalize the latest calibration/test strict-gate-passing domain candidate, "
+            "prove its training-replay generation, and render an independent FAR holdout."
         )
     )
     parser.add_argument("--work-dir", required=True)
@@ -46,6 +52,29 @@ def require_file(path: pathlib.Path, label: str) -> pathlib.Path:
     if not path.is_file() or path.stat().st_size == 0:
         raise RuntimeError(f"missing {label}: {path}")
     return path
+
+
+def manifest_clip_hashes(path: pathlib.Path) -> set[str]:
+    hashes: set[str] = set()
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        if not cols or not cols[0].strip():
+            raise RuntimeError(f"{path}:{line_no}: missing hard-negative WAV path")
+        source = pathlib.Path(cols[0])
+        if not source.is_absolute():
+            source = (path.parent / source).resolve()
+        else:
+            source = source.resolve()
+        require_file(source, "hard-negative WAV")
+        digest = sha256_file(source)
+        if digest in hashes:
+            raise RuntimeError(f"duplicate hard-negative WAV content in {path}: {digest}")
+        hashes.add(digest)
+    if not hashes:
+        raise RuntimeError(f"hard-negative manifest has no clips: {path}")
+    return hashes
 
 
 def main() -> int:
@@ -76,7 +105,7 @@ def main() -> int:
 
     # Each full warm-start round consumes the replay rendered for that exact
     # round before training. Never select an earlier model against a newer
-    # replay merely because its objective is slightly lower.
+    # training replay merely because its objective is slightly lower.
     latest_round = max(int(row["round"]) for row in eligible)
     latest = [row for row in eligible if int(row["round"]) == latest_round]
     selected = min(latest, key=lambda row: (float(row["score"]), str(row["frontend"])))
@@ -108,33 +137,74 @@ def main() -> int:
         require_file(source, "selected candidate artifact")
         shutil.copy2(source, destination)
 
-    # Replay round-N is rendered before training round N and its SHA is written
-    # into that candidate record. Bind the final model to this exact replay and
-    # freeze the pair under best/ for every downstream FAR gate.
-    replay = root / "hard-negative-replay" / f"round-{selected_round:02d}" / "hard-negatives.tsv"
-    replay_evidence = replay.with_name("hard-negatives.json")
-    require_file(replay, "selected-round hard-negative replay")
-    require_file(replay_evidence, "selected-round hard-negative replay evidence")
-    replay_meta = json.loads(replay_evidence.read_text(encoding="utf-8"))
-    replay_sha = sha256_file(replay)
+    # Training replay round N is rendered before training round N and its SHA is
+    # recorded in the candidate. Freeze it only as generation/provenance proof;
+    # it must never serve as the final continuous-FAR validation corpus.
+    training_replay = (
+        root / "hard-negative-replay" / f"round-{selected_round:02d}" / "hard-negatives.tsv"
+    )
+    training_replay_evidence = training_replay.with_name("hard-negatives.json")
+    require_file(training_replay, "selected-round training hard-negative replay")
+    require_file(training_replay_evidence, "selected-round training replay evidence")
+    training_replay_meta = json.loads(training_replay_evidence.read_text(encoding="utf-8"))
+    training_replay_sha = sha256_file(training_replay)
     expected_replay_sha = str(selected.get("hard_negative_replay_manifest_sha256") or "")
-    if int(replay_meta.get("round", -1)) != selected_round:
+    if int(training_replay_meta.get("round", -1)) != selected_round:
         raise RuntimeError(
-            f"hard-negative replay round mismatch: selected={selected_round} "
-            f"evidence={replay_meta.get('round')}"
+            f"training replay round mismatch: selected={selected_round} "
+            f"evidence={training_replay_meta.get('round')}"
         )
-    if str(replay_meta.get("manifest_sha256") or "") != replay_sha:
-        raise RuntimeError("hard-negative replay evidence SHA does not match manifest")
-    if not expected_replay_sha or expected_replay_sha != replay_sha:
+    if str(training_replay_meta.get("manifest_sha256") or "") != training_replay_sha:
+        raise RuntimeError("training replay evidence SHA does not match manifest")
+    if not expected_replay_sha or expected_replay_sha != training_replay_sha:
+        raise RuntimeError("selected candidate replay SHA does not match its training record")
+    training_clip_hashes = manifest_clip_hashes(training_replay)
+    shutil.copy2(training_replay, best_dir / "training-hard-negatives.tsv")
+    shutil.copy2(training_replay_evidence, best_dir / "training-hard-negatives.json")
+
+    # Render a deterministic but seed-disjoint hard-negative holdout only after
+    # candidate selection. Match the selected round's input curriculum while
+    # ensuring no underlying WAV bytes overlap training replay. This holdout is
+    # never fed back into training, calibration/test selection, or qualification.
+    replay_curriculum = None
+    if selected_round > 0:
+        curriculum_path = root / "curriculum" / f"round-{selected_round - 1:02d}.json"
+        require_file(curriculum_path, "selected-round input curriculum")
+        replay_curriculum = json.loads(curriculum_path.read_text(encoding="utf-8"))
+    holdout_generation_index = FAR_HOLDOUT_ROUND_NAMESPACE + selected_round
+    holdout_dir = root / "hard-negative-holdout" / f"round-{selected_round:02d}"
+    holdout_meta = render_hard_negative_replay(
+        config_path,
+        holdout_dir,
+        round_index=holdout_generation_index,
+        curriculum_weights=replay_curriculum,
+    )
+    holdout_manifest = pathlib.Path(str(holdout_meta["manifest"]))
+    holdout_evidence = pathlib.Path(str(holdout_meta["evidence"]))
+    require_file(holdout_manifest, "FAR hard-negative holdout manifest")
+    require_file(holdout_evidence, "FAR hard-negative holdout evidence")
+    holdout_sha = sha256_file(holdout_manifest)
+    if str(holdout_meta.get("manifest_sha256") or "") != holdout_sha:
+        raise RuntimeError("FAR holdout evidence SHA does not match manifest")
+    holdout_clip_hashes = manifest_clip_hashes(holdout_manifest)
+    overlapping_clip_hashes = training_clip_hashes & holdout_clip_hashes
+    if overlapping_clip_hashes:
         raise RuntimeError(
-            "selected candidate hard-negative replay SHA does not match its training record"
+            f"FAR holdout overlaps {len(overlapping_clip_hashes)} training replay WAV(s)"
         )
-    frozen_replay = best_dir / "hard-negatives.tsv"
-    shutil.copy2(replay, frozen_replay)
+    if len(holdout_clip_hashes) != len(training_clip_hashes):
+        raise RuntimeError(
+            "FAR holdout/training replay clip-count mismatch: "
+            f"training={len(training_clip_hashes)} holdout={len(holdout_clip_hashes)}"
+        )
+    if holdout_sha == training_replay_sha:
+        raise RuntimeError("FAR holdout manifest is byte-identical to training replay manifest")
+    shutil.copy2(holdout_manifest, best_dir / "hard-negatives.tsv")
+    shutil.copy2(holdout_evidence, best_dir / "hard-negative-holdout.json")
 
     # Selection above uses calibration/test evidence only. Re-run untouched
     # qualification after selection so qualification cannot influence candidate
-    # choice, curriculum, or replay generation.
+    # choice, curriculum, training replay, or FAR holdout generation.
     qualification_dir = best_dir / "qualification"
     if qualification_dir.exists():
         shutil.rmtree(qualification_dir)
@@ -162,9 +232,17 @@ def main() -> int:
         "reselected": reselected,
         "qualification_used_for_selection": False,
         "replay_round": selected_round,
-        "replay_source": str(replay.relative_to(ROOT)),
-        "replay_sha256": replay_sha,
+        "replay_source": str(training_replay.relative_to(ROOT)),
+        "replay_sha256": training_replay_sha,
         "model_replay_generation_match": True,
+        "far_holdout_source": str(holdout_manifest.relative_to(ROOT)),
+        "far_holdout_sha256": holdout_sha,
+        "far_holdout_generation_index": holdout_generation_index,
+        "far_holdout_used_for_training": False,
+        "far_holdout_used_for_selection": False,
+        "training_replay_clip_count": len(training_clip_hashes),
+        "far_holdout_clip_count": len(holdout_clip_hashes),
+        "overlapping_training_holdout_wav_sha256": 0,
     }
 
     manifest["best_round"] = selected_round
@@ -172,7 +250,8 @@ def main() -> int:
     manifest["best_score"] = selected_score
     manifest["best_model_sha256"] = sha256_file(best_dir / "model.kwm")
     manifest["best_pack_sha256"] = sha256_file(best_dir / "keywords.kwk")
-    manifest["best_hard_negative_manifest_sha256"] = replay_sha
+    manifest["best_training_hard_negative_manifest_sha256"] = training_replay_sha
+    manifest["best_hard_negative_manifest_sha256"] = holdout_sha
     manifest["qualification"] = qualification
     manifest["qualification_domains"] = qualification_domains
     manifest["qualified"] = bool(qualified)
@@ -188,7 +267,10 @@ def main() -> int:
         best_dir / "keywords.kwk",
         best_dir / "keywords.tsv",
         best_dir / "model-provenance.json",
+        best_dir / "training-hard-negatives.tsv",
+        best_dir / "training-hard-negatives.json",
         best_dir / "hard-negatives.tsv",
+        best_dir / "hard-negative-holdout.json",
     ]
     for path in required:
         require_file(path, "final training artifact")
