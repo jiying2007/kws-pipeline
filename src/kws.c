@@ -11,13 +11,13 @@
 #include "decoder.h"
 #include "frontend.h"
 
-/* A normal Mandarin syllable occupies far fewer than 40 20-ms hops. If the
- * same nonblank token stays top-1 for 800 ms, treat it as a recurrent-state
- * latch rather than carrying that acoustic memory indefinitely. Only the RNN
- * state is cleared: frontend timing, decoder prefix state and refractory state
- * stay continuous, so a genuinely elongated syllable does not lose its trie
- * prefix and can still advance on the following token. */
-#define MAX_NONBLANK_TOP_STREAK_FRAMES 40u
+/* The current product training geometry uses roughly 150..210 ms syllables.
+ * If one nonblank token remains top-1 for 24 consecutive 20-ms hops (480 ms),
+ * bound that recurrent episode before it can synthesize a later wake across
+ * otherwise unrelated audio. Frontend timing and refractory state stay
+ * continuous; only recurrent acoustic memory and the in-flight trie search are
+ * restarted. */
+#define MAX_NONBLANK_TOP_STREAK_FRAMES 24u
 
 struct kws_engine {
   kws_model_t model;
@@ -273,6 +273,7 @@ static void bound_recurrent_token_latch(kws_engine_t *engine,
 
   if (engine->nonblank_top_streak_frames >= MAX_NONBLANK_TOP_STREAK_FRAMES) {
     reset_recurrent_state(engine);
+    kws_decoder_reset(&engine->decoder);
   }
 }
 
