@@ -90,6 +90,12 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Rotate untouched qualification cohort
+        run: |
+          .venv/bin/python training/render_qualification_holdout.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-training/qualification-dataset
       - name: Finalize latest strict gate-passing candidate and run summary
         env:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
@@ -105,12 +111,15 @@ jobs:
           import json
           from pathlib import Path
 
-          summary = json.loads(Path('build/model-training/training-run-summary.json').read_text(encoding='utf-8'))
+          root = Path('build/model-training')
+          summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
           qualified = bool(summary['qualified'])
           train_exit = int(summary['training_exit_code'])
           iteration_exit = int(summary['iteration_exit_code'])
           print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
           print(json.dumps(summary['candidate_selection'], indent=2, sort_keys=True))
+          print(json.dumps(cohort, indent=2, sort_keys=True))
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
           if iteration_exit not in (0, 1):
               raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
@@ -118,6 +127,19 @@ jobs:
               raise SystemExit(
                   f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
               )
+          if not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('active qualification seed is not disjoint from training seed')
+          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
+              raise SystemExit('active qualification reuses training seed')
+          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps retired qualification WAV content')
+          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps development/training WAV content')
+          if int(cohort.get('expected_wakes', 0)) != 256:
+              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
+          selection = summary.get('candidate_selection', {})
+          if bool(selection.get('qualification_used_for_selection', True)):
+              raise SystemExit('qualification leaked into candidate selection')
           if not qualified:
               raise SystemExit('synthetic qualification gates were not met')
           PY
@@ -159,6 +181,8 @@ jobs:
             build/model-training/hard-negative-replay/
             build/model-training/hard-negative-holdout/
             build/model-training/curriculum/
+            build/model-training/qualification-effective-config.json
+            build/model-training/qualification-dataset/qualification-cohort.json
             build/model-training/datasets/*/audit.json
           if-no-files-found: error
           retention-days: 30

@@ -50,6 +50,12 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Rotate untouched qualification cohort
+        run: |
+          .venv/bin/python training/render_qualification_holdout.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/far-training \
+            --output build/far-training/qualification-dataset
       - name: Finalize latest strict gate-passing canonical candidate
         env:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
@@ -69,8 +75,19 @@ jobs:
           root = Path('build/far-training')
           manifest = json.loads((root / 'domain-loop-manifest.json').read_text(encoding='utf-8'))
           summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
           if not summary.get('qualified') or not manifest.get('qualified'):
               raise SystemExit('canonical finalized domain model is not qualified')
+          if not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('active qualification seed is not disjoint from training seed')
+          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
+              raise SystemExit('active qualification reuses training seed')
+          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps retired qualification WAV content')
+          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps development/training WAV content')
+          if int(cohort.get('expected_wakes', 0)) != 256:
+              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
           selection = summary.get('candidate_selection', {})
           selected_round = int(selection.get('selected_round', -1))
           training_replay_round = int(selection.get('replay_round', -2))
@@ -134,6 +151,10 @@ jobs:
               'best_frontend': manifest['best_frontend'],
               'model_sha256': model_sha,
               'keyword_pack_sha256': keyword_sha,
+              'qualification_seed': cohort['qualification_seed'],
+              'qualification_references_sha256': cohort['active_references_sha256'],
+              'overlapping_retired_active_wav_sha256': 0,
+              'overlapping_development_active_wav_sha256': 0,
               'training_replay_source': selection['replay_source'],
               'training_replay_sha256': training_replay_sha,
               'far_holdout_source': selection['far_holdout_source'],
@@ -181,6 +202,8 @@ jobs:
             build/far-training/best/
             build/far-training/domain-loop-manifest.json
             build/far-training/training-run-summary.json
+            build/far-training/qualification-effective-config.json
+            build/far-training/qualification-dataset/qualification-cohort.json
             build/far-training/hard-negative-replay/
             build/far-training/hard-negative-holdout/
             build/far-run-*/
