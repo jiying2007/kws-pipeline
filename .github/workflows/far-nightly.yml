@@ -59,7 +59,7 @@ jobs:
             --runner build/kws_wav \
             --work-dir build/far-training \
             --iteration-exit-code "$ITERATION_EXIT_CODE"
-      - name: Verify frozen model and same-round hard-negative evidence
+      - name: Verify frozen model and held-out hard-negative evidence
         run: |
           .venv/bin/python - <<'PY'
           import hashlib
@@ -73,22 +73,36 @@ jobs:
               raise SystemExit('canonical finalized domain model is not qualified')
           selection = summary.get('candidate_selection', {})
           selected_round = int(selection.get('selected_round', -1))
-          replay_round = int(selection.get('replay_round', -2))
-          if selected_round < 0 or selected_round != replay_round:
+          training_replay_round = int(selection.get('replay_round', -2))
+          if selected_round < 0 or selected_round != training_replay_round:
               raise SystemExit(
-                  f'finalized model/replay round mismatch: model={selected_round} replay={replay_round}'
+                  f'finalized model/training-replay mismatch: model={selected_round} '
+                  f'replay={training_replay_round}'
               )
           if not bool(selection.get('model_replay_generation_match')):
-              raise SystemExit('finalizer did not attest model/replay generation match')
+              raise SystemExit('finalizer did not attest model/training-replay generation match')
           if bool(selection.get('qualification_used_for_selection', True)):
               raise SystemExit('qualification leaked into candidate selection')
+          if bool(selection.get('far_holdout_used_for_training', True)):
+              raise SystemExit('FAR holdout leaked into model training')
+          if bool(selection.get('far_holdout_used_for_selection', True)):
+              raise SystemExit('FAR holdout leaked into candidate selection')
+          if int(selection.get('overlapping_training_holdout_wav_sha256', -1)) != 0:
+              raise SystemExit('FAR holdout overlaps training hard-negative WAV content')
+          if int(selection.get('training_replay_clip_count', 0)) <= 0:
+              raise SystemExit('training hard-negative replay has no clips')
+          if int(selection.get('far_holdout_clip_count', 0)) != int(
+              selection.get('training_replay_clip_count', -1)
+          ):
+              raise SystemExit('FAR holdout/training replay clip counts differ')
 
           model = root / 'best/model.kwm'
           keywords = root / 'best/keywords.kwk'
-          replay = root / 'best/hard-negatives.tsv'
-          for path in (model, keywords, replay):
+          training_replay = root / 'best/training-hard-negatives.tsv'
+          far_holdout = root / 'best/hard-negatives.tsv'
+          for path in (model, keywords, training_replay, far_holdout):
               if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing frozen FAR input: {path}')
+                  raise SystemExit(f'missing frozen FAR input/evidence: {path}')
 
           def sha256(path: Path) -> str:
               digest = hashlib.sha256()
@@ -97,22 +111,35 @@ jobs:
                       digest.update(chunk)
               return digest.hexdigest()
 
-          if sha256(model) != manifest['best_model_sha256']:
+          model_sha = sha256(model)
+          keyword_sha = sha256(keywords)
+          training_replay_sha = sha256(training_replay)
+          far_holdout_sha = sha256(far_holdout)
+          if model_sha != manifest['best_model_sha256']:
               raise SystemExit('best model hash does not match finalized manifest')
-          if sha256(keywords) != manifest['best_pack_sha256']:
+          if keyword_sha != manifest['best_pack_sha256']:
               raise SystemExit('best keyword pack hash does not match finalized manifest')
-          if sha256(replay) != manifest['best_hard_negative_manifest_sha256']:
-              raise SystemExit('hard-negative replay hash does not match finalized manifest')
-          if sha256(replay) != selection['replay_sha256']:
-              raise SystemExit('hard-negative replay hash does not match candidate-selection evidence')
+          if training_replay_sha != manifest['best_training_hard_negative_manifest_sha256']:
+              raise SystemExit('training replay hash does not match finalized manifest')
+          if training_replay_sha != selection['replay_sha256']:
+              raise SystemExit('training replay hash does not match candidate record evidence')
+          if far_holdout_sha != manifest['best_hard_negative_manifest_sha256']:
+              raise SystemExit('FAR holdout hash does not match finalized manifest')
+          if far_holdout_sha != selection['far_holdout_sha256']:
+              raise SystemExit('FAR holdout hash does not match candidate-selection evidence')
+          if far_holdout_sha == training_replay_sha:
+              raise SystemExit('FAR holdout manifest equals training replay manifest')
           print(json.dumps({
               'best_round': manifest['best_round'],
               'best_frontend': manifest['best_frontend'],
-              'model_sha256': sha256(model),
-              'keyword_pack_sha256': sha256(keywords),
-              'hard_negative_source': selection['replay_source'],
-              'hard_negative_manifest_sha256': sha256(replay),
-              'model_replay_generation_match': True,
+              'model_sha256': model_sha,
+              'keyword_pack_sha256': keyword_sha,
+              'training_replay_source': selection['replay_source'],
+              'training_replay_sha256': training_replay_sha,
+              'far_holdout_source': selection['far_holdout_source'],
+              'far_holdout_sha256': far_holdout_sha,
+              'far_holdout_generation_index': selection['far_holdout_generation_index'],
+              'overlapping_training_holdout_wav_sha256': 0,
           }, indent=2, sort_keys=True))
           PY
       - name: Stream four independent negative shards against the frozen canonical model
@@ -155,6 +182,7 @@ jobs:
             build/far-training/domain-loop-manifest.json
             build/far-training/training-run-summary.json
             build/far-training/hard-negative-replay/
+            build/far-training/hard-negative-holdout/
             build/far-run-*/
             build/far-aggregate.json
           if-no-files-found: warn
