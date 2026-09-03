@@ -241,10 +241,10 @@ static void verify_two_fuzzy_children_cannot_complete(void) {
 }
 
 int main(void) {
-  /* state_retention=0.94 gives log-retention ~= -0.0619 per speech frame, so
-   * 320 frames exceed the -16 path budget. Silence uses the stronger fixed
-   * retention decay and expires well within 80 frames. */
-  verify_stale_prefix_expires(1, 320);
+  /* Blank-dominant posterior evidence is an utterance boundary even when an
+   * upstream VAD remains active because of noise. Both VAD states must expire
+   * a stale prefix on the same bounded silence-retention timescale. */
+  verify_stale_prefix_expires(1, 80);
   verify_stale_prefix_expires(0, 80);
   verify_unrelated_nonblank_breaks_prefix();
   verify_subdominant_root_cannot_start();
