@@ -121,6 +121,10 @@
       {
         "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
         "examples": 32
+      },
+      {
+        "tokens": ["ni3", "hao3", "xiao3"],
+        "examples": 8
       }
     ]
   },
