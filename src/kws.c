@@ -13,10 +13,11 @@
 
 /* The current product training geometry uses roughly 150..210 ms syllables.
  * If one nonblank token remains top-1 for 24 consecutive 20-ms hops (480 ms),
- * bound that recurrent episode before it can synthesize a later wake across
- * otherwise unrelated audio. Frontend timing and refractory state stay
- * continuous; only recurrent acoustic memory and the in-flight trie search are
- * restarted. */
+ * bound that recurrent acoustic episode before it can synthesize a later wake
+ * across otherwise unrelated audio. Keep an in-flight trie search intact:
+ * decoder retention/competition budgets already expire stale prefixes, while
+ * preserving the prefix avoids cutting a legitimate slow/shifted utterance at
+ * the recurrent-memory boundary. */
 #define MAX_NONBLANK_TOP_STREAK_FRAMES 24u
 
 struct kws_engine {
@@ -272,8 +273,10 @@ static void bound_recurrent_token_latch(kws_engine_t *engine,
   }
 
   if (engine->nonblank_top_streak_frames >= MAX_NONBLANK_TOP_STREAK_FRAMES) {
+    /* Bound stale recurrent acoustic memory, but preserve the decoder trie.
+     * Decoder-side retention and competition budgets independently expire stale
+     * prefixes; clearing the trie here can cut a valid slow utterance in half. */
     reset_recurrent_state(engine);
-    kws_decoder_reset(&engine->decoder);
   }
 }
 
