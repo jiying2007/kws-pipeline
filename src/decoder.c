@@ -375,9 +375,12 @@ int kws_decoder_step(kws_decoder_t *d,
     if (i != 0u) {
       if (nonblank > NEG_INF / 2.0f) {
         if (blank_dominant != 0) {
+          /* Decoder blank evidence is the reliable utterance-boundary signal.
+           * Do not let a noisy/VAD-active frame keep an old keyword prefix
+           * alive at the slower speech retention rate. */
           max_assign_pair(&d->nodes[i].next_blank_score,
                           &d->nodes[i].next_blank_acoustic_score,
-                          nonblank + decay, nonblank_acoustic);
+                          nonblank + SILENCE_RETENTION_LOG, nonblank_acoustic);
         } else if (top_token == d->nodes[i].token) {
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
@@ -387,7 +390,7 @@ int kws_decoder_step(kws_decoder_t *d,
       if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
         max_assign_pair(&d->nodes[i].next_blank_score,
                         &d->nodes[i].next_blank_acoustic_score,
-                        separated + decay, separated_acoustic);
+                        separated + SILENCE_RETENTION_LOG, separated_acoustic);
       }
     }
 
