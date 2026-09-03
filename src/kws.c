@@ -11,6 +11,14 @@
 #include "decoder.h"
 #include "frontend.h"
 
+/* A normal Mandarin syllable occupies far fewer than 40 20-ms hops. If the
+ * same nonblank token stays top-1 for 800 ms, treat it as a recurrent-state
+ * latch rather than carrying that acoustic memory indefinitely. Only the RNN
+ * state is cleared: frontend timing, decoder prefix state and refractory state
+ * stay continuous, so a genuinely elongated syllable does not lose its trie
+ * prefix and can still advance on the following token. */
+#define MAX_NONBLANK_TOP_STREAK_FRAMES 40u
+
 struct kws_engine {
   kws_model_t model;
   kws_config_t config;
@@ -37,6 +45,8 @@ struct kws_engine {
   float max_detection_confidence;
   float block_external_vad_probability;
   uint32_t afe_latency_samples;
+  uint16_t last_nonblank_top;
+  uint16_t nonblank_top_streak_frames;
   uint8_t block_external_vad_valid;
   uint8_t afe_config_sha256[32];
 };
@@ -145,9 +155,15 @@ kws_status_t kws_engine_set_keyword_pack(kws_engine_t *engine,
                                  pack->vocab_fingerprint);
 }
 
-static void reset_algorithm_state(kws_engine_t *engine) {
+static void reset_recurrent_state(kws_engine_t *engine) {
   memset(engine->hidden, 0, sizeof(engine->hidden));
   memset(engine->next_hidden, 0, sizeof(engine->next_hidden));
+  engine->last_nonblank_top = 0u;
+  engine->nonblank_top_streak_frames = 0u;
+}
+
+static void reset_algorithm_state(kws_engine_t *engine) {
+  reset_recurrent_state(engine);
   kws_frontend_reset(&engine->frontend);
   kws_decoder_reset(&engine->decoder);
   engine->suppress_until_sample = 0u;
@@ -236,6 +252,28 @@ static uint16_t infer_frame(kws_engine_t *e) {
     }
   }
   return top_index;
+}
+
+static void bound_recurrent_token_latch(kws_engine_t *engine,
+                                        uint16_t top_index) {
+  if (top_index == 0u) {
+    engine->last_nonblank_top = 0u;
+    engine->nonblank_top_streak_frames = 0u;
+    return;
+  }
+
+  if (top_index == engine->last_nonblank_top) {
+    if (engine->nonblank_top_streak_frames != UINT16_MAX) {
+      engine->nonblank_top_streak_frames++;
+    }
+  } else {
+    engine->last_nonblank_top = top_index;
+    engine->nonblank_top_streak_frames = 1u;
+  }
+
+  if (engine->nonblank_top_streak_frames >= MAX_NONBLANK_TOP_STREAK_FRAMES) {
+    reset_recurrent_state(engine);
+  }
 }
 
 static kws_status_t validate_frame_metadata(const kws_frame_metadata_t *metadata) {
@@ -348,6 +386,7 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
       if (top_index == 0u) {
         engine->blank_top1_frames++;
       }
+      bound_recurrent_token_latch(engine, top_index);
       decoder_hit = kws_decoder_step(&engine->decoder, engine->logits,
                                      engine->model.vocab_size, speech_active,
                                      &keyword_id, &confidence);
