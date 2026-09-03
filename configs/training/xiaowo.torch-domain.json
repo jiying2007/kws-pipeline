@@ -76,9 +76,9 @@
       "backend": "proxy"
     },
     "scenes_per_example": {
-      "train": 2,
-      "calibration": 1,
-      "test": 2,
+      "train": 4,
+      "calibration": 4,
+      "test": 4,
       "qualification": 8
     }
   },
