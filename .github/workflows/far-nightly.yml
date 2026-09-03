@@ -15,7 +15,7 @@ concurrency:
 jobs:
   streaming-far:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,8 +23,9 @@ jobs:
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target kws_wav kws_raw_stream kws_decoder_tests
-          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
+          cmake --build build --parallel --target \
+            kws_wav kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
       - name: Install pinned CPU training runtime
         run: |
           python3 -m venv .venv
@@ -37,35 +38,88 @@ jobs:
           assert numpy.__version__ == '2.3.2'
           assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
           PY
-      - name: Train the canonical qualified domain model
-        run: >-
-          .venv/bin/python training/iterate_domain.py
-          --config configs/training/xiaowo.torch-domain.json
-          --runner build/kws_wav
-          --work-dir build/far-training
-      - name: Verify frozen model and hard-negative evidence
+      - name: Train the canonical domain model
+        id: train
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/far-training
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Rotate untouched qualification cohort
+        run: |
+          .venv/bin/python training/render_qualification_holdout.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/far-training \
+            --output build/far-training/qualification-dataset
+      - name: Finalize latest strict gate-passing canonical candidate
+        env:
+          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+        run: |
+          .venv/bin/python training/finalize_domain_candidate.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/far-training \
+            --iteration-exit-code "$ITERATION_EXIT_CODE"
+      - name: Verify frozen model and held-out hard-negative evidence
         run: |
           .venv/bin/python - <<'PY'
           import hashlib
           import json
-          import shutil
           from pathlib import Path
 
           root = Path('build/far-training')
           manifest = json.loads((root / 'domain-loop-manifest.json').read_text(encoding='utf-8'))
-          if not manifest.get('qualified'):
-              raise SystemExit('canonical domain model is not qualified')
+          summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
+          if not summary.get('qualified') or not manifest.get('qualified'):
+              raise SystemExit('canonical finalized domain model is not qualified')
+          if not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('active qualification seed is not disjoint from training seed')
+          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
+              raise SystemExit('active qualification reuses training seed')
+          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps retired qualification WAV content')
+          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps development/training WAV content')
+          if int(cohort.get('expected_wakes', 0)) != 256:
+              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
+          selection = summary.get('candidate_selection', {})
+          selected_round = int(selection.get('selected_round', -1))
+          training_replay_round = int(selection.get('replay_round', -2))
+          if selected_round < 0 or selected_round != training_replay_round:
+              raise SystemExit(
+                  f'finalized model/training-replay mismatch: model={selected_round} '
+                  f'replay={training_replay_round}'
+              )
+          if not bool(selection.get('model_replay_generation_match')):
+              raise SystemExit('finalizer did not attest model/training-replay generation match')
+          if bool(selection.get('qualification_used_for_selection', True)):
+              raise SystemExit('qualification leaked into candidate selection')
+          if bool(selection.get('far_holdout_used_for_training', True)):
+              raise SystemExit('FAR holdout leaked into model training')
+          if bool(selection.get('far_holdout_used_for_selection', True)):
+              raise SystemExit('FAR holdout leaked into candidate selection')
+          if int(selection.get('overlapping_training_holdout_wav_sha256', -1)) != 0:
+              raise SystemExit('FAR holdout overlaps training hard-negative WAV content')
+          if int(selection.get('training_replay_clip_count', 0)) <= 0:
+              raise SystemExit('training hard-negative replay has no clips')
+          if int(selection.get('far_holdout_clip_count', 0)) != int(
+              selection.get('training_replay_clip_count', -1)
+          ):
+              raise SystemExit('FAR holdout/training replay clip counts differ')
+
           model = root / 'best/model.kwm'
           keywords = root / 'best/keywords.kwk'
-          replay_candidates = sorted(
-              (root / 'hard-negative-replay').glob('round-*/hard-negatives.tsv')
-          )
-          if not replay_candidates:
-              raise SystemExit('canonical training produced no hard-negative replay manifest')
-          replay = replay_candidates[-1]
-          for path in (model, keywords, replay):
+          training_replay = root / 'best/training-hard-negatives.tsv'
+          far_holdout = root / 'best/hard-negatives.tsv'
+          for path in (model, keywords, training_replay, far_holdout):
               if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing frozen FAR input: {path}')
+                  raise SystemExit(f'missing frozen FAR input/evidence: {path}')
 
           def sha256(path: Path) -> str:
               digest = hashlib.sha256()
@@ -74,19 +128,39 @@ jobs:
                       digest.update(chunk)
               return digest.hexdigest()
 
-          if sha256(model) != manifest['best_model_sha256']:
-              raise SystemExit('best model hash does not match domain-loop manifest')
-          if sha256(keywords) != manifest['best_pack_sha256']:
-              raise SystemExit('best keyword pack hash does not match domain-loop manifest')
-          frozen_replay = root / 'best/hard-negatives.tsv'
-          shutil.copy2(replay, frozen_replay)
+          model_sha = sha256(model)
+          keyword_sha = sha256(keywords)
+          training_replay_sha = sha256(training_replay)
+          far_holdout_sha = sha256(far_holdout)
+          if model_sha != manifest['best_model_sha256']:
+              raise SystemExit('best model hash does not match finalized manifest')
+          if keyword_sha != manifest['best_pack_sha256']:
+              raise SystemExit('best keyword pack hash does not match finalized manifest')
+          if training_replay_sha != manifest['best_training_hard_negative_manifest_sha256']:
+              raise SystemExit('training replay hash does not match finalized manifest')
+          if training_replay_sha != selection['replay_sha256']:
+              raise SystemExit('training replay hash does not match candidate record evidence')
+          if far_holdout_sha != manifest['best_hard_negative_manifest_sha256']:
+              raise SystemExit('FAR holdout hash does not match finalized manifest')
+          if far_holdout_sha != selection['far_holdout_sha256']:
+              raise SystemExit('FAR holdout hash does not match candidate-selection evidence')
+          if far_holdout_sha == training_replay_sha:
+              raise SystemExit('FAR holdout manifest equals training replay manifest')
           print(json.dumps({
               'best_round': manifest['best_round'],
               'best_frontend': manifest['best_frontend'],
-              'model_sha256': sha256(model),
-              'keyword_pack_sha256': sha256(keywords),
-              'hard_negative_source': str(replay),
-              'hard_negative_manifest_sha256': sha256(frozen_replay),
+              'model_sha256': model_sha,
+              'keyword_pack_sha256': keyword_sha,
+              'qualification_seed': cohort['qualification_seed'],
+              'qualification_references_sha256': cohort['active_references_sha256'],
+              'overlapping_retired_active_wav_sha256': 0,
+              'overlapping_development_active_wav_sha256': 0,
+              'training_replay_source': selection['replay_source'],
+              'training_replay_sha256': training_replay_sha,
+              'far_holdout_source': selection['far_holdout_source'],
+              'far_holdout_sha256': far_holdout_sha,
+              'far_holdout_generation_index': selection['far_holdout_generation_index'],
+              'overlapping_training_holdout_wav_sha256': 0,
           }, indent=2, sort_keys=True))
           PY
       - name: Stream four independent negative shards against the frozen canonical model
@@ -127,7 +201,11 @@ jobs:
           path: |
             build/far-training/best/
             build/far-training/domain-loop-manifest.json
+            build/far-training/training-run-summary.json
+            build/far-training/qualification-effective-config.json
+            build/far-training/qualification-dataset/qualification-cohort.json
             build/far-training/hard-negative-replay/
+            build/far-training/hard-negative-holdout/
             build/far-run-*/
             build/far-aggregate.json
           if-no-files-found: warn

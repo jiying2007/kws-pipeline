@@ -5,6 +5,20 @@
 
 #define NEG_INF (-1.0e30f)
 #define SILENCE_RETENTION_LOG (-0.3566749439f)
+/* Bound partial keyword lifetime without narrowing normal phrase timing. The
+ * search/acoustic score delta isolates cumulative retention decay because
+ * token boost is added exactly once per trie depth. */
+#define MIN_PATH_RETENTION_LOG (-16.0f)
+/* A keyword root may follow a near-tied competing keyword root, but an
+ * unrelated nonblank token must not shadow-start a wake path. This preserves
+ * bounded ambiguity between configured wake starts without reopening the
+ * continuous hard-negative false starts caused by arbitrary secondary peaks. */
+#define ROOT_START_LOGIT_MARGIN (0.5f)
+/* Keep one fuzzy child transition available for noisy/far-field recovery, but
+ * charge it against the existing cumulative path-retention budget. Two fuzzy
+ * child advances then exceed MIN_PATH_RETENTION_LOG and cannot synthesize a
+ * full keyword from secondary posteriors across an unrelated hard negative. */
+#define FUZZY_CHILD_RETENTION_COST_LOG (-8.25f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -44,13 +58,26 @@ static float approx_logsumexp(const float *x, uint16_t n) {
   return max_value + logf(sum);
 }
 
-static int blank_is_dominant(const float *logits, uint16_t vocab_size) {
+static uint16_t dominant_token(const float *logits, uint16_t vocab_size) {
+  uint16_t top = 0u;
   for (uint16_t i = 1u; i < vocab_size; ++i) {
-    if (logits[i] > logits[0]) {
-      return 0;
+    if (logits[i] > logits[top]) {
+      top = i;
     }
   }
-  return 1;
+  return top;
+}
+
+static int is_keyword_root_token(const kws_decoder_t *d, uint16_t token) {
+  uint16_t child = d->nodes[0].first_child;
+
+  while (child != UINT16_MAX) {
+    if (d->nodes[child].token == token) {
+      return 1;
+    }
+    child = d->nodes[child].next_sibling;
+  }
+  return 0;
 }
 
 static void max_assign_pair(float *dst_score,
@@ -308,7 +335,10 @@ int kws_decoder_step(kws_decoder_t *d,
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : SILENCE_RETENTION_LOG;
-  int blank_dominant = blank_is_dominant(logits, vocab_size);
+  uint16_t top_token = dominant_token(logits, vocab_size);
+  int blank_dominant = top_token == 0u;
+  int top_is_keyword_root =
+      top_token != 0u && is_keyword_root_token(d, top_token) != 0;
   int immediate_kw = -1;
 
   if (d->pending_keyword >= 0) {
@@ -345,19 +375,22 @@ int kws_decoder_step(kws_decoder_t *d,
     if (i != 0u) {
       if (nonblank > NEG_INF / 2.0f) {
         if (blank_dominant != 0) {
+          /* Decoder blank evidence is the reliable utterance-boundary signal.
+           * Do not let a noisy/VAD-active frame keep an old keyword prefix
+           * alive at the slower speech retention rate. */
           max_assign_pair(&d->nodes[i].next_blank_score,
                           &d->nodes[i].next_blank_acoustic_score,
-                          nonblank + decay, nonblank_acoustic);
-        } else {
+                          nonblank + SILENCE_RETENTION_LOG, nonblank_acoustic);
+        } else if (top_token == d->nodes[i].token) {
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
                           nonblank + decay, nonblank_acoustic);
         }
       }
-      if (separated > NEG_INF / 2.0f) {
+      if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
         max_assign_pair(&d->nodes[i].next_blank_score,
                         &d->nodes[i].next_blank_acoustic_score,
-                        separated + decay, separated_acoustic);
+                        separated + SILENCE_RETENTION_LOG, separated_acoustic);
       }
     }
 
@@ -379,10 +412,21 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      if (base > NEG_INF / 2.0f) {
+      /* Starting a keyword from the root requires either dominant evidence or
+       * a near-tied competing token that is itself a configured keyword root.
+       * Once a prefix exists, preserve fuzzy child competition, but charge a
+       * non-top child against the cumulative path budget so repeated secondary
+       * posterior advances cannot synthesize a full wake sequence. */
+      if (base > NEG_INF / 2.0f &&
+          (i != 0u || top_token == token ||
+           (top_is_keyword_root != 0 &&
+            logits[top_token] - logits[token] <= ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
+        if (i != 0u && top_token != token) {
+          search_log_probability += FUZZY_CHILD_RETENTION_COST_LOG;
+        }
         max_assign_pair(&d->nodes[child].next_score,
                         &d->nodes[child].next_acoustic_score,
                         base + search_log_probability,
@@ -411,7 +455,16 @@ int kws_decoder_step(kws_decoder_t *d,
         terminal_score > NEG_INF / 2.0f &&
         terminal_acoustic > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float conf = expf(terminal_acoustic / (float)d->nodes[i].depth);
+      float retention_log =
+          terminal_score - terminal_acoustic -
+          d->token_boost * (float)d->nodes[i].depth;
+      float conf;
+
+      if (retention_log < MIN_PATH_RETENTION_LOG) {
+        continue;
+      }
+
+      conf = expf(terminal_acoustic / (float)d->nodes[i].depth);
       if (conf > 1.0f) {
         conf = 1.0f;
       }

@@ -13,11 +13,13 @@ on:
       - 'eval/score_events.py'
       - 'eval/domain_metrics.py'
       - 'eval/gate_robustness.py'
+      - 'eval/long_far_stream.py'
       - 'include/**'
       - 'keywords/**'
       - 'src/**'
       - 'tools/**'
       - 'training/**'
+      - 'tests/test_decoder_retention.c'
   pull_request:
     branches:
       - main
@@ -30,11 +32,13 @@ on:
       - 'eval/score_events.py'
       - 'eval/domain_metrics.py'
       - 'eval/gate_robustness.py'
+      - 'eval/long_far_stream.py'
       - 'include/**'
       - 'keywords/**'
       - 'src/**'
       - 'tools/**'
       - 'training/**'
+      - 'tests/test_decoder_retention.c'
   workflow_dispatch:
 
 permissions:
@@ -47,7 +51,7 @@ concurrency:
 jobs:
   torch-domain-iteration:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -55,8 +59,9 @@ jobs:
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target kws_wav kws_decoder_tests
-          ctest --test-dir build --output-on-failure -R '^kws_decoder_tests$'
+          cmake --build build --parallel --target \
+            kws_wav kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
       - name: Install pinned CPU training runtime
         run: |
           python3 -m venv .venv
@@ -85,93 +90,56 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
-      - name: Finalize best checkpoint and run summary
-        shell: bash
-        env:
-          TRAIN_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+      - name: Rotate untouched qualification cohort
         run: |
-          .venv/bin/python - <<'PY'
-          import hashlib
-          import json
-          import os
-          import pathlib
-          import shutil
-
-          root = pathlib.Path('build/model-training')
-          manifest_path = root / 'domain-loop-manifest.json'
-          if not manifest_path.is_file():
-              raise SystemExit('training did not produce domain-loop-manifest.json')
-          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-          best_round = int(manifest['best_round'])
-          best_frontend = str(manifest['best_frontend'])
-          matches = [
-              row for row in manifest['records']
-              if int(row['round']) == best_round
-              and str(row['frontend']) == best_frontend
-              and 'checkpoint' in row
-          ]
-          if not matches:
-              raise SystemExit('best torch candidate has no checkpoint record')
-          best = min(matches, key=lambda row: float(row['score']))
-          checkpoint = pathlib.Path(best['checkpoint'])
-          if not checkpoint.is_file():
-              raise SystemExit(f'missing best checkpoint: {checkpoint}')
-          best_dir = root / 'best'
-          best_dir.mkdir(parents=True, exist_ok=True)
-          shutil.copy2(checkpoint, best_dir / 'model.pt')
-
-          def sha256(path: pathlib.Path) -> str:
-              digest = hashlib.sha256()
-              with path.open('rb') as stream:
-                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
-                      digest.update(chunk)
-              return digest.hexdigest()
-
-          required = [
-              best_dir / 'model.kwm',
-              best_dir / 'model.pt',
-              best_dir / 'keywords.kwk',
-              best_dir / 'keywords.tsv',
-              best_dir / 'model-provenance.json',
-          ]
-          for path in required:
-              if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing training artifact: {path}')
-          summary = {
-              'schema_version': 1,
-              'training_exit_code': int(os.environ.get('TRAIN_EXIT_CODE', '2')),
-              'qualified': bool(manifest['qualified']),
-              'best_round': best_round,
-              'best_frontend': best_frontend,
-              'best_score': float(manifest['best_score']),
-              'qualification': manifest['qualification'],
-              'qualification_domains': manifest['qualification_domains'],
-              'artifacts': {path.name: sha256(path) for path in required},
-              'limitations': manifest['limitations'],
-          }
-          (root / 'training-run-summary.json').write_text(
-              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + '\n',
-              encoding='utf-8',
-          )
-          print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
-          PY
+          .venv/bin/python training/render_qualification_holdout.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-training/qualification-dataset
+      - name: Finalize latest strict gate-passing candidate and run summary
+        env:
+          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+        run: |
+          .venv/bin/python training/finalize_domain_candidate.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/model-training \
+            --iteration-exit-code "$ITERATION_EXIT_CODE"
       - name: Enforce synthetic qualification gate
         run: |
           python3 - <<'PY'
           import json
           from pathlib import Path
 
-          summary = json.loads(Path('build/model-training/training-run-summary.json').read_text(encoding='utf-8'))
+          root = Path('build/model-training')
+          summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
           qualified = bool(summary['qualified'])
           train_exit = int(summary['training_exit_code'])
+          iteration_exit = int(summary['iteration_exit_code'])
           print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
+          print(json.dumps(summary['candidate_selection'], indent=2, sort_keys=True))
+          print(json.dumps(cohort, indent=2, sort_keys=True))
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
-          if train_exit not in (0, 1):
-              raise SystemExit(f'training infrastructure failed with exit code {train_exit}')
+          if iteration_exit not in (0, 1):
+              raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
           if qualified != (train_exit == 0):
               raise SystemExit(
                   f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
               )
+          if not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('active qualification seed is not disjoint from training seed')
+          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
+              raise SystemExit('active qualification reuses training seed')
+          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps retired qualification WAV content')
+          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps development/training WAV content')
+          if int(cohort.get('expected_wakes', 0)) != 256:
+              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
+          selection = summary.get('candidate_selection', {})
+          if bool(selection.get('qualification_used_for_selection', True)):
+              raise SystemExit('qualification leaked into candidate selection')
           if not qualified:
               raise SystemExit('synthetic qualification gates were not met')
           PY
@@ -182,6 +150,23 @@ jobs:
             --summary build/model-training/training-run-summary.json \
             --config configs/training/xiaowo.torch-domain.json \
             --output build/model-training/robustness-summary.json
+      - name: Enforce continuous hard-negative regression gate
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          replay=build/model-training/best/hard-negatives.tsv
+          test -s "$replay"
+          .venv/bin/python eval/long_far_stream.py \
+            --runner build/kws_raw_stream \
+            --model build/model-training/best/model.kwm \
+            --keywords build/model-training/best/keywords.kwk \
+            --negative-manifest "$replay" \
+            --hard-negative-rate-per-minute 8.0 \
+            --seconds 900 \
+            --seed 5501 \
+            --output-dir build/model-training/hard-negative-stream \
+            --max-far-per-hour 0
       - name: Retain trained model and iteration evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -192,7 +177,12 @@ jobs:
             build/model-training/domain-loop-manifest.json
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json
+            build/model-training/hard-negative-stream/
+            build/model-training/hard-negative-replay/
+            build/model-training/hard-negative-holdout/
             build/model-training/curriculum/
+            build/model-training/qualification-effective-config.json
+            build/model-training/qualification-dataset/qualification-cohort.json
             build/model-training/datasets/*/audit.json
           if-no-files-found: error
           retention-days: 30

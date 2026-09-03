@@ -94,15 +94,21 @@ if(KWS_BUILD_TESTS)
   target_include_directories(kws_decoder_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(kws_decoder_tests PRIVATE KwsPipeline::core)
 
+  add_executable(kws_decoder_retention_tests tests/test_decoder_retention.c)
+  target_include_directories(kws_decoder_retention_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_decoder_retention_tests PRIVATE KwsPipeline::core)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_keyword_pack_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_decoder_tests PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_decoder_retention_tests PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 
   add_test(NAME kws_tests COMMAND kws_tests)
   add_test(NAME kws_keyword_pack_tests COMMAND kws_keyword_pack_tests)
   add_test(NAME kws_decoder_tests COMMAND kws_decoder_tests)
+  add_test(NAME kws_decoder_retention_tests COMMAND kws_decoder_retention_tests)
 endif()
 
 if(KWS_BUILD_BENCH)
@@ -167,8 +173,7 @@ endif()
 install(TARGETS kws_pipeline
   EXPORT KwsPipelineTargets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 configure_package_config_file(

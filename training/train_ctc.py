@@ -37,6 +37,14 @@ WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
 POSITIVE_EXAMPLE_WEIGHT = 2.0
 ORDERED_TOKEN_LOSS_WEIGHT = 0.35
+# CTC intentionally ignores padded frames beyond each sample's true input
+# length. Give the streaming RNN an explicit post-utterance objective instead:
+# after a short 160-ms release allowance, zero acoustic input must converge to
+# blank before 500 ms. This trains out persistent recurrent token attractors
+# without adding a shipping-runtime reset heuristic or shortening weak speech.
+RECURRENT_RELEASE_TAIL_STEPS = 25
+RECURRENT_RELEASE_WARMUP_STEPS = 8
+RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -249,7 +257,11 @@ def collate(batch):
     ylen = torch.tensor([y.shape[0] for y in ys], dtype=torch.long)
     max_t = int(xlen.max())
     feature_dim = xs[0].shape[1]
-    padded = torch.zeros((len(xs), max_t, feature_dim))
+    # Preserve each sample's true CTC length while always giving the recurrent
+    # state enough zero-input steps to learn post-utterance release.
+    padded = torch.zeros(
+        (len(xs), max_t + RECURRENT_RELEASE_TAIL_STEPS, feature_dim)
+    )
     for index, x in enumerate(xs):
         padded[index, : x.shape[0]] = x
     targets = (
@@ -303,6 +315,30 @@ def ordered_token_loss(
     if not losses:
         return log_probs.sum() * 0.0, correct, total
     return torch.stack(losses).mean(), correct, total
+
+
+def recurrent_release_loss(
+    log_probs: torch.Tensor,
+    input_lengths: torch.Tensor,
+) -> torch.Tensor:
+    """Require recurrent acoustic memory to return to blank after an utterance.
+
+    The release region is outside every sample's CTC/ordered-token length, so
+    this cannot move target alignments or truncate weak terminal speech. The
+    warmup leaves a bounded natural decay interval before blank is enforced.
+    """
+    losses: list[torch.Tensor] = []
+    available_steps = int(log_probs.shape[0])
+    for batch_index, input_length in enumerate(input_lengths.tolist()):
+        steps = int(input_length)
+        start = steps + RECURRENT_RELEASE_WARMUP_STEPS
+        stop = steps + RECURRENT_RELEASE_TAIL_STEPS
+        if steps <= 0 or start >= stop or stop > available_steps:
+            raise ValueError("recurrent release tail does not fit model output")
+        losses.append(-log_probs[start:stop, batch_index, 0].mean())
+    if not losses:
+        return log_probs.sum() * 0.0
+    return torch.stack(losses).mean()
 
 
 def validate_warm_start(
@@ -370,6 +406,10 @@ def main() -> None:
         parser.error("--positive-example-weight must be finite and > 0")
     if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
         parser.error("--ordered-token-loss-weight must be finite and >= 0")
+    if not 0 <= RECURRENT_RELEASE_WARMUP_STEPS < RECURRENT_RELEASE_TAIL_STEPS:
+        parser.error("recurrent release warmup must be inside the release tail")
+    if not math.isfinite(RECURRENT_RELEASE_LOSS_WEIGHT) or RECURRENT_RELEASE_LOSS_WEIGHT <= 0.0:
+        parser.error("recurrent release loss weight must be finite and > 0")
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
 
@@ -412,6 +452,7 @@ def main() -> None:
         total = 0.0
         total_ctc = 0.0
         total_ordered = 0.0
+        total_release = 0.0
         ordered_correct = 0
         ordered_total = 0
         for x, y, xlen, ylen in loader:
@@ -427,7 +468,12 @@ def main() -> None:
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
                 log_probs, y, xlen, ylen
             )
-            loss = ctc_loss + args.ordered_token_loss_weight * ordered_loss
+            release_loss = recurrent_release_loss(log_probs, xlen)
+            loss = (
+                ctc_loss
+                + args.ordered_token_loss_weight * ordered_loss
+                + RECURRENT_RELEASE_LOSS_WEIGHT * release_loss
+            )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             nn.utils.clip_grad_norm_(trainable, GRAD_CLIP_NORM)
@@ -435,6 +481,7 @@ def main() -> None:
             total += float(loss.detach())
             total_ctc += float(ctc_loss.detach())
             total_ordered += float(ordered_loss.detach())
+            total_release += float(release_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
         batches = max(1, len(loader))
@@ -442,6 +489,7 @@ def main() -> None:
         print(
             f"epoch={epoch + 1} loss={total / batches:.6f} "
             f"ctc={total_ctc / batches:.6f} ordered={total_ordered / batches:.6f} "
+            f"release={total_release / batches:.6f} "
             f"ordered_token_acc={ordered_accuracy:.6f}"
         )
 
@@ -475,6 +523,9 @@ def main() -> None:
             "ctc_reduction": "per-frame-weighted",
             "positive_example_weight": args.positive_example_weight,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
+            "recurrent_release_tail_steps": RECURRENT_RELEASE_TAIL_STEPS,
+            "recurrent_release_warmup_steps": RECURRENT_RELEASE_WARMUP_STEPS,
+            "recurrent_release_loss_weight": RECURRENT_RELEASE_LOSS_WEIGHT,
             "hard_negative_capable": True,
             "training_environment": environment,
         },
