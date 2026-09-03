@@ -156,6 +156,8 @@ jobs:
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json
             build/model-training/hard-negative-stream/
+            build/model-training/hard-negative-replay/
+            build/model-training/hard-negative-holdout/
             build/model-training/curriculum/
             build/model-training/datasets/*/audit.json
           if-no-files-found: error
