@@ -98,6 +98,51 @@ static size_t make_test_model(uint8_t *blob, size_t cap) {
   return total;
 }
 
+static size_t make_recurrent_latch_model(uint8_t *blob, size_t cap) {
+  const uint16_t f = 32u;
+  const uint16_t h = 1u;
+  const uint16_t v = 2u;
+  const uint32_t wx = 72u;
+  const uint32_t wh = 104u;
+  const uint32_t bh = 108u;
+  const uint32_t wo = 112u;
+  const uint32_t bo = 116u;
+  const uint32_t total = 124u;
+
+  CHECK(cap >= total);
+  memset(blob, 0, total);
+  memcpy(blob, "KWSP", 4u);
+  put16(blob + 4u, KWS_MODEL_VERSION);
+  put16(blob + 6u, 72u);
+  put16(blob + 8u, f);
+  put16(blob + 10u, h);
+  put16(blob + 12u, v);
+  put16(blob + 14u, KWS_FRONTEND_LOGMEL);
+  put32(blob + 16u, KWS_SAMPLE_RATE_HZ);
+  put32(blob + 20u, KWS_FRAME_LENGTH_SAMPLES);
+  put32(blob + 24u, KWS_FRAME_HOP_SAMPLES);
+  putf(blob + 28u, 0.02f);
+  putf(blob + 32u, 0.01f);
+  putf(blob + 36u, 0.01f);
+  put64(blob + 40u, TEST_VOCAB_FINGERPRINT);
+  put32(blob + 48u, wx);
+  put32(blob + 52u, wh);
+  put32(blob + 56u, bh);
+  put32(blob + 60u, wo);
+  put32(blob + 64u, bo);
+  put32(blob + 68u, total);
+
+  /* The 400-Hz square-wave fixture produces strong positive logmel feature 4.
+   * That frame drives hidden state high; recurrent gain > 1 then creates a
+   * stable non-zero state even when every following feature frame is zero. */
+  blob[wx + 4u] = 127u;
+  blob[wh] = 127u;
+  blob[wo + 1u] = 127u;
+  putf(blob + bo + 0u, 0.20f);
+  putf(blob + bo + 4u, -0.20f);
+  return total;
+}
+
 static void test_model_and_engine(void) {
   _Alignas(max_align_t) uint8_t blob[512];
   _Alignas(max_align_t) uint8_t arena[65536];
@@ -228,6 +273,49 @@ static void test_model_and_engine(void) {
   CHECK(stats.max_detection_confidence >= first_detection.confidence);
 }
 
+static void test_recurrent_token_latch_expires(void) {
+  _Alignas(max_align_t) uint8_t blob[256];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  kws_config_t config = kws_default_config();
+  const uint16_t sequence[] = {1u};
+  kws_keyword_t keyword = make_keyword(77u, sequence, 1u, 0.40f);
+  int16_t trigger[400];
+  int16_t silence[KWS_FRAME_HOP_SAMPLES] = {0};
+  size_t bytes = make_recurrent_latch_model(blob, sizeof(blob));
+  int detected = 0;
+
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  config.min_speech_dbfs = -100.0f;
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) == KWS_OK);
+
+  for (size_t i = 0u; i < sizeof(trigger) / sizeof(trigger[0]); ++i) {
+    trigger[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
+  }
+  CHECK(kws_engine_accept_pcm16(engine, trigger, 320u, NULL, &detected) == KWS_OK);
+  CHECK(detected == 0);
+  CHECK(kws_engine_accept_pcm16(engine, trigger + 320u, 80u, NULL, &detected) == KWS_OK);
+  CHECK(detected == 0);
+
+  /* The crafted recurrent state would otherwise keep token 1 top-1 forever
+   * on zero features. Give the private latch guard ample time to clear it. */
+  for (unsigned frame = 0u; frame < 50u; ++frame) {
+    CHECK(kws_engine_accept_pcm16(engine, silence, KWS_FRAME_HOP_SAMPLES,
+                                  NULL, &detected) == KWS_OK);
+    CHECK(detected == 0);
+  }
+
+  /* Installing a keyword resets trie search but intentionally does not reset
+   * acoustic hidden state. A stale recurrent latch would therefore trigger on
+   * this all-zero frame before the runtime fix. */
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_OK);
+  CHECK(kws_engine_accept_pcm16(engine, silence, KWS_FRAME_HOP_SAMPLES,
+                                NULL, &detected) == KWS_OK);
+  CHECK(detected == 0);
+}
+
 static void test_validation(void) {
   _Alignas(max_align_t) uint8_t blob[512];
   _Alignas(max_align_t) uint8_t arena[65536];
@@ -340,6 +428,7 @@ static void test_metadata_and_build_identity(void) {
 
 int main(void) {
   test_model_and_engine();
+  test_recurrent_token_latch_expires();
   test_validation();
   test_metadata_and_build_identity();
   puts("kws_tests: ok");
