@@ -21,13 +21,13 @@ def sha256_file(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def write_negative_wav(path: pathlib.Path) -> None:
-    samples = [0] * SAMPLE_RATE_HZ
+def write_negative_wav(path: pathlib.Path, value: int = 0) -> None:
+    samples = [value] * SAMPLE_RATE_HZ
     with wave.open(str(path), "wb") as writer:
         writer.setnchannels(1)
         writer.setsampwidth(2)
         writer.setframerate(SAMPLE_RATE_HZ)
-        writer.writeframes(b"".join(struct.pack("<h", value) for value in samples))
+        writer.writeframes(b"".join(struct.pack("<h", sample) for sample in samples))
 
 
 def run_far(
@@ -124,12 +124,20 @@ def main() -> int:
             output=output,
             seed=404,
         )
+        assert summary["schema_version"] == 2
         assert summary["qualified"] is True
         assert summary["seconds"] == 3
         assert summary["false_accepts"] == 0
         assert summary["far_per_hour"] == 0.0
         assert summary["hard_negative_injections"] == 0
         assert summary["negative_manifest_sha256"] is None
+        assert summary["negative_manifest_clips"] == 0
+        assert summary["unique_hard_negative_clips_injected"] == 0
+        assert summary["min_hard_negative_injections_per_clip"] == 0
+        assert summary["min_observed_hard_negative_injections_per_clip"] == 0
+        assert summary["full_negative_manifest_coverage"] is True
+        assert summary["coverage_forced_injections"] == 0
+        assert summary["coverage_hard_negative_gain"] is None
         assert sum(summary["profile_seconds"].values()) == 3
         assert (output / "detections.jsonl").read_text(encoding="utf-8") == ""
 
@@ -158,16 +166,65 @@ def main() -> int:
             ),
         ]
         for item, path in zip(stressed, stressed_outputs):
+            assert item["schema_version"] == 2
             assert item["qualified"] is True
             assert item["false_accepts"] == 0
             assert item["hard_negative_rate_per_minute"] == 60.0
             assert item["hard_negative_injections"] == 3
             assert item["hard_negative_audio_seconds"] == 3.0
             assert item["negative_manifest_sha256"] == sha256_file(negative_manifest)
+            assert item["negative_manifest_clips"] == 1
+            assert item["unique_hard_negative_clips_injected"] == 1
+            assert item["min_hard_negative_injections_per_clip"] == 1
+            assert item["min_observed_hard_negative_injections_per_clip"] == 3
+            assert item["full_negative_manifest_coverage"] is True
+            assert item["coverage_forced_injections"] == 1
+            assert item["coverage_hard_negative_gain"] == 0.90
             injections = (path / "hard-negative-injections.jsonl").read_text(
                 encoding="utf-8"
             ).splitlines()
             assert len(injections) == 3
+            parsed = [json.loads(line) for line in injections]
+            assert sum(bool(row["coverage_required"]) for row in parsed) == 1
+
+        coverage_wav_a = root / "coverage-negative-a.wav"
+        coverage_wav_b = root / "coverage-negative-b.wav"
+        write_negative_wav(coverage_wav_a, 0)
+        write_negative_wav(coverage_wav_b, 64)
+        coverage_manifest = root / "coverage-hard-negatives.tsv"
+        coverage_manifest.write_text(
+            f"{coverage_wav_a.resolve()}\t1 2\n{coverage_wav_b.resolve()}\t2 1\n",
+            encoding="utf-8",
+        )
+        coverage_output = root / "far-coverage"
+        coverage_summary = run_far(
+            runner=args.runner,
+            model=model,
+            pack=pack,
+            output=coverage_output,
+            seed=407,
+            negative_manifest=coverage_manifest,
+        )
+        assert coverage_summary["qualified"] is True
+        assert coverage_summary["negative_manifest_clips"] == 2
+        assert coverage_summary["unique_hard_negative_clips_injected"] == 2
+        assert coverage_summary["min_hard_negative_injections_per_clip"] == 1
+        assert coverage_summary["min_observed_hard_negative_injections_per_clip"] == 1
+        assert coverage_summary["full_negative_manifest_coverage"] is True
+        assert coverage_summary["coverage_forced_injections"] == 2
+        assert coverage_summary["hard_negative_injections"] == 2
+        assert coverage_summary["hard_negative_audio_seconds"] == 2.0
+        coverage_rows = [
+            json.loads(line)
+            for line in (coverage_output / "hard-negative-injections.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ]
+        assert all(bool(row["coverage_required"]) for row in coverage_rows)
+        assert {row["source_sha256"] for row in coverage_rows} == {
+            sha256_file(coverage_wav_a),
+            sha256_file(coverage_wav_b),
+        }
 
         aggregate = root / "far-aggregate.json"
         code, aggregate_summary = aggregate_far(

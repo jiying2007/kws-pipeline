@@ -3,6 +3,8 @@
   "name": "xiaowo-torch-domain-iteration-v1",
   "seed": 1337,
   "qualification_holdout_seed": 271828,
+  "far_holdout_round_namespace": 2000000,
+  "retired_far_holdout_round_namespaces": [1000000],
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
   "domain_work_dir": "build/model-training",

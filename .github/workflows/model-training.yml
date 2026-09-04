@@ -105,21 +105,27 @@ jobs:
             --runner build/kws_wav \
             --work-dir build/model-training \
             --iteration-exit-code "$ITERATION_EXIT_CODE"
-      - name: Enforce synthetic qualification gate
+      - name: Enforce synthetic qualification and holdout-isolation gates
         run: |
           python3 - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
           root = Path('build/model-training')
+          config = json.loads(Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8'))
           summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
           cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
+          far_cohort_path = root / 'best/far-holdout-cohort.json'
+          far_cohort = json.loads(far_cohort_path.read_text(encoding='utf-8'))
           qualified = bool(summary['qualified'])
           train_exit = int(summary['training_exit_code'])
           iteration_exit = int(summary['iteration_exit_code'])
+          selection = summary.get('candidate_selection', {})
           print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
-          print(json.dumps(summary['candidate_selection'], indent=2, sort_keys=True))
+          print(json.dumps(selection, indent=2, sort_keys=True))
           print(json.dumps(cohort, indent=2, sort_keys=True))
+          print(json.dumps(far_cohort, indent=2, sort_keys=True))
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
           if iteration_exit not in (0, 1):
               raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
@@ -137,9 +143,39 @@ jobs:
               raise SystemExit('active qualification overlaps development/training WAV content')
           if int(cohort.get('expected_wakes', 0)) != 256:
               raise SystemExit('active qualification cohort does not contain 256 expected wakes')
-          selection = summary.get('candidate_selection', {})
           if bool(selection.get('qualification_used_for_selection', True)):
               raise SystemExit('qualification leaked into candidate selection')
+          if bool(selection.get('far_holdout_used_for_training', True)):
+              raise SystemExit('FAR holdout leaked into model training')
+          if bool(selection.get('far_holdout_used_for_selection', True)):
+              raise SystemExit('FAR holdout leaked into candidate selection')
+          if int(selection.get('overlapping_training_holdout_wav_sha256', -1)) != 0:
+              raise SystemExit('active FAR holdout overlaps training replay WAV content')
+          if int(selection.get('overlapping_retired_active_far_holdout_wav_sha256', -1)) != 0:
+              raise SystemExit('active FAR holdout overlaps retired FAR holdout WAV content')
+
+          active_namespace = int(config['far_holdout_round_namespace'])
+          retired_namespaces = [int(value) for value in config['retired_far_holdout_round_namespaces']]
+          if int(selection.get('far_holdout_round_namespace', -1)) != active_namespace:
+              raise SystemExit('candidate-selection FAR namespace differs from config')
+          if [int(value) for value in selection.get('retired_far_holdout_round_namespaces', [])] != retired_namespaces:
+              raise SystemExit('candidate-selection retired FAR namespaces differ from config')
+          if int(far_cohort.get('active_namespace', -1)) != active_namespace:
+              raise SystemExit('FAR cohort active namespace differs from config')
+          if [int(row['namespace']) for row in far_cohort.get('retired', [])] != retired_namespaces:
+              raise SystemExit('FAR cohort retired namespaces differ from config')
+          if int(far_cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
+              raise SystemExit('FAR cohort attests retired/active WAV overlap')
+          if int(far_cohort.get('active_clip_count', 0)) != int(selection.get('far_holdout_clip_count', -1)):
+              raise SystemExit('FAR cohort active clip count differs from candidate-selection evidence')
+          if str(far_cohort.get('active_manifest_sha256', '')) != str(selection.get('far_holdout_sha256', '')):
+              raise SystemExit('FAR cohort active manifest SHA differs from candidate-selection evidence')
+
+          digest = hashlib.sha256(far_cohort_path.read_bytes()).hexdigest()
+          if digest != str(selection.get('far_holdout_cohort_sha256', '')):
+              raise SystemExit('FAR cohort SHA differs from candidate-selection evidence')
+          if digest != str(summary.get('artifacts', {}).get('far-holdout-cohort.json', '')):
+              raise SystemExit('FAR cohort SHA differs from final artifact evidence')
           if not qualified:
               raise SystemExit('synthetic qualification gates were not met')
           PY
@@ -167,6 +203,31 @@ jobs:
             --seed 5501 \
             --output-dir build/model-training/hard-negative-stream \
             --max-far-per-hour 0
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('build/model-training')
+          training = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          stream = json.loads((root / 'hard-negative-stream/summary.json').read_text(encoding='utf-8'))
+          expected_clips = int(training['candidate_selection']['far_holdout_clip_count'])
+          if int(stream.get('schema_version', 0)) != 2:
+              raise SystemExit('continuous FAR summary is not coverage-aware schema v2')
+          if int(stream.get('false_accepts', -1)) != 0 or float(stream.get('far_per_hour', -1.0)) != 0.0:
+              raise SystemExit('continuous FAR gate is not zero-error')
+          if not bool(stream.get('full_negative_manifest_coverage')):
+              raise SystemExit('continuous FAR gate did not cover the full active holdout')
+          if int(stream.get('negative_manifest_clips', -1)) != expected_clips:
+              raise SystemExit('continuous FAR manifest clip count differs from finalized holdout')
+          if int(stream.get('unique_hard_negative_clips_injected', -1)) != expected_clips:
+              raise SystemExit('continuous FAR did not inject every active holdout clip')
+          if int(stream.get('min_observed_hard_negative_injections_per_clip', 0)) < 1:
+              raise SystemExit('continuous FAR left at least one active holdout clip unexercised')
+          if int(stream.get('coverage_forced_injections', -1)) != expected_clips:
+              raise SystemExit('continuous FAR forced coverage count differs from active holdout size')
+          if float(stream.get('coverage_hard_negative_gain', 0.0)) != 0.90:
+              raise SystemExit('continuous FAR coverage gain drifted from 0.90')
+          PY
       - name: Retain trained model and iteration evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -180,6 +241,7 @@ jobs:
             build/model-training/hard-negative-stream/
             build/model-training/hard-negative-replay/
             build/model-training/hard-negative-holdout/
+            build/model-training/retired-hard-negative-holdout/
             build/model-training/curriculum/
             build/model-training/qualification-effective-config.json
             build/model-training/qualification-dataset/qualification-cohort.json

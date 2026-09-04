@@ -141,6 +141,8 @@ def main() -> int:
     parser.add_argument("--capture-context-seconds", type=float, default=2.0)
     parser.add_argument("--negative-manifest", type=pathlib.Path)
     parser.add_argument("--hard-negative-rate-per-minute", type=float, default=0.0)
+    parser.add_argument("--min-hard-negative-injections-per-clip", type=int)
+    parser.add_argument("--coverage-hard-negative-gain", type=float, default=0.90)
     args = parser.parse_args()
     if args.seconds <= 0:
         parser.error("--seconds must be > 0")
@@ -154,14 +156,58 @@ def main() -> int:
         or not math.isfinite(args.hard_negative_rate_per_minute)
     ):
         parser.error("--hard-negative-rate-per-minute must be finite and in [0,60]")
+    if not math.isfinite(args.coverage_hard_negative_gain) or not (
+        0.0 < args.coverage_hard_negative_gain <= 1.0
+    ):
+        parser.error("--coverage-hard-negative-gain must be finite and in (0,1]")
+    if args.min_hard_negative_injections_per_clip is not None and (
+        args.min_hard_negative_injections_per_clip < 0
+    ):
+        parser.error("--min-hard-negative-injections-per-clip must be >= 0")
     if args.hard_negative_rate_per_minute > 0.0 and args.negative_manifest is None:
         parser.error("--negative-manifest is required when hard-negative injection is enabled")
+
+    min_injections_per_clip = args.min_hard_negative_injections_per_clip
+    if min_injections_per_clip is None:
+        min_injections_per_clip = 1 if args.negative_manifest is not None else 0
+    if min_injections_per_clip > 0 and args.negative_manifest is None:
+        parser.error(
+            "--negative-manifest is required when per-clip hard-negative coverage is enabled"
+        )
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     rng = random.Random(args.seed)
     negative_manifest = args.negative_manifest.resolve() if args.negative_manifest else None
     negative_clips = load_negative_manifest(negative_manifest) if negative_manifest else []
+
+    coverage_schedule: list[int] = []
+    coverage_targets: list[int] = []
+    max_clip_span_seconds = 0
+    if negative_clips and min_injections_per_clip > 0:
+        coverage_rng = random.Random(args.seed ^ 0x5F3759DF)
+        for _ in range(min_injections_per_clip):
+            order = list(range(len(negative_clips)))
+            coverage_rng.shuffle(order)
+            coverage_schedule.extend(order)
+        max_clip_span_seconds = max(
+            1, max(int(math.ceil(float(clip["seconds"]))) for clip in negative_clips)
+        )
+        latest_start = args.seconds - max_clip_span_seconds
+        if latest_start < 0:
+            parser.error("stream duration is shorter than the longest hard-negative clip")
+        if len(coverage_schedule) == 1:
+            coverage_targets = [0]
+        else:
+            stride = latest_start / float(len(coverage_schedule) - 1)
+            if stride < float(max_clip_span_seconds):
+                parser.error(
+                    "stream duration is too short to guarantee requested per-clip hard-negative coverage"
+                )
+            coverage_targets = [
+                int(round(index * stride)) for index in range(len(coverage_schedule))
+            ]
+
     process = subprocess.Popen(
         [
             str(args.runner.resolve()),
@@ -192,6 +238,9 @@ def main() -> int:
     captures: list[dict] = []
     profile_seconds: dict[str, int] = {}
     injections: list[dict] = []
+    injection_counts = {str(clip["sha256"]): 0 for clip in negative_clips}
+    coverage_cursor = 0
+    coverage_forced_injections = 0
     active_clip: dict | None = None
     active_offset = 0
     active_gain = 1.0
@@ -202,19 +251,47 @@ def main() -> int:
         for second in range(args.seconds):
             samples, scene = generate_second(rng, second)
             profile_seconds[scene["profile"]] = profile_seconds.get(scene["profile"], 0) + 1
-            if active_clip is None and negative_clips and rng.random() < injection_probability:
-                active_clip = rng.choice(negative_clips)
-                active_offset = 0
-                active_gain = rng.uniform(0.65, 1.0)
-                injections.append(
-                    {
-                        "start_second": second,
-                        "source_path": active_clip["path"],
-                        "source_sha256": active_clip["sha256"],
-                        "source_seconds": active_clip["seconds"],
-                        "gain": active_gain,
-                    }
-                )
+            if active_clip is None and negative_clips:
+                start_clip: dict | None = None
+                start_gain = 1.0
+                coverage_required = False
+                if (
+                    coverage_cursor < len(coverage_schedule)
+                    and second >= coverage_targets[coverage_cursor]
+                ):
+                    start_clip = negative_clips[coverage_schedule[coverage_cursor]]
+                    start_gain = args.coverage_hard_negative_gain
+                    coverage_required = True
+                    coverage_cursor += 1
+                    coverage_forced_injections += 1
+                else:
+                    next_target = (
+                        coverage_targets[coverage_cursor]
+                        if coverage_cursor < len(coverage_targets)
+                        else None
+                    )
+                    random_start_is_safe = (
+                        next_target is None
+                        or next_target - second > max_clip_span_seconds
+                    )
+                    if random_start_is_safe and rng.random() < injection_probability:
+                        start_clip = rng.choice(negative_clips)
+                        start_gain = rng.uniform(0.65, 1.0)
+                if start_clip is not None:
+                    active_clip = start_clip
+                    active_offset = 0
+                    active_gain = start_gain
+                    injection_counts[str(active_clip["sha256"])] += 1
+                    injections.append(
+                        {
+                            "start_second": second,
+                            "source_path": active_clip["path"],
+                            "source_sha256": active_clip["sha256"],
+                            "source_seconds": active_clip["seconds"],
+                            "gain": active_gain,
+                            "coverage_required": coverage_required,
+                        }
+                    )
             if active_clip is not None:
                 source_samples = active_clip["samples"]
                 mix_count = min(len(samples), len(source_samples) - active_offset)
@@ -292,8 +369,17 @@ def main() -> int:
         + ("\n" if injections else ""),
         encoding="utf-8",
     )
+
+    observed_counts = list(injection_counts.values())
+    unique_clips_injected = sum(1 for count in observed_counts if count > 0)
+    min_observed_injections_per_clip = min(observed_counts) if observed_counts else 0
+    full_negative_manifest_coverage = (
+        not negative_clips
+        or min_observed_injections_per_clip >= min_injections_per_clip
+    )
+    qualified = far <= args.max_far_per_hour and full_negative_manifest_coverage
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "synthetic-streaming-far",
         "seconds": args.seconds,
         "audio_hours": audio_hours,
@@ -301,12 +387,21 @@ def main() -> int:
         "false_accepts": len(detections),
         "far_per_hour": far,
         "max_far_per_hour": args.max_far_per_hour,
-        "qualified": far <= args.max_far_per_hour,
+        "qualified": qualified,
         "profile_seconds": profile_seconds,
         "hard_negative_rate_per_minute": args.hard_negative_rate_per_minute,
         "hard_negative_injections": len(injections),
         "hard_negative_audio_seconds": injected_samples / SAMPLE_RATE_HZ,
         "negative_manifest_sha256": sha256_file(negative_manifest) if negative_manifest else None,
+        "negative_manifest_clips": len(negative_clips),
+        "unique_hard_negative_clips_injected": unique_clips_injected,
+        "min_hard_negative_injections_per_clip": min_injections_per_clip,
+        "min_observed_hard_negative_injections_per_clip": min_observed_injections_per_clip,
+        "full_negative_manifest_coverage": full_negative_manifest_coverage,
+        "coverage_forced_injections": coverage_forced_injections,
+        "coverage_hard_negative_gain": (
+            args.coverage_hard_negative_gain if negative_clips and min_injections_per_clip > 0 else None
+        ),
         "runner_sha256": sha256_file(args.runner),
         "model_sha256": sha256_file(args.model),
         "keyword_pack_sha256": sha256_file(args.keywords),
