@@ -1,20 +1,36 @@
 from __future__ import annotations
 
+import os
+
+# Keep the deterministic CPU contract visible in a training code file that is
+# hashed into exported model provenance.  sitecustomize.py applies the same
+# values before torch import; repeating them here makes the contract fail-safe
+# for direct module callers that bypass normal interpreter startup discovery.
+_DETERMINISTIC_CPU_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OMP_DYNAMIC": "FALSE",
+    "MKL_NUM_THREADS": "1",
+    "MKL_CBWR": "COMPATIBLE",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "ATEN_CPU_CAPABILITY": "default",
+}
+for _name, _value in _DETERMINISTIC_CPU_ENV.items():
+    os.environ[_name] = _value
+
 import torch
 from torch import nn
 
-# GitHub-hosted CPU runners have exposed different default inter-op thread
-# counts across otherwise identical training runs (for example 4 vs 2).  The
-# training loop already requests deterministic algorithms and a fixed RNG seed,
-# so leave no scheduler topology implicit: pin both pools before model creation
-# or any training work.  Keep this in the training-only model module so every
-# caller that can instantiate TinyStreamingRNN receives the same runtime
-# topology, including warm-start and reproducibility probes.
-TRAINING_TORCH_NUM_THREADS = 2
+# Fixed RNG seeds and torch deterministic algorithms still leave CPU math
+# topology/dispatch implicit unless both pools and MKLDNN are pinned.  Use one
+# thread for both pools and disable MKLDNN so model/FFT/linear execution does
+# not depend on hosted-runner thread scheduling or oneDNN kernel selection.
+TRAINING_TORCH_NUM_THREADS = 1
 TRAINING_TORCH_NUM_INTEROP_THREADS = 1
 
 torch.set_num_threads(TRAINING_TORCH_NUM_THREADS)
 torch.set_num_interop_threads(TRAINING_TORCH_NUM_INTEROP_THREADS)
+torch.backends.mkldnn.enabled = False
 
 
 class TinyStreamingRNN(nn.Module):
