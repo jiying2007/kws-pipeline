@@ -59,8 +59,11 @@ def main() -> int:
     seeds: set[int] = set()
     for path in args.summary:
         row = load(path)
-        if int(row.get("schema_version", 0)) != 1:
+        schema_version = int(row.get("schema_version", 0))
+        if schema_version not in (1, 2):
             raise ValueError(f"{path}: unsupported FAR summary schema")
+        if schema_version >= 2 and not bool(row.get("full_negative_manifest_coverage", False)):
+            raise ValueError(f"{path}: FAR shard did not cover its full hard-negative manifest")
         negative_manifest = row.get("negative_manifest_sha256")
         if negative_manifest is not None and not isinstance(negative_manifest, str):
             raise ValueError(f"{path}: negative_manifest_sha256 must be a string or null")
