@@ -20,18 +20,18 @@ def main() -> int:
     assert "torch==2.13.0" in lock
 
     # Reproducible CPU training requires more than a fixed RNG seed. Pin the
-    # pre-import BLAS/ATen dispatch environment, preserve the qualified two-
-    # thread intra-op path, pin one inter-op thread, and disable MKLDNN before
-    # any model/feature work. Keep the same literals in model.py so exported
-    # training-code provenance attests the effective contract.
+    # pre-import BLAS/ATen dispatch environment to the common AVX2 baseline,
+    # preserve the qualified two-thread intra-op path, pin one inter-op thread,
+    # and disable MKLDNN before model/feature work. Keep the same literals in
+    # model.py so exported training-code provenance attests the effective contract.
     for source in (site_source, model_source):
         assert '"OMP_NUM_THREADS": "2"' in source
         assert '"OMP_DYNAMIC": "FALSE"' in source
         assert '"MKL_NUM_THREADS": "2"' in source
-        assert '"MKL_CBWR": "COMPATIBLE"' in source
+        assert '"MKL_CBWR": "AVX2"' in source
         assert '"OPENBLAS_NUM_THREADS": "2"' in source
         assert '"NUMEXPR_NUM_THREADS": "2"' in source
-        assert '"ATEN_CPU_CAPABILITY": "default"' in source
+        assert '"ATEN_CPU_CAPABILITY": "avx2"' in source
     assert "TRAINING_TORCH_NUM_THREADS = 2" in model_source
     assert "TRAINING_TORCH_NUM_INTEROP_THREADS = 1" in model_source
     assert "torch.set_num_threads(TRAINING_TORCH_NUM_THREADS)" in model_source
