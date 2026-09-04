@@ -3,17 +3,19 @@ from __future__ import annotations
 import os
 
 # Keep the deterministic CPU contract visible in a training code file that is
-# hashed into exported model provenance.  sitecustomize.py applies the same
+# hashed into exported model provenance. sitecustomize.py applies the same
 # values before torch import; repeating them here makes the contract fail-safe
 # for direct module callers that bypass normal interpreter startup discovery.
+# Use AVX2 as the common hosted-runner baseline so AVX2/AVX512 dispatch cannot
+# change the training trajectory while avoiding the generic-kernel regression.
 _DETERMINISTIC_CPU_ENV = {
     "OMP_NUM_THREADS": "2",
     "OMP_DYNAMIC": "FALSE",
     "MKL_NUM_THREADS": "2",
-    "MKL_CBWR": "COMPATIBLE",
+    "MKL_CBWR": "AVX2",
     "OPENBLAS_NUM_THREADS": "2",
     "NUMEXPR_NUM_THREADS": "2",
-    "ATEN_CPU_CAPABILITY": "default",
+    "ATEN_CPU_CAPABILITY": "avx2",
 }
 for _name, _value in _DETERMINISTIC_CPU_ENV.items():
     os.environ[_name] = _value
@@ -23,8 +25,8 @@ from torch import nn
 
 # Fixed RNG seeds and torch deterministic algorithms still leave CPU math
 # topology/dispatch implicit unless both pools and the backend are pinned.
-# Preserve the previously qualified two-thread intra-op trajectory while
-# fixing inter-op scheduling and generic CPU/backend dispatch across runners.
+# Preserve the qualified two-thread intra-op path, pin inter-op scheduling,
+# disable MKLDNN, and force one AVX2 numerical backend across hosted runners.
 TRAINING_TORCH_NUM_THREADS = 2
 TRAINING_TORCH_NUM_INTEROP_THREADS = 1
 
