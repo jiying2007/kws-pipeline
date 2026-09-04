@@ -18,7 +18,7 @@ from iterate_domain import base_gate, domain_gate, evaluate, gate_values  # noqa
 # render_hard_negative_replay uses round_index only as deterministic seed input
 # plus evidence metadata. Keep FAR holdout synthesis in a disjoint seed namespace
 # while preserving the selected round's acoustic curriculum distribution.
-FAR_HOLDOUT_ROUND_NAMESPACE = 1_000_000
+DEFAULT_FAR_HOLDOUT_ROUND_NAMESPACE = 1_000_000
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -93,6 +93,22 @@ def main() -> int:
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     config = json.loads(config_path.read_text(encoding="utf-8"))
+    far_holdout_namespace = int(
+        config.get("far_holdout_round_namespace", DEFAULT_FAR_HOLDOUT_ROUND_NAMESPACE)
+    )
+    retired_raw = config.get("retired_far_holdout_round_namespaces", [])
+    if not isinstance(retired_raw, list):
+        raise RuntimeError("retired_far_holdout_round_namespaces must be a list")
+    retired_far_holdout_namespaces = [int(value) for value in retired_raw]
+    if far_holdout_namespace < 0:
+        raise RuntimeError("far_holdout_round_namespace must be >= 0")
+    if any(value < 0 for value in retired_far_holdout_namespaces):
+        raise RuntimeError("retired FAR holdout namespaces must be >= 0")
+    if len(set(retired_far_holdout_namespaces)) != len(retired_far_holdout_namespaces):
+        raise RuntimeError("retired FAR holdout namespaces must be unique")
+    if far_holdout_namespace in retired_far_holdout_namespaces:
+        raise RuntimeError("active FAR holdout namespace is also marked retired")
+
     eligible = [
         row
         for row in manifest["records"]
@@ -171,7 +187,7 @@ def main() -> int:
         curriculum_path = root / "curriculum" / f"round-{selected_round - 1:02d}.json"
         require_file(curriculum_path, "selected-round input curriculum")
         replay_curriculum = json.loads(curriculum_path.read_text(encoding="utf-8"))
-    holdout_generation_index = FAR_HOLDOUT_ROUND_NAMESPACE + selected_round
+    holdout_generation_index = far_holdout_namespace + selected_round
     holdout_dir = root / "hard-negative-holdout" / f"round-{selected_round:02d}"
     holdout_meta = render_hard_negative_replay(
         config_path,
@@ -202,6 +218,68 @@ def main() -> int:
     shutil.copy2(holdout_manifest, best_dir / "hard-negatives.tsv")
     shutil.copy2(holdout_evidence, best_dir / "hard-negative-holdout.json")
 
+    # Once a FAR holdout has influenced debugging, it is development evidence.
+    # Re-render each retired deterministic namespace with the same selected-round
+    # curriculum and prove the newly active namespace has zero WAV-byte overlap.
+    retired_holdouts: list[dict] = []
+    retired_active_overlap = 0
+    for retired_namespace in retired_far_holdout_namespaces:
+        retired_generation_index = retired_namespace + selected_round
+        retired_dir = (
+            root
+            / "retired-hard-negative-holdout"
+            / f"namespace-{retired_namespace}"
+            / f"round-{selected_round:02d}"
+        )
+        retired_meta = render_hard_negative_replay(
+            config_path,
+            retired_dir,
+            round_index=retired_generation_index,
+            curriculum_weights=replay_curriculum,
+        )
+        retired_manifest = pathlib.Path(str(retired_meta["manifest"]))
+        require_file(retired_manifest, "retired FAR hard-negative holdout manifest")
+        retired_sha = sha256_file(retired_manifest)
+        retired_hashes = manifest_clip_hashes(retired_manifest)
+        if len(retired_hashes) != len(holdout_clip_hashes):
+            raise RuntimeError(
+                "retired/active FAR holdout clip-count mismatch: "
+                f"retired={len(retired_hashes)} active={len(holdout_clip_hashes)}"
+            )
+        overlap = retired_hashes & holdout_clip_hashes
+        retired_active_overlap += len(overlap)
+        if overlap:
+            raise RuntimeError(
+                f"active FAR holdout overlaps {len(overlap)} WAV(s) with retired "
+                f"namespace {retired_namespace}"
+            )
+        retired_holdouts.append(
+            {
+                "namespace": retired_namespace,
+                "generation_index": retired_generation_index,
+                "manifest_sha256": retired_sha,
+                "clip_count": len(retired_hashes),
+                "overlapping_active_wav_sha256": 0,
+            }
+        )
+
+    far_holdout_cohort = {
+        "schema_version": 1,
+        "policy": "retire-exposed-far-holdout-and-rotate-namespace",
+        "active_namespace": far_holdout_namespace,
+        "active_generation_index": holdout_generation_index,
+        "active_manifest_sha256": holdout_sha,
+        "active_clip_count": len(holdout_clip_hashes),
+        "retired": retired_holdouts,
+        "overlapping_retired_active_wav_sha256": retired_active_overlap,
+    }
+    far_holdout_cohort_path = best_dir / "far-holdout-cohort.json"
+    far_holdout_cohort_path.write_text(
+        json.dumps(far_holdout_cohort, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        + "\n",
+        encoding="utf-8",
+    )
+
     # Selection above uses calibration/test evidence only. Re-run untouched
     # qualification after selection so qualification cannot influence candidate
     # choice, curriculum, training replay, or FAR holdout generation.
@@ -220,6 +298,7 @@ def main() -> int:
     gates = gate_values(config.get("domain_gates", {}))
     qualified = base_gate(qualification, gates) and domain_gate(qualification_domains, gates)
 
+    far_holdout_cohort_sha = sha256_file(far_holdout_cohort_path)
     candidate_selection = {
         "policy": "latest-strict-gate-passing-round",
         "eligible_rounds": eligible_rounds,
@@ -238,11 +317,15 @@ def main() -> int:
         "far_holdout_source": str(holdout_manifest.relative_to(ROOT)),
         "far_holdout_sha256": holdout_sha,
         "far_holdout_generation_index": holdout_generation_index,
+        "far_holdout_round_namespace": far_holdout_namespace,
+        "retired_far_holdout_round_namespaces": retired_far_holdout_namespaces,
+        "far_holdout_cohort_sha256": far_holdout_cohort_sha,
         "far_holdout_used_for_training": False,
         "far_holdout_used_for_selection": False,
         "training_replay_clip_count": len(training_clip_hashes),
         "far_holdout_clip_count": len(holdout_clip_hashes),
         "overlapping_training_holdout_wav_sha256": 0,
+        "overlapping_retired_active_far_holdout_wav_sha256": retired_active_overlap,
     }
 
     manifest["best_round"] = selected_round
@@ -252,6 +335,7 @@ def main() -> int:
     manifest["best_pack_sha256"] = sha256_file(best_dir / "keywords.kwk")
     manifest["best_training_hard_negative_manifest_sha256"] = training_replay_sha
     manifest["best_hard_negative_manifest_sha256"] = holdout_sha
+    manifest["best_far_holdout_cohort_sha256"] = far_holdout_cohort_sha
     manifest["qualification"] = qualification
     manifest["qualification_domains"] = qualification_domains
     manifest["qualified"] = bool(qualified)
@@ -271,6 +355,7 @@ def main() -> int:
         best_dir / "training-hard-negatives.json",
         best_dir / "hard-negatives.tsv",
         best_dir / "hard-negative-holdout.json",
+        best_dir / "far-holdout-cohort.json",
     ]
     for path in required:
         require_file(path, "final training artifact")
