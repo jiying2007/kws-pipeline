@@ -105,8 +105,8 @@
   },
   "domain_iteration": {
     "backend": "torch_ctc",
-    "max_rounds": 3,
-    "min_rounds": 3,
+    "max_rounds": 4,
+    "min_rounds": 4,
     "patience": 3,
     "curriculum_strength": 2.5,
     "max_domain_weight": 6.0,
