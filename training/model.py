@@ -7,12 +7,12 @@ import os
 # values before torch import; repeating them here makes the contract fail-safe
 # for direct module callers that bypass normal interpreter startup discovery.
 _DETERMINISTIC_CPU_ENV = {
-    "OMP_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "2",
     "OMP_DYNAMIC": "FALSE",
-    "MKL_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "2",
     "MKL_CBWR": "COMPATIBLE",
-    "OPENBLAS_NUM_THREADS": "1",
-    "NUMEXPR_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "2",
+    "NUMEXPR_NUM_THREADS": "2",
     "ATEN_CPU_CAPABILITY": "default",
 }
 for _name, _value in _DETERMINISTIC_CPU_ENV.items():
@@ -22,10 +22,10 @@ import torch
 from torch import nn
 
 # Fixed RNG seeds and torch deterministic algorithms still leave CPU math
-# topology/dispatch implicit unless both pools and MKLDNN are pinned.  Use one
-# thread for both pools and disable MKLDNN so model/FFT/linear execution does
-# not depend on hosted-runner thread scheduling or oneDNN kernel selection.
-TRAINING_TORCH_NUM_THREADS = 1
+# topology/dispatch implicit unless both pools and the backend are pinned.
+# Preserve the previously qualified two-thread intra-op trajectory while
+# fixing inter-op scheduling and generic CPU/backend dispatch across runners.
+TRAINING_TORCH_NUM_THREADS = 2
 TRAINING_TORCH_NUM_INTEROP_THREADS = 1
 
 torch.set_num_threads(TRAINING_TORCH_NUM_THREADS)
