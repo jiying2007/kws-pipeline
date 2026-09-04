@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ staging-"
+  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ staging-"
 
 jobs:
   sweep-merged-branches:
