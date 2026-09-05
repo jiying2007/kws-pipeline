@@ -17,6 +17,54 @@ def _target_rows(targets: torch.Tensor, target_lengths: torch.Tensor) -> list[tu
     return rows
 
 
+def _keyword_completion_margin(
+    *,
+    log_probs: torch.Tensor,
+    input_lengths: torch.Tensor,
+    true_rows: list[tuple[int, ...]],
+    keywords: set[tuple[int, ...]],
+    blank: int,
+    margin: float,
+) -> torch.Tensor:
+    """Return a temporal token-vs-blank margin for exact keyword positives.
+
+    Whole-utterance CTC ranking can still accept a wake path whose weakest token
+    is locally dominated by blank at the streaming completion frame. Reuse the
+    ordered-token chronological regions, select the frame where each correct
+    token is strongest, and require that token to beat blank at that same frame.
+    Comparing at the same frame is deliberate: blank is allowed to dominate the
+    gaps between CTC token emissions.
+
+    The weakest target occurrence wins by max hinge, so a weak terminal token is
+    never diluted by the other, already-strong keyword tokens.
+    """
+    per_sample: list[torch.Tensor] = []
+    for batch_index, row in enumerate(true_rows):
+        if row not in keywords:
+            per_sample.append(log_probs[:, batch_index].sum() * 0.0)
+            continue
+        steps = int(input_lengths[batch_index])
+        if steps <= 0:
+            raise ValueError("input length must be positive")
+        count = len(row)
+        token_hinges: list[torch.Tensor] = []
+        for occurrence, token in enumerate(row):
+            start = (occurrence * steps) // count
+            stop = max(start + 1, ((occurrence + 1) * steps) // count)
+            stop = min(stop, steps)
+            token_region = log_probs[start:stop, batch_index, token]
+            best_frame = start + int(token_region.detach().argmax())
+            token_hinges.append(
+                torch.relu(
+                    float(margin)
+                    + log_probs[best_frame, batch_index, blank]
+                    - log_probs[best_frame, batch_index, token]
+                )
+            )
+        per_sample.append(torch.stack(token_hinges).amax())
+    return torch.stack(per_sample)
+
+
 def keyword_sequence_margin_loss(
     *,
     log_probs: torch.Tensor,
@@ -31,13 +79,18 @@ def keyword_sequence_margin_loss(
     """Return a per-sample wake/non-wake sequence-discriminative hinge.
 
     For a real wake example, its true keyword path must beat both the blank-only
-    path and every other configured wake phrase. For a non-wake example, its true
-    target path (including the blank-only target for background) must beat every
-    configured wake phrase. All CTC NLLs are normalized by true acoustic length.
+    path and every other configured wake phrase. Exact keyword positives also
+    require every chronological target occurrence to beat blank at its strongest
+    token frame, aligning the recall objective with streaming completion timing.
+    For a non-wake example, its true target path (including the blank-only target
+    for background) must beat every configured wake phrase. All CTC NLLs are
+    normalized by true acoustic length.
 
-    The loss uses the worst competing path, not an average across keywords.
-    Product semantics are wake-on-any-keyword, so averaging would dilute one
-    dangerous path as more custom keywords are configured.
+    The loss uses the worst competing path / weakest completion token, not an
+    average. Product semantics are wake-on-any-keyword, so averaging would dilute
+    one dangerous path as more custom keywords are configured. The sequence and
+    completion terms are combined with max rather than sum so this objective keeps
+    the qualified global 0.10 loss scale instead of silently increasing it.
     """
     if log_probs.ndim != 3:
         raise ValueError("log_probs must be [T,B,V]")
@@ -127,4 +180,13 @@ def keyword_sequence_margin_loss(
             torch.relu(float(margin) + true_norm - keyword_norm) * include
         )
 
-    return torch.stack(competing_hinges, dim=0).amax(dim=0)
+    sequence_hinge = torch.stack(competing_hinges, dim=0).amax(dim=0)
+    completion_hinge = _keyword_completion_margin(
+        log_probs=log_probs,
+        input_lengths=input_lengths,
+        true_rows=true_rows,
+        keywords=seen,
+        blank=blank,
+        margin=float(margin),
+    )
+    return torch.maximum(sequence_hinge, completion_hinge)
