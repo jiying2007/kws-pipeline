@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -12,6 +13,14 @@ def main() -> int:
     model_source = (ROOT / "training" / "model.py").read_text(encoding="utf-8")
     site_source = (ROOT / "training" / "sitecustomize.py").read_text(encoding="utf-8")
     train_source = (ROOT / "training" / "train_ctc.py").read_text(encoding="utf-8")
+    qualification_source = (ROOT / "training" / "render_qualification_holdout.py").read_text(
+        encoding="utf-8"
+    )
+    formal = json.loads(
+        (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(
+            encoding="utf-8"
+        )
+    )
     assert "ARG KWS_TRAINING_BASE" in dockerfile
     assert "FROM ${KWS_TRAINING_BASE}" in dockerfile
     assert "pip install" not in dockerfile
@@ -46,6 +55,26 @@ def main() -> int:
         in train_source
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
+
+    # Once a qualification seed has been inspected to tune the model it becomes
+    # development evidence. Keep those seeds explicit and require the rotation
+    # implementation to reconstruct them and prove zero active WAV-SHA overlap.
+    assert int(formal["qualification_holdout_seed"]) == 271830
+    assert [int(value) for value in formal["retired_qualification_holdout_seeds"]] == [
+        271828,
+        271829,
+    ]
+    replay = {
+        tuple(str(token) for token in item["tokens"]): int(item["examples"])
+        for item in formal["domain_iteration"]["hard_negative_replay"]
+    }
+    assert replay[("ni3", "hao3", "xiao3")] == 24
+    assert replay[("xiao3", "wo1", "xiao3")] == 24
+    assert "normalize_retired_qualification_seeds" in qualification_source
+    assert "retired_exposed_qualification_seeds" in qualification_source
+    assert "overlapping_exposed_active_wav_sha256" in qualification_source
+    assert "active qualification overlaps" in qualification_source
+    assert "retired-qualification-scratch" in qualification_source
 
     module_path = ROOT / "training" / "build_container.py"
     spec = importlib.util.spec_from_file_location("build_container", module_path)
