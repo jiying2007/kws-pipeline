@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "xiaowo-torch-domain-iteration-v1",
   "seed": 1337,
-  "qualification_holdout_seed": 271829,
+  "qualification_holdout_seed": 271830,
   "far_holdout_round_namespace": 2000000,
   "retired_far_holdout_round_namespaces": [1000000],
   "tokens": "keywords/tokens.example.txt",
@@ -127,6 +127,10 @@
       },
       {
         "tokens": ["ni3", "hao3", "xiao3"],
+        "examples": 24
+      },
+      {
+        "tokens": ["xiao3", "wo1", "xiao3"],
         "examples": 24
       }
     ]
