@@ -26,6 +26,7 @@ from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
+from sequence_margin import keyword_sequence_margin_loss
 
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
@@ -37,6 +38,8 @@ WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
 POSITIVE_EXAMPLE_WEIGHT = 2.0
 ORDERED_TOKEN_LOSS_WEIGHT = 0.35
+KEYWORD_SEQUENCE_MARGIN = 0.05
+KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10
 # CTC intentionally ignores padded frames beyond each sample's true input
 # length. Give the streaming RNN an explicit post-utterance objective instead:
 # after a short 160-ms release allowance, zero acoustic input must converge to
@@ -80,6 +83,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend.py",
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
+        ROOT / "training" / "sequence_margin.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
@@ -121,9 +125,41 @@ def parse_token_ids(value, label: str) -> list[int]:
             return [int(item) for item in value.split()]
         except ValueError as exc:
             raise ValueError(f"{label}: token ids must be integers") from exc
-    if isinstance(value, list) and all(isinstance(item, int) and not isinstance(item, bool) for item in value):
+    if isinstance(value, list) and all(
+        isinstance(item, int) and not isinstance(item, bool) for item in value
+    ):
         return list(value)
     raise ValueError(f"{label}: expected token id string/list")
+
+
+def load_keyword_sequences(path: pathlib.Path, token_map: dict[str, int]) -> list[list[int]]:
+    sequences: list[list[int]] = []
+    seen: set[tuple[int, ...]] = set()
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        if len(cols) < 4:
+            raise ValueError(f"{path}:{line_no}: expected keyword TSV with token column")
+        names = cols[3].split()
+        if not names:
+            raise ValueError(f"{path}:{line_no}: keyword token sequence is empty")
+        missing = [name for name in names if name not in token_map]
+        if missing:
+            raise ValueError(
+                f"{path}:{line_no}: keyword tokens missing from vocabulary: {', '.join(missing)}"
+            )
+        sequence = [int(token_map[name]) for name in names]
+        key = tuple(sequence)
+        if key in seen:
+            raise ValueError(f"{path}:{line_no}: duplicate keyword token sequence")
+        if any(token <= 0 for token in sequence):
+            raise ValueError(f"{path}:{line_no}: keyword sequence may not contain blank")
+        seen.add(key)
+        sequences.append(sequence)
+    if not sequences:
+        raise ValueError("keyword TSV contains no wake sequences")
+    return sequences
 
 
 def manifest_rows(path: pathlib.Path) -> list[dict]:
@@ -368,6 +404,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, action="append", type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
+    parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--feature-dim", type=int, default=32)
     parser.add_argument("--hidden-dim", type=int, default=48)
@@ -388,6 +425,7 @@ def main() -> None:
     args = parser.parse_args()
 
     token_map = load_tokens(args.tokens)
+    keyword_sequences = load_keyword_sequences(args.keywords, token_map)
     vocab_size_value = vocab_size(token_map)
     fingerprint = vocab_fingerprint(token_map)
     if not 2 <= vocab_size_value <= MAX_VOCAB_SIZE:
@@ -406,6 +444,13 @@ def main() -> None:
         parser.error("--positive-example-weight must be finite and > 0")
     if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
         parser.error("--ordered-token-loss-weight must be finite and >= 0")
+    if not math.isfinite(KEYWORD_SEQUENCE_MARGIN) or KEYWORD_SEQUENCE_MARGIN <= 0.0:
+        parser.error("keyword sequence margin must be finite and > 0")
+    if (
+        not math.isfinite(KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT)
+        or KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT <= 0.0
+    ):
+        parser.error("keyword sequence margin loss weight must be finite and > 0")
     if not 0 <= RECURRENT_RELEASE_WARMUP_STEPS < RECURRENT_RELEASE_TAIL_STEPS:
         parser.error("recurrent release warmup must be inside the release tail")
     if not math.isfinite(RECURRENT_RELEASE_LOSS_WEIGHT) or RECURRENT_RELEASE_LOSS_WEIGHT <= 0.0:
@@ -452,6 +497,7 @@ def main() -> None:
         total = 0.0
         total_ctc = 0.0
         total_ordered = 0.0
+        total_margin = 0.0
         total_release = 0.0
         ordered_correct = 0
         ordered_total = 0
@@ -468,10 +514,22 @@ def main() -> None:
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
                 log_probs, y, xlen, ylen
             )
+            margin_per_sample = keyword_sequence_margin_loss(
+                log_probs=log_probs,
+                targets=y,
+                input_lengths=xlen,
+                target_lengths=ylen,
+                true_ctc_nll=raw_ctc,
+                keyword_sequences=keyword_sequences,
+                blank=0,
+                margin=KEYWORD_SEQUENCE_MARGIN,
+            )
+            margin_loss = (margin_per_sample * sample_weights).sum() / sample_weights.sum()
             release_loss = recurrent_release_loss(log_probs, xlen)
             loss = (
                 ctc_loss
                 + args.ordered_token_loss_weight * ordered_loss
+                + KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT * margin_loss
                 + RECURRENT_RELEASE_LOSS_WEIGHT * release_loss
             )
             optimizer.zero_grad(set_to_none=True)
@@ -481,6 +539,7 @@ def main() -> None:
             total += float(loss.detach())
             total_ctc += float(ctc_loss.detach())
             total_ordered += float(ordered_loss.detach())
+            total_margin += float(margin_loss.detach())
             total_release += float(release_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
@@ -489,7 +548,7 @@ def main() -> None:
         print(
             f"epoch={epoch + 1} loss={total / batches:.6f} "
             f"ctc={total_ctc / batches:.6f} ordered={total_ordered / batches:.6f} "
-            f"release={total_release / batches:.6f} "
+            f"margin={total_margin / batches:.6f} release={total_release / batches:.6f} "
             f"ordered_token_acc={ordered_accuracy:.6f}"
         )
 
@@ -505,6 +564,8 @@ def main() -> None:
             "vocab_size": vocab_size_value,
             "vocab_fingerprint": fingerprint,
             "tokens_sha256": sha256_file(args.tokens),
+            "keywords_sha256": sha256_file(args.keywords),
+            "keyword_sequences": keyword_sequences,
             "frame_length_samples": FRAME_LENGTH_SAMPLES,
             "frame_hop_samples": FRAME_HOP_SAMPLES,
             "frontend_spec_version": FRONTEND_SPEC_VERSION,
@@ -523,6 +584,8 @@ def main() -> None:
             "ctc_reduction": "per-frame-weighted",
             "positive_example_weight": args.positive_example_weight,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
+            "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
+            "keyword_sequence_margin_loss_weight": KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
             "recurrent_release_tail_steps": RECURRENT_RELEASE_TAIL_STEPS,
             "recurrent_release_warmup_steps": RECURRENT_RELEASE_WARMUP_STEPS,
             "recurrent_release_loss_weight": RECURRENT_RELEASE_LOSS_WEIGHT,

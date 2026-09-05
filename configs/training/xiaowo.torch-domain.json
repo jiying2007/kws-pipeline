@@ -2,9 +2,10 @@
   "schema_version": 1,
   "name": "xiaowo-torch-domain-iteration-v1",
   "seed": 1337,
-  "qualification_holdout_seed": 271828,
-  "far_holdout_round_namespace": 2000000,
-  "retired_far_holdout_round_namespaces": [1000000],
+  "qualification_holdout_seed": 271834,
+  "retired_qualification_holdout_seeds": [271828, 271829, 271830, 271831, 271832, 271833],
+  "far_holdout_round_namespace": 3000000,
+  "retired_far_holdout_round_namespaces": [1000000, 2000000],
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
   "domain_work_dir": "build/model-training",
@@ -105,8 +106,8 @@
   },
   "domain_iteration": {
     "backend": "torch_ctc",
-    "max_rounds": 3,
-    "min_rounds": 3,
+    "max_rounds": 4,
+    "min_rounds": 4,
     "patience": 3,
     "curriculum_strength": 2.5,
     "max_domain_weight": 6.0,
@@ -127,7 +128,11 @@
       },
       {
         "tokens": ["ni3", "hao3", "xiao3"],
-        "examples": 8
+        "examples": 24
+      },
+      {
+        "tokens": ["xiao3", "wo1", "xiao3"],
+        "examples": 24
       }
     ]
   },

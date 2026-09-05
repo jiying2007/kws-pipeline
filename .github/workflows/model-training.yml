@@ -78,7 +78,7 @@ jobs:
           assert numpy.__version__ == '2.3.2'
           assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
           PY
-      - name: Train and iterate three domain rounds
+      - name: Train and iterate domain rounds
         id: train
         shell: bash
         run: |
@@ -139,10 +139,15 @@ jobs:
               raise SystemExit('active qualification reuses training seed')
           if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
               raise SystemExit('active qualification overlaps retired qualification WAV content')
+          if int(cohort.get('overlapping_exposed_active_wav_sha256', -1)) != 0:
+              raise SystemExit('active qualification overlaps exposed retired qualification WAV content')
           if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
               raise SystemExit('active qualification overlaps development/training WAV content')
           if int(cohort.get('expected_wakes', 0)) != 256:
               raise SystemExit('active qualification cohort does not contain 256 expected wakes')
+          retired_qualification = [int(value) for value in config['retired_qualification_holdout_seeds']]
+          if [int(value) for value in cohort.get('retired_exposed_qualification_seeds', [])] != retired_qualification:
+              raise SystemExit('qualification retired seed lineage differs from config')
           if bool(selection.get('qualification_used_for_selection', True)):
               raise SystemExit('qualification leaked into candidate selection')
           if bool(selection.get('far_holdout_used_for_training', True)):
@@ -193,12 +198,16 @@ jobs:
           set -euo pipefail
           replay=build/model-training/best/hard-negatives.tsv
           test -s "$replay"
+          # Coverage scheduling already injects every active FAR clip once across
+          # 900 s (128 clips => 8.53 clips/min). Disable extra random payloads:
+          # they can place two individually-negative utterances inside the decoder
+          # retention window and synthesize a real cross-boundary wake phrase.
           .venv/bin/python eval/long_far_stream.py \
             --runner build/kws_raw_stream \
             --model build/model-training/best/model.kwm \
             --keywords build/model-training/best/keywords.kwk \
             --negative-manifest "$replay" \
-            --hard-negative-rate-per-minute 8.0 \
+            --hard-negative-rate-per-minute 0.0 \
             --seconds 900 \
             --seed 5501 \
             --output-dir build/model-training/hard-negative-stream \
@@ -208,8 +217,14 @@ jobs:
           from pathlib import Path
 
           root = Path('build/model-training')
+          stream_root = root / 'hard-negative-stream'
           training = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
-          stream = json.loads((root / 'hard-negative-stream/summary.json').read_text(encoding='utf-8'))
+          stream = json.loads((stream_root / 'summary.json').read_text(encoding='utf-8'))
+          injections = [
+              json.loads(line)
+              for line in (stream_root / 'hard-negative-injections.jsonl').read_text(encoding='utf-8').splitlines()
+              if line.strip()
+          ]
           expected_clips = int(training['candidate_selection']['far_holdout_clip_count'])
           if int(stream.get('schema_version', 0)) != 2:
               raise SystemExit('continuous FAR summary is not coverage-aware schema v2')
@@ -221,12 +236,51 @@ jobs:
               raise SystemExit('continuous FAR manifest clip count differs from finalized holdout')
           if int(stream.get('unique_hard_negative_clips_injected', -1)) != expected_clips:
               raise SystemExit('continuous FAR did not inject every active holdout clip')
-          if int(stream.get('min_observed_hard_negative_injections_per_clip', 0)) < 1:
-              raise SystemExit('continuous FAR left at least one active holdout clip unexercised')
+          if int(stream.get('min_observed_hard_negative_injections_per_clip', 0)) != 1:
+              raise SystemExit('continuous FAR must inject every active holdout clip exactly once')
           if int(stream.get('coverage_forced_injections', -1)) != expected_clips:
               raise SystemExit('continuous FAR forced coverage count differs from active holdout size')
+          if int(stream.get('hard_negative_injections', -1)) != expected_clips or len(injections) != expected_clips:
+              raise SystemExit('continuous FAR injection count differs from exact forced coverage')
+          if float(stream.get('hard_negative_rate_per_minute', -1.0)) != 0.0:
+              raise SystemExit('continuous FAR random hard-negative injection is not disabled')
           if float(stream.get('coverage_hard_negative_gain', 0.0)) != 0.90:
               raise SystemExit('continuous FAR coverage gain drifted from 0.90')
+          if any(not bool(row.get('coverage_required')) for row in injections):
+              raise SystemExit('continuous FAR contains a non-coverage random injection')
+
+          seconds = float(stream['seconds'])
+          actual_injection_rate_per_minute = len(injections) * 60.0 / seconds
+          minimum_payload_gap_seconds = 2.0
+          observed_gaps = [
+              float(current['start_second'])
+              - (float(previous['start_second']) + float(previous['source_seconds']))
+              for previous, current in zip(injections, injections[1:])
+          ]
+          observed_min_payload_gap_seconds = min(observed_gaps) if observed_gaps else seconds
+          if actual_injection_rate_per_minute < 8.0:
+              raise SystemExit('continuous FAR actual payload rate fell below 8/min')
+          if observed_min_payload_gap_seconds + 1.0e-9 < minimum_payload_gap_seconds:
+              raise SystemExit('continuous FAR payload gap is inside decoder retention window')
+
+          contract = {
+              'schema_version': 1,
+              'policy': 'semantic-negative-boundary-v1',
+              'all_injections_coverage_required': True,
+              'payload_injections': len(injections),
+              'actual_injection_rate_per_minute': actual_injection_rate_per_minute,
+              'minimum_payload_gap_seconds': minimum_payload_gap_seconds,
+              'observed_min_payload_gap_seconds': observed_min_payload_gap_seconds,
+              'decoder_retention_proof_window_seconds': 1.6,
+              'full_negative_manifest_coverage': True,
+              'negative_manifest_sha256': stream['negative_manifest_sha256'],
+              'model_sha256': stream['model_sha256'],
+          }
+          (stream_root / 'stream-contract.json').write_text(
+              json.dumps(contract, indent=2, sort_keys=True, allow_nan=False) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(contract, indent=2, sort_keys=True))
           PY
       - name: Retain trained model and iteration evidence
         if: always()
