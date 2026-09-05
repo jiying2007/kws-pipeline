@@ -19,6 +19,9 @@ def main() -> int:
     model_training_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(
         encoding="utf-8"
     )
+    curriculum_source = (ROOT / "training" / "domain_curriculum.py").read_text(
+        encoding="utf-8"
+    )
     formal = json.loads(
         (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(
             encoding="utf-8"
@@ -61,12 +64,13 @@ def main() -> int:
 
     # Once a qualification seed has been inspected it becomes development
     # evidence. Keep all exposed cohorts explicit and prove zero active overlap.
-    assert int(formal["qualification_holdout_seed"]) == 271832
+    assert int(formal["qualification_holdout_seed"]) == 271833
     assert [int(value) for value in formal["retired_qualification_holdout_seeds"]] == [
         271828,
         271829,
         271830,
         271831,
+        271832,
     ]
     assert int(formal["far_holdout_round_namespace"]) == 3000000
     assert [int(value) for value in formal["retired_far_holdout_round_namespaces"]] == [
@@ -84,6 +88,13 @@ def main() -> int:
     assert "overlapping_exposed_active_wav_sha256" in qualification_source
     assert "active qualification overlaps" in qualification_source
     assert "retired-qualification-scratch" in qualification_source
+
+    # Adaptive curriculum must preserve product-risk floors rather than letting
+    # a transient development slice reverse the configured far/rear priority.
+    assert 'dimension == "distance"' in curriculum_source
+    assert 'weights["far"] = max(weights["far"], weights["mid"])' in curriculum_source
+    assert 'dimension == "azimuth"' in curriculum_source
+    assert 'weights["rear"] = max(weights["rear"], *peer_weights)' in curriculum_source
 
     # Continuous FAR must not synthesize a real wake phrase by placing two
     # individually-negative payloads inside the decoder retention window. The
