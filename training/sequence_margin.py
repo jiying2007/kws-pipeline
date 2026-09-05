@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn.functional as F
+
+QUALIFIED_DECODER_CONFIDENCE_TARGET = 0.55
 
 
 def _target_rows(targets: torch.Tensor, target_lengths: torch.Tensor) -> list[tuple[int, ...]]:
@@ -15,6 +19,49 @@ def _target_rows(targets: torch.Tensor, target_lengths: torch.Tensor) -> list[tu
     if offset != len(flat):
         raise ValueError("flattened CTC targets do not match target lengths")
     return rows
+
+
+def _positive_decoder_confidence_hinge(
+    *,
+    log_probs: torch.Tensor,
+    true_rows: list[tuple[int, ...]],
+    input_lengths: torch.Tensor,
+    keyword_sequences: set[tuple[int, ...]],
+) -> torch.Tensor:
+    """Mirror the shipping decoder confidence threshold on genuine wakes.
+
+    Runtime confidence is ``exp(terminal_acoustic / keyword_depth)``: the
+    geometric mean of token acoustic probabilities along the accepted trie path.
+    This differentiable surrogate uses the same chronological token regions as
+    ``ordered_token_loss`` and the strongest target posterior in each region.
+    It activates only below the formally qualified 0.55 runtime threshold and
+    adds no extra confidence margin or any loss to non-wake examples.
+    """
+    losses: list[torch.Tensor] = []
+    for batch_index, row in enumerate(true_rows):
+        if row not in keyword_sequences:
+            losses.append(log_probs[:, batch_index].sum() * 0.0)
+            continue
+        steps = int(input_lengths[batch_index])
+        count = len(row)
+        if steps <= 0 or count <= 0:
+            raise ValueError("positive decoder surrogate requires non-empty input/target")
+        occurrence_peaks: list[torch.Tensor] = []
+        for occurrence, token in enumerate(row):
+            start = (occurrence * steps) // count
+            stop = max(start + 1, ((occurrence + 1) * steps) // count)
+            stop = min(stop, steps)
+            occurrence_peaks.append(log_probs[start:stop, batch_index, token].max())
+        surrogate_log_confidence = torch.stack(occurrence_peaks).mean()
+        losses.append(
+            torch.relu(
+                math.log(QUALIFIED_DECODER_CONFIDENCE_TARGET)
+                - surrogate_log_confidence
+            )
+        )
+    if not losses:
+        return log_probs.sum(dim=(0, 2)) * 0.0
+    return torch.stack(losses)
 
 
 def keyword_sequence_margin_loss(
@@ -69,6 +116,20 @@ def keyword_sequence_margin_loss(
     length_norm = input_lengths.to(dtype=log_probs.dtype).clamp_min(1.0)
     true_norm = true_ctc_nll / length_norm
     competing_hinges: list[torch.Tensor] = []
+
+    # #121 eliminated formal false accepts but still missed two kw1 positives at
+    # 5 m + critical SNR. Full-sequence CTC margin can prefer the correct wake
+    # globally while the streaming decoder's geometric-mean token confidence
+    # remains below its fixed threshold. Align recall training with that exact
+    # product gate before evaluating the broader blank/keyword competitors.
+    competing_hinges.append(
+        _positive_decoder_confidence_hinge(
+            log_probs=log_probs,
+            true_rows=true_rows,
+            input_lengths=input_lengths,
+            keyword_sequences=seen,
+        )
+    )
 
     # Positive wakes must not collapse toward the all-blank explanation. This is
     # the recall side of the same discriminative boundary that suppresses keyword
