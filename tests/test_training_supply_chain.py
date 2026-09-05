@@ -13,6 +13,11 @@ def main() -> int:
     model_source = (ROOT / "training" / "model.py").read_text(encoding="utf-8")
     site_source = (ROOT / "training" / "sitecustomize.py").read_text(encoding="utf-8")
     train_source = (ROOT / "training" / "train_ctc.py").read_text(encoding="utf-8")
+    iterate_source = (ROOT / "training" / "iterate_domain.py").read_text(encoding="utf-8")
+    margin_source = (ROOT / "training" / "sequence_margin.py").read_text(encoding="utf-8")
+    margin_test_source = (ROOT / "training" / "test_sequence_margin.py").read_text(
+        encoding="utf-8"
+    )
     qualification_source = (ROOT / "training" / "render_qualification_holdout.py").read_text(
         encoding="utf-8"
     )
@@ -62,6 +67,38 @@ def main() -> int:
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
 
+    # Sequence-discriminative training directly optimizes both sides of the
+    # product boundary: a real wake must beat blank-only and all other wake paths,
+    # while every non-wake target must beat the most competitive configured wake.
+    # Worst-path max prevents dilution as custom keyword count grows.
+    assert "KEYWORD_SEQUENCE_MARGIN = 0.05" in train_source
+    assert "KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10" in train_source
+    assert "keyword_sequence_margin_loss" in train_source
+    assert '"keywords_sha256"' in train_source
+    assert '"keyword_sequence_margin"' in train_source
+    assert '"keyword_sequence_margin_loss_weight"' in train_source
+    assert "keywords: pathlib.Path" in iterate_source
+    assert '"--keywords"' in iterate_source
+    assert "keywords=keywords" in iterate_source
+    assert "F.ctc_loss" in margin_source
+    assert "zero_infinity=False" in margin_source
+    assert "blank_nll" in margin_source
+    assert "blank-only" in margin_source
+    assert ".amax(dim=0)" in margin_source
+    assert "wake-on-any-keyword" in margin_source
+    assert "test_sequence_margin: ok" in margin_test_source
+    assert "Adding unrelated wake words must not dilute" in margin_test_source
+    assert "Recall-side contract" in margin_test_source
+    assert "impossible wake sequence" in margin_test_source
+
+    # #120 proved that forcing far/rear adaptive multiplier floors destabilizes
+    # the FR/FA trade-off. Keep the earlier playback anti-starvation rule, but do
+    # not silently reintroduce the rejected distance/azimuth hard floors.
+    assert 'dimension == "playback"' in curriculum_source
+    assert 'weights["playback"] = max' in curriculum_source
+    assert 'weights["far"] = max(weights["far"], weights["mid"])' not in curriculum_source
+    assert 'weights["rear"] = max(weights["rear"], *peer_weights)' not in curriculum_source
+
     # Once a qualification seed has been inspected it becomes development
     # evidence. Keep all exposed cohorts explicit and prove zero active overlap.
     assert int(formal["qualification_holdout_seed"]) == 271833
@@ -88,13 +125,6 @@ def main() -> int:
     assert "overlapping_exposed_active_wav_sha256" in qualification_source
     assert "active qualification overlaps" in qualification_source
     assert "retired-qualification-scratch" in qualification_source
-
-    # Adaptive curriculum must preserve product-risk floors rather than letting
-    # a transient development slice reverse the configured far/rear priority.
-    assert 'dimension == "distance"' in curriculum_source
-    assert 'weights["far"] = max(weights["far"], weights["mid"])' in curriculum_source
-    assert 'dimension == "azimuth"' in curriculum_source
-    assert 'weights["rear"] = max(weights["rear"], *peer_weights)' in curriculum_source
 
     # Continuous FAR must not synthesize a real wake phrase by placing two
     # individually-negative payloads inside the decoder retention window. The

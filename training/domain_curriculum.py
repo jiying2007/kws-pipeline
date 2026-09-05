@@ -109,28 +109,6 @@ def update_curriculum(
                 weights["playback"], weights["no-playback"]
             )
 
-        # The product configuration already encodes a monotonic distance prior
-        # (far > mid > near). Adaptive multipliers must not reverse that priority:
-        # doing so can make a development-easy far slice receive less sampling
-        # than mid/near even though 5 m is a required robustness boundary. Keep
-        # the multiplier itself monotonic so the configured base weights remain
-        # authoritative while still allowing all three bands to rise together.
-        if dimension == "distance" and {"near", "mid", "far"}.issubset(weights):
-            weights["mid"] = max(weights["mid"], weights["near"])
-            weights["far"] = max(weights["far"], weights["mid"])
-
-        # Rear-field coverage is an explicit product stress requirement. The
-        # adaptive curriculum may emphasize front/side failures, but it must not
-        # make rear receive a lower multiplier than either easier angular band.
-        if dimension == "azimuth" and "rear" in weights:
-            peer_weights = [
-                weights[name]
-                for name in ("front", "side")
-                if name in weights
-            ]
-            if peer_weights:
-                weights["rear"] = max(weights["rear"], *peer_weights)
-
         dimension_hardness[dimension] = hardness
         dimension_weights[dimension] = weights
 

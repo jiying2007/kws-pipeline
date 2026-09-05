@@ -81,30 +81,6 @@ def main() -> int:
     assert guarded["no-playback"] > 1.0
     assert guarded["playback"] == guarded["no-playback"]
 
-    # Development-local ease must not invert product risk priorities. Even when
-    # near/front are much harder in one round, the adaptive multipliers preserve
-    # far >= mid >= near and keep rear no lower than front/side. The renderer's
-    # configured base distance weights then remain authoritative instead of being
-    # silently reversed by a transient calibration slice.
-    inverted = {
-        "domains": {
-            "distance:near": metric(0.25, latency=450.0),
-            "distance:mid": metric(0.05),
-            "distance:far": metric(0.00, latency=20.0),
-            "azimuth:front": metric(0.22, latency=420.0),
-            "azimuth:side": metric(0.08),
-            "azimuth:rear": metric(0.00, latency=20.0),
-        }
-    }
-    protected = update_curriculum(
-        inverted, strength=3.0, max_weight=6.0
-    )["dimension_weights"]
-    assert protected["distance"]["near"] > 1.0
-    assert protected["distance"]["far"] >= protected["distance"]["mid"] >= protected["distance"]["near"]
-    assert protected["azimuth"]["front"] > 1.0
-    assert protected["azimuth"]["rear"] >= protected["azimuth"]["front"]
-    assert protected["azimuth"]["rear"] >= protected["azimuth"]["side"]
-
     print("test_domain_curriculum: ok")
     return 0
 
