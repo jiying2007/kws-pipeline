@@ -16,6 +16,9 @@ def main() -> int:
     qualification_source = (ROOT / "training" / "render_qualification_holdout.py").read_text(
         encoding="utf-8"
     )
+    model_training_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(
+        encoding="utf-8"
+    )
     formal = json.loads(
         (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(
             encoding="utf-8"
@@ -56,13 +59,19 @@ def main() -> int:
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
 
-    # Once a qualification seed has been inspected to tune the model it becomes
-    # development evidence. Keep those seeds explicit and require the rotation
-    # implementation to reconstruct them and prove zero active WAV-SHA overlap.
-    assert int(formal["qualification_holdout_seed"]) == 271830
+    # Once a qualification seed has been inspected it becomes development
+    # evidence. Keep all exposed cohorts explicit and prove zero active overlap.
+    assert int(formal["qualification_holdout_seed"]) == 271832
     assert [int(value) for value in formal["retired_qualification_holdout_seeds"]] == [
         271828,
         271829,
+        271830,
+        271831,
+    ]
+    assert int(formal["far_holdout_round_namespace"]) == 3000000
+    assert [int(value) for value in formal["retired_far_holdout_round_namespaces"]] == [
+        1000000,
+        2000000,
     ]
     replay = {
         tuple(str(token) for token in item["tokens"]): int(item["examples"])
@@ -75,6 +84,16 @@ def main() -> int:
     assert "overlapping_exposed_active_wav_sha256" in qualification_source
     assert "active qualification overlaps" in qualification_source
     assert "retired-qualification-scratch" in qualification_source
+
+    # Continuous FAR must not synthesize a real wake phrase by placing two
+    # individually-negative payloads inside the decoder retention window. The
+    # formal gate uses only deterministic forced coverage, still exceeds 8
+    # payloads/minute, and proves a >=2 s payload gap (>1.6 s retention test).
+    assert "--hard-negative-rate-per-minute 0.0" in model_training_workflow
+    assert "actual_injection_rate_per_minute" in model_training_workflow
+    assert "minimum_payload_gap_seconds" in model_training_workflow
+    assert "observed_min_payload_gap_seconds" in model_training_workflow
+    assert "semantic-negative-boundary-v1" in model_training_workflow
 
     module_path = ROOT / "training" / "build_container.py"
     spec = importlib.util.spec_from_file_location("build_container", module_path)
