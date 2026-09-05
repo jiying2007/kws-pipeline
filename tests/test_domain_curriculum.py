@@ -64,6 +64,23 @@ def main() -> int:
         next_result["dimension_weights"]["snr"]["critical"]
         >= weights["snr"]["critical"]
     )
+
+    # A hard no-playback development slice must not starve playback below the
+    # renderer's configured base probability. Equal adaptive weights preserve
+    # that base probability; playback may still rise above it when playback is
+    # itself the harder state, as exercised by the primary fixture above.
+    no_playback_harder = {
+        "domains": {
+            "playback:no-playback": metric(0.20, latency=400.0),
+            "playback:playback": metric(0.00, latency=20.0),
+        }
+    }
+    guarded = update_curriculum(
+        no_playback_harder, strength=3.0, max_weight=6.0
+    )["dimension_weights"]["playback"]
+    assert guarded["no-playback"] > 1.0
+    assert guarded["playback"] == guarded["no-playback"]
+
     print("test_domain_curriculum: ok")
     return 0
 
