@@ -67,10 +67,12 @@ def main() -> int:
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
 
-    # Sequence-discriminative training directly optimizes both sides of the
-    # product boundary: a real wake must beat blank-only and all other wake paths,
-    # while every non-wake target must beat the most competitive configured wake.
-    # Worst-path max prevents dilution as custom keyword count grows.
+    # #121 proved that relative CTC sequence separation is directionally useful
+    # but still mismatched the shipping decoder's actual confidence. The formal
+    # auxiliary objective now operates in the same acoustic units used by
+    # candidate_confidence = exp(acoustic_score / depth): a real wake must clear
+    # threshold+margin, every non-wake/competing path must stay below
+    # threshold-margin, and the worst path is never diluted by keyword count.
     assert "KEYWORD_SEQUENCE_MARGIN = 0.05" in train_source
     assert "KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10" in train_source
     assert "keyword_sequence_margin_loss" in train_source
@@ -80,16 +82,27 @@ def main() -> int:
     assert "keywords: pathlib.Path" in iterate_source
     assert '"--keywords"' in iterate_source
     assert "keywords=keywords" in iterate_source
-    assert "F.ctc_loss" in margin_source
-    assert "zero_infinity=False" in margin_source
-    assert "blank_nll" in margin_source
-    assert "blank-only" in margin_source
-    assert ".amax(dim=0)" in margin_source
+    assert "DECODER_CONFIDENCE_THRESHOLD = 0.55" in margin_source
+    assert "_decoder_sequence_log_confidence" in margin_source
+    assert "torch.cummax" in margin_source
+    assert "positive_floor" in margin_source
+    assert "negative_ceiling" in margin_source
     assert "wake-on-any-keyword" in margin_source
     assert "test_sequence_margin: ok" in margin_test_source
     assert "Adding unrelated wake words must not dilute" in margin_test_source
     assert "Recall-side contract" in margin_test_source
     assert "impossible wake sequence" in margin_test_source
+
+    # Until train_ctc carries per-keyword thresholds explicitly, keep the formal
+    # decoder-confidence surrogate coupled to the exact threshold used by every
+    # shipping keyword. A keyword TSV threshold change must fail this contract
+    # instead of silently training against the wrong operating point.
+    keyword_thresholds = {
+        float(raw.split("\t")[2])
+        for raw in (ROOT / str(formal["keywords"])).read_text(encoding="utf-8").splitlines()
+        if raw.strip() and not raw.lstrip().startswith("#")
+    }
+    assert keyword_thresholds == {0.55}
 
     # #120 proved that forcing far/rear adaptive multiplier floors destabilizes
     # the FR/FA trade-off. Keep the earlier playback anti-starvation rule, but do
@@ -101,13 +114,14 @@ def main() -> int:
 
     # Once a qualification seed has been inspected it becomes development
     # evidence. Keep all exposed cohorts explicit and prove zero active overlap.
-    assert int(formal["qualification_holdout_seed"]) == 271833
+    assert int(formal["qualification_holdout_seed"]) == 271834
     assert [int(value) for value in formal["retired_qualification_holdout_seeds"]] == [
         271828,
         271829,
         271830,
         271831,
         271832,
+        271833,
     ]
     assert int(formal["far_holdout_round_namespace"]) == 3000000
     assert [int(value) for value in formal["retired_far_holdout_round_namespaces"]] == [

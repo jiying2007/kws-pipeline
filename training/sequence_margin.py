@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import math
+
 import torch
-import torch.nn.functional as F
 
 
-def _target_rows(targets: torch.Tensor, target_lengths: torch.Tensor) -> list[tuple[int, ...]]:
+DECODER_CONFIDENCE_THRESHOLD = 0.55
+
+
+def _target_rows(
+    targets: torch.Tensor, target_lengths: torch.Tensor
+) -> list[tuple[int, ...]]:
     rows: list[tuple[int, ...]] = []
     offset = 0
     flat = targets.detach().cpu().tolist()
@@ -17,6 +23,47 @@ def _target_rows(targets: torch.Tensor, target_lengths: torch.Tensor) -> list[tu
     return rows
 
 
+def _decoder_sequence_log_confidence(
+    sample_log_probs: torch.Tensor,
+    sequence: tuple[int, ...],
+) -> torch.Tensor:
+    """Best chronological token-transition confidence in shipping-decoder units.
+
+    The C decoder reports exp(acoustic_score / trie_depth), where acoustic_score
+    contains only the log probability collected when a keyword token advances.
+    This max-plus dynamic program is a differentiable surrogate for that acoustic
+    path: choose one chronological frame per keyword token, then normalize the
+    best accumulated log probability by keyword depth.
+
+    Adjacent repeated tokens require one separating frame, matching the runtime
+    decoder's repeated-token transition rule. Retention/dominance remain runtime
+    constraints; this objective deliberately aligns the confidence numerator and
+    threshold without cloning the entire discrete decoder state machine.
+    """
+    if sample_log_probs.ndim != 2:
+        raise ValueError("sample_log_probs must be [T,V]")
+    steps = int(sample_log_probs.shape[0])
+    if not sequence:
+        raise ValueError("decoder keyword sequence may not be empty")
+    if steps <= 0:
+        raise ValueError("decoder confidence requires positive input length")
+
+    # Each state means: best acoustic sum whose current token was consumed at
+    # exactly this frame. Strict chronological advance uses a shifted prefix max.
+    score = sample_log_probs[:, sequence[0]]
+    previous = sequence[0]
+    for token in sequence[1:]:
+        gap = 2 if token == previous else 1
+        if steps <= gap:
+            return sample_log_probs.new_tensor(float("-inf"))
+        prefix_best = torch.cummax(score, dim=0).values
+        shifted = sample_log_probs.new_full((steps,), float("-inf"))
+        shifted[gap:] = prefix_best[:-gap]
+        score = shifted + sample_log_probs[:, token]
+        previous = token
+    return score.amax() / float(len(sequence))
+
+
 def keyword_sequence_margin_loss(
     *,
     log_probs: torch.Tensor,
@@ -27,17 +74,25 @@ def keyword_sequence_margin_loss(
     keyword_sequences: list[list[int]],
     blank: int = 0,
     margin: float = 0.05,
+    confidence_threshold: float = DECODER_CONFIDENCE_THRESHOLD,
 ) -> torch.Tensor:
-    """Return a per-sample wake/non-wake sequence-discriminative hinge.
+    """Return a per-sample decoder-confidence operating-band hinge.
 
-    For a real wake example, its true keyword path must beat both the blank-only
-    path and every other configured wake phrase. For a non-wake example, its true
-    target path (including the blank-only target for background) must beat every
-    configured wake phrase. All CTC NLLs are normalized by true acoustic length.
+    The previous relative CTC-likelihood margin improved development FR/FA but
+    still optimized a score different from the shipping decoder. Runtime wakes
+    on the geometric mean of token-transition acoustic probabilities crossing a
+    keyword threshold. Train that operating band directly:
 
-    The loss uses the worst competing path, not an average across keywords.
-    Product semantics are wake-on-any-keyword, so averaging would dilute one
-    dangerous path as more custom keywords are configured.
+    * a genuine wake must reach at least ``threshold + margin``;
+    * every competing/non-wake keyword path must stay at or below
+      ``threshold - margin``;
+    * the worst competing path wins, never an average, because product semantics
+      are wake-on-any-keyword.
+
+    Once a sample is safely inside the operating band this auxiliary loss is
+    exactly zero, avoiding the late-round over-driving seen with a purely
+    relative objective. CTC/ordered-token/recurrent-release remain the primary
+    sequence, alignment and recurrent-state objectives.
     """
     if log_probs.ndim != 3:
         raise ValueError("log_probs must be [T,B,V]")
@@ -50,15 +105,23 @@ def keyword_sequence_margin_loss(
         raise ValueError("target_lengths must contain one value per batch sample")
     if not keyword_sequences:
         return torch.zeros_like(true_ctc_nll)
-    if not 0.0 <= float(margin) <= 10.0:
+    if not 0.0 < float(confidence_threshold) < 1.0:
+        raise ValueError("decoder confidence threshold must be in (0,1)")
+    if not 0.0 <= float(margin) < 0.5:
         raise ValueError("keyword sequence margin is invalid")
+    lower = float(confidence_threshold) - float(margin)
+    upper = float(confidence_threshold) + float(margin)
+    if not 0.0 < lower < upper < 1.0:
+        raise ValueError("decoder confidence operating band must stay inside (0,1)")
 
     vocab = int(log_probs.shape[2])
     normalized_keywords: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
     for raw in keyword_sequences:
         sequence = tuple(int(value) for value in raw)
-        if not sequence or any(value <= blank or value >= vocab for value in sequence):
+        if not sequence or any(
+            value <= blank or value >= vocab for value in sequence
+        ):
             raise ValueError("keyword sequence contains invalid token ids")
         if sequence in seen:
             raise ValueError("keyword sequences must be unique")
@@ -66,65 +129,37 @@ def keyword_sequence_margin_loss(
         normalized_keywords.append(sequence)
 
     true_rows = _target_rows(targets, target_lengths)
-    length_norm = input_lengths.to(dtype=log_probs.dtype).clamp_min(1.0)
-    true_norm = true_ctc_nll / length_norm
-    competing_hinges: list[torch.Tensor] = []
+    positive_floor = log_probs.new_tensor(math.log(upper))
+    negative_ceiling = log_probs.new_tensor(math.log(lower))
+    losses: list[torch.Tensor] = []
 
-    # Positive wakes must not collapse toward the all-blank explanation. This is
-    # the recall side of the same discriminative boundary that suppresses keyword
-    # paths on hard negatives below.
-    blank_targets = torch.empty(0, dtype=targets.dtype, device=targets.device)
-    blank_lengths = torch.zeros_like(target_lengths)
-    blank_nll = F.ctc_loss(
-        log_probs,
-        blank_targets,
-        input_lengths,
-        blank_lengths,
-        blank=blank,
-        reduction="none",
-        zero_infinity=False,
-    )
-    wake_example = torch.tensor(
-        [row in seen for row in true_rows],
-        dtype=log_probs.dtype,
-        device=log_probs.device,
-    )
-    competing_hinges.append(
-        torch.relu(float(margin) + true_norm - blank_nll / length_norm)
-        * wake_example
-    )
+    for batch_index, true_row in enumerate(true_rows):
+        steps = int(input_lengths[batch_index])
+        if steps <= 0 or steps > int(log_probs.shape[0]):
+            raise ValueError("input length is outside model output")
+        sample = log_probs[:steps, batch_index, :]
+        scores = [
+            _decoder_sequence_log_confidence(sample, sequence)
+            for sequence in normalized_keywords
+        ]
+        wake_index = next(
+            (
+                index
+                for index, sequence in enumerate(normalized_keywords)
+                if sequence == true_row
+            ),
+            None,
+        )
+        hinges: list[torch.Tensor] = []
+        if wake_index is not None:
+            hinges.append(torch.relu(positive_floor - scores[wake_index]))
+        for index, score in enumerate(scores):
+            if index == wake_index:
+                continue
+            hinges.append(torch.relu(score - negative_ceiling))
+        if hinges:
+            losses.append(torch.stack(hinges).amax())
+        else:
+            losses.append(log_probs[:, batch_index, :].sum() * 0.0)
 
-    for sequence in normalized_keywords:
-        keyword_targets = torch.tensor(
-            sequence, dtype=targets.dtype, device=targets.device
-        ).repeat(batch, 1)
-        keyword_lengths = torch.full(
-            (batch,),
-            len(sequence),
-            dtype=target_lengths.dtype,
-            device=target_lengths.device,
-        )
-        keyword_nll = F.ctc_loss(
-            log_probs,
-            keyword_targets,
-            input_lengths,
-            keyword_lengths,
-            blank=blank,
-            reduction="none",
-            # An impossible wake path should be safely separated, not converted
-            # to zero loss (which would make it look like the best possible path).
-            zero_infinity=False,
-        )
-        keyword_norm = keyword_nll / length_norm
-        # A genuine wake does not compete against its own identical true path;
-        # non-wake targets compete against every configured wake path.
-        include = torch.tensor(
-            [row != sequence for row in true_rows],
-            dtype=log_probs.dtype,
-            device=log_probs.device,
-        )
-        competing_hinges.append(
-            torch.relu(float(margin) + true_norm - keyword_norm) * include
-        )
-
-    return torch.stack(competing_hinges, dim=0).amax(dim=0)
+    return torch.stack(losses)
