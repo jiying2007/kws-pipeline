@@ -10,7 +10,11 @@ from sequence_margin import keyword_sequence_margin_loss
 def make_logits(tokens: list[int], *, steps: int = 12, vocab: int = 5) -> torch.Tensor:
     logits = torch.full((steps, 1, vocab), -6.0, dtype=torch.float32)
     logits[:, :, 0] = 4.0
-    positions = [1 + 2 * index for index in range(len(tokens))]
+    count = max(1, len(tokens))
+    positions = [
+        min(steps - 1, (index * steps) // count + 1)
+        for index in range(len(tokens))
+    ]
     for position, token in zip(positions, tokens):
         logits[position, 0, 0] = -6.0
         logits[position, 0, token] = 8.0
@@ -78,17 +82,32 @@ def main() -> int:
     safe_loss = margin(safe, [3, 4, 3])
     assert float(safe_loss.item()) < 1.0e-6
 
-    # A clean genuine keyword must already beat both blank and other wake paths.
+    # A clean genuine keyword must already beat both blank and other wake paths,
+    # and its chronological token peaks are comfortably above decoder threshold.
     positive = make_logits([1, 2, 3, 4])
     positive_loss = margin(positive, [1, 2, 3, 4])
     assert float(positive_loss.item()) < 1.0e-6
 
-    # Recall-side contract: all four target tokens are acoustically present, but
-    # blank remains stronger at every frame. The true wake explanation loses to
-    # blank and therefore must receive a positive sequence margin penalty.
+    # Decoder-alignment contract: a wake may be globally preferable to blank yet
+    # still have only weak local token peaks. The shipping C decoder thresholds
+    # exp(mean(token acoustic log-prob)) at 0.55, so this case must receive a
+    # positive recall gradient without changing the runtime threshold itself.
+    weak_decoder_logits = torch.full((12, 1, 5), -2.0, dtype=torch.float32)
+    weak_decoder_logits[:, :, 0] = 0.0
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
+        weak_decoder_logits[position, 0, token] = 0.45
+    weak_decoder_log_probs = weak_decoder_logits.requires_grad_().log_softmax(dim=2)
+    weak_decoder_loss = margin(weak_decoder_log_probs, [1, 2, 3, 4])
+    assert float(weak_decoder_loss.item()) > 0.01
+    weak_decoder_loss.mean().backward()
+    assert weak_decoder_logits.grad is not None
+
+    # Recall-side sequence contract: all four target tokens are acoustically
+    # present, but blank remains much stronger at every frame. The true wake
+    # explanation loses to blank and must receive a positive sequence penalty.
     weak_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
     weak_logits[:, :, 0] = 6.0
-    for position, token in zip([1, 3, 5, 7], [1, 2, 3, 4]):
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
         weak_logits[position, 0, token] = 4.0
     weak_log_probs = weak_logits.requires_grad_().log_softmax(dim=2)
     weak_loss = margin(weak_log_probs, [1, 2, 3, 4])
@@ -96,9 +115,9 @@ def main() -> int:
     weak_loss.mean().backward()
     assert weak_logits.grad is not None
 
-    # If an input is too short to realize any wake sequence, each impossible wake sequence
-    # has +inf CTC NLL. It is safely separated and must not be converted to zero
-    # NLL, which would create a false margin penalty.
+    # If an input is too short to realize any wake sequence, each impossible wake
+    # sequence has +inf CTC NLL. It is safely separated and must not be converted
+    # to zero NLL, which would create a false margin penalty.
     short_logits = torch.full((2, 1, 5), -6.0, dtype=torch.float32)
     short_logits[:, :, 0] = 6.0
     short_log_probs = short_logits.log_softmax(dim=2)
