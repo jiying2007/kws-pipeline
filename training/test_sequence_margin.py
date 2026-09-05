@@ -10,7 +10,12 @@ from sequence_margin import keyword_sequence_margin_loss
 def make_logits(tokens: list[int], *, steps: int = 12, vocab: int = 5) -> torch.Tensor:
     logits = torch.full((steps, 1, vocab), -6.0, dtype=torch.float32)
     logits[:, :, 0] = 4.0
-    positions = [1 + 2 * index for index in range(len(tokens))]
+    count = len(tokens)
+    positions = []
+    for occurrence in range(count):
+        start = (occurrence * steps) // count
+        stop = max(start + 1, ((occurrence + 1) * steps) // count)
+        positions.append((start + stop - 1) // 2)
     for position, token in zip(positions, tokens):
         logits[position, 0, 0] = -6.0
         logits[position, 0, token] = 8.0
@@ -78,17 +83,36 @@ def main() -> int:
     safe_loss = margin(safe, [3, 4, 3])
     assert float(safe_loss.item()) < 1.0e-6
 
-    # A clean genuine keyword must already beat both blank and other wake paths.
+    # A clean genuine keyword with every target strongly owning its chronological
+    # completion region must already beat blank and other wake paths.
     positive = make_logits([1, 2, 3, 4])
     positive_loss = margin(positive, [1, 2, 3, 4])
     assert float(positive_loss.item()) < 1.0e-6
 
-    # Recall-side contract: all four target tokens are acoustically present, but
-    # blank remains stronger at every frame. The true wake explanation loses to
-    # blank and therefore must receive a positive sequence margin penalty.
+    # Streaming-completion contract: the whole wake path can still beat the
+    # all-blank path because three tokens are very strong, while the terminal
+    # token is locally weaker than blank. The temporal completion hinge must catch
+    # that weakest occurrence instead of averaging it away.
+    terminal_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
+    terminal_logits[:, :, 0] = 4.0
+    for position, token in zip([1, 4, 7], [1, 2, 3]):
+        terminal_logits[position, 0, 0] = -6.0
+        terminal_logits[position, 0, token] = 8.0
+    terminal_logits[10, 0, 0] = 4.0
+    terminal_logits[10, 0, 4] = 3.0
+    terminal_log_probs = terminal_logits.requires_grad_().log_softmax(dim=2)
+    terminal_loss = margin(terminal_log_probs, [1, 2, 3, 4])
+    assert float(terminal_loss.item()) > 0.50
+    terminal_loss.mean().backward()
+    assert terminal_logits.grad is not None
+    assert float(terminal_logits.grad[10, 0, 4].abs()) > 0.0
+
+    # Recall-side global contract: all four target tokens are acoustically present,
+    # but blank remains stronger at every completion frame. The true wake loses
+    # both globally and temporally and therefore must receive a positive penalty.
     weak_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
     weak_logits[:, :, 0] = 6.0
-    for position, token in zip([1, 3, 5, 7], [1, 2, 3, 4]):
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
         weak_logits[position, 0, token] = 4.0
     weak_log_probs = weak_logits.requires_grad_().log_softmax(dim=2)
     weak_loss = margin(weak_log_probs, [1, 2, 3, 4])
