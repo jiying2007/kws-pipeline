@@ -42,11 +42,13 @@ KEYWORD_SEQUENCE_MARGIN = 0.05
 KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10
 # CTC intentionally ignores padded frames beyond each sample's true input
 # length. Give the streaming RNN an explicit post-utterance objective instead:
-# after a short 160-ms release allowance, zero acoustic input must converge to
-# blank before 500 ms. This trains out persistent recurrent token attractors
-# without adding a shipping-runtime reset heuristic or shortening weak speech.
+# after a short 160-ms release allowance, the terminal scene background must
+# converge to blank before 500 ms. Repeating the final 80 ms of observed scene
+# context matches the continuous colored-noise shipping gate much better than
+# an all-zero feature tail, while still leaving target alignment untouched.
 RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
+RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
@@ -293,13 +295,22 @@ def collate(batch):
     ylen = torch.tensor([y.shape[0] for y in ys], dtype=torch.long)
     max_t = int(xlen.max())
     feature_dim = xs[0].shape[1]
-    # Preserve each sample's true CTC length while always giving the recurrent
-    # state enough zero-input steps to learn post-utterance release.
+    # Preserve each sample's true CTC length while giving recurrent state a
+    # post-utterance trajectory that matches the shipping stream: the active
+    # scene floor continues after speech instead of becoming an impossible
+    # all-zero feature vector. Only the explicit release region receives this
+    # repeated terminal context; CTC/ordered-token losses still stop at xlen.
     padded = torch.zeros(
         (len(xs), max_t + RECURRENT_RELEASE_TAIL_STEPS, feature_dim)
     )
     for index, x in enumerate(xs):
-        padded[index, : x.shape[0]] = x
+        steps = int(x.shape[0])
+        padded[index, :steps] = x
+        context_steps = min(RECURRENT_RELEASE_CONTEXT_STEPS, steps)
+        context = x[steps - context_steps : steps]
+        repeats = (RECURRENT_RELEASE_TAIL_STEPS + context_steps - 1) // context_steps
+        release = context.repeat((repeats, 1))[:RECURRENT_RELEASE_TAIL_STEPS]
+        padded[index, steps : steps + RECURRENT_RELEASE_TAIL_STEPS] = release
     targets = (
         torch.cat(ys)
         if any(y.numel() for y in ys)
@@ -361,7 +372,8 @@ def recurrent_release_loss(
 
     The release region is outside every sample's CTC/ordered-token length, so
     this cannot move target alignments or truncate weak terminal speech. The
-    warmup leaves a bounded natural decay interval before blank is enforced.
+    warmup leaves a bounded natural decay interval while the terminal scene
+    background continues, then blank is explicitly enforced.
     """
     losses: list[torch.Tensor] = []
     available_steps = int(log_probs.shape[0])
@@ -453,6 +465,8 @@ def main() -> None:
         parser.error("keyword sequence margin loss weight must be finite and > 0")
     if not 0 <= RECURRENT_RELEASE_WARMUP_STEPS < RECURRENT_RELEASE_TAIL_STEPS:
         parser.error("recurrent release warmup must be inside the release tail")
+    if not 1 <= RECURRENT_RELEASE_CONTEXT_STEPS <= RECURRENT_RELEASE_TAIL_STEPS:
+        parser.error("recurrent release context must fit inside the release tail")
     if not math.isfinite(RECURRENT_RELEASE_LOSS_WEIGHT) or RECURRENT_RELEASE_LOSS_WEIGHT <= 0.0:
         parser.error("recurrent release loss weight must be finite and > 0")
     if args.head_only and not args.warm_start:
@@ -588,6 +602,8 @@ def main() -> None:
             "keyword_sequence_margin_loss_weight": KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
             "recurrent_release_tail_steps": RECURRENT_RELEASE_TAIL_STEPS,
             "recurrent_release_warmup_steps": RECURRENT_RELEASE_WARMUP_STEPS,
+            "recurrent_release_context_steps": RECURRENT_RELEASE_CONTEXT_STEPS,
+            "recurrent_release_tail_mode": "terminal-context-repeat",
             "recurrent_release_loss_weight": RECURRENT_RELEASE_LOSS_WEIGHT,
             "hard_negative_capable": True,
             "training_environment": environment,
