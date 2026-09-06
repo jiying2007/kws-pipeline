@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import copy
 import hashlib
 import json
@@ -142,6 +143,46 @@ def _write_json(path: pathlib.Path, value: dict) -> None:
     )
 
 
+def _retired_render_worker_count(cfg: dict, retired_seeds: list[int]) -> int:
+    if not retired_seeds:
+        return 0
+    domains = cfg.get("domains", {})
+    afe = domains.get("afe", {}) if isinstance(domains, dict) else {}
+    backend = str(afe.get("backend", "proxy")) if isinstance(afe, dict) else "proxy"
+    # Command AFE implementations may have hidden shared-device/process state.
+    # Preserve the historical serial execution contract for those backends.
+    if backend != "proxy":
+        return 1
+    return min(2, len(retired_seeds))
+
+
+def _render_retired_seed(cfg: dict, scratch: pathlib.Path, retired_seed: int) -> dict:
+    seed_root = scratch / f"seed-{retired_seed}"
+    seed_config = seed_root / "effective-config.json"
+    retired_config = _qualification_render_config(cfg, retired_seed)
+    _write_json(seed_config, retired_config)
+    retired_output = seed_root / "dataset"
+    retired_summary = render_domain_dataset(
+        seed_config, retired_output, curriculum_weights=None
+    )
+    exposed_index = retired_output / "domain-index.jsonl"
+    exposed_references = retired_output / "qualification.references.jsonl"
+    exposed_hashes = _index_hashes(exposed_index, {"qualification"})
+    exposed_recordings, exposed_expected_wakes = _reference_stats(exposed_references)
+    return {
+        "seed": retired_seed,
+        "wav_hashes": sorted(exposed_hashes),
+        "recordings": exposed_recordings,
+        "expected_wakes": exposed_expected_wakes,
+        "effective_config_sha256": sha256_file(seed_config),
+        "domain_index_sha256": str(retired_summary["domain_index_sha256"]),
+        "references_sha256": sha256_file(exposed_references),
+        "summary_references_sha256": str(
+            retired_summary["splits"]["qualification"]["references_sha256"]
+        ),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Retire exposed qualification cohorts and render a seed-disjoint replacement."
@@ -190,44 +231,56 @@ def main() -> int:
     effective_config = work / "qualification-effective-config.json"
     _write_json(effective_config, rotated)
 
-    shutil.rmtree(output)
-    summary = render_domain_dataset(effective_config, output, curriculum_weights=None)
-    active_index = output / "domain-index.jsonl"
-    active_references = output / "qualification.references.jsonl"
-    active_hashes = _index_hashes(active_index, {"qualification"})
-    if not active_hashes:
-        raise ValueError("active qualification cohort has no qualification WAVs")
-    active_references_sha = sha256_file(active_references)
-    retired_overlap = retired_hashes & active_hashes
-    development_overlap = development_hashes & active_hashes
-    if retired_overlap:
-        raise ValueError(
-            f"active qualification overlaps {len(retired_overlap)} retired qualification WAV SHA(s)"
-        )
-    if development_overlap:
-        raise ValueError(
-            f"active qualification overlaps {len(development_overlap)} development/training WAV SHA(s)"
-        )
-    if active_references_sha == retired_references_sha:
-        raise ValueError("active qualification references are byte-identical to retired references")
-
-    recordings, expected_wakes = _reference_stats(active_references)
     retired_exposed: list[dict] = []
     scratch = work / "retired-qualification-scratch"
     shutil.rmtree(scratch, ignore_errors=True)
+    worker_count = _retired_render_worker_count(cfg, retired_exposed_seeds)
+    executor: concurrent.futures.ProcessPoolExecutor | None = None
+    futures: list[concurrent.futures.Future] = []
     try:
-        for retired_seed in retired_exposed_seeds:
-            seed_root = scratch / f"seed-{retired_seed}"
-            seed_config = seed_root / "effective-config.json"
-            retired_config = _qualification_render_config(cfg, retired_seed)
-            _write_json(seed_config, retired_config)
-            retired_output = seed_root / "dataset"
-            retired_summary = render_domain_dataset(
-                seed_config, retired_output, curriculum_weights=None
+        if worker_count > 1:
+            executor = concurrent.futures.ProcessPoolExecutor(max_workers=worker_count)
+            futures = [
+                executor.submit(_render_retired_seed, cfg, scratch, retired_seed)
+                for retired_seed in retired_exposed_seeds
+            ]
+
+        # Active qualification rendering is independent of every retired seed.
+        # Overlap it with proxy-AFE retired reconstruction so governance history
+        # does not consume the fixed workflow wall-clock budget serially.
+        shutil.rmtree(output)
+        summary = render_domain_dataset(effective_config, output, curriculum_weights=None)
+        active_index = output / "domain-index.jsonl"
+        active_references = output / "qualification.references.jsonl"
+        active_hashes = _index_hashes(active_index, {"qualification"})
+        if not active_hashes:
+            raise ValueError("active qualification cohort has no qualification WAVs")
+        active_references_sha = sha256_file(active_references)
+        retired_overlap = retired_hashes & active_hashes
+        development_overlap = development_hashes & active_hashes
+        if retired_overlap:
+            raise ValueError(
+                f"active qualification overlaps {len(retired_overlap)} retired qualification WAV SHA(s)"
             )
-            exposed_index = retired_output / "domain-index.jsonl"
-            exposed_references = retired_output / "qualification.references.jsonl"
-            exposed_hashes = _index_hashes(exposed_index, {"qualification"})
+        if development_overlap:
+            raise ValueError(
+                f"active qualification overlaps {len(development_overlap)} development/training WAV SHA(s)"
+            )
+        if active_references_sha == retired_references_sha:
+            raise ValueError("active qualification references are byte-identical to retired references")
+
+        recordings, expected_wakes = _reference_stats(active_references)
+        if futures:
+            rendered_retired = [future.result() for future in futures]
+        else:
+            rendered_retired = [
+                _render_retired_seed(cfg, scratch, retired_seed)
+                for retired_seed in retired_exposed_seeds
+            ]
+
+        for rendered in rendered_retired:
+            retired_seed = int(rendered["seed"])
+            exposed_hashes = set(str(value) for value in rendered["wav_hashes"])
             if len(exposed_hashes) != len(active_hashes):
                 raise ValueError(
                     "retired/active qualification WAV-count mismatch: "
@@ -240,22 +293,20 @@ def main() -> int:
                     f"active qualification overlaps {len(overlap)} WAV SHA(s) with "
                     f"retired qualification seed {retired_seed}"
                 )
-            exposed_references_sha = sha256_file(exposed_references)
+            exposed_references_sha = str(rendered["references_sha256"])
             if exposed_references_sha == active_references_sha:
                 raise ValueError(
                     f"active qualification references are byte-identical to retired seed {retired_seed}"
                 )
-            exposed_recordings, exposed_expected_wakes = _reference_stats(exposed_references)
+            exposed_recordings = int(rendered["recordings"])
+            exposed_expected_wakes = int(rendered["expected_wakes"])
             if exposed_recordings != recordings or exposed_expected_wakes != expected_wakes:
                 raise ValueError(
                     f"retired qualification seed {retired_seed} has different support: "
                     f"recordings={exposed_recordings}/{recordings} "
                     f"expected={exposed_expected_wakes}/{expected_wakes}"
                 )
-            summary_reference_sha = str(
-                retired_summary["splits"]["qualification"]["references_sha256"]
-            )
-            if summary_reference_sha != exposed_references_sha:
+            if str(rendered["summary_references_sha256"]) != exposed_references_sha:
                 raise ValueError(
                     f"retired qualification seed {retired_seed} reference SHA mismatch"
                 )
@@ -265,13 +316,15 @@ def main() -> int:
                     "wav_count": len(exposed_hashes),
                     "recordings": exposed_recordings,
                     "expected_wakes": exposed_expected_wakes,
-                    "effective_config_sha256": sha256_file(seed_config),
-                    "domain_index_sha256": str(retired_summary["domain_index_sha256"]),
+                    "effective_config_sha256": str(rendered["effective_config_sha256"]),
+                    "domain_index_sha256": str(rendered["domain_index_sha256"]),
                     "references_sha256": exposed_references_sha,
                     "overlapping_active_wav_sha256": 0,
                 }
             )
     finally:
+        if executor is not None:
+            executor.shutdown(wait=True, cancel_futures=True)
         shutil.rmtree(scratch, ignore_errors=True)
 
     evidence = {
