@@ -1,0 +1,149 @@
+name: domain-pcm-determinism-probe
+
+on:
+  push:
+    branches:
+      - codex/renderer-determinism-probe
+    paths:
+      - '.github/workflows/domain-pcm-determinism-probe.yml'
+      - 'tests/domain_pcm_determinism_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: domain-pcm-determinism-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: runner-${{ matrix.runner }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [a, b]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run full round-zero domain PCM probe
+        run: |
+          python3 tests/domain_pcm_determinism_probe.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/domain-pcm-probe \
+            --output build/domain-pcm-${{ matrix.runner }}.json
+      - name: Retain byte-level report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: domain-pcm-${{ matrix.runner }}
+          path: build/domain-pcm-${{ matrix.runner }}.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+
+  compare:
+    name: compare
+    needs: probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download runner A report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: domain-pcm-a
+          path: reports/a
+      - name: Download runner B report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: domain-pcm-b
+          path: reports/b
+      - name: Compare semantic, source and rendered PCM identities
+        run: |
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          def load(root):
+              files = list(Path(root).glob('*.json'))
+              if len(files) != 1:
+                  raise SystemExit(f'{root}: expected one report, got {len(files)}')
+              return json.loads(files[0].read_text(encoding='utf-8'))
+
+          a = load('reports/a')
+          b = load('reports/b')
+          print('runner-a CPU:', a['environment']['cpu_model'])
+          print('runner-b CPU:', b['environment']['cpu_model'])
+          print('examples:', a['examples'], b['examples'])
+
+          failed = False
+          for field in (
+              'semantic_sha256',
+              'index_order_sha256',
+              'source_pcm_tree_sha256',
+              'rendered_pcm_tree_sha256',
+          ):
+              same = a[field] == b[field]
+              print(f'{field}: {a[field]} / {b[field]} same={same}')
+              failed |= not same
+
+          ar = a['recordings']
+          br = b['recordings']
+          only_a = sorted(set(ar) - set(br))
+          only_b = sorted(set(br) - set(ar))
+          semantic = []
+          source = []
+          rendered = []
+          for key in sorted(set(ar) & set(br)):
+              if ar[key]['semantic'] != br[key]['semantic']:
+                  semantic.append(key)
+              if ar[key]['source_wav_sha256'] != br[key]['source_wav_sha256']:
+                  source.append(key)
+              if ar[key]['rendered_wav_sha256'] != br[key]['rendered_wav_sha256']:
+                  rendered.append(key)
+
+          print('recordings only in A:', len(only_a))
+          print('recordings only in B:', len(only_b))
+          print('semantic mismatches:', len(semantic))
+          print('source PCM mismatches:', len(source))
+          print('rendered PCM mismatches:', len(rendered))
+
+          def category(keys):
+              return Counter('|'.join(key.split('|')[:2]) for key in keys)
+
+          if only_a:
+              print('first only-A:', only_a[:10])
+          if only_b:
+              print('first only-B:', only_b[:10])
+          if semantic:
+              print('semantic mismatch categories:', dict(category(semantic)))
+              print('first semantic mismatches:', semantic[:20])
+          if source:
+              print('source mismatch categories:', dict(category(source)))
+              print('first source PCM mismatches:')
+              for key in source[:20]:
+                  print(' ', key, ar[key]['source_wav_sha256'], br[key]['source_wav_sha256'])
+          if rendered:
+              print('rendered mismatch categories:', dict(category(rendered)))
+              print('first rendered PCM mismatches:')
+              for key in rendered[:20]:
+                  print(' ', key, ar[key]['rendered_wav_sha256'], br[key]['rendered_wav_sha256'])
+
+          categories = sorted(set(a['category_digests']) | set(b['category_digests']))
+          category_mismatch = []
+          for key in categories:
+              av = a['category_digests'].get(key)
+              bv = b['category_digests'].get(key)
+              same = av == bv
+              print(f'category {key}: same={same} A={av} B={bv}')
+              if not same:
+                  category_mismatch.append(key)
+
+          failed |= bool(only_a or only_b or semantic or source or rendered or category_mismatch)
+          if failed:
+              raise SystemExit('round-zero domain generation is not byte-identical across hosted runners')
+          print('round-zero domain generation is byte-identical across independent hosted runners')
+          PY
