@@ -1,0 +1,228 @@
+name: training-determinism-probe
+
+on:
+  push:
+    branches:
+      - codex/renderer-determinism-probe
+    paths:
+      - '.github/workflows/training-determinism-probe.yml'
+      - 'tests/training_determinism_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: training-determinism-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runner-a:
+    runs-on: ubuntu-24.04
+    outputs:
+      cpu_model: ${{ steps.probe.outputs.cpu_model }}
+      corpus_tree: ${{ steps.probe.outputs.corpus_tree }}
+      training_corpus: ${{ steps.probe.outputs.training_corpus }}
+      batch: ${{ steps.probe.outputs.batch }}
+      initial: ${{ steps.probe.outputs.initial }}
+      forward: ${{ steps.probe.outputs.forward }}
+      loss: ${{ steps.probe.outputs.loss }}
+      gradient: ${{ steps.probe.outputs.gradient }}
+      clipped_gradient: ${{ steps.probe.outputs.clipped_gradient }}
+      post_step: ${{ steps.probe.outputs.post_step }}
+      final: ${{ steps.probe.outputs.final }}
+      stdout: ${{ steps.probe.outputs.stdout }}
+      torch_config: ${{ steps.probe.outputs.torch_config }}
+      parallel_info: ${{ steps.probe.outputs.parallel_info }}
+      cpu_capability: ${{ steps.probe.outputs.cpu_capability }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Run fixed-PCM training probe
+        run: |
+          .venv/bin/python tests/training_determinism_probe.py \
+            --work-dir build/training-determinism-probe \
+            --output build/training-determinism-probe-report.json
+      - name: Publish probe digests
+        id: probe
+        run: |
+          .venv/bin/python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report = json.loads(Path("build/training-determinism-probe-report.json").read_text())
+          env = report["environment"]
+          training = report["training"]
+          step = report["one_step"]
+          values = {
+              "cpu_model": env["cpu_model"],
+              "corpus_tree": report["fixed_corpus_tree_sha256"],
+              "training_corpus": training["training_corpus_sha256"],
+              "batch": step["batch_digest"],
+              "initial": step["initial_model_digest"],
+              "forward": step["forward_digest"],
+              "loss": step["loss_digest"],
+              "gradient": step["gradient_digest"],
+              "clipped_gradient": step["clipped_gradient_digest"],
+              "post_step": step["post_step_model_digest"],
+              "final": training["tensor_digest"],
+              "stdout": training["stdout_sha256"],
+              "torch_config": env["torch_config_sha256"],
+              "parallel_info": env["torch_parallel_info_sha256"],
+              "cpu_capability": str(env["torch_cpu_capability"]),
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
+              for key, value in values.items():
+                  print(f"{key}={value}", file=stream)
+          print(json.dumps(values, sort_keys=True, indent=2))
+          PY
+
+  runner-b:
+    runs-on: ubuntu-24.04
+    outputs:
+      cpu_model: ${{ steps.probe.outputs.cpu_model }}
+      corpus_tree: ${{ steps.probe.outputs.corpus_tree }}
+      training_corpus: ${{ steps.probe.outputs.training_corpus }}
+      batch: ${{ steps.probe.outputs.batch }}
+      initial: ${{ steps.probe.outputs.initial }}
+      forward: ${{ steps.probe.outputs.forward }}
+      loss: ${{ steps.probe.outputs.loss }}
+      gradient: ${{ steps.probe.outputs.gradient }}
+      clipped_gradient: ${{ steps.probe.outputs.clipped_gradient }}
+      post_step: ${{ steps.probe.outputs.post_step }}
+      final: ${{ steps.probe.outputs.final }}
+      stdout: ${{ steps.probe.outputs.stdout }}
+      torch_config: ${{ steps.probe.outputs.torch_config }}
+      parallel_info: ${{ steps.probe.outputs.parallel_info }}
+      cpu_capability: ${{ steps.probe.outputs.cpu_capability }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Run fixed-PCM training probe
+        run: |
+          .venv/bin/python tests/training_determinism_probe.py \
+            --work-dir build/training-determinism-probe \
+            --output build/training-determinism-probe-report.json
+      - name: Publish probe digests
+        id: probe
+        run: |
+          .venv/bin/python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report = json.loads(Path("build/training-determinism-probe-report.json").read_text())
+          env = report["environment"]
+          training = report["training"]
+          step = report["one_step"]
+          values = {
+              "cpu_model": env["cpu_model"],
+              "corpus_tree": report["fixed_corpus_tree_sha256"],
+              "training_corpus": training["training_corpus_sha256"],
+              "batch": step["batch_digest"],
+              "initial": step["initial_model_digest"],
+              "forward": step["forward_digest"],
+              "loss": step["loss_digest"],
+              "gradient": step["gradient_digest"],
+              "clipped_gradient": step["clipped_gradient_digest"],
+              "post_step": step["post_step_model_digest"],
+              "final": training["tensor_digest"],
+              "stdout": training["stdout_sha256"],
+              "torch_config": env["torch_config_sha256"],
+              "parallel_info": env["torch_parallel_info_sha256"],
+              "cpu_capability": str(env["torch_cpu_capability"]),
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as stream:
+              for key, value in values.items():
+                  print(f"{key}={value}", file=stream)
+          print(json.dumps(values, sort_keys=True, indent=2))
+          PY
+
+  compare:
+    runs-on: ubuntu-24.04
+    needs:
+      - runner-a
+      - runner-b
+    steps:
+      - name: Compare independent hosted runners
+        env:
+          A_CPU: ${{ needs.runner-a.outputs.cpu_model }}
+          B_CPU: ${{ needs.runner-b.outputs.cpu_model }}
+          A_CORPUS_TREE: ${{ needs.runner-a.outputs.corpus_tree }}
+          B_CORPUS_TREE: ${{ needs.runner-b.outputs.corpus_tree }}
+          A_TRAINING_CORPUS: ${{ needs.runner-a.outputs.training_corpus }}
+          B_TRAINING_CORPUS: ${{ needs.runner-b.outputs.training_corpus }}
+          A_BATCH: ${{ needs.runner-a.outputs.batch }}
+          B_BATCH: ${{ needs.runner-b.outputs.batch }}
+          A_INITIAL: ${{ needs.runner-a.outputs.initial }}
+          B_INITIAL: ${{ needs.runner-b.outputs.initial }}
+          A_FORWARD: ${{ needs.runner-a.outputs.forward }}
+          B_FORWARD: ${{ needs.runner-b.outputs.forward }}
+          A_LOSS: ${{ needs.runner-a.outputs.loss }}
+          B_LOSS: ${{ needs.runner-b.outputs.loss }}
+          A_GRADIENT: ${{ needs.runner-a.outputs.gradient }}
+          B_GRADIENT: ${{ needs.runner-b.outputs.gradient }}
+          A_CLIPPED_GRADIENT: ${{ needs.runner-a.outputs.clipped_gradient }}
+          B_CLIPPED_GRADIENT: ${{ needs.runner-b.outputs.clipped_gradient }}
+          A_POST_STEP: ${{ needs.runner-a.outputs.post_step }}
+          B_POST_STEP: ${{ needs.runner-b.outputs.post_step }}
+          A_FINAL: ${{ needs.runner-a.outputs.final }}
+          B_FINAL: ${{ needs.runner-b.outputs.final }}
+          A_STDOUT: ${{ needs.runner-a.outputs.stdout }}
+          B_STDOUT: ${{ needs.runner-b.outputs.stdout }}
+          A_TORCH_CONFIG: ${{ needs.runner-a.outputs.torch_config }}
+          B_TORCH_CONFIG: ${{ needs.runner-b.outputs.torch_config }}
+          A_PARALLEL_INFO: ${{ needs.runner-a.outputs.parallel_info }}
+          B_PARALLEL_INFO: ${{ needs.runner-b.outputs.parallel_info }}
+          A_CPU_CAPABILITY: ${{ needs.runner-a.outputs.cpu_capability }}
+          B_CPU_CAPABILITY: ${{ needs.runner-b.outputs.cpu_capability }}
+        run: |
+          python3 - <<'PY'
+          import os
+
+          pairs = [
+              ("fixed corpus tree", "A_CORPUS_TREE", "B_CORPUS_TREE"),
+              ("training corpus", "A_TRAINING_CORPUS", "B_TRAINING_CORPUS"),
+              ("first batch", "A_BATCH", "B_BATCH"),
+              ("initial model", "A_INITIAL", "B_INITIAL"),
+              ("forward", "A_FORWARD", "B_FORWARD"),
+              ("loss", "A_LOSS", "B_LOSS"),
+              ("gradient", "A_GRADIENT", "B_GRADIENT"),
+              ("clipped gradient", "A_CLIPPED_GRADIENT", "B_CLIPPED_GRADIENT"),
+              ("post-step model", "A_POST_STEP", "B_POST_STEP"),
+              ("8-epoch final model", "A_FINAL", "B_FINAL"),
+              ("training stdout", "A_STDOUT", "B_STDOUT"),
+              ("torch build config", "A_TORCH_CONFIG", "B_TORCH_CONFIG"),
+              ("torch parallel info", "A_PARALLEL_INFO", "B_PARALLEL_INFO"),
+              ("torch CPU capability", "A_CPU_CAPABILITY", "B_CPU_CAPABILITY"),
+          ]
+          print(f"runner-a CPU: {os.environ['A_CPU']}")
+          print(f"runner-b CPU: {os.environ['B_CPU']}")
+          mismatches = []
+          for label, left, right in pairs:
+              a = os.environ[left]
+              b = os.environ[right]
+              state = "MATCH" if a == b else "DIFF"
+              print(f"{label}: {state} a={a} b={b}")
+              if a != b:
+                  mismatches.append(label)
+          if mismatches:
+              raise SystemExit(
+                  "cross-runner determinism mismatch: " + ", ".join(mismatches)
+              )
+          PY
