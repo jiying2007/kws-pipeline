@@ -113,16 +113,20 @@ def main() -> int:
     assert 'weights["rear"] = max(weights["rear"], *peer_weights)' not in curriculum_source
 
     # Once a qualification seed has been inspected it becomes development
-    # evidence. Keep all exposed cohorts explicit and prove zero active overlap.
-    assert int(formal["qualification_holdout_seed"]) == 271834
-    assert [int(value) for value in formal["retired_qualification_holdout_seeds"]] == [
-        271828,
-        271829,
-        271830,
-        271831,
-        271832,
-        271833,
+    # evidence. Keep every exposed cohort explicit, ordered, gap-free, and
+    # disjoint from the single fresh active seed. This lifecycle invariant must
+    # survive legal rotations instead of hard-coding one generation forever.
+    qualification_seed = int(formal["qualification_holdout_seed"])
+    retired_qualification_seeds = [
+        int(value) for value in formal["retired_qualification_holdout_seeds"]
     ]
+    assert retired_qualification_seeds
+    assert retired_qualification_seeds == sorted(set(retired_qualification_seeds))
+    assert retired_qualification_seeds == list(
+        range(retired_qualification_seeds[0], qualification_seed)
+    )
+    assert qualification_seed == retired_qualification_seeds[-1] + 1
+    assert qualification_seed not in retired_qualification_seeds
     assert int(formal["far_holdout_round_namespace"]) == 3000000
     assert [int(value) for value in formal["retired_far_holdout_round_namespaces"]] == [
         1000000,
