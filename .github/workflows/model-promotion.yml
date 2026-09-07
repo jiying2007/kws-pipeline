@@ -1,0 +1,256 @@
+name: model-promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      training_run_id:
+        description: Successful model-training workflow run ID to promote
+        required: true
+        type: string
+      expected_head_sha:
+        description: Exact 40-hex head SHA that the training run must have used
+        required: true
+        type: string
+      release_tag:
+        description: Optional model release tag; defaults to model-<12-char SHA>
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: model-promotion-${{ inputs.expected_head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAINING_RUN_ID: ${{ inputs.training_run_id }}
+      EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
+      REQUESTED_RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - name: Verify requested training run
+        id: run
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TRAINING_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$EXPECTED_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}" > run.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          run = json.loads(Path('run.json').read_text(encoding='utf-8'))
+          expected = os.environ['EXPECTED_HEAD_SHA']
+          if run.get('name') != 'model-training':
+              raise SystemExit(f"unexpected workflow name: {run.get('name')!r}")
+          if run.get('status') != 'completed' or run.get('conclusion') != 'success':
+              raise SystemExit(
+                  f"training run is not completed/success: "
+                  f"status={run.get('status')} conclusion={run.get('conclusion')}"
+              )
+          if run.get('head_sha') != expected:
+              raise SystemExit(
+                  f"training run head mismatch: expected={expected} actual={run.get('head_sha')}"
+              )
+          print(
+              f"verified model-training run id={run['id']} "
+              f"event={run.get('event')} head={run['head_sha']}"
+          )
+          PY
+
+      - name: Resolve exact trained-model artifact
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}/artifacts?per_page=100" > artifacts.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('artifacts.json').read_text(encoding='utf-8'))
+          matches = [
+              row for row in payload.get('artifacts', [])
+              if row.get('name') == 'xiaowo-torch-domain-model' and not row.get('expired', False)
+          ]
+          if len(matches) != 1:
+              raise SystemExit(
+                  f"expected exactly one live xiaowo-torch-domain-model artifact, got {len(matches)}"
+              )
+          row = matches[0]
+          print(f"artifact_id={row['id']}")
+          print(f"artifact_digest={row.get('digest') or ''}")
+          print(f"artifact_size={row.get('size_in_bytes') or 0}")
+          PY
+
+      - name: Download exact trained-model artifact
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
+            --output trained-model.zip
+          test -s trained-model.zip
+          mkdir artifact
+          unzip -q trained-model.zip -d artifact
+
+      - name: Freeze deployable model assets and provenance
+        id: assets
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact_digest }}
+          ARTIFACT_SIZE: ${{ steps.artifact.outputs.artifact_size }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          root = Path('artifact')
+          required = {
+              'model.kwm': 'xiaowo-model.kwm',
+              'model.pt': 'xiaowo-model.pt',
+              'model-provenance.json': 'xiaowo-model-provenance.json',
+              'keywords.kwk': 'xiaowo-keywords.kwk',
+              'keywords.tsv': 'xiaowo-keywords.tsv',
+          }
+          optional = {
+              'training-run-summary.json': 'training-run-summary.json',
+              'robustness-summary.json': 'robustness-summary.json',
+              'qualification-effective-config.json': 'qualification-effective-config.json',
+          }
+
+          def resolve(name: str, *, under_best: bool) -> Path:
+              matches = [
+                  path for path in root.rglob(name)
+                  if path.is_file() and (not under_best or path.parent.name == 'best')
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(f"expected exactly one {name}, got {len(matches)}")
+              if matches[0].stat().st_size == 0:
+                  raise SystemExit(f"empty model artifact file: {matches[0]}")
+              return matches[0]
+
+          copied = {}
+          for source_name, target_name in required.items():
+              source = resolve(source_name, under_best=True)
+              target = Path('dist') / target_name
+              shutil.copy2(source, target)
+              copied[target_name] = target
+
+          for source_name, target_name in optional.items():
+              matches = [path for path in root.rglob(source_name) if path.is_file()]
+              if len(matches) > 1:
+                  raise SystemExit(f"ambiguous optional evidence file {source_name}: {len(matches)}")
+              if len(matches) == 1 and matches[0].stat().st_size > 0:
+                  target = Path('dist') / target_name
+                  shutil.copy2(matches[0], target)
+                  copied[target_name] = target
+
+          json.loads((Path('dist') / 'xiaowo-model-provenance.json').read_text(encoding='utf-8'))
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          files = {
+              name: {'sha256': sha256(path), 'size_bytes': path.stat().st_size}
+              for name, path in sorted(copied.items())
+          }
+          manifest = {
+              'schema_version': 1,
+              'source': {
+                  'repository': os.environ['GITHUB_REPOSITORY'],
+                  'training_run_id': int(os.environ['TRAINING_RUN_ID']),
+                  'head_sha': os.environ['EXPECTED_HEAD_SHA'],
+                  'artifact_id': int(os.environ['ARTIFACT_ID']),
+                  'artifact_digest': os.environ.get('ARTIFACT_DIGEST') or None,
+                  'artifact_size_bytes': int(os.environ.get('ARTIFACT_SIZE') or 0),
+              },
+              'files': files,
+          }
+          Path('dist/model-promotion-manifest.json').write_text(
+              json.dumps(manifest, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(manifest, indent=2, sort_keys=True))
+          PY
+          (
+            cd dist
+            sha256sum \
+              xiaowo-model.kwm \
+              xiaowo-model.pt \
+              xiaowo-model-provenance.json \
+              xiaowo-keywords.kwk \
+              xiaowo-keywords.tsv \
+              model-promotion-manifest.json \
+              > MODEL_SHA256SUMS
+            sha256sum -c MODEL_SHA256SUMS
+          )
+          model_sha="$(sha256sum dist/xiaowo-model.kwm | awk '{print $1}')"
+          echo "model_sha256=$model_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Attest promoted model assets
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: dist/MODEL_SHA256SUMS
+
+      - name: Resolve immutable model release tag
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$REQUESTED_RELEASE_TAG" ]]; then
+            tag="$REQUESTED_RELEASE_TAG"
+          else
+            tag="model-${EXPECTED_HEAD_SHA:0:12}"
+          fi
+          [[ "$tag" =~ ^model-[A-Za-z0-9._-]+$ ]]
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "model release already exists: $tag" >&2
+            exit 2
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publish trained model release
+        shell: bash
+        env:
+          MODEL_RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          MODEL_SHA256: ${{ steps.assets.outputs.model_sha256 }}
+        run: |
+          set -euo pipefail
+          gh release create "$MODEL_RELEASE_TAG" \
+            dist/xiaowo-model.kwm \
+            dist/xiaowo-model.pt \
+            dist/xiaowo-model-provenance.json \
+            dist/xiaowo-keywords.kwk \
+            dist/xiaowo-keywords.tsv \
+            dist/model-promotion-manifest.json \
+            dist/MODEL_SHA256SUMS \
+            --target "$EXPECTED_HEAD_SHA" \
+            --title "kws-pipeline trained model ${EXPECTED_HEAD_SHA:0:12}" \
+            --notes "Promoted from successful model-training run ${TRAINING_RUN_ID}. Deployable model SHA256: ${MODEL_SHA256}."
