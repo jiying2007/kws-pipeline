@@ -4,9 +4,11 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import pathlib
 import random
 import struct
+import subprocess
 import sys
 import tempfile
 import wave
@@ -225,8 +227,93 @@ def test_deterministic_robustness_axes() -> None:
     assert critical >= 160
 
 
+def test_cross_process_scene_determinism() -> None:
+    script = r'''
+import hashlib
+import json
+import math
+import pathlib
+import random
+import struct
+import sys
+
+root = pathlib.Path(sys.argv[1]).resolve()
+sys.path.insert(0, str(root / "training"))
+
+from acoustic_scene import render_scene
+from development_stress import apply_development_stress_scene, build_development_stress_plan
+from render_domains import _deterministic_eval_scene, _evaluation_axes, validate_domains
+
+config = json.loads(
+    (root / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
+)
+domains = validate_domains(config)
+axes = _evaluation_axes(config, domains)
+assert axes is not None
+
+plan = build_development_stress_plan(
+    config,
+    axes,
+    split="calibration",
+    positive_scene_count=64,
+)
+ordinal = 59
+scene = _deterministic_eval_scene(
+    domains,
+    axes,
+    ordinal,
+    random.Random(2000 + ordinal),
+)
+spec = plan["slots"].get(ordinal)
+if spec is not None:
+    scene = apply_development_stress_scene(scene, domains, axes, spec)
+
+clean = [
+    int(round(9000.0 * math.sin(2.0 * math.pi * 880.0 * index / 16000.0)))
+    for index in range(16000)
+]
+samples, metadata = render_scene(
+    clean,
+    scene,
+    seed=314159,
+    afe={"backend": "proxy"},
+)
+pcm = b"".join(struct.pack("<h", int(value)) for value in samples)
+payload = {
+    "pcm_sha256": hashlib.sha256(pcm).hexdigest(),
+    "scene": scene,
+    "metadata": metadata,
+}
+print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
+'''
+    results = []
+    for hash_seed in ("1", "777", "314159"):
+        env = os.environ.copy()
+        env["PYTHONHASHSEED"] = hash_seed
+        completed = subprocess.run(
+            [sys.executable, "-c", script, str(ROOT)],
+            cwd=ROOT,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise AssertionError(
+                f"cross-process render failed for PYTHONHASHSEED={hash_seed}:\n"
+                f"{completed.stderr}"
+            )
+        results.append(json.loads(completed.stdout))
+    assert results[0] == results[1] == results[2], json.dumps(
+        results, ensure_ascii=True, sort_keys=True
+    )
+    assert len({str(result["pcm_sha256"]) for result in results}) == 1
+
+
 def main() -> int:
     test_deterministic_robustness_axes()
+    test_cross_process_scene_determinism()
 
     clean = clean_tone()
     afe = {"backend": "proxy"}
