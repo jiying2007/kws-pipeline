@@ -1,0 +1,136 @@
+name: synthetic-pcm-determinism-probe
+
+on:
+  push:
+    branches:
+      - codex/renderer-determinism-probe
+    paths:
+      - '.github/workflows/synthetic-pcm-determinism-probe.yml'
+      - 'tests/synthetic_pcm_determinism_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synthetic-pcm-determinism-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: runner-${{ matrix.runner }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [a, b]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run production synthetic PCM probe
+        run: |
+          python3 tests/synthetic_pcm_determinism_probe.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/synthetic-pcm-probe \
+            --output build/synthetic-pcm-${{ matrix.runner }}.json
+      - name: Retain byte-level report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: synthetic-pcm-${{ matrix.runner }}
+          path: build/synthetic-pcm-${{ matrix.runner }}.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+
+  compare:
+    name: compare
+    needs: probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download runner A report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: synthetic-pcm-a
+          path: reports/a
+      - name: Download runner B report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: synthetic-pcm-b
+          path: reports/b
+      - name: Compare semantic and PCM identities
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          def load(root):
+              files = list(Path(root).glob('*.json'))
+              if len(files) != 1:
+                  raise SystemExit(f'{root}: expected one report, got {len(files)}')
+              return json.loads(files[0].read_text(encoding='utf-8'))
+
+          a = load('reports/a')
+          b = load('reports/b')
+          print('runner-a CPU:', a['environment']['cpu_model'])
+          print('runner-b CPU:', b['environment']['cpu_model'])
+          print('training seed:', a['config']['training_seed'], b['config']['training_seed'])
+
+          invariant_fields = (
+              'semantic_sha256',
+              'index_order_sha256',
+              'mapping_sha256',
+          )
+          failed = False
+          for field in invariant_fields:
+              same = a[field] == b[field]
+              print(f'{field}: {a[field]} / {b[field]} same={same}')
+              failed |= not same
+
+          a_rows = a['recordings']
+          b_rows = b['recordings']
+          only_a = sorted(set(a_rows) - set(b_rows))
+          only_b = sorted(set(b_rows) - set(a_rows))
+          semantic_mismatch = []
+          pcm_mismatch = []
+          for key in sorted(set(a_rows) & set(b_rows)):
+              if a_rows[key]['semantic'] != b_rows[key]['semantic']:
+                  semantic_mismatch.append(key)
+              if a_rows[key]['wav_sha256'] != b_rows[key]['wav_sha256']:
+                  pcm_mismatch.append(key)
+
+          print('recordings only in A:', len(only_a))
+          print('recordings only in B:', len(only_b))
+          print('semantic row mismatches:', len(semantic_mismatch))
+          print('PCM SHA mismatches:', len(pcm_mismatch))
+          if only_a:
+              print('first only-A keys:', only_a[:10])
+          if only_b:
+              print('first only-B keys:', only_b[:10])
+          if semantic_mismatch:
+              print('first semantic mismatches:', semantic_mismatch[:10])
+          if pcm_mismatch:
+              print('first PCM mismatches:')
+              for key in pcm_mismatch[:20]:
+                  print(' ', key, a_rows[key]['wav_sha256'], b_rows[key]['wav_sha256'])
+
+          print('pcm_tree_sha256:', a['pcm_tree_sha256'], '/', b['pcm_tree_sha256'])
+          categories = sorted(set(a['category_digests']) | set(b['category_digests']))
+          category_pcm_mismatch = []
+          for category in categories:
+              av = a['category_digests'].get(category)
+              bv = b['category_digests'].get(category)
+              same = av == bv
+              print(f'category {category}: same={same} A={av} B={bv}')
+              if not same:
+                  category_pcm_mismatch.append(category)
+
+          failed |= bool(only_a or only_b or semantic_mismatch)
+          failed |= a['pcm_tree_sha256'] != b['pcm_tree_sha256']
+          failed |= bool(pcm_mismatch or category_pcm_mismatch)
+          if failed:
+              raise SystemExit('production synthetic base generation is not byte-identical across hosted runners')
+          print('production synthetic base generation is byte-identical across independent hosted runners')
+          PY
