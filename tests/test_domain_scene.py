@@ -15,6 +15,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from acoustic_scene import render_scene  # noqa: E402
+from development_stress import (  # noqa: E402
+    apply_development_stress_scene,
+    build_development_stress_plan,
+)
 from render_domains import (  # noqa: E402
     _deterministic_eval_scene,
     _evaluation_axes,
@@ -56,6 +60,12 @@ with open(a.result,'w',encoding='utf-8') as f: json.dump({'latency_samples':320,
 
 def test_deterministic_robustness_axes() -> None:
     azimuths = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180]
+    required_stress = [
+        "distance_azimuth:distance_bin=5m|azimuth=rear",
+        "distance_snr:distance_bin=5m|snr=critical",
+        "azimuth_snr:azimuth=rear|snr=critical",
+        "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical",
+    ]
     config = {
         "domains": {
             "distance_bands": {
@@ -78,9 +88,11 @@ def test_deterministic_robustness_axes() -> None:
             },
         },
         "robustness_gates": {
+            "min_expected_wakes": 4,
             "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
             "required_azimuth_deg": azimuths,
             "required_snr_bands": ["critical", "low", "mid", "high"],
+            "required_stress_slices": required_stress,
         },
     }
     domains = validate_domains(config)
@@ -114,9 +126,6 @@ def test_deterministic_robustness_axes() -> None:
     assert len(azimuth_snr) == 12 * 4
     assert len(distance_snr) == 5 * 4
 
-    # Calibration has only a small number of positive base examples. Its early
-    # prefix must still see every marginal axis, rather than walking several
-    # consecutive examples through only rear-facing azimuths.
     early = scenes[:16]
     assert {float(scene["azimuth_deg"]) for scene in early} == set(axes["azimuth_deg"])
     assert {float(scene["distance_m"]) for scene in early} == set(axes["distance_m"])
@@ -124,12 +133,82 @@ def test_deterministic_robustness_axes() -> None:
         round(float(value), 6) for value in axes["snr_db"]
     }
 
-    # The same ordinal must preserve the matrix coordinates even when the
-    # randomized nuisance dimensions (RT60/noise/playback) use a different seed.
     first_a = _deterministic_eval_scene(domains, axes, 17, random.Random(1))
     first_b = _deterministic_eval_scene(domains, axes, 17, random.Random(2))
     for key in ("distance_m", "azimuth_deg", "snr_db", "distance_band"):
         assert first_a[key] == first_b[key]
+
+    # The formal robustness contract already has one 5m/rear/critical positive
+    # in a 64-scene calibration prefix. Reserve only the three missing scenes.
+    # Selection is minimal-disturbance and keeps every pre-existing pairwise
+    # distance/azimuth/SNR combination represented.
+    stress_plan = build_development_stress_plan(
+        config,
+        axes,
+        split="calibration",
+        positive_scene_count=64,
+    )
+    assert stress_plan["reserved_scenes"] == 3
+    assert sorted(stress_plan["slots"]) == [0, 9, 59]
+    assert stress_plan["baseline_support"] == {
+        required_stress[0]: 5,
+        required_stress[1]: 3,
+        required_stress[2]: 6,
+        required_stress[3]: 1,
+    }
+    assert stress_plan["resulting_support"] == {
+        required_stress[0]: 6,
+        required_stress[1]: 6,
+        required_stress[2]: 8,
+        required_stress[3]: 4,
+    }
+    assert stress_plan["pairwise_unique_before"] == {
+        "distance_azimuth": 60,
+        "distance_snr": 20,
+        "azimuth_snr": 48,
+    }
+    assert stress_plan["pairwise_unique_after"] == stress_plan["pairwise_unique_before"]
+
+    final_scenes = []
+    for ordinal in range(64):
+        scene = _deterministic_eval_scene(
+            domains, axes, ordinal, random.Random(2000 + ordinal)
+        )
+        spec = stress_plan["slots"].get(ordinal)
+        if spec is not None:
+            scene = apply_development_stress_scene(scene, domains, axes, spec)
+        final_scenes.append(scene)
+    triple = [
+        scene
+        for scene in final_scenes
+        if float(scene["distance_m"]) == 5.0
+        and abs(float(scene["azimuth_deg"])) > 90.0
+        and float(scene["snr_db"]) <= 6.0
+    ]
+    assert len(triple) == 4
+    assert len({(float(scene["distance_m"]), float(scene["azimuth_deg"])) for scene in final_scenes}) == 60
+    assert len({(float(scene["distance_m"]), round(float(scene["snr_db"]), 6)) for scene in final_scenes}) == 20
+    assert len({(float(scene["azimuth_deg"]), round(float(scene["snr_db"]), 6)) for scene in final_scenes}) == 48
+
+    qualification_plan = build_development_stress_plan(
+        config,
+        axes,
+        split="qualification",
+        positive_scene_count=128,
+    )
+    assert qualification_plan["reserved_scenes"] == 0
+    assert qualification_plan["slots"] == {}
+    try:
+        build_development_stress_plan(
+            config,
+            axes,
+            split="test",
+            positive_scene_count=3,
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("insufficient development stress capacity was accepted")
 
     adaptive = {
         "dimension_weights": {
