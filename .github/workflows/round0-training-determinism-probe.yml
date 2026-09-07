@@ -1,0 +1,136 @@
+name: round0-training-determinism-probe
+
+on:
+  push:
+    branches:
+      - codex/renderer-determinism-probe
+    paths:
+      - '.github/workflows/round0-training-determinism-probe.yml'
+      - 'tests/round0_training_determinism_probe.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: round0-training-determinism-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: runner-${{ matrix.runner }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [a, b]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Run production round-zero generation, replay and training probe
+        run: |
+          .venv/bin/python tests/round0_training_determinism_probe.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/round0-training-probe \
+            --output build/round0-training-${{ matrix.runner }}.json
+      - name: Retain end-to-end report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: round0-training-${{ matrix.runner }}
+          path: build/round0-training-${{ matrix.runner }}.json
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 9
+
+  compare:
+    name: compare
+    needs: probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download runner A report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: round0-training-a
+          path: reports/a
+      - name: Download runner B report
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: round0-training-b
+          path: reports/b
+      - name: Compare production round-zero identities and final tensors
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          def load(root):
+              files = list(Path(root).glob('*.json'))
+              if len(files) != 1:
+                  raise SystemExit(f'{root}: expected one report, got {len(files)}')
+              return json.loads(files[0].read_text(encoding='utf-8'))
+
+          a = load('reports/a')
+          b = load('reports/b')
+          print('runner-a CPU:', a['environment']['cpu_model'])
+          print('runner-b CPU:', b['environment']['cpu_model'])
+
+          pairs = [
+              ('config SHA', a['config_sha256'], b['config_sha256']),
+              ('domain examples', a['domain_train']['examples'], b['domain_train']['examples']),
+              ('domain semantic', a['domain_train']['semantic_sha256'], b['domain_train']['semantic_sha256']),
+              ('domain source PCM tree', a['domain_train']['source_pcm_tree_sha256'], b['domain_train']['source_pcm_tree_sha256']),
+              ('domain rendered PCM tree', a['domain_train']['rendered_pcm_tree_sha256'], b['domain_train']['rendered_pcm_tree_sha256']),
+              ('replay examples', a['round0_replay']['examples'], b['round0_replay']['examples']),
+              ('replay PCM tree', a['round0_replay']['pcm_tree_sha256'], b['round0_replay']['pcm_tree_sha256']),
+              ('replay manifest', a['round0_replay']['manifest_sha256'], b['round0_replay']['manifest_sha256']),
+              ('training examples', a['training']['examples'], b['training']['examples']),
+              ('training corpus', a['training']['corpus_sha256'], b['training']['corpus_sha256']),
+              ('final tensor', a['training']['tensor_sha256'], b['training']['tensor_sha256']),
+              ('training stdout', a['training']['stdout_sha256'], b['training']['stdout_sha256']),
+              ('seed', a['training']['seed'], b['training']['seed']),
+              ('epochs', a['training']['epochs'], b['training']['epochs']),
+              ('batch size', a['training']['batch_size'], b['training']['batch_size']),
+              ('learning rate', a['training']['learning_rate'], b['training']['learning_rate']),
+              ('torch version', a['environment']['torch'], b['environment']['torch']),
+              ('torch threads', a['environment']['torch_num_threads'], b['environment']['torch_num_threads']),
+              ('torch interop threads', a['environment']['torch_num_interop_threads'], b['environment']['torch_num_interop_threads']),
+              ('mkldnn enabled', a['environment']['mkldnn_enabled'], b['environment']['mkldnn_enabled']),
+          ]
+
+          mismatches = []
+          for label, left, right in pairs:
+              same = left == right
+              print(f'{label}: same={same} A={left} B={right}')
+              if not same:
+                  mismatches.append(label)
+
+          for field in (
+              'torch_version',
+              'torch_num_threads',
+              'torch_num_interop_threads',
+              'training_code_sha256',
+              'requirements_lock_sha256',
+              'dockerfile_sha256',
+          ):
+              av = a['training']['training_environment'].get(field)
+              bv = b['training']['training_environment'].get(field)
+              same = av == bv
+              print(f'training environment {field}: same={same} A={av} B={bv}')
+              if not same:
+                  mismatches.append(f'training environment {field}')
+
+          if mismatches:
+              raise SystemExit(
+                  'production round-zero determinism mismatch: ' + ', '.join(mismatches)
+              )
+          print('production round-zero generation, replay and training are byte/tensor-identical across independent hosted runners')
+          PY
