@@ -93,6 +93,22 @@ def update_curriculum(
                 max_weight,
                 max(1.0, 0.55 * old + 0.45 * target),
             )
+
+        # Playback is the only binary domain with an explicit configured base
+        # probability in the renderer. Adaptive weighting may increase playback
+        # exposure when playback is hard, but it must not make the effective
+        # playback probability fall below that configured baseline merely because
+        # no-playback happened to be harder in the development slice. Keeping the
+        # two weights equal in that direction preserves the base probability while
+        # still allowing playback to be up-weighted above baseline when warranted.
+        if dimension == "playback" and {
+            "playback",
+            "no-playback",
+        }.issubset(weights):
+            weights["playback"] = max(
+                weights["playback"], weights["no-playback"]
+            )
+
         dimension_hardness[dimension] = hardness
         dimension_weights[dimension] = weights
 

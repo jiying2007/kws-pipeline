@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import copy
 import hashlib
 import json
@@ -82,9 +83,109 @@ def _reference_stats(path: pathlib.Path) -> tuple[int, int]:
     return recordings, expected_wakes
 
 
+def normalize_retired_qualification_seeds(
+    raw: object,
+    *,
+    training_seed: int,
+    qualification_seed: int,
+) -> list[int]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ValueError("retired_qualification_holdout_seeds must be a list")
+    seeds: list[int] = []
+    for index, value in enumerate(raw):
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(
+                f"retired_qualification_holdout_seeds[{index}] must be an integer"
+            )
+        if value < 0:
+            raise ValueError("retired qualification seeds must be >= 0")
+        seeds.append(int(value))
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("retired qualification seeds must be unique")
+    if training_seed in seeds:
+        raise ValueError("training seed must not be listed as a retired qualification seed")
+    if qualification_seed in seeds:
+        raise ValueError("active qualification seed is also marked retired")
+    return seeds
+
+
+def _qualification_render_config(cfg: dict, seed: int) -> dict:
+    rendered = copy.deepcopy(cfg)
+    rendered["seed"] = seed
+    rendered.pop("qualification_holdout_seed", None)
+    rendered.pop("retired_qualification_holdout_seeds", None)
+    domains = rendered.get("domains")
+    if not isinstance(domains, dict):
+        raise ValueError("domains config is required")
+    scenes = domains.get("scenes_per_example")
+    if not isinstance(scenes, dict):
+        raise ValueError("domains.scenes_per_example must be an object")
+    # Qualification scene seeds depend on the global base-row index and the
+    # qualification-local evaluation ordinal, not on how many domain scenes
+    # were rendered for earlier splits. Render only one scene per non-holdout
+    # base row to keep retired-seed SHA reconstruction bounded while preserving
+    # byte-identical qualification WAV generation.
+    for split in ("train", "calibration", "test"):
+        if split not in scenes:
+            raise ValueError(f"domains.scenes_per_example.{split} must be configured")
+        scenes[split] = 1
+    return rendered
+
+
+def _write_json(path: pathlib.Path, value: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _retired_render_worker_count(cfg: dict, retired_seeds: list[int]) -> int:
+    if not retired_seeds:
+        return 0
+    domains = cfg.get("domains", {})
+    afe = domains.get("afe", {}) if isinstance(domains, dict) else {}
+    backend = str(afe.get("backend", "proxy")) if isinstance(afe, dict) else "proxy"
+    # Command AFE implementations may have hidden shared-device/process state.
+    # Preserve the historical serial execution contract for those backends.
+    if backend != "proxy":
+        return 1
+    return min(2, len(retired_seeds))
+
+
+def _render_retired_seed(cfg: dict, scratch: pathlib.Path, retired_seed: int) -> dict:
+    seed_root = scratch / f"seed-{retired_seed}"
+    seed_config = seed_root / "effective-config.json"
+    retired_config = _qualification_render_config(cfg, retired_seed)
+    _write_json(seed_config, retired_config)
+    retired_output = seed_root / "dataset"
+    retired_summary = render_domain_dataset(
+        seed_config, retired_output, curriculum_weights=None
+    )
+    exposed_index = retired_output / "domain-index.jsonl"
+    exposed_references = retired_output / "qualification.references.jsonl"
+    exposed_hashes = _index_hashes(exposed_index, {"qualification"})
+    exposed_recordings, exposed_expected_wakes = _reference_stats(exposed_references)
+    return {
+        "seed": retired_seed,
+        "wav_hashes": sorted(exposed_hashes),
+        "recordings": exposed_recordings,
+        "expected_wakes": exposed_expected_wakes,
+        "effective_config_sha256": sha256_file(seed_config),
+        "domain_index_sha256": str(retired_summary["domain_index_sha256"]),
+        "references_sha256": sha256_file(exposed_references),
+        "summary_references_sha256": str(
+            retired_summary["splits"]["qualification"]["references_sha256"]
+        ),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Retire an exposed qualification cohort and render a seed-disjoint replacement."
+        description="Retire exposed qualification cohorts and render a seed-disjoint replacement."
     )
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
@@ -101,6 +202,11 @@ def main() -> int:
         raise ValueError("qualification_holdout_seed must be configured")
     if qualification_seed == training_seed:
         raise ValueError("qualification_holdout_seed must differ from training seed")
+    retired_exposed_seeds = normalize_retired_qualification_seeds(
+        cfg.get("retired_qualification_holdout_seeds", []),
+        training_seed=training_seed,
+        qualification_seed=qualification_seed,
+    )
 
     retired_index = output / "domain-index.jsonl"
     retired_references = output / "qualification.references.jsonl"
@@ -121,44 +227,115 @@ def main() -> int:
     if not development_hashes:
         raise ValueError("no development/training WAV evidence found")
 
-    rotated = copy.deepcopy(cfg)
-    rotated["seed"] = qualification_seed
-    rotated.pop("qualification_holdout_seed", None)
+    rotated = _qualification_render_config(cfg, qualification_seed)
     effective_config = work / "qualification-effective-config.json"
-    effective_config.write_text(
-        json.dumps(rotated, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
+    _write_json(effective_config, rotated)
 
-    shutil.rmtree(output)
-    summary = render_domain_dataset(effective_config, output, curriculum_weights=None)
-    active_index = output / "domain-index.jsonl"
-    active_references = output / "qualification.references.jsonl"
-    active_hashes = _index_hashes(active_index, {"qualification"})
-    if not active_hashes:
-        raise ValueError("active qualification cohort has no qualification WAVs")
-    active_references_sha = sha256_file(active_references)
-    retired_overlap = retired_hashes & active_hashes
-    development_overlap = development_hashes & active_hashes
-    if retired_overlap:
-        raise ValueError(
-            f"active qualification overlaps {len(retired_overlap)} retired qualification WAV SHA(s)"
-        )
-    if development_overlap:
-        raise ValueError(
-            f"active qualification overlaps {len(development_overlap)} development/training WAV SHA(s)"
-        )
-    if active_references_sha == retired_references_sha:
-        raise ValueError("active qualification references are byte-identical to retired references")
+    retired_exposed: list[dict] = []
+    scratch = work / "retired-qualification-scratch"
+    shutil.rmtree(scratch, ignore_errors=True)
+    worker_count = _retired_render_worker_count(cfg, retired_exposed_seeds)
+    executor: concurrent.futures.ProcessPoolExecutor | None = None
+    futures: list[concurrent.futures.Future] = []
+    try:
+        if worker_count > 1:
+            executor = concurrent.futures.ProcessPoolExecutor(max_workers=worker_count)
+            futures = [
+                executor.submit(_render_retired_seed, cfg, scratch, retired_seed)
+                for retired_seed in retired_exposed_seeds
+            ]
 
-    recordings, expected_wakes = _reference_stats(active_references)
+        # Active qualification rendering is independent of every retired seed.
+        # Overlap it with proxy-AFE retired reconstruction so governance history
+        # does not consume the fixed workflow wall-clock budget serially.
+        shutil.rmtree(output)
+        summary = render_domain_dataset(effective_config, output, curriculum_weights=None)
+        active_index = output / "domain-index.jsonl"
+        active_references = output / "qualification.references.jsonl"
+        active_hashes = _index_hashes(active_index, {"qualification"})
+        if not active_hashes:
+            raise ValueError("active qualification cohort has no qualification WAVs")
+        active_references_sha = sha256_file(active_references)
+        retired_overlap = retired_hashes & active_hashes
+        development_overlap = development_hashes & active_hashes
+        if retired_overlap:
+            raise ValueError(
+                f"active qualification overlaps {len(retired_overlap)} retired qualification WAV SHA(s)"
+            )
+        if development_overlap:
+            raise ValueError(
+                f"active qualification overlaps {len(development_overlap)} development/training WAV SHA(s)"
+            )
+        if active_references_sha == retired_references_sha:
+            raise ValueError("active qualification references are byte-identical to retired references")
+
+        recordings, expected_wakes = _reference_stats(active_references)
+        if futures:
+            rendered_retired = [future.result() for future in futures]
+        else:
+            rendered_retired = [
+                _render_retired_seed(cfg, scratch, retired_seed)
+                for retired_seed in retired_exposed_seeds
+            ]
+
+        for rendered in rendered_retired:
+            retired_seed = int(rendered["seed"])
+            exposed_hashes = set(str(value) for value in rendered["wav_hashes"])
+            if len(exposed_hashes) != len(active_hashes):
+                raise ValueError(
+                    "retired/active qualification WAV-count mismatch: "
+                    f"seed={retired_seed} retired={len(exposed_hashes)} "
+                    f"active={len(active_hashes)}"
+                )
+            overlap = exposed_hashes & active_hashes
+            if overlap:
+                raise ValueError(
+                    f"active qualification overlaps {len(overlap)} WAV SHA(s) with "
+                    f"retired qualification seed {retired_seed}"
+                )
+            exposed_references_sha = str(rendered["references_sha256"])
+            if exposed_references_sha == active_references_sha:
+                raise ValueError(
+                    f"active qualification references are byte-identical to retired seed {retired_seed}"
+                )
+            exposed_recordings = int(rendered["recordings"])
+            exposed_expected_wakes = int(rendered["expected_wakes"])
+            if exposed_recordings != recordings or exposed_expected_wakes != expected_wakes:
+                raise ValueError(
+                    f"retired qualification seed {retired_seed} has different support: "
+                    f"recordings={exposed_recordings}/{recordings} "
+                    f"expected={exposed_expected_wakes}/{expected_wakes}"
+                )
+            if str(rendered["summary_references_sha256"]) != exposed_references_sha:
+                raise ValueError(
+                    f"retired qualification seed {retired_seed} reference SHA mismatch"
+                )
+            retired_exposed.append(
+                {
+                    "seed": retired_seed,
+                    "wav_count": len(exposed_hashes),
+                    "recordings": exposed_recordings,
+                    "expected_wakes": exposed_expected_wakes,
+                    "effective_config_sha256": str(rendered["effective_config_sha256"]),
+                    "domain_index_sha256": str(rendered["domain_index_sha256"]),
+                    "references_sha256": exposed_references_sha,
+                    "overlapping_active_wav_sha256": 0,
+                }
+            )
+    finally:
+        if executor is not None:
+            executor.shutdown(wait=True, cancel_futures=True)
+        shutil.rmtree(scratch, ignore_errors=True)
+
     evidence = {
-        "schema_version": 1,
-        "policy": "retire-exposed-qualification-and-rotate-seed",
+        "schema_version": 2,
+        "policy": "retire-exposed-qualification-and-rotate-seed-v2",
         "source_config_sha256": sha256_file(config_path),
         "effective_config_sha256": sha256_file(effective_config),
         "training_seed": training_seed,
         "qualification_seed": qualification_seed,
+        "retired_exposed_qualification_seeds": retired_exposed_seeds,
+        "retired_exposed_qualification": retired_exposed,
         "seed_disjoint": True,
         "generated_after_training": True,
         "retired_references_sha256": retired_references_sha,
@@ -167,6 +344,7 @@ def main() -> int:
         "active_qualification_wav_count": len(active_hashes),
         "development_training_wav_count": len(development_hashes),
         "overlapping_retired_active_wav_sha256": 0,
+        "overlapping_exposed_active_wav_sha256": 0,
         "overlapping_development_active_wav_sha256": 0,
         "recordings": recordings,
         "expected_wakes": expected_wakes,
@@ -178,10 +356,7 @@ def main() -> int:
     if evidence["qualification_references_sha256"] != active_references_sha:
         raise ValueError("domain summary qualification reference SHA does not match active cohort")
     evidence_path = output / "qualification-cohort.json"
-    evidence_path.write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
+    _write_json(evidence_path, evidence)
     print(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 

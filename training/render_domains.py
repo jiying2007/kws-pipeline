@@ -10,6 +10,10 @@ import struct
 import wave
 
 from acoustic_scene import render_scene, sha256_file
+from development_stress import (
+    apply_development_stress_scene,
+    build_development_stress_plan,
+)
 from frontend_spec import SAMPLE_RATE_HZ
 from rir_manifest import load_rir_manifest
 from synthetic_audio import SPLITS, generate_dataset, load_config, write_wav
@@ -616,6 +620,24 @@ def render_domain_dataset(
     base_rows = load_jsonl(base_dir / "dataset-index.jsonl")
     seed = int(config.get("seed", 1337))
 
+    development_stress_plans: dict[str, dict] = {}
+    if evaluation_axes is not None:
+        for split in ("calibration", "test"):
+            positive_base_examples = sum(
+                1
+                for row in base_rows
+                if str(row["split"]) == split and row["kind"] == "positive"
+            )
+            positive_scene_count = (
+                positive_base_examples * domains["scenes_per_example"][split]
+            )
+            development_stress_plans[split] = build_development_stress_plan(
+                config,
+                evaluation_axes,
+                split=split,
+                positive_scene_count=positive_scene_count,
+            )
+
     output.mkdir(parents=True, exist_ok=True)
     rows_by_split: dict[str, list[dict]] = {split: [] for split in SPLITS}
     domain_rows: list[dict] = []
@@ -647,6 +669,17 @@ def render_domain_dataset(
                     ordinal,
                     rng,
                 )
+                if support == "positive":
+                    plan = development_stress_plans.get(split)
+                    if plan is not None:
+                        stress_spec = plan["slots"].get(ordinal)
+                        if stress_spec is not None:
+                            scene = apply_development_stress_scene(
+                                scene,
+                                domains,
+                                evaluation_axes,
+                                stress_spec,
+                            )
             else:
                 forced_band = None
                 if split != "train" and row["kind"] == "positive":
@@ -762,6 +795,18 @@ def render_domain_dataset(
         split_histogram = histogram_by_split[split]
         split_histogram[key] = split_histogram.get(key, 0) + 1
     rir_manifest = domains.get("rir_manifest")
+    development_stress_summary = {
+        split: {
+            "contract": "robustness_gates.required_stress_slices",
+            "positive_scene_capacity": int(plan["positive_scene_count"]),
+            "target_per_slice": int(plan["target_per_slice"]),
+            "required_slices": list(plan["required_slices"]),
+            "planned_support": dict(plan["planned_support"]),
+            "reserved_scenes": int(plan["reserved_scenes"]),
+            "reserved_ordinals": sorted(int(value) for value in plan["slots"]),
+        }
+        for split, plan in development_stress_plans.items()
+    }
     summary = {
         "schema_version": 3,
         "evidence_class": (
@@ -783,6 +828,11 @@ def render_domain_dataset(
                 "azimuth_deg": evaluation_axes["azimuth_deg"],
                 "snr_db": evaluation_axes["snr_db"],
                 "snr_bands": evaluation_axes["snr_bands"],
+                "development_positive_override": {
+                    "mode": "contract-stress-v1",
+                    "splits": development_stress_summary,
+                    "qualification_overridden": False,
+                },
             }
             if evaluation_axes is not None
             else {"mode": "legacy-domain-sampling-v1"}
