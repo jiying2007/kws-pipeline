@@ -91,8 +91,21 @@ def main() -> int:
 
     recordings = {str(row["recording"]): row for row in manifest["recordings"]}
     references = {str(row["recording"]): row for row in references_rows}
+    if len(references) != len(references_rows):
+        raise ValueError("post-AFE references contain duplicate recording IDs")
     if set(references) != set(recordings):
         raise ValueError("post-AFE references do not cover the exact held-out corpus")
+
+    expected_manifest = sum(
+        len(row.get("expected", [])) for row in recordings.values()
+    )
+    if int(intake["expected_wakes"]) != expected_manifest:
+        raise ValueError("corpus intake expected-wake count differs from manifest")
+    if int(score["recordings"]) != len(recordings):
+        raise ValueError("score recording count differs from held-out corpus")
+    if int(score["expected"]) != expected_manifest:
+        raise ValueError("score expected-wake count differs from held-out corpus")
+
     negative_recordings = {
         name for name, row in recordings.items() if not row.get("expected")
     }
@@ -113,6 +126,14 @@ def main() -> int:
         for row in false_accepts
         if str(row.get("recording")) in positive_recordings
     ]
+    unknown_false_accepts = [
+        row
+        for row in false_accepts
+        if str(row.get("recording")) not in recordings
+    ]
+    if unknown_false_accepts:
+        raise ValueError("false-accept evidence references unknown recordings")
+
     false_reject_counts = Counter(
         (str(row["recording"]), int(row["keyword_id"])) for row in false_rejects
     )
@@ -155,7 +176,7 @@ def main() -> int:
             ),
         }
 
-    slice_results = {}
+    positive_slice_results = {}
     for rule in policy.get("critical_positive_slices", []):
         expected = Counter()
         rejects = Counter()
@@ -183,7 +204,36 @@ def main() -> int:
                 "false_rejects": missed,
                 "frr": missed / count if count else 1.0,
             }
-        slice_results[str(rule["name"])] = item
+        positive_slice_results[str(rule["name"])] = item
+
+    negative_slice_results = {}
+    for tag, minimum_hours_raw in policy.get(
+        "critical_negative_exposure_hours", {}
+    ).items():
+        tag = str(tag)
+        names = {
+            name
+            for name in negative_recordings
+            if tag in set(recordings[name].get("tags", []))
+        }
+        hours = sum(float(references[name]["duration_s"]) for name in names) / 3600.0
+        false_accept_count = sum(
+            1
+            for event in false_accepts_negative
+            if str(event.get("recording")) in names
+        )
+        negative_slice_results[tag] = {
+            "recordings": len(names),
+            "audio_hours": hours,
+            "minimum_audio_hours": float(minimum_hours_raw),
+            "false_accepts": false_accept_count,
+            "far_per_hour": false_accept_count / hours if hours > 0.0 else 0.0,
+            "far_upper_bound_per_hour": (
+                poisson_rate_upper(false_accept_count, hours, confidence)
+                if hours > 0.0
+                else None
+            ),
+        }
 
     failures = []
     minimums = policy["minimums"]
@@ -210,16 +260,28 @@ def main() -> int:
         failures.append("unexpected-detections-in-positive-recordings")
 
     for keyword in (1, 2):
-        if expected_by_keyword[keyword] < int(minimums["expected_wakes_per_keyword"]):
+        stats = per_keyword[str(keyword)]
+        if stats["expected"] < int(minimums["expected_wakes_per_keyword"]):
             failures.append(f"keyword-{keyword}-minimum")
+        if stats["frr"] > float(gates["max_frr_per_keyword"]):
+            failures.append(f"keyword-{keyword}-frr")
+        if stats["frr_upper_bound"] > float(
+            gates["max_frr_upper_bound_per_keyword"]
+        ):
+            failures.append(f"keyword-{keyword}-frr-upper-bound")
+
     for rule in policy.get("critical_positive_slices", []):
         name = str(rule["name"])
         for keyword in (1, 2):
-            stats = slice_results[name][str(keyword)]
+            stats = positive_slice_results[name][str(keyword)]
             if stats["expected"] < int(rule["min_expected_per_keyword"]):
                 failures.append(f"slice-{name}-keyword-{keyword}-minimum")
             if stats["frr"] > float(rule["max_frr"]):
                 failures.append(f"slice-{name}-keyword-{keyword}-frr")
+
+    for tag, stats in negative_slice_results.items():
+        if stats["audio_hours"] + 1e-12 < stats["minimum_audio_hours"]:
+            failures.append(f"negative-slice-{tag}-minimum-post-afe-hours")
 
     result = {
         "schema_version": 1,
@@ -244,7 +306,8 @@ def main() -> int:
         "p50_post_end_latency_ms": score["p50_post_end_latency_ms"],
         "p95_post_end_latency_ms": score["p95_post_end_latency_ms"],
         "per_keyword": per_keyword,
-        "critical_positive_slices": slice_results,
+        "critical_positive_slices": positive_slice_results,
+        "critical_negative_slices": negative_slice_results,
         "afe": afe["afe"],
         "evidence_sha256": {
             "manifest": sha256_file(args.manifest),
