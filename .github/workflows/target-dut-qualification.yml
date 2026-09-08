@@ -1,0 +1,174 @@
+name: target-dut-qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      human_qualification_tag:
+        description: Immutable Phase-A human qualification tag
+        required: true
+        type: string
+      target_profile:
+        description: Pseudonymous target evidence profile ID on the controlled runner
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: target-dut-qualification-${{ inputs.target_profile }}
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: [self-hosted, kws-target-board]
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve immutable Phase-A and deployment evidence
+        id: identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+          PROFILE: ${{ inputs.target_profile }}
+          TARGET_ROOT: ${{ env.KWS_TARGET_QUALIFICATION_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$PROFILE" in *'/'*|*'\\'*|*'..'*) echo 'unsafe target profile' >&2; exit 2;; esac
+          test -n "$TARGET_ROOT"
+          bundle="$TARGET_ROOT/$PROFILE"
+          test -d "$bundle"
+          test -f "$bundle/target-profile.json"
+          deployment_tag="$(jq -r '.deployment_tag' commercial/target-qualification.policy.json)"
+          test "$(jq -r '.human_qualification_tag' "$bundle/target-profile.json")" = "$HUMAN_TAG"
+          test "$(jq -r '.deployment_tag' "$bundle/target-profile.json")" = "$deployment_tag"
+
+          mkdir -p build/phase-a build/deployment
+          human_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${HUMAN_TAG}")"
+          jq -e '.draft == false and .prerelease == false and .immutable == true' <<<"$human_json" >/dev/null
+          gh release download "$HUMAN_TAG" --repo "$GITHUB_REPOSITORY" --dir build/phase-a \
+            --pattern public-phase-a-receipt.json --pattern real-human-qualification-summary.json
+          test "$(jq -r '.qualified' build/phase-a/public-phase-a-receipt.json)" = true
+          test "$(jq -r '.shipping_approved' build/phase-a/public-phase-a-receipt.json)" = false
+          test "$(jq -r '.qualified' build/phase-a/real-human-qualification-summary.json)" = true
+          summary_sha="$(sha256sum build/phase-a/real-human-qualification-summary.json | awk '{print $1}')"
+          test "$summary_sha" = "$(jq -r '.qualification_summary_sha256' build/phase-a/public-phase-a-receipt.json)"
+
+          deployment_target="$(jq -r '.deployment_target' build/phase-a/public-phase-a-receipt.json)"
+          deployment_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${deployment_tag}")"
+          jq -e --arg target "$deployment_target" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' <<<"$deployment_json" >/dev/null
+          gh release download "$deployment_tag" --repo "$GITHUB_REPOSITORY" --dir build/deployment \
+            --pattern deployment-manifest.json --pattern xiaowo-model.kwm --pattern xiaowo-keywords.kwk
+          test "$(jq -r '.source_sha' build/deployment/deployment-manifest.json)" = "$deployment_target"
+          printf 'bundle=%s\ndeployment_tag=%s\ndeployment_target=%s\n' "$bundle" "$deployment_tag" "$deployment_target" >> "$GITHUB_OUTPUT"
+
+      - name: Score exact physical DUT evidence
+        id: gate
+        env:
+          BUNDLE: ${{ steps.identity.outputs.bundle }}
+        shell: bash
+        run: |
+          set +e
+          mkdir -p build/target
+          python3 tools/score_target_dut_qualification.py \
+            --bundle "$BUNDLE" \
+            --policy commercial/target-qualification.policy.json \
+            --phase-a-receipt build/phase-a/public-phase-a-receipt.json \
+            --phase-a-summary build/phase-a/real-human-qualification-summary.json \
+            --deployment-manifest build/deployment/deployment-manifest.json \
+            --model build/deployment/xiaowo-model.kwm \
+            --keywords build/deployment/xiaowo-keywords.kwk \
+            --output build/target/target-dut-qualification-summary.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Freeze public target-DUT receipt
+        if: ${{ steps.gate.outputs.exit_code == '0' }}
+        id: receipt
+        env:
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary=build/target/target-dut-qualification-summary.json
+          summary_sha="$(sha256sum "$summary" | awk '{print $1}')"
+          evidence_sha="$(jq -r '.evidence_sha256.target_evidence' "$summary")"
+          tag="target-qualified-${evidence_sha:0:16}"
+          jq -n \
+            --arg tag "$tag" \
+            --arg deployment_tag "$(jq -r '.deployment_tag' "$summary")" \
+            --arg deployment_target "$(jq -r '.deployment_target' "$summary")" \
+            --arg human_tag "$HUMAN_TAG" \
+            --arg human_corpus "$(jq -r '.human_corpus_sha256' "$summary")" \
+            --arg afe_identity "$(jq -r '.final_afe_identity_sha256' "$summary")" \
+            --arg sku "$(jq -r '.sku' "$summary")" \
+            --arg board_revision "$(jq -r '.board_revision' "$summary")" \
+            --arg dut_id "$(jq -r '.dut_id' "$summary")" \
+            --arg summary_sha "$summary_sha" \
+            --arg evidence_sha "$evidence_sha" \
+            '{schema_version:1,phase:"physical-target-dut-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,sku:$sku,board_revision:$board_revision,dut_id:$dut_id,qualification_summary_sha256:$summary_sha,target_evidence_sha256:$evidence_sha,next_gate:"physical-target-cohort-qualification"}' \
+            > build/target/public-target-dut-receipt.json
+          cp commercial/target-qualification.policy.json build/target/
+          (cd build/target && sha256sum target-qualification.policy.json target-dut-qualification-summary.json public-target-dut-receipt.json > TARGET_DUT_PUBLIC_SHA256SUMS && sha256sum -c TARGET_DUT_PUBLIC_SHA256SUMS)
+          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Attest target-DUT public evidence
+        if: ${{ steps.gate.outputs.exit_code == '0' }}
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: build/target/TARGET_DUT_PUBLIC_SHA256SUMS
+
+      - name: Publish immutable target-DUT qualification receipt
+        if: ${{ steps.gate.outputs.exit_code == '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.receipt.outputs.tag }}
+          TARGET_SHA: ${{ steps.identity.outputs.deployment_target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "target qualification release already exists: $TAG" >&2
+            exit 2
+          fi
+          gh release create "$TAG" \
+            build/target/public-target-dut-receipt.json \
+            build/target/target-dut-qualification-summary.json \
+            build/target/target-qualification.policy.json \
+            build/target/TARGET_DUT_PUBLIC_SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "KWS physical target DUT qualification ${TAG#target-qualified-}" \
+            --notes 'One physical DUT passed the frozen deployment/Phase-A target policy. This is not cohort qualification and shipping_approved remains false. Raw lab evidence remains in the controlled evidence store and is hash/attestation bound.'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" | jq -e --arg target "$TARGET_SHA" '.immutable == true and .target_commitish == $target' >/dev/null
+
+      - name: Retain public target-DUT evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: target-dut-${{ inputs.target_profile }}
+          path: |
+            build/target/*.json
+            build/target/*SHA256SUMS
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail if target DUT did not qualify
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.gate.outputs.exit_code }}
+        run: |
+          test "$EXIT_CODE" = 0 || {
+            echo "physical target DUT qualification failed with exit code $EXIT_CODE" >&2
+            exit 1
+          }
