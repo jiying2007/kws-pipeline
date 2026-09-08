@@ -57,11 +57,22 @@ def main() -> int:
     assert production_policy["minimums"]["expected_wakes_per_keyword"] == 600
     assert production_policy["minimums"]["negative_audio_hours"] == 24.0
     assert production_policy["gates"]["max_frr"] == 0.05
+    assert production_policy["gates"]["max_frr_per_keyword"] == 0.05
+    assert production_policy["gates"]["max_frr_upper_bound_per_keyword"] == 0.08
     assert production_policy["gates"]["max_far_per_hour"] == 0.10
     assert {
         row["name"] for row in production_policy["critical_positive_slices"]
     } >= {"distance_3_5m", "rear", "playback", "double_talk", "robot_motion"}
     assert production_policy["privacy"]["raw_audio_public_upload_allowed"] is False
+    assert production_policy["privacy"]["post_afe_audio_public_upload_allowed"] is False
+
+    summary_schema = json.loads(
+        (ROOT / "commercial/real-human-qualification-summary.schema.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert summary_schema["properties"]["shipping_approved"]["const"] is False
+    assert "critical_negative_slices" in summary_schema["required"]
 
     workflow = (ROOT / ".github/workflows/real-human-qualification.yml").read_text(
         encoding="utf-8"
@@ -70,6 +81,11 @@ def main() -> int:
     assert "pull_request:" not in workflow
     assert "push:" not in workflow.split("permissions:", 1)[0]
     assert "runs-on: [self-hosted, kws-real-audio]" in workflow
+    assert "corpus_manifest_path:" not in workflow
+    assert "audio_root:" not in workflow
+    assert "afe_adapter_path:" not in workflow
+    assert "qualification_id:" in workflow and "afe_profile:" in workflow
+    assert "KWS_REAL_HUMAN_ROOT" in workflow and "KWS_FINAL_AFE_ROOT" in workflow
     consume = "Consume fresh corpus before final AFE or KWS evaluation"
     afe_run = "Execute frozen final AFE over consumed held-out corpus"
     kws_run = "Run frozen KWS over post-AFE human audio"
@@ -93,7 +109,7 @@ def main() -> int:
         for index, name in enumerate(("k1.wav", "k2.wav", "neg.wav"), 1):
             write_wav(audio_root / name, index)
 
-        manifest = {
+        draft = {
             "schema_version": 1,
             "qualification_id": "fixture-q-0001",
             "deployment_tag": "deployment-fixture0000",
@@ -127,14 +143,10 @@ def main() -> int:
             ),
         ]
         for recording, filename, speaker, session, expected, tags in rows:
-            path = audio_root / filename
-            manifest["recordings"].append(
+            draft["recordings"].append(
                 {
                     "recording": recording,
                     "input_path": filename,
-                    "input_sha256": sha(path),
-                    "input_bytes": path.stat().st_size,
-                    "duration_s": 1.0,
                     "speaker_id": speaker,
                     "session_id": session,
                     "source_id": f"src-{recording}",
@@ -145,19 +157,35 @@ def main() -> int:
                     "snr_db": 20.0,
                     "tags": tags,
                     "expected": expected,
-                    "capture": {
-                        "sample_rate_hz": 16000,
-                        "channels": 1,
-                        "sample_format": "pcm_s16le",
-                    },
                     "consent_scope": "product-kws-qualification",
                     "retention_class": "restricted-raw-audio",
                 }
             )
+        draft_path = tmp / "draft.json"
+        draft_path.write_text(json.dumps(draft, indent=2) + "\n", encoding="utf-8")
         manifest_path = tmp / "manifest.json"
-        manifest_path.write_text(
-            json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+        run(
+            "python3",
+            "tools/seal_real_human_corpus.py",
+            "--draft",
+            str(draft_path),
+            "--audio-root",
+            str(audio_root),
+            "--output",
+            str(manifest_path),
         )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        assert len(manifest["recordings"]) == 3
+        for row in manifest["recordings"]:
+            path = audio_root / row["input_path"]
+            assert row["input_sha256"] == sha(path)
+            assert row["input_bytes"] == path.stat().st_size
+            assert row["capture"] == {
+                "sample_rate_hz": 16000,
+                "channels": 1,
+                "sample_format": "pcm_s16le",
+            }
+            assert abs(row["duration_s"] - 1.0) < 1e-12
 
         policy = {
             "schema_version": 1,
@@ -173,12 +201,16 @@ def main() -> int:
             "gates": {
                 "max_frr": 0.01,
                 "max_frr_upper_bound": 0.90,
+                "max_frr_per_keyword": 0.01,
+                "max_frr_upper_bound_per_keyword": 0.90,
                 "max_far_per_hour": 0.01,
                 "max_far_upper_bound_per_hour": 20000.0,
                 "max_p95_post_end_latency_ms": 500.0,
             },
             "critical_positive_slices": [],
-            "critical_negative_exposure_hours": {},
+            "critical_negative_exposure_hours": {
+                "household": 1.0 / 3600.0
+            },
             "identity_policy": {"forbidden_fields": ["name", "email", "phone"]},
         }
         policy_path = tmp / "policy.json"
@@ -361,6 +393,12 @@ def main() -> int:
         assert result["false_rejects"] == 0
         assert result["false_accepts_negative"] == 0
         assert abs(result["negative_audio_hours"] - 1.0 / 3600.0) < 1e-12
+        assert result["per_keyword"]["1"]["frr"] == 0.0
+        assert result["per_keyword"]["2"]["frr"] == 0.0
+        assert abs(
+            result["critical_negative_slices"]["household"]["audio_hours"]
+            - 1.0 / 3600.0
+        ) < 1e-12
         assert result["next_gate"] == "physical-target-board-performance-and-soak"
 
         # Once the identity has been frozen, changing any AFE config must fail
