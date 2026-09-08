@@ -71,10 +71,18 @@ def inspect_adapter(path: pathlib.Path) -> tuple[dict, pathlib.Path, dict]:
     source_sha = adapter.get("pipeline_source_sha")
     if source_sha is not None:
         source_sha = str(source_sha).lower()
-        if len(source_sha) != 40 or any(ch not in "0123456789abcdef" for ch in source_sha):
+        if len(source_sha) != 40 or any(
+            ch not in "0123456789abcdef" for ch in source_sha
+        ):
             raise ValueError("pipeline_source_sha must be 40 lowercase hex characters")
 
-    for field in ("sku", "microphone_revision", "enclosure_revision", "audio_route", "toolchain"):
+    for field in (
+        "sku",
+        "microphone_revision",
+        "enclosure_revision",
+        "audio_route",
+        "toolchain",
+    ):
         value = adapter.get(field)
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"AFE adapter {field} must be non-empty text")
@@ -86,7 +94,7 @@ def inspect_adapter(path: pathlib.Path) -> tuple[dict, pathlib.Path, dict]:
         "executable_sha256": sha256_file(executable),
         "config_bundle_sha256": config_bundle_sha,
         "config_files": config_rows,
-        "command_argv": template,
+        "command_argv_sha256": canonical_sha(template),
         "pipeline_source_sha": source_sha,
         "sku": adapter["sku"],
         "microphone_revision": adapter["microphone_revision"],
@@ -106,7 +114,13 @@ def main() -> int:
     _, _, identity = inspect_adapter(args.adapter)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
-        json.dumps(identity, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        json.dumps(
+            identity,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
         + "\n",
         encoding="utf-8",
     )
