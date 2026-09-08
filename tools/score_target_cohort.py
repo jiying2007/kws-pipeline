@@ -23,6 +23,52 @@ def load(path: pathlib.Path) -> dict:
     return value
 
 
+def current_policy_failures(item: dict, policy: dict) -> list[str]:
+    dut = str(item["dut_id"])
+    metrics = item.get("metrics")
+    continuity = item.get("continuity")
+    budget = item.get("resource_budget")
+    if not isinstance(metrics, dict) or not isinstance(continuity, dict) or not isinstance(budget, dict):
+        raise ValueError(f"DUT {dut} summary is missing metrics/continuity/resource budget")
+    limits = budget.get("limits")
+    if not isinstance(limits, dict):
+        raise ValueError(f"DUT {dut} resource budget limits are missing")
+    hard = policy["per_dut_hard_gates"]
+    failures: list[str] = []
+    if float(metrics["soak_hours"]) < float(hard["min_soak_hours"]):
+        failures.append(f"dut-{dut}-soak-hours")
+    if hard.get("require_p99_below_block_deadline") is True and not (
+        float(metrics["p99_process_us"]) < float(metrics["block_deadline_us"])
+    ):
+        failures.append(f"dut-{dut}-p99-block-deadline")
+    if hard.get("require_rtf_below_realtime") is True and not float(metrics["rtf"]) < 1.0:
+        failures.append(f"dut-{dut}-rtf-realtime")
+    if hard.get("require_p99_headroom_above_one") is True and not (
+        float(metrics["p99_headroom"]) > 1.0
+    ):
+        failures.append(f"dut-{dut}-p99-headroom")
+    continuity_limits = {
+        "xrun_count": "max_xrun_count",
+        "discontinuity_count": "max_discontinuity_count",
+        "lost_samples": "max_lost_samples",
+        "backpressure_count": "max_backpressure_count",
+    }
+    for measured, limit in continuity_limits.items():
+        if int(continuity[measured]) > int(hard[limit]):
+            failures.append(f"dut-{dut}-{measured}")
+    resources = (
+        ("cpu_percent", "max_cpu_percent"),
+        ("rss_kib", "max_rss_kib"),
+        ("stack_high_water_bytes", "max_stack_high_water_bytes"),
+        ("max_temp_c", "max_temp_c"),
+        ("average_power_mw", "max_average_power_mw"),
+    )
+    for measured, limit in resources:
+        if float(metrics[measured]) > float(limits[limit]):
+            failures.append(f"dut-{dut}-{measured}-budget")
+    return failures
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--policy", required=True, type=pathlib.Path)
@@ -54,6 +100,8 @@ def main() -> int:
         raise ValueError("target cohort reuses one physical evidence object across multiple DUTs")
 
     failures: list[str] = []
+    for item in summaries:
+        failures.extend(current_policy_failures(item, policy))
     if len(duts) < int(cohort["min_unique_duts"]):
         failures.append("minimum-unique-duts")
 
