@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jiying2007/kws-pipeline/commercial/afe-evidence.schema.json",
+  "title": "KWS final AFE evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "backend",
+    "shipping_authority",
+    "executable_sha256",
+    "config_bundle_sha256",
+    "input_pcm_sha256",
+    "output_pcm_sha256",
+    "result_sidecar_sha256",
+    "latency_samples",
+    "sample_rate_hz",
+    "channels",
+    "sample_format",
+    "sku",
+    "microphone_revision",
+    "enclosure_revision"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "backend": {"const": "command"},
+    "shipping_authority": {"const": true},
+    "command_argv": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "executable_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "config_bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "input_pcm_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "output_pcm_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "result_sidecar_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "pipeline_source_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "toolchain": {"type": "string", "minLength": 1},
+    "latency_samples": {"type": "integer", "minimum": 0},
+    "sample_rate_hz": {"const": 16000},
+    "channels": {"const": 1},
+    "sample_format": {"const": "pcm_s16le"},
+    "sku": {"type": "string", "minLength": 1},
+    "microphone_revision": {"type": "string", "minLength": 1},
+    "enclosure_revision": {"type": "string", "minLength": 1},
+    "audio_route": {"type": "string", "minLength": 1},
+    "notes": {"type": "string"}
+  }
+}
