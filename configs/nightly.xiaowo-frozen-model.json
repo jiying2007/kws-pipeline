@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "name": "xiaowo-frozen-model-nightly-regression-v1",
+  "seed": 880137,
+  "regression_namespace": "nightly-frozen-model-v1",
+  "tokens": "keywords/tokens.example.txt",
+  "keywords": "keywords/zh_cn_example.tsv",
+  "generator": {
+    "continuous_gap_ms": 1600.0,
+    "tts": {
+      "backend": "tone",
+      "token_ms": 180.0,
+      "token_ms_jitter": 30.0,
+      "gap_ms": 85.0,
+      "lead_ms": 180.0,
+      "tail_ms": 200.0,
+      "amplitude": 12500.0,
+      "pitch_jitter": 0.012
+    },
+    "augment": {
+      "gain_db_min": -5.0,
+      "gain_db_max": 3.0,
+      "snr_db_min": 3.0,
+      "snr_db_max": 30.0,
+      "echo_max_ms": 70.0,
+      "echo_gain_max": 0.18,
+      "noise_profiles": ["white", "fan", "motor", "media"]
+    }
+  },
+  "dataset": {
+    "train": {
+      "positive_families_per_keyword": 1,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 8.0,
+      "variants_per_family": 1
+    },
+    "calibration": {
+      "positive_families_per_keyword": 1,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 8.0,
+      "variants_per_family": 1
+    },
+    "test": {
+      "positive_families_per_keyword": 1,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 8.0,
+      "variants_per_family": 1
+    },
+    "qualification": {
+      "positive_families_per_keyword": 1,
+      "confusable_families_per_keyword": 6,
+      "random_negative_families": 12,
+      "background_seconds_per_profile": 8.0,
+      "variants_per_family": 1
+    }
+  },
+  "domains": {
+    "distance_bands": {
+      "near": {"distance_m": [0.3, 1.0], "weight": 1.0},
+      "mid": {"distance_m": [1.0, 3.0], "weight": 1.0},
+      "far": {"distance_m": [3.0, 5.0], "weight": 1.0}
+    },
+    "azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
+    "rt60_s": [0.15, 0.80],
+    "snr_db": [3.0, 30.0],
+    "noise_profiles": ["white", "fan", "motor", "media"],
+    "mic_spacing_m": 0.06,
+    "playback": {
+      "probability": 0.35,
+      "sir_db": [-8.0, 20.0]
+    },
+    "afe": {
+      "backend": "proxy"
+    },
+    "scenes_per_example": {
+      "train": 2,
+      "calibration": 2,
+      "test": 2,
+      "qualification": 2
+    }
+  },
+  "model": {
+    "feature_dim": 32,
+    "hidden_dim": 64
+  }
+}
