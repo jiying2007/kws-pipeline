@@ -1,0 +1,329 @@
+name: deployment-release
+
+on:
+  push:
+    branches:
+      - 'deployment/commercial-candidate'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployment-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require exact protected main source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          main_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/main")"
+          main_sha="$(jq -r '.commit.sha' <<<"$main_json")"
+          protected="$(jq -r '.protected' <<<"$main_json")"
+          test "$main_sha" = "$GITHUB_SHA" || {
+            echo "deployment branch must point at current main: branch=$GITHUB_SHA main=$main_sha" >&2
+            exit 2
+          }
+          test "$protected" = true || {
+            echo 'main is not protected; commercial-candidate publication is fail-closed' >&2
+            exit 2
+          }
+
+      - name: Resolve immutable qualified model identity
+        id: identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          contract=configs/shipping.xiaowo.json
+          model_tag="$(jq -r '.model.release_tag' "$contract")"
+          trained_head="$(jq -r '.model.trained_head_sha' "$contract")"
+          model_sha="$(jq -r '.model.model_sha256' "$contract")"
+          pack_sha="$(jq -r '.model.keyword_pack_sha256' "$contract")"
+          training_run="$(jq -r '.model.training_run_id' "$contract")"
+          qualification_seed="$(jq -r '.model.qualification_seed' "$contract")"
+          deployment_tag="deployment-${GITHUB_SHA:0:12}"
+
+          test "$(jq -r '.shipping_approved' "$contract")" = false
+          test "$(jq -r '.shipping_wake_words | length' "$contract")" = 2
+          test "$(jq -r '.shipping_wake_words[0].text' "$contract")" = '你好小窝'
+          test "$(jq -r '.shipping_wake_words[1].text' "$contract")" = '小窝小窝'
+          test "$(jq -r '.forbidden_shipping_wake_words | index("小窝") != null' "$contract")" = true
+          test "$(jq -r '.nightly_policy.may_train' "$contract")" = false
+          test "$(jq -r '.nightly_policy.may_render_formal_qualification' "$contract")" = false
+          test "$qualification_seed" = 271838
+
+          release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${model_tag}")"
+          jq -e --arg head "$trained_head" '
+            .draft == false and .prerelease == false and .immutable == true and .target_commitish == $head
+          ' <<<"$release_json" >/dev/null
+
+          git fetch --force --no-tags origin "refs/tags/${model_tag}:refs/tags/${model_tag}"
+          test "$(git rev-list -n1 "$model_tag")" = "$trained_head"
+          git diff --quiet "$trained_head" "$GITHUB_SHA" -- CMakeLists.txt cmake include src || {
+            echo 'runtime surface differs from the source used by the qualified model' >&2
+            git diff --stat "$trained_head" "$GITHUB_SHA" -- CMakeLists.txt cmake include src >&2
+            exit 2
+          }
+
+          if gh release view "$deployment_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "deployment release already exists: $deployment_tag" >&2
+            exit 2
+          fi
+
+          mkdir -p build/model-release
+          printf '%s\n' "$release_json" > build/model-release/release.json
+          gh release download "$model_tag" --repo "$GITHUB_REPOSITORY" --dir build/model-release
+          test "$(sha256sum build/model-release/xiaowo-model.kwm | awk '{print $1}')" = "$model_sha"
+          test "$(sha256sum build/model-release/xiaowo-keywords.kwk | awk '{print $1}')" = "$pack_sha"
+          (cd build/model-release && sha256sum -c MODEL_SHA256SUMS)
+
+          printf 'deployment_tag=%s\nmodel_tag=%s\ntrained_head=%s\nmodel_release_id=%s\ntraining_run=%s\nqualification_seed=%s\n' \
+            "$deployment_tag" "$model_tag" "$trained_head" "$(jq -r '.id' <<<"$release_json")" \
+            "$training_run" "$qualification_seed" >> "$GITHUB_OUTPUT"
+
+      - name: Build and verify reproducible candidate SDK
+        id: sdk
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
+          test -n "$version"
+          stem="kws-pipeline-${version}-deployment-${GITHUB_SHA:0:12}"
+
+          cmake -S . -B build/sdk-a -DCMAKE_BUILD_TYPE=Release -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+          cmake --build build/sdk-a --parallel
+          ctest --test-dir build/sdk-a --output-on-failure
+          cmake --install build/sdk-a --prefix "$RUNNER_TEMP/sdk-a"
+
+          cmake -S . -B build/sdk-b -DCMAKE_BUILD_TYPE=Release -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+          cmake --build build/sdk-b --parallel
+          cmake --install build/sdk-b --prefix "$RUNNER_TEMP/sdk-b"
+          python3 tools/check_reproducible_sdk.py "$RUNNER_TEMP/sdk-a" "$RUNNER_TEMP/sdk-b"
+
+          mkdir -p dist
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -C "$RUNNER_TEMP/sdk-a" -czf "dist/${stem}-sdk.tar.gz" .
+          git archive --format=tar.gz --prefix="${stem}/" -o "dist/${stem}-source.tar.gz" "$GITHUB_SHA"
+          python3 tools/generate_sbom.py \
+            --root "$RUNNER_TEMP/sdk-a" \
+            --name kws-pipeline \
+            --version "$version" \
+            --source-sha "$GITHUB_SHA" \
+            --output "dist/${stem}.spdx.json"
+          python3 -m json.tool "dist/${stem}.spdx.json" >/dev/null
+          printf 'version=%s\nstem=%s\n' "$version" "$stem" >> "$GITHUB_OUTPUT"
+
+      - name: Assemble fail-closed deployment manifest
+        env:
+          PROJECT_VERSION: ${{ steps.sdk.outputs.version }}
+          STEM: ${{ steps.sdk.outputs.stem }}
+          DEPLOYMENT_TAG: ${{ steps.identity.outputs.deployment_tag }}
+          MODEL_TAG: ${{ steps.identity.outputs.model_tag }}
+          MODEL_RELEASE_ID: ${{ steps.identity.outputs.model_release_id }}
+          TRAINED_HEAD: ${{ steps.identity.outputs.trained_head }}
+          TRAINING_RUN: ${{ steps.identity.outputs.training_run }}
+          QUALIFICATION_SEED: ${{ steps.identity.outputs.qualification_seed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp configs/shipping.xiaowo.json dist/shipping.xiaowo.json
+          cp configs/nightly.xiaowo-frozen-model.json dist/nightly.xiaowo-frozen-model.json
+          cp commercial/afe-evidence.schema.json dist/afe-evidence.schema.json
+          cp build/model-release/xiaowo-model.kwm dist/
+          cp build/model-release/xiaowo-model.pt dist/
+          cp build/model-release/xiaowo-model-provenance.json dist/
+          cp build/model-release/xiaowo-keywords.kwk dist/
+          cp build/model-release/xiaowo-keywords.tsv dist/
+          cp build/model-release/training-run-summary.json dist/
+          cp build/model-release/model-promotion-manifest.json dist/
+          cp build/model-release/qualification-summary.json dist/
+          cp build/model-release/qualification-cohort.json dist/
+          cp build/model-release/robustness-summary.json dist/
+          cp build/model-release/continuous-far-summary.json dist/
+          cp build/model-release/continuous-far-stream-contract.json dist/
+          cp build/model-release/MODEL_SHA256SUMS dist/
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import subprocess
+
+          root = pathlib.Path('.')
+          dist = root / 'dist'
+          shipping = json.loads((root / 'configs/shipping.xiaowo.json').read_text(encoding='utf-8'))
+          model_release = json.loads((root / 'build/model-release/release.json').read_text(encoding='utf-8'))
+          promotion = json.loads((dist / 'model-promotion-manifest.json').read_text(encoding='utf-8'))
+
+          def sha(path: pathlib.Path) -> str:
+              h = hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          source_sha = os.environ['GITHUB_SHA']
+          source_tree = subprocess.check_output(['git', 'rev-parse', f'{source_sha}^{{tree}}'], text=True).strip()
+          model = shipping['model']
+          if promotion['source']['training_run_id'] != int(os.environ['TRAINING_RUN']):
+              raise SystemExit('promotion/training run mismatch')
+          if promotion['source']['head_sha'] != os.environ['TRAINED_HEAD']:
+              raise SystemExit('promotion/trained head mismatch')
+          if promotion['source']['qualification_seed'] != int(os.environ['QUALIFICATION_SEED']):
+              raise SystemExit('promotion/qualification seed mismatch')
+          if sha(dist / 'xiaowo-model.kwm') != model['model_sha256']:
+              raise SystemExit('deployment model digest mismatch')
+          if sha(dist / 'xiaowo-keywords.kwk') != model['keyword_pack_sha256']:
+              raise SystemExit('deployment keyword-pack digest mismatch')
+
+          blockers = list(shipping['shipping_evidence_boundary']['pending'])
+          if blockers != [
+              'real-human-final-afe-acoustic-qualification',
+              'physical-target-board-performance-and-soak',
+          ]:
+              raise SystemExit(f'unexpected shipping blocker set: {blockers!r}')
+
+          manifest = {
+              'schema_version': 1,
+              'status': 'commercial-candidate',
+              'shipping_approved': False,
+              'shipping_approval_blockers': blockers,
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'deployment_tag': os.environ['DEPLOYMENT_TAG'],
+              'source_sha': source_sha,
+              'source_tree_sha': source_tree,
+              'sdk_project_version': os.environ['PROJECT_VERSION'],
+              'runtime_surface_equivalent_to_qualified_source': True,
+              'runtime_equivalence_base_sha': os.environ['TRAINED_HEAD'],
+              'runtime_equivalence_paths': ['CMakeLists.txt', 'cmake', 'include', 'src'],
+              'shipping_contract_sha256': sha(root / 'configs/shipping.xiaowo.json'),
+              'nightly_contract_sha256': sha(root / 'configs/nightly.xiaowo-frozen-model.json'),
+              'model_release': {
+                  'tag': os.environ['MODEL_TAG'],
+                  'release_id': int(os.environ['MODEL_RELEASE_ID']),
+                  'immutable': bool(model_release['immutable']),
+                  'target_commitish': model_release['target_commitish'],
+                  'training_run_id': model['training_run_id'],
+                  'qualification_seed': model['qualification_seed'],
+                  'model_sha256': model['model_sha256'],
+                  'keyword_pack_sha256': model['keyword_pack_sha256'],
+              },
+              'shipping_wake_words': shipping['shipping_wake_words'],
+              'nightly_regression': {
+                  'mode': shipping['nightly_policy']['mode'],
+                  'formal_qualification_seed_reused': False,
+                  'training_performed': False,
+                  'qualification_performed': False,
+              },
+              'afe_evidence': {
+                  'schema_sha256': sha(root / 'commercial/afe-evidence.schema.json'),
+                  'status': 'contract-ready-real-final-afe-evidence-pending',
+                  'proxy_backend_shipping_authority': False,
+              },
+              'target_evidence': {
+                  'documentation': 'docs/TARGET_EVIDENCE.md',
+                  'status': 'contract-ready-physical-evidence-pending',
+              },
+              'artifacts': {
+                  'sdk_sha256': sha(dist / f"{os.environ['STEM']}-sdk.tar.gz"),
+                  'source_sha256': sha(dist / f"{os.environ['STEM']}-source.tar.gz"),
+                  'sbom_sha256': sha(dist / f"{os.environ['STEM']}.spdx.json"),
+              },
+          }
+          (dist / 'deployment-manifest.json').write_text(
+              json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+          python3 -m json.tool dist/deployment-manifest.json >/dev/null
+          test "$(jq -r '.status' dist/deployment-manifest.json)" = commercial-candidate
+          test "$(jq -r '.shipping_approved' dist/deployment-manifest.json)" = false
+          test "$(jq -r '.shipping_approval_blockers | length' dist/deployment-manifest.json)" = 2
+
+      - name: Freeze deployment checksums
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum \
+            "${{ steps.sdk.outputs.stem }}-sdk.tar.gz" \
+            "${{ steps.sdk.outputs.stem }}-source.tar.gz" \
+            "${{ steps.sdk.outputs.stem }}.spdx.json" \
+            xiaowo-model.kwm xiaowo-model.pt xiaowo-model-provenance.json \
+            xiaowo-keywords.kwk xiaowo-keywords.tsv training-run-summary.json \
+            model-promotion-manifest.json qualification-summary.json qualification-cohort.json \
+            robustness-summary.json continuous-far-summary.json continuous-far-stream-contract.json \
+            MODEL_SHA256SUMS shipping.xiaowo.json nightly.xiaowo-frozen-model.json \
+            afe-evidence.schema.json deployment-manifest.json \
+            > DEPLOYMENT_SHA256SUMS && sha256sum -c DEPLOYMENT_SHA256SUMS)
+
+      - name: Attest deployment tuple
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: dist/DEPLOYMENT_SHA256SUMS
+
+      - name: Attest deployment SDK SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/${{ steps.sdk.outputs.stem }}-sdk.tar.gz
+          sbom-path: dist/${{ steps.sdk.outputs.stem }}.spdx.json
+
+      - name: Publish immutable commercial-candidate tuple
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_TAG: ${{ steps.identity.outputs.deployment_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$DEPLOYMENT_TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "kws-pipeline commercial candidate ${GITHUB_SHA:0:12}" \
+            --notes 'Commercial-candidate deployment tuple. Software/model/synthetic evidence is frozen. Shipping remains blocked only by real-human final-AFE qualification and physical target-board evidence.'
+          release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${DEPLOYMENT_TAG}")"
+          jq -e --arg target "$GITHUB_SHA" '
+            .draft == false and .prerelease == false and .immutable == true and .target_commitish == $target
+          ' <<<"$release_json" >/dev/null
+
+      - name: Retain deployment build evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: deployment-candidate-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  cleanup-bootstrap-branch:
+    needs: publish
+    if: ${{ always() && needs.publish.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Delete successful deployment bootstrap branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = deployment/commercial-candidate
+          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}"
