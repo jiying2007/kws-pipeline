@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "contract_id": "xiaowo-dual-wake-v1",
+  "product_scope": "dedicated-two-keyword-mandarin-kws",
+  "evidence_status": "synthetic-qualified",
+  "shipping_approved": false,
+  "shipping_wake_words": [
+    {
+      "id": 1,
+      "text": "你好小窝",
+      "threshold": 0.55,
+      "tokens": ["ni3", "hao3", "xiao3", "wo1"]
+    },
+    {
+      "id": 2,
+      "text": "小窝小窝",
+      "threshold": 0.55,
+      "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
+    }
+  ],
+  "forbidden_shipping_wake_words": ["小窝"],
+  "vocabulary": {
+    "kind": "dedicated-product-vocabulary",
+    "size": 5,
+    "tokens_path": "keywords/tokens.example.txt",
+    "keyword_tsv_path": "keywords/zh_cn_example.tsv",
+    "arbitrary_mandarin_l0_change_claimed": false
+  },
+  "model": {
+    "release_tag": "model-749187ec1d66",
+    "training_run_id": 34134789576,
+    "trained_head_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
+    "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "checkpoint_sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+    "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "keyword_tsv_sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
+    "qualification_seed": 271838,
+    "qualification_seed_state": "consumed-and-frozen",
+    "qualification": {
+      "expected_wakes": 256,
+      "matched_wakes": 256,
+      "false_rejects": 0,
+      "false_accepts": 0
+    },
+    "robustness_qualified": true,
+    "continuous_far_false_accepts": 0
+  },
+  "nightly_policy": {
+    "mode": "immutable-released-model-regression",
+    "may_train": false,
+    "may_render_formal_qualification": false,
+    "may_consume_formal_qualification_seed": false,
+    "formal_qualification_seed": 271838,
+    "next_formal_candidate_seed_reserved": 271839
+  },
+  "shipping_evidence_boundary": {
+    "final_afe_required": true,
+    "real_human_acoustic_required": true,
+    "physical_target_board_required": true,
+    "pending": [
+      "real-human-final-afe-acoustic-qualification",
+      "physical-target-board-performance-and-soak"
+    ]
+  }
+}
