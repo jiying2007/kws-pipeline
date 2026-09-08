@@ -5,11 +5,13 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 
 from qualification_metrics import validate_board, validate_evidence
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -47,6 +49,58 @@ def require_bundle_file(root: pathlib.Path, relative: str) -> pathlib.Path:
     if not path.is_file():
         raise ValueError(f"bundle file is missing: {relative}")
     return path
+
+
+def require_sha256(value: object, label: str) -> str:
+    if not isinstance(value, str) or SHA256_RE.fullmatch(value) is None:
+        raise ValueError(f"{label} must be lowercase SHA256 hex")
+    return value
+
+
+def require_text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} must be non-empty text")
+    return value.strip()
+
+
+def verify_external_attestation(
+    attestation: dict,
+    *,
+    evidence_raw_sha256: str,
+    collector_sha256: str,
+    board_runner_sha256: str,
+    model_sha256: str,
+    keyword_pack_sha256: str,
+    final_afe_identity_sha256: str,
+) -> dict:
+    if attestation.get("schema_version") != 1:
+        raise ValueError("attestation verification schema_version must be 1")
+    if attestation.get("verified") is not True:
+        raise ValueError("attestation verification must report verified=true")
+    if attestation.get("subject_kind") != "kws-target-evidence":
+        raise ValueError("attestation subject_kind must be kws-target-evidence")
+    issuer = require_text(attestation.get("issuer"), "attestation.issuer")
+    trust_policy = require_text(attestation.get("trust_policy"), "attestation.trust_policy")
+    verified_at = require_text(attestation.get("verified_at_utc"), "attestation.verified_at_utc")
+    if not verified_at.endswith("Z"):
+        raise ValueError("attestation verified_at_utc must be UTC")
+    expected = {
+        "subject_sha256": evidence_raw_sha256,
+        "collector_sha256": collector_sha256,
+        "board_runner_sha256": board_runner_sha256,
+        "model_sha256": model_sha256,
+        "keyword_pack_sha256": keyword_pack_sha256,
+        "audio_frontend_identity_sha256": final_afe_identity_sha256,
+    }
+    for field, digest in expected.items():
+        measured = require_sha256(attestation.get(field), f"attestation.{field}")
+        if measured != digest:
+            raise ValueError(f"attestation {field} does not match selected qualification tuple")
+    return {
+        "issuer": issuer,
+        "trust_policy": trust_policy,
+        "verified_at_utc": verified_at,
+    }
 
 
 def main() -> int:
@@ -103,10 +157,25 @@ def main() -> int:
     phase_a_afe = phase_a.get("afe")
     if not isinstance(phase_a_afe, dict):
         raise ValueError("Phase-A summary is missing final AFE identity")
-    final_afe_identity = str(phase_a_receipt.get("final_afe_identity_sha256", ""))
-    if final_afe_identity != str(phase_a_afe.get("identity_sha256", "")):
+    final_afe_identity = require_sha256(
+        phase_a_receipt.get("final_afe_identity_sha256"),
+        "Phase-A receipt final_afe_identity_sha256",
+    )
+    if final_afe_identity != require_sha256(
+        phase_a_afe.get("identity_sha256"), "Phase-A summary AFE identity_sha256"
+    ):
         raise ValueError("Phase-A receipt/final-AFE identity mismatch")
-    if str(target_raw.get("audio_frontend_sha256", "")) != str(phase_a_afe.get("executable_sha256", "")):
+    if require_sha256(
+        target_raw.get("audio_frontend_identity_sha256"),
+        "target evidence audio_frontend_identity_sha256",
+    ) != final_afe_identity:
+        raise ValueError("physical target evidence uses a different full final-AFE identity")
+    if require_sha256(
+        target_raw.get("audio_frontend_sha256"),
+        "target evidence audio_frontend_sha256",
+    ) != require_sha256(
+        phase_a_afe.get("executable_sha256"), "Phase-A summary AFE executable_sha256"
+    ):
         raise ValueError("physical target evidence uses a different final-AFE executable")
     if str(target_raw.get("sku", "")) != str(phase_a_afe.get("sku", "")):
         raise ValueError("physical target SKU differs from Phase-A final-AFE SKU")
@@ -114,10 +183,24 @@ def main() -> int:
     board_runner = require_bundle_file(bundle, "board-runner")
     board_audio = require_bundle_file(bundle, "board-audio.wav")
     evidence_raw = require_bundle_file(bundle, "evidence-raw.jsonl")
-    attestation = require_bundle_file(bundle, "attestation-verification.json")
+    attestation_path = require_bundle_file(bundle, "attestation-verification.json")
     model = args.model.resolve(strict=True)
     keywords = args.keywords.resolve(strict=True)
     collector = ROOT / "tools" / "collect_target_evidence.py"
+
+    board_runner_sha256 = sha256_file(board_runner)
+    model_sha256 = sha256_file(model)
+    keyword_pack_sha256 = sha256_file(keywords)
+    evidence_raw_sha256 = sha256_file(evidence_raw)
+    external_attestation = verify_external_attestation(
+        load_json(attestation_path),
+        evidence_raw_sha256=evidence_raw_sha256,
+        collector_sha256=sha256_file(collector),
+        board_runner_sha256=board_runner_sha256,
+        model_sha256=model_sha256,
+        keyword_pack_sha256=keyword_pack_sha256,
+        final_afe_identity_sha256=final_afe_identity,
+    )
 
     board = validate_board(
         board_raw,
@@ -125,9 +208,9 @@ def main() -> int:
         keywords.stat().st_size,
         source_sha,
         {
-            "runner_sha256": sha256_file(board_runner),
-            "model_sha256": sha256_file(model),
-            "keyword_pack_sha256": sha256_file(keywords),
+            "runner_sha256": board_runner_sha256,
+            "model_sha256": model_sha256,
+            "keyword_pack_sha256": keyword_pack_sha256,
             "audio_sha256": sha256_file(board_audio),
         },
     )
@@ -137,11 +220,11 @@ def main() -> int:
         source_sha=source_sha,
         actual_hashes={
             "collector_sha256": sha256_file(collector),
-            "raw_evidence_sha256": sha256_file(evidence_raw),
-            "attestation_verification_sha256": sha256_file(attestation),
-            "board_runner_sha256": sha256_file(board_runner),
-            "model_sha256": sha256_file(model),
-            "keyword_pack_sha256": sha256_file(keywords),
+            "raw_evidence_sha256": evidence_raw_sha256,
+            "attestation_verification_sha256": sha256_file(attestation_path),
+            "board_runner_sha256": board_runner_sha256,
+            "model_sha256": model_sha256,
+            "keyword_pack_sha256": keyword_pack_sha256,
             "board_audio_sha256": sha256_file(board_audio),
         },
     )
@@ -206,6 +289,7 @@ def main() -> int:
         "builder_id": evidence["builder_id"],
         "collector_id": evidence["collector_id"],
         "board_audio_class": profile["board_audio_class"],
+        "external_attestation": external_attestation,
         "metrics": {
             "p99_process_us": board["p99_process_us"],
             "rtf": board["rtf"],
@@ -222,10 +306,10 @@ def main() -> int:
             "target_profile": sha256_file(require_bundle_file(bundle, "target-profile.json")),
             "target_evidence": sha256_file(require_bundle_file(bundle, "target-evidence.json")),
             "board_summary": sha256_file(require_bundle_file(bundle, "board-summary.json")),
-            "board_runner": sha256_file(board_runner),
+            "board_runner": board_runner_sha256,
             "board_audio": sha256_file(board_audio),
-            "evidence_raw": sha256_file(evidence_raw),
-            "attestation_verification": sha256_file(attestation),
+            "evidence_raw": evidence_raw_sha256,
+            "attestation_verification": sha256_file(attestation_path),
             "audio_continuity": sha256_file(continuity_path),
         },
         "raw_evidence_sha256": raw_hashes,
