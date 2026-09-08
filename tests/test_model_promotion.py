@@ -60,10 +60,14 @@ def main() -> int:
         "model-promotion-manifest.json",
         "'schema_version': 2",
         "subject-checksums: dist/MODEL_SHA256SUMS",
+        "gh release view \"$tag\" --repo \"$GITHUB_REPOSITORY\"",
+        "gh release create \"$MODEL_RELEASE_TAG\"",
         "--target \"$EXPECTED_HEAD_SHA\"",
     ):
         require(text, needle)
 
+    if text.count('--repo "$GITHUB_REPOSITORY"') < 2:
+        raise AssertionError("all release CLI calls must bind the repository explicitly")
     if "latest" in lowered:
         raise AssertionError("model promotion must never select an ambiguous training artifact")
     if "cancel-in-progress: true" in lowered:
