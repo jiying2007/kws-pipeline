@@ -31,8 +31,8 @@ def main() -> int:
     args = parser.parse_args()
 
     policy = load(args.policy)
-    if policy.get("schema_version") != 1:
-        raise ValueError("target policy schema_version must be 1")
+    if policy.get("schema_version") != 2:
+        raise ValueError("target policy schema_version must be 2")
     summaries = [load(path) for path in args.summary]
     if not summaries:
         raise ValueError("target cohort is empty")
@@ -41,6 +41,9 @@ def main() -> int:
             raise ValueError(f"summary[{index}] is not a target-DUT summary")
         if item.get("qualified") is not True or item.get("shipping_approved") is not False:
             raise ValueError(f"summary[{index}] is not a qualified pre-shipping DUT")
+        budget = item.get("resource_budget")
+        if not isinstance(budget, dict) or not budget.get("budget_id") or not budget.get("sha256"):
+            raise ValueError(f"summary[{index}] is missing approved resource budget identity")
 
     cohort = policy["cohort"]
     duts = [str(item["dut_id"]) for item in summaries]
@@ -54,16 +57,19 @@ def main() -> int:
     if len(duts) < int(cohort["min_unique_duts"]):
         failures.append("minimum-unique-duts")
 
-    identity_keys = [
-        "deployment_tag",
-        "deployment_target",
-        "human_qualification_tag",
-        "human_corpus_sha256",
-        "final_afe_identity_sha256",
-        "sku",
-        "board_revision",
-    ]
-    identities = {key: {str(item[key]) for item in summaries} for key in identity_keys}
+    identity_values = {
+        "deployment_tag": [str(item["deployment_tag"]) for item in summaries],
+        "deployment_target": [str(item["deployment_target"]) for item in summaries],
+        "human_qualification_tag": [str(item["human_qualification_tag"]) for item in summaries],
+        "human_corpus_sha256": [str(item["human_corpus_sha256"]) for item in summaries],
+        "final_afe_identity_sha256": [str(item["final_afe_identity_sha256"]) for item in summaries],
+        "sku": [str(item["sku"]) for item in summaries],
+        "board_revision": [str(item["board_revision"]) for item in summaries],
+        "resource_budget_id": [str(item["resource_budget"]["budget_id"]) for item in summaries],
+        "resource_budget_sha256": [str(item["resource_budget"]["sha256"]) for item in summaries],
+        "measurement_contract_id": [str(item["resource_budget"]["measurement_contract_id"]) for item in summaries],
+    }
+    identities = {key: set(values) for key, values in identity_values.items()}
     required_same = {
         "deployment_tag": bool(cohort["require_same_deployment"]),
         "deployment_target": bool(cohort["require_same_deployment"]),
@@ -72,6 +78,9 @@ def main() -> int:
         "final_afe_identity_sha256": bool(cohort["require_same_final_afe_identity"]),
         "sku": bool(cohort["require_same_sku"]),
         "board_revision": bool(cohort["require_same_board_revision"]),
+        "resource_budget_id": bool(cohort["require_same_resource_budget"]),
+        "resource_budget_sha256": bool(cohort["require_same_resource_budget"]),
+        "measurement_contract_id": bool(cohort["require_same_resource_budget"]),
     }
     for key, required in required_same.items():
         if required and len(identities[key]) != 1:
@@ -110,6 +119,9 @@ def main() -> int:
         "final_afe_identity_sha256": first["final_afe_identity_sha256"],
         "sku": first["sku"],
         "board_revision": first["board_revision"],
+        "resource_budget_id": first["resource_budget"]["budget_id"],
+        "resource_budget_sha256": first["resource_budget"]["sha256"],
+        "measurement_contract_id": first["resource_budget"]["measurement_contract_id"],
         "dut_count": len(summaries),
         "dut_ids": sorted(duts),
         "long_soak_duts": long_count,
@@ -119,6 +131,7 @@ def main() -> int:
                 "dut_id": item["dut_id"],
                 "sha256": sha256_file(path),
                 "target_evidence_sha256": item["evidence_sha256"]["target_evidence"],
+                "resource_budget_sha256": item["resource_budget"]["sha256"],
                 "soak_hours": item["metrics"]["soak_hours"],
             }
             for path, item in zip(args.summary, summaries)
