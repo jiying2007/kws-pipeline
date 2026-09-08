@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jiying2007/kws-pipeline/commercial/final-afe-adapter.schema.json",
+  "title": "KWS final AFE command adapter configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "executable_path", "command_argv", "config_files",
+    "sku", "microphone_revision", "enclosure_revision", "audio_route", "toolchain"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "executable_path": {"type": "string", "minLength": 1},
+    "command_argv": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "config_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "pipeline_source_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sku": {"type": "string", "minLength": 1},
+    "microphone_revision": {"type": "string", "minLength": 1},
+    "enclosure_revision": {"type": "string", "minLength": 1},
+    "audio_route": {"type": "string", "minLength": 1},
+    "toolchain": {"type": "string", "minLength": 1}
+  }
+}
