@@ -9,6 +9,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TARGET = ROOT / "governance" / "main-ruleset-target.json"
 VERIFIER = ROOT / "governance" / "verify_live_main_ruleset.py"
+DEPLOYMENT_WORKFLOW = ROOT / ".github" / "workflows" / "deployment-release.yml"
 
 
 def run_case(live: dict, *, expect_success: bool) -> None:
@@ -93,6 +94,20 @@ def main() -> int:
     checks = rule(weakened, "required_status_checks")["parameters"]["required_status_checks"]
     checks[0]["integration_id"] = 999
     run_case(weakened, expect_success=False)
+
+    workflow = DEPLOYMENT_WORKFLOW.read_text(encoding="utf-8")
+    for value in (
+        "Require exact protected main source and live terminal ruleset",
+        'gh api "repos/${GITHUB_REPOSITORY}/rulesets"',
+        "governance/main-ruleset-target.json",
+        "governance/verify_live_main_ruleset.py",
+        "build/governance/live-main-ruleset.json",
+        "main-ruleset-verification.json",
+        "repository_governance",
+        "verified_equivalent_to_repository_target",
+        "main-ruleset-target.json live-main-ruleset.json",
+    ):
+        assert value in workflow, f"deployment workflow is not bound to live ruleset verification: {value}"
 
     print("test_live_ruleset_contract: ok")
     return 0
