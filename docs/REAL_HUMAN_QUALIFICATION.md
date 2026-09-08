@@ -30,6 +30,15 @@ kws-real-audio
 
 The runner must have local access to the restricted raw corpus and the final `audio-pipeline` executable/configuration. GitHub-hosted runners are not a valid substitute.
 
+Do not pass private absolute paths through `workflow_dispatch`: those inputs may be visible in the public Actions UI. Configure two runner-local environment roots instead:
+
+```text
+KWS_REAL_HUMAN_ROOT=/restricted/kws-real-human
+KWS_FINAL_AFE_ROOT=/restricted/kws-final-afe
+```
+
+Only pseudonymous `qualification_id` and `afe_profile` values are passed to GitHub.
+
 ## Phase-A policy
 
 The machine authority is `commercial/real-human-qualification.policy.json`.
@@ -40,24 +49,35 @@ Minimum evidence:
 - at least 2 independent sessions per positive speaker;
 - at least 1200 expected wakes total;
 - at least 600 expected wakes for each shipping keyword;
-- at least 24 hours of post-AFE negative exposure;
+- at least 24 hours of **post-AFE** negative exposure;
 - 95% one-sided statistical confidence bounds.
 
 Aggregate gates:
 
 - FRR <= 5%;
-- one-sided FRR upper bound <= 6.5%;
+- one-sided aggregate FRR upper bound <= 6.5%;
+- each shipping keyword independently: FRR <= 5% and one-sided FRR upper bound <= 8%;
 - FAR <= 0.10/hour;
 - one-sided FAR upper bound <= 0.13/hour;
 - p95 post-end wake latency <= 500 ms.
 
 The 24-hour/0-FA case is intentionally close to the 95% Poisson upper-bound requirement. One observed false accept may therefore fail the confidence gate even when observed FAR alone remains below 0.10/hour.
 
-Critical positive coverage also includes real 3-5 m, rear, playback, double-talk and robot-motion slices. Critical negative exposure includes household, speech-confusion, playback and robot-motion time. Exact minima are in the policy JSON and are checked before the frozen KWS model is allowed to see the corpus.
+Critical positive coverage also includes real 3-5 m, rear, playback, double-talk and robot-motion slices. Critical negative exposure includes household, speech-confusion, playback and robot-motion time. Both raw-corpus intake and post-AFE scoring verify the required exposure. Exact minima are in the policy JSON and are checked before the frozen KWS model is allowed to see the corpus.
 
 ## Private corpus preparation
 
-Maintain a private draft JSON with `schema_version=1`, `corpus_role=fresh-held-out-qualification`, a stable `qualification_id`, deployment tag, and one recording entry per raw WAV. Use only pseudonymous `speaker_id`, `session_id`, `source_id`, `room_id` and `device_id` values.
+For a qualification ID such as `q-2026-09-a001`, prepare this runner-local layout:
+
+```text
+$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/
+  draft.json
+  sealed.json
+  wav/
+    ... restricted raw WAV files ...
+```
+
+Maintain `draft.json` with `schema_version=1`, `corpus_role=fresh-held-out-qualification`, the same stable `qualification_id`, deployment tag, and one recording entry per raw WAV. Use only pseudonymous `speaker_id`, `session_id`, `source_id`, `room_id` and `device_id` values.
 
 Each recording supplies at least:
 
@@ -88,26 +108,32 @@ Seal the private draft locally so hashes, byte sizes, duration and capture geome
 
 ```bash
 python3 tools/seal_real_human_corpus.py \
-  --draft /restricted/kws/q1/draft.json \
-  --audio-root /restricted/kws/q1/wav \
-  --output /restricted/kws/q1/sealed.json
+  --draft "$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/draft.json" \
+  --audio-root "$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/wav" \
+  --output "$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/sealed.json"
 ```
 
-Then validate policy coverage and raw identities without exposing the corpus to the model:
+Then validate policy coverage and raw identities without exposing the corpus to final AFE or the KWS model:
 
 ```bash
 python3 tools/validate_real_human_corpus.py \
-  --manifest /restricted/kws/q1/sealed.json \
-  --audio-root /restricted/kws/q1/wav \
+  --manifest "$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/sealed.json" \
+  --audio-root "$KWS_REAL_HUMAN_ROOT/q-2026-09-a001/wav" \
   --policy commercial/real-human-qualification.policy.json \
-  --public-summary /restricted/kws/q1/intake-summary.json
+  --public-summary /tmp/q-2026-09-a001-intake.json
 ```
 
 `commercial/real-human-corpus.schema.json` describes the sealed manifest.
 
 ## Final AFE adapter
 
-The adapter is a private JSON file described by `commercial/final-afe-adapter.schema.json`. Example shape:
+Store private adapter profiles under:
+
+```text
+$KWS_FINAL_AFE_ROOT/<afe_profile>.json
+```
+
+The adapter is described by `commercial/final-afe-adapter.schema.json`. Example shape:
 
 ```json
 {
@@ -158,12 +184,21 @@ If the final AFE executable/config changes after the marker is created, the run 
 
 ## Running the workflow
 
-After the controlled self-hosted runner and private files are ready, dispatch `.github/workflows/real-human-qualification.yml` with:
+After the controlled self-hosted runner and private files are ready, dispatch `.github/workflows/real-human-qualification.yml` with only:
 
 - `deployment_tag=deployment-c20f3eb88e43`;
-- absolute `corpus_manifest_path` to the sealed private manifest;
-- absolute `audio_root`;
-- absolute `afe_adapter_path`.
+- `qualification_id`, for example `q-2026-09-a001`;
+- `afe_profile`, for example `pcr02-final-v1`.
+
+The workflow derives private files locally as:
+
+```text
+$KWS_REAL_HUMAN_ROOT/<qualification_id>/sealed.json
+$KWS_REAL_HUMAN_ROOT/<qualification_id>/wav/
+$KWS_FINAL_AFE_ROOT/<afe_profile>.json
+```
+
+Both IDs are restricted to safe alphanumeric/`._-` forms so they cannot perform path traversal.
 
 The workflow performs, in order:
 
@@ -172,12 +207,12 @@ The workflow performs, in order:
 3. validate private human corpus identities/coverage/PII boundary;
 4. freeze actual final-AFE identity;
 5. create the immutable no-retry exposure marker;
-6. execute the frozen final AFE;
+6. execute the frozen final AFE and reject any identity drift;
 7. run the frozen model/keyword pack through the real C runtime;
 8. score FRR/FAR/latency with the existing evaluation engine;
-9. use post-AFE negative duration for FAR exposure;
+9. use post-AFE negative duration for aggregate and critical-negative exposure;
 10. calculate one-sided Wilson/Poisson bounds;
-11. enforce aggregate and critical-slice gates;
+11. enforce aggregate, per-keyword and critical-slice gates;
 12. hash and attest non-audio evidence;
 13. retain non-audio evidence only.
 
@@ -192,6 +227,8 @@ human-qualified-<corpus-sha16>
 ```
 
 The public Release contains only aggregate/non-audio evidence: Phase-A receipt, qualification summary, corpus intake summary, frozen AFE identity, AFE corpus summary and evidence checksums. It explicitly retains `shipping_approved=false`.
+
+The machine result shape is documented by `commercial/real-human-qualification-summary.schema.json`.
 
 Phase A PASS changes the next gate to:
 
