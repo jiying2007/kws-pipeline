@@ -73,6 +73,8 @@ def main() -> int:
         model.write_bytes(b"fixture-model")
         keyword_pack.write_bytes(b"fixture-keyword-pack")
         board_audio.write_bytes(b"fixture-board-audio")
+        afe_sha = "c" * 64
+        afe_identity = "d" * 64
 
         evidence_raw = root / "evidence-raw.jsonl"
         raw_paths = [soak, power]
@@ -107,6 +109,7 @@ def main() -> int:
                     "board_runner_sha256": sha256_file(board_runner),
                     "model_sha256": sha256_file(model),
                     "keyword_pack_sha256": sha256_file(keyword_pack),
+                    "audio_frontend_identity_sha256": afe_identity,
                 },
                 indent=2,
                 sort_keys=True,
@@ -127,6 +130,8 @@ def main() -> int:
                 "--toolchain", "fixture-gcc",
                 "--compiler-flags=-O3",
                 "--audio-frontend", "fixture-afe",
+                "--audio-frontend-sha256", afe_sha,
+                "--audio-frontend-identity-sha256", afe_identity,
                 "--runtime-soak", str(soak),
                 "--stack-high-water-bytes", "4096",
                 "--average-power-mw", "123",
@@ -155,6 +160,8 @@ def main() -> int:
         assert value["builder_id"] == "fixture-builder"
         assert value["dut_id"] == "fixture-dut"
         assert value["collector_id"] == "fixture-collector"
+        assert value["audio_frontend_sha256"] == afe_sha
+        assert value["audio_frontend_identity_sha256"] == afe_identity
         assert value["soak_hours"] == 1.01
         assert abs(value["cpu_percent"] - 5.0) < 1e-9
         assert value["rss_kib"] == 512.0
