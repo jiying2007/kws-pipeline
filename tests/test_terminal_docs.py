@@ -300,6 +300,61 @@ def main() -> int:
     ):
         assert value not in deployment_workflow, f"deployment workflow crosses evidence boundary: {value}"
 
+    ruleset_path = ROOT / "governance" / "main-ruleset-target.json"
+    ruleset = json.loads(ruleset_path.read_text(encoding="utf-8"))
+    assert ruleset["name"] == "kws-main-terminal"
+    assert ruleset["target"] == "branch"
+    assert ruleset["enforcement"] == "active"
+    assert ruleset["bypass_actors"] == []
+    assert ruleset["conditions"] == {
+        "ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}
+    }
+    rule_map = {row["type"]: row for row in ruleset["rules"]}
+    assert set(rule_map) == {
+        "deletion",
+        "non_fast_forward",
+        "pull_request",
+        "required_status_checks",
+    }
+    assert set(rule_map["deletion"]) == {"type"}
+    assert set(rule_map["non_fast_forward"]) == {"type"}
+    pull_request = rule_map["pull_request"]["parameters"]
+    assert pull_request == {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": False,
+        "require_code_owner_review": False,
+        "require_last_push_approval": False,
+        "required_review_thread_resolution": True,
+        "allowed_merge_methods": ["squash"],
+    }
+    required_checks = rule_map["required_status_checks"]["parameters"]
+    assert required_checks["do_not_enforce_on_create"] is False
+    assert required_checks["strict_required_status_checks_policy"] is True
+    assert [row["context"] for row in required_checks["required_status_checks"]] == [
+        "hosted (gcc)",
+        "hosted (clang)",
+        "coverage",
+        "sanitizers",
+        "fuzz",
+        "armv7-cross",
+    ]
+
+    governance_doc = (ROOT / "docs" / "GOVERNANCE_TARGET.md").read_text(encoding="utf-8")
+    require_all(
+        governance_doc,
+        ROOT / "docs" / "GOVERNANCE_TARGET.md",
+        (
+            "governance/main-ruleset-target.json",
+            "kws-main-terminal",
+            "403 Resource not accessible by integration",
+            "deployment/commercial-candidate",
+        ),
+    )
+    cleanup_workflow = (ROOT / ".github" / "workflows" / "repository-cleanup.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "governance/" in cleanup_workflow
+
     print("test_terminal_docs: ok")
     return 0
 
