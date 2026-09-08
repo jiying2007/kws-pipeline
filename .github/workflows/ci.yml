@@ -192,6 +192,7 @@ jobs:
       - name: Target and shipping promotion contract
         run: python3 tests/test_target_shipping_contract.py
       - name: Verify tracked worktree after Target and shipping promotion contract
+        if: always()
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target and shipping promotion contract"'
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
@@ -290,7 +291,7 @@ jobs:
         run: >-
           cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
-          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
       - name: Build
         run: cmake --build build-san --parallel
       - name: Test
