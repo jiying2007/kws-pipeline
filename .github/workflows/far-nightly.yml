@@ -13,133 +13,72 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  streaming-far:
+  frozen-model-far:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      MODEL_RELEASE_TAG: model-749187ec1d66
+      EXPECTED_TRAINED_HEAD_SHA: 749187ec1d6662658f06aa9c76d47fde835968db
+      EXPECTED_TRAINING_RUN_ID: "34134789576"
+      EXPECTED_MODEL_SHA256: ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402
+      EXPECTED_KEYWORD_PACK_SHA256: 370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723
+      NIGHTLY_CONFIG: configs/nightly.xiaowo-frozen-model.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
           cmake --build build --parallel --target \
-            kws_wav kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
+            kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
-      - name: Install pinned CPU training runtime
-        run: |
-          python3 -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
-          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
-            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-          .venv/bin/python - <<'PY'
-          import numpy
-          import torch
-          assert numpy.__version__ == '2.3.2'
-          assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
-          PY
-      - name: Train the canonical domain model
-        id: train
+
+      - name: Download exact immutable promoted model
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          set +e
-          .venv/bin/python training/iterate_domain.py \
-            --config configs/training/xiaowo.torch-domain.json \
-            --runner build/kws_wav \
-            --work-dir build/far-training
-          code=$?
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Rotate untouched qualification cohort
-        run: |
-          .venv/bin/python training/render_qualification_holdout.py \
-            --config configs/training/xiaowo.torch-domain.json \
-            --work-dir build/far-training \
-            --output build/far-training/qualification-dataset
-      - name: Finalize latest strict gate-passing canonical candidate
-        env:
-          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
-        run: |
-          .venv/bin/python training/finalize_domain_candidate.py \
-            --config configs/training/xiaowo.torch-domain.json \
-            --runner build/kws_wav \
-            --work-dir build/far-training \
-            --iteration-exit-code "$ITERATION_EXIT_CODE"
-      - name: Verify frozen model and held-out hard-negative evidence
-        run: |
-          .venv/bin/python - <<'PY'
-          import hashlib
+          set -euo pipefail
+          gh release view "$MODEL_RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json tagName,targetCommitish,isDraft,isPrerelease \
+            > build/model-release.json
+          python3 - <<'PY'
           import json
+          import os
           from pathlib import Path
 
-          root = Path('build/far-training')
-          config = json.loads(Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8'))
-          manifest = json.loads((root / 'domain-loop-manifest.json').read_text(encoding='utf-8'))
-          summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
-          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
-          far_cohort_path = root / 'best/far-holdout-cohort.json'
-          far_cohort = json.loads(far_cohort_path.read_text(encoding='utf-8'))
-          if not summary.get('qualified') or not manifest.get('qualified'):
-              raise SystemExit('canonical finalized domain model is not qualified')
-          if not bool(cohort.get('seed_disjoint')):
-              raise SystemExit('active qualification seed is not disjoint from training seed')
-          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
-              raise SystemExit('active qualification reuses training seed')
-          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
-              raise SystemExit('active qualification overlaps retired qualification WAV content')
-          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
-              raise SystemExit('active qualification overlaps development/training WAV content')
-          if int(cohort.get('expected_wakes', 0)) != 256:
-              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
-          selection = summary.get('candidate_selection', {})
-          selected_round = int(selection.get('selected_round', -1))
-          training_replay_round = int(selection.get('replay_round', -2))
-          if selected_round < 0 or selected_round != training_replay_round:
-              raise SystemExit(
-                  f'finalized model/training-replay mismatch: model={selected_round} '
-                  f'replay={training_replay_round}'
-              )
-          if not bool(selection.get('model_replay_generation_match')):
-              raise SystemExit('finalizer did not attest model/training-replay generation match')
-          if bool(selection.get('qualification_used_for_selection', True)):
-              raise SystemExit('qualification leaked into candidate selection')
-          if bool(selection.get('far_holdout_used_for_training', True)):
-              raise SystemExit('FAR holdout leaked into model training')
-          if bool(selection.get('far_holdout_used_for_selection', True)):
-              raise SystemExit('FAR holdout leaked into candidate selection')
-          if int(selection.get('overlapping_training_holdout_wav_sha256', -1)) != 0:
-              raise SystemExit('FAR holdout overlaps training hard-negative WAV content')
-          if int(selection.get('overlapping_retired_active_far_holdout_wav_sha256', -1)) != 0:
-              raise SystemExit('active FAR holdout overlaps retired FAR holdout WAV content')
-          if int(selection.get('training_replay_clip_count', 0)) <= 0:
-              raise SystemExit('training hard-negative replay has no clips')
-          if int(selection.get('far_holdout_clip_count', 0)) != int(
-              selection.get('training_replay_clip_count', -1)
-          ):
-              raise SystemExit('FAR holdout/training replay clip counts differ')
+          release = json.loads(Path('build/model-release.json').read_text(encoding='utf-8'))
+          if release.get('tagName') != os.environ['MODEL_RELEASE_TAG']:
+              raise SystemExit('model release tag mismatch')
+          if release.get('targetCommitish') != os.environ['EXPECTED_TRAINED_HEAD_SHA']:
+              raise SystemExit('model release target is not the frozen trained HEAD')
+          if bool(release.get('isDraft')) or bool(release.get('isPrerelease')):
+              raise SystemExit('nightly model release must be final, not draft/prerelease')
+          PY
+          mkdir -p build/frozen-model
+          gh release download "$MODEL_RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir build/frozen-model
+          test -s build/frozen-model/MODEL_SHA256SUMS
+          (
+            cd build/frozen-model
+            sha256sum -c MODEL_SHA256SUMS
+          )
 
-          active_namespace = int(config['far_holdout_round_namespace'])
-          retired_namespaces = [int(value) for value in config['retired_far_holdout_round_namespaces']]
-          if int(selection.get('far_holdout_round_namespace', -1)) != active_namespace:
-              raise SystemExit('candidate-selection FAR namespace differs from config')
-          if [int(value) for value in selection.get('retired_far_holdout_round_namespaces', [])] != retired_namespaces:
-              raise SystemExit('candidate-selection retired FAR namespaces differ from config')
-          if int(far_cohort.get('active_namespace', -1)) != active_namespace:
-              raise SystemExit('FAR cohort active namespace differs from config')
-          if [int(row['namespace']) for row in far_cohort.get('retired', [])] != retired_namespaces:
-              raise SystemExit('FAR cohort retired namespaces differ from config')
-          if int(far_cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
-              raise SystemExit('FAR cohort attests retired/active WAV overlap')
-          if int(far_cohort.get('active_clip_count', 0)) != int(selection.get('far_holdout_clip_count', -1)):
-              raise SystemExit('FAR cohort active clip count differs from candidate-selection evidence')
+      - name: Verify frozen model provenance and strict acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
 
-          model = root / 'best/model.kwm'
-          keywords = root / 'best/keywords.kwk'
-          training_replay = root / 'best/training-hard-negatives.tsv'
-          far_holdout = root / 'best/hard-negatives.tsv'
-          for path in (model, keywords, training_replay, far_holdout, far_cohort_path):
-              if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing frozen FAR input/evidence: {path}')
+          root = Path('build/frozen-model')
 
           def sha256(path: Path) -> str:
               digest = hashlib.sha256()
@@ -148,60 +87,171 @@ jobs:
                       digest.update(chunk)
               return digest.hexdigest()
 
-          model_sha = sha256(model)
-          keyword_sha = sha256(keywords)
-          training_replay_sha = sha256(training_replay)
-          far_holdout_sha = sha256(far_holdout)
-          far_cohort_sha = sha256(far_cohort_path)
-          if model_sha != manifest['best_model_sha256']:
-              raise SystemExit('best model hash does not match finalized manifest')
-          if keyword_sha != manifest['best_pack_sha256']:
-              raise SystemExit('best keyword pack hash does not match finalized manifest')
-          if training_replay_sha != manifest['best_training_hard_negative_manifest_sha256']:
-              raise SystemExit('training replay hash does not match finalized manifest')
-          if training_replay_sha != selection['replay_sha256']:
-              raise SystemExit('training replay hash does not match candidate record evidence')
-          if far_holdout_sha != manifest['best_hard_negative_manifest_sha256']:
-              raise SystemExit('FAR holdout hash does not match finalized manifest')
-          if far_holdout_sha != selection['far_holdout_sha256']:
-              raise SystemExit('FAR holdout hash does not match candidate-selection evidence')
-          if far_holdout_sha == training_replay_sha:
-              raise SystemExit('FAR holdout manifest equals training replay manifest')
-          if far_cohort_sha != manifest['best_far_holdout_cohort_sha256']:
-              raise SystemExit('FAR cohort hash does not match finalized manifest')
-          if far_cohort_sha != selection['far_holdout_cohort_sha256']:
-              raise SystemExit('FAR cohort hash does not match candidate-selection evidence')
+          required = (
+              'xiaowo-model.kwm',
+              'xiaowo-keywords.kwk',
+              'xiaowo-keywords.tsv',
+              'model-promotion-manifest.json',
+              'qualification-summary.json',
+              'qualification-cohort.json',
+              'robustness-summary.json',
+              'continuous-far-summary.json',
+          )
+          for name in required:
+              path = root / name
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing frozen release asset: {name}')
+
+          model_sha = sha256(root / 'xiaowo-model.kwm')
+          keyword_sha = sha256(root / 'xiaowo-keywords.kwk')
+          if model_sha != os.environ['EXPECTED_MODEL_SHA256']:
+              raise SystemExit('released model SHA drifted')
+          if keyword_sha != os.environ['EXPECTED_KEYWORD_PACK_SHA256']:
+              raise SystemExit('released keyword-pack SHA drifted')
+
+          manifest = json.loads((root / 'model-promotion-manifest.json').read_text(encoding='utf-8'))
+          source = manifest.get('source', {})
+          acceptance = manifest.get('acceptance', {})
+          if int(manifest.get('schema_version', -1)) != 2:
+              raise SystemExit('unexpected model-promotion manifest schema')
+          if int(source.get('training_run_id', -1)) != int(os.environ['EXPECTED_TRAINING_RUN_ID']):
+              raise SystemExit('promotion manifest training run drifted')
+          if source.get('head_sha') != os.environ['EXPECTED_TRAINED_HEAD_SHA']:
+              raise SystemExit('promotion manifest trained HEAD drifted')
+          if int(source.get('qualification_seed', -1)) != 271838:
+              raise SystemExit('promotion manifest qualification seed drifted')
+          if int(acceptance.get('qualification_expected', -1)) != 256:
+              raise SystemExit('promotion manifest expected-wake count drifted')
+          if int(acceptance.get('qualification_matched', -1)) != 256:
+              raise SystemExit('promotion manifest matched-wake count drifted')
+          if int(acceptance.get('qualification_false_rejects', -1)) != 0:
+              raise SystemExit('promotion manifest contains false rejects')
+          if int(acceptance.get('qualification_false_accepts', -1)) != 0:
+              raise SystemExit('promotion manifest contains false accepts')
+          if not bool(acceptance.get('robustness_qualified')):
+              raise SystemExit('promotion manifest robustness is not qualified')
+          if float(acceptance.get('continuous_far_per_hour', -1.0)) != 0.0:
+              raise SystemExit('promotion manifest continuous FAR is not zero')
+          if not bool(acceptance.get('continuous_far_full_negative_manifest_coverage')):
+              raise SystemExit('promotion manifest lacks continuous FAR coverage')
+
+          qualification = json.loads((root / 'qualification-summary.json').read_text(encoding='utf-8'))
+          if (
+              int(qualification.get('expected', -1)) != 256
+              or int(qualification.get('matched', -1)) != 256
+              or int(qualification.get('false_rejects', -1)) != 0
+              or int(qualification.get('false_accepts', -1)) != 0
+          ):
+              raise SystemExit('released qualification is not strict 256/256 zero-error')
+
+          cohort = json.loads((root / 'qualification-cohort.json').read_text(encoding='utf-8'))
+          if int(cohort.get('qualification_seed', -1)) != 271838:
+              raise SystemExit('released qualification cohort seed drifted')
+          if not bool(cohort.get('generated_after_training')) or not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('released qualification cohort is not untouched/disjoint')
+
+          robustness = json.loads((root / 'robustness-summary.json').read_text(encoding='utf-8'))
+          if not bool(robustness.get('qualified')) or robustness.get('failures') != []:
+              raise SystemExit('released robustness is not strict-pass')
+
+          far = json.loads((root / 'continuous-far-summary.json').read_text(encoding='utf-8'))
+          if (
+              not bool(far.get('qualified'))
+              or int(far.get('false_accepts', -1)) != 0
+              or float(far.get('far_per_hour', -1.0)) != 0.0
+              or not bool(far.get('full_negative_manifest_coverage'))
+              or far.get('model_sha256') != model_sha
+          ):
+              raise SystemExit('released continuous-FAR evidence is not strict-pass')
+
+          rows = [
+              raw.split('\t')
+              for raw in (root / 'xiaowo-keywords.tsv').read_text(encoding='utf-8').splitlines()
+              if raw.strip() and not raw.lstrip().startswith('#')
+          ]
+          expected = [
+              ['1', '你好小窝', '0.55', 'ni3 hao3 xiao3 wo1'],
+              ['2', '小窝小窝', '0.55', 'xiao3 wo1 xiao3 wo1'],
+          ]
+          if rows != expected:
+              raise SystemExit(f'released shipping keyword contract drifted: {rows!r}')
           print(json.dumps({
-              'best_round': manifest['best_round'],
-              'best_frontend': manifest['best_frontend'],
+              'release_tag': os.environ['MODEL_RELEASE_TAG'],
+              'trained_head_sha': os.environ['EXPECTED_TRAINED_HEAD_SHA'],
               'model_sha256': model_sha,
               'keyword_pack_sha256': keyword_sha,
-              'qualification_seed': cohort['qualification_seed'],
-              'qualification_references_sha256': cohort['active_references_sha256'],
-              'overlapping_retired_active_wav_sha256': 0,
-              'overlapping_development_active_wav_sha256': 0,
-              'training_replay_source': selection['replay_source'],
-              'training_replay_sha256': training_replay_sha,
-              'far_holdout_source': selection['far_holdout_source'],
-              'far_holdout_sha256': far_holdout_sha,
-              'far_holdout_generation_index': selection['far_holdout_generation_index'],
-              'far_holdout_round_namespace': active_namespace,
-              'retired_far_holdout_round_namespaces': retired_namespaces,
-              'far_holdout_cohort_sha256': far_cohort_sha,
-              'overlapping_training_holdout_wav_sha256': 0,
-              'overlapping_retired_active_far_holdout_wav_sha256': 0,
-          }, indent=2, sort_keys=True))
+              'qualification_seed': 271838,
+              'qualification': '256/256, 0 FR, 0 FA',
+              'robustness': 'qualified',
+              'continuous_far_per_hour': 0.0,
+          }, indent=2, sort_keys=True, ensure_ascii=False))
           PY
-      - name: Stream four independent negative shards against the frozen canonical model
+
+      - name: Render isolated nightly negative regression corpus
         shell: bash
         run: |
           set -euo pipefail
-          replay=build/far-training/best/hard-negatives.tsv
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config = json.loads(Path(os.environ['NIGHTLY_CONFIG']).read_text(encoding='utf-8'))
+          forbidden = {
+              'qualification_holdout_seed',
+              'retired_qualification_holdout_seeds',
+              'far_holdout_round_namespace',
+              'retired_far_holdout_round_namespaces',
+          }
+          leaked = sorted(forbidden.intersection(config))
+          if leaked:
+              raise SystemExit(f'nightly regression config leaked formal namespaces: {leaked}')
+          if config.get('regression_namespace') != 'nightly-frozen-model-v1':
+              raise SystemExit('unexpected nightly regression namespace')
+          PY
+          python3 training/render_domains.py \
+            --config "$NIGHTLY_CONFIG" \
+            --output build/nightly-domain \
+            > build/nightly-render-summary.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          index = Path('build/nightly-domain/domain-index.jsonl')
+          rows = [json.loads(raw) for raw in index.read_text(encoding='utf-8').splitlines() if raw.strip()]
+          negative = [row for row in rows if row.get('kind') != 'positive']
+          if len(negative) < 200:
+              raise SystemExit(f'nightly regression corpus unexpectedly small: {len(negative)}')
+          manifest = Path('build/nightly-negative.tsv')
+          manifest.write_text(
+              ''.join(f"{row['path']}\n" for row in negative),
+              encoding='utf-8',
+          )
+          evidence = {
+              'schema_version': 1,
+              'evidence_class': 'synthetic-nightly-regression',
+              'regression_namespace': 'nightly-frozen-model-v1',
+              'formal_qualification_seed_consumed': False,
+              'training_performed': False,
+              'negative_clip_count': len(negative),
+          }
+          Path('build/nightly-regression-contract.json').write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(evidence, indent=2, sort_keys=True))
+          PY
+
+      - name: Stream four independent negative shards against the frozen released model
+        shell: bash
+        run: |
+          set -euo pipefail
+          replay=build/nightly-negative.tsv
           for seed in 1103 2207 3301 4409; do
-            .venv/bin/python eval/long_far_stream.py \
+            python3 eval/long_far_stream.py \
               --runner build/kws_raw_stream \
-              --model build/far-training/best/model.kwm \
-              --keywords build/far-training/best/keywords.kwk \
+              --model build/frozen-model/xiaowo-model.kwm \
+              --keywords build/frozen-model/xiaowo-keywords.kwk \
               --negative-manifest "$replay" \
               --hard-negative-rate-per-minute 2.0 \
               --min-hard-negative-injections-per-clip 1 \
@@ -211,9 +261,10 @@ jobs:
               --output-dir "build/far-run-$seed" \
               --max-far-per-hour 1000000
           done
-      - name: Aggregate eight hours for the frozen model only
+
+      - name: Aggregate eight hours for the frozen released model only
         run: >-
-          .venv/bin/python eval/aggregate_far.py
+          python3 eval/aggregate_far.py
           --summary build/far-run-1103/summary.json
           --summary build/far-run-2207/summary.json
           --summary build/far-run-3301/summary.json
@@ -224,20 +275,22 @@ jobs:
           --max-upper-bound-per-hour 0.40
           --min-hard-negative-injections 800
           --min-hard-negative-audio-seconds 800
-      - name: Retain canonical FAR evidence and captures
+
+      - name: Retain frozen-model nightly FAR evidence and captures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: far-canonical
+          name: far-frozen-model-regression
           path: |
-            build/far-training/best/
-            build/far-training/domain-loop-manifest.json
-            build/far-training/training-run-summary.json
-            build/far-training/qualification-effective-config.json
-            build/far-training/qualification-dataset/qualification-cohort.json
-            build/far-training/hard-negative-replay/
-            build/far-training/hard-negative-holdout/
-            build/far-training/retired-hard-negative-holdout/
+            build/model-release.json
+            build/frozen-model/model-promotion-manifest.json
+            build/frozen-model/qualification-summary.json
+            build/frozen-model/qualification-cohort.json
+            build/frozen-model/robustness-summary.json
+            build/frozen-model/continuous-far-summary.json
+            build/nightly-domain/domain-summary.json
+            build/nightly-regression-contract.json
+            build/nightly-negative.tsv
             build/far-run-*/
             build/far-aggregate.json
           if-no-files-found: warn
