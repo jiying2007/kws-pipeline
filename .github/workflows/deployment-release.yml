@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Require exact protected main source
+      - name: Require exact protected main source and live terminal ruleset
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -44,6 +44,27 @@ jobs:
             echo 'main is not protected; commercial-candidate publication is fail-closed' >&2
             exit 2
           }
+
+          mkdir -p build/governance
+          ruleset_name="$(jq -r '.name' governance/main-ruleset-target.json)"
+          rulesets_json="$(gh api "repos/${GITHUB_REPOSITORY}/rulesets")"
+          printf '%s\n' "$rulesets_json" > build/governance/rulesets.json
+          ruleset_count="$(jq --arg name "$ruleset_name" \
+            '[.[] | select(.name == $name and .target == "branch" and .enforcement == "active")] | length' \
+            <<<"$rulesets_json")"
+          test "$ruleset_count" = 1 || {
+            echo "expected exactly one active branch ruleset named ${ruleset_name}; got ${ruleset_count}" >&2
+            exit 2
+          }
+          ruleset_id="$(jq -r --arg name "$ruleset_name" \
+            '[.[] | select(.name == $name and .target == "branch" and .enforcement == "active")][0].id' \
+            <<<"$rulesets_json")"
+          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${ruleset_id}" \
+            > build/governance/live-main-ruleset.json
+          python3 governance/verify_live_main_ruleset.py \
+            --target governance/main-ruleset-target.json \
+            --live build/governance/live-main-ruleset.json \
+            | tee build/governance/verification.json
 
       - name: Resolve immutable qualified model identity
         id: identity
@@ -147,6 +168,9 @@ jobs:
           cp configs/shipping.xiaowo.json dist/shipping.xiaowo.json
           cp configs/nightly.xiaowo-frozen-model.json dist/nightly.xiaowo-frozen-model.json
           cp commercial/afe-evidence.schema.json dist/afe-evidence.schema.json
+          cp governance/main-ruleset-target.json dist/main-ruleset-target.json
+          cp build/governance/live-main-ruleset.json dist/live-main-ruleset.json
+          cp build/governance/verification.json dist/main-ruleset-verification.json
           cp build/model-release/xiaowo-model.kwm dist/
           cp build/model-release/xiaowo-model.pt dist/
           cp build/model-release/xiaowo-model-provenance.json dist/
@@ -173,6 +197,7 @@ jobs:
           shipping = json.loads((root / 'configs/shipping.xiaowo.json').read_text(encoding='utf-8'))
           model_release = json.loads((root / 'build/model-release/release.json').read_text(encoding='utf-8'))
           promotion = json.loads((dist / 'model-promotion-manifest.json').read_text(encoding='utf-8'))
+          governance = json.loads((dist / 'main-ruleset-verification.json').read_text(encoding='utf-8'))
 
           def sha(path: pathlib.Path) -> str:
               h = hashlib.sha256()
@@ -194,6 +219,10 @@ jobs:
               raise SystemExit('deployment model digest mismatch')
           if sha(dist / 'xiaowo-keywords.kwk') != model['keyword_pack_sha256']:
               raise SystemExit('deployment keyword-pack digest mismatch')
+          if governance.get('qualified') is not True:
+              raise SystemExit('live repository governance verification is not qualified')
+          if governance.get('ruleset_name') != 'kws-main-terminal':
+              raise SystemExit('unexpected live repository ruleset identity')
 
           blockers = list(shipping['shipping_evidence_boundary']['pending'])
           if blockers != [
@@ -217,6 +246,15 @@ jobs:
               'runtime_equivalence_paths': ['CMakeLists.txt', 'cmake', 'include', 'src'],
               'shipping_contract_sha256': sha(root / 'configs/shipping.xiaowo.json'),
               'nightly_contract_sha256': sha(root / 'configs/nightly.xiaowo-frozen-model.json'),
+              'repository_governance': {
+                  'main_protected': True,
+                  'ruleset_name': governance['ruleset_name'],
+                  'verified_equivalent_to_repository_target': True,
+                  'required_status_contexts': governance['required_status_contexts'],
+                  'target_sha256': sha(dist / 'main-ruleset-target.json'),
+                  'live_ruleset_sha256': sha(dist / 'live-main-ruleset.json'),
+                  'verification_sha256': sha(dist / 'main-ruleset-verification.json'),
+              },
               'model_release': {
                   'tag': os.environ['MODEL_TAG'],
                   'release_id': int(os.environ['MODEL_RELEASE_ID']),
@@ -259,6 +297,8 @@ jobs:
           test "$(jq -r '.status' dist/deployment-manifest.json)" = commercial-candidate
           test "$(jq -r '.shipping_approved' dist/deployment-manifest.json)" = false
           test "$(jq -r '.shipping_approval_blockers | length' dist/deployment-manifest.json)" = 2
+          test "$(jq -r '.repository_governance.main_protected' dist/deployment-manifest.json)" = true
+          test "$(jq -r '.repository_governance.verified_equivalent_to_repository_target' dist/deployment-manifest.json)" = true
 
       - name: Freeze deployment checksums
         run: |
@@ -272,7 +312,8 @@ jobs:
             model-promotion-manifest.json qualification-summary.json qualification-cohort.json \
             robustness-summary.json continuous-far-summary.json continuous-far-stream-contract.json \
             MODEL_SHA256SUMS shipping.xiaowo.json nightly.xiaowo-frozen-model.json \
-            afe-evidence.schema.json deployment-manifest.json \
+            afe-evidence.schema.json main-ruleset-target.json live-main-ruleset.json \
+            main-ruleset-verification.json deployment-manifest.json \
             > DEPLOYMENT_SHA256SUMS && sha256sum -c DEPLOYMENT_SHA256SUMS)
 
       - name: Attest deployment tuple
