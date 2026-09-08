@@ -29,6 +29,8 @@ def main() -> int:
         ROOT / "docs" / "RELEASE_QUALIFICATION.md",
         ROOT / "docs" / "REPRODUCIBILITY.md",
         ROOT / "docs" / "GOVERNANCE_TARGET.md",
+        ROOT / "docs" / "INTEGRATION.md",
+        ROOT / "docs" / "CUSTOMIZATION.md",
     ]
     for path in docs:
         text = path.read_text(encoding="utf-8")
@@ -194,6 +196,72 @@ def main() -> int:
     assert shipping_boundary["final_afe_required"] is True
     assert shipping_boundary["real_human_acoustic_required"] is True
     assert shipping_boundary["physical_target_board_required"] is True
+    assert shipping_boundary["pending"] == [
+        "real-human-final-afe-acoustic-qualification",
+        "physical-target-board-performance-and-soak",
+    ]
+
+    afe_schema = json.loads((ROOT / "commercial" / "afe-evidence.schema.json").read_text(encoding="utf-8"))
+    assert afe_schema["additionalProperties"] is False
+    assert afe_schema["properties"]["backend"]["const"] == "command"
+    assert afe_schema["properties"]["shipping_authority"]["const"] is True
+    assert afe_schema["properties"]["sample_rate_hz"]["const"] == 16000
+    assert afe_schema["properties"]["channels"]["const"] == 1
+    assert afe_schema["properties"]["sample_format"]["const"] == "pcm_s16le"
+    assert {
+        "executable_sha256",
+        "config_bundle_sha256",
+        "input_pcm_sha256",
+        "output_pcm_sha256",
+        "result_sidecar_sha256",
+        "latency_samples",
+        "sku",
+        "microphone_revision",
+        "enclosure_revision",
+    } <= set(afe_schema["required"])
+
+    integration = (ROOT / "docs" / "INTEGRATION.md").read_text(encoding="utf-8")
+    require_all(
+        integration,
+        ROOT / "docs" / "INTEGRATION.md",
+        (
+            "commercial/afe-evidence.schema.json",
+            "configs/shipping.xiaowo.json",
+            "shipping_authority=true",
+            "commercial-candidate",
+            "shipping_approved=false",
+        ),
+    )
+
+    deployment_workflow = (ROOT / ".github" / "workflows" / "deployment-release.yml").read_text(
+        encoding="utf-8"
+    )
+    for value in (
+        "deployment/commercial-candidate",
+        "Require exact protected main source",
+        "test \"$protected\" = true",
+        "configs/shipping.xiaowo.json",
+        "configs/nightly.xiaowo-frozen-model.json",
+        "commercial/afe-evidence.schema.json",
+        "git diff --quiet \"$trained_head\" \"$GITHUB_SHA\" -- CMakeLists.txt cmake include src",
+        "sha256sum -c MODEL_SHA256SUMS",
+        "tools/check_reproducible_sdk.py",
+        "deployment-manifest.json",
+        "DEPLOYMENT_SHA256SUMS",
+        "shipping_approved': False",
+        "actions/attest@",
+        '--repo \"$GITHUB_REPOSITORY\"',
+        '--target \"$GITHUB_SHA\"',
+    ):
+        assert value in deployment_workflow, f"deployment release contract missing: {value}"
+    for value in (
+        "training/iterate_domain.py",
+        "training/train_ctc.py",
+        "training/render_qualification_holdout.py",
+        "qualification_seed = 271839",
+        "shipping_approved': True",
+    ):
+        assert value not in deployment_workflow, f"deployment workflow crosses evidence boundary: {value}"
 
     print("test_terminal_docs: ok")
     return 0
