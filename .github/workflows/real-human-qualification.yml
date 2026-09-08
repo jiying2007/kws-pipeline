@@ -1,0 +1,289 @@
+name: real-human-qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_tag:
+        description: Immutable commercial-candidate deployment tag
+        required: true
+        default: deployment-c20f3eb88e43
+        type: string
+      qualification_id:
+        description: Pseudonymous private qualification dataset ID
+        required: true
+        type: string
+      afe_profile:
+        description: Runner-local final-AFE adapter profile ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-human-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: [self-hosted, kws-real-audio]
+    timeout-minutes: 720
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve private runner-local inputs and immutable deployment
+        id: deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_TAG: ${{ inputs.deployment_tag }}
+          QUALIFICATION_ID: ${{ inputs.qualification_id }}
+          AFE_PROFILE: ${{ inputs.afe_profile }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$QUALIFICATION_ID" =~ ^[a-z0-9][a-z0-9._-]{7,63}$ ]] || {
+            echo 'qualification_id contains invalid characters' >&2
+            exit 2
+          }
+          [[ "$AFE_PROFILE" =~ ^[a-z0-9][a-z0-9._-]{2,63}$ ]] || {
+            echo 'afe_profile contains invalid characters' >&2
+            exit 2
+          }
+          test -n "${KWS_REAL_HUMAN_ROOT:-}" || {
+            echo 'self-hosted runner must define KWS_REAL_HUMAN_ROOT' >&2
+            exit 2
+          }
+          test -n "${KWS_FINAL_AFE_ROOT:-}" || {
+            echo 'self-hosted runner must define KWS_FINAL_AFE_ROOT' >&2
+            exit 2
+          }
+          corpus_manifest="${KWS_REAL_HUMAN_ROOT}/${QUALIFICATION_ID}/sealed.json"
+          audio_root="${KWS_REAL_HUMAN_ROOT}/${QUALIFICATION_ID}/wav"
+          afe_adapter="${KWS_FINAL_AFE_ROOT}/${AFE_PROFILE}.json"
+          test -f "$corpus_manifest"
+          test -d "$audio_root"
+          test -f "$afe_adapter"
+          test "$(jq -r '.qualification_id' "$corpus_manifest")" = "$QUALIFICATION_ID"
+          printf 'CORPUS_MANIFEST=%s\nAUDIO_ROOT=%s\nAFE_ADAPTER=%s\n' \
+            "$corpus_manifest" "$audio_root" "$afe_adapter" >> "$GITHUB_ENV"
+
+          policy_tag="$(jq -r '.deployment_tag' commercial/real-human-qualification.policy.json)"
+          test "$DEPLOYMENT_TAG" = "$policy_tag" || {
+            echo "real-human policy is pinned to $policy_tag; got $DEPLOYMENT_TAG" >&2
+            exit 2
+          }
+          release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${DEPLOYMENT_TAG}")"
+          jq -e '.draft == false and .prerelease == false and .immutable == true' <<<"$release_json" >/dev/null
+          target="$(jq -r '.target_commitish' <<<"$release_json")"
+          test "$target" != null && test -n "$target"
+          printf 'target=%s\nrelease_id=%s\n' "$target" "$(jq -r '.id' <<<"$release_json")" >> "$GITHUB_OUTPUT"
+          mkdir -p build/deployment
+          gh release download "$DEPLOYMENT_TAG" --repo "$GITHUB_REPOSITORY" --dir build/deployment
+          (cd build/deployment && sha256sum -c DEPLOYMENT_SHA256SUMS)
+          test "$(jq -r '.shipping_approved' build/deployment/deployment-manifest.json)" = false
+          test "$(jq -r '.source_sha' build/deployment/deployment-manifest.json)" = "$target"
+
+      - name: Build exact deployment KWS evaluation runtime
+        env:
+          TARGET_SHA: ${{ steps.deployment.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach build/deployment-source "$TARGET_SHA"
+          cmake -S build/deployment-source -B build/kws -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build/kws --parallel --target kws_wav
+          test -x build/kws/kws_wav
+
+      - name: Validate fresh restricted human corpus before exposure
+        run: |
+          python3 tools/validate_real_human_corpus.py \
+            --manifest "$CORPUS_MANIFEST" \
+            --audio-root "$AUDIO_ROOT" \
+            --policy commercial/real-human-qualification.policy.json \
+            --public-summary build/real-human/corpus-intake-summary.json
+
+      - name: Freeze final AFE identity before exposure
+        run: |
+          python3 tools/final_afe_identity.py \
+            --adapter "$AFE_ADAPTER" \
+            --output build/real-human/final-afe-identity.json
+
+      - name: Consume fresh corpus before final AFE or KWS evaluation
+        id: exposure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_TAG: ${{ inputs.deployment_tag }}
+          TARGET_SHA: ${{ steps.deployment.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          corpus_sha="$(jq -r '.corpus_sha256' build/real-human/corpus-intake-summary.json)"
+          qualification_id="$(jq -r '.qualification_id' build/real-human/corpus-intake-summary.json)"
+          afe_identity="$(jq -r '.identity_sha256' build/real-human/final-afe-identity.json)"
+          exposure_tag="human-exposure-${corpus_sha:0:16}"
+          if gh release view "$exposure_tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "held-out corpus was already exposed: $exposure_tag" >&2
+            exit 2
+          fi
+          jq -n \
+            --arg qualification_id "$qualification_id" \
+            --arg corpus_sha256 "$corpus_sha" \
+            --arg deployment_tag "$DEPLOYMENT_TAG" \
+            --arg deployment_target "$TARGET_SHA" \
+            --arg intake_sha256 "$(sha256sum build/real-human/corpus-intake-summary.json | awk '{print $1}')" \
+            --arg final_afe_identity_sha256 "$afe_identity" \
+            '{schema_version:1,state:"consumed-and-frozen",qualification_id:$qualification_id,corpus_sha256:$corpus_sha256,deployment_tag:$deployment_tag,deployment_target:$deployment_target,corpus_intake_summary_sha256:$intake_sha256,final_afe_identity_sha256:$final_afe_identity_sha256}' \
+            > build/real-human/human-exposure-receipt.json
+          gh release create "$exposure_tag" build/real-human/human-exposure-receipt.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "KWS held-out human corpus exposure ${corpus_sha:0:16}" \
+            --notes 'This content-addressed marker permanently consumes the held-out human corpus before final-AFE/KWS evaluation. Raw audio remains restricted and is not published.'
+          exposure_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${exposure_tag}")"
+          jq -e --arg target "$TARGET_SHA" '.immutable == true and .target_commitish == $target' <<<"$exposure_json" >/dev/null
+          printf 'tag=%s\ncorpus_sha=%s\n' "$exposure_tag" "$corpus_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Execute frozen final AFE over consumed held-out corpus
+        run: |
+          python3 tools/run_final_afe_corpus.py \
+            --manifest "$CORPUS_MANIFEST" \
+            --audio-root "$AUDIO_ROOT" \
+            --adapter "$AFE_ADAPTER" \
+            --expected-identity build/real-human/final-afe-identity.json \
+            --output-dir build/real-human/afe
+
+      - name: Run frozen KWS over post-AFE human audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 eval/run_corpus.py \
+            --runner build/kws/kws_wav \
+            --model build/deployment/xiaowo-model.kwm \
+            --keywords build/deployment/xiaowo-keywords.kwk \
+            --references build/real-human/afe/references.post-afe.jsonl \
+            --audio-root build/real-human/afe/post-afe \
+            --detections build/real-human/detections.jsonl \
+            --provenance build/real-human/eval-provenance.json \
+            --corpus-identity build/real-human/post-afe-corpus-identity.json
+          python3 eval/score_events.py \
+            --references build/real-human/afe/references.post-afe.jsonl \
+            --detections build/real-human/detections.jsonl \
+            --summary build/real-human/score-summary.json \
+            --false-positives build/real-human/false-accepts.jsonl \
+            --false-rejects build/real-human/false-rejects.jsonl
+
+      - name: Enforce real-human acoustic qualification policy
+        id: gate
+        shell: bash
+        run: |
+          set +e
+          python3 tools/score_real_human_qualification.py \
+            --manifest "$CORPUS_MANIFEST" \
+            --policy commercial/real-human-qualification.policy.json \
+            --intake-summary build/real-human/corpus-intake-summary.json \
+            --afe-summary build/real-human/afe/afe-corpus-summary.json \
+            --references build/real-human/afe/references.post-afe.jsonl \
+            --score-summary build/real-human/score-summary.json \
+            --false-accepts build/real-human/false-accepts.jsonl \
+            --false-rejects build/real-human/false-rejects.jsonl \
+            --detections build/real-human/detections.jsonl \
+            --output build/real-human/real-human-qualification-summary.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Freeze non-audio evidence checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp commercial/real-human-qualification.policy.json build/real-human/
+          cp commercial/real-human-corpus.schema.json build/real-human/
+          cp commercial/final-afe-adapter.schema.json build/real-human/
+          cp commercial/afe-evidence.schema.json build/real-human/
+          cp commercial/real-human-qualification-summary.schema.json build/real-human/
+          (cd build/real-human && sha256sum \
+            real-human-qualification.policy.json real-human-corpus.schema.json \
+            final-afe-adapter.schema.json afe-evidence.schema.json \
+            real-human-qualification-summary.schema.json \
+            corpus-intake-summary.json final-afe-identity.json human-exposure-receipt.json \
+            afe/afe-corpus-summary.json afe/afe-evidence.jsonl afe/references.post-afe.jsonl \
+            detections.jsonl eval-provenance.json post-afe-corpus-identity.json \
+            score-summary.json false-accepts.jsonl false-rejects.jsonl \
+            real-human-qualification-summary.json \
+            > REAL_HUMAN_EVIDENCE_SHA256SUMS && sha256sum -c REAL_HUMAN_EVIDENCE_SHA256SUMS)
+
+      - name: Attest real-human qualification evidence
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: build/real-human/REAL_HUMAN_EVIDENCE_SHA256SUMS
+
+      - name: Retain qualification evidence without raw or post-AFE audio
+        id: evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: real-human-qualification-${{ steps.exposure.outputs.corpus_sha }}
+          path: |
+            build/real-human/*.json
+            build/real-human/*.jsonl
+            build/real-human/*SHA256SUMS
+            build/real-human/afe/*.json
+            build/real-human/afe/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish successful Phase-A receipt
+        if: ${{ steps.gate.outputs.exit_code == '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ steps.deployment.outputs.target }}
+          CORPUS_SHA: ${{ steps.exposure.outputs.corpus_sha }}
+          EXPOSURE_TAG: ${{ steps.exposure.outputs.tag }}
+          ARTIFACT_ID: ${{ steps.evidence.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="human-qualified-${CORPUS_SHA:0:16}"
+          jq -n \
+            --arg corpus_sha256 "$CORPUS_SHA" \
+            --arg exposure_tag "$EXPOSURE_TAG" \
+            --arg deployment_tag "${{ inputs.deployment_tag }}" \
+            --arg deployment_target "$TARGET_SHA" \
+            --arg artifact_id "$ARTIFACT_ID" \
+            --arg artifact_digest "$ARTIFACT_DIGEST" \
+            --arg final_afe_identity_sha256 "$(jq -r '.identity_sha256' build/real-human/final-afe-identity.json)" \
+            --arg evidence_checksums_sha256 "$(sha256sum build/real-human/REAL_HUMAN_EVIDENCE_SHA256SUMS | awk '{print $1}')" \
+            --arg summary_sha256 "$(sha256sum build/real-human/real-human-qualification-summary.json | awk '{print $1}')" \
+            '{schema_version:1,phase:"real-human-final-afe-acoustic-qualification",qualified:true,shipping_approved:false,corpus_sha256:$corpus_sha256,exposure_tag:$exposure_tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,final_afe_identity_sha256:$final_afe_identity_sha256,evidence_artifact_id:$artifact_id,evidence_artifact_digest:$artifact_digest,evidence_checksums_sha256:$evidence_checksums_sha256,qualification_summary_sha256:$summary_sha256,next_gate:"physical-target-board-performance-and-soak"}' \
+            > build/real-human/public-phase-a-receipt.json
+          gh release create "$tag" \
+            build/real-human/public-phase-a-receipt.json \
+            build/real-human/real-human-qualification-summary.json \
+            build/real-human/corpus-intake-summary.json \
+            build/real-human/final-afe-identity.json \
+            build/real-human/afe/afe-corpus-summary.json \
+            build/real-human/REAL_HUMAN_EVIDENCE_SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "KWS real-human Phase-A qualification ${CORPUS_SHA:0:16}" \
+            --notes 'Real-human final-AFE acoustic qualification passed for the frozen deployment. Raw and post-AFE audio remain restricted and are not published. shipping_approved remains false pending physical target-board evidence.'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" | jq -e --arg target "$TARGET_SHA" '.immutable == true and .target_commitish == $target' >/dev/null
+
+      - name: Fail if real-human qualification did not pass
+        if: always()
+        env:
+          QUALIFICATION_EXIT_CODE: ${{ steps.gate.outputs.exit_code }}
+        run: |
+          test "$QUALIFICATION_EXIT_CODE" = 0 || {
+            echo "real-human qualification failed with exit code $QUALIFICATION_EXIT_CODE; corpus remains consumed/frozen" >&2
+            exit 1
+          }
