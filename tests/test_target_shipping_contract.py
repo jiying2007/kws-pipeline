@@ -10,10 +10,39 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+DIAGNOSTIC_PATH = ROOT / ".target-shipping-contract-diagnostic.json"
+DIAGNOSTIC_STDOUT_LIMIT = 4096
 
 
 def sha(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_diagnostic(
+    *,
+    line: int,
+    command,
+    expected_rc,
+    actual_rc,
+    stdout: str,
+) -> None:
+    if DIAGNOSTIC_PATH.exists():
+        return
+    DIAGNOSTIC_PATH.write_text(
+        json.dumps(
+            {
+                "line": line,
+                "command": command,
+                "expected_rc": expected_rc,
+                "actual_rc": actual_rc,
+                "stdout": stdout[-DIAGNOSTIC_STDOUT_LIMIT:],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
@@ -26,6 +55,13 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
         check=False,
     )
     if completed.returncode != expect:
+        write_diagnostic(
+            line=sys._getframe(1).f_lineno,
+            command=list(args),
+            expected_rc=expect,
+            actual_rc=completed.returncode,
+            stdout=completed.stdout,
+        )
         raise AssertionError(
             f"command: {' '.join(args)}\n"
             f"expected exit {expect}, got {completed.returncode}:\n{completed.stdout}"
@@ -452,6 +488,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    DIAGNOSTIC_PATH.unlink(missing_ok=True)
     try:
         raise SystemExit(main())
     except AssertionError as exc:
@@ -459,6 +496,14 @@ if __name__ == "__main__":
         while tb is not None and tb.tb_next is not None:
             tb = tb.tb_next
         line = tb.tb_lineno if tb is not None else 1
+        if not DIAGNOSTIC_PATH.exists():
+            write_diagnostic(
+                line=line,
+                command=None,
+                expected_rc=None,
+                actual_rc=None,
+                stdout="",
+            )
         message = str(exc) or "assertion failed"
         message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(
