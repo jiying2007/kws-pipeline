@@ -80,6 +80,7 @@ jobs:
             gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir "$dir" \
               --pattern public-target-dut-receipt.json \
               --pattern target-dut-qualification-summary.json \
+              --pattern target-qualification.policy.json \
               --pattern TARGET_DUT_PUBLIC_SHA256SUMS
             (cd "$dir" && sha256sum -c TARGET_DUT_PUBLIC_SHA256SUMS)
             test "$(jq -r '.qualified' "$dir/public-target-dut-receipt.json")" = true
