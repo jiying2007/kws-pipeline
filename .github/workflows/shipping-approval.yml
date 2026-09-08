@@ -27,23 +27,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Require live terminal repository governance
-        shell: bash
+      - name: Require exact current protected main control plane
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
           set -euo pipefail
-          main_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/main")"
-          test "$(jq -r '.protected' <<<"$main_json")" = true
-          rulesets="$(gh api "repos/${GITHUB_REPOSITORY}/rulesets")"
-          ruleset_id="$(jq -r '[.[] | select(.name == "kws-main-terminal" and .target == "branch" and .enforcement == "active")][0].id // empty' <<<"$rulesets")"
-          test -n "$ruleset_id"
+          bash governance/require_current_main.sh
           mkdir -p build/approval/governance
-          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${ruleset_id}" > build/approval/governance/live-main-ruleset.json
-          python3 governance/verify_live_main_ruleset.py \
-            --target governance/main-ruleset-target.json \
-            --live build/approval/governance/live-main-ruleset.json \
-            > build/approval/governance/verification.json
+          cp build/control-plane/live-main-ruleset.json build/approval/governance/
+          cp build/control-plane/verification.json build/approval/governance/
 
       - name: Resolve immutable deployment and Phase-A evidence
         id: base
@@ -64,6 +57,7 @@ jobs:
             --pattern shipping.xiaowo.json \
             --pattern xiaowo-model.kwm \
             --pattern xiaowo-keywords.kwk
+          (cd build/approval/deployment && grep -E '(deployment-manifest\.json|shipping\.xiaowo\.json|xiaowo-model\.kwm|xiaowo-keywords\.kwk)$' DEPLOYMENT_SHA256SUMS | sha256sum -c -)
           test "$(jq -r '.source_sha' build/approval/deployment/deployment-manifest.json)" = "$target"
           test "$(jq -r '.shipping_approved' build/approval/deployment/deployment-manifest.json)" = false
           test "$(jq -r '.shipping_approved' build/approval/deployment/shipping.xiaowo.json)" = false
@@ -128,7 +122,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import hashlib, json, os, pathlib, subprocess
+          import hashlib, json, os, pathlib
           root = pathlib.Path('build/approval')
           def load(path): return json.loads(path.read_text(encoding='utf-8'))
           def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
