@@ -27,7 +27,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Verify live main governance and Phase-A identity
+      - name: Require exact current protected main control plane
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash governance/require_current_main.sh
+
+      - name: Verify immutable Phase-A identity
         id: base
         env:
           GH_TOKEN: ${{ github.token }}
@@ -35,14 +40,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          main_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/main")"
-          test "$(jq -r '.protected' <<<"$main_json")" = true
-          rulesets="$(gh api "repos/${GITHUB_REPOSITORY}/rulesets")"
-          ruleset_id="$(jq -r '[.[] | select(.name == "kws-main-terminal" and .target == "branch" and .enforcement == "active")][0].id // empty' <<<"$rulesets")"
-          test -n "$ruleset_id"
-          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${ruleset_id}" > build-live-ruleset.json
-          python3 governance/verify_live_main_ruleset.py --target governance/main-ruleset-target.json --live build-live-ruleset.json >/dev/null
-
           mkdir -p build/cohort/phase-a
           human_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${HUMAN_TAG}")"
           jq -e '.draft == false and .prerelease == false and .immutable == true' <<<"$human_json" >/dev/null
