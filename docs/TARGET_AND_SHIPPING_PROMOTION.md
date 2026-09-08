@@ -14,6 +14,8 @@ Every Phase-B and Phase-C receipt must remain bound to the same tuple:
 
 Changing the deployment, model, AFE executable/config, SKU or board revision starts a new qualification tuple.
 
+All Phase-A/B/C evidence workflows must be dispatched from the exact current protected `main`. `governance/require_current_main.sh` rejects branch refs, stale main SHAs and weakened live rulesets before evidence promotion.
+
 ## Phase B1 — one physical DUT
 
 Use the existing physical evidence collectors documented in `TARGET_EVIDENCE.md`. Raw lab evidence is produced and retained by the controlled qualification station; GitHub receives aggregate metrics, hashes and attestation-bound identities only.
@@ -49,7 +51,7 @@ raw/audio-continuity.json
 
 `board-audio.wav` must be `non-human-public-safe`. Human or Phase-A post-AFE recordings are forbidden as a public target benchmark fixture.
 
-`target-evidence.json` is produced by `tools/collect_target_evidence.py`. `board-summary.json` is produced by the exact shipping target `kws_board_bench`. The external attestation-verification file remains the product trust-layer result described in `TARGET_EVIDENCE.md`.
+`target-evidence.json` is produced by `tools/collect_target_evidence.py`. It must carry both the final-AFE executable SHA and the **full Phase-A final-AFE identity SHA**. The external trust-layer verification must independently bind that full identity together with the raw-evidence manifest, collector, board runner, model and keyword pack; `target-dut-qualification` parses and re-verifies those fields instead of trusting the summary alone. `board-summary.json` is produced by the exact shipping target `kws_board_bench`.
 
 Per-DUT policy is `commercial/target-qualification.policy.json`. Current gates require at least 24 h soak and bound p99 processing, RTF/headroom, CPU, RSS, stack high-water, temperature, average power, XRUN, lost-sample, discontinuity and backpressure evidence.
 
@@ -88,7 +90,7 @@ and still leaves `shipping_approved=false`.
 
 It is manual-only and runs only after:
 
-1. live `main` governance passes `governance/verify_live_main_ruleset.py`;
+1. the workflow source is the exact current protected `main` and live governance passes `governance/verify_live_main_ruleset.py`;
 2. the immutable commercial deployment is valid;
 3. the supplied immutable Phase-A Release is `qualified=true`;
 4. the supplied immutable Phase-B multi-DUT cohort is `qualified=true`;
