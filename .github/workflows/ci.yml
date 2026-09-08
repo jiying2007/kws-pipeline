@@ -75,6 +75,8 @@ jobs:
         run: python3 tests/test_audio_discontinuity_contract.py
       - name: Training supply-chain contract
         run: python3 tests/test_training_supply_chain.py
+      - name: Model promotion contract
+        run: python3 tests/test_model_promotion.py
       - name: Reproducibility tool contract
         run: python3 tests/test_reproducible_sdk.py
       - name: Terminal documentation contract

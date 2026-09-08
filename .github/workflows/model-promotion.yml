@@ -1,0 +1,400 @@
+name: model-promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      training_run_id:
+        description: Successful model-training workflow run ID to promote
+        required: true
+        type: string
+      expected_head_sha:
+        description: Exact 40-hex head SHA that the training run must have used
+        required: true
+        type: string
+      release_tag:
+        description: Optional model release tag; defaults to model-<12-char SHA>
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: model-promotion-${{ inputs.expected_head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TRAINING_RUN_ID: ${{ inputs.training_run_id }}
+      EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
+      REQUESTED_RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - name: Verify requested training run
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$TRAINING_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$EXPECTED_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}" > run.json
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          run = json.loads(Path('run.json').read_text(encoding='utf-8'))
+          expected = os.environ['EXPECTED_HEAD_SHA']
+          if run.get('name') != 'model-training':
+              raise SystemExit(f"unexpected workflow name: {run.get('name')!r}")
+          if run.get('status') != 'completed' or run.get('conclusion') != 'success':
+              raise SystemExit(
+                  f"training run is not completed/success: "
+                  f"status={run.get('status')} conclusion={run.get('conclusion')}"
+              )
+          if run.get('head_sha') != expected:
+              raise SystemExit(
+                  f"training run head mismatch: expected={expected} actual={run.get('head_sha')}"
+              )
+          print(
+              f"verified model-training run id={run['id']} "
+              f"event={run.get('event')} head={run['head_sha']}"
+          )
+          PY
+
+      - name: Resolve exact trained-model artifact
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}/artifacts?per_page=100" > artifacts.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('artifacts.json').read_text(encoding='utf-8'))
+          matches = [
+              row for row in payload.get('artifacts', [])
+              if row.get('name') == 'xiaowo-torch-domain-model' and not row.get('expired', False)
+          ]
+          if len(matches) != 1:
+              raise SystemExit(
+                  f"expected exactly one live xiaowo-torch-domain-model artifact, got {len(matches)}"
+              )
+          row = matches[0]
+          print(f"artifact_id={row['id']}")
+          print(f"artifact_digest={row.get('digest') or ''}")
+          print(f"artifact_size={row.get('size_in_bytes') or 0}")
+          PY
+
+      - name: Download exact trained-model artifact
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
+            --output trained-model.zip
+          test -s trained-model.zip
+          mkdir artifact
+          unzip -q trained-model.zip -d artifact
+
+      - name: Freeze and verify deployable model evidence
+        id: assets
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact_digest }}
+          ARTIFACT_SIZE: ${{ steps.artifact.outputs.artifact_size }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          root = Path('artifact')
+          dist = Path('dist')
+
+          required_best = {
+              'model.kwm': 'xiaowo-model.kwm',
+              'model.pt': 'xiaowo-model.pt',
+              'model-provenance.json': 'xiaowo-model-provenance.json',
+              'keywords.kwk': 'xiaowo-keywords.kwk',
+              'keywords.tsv': 'xiaowo-keywords.tsv',
+          }
+          required_evidence = {
+              root / 'training-run-summary.json': 'training-run-summary.json',
+              root / 'robustness-summary.json': 'robustness-summary.json',
+              root / 'hard-negative-stream' / 'summary.json': 'continuous-far-summary.json',
+              root / 'hard-negative-stream' / 'stream-contract.json': 'continuous-far-stream-contract.json',
+              root / 'qualification-dataset' / 'qualification-cohort.json': 'qualification-cohort.json',
+              root / 'best' / 'qualification' / 'summary.json': 'qualification-summary.json',
+          }
+
+          def resolve_best(name: str) -> Path:
+              matches = [
+                  path for path in root.rglob(name)
+                  if path.is_file() and path.parent.name == 'best'
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(f"expected exactly one best/{name}, got {len(matches)}")
+              if matches[0].stat().st_size == 0:
+                  raise SystemExit(f"empty model artifact file: {matches[0]}")
+              return matches[0]
+
+          copied = {}
+          for source_name, target_name in required_best.items():
+              source = resolve_best(source_name)
+              target = dist / target_name
+              shutil.copy2(source, target)
+              copied[target_name] = target
+
+          for source, target_name in required_evidence.items():
+              if not source.is_file() or source.stat().st_size == 0:
+                  raise SystemExit(f"missing/empty required evidence: {source}")
+              target = dist / target_name
+              shutil.copy2(source, target)
+              copied[target_name] = target
+
+          def sha256(path: Path) -> str:
+              digest = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          files = {
+              name: {'sha256': sha256(path), 'size_bytes': path.stat().st_size}
+              for name, path in sorted(copied.items())
+          }
+
+          provenance = json.loads((dist / 'xiaowo-model-provenance.json').read_text(encoding='utf-8'))
+          if provenance.get('model', {}).get('sha256') != files['xiaowo-model.kwm']['sha256']:
+              raise SystemExit('model provenance SHA does not match promoted model.kwm')
+          if provenance.get('checkpoint', {}).get('sha256') != files['xiaowo-model.pt']['sha256']:
+              raise SystemExit('model provenance checkpoint SHA does not match promoted model.pt')
+
+          training = json.loads((dist / 'training-run-summary.json').read_text(encoding='utf-8'))
+          artifacts = training.get('artifacts', {})
+          expected_artifact_hashes = {
+              'model.kwm': files['xiaowo-model.kwm']['sha256'],
+              'model.pt': files['xiaowo-model.pt']['sha256'],
+              'model-provenance.json': files['xiaowo-model-provenance.json']['sha256'],
+              'keywords.kwk': files['xiaowo-keywords.kwk']['sha256'],
+              'keywords.tsv': files['xiaowo-keywords.tsv']['sha256'],
+          }
+          for name, digest in expected_artifact_hashes.items():
+              if artifacts.get(name) != digest:
+                  raise SystemExit(f'training summary artifact SHA mismatch for {name}')
+          if not bool(training.get('qualified')):
+              raise SystemExit('training summary is not qualified')
+
+          qualification = json.loads((dist / 'qualification-summary.json').read_text(encoding='utf-8'))
+          if (
+              int(qualification.get('expected', -1)) != 256
+              or int(qualification.get('matched', -1)) != 256
+              or int(qualification.get('false_rejects', -1)) != 0
+              or int(qualification.get('false_accepts', -1)) != 0
+          ):
+              raise SystemExit('qualification evidence is not strict 256/256 zero-error')
+          per_keyword = qualification.get('per_keyword', {})
+          for keyword_id in ('1', '2'):
+              row = per_keyword.get(keyword_id, {})
+              if int(row.get('expected', -1)) != 128 or int(row.get('matched', -1)) != 128:
+                  raise SystemExit(f'qualification keyword {keyword_id} is not 128/128')
+              if int(row.get('false_rejects', -1)) != 0 or int(row.get('false_accepts', -1)) != 0:
+                  raise SystemExit(f'qualification keyword {keyword_id} is not zero-error')
+
+          robustness = json.loads((dist / 'robustness-summary.json').read_text(encoding='utf-8'))
+          if not bool(robustness.get('qualified')) or robustness.get('failures') != []:
+              raise SystemExit('robustness evidence is not qualified with zero failures')
+
+          continuous_far = json.loads((dist / 'continuous-far-summary.json').read_text(encoding='utf-8'))
+          if not bool(continuous_far.get('qualified')):
+              raise SystemExit('continuous FAR evidence is not qualified')
+          if int(continuous_far.get('false_accepts', -1)) != 0 or float(continuous_far.get('far_per_hour', -1.0)) != 0.0:
+              raise SystemExit('continuous FAR evidence is not zero-error')
+          if not bool(continuous_far.get('full_negative_manifest_coverage')):
+              raise SystemExit('continuous FAR evidence lacks full negative-manifest coverage')
+          if continuous_far.get('model_sha256') != files['xiaowo-model.kwm']['sha256']:
+              raise SystemExit('continuous FAR model SHA does not match promoted model')
+
+          stream_contract = json.loads((dist / 'continuous-far-stream-contract.json').read_text(encoding='utf-8'))
+          if stream_contract.get('model_sha256') != files['xiaowo-model.kwm']['sha256']:
+              raise SystemExit('continuous FAR stream contract model SHA mismatch')
+          if not bool(stream_contract.get('full_negative_manifest_coverage')):
+              raise SystemExit('continuous FAR stream contract lacks full coverage')
+          if float(stream_contract.get('observed_min_payload_gap_seconds', 0.0)) < float(
+              stream_contract.get('decoder_retention_proof_window_seconds', 1.6)
+          ):
+              raise SystemExit('continuous FAR payload gap does not clear decoder retention window')
+
+          cohort = json.loads((dist / 'qualification-cohort.json').read_text(encoding='utf-8'))
+          if not bool(cohort.get('generated_after_training')) or not bool(cohort.get('seed_disjoint')):
+              raise SystemExit('qualification cohort is not untouched/disjoint')
+          if int(cohort.get('expected_wakes', -1)) != 256:
+              raise SystemExit('qualification cohort expected-wake count is not 256')
+          for key in (
+              'overlapping_development_active_wav_sha256',
+              'overlapping_exposed_active_wav_sha256',
+              'overlapping_retired_active_wav_sha256',
+          ):
+              if int(cohort.get(key, -1)) != 0:
+                  raise SystemExit(f'qualification cohort overlap is non-zero: {key}')
+          qualification_seed = int(cohort.get('qualification_seed', -1))
+          retired = [int(value) for value in cohort.get('retired_exposed_qualification_seeds', [])]
+          if qualification_seed < 0 or qualification_seed in retired:
+              raise SystemExit('qualification seed is invalid or already retired in its own cohort evidence')
+
+          keyword_rows = [
+              raw.split('\t')
+              for raw in (dist / 'xiaowo-keywords.tsv').read_text(encoding='utf-8').splitlines()
+              if raw.strip() and not raw.lstrip().startswith('#')
+          ]
+          expected_keywords = [
+              ('1', '你好小窝', 0.55, 'ni3 hao3 xiao3 wo1'),
+              ('2', '小窝小窝', 0.55, 'xiao3 wo1 xiao3 wo1'),
+          ]
+          if len(keyword_rows) != len(expected_keywords):
+              raise SystemExit('promoted keyword TSV must contain exactly two shipping wake words')
+          for row, expected in zip(keyword_rows, expected_keywords):
+              if len(row) < 4:
+                  raise SystemExit('promoted keyword TSV row is incomplete')
+              if row[0] != expected[0] or row[1] != expected[1] or abs(float(row[2]) - expected[2]) > 1.0e-9 or row[3] != expected[3]:
+                  raise SystemExit(f'promoted keyword contract drifted: {row!r}')
+          if any(row[1] == '小窝' or len(row[1]) != 4 for row in keyword_rows):
+              raise SystemExit('two-character 小窝 is not a shipping wake word')
+
+          provenance_repository_sha = str(
+              provenance.get('training', {}).get('environment', {}).get('repository_sha', '')
+          )
+          if len(provenance_repository_sha) != 40 or any(ch not in '0123456789abcdef' for ch in provenance_repository_sha):
+              raise SystemExit('model provenance repository SHA is missing/invalid')
+
+          def git_tree(sha: str) -> str:
+              payload = subprocess.check_output(
+                  ['gh', 'api', f"repos/{os.environ['GITHUB_REPOSITORY']}/git/commits/{sha}"],
+                  text=True,
+              )
+              return str(json.loads(payload)['tree']['sha'])
+
+          expected_tree_sha = git_tree(os.environ['EXPECTED_HEAD_SHA'])
+          provenance_tree_sha = git_tree(provenance_repository_sha)
+          if provenance_tree_sha != expected_tree_sha:
+              raise SystemExit(
+                  'model provenance repository tree differs from the requested training HEAD tree'
+              )
+
+          manifest = {
+              'schema_version': 2,
+              'source': {
+                  'repository': os.environ['GITHUB_REPOSITORY'],
+                  'training_run_id': int(os.environ['TRAINING_RUN_ID']),
+                  'head_sha': os.environ['EXPECTED_HEAD_SHA'],
+                  'head_tree_sha': expected_tree_sha,
+                  'provenance_repository_sha': provenance_repository_sha,
+                  'provenance_tree_sha': provenance_tree_sha,
+                  'artifact_id': int(os.environ['ARTIFACT_ID']),
+                  'artifact_digest': os.environ.get('ARTIFACT_DIGEST') or None,
+                  'artifact_size_bytes': int(os.environ.get('ARTIFACT_SIZE') or 0),
+                  'qualification_seed': qualification_seed,
+              },
+              'acceptance': {
+                  'qualification_expected': 256,
+                  'qualification_matched': 256,
+                  'qualification_false_rejects': 0,
+                  'qualification_false_accepts': 0,
+                  'robustness_qualified': True,
+                  'continuous_far_per_hour': 0.0,
+                  'continuous_far_full_negative_manifest_coverage': True,
+              },
+              'files': files,
+          }
+          (dist / 'model-promotion-manifest.json').write_text(
+              json.dumps(manifest, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(manifest, indent=2, sort_keys=True))
+          PY
+          (
+            cd dist
+            sha256sum \
+              xiaowo-model.kwm \
+              xiaowo-model.pt \
+              xiaowo-model-provenance.json \
+              xiaowo-keywords.kwk \
+              xiaowo-keywords.tsv \
+              training-run-summary.json \
+              qualification-summary.json \
+              qualification-cohort.json \
+              robustness-summary.json \
+              continuous-far-summary.json \
+              continuous-far-stream-contract.json \
+              model-promotion-manifest.json \
+              > MODEL_SHA256SUMS
+            sha256sum -c MODEL_SHA256SUMS
+          )
+          model_sha="$(sha256sum dist/xiaowo-model.kwm | awk '{print $1}')"
+          echo "model_sha256=$model_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Attest promoted model assets
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: dist/MODEL_SHA256SUMS
+
+      - name: Resolve immutable model release tag
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$REQUESTED_RELEASE_TAG" ]]; then
+            tag="$REQUESTED_RELEASE_TAG"
+          else
+            tag="model-${EXPECTED_HEAD_SHA:0:12}"
+          fi
+          [[ "$tag" =~ ^model-[A-Za-z0-9._-]+$ ]]
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "model release already exists: $tag" >&2
+            exit 2
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publish trained model release
+        shell: bash
+        env:
+          MODEL_RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          MODEL_SHA256: ${{ steps.assets.outputs.model_sha256 }}
+        run: |
+          set -euo pipefail
+          gh release create "$MODEL_RELEASE_TAG" \
+            dist/xiaowo-model.kwm \
+            dist/xiaowo-model.pt \
+            dist/xiaowo-model-provenance.json \
+            dist/xiaowo-keywords.kwk \
+            dist/xiaowo-keywords.tsv \
+            dist/training-run-summary.json \
+            dist/qualification-summary.json \
+            dist/qualification-cohort.json \
+            dist/robustness-summary.json \
+            dist/continuous-far-summary.json \
+            dist/continuous-far-stream-contract.json \
+            dist/model-promotion-manifest.json \
+            dist/MODEL_SHA256SUMS \
+            --target "$EXPECTED_HEAD_SHA" \
+            --title "kws-pipeline trained model ${EXPECTED_HEAD_SHA:0:12}" \
+            --notes "Promoted from successful model-training run ${TRAINING_RUN_ID}. Deployable model SHA256: ${MODEL_SHA256}."
