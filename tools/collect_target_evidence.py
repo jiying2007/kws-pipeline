@@ -13,6 +13,7 @@ import time
 
 CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
+SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 
 def read_text(path: pathlib.Path) -> str | None:
@@ -169,6 +170,12 @@ def require_text(value: object, label: str) -> str:
     return value.strip()
 
 
+def require_sha256(value: object, label: str) -> str:
+    if not isinstance(value, str) or SHA256_RE.fullmatch(value) is None:
+        raise ValueError(f"{label} must be lowercase SHA256 hex")
+    return value
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=pathlib.Path)
@@ -178,7 +185,8 @@ def main() -> int:
     parser.add_argument("--toolchain", required=True)
     parser.add_argument("--compiler-flags", required=True)
     parser.add_argument("--audio-frontend", required=True)
-    parser.add_argument("--audio-frontend-sha256")
+    parser.add_argument("--audio-frontend-sha256", required=True)
+    parser.add_argument("--audio-frontend-identity-sha256", required=True)
     parser.add_argument("--runtime-soak", required=True, type=pathlib.Path)
     parser.add_argument("--stack-high-water-bytes", type=float, required=True)
     parser.add_argument("--average-power-mw", type=float, required=True)
@@ -202,6 +210,13 @@ def main() -> int:
     source_sha = args.source_sha.strip().lower()
     if SOURCE_SHA_RE.fullmatch(source_sha) is None:
         raise ValueError("--source-sha must be lowercase 40- or 64-character hex")
+    audio_frontend_sha256 = require_sha256(
+        args.audio_frontend_sha256, "--audio-frontend-sha256"
+    )
+    audio_frontend_identity_sha256 = require_sha256(
+        args.audio_frontend_identity_sha256,
+        "--audio-frontend-identity-sha256",
+    )
     sku = require_text(args.sku, "--sku")
     builder_id = require_text(args.builder_id, "--builder-id")
     dut_id = require_text(args.dut_id, "--dut-id")
@@ -235,7 +250,7 @@ def main() -> int:
         name = require_text(row.get("name"), f"evidence-raw[{index}].name")
         digest = row.get("sha256")
         size = row.get("bytes")
-        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        if not isinstance(digest, str) or SHA256_RE.fullmatch(digest) is None:
             raise ValueError(f"evidence-raw[{index}].sha256 must be lowercase SHA256")
         if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
             raise ValueError(f"evidence-raw[{index}].bytes must be a positive integer")
@@ -269,6 +284,7 @@ def main() -> int:
         "board_runner_sha256": board_runner_sha256,
         "model_sha256": model_sha256,
         "keyword_pack_sha256": keyword_pack_sha256,
+        "audio_frontend_identity_sha256": audio_frontend_identity_sha256,
     }
     for key, expected in expected_attestation.items():
         if attestation.get(key) != expected:
@@ -303,7 +319,8 @@ def main() -> int:
         "compiler_flags": args.compiler_flags,
         "governor": governor,
         "audio_frontend": args.audio_frontend,
-        "audio_frontend_sha256": args.audio_frontend_sha256,
+        "audio_frontend_sha256": audio_frontend_sha256,
+        "audio_frontend_identity_sha256": audio_frontend_identity_sha256,
         "kernel": platform.release(),
         "machine": platform.machine(),
         "cpu_online": read_text(pathlib.Path("/sys/devices/system/cpu/online")) or "unknown",
