@@ -14,6 +14,8 @@
   "gates": {
     "max_frr": 0.05,
     "max_frr_upper_bound": 0.065,
+    "max_frr_per_keyword": 0.05,
+    "max_frr_upper_bound_per_keyword": 0.08,
     "max_far_per_hour": 0.10,
     "max_far_upper_bound_per_hour": 0.13,
     "max_p95_post_end_latency_ms": 500.0
@@ -40,6 +42,7 @@
   },
   "privacy": {
     "raw_audio_public_upload_allowed": false,
+    "post_afe_audio_public_upload_allowed": false,
     "public_evidence_may_include": ["content_hashes", "pseudonymous_ids", "aggregate_metrics", "coverage", "provenance", "attestations"]
   }
 }
