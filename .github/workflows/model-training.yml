@@ -5,9 +5,6 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/model-training.yml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
       - 'configs/training/**'
       - 'eval/run_corpus.py'
       - 'eval/score_events.py'
@@ -17,9 +14,12 @@ on:
       - 'include/**'
       - 'keywords/**'
       - 'src/**'
-      - 'tools/**'
       - 'training/**'
-      - 'tests/test_decoder_retention.c'
+      - 'tools/build_vocab.py'
+      - 'tools/compile_keywords.py'
+      - 'tools/kws_vocab.py'
+      - 'tools/kws_wav.c'
+      - 'tools/kws_raw_stream.c'
   workflow_dispatch:
 
 permissions:
@@ -37,6 +37,44 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Refuse consumed formal qualification seed
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8'))
+          shipping = json.loads(Path('configs/shipping.xiaowo.json').read_text(encoding='utf-8'))
+          active = int(config['qualification_holdout_seed'])
+          retired = [int(value) for value in config['retired_qualification_holdout_seeds']]
+          model = shipping['model']
+          policy = shipping['nightly_policy']
+          frozen = int(model['qualification_seed'])
+          state = str(model['qualification_seed_state'])
+          reserved = int(policy['next_formal_candidate_seed_reserved'])
+
+          if state != 'consumed-and-frozen':
+              raise SystemExit(f'unexpected shipping qualification seed state: {state!r}')
+          if active == frozen:
+              raise SystemExit(
+                  f'formal qualification seed {active} is already consumed/frozen; '
+                  f'rotate explicitly to fresh reserved seed {reserved} before model training'
+              )
+          if frozen not in retired:
+              raise SystemExit(
+                  f'consumed qualification seed {frozen} must be retired before a new formal candidate'
+              )
+          if active != reserved:
+              raise SystemExit(
+                  f'formal qualification seed must rotate exactly to reserved seed {reserved}; got {active}'
+              )
+          if active in retired:
+              raise SystemExit(f'active qualification seed {active} is already retired')
+          print(
+              f'formal qualification rotation accepted: frozen={frozen} '
+              f'active={active} retired_count={len(retired)}'
+          )
+          PY
       - name: Verify shipping wake-word contract
         run: |
           python3 - <<'PY'

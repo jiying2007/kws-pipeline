@@ -190,6 +190,43 @@ def main() -> int:
     ):
         assert value not in nightly_workflow, f"far-nightly must not train/formally qualify: {value}"
 
+    formal_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
+    trigger_block = formal_workflow.split("  workflow_dispatch:", 1)[0]
+    require_all(
+        formal_workflow,
+        ROOT / ".github" / "workflows" / "model-training.yml",
+        (
+            "Refuse consumed formal qualification seed",
+            "if active == frozen:",
+            "if frozen not in retired:",
+            "if active != reserved:",
+            "qualification_seed_state",
+            "next_formal_candidate_seed_reserved",
+            "consumed/frozen",
+        ),
+    )
+    for path_value in (
+        "'configs/training/**'",
+        "'include/**'",
+        "'keywords/**'",
+        "'src/**'",
+        "'training/**'",
+        "'tools/build_vocab.py'",
+        "'tools/compile_keywords.py'",
+        "'tools/kws_vocab.py'",
+        "'tools/kws_wav.c'",
+        "'tools/kws_raw_stream.c'",
+    ):
+        assert path_value in trigger_block, f"model-training trigger missing model-sensitive path: {path_value}"
+    for non_model_path in (
+        "'.github/workflows/model-training.yml'",
+        "'CMakeLists.txt'",
+        "'cmake/**'",
+        "'tools/**'",
+        "'tests/test_decoder_retention.c'",
+    ):
+        assert non_model_path not in trigger_block, f"model-training trigger still includes non-model path: {non_model_path}"
+
     shipping_boundary = shipping["shipping_evidence_boundary"]
     assert shipping_boundary["final_afe_required"] is True
     assert shipping_boundary["real_human_acoustic_required"] is True
