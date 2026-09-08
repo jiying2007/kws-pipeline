@@ -39,13 +39,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           HUMAN_TAG: ${{ inputs.human_qualification_tag }}
           PROFILE: ${{ inputs.target_profile }}
-          TARGET_ROOT: ${{ env.KWS_TARGET_QUALIFICATION_ROOT }}
         shell: bash
         run: |
           set -euo pipefail
-          case "$PROFILE" in *'/'*|*'\\'*|*'..'*) echo 'unsafe target profile' >&2; exit 2;; esac
-          test -n "$TARGET_ROOT"
-          bundle="$TARGET_ROOT/$PROFILE"
+          [[ "$PROFILE" =~ ^[A-Za-z0-9._-]{1,64}$ ]] || {
+            echo 'unsafe target profile' >&2
+            exit 2
+          }
+          test -n "${KWS_TARGET_QUALIFICATION_ROOT:-}" || {
+            echo 'self-hosted runner must define KWS_TARGET_QUALIFICATION_ROOT' >&2
+            exit 2
+          }
+          bundle="${KWS_TARGET_QUALIFICATION_ROOT}/${PROFILE}"
           test -d "$bundle"
           test -f "$bundle/target-profile.json"
           deployment_tag="$(jq -r '.deployment_tag' commercial/target-qualification.policy.json)"
@@ -67,7 +72,11 @@ jobs:
           deployment_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${deployment_tag}")"
           jq -e --arg target "$deployment_target" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' <<<"$deployment_json" >/dev/null
           gh release download "$deployment_tag" --repo "$GITHUB_REPOSITORY" --dir build/deployment \
-            --pattern deployment-manifest.json --pattern xiaowo-model.kwm --pattern xiaowo-keywords.kwk
+            --pattern deployment-manifest.json \
+            --pattern xiaowo-model.kwm \
+            --pattern xiaowo-keywords.kwk \
+            --pattern DEPLOYMENT_SHA256SUMS
+          (cd build/deployment && grep -E '(deployment-manifest\.json|xiaowo-model\.kwm|xiaowo-keywords\.kwk)$' DEPLOYMENT_SHA256SUMS | sha256sum -c -)
           test "$(jq -r '.source_sha' build/deployment/deployment-manifest.json)" = "$deployment_target"
           printf 'bundle=%s\ndeployment_tag=%s\ndeployment_target=%s\n' "$bundle" "$deployment_tag" "$deployment_target" >> "$GITHUB_OUTPUT"
 
