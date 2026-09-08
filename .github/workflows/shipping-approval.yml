@@ -34,9 +34,12 @@ jobs:
         run: |
           set -euo pipefail
           bash governance/require_current_main.sh
-          mkdir -p build/approval/governance
+          mkdir -p build/approval/governance build/approval/policies
           cp build/control-plane/live-main-ruleset.json build/approval/governance/
           cp build/control-plane/verification.json build/approval/governance/
+          cp commercial/real-human-qualification.policy.json build/approval/policies/
+          cp commercial/target-qualification.policy.json build/approval/policies/
+          cp commercial/target-resource-budget.schema.json build/approval/policies/
 
       - name: Resolve immutable deployment and Phase-A evidence
         id: base
@@ -76,6 +79,7 @@ jobs:
           test "$(jq -r '.deployment_tag' build/approval/phase-a/public-phase-a-receipt.json)" = "$deployment_tag"
           test "$(jq -r '.deployment_target' build/approval/phase-a/public-phase-a-receipt.json)" = "$target"
           test "$(jq -r '.qualification_summary_sha256' build/approval/phase-a/public-phase-a-receipt.json)" = "$(sha256sum build/approval/phase-a/real-human-qualification-summary.json | awk '{print $1}')"
+          test "$(jq -r '.evidence_sha256.policy' build/approval/phase-a/real-human-qualification-summary.json)" = "$(sha256sum commercial/real-human-qualification.policy.json | awk '{print $1}')"
           printf 'deployment_tag=%s\ntarget=%s\n' "$deployment_tag" "$target" >> "$GITHUB_OUTPUT"
 
       - name: Resolve immutable Phase-B target cohort
@@ -96,10 +100,14 @@ jobs:
             --pattern public-target-cohort-receipt.json \
             --pattern target-cohort-qualification-summary.json \
             --pattern TARGET_COHORT_SHA256SUMS \
-            --pattern target-qualification.policy.json
+            --pattern target-qualification.policy.json \
+            --pattern target-resource-budget.schema.json \
+            --pattern resource-budget.json
           (cd build/approval/phase-b && sha256sum -c TARGET_COHORT_SHA256SUMS)
+          test "$(sha256sum build/approval/phase-b/target-qualification.policy.json | awk '{print $1}')" = "$(sha256sum commercial/target-qualification.policy.json | awk '{print $1}')"
           receipt=build/approval/phase-b/public-target-cohort-receipt.json
           summary=build/approval/phase-b/target-cohort-qualification-summary.json
+          budget=build/approval/phase-b/resource-budget.json
           test "$(jq -r '.qualified' "$receipt")" = true
           test "$(jq -r '.shipping_approved' "$receipt")" = false
           test "$(jq -r '.deployment_tag' "$receipt")" = "$DEPLOYMENT_TAG"
@@ -108,8 +116,14 @@ jobs:
           test "$(jq -r '.qualification_summary_sha256' "$receipt")" = "$(sha256sum "$summary" | awk '{print $1}')"
           test "$(jq -r '.qualified' "$summary")" = true
           test "$(jq -r '.next_gate' "$summary")" = shipping-approval-promotion
+          test "$(jq -r '.policy_sha256' "$summary")" = "$(sha256sum commercial/target-qualification.policy.json | awk '{print $1}')"
           test "$(jq -r '.dut_count' "$summary")" -ge "$(jq -r '.cohort.min_unique_duts' commercial/target-qualification.policy.json)"
           test "$(jq -r '.long_soak_duts' "$summary")" -ge "$(jq -r '.cohort.min_long_soak_duts' commercial/target-qualification.policy.json)"
+          budget_sha="$(sha256sum "$budget" | awk '{print $1}')"
+          test "$budget_sha" = "$(jq -r '.resource_budget_sha256' "$receipt")"
+          test "$budget_sha" = "$(jq -r '.resource_budget_sha256' "$summary")"
+          test "$(jq -r '.budget_id' "$budget")" = "$(jq -r '.resource_budget_id' "$summary")"
+          test "$(jq -r '.status' "$budget")" = approved
 
       - name: Assemble terminal shipping approval manifest
         id: manifest
@@ -132,6 +146,7 @@ jobs:
           human = load(root/'phase-a/real-human-qualification-summary.json')
           cohort_receipt = load(root/'phase-b/public-target-cohort-receipt.json')
           cohort = load(root/'phase-b/target-cohort-qualification-summary.json')
+          budget = load(root/'phase-b/resource-budget.json')
           governance = load(root/'governance/verification.json')
           if governance.get('qualified') is not True:
               raise SystemExit('live governance verification is not qualified')
@@ -141,6 +156,9 @@ jobs:
               raise SystemExit('Phase A/B final AFE identity mismatch')
           if human_receipt['corpus_sha256'] != cohort_receipt['human_corpus_sha256']:
               raise SystemExit('Phase A/B human corpus identity mismatch')
+          budget_sha = sha(root/'phase-b/resource-budget.json')
+          if cohort_receipt['resource_budget_sha256'] != budget_sha or cohort['resource_budget_sha256'] != budget_sha:
+              raise SystemExit('Phase B resource budget identity mismatch')
           manifest = {
               'schema_version': 1,
               'status': 'shipping-approved',
@@ -153,6 +171,10 @@ jobs:
               'deployment_manifest_sha256': sha(root/'deployment/deployment-manifest.json'),
               'model_release': deployment['model_release'],
               'shipping_wake_words': shipping['shipping_wake_words'],
+              'qualification_policies': {
+                  'phase_a_sha256': sha(root/'policies/real-human-qualification.policy.json'),
+                  'phase_b_sha256': sha(root/'policies/target-qualification.policy.json'),
+              },
               'human_qualification': {
                   'tag': os.environ['HUMAN_TAG'],
                   'corpus_sha256': human['corpus_sha256'],
@@ -165,6 +187,13 @@ jobs:
                   'dut_ids': cohort['dut_ids'],
                   'board_revision': cohort['board_revision'],
                   'summary_sha256': sha(root/'phase-b/target-cohort-qualification-summary.json'),
+              },
+              'resource_budget': {
+                  'budget_id': budget['budget_id'],
+                  'sha256': budget_sha,
+                  'measurement_contract_id': budget['measurement_contract_id'],
+                  'authority': budget['authority'],
+                  'approved_at_utc': budget['approved_at_utc'],
               },
               'repository_governance': {
                   'ruleset_name': governance['ruleset_name'],
@@ -182,7 +211,8 @@ jobs:
             shipping-approval-manifest.json \
             deployment/deployment-manifest.json deployment/shipping.xiaowo.json \
             phase-a/public-phase-a-receipt.json phase-a/real-human-qualification-summary.json \
-            phase-b/public-target-cohort-receipt.json phase-b/target-cohort-qualification-summary.json \
+            phase-b/public-target-cohort-receipt.json phase-b/target-cohort-qualification-summary.json phase-b/resource-budget.json \
+            policies/real-human-qualification.policy.json policies/target-qualification.policy.json policies/target-resource-budget.schema.json \
             governance/main-ruleset-target.json governance/live-main-ruleset.json governance/verification.json \
             > SHIPPING_APPROVAL_SHA256SUMS && sha256sum -c SHIPPING_APPROVAL_SHA256SUMS)
           digest="$(sha256sum build/approval/shipping-approval-manifest.json | awk '{print $1}')"
@@ -212,8 +242,9 @@ jobs:
             build/approval/phase-a/real-human-qualification-summary.json \
             build/approval/phase-b/public-target-cohort-receipt.json \
             build/approval/phase-b/target-cohort-qualification-summary.json \
+            build/approval/phase-b/resource-budget.json \
             --repo "$GITHUB_REPOSITORY" \
             --target "$TARGET_SHA" \
             --title "kws-pipeline shipping approval ${TAG#shipping-approved-}" \
-            --notes 'Terminal shipping approval for one immutable deployment tuple. This Release is the product approval authority; it does not mutate model weights, thresholds, decoder behavior, training state or the fail-closed repository candidate contract.'
+            --notes 'Terminal shipping approval for one immutable deployment tuple, current Phase-A/Phase-B policies, one approved SKU resource budget, physical target cohort and live repository governance. This Release is the product approval authority; it does not mutate model weights, thresholds, decoder behavior or training state.'
           gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" | jq -e --arg target "$TARGET_SHA" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' >/dev/null
