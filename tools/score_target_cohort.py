@@ -46,11 +46,23 @@ def main() -> int:
     duts = [str(item["dut_id"]) for item in summaries]
     if len(set(duts)) != len(duts):
         raise ValueError("target cohort contains duplicate DUT IDs")
+    evidence_hashes = [str(item["evidence_sha256"]["target_evidence"]) for item in summaries]
+    if len(set(evidence_hashes)) != len(evidence_hashes):
+        raise ValueError("target cohort reuses one physical evidence object across multiple DUTs")
+
     failures: list[str] = []
     if len(duts) < int(cohort["min_unique_duts"]):
         failures.append("minimum-unique-duts")
 
-    identity_keys = ["deployment_tag", "deployment_target", "human_qualification_tag", "human_corpus_sha256", "final_afe_identity_sha256", "sku", "board_revision"]
+    identity_keys = [
+        "deployment_tag",
+        "deployment_target",
+        "human_qualification_tag",
+        "human_corpus_sha256",
+        "final_afe_identity_sha256",
+        "sku",
+        "board_revision",
+    ]
     identities = {key: {str(item[key]) for item in summaries} for key in identity_keys}
     required_same = {
         "deployment_tag": bool(cohort["require_same_deployment"]),
@@ -66,7 +78,9 @@ def main() -> int:
             failures.append(f"identity-{key}")
 
     long_soak = float(cohort["min_long_soak_hours"])
-    long_count = sum(1 for item in summaries if float(item["metrics"]["soak_hours"]) >= long_soak)
+    long_count = sum(
+        1 for item in summaries if float(item["metrics"]["soak_hours"]) >= long_soak
+    )
     if long_count < int(cohort["min_long_soak_duts"]):
         failures.append("minimum-long-soak-duts")
 
@@ -114,7 +128,10 @@ def main() -> int:
         "next_gate": "shipping-approval-promotion" if not failures else "physical-target-cohort-failed",
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
+    args.output.write_text(
+        json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(result, sort_keys=True, ensure_ascii=False, allow_nan=False))
     return 0 if result["qualified"] else 1
 
