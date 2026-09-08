@@ -1,0 +1,153 @@
+name: target-cohort-promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      human_qualification_tag:
+        description: Immutable Phase-A human qualification tag
+        required: true
+        type: string
+      target_dut_tags:
+        description: Comma-separated immutable target-qualified tags (at least 3 unique DUTs)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify live main governance and Phase-A identity
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          main_json="$(gh api "repos/${GITHUB_REPOSITORY}/branches/main")"
+          test "$(jq -r '.protected' <<<"$main_json")" = true
+          rulesets="$(gh api "repos/${GITHUB_REPOSITORY}/rulesets")"
+          ruleset_id="$(jq -r '[.[] | select(.name == "kws-main-terminal" and .target == "branch" and .enforcement == "active")][0].id // empty' <<<"$rulesets")"
+          test -n "$ruleset_id"
+          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${ruleset_id}" > build-live-ruleset.json
+          python3 governance/verify_live_main_ruleset.py --target governance/main-ruleset-target.json --live build-live-ruleset.json >/dev/null
+
+          mkdir -p build/cohort/phase-a
+          human_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${HUMAN_TAG}")"
+          jq -e '.draft == false and .prerelease == false and .immutable == true' <<<"$human_json" >/dev/null
+          gh release download "$HUMAN_TAG" --repo "$GITHUB_REPOSITORY" --dir build/cohort/phase-a \
+            --pattern public-phase-a-receipt.json --pattern real-human-qualification-summary.json
+          test "$(jq -r '.qualified' build/cohort/phase-a/public-phase-a-receipt.json)" = true
+          test "$(jq -r '.shipping_approved' build/cohort/phase-a/public-phase-a-receipt.json)" = false
+          summary_sha="$(sha256sum build/cohort/phase-a/real-human-qualification-summary.json | awk '{print $1}')"
+          test "$summary_sha" = "$(jq -r '.qualification_summary_sha256' build/cohort/phase-a/public-phase-a-receipt.json)"
+          printf 'deployment_target=%s\n' "$(jq -r '.deployment_target' build/cohort/phase-a/public-phase-a-receipt.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Download and verify immutable target-DUT receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAGS: ${{ inputs.target_dut_tags }}
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+          TARGET_SHA: ${{ steps.base.outputs.deployment_target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/cohort/duts
+          IFS=',' read -r -a tags <<<"$TAGS"
+          test "${#tags[@]}" -ge 3
+          declare -A seen=()
+          index=0
+          for raw in "${tags[@]}"; do
+            tag="${raw//[[:space:]]/}"
+            [[ "$tag" =~ ^target-qualified-[0-9a-f]{16}$ ]] || { echo "invalid target tag: $tag" >&2; exit 2; }
+            test -z "${seen[$tag]:-}" || { echo "duplicate target tag: $tag" >&2; exit 2; }
+            seen[$tag]=1
+            dir="build/cohort/duts/$index"
+            mkdir -p "$dir"
+            release_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}")"
+            jq -e --arg target "$TARGET_SHA" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' <<<"$release_json" >/dev/null
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir "$dir" \
+              --pattern public-target-dut-receipt.json \
+              --pattern target-dut-qualification-summary.json \
+              --pattern TARGET_DUT_PUBLIC_SHA256SUMS
+            (cd "$dir" && sha256sum -c TARGET_DUT_PUBLIC_SHA256SUMS)
+            test "$(jq -r '.qualified' "$dir/public-target-dut-receipt.json")" = true
+            test "$(jq -r '.shipping_approved' "$dir/public-target-dut-receipt.json")" = false
+            test "$(jq -r '.human_qualification_tag' "$dir/public-target-dut-receipt.json")" = "$HUMAN_TAG"
+            receipt_sha="$(jq -r '.qualification_summary_sha256' "$dir/public-target-dut-receipt.json")"
+            test "$receipt_sha" = "$(sha256sum "$dir/target-dut-qualification-summary.json" | awk '{print $1}')"
+            index=$((index + 1))
+          done
+
+      - name: Enforce multi-DUT cohort policy
+        id: cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          while IFS= read -r path; do args+=(--summary "$path"); done < <(find build/cohort/duts -name target-dut-qualification-summary.json -print | sort)
+          python3 tools/score_target_cohort.py \
+            --policy commercial/target-qualification.policy.json \
+            "${args[@]}" \
+            --output build/cohort/target-cohort-qualification-summary.json
+          digest="$(sha256sum build/cohort/target-cohort-qualification-summary.json | awk '{print $1}')"
+          printf 'digest=%s\ntag=target-cohort-qualified-%s\n' "$digest" "${digest:0:16}" >> "$GITHUB_OUTPUT"
+
+      - name: Freeze cohort receipt and checksums
+        env:
+          TAG: ${{ steps.cohort.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          summary=build/cohort/target-cohort-qualification-summary.json
+          jq -n \
+            --arg tag "$TAG" \
+            --arg deployment_tag "$(jq -r '.deployment_tag' "$summary")" \
+            --arg deployment_target "$(jq -r '.deployment_target' "$summary")" \
+            --arg human_tag "$(jq -r '.human_qualification_tag' "$summary")" \
+            --arg human_corpus "$(jq -r '.human_corpus_sha256' "$summary")" \
+            --arg afe_identity "$(jq -r '.final_afe_identity_sha256' "$summary")" \
+            --arg summary_sha "$(sha256sum "$summary" | awk '{print $1}')" \
+            '{schema_version:1,phase:"physical-target-cohort-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,qualification_summary_sha256:$summary_sha,next_gate:"shipping-approval-promotion"}' \
+            > build/cohort/public-target-cohort-receipt.json
+          cp commercial/target-qualification.policy.json build/cohort/
+          (cd build/cohort && sha256sum target-qualification.policy.json target-cohort-qualification-summary.json public-target-cohort-receipt.json > TARGET_COHORT_SHA256SUMS && sha256sum -c TARGET_COHORT_SHA256SUMS)
+
+      - name: Attest target cohort
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: build/cohort/TARGET_COHORT_SHA256SUMS
+
+      - name: Publish immutable target cohort
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.cohort.outputs.tag }}
+          TARGET_SHA: ${{ steps.base.outputs.deployment_target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "target cohort release already exists: $TAG" >&2
+            exit 2
+          fi
+          gh release create "$TAG" \
+            build/cohort/public-target-cohort-receipt.json \
+            build/cohort/target-cohort-qualification-summary.json \
+            build/cohort/target-qualification.policy.json \
+            build/cohort/TARGET_COHORT_SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "KWS physical target cohort qualification ${TAG#target-cohort-qualified-}" \
+            --notes 'Multi-DUT physical target qualification passed and is bound to the immutable Phase-A human evidence and deployment. shipping_approved remains false pending explicit final promotion.'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" | jq -e --arg target "$TARGET_SHA" '.immutable == true and .target_commitish == $target' >/dev/null
