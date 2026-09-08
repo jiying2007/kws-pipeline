@@ -17,52 +17,35 @@ def sha(path: pathlib.Path) -> str:
 
 
 def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(
-        args,
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
+    completed = subprocess.run(args, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
     if completed.returncode != expect:
-        raise AssertionError(
-            f"expected exit {expect}, got {completed.returncode}:\n{completed.stdout}"
-        )
+        raise AssertionError(f"expected exit {expect}, got {completed.returncode}:\n{completed.stdout}")
     return completed
 
 
 def write_runtime_soak(path: pathlib.Path, hours: float) -> None:
     elapsed = hours * 3600.0
-    path.write_text(
-        json.dumps(
-            {
-                "schema_version": 2,
-                "command": ["fixture-product-soak"],
-                "pid": 123,
-                "cpu_capacity_count": 1,
-                "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
-                "requested_hours": hours,
-                "elapsed_seconds": elapsed,
-                "elapsed_hours": hours,
-                "completed_requested_duration": True,
-                "termination_returncode": -15,
-                "sample_seconds": 60.0,
-                "initial_cpu_seconds": 10.0,
-                "samples": [
-                    {"elapsed_s": 0.0, "rss_kib": 500.0, "cpu_seconds": 10.0, "temp_c": 50.0},
-                    {"elapsed_s": elapsed, "rss_kib": 512.0, "cpu_seconds": 10.0 + elapsed * 0.05, "temp_c": 55.0},
-                ],
-                "max_rss_kib": 512.0,
-                "average_cpu_percent": 5.0,
-                "max_temp_c": 55.0,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    path.write_text(json.dumps({
+        "schema_version": 2,
+        "command": ["fixture-product-soak"],
+        "pid": 123,
+        "cpu_capacity_count": 1,
+        "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
+        "requested_hours": hours,
+        "elapsed_seconds": elapsed,
+        "elapsed_hours": hours,
+        "completed_requested_duration": True,
+        "termination_returncode": -15,
+        "sample_seconds": 60.0,
+        "initial_cpu_seconds": 10.0,
+        "samples": [
+            {"elapsed_s": 0.0, "rss_kib": 500.0, "cpu_seconds": 10.0, "temp_c": 50.0},
+            {"elapsed_s": elapsed, "rss_kib": 512.0, "cpu_seconds": 10.0 + elapsed * 0.05, "temp_c": 55.0},
+        ],
+        "max_rss_kib": 512.0,
+        "average_cpu_percent": 5.0,
+        "max_temp_c": 55.0,
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def make_bundle(root: pathlib.Path, *, source_sha: str, phase_a_tag: str, deployment_tag: str, afe_sha: str) -> pathlib.Path:
@@ -83,62 +66,39 @@ def make_bundle(root: pathlib.Path, *, source_sha: str, phase_a_tag: str, deploy
     continuity = raw / "audio-continuity.json"
     write_runtime_soak(soak, 24.0)
     power.write_text("t,power_mw\n0,123\n", encoding="utf-8")
-    continuity.write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "xrun_count": 0,
-                "discontinuity_count": 0,
-                "lost_samples": 0,
-                "backpressure_count": 0,
-            },
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    continuity.write_text(json.dumps({
+        "schema_version": 1,
+        "xrun_count": 0,
+        "discontinuity_count": 0,
+        "lost_samples": 0,
+        "backpressure_count": 0,
+    }, sort_keys=True) + "\n", encoding="utf-8")
     evidence_raw = bundle / "evidence-raw.jsonl"
     raw_paths = [soak, power, continuity]
-    evidence_raw.write_text(
-        "".join(
-            json.dumps(
-                {"name": path.name, "sha256": sha(path), "bytes": path.stat().st_size},
-                sort_keys=True,
-            )
-            + "\n"
-            for path in raw_paths
-        ),
-        encoding="utf-8",
-    )
+    evidence_raw.write_text("".join(
+        json.dumps({"name": path.name, "sha256": sha(path), "bytes": path.stat().st_size}, sort_keys=True) + "\n"
+        for path in raw_paths
+    ), encoding="utf-8")
 
     collector = ROOT / "tools/collect_target_evidence.py"
     attestation = bundle / "attestation-verification.json"
-    attestation.write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "verified": True,
-                "subject_kind": "kws-target-evidence",
-                "issuer": "fixture-trust-layer",
-                "trust_policy": "fixture-physical-policy",
-                "verified_at_utc": "2026-09-08T00:00:00Z",
-                "subject_sha256": sha(evidence_raw),
-                "collector_sha256": sha(collector),
-                "board_runner_sha256": sha(runner),
-                "model_sha256": sha(model),
-                "keyword_pack_sha256": sha(keywords),
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    attestation.write_text(json.dumps({
+        "schema_version": 1,
+        "verified": True,
+        "subject_kind": "kws-target-evidence",
+        "issuer": "fixture-trust-layer",
+        "trust_policy": "fixture-physical-policy",
+        "verified_at_utc": "2026-09-08T00:00:00Z",
+        "subject_sha256": sha(evidence_raw),
+        "collector_sha256": sha(collector),
+        "board_runner_sha256": sha(runner),
+        "model_sha256": sha(model),
+        "keyword_pack_sha256": sha(keywords),
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     target_evidence = bundle / "target-evidence.json"
     run(
-        sys.executable,
-        "tools/collect_target_evidence.py",
+        sys.executable, "tools/collect_target_evidence.py",
         "--output", str(target_evidence),
         "--target", "fixture-target",
         "--board-revision", "A",
@@ -170,7 +130,7 @@ def make_bundle(root: pathlib.Path, *, source_sha: str, phase_a_tag: str, deploy
     blocks = 100
     total_us = 100000.0
     p99 = 1000.0
-    board_summary = {
+    (bundle / "board-summary.json").write_text(json.dumps({
         "schema_version": 1,
         "runner_sha256": sha(runner),
         "model_sha256": sha(model),
@@ -196,32 +156,19 @@ def make_bundle(root: pathlib.Path, *, source_sha: str, phase_a_tag: str, deploy
         "max_process_us": 1100.0,
         "rtf": total_us / 2_000_000.0,
         "p99_headroom": 20000.0 / p99,
-    }
-    (bundle / "board-summary.json").write_text(
-        json.dumps(board_summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    (bundle / "target-profile.json").write_text(
-        json.dumps(
-            {
-                "schema_version": 1,
-                "profile_id": "fixture-target-a",
-                "human_qualification_tag": phase_a_tag,
-                "deployment_tag": deployment_tag,
-                "board_audio_class": "non-human-public-safe",
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (bundle / "target-profile.json").write_text(json.dumps({
+        "schema_version": 1,
+        "profile_id": "fixture-target-a",
+        "human_qualification_tag": phase_a_tag,
+        "deployment_tag": deployment_tag,
+        "board_audio_class": "non-human-public-safe",
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return bundle
 
 
 def main() -> int:
-    production = json.loads(
-        (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
-    )
+    production = json.loads((ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8"))
     assert production["shipping_approved"] is False
     assert production["per_dut_gates"]["min_soak_hours"] == 24.0
     assert production["cohort"]["min_unique_duts"] == 3
@@ -229,22 +176,39 @@ def main() -> int:
     assert production["cohort"]["min_long_soak_duts"] == 1
     assert production["board_audio_policy"]["human_derived_audio_forbidden"] is True
 
-    dut_workflow = (ROOT / ".github/workflows/target-dut-qualification.yml").read_text(encoding="utf-8")
-    cohort_workflow = (ROOT / ".github/workflows/target-cohort-promotion.yml").read_text(encoding="utf-8")
-    approval_workflow = (ROOT / ".github/workflows/shipping-approval.yml").read_text(encoding="utf-8")
-    for text in (dut_workflow, cohort_workflow, approval_workflow):
+    workflows = {
+        "real-human": (ROOT / ".github/workflows/real-human-qualification.yml").read_text(encoding="utf-8"),
+        "target-dut": (ROOT / ".github/workflows/target-dut-qualification.yml").read_text(encoding="utf-8"),
+        "target-cohort": (ROOT / ".github/workflows/target-cohort-promotion.yml").read_text(encoding="utf-8"),
+        "shipping": (ROOT / ".github/workflows/shipping-approval.yml").read_text(encoding="utf-8"),
+    }
+    for name, text in workflows.items():
         header = text.split("permissions:", 1)[0]
-        assert "workflow_dispatch:" in header
-        assert "pull_request:" not in header
-        assert "push:" not in header
-        assert "train_ctc.py" not in text
-        assert "iterate_domain.py" not in text
+        assert "workflow_dispatch:" in header, name
+        assert "pull_request:" not in header, name
+        assert "push:" not in header, name
+        assert "governance/require_current_main.sh" in text, name
+        assert "train_ctc.py" not in text, name
+        assert "iterate_domain.py" not in text, name
+    run("bash", "-n", "governance/require_current_main.sh")
+    control = (ROOT / "governance/require_current_main.sh").read_text(encoding="utf-8")
+    assert 'GITHUB_REF" != "refs/heads/main"' in control
+    assert 'GITHUB_SHA" != "$main_sha"' in control
+    assert "verify_live_main_ruleset.py" in control
+
+    dut_workflow = workflows["target-dut"]
+    cohort_workflow = workflows["target-cohort"]
+    approval_workflow = workflows["shipping"]
     assert "runs-on: [self-hosted, kws-target-board]" in dut_workflow
+    assert "${KWS_TARGET_QUALIFICATION_ROOT:-}" in dut_workflow
+    assert "${{ env.KWS_TARGET_QUALIFICATION_ROOT }}" not in dut_workflow
     assert "board_audio_class" in dut_workflow
+    assert "DEPLOYMENT_SHA256SUMS" in dut_workflow
     assert "target-cohort-qualified-" in cohort_workflow
+    assert "TARGET_DUT_PUBLIC_SHA256SUMS" in cohort_workflow
     assert "shipping-approved-" in approval_workflow
     assert "shipping_approved': True" in approval_workflow
-    assert "verify_live_main_ruleset.py" in approval_workflow
+    assert "DEPLOYMENT_SHA256SUMS" in approval_workflow
     assert "public-phase-a-receipt.json" in approval_workflow
     assert "public-target-cohort-receipt.json" in approval_workflow
 
@@ -256,77 +220,45 @@ def main() -> int:
         afe_executable = "e" * 64
         deployment_tag = "deployment-fixture0000"
         human_tag = "human-qualified-0123456789abcdef"
-        bundle = make_bundle(
-            root,
-            source_sha=source_sha,
-            phase_a_tag=human_tag,
-            deployment_tag=deployment_tag,
-            afe_sha=afe_executable,
-        )
+        bundle = make_bundle(root, source_sha=source_sha, phase_a_tag=human_tag, deployment_tag=deployment_tag, afe_sha=afe_executable)
         model = root / "model.kwm"
         keywords = root / "keywords.kwk"
         phase_a_summary = root / "phase-a-summary.json"
-        phase_a_summary.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "phase": "real-human-final-afe-acoustic-qualification",
-                    "qualified": True,
-                    "shipping_approved": False,
-                    "deployment_tag": deployment_tag,
-                    "corpus_sha256": corpus_sha,
-                    "afe": {
-                        "identity_sha256": afe_identity,
-                        "executable_sha256": afe_executable,
-                        "sku": "fixture-sku",
-                    },
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        phase_a_summary.write_text(json.dumps({
+            "schema_version": 1,
+            "phase": "real-human-final-afe-acoustic-qualification",
+            "qualified": True,
+            "shipping_approved": False,
+            "deployment_tag": deployment_tag,
+            "corpus_sha256": corpus_sha,
+            "afe": {"identity_sha256": afe_identity, "executable_sha256": afe_executable, "sku": "fixture-sku"},
+        }, indent=2) + "\n", encoding="utf-8")
         phase_a_receipt = root / "phase-a-receipt.json"
-        phase_a_receipt.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "phase": "real-human-final-afe-acoustic-qualification",
-                    "qualified": True,
-                    "shipping_approved": False,
-                    "deployment_tag": deployment_tag,
-                    "deployment_target": source_sha,
-                    "corpus_sha256": corpus_sha,
-                    "final_afe_identity_sha256": afe_identity,
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        phase_a_receipt.write_text(json.dumps({
+            "schema_version": 1,
+            "phase": "real-human-final-afe-acoustic-qualification",
+            "qualified": True,
+            "shipping_approved": False,
+            "deployment_tag": deployment_tag,
+            "deployment_target": source_sha,
+            "corpus_sha256": corpus_sha,
+            "final_afe_identity_sha256": afe_identity,
+        }, indent=2) + "\n", encoding="utf-8")
         deployment = root / "deployment.json"
-        deployment.write_text(
-            json.dumps(
-                {
-                    "schema_version": 1,
-                    "status": "commercial-candidate",
-                    "shipping_approved": False,
-                    "deployment_tag": deployment_tag,
-                    "source_sha": source_sha,
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        deployment.write_text(json.dumps({
+            "schema_version": 1,
+            "status": "commercial-candidate",
+            "shipping_approved": False,
+            "deployment_tag": deployment_tag,
+            "source_sha": source_sha,
+        }, indent=2) + "\n", encoding="utf-8")
         policy = json.loads(json.dumps(production))
         policy["deployment_tag"] = deployment_tag
         policy_path = root / "policy.json"
         policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
         dut_summary = root / "dut-summary.json"
         run(
-            sys.executable,
-            "tools/score_target_dut_qualification.py",
+            sys.executable, "tools/score_target_dut_qualification.py",
             "--bundle", str(bundle),
             "--policy", str(policy_path),
             "--phase-a-receipt", str(phase_a_receipt),
@@ -348,9 +280,7 @@ def main() -> int:
             value = json.loads(json.dumps(dut))
             value["dut_id"] = f"dut-{index}"
             value["metrics"]["soak_hours"] = hours
-            value["evidence_sha256"]["target_evidence"] = hashlib.sha256(
-                f"evidence-{index}".encode()
-            ).hexdigest()
+            value["evidence_sha256"]["target_evidence"] = hashlib.sha256(f"evidence-{index}".encode()).hexdigest()
             path = root / f"dut-{index}.json"
             path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
             cohort_paths.append(path)
@@ -367,9 +297,7 @@ def main() -> int:
         assert cohort["next_gate"] == "shipping-approval-promotion"
 
         duplicate = json.loads(cohort_paths[2].read_text(encoding="utf-8"))
-        duplicate["evidence_sha256"]["target_evidence"] = json.loads(
-            cohort_paths[0].read_text(encoding="utf-8")
-        )["evidence_sha256"]["target_evidence"]
+        duplicate["evidence_sha256"]["target_evidence"] = json.loads(cohort_paths[0].read_text(encoding="utf-8"))["evidence_sha256"]["target_evidence"]
         cohort_paths[2].write_text(json.dumps(duplicate) + "\n", encoding="utf-8")
         run(*args, expect=2)
 
