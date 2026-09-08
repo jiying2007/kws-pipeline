@@ -1,0 +1,250 @@
+name: shipping-approval
+
+on:
+  workflow_dispatch:
+    inputs:
+      human_qualification_tag:
+        description: Immutable Phase-A human qualification tag
+        required: true
+        type: string
+      target_cohort_tag:
+        description: Immutable Phase-B target cohort qualification tag
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  approve:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require exact current protected main control plane
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash governance/require_current_main.sh
+          mkdir -p build/approval/governance build/approval/policies
+          cp build/control-plane/live-main-ruleset.json build/approval/governance/
+          cp build/control-plane/verification.json build/approval/governance/
+          cp commercial/real-human-qualification.policy.json build/approval/policies/
+          cp commercial/target-qualification.policy.json build/approval/policies/
+          cp commercial/target-resource-budget.schema.json build/approval/policies/
+
+      - name: Resolve immutable deployment and Phase-A evidence
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deployment_tag="$(jq -r '.deployment_tag' commercial/target-qualification.policy.json)"
+          mkdir -p build/approval/deployment build/approval/phase-a
+          deployment_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${deployment_tag}")"
+          jq -e '.draft == false and .prerelease == false and .immutable == true' <<<"$deployment_json" >/dev/null
+          target="$(jq -r '.target_commitish' <<<"$deployment_json")"
+          gh release download "$deployment_tag" --repo "$GITHUB_REPOSITORY" --dir build/approval/deployment \
+            --pattern deployment-manifest.json \
+            --pattern DEPLOYMENT_SHA256SUMS \
+            --pattern shipping.xiaowo.json \
+            --pattern xiaowo-model.kwm \
+            --pattern xiaowo-keywords.kwk
+          (cd build/approval/deployment && grep -E '(deployment-manifest\.json|shipping\.xiaowo\.json|xiaowo-model\.kwm|xiaowo-keywords\.kwk)$' DEPLOYMENT_SHA256SUMS | sha256sum -c -)
+          test "$(jq -r '.source_sha' build/approval/deployment/deployment-manifest.json)" = "$target"
+          test "$(jq -r '.shipping_approved' build/approval/deployment/deployment-manifest.json)" = false
+          test "$(jq -r '.shipping_approved' build/approval/deployment/shipping.xiaowo.json)" = false
+          test "$(jq -r '.shipping_wake_words | length' build/approval/deployment/shipping.xiaowo.json)" = 2
+          test "$(jq -r '.shipping_wake_words[0].text' build/approval/deployment/shipping.xiaowo.json)" = '你好小窝'
+          test "$(jq -r '.shipping_wake_words[1].text' build/approval/deployment/shipping.xiaowo.json)" = '小窝小窝'
+          test "$(jq -r '.shipping_wake_words[0].threshold' build/approval/deployment/shipping.xiaowo.json)" = 0.55
+          test "$(jq -r '.shipping_wake_words[1].threshold' build/approval/deployment/shipping.xiaowo.json)" = 0.55
+
+          human_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${HUMAN_TAG}")"
+          jq -e --arg target "$target" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' <<<"$human_json" >/dev/null
+          gh release download "$HUMAN_TAG" --repo "$GITHUB_REPOSITORY" --dir build/approval/phase-a \
+            --pattern public-phase-a-receipt.json --pattern real-human-qualification-summary.json
+          test "$(jq -r '.qualified' build/approval/phase-a/public-phase-a-receipt.json)" = true
+          test "$(jq -r '.shipping_approved' build/approval/phase-a/public-phase-a-receipt.json)" = false
+          test "$(jq -r '.deployment_tag' build/approval/phase-a/public-phase-a-receipt.json)" = "$deployment_tag"
+          test "$(jq -r '.deployment_target' build/approval/phase-a/public-phase-a-receipt.json)" = "$target"
+          test "$(jq -r '.qualification_summary_sha256' build/approval/phase-a/public-phase-a-receipt.json)" = "$(sha256sum build/approval/phase-a/real-human-qualification-summary.json | awk '{print $1}')"
+          test "$(jq -r '.evidence_sha256.policy' build/approval/phase-a/real-human-qualification-summary.json)" = "$(sha256sum commercial/real-human-qualification.policy.json | awk '{print $1}')"
+          printf 'deployment_tag=%s\ntarget=%s\n' "$deployment_tag" "$target" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve immutable Phase-B target cohort
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT_TAG: ${{ inputs.target_cohort_tag }}
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+          DEPLOYMENT_TAG: ${{ steps.base.outputs.deployment_tag }}
+          TARGET_SHA: ${{ steps.base.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$COHORT_TAG" =~ ^target-cohort-qualified-[0-9a-f]{16}$ ]]
+          mkdir -p build/approval/phase-b
+          cohort_json="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${COHORT_TAG}")"
+          jq -e --arg target "$TARGET_SHA" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' <<<"$cohort_json" >/dev/null
+          gh release download "$COHORT_TAG" --repo "$GITHUB_REPOSITORY" --dir build/approval/phase-b \
+            --pattern public-target-cohort-receipt.json \
+            --pattern target-cohort-qualification-summary.json \
+            --pattern TARGET_COHORT_SHA256SUMS \
+            --pattern target-qualification.policy.json \
+            --pattern target-resource-budget.schema.json \
+            --pattern resource-budget.json
+          (cd build/approval/phase-b && sha256sum -c TARGET_COHORT_SHA256SUMS)
+          test "$(sha256sum build/approval/phase-b/target-qualification.policy.json | awk '{print $1}')" = "$(sha256sum commercial/target-qualification.policy.json | awk '{print $1}')"
+          receipt=build/approval/phase-b/public-target-cohort-receipt.json
+          summary=build/approval/phase-b/target-cohort-qualification-summary.json
+          budget=build/approval/phase-b/resource-budget.json
+          test "$(jq -r '.qualified' "$receipt")" = true
+          test "$(jq -r '.shipping_approved' "$receipt")" = false
+          test "$(jq -r '.deployment_tag' "$receipt")" = "$DEPLOYMENT_TAG"
+          test "$(jq -r '.deployment_target' "$receipt")" = "$TARGET_SHA"
+          test "$(jq -r '.human_qualification_tag' "$receipt")" = "$HUMAN_TAG"
+          test "$(jq -r '.qualification_summary_sha256' "$receipt")" = "$(sha256sum "$summary" | awk '{print $1}')"
+          test "$(jq -r '.qualified' "$summary")" = true
+          test "$(jq -r '.next_gate' "$summary")" = shipping-approval-promotion
+          test "$(jq -r '.policy_sha256' "$summary")" = "$(sha256sum commercial/target-qualification.policy.json | awk '{print $1}')"
+          test "$(jq -r '.dut_count' "$summary")" -ge "$(jq -r '.cohort.min_unique_duts' commercial/target-qualification.policy.json)"
+          test "$(jq -r '.long_soak_duts' "$summary")" -ge "$(jq -r '.cohort.min_long_soak_duts' commercial/target-qualification.policy.json)"
+          budget_sha="$(sha256sum "$budget" | awk '{print $1}')"
+          test "$budget_sha" = "$(jq -r '.resource_budget_sha256' "$receipt")"
+          test "$budget_sha" = "$(jq -r '.resource_budget_sha256' "$summary")"
+          test "$(jq -r '.budget_id' "$budget")" = "$(jq -r '.resource_budget_id' "$summary")"
+          test "$(jq -r '.status' "$budget")" = approved
+
+      - name: Assemble terminal shipping approval manifest
+        id: manifest
+        env:
+          HUMAN_TAG: ${{ inputs.human_qualification_tag }}
+          COHORT_TAG: ${{ inputs.target_cohort_tag }}
+          DEPLOYMENT_TAG: ${{ steps.base.outputs.deployment_tag }}
+          TARGET_SHA: ${{ steps.base.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path('build/approval')
+          def load(path): return json.loads(path.read_text(encoding='utf-8'))
+          def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+          deployment = load(root/'deployment/deployment-manifest.json')
+          shipping = load(root/'deployment/shipping.xiaowo.json')
+          human_receipt = load(root/'phase-a/public-phase-a-receipt.json')
+          human = load(root/'phase-a/real-human-qualification-summary.json')
+          cohort_receipt = load(root/'phase-b/public-target-cohort-receipt.json')
+          cohort = load(root/'phase-b/target-cohort-qualification-summary.json')
+          budget = load(root/'phase-b/resource-budget.json')
+          governance = load(root/'governance/verification.json')
+          if governance.get('qualified') is not True:
+              raise SystemExit('live governance verification is not qualified')
+          if human.get('qualified') is not True or cohort.get('qualified') is not True:
+              raise SystemExit('Phase A/B evidence is not qualified')
+          if human_receipt['final_afe_identity_sha256'] != cohort_receipt['final_afe_identity_sha256']:
+              raise SystemExit('Phase A/B final AFE identity mismatch')
+          if human_receipt['corpus_sha256'] != cohort_receipt['human_corpus_sha256']:
+              raise SystemExit('Phase A/B human corpus identity mismatch')
+          budget_sha = sha(root/'phase-b/resource-budget.json')
+          if cohort_receipt['resource_budget_sha256'] != budget_sha or cohort['resource_budget_sha256'] != budget_sha:
+              raise SystemExit('Phase B resource budget identity mismatch')
+          manifest = {
+              'schema_version': 1,
+              'status': 'shipping-approved',
+              'shipping_approved': True,
+              'shipping_approval_blockers': [],
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'approval_control_sha': os.environ['GITHUB_SHA'],
+              'deployment_tag': os.environ['DEPLOYMENT_TAG'],
+              'deployment_target': os.environ['TARGET_SHA'],
+              'deployment_manifest_sha256': sha(root/'deployment/deployment-manifest.json'),
+              'model_release': deployment['model_release'],
+              'shipping_wake_words': shipping['shipping_wake_words'],
+              'qualification_policies': {
+                  'phase_a_sha256': sha(root/'policies/real-human-qualification.policy.json'),
+                  'phase_b_sha256': sha(root/'policies/target-qualification.policy.json'),
+              },
+              'human_qualification': {
+                  'tag': os.environ['HUMAN_TAG'],
+                  'corpus_sha256': human['corpus_sha256'],
+                  'final_afe_identity_sha256': human_receipt['final_afe_identity_sha256'],
+                  'summary_sha256': sha(root/'phase-a/real-human-qualification-summary.json'),
+              },
+              'target_qualification': {
+                  'cohort_tag': os.environ['COHORT_TAG'],
+                  'dut_count': cohort['dut_count'],
+                  'dut_ids': cohort['dut_ids'],
+                  'board_revision': cohort['board_revision'],
+                  'summary_sha256': sha(root/'phase-b/target-cohort-qualification-summary.json'),
+              },
+              'resource_budget': {
+                  'budget_id': budget['budget_id'],
+                  'sha256': budget_sha,
+                  'measurement_contract_id': budget['measurement_contract_id'],
+                  'authority': budget['authority'],
+                  'approved_at_utc': budget['approved_at_utc'],
+              },
+              'repository_governance': {
+                  'ruleset_name': governance['ruleset_name'],
+                  'required_status_contexts': governance['required_status_contexts'],
+                  'verification_sha256': sha(root/'governance/verification.json'),
+                  'live_ruleset_sha256': sha(root/'governance/live-main-ruleset.json'),
+              },
+          }
+          out = root/'shipping-approval-manifest.json'
+          out.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)+'\n', encoding='utf-8')
+          PY
+          jq -e '.shipping_approved == true and .shipping_approval_blockers == [] and .status == "shipping-approved"' build/approval/shipping-approval-manifest.json >/dev/null
+          cp governance/main-ruleset-target.json build/approval/governance/
+          (cd build/approval && sha256sum \
+            shipping-approval-manifest.json \
+            deployment/deployment-manifest.json deployment/shipping.xiaowo.json \
+            phase-a/public-phase-a-receipt.json phase-a/real-human-qualification-summary.json \
+            phase-b/public-target-cohort-receipt.json phase-b/target-cohort-qualification-summary.json phase-b/resource-budget.json \
+            policies/real-human-qualification.policy.json policies/target-qualification.policy.json policies/target-resource-budget.schema.json \
+            governance/main-ruleset-target.json governance/live-main-ruleset.json governance/verification.json \
+            > SHIPPING_APPROVAL_SHA256SUMS && sha256sum -c SHIPPING_APPROVAL_SHA256SUMS)
+          digest="$(sha256sum build/approval/shipping-approval-manifest.json | awk '{print $1}')"
+          printf 'digest=%s\ntag=shipping-approved-%s\n' "$digest" "${digest:0:16}" >> "$GITHUB_OUTPUT"
+
+      - name: Attest terminal shipping approval
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-checksums: build/approval/SHIPPING_APPROVAL_SHA256SUMS
+
+      - name: Publish immutable shipping approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.manifest.outputs.tag }}
+          TARGET_SHA: ${{ steps.base.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "shipping approval already exists: $TAG" >&2
+            exit 2
+          fi
+          gh release create "$TAG" \
+            build/approval/shipping-approval-manifest.json \
+            build/approval/SHIPPING_APPROVAL_SHA256SUMS \
+            build/approval/phase-a/public-phase-a-receipt.json \
+            build/approval/phase-a/real-human-qualification-summary.json \
+            build/approval/phase-b/public-target-cohort-receipt.json \
+            build/approval/phase-b/target-cohort-qualification-summary.json \
+            build/approval/phase-b/resource-budget.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "kws-pipeline shipping approval ${TAG#shipping-approved-}" \
+            --notes 'Terminal shipping approval for one immutable deployment tuple, current Phase-A/Phase-B policies, one approved SKU resource budget, physical target cohort and live repository governance. This Release is the product approval authority; it does not mutate model weights, thresholds, decoder behavior or training state.'
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" | jq -e --arg target "$TARGET_SHA" '.draft == false and .prerelease == false and .immutable == true and .target_commitish == $target' >/dev/null

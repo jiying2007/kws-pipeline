@@ -184,6 +184,8 @@ If the final AFE executable/config changes after the marker is created, the run 
 
 ## Running the workflow
 
+The workflow must be dispatched from the exact current protected `main`; `governance/require_current_main.sh` rejects branch refs, stale main SHAs or weakened live rulesets before any held-out corpus is consumed.
+
 After the controlled self-hosted runner and private files are ready, dispatch `.github/workflows/real-human-qualification.yml` with only:
 
 - `deployment_tag=deployment-c20f3eb88e43`;
@@ -202,19 +204,20 @@ Both IDs are restricted to safe alphanumeric/`._-` forms so they cannot perform 
 
 The workflow performs, in order:
 
-1. verify the immutable deployment and all `DEPLOYMENT_SHA256SUMS` subjects;
-2. build the exact deployment-source `kws_wav` runtime;
-3. validate private human corpus identities/coverage/PII boundary;
-4. freeze actual final-AFE identity;
-5. create the immutable no-retry exposure marker;
-6. execute the frozen final AFE and reject any identity drift;
-7. run the frozen model/keyword pack through the real C runtime;
-8. score FRR/FAR/latency with the existing evaluation engine;
-9. use post-AFE negative duration for aggregate and critical-negative exposure;
-10. calculate one-sided Wilson/Poisson bounds;
-11. enforce aggregate, per-keyword and critical-slice gates;
-12. hash and attest non-audio evidence;
-13. retain non-audio evidence only.
+1. require exact current protected `main` and the live terminal ruleset;
+2. verify the immutable deployment and all `DEPLOYMENT_SHA256SUMS` subjects;
+3. build the exact deployment-source `kws_wav` runtime;
+4. validate private human corpus identities/coverage/PII boundary;
+5. freeze actual final-AFE identity;
+6. create the immutable no-retry exposure marker;
+7. execute the frozen final AFE and reject any identity drift;
+8. run the frozen model/keyword pack through the real C runtime;
+9. score FRR/FAR/latency with the existing evaluation engine;
+10. use post-AFE negative duration for aggregate and critical-negative exposure;
+11. calculate one-sided Wilson/Poisson bounds;
+12. enforce aggregate, per-keyword and critical-slice gates;
+13. hash and attest non-audio evidence;
+14. retain non-audio evidence only.
 
 A failure after exposure leaves the corpus consumed. The job fails; it does not automatically retrain or change any gate.
 
@@ -236,4 +239,4 @@ Phase A PASS changes the next gate to:
 physical-target-board-performance-and-soak
 ```
 
-Only after Phase B physical evidence also passes may an explicit reviewed shipping-approval path set `shipping_approved=true`.
+Continue with `TARGET_AND_SHIPPING_PROMOTION.md`. Phase B requires qualified physical evidence from multiple unique DUTs, and only the explicit Phase-C `shipping-approval` workflow may ultimately emit an immutable receipt with `shipping_approved=true`.

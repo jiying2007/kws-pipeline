@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jiying2007/kws-pipeline/commercial/target-bundle.schema.json",
+  "title": "KWS physical target qualification profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "human_qualification_tag",
+    "deployment_tag",
+    "resource_budget_id",
+    "board_audio_class"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"},
+    "human_qualification_tag": {"type": "string", "pattern": "^human-qualified-[0-9a-f]{16}$"},
+    "deployment_tag": {"type": "string", "pattern": "^deployment-[0-9a-f]{12}$"},
+    "resource_budget_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{3,96}$"},
+    "board_audio_class": {"const": "non-human-public-safe"}
+  }
+}

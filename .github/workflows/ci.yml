@@ -19,14 +19,66 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Install tracked-worktree integrity guard
+        run: |
+          set -euo pipefail
+          guard="$RUNNER_TEMP/check-tracked-worktree.sh"
+          cat >"$guard" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          stage=${1:?stage name required}
+
+          mapfile -d '' paths < <(git diff --name-only -z HEAD --)
+          if ((${#paths[@]} == 0)); then
+            echo "tracked-worktree clean after: $stage"
+            exit 0
+          fi
+
+          echo "::error title=Tracked worktree polluted::first detected after stage: $stage"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "tracked status:"
+          git status --short --untracked-files=no
+
+          for path in "${paths[@]}"; do
+            if head_blob=$(git rev-parse "HEAD:$path" 2>/dev/null); then
+              head_sha256=$(git show "HEAD:$path" | sha256sum | awk '{print $1}')
+            else
+              head_blob=MISSING
+              head_sha256=MISSING
+            fi
+
+            if [[ -f "$path" ]]; then
+              worktree_blob=$(git hash-object -- "$path")
+              worktree_sha256=$(sha256sum -- "$path" | awk '{print $1}')
+            elif [[ -e "$path" ]]; then
+              worktree_blob=NONREGULAR
+              worktree_sha256=NONREGULAR
+            else
+              worktree_blob=MISSING
+              worktree_sha256=MISSING
+            fi
+
+            printf 'path=%q head_blob=%s head_sha256=%s worktree_blob=%s worktree_sha256=%s\n' \
+              "$path" "$head_blob" "$head_sha256" "$worktree_blob" "$worktree_sha256"
+          done
+          exit 1
+          EOF
+          chmod +x "$guard"
+          "$guard" "checkout baseline"
       - name: Configure
         env:
           CC: ${{ matrix.cc }}
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+      - name: Verify tracked worktree after Configure
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Configure"'
       - name: Build
         run: cmake --build build --parallel
+      - name: Verify tracked worktree after Build
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Build"'
       - name: Test
         run: ctest --test-dir build --output-on-failure
+      - name: Verify tracked worktree after Test
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test"'
       - name: Clang static analysis
         if: matrix.cc == 'clang'
         run: |
@@ -35,74 +87,153 @@ jobs:
             clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
               -Iinclude -Isrc -Ibuild/generated "$source"
           done
+      - name: Verify tracked worktree after Clang static analysis
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Clang static analysis"'
       - name: Frontend C/spec parity
         run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
+      - name: Verify tracked worktree after Frontend C/spec parity
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frontend C/spec parity"'
       - name: Dataset split leakage audit
         run: python3 tests/test_dataset_audit.py
+      - name: Verify tracked worktree after Dataset split leakage audit
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset split leakage audit"'
       - name: Corpus byte identity
         run: python3 tests/test_corpus_identity.py
+      - name: Verify tracked worktree after Corpus byte identity
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus byte identity"'
       - name: False reject positive replay
         run: python3 tests/test_false_reject_mining.py
+      - name: Verify tracked worktree after False reject positive replay
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "False reject positive replay"'
       - name: Synthetic model self-training loop
         run: python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
+      - name: Verify tracked worktree after Synthetic model self-training loop
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Synthetic model self-training loop"'
       - name: Acoustic scene renderer
         run: python3 tests/test_domain_scene.py
+      - name: Verify tracked worktree after Acoustic scene renderer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Acoustic scene renderer"'
       - name: Domain metric scorer
         run: python3 tests/test_domain_metrics.py
+      - name: Verify tracked worktree after Domain metric scorer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
       - name: Adaptive domain curriculum
         run: python3 tests/test_domain_curriculum.py
+      - name: Verify tracked worktree after Adaptive domain curriculum
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Adaptive domain curriculum"'
       - name: Domain-aware multi-frontend training loop
         run: python3 tests/test_domain_loop.py --runner ./build/kws_wav
+      - name: Verify tracked worktree after Domain-aware multi-frontend training loop
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain-aware multi-frontend training loop"'
       - name: Streaming long-FAR smoke
         run: python3 tests/test_long_far.py --runner ./build/kws_raw_stream
+      - name: Verify tracked worktree after Streaming long-FAR smoke
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Streaming long-FAR smoke"'
       - name: Keyword compiler
         run: python3 tests/test_keyword_compile.py
+      - name: Verify tracked worktree after Keyword compiler
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Keyword compiler"'
       - name: Product metric scorer
         run: python3 tests/test_eval.py
+      - name: Verify tracked worktree after Product metric scorer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product metric scorer"'
       - name: Statistical qualification bounds
         run: python3 tests/test_statistical_bounds.py
+      - name: Verify tracked worktree after Statistical qualification bounds
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Statistical qualification bounds"'
       - name: Corpus provenance sidecar
         run: python3 tests/test_run_corpus.py
+      - name: Verify tracked worktree after Corpus provenance sidecar
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus provenance sidecar"'
       - name: Real-artifact board benchmark contract
         run: python3 tests/test_board_bench.py --runner ./build/kws_board_bench
+      - name: Verify tracked worktree after Real-artifact board benchmark contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-artifact board benchmark contract"'
       - name: Release qualification manifest and gate
         run: python3 tests/test_release_qualification.py
+      - name: Verify tracked worktree after Release qualification manifest and gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release qualification manifest and gate"'
       - name: Runtime soak collector contract
         run: python3 tests/test_runtime_soak.py
+      - name: Verify tracked worktree after Runtime soak collector contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime soak collector contract"'
       - name: Target evidence collector contract
         run: python3 tests/test_target_evidence.py
+      - name: Verify tracked worktree after Target evidence collector contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target evidence collector contract"'
       - name: Audio discontinuity contract
         run: python3 tests/test_audio_discontinuity_contract.py
+      - name: Verify tracked worktree after Audio discontinuity contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Audio discontinuity contract"'
       - name: Training supply-chain contract
         run: python3 tests/test_training_supply_chain.py
+      - name: Verify tracked worktree after Training supply-chain contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
       - name: Model promotion contract
         run: python3 tests/test_model_promotion.py
+      - name: Verify tracked worktree after Model promotion contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
       - name: Reproducibility tool contract
         run: python3 tests/test_reproducible_sdk.py
+      - name: Verify tracked worktree after Reproducibility tool contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducibility tool contract"'
       - name: Terminal documentation contract
         run: python3 tests/test_terminal_docs.py
+      - name: Verify tracked worktree after Terminal documentation contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Terminal documentation contract"'
       - name: Live main ruleset verifier contract
         run: python3 tests/test_live_ruleset_contract.py
+      - name: Verify tracked worktree after Live main ruleset verifier contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Live main ruleset verifier contract"'
       - name: Real-human qualification contract
         run: python3 tests/test_real_human_qualification.py
+      - name: Verify tracked worktree after Real-human qualification contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-human qualification contract"'
+      - name: Target and shipping promotion contract
+        run: python3 tests/test_target_shipping_contract.py
+      - name: Upload target and shipping promotion diagnostic
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: target-shipping-contract-diagnostic-${{ matrix.cc }}
+          path: .target-shipping-contract-diagnostic.json
+          if-no-files-found: error
+          include-hidden-files: true
+      - name: Verify tracked worktree after Target and shipping promotion contract
+        if: always()
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target and shipping promotion contract"'
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
+      - name: Verify tracked worktree after Test inventory tool contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test inventory tool contract"'
       - name: Hosted benchmark signal
         run: ./build/kws_bench
+      - name: Verify tracked worktree after Hosted benchmark signal
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted benchmark signal"'
       - name: Install SDK
         run: cmake --install build --prefix "$RUNNER_TEMP/kws-install"
+      - name: Verify tracked worktree after Install SDK
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Install SDK"'
       - name: Validate pkg-config metadata
         run: PKG_CONFIG_PATH="$RUNNER_TEMP/kws-install/lib/pkgconfig" pkg-config --modversion kws-pipeline
+      - name: Verify tracked worktree after Validate pkg-config metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Validate pkg-config metadata"'
       - name: Configure clean SDK consumer
         env:
           CC: ${{ matrix.cc }}
         run: >-
           cmake -S tests/consumer -B build-consumer
           -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/kws-install"
+      - name: Verify tracked worktree after Configure clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Configure clean SDK consumer"'
       - name: Build clean SDK consumer
         run: cmake --build build-consumer --parallel
+      - name: Verify tracked worktree after Build clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Build clean SDK consumer"'
       - name: Run clean SDK consumer
         run: ./build-consumer/kws_pipeline_consumer
+      - name: Verify tracked worktree after Run clean SDK consumer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Run clean SDK consumer"'
       - name: Independent second SDK build
         env:
           CC: ${{ matrix.cc }}
@@ -110,17 +241,25 @@ jobs:
           cmake -S . -B build-repro -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
           cmake --build build-repro --parallel
           cmake --install build-repro --prefix "$RUNNER_TEMP/kws-install-repro"
+      - name: Verify tracked worktree after Independent second SDK build
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Independent second SDK build"'
       - name: Reproducible installed SDK gate
         run: >-
           python3 tools/check_reproducible_sdk.py
           "$RUNNER_TEMP/kws-install" "$RUNNER_TEMP/kws-install-repro"
+      - name: Verify tracked worktree after Reproducible installed SDK gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducible installed SDK gate"'
       - name: Python test inventory
         run: >-
           python3 tools/test_inventory.py
           --workflow .github/workflows/ci.yml
           --workflow .github/workflows/training-integration.yml
+      - name: Verify tracked worktree after Python test inventory
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python test inventory"'
       - name: Python syntax
         run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py governance/*.py
+      - name: Verify tracked worktree after Python syntax
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python syntax"'
 
   coverage:
     runs-on: ubuntu-latest

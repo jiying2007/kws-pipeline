@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "policy_id": "xiaowo-physical-target-phase-b-v2",
+  "deployment_tag": "deployment-c20f3eb88e43",
+  "shipping_approved": false,
+  "per_dut_hard_gates": {
+    "min_soak_hours": 24.0,
+    "require_p99_below_block_deadline": true,
+    "require_rtf_below_realtime": true,
+    "require_p99_headroom_above_one": true,
+    "max_xrun_count": 0,
+    "max_discontinuity_count": 0,
+    "max_lost_samples": 0,
+    "max_backpressure_count": 0
+  },
+  "resource_budget": {
+    "required": true,
+    "schema": "commercial/target-resource-budget.schema.json",
+    "fixed_bundle_file": "resource-budget.json",
+    "required_limit_fields": [
+      "max_cpu_percent",
+      "max_rss_kib",
+      "max_stack_high_water_bytes",
+      "max_temp_c",
+      "max_average_power_mw"
+    ]
+  },
+  "cohort": {
+    "min_unique_duts": 3,
+    "min_long_soak_hours": 72.0,
+    "min_long_soak_duts": 1,
+    "require_same_sku": true,
+    "require_same_board_revision": true,
+    "require_same_deployment": true,
+    "require_same_phase_a": true,
+    "require_same_final_afe_identity": true,
+    "require_same_resource_budget": true
+  },
+  "board_audio_policy": {
+    "required_class": "non-human-public-safe",
+    "human_derived_audio_forbidden": true
+  },
+  "required_raw_evidence": [
+    "runtime-soak.json",
+    "power.csv",
+    "audio-continuity.json"
+  ]
+}
