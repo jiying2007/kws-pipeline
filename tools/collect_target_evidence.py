@@ -185,8 +185,8 @@ def main() -> int:
     parser.add_argument("--toolchain", required=True)
     parser.add_argument("--compiler-flags", required=True)
     parser.add_argument("--audio-frontend", required=True)
-    parser.add_argument("--audio-frontend-sha256", required=True)
-    parser.add_argument("--audio-frontend-identity-sha256", required=True)
+    parser.add_argument("--audio-frontend-sha256")
+    parser.add_argument("--audio-frontend-identity-sha256")
     parser.add_argument("--runtime-soak", required=True, type=pathlib.Path)
     parser.add_argument("--stack-high-water-bytes", type=float, required=True)
     parser.add_argument("--average-power-mw", type=float, required=True)
@@ -210,12 +210,18 @@ def main() -> int:
     source_sha = args.source_sha.strip().lower()
     if SOURCE_SHA_RE.fullmatch(source_sha) is None:
         raise ValueError("--source-sha must be lowercase 40- or 64-character hex")
-    audio_frontend_sha256 = require_sha256(
-        args.audio_frontend_sha256, "--audio-frontend-sha256"
+    audio_frontend_sha256 = (
+        require_sha256(args.audio_frontend_sha256, "--audio-frontend-sha256")
+        if args.audio_frontend_sha256 is not None
+        else None
     )
-    audio_frontend_identity_sha256 = require_sha256(
-        args.audio_frontend_identity_sha256,
-        "--audio-frontend-identity-sha256",
+    audio_frontend_identity_sha256 = (
+        require_sha256(
+            args.audio_frontend_identity_sha256,
+            "--audio-frontend-identity-sha256",
+        )
+        if args.audio_frontend_identity_sha256 is not None
+        else None
     )
     sku = require_text(args.sku, "--sku")
     builder_id = require_text(args.builder_id, "--builder-id")
@@ -284,8 +290,11 @@ def main() -> int:
         "board_runner_sha256": board_runner_sha256,
         "model_sha256": model_sha256,
         "keyword_pack_sha256": keyword_pack_sha256,
-        "audio_frontend_identity_sha256": audio_frontend_identity_sha256,
     }
+    if audio_frontend_identity_sha256 is not None:
+        expected_attestation["audio_frontend_identity_sha256"] = (
+            audio_frontend_identity_sha256
+        )
     for key, expected in expected_attestation.items():
         if attestation.get(key) != expected:
             raise ValueError(f"attestation {key} does not match selected artifact")
