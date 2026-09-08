@@ -86,6 +86,33 @@ def make_bundle(
     runner.write_bytes(b"fixture-board-runner")
     audio.write_bytes(b"non-human-board-audio")
 
+    resource_budget = bundle / "resource-budget.json"
+    resource_budget.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "status": "approved",
+                "budget_id": "fixture-budget-v1",
+                "sku": "fixture-sku",
+                "board_revision": "A",
+                "measurement_contract_id": "fixture-measurement-v1",
+                "authority": "fixture-product-owner",
+                "approved_at_utc": "2026-09-08T00:00:00Z",
+                "limits": {
+                    "max_cpu_percent": 10.0,
+                    "max_rss_kib": 2048.0,
+                    "max_stack_high_water_bytes": 65536.0,
+                    "max_temp_c": 70.0,
+                    "max_average_power_mw": 250.0,
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
     soak = raw / "runtime-soak.json"
     power = raw / "power.csv"
     continuity = raw / "audio-continuity.json"
@@ -136,6 +163,7 @@ def make_bundle(
                 "model_sha256": sha(model),
                 "keyword_pack_sha256": sha(keywords),
                 "audio_frontend_identity_sha256": afe_identity,
+                "resource_budget_sha256": sha(resource_budget),
             },
             indent=2,
             sort_keys=True,
@@ -157,6 +185,7 @@ def make_bundle(
         "--audio-frontend", "final-audio-pipeline",
         "--audio-frontend-sha256", afe_sha,
         "--audio-frontend-identity-sha256", afe_identity,
+        "--resource-budget", str(resource_budget),
         "--runtime-soak", str(soak),
         "--stack-high-water-bytes", "4096",
         "--average-power-mw", "123",
@@ -217,6 +246,7 @@ def make_bundle(
                 "profile_id": "fixture-target-a",
                 "human_qualification_tag": phase_a_tag,
                 "deployment_tag": deployment_tag,
+                "resource_budget_id": "fixture-budget-v1",
                 "board_audio_class": "non-human-public-safe",
             },
             indent=2,
@@ -232,11 +262,15 @@ def main() -> int:
     production = json.loads(
         (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
     )
+    assert production["schema_version"] == 2
     assert production["shipping_approved"] is False
-    assert production["per_dut_gates"]["min_soak_hours"] == 24.0
+    assert production["per_dut_hard_gates"]["min_soak_hours"] == 24.0
+    assert production["resource_budget"]["required"] is True
+    assert "max_average_power_mw" not in production["per_dut_hard_gates"]
     assert production["cohort"]["min_unique_duts"] == 3
     assert production["cohort"]["min_long_soak_hours"] == 72.0
     assert production["cohort"]["min_long_soak_duts"] == 1
+    assert production["cohort"]["require_same_resource_budget"] is True
     assert production["board_audio_policy"]["human_derived_audio_forbidden"] is True
 
     human_workflow = (ROOT / ".github/workflows/real-human-qualification.yml").read_text(encoding="utf-8")
@@ -254,10 +288,11 @@ def main() -> int:
         assert "governance/require_current_main.sh" in text
     assert "runs-on: [self-hosted, kws-target-board]" in dut_workflow
     assert "board_audio_class" in dut_workflow
+    assert "resource_budget" in dut_workflow
     assert "target-cohort-qualified-" in cohort_workflow
     assert "shipping-approved-" in approval_workflow
     assert "shipping_approved': True" in approval_workflow
-    assert "verify_live_main_ruleset.py" in approval_workflow
+    assert "verify_live_main_ruleset.py" in approval_workflow or "require_current_main.sh" in approval_workflow
     assert "public-phase-a-receipt.json" in approval_workflow
     assert "public-target-cohort-receipt.json" in approval_workflow
 
@@ -356,6 +391,8 @@ def main() -> int:
         assert dut["metrics"]["soak_hours"] == 24.0
         assert dut["continuity"]["xrun_count"] == 0
         assert dut["final_afe_identity_sha256"] == afe_identity
+        assert dut["resource_budget"]["budget_id"] == "fixture-budget-v1"
+        assert dut["resource_budget"]["sha256"] == sha(bundle / "resource-budget.json")
         assert dut["next_gate"] == "physical-target-cohort-qualification"
 
         drift = json.loads((bundle / "target-evidence.json").read_text(encoding="utf-8"))
@@ -399,6 +436,7 @@ def main() -> int:
         assert cohort["qualified"] is True
         assert cohort["dut_count"] == 3
         assert cohort["long_soak_duts"] == 1
+        assert cohort["resource_budget_sha256"] == dut["resource_budget"]["sha256"]
         assert cohort["next_gate"] == "shipping-approval-promotion"
 
         duplicate = json.loads(cohort_paths[2].read_text(encoding="utf-8"))
