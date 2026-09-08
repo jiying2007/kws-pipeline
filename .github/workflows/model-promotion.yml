@@ -368,7 +368,7 @@ jobs:
             tag="model-${EXPECTED_HEAD_SHA:0:12}"
           fi
           [[ "$tag" =~ ^model-[A-Za-z0-9._-]+$ ]]
-          if gh release view "$tag" >/dev/null 2>&1; then
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "model release already exists: $tag" >&2
             exit 2
           fi
@@ -395,6 +395,7 @@ jobs:
             dist/continuous-far-stream-contract.json \
             dist/model-promotion-manifest.json \
             dist/MODEL_SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" \
             --target "$EXPECTED_HEAD_SHA" \
             --title "kws-pipeline trained model ${EXPECTED_HEAD_SHA:0:12}" \
             --notes "Promoted from successful model-training run ${TRAINING_RUN_ID}. Deployable model SHA256: ${MODEL_SHA256}."
