@@ -65,6 +65,7 @@ jobs:
           test "$(jq -r '.human_qualification_tag' "$bundle/target-profile.json")" = "$HUMAN_TAG"
           test "$(jq -r '.deployment_tag' "$bundle/target-profile.json")" = "$deployment_tag"
           test "$(jq -r '.resource_budget_id' "$bundle/target-profile.json")" = "$(jq -r '.budget_id' "$bundle/$budget_file")"
+          test "$(jq -r '.board_audio_class' "$bundle/target-profile.json")" = "$(jq -r '.board_audio_policy.required_class' commercial/target-qualification.policy.json)"
           test "$(jq -r '.status' "$bundle/$budget_file")" = approved
 
           mkdir -p build/phase-a build/deployment
