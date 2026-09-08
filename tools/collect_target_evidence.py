@@ -187,6 +187,7 @@ def main() -> int:
     parser.add_argument("--audio-frontend", required=True)
     parser.add_argument("--audio-frontend-sha256")
     parser.add_argument("--audio-frontend-identity-sha256")
+    parser.add_argument("--resource-budget", type=pathlib.Path)
     parser.add_argument("--runtime-soak", required=True, type=pathlib.Path)
     parser.add_argument("--stack-high-water-bytes", type=float, required=True)
     parser.add_argument("--average-power-mw", type=float, required=True)
@@ -223,6 +224,9 @@ def main() -> int:
         if args.audio_frontend_identity_sha256 is not None
         else None
     )
+    resource_budget_sha256 = None
+    if args.resource_budget is not None:
+        resource_budget_sha256 = sha256_file(args.resource_budget.resolve(strict=True))
     sku = require_text(args.sku, "--sku")
     builder_id = require_text(args.builder_id, "--builder-id")
     dut_id = require_text(args.dut_id, "--dut-id")
@@ -295,6 +299,8 @@ def main() -> int:
         expected_attestation["audio_frontend_identity_sha256"] = (
             audio_frontend_identity_sha256
         )
+    if resource_budget_sha256 is not None:
+        expected_attestation["resource_budget_sha256"] = resource_budget_sha256
     for key, expected in expected_attestation.items():
         if attestation.get(key) != expected:
             raise ValueError(f"attestation {key} does not match selected artifact")
@@ -330,6 +336,7 @@ def main() -> int:
         "audio_frontend": args.audio_frontend,
         "audio_frontend_sha256": audio_frontend_sha256,
         "audio_frontend_identity_sha256": audio_frontend_identity_sha256,
+        "resource_budget_sha256": resource_budget_sha256,
         "kernel": platform.release(),
         "machine": platform.machine(),
         "cpu_online": read_text(pathlib.Path("/sys/devices/system/cpu/online")) or "unknown",
