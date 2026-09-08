@@ -39,6 +39,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Require exact current protected main control plane
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash governance/require_current_main.sh
+
       - name: Resolve private runner-local inputs and immutable deployment
         id: deployment
         env:
