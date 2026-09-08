@@ -27,6 +27,7 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
     )
     if completed.returncode != expect:
         raise AssertionError(
+            f"command: {' '.join(args)}\n"
             f"expected exit {expect}, got {completed.returncode}:\n{completed.stdout}"
         )
     return completed
@@ -451,4 +452,16 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except AssertionError as exc:
+        tb = exc.__traceback__
+        while tb is not None and tb.tb_next is not None:
+            tb = tb.tb_next
+        line = tb.tb_lineno if tb is not None else 1
+        message = str(exc) or "assertion failed"
+        message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(
+            f"::error file=tests/test_target_shipping_contract.py,line={line},title=target shipping contract::{message}"
+        )
+        raise
