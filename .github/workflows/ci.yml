@@ -85,6 +85,8 @@ jobs:
         run: python3 tests/test_live_ruleset_contract.py
       - name: Real-human qualification contract
         run: python3 tests/test_real_human_qualification.py
+      - name: Target and shipping promotion contract
+        run: python3 tests/test_target_shipping_contract.py
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
       - name: Hosted benchmark signal
