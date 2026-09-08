@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy_id": "xiaowo-real-human-phase-a-v1",
+  "deployment_tag": "deployment-c20f3eb88e43",
+  "shipping_approved": false,
+  "confidence_level": 0.95,
+  "minimums": {
+    "speakers": 40,
+    "sessions_per_speaker": 2,
+    "expected_wakes_total": 1200,
+    "expected_wakes_per_keyword": 600,
+    "negative_audio_hours": 24.0
+  },
+  "gates": {
+    "max_frr": 0.05,
+    "max_frr_upper_bound": 0.065,
+    "max_far_per_hour": 0.10,
+    "max_far_upper_bound_per_hour": 0.13,
+    "max_p95_post_end_latency_ms": 500.0
+  },
+  "critical_positive_slices": [
+    {"name": "distance_0p3_1m", "field": "distance_m", "min": 0.3, "max": 1.0, "min_expected_per_keyword": 100, "max_frr": 0.06},
+    {"name": "distance_1_3m", "field": "distance_m", "min_exclusive": 1.0, "max": 3.0, "min_expected_per_keyword": 150, "max_frr": 0.06},
+    {"name": "distance_3_5m", "field": "distance_m", "min_exclusive": 3.0, "max": 5.0, "min_expected_per_keyword": 150, "max_frr": 0.08},
+    {"name": "rear", "tag": "rear", "min_expected_per_keyword": 100, "max_frr": 0.08},
+    {"name": "playback", "tag": "playback", "min_expected_per_keyword": 100, "max_frr": 0.08},
+    {"name": "double_talk", "tag": "double_talk", "min_expected_per_keyword": 80, "max_frr": 0.08},
+    {"name": "robot_motion", "tag": "robot_motion", "min_expected_per_keyword": 80, "max_frr": 0.08}
+  ],
+  "critical_negative_exposure_hours": {
+    "household": 8.0,
+    "speech_confusion": 4.0,
+    "playback": 4.0,
+    "robot_motion": 4.0
+  },
+  "identity_policy": {
+    "required": ["speaker_id", "session_id", "source_id", "room_id", "device_id"],
+    "pseudonymous_only": true,
+    "forbidden_fields": ["name", "full_name", "email", "phone", "address", "id_number"]
+  },
+  "privacy": {
+    "raw_audio_public_upload_allowed": false,
+    "public_evidence_may_include": ["content_hashes", "pseudonymous_ids", "aggregate_metrics", "coverage", "provenance", "attestations"]
+  }
+}
