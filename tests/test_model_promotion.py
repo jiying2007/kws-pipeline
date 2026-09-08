@@ -36,15 +36,36 @@ def main() -> int:
         "xiaowo-model-provenance.json",
         "xiaowo-keywords.kwk",
         "xiaowo-keywords.tsv",
+        "training-run-summary.json",
+        "qualification-summary.json",
+        "qualification-cohort.json",
+        "robustness-summary.json",
+        "continuous-far-summary.json",
+        "continuous-far-stream-contract.json",
+        "model provenance SHA does not match promoted model.kwm",
+        "model provenance checkpoint SHA does not match promoted model.pt",
+        "training summary artifact SHA mismatch",
+        "qualification evidence is not strict 256/256 zero-error",
+        "qualification keyword {keyword_id} is not 128/128",
+        "robustness evidence is not qualified with zero failures",
+        "continuous FAR evidence is not zero-error",
+        "full_negative_manifest_coverage",
+        "two-character 小窝 is not a shipping wake word",
+        "provenance_repository_sha",
+        "provenance_tree_sha",
+        "expected_tree_sha",
+        "git_tree(os.environ['EXPECTED_HEAD_SHA'])",
+        "model provenance repository tree differs from the requested training HEAD tree",
         "MODEL_SHA256SUMS",
         "model-promotion-manifest.json",
+        "'schema_version': 2",
         "subject-checksums: dist/MODEL_SHA256SUMS",
         "--target \"$EXPECTED_HEAD_SHA\"",
     ):
         require(text, needle)
 
     if "latest" in lowered:
-        raise AssertionError("model promotion must never select an ambiguous latest training artifact")
+        raise AssertionError("model promotion must never select an ambiguous training artifact")
     if "cancel-in-progress: true" in lowered:
         raise AssertionError("model promotion must not cancel another promotion for the same provenance")
     if 'tags:\n      - "v*"' in text:
