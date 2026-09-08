@@ -81,6 +81,8 @@ jobs:
         run: python3 tests/test_reproducible_sdk.py
       - name: Terminal documentation contract
         run: python3 tests/test_terminal_docs.py
+      - name: Live main ruleset verifier contract
+        run: python3 tests/test_live_ruleset_contract.py
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
       - name: Hosted benchmark signal
@@ -116,7 +118,7 @@ jobs:
           --workflow .github/workflows/ci.yml
           --workflow .github/workflows/training-integration.yml
       - name: Python syntax
-        run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
+        run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py governance/*.py
 
   coverage:
     runs-on: ubuntu-latest
