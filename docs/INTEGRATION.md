@@ -12,6 +12,8 @@ microphones -> audio-pipeline (BF/AEC/RES/NS/AGC as SKU requires)
 
 Do not run two independent resamplers when `audio-pipeline` already emits 16-kHz mono. KWS normally consumes post-AEC/post-NS audio so local speaker playback and device noise are reduced before wake detection. Validate thresholds against the exact AGC configuration because gain changes alter score distributions.
 
+The current promoted model is `model-749187ec1d66`. `configs/shipping.xiaowo.json` is the machine-readable product authority and contains exactly `你好小窝` and `小窝小窝`; generic overlap fixtures are decoder tests, not additional shipping wake words.
+
 ## Field-updatable initialization
 
 ```c
@@ -29,7 +31,7 @@ kws_engine_init(arena, bytes, &model, &cfg, &kws);
 kws_engine_set_keyword_pack(kws, &pack);
 ```
 
-The deployable artifact contract remains **KWSP model ABI v2 + KWKP keyword-pack ABI v3** in v0.3. Their vocabulary fingerprints must match exactly. The keyword-pack object may be discarded after the setter returns; the model blob must remain alive because model tensors are zero-copy views into it and must satisfy the documented alignment requirement.
+The deployable runtime artifact contract remains **KWSP model ABI v2 + KWKP keyword-pack ABI v3**. Their vocabulary fingerprints must match exactly. The keyword-pack object may be discarded after the setter returns; the model blob must remain alive because model tensors are zero-copy views into it and must satisfy the documented alignment requirement.
 
 For a firmware-linked generated C table use:
 
@@ -42,7 +44,7 @@ kws_engine_set_keywords(kws,
 
 The generated-table path performs the same vocabulary identity check as `.kwk`.
 
-For overlapping phrases, compile shared token paths into the same KWKP v3 pack and use `min_trailing_blanks`, `priority`, `prefix_policy` and `grace_frames`. `keywords/zh_cn_overlap_example.tsv` shows `小窝` / `小窝小窝`.
+For overlapping phrases, KWKP v3 supports `min_trailing_blanks`, `priority`, `prefix_policy` and `grace_frames`. `keywords/zh_cn_overlap_example.tsv` is a **decoder contract fixture only**; `keywords/zh_cn_example.tsv` is the current shipping pack.
 
 ## Audio calls
 
@@ -110,17 +112,43 @@ Synthetic/measured-domain training can invoke the final `audio-pipeline` through
 
 AFE identity binds the command template, actual executable SHA256, declared config-file bundle SHA256, input/output hashes and result sidecar rather than temporary paths. Reported AFE latency is added to event timing so BF/AEC/NS buffering or lookahead cannot silently shift wake-latency scoring.
 
+The repository-side shipping schema is **`commercial/afe-evidence.schema.json`**. Shipping-authoritative AFE evidence must bind at least:
+
+- `backend=command` and `shipping_authority=true`;
+- exact executable and config-bundle SHA256;
+- input PCM, output PCM and result-sidecar SHA256;
+- non-negative `latency_samples`;
+- mono PCM16 16 kHz;
+- exact SKU, microphone revision and enclosure revision.
+
+The synthetic `proxy` backend remains valid for development/domain stress, but it has no shipping authority. It cannot clear `shipping_evidence_boundary.final_afe_required` in `configs/shipping.xiaowo.json`.
+
 Threshold qualification must use the exact final microphone/enclosure/audio-pipeline stage composition and gain policy shipped on the SKU. Changing the AFE executable/config or hardware sound path creates a new qualification tuple.
+
+## Commercial-candidate deployment identity
+
+`.github/workflows/deployment-release.yml` creates a content-addressed `deployment-<source-sha12>` candidate only from the exact current protected `main`. It refuses publication unless:
+
+- the immutable promoted Model Release still targets exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`;
+- current runtime source (`CMakeLists.txt`, `cmake/`, `include/`, `src/`) is unchanged from the source used by the qualified model;
+- every promoted-model asset in `MODEL_SHA256SUMS` verifies;
+- two independently built installed SDK trees are byte-for-byte reproducible;
+- SDK/source/SPDX/model/qualification/robustness/FAR/shipping/nightly/AFE identities are frozen into `deployment-manifest.json` and `DEPLOYMENT_SHA256SUMS`;
+- provenance and SDK-SBOM attestations succeed.
+
+The deployment manifest is deliberately `commercial-candidate` with `shipping_approved=false`. Its only remaining blockers are the two evidence classes already declared by `configs/shipping.xiaowo.json`: real-human final-AFE acoustic qualification and physical target-board performance/soak.
 
 ## Release evidence boundary
 
-The integration layer must retain enough identity to connect the shipping data path to v0.3 qualification:
+The final product tuple must retain enough identity to connect the shipping data path to the candidate deployment and final qualification:
 
+- exact deployment Release/source SHA and SDK identity;
 - exact KWS model/pack/config;
-- exact audio-pipeline executable/config identity;
+- exact audio-pipeline executable/config identity and schema-valid AFE evidence;
 - microphone/enclosure/device revision;
 - discontinuity/XRUN policy and soak counters;
 - representative post-AFE board benchmark audio;
-- the original held-out qualification WAVs.
+- original held-out human qualification WAVs and corpus identity;
+- physical target-board raw measurements.
 
-Hosted tests can prove API contracts. Only the final device/audio path can prove real FAR/FRR and far-field behavior.
+Hosted tests can prove API and evidence contracts. Only the final device/audio path can prove real FAR/FRR, far-field behavior and physical performance. Until those two real-world evidence classes pass, `shipping_approved` must remain false.
