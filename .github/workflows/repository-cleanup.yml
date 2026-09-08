@@ -127,6 +127,8 @@ jobs:
               continue
             fi
 
+            # Re-read both safety conditions immediately before deletion to avoid
+            # racing a new push or PR created during the sweep.
             latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
             latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
