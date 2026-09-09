@@ -37,6 +37,7 @@ def margin(
     log_probs: torch.Tensor,
     target: list[int],
     keyword_sequences: list[list[int]] | None = None,
+    keyword_operating_points: list[dict] | None = None,
 ) -> torch.Tensor:
     targets, input_lengths, target_lengths, raw = true_nll(log_probs, target)
     return keyword_sequence_margin_loss(
@@ -49,21 +50,17 @@ def margin(
         or [[1, 2, 3, 4], [3, 4, 3, 4]],
         blank=0,
         margin=0.05,
+        keyword_operating_points=keyword_operating_points,
     )
 
 
 def main() -> int:
-    # A hard-negative kw2 prefix becomes unsafe when the missing terminal wo1 is
-    # acoustically present: the full wake path outranks the configured negative
-    # target and must receive a positive discriminative penalty.
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])
     assert float(unsafe_loss.item()) > 0.05
     unsafe_loss.mean().backward()
     assert unsafe.grad_fn is not None
 
-    # Adding unrelated wake words must not dilute the one dangerous path. Product
-    # semantics are wake-on-any-keyword, so the per-sample objective is max hinge.
     unsafe_more_keywords = make_logits([3, 4, 3, 4])
     expanded_loss = margin(
         unsafe_more_keywords,
@@ -72,20 +69,14 @@ def main() -> int:
     )
     assert abs(float(expanded_loss.item()) - float(unsafe_loss.item())) < 1.0e-5
 
-    # When the incomplete prefix really terminates before the final wake token,
-    # the true negative path already has adequate margin and needs no penalty.
     safe = make_logits([3, 4, 3])
     safe_loss = margin(safe, [3, 4, 3])
     assert float(safe_loss.item()) < 1.0e-6
 
-    # A clean genuine keyword must already beat both blank and other wake paths.
     positive = make_logits([1, 2, 3, 4])
     positive_loss = margin(positive, [1, 2, 3, 4])
     assert float(positive_loss.item()) < 1.0e-6
 
-    # Recall-side contract: all four target tokens are acoustically present, but
-    # blank remains stronger at every frame. The true wake explanation loses to
-    # blank and therefore must receive a positive sequence margin penalty.
     weak_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
     weak_logits[:, :, 0] = 6.0
     for position, token in zip([1, 3, 5, 7], [1, 2, 3, 4]):
@@ -96,9 +87,34 @@ def main() -> int:
     weak_loss.mean().backward()
     assert weak_logits.grad is not None
 
-    # If an input is too short to realize any wake sequence, each impossible wake sequence
-    # has +inf CTC NLL. It is safely separated and must not be converted to zero
-    # NLL, which would create a false margin penalty.
+    # A stricter negative margin on keyword 2 must increase the penalty for a
+    # partial "小窝小" target whose acoustic continuation realizes "小窝小窝".
+    default_partial = make_logits([3, 4, 3, 4])
+    default_partial_loss = margin(default_partial, [3, 4, 3])
+    strict_partial = make_logits([3, 4, 3, 4])
+    strict_partial_loss = margin(
+        strict_partial,
+        [3, 4, 3],
+        keyword_operating_points=[
+            {"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.05},
+            {"threshold": 0.55, "positive_margin": 0.055, "negative_margin": 0.06},
+        ],
+    )
+    assert float(strict_partial_loss.item()) > float(default_partial_loss.item())
+
+    # Per-keyword thresholds are independent: tightening keyword 1 must not move
+    # the keyword-2 negative ceiling when keyword 2 keeps the same operating point.
+    same_kw2 = make_logits([3, 4, 3, 4])
+    same_kw2_loss = margin(
+        same_kw2,
+        [3, 4, 3],
+        keyword_operating_points=[
+            {"threshold": 0.60, "positive_margin": 0.03, "negative_margin": 0.03},
+            {"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.05},
+        ],
+    )
+    assert abs(float(same_kw2_loss.item()) - float(default_partial_loss.item())) < 1.0e-5
+
     short_logits = torch.full((2, 1, 5), -6.0, dtype=torch.float32)
     short_logits[:, :, 0] = 6.0
     short_log_probs = short_logits.log_softmax(dim=2)
@@ -126,6 +142,20 @@ def main() -> int:
     )
     assert torch.isfinite(impossible_loss).all()
     assert float(impossible_loss.item()) == 0.0
+
+    for bad in (
+        [{"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.05}],
+        [
+            {"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.05},
+            {"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.60},
+        ],
+    ):
+        try:
+            margin(make_logits([1, 2, 3, 4]), [1, 2, 3, 4], keyword_operating_points=bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid keyword operating point must fail closed")
 
     print("test_sequence_margin: ok")
     return 0
