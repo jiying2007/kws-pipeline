@@ -18,7 +18,9 @@ from hard_negative_replay import (  # noqa: E402
 )
 from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
+    qualification_contract,
     select_calibration_threshold,
+    strict_dual_pass,
     warm_start_args,
 )
 
@@ -78,6 +80,41 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("empty calibration candidate set was accepted")
+
+    contract_records = [
+        {"round": 0, "calibration_gate": False, "test_gate": True},
+        {"round": 1, "calibration_gate": True, "test_gate": False},
+        {"round": 2, "calibration_gate": True, "test_gate": True},
+    ]
+    assert strict_dual_pass(contract_records[0]) is False
+    assert strict_dual_pass(contract_records[2]) is True
+    false_positive_regression = qualification_contract(
+        records=contract_records,
+        best=contract_records[0],
+        qualification_gate=True,
+    )
+    assert false_positive_regression == {
+        "evidence_class": "synthetic-domain-development",
+        "qualified": False,
+        "qualification_gate": True,
+        "iteration_objective_best_dual_pass": False,
+        "dual_pass_eligible_rounds": [2],
+    }
+    strict_success = qualification_contract(
+        records=contract_records,
+        best=contract_records[2],
+        qualification_gate=True,
+    )
+    assert strict_success["qualified"] is True
+    assert strict_success["evidence_class"] == "synthetic-domain-qualified"
+    assert strict_success["iteration_objective_best_dual_pass"] is True
+    strict_qualification_failure = qualification_contract(
+        records=contract_records,
+        best=contract_records[2],
+        qualification_gate=False,
+    )
+    assert strict_qualification_failure["qualified"] is False
+    assert strict_qualification_failure["evidence_class"] == "synthetic-domain-development"
 
     formal = json.loads(
         (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
@@ -267,6 +304,10 @@ def main() -> int:
         assert completed.returncode == 0, completed.returncode
         manifest = json.loads((work / "domain-loop-manifest.json").read_text(encoding="utf-8"))
         assert manifest["qualified"] is True
+        assert manifest["qualification_gate"] is True
+        assert manifest["iteration_objective_best_dual_pass"] is True
+        assert manifest["dual_pass_eligible_rounds"] == [0]
+        assert manifest["qualification_candidate_policy"] == "iteration-objective-best"
         assert manifest["evidence_class"] == "synthetic-domain-qualified"
         assert manifest["best_frontend"] in {"logmel", "pcen-lite"}
         assert {row["frontend"] for row in manifest["records"]} == {"logmel", "pcen-lite"}
