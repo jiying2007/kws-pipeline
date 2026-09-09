@@ -22,11 +22,11 @@ def main() -> int:
         "domains": {
             "distance:near": metric(0.01),
             "distance:mid": metric(0.04, latency=120.0),
-            "distance:far": metric(0.20, far=0.5, latency=400.0),
+            "distance:far": metric(0.05, far=0.1, latency=180.0),
             "azimuth:front": metric(0.01),
             "azimuth:side": metric(0.05),
-            "azimuth:rear": metric(0.18),
-            "snr:critical": metric(0.22, far=0.2, latency=420.0),
+            "azimuth:rear": metric(0.06),
+            "snr:critical": metric(0.07),
             "snr:low": metric(0.10),
             "snr:mid": metric(0.04),
             "snr:high": metric(0.01),
@@ -50,18 +50,18 @@ def main() -> int:
         "keyword_domains": {
             "1": {
                 "domains": {
-                    "distance:far": metric(0.12),
-                    "azimuth:rear": metric(0.15),
-                    "snr:critical": metric(0.18),
+                    "distance:far": metric(0.04),
+                    "azimuth:rear": metric(0.05),
+                    "snr:critical": metric(0.06),
                     "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(0.32),
                     "distance_azimuth_snr:distance_bin=3m|azimuth=rear|snr=critical": metric(0.08),
                 }
             },
             "2": {
                 "domains": {
-                    "distance:far": metric(0.20),
-                    "azimuth:rear": metric(0.21),
-                    "snr:critical": metric(0.24),
+                    "distance:far": metric(0.05),
+                    "azimuth:rear": metric(0.06),
+                    "snr:critical": metric(0.07),
                     "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(0.38),
                     "distance_azimuth_snr:distance_bin=5m|azimuth=side|snr=critical": metric(0.10),
                 }
@@ -70,10 +70,13 @@ def main() -> int:
     }
     result = update_curriculum(metrics, strength=3.0, max_weight=6.0)
     assert result["schema_version"] == 2
+    assert result["interaction_projection"] == "max-to-distance-azimuth-snr-marginals-v1"
     weights = result["dimension_weights"]
+    # The hard 5m/rear/critical triple must project into the marginals consumed
+    # by the ordinary train scene sampler, not live only in the report.
     assert weights["distance"]["far"] > weights["distance"]["mid"] > weights["distance"]["near"] >= 1.0
     assert weights["azimuth"]["rear"] > weights["azimuth"]["front"]
-    assert weights["snr"]["critical"] > weights["snr"]["low"] > weights["snr"]["high"]
+    assert weights["snr"]["critical"] > weights["snr"]["high"]
     assert weights["rt60"]["reverb"] > weights["rt60"]["dry"]
     assert weights["noise"]["motor"] > weights["noise"]["fan"]
     assert weights["playback"]["playback"] > weights["playback"]["no-playback"]
@@ -87,7 +90,11 @@ def main() -> int:
 
     kw = result["keyword_dimension_weights"]
     assert kw["1"]["distance"]["far"] > 1.0
+    assert kw["1"]["azimuth"]["rear"] > 1.0
+    assert kw["1"]["snr"]["critical"] > 1.0
     assert kw["2"]["distance"]["far"] > 1.0
+    assert kw["2"]["azimuth"]["rear"] > kw["2"]["azimuth"]["side"]
+    assert kw["2"]["snr"]["critical"] > 1.0
     assert (
         kw["2"]["distance_azimuth_snr"][
             "distance_bin=5m|azimuth=rear|snr=critical"
