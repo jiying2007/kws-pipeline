@@ -126,7 +126,6 @@ def main() -> int:
         ["1", "你好小窝", "0.55", "ni3 hao3 xiao3 wo1"],
         ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
     ]
-
     model = shipping["model"]
     assert model["release_tag"] == "model-749187ec1d66"
     assert model["training_run_id"] == 34134789576
@@ -150,7 +149,7 @@ def main() -> int:
     assert nightly_policy["may_render_formal_qualification"] is False
     assert nightly_policy["may_consume_formal_qualification_seed"] is False
     assert nightly_policy["formal_qualification_seed"] == 271838
-    assert nightly_policy["next_formal_candidate_seed_reserved"] == 271840
+    assert nightly_policy["next_formal_candidate_seed_reserved"] == 271841
 
     nightly_config = json.loads(
         (ROOT / "configs" / "nightly.xiaowo-frozen-model.json").read_text(encoding="utf-8")
