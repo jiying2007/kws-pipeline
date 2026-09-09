@@ -26,6 +26,13 @@ INTERACTION_DIMENSIONS = {
     "azimuth_snr",
     "distance_azimuth_snr",
 }
+DISTANCE_BIN_TO_BAND = {
+    "0.5m": "near",
+    "1m": "near",
+    "2m": "mid",
+    "3m": "far",
+    "5m": "far",
+}
 
 
 def finite(value, label: str) -> float:
@@ -102,6 +109,51 @@ def _weights_from_hardness(
     return weights
 
 
+def _interaction_fields(value: str) -> dict[str, str]:
+    result: dict[str, str] = {}
+    for field in value.split("|"):
+        if "=" not in field:
+            continue
+        key, item = field.split("=", 1)
+        if key and item:
+            result[key] = item
+    return result
+
+
+def _project_interactions(
+    dimension_hardness: dict[str, dict[str, float]],
+) -> dict[str, dict[str, float]]:
+    """Project joint-slice hardness into marginals consumed by scene sampling.
+
+    Exact joint slices remain intact for adaptive positive-stress replay. The
+    projection uses max, not sum, so one hard triple can raise the relevant
+    distance/azimuth/SNR marginals without multiplying the same evidence several
+    times or recreating the rejected hard far/rear floors.
+    """
+    projected = {
+        dimension: dict(values)
+        for dimension, values in dimension_hardness.items()
+    }
+    for dimension in INTERACTION_DIMENSIONS:
+        for value, score in dimension_hardness.get(dimension, {}).items():
+            fields = _interaction_fields(value)
+            distance_bin = fields.get("distance_bin")
+            if distance_bin is not None:
+                band = DISTANCE_BIN_TO_BAND.get(distance_bin)
+                if band is not None:
+                    target = projected.setdefault("distance", {})
+                    target[band] = max(target.get(band, 0.0), score)
+            azimuth = fields.get("azimuth")
+            if azimuth is not None:
+                target = projected.setdefault("azimuth", {})
+                target[azimuth] = max(target.get(azimuth, 0.0), score)
+            snr = fields.get("snr")
+            if snr is not None:
+                target = projected.setdefault("snr", {})
+                target[snr] = max(target.get(snr, 0.0), score)
+    return projected
+
+
 def _dimension_views(
     domains: dict,
     *,
@@ -109,8 +161,7 @@ def _dimension_views(
     strength: float,
     max_weight: float,
 ) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], list[tuple[float, str]]]:
-    dimension_hardness: dict[str, dict[str, float]] = {}
-    dimension_weights: dict[str, dict[str, float]] = {}
+    raw_hardness: dict[str, dict[str, float]] = {}
     ranked_domains: list[tuple[float, str]] = []
     for dimension, prefix in DIMENSION_PREFIXES.items():
         hardness: dict[str, float] = {}
@@ -121,9 +172,12 @@ def _dimension_views(
             score = metric_hardness(item, key)
             hardness[value_name] = score
             ranked_domains.append((score, key))
-        if not hardness:
-            continue
-        dimension_hardness[dimension] = hardness
+        if hardness:
+            raw_hardness[dimension] = hardness
+
+    dimension_hardness = _project_interactions(raw_hardness)
+    dimension_weights: dict[str, dict[str, float]] = {}
+    for dimension, hardness in dimension_hardness.items():
         dimension_weights[dimension] = _weights_from_hardness(
             hardness,
             base=base_lookup(dimension),
@@ -198,6 +252,7 @@ def update_curriculum(
         "keyword_dimension_weights": keyword_dimension_weights,
         "keyword_dimension_hardness": keyword_dimension_hardness,
         "keyword_worst_domains": keyword_worst_domains,
+        "interaction_projection": "max-to-distance-azimuth-snr-marginals-v1",
     }
 
 
