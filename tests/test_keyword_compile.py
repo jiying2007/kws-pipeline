@@ -11,6 +11,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens, vocab_fingerprint  # noqa: E402
+from validate_shipping_keywords import validate_shipping_keywords  # noqa: E402
 
 
 def compile_one(tokens: pathlib.Path, keywords: pathlib.Path, root: pathlib.Path):
@@ -93,6 +94,28 @@ def main() -> int:
         p1 = struct.unpack("<IfHBBBBH16H", pblob[72:120])
         assert p0[3:8] == (1, 2, 1, 0, 0)
         assert p1[3:8] == (0, 3, 2, 4, 0)
+
+        # Shipping validation must compare threshold semantics, not decimal formatting.
+        shipping = root / "shipping.tsv"
+        shipping.write_text(
+            "1\t你好小窝\t0.550000\tni3 hao3 xiao3 wo1\n"
+            "2\t小窝小窝\t0.55\txiao3 wo1 xiao3 wo1\n",
+            encoding="utf-8",
+        )
+        canonical = validate_shipping_keywords(shipping)
+        assert [item["threshold"] for item in canonical] == ["0.55", "0.55"]
+
+        drifted_shipping = root / "shipping-drifted.tsv"
+        drifted_shipping.write_text(
+            shipping.read_text(encoding="utf-8").replace("0.550000", "0.56", 1),
+            encoding="utf-8",
+        )
+        try:
+            validate_shipping_keywords(drifted_shipping)
+        except ValueError as exc:
+            assert "threshold drifted" in str(exc)
+        else:
+            raise AssertionError("shipping threshold semantic drift must be rejected")
 
         reordered = root / "tokens-reordered.txt"
         reordered.write_text("wo1 4\nxiao3 3\nhao3 2\nni3 1\n<blk> 0\n", encoding="utf-8")
