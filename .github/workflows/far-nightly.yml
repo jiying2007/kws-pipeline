@@ -164,17 +164,6 @@ jobs:
           ):
               raise SystemExit('released continuous-FAR evidence is not strict-pass')
 
-          rows = [
-              raw.split('\t')
-              for raw in (root / 'xiaowo-keywords.tsv').read_text(encoding='utf-8').splitlines()
-              if raw.strip() and not raw.lstrip().startswith('#')
-          ]
-          expected = [
-              ['1', '你好小窝', '0.55', 'ni3 hao3 xiao3 wo1'],
-              ['2', '小窝小窝', '0.55', 'xiao3 wo1 xiao3 wo1'],
-          ]
-          if rows != expected:
-              raise SystemExit(f'released shipping keyword contract drifted: {rows!r}')
           print(json.dumps({
               'release_tag': os.environ['MODEL_RELEASE_TAG'],
               'trained_head_sha': os.environ['EXPECTED_TRAINED_HEAD_SHA'],
@@ -186,6 +175,7 @@ jobs:
               'continuous_far_per_hour': 0.0,
           }, indent=2, sort_keys=True, ensure_ascii=False))
           PY
+          python3 tools/validate_shipping_keywords.py build/frozen-model/xiaowo-keywords.tsv
 
       - name: Render isolated nightly negative regression corpus
         shell: bash
