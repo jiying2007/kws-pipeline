@@ -40,12 +40,6 @@ POSITIVE_EXAMPLE_WEIGHT = 2.0
 ORDERED_TOKEN_LOSS_WEIGHT = 0.35
 KEYWORD_SEQUENCE_MARGIN = 0.05
 KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10
-# CTC intentionally ignores padded frames beyond each sample's true input
-# length. Give the streaming RNN an explicit post-utterance objective instead:
-# after a short 160-ms release allowance, the terminal scene background must
-# converge to blank before 500 ms. Repeating the final 80 ms of observed scene
-# context matches the continuous colored-noise shipping gate much better than
-# an all-zero feature tail, while still leaving target alignment untouched.
 RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
 RECURRENT_RELEASE_CONTEXT_STEPS = 4
@@ -134,15 +128,22 @@ def parse_token_ids(value, label: str) -> list[int]:
     raise ValueError(f"{label}: expected token id string/list")
 
 
-def load_keyword_sequences(path: pathlib.Path, token_map: dict[str, int]) -> list[list[int]]:
-    sequences: list[list[int]] = []
-    seen: set[tuple[int, ...]] = set()
+def _keyword_rows(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
+    rows: list[dict] = []
+    seen_sequences: set[tuple[int, ...]] = set()
+    seen_ids: set[int] = set()
     for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
         cols = raw.split("\t")
         if len(cols) < 4:
             raise ValueError(f"{path}:{line_no}: expected keyword TSV with token column")
+        keyword_id = int(cols[0])
+        if keyword_id <= 0 or keyword_id in seen_ids:
+            raise ValueError(f"{path}:{line_no}: keyword id must be unique and positive")
+        threshold = float(cols[2])
+        if not math.isfinite(threshold) or not 0.0 < threshold < 1.0:
+            raise ValueError(f"{path}:{line_no}: threshold must be finite and in (0,1)")
         names = cols[3].split()
         if not names:
             raise ValueError(f"{path}:{line_no}: keyword token sequence is empty")
@@ -153,15 +154,89 @@ def load_keyword_sequences(path: pathlib.Path, token_map: dict[str, int]) -> lis
             )
         sequence = [int(token_map[name]) for name in names]
         key = tuple(sequence)
-        if key in seen:
+        if key in seen_sequences:
             raise ValueError(f"{path}:{line_no}: duplicate keyword token sequence")
         if any(token <= 0 for token in sequence):
             raise ValueError(f"{path}:{line_no}: keyword sequence may not contain blank")
-        seen.add(key)
-        sequences.append(sequence)
-    if not sequences:
+        seen_ids.add(keyword_id)
+        seen_sequences.add(key)
+        rows.append(
+            {
+                "id": keyword_id,
+                "text": cols[1].strip(),
+                "threshold": threshold,
+                "sequence": sequence,
+            }
+        )
+    if not rows:
         raise ValueError("keyword TSV contains no wake sequences")
-    return sequences
+    return rows
+
+
+def load_keyword_sequences(path: pathlib.Path, token_map: dict[str, int]) -> list[list[int]]:
+    return [list(row["sequence"]) for row in _keyword_rows(path, token_map)]
+
+
+def keyword_margin_profile_path(keywords_path: pathlib.Path) -> pathlib.Path:
+    return keywords_path.with_suffix(keywords_path.suffix + ".margin.json")
+
+
+def load_keyword_operating_points(
+    keywords_path: pathlib.Path,
+    token_map: dict[str, int],
+    *,
+    default_margin: float = KEYWORD_SEQUENCE_MARGIN,
+) -> tuple[list[list[int]], list[dict], pathlib.Path]:
+    rows = _keyword_rows(keywords_path, token_map)
+    profile_path = keyword_margin_profile_path(keywords_path)
+    profile: dict = {}
+    if profile_path.is_file():
+        value = json.loads(profile_path.read_text(encoding="utf-8"))
+        if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
+            raise ValueError("keyword margin profile must be schema_version 1")
+        raw_keywords = value.get("keywords")
+        if not isinstance(raw_keywords, dict):
+            raise ValueError("keyword margin profile must contain keywords object")
+        profile = raw_keywords
+        known = {str(int(row["id"])) for row in rows}
+        unknown = sorted(set(str(key) for key in profile) - known)
+        if unknown:
+            raise ValueError(
+                "keyword margin profile contains unknown keyword id(s): "
+                + ", ".join(unknown)
+            )
+
+    operating_points: list[dict] = []
+    for row in rows:
+        raw = profile.get(str(int(row["id"])), {})
+        if not isinstance(raw, dict):
+            raise ValueError("keyword margin profile entry must be an object")
+        if "text" in raw and str(raw["text"]) != str(row["text"]):
+            raise ValueError("keyword margin profile text does not match keyword TSV")
+        positive_margin = float(raw.get("positive_margin", default_margin))
+        negative_margin = float(raw.get("negative_margin", default_margin))
+        if any(
+            not math.isfinite(value) or value < 0.0
+            for value in (positive_margin, negative_margin)
+        ):
+            raise ValueError("keyword margins must be finite and non-negative")
+        threshold = float(row["threshold"])
+        if not 0.0 < threshold - negative_margin < threshold <= threshold + positive_margin < 1.0:
+            raise ValueError("keyword margin profile produces an invalid operating band")
+        operating_points.append(
+            {
+                "keyword_id": int(row["id"]),
+                "text": str(row["text"]),
+                "threshold": threshold,
+                "positive_margin": positive_margin,
+                "negative_margin": negative_margin,
+            }
+        )
+    return (
+        [list(row["sequence"]) for row in rows],
+        operating_points,
+        profile_path,
+    )
 
 
 def manifest_rows(path: pathlib.Path) -> list[dict]:
@@ -295,11 +370,6 @@ def collate(batch):
     ylen = torch.tensor([y.shape[0] for y in ys], dtype=torch.long)
     max_t = int(xlen.max())
     feature_dim = xs[0].shape[1]
-    # Preserve each sample's true CTC length while giving recurrent state a
-    # post-utterance trajectory that matches the shipping stream: the active
-    # scene floor continues after speech instead of becoming an impossible
-    # all-zero feature vector. Only the explicit release region receives this
-    # repeated terminal context; CTC/ordered-token losses still stop at xlen.
     padded = torch.zeros(
         (len(xs), max_t + RECURRENT_RELEASE_TAIL_STEPS, feature_dim)
     )
@@ -325,12 +395,7 @@ def ordered_token_loss(
     input_lengths: torch.Tensor,
     target_lengths: torch.Tensor,
 ) -> tuple[torch.Tensor, int, int]:
-    """Encourage each target occurrence to own a chronological region.
-
-    CTC remains the primary sequence objective. This auxiliary term prevents
-    blank-only/token-starvation collapse on mixed positive + empty-target
-    batches while preserving CTC's freedom to choose the exact alignment.
-    """
+    """Encourage each target occurrence to own a chronological region."""
     losses: list[torch.Tensor] = []
     correct = 0
     total = 0
@@ -368,13 +433,7 @@ def recurrent_release_loss(
     log_probs: torch.Tensor,
     input_lengths: torch.Tensor,
 ) -> torch.Tensor:
-    """Require recurrent acoustic memory to return to blank after an utterance.
-
-    The release region is outside every sample's CTC/ordered-token length, so
-    this cannot move target alignments or truncate weak terminal speech. The
-    warmup leaves a bounded natural decay interval while the terminal scene
-    background continues, then blank is explicitly enforced.
-    """
+    """Require recurrent acoustic memory to return to blank after an utterance."""
     losses: list[torch.Tensor] = []
     available_steps = int(log_probs.shape[0])
     for batch_index, input_length in enumerate(input_lengths.tolist()):
@@ -437,7 +496,9 @@ def main() -> None:
     args = parser.parse_args()
 
     token_map = load_tokens(args.tokens)
-    keyword_sequences = load_keyword_sequences(args.keywords, token_map)
+    keyword_sequences, keyword_operating_points, margin_profile_path = (
+        load_keyword_operating_points(args.keywords, token_map)
+    )
     vocab_size_value = vocab_size(token_map)
     fingerprint = vocab_fingerprint(token_map)
     if not 2 <= vocab_size_value <= MAX_VOCAB_SIZE:
@@ -537,6 +598,7 @@ def main() -> None:
                 keyword_sequences=keyword_sequences,
                 blank=0,
                 margin=KEYWORD_SEQUENCE_MARGIN,
+                keyword_operating_points=keyword_operating_points,
             )
             margin_loss = (margin_per_sample * sample_weights).sum() / sample_weights.sum()
             release_loss = recurrent_release_loss(log_probs, xlen)
@@ -580,6 +642,8 @@ def main() -> None:
             "tokens_sha256": sha256_file(args.tokens),
             "keywords_sha256": sha256_file(args.keywords),
             "keyword_sequences": keyword_sequences,
+            "keyword_operating_points": keyword_operating_points,
+            "keyword_margin_profile_sha256": optional_sha256(margin_profile_path),
             "frame_length_samples": FRAME_LENGTH_SAMPLES,
             "frame_hop_samples": FRAME_HOP_SAMPLES,
             "frontend_spec_version": FRONTEND_SPEC_VERSION,
