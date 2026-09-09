@@ -219,6 +219,32 @@ def domain_gate(metrics: dict, gates: dict) -> bool:
     return isinstance(far, dict) and float(far["frr"]) <= gates["max_far_frr"]
 
 
+def strict_dual_pass(record: dict) -> bool:
+    return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
+
+
+def qualification_contract(
+    *,
+    records: list[dict],
+    best: dict,
+    qualification_gate: bool,
+) -> dict:
+    dual_pass_eligible_rounds = sorted(
+        {int(record["round"]) for record in records if strict_dual_pass(record)}
+    )
+    objective_best_dual_pass = strict_dual_pass(best)
+    qualified = objective_best_dual_pass and bool(qualification_gate)
+    return {
+        "evidence_class": (
+            "synthetic-domain-qualified" if qualified else "synthetic-domain-development"
+        ),
+        "qualified": qualified,
+        "qualification_gate": bool(qualification_gate),
+        "iteration_objective_best_dual_pass": objective_best_dual_pass,
+        "dual_pass_eligible_rounds": dual_pass_eligible_rounds,
+    }
+
+
 def objective(base: dict, domains: dict, gates: dict) -> float:
     far = domains.get("domains", {}).get("distance:far", {})
     far_frr = float(far.get("frr", 1.0))
@@ -628,11 +654,18 @@ def main() -> int:
         references=qualification_dataset / "qualification.references.jsonl",
         output=best_dir / "qualification",
     )
-    qualified = base_gate(qualification_base, gates) and domain_gate(qualification_domains, gates)
+    qualification_gate = base_gate(qualification_base, gates) and domain_gate(
+        qualification_domains, gates
+    )
+    contract = qualification_contract(
+        records=records,
+        best=best,
+        qualification_gate=qualification_gate,
+    )
+    qualified = bool(contract["qualified"])
     manifest = {
         "schema_version": 2,
-        "evidence_class": "synthetic-domain-qualified",
-        "qualified": qualified,
+        **contract,
         "config_sha256": sha256_file(config_path),
         "runner_sha256": sha256_file(runner),
         "best_round": best["round"],
@@ -643,6 +676,7 @@ def main() -> int:
         "warm_start_strategy": warm_start_strategy if backend == "torch_ctc" else None,
         "records": records,
         "final_curriculum": curriculum or {},
+        "qualification_candidate_policy": "iteration-objective-best",
         "qualification": qualification_base,
         "qualification_domains": qualification_domains,
         "gates": gates,
