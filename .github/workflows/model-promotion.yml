@@ -247,6 +247,21 @@ jobs:
           cohort = json.loads((dist / 'qualification-cohort.json').read_text(encoding='utf-8'))
           if not bool(cohort.get('generated_after_training')) or not bool(cohort.get('seed_disjoint')):
               raise SystemExit('qualification cohort is not untouched/disjoint')
+          if not bool(cohort.get('strict_development_candidate_required')):
+              raise SystemExit('qualification cohort lacks strict development prerequisite evidence')
+          development_manifest_sha = str(cohort.get('development_manifest_sha256') or '')
+          if len(development_manifest_sha) != 64 or any(
+              ch not in '0123456789abcdef' for ch in development_manifest_sha
+          ):
+              raise SystemExit('qualification cohort development manifest SHA is missing/invalid')
+          if str(cohort.get('development_candidate_policy')) != 'latest-strict-gate-passing-round':
+              raise SystemExit('qualification cohort development candidate policy is not strict/latest')
+          if int(cohort.get('development_selected_round', -1)) != int(training.get('best_round', -2)):
+              raise SystemExit('qualification cohort development round differs from finalized model')
+          if str(cohort.get('development_selected_frontend') or '') != str(
+              training.get('best_frontend') or ''
+          ):
+              raise SystemExit('qualification cohort development frontend differs from finalized model')
           if int(cohort.get('expected_wakes', -1)) != 256:
               raise SystemExit('qualification cohort expected-wake count is not 256')
           for key in (
@@ -313,12 +328,14 @@ jobs:
                   'artifact_digest': os.environ.get('ARTIFACT_DIGEST') or None,
                   'artifact_size_bytes': int(os.environ.get('ARTIFACT_SIZE') or 0),
                   'qualification_seed': qualification_seed,
+                  'development_manifest_sha256': development_manifest_sha,
               },
               'acceptance': {
                   'qualification_expected': 256,
                   'qualification_matched': 256,
                   'qualification_false_rejects': 0,
                   'qualification_false_accepts': 0,
+                  'strict_development_candidate_required': True,
                   'robustness_qualified': True,
                   'continuous_far_per_hour': 0.0,
                   'continuous_far_full_negative_manifest_coverage': True,

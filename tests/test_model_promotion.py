@@ -47,6 +47,13 @@ def main() -> int:
         "training summary artifact SHA mismatch",
         "qualification evidence is not strict 256/256 zero-error",
         "qualification keyword {keyword_id} is not 128/128",
+        "qualification cohort lacks strict development prerequisite evidence",
+        "qualification cohort development manifest SHA is missing/invalid",
+        "qualification cohort development candidate policy is not strict/latest",
+        "qualification cohort development round differs from finalized model",
+        "qualification cohort development frontend differs from finalized model",
+        "strict_development_candidate_required",
+        "development_manifest_sha256",
         "robustness evidence is not qualified with zero failures",
         "continuous FAR evidence is not zero-error",
         "full_negative_manifest_coverage",
@@ -68,7 +75,13 @@ def main() -> int:
 
     if text.count('--repo "$GITHUB_REPOSITORY"') < 2:
         raise AssertionError("all release CLI calls must bind the repository explicitly")
-    if "latest" in lowered:
+    # The development selection policy legitimately contains the word "latest".
+    # Strip only those exact, known semantic phrases before preserving the older
+    # broad ban against ambiguous "latest" artifact/release selection.
+    ambiguous_latest_scan = lowered
+    for allowed in ("latest-strict-gate-passing-round", "strict/latest"):
+        ambiguous_latest_scan = ambiguous_latest_scan.replace(allowed, "")
+    if "latest" in ambiguous_latest_scan:
         raise AssertionError("model promotion must never select an ambiguous training artifact")
     if "cancel-in-progress: true" in lowered:
         raise AssertionError("model promotion must not cancel another promotion for the same provenance")

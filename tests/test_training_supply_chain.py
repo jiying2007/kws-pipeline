@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import pathlib
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -156,6 +157,117 @@ def main() -> int:
     assert "overlapping_exposed_active_wav_sha256" in qualification_source
     assert "active qualification overlaps" in qualification_source
     assert "retired-qualification-scratch" in qualification_source
+    assert "require_strict_development_candidate" in qualification_source
+    assert "no calibration/test strict development candidate; refuse formal qualification" in qualification_source
+    assert '"strict_development_candidate_required": True' in qualification_source
+    assert '"development_manifest_sha256"' in qualification_source
+    assert '"development_selected_round"' in qualification_source
+    assert '"development_selected_frontend"' in qualification_source
+
+    qualification_module_path = ROOT / "training" / "render_qualification_holdout.py"
+    qualification_spec = importlib.util.spec_from_file_location(
+        "render_qualification_holdout_contract", qualification_module_path
+    )
+    assert qualification_spec is not None and qualification_spec.loader is not None
+    qualification_module = importlib.util.module_from_spec(qualification_spec)
+    qualification_spec.loader.exec_module(qualification_module)
+    with tempfile.TemporaryDirectory() as td:
+        work = pathlib.Path(td)
+        try:
+            qualification_module.require_strict_development_candidate(work)
+        except ValueError as exc:
+            assert "development manifest is missing" in str(exc)
+        else:
+            raise AssertionError("formal qualification accepted a missing development manifest")
+
+        manifest_path = work / "domain-loop-manifest.json"
+        split_pass = {
+            "development_qualified": False,
+            "records": [
+                {
+                    "round": 0,
+                    "frontend": "logmel",
+                    "score": 1.0,
+                    "calibration_gate": False,
+                    "test_gate": True,
+                    "checkpoint": "round0.pt",
+                },
+                {
+                    "round": 2,
+                    "frontend": "logmel",
+                    "score": 0.5,
+                    "calibration_gate": True,
+                    "test_gate": False,
+                    "checkpoint": "round2.pt",
+                },
+            ],
+            "candidate_selection": {
+                "policy": "latest-strict-gate-passing-round",
+                "eligible_rounds": [],
+                "selected_round": None,
+                "selected_frontend": None,
+            },
+        }
+        manifest_path.write_text(json.dumps(split_pass) + "\n", encoding="utf-8")
+        try:
+            qualification_module.require_strict_development_candidate(work)
+        except ValueError as exc:
+            assert "no calibration/test strict development candidate" in str(exc)
+        else:
+            raise AssertionError("formal qualification accepted split-pass development evidence")
+
+        strict_records = [
+            {
+                "round": 1,
+                "frontend": "pcen-lite",
+                "score": 0.1,
+                "calibration_gate": True,
+                "test_gate": True,
+                "checkpoint": "round1.pt",
+            },
+            {
+                "round": 3,
+                "frontend": "pcen-lite",
+                "score": 0.3,
+                "calibration_gate": True,
+                "test_gate": True,
+                "checkpoint": "round3-pcen.pt",
+            },
+            {
+                "round": 3,
+                "frontend": "logmel",
+                "score": 0.2,
+                "calibration_gate": True,
+                "test_gate": True,
+                "checkpoint": "round3-logmel.pt",
+            },
+        ]
+        strict_pass = {
+            "development_qualified": True,
+            "records": strict_records,
+            "candidate_selection": {
+                "policy": "latest-strict-gate-passing-round",
+                "eligible_rounds": [1, 3],
+                "selected_round": 3,
+                "selected_frontend": "logmel",
+                "selected_score": 0.2,
+            },
+        }
+        manifest_path.write_text(json.dumps(strict_pass) + "\n", encoding="utf-8")
+        accepted = qualification_module.require_strict_development_candidate(work)
+        assert accepted == strict_pass
+
+        inconsistent = json.loads(json.dumps(strict_pass))
+        inconsistent["candidate_selection"]["selected_round"] = 1
+        inconsistent["candidate_selection"]["selected_frontend"] = "pcen-lite"
+        inconsistent["candidate_selection"]["selected_score"] = 0.1
+        manifest_path.write_text(json.dumps(inconsistent) + "\n", encoding="utf-8")
+        try:
+            qualification_module.require_strict_development_candidate(work)
+        except ValueError as exc:
+            assert "selected round disagrees with strict records" in str(exc)
+        else:
+            raise AssertionError("formal qualification trusted inconsistent candidate summary")
 
     assert "--hard-negative-rate-per-minute 0.0" in model_training_workflow
     assert "actual_injection_rate_per_minute" in model_training_workflow
