@@ -33,6 +33,7 @@ DISTANCE_BIN_TO_BAND = {
     "3m": "far",
     "5m": "far",
 }
+HARDNESS_EPSILON = 1.0e-12
 
 
 def finite(value, label: str) -> float:
@@ -48,10 +49,16 @@ def metric_hardness(item: dict, label: str) -> float:
     frr = finite(item.get("frr", 0.0), f"{label}.frr")
     far = finite(item.get("far_per_hour", 0.0), f"{label}.far")
     latency = finite(item.get("p95_post_end_latency_ms", 0.0), f"{label}.latency")
-    return max(
-        0.0,
-        frr * 20.0 + min(far, 20.0) * 0.05 + min(latency, 1500.0) / 3000.0,
-    )
+    # Acoustic curriculum is driven by recognition errors, not harmless latency
+    # jitter. Otherwise a completely zero-error calibration pass still has a
+    # non-zero maximum, and relative normalization amplifies the slowest normal
+    # slice to full curriculum strength. Keep latency only as a secondary signal
+    # among slices that already contain FR/FAR evidence; candidate selection and
+    # the strict latency gate remain responsible for latency itself.
+    error_hardness = frr * 20.0 + min(far, 20.0) * 0.05
+    if error_hardness <= HARDNESS_EPSILON:
+        return 0.0
+    return error_hardness + min(latency, 1500.0) / 3000.0
 
 
 def previous_dimension(previous: dict | None, name: str) -> dict[str, float]:
@@ -97,7 +104,7 @@ def _weights_from_hardness(
     maximum = max(hardness.values()) if hardness else 0.0
     weights: dict[str, float] = {}
     for value_name, score in hardness.items():
-        relative = score / maximum if maximum > 1.0e-12 else 0.0
+        relative = score / maximum if maximum > HARDNESS_EPSILON else 0.0
         target = 1.0 + strength * relative
         old = base.get(value_name, 1.0)
         weights[value_name] = min(
@@ -234,7 +241,8 @@ def update_curriculum(
         interaction_ranked = [
             (score, key)
             for score, key in ranked
-            if key.split(":", 1)[0] in INTERACTION_DIMENSIONS
+            if score > HARDNESS_EPSILON
+            and key.split(":", 1)[0] in INTERACTION_DIMENSIONS
         ]
         keyword_worst_domains[str(keyword_id)] = [
             {"domain": key, "hardness": score}
@@ -243,12 +251,14 @@ def update_curriculum(
 
     return {
         "schema_version": 2,
+        "hardness_policy": "recognition-error-gated-latency-v1",
         "dimension_weights": dimension_weights,
         "dimension_hardness": dimension_hardness,
         "worst_domains": [
             {"domain": key, "hardness": score}
-            for score, key in ranked_domains[:12]
-        ],
+            for score, key in ranked_domains
+            if score > HARDNESS_EPSILON
+        ][:12],
         "keyword_dimension_weights": keyword_dimension_weights,
         "keyword_dimension_hardness": keyword_dimension_hardness,
         "keyword_worst_domains": keyword_worst_domains,
