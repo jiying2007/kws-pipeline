@@ -150,7 +150,7 @@ def main() -> int:
     assert nightly_policy["may_render_formal_qualification"] is False
     assert nightly_policy["may_consume_formal_qualification_seed"] is False
     assert nightly_policy["formal_qualification_seed"] == 271838
-    assert nightly_policy["next_formal_candidate_seed_reserved"] == 271839
+    assert nightly_policy["next_formal_candidate_seed_reserved"] == 271840
 
     nightly_config = json.loads(
         (ROOT / "configs" / "nightly.xiaowo-frozen-model.json").read_text(encoding="utf-8")
