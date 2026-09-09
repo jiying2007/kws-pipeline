@@ -37,10 +37,36 @@ def main() -> int:
             "noise:motor": metric(0.12),
             "playback:no-playback": metric(0.02),
             "playback:playback": metric(0.15),
+            "distance_azimuth:distance_bin=5m|azimuth=rear": metric(0.28),
+            "distance_snr:distance_bin=5m|snr=critical": metric(0.30),
+            "azimuth_snr:azimuth=rear|snr=critical": metric(0.27),
+            "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(
+                0.35, far=0.8, latency=550.0
+            ),
             "composite:distance=far|az=rear|rt60=reverb|noise=motor|playback": metric(
                 0.25, far=0.8, latency=550.0
             ),
-        }
+        },
+        "keyword_domains": {
+            "1": {
+                "domains": {
+                    "distance:far": metric(0.12),
+                    "azimuth:rear": metric(0.15),
+                    "snr:critical": metric(0.18),
+                    "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(0.32),
+                    "distance_azimuth_snr:distance_bin=3m|azimuth=rear|snr=critical": metric(0.08),
+                }
+            },
+            "2": {
+                "domains": {
+                    "distance:far": metric(0.20),
+                    "azimuth:rear": metric(0.21),
+                    "snr:critical": metric(0.24),
+                    "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(0.38),
+                    "distance_azimuth_snr:distance_bin=5m|azimuth=side|snr=critical": metric(0.10),
+                }
+            },
+        },
     }
     result = update_curriculum(metrics, strength=3.0, max_weight=6.0)
     assert result["schema_version"] == 2
@@ -51,7 +77,31 @@ def main() -> int:
     assert weights["rt60"]["reverb"] > weights["rt60"]["dry"]
     assert weights["noise"]["motor"] > weights["noise"]["fan"]
     assert weights["playback"]["playback"] > weights["playback"]["no-playback"]
-    assert result["worst_domains"][0]["domain"].startswith("composite:")
+    assert (
+        weights["distance_azimuth_snr"]["distance_bin=5m|azimuth=rear|snr=critical"]
+        > 1.0
+    )
+    assert result["worst_domains"][0]["domain"].startswith(
+        "distance_azimuth_snr:"
+    )
+
+    kw = result["keyword_dimension_weights"]
+    assert kw["1"]["distance"]["far"] > 1.0
+    assert kw["2"]["distance"]["far"] > 1.0
+    assert (
+        kw["2"]["distance_azimuth_snr"][
+            "distance_bin=5m|azimuth=rear|snr=critical"
+        ]
+        > kw["2"]["distance_azimuth_snr"][
+            "distance_bin=5m|azimuth=side|snr=critical"
+        ]
+    )
+    assert result["keyword_worst_domains"]["1"][0]["domain"] == (
+        "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+    )
+    assert result["keyword_worst_domains"]["2"][0]["domain"] == (
+        "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+    )
 
     next_result = update_curriculum(
         metrics, previous=result, strength=3.0, max_weight=6.0
@@ -61,14 +111,10 @@ def main() -> int:
         >= weights["distance"]["far"]
     )
     assert (
-        next_result["dimension_weights"]["snr"]["critical"]
-        >= weights["snr"]["critical"]
+        next_result["keyword_dimension_weights"]["2"]["snr"]["critical"]
+        >= kw["2"]["snr"]["critical"]
     )
 
-    # A hard no-playback development slice must not starve playback below the
-    # renderer's configured base probability. Equal adaptive weights preserve
-    # that base probability; playback may still rise above it when playback is
-    # itself the harder state, as exercised by the primary fixture above.
     no_playback_harder = {
         "domains": {
             "playback:no-playback": metric(0.20, latency=400.0),
