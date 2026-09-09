@@ -70,6 +70,7 @@ def main() -> int:
     }
     result = update_curriculum(metrics, strength=3.0, max_weight=6.0)
     assert result["schema_version"] == 2
+    assert result["hardness_policy"] == "recognition-error-gated-latency-v1"
     assert result["interaction_projection"] == "max-to-distance-azimuth-snr-marginals-v1"
     weights = result["dimension_weights"]
     # The hard 5m/rear/critical triple must project into the marginals consumed
@@ -120,6 +121,50 @@ def main() -> int:
     assert (
         next_result["keyword_dimension_weights"]["2"]["snr"]["critical"]
         >= kw["2"]["snr"]["critical"]
+    )
+
+    # Regression for model-training #132: a strict zero-error calibration pass
+    # must not turn ordinary 20..700 ms latency variation into full-strength
+    # acoustic curriculum feedback. With no FR/FAR evidence, all fresh weights
+    # stay at 1.0, zero-hardness interaction views are not advertised as an
+    # adaptive focus, and any previous stress weights relax toward baseline.
+    zero_error = {
+        "domains": {
+            "distance:near": metric(0.0, latency=20.0),
+            "distance:far": metric(0.0, latency=700.0),
+            "azimuth:rear": metric(0.0, latency=650.0),
+            "snr:critical": metric(0.0, latency=600.0),
+            "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(
+                0.0, latency=700.0
+            ),
+        },
+        "keyword_domains": {
+            "1": {
+                "domains": {
+                    "distance:far": metric(0.0, latency=700.0),
+                    "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": metric(
+                        0.0, latency=700.0
+                    ),
+                }
+            }
+        },
+    }
+    stable = update_curriculum(zero_error, strength=3.0, max_weight=6.0)
+    assert stable["worst_domains"] == []
+    assert stable["keyword_worst_domains"]["1"] == []
+    for dimension in stable["dimension_weights"].values():
+        assert all(abs(float(value) - 1.0) <= 1.0e-12 for value in dimension.values())
+    for dimension in stable["keyword_dimension_weights"]["1"].values():
+        assert all(abs(float(value) - 1.0) <= 1.0e-12 for value in dimension.values())
+
+    relaxed = update_curriculum(
+        zero_error, previous=result, strength=3.0, max_weight=6.0
+    )
+    assert 1.0 <= relaxed["dimension_weights"]["distance"]["far"] < weights["distance"]["far"]
+    assert (
+        1.0
+        <= relaxed["keyword_dimension_weights"]["1"]["distance"]["far"]
+        < kw["1"]["distance"]["far"]
     )
 
     no_playback_harder = {
