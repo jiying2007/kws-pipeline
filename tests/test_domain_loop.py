@@ -19,6 +19,8 @@ from hard_negative_replay import (  # noqa: E402
 from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
     select_calibration_threshold,
+    select_strict_candidate,
+    strict_gate_candidate,
     warm_start_args,
 )
 
@@ -78,6 +80,56 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("empty calibration candidate set was accepted")
+
+    # Regression for model-training #132: calibration-only and test-only passes
+    # from different rounds must never be promoted into a synthetic qualification.
+    split_pass = [
+        {
+            "round": 0,
+            "frontend": "logmel",
+            "score": 1.0,
+            "calibration_gate": False,
+            "test_gate": True,
+        },
+        {
+            "round": 2,
+            "frontend": "logmel",
+            "score": 0.5,
+            "calibration_gate": True,
+            "test_gate": False,
+        },
+    ]
+    assert all(not strict_gate_candidate(record) for record in split_pass)
+    assert select_strict_candidate(split_pass) is None
+
+    strict_candidates = split_pass + [
+        {
+            "round": 1,
+            "frontend": "pcen-lite",
+            "score": 0.1,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+        {
+            "round": 3,
+            "frontend": "pcen-lite",
+            "score": 0.3,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+        {
+            "round": 3,
+            "frontend": "logmel",
+            "score": 0.2,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+    ]
+    selected_strict = select_strict_candidate(strict_candidates)
+    assert selected_strict is not None
+    assert int(selected_strict["round"]) == 3
+    assert selected_strict["frontend"] == "logmel"
+    assert float(selected_strict["score"]) == 0.2
 
     formal = json.loads(
         (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
@@ -267,7 +319,12 @@ def main() -> int:
         assert completed.returncode == 0, completed.returncode
         manifest = json.loads((work / "domain-loop-manifest.json").read_text(encoding="utf-8"))
         assert manifest["qualified"] is True
+        assert manifest["development_qualified"] is True
+        assert manifest["qualification_qualified"] is True
         assert manifest["evidence_class"] == "synthetic-domain-qualified"
+        assert manifest["candidate_selection"]["policy"] == "latest-strict-gate-passing-round"
+        assert manifest["candidate_selection"]["qualification_used_for_selection"] is False
+        assert manifest["candidate_selection"]["objective_fallback_used"] is False
         assert manifest["best_frontend"] in {"logmel", "pcen-lite"}
         assert {row["frontend"] for row in manifest["records"]} == {"logmel", "pcen-lite"}
         far = manifest["qualification_domains"]["domains"]["distance:far"]
