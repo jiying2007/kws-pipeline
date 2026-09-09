@@ -11,7 +11,11 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-from hard_negative_replay import normalize_hard_negative_replay  # noqa: E402
+from hard_negative_replay import (  # noqa: E402
+    adaptive_focus,
+    normalize_hard_negative_replay,
+    normalize_positive_stress_replay,
+)
 from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
     select_calibration_threshold,
@@ -81,6 +85,15 @@ def validate_torch_iteration_policy() -> None:
     assert float(formal["domain_gates"]["max_far_per_hour"]) == 0.0
     assert float(formal["domain_gates"]["max_frr"]) == 0.0
     assert float(formal["domain_gates"]["max_far_frr"]) == 0.0
+    assert 0.55 in formal["calibration"]["thresholds"]
+    assert len(formal["calibration"]["thresholds"]) >= 5
+    assert int(formal["calibration"]["coordinate_rounds"]) >= 2
+    positive_stress = formal["domain_iteration"]["positive_stress_replay"]
+    assert {int(item["keyword_id"]) for item in positive_stress} == {1, 2}
+    assert all(item["focus"] == "adaptive" for item in positive_stress)
+    assert all(item["fallback"]["distance_bin"] == "5m" for item in positive_stress)
+    assert all(item["fallback"]["azimuth"] == "rear" for item in positive_stress)
+    assert all(item["fallback"]["snr"] == "critical" for item in positive_stress)
 
     active = ["ni3", "hao3", "xiao3", "wo1"]
     token_map = {"<blank>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}
@@ -90,16 +103,26 @@ def validate_torch_iteration_policy() -> None:
     ]
     replay = normalize_hard_negative_replay(
         [
-            {"tokens": ["hao3", "ni3", "xiao3", "wo1"], "examples": 24},
+            {
+                "tokens": ["hao3", "ni3", "xiao3", "wo1"],
+                "examples": 24,
+                "focus_keyword_id": 1,
+            },
             {"tokens": ["hao3", "hao3", "xiao3", "wo1"], "examples": 16},
-            {"tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"], "examples": 16},
+            {
+                "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
+                "examples": 16,
+                "focus_keyword_id": 1,
+            },
         ],
         active_tokens=active,
         forbidden=forbidden,
         token_map=token_map,
+        keyword_ids={1, 2},
     )
     assert [item["examples"] for item in replay] == [24, 16, 16]
     assert replay[0]["target_ids"] == [2, 1, 3, 4]
+    assert replay[0]["focus_keyword_id"] == 1
     assert replay[2]["target_ids"] == [2, 4, 3, 4, 1]
     try:
         normalize_hard_negative_replay(
@@ -112,6 +135,68 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("wake path was accepted as a hard negative")
+
+    keywords = [
+        {
+            "id": 1,
+            "text": "你好小窝",
+            "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+            "token_ids": [1, 2, 3, 4],
+        },
+        {
+            "id": 2,
+            "text": "小窝小窝",
+            "tokens": ["xiao3", "wo1", "xiao3", "wo1"],
+            "token_ids": [3, 4, 3, 4],
+        },
+    ]
+    normalized_positive = normalize_positive_stress_replay(
+        [
+            {
+                "keyword_id": 1,
+                "examples": 8,
+                "focus": "adaptive",
+                "fallback": {
+                    "distance_bin": "5m",
+                    "azimuth": "rear",
+                    "snr": "critical",
+                },
+            },
+            {
+                "keyword_id": 2,
+                "examples": 8,
+                "focus": "adaptive",
+                "fallback": {
+                    "distance_bin": "5m",
+                    "azimuth": "rear",
+                    "snr": "critical",
+                },
+            },
+        ],
+        keywords=keywords,
+    )
+    assert normalized_positive[0]["target_ids"] == [1, 2, 3, 4]
+    assert normalized_positive[1]["target_ids"] == [3, 4, 3, 4]
+    curriculum = {
+        "keyword_worst_domains": {
+            "2": [
+                {
+                    "domain": "distance_azimuth_snr:distance_bin=3m|azimuth=side|snr=low",
+                    "hardness": 2.0,
+                },
+                {
+                    "domain": "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical",
+                    "hardness": 4.0,
+                },
+            ]
+        }
+    }
+    focus = adaptive_focus(
+        curriculum,
+        2,
+        {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"},
+    )
+    assert focus == {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"}
 
 
 def main() -> int:
@@ -143,11 +228,6 @@ def main() -> int:
         config["domains"]["snr_db"] = [22.0, 34.0]
         config["domains"]["playback"]["probability"] = 0.1
         config["model"]["frontends"] = ["logmel", "pcen-lite"]
-        # Keep the production minimum here. With only 8 variants the 75/25
-        # train/validation split leaves two validation scenes per token; PCEN's
-        # stateful compression makes that unnecessarily high-variance while not
-        # exercising a different contract. Sixteen gives 12 train + 4 held-out
-        # domain scenes per token and retains the hard 98.5% quantized-fit gate.
         config["model"]["domain_variants_per_token"] = 16
         config["model"]["prototype_candidates"] = [
             {"input_scale": 0.010, "output_scale": 0.050, "blank_bias": 1.8, "token_bias": -1.2}
@@ -162,8 +242,6 @@ def main() -> int:
             "max_domain_weight": 4.0,
             "stop_on_gate": True,
         }
-        # Smoke test validates orchestration and domain accounting, not the formal
-        # product-facing strict policy in xiaowo.domain.json.
         config["domain_gates"] = {
             "max_frr": 1.0,
             "max_far_per_hour": 1000000.0,
