@@ -338,7 +338,12 @@ def main() -> int:
     manifest["best_far_holdout_cohort_sha256"] = far_holdout_cohort_sha
     manifest["qualification"] = qualification
     manifest["qualification_domains"] = qualification_domains
+    manifest["qualification_gate"] = bool(qualified)
+    manifest["qualification_candidate_policy"] = "finalizer-selected-dual-pass"
     manifest["qualified"] = bool(qualified)
+    manifest["evidence_class"] = (
+        "synthetic-domain-qualified" if qualified else "synthetic-domain-development"
+    )
     manifest["candidate_selection"] = candidate_selection
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
