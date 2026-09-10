@@ -28,8 +28,11 @@ from synthetic_audio import (  # noqa: E402
 MAX_REPLAY_EXAMPLES_PER_SEQUENCE = 256
 MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD = 256
 DISTANCE_POINTS_M = {"0.5m": 0.5, "1m": 1.0, "2m": 2.0, "3m": 3.0, "5m": 5.0}
+HARD_NEGATIVE_DISTANCE_BINS = ("0.5m", "1m", "2m", "3m", "5m")
 HARD_NEGATIVE_AZIMUTH_BANDS = ("front", "side", "rear")
 HARD_NEGATIVE_SNR_BANDS = ("critical", "low", "mid", "high")
+HARD_NEGATIVE_RT60_BANDS = ("dry", "medium", "reverb")
+HARD_NEGATIVE_STRESS_POLICY = "hard-negative-pairwise-covering-v2"
 
 
 def _repo_path(value: str) -> pathlib.Path:
@@ -238,6 +241,22 @@ def _snr_point(domains: dict, name: str) -> float:
     return (start + end) * 0.5
 
 
+def _rt60_point(domains: dict, name: str) -> float:
+    low, high = [float(value) for value in domains["rt60_s"]]
+    epsilon = 1.0e-3
+    ranges = {
+        "dry": (low, min(high, 0.30 - epsilon)),
+        "medium": (max(low, 0.30), min(high, 0.55 - epsilon)),
+        "reverb": (max(low, 0.55), high),
+    }
+    if name not in ranges:
+        return float(name)
+    start, end = ranges[name]
+    if start > end:
+        raise ValueError(f"focused replay RT60 band is outside configured range: {name}")
+    return (start + end) * 0.5
+
+
 def _azimuth_band(value: float) -> str:
     if abs(value) <= 30.0:
         return "front"
@@ -253,14 +272,17 @@ def hard_negative_stress_focus(
     item_index: int,
     example_index: int,
 ) -> dict:
-    """Guarantee bounded hard-negative coverage without increasing replay count.
+    """Pairwise-cover hard-negative acoustics without increasing replay count.
 
-    Synthetic geometry uses a deterministic azimuth-band x SNR-band x playback
-    cube. With the product's 24-example replay entries, every one of the 3x4x2
-    primary stress combinations is present once per sequence and round. Exact
-    azimuth values rotate across rounds, while distance/noise/RT60 remain sampled
-    by the existing curriculum so replay keeps acoustic diversity. Measured-RIR
-    evidence never has its geometry overridden; only SNR/playback are stratified.
+    For synthetic geometry, the primary 3x4x2 azimuth-band x SNR-band x playback
+    cube stays exact. Noise profile, canonical distance and RT60 are assigned by
+    orthogonal modular projections of those primary coordinates. With the formal
+    product's 24-example replay entries this is a covering array over all six
+    factors: every pair of configured levels appears in one round while exact
+    azimuth values and secondary assignments rotate across rounds/items.
+
+    Measured-RIR evidence never has geometry overridden; it preserves the prior
+    SNR/playback-only stratification instead of fabricating distance/azimuth/RT60.
     """
     snr_bands: list[str] = []
     for name in HARD_NEGATIVE_SNR_BANDS:
@@ -281,38 +303,85 @@ def hard_negative_stress_focus(
         playback_states = [False, True]
 
     measured_rir = isinstance(domains.get("rir_manifest"), dict)
-    azimuth_values: dict[str, list[float]] = {}
-    if not measured_rir:
-        raw_azimuths = [float(value) for value in domains.get("azimuth_deg", [])]
-        for band in HARD_NEGATIVE_AZIMUTH_BANDS:
-            values = [value for value in raw_azimuths if _azimuth_band(value) == band]
-            if values:
-                azimuth_values[band] = values
+    if measured_rir:
+        combinations = [
+            (snr, playback)
+            for playback in playback_states
+            for snr in snr_bands
+        ]
+        if not combinations:
+            return {}
+        rotation = (round_index + item_index) * 7
+        snr, playback = combinations[(example_index + rotation) % len(combinations)]
+        return {"snr": snr, "playback": playback}
 
-    if measured_rir or not azimuth_values:
-        combinations = [
-            (None, snr, playback)
-            for playback in playback_states
-            for snr in snr_bands
-        ]
-    else:
-        combinations = [
-            (band, snr, playback)
-            for playback in playback_states
-            for snr in snr_bands
-            for band in HARD_NEGATIVE_AZIMUTH_BANDS
-            if band in azimuth_values
-        ]
+    azimuth_values: dict[str, list[float]] = {}
+    raw_azimuths = [float(value) for value in domains.get("azimuth_deg", [])]
+    for band in HARD_NEGATIVE_AZIMUTH_BANDS:
+        values = [value for value in raw_azimuths if _azimuth_band(value) == band]
+        if values:
+            azimuth_values[band] = values
+    azimuth_bands = [
+        band for band in HARD_NEGATIVE_AZIMUTH_BANDS if band in azimuth_values
+    ]
+    if not azimuth_bands:
+        return {}
+
+    combinations = [
+        (band, snr, playback)
+        for playback in playback_states
+        for snr in snr_bands
+        for band in azimuth_bands
+    ]
     if not combinations:
         return {}
 
     rotation = (round_index + item_index) * 7
     band, snr, playback = combinations[(example_index + rotation) % len(combinations)]
-    focus: dict[str, object] = {"snr": snr, "playback": playback}
-    if band is not None:
-        values = azimuth_values[band]
-        cycle = example_index // len(combinations)
-        focus["azimuth"] = values[(round_index + item_index + cycle) % len(values)]
+    band_index = azimuth_bands.index(band)
+    snr_index = snr_bands.index(snr)
+    playback_index = playback_states.index(playback)
+    phase = round_index + item_index
+
+    values = azimuth_values[band]
+    cycle = example_index // len(combinations)
+    focus: dict[str, object] = {
+        "azimuth": values[(round_index + item_index + cycle) % len(values)],
+        "snr": snr,
+        "playback": playback,
+    }
+
+    noise_profiles = [str(value) for value in domains.get("noise_profiles", [])]
+    if noise_profiles:
+        focus["noise"] = noise_profiles[
+            (band_index + 2 * snr_index + playback_index + phase)
+            % len(noise_profiles)
+        ]
+
+    distance_bins: list[str] = []
+    for name in HARD_NEGATIVE_DISTANCE_BINS:
+        try:
+            _band_for_distance(domains, DISTANCE_POINTS_M[name])
+        except ValueError:
+            continue
+        distance_bins.append(name)
+    if distance_bins:
+        focus["distance_bin"] = distance_bins[
+            (band_index + snr_index + 2 * playback_index + phase)
+            % len(distance_bins)
+        ]
+
+    rt60_bands: list[str] = []
+    for name in HARD_NEGATIVE_RT60_BANDS:
+        try:
+            _rt60_point(domains, name)
+        except ValueError:
+            continue
+        rt60_bands.append(name)
+    if rt60_bands:
+        focus["rt60"] = rt60_bands[
+            (band_index + 2 * snr_index + phase) % len(rt60_bands)
+        ]
     return focus
 
 
@@ -320,7 +389,7 @@ def apply_focus(scene: dict, focus: dict, domains: dict) -> dict:
     if not focus:
         return scene
     result = dict(scene)
-    geometry_fields = {"distance_bin", "distance_m", "azimuth"} & set(focus)
+    geometry_fields = {"distance_bin", "distance_m", "azimuth", "rt60"} & set(focus)
     if geometry_fields and isinstance(domains.get("rir_manifest"), dict):
         raise ValueError("focused synthetic geometry cannot override measured RIR evidence")
 
@@ -342,6 +411,8 @@ def apply_focus(scene: dict, focus: dict, domains: dict) -> dict:
         result["azimuth_deg"] = float(value) if azimuth is None else azimuth
     if "snr" in focus:
         result["snr_db"] = _snr_point(domains, str(focus["snr"]))
+    if "rt60" in focus:
+        result["rt60_s"] = _rt60_point(domains, str(focus["rt60"]))
     if "noise" in focus:
         noise = str(focus["noise"])
         if noise not in domains["noise_profiles"]:
@@ -406,7 +477,7 @@ def render_hard_negative_replay(
             "positive_stress_examples": 0,
             "sequences": [],
             "positive_stress": [],
-            "hard_negative_stress_policy": "azimuth-snr-playback-cube-v1",
+            "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
             "manifest": str(manifest),
             "manifest_sha256": sha256_file(manifest),
         }
@@ -557,7 +628,7 @@ def render_hard_negative_replay(
         "examples": len(rows),
         "hard_negative_examples": hard_negative_examples,
         "positive_stress_examples": positive_stress_examples,
-        "hard_negative_stress_policy": "azimuth-snr-playback-cube-v1",
+        "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
         "sequences": [
             {
                 "tokens": item["tokens"],
