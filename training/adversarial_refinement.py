@@ -199,6 +199,10 @@ def main() -> int:
     adversarial_evidence = pathlib.Path(str(adversarial["evidence"]))
     if bool(adversarial.get("formal_qualification_used", True)):
         raise ValueError("adversarial mining must not use formal qualification")
+    adversarial_selection_policy = str(adversarial.get("selection_policy") or "")
+    adversarial_data_policy = str(adversarial.get("data_augmentation_policy") or "")
+    if not adversarial_selection_policy or not adversarial_data_policy:
+        raise ValueError("adversarial evidence is missing data/selection policy provenance")
 
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
     model, checkpoint, provenance = _train_refinement(
@@ -266,32 +270,49 @@ def main() -> int:
         "source_checkpoint_sha256": sha256_file(source_checkpoint),
         "hard_negative_replay_examples": int(static.get("examples", 0)),
         "hard_negative_replay_manifest_sha256": str(static["manifest_sha256"]),
-        "adversarial_policy": "exhaustive-safe-lexicon-topk-v1",
+        "adversarial_policy": adversarial_selection_policy,
+        "adversarial_data_augmentation_policy": adversarial_data_policy,
         "adversarial_enumerated_sequences": int(adversarial["enumerated_sequences"]),
         "adversarial_top_k": int(adversarial["top_k"]),
+        "adversarial_probes_per_sequence": int(adversarial["probes_per_sequence"]),
+        "adversarial_replay_examples_per_sequence": int(
+            adversarial["replay_examples_per_sequence"]
+        ),
         "adversarial_replay_examples": int(adversarial["replay_examples"]),
+        "adversarial_min_per_keyword": int(adversarial["min_per_keyword"]),
+        "adversarial_per_keyword_selected": dict(adversarial["per_keyword_selected"]),
+        "adversarial_strict_prefix_anchors": list(adversarial["strict_prefix_anchors"]),
         "adversarial_manifest_sha256": str(adversarial["manifest_sha256"]),
         "adversarial_evidence_sha256": sha256_file(adversarial_evidence),
         "adversarial_formal_qualification_used": False,
     }
     if not cal_gate or not test_gate:
         summary = {
-            "schema_version": 1,
+            "schema_version": 2,
             "policy": POLICY,
             "qualified": False,
             "input_development_manifest_sha256": input_manifest_sha,
             "source_round": source_round,
             "refinement_round": refinement_round,
+            "adversarial_data_augmentation_policy": adversarial_data_policy,
+            "adversarial_selection_policy": adversarial_selection_policy,
             "record": record,
         }
         out = work / "adversarial-refinement" / "summary.json"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+        out.write_text(
+            json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
         raise ValueError("adversarial refinement did not retain calibration/test strict dual-pass")
 
     manifest["records"].append(record)
     eligible_rounds = sorted(
-        {int(row["round"]) for row in manifest["records"] if bool(row.get("calibration_gate")) and bool(row.get("test_gate"))}
+        {
+            int(row["round"])
+            for row in manifest["records"]
+            if bool(row.get("calibration_gate")) and bool(row.get("test_gate"))
+        }
     )
     selection = manifest["candidate_selection"]
     selection.update(
@@ -304,6 +325,8 @@ def main() -> int:
             "objective_fallback_used": False,
             "adversarial_refinement_used": True,
             "adversarial_refinement_policy": POLICY,
+            "adversarial_data_augmentation_policy": adversarial_data_policy,
+            "adversarial_selection_policy": adversarial_selection_policy,
         }
     )
     manifest["best_round"] = refinement_round
@@ -348,7 +371,7 @@ def main() -> int:
     )
 
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
         "policy": POLICY,
         "qualified": bool(qualification_qualified),
         "input_development_manifest_sha256": input_manifest_sha,
@@ -356,18 +379,30 @@ def main() -> int:
         "source_round": source_round,
         "refinement_round": refinement_round,
         "frontend": frontend,
+        "adversarial_data_augmentation_policy": adversarial_data_policy,
+        "adversarial_selection_policy": adversarial_selection_policy,
         "adversarial_evidence_sha256": sha256_file(adversarial_evidence),
         "adversarial_manifest_sha256": str(adversarial["manifest_sha256"]),
         "adversarial_enumerated_sequences": int(adversarial["enumerated_sequences"]),
         "adversarial_top_k": int(adversarial["top_k"]),
+        "adversarial_probes_per_sequence": int(adversarial["probes_per_sequence"]),
+        "adversarial_replay_examples_per_sequence": int(
+            adversarial["replay_examples_per_sequence"]
+        ),
         "adversarial_replay_examples": int(adversarial["replay_examples"]),
+        "adversarial_min_per_keyword": int(adversarial["min_per_keyword"]),
+        "adversarial_per_keyword_selected": dict(adversarial["per_keyword_selected"]),
+        "strict_prefix_anchors": list(adversarial["strict_prefix_anchors"]),
         "formal_qualification_used": False,
         "record": record,
         "development_qualification": qual_base,
     }
     out = work / "adversarial-refinement" / "summary.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False))
     return 0 if qualification_qualified else 1
 
