@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "training"))
 
 from hard_negative_replay import (  # noqa: E402
     adaptive_focus,
+    hard_negative_stress_focus,
     normalize_hard_negative_replay,
     normalize_positive_stress_replay,
 )
@@ -146,6 +147,71 @@ def validate_torch_iteration_policy() -> None:
     assert all(item["fallback"]["distance_bin"] == "5m" for item in positive_stress)
     assert all(item["fallback"]["azimuth"] == "rear" for item in positive_stress)
     assert all(item["fallback"]["snr"] == "critical" for item in positive_stress)
+
+    formal_hard_negative = formal["domain_iteration"]["hard_negative_replay"]
+    assert formal_hard_negative
+    assert min(int(item["examples"]) for item in formal_hard_negative) >= 24
+
+    coverage_domains = {
+        "azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
+        "snr_db": [3.0, 30.0],
+        "playback_probability": 0.35,
+    }
+
+    def azimuth_band(value: float) -> str:
+        if abs(value) <= 30.0:
+            return "front"
+        if abs(value) <= 90.0:
+            return "side"
+        return "rear"
+
+    cube = [
+        hard_negative_stress_focus(
+            coverage_domains,
+            round_index=0,
+            item_index=3,
+            example_index=index,
+        )
+        for index in range(24)
+    ]
+    observed = {
+        (azimuth_band(float(item["azimuth"])), str(item["snr"]), bool(item["playback"]))
+        for item in cube
+    }
+    expected = {
+        (azimuth, snr, playback)
+        for playback in (False, True)
+        for snr in ("critical", "low", "mid", "high")
+        for azimuth in ("front", "side", "rear")
+    }
+    assert len(cube) == 24
+    assert observed == expected
+
+    side_angles = {
+        float(item["azimuth"])
+        for round_index in range(4)
+        for example_index in range(24)
+        for item in [
+            hard_negative_stress_focus(
+                coverage_domains,
+                round_index=round_index,
+                item_index=3,
+                example_index=example_index,
+            )
+        ]
+        if azimuth_band(float(item["azimuth"])) == "side"
+    }
+    assert side_angles == {-90.0, -60.0, 60.0, 90.0}
+
+    measured_domains = {**coverage_domains, "rir_manifest": {"entries": []}}
+    measured_focus = hard_negative_stress_focus(
+        measured_domains,
+        round_index=0,
+        item_index=0,
+        example_index=0,
+    )
+    assert "azimuth" not in measured_focus
+    assert set(measured_focus) == {"snr", "playback"}
 
     active = ["ni3", "hao3", "xiao3", "wo1"]
     token_map = {"<blank>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}
