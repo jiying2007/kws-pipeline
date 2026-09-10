@@ -28,6 +28,8 @@ from synthetic_audio import (  # noqa: E402
     write_wav,
 )
 
+SELECTION_POLICY = "balanced-strict-prefix-anchor-topk-v2"
+
 
 def enumerate_safe_sequences(
     active_tokens: list[str], forbidden: list[list[str]], *, max_length: int = 5
@@ -42,6 +44,98 @@ def enumerate_safe_sequences(
             if safe_negative(list(sequence), forbidden):
                 rows.append(tuple(sequence))
     return rows
+
+
+def strict_prefix_anchors(keywords: list[dict]) -> set[tuple[str, ...]]:
+    anchors: set[tuple[str, ...]] = set()
+    for keyword in keywords:
+        tokens = [str(token) for token in keyword.get("tokens", [])]
+        for length in range(1, len(tokens)):
+            anchors.add(tuple(tokens[:length]))
+    return anchors
+
+
+def select_adversarial_candidates(
+    ranked: list[dict],
+    keywords: list[dict],
+    *,
+    top_k: int,
+    min_per_keyword: int = 0,
+    include_strict_prefix_anchors: bool = False,
+) -> list[dict]:
+    if top_k <= 0:
+        raise ValueError("adversarial top_k must be positive")
+    if min_per_keyword < 0:
+        raise ValueError("adversarial min_per_keyword must be >= 0")
+    keyword_ids = [int(keyword["id"]) for keyword in keywords]
+    if len(set(keyword_ids)) != len(keyword_ids) or not keyword_ids:
+        raise ValueError("adversarial keyword ids must be non-empty and unique")
+    if min_per_keyword * len(keyword_ids) > top_k:
+        raise ValueError("adversarial per-keyword quota exceeds top_k capacity")
+
+    limit = min(top_k, len(ranked))
+    if limit <= 0:
+        return []
+    anchors = strict_prefix_anchors(keywords) if include_strict_prefix_anchors else set()
+    selected: list[dict] = []
+    seen: set[tuple[str, ...]] = set()
+
+    def add(item: dict, reason: str) -> bool:
+        tokens = tuple(str(token) for token in item.get("tokens", []))
+        if not tokens or tokens in seen or len(selected) >= limit:
+            return False
+        row = dict(item)
+        reasons = list(row.get("selection_reasons", []))
+        if reason not in reasons:
+            reasons.append(reason)
+        row["selection_reasons"] = reasons
+        selected.append(row)
+        seen.add(tokens)
+        return True
+
+    # Anchors encode the terminal-completion failure family generically. They are
+    # derived only from configured wake paths, never from a formal qualification
+    # clip or seed, and therefore remain reusable development data.
+    if anchors:
+        for item in ranked:
+            if tuple(str(token) for token in item.get("tokens", [])) in anchors:
+                add(item, "strict-prefix-anchor")
+        missing = anchors - seen
+        if missing:
+            raise ValueError(
+                "adversarial ranking omitted configured strict-prefix anchors: "
+                + ", ".join(" ".join(tokens) for tokens in sorted(missing))
+            )
+
+    # Reserve capacity for each shipping keyword before global hardest-fill so a
+    # dominant keyword cannot starve the other keyword's hard-negative replay.
+    for keyword_id in keyword_ids:
+        have = sum(int(item.get("focus_keyword_id", -1)) == keyword_id for item in selected)
+        if have >= min_per_keyword:
+            continue
+        for item in ranked:
+            if int(item.get("focus_keyword_id", -1)) != keyword_id:
+                continue
+            if add(item, f"keyword-{keyword_id}-quota"):
+                have += 1
+            if have >= min_per_keyword:
+                break
+        if have < min_per_keyword:
+            raise ValueError(
+                f"adversarial ranking cannot satisfy keyword {keyword_id} quota "
+                f"{min_per_keyword}; selected={have}"
+            )
+
+    for item in ranked:
+        if len(selected) >= limit:
+            break
+        add(item, "global-hardest-fill")
+
+    if len(selected) != limit:
+        raise ValueError(
+            f"adversarial selection produced {len(selected)} entries, expected {limit}"
+        )
+    return selected
 
 
 def _stable_seed(text: str) -> int:
@@ -119,8 +213,12 @@ def mine_adversarial_lexicon(
     top_k = int(policy.get("top_k", 24))
     probes_per_sequence = int(policy.get("probes_per_sequence", 2))
     replay_examples = int(policy.get("replay_examples_per_sequence", 4))
+    min_per_keyword = int(policy.get("min_per_keyword", 0))
+    include_prefix_anchors = bool(policy.get("include_strict_prefix_anchors", False))
     if top_k <= 0 or probes_per_sequence <= 0 or replay_examples <= 0:
         raise ValueError("adversarial lexicon counts must be positive")
+    if min_per_keyword < 0:
+        raise ValueError("adversarial min_per_keyword must be >= 0")
 
     tokens_path = pathlib.Path(str(cfg["tokens"]))
     keywords_path = pathlib.Path(str(cfg["keywords"]))
@@ -208,7 +306,13 @@ def mine_adversarial_lexicon(
         )
 
     ranked.sort(key=lambda item: (-float(item["max_confidence"]), tuple(item["tokens"])))
-    selected = ranked[: min(top_k, len(ranked))]
+    selected = select_adversarial_candidates(
+        ranked,
+        keywords,
+        top_k=top_k,
+        min_per_keyword=min_per_keyword,
+        include_strict_prefix_anchors=include_prefix_anchors,
+    )
     replay_rows: list[dict] = []
     for selected_index, item in enumerate(selected):
         for example_index in range(replay_examples):
@@ -245,9 +349,17 @@ def mine_adversarial_lexicon(
         ),
         encoding="utf-8",
     )
+    per_keyword_selected = {
+        str(keyword["id"]): sum(
+            int(item["focus_keyword_id"]) == int(keyword["id"]) for item in selected
+        )
+        for keyword in keywords
+    }
+    anchors = strict_prefix_anchors(keywords) if include_prefix_anchors else set()
     evidence = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": "development-only-adversarial-lexicon",
+        "selection_policy": SELECTION_POLICY,
         "round": round_index,
         "frontend": frontend,
         "max_length": max_length,
@@ -255,6 +367,10 @@ def mine_adversarial_lexicon(
         "top_k": len(selected),
         "probes_per_sequence": probes_per_sequence,
         "replay_examples_per_sequence": replay_examples,
+        "min_per_keyword": min_per_keyword,
+        "include_strict_prefix_anchors": include_prefix_anchors,
+        "strict_prefix_anchors": [list(tokens) for tokens in sorted(anchors)],
+        "per_keyword_selected": per_keyword_selected,
         "selected": selected,
         "manifest": str(manifest),
         "manifest_sha256": sha256_file(manifest),
