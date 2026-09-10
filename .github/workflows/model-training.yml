@@ -118,6 +118,8 @@ jobs:
           assert numpy.__version__ == '2.3.2'
           assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
           PY
+      - name: Verify decoder-aligned training objectives
+        run: .venv/bin/python training/test_sequence_margin.py
       - name: Train and iterate domain rounds
         id: train
         shell: bash
@@ -130,6 +132,13 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Enforce development shadow qualification arena
+        run: |
+          .venv/bin/python training/shadow_qualification.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/model-training \
+            --output build/model-training/shadow-qualification
       - name: Rotate untouched qualification cohort
         run: |
           .venv/bin/python training/render_qualification_holdout.py \
@@ -158,6 +167,8 @@ jobs:
           cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
           far_cohort_path = root / 'best/far-holdout-cohort.json'
           far_cohort = json.loads(far_cohort_path.read_text(encoding='utf-8'))
+          shadow_path = root / 'shadow-qualification/summary.json'
+          shadow = json.loads(shadow_path.read_text(encoding='utf-8'))
           qualified = bool(summary['qualified'])
           train_exit = int(summary['training_exit_code'])
           iteration_exit = int(summary['iteration_exit_code'])
@@ -167,6 +178,10 @@ jobs:
           print(json.dumps(cohort, indent=2, sort_keys=True))
           print(json.dumps(far_cohort, indent=2, sort_keys=True))
           print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
+          if not bool(shadow.get('qualified')):
+              raise SystemExit('formal qualification ran without a qualified shadow arena')
+          if bool(shadow.get('formal_qualification_seed_consumed', True)):
+              raise SystemExit('shadow qualification claims formal seed consumption')
           if iteration_exit not in (0, 1):
               raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
           if qualified != (train_exit == 0):
@@ -378,6 +393,8 @@ jobs:
             build/model-training/domain-loop-manifest.json
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json
+            build/model-training/shadow-qualification/
+            build/model-training/adversarial-lexicon/
             build/model-training/hard-negative-stream/
             build/model-training/hard-negative-replay/
             build/model-training/hard-negative-holdout/
