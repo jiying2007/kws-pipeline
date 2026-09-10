@@ -4,6 +4,7 @@ from __future__ import annotations
 import torch
 import torch.nn.functional as F
 
+from completion_loss import strict_prefix_completion_loss
 from sequence_margin import keyword_sequence_margin_loss
 
 
@@ -33,6 +34,13 @@ def true_nll(log_probs: torch.Tensor, target: list[int]) -> tuple[torch.Tensor, 
     return targets, input_lengths, target_lengths, raw
 
 
+def operating_points() -> list[dict]:
+    return [
+        {"threshold": 0.55, "positive_margin": 0.05, "negative_margin": 0.06},
+        {"threshold": 0.55, "positive_margin": 0.055, "negative_margin": 0.06},
+    ]
+
+
 def margin(
     log_probs: torch.Tensor,
     target: list[int],
@@ -51,6 +59,19 @@ def margin(
         blank=0,
         margin=0.05,
         keyword_operating_points=keyword_operating_points,
+    )
+
+
+def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
+    targets, input_lengths, target_lengths, _ = true_nll(log_probs, target)
+    return strict_prefix_completion_loss(
+        log_probs=log_probs,
+        targets=targets,
+        input_lengths=input_lengths,
+        target_lengths=target_lengths,
+        keyword_sequences=[[1, 2, 3, 4], [3, 4, 3, 4]],
+        keyword_operating_points=operating_points(),
+        tail_steps=6,
     )
 
 
@@ -86,6 +107,37 @@ def main() -> int:
     assert float(weak_loss.item()) > 0.50
     weak_loss.mean().backward()
     assert weak_logits.grad is not None
+
+    # The #132/#135 failure mode is a strict "你好小" prefix with a spurious
+    # terminal wo1 posterior in the acoustic tail. The completion hinge must
+    # concentrate gradient on that missing terminal token without changing the
+    # shipping 0.55 threshold or global sequence margin.
+    prefix_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
+    prefix_logits[:, :, 0] = 5.0
+    for position, token in zip([1, 3, 5], [1, 2, 3]):
+        prefix_logits[position, 0, 0] = -6.0
+        prefix_logits[position, 0, token] = 8.0
+    prefix_logits[9, 0, 0] = -1.0
+    prefix_logits[9, 0, 4] = 7.0
+    prefix_log_probs = prefix_logits.requires_grad_().log_softmax(dim=2)
+    prefix_completion = completion(prefix_log_probs, [1, 2, 3])
+    assert float(prefix_completion.item()) > 0.05
+    prefix_completion.mean().backward()
+    assert prefix_logits.grad is not None
+    assert abs(float(prefix_logits.grad[9, 0, 4])) > 0.0
+
+    # A strict prefix with a blank-dominant terminal window is already safe.
+    safe_prefix = make_logits([1, 2, 3])
+    safe_prefix_completion = completion(safe_prefix, [1, 2, 3])
+    assert float(safe_prefix_completion.item()) < 1.0e-6
+
+    # Full wake positives and unrelated negatives must not receive the strict-
+    # prefix terminal penalty; their discrimination remains owned by CTC,
+    # ordered-token, sequence-margin and recurrent-release objectives.
+    complete_wake = make_logits([1, 2, 3, 4])
+    assert float(completion(complete_wake, [1, 2, 3, 4]).item()) == 0.0
+    unrelated = make_logits([2, 1, 3, 4])
+    assert float(completion(unrelated, [2, 1, 3]).item()) == 0.0
 
     # A stricter negative margin on keyword 2 must increase the penalty for a
     # partial "小窝小" target whose acoustic continuation realizes "小窝小窝".
