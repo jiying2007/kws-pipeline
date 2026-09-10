@@ -4,12 +4,29 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import pathlib
 import shutil
 import subprocess
 
 HEX = set("0123456789abcdef")
+PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"
+DATA_POLICY = "train-only-balanced-mining-v1"
+ADVERSARIAL_POLICY = "balanced-strict-prefix-anchor-topk-v2"
+FAILURE_REPLAY_POLICY = "development-failure-resynthesis-v1"
+EXPECTED_ADVERSARIAL_TOP_K = 64
+EXPECTED_ADVERSARIAL_PROBES = 2
+EXPECTED_ADVERSARIAL_REPLAY_PER_SEQUENCE = 8
+EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES = 512
+EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD = 24
+EXPECTED_SAFE_LEXICAL_POOL = 1330
+EXPECTED_PREFIX_ANCHORS = {
+    ("ni3",),
+    ("ni3", "hao3"),
+    ("ni3", "hao3", "xiao3"),
+    ("xiao3",),
+    ("xiao3", "wo1"),
+    ("xiao3", "wo1", "xiao3"),
+}
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -20,8 +37,8 @@ def sha256(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def require_file(path: pathlib.Path, label: str) -> pathlib.Path:
-    if not path.is_file() or path.stat().st_size == 0:
+def require_file(path: pathlib.Path, label: str, *, allow_empty: bool = False) -> pathlib.Path:
+    if not path.is_file() or (not allow_empty and path.stat().st_size == 0):
         raise ValueError(f"missing/empty {label}: {path}")
     return path
 
@@ -51,10 +68,7 @@ def require_zero_error(summary: dict, *, expected: int, label: str) -> None:
 
 
 def resolve_best(root: pathlib.Path, name: str) -> pathlib.Path:
-    matches = [
-        path for path in root.rglob(name)
-        if path.is_file() and path.parent.name == "best"
-    ]
+    matches = [path for path in root.rglob(name) if path.is_file() and path.parent.name == "best"]
     if len(matches) != 1:
         raise ValueError(f"expected exactly one best/{name}, got {len(matches)}")
     return require_file(matches[0], f"best/{name}")
@@ -67,6 +81,7 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
         "model-provenance.json": "xiaowo-model-provenance.json",
         "keywords.kwk": "xiaowo-keywords.kwk",
         "keywords.tsv": "xiaowo-keywords.tsv",
+        "development-failure-replay.json": "development-failure-replay.json",
     }
     evidence = {
         root / "training-run-summary.json": "training-run-summary.json",
@@ -95,10 +110,21 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
 
 
 def git_tree(repo: str, commit: str) -> str:
-    payload = subprocess.check_output(
-        ["gh", "api", f"repos/{repo}/git/commits/{commit}"], text=True
-    )
+    payload = subprocess.check_output(["gh", "api", f"repos/{repo}/git/commits/{commit}"], text=True)
     return str(json.loads(payload)["tree"]["sha"])
+
+
+def provenance_manifest_count(provenance: dict, name: str, digest: str) -> int:
+    manifests = provenance.get("training", {}).get("manifests", [])
+    if not isinstance(manifests, list):
+        raise ValueError("model provenance training.manifests is invalid")
+    return sum(
+        1
+        for row in manifests
+        if isinstance(row, dict)
+        and str(row.get("name")) == name
+        and str(row.get("sha256")) == digest
+    )
 
 
 def verify(args: argparse.Namespace) -> dict:
@@ -134,8 +160,11 @@ def verify(args: argparse.Namespace) -> dict:
     require_zero_error(qualification, expected=256, label="qualification evidence")
     per_keyword = qualification.get("per_keyword", {})
     for keyword_id in ("1", "2"):
-        row = per_keyword.get(keyword_id, {})
-        require_zero_error(row, expected=128, label=f"qualification keyword {keyword_id}")
+        require_zero_error(
+            per_keyword.get(keyword_id, {}),
+            expected=128,
+            label=f"qualification keyword {keyword_id}",
+        )
 
     robustness = load_json(dist / "robustness-summary.json", "robustness summary")
     if not bool(robustness.get("qualified")) or robustness.get("failures") != []:
@@ -192,29 +221,37 @@ def verify(args: argparse.Namespace) -> dict:
     if qualification_seed < 0 or qualification_seed in retired:
         raise ValueError("qualification seed is invalid or already retired in its own cohort evidence")
 
-    if str(cohort.get("formal_preflight_policy")) != "shadow-adversarial-formal-preflight-v1":
-        raise ValueError("qualification cohort lacks guarded formal preflight policy")
+    if str(cohort.get("formal_preflight_policy")) != PREFLIGHT_POLICY:
+        raise ValueError("qualification cohort lacks Data V3 guarded formal preflight policy")
     for key in (
         "shadow_qualification_required",
         "shadow_qualification_qualified",
         "adversarial_refinement_required",
         "model_provenance_adversarial_manifest_verified",
         "adversarial_overlap_guard_included",
+        "failure_replay_required",
+        "model_provenance_failure_replay_manifest_verified",
     ):
         if not bool(cohort.get(key)):
             raise ValueError(f"qualification cohort prerequisite is false: {key}")
     if bool(cohort.get("adversarial_formal_qualification_used", True)):
         raise ValueError("qualification cohort says adversarial training used formal qualification")
+    if bool(cohort.get("failure_replay_formal_qualification_used", True)):
+        raise ValueError("qualification cohort says failure replay used formal qualification")
+    if bool(cohort.get("failure_replay_development_source_wav_bytes_copied", True)):
+        raise ValueError("qualification cohort says failure replay copied development WAV bytes")
 
     shadow = load_json(dist / "shadow-qualification-summary.json", "shadow qualification summary")
     refinement = load_json(dist / "adversarial-refinement-summary.json", "adversarial refinement summary")
     adversarial = load_json(dist / "adversarial-lexicon.json", "adversarial lexicon evidence")
+    failure = load_json(dist / "development-failure-replay.json", "development failure replay evidence")
     preflight = load_json(dist / "formal-preflight.json", "formal preflight")
 
     sha_bindings = {
         "shadow_summary_sha256": "shadow-qualification-summary.json",
         "adversarial_refinement_summary_sha256": "adversarial-refinement-summary.json",
         "adversarial_lexicon_evidence_sha256": "adversarial-lexicon.json",
+        "failure_replay_evidence_sha256": "development-failure-replay.json",
         "formal_preflight_sha256": "formal-preflight.json",
     }
     for field, filename in sha_bindings.items():
@@ -270,52 +307,114 @@ def verify(args: argparse.Namespace) -> dict:
     if (
         str(adversarial.get("evidence_class")) != "development-only-adversarial-lexicon"
         or bool(adversarial.get("formal_qualification_used", True))
+        or str(adversarial.get("data_augmentation_policy")) != DATA_POLICY
+        or str(adversarial.get("selection_policy")) != ADVERSARIAL_POLICY
         or int(adversarial.get("max_length", -1)) != 5
-        or int(adversarial.get("probes_per_sequence", -1)) != 1
-        or int(adversarial.get("replay_examples_per_sequence", -1)) != 4
+        or int(adversarial.get("enumerated_sequences", -1)) != EXPECTED_SAFE_LEXICAL_POOL
+        or int(adversarial.get("top_k", -1)) != EXPECTED_ADVERSARIAL_TOP_K
+        or int(adversarial.get("probes_per_sequence", -1)) != EXPECTED_ADVERSARIAL_PROBES
+        or int(adversarial.get("replay_examples_per_sequence", -1)) != EXPECTED_ADVERSARIAL_REPLAY_PER_SEQUENCE
+        or int(adversarial.get("replay_examples", -1)) != EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES
+        or int(adversarial.get("min_per_keyword", -1)) != EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD
     ):
-        raise ValueError("adversarial lexicon policy contract failed")
-    if int(adversarial.get("enumerated_sequences", -1)) != int(cohort.get("adversarial_enumerated_sequences", -2)):
-        raise ValueError("adversarial enumeration count differs from formal cohort")
-    if int(adversarial.get("top_k", -1)) != int(cohort.get("adversarial_top_k", -2)):
-        raise ValueError("adversarial Top-K differs from formal cohort")
-    if int(adversarial.get("replay_examples", -1)) != int(cohort.get("adversarial_replay_examples", -2)):
-        raise ValueError("adversarial replay count differs from formal cohort")
-    if int(adversarial.get("top_k", 0)) != 24 or int(adversarial.get("replay_examples", 0)) != 96:
-        raise ValueError("adversarial Top-K/replay product policy drifted")
-    if int(adversarial.get("enumerated_sequences", 0)) != 1330:
-        raise ValueError("exhaustive safe lexical pool size drifted from 1330")
-    if require_sha(adversarial.get("manifest_sha256"), "adversarial manifest SHA") != require_sha(
+        raise ValueError("adversarial lexicon Data V3 policy contract failed")
+    per_keyword_selected = adversarial.get("per_keyword_selected", {})
+    for keyword_id in ("1", "2"):
+        if int(per_keyword_selected.get(keyword_id, 0)) < EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD:
+            raise ValueError(f"adversarial keyword {keyword_id} quota is below Data V3 minimum")
+    anchors = {
+        tuple(str(token) for token in item)
+        for item in adversarial.get("strict_prefix_anchors", [])
+        if isinstance(item, list)
+    }
+    if anchors != EXPECTED_PREFIX_ANCHORS:
+        raise ValueError("adversarial strict-prefix anchor set drifted")
+    for field in (
+        "enumerated_sequences",
+        "top_k",
+        "probes_per_sequence",
+        "replay_examples_per_sequence",
+        "replay_examples",
+        "min_per_keyword",
+    ):
+        if int(adversarial.get(field, -1)) != int(cohort.get(f"adversarial_{field}", -2)):
+            raise ValueError(f"adversarial {field} differs from formal cohort")
+    if dict(per_keyword_selected) != dict(cohort.get("adversarial_per_keyword_selected", {})):
+        raise ValueError("adversarial per-keyword selection differs from formal cohort")
+    if list(adversarial.get("strict_prefix_anchors", [])) != list(
+        cohort.get("adversarial_strict_prefix_anchors", [])
+    ):
+        raise ValueError("adversarial strict-prefix anchors differ from formal cohort")
+    if str(adversarial.get("selection_policy")) != str(cohort.get("adversarial_selection_policy")):
+        raise ValueError("adversarial selection policy differs from formal cohort")
+    if str(adversarial.get("data_augmentation_policy")) != str(
+        cohort.get("adversarial_data_augmentation_policy")
+    ):
+        raise ValueError("adversarial data policy differs from formal cohort")
+    adversarial_manifest_sha = require_sha(adversarial.get("manifest_sha256"), "adversarial manifest SHA")
+    if adversarial_manifest_sha != require_sha(
         cohort.get("adversarial_manifest_sha256"), "cohort adversarial manifest SHA"
     ):
         raise ValueError("adversarial manifest SHA differs from formal cohort")
 
-    if str(preflight.get("policy")) != "shadow-adversarial-formal-preflight-v1":
-        raise ValueError("formal preflight policy drifted")
-    for field, expected in (
-        ("development_manifest_sha256", development_manifest_sha),
-        ("development_selected_round", selected_round),
-        ("development_selected_frontend", selected_frontend),
-        ("shadow_summary_sha256", files["shadow-qualification-summary.json"]["sha256"]),
-        ("adversarial_refinement_summary_sha256", files["adversarial-refinement-summary.json"]["sha256"]),
-        ("adversarial_lexicon_evidence_sha256", files["adversarial-lexicon.json"]["sha256"]),
-        ("adversarial_manifest_sha256", str(cohort["adversarial_manifest_sha256"])),
+    if (
+        str(failure.get("evidence_class")) != "development-only-failure-resynthesis"
+        or str(failure.get("policy")) != FAILURE_REPLAY_POLICY
+        or not bool(failure.get("enabled"))
+        or bool(failure.get("formal_qualification_used", True))
+        or bool(failure.get("development_source_wav_bytes_copied", True))
+        or list(failure.get("source_splits", [])) != ["calibration", "test"]
     ):
+        raise ValueError("development failure replay evidence contract failed")
+    failure_manifest_sha = require_sha(failure.get("manifest_sha256"), "failure replay manifest SHA")
+    if failure_manifest_sha != require_sha(
+        cohort.get("failure_replay_manifest_sha256"), "cohort failure replay manifest SHA"
+    ):
+        raise ValueError("failure replay manifest SHA differs from formal cohort")
+    for field in (
+        "examples",
+        "observed_unique_failures",
+        "selected_unique_failures",
+    ):
+        if int(failure.get(field, -1)) != int(cohort.get(f"failure_replay_{field}", -2)):
+            raise ValueError(f"failure replay {field} differs from formal cohort")
+    failure_examples = int(failure.get("examples", 0))
+    if bool(cohort.get("failure_replay_overlap_guard_included")) != (failure_examples > 0):
+        raise ValueError("failure replay overlap-guard state disagrees with replay support")
+
+    if str(preflight.get("policy")) != PREFLIGHT_POLICY:
+        raise ValueError("formal preflight policy drifted")
+    scalar_preflight_bindings = {
+        "development_manifest_sha256": development_manifest_sha,
+        "development_selected_round": selected_round,
+        "development_selected_frontend": selected_frontend,
+        "shadow_summary_sha256": files["shadow-qualification-summary.json"]["sha256"],
+        "adversarial_refinement_summary_sha256": files["adversarial-refinement-summary.json"]["sha256"],
+        "adversarial_lexicon_evidence_sha256": files["adversarial-lexicon.json"]["sha256"],
+        "adversarial_manifest_sha256": adversarial_manifest_sha,
+        "failure_replay_evidence_sha256": files["development-failure-replay.json"]["sha256"],
+        "failure_replay_manifest_sha256": failure_manifest_sha,
+        "failure_replay_examples": failure_examples,
+    }
+    for field, expected in scalar_preflight_bindings.items():
         if preflight.get(field) != expected:
             raise ValueError(f"formal preflight {field} mismatch")
     if not bool(preflight.get("model_provenance_adversarial_manifest_verified")):
         raise ValueError("formal preflight lacks adversarial training provenance proof")
+    if not bool(preflight.get("model_provenance_failure_replay_manifest_verified")):
+        raise ValueError("formal preflight lacks failure-replay training provenance proof")
 
-    provenance_manifests = provenance.get("training", {}).get("manifests", [])
-    adversarial_manifest_sha = str(cohort["adversarial_manifest_sha256"])
-    matches = [
-        row for row in provenance_manifests
-        if isinstance(row, dict)
-        and str(row.get("name")) == "adversarial-hard-negatives.tsv"
-        and str(row.get("sha256")) == adversarial_manifest_sha
-    ]
-    if len(matches) != 1:
+    if provenance_manifest_count(
+        provenance, "adversarial-hard-negatives.tsv", adversarial_manifest_sha
+    ) != 1:
         raise ValueError("promoted model provenance does not prove adversarial replay training")
+    failure_manifest_matches = provenance_manifest_count(
+        provenance, "development-failure-replay.tsv", failure_manifest_sha
+    )
+    if failure_examples > 0 and failure_manifest_matches != 1:
+        raise ValueError("promoted model provenance does not prove development failure replay training")
+    if failure_examples == 0 and failure_manifest_matches != 0:
+        raise ValueError("zero-support failure replay unexpectedly appears in model training provenance")
 
     keyword_rows = [
         raw.split("\t")
@@ -351,7 +450,7 @@ def verify(args: argparse.Namespace) -> dict:
         raise ValueError("model provenance repository tree differs from requested training HEAD tree")
 
     manifest = {
-        "schema_version": 3,
+        "schema_version": 4,
         "source": {
             "repository": args.repository,
             "training_run_id": args.training_run_id,
@@ -368,6 +467,7 @@ def verify(args: argparse.Namespace) -> dict:
             "shadow_summary_sha256": files["shadow-qualification-summary.json"]["sha256"],
             "adversarial_refinement_summary_sha256": files["adversarial-refinement-summary.json"]["sha256"],
             "adversarial_lexicon_evidence_sha256": files["adversarial-lexicon.json"]["sha256"],
+            "failure_replay_evidence_sha256": files["development-failure-replay.json"]["sha256"],
         },
         "acceptance": {
             "qualification_expected": 256,
@@ -377,6 +477,13 @@ def verify(args: argparse.Namespace) -> dict:
             "strict_development_candidate_required": True,
             "adversarial_refinement_required": True,
             "adversarial_refinement_qualified": True,
+            "adversarial_data_policy": DATA_POLICY,
+            "adversarial_selection_policy": ADVERSARIAL_POLICY,
+            "adversarial_top_k": EXPECTED_ADVERSARIAL_TOP_K,
+            "adversarial_replay_examples": EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES,
+            "failure_replay_required": True,
+            "failure_replay_policy": FAILURE_REPLAY_POLICY,
+            "failure_replay_examples": failure_examples,
             "shadow_qualification_required": True,
             "shadow_qualification_qualified": True,
             "shadow_seed_count": len(shadow_results),
@@ -397,7 +504,8 @@ def verify(args: argparse.Namespace) -> dict:
     sums = dist / "MODEL_SHA256SUMS"
     release_files = [path for path in sorted(dist.iterdir()) if path.is_file() and path.name != sums.name]
     sums.write_text(
-        "".join(f"{sha256(path)}  {path.name}\n" for path in release_files), encoding="utf-8"
+        "".join(f"{sha256(path)}  {path.name}\n" for path in release_files),
+        encoding="utf-8",
     )
     return manifest
 
@@ -423,6 +531,13 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (json.JSONDecodeError, KeyError, OSError, subprocess.CalledProcessError, TypeError, ValueError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
+    except (
+        json.JSONDecodeError,
+        KeyError,
+        OSError,
+        subprocess.CalledProcessError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        print(f"error: {exc}")
         raise SystemExit(2)
