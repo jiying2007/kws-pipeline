@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 
@@ -94,6 +95,9 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
         raise ValueError("adversarial Top-K differs from selected record")
     if int(adversarial.get("replay_examples", -1)) != int(selected.get("adversarial_replay_examples", -2)):
         raise ValueError("adversarial replay count differs from selected record")
+    adversarial_manifest = pathlib.Path(str(adversarial.get("manifest") or ""))
+    if not adversarial_manifest.is_file() or sha256_file(adversarial_manifest) != str(adversarial["manifest_sha256"]):
+        raise ValueError("adversarial replay manifest is missing or its SHA drifted")
 
     provenance_path = work / "best" / "model-provenance.json"
     provenance = _read_json(provenance_path, "selected model provenance")
@@ -157,6 +161,7 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
         "adversarial_refinement_summary_sha256": sha256_file(refinement_path),
         "adversarial_lexicon_evidence_sha256": adversarial_sha,
         "adversarial_manifest_sha256": adversarial_manifest_sha,
+        "adversarial_manifest": str(adversarial_manifest),
         "adversarial_enumerated_sequences": int(adversarial["enumerated_sequences"]),
         "adversarial_top_k": int(adversarial["top_k"]),
         "adversarial_replay_examples": int(adversarial["replay_examples"]),
@@ -183,19 +188,30 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    subprocess.run(
-        [
-            sys.executable,
-            str(TRAINING / "render_qualification_holdout.py"),
-            "--config",
-            str(config),
-            "--work-dir",
-            str(work),
-            "--output",
-            str(output),
-        ],
-        check=True,
-    )
+    # The legacy renderer's development overlap scan intentionally only follows
+    # hard-negative-replay/round-*/hard-negatives.tsv. Inject the model-mined
+    # adversarial manifest into that scan namespace for the duration of formal
+    # rendering, so the active formal cohort proves zero WAV-byte overlap with
+    # every training source without changing finalizer FAR-replay semantics.
+    overlap_guard = work / "hard-negative-replay" / "round-adversarial-overlap-guard"
+    overlap_guard.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(pathlib.Path(preflight["adversarial_manifest"]), overlap_guard / "hard-negatives.tsv")
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                str(TRAINING / "render_qualification_holdout.py"),
+                "--config",
+                str(config),
+                "--work-dir",
+                str(work),
+                "--output",
+                str(output),
+            ],
+            check=True,
+        )
+    finally:
+        shutil.rmtree(overlap_guard, ignore_errors=True)
 
     cohort_path = output / "qualification-cohort.json"
     cohort = _read_json(cohort_path, "formal qualification cohort")
@@ -205,6 +221,7 @@ def main() -> int:
         {
             "formal_preflight_policy": POLICY,
             "formal_preflight_sha256": sha256_file(preflight_path),
+            "adversarial_overlap_guard_included": True,
             "shadow_qualification_required": True,
             "shadow_qualification_qualified": True,
             "shadow_summary_sha256": preflight["shadow_summary_sha256"],
