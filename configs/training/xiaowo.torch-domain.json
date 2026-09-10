@@ -20,30 +20,30 @@
     "tts": {
       "backend": "tone",
       "token_ms": 180.0,
-      "token_ms_jitter": 30.0,
+      "token_ms_jitter": 45.0,
       "gap_ms": 85.0,
       "lead_ms": 180.0,
       "tail_ms": 200.0,
       "amplitude": 12500.0,
-      "pitch_jitter": 0.012
+      "pitch_jitter": 0.020
     },
     "augment": {
-      "gain_db_min": -5.0,
-      "gain_db_max": 3.0,
-      "snr_db_min": 5.0,
+      "gain_db_min": -7.0,
+      "gain_db_max": 4.0,
+      "snr_db_min": 3.0,
       "snr_db_max": 36.0,
-      "echo_max_ms": 70.0,
-      "echo_gain_max": 0.18,
+      "echo_max_ms": 90.0,
+      "echo_gain_max": 0.22,
       "noise_profiles": ["white", "fan", "motor", "media"]
     }
   },
   "dataset": {
     "train": {
-      "positive_families_per_keyword": 24,
-      "confusable_families_per_keyword": 16,
-      "random_negative_families": 24,
+      "positive_families_per_keyword": 48,
+      "confusable_families_per_keyword": 32,
+      "random_negative_families": 48,
       "background_seconds_per_profile": 4.0,
-      "variants_per_family": 4
+      "variants_per_family": 6
     },
     "calibration": {
       "positive_families_per_keyword": 8,
@@ -131,57 +131,57 @@
     "hard_negative_replay": [
       {
         "tokens": ["hao3", "ni3", "xiao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["hao3", "hao3", "xiao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
-        "examples": 32,
+        "examples": 64,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["ni3", "hao3", "xiao3"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["ni3", "hao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["ni3", "xiao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["hao3", "xiao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 1
       },
       {
         "tokens": ["xiao3", "wo1", "xiao3"],
-        "examples": 32,
+        "examples": 64,
         "focus_keyword_id": 2
       },
       {
         "tokens": ["xiao3", "wo1"],
-        "examples": 32,
+        "examples": 64,
         "focus_keyword_id": 2
       },
       {
         "tokens": ["wo1", "xiao3", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 2
       },
       {
         "tokens": ["xiao3", "wo1", "wo1"],
-        "examples": 24,
+        "examples": 48,
         "focus_keyword_id": 2
       }
     ],
