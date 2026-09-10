@@ -12,11 +12,13 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
+from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
 from hard_negative_replay import (  # noqa: E402
     adaptive_focus,
     hard_negative_stress_focus,
     normalize_hard_negative_replay,
     normalize_positive_stress_replay,
+    positive_stress_focus,
 )
 from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
@@ -142,9 +144,29 @@ def validate_torch_iteration_policy() -> None:
     assert 0.55 in formal["calibration"]["thresholds"]
     assert len(formal["calibration"]["thresholds"]) >= 5
     assert int(formal["calibration"]["coordinate_rounds"]) >= 2
+
+    shadow = formal["shadow_qualification"]
+    assert shadow["enabled"] is True
+    assert len(shadow["seeds"]) == 8
+    assert len(set(shadow["seeds"])) == 8
+    assert int(shadow["expected_wakes_per_seed"]) == 256
+    assert float(shadow["min_surrogate_separation"]) > 0.0
+    assert int(formal["qualification_holdout_seed"]) not in set(shadow["seeds"])
+    assert not set(formal["retired_qualification_holdout_seeds"]) & set(shadow["seeds"])
+
+    adversarial = formal["domain_iteration"]["adversarial_lexicon"]
+    assert adversarial == {
+        "enabled": True,
+        "max_length": 5,
+        "top_k": 24,
+        "probes_per_sequence": 1,
+        "replay_examples_per_sequence": 4,
+    }
+
     positive_stress = formal["domain_iteration"]["positive_stress_replay"]
     assert {int(item["keyword_id"]) for item in positive_stress} == {1, 2}
     assert all(item["focus"] == "adaptive" for item in positive_stress)
+    assert all(int(item["examples"]) == 32 for item in positive_stress)
     assert all(item["fallback"]["distance_bin"] == "5m" for item in positive_stress)
     assert all(item["fallback"]["azimuth"] == "rear" for item in positive_stress)
     assert all(item["fallback"]["snr"] == "critical" for item in positive_stress)
@@ -201,7 +223,7 @@ def validate_torch_iteration_policy() -> None:
 
     # #132 and #135 both exposed the same ni3-hao3-xiao3 prefix under
     # different acoustics. Lock a generic six-factor covering array instead of
-    # hard-coding either qualification scene or increasing replay count.
+    # hard-coding either qualification scene or increasing static replay count.
     factor_levels = {
         "azimuth": ("front", "side", "rear"),
         "snr": ("critical", "low", "mid", "high"),
@@ -223,6 +245,40 @@ def validate_torch_iteration_policy() -> None:
         }
         expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
         assert observed_pairs == expected_pairs, (left, right, expected_pairs - observed_pairs)
+
+    # Positive stress is symmetric with hard negatives: 24/32 examples cover
+    # the same six-factor pairwise space, while the remaining eight retain the
+    # adaptive hardest-slice focus. This prevents a single rear-only curriculum
+    # focus from starving side/front recall as happened in #135.
+    adaptive = {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"}
+    positive_cover = [
+        positive_stress_focus(
+            coverage_domains,
+            round_index=0,
+            keyword_id=1,
+            example_index=index,
+            total_examples=32,
+            adaptive=adaptive,
+        )
+        for index in range(24)
+    ]
+    assert len(positive_cover) == 24
+    for left, right in itertools.combinations(factor_levels, 2):
+        observed_pairs = {
+            (factor_value(item, left), factor_value(item, right))
+            for item in positive_cover
+        }
+        expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
+        assert observed_pairs == expected_pairs, ("positive", left, right)
+    for index in range(24, 32):
+        assert positive_stress_focus(
+            coverage_domains,
+            round_index=0,
+            keyword_id=1,
+            example_index=index,
+            total_examples=32,
+            adaptive=adaptive,
+        ) == adaptive
 
     side_angles = {
         float(item["azimuth"])
@@ -256,6 +312,16 @@ def validate_torch_iteration_policy() -> None:
         ["ni3", "hao3", "xiao3", "wo1"],
         ["xiao3", "wo1", "xiao3", "wo1"],
     ]
+
+    # Exhaustive lexical arena: 1364 raw length-1..5 paths collapse to 1330
+    # safe development negatives after rejecting either wake as a subsequence.
+    lexical = enumerate_safe_sequences(active, forbidden, max_length=5)
+    assert len(lexical) == 1330
+    assert lexical == enumerate_safe_sequences(active, forbidden, max_length=5)
+    assert ("ni3", "hao3", "xiao3") in lexical
+    assert ("ni3", "hao3", "xiao3", "wo1") not in lexical
+    assert ("xiao3", "wo1", "xiao3", "wo1") not in lexical
+
     replay = normalize_hard_negative_replay(
         [
             {
