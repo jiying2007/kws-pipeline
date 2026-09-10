@@ -28,6 +28,8 @@ from synthetic_audio import (  # noqa: E402
 MAX_REPLAY_EXAMPLES_PER_SEQUENCE = 256
 MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD = 256
 DISTANCE_POINTS_M = {"0.5m": 0.5, "1m": 1.0, "2m": 2.0, "3m": 3.0, "5m": 5.0}
+HARD_NEGATIVE_AZIMUTH_BANDS = ("front", "side", "rear")
+HARD_NEGATIVE_SNR_BANDS = ("critical", "low", "mid", "high")
 
 
 def _repo_path(value: str) -> pathlib.Path:
@@ -236,6 +238,84 @@ def _snr_point(domains: dict, name: str) -> float:
     return (start + end) * 0.5
 
 
+def _azimuth_band(value: float) -> str:
+    if abs(value) <= 30.0:
+        return "front"
+    if abs(value) <= 90.0:
+        return "side"
+    return "rear"
+
+
+def hard_negative_stress_focus(
+    domains: dict,
+    *,
+    round_index: int,
+    item_index: int,
+    example_index: int,
+) -> dict:
+    """Guarantee bounded hard-negative coverage without increasing replay count.
+
+    Synthetic geometry uses a deterministic azimuth-band x SNR-band x playback
+    cube. With the product's 24-example replay entries, every one of the 3x4x2
+    primary stress combinations is present once per sequence and round. Exact
+    azimuth values rotate across rounds, while distance/noise/RT60 remain sampled
+    by the existing curriculum so replay keeps acoustic diversity. Measured-RIR
+    evidence never has its geometry overridden; only SNR/playback are stratified.
+    """
+    snr_bands: list[str] = []
+    for name in HARD_NEGATIVE_SNR_BANDS:
+        try:
+            _snr_point(domains, name)
+        except ValueError:
+            continue
+        snr_bands.append(name)
+    if not snr_bands:
+        return {}
+
+    playback_probability = float(domains.get("playback_probability", 0.0))
+    if playback_probability <= 0.0:
+        playback_states = [False]
+    elif playback_probability >= 1.0:
+        playback_states = [True]
+    else:
+        playback_states = [False, True]
+
+    measured_rir = isinstance(domains.get("rir_manifest"), dict)
+    azimuth_values: dict[str, list[float]] = {}
+    if not measured_rir:
+        raw_azimuths = [float(value) for value in domains.get("azimuth_deg", [])]
+        for band in HARD_NEGATIVE_AZIMUTH_BANDS:
+            values = [value for value in raw_azimuths if _azimuth_band(value) == band]
+            if values:
+                azimuth_values[band] = values
+
+    if measured_rir or not azimuth_values:
+        combinations = [
+            (None, snr, playback)
+            for playback in playback_states
+            for snr in snr_bands
+        ]
+    else:
+        combinations = [
+            (band, snr, playback)
+            for playback in playback_states
+            for snr in snr_bands
+            for band in HARD_NEGATIVE_AZIMUTH_BANDS
+            if band in azimuth_values
+        ]
+    if not combinations:
+        return {}
+
+    rotation = (round_index + item_index) * 7
+    band, snr, playback = combinations[(example_index + rotation) % len(combinations)]
+    focus: dict[str, object] = {"snr": snr, "playback": playback}
+    if band is not None:
+        values = azimuth_values[band]
+        cycle = example_index // len(combinations)
+        focus["azimuth"] = values[(round_index + item_index + cycle) % len(values)]
+    return focus
+
+
 def apply_focus(scene: dict, focus: dict, domains: dict) -> dict:
     if not focus:
         return scene
@@ -326,6 +406,7 @@ def render_hard_negative_replay(
             "positive_stress_examples": 0,
             "sequences": [],
             "positive_stress": [],
+            "hard_negative_stress_policy": "azimuth-snr-playback-cube-v1",
             "manifest": str(manifest),
             "manifest_sha256": sha256_file(manifest),
         }
@@ -432,7 +513,12 @@ def render_hard_negative_replay(
                 token_names=list(sequence["tokens"]),
                 target_ids=list(sequence["target_ids"]),
                 focus_keyword_id=sequence.get("focus_keyword_id"),
-                focus=None,
+                focus=hard_negative_stress_focus(
+                    domains,
+                    round_index=round_index,
+                    item_index=sequence_index,
+                    example_index=example_index,
+                ),
             )
 
     for positive_index, item in enumerate(positive_replay):
@@ -471,6 +557,7 @@ def render_hard_negative_replay(
         "examples": len(rows),
         "hard_negative_examples": hard_negative_examples,
         "positive_stress_examples": positive_stress_examples,
+        "hard_negative_stress_policy": "azimuth-snr-playback-cube-v1",
         "sequences": [
             {
                 "tokens": item["tokens"],
