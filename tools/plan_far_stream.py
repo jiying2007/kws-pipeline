@@ -72,18 +72,20 @@ def plan_stream_capacity(
     coverage_injections = len(clip_seconds) * injections_per_clip
     max_clip_seconds = max(clip_seconds)
     # long_far_stream schedules coverage starts on integer-second boundaries and
-    # protects each active clip using ceil(duration). Plan against the same span
-    # so a future manifest-size increase cannot make a formerly-valid fixed
-    # duration impossible before the runtime is even started.
+    # protects each active clip using ceil(duration). Use an integer start stride
+    # large enough for that protected occupancy plus the semantic boundary. This
+    # remains safe after long_far_stream rounds each target to an integer second.
     max_clip_span_seconds = max(1, int(math.ceil(max_clip_seconds)))
+    required_start_stride_seconds = max(
+        1,
+        int(math.ceil(max_clip_span_seconds + minimum_payload_gap_seconds)),
+    )
     if coverage_injections == 1:
         minimum_coverage_seconds = max_clip_span_seconds
     else:
-        stride = max_clip_span_seconds + minimum_payload_gap_seconds
-        minimum_coverage_seconds = int(
-            math.ceil(
-                (coverage_injections - 1) * stride + max_clip_span_seconds
-            )
+        minimum_coverage_seconds = (
+            (coverage_injections - 1) * required_start_stride_seconds
+            + max_clip_span_seconds
         )
     planned_seconds = max(baseline_seconds, minimum_coverage_seconds)
     planned_payload_rate_per_minute = coverage_injections * 60.0 / planned_seconds
@@ -100,6 +102,7 @@ def plan_stream_capacity(
         "coverage_injections": coverage_injections,
         "max_clip_seconds": max_clip_seconds,
         "max_clip_span_seconds": max_clip_span_seconds,
+        "required_start_stride_seconds": required_start_stride_seconds,
         "baseline_seconds": baseline_seconds,
         "minimum_payload_gap_seconds": minimum_payload_gap_seconds,
         "minimum_payload_rate_per_minute": minimum_payload_rate_per_minute,
