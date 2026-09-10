@@ -9,6 +9,12 @@
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
   "domain_work_dir": "build/model-training",
+  "shadow_qualification": {
+    "enabled": true,
+    "seeds": [731101, 731102, 731103, 731104, 731105, 731106, 731107, 731108],
+    "expected_wakes_per_seed": 256,
+    "min_surrogate_separation": 0.06
+  },
   "generator": {
     "continuous_gap_ms": 1600.0,
     "tts": {
@@ -113,6 +119,13 @@
     "max_domain_weight": 6.0,
     "stop_on_gate": false,
     "warm_start_strategy": "full",
+    "adversarial_lexicon": {
+      "enabled": true,
+      "max_length": 5,
+      "top_k": 24,
+      "probes_per_sequence": 1,
+      "replay_examples_per_sequence": 4
+    },
     "hard_negative_replay": [
       {
         "tokens": ["hao3", "ni3", "xiao3", "wo1"],
