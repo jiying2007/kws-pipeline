@@ -15,6 +15,8 @@ from qualification_fixture import write_model, write_pack, write_tokens
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE_RATE_HZ = 16000
+sys.path.insert(0, str(ROOT / "tools"))
+from plan_far_stream import plan_stream_capacity  # noqa: E402
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -107,6 +109,26 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
+
+    # Regression for model-training #134. The selected active FAR cohort grew to
+    # 352 clips and included a 2.318375 s clip. long_far_stream protects clip
+    # occupancy using ceil(duration)=3 s, so the old fixed 900 s stream cannot
+    # schedule all clips even once. Capacity planning must scale the stream while
+    # preserving both the 2 s semantic boundary and >=8 payloads/min contract.
+    capacity = plan_stream_capacity(
+        [2.318375] + [1.0] * 351,
+        baseline_seconds=900,
+        minimum_payload_gap_seconds=2.0,
+        minimum_payload_rate_per_minute=8.0,
+    )
+    assert capacity["negative_manifest_clips"] == 352
+    assert capacity["coverage_injections"] == 352
+    assert capacity["max_clip_span_seconds"] == 3
+    assert capacity["minimum_coverage_seconds"] == 1758
+    assert capacity["planned_seconds"] == 1758
+    assert capacity["planned_seconds"] > 900
+    assert capacity["planned_payload_rate_per_minute"] >= 8.0
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         tokens = root / "tokens.txt"
