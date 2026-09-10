@@ -237,28 +237,52 @@ jobs:
         run: |
           set -euo pipefail
           replay=build/model-training/best/hard-negatives.tsv
+          stream_root=build/model-training/hard-negative-stream
+          plan="$stream_root/plan.json"
           test -s "$replay"
-          # Coverage scheduling already injects every active FAR clip once across
-          # 900 s (128 clips => 8.53 clips/min). Disable extra random payloads:
-          # they can place two individually-negative utterances inside the decoder
-          # retention window and synthesize a real cross-boundary wake phrase.
+          mkdir -p "$stream_root"
+          # Size the stream from the finalized active FAR manifest. Keep every
+          # payload isolated outside the decoder retention window while retaining
+          # at least 8 semantic-negative payloads/minute. Extra random payloads
+          # stay disabled so cross-boundary token concatenation cannot synthesize
+          # a wake phrase that is absent from each individually-negative clip.
+          .venv/bin/python tools/plan_far_stream.py \
+            --negative-manifest "$replay" \
+            --injections-per-clip 1 \
+            --baseline-seconds 900 \
+            --minimum-payload-gap-seconds 2.0 \
+            --minimum-payload-rate-per-minute 8.0 \
+            --output "$plan"
+          stream_seconds="$(
+            python3 - "$plan" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          plan = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
+          print(int(plan['planned_seconds']))
+          PY
+          )"
           .venv/bin/python eval/long_far_stream.py \
             --runner build/kws_raw_stream \
             --model build/model-training/best/model.kwm \
             --keywords build/model-training/best/keywords.kwk \
             --negative-manifest "$replay" \
             --hard-negative-rate-per-minute 0.0 \
-            --seconds 900 \
+            --seconds "$stream_seconds" \
             --seed 5501 \
-            --output-dir build/model-training/hard-negative-stream \
+            --output-dir "$stream_root" \
             --max-far-per-hour 0
           python3 - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
           root = Path('build/model-training')
           stream_root = root / 'hard-negative-stream'
+          plan_path = stream_root / 'plan.json'
           training = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
+          plan = json.loads(plan_path.read_text(encoding='utf-8'))
           stream = json.loads((stream_root / 'summary.json').read_text(encoding='utf-8'))
           injections = [
               json.loads(line)
@@ -266,6 +290,22 @@ jobs:
               if line.strip()
           ]
           expected_clips = int(training['candidate_selection']['far_holdout_clip_count'])
+          if int(plan.get('schema_version', 0)) != 1 or str(plan.get('policy', '')) != 'coverage-capacity-v1':
+              raise SystemExit('continuous FAR capacity plan contract drifted')
+          if int(plan.get('negative_manifest_clips', -1)) != expected_clips:
+              raise SystemExit('continuous FAR capacity plan clip count differs from finalized holdout')
+          if int(plan.get('injections_per_clip', -1)) != 1:
+              raise SystemExit('continuous FAR capacity plan must schedule exactly one injection per clip')
+          if int(plan.get('coverage_injections', -1)) != expected_clips:
+              raise SystemExit('continuous FAR planned coverage count differs from finalized holdout')
+          if float(plan.get('minimum_payload_gap_seconds', -1.0)) != 2.0:
+              raise SystemExit('continuous FAR planned payload gap drifted')
+          if float(plan.get('minimum_payload_rate_per_minute', -1.0)) != 8.0:
+              raise SystemExit('continuous FAR planned payload rate floor drifted')
+          if int(plan.get('planned_seconds', -1)) != int(stream.get('seconds', -2)):
+              raise SystemExit('continuous FAR executed duration differs from capacity plan')
+          if float(plan.get('planned_payload_rate_per_minute', -1.0)) < 8.0:
+              raise SystemExit('continuous FAR capacity plan fell below 8 payloads/min')
           if int(stream.get('schema_version', 0)) != 2:
               raise SystemExit('continuous FAR summary is not coverage-aware schema v2')
           if int(stream.get('false_accepts', -1)) != 0 or float(stream.get('far_per_hour', -1.0)) != 0.0:
@@ -315,6 +355,12 @@ jobs:
               'full_negative_manifest_coverage': True,
               'negative_manifest_sha256': stream['negative_manifest_sha256'],
               'model_sha256': stream['model_sha256'],
+              'capacity_plan_policy': plan['policy'],
+              'capacity_plan_sha256': hashlib.sha256(plan_path.read_bytes()).hexdigest(),
+              'planned_seconds': int(plan['planned_seconds']),
+              'planned_payload_rate_per_minute': float(plan['planned_payload_rate_per_minute']),
+              'max_clip_span_seconds': int(plan['max_clip_span_seconds']),
+              'required_start_stride_seconds': int(plan['required_start_stride_seconds']),
           }
           (stream_root / 'stream-contract.json').write_text(
               json.dumps(contract, indent=2, sort_keys=True, allow_nan=False) + '\n',
