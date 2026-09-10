@@ -23,7 +23,11 @@
     "adversarial_probes_per_sequence": 2,
     "adversarial_replay_examples_per_sequence": 8,
     "adversarial_min_per_keyword": 24,
-    "adversarial_include_strict_prefix_anchors": true
+    "adversarial_include_strict_prefix_anchors": true,
+    "failure_replay_enabled": true,
+    "failure_replay_examples_per_failure": 4,
+    "failure_replay_max_unique_failures": 64,
+    "failure_replay_max_per_keyword": 32
   },
   "generator": {
     "continuous_gap_ms": 1600.0,
