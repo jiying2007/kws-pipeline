@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import pathlib
 import subprocess
@@ -151,11 +152,22 @@ def validate_torch_iteration_policy() -> None:
     formal_hard_negative = formal["domain_iteration"]["hard_negative_replay"]
     assert formal_hard_negative
     assert min(int(item["examples"]) for item in formal_hard_negative) >= 24
+    prefix = next(
+        item
+        for item in formal_hard_negative
+        if item["tokens"] == ["ni3", "hao3", "xiao3"]
+    )
+    assert int(prefix["examples"]) >= 24
+    assert int(prefix["focus_keyword_id"]) == 1
 
+    formal_domains = formal["domains"]
     coverage_domains = {
-        "azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
-        "snr_db": [3.0, 30.0],
-        "playback_probability": 0.35,
+        "distance_bands": formal_domains["distance_bands"],
+        "azimuth_deg": formal_domains["azimuth_deg"],
+        "rt60_s": formal_domains["rt60_s"],
+        "snr_db": formal_domains["snr_db"],
+        "noise_profiles": formal_domains["noise_profiles"],
+        "playback_probability": formal_domains["playback"]["probability"],
     }
 
     def azimuth_band(value: float) -> str:
@@ -186,6 +198,31 @@ def validate_torch_iteration_policy() -> None:
     }
     assert len(cube) == 24
     assert observed == expected
+
+    # #132 and #135 both exposed the same ni3-hao3-xiao3 prefix under
+    # different acoustics. Lock a generic six-factor covering array instead of
+    # hard-coding either qualification scene or increasing replay count.
+    factor_levels = {
+        "azimuth": ("front", "side", "rear"),
+        "snr": ("critical", "low", "mid", "high"),
+        "playback": (False, True),
+        "noise": tuple(formal_domains["noise_profiles"]),
+        "distance_bin": ("0.5m", "1m", "2m", "3m", "5m"),
+        "rt60": ("dry", "medium", "reverb"),
+    }
+
+    def factor_value(item: dict, factor: str):
+        if factor == "azimuth":
+            return azimuth_band(float(item["azimuth"]))
+        return item[factor]
+
+    assert all(set(item) == set(factor_levels) for item in cube)
+    for left, right in itertools.combinations(factor_levels, 2):
+        observed_pairs = {
+            (factor_value(item, left), factor_value(item, right)) for item in cube
+        }
+        expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
+        assert observed_pairs == expected_pairs, (left, right, expected_pairs - observed_pairs)
 
     side_angles = {
         float(item["azimuth"])
