@@ -124,7 +124,9 @@
       "max_length": 5,
       "top_k": 24,
       "probes_per_sequence": 1,
-      "replay_examples_per_sequence": 4
+      "replay_examples_per_sequence": 4,
+      "refinement_epochs": 12,
+      "refinement_lr_scale": 0.5
     },
     "hard_negative_replay": [
       {
