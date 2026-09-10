@@ -33,6 +33,8 @@ HARD_NEGATIVE_AZIMUTH_BANDS = ("front", "side", "rear")
 HARD_NEGATIVE_SNR_BANDS = ("critical", "low", "mid", "high")
 HARD_NEGATIVE_RT60_BANDS = ("dry", "medium", "reverb")
 HARD_NEGATIVE_STRESS_POLICY = "hard-negative-pairwise-covering-v2"
+POSITIVE_STRESS_POLICY = "positive-pairwise-covering-plus-adaptive-v1"
+POSITIVE_STRESS_COVERING_EXAMPLES = 24
 
 
 def _repo_path(value: str) -> pathlib.Path:
@@ -385,6 +387,28 @@ def hard_negative_stress_focus(
     return focus
 
 
+def positive_stress_focus(
+    domains: dict,
+    *,
+    round_index: int,
+    keyword_id: int,
+    example_index: int,
+    total_examples: int,
+    adaptive: dict,
+) -> dict:
+    """Pairwise-cover positive acoustics, then spend residual capacity adaptively."""
+    if total_examples < POSITIVE_STRESS_COVERING_EXAMPLES:
+        return dict(adaptive)
+    if example_index < POSITIVE_STRESS_COVERING_EXAMPLES:
+        return hard_negative_stress_focus(
+            domains,
+            round_index=round_index,
+            item_index=1000 + int(keyword_id),
+            example_index=example_index,
+        )
+    return dict(adaptive)
+
+
 def apply_focus(scene: dict, focus: dict, domains: dict) -> dict:
     if not focus:
         return scene
@@ -478,6 +502,7 @@ def render_hard_negative_replay(
             "sequences": [],
             "positive_stress": [],
             "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
+            "positive_stress_policy": POSITIVE_STRESS_POLICY,
             "manifest": str(manifest),
             "manifest_sha256": sha256_file(manifest),
         }
@@ -593,12 +618,21 @@ def render_hard_negative_replay(
             )
 
     for positive_index, item in enumerate(positive_replay):
-        focus = (
+        adaptive = (
             adaptive_focus(curriculum_weights, int(item["keyword_id"]), item["fallback"])
             if item["focus"] == "adaptive"
             else dict(item["fallback"])
         )
-        for example_index in range(int(item["examples"])):
+        total_examples = int(item["examples"])
+        for example_index in range(total_examples):
+            focus = positive_stress_focus(
+                domains,
+                round_index=round_index,
+                keyword_id=int(item["keyword_id"]),
+                example_index=example_index,
+                total_examples=total_examples,
+                adaptive=adaptive,
+            )
             render_item(
                 kind="positive-stress",
                 item_index=positive_index,
@@ -616,12 +650,8 @@ def render_hard_negative_replay(
         ),
         encoding="utf-8",
     )
-    hard_negative_examples = sum(
-        int(item["examples"]) for item in sequences
-    )
-    positive_stress_examples = sum(
-        int(item["examples"]) for item in positive_replay
-    )
+    hard_negative_examples = sum(int(item["examples"]) for item in sequences)
+    positive_stress_examples = sum(int(item["examples"]) for item in positive_replay)
     evidence = {
         "schema_version": 1,
         "round": round_index,
@@ -629,6 +659,8 @@ def render_hard_negative_replay(
         "hard_negative_examples": hard_negative_examples,
         "positive_stress_examples": positive_stress_examples,
         "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
+        "positive_stress_policy": POSITIVE_STRESS_POLICY,
+        "positive_stress_covering_examples": POSITIVE_STRESS_COVERING_EXAMPLES,
         "sequences": [
             {
                 "tokens": item["tokens"],
