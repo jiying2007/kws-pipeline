@@ -93,9 +93,8 @@ def select_adversarial_candidates(
         seen.add(tokens)
         return True
 
-    # Anchors encode the terminal-completion failure family generically. They are
-    # derived only from configured wake paths, never from a formal qualification
-    # clip or seed, and therefore remain reusable development data.
+    # These anchors encode terminal-completion failure families generically from
+    # configured wake paths. No formal clip, formal seed or formal scene is used.
     if anchors:
         for item in ranked:
             if tuple(str(token) for token in item.get("tokens", [])) in anchors:
@@ -107,8 +106,7 @@ def select_adversarial_candidates(
                 + ", ".join(" ".join(tokens) for tokens in sorted(missing))
             )
 
-    # Reserve capacity for each shipping keyword before global hardest-fill so a
-    # dominant keyword cannot starve the other keyword's hard-negative replay.
+    # Reserve capacity for both shipping keywords before the global hardest fill.
     for keyword_id in keyword_ids:
         have = sum(int(item.get("focus_keyword_id", -1)) == keyword_id for item in selected)
         if have >= min_per_keyword:
@@ -196,6 +194,38 @@ def _render_sequence(
     }
 
 
+def _effective_policy(cfg: dict, legacy: dict) -> dict:
+    data_v3 = cfg.get("data_augmentation_v3", {})
+    if data_v3 is None:
+        data_v3 = {}
+    if not isinstance(data_v3, dict):
+        raise ValueError("data_augmentation_v3 must be an object")
+    if data_v3:
+        if str(data_v3.get("policy")) != "train-only-balanced-mining-v1":
+            raise ValueError("unsupported data_augmentation_v3 policy")
+        if data_v3.get("formal_qualification_used") is not False:
+            raise ValueError("data v3 must not use formal qualification")
+        if data_v3.get("expand_evaluation_splits") is not False:
+            raise ValueError("data v3 must not expand calibration/test/qualification")
+    return {
+        "data_policy": str(data_v3.get("policy") or "legacy"),
+        "top_k": int(data_v3.get("adversarial_top_k", legacy.get("top_k", 24))),
+        "probes_per_sequence": int(
+            data_v3.get("adversarial_probes_per_sequence", legacy.get("probes_per_sequence", 2))
+        ),
+        "replay_examples_per_sequence": int(
+            data_v3.get(
+                "adversarial_replay_examples_per_sequence",
+                legacy.get("replay_examples_per_sequence", 4),
+            )
+        ),
+        "min_per_keyword": int(data_v3.get("adversarial_min_per_keyword", 0)),
+        "include_strict_prefix_anchors": bool(
+            data_v3.get("adversarial_include_strict_prefix_anchors", False)
+        ),
+    }
+
+
 def mine_adversarial_lexicon(
     config_path: pathlib.Path,
     checkpoint_path: pathlib.Path,
@@ -206,15 +236,16 @@ def mine_adversarial_lexicon(
 ) -> dict:
     cfg = load_config(config_path)
     iteration = cfg.get("domain_iteration", {})
-    policy = iteration.get("adversarial_lexicon", {}) if isinstance(iteration, dict) else {}
-    if not isinstance(policy, dict) or not bool(policy.get("enabled", False)):
+    legacy = iteration.get("adversarial_lexicon", {}) if isinstance(iteration, dict) else {}
+    if not isinstance(legacy, dict) or not bool(legacy.get("enabled", False)):
         raise ValueError("adversarial lexicon policy is not enabled")
-    max_length = int(policy.get("max_length", 5))
-    top_k = int(policy.get("top_k", 24))
-    probes_per_sequence = int(policy.get("probes_per_sequence", 2))
-    replay_examples = int(policy.get("replay_examples_per_sequence", 4))
-    min_per_keyword = int(policy.get("min_per_keyword", 0))
-    include_prefix_anchors = bool(policy.get("include_strict_prefix_anchors", False))
+    max_length = int(legacy.get("max_length", 5))
+    effective = _effective_policy(cfg, legacy)
+    top_k = int(effective["top_k"])
+    probes_per_sequence = int(effective["probes_per_sequence"])
+    replay_examples = int(effective["replay_examples_per_sequence"])
+    min_per_keyword = int(effective["min_per_keyword"])
+    include_prefix_anchors = bool(effective["include_strict_prefix_anchors"])
     if top_k <= 0 or probes_per_sequence <= 0 or replay_examples <= 0:
         raise ValueError("adversarial lexicon counts must be positive")
     if min_per_keyword < 0:
@@ -359,6 +390,7 @@ def mine_adversarial_lexicon(
     evidence = {
         "schema_version": 2,
         "evidence_class": "development-only-adversarial-lexicon",
+        "data_augmentation_policy": str(effective["data_policy"]),
         "selection_policy": SELECTION_POLICY,
         "round": round_index,
         "frontend": frontend,
