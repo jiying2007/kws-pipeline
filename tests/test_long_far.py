@@ -110,6 +110,16 @@ def main() -> int:
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
+    workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "tools/plan_far_stream.py" in workflow
+    assert 'plan="$stream_root/plan.json"' in workflow
+    assert '--seconds "$stream_seconds"' in workflow
+    assert "coverage-capacity-v1" in workflow
+    assert "capacity_plan_sha256" in workflow
+    assert "required_start_stride_seconds" in workflow
+
     # Regression for model-training #134. The selected active FAR cohort grew to
     # 352 clips and included a 2.318375 s clip. long_far_stream protects clip
     # occupancy using ceil(duration)=3 s, so the old fixed 900 s stream cannot
@@ -124,6 +134,7 @@ def main() -> int:
     assert capacity["negative_manifest_clips"] == 352
     assert capacity["coverage_injections"] == 352
     assert capacity["max_clip_span_seconds"] == 3
+    assert capacity["required_start_stride_seconds"] == 5
     assert capacity["minimum_coverage_seconds"] == 1758
     assert capacity["planned_seconds"] == 1758
     assert capacity["planned_seconds"] > 900
