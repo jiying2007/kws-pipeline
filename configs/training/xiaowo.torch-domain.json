@@ -15,6 +15,16 @@
     "expected_wakes_per_seed": 256,
     "min_surrogate_separation": 0.06
   },
+  "data_augmentation_v3": {
+    "policy": "train-only-balanced-mining-v1",
+    "formal_qualification_used": false,
+    "expand_evaluation_splits": false,
+    "adversarial_top_k": 64,
+    "adversarial_probes_per_sequence": 2,
+    "adversarial_replay_examples_per_sequence": 8,
+    "adversarial_min_per_keyword": 24,
+    "adversarial_include_strict_prefix_anchors": true
+  },
   "generator": {
     "continuous_gap_ms": 1600.0,
     "tts": {
