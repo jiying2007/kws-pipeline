@@ -85,8 +85,6 @@ def validate_torch_iteration_policy() -> None:
     else:
         raise AssertionError("empty calibration candidate set was accepted")
 
-    # Regression for model-training #132: calibration-only and test-only passes
-    # from different rounds must never be promoted into a synthetic qualification.
     split_pass = [
         {
             "round": 0,
@@ -150,18 +148,27 @@ def validate_torch_iteration_policy() -> None:
     assert len(shadow["seeds"]) == 8
     assert len(set(shadow["seeds"])) == 8
     assert int(shadow["expected_wakes_per_seed"]) == 256
-    assert float(shadow["min_surrogate_separation"]) > 0.0
+    assert float(shadow["min_surrogate_separation"]) == 0.06
     assert int(formal["qualification_holdout_seed"]) not in set(shadow["seeds"])
     assert not set(formal["retired_qualification_holdout_seeds"]) & set(shadow["seeds"])
 
     adversarial = formal["domain_iteration"]["adversarial_lexicon"]
-    assert adversarial == {
-        "enabled": True,
-        "max_length": 5,
-        "top_k": 24,
-        "probes_per_sequence": 1,
-        "replay_examples_per_sequence": 4,
+    assert set(adversarial) == {
+        "enabled",
+        "max_length",
+        "top_k",
+        "probes_per_sequence",
+        "replay_examples_per_sequence",
+        "refinement_epochs",
+        "refinement_lr_scale",
     }
+    assert adversarial["enabled"] is True
+    assert int(adversarial["max_length"]) == 5
+    assert int(adversarial["top_k"]) == 24
+    assert int(adversarial["probes_per_sequence"]) == 1
+    assert int(adversarial["replay_examples_per_sequence"]) == 4
+    assert int(adversarial["refinement_epochs"]) == 12
+    assert float(adversarial["refinement_lr_scale"]) == 0.5
 
     positive_stress = formal["domain_iteration"]["positive_stress_replay"]
     assert {int(item["keyword_id"]) for item in positive_stress} == {1, 2}
@@ -221,9 +228,6 @@ def validate_torch_iteration_policy() -> None:
     assert len(cube) == 24
     assert observed == expected
 
-    # #132 and #135 both exposed the same ni3-hao3-xiao3 prefix under
-    # different acoustics. Lock a generic six-factor covering array instead of
-    # hard-coding either qualification scene or increasing static replay count.
     factor_levels = {
         "azimuth": ("front", "side", "rear"),
         "snr": ("critical", "low", "mid", "high"),
@@ -246,10 +250,6 @@ def validate_torch_iteration_policy() -> None:
         expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
         assert observed_pairs == expected_pairs, (left, right, expected_pairs - observed_pairs)
 
-    # Positive stress is symmetric with hard negatives: 24/32 examples cover
-    # the same six-factor pairwise space, while the remaining eight retain the
-    # adaptive hardest-slice focus. This prevents a single rear-only curriculum
-    # focus from starving side/front recall as happened in #135.
     adaptive = {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"}
     positive_cover = [
         positive_stress_focus(
@@ -313,8 +313,6 @@ def validate_torch_iteration_policy() -> None:
         ["xiao3", "wo1", "xiao3", "wo1"],
     ]
 
-    # Exhaustive lexical arena: 1364 raw length-1..5 paths collapse to 1330
-    # safe development negatives after rejecting either wake as a subsequence.
     lexical = enumerate_safe_sequences(active, forbidden, max_length=5)
     assert len(lexical) == 1330
     assert lexical == enumerate_safe_sequences(active, forbidden, max_length=5)
