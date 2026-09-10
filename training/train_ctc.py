@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
+from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completion_loss
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
@@ -40,6 +41,7 @@ POSITIVE_EXAMPLE_WEIGHT = 2.0
 ORDERED_TOKEN_LOSS_WEIGHT = 0.35
 KEYWORD_SEQUENCE_MARGIN = 0.05
 KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10
+PREFIX_COMPLETION_LOSS_WEIGHT = 0.10
 RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
 RECURRENT_RELEASE_CONTEXT_STEPS = 4
@@ -80,6 +82,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
         ROOT / "training" / "sequence_margin.py",
+        ROOT / "training" / "completion_loss.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
@@ -524,6 +527,8 @@ def main() -> None:
         or KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT <= 0.0
     ):
         parser.error("keyword sequence margin loss weight must be finite and > 0")
+    if not math.isfinite(PREFIX_COMPLETION_LOSS_WEIGHT) or PREFIX_COMPLETION_LOSS_WEIGHT <= 0.0:
+        parser.error("prefix completion loss weight must be finite and > 0")
     if not 0 <= RECURRENT_RELEASE_WARMUP_STEPS < RECURRENT_RELEASE_TAIL_STEPS:
         parser.error("recurrent release warmup must be inside the release tail")
     if not 1 <= RECURRENT_RELEASE_CONTEXT_STEPS <= RECURRENT_RELEASE_TAIL_STEPS:
@@ -573,6 +578,7 @@ def main() -> None:
         total_ctc = 0.0
         total_ordered = 0.0
         total_margin = 0.0
+        total_completion = 0.0
         total_release = 0.0
         ordered_correct = 0
         ordered_total = 0
@@ -601,11 +607,23 @@ def main() -> None:
                 keyword_operating_points=keyword_operating_points,
             )
             margin_loss = (margin_per_sample * sample_weights).sum() / sample_weights.sum()
+            completion_per_sample = strict_prefix_completion_loss(
+                log_probs=log_probs,
+                targets=y,
+                input_lengths=xlen,
+                target_lengths=ylen,
+                keyword_sequences=keyword_sequences,
+                keyword_operating_points=keyword_operating_points,
+            )
+            completion_loss = (
+                completion_per_sample * sample_weights
+            ).sum() / sample_weights.sum()
             release_loss = recurrent_release_loss(log_probs, xlen)
             loss = (
                 ctc_loss
                 + args.ordered_token_loss_weight * ordered_loss
                 + KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT * margin_loss
+                + PREFIX_COMPLETION_LOSS_WEIGHT * completion_loss
                 + RECURRENT_RELEASE_LOSS_WEIGHT * release_loss
             )
             optimizer.zero_grad(set_to_none=True)
@@ -616,6 +634,7 @@ def main() -> None:
             total_ctc += float(ctc_loss.detach())
             total_ordered += float(ordered_loss.detach())
             total_margin += float(margin_loss.detach())
+            total_completion += float(completion_loss.detach())
             total_release += float(release_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
@@ -624,8 +643,8 @@ def main() -> None:
         print(
             f"epoch={epoch + 1} loss={total / batches:.6f} "
             f"ctc={total_ctc / batches:.6f} ordered={total_ordered / batches:.6f} "
-            f"margin={total_margin / batches:.6f} release={total_release / batches:.6f} "
-            f"ordered_token_acc={ordered_accuracy:.6f}"
+            f"margin={total_margin / batches:.6f} completion={total_completion / batches:.6f} "
+            f"release={total_release / batches:.6f} ordered_token_acc={ordered_accuracy:.6f}"
         )
 
     manifest_metadata = [
@@ -664,6 +683,9 @@ def main() -> None:
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
+            "prefix_completion_loss_weight": PREFIX_COMPLETION_LOSS_WEIGHT,
+            "prefix_completion_tail_steps": PREFIX_COMPLETION_TAIL_STEPS,
+            "prefix_completion_policy": "strict-prefix-terminal-hinge-v1",
             "recurrent_release_tail_steps": RECURRENT_RELEASE_TAIL_STEPS,
             "recurrent_release_warmup_steps": RECURRENT_RELEASE_WARMUP_STEPS,
             "recurrent_release_context_steps": RECURRENT_RELEASE_CONTEXT_STEPS,
