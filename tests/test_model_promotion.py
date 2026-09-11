@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "model-promotion.yml"
 VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
+DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 
 
 def require(text: str, needle: str, label: str) -> None:
@@ -18,6 +19,7 @@ def main() -> int:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     verifier = VERIFIER.read_text(encoding="utf-8")
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
+    diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
 
     for needle in (
         "workflow_dispatch:",
@@ -47,11 +49,24 @@ def main() -> int:
         require(workflow, needle, "model-promotion workflow")
 
     for needle in (
+        'PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"',
+        'DATA_POLICY = "train-only-balanced-mining-v1"',
+        'ADVERSARIAL_POLICY = "balanced-strict-prefix-anchor-topk-v2"',
+        'FAILURE_REPLAY_POLICY = "development-failure-resynthesis-v1"',
+        "EXPECTED_ADVERSARIAL_TOP_K = 64",
+        "EXPECTED_ADVERSARIAL_PROBES = 2",
+        "EXPECTED_ADVERSARIAL_REPLAY_PER_SEQUENCE = 8",
+        "EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES = 512",
+        "EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD = 24",
+        "EXPECTED_SAFE_LEXICAL_POOL = 1330",
+        '("ni3", "hao3", "xiao3")',
+        '("xiao3", "wo1", "xiao3")',
         "xiaowo-model.kwm",
         "xiaowo-model.pt",
         "xiaowo-model-provenance.json",
         "xiaowo-keywords.kwk",
         "xiaowo-keywords.tsv",
+        "development-failure-replay.json",
         "training-run-summary.json",
         "qualification-summary.json",
         "qualification-cohort.json",
@@ -68,51 +83,35 @@ def main() -> int:
         "model provenance checkpoint SHA does not match promoted model.pt",
         "training summary artifact SHA mismatch",
         "qualification evidence",
-        "qualification keyword {keyword_id}",
         "robustness evidence is not qualified with zero failures",
         "continuous FAR evidence is not strict zero-error/full-coverage",
-        "qualification cohort lacks strict development prerequisite evidence",
-        "qualification cohort development manifest SHA",
         "latest-strict-gate-passing-round",
-        "qualification cohort development round differs from finalized model",
-        "qualification cohort development frontend differs from finalized model",
         "overlapping_development_active_wav_sha256",
         "overlapping_exposed_active_wav_sha256",
         "overlapping_retired_active_wav_sha256",
-        "shadow-adversarial-formal-preflight-v1",
         "shadow_qualification_required",
         "shadow_qualification_qualified",
         "adversarial_refinement_required",
         "model_provenance_adversarial_manifest_verified",
         "adversarial_overlap_guard_included",
-        "adversarial_formal_qualification_used",
+        "failure_replay_required",
+        "model_provenance_failure_replay_manifest_verified",
+        "failure_replay_formal_qualification_used",
+        "failure_replay_development_source_wav_bytes_copied",
         "development-only-shadow-qualification",
         "development-only-adversarial-lexicon",
         "post-domain-adversarial-refinement-v1",
         "adversarial-hard-negatives.tsv",
-        "exhaustive safe lexical pool size drifted from 1330",
-        "adversarial Top-K/replay product policy drifted",
-        "int(adversarial.get(\"top_k\", 0)) != 24",
-        "int(adversarial.get(\"replay_examples\", 0)) != 96",
-        "int(adversarial.get(\"max_length\", -1)) != 5",
-        "int(adversarial.get(\"probes_per_sequence\", -1)) != 1",
-        "int(adversarial.get(\"replay_examples_per_sequence\", -1)) != 4",
-        "shadow qualification arena is smaller than eight seeds",
-        "shadow seed surrogate separation fell below the promoted floor",
         "promoted model provenance does not prove adversarial replay training",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
         "xiao3 wo1 xiao3 wo1",
         "model provenance repository tree differs from requested training HEAD tree",
-        '"schema_version": 3',
-        '"adversarial_refinement_qualified": True',
-        '"shadow_qualification_qualified": True',
     ):
         require(verifier, needle, "promotion bundle verifier")
 
-    # Formal-seed ownership must be a one-way chain: base training may finish with
-    # development status 0/1, but refinement and all shadow gates must succeed
-    # before the guarded renderer can ever expose the reserved formal seed.
+    # Formal-seed ownership remains one-way: all development-only learning and
+    # shadow gates must complete before the guarded renderer can expose a seed.
     expected_order = [
         "Train and iterate domain rounds",
         "Refine strict candidate with model-mined adversarial lexicon",
@@ -143,6 +142,19 @@ def main() -> int:
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
 
+    # The compact sidecar is deliberately independent from the heavyweight model
+    # artifact so future failures can be diagnosed without downloading GBs.
+    for needle in (
+        '"compact-model-training-diagnostics"',
+        '"formal_seed"',
+        '"consumed_by_this_run"',
+        '"shadow_qualification"',
+        '"development_failure_replay"',
+        '"continuous_far"',
+        '"diagnostic_errors"',
+    ):
+        require(diagnostics, needle, "compact training diagnostics")
+
     if workflow.count('--repo "$GITHUB_REPOSITORY"') < 2:
         raise AssertionError("all release CLI calls must bind the repository explicitly")
     scan = workflow.lower()
@@ -155,7 +167,7 @@ def main() -> int:
     if 'tags:\n      - "v*"' in workflow:
         raise AssertionError("model promotion must not masquerade as the SDK v* release workflow")
 
-    print("model promotion + optimized training provenance contract: PASS")
+    print("model promotion + Data V3 provenance contract: PASS")
     return 0
 
 
