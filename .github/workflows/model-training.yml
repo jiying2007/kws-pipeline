@@ -11,6 +11,7 @@ on:
       - 'eval/domain_metrics.py'
       - 'eval/gate_robustness.py'
       - 'eval/long_far_stream.py'
+      - 'eval/run_continuous_far_gate.py'
       - 'include/**'
       - 'keywords/**'
       - 'src/**'
@@ -30,7 +31,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  torch-domain-iteration:
+  base-domain-training:
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
@@ -38,64 +39,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Refuse consumed formal qualification seed
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          config = json.loads(Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8'))
-          shipping = json.loads(Path('configs/shipping.xiaowo.json').read_text(encoding='utf-8'))
-          active = int(config['qualification_holdout_seed'])
-          retired = [int(value) for value in config['retired_qualification_holdout_seeds']]
-          model = shipping['model']
-          policy = shipping['nightly_policy']
-          frozen = int(model['qualification_seed'])
-          state = str(model['qualification_seed_state'])
-          reserved = int(policy['next_formal_candidate_seed_reserved'])
-
-          if state != 'consumed-and-frozen':
-              raise SystemExit(f'unexpected shipping qualification seed state: {state!r}')
-          if active == frozen:
-              raise SystemExit(
-                  f'formal qualification seed {active} is already consumed/frozen; '
-                  f'rotate explicitly to fresh reserved seed {reserved} before model training'
-              )
-          if frozen not in retired:
-              raise SystemExit(
-                  f'consumed qualification seed {frozen} must be retired before a new formal candidate'
-              )
-          if active != reserved:
-              raise SystemExit(
-                  f'formal qualification seed must rotate exactly to reserved seed {reserved}; got {active}'
-              )
-          if active in retired:
-              raise SystemExit(f'active qualification seed {active} is already retired')
-          print(
-              f'formal qualification rotation accepted: frozen={frozen} '
-              f'active={active} retired_count={len(retired)}'
-          )
-          PY
+        run: python3 training/verify_training_entry_contract.py
       - name: Verify shipping wake-word contract
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          rows = [
-              raw.split('\t')
-              for raw in Path('keywords/zh_cn_example.tsv').read_text(encoding='utf-8').splitlines()
-              if raw.strip() and not raw.lstrip().startswith('#')
-          ]
-          expected = [
-              ['1', '你好小窝', '0.55', 'ni3 hao3 xiao3 wo1'],
-              ['2', '小窝小窝', '0.55', 'xiao3 wo1 xiao3 wo1'],
-          ]
-          if rows != expected:
-              raise SystemExit(f'shipping wake-word contract drifted: {rows!r}')
-          if any(len(row[1]) != 4 for row in rows):
-              raise SystemExit('shipping Chinese wake words must be four characters')
-          if any(row[1] == '小窝' for row in rows):
-              raise SystemExit('two-character 小窝 is not a shipping wake word')
-          PY
+        run: python3 training/verify_training_entry_contract.py
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
@@ -109,12 +55,8 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
           .venv/bin/python - <<'PY'
-          import platform
           import numpy
           import torch
-          print('python', platform.python_version())
-          print('numpy', numpy.__version__)
-          print('torch', torch.__version__)
           assert numpy.__version__ == '2.3.2'
           assert str(torch.__version__).split('+', 1)[0] == '2.13.0'
           PY
@@ -132,6 +74,63 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Bind base-stage provenance receipt
+        env:
+          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+        run: |
+          python3 training/base_stage_receipt.py write \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-training/base-stage-receipt.json \
+            --iteration-exit-code "$ITERATION_EXIT_CODE"
+      - name: Retain exact base-domain state
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-domain-base-state
+          path: build/model-training/
+          if-no-files-found: error
+          retention-days: 3
+
+  refinement-and-qualification:
+    needs: base-domain-training
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Refuse consumed formal qualification seed
+        run: python3 training/verify_training_entry_contract.py
+      - name: Verify shipping wake-word contract
+        run: python3 training/verify_training_entry_contract.py
+      - name: Build and verify real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_raw_stream kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Verify decoder-aligned training objectives
+        run: .venv/bin/python training/test_sequence_margin.py
+      - name: Download exact base-domain state
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-domain-base-state
+          path: build/model-training
+      - name: Verify base-stage handoff receipt
+        id: base_stage
+        run: |
+          python3 training/base_stage_receipt.py verify \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --receipt build/model-training/base-stage-receipt.json \
+            --github-output "$GITHUB_OUTPUT"
       - name: Refine strict candidate with model-mined adversarial lexicon
         run: |
           .venv/bin/python training/adversarial_refinement.py \
@@ -153,7 +152,7 @@ jobs:
             --output build/model-training/qualification-dataset
       - name: Finalize latest strict gate-passing candidate and run summary
         env:
-          ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
+          ITERATION_EXIT_CODE: ${{ steps.base_stage.outputs.iteration_exit_code }}
         run: |
           .venv/bin/python training/finalize_domain_candidate.py \
             --config configs/training/xiaowo.torch-domain.json \
@@ -162,105 +161,9 @@ jobs:
             --iteration-exit-code "$ITERATION_EXIT_CODE"
       - name: Enforce synthetic qualification and holdout-isolation gates
         run: |
-          python3 - <<'PY'
-          import hashlib
-          import json
-          from pathlib import Path
-
-          root = Path('build/model-training')
-          config = json.loads(Path('configs/training/xiaowo.torch-domain.json').read_text(encoding='utf-8'))
-          summary = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
-          cohort = json.loads((root / 'qualification-dataset/qualification-cohort.json').read_text(encoding='utf-8'))
-          far_cohort_path = root / 'best/far-holdout-cohort.json'
-          far_cohort = json.loads(far_cohort_path.read_text(encoding='utf-8'))
-          shadow_path = root / 'shadow-qualification/summary.json'
-          shadow = json.loads(shadow_path.read_text(encoding='utf-8'))
-          refinement_path = root / 'adversarial-refinement/summary.json'
-          refinement = json.loads(refinement_path.read_text(encoding='utf-8'))
-          qualified = bool(summary['qualified'])
-          train_exit = int(summary['training_exit_code'])
-          iteration_exit = int(summary['iteration_exit_code'])
-          selection = summary.get('candidate_selection', {})
-          print(f"qualified={qualified} best_round={summary['best_round']} frontend={summary['best_frontend']}")
-          print(json.dumps(selection, indent=2, sort_keys=True))
-          print(json.dumps(cohort, indent=2, sort_keys=True))
-          print(json.dumps(far_cohort, indent=2, sort_keys=True))
-          print(json.dumps(summary['qualification'], indent=2, sort_keys=True))
-          if not bool(refinement.get('qualified')) or bool(refinement.get('formal_qualification_used', True)):
-              raise SystemExit('formal qualification ran without qualified development-only adversarial refinement')
-          if not bool(shadow.get('qualified')):
-              raise SystemExit('formal qualification ran without a qualified shadow arena')
-          if bool(shadow.get('formal_qualification_seed_consumed', True)):
-              raise SystemExit('shadow qualification claims formal seed consumption')
-          if str(cohort.get('formal_preflight_policy')) != 'shadow-adversarial-formal-preflight-v1':
-              raise SystemExit('formal qualification cohort lacks guarded preflight policy')
-          if not bool(cohort.get('shadow_qualification_required')) or not bool(cohort.get('shadow_qualification_qualified')):
-              raise SystemExit('formal qualification cohort lacks qualified shadow evidence')
-          if not bool(cohort.get('adversarial_refinement_required')):
-              raise SystemExit('formal qualification cohort lacks adversarial refinement prerequisite')
-          if bool(cohort.get('adversarial_formal_qualification_used', True)):
-              raise SystemExit('formal cohort says adversarial training used formal qualification')
-          if not bool(cohort.get('model_provenance_adversarial_manifest_verified')):
-              raise SystemExit('formal cohort lacks adversarial training provenance proof')
-          if not bool(cohort.get('adversarial_overlap_guard_included')):
-              raise SystemExit('formal cohort did not include adversarial WAVs in overlap guard')
-          if iteration_exit not in (0, 1):
-              raise SystemExit(f'training infrastructure failed with exit code {iteration_exit}')
-          if qualified != (train_exit == 0):
-              raise SystemExit(
-                  f'qualification/exit-code contract mismatch: qualified={qualified} exit={train_exit}'
-              )
-          if not bool(cohort.get('seed_disjoint')):
-              raise SystemExit('active qualification seed is not disjoint from training seed')
-          if int(cohort.get('qualification_seed', -1)) == int(cohort.get('training_seed', -1)):
-              raise SystemExit('active qualification reuses training seed')
-          if int(cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
-              raise SystemExit('active qualification overlaps retired qualification WAV content')
-          if int(cohort.get('overlapping_exposed_active_wav_sha256', -1)) != 0:
-              raise SystemExit('active qualification overlaps exposed retired qualification WAV content')
-          if int(cohort.get('overlapping_development_active_wav_sha256', -1)) != 0:
-              raise SystemExit('active qualification overlaps development/training WAV content')
-          if int(cohort.get('expected_wakes', 0)) != 256:
-              raise SystemExit('active qualification cohort does not contain 256 expected wakes')
-          retired_qualification = [int(value) for value in config['retired_qualification_holdout_seeds']]
-          if [int(value) for value in cohort.get('retired_exposed_qualification_seeds', [])] != retired_qualification:
-              raise SystemExit('qualification retired seed lineage differs from config')
-          if bool(selection.get('qualification_used_for_selection', True)):
-              raise SystemExit('qualification leaked into candidate selection')
-          if bool(selection.get('far_holdout_used_for_training', True)):
-              raise SystemExit('FAR holdout leaked into model training')
-          if bool(selection.get('far_holdout_used_for_selection', True)):
-              raise SystemExit('FAR holdout leaked into candidate selection')
-          if int(selection.get('overlapping_training_holdout_wav_sha256', -1)) != 0:
-              raise SystemExit('active FAR holdout overlaps training replay WAV content')
-          if int(selection.get('overlapping_retired_active_far_holdout_wav_sha256', -1)) != 0:
-              raise SystemExit('active FAR holdout overlaps retired FAR holdout WAV content')
-
-          active_namespace = int(config['far_holdout_round_namespace'])
-          retired_namespaces = [int(value) for value in config['retired_far_holdout_round_namespaces']]
-          if int(selection.get('far_holdout_round_namespace', -1)) != active_namespace:
-              raise SystemExit('candidate-selection FAR namespace differs from config')
-          if [int(value) for value in selection.get('retired_far_holdout_round_namespaces', [])] != retired_namespaces:
-              raise SystemExit('candidate-selection retired FAR namespaces differ from config')
-          if int(far_cohort.get('active_namespace', -1)) != active_namespace:
-              raise SystemExit('FAR cohort active namespace differs from config')
-          if [int(row['namespace']) for row in far_cohort.get('retired', [])] != retired_namespaces:
-              raise SystemExit('FAR cohort retired namespaces differ from config')
-          if int(far_cohort.get('overlapping_retired_active_wav_sha256', -1)) != 0:
-              raise SystemExit('FAR cohort attests retired/active WAV overlap')
-          if int(far_cohort.get('active_clip_count', 0)) != int(selection.get('far_holdout_clip_count', -1)):
-              raise SystemExit('FAR cohort active clip count differs from candidate-selection evidence')
-          if str(far_cohort.get('active_manifest_sha256', '')) != str(selection.get('far_holdout_sha256', '')):
-              raise SystemExit('FAR cohort active manifest SHA differs from candidate-selection evidence')
-
-          digest = hashlib.sha256(far_cohort_path.read_bytes()).hexdigest()
-          if digest != str(selection.get('far_holdout_cohort_sha256', '')):
-              raise SystemExit('FAR cohort SHA differs from candidate-selection evidence')
-          if digest != str(summary.get('artifacts', {}).get('far-holdout-cohort.json', '')):
-              raise SystemExit('FAR cohort SHA differs from final artifact evidence')
-          if not qualified:
-              raise SystemExit('synthetic qualification gates were not met')
-          PY
+          python3 training/verify_final_training_gates.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training
       - name: Enforce robustness matrix gate
         if: always()
         run: |
@@ -270,141 +173,10 @@ jobs:
             --output build/model-training/robustness-summary.json
       - name: Enforce continuous hard-negative regression gate
         if: success()
-        shell: bash
         run: |
-          set -euo pipefail
-          replay=build/model-training/best/hard-negatives.tsv
-          stream_root=build/model-training/hard-negative-stream
-          plan="$stream_root/plan.json"
-          test -s "$replay"
-          mkdir -p "$stream_root"
-          # Size the stream from the finalized active FAR manifest. Keep every
-          # payload isolated outside the decoder retention window while retaining
-          # at least 8 semantic-negative payloads/minute. Extra random payloads
-          # stay disabled so cross-boundary token concatenation cannot synthesize
-          # a wake phrase that is absent from each individually-negative clip.
-          .venv/bin/python tools/plan_far_stream.py \
-            --negative-manifest "$replay" \
-            --injections-per-clip 1 \
-            --baseline-seconds 900 \
-            --minimum-payload-gap-seconds 2.0 \
-            --minimum-payload-rate-per-minute 8.0 \
-            --output "$plan"
-          stream_seconds="$(
-            python3 - "$plan" <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-
-          plan = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
-          print(int(plan['planned_seconds']))
-          PY
-          )"
-          .venv/bin/python eval/long_far_stream.py \
+          .venv/bin/python eval/run_continuous_far_gate.py \
             --runner build/kws_raw_stream \
-            --model build/model-training/best/model.kwm \
-            --keywords build/model-training/best/keywords.kwk \
-            --negative-manifest "$replay" \
-            --hard-negative-rate-per-minute 0.0 \
-            --seconds "$stream_seconds" \
-            --seed 5501 \
-            --output-dir "$stream_root" \
-            --max-far-per-hour 0
-          python3 - <<'PY'
-          import hashlib
-          import json
-          from pathlib import Path
-
-          root = Path('build/model-training')
-          stream_root = root / 'hard-negative-stream'
-          plan_path = stream_root / 'plan.json'
-          training = json.loads((root / 'training-run-summary.json').read_text(encoding='utf-8'))
-          plan = json.loads(plan_path.read_text(encoding='utf-8'))
-          stream = json.loads((stream_root / 'summary.json').read_text(encoding='utf-8'))
-          injections = [
-              json.loads(line)
-              for line in (stream_root / 'hard-negative-injections.jsonl').read_text(encoding='utf-8').splitlines()
-              if line.strip()
-          ]
-          expected_clips = int(training['candidate_selection']['far_holdout_clip_count'])
-          if int(plan.get('schema_version', 0)) != 1 or str(plan.get('policy', '')) != 'coverage-capacity-v1':
-              raise SystemExit('continuous FAR capacity plan contract drifted')
-          if int(plan.get('negative_manifest_clips', -1)) != expected_clips:
-              raise SystemExit('continuous FAR capacity plan clip count differs from finalized holdout')
-          if int(plan.get('injections_per_clip', -1)) != 1:
-              raise SystemExit('continuous FAR capacity plan must schedule exactly one injection per clip')
-          if int(plan.get('coverage_injections', -1)) != expected_clips:
-              raise SystemExit('continuous FAR planned coverage count differs from finalized holdout')
-          if float(plan.get('minimum_payload_gap_seconds', -1.0)) != 2.0:
-              raise SystemExit('continuous FAR planned payload gap drifted')
-          if float(plan.get('minimum_payload_rate_per_minute', -1.0)) != 8.0:
-              raise SystemExit('continuous FAR planned payload rate floor drifted')
-          if int(plan.get('planned_seconds', -1)) != int(stream.get('seconds', -2)):
-              raise SystemExit('continuous FAR executed duration differs from capacity plan')
-          if float(plan.get('planned_payload_rate_per_minute', -1.0)) < 8.0:
-              raise SystemExit('continuous FAR capacity plan fell below 8 payloads/min')
-          if int(stream.get('schema_version', 0)) != 2:
-              raise SystemExit('continuous FAR summary is not coverage-aware schema v2')
-          if int(stream.get('false_accepts', -1)) != 0 or float(stream.get('far_per_hour', -1.0)) != 0.0:
-              raise SystemExit('continuous FAR gate is not zero-error')
-          if not bool(stream.get('full_negative_manifest_coverage')):
-              raise SystemExit('continuous FAR gate did not cover the full active holdout')
-          if int(stream.get('negative_manifest_clips', -1)) != expected_clips:
-              raise SystemExit('continuous FAR manifest clip count differs from finalized holdout')
-          if int(stream.get('unique_hard_negative_clips_injected', -1)) != expected_clips:
-              raise SystemExit('continuous FAR did not inject every active holdout clip')
-          if int(stream.get('min_observed_hard_negative_injections_per_clip', 0)) != 1:
-              raise SystemExit('continuous FAR must inject every active holdout clip exactly once')
-          if int(stream.get('coverage_forced_injections', -1)) != expected_clips:
-              raise SystemExit('continuous FAR forced coverage count differs from active holdout size')
-          if int(stream.get('hard_negative_injections', -1)) != expected_clips or len(injections) != expected_clips:
-              raise SystemExit('continuous FAR injection count differs from exact forced coverage')
-          if float(stream.get('hard_negative_rate_per_minute', -1.0)) != 0.0:
-              raise SystemExit('continuous FAR random hard-negative injection is not disabled')
-          if float(stream.get('coverage_hard_negative_gain', 0.0)) != 0.90:
-              raise SystemExit('continuous FAR coverage gain drifted from 0.90')
-          if any(not bool(row.get('coverage_required')) for row in injections):
-              raise SystemExit('continuous FAR contains a non-coverage random injection')
-
-          seconds = float(stream['seconds'])
-          actual_injection_rate_per_minute = len(injections) * 60.0 / seconds
-          minimum_payload_gap_seconds = 2.0
-          observed_gaps = [
-              float(current['start_second'])
-              - (float(previous['start_second']) + float(previous['source_seconds']))
-              for previous, current in zip(injections, injections[1:])
-          ]
-          observed_min_payload_gap_seconds = min(observed_gaps) if observed_gaps else seconds
-          if actual_injection_rate_per_minute < 8.0:
-              raise SystemExit('continuous FAR actual payload rate fell below 8/min')
-          if observed_min_payload_gap_seconds + 1.0e-9 < minimum_payload_gap_seconds:
-              raise SystemExit('continuous FAR payload gap is inside decoder retention window')
-
-          contract = {
-              'schema_version': 1,
-              'policy': 'semantic-negative-boundary-v1',
-              'all_injections_coverage_required': True,
-              'payload_injections': len(injections),
-              'actual_injection_rate_per_minute': actual_injection_rate_per_minute,
-              'minimum_payload_gap_seconds': minimum_payload_gap_seconds,
-              'observed_min_payload_gap_seconds': observed_min_payload_gap_seconds,
-              'decoder_retention_proof_window_seconds': 1.6,
-              'full_negative_manifest_coverage': True,
-              'negative_manifest_sha256': stream['negative_manifest_sha256'],
-              'model_sha256': stream['model_sha256'],
-              'capacity_plan_policy': plan['policy'],
-              'capacity_plan_sha256': hashlib.sha256(plan_path.read_bytes()).hexdigest(),
-              'planned_seconds': int(plan['planned_seconds']),
-              'planned_payload_rate_per_minute': float(plan['planned_payload_rate_per_minute']),
-              'max_clip_span_seconds': int(plan['max_clip_span_seconds']),
-              'required_start_stride_seconds': int(plan['required_start_stride_seconds']),
-          }
-          (stream_root / 'stream-contract.json').write_text(
-              json.dumps(contract, indent=2, sort_keys=True, allow_nan=False) + '\n',
-              encoding='utf-8',
-          )
-          print(json.dumps(contract, indent=2, sort_keys=True))
-          PY
+            --work-dir build/model-training
       - name: Retain trained model and iteration evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -412,11 +184,14 @@ jobs:
           name: xiaowo-torch-domain-model
           path: |
             build/model-training/best/
+            build/model-training/base-stage-receipt.json
             build/model-training/domain-loop-manifest.json
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json
             build/model-training/adversarial-refinement/
             build/model-training/adversarial-lexicon/
+            build/model-training/development-failure-replay/
+            build/model-training/qualification-repair/
             build/model-training/shadow-qualification/
             build/model-training/formal-preflight.json
             build/model-training/hard-negative-stream/
