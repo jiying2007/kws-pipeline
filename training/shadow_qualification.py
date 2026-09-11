@@ -141,6 +141,40 @@ def _surrogate_separation(
     return {"per_keyword": result, "minimum_separation": min(gaps)}
 
 
+def _metric_compact(base: dict) -> dict:
+    result = {
+        key: base[key]
+        for key in ("expected", "matched", "false_rejects", "false_accepts", "frr", "far_per_hour")
+        if key in base
+    }
+    per_keyword = base.get("per_keyword")
+    if isinstance(per_keyword, dict):
+        result["per_keyword"] = {
+            str(key): {
+                field: row[field]
+                for field in ("expected", "matched", "false_rejects", "false_accepts", "frr")
+                if isinstance(row, dict) and field in row
+            }
+            for key, row in sorted(per_keyword.items(), key=lambda item: str(item[0]))
+            if isinstance(row, dict)
+        }
+    return result
+
+
+def _emit_failure_annotation(row: dict, required_separation: float) -> None:
+    payload = {
+        "seed": int(row["seed"]),
+        "runtime_qualified": bool(row["runtime_qualified"]),
+        "surrogate_separation_qualified": bool(row["surrogate_separation_qualified"]),
+        "required_separation": float(required_separation),
+        "qualification": _metric_compact(row["qualification"]),
+        "surrogate": row["surrogate"],
+    }
+    message = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    print(f"::error title=Shadow qualification failed::{message}")
+
+
 def main() -> int:
     import argparse
 
@@ -206,19 +240,20 @@ def main() -> int:
         )
         qualified = runtime_qualified and separation_qualified
         all_qualified = all_qualified and qualified
-        results.append(
-            {
-                "seed": seed,
-                "qualified": qualified,
-                "runtime_qualified": runtime_qualified,
-                "surrogate_separation_qualified": separation_qualified,
-                "qualification": base,
-                "qualification_domains": domains,
-                "surrogate": separation,
-                "domain_index_sha256": sha256_file(dataset / "domain-index.jsonl"),
-                "references_sha256": sha256_file(dataset / "qualification.references.jsonl"),
-            }
-        )
+        row = {
+            "seed": seed,
+            "qualified": qualified,
+            "runtime_qualified": runtime_qualified,
+            "surrogate_separation_qualified": separation_qualified,
+            "qualification": base,
+            "qualification_domains": domains,
+            "surrogate": separation,
+            "domain_index_sha256": sha256_file(dataset / "domain-index.jsonl"),
+            "references_sha256": sha256_file(dataset / "qualification.references.jsonl"),
+        }
+        results.append(row)
+        if not qualified:
+            _emit_failure_annotation(row, float(policy["min_surrogate_separation"]))
 
     selection = development["candidate_selection"]
     summary = {
@@ -240,6 +275,29 @@ def main() -> int:
         + "\n",
         encoding="utf-8",
     )
+    failures = [row for row in results if not bool(row["qualified"])]
+    failure_summary = {
+        "schema_version": 1,
+        "evidence_class": "compact-shadow-failure-diagnostics",
+        "qualified": all_qualified,
+        "required_separation": float(policy["min_surrogate_separation"]),
+        "failure_count": len(failures),
+        "failures": [
+            {
+                "seed": int(row["seed"]),
+                "runtime_qualified": bool(row["runtime_qualified"]),
+                "surrogate_separation_qualified": bool(row["surrogate_separation_qualified"]),
+                "qualification": _metric_compact(row["qualification"]),
+                "surrogate": row["surrogate"],
+            }
+            for row in failures
+        ],
+    }
+    (output / "failure-summary.json").write_text(
+        json.dumps(failure_summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
     return 0 if all_qualified else 1
 
@@ -248,5 +306,7 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        message = str(exc).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::error title=Shadow qualification infrastructure failure::{message}")
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)
