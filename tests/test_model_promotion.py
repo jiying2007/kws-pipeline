@@ -8,6 +8,9 @@ WORKFLOW = ROOT / ".github" / "workflows" / "model-promotion.yml"
 VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
 DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
+REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
+REPAIR = ROOT / "training" / "qualification_failure_replay.py"
+ROBUSTNESS = ROOT / "eval" / "gate_robustness.py"
 
 
 def require(text: str, needle: str, label: str) -> None:
@@ -20,6 +23,9 @@ def main() -> int:
     verifier = VERIFIER.read_text(encoding="utf-8")
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
     diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
+    refinement = REFINEMENT.read_text(encoding="utf-8")
+    repair = REPAIR.read_text(encoding="utf-8")
+    robustness = ROBUSTNESS.read_text(encoding="utf-8")
 
     for needle in (
         "workflow_dispatch:",
@@ -110,8 +116,6 @@ def main() -> int:
     ):
         require(verifier, needle, "promotion bundle verifier")
 
-    # Formal-seed ownership remains one-way: all development-only learning and
-    # shadow gates must complete before the guarded renderer can expose a seed.
     expected_order = [
         "Train and iterate domain rounds",
         "Refine strict candidate with model-mined adversarial lexicon",
@@ -142,8 +146,39 @@ def main() -> int:
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
 
-    # The compact sidecar is deliberately independent from the heavyweight model
-    # artifact so future failures can be diagnosed without downloading GBs.
+    for needle in (
+        'POLICY = "development-qualification-repair-v1"',
+        "MAX_UNIQUE_FAILURES = 8",
+        "EXAMPLES_PER_FAILURE = 8",
+        "REPAIR_EPOCHS = 6",
+        "REPAIR_LR_SCALE = 0.25",
+        '"qualification_repair_source_splits": ["qualification"]',
+        '"source_splits": base_source_splits',
+        '"formal_qualification_used": False',
+        '"development_source_wav_bytes_copied": False',
+        "qualification repair accidentally copied a development evaluation WAV",
+    ):
+        require(repair, needle, "qualification repair replay")
+
+    for needle in (
+        "REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003",
+        "development-qualification-mining",
+        "development-qualification-repair-validation-config.json",
+        '"mining_cohort_used_for_training": True',
+        '"validation_cohort_used_for_training": False',
+        '"development_qualification_validation_used_for_training": False',
+        '"formal_qualification_used": False',
+        "development qualification repair did not reach strict triple-pass",
+    ):
+        require(refinement, needle, "qualification repair refinement")
+
+    for needle in (
+        '"blocked": True',
+        '"blocked_reason": reason',
+        'blocked_result("training-summary-missing")',
+    ):
+        require(robustness, needle, "robustness blocked diagnostic")
+
     for needle in (
         '"compact-model-training-diagnostics"',
         '"formal_seed"',
@@ -167,7 +202,7 @@ def main() -> int:
     if 'tags:\n      - "v*"' in workflow:
         raise AssertionError("model promotion must not masquerade as the SDK v* release workflow")
 
-    print("model promotion + Data V3 provenance contract: PASS")
+    print("model promotion + Data V3 qualification-repair provenance contract: PASS")
     return 0
 
 
