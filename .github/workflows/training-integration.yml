@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Staged model-training handoff contract
+        run: python3 tests/test_training_stage_handoff.py
       - name: Resolve immutable training image
         id: image
         shell: bash
