@@ -24,6 +24,12 @@ from iterate_domain import (
     run,
     sha256_file,
 )
+from qualification_failure_replay import (
+    POLICY as QUALIFICATION_REPAIR_POLICY,
+    REPAIR_EPOCHS,
+    REPAIR_LR_SCALE,
+    render_qualification_failure_replay,
+)
 from render_domains import render_domain_dataset
 from render_qualification_holdout import require_strict_development_candidate
 from synthetic_audio import load_config
@@ -87,6 +93,7 @@ def _train_refinement(
     epochs: int,
     lr_scale: float,
     refinement_round: int,
+    seed_offset: int = 0,
 ) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
     train = cfg.get("train", {})
     if not isinstance(train, dict):
@@ -96,7 +103,7 @@ def _train_refinement(
     model = output / "model.kwm"
     provenance = pathlib.Path(str(model) + ".provenance.json")
     learning_rate = float(train.get("lr", 0.001)) * lr_scale
-    seed = int(cfg.get("seed", 1337)) + 4_000_003 + refinement_round * 1009
+    seed = int(cfg.get("seed", 1337)) + 4_000_003 + refinement_round * 1009 + seed_offset
     command = [
         sys.executable,
         str(TRAINING / "train_ctc.py"),
@@ -151,6 +158,53 @@ def _train_refinement(
         ]
     )
     return model, checkpoint, provenance
+
+
+def _strict(base: dict, domains: dict, gates: dict) -> bool:
+    return base_gate(base, gates) and domain_gate(domains, gates)
+
+
+def _update_record_candidate(
+    record: dict,
+    *,
+    model: pathlib.Path,
+    checkpoint: pathlib.Path,
+    provenance: pathlib.Path,
+    calibrated: pathlib.Path,
+    pack: pathlib.Path,
+    cal_base: dict,
+    cal_domains: dict,
+    test_base: dict,
+    test_domains: dict,
+    failure: dict,
+    failure_evidence: pathlib.Path,
+    score: float,
+    qualification_repair_used: bool,
+) -> None:
+    record.update(
+        {
+            "score": score,
+            "model": str(model),
+            "model_sha256": sha256_file(model),
+            "checkpoint": str(checkpoint),
+            "provenance": str(provenance),
+            "provenance_sha256": sha256_file(provenance),
+            "keywords": str(calibrated),
+            "pack": str(pack),
+            "calibration": cal_base,
+            "calibration_domains": cal_domains,
+            "test": test_base,
+            "test_domains": test_domains,
+            "calibration_gate": _strict(cal_base, cal_domains, record["_gates"]),
+            "test_gate": _strict(test_base, test_domains, record["_gates"]),
+            "failure_replay_observed_unique_failures": int(failure["observed_unique_failures"]),
+            "failure_replay_selected_unique_failures": int(failure["selected_unique_failures"]),
+            "failure_replay_examples": int(failure["examples"]),
+            "failure_replay_manifest_sha256": str(failure["manifest_sha256"]),
+            "failure_replay_evidence_sha256": sha256_file(failure_evidence),
+            "qualification_repair_used": qualification_repair_used,
+        }
+    )
 
 
 def main() -> int:
@@ -225,9 +279,7 @@ def main() -> int:
         raise ValueError("development failure replay must not use formal qualification")
     if bool(failure.get("development_source_wav_bytes_copied", True)):
         raise ValueError("development failure replay copied evaluation WAV bytes")
-    failure_manifest = (
-        failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
-    )
+    failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
     model, checkpoint, provenance = _train_refinement(
@@ -267,8 +319,8 @@ def main() -> int:
         references=dataset / "test.references.jsonl",
         output=candidate_dir / "test",
     )
-    cal_gate = base_gate(cal_base, gates) and domain_gate(cal_domains, gates)
-    test_gate = base_gate(test_base, gates) and domain_gate(test_domains, gates)
+    cal_gate = _strict(cal_base, cal_domains, gates)
+    test_gate = _strict(test_base, test_domains, gates)
     score = objective(cal_base, cal_domains, gates) + objective(test_base, test_domains, gates)
 
     record = {
@@ -301,9 +353,7 @@ def main() -> int:
         "adversarial_enumerated_sequences": int(adversarial["enumerated_sequences"]),
         "adversarial_top_k": int(adversarial["top_k"]),
         "adversarial_probes_per_sequence": int(adversarial["probes_per_sequence"]),
-        "adversarial_replay_examples_per_sequence": int(
-            adversarial["replay_examples_per_sequence"]
-        ),
+        "adversarial_replay_examples_per_sequence": int(adversarial["replay_examples_per_sequence"]),
         "adversarial_replay_examples": int(adversarial["replay_examples"]),
         "adversarial_min_per_keyword": int(adversarial["min_per_keyword"]),
         "adversarial_per_keyword_selected": dict(adversarial["per_keyword_selected"]),
@@ -319,10 +369,12 @@ def main() -> int:
         "failure_replay_evidence_sha256": sha256_file(failure_evidence),
         "failure_replay_formal_qualification_used": False,
         "failure_replay_development_source_wav_bytes_copied": False,
+        "qualification_repair_used": False,
+        "_gates": gates,
     }
     if not cal_gate or not test_gate:
         summary = {
-            "schema_version": 2,
+            "schema_version": 3,
             "policy": POLICY,
             "qualified": False,
             "input_development_manifest_sha256": input_manifest_sha,
@@ -332,16 +384,174 @@ def main() -> int:
             "adversarial_selection_policy": adversarial_selection_policy,
             "failure_replay_policy": str(failure["policy"]),
             "failure_replay_examples": int(failure["examples"]),
-            "record": record,
+            "qualification_repair_used": False,
+            "record": {key: value for key, value in record.items() if key != "_gates"},
         }
         out = work / "adversarial-refinement" / "summary.json"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(
-            json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
-            encoding="utf-8",
-        )
+        out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
         raise ValueError("adversarial refinement did not retain calibration/test strict dual-pass")
 
+    development_qualification = work / "qualification-dataset"
+    render_domain_dataset(config_path, development_qualification, curriculum_weights=None)
+    initial_qualification_dir = candidate_dir / "development-qualification"
+    qual_base, qual_domains = evaluate(
+        runner=runner,
+        model=model,
+        pack=pack,
+        references=development_qualification / "qualification.references.jsonl",
+        output=initial_qualification_dir,
+    )
+    qualification_qualified = _strict(qual_base, qual_domains, gates)
+    initial_qualification = dict(qual_base)
+    qualification_repair = None
+
+    if not qualification_qualified:
+        failure = render_qualification_failure_replay(
+            config_path,
+            development_qualification,
+            initial_qualification_dir,
+            failure_evidence,
+            work / "development-failure-replay" / f"round-{refinement_round:02d}-qualification-repair",
+        )
+        failure_manifest_path = pathlib.Path(str(failure["manifest"]))
+        failure_evidence = pathlib.Path(str(failure["evidence"]))
+        repair_dir = candidate_dir / "qualification-repair"
+        repaired_model, repaired_checkpoint, repaired_provenance = _train_refinement(
+            cfg=cfg,
+            frontend=frontend,
+            tokens=tokens,
+            keywords=keywords,
+            dataset_manifest=dataset / "train.tsv",
+            static_manifest=static_manifest,
+            adversarial_manifest=adversarial_manifest,
+            failure_manifest=failure_manifest_path,
+            warm_start=checkpoint,
+            output=repair_dir,
+            epochs=REPAIR_EPOCHS,
+            lr_scale=REPAIR_LR_SCALE,
+            refinement_round=refinement_round,
+            seed_offset=700_001,
+        )
+        repaired_keywords, repaired_pack, repaired_cal_base, repaired_cal_domains = calibrate(
+            runner=runner,
+            model=repaired_model,
+            tokens=tokens,
+            source_keywords=keywords,
+            references=dataset / "calibration.references.jsonl",
+            output=repair_dir / "calibration",
+            thresholds=thresholds,
+            rounds=coordinate_rounds,
+            gates=gates,
+        )
+        repaired_test_base, repaired_test_domains = evaluate(
+            runner=runner,
+            model=repaired_model,
+            pack=repaired_pack,
+            references=dataset / "test.references.jsonl",
+            output=repair_dir / "test",
+        )
+        repaired_cal_gate = _strict(repaired_cal_base, repaired_cal_domains, gates)
+        repaired_test_gate = _strict(repaired_test_base, repaired_test_domains, gates)
+        repaired_score = objective(repaired_cal_base, repaired_cal_domains, gates) + objective(
+            repaired_test_base, repaired_test_domains, gates
+        )
+        repaired_qual_base, repaired_qual_domains = evaluate(
+            runner=runner,
+            model=repaired_model,
+            pack=repaired_pack,
+            references=development_qualification / "qualification.references.jsonl",
+            output=repair_dir / "development-qualification",
+        )
+        repaired_qual_gate = _strict(repaired_qual_base, repaired_qual_domains, gates)
+        qualification_repair = {
+            "policy": QUALIFICATION_REPAIR_POLICY,
+            "epochs": REPAIR_EPOCHS,
+            "lr_scale": REPAIR_LR_SCALE,
+            "initial_qualification": initial_qualification,
+            "calibration_gate": repaired_cal_gate,
+            "test_gate": repaired_test_gate,
+            "qualification_gate": repaired_qual_gate,
+            "failure_replay_examples": int(failure["examples"]),
+            "qualification_repair_examples": int(failure.get("qualification_repair_examples", 0)),
+            "qualification_repair_selected_unique_failures": int(
+                failure.get("qualification_repair_selected_unique_failures", 0)
+            ),
+        }
+        if not repaired_cal_gate or not repaired_test_gate or not repaired_qual_gate:
+            record["qualification_repair_used"] = True
+            record["qualification_repair"] = qualification_repair
+            _update_record_candidate(
+                record,
+                model=repaired_model,
+                checkpoint=repaired_checkpoint,
+                provenance=repaired_provenance,
+                calibrated=repaired_keywords,
+                pack=repaired_pack,
+                cal_base=repaired_cal_base,
+                cal_domains=repaired_cal_domains,
+                test_base=repaired_test_base,
+                test_domains=repaired_test_domains,
+                failure=failure,
+                failure_evidence=failure_evidence,
+                score=repaired_score,
+                qualification_repair_used=True,
+            )
+            summary = {
+                "schema_version": 3,
+                "policy": POLICY,
+                "qualified": False,
+                "input_development_manifest_sha256": input_manifest_sha,
+                "source_round": source_round,
+                "refinement_round": refinement_round,
+                "adversarial_data_augmentation_policy": adversarial_data_policy,
+                "adversarial_selection_policy": adversarial_selection_policy,
+                "failure_replay_policy": str(failure["policy"]),
+                "failure_replay_examples": int(failure["examples"]),
+                "qualification_repair_used": True,
+                "qualification_repair": qualification_repair,
+                "record": {key: value for key, value in record.items() if key != "_gates"},
+                "development_qualification": repaired_qual_base,
+            }
+            out = work / "adversarial-refinement" / "summary.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+            raise ValueError("development qualification repair did not reach strict triple-pass")
+
+        model = repaired_model
+        checkpoint = repaired_checkpoint
+        provenance = repaired_provenance
+        calibrated = repaired_keywords
+        pack = repaired_pack
+        cal_base = repaired_cal_base
+        cal_domains = repaired_cal_domains
+        test_base = repaired_test_base
+        test_domains = repaired_test_domains
+        cal_gate = repaired_cal_gate
+        test_gate = repaired_test_gate
+        score = repaired_score
+        qual_base = repaired_qual_base
+        qual_domains = repaired_qual_domains
+        qualification_qualified = repaired_qual_gate
+        record["qualification_repair"] = qualification_repair
+        _update_record_candidate(
+            record,
+            model=model,
+            checkpoint=checkpoint,
+            provenance=provenance,
+            calibrated=calibrated,
+            pack=pack,
+            cal_base=cal_base,
+            cal_domains=cal_domains,
+            test_base=test_base,
+            test_domains=test_domains,
+            failure=failure,
+            failure_evidence=failure_evidence,
+            score=score,
+            qualification_repair_used=True,
+        )
+
+    record.pop("_gates", None)
     manifest["records"].append(record)
     eligible_rounds = sorted(
         {
@@ -365,6 +575,10 @@ def main() -> int:
             "adversarial_selection_policy": adversarial_selection_policy,
             "development_failure_replay_used": int(failure["examples"]) > 0,
             "development_failure_replay_policy": str(failure["policy"]),
+            "development_qualification_repair_used": qualification_repair is not None,
+            "development_qualification_repair_policy": (
+                QUALIFICATION_REPAIR_POLICY if qualification_repair is not None else None
+            ),
         }
     )
     manifest["best_round"] = refinement_round
@@ -387,18 +601,16 @@ def main() -> int:
     ):
         shutil.copy2(source_path, best / name)
 
-    development_qualification = work / "qualification-dataset"
-    render_domain_dataset(config_path, development_qualification, curriculum_weights=None)
-    qual_base, qual_domains = evaluate(
+    canonical_qual_base, canonical_qual_domains = evaluate(
         runner=runner,
         model=best / "model.kwm",
         pack=best / "keywords.kwk",
         references=development_qualification / "qualification.references.jsonl",
         output=best / "qualification",
     )
-    qualification_qualified = base_gate(qual_base, gates) and domain_gate(qual_domains, gates)
-    manifest["qualification"] = qual_base
-    manifest["qualification_domains"] = qual_domains
+    qualification_qualified = _strict(canonical_qual_base, canonical_qual_domains, gates)
+    manifest["qualification"] = canonical_qual_base
+    manifest["qualification_domains"] = canonical_qual_domains
     manifest["qualification_qualified"] = qualification_qualified
     manifest["qualified"] = bool(qualification_qualified)
     manifest["evidence_class"] = (
@@ -410,7 +622,7 @@ def main() -> int:
     )
 
     summary = {
-        "schema_version": 2,
+        "schema_version": 3,
         "policy": POLICY,
         "qualified": bool(qualification_qualified),
         "input_development_manifest_sha256": input_manifest_sha,
@@ -425,9 +637,7 @@ def main() -> int:
         "adversarial_enumerated_sequences": int(adversarial["enumerated_sequences"]),
         "adversarial_top_k": int(adversarial["top_k"]),
         "adversarial_probes_per_sequence": int(adversarial["probes_per_sequence"]),
-        "adversarial_replay_examples_per_sequence": int(
-            adversarial["replay_examples_per_sequence"]
-        ),
+        "adversarial_replay_examples_per_sequence": int(adversarial["replay_examples_per_sequence"]),
         "adversarial_replay_examples": int(adversarial["replay_examples"]),
         "adversarial_min_per_keyword": int(adversarial["min_per_keyword"]),
         "adversarial_per_keyword_selected": dict(adversarial["per_keyword_selected"]),
@@ -439,16 +649,15 @@ def main() -> int:
         "failure_replay_selected_unique_failures": int(failure["selected_unique_failures"]),
         "failure_replay_examples": int(failure["examples"]),
         "failure_replay_development_source_wav_bytes_copied": False,
+        "qualification_repair_used": qualification_repair is not None,
+        "qualification_repair": qualification_repair,
         "formal_qualification_used": False,
         "record": record,
-        "development_qualification": qual_base,
+        "development_qualification": canonical_qual_base,
     }
     out = work / "adversarial-refinement" / "summary.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
+    out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False))
     return 0 if qualification_qualified else 1
 
