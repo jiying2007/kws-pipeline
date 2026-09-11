@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +12,10 @@ DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
 REPAIR = ROOT / "training" / "qualification_failure_replay.py"
 ROBUSTNESS = ROOT / "eval" / "gate_robustness.py"
+BASE_STAGE = ROOT / "training" / "base_stage_receipt.py"
+ENTRY_CONTRACT = ROOT / "training" / "verify_training_entry_contract.py"
+FINAL_GATES = ROOT / "training" / "verify_final_training_gates.py"
+FAR_GATE = ROOT / "eval" / "run_continuous_far_gate.py"
 
 
 def require(text: str, needle: str, label: str) -> None:
@@ -26,6 +31,10 @@ def main() -> int:
     refinement = REFINEMENT.read_text(encoding="utf-8")
     repair = REPAIR.read_text(encoding="utf-8")
     robustness = ROBUSTNESS.read_text(encoding="utf-8")
+    base_stage = BASE_STAGE.read_text(encoding="utf-8")
+    entry_contract = ENTRY_CONTRACT.read_text(encoding="utf-8")
+    final_gates = FINAL_GATES.read_text(encoding="utf-8")
+    far_gate = FAR_GATE.read_text(encoding="utf-8")
 
     for needle in (
         "workflow_dispatch:",
@@ -116,6 +125,38 @@ def main() -> int:
     ):
         require(verifier, needle, "promotion bundle verifier")
 
+    # The model-training workflow is intentionally split across two independently
+    # bounded hosted jobs. The base job must never expose the formal seed.
+    for needle in (
+        "base-domain-training:",
+        "refinement-and-qualification:",
+        "needs: base-domain-training",
+        "xiaowo-domain-base-state",
+        "Retain exact base-domain state",
+        "Download exact base-domain state",
+        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+        "training/base_stage_receipt.py write",
+        "training/base_stage_receipt.py verify",
+        "steps.base_stage.outputs.iteration_exit_code",
+        "training/verify_final_training_gates.py",
+        "eval/run_continuous_far_gate.py",
+    ):
+        require(training, needle, "staged model-training workflow")
+    timeouts = [int(value) for value in re.findall(r"timeout-minutes:\s*(\d+)", training)]
+    if timeouts != [360, 360]:
+        raise AssertionError(f"staged model-training jobs must remain independently capped at 360 minutes: {timeouts}")
+    continuation = training.index("  refinement-and-qualification:")
+    base_section = training[:continuation]
+    for forbidden in (
+        "Refine strict candidate with model-mined adversarial lexicon",
+        "Enforce development shadow qualification arena",
+        "Rotate untouched qualification cohort",
+        "training/render_qualification_guarded.py",
+        "Finalize latest strict gate-passing candidate and run summary",
+    ):
+        if forbidden in base_section:
+            raise AssertionError(f"base-domain job must not contain formal/refinement stage: {forbidden}")
+
     expected_order = [
         "Train and iterate domain rounds",
         "Refine strict candidate with model-mined adversarial lexicon",
@@ -137,14 +178,69 @@ def main() -> int:
         "training/render_qualification_guarded.py",
         "adversarial-refinement/",
         "adversarial-lexicon/",
+        "development-failure-replay/",
+        "qualification-repair/",
         "shadow-qualification/",
         "formal-preflight.json",
-        "adversarial_overlap_guard_included",
-        "model_provenance_adversarial_manifest_verified",
     ):
         require(training, needle, "model-training workflow")
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
+
+    for needle in (
+        'POLICY = "staged-domain-base-handoff-v1"',
+        '"workflow_sha": workflow_sha',
+        '"checkout_commit_sha": git_head()',
+        '"training_config_sha256": sha256_file(config_path)',
+        '"domain_manifest_sha256": sha256_file(manifest_path)',
+        '"formal_seed_consumed": False',
+        "base stage workflow SHA differs from continuation workflow SHA",
+        "base stage checkout commit differs from continuation checkout",
+        "base stage domain manifest SHA differs from downloaded state",
+        "base stage formal seed differs from continuation config",
+        "iteration_exit_code=",
+    ):
+        require(base_stage, needle, "base-stage handoff receipt")
+
+    for needle in (
+        '"你好小窝"',
+        '"小窝小窝"',
+        '"0.55"',
+        '"ni3 hao3 xiao3 wo1"',
+        '"xiao3 wo1 xiao3 wo1"',
+        "active != reserved",
+        "active in retired",
+    ):
+        require(entry_contract, needle, "staged training entry contract")
+
+    for needle in (
+        'PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"',
+        "formal qualification ran without qualified development-only adversarial refinement",
+        "formal qualification ran without a qualified shadow arena",
+        "model_provenance_adversarial_manifest_verified",
+        "adversarial_overlap_guard_included",
+        "model_provenance_failure_replay_manifest_verified",
+        "failure_replay_formal_qualification_used",
+        "overlapping_development_active_wav_sha256",
+        "qualification leaked into candidate selection",
+        "FAR holdout leaked into model training",
+        "synthetic qualification gates were not met",
+    ):
+        require(final_gates, needle, "extracted final training gates")
+
+    for needle in (
+        '"coverage-capacity-v1"',
+        '"semantic-negative-boundary-v1"',
+        '"false_accepts"',
+        '"far_per_hour"',
+        '"full_negative_manifest_coverage"',
+        '"min_observed_hard_negative_injections_per_clip"',
+        '"hard_negative_rate_per_minute"',
+        '"coverage_hard_negative_gain"',
+        "actual payload rate fell below 8/min",
+        "payload gap is inside decoder retention window",
+    ):
+        require(far_gate, needle, "extracted continuous FAR gate")
 
     for needle in (
         'POLICY = "development-qualification-repair-v1"',
@@ -202,7 +298,7 @@ def main() -> int:
     if 'tags:\n      - "v*"' in workflow:
         raise AssertionError("model promotion must not masquerade as the SDK v* release workflow")
 
-    print("model promotion + Data V3 qualification-repair provenance contract: PASS")
+    print("model promotion + staged Data V3 qualification-repair provenance contract: PASS")
     return 0
 
 
