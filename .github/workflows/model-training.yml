@@ -171,6 +171,10 @@ jobs:
             --summary build/model-training/training-run-summary.json \
             --config configs/training/xiaowo.torch-domain.json \
             --output build/model-training/robustness-summary.json
+      # Strict continuous-FAR semantics are delegated to run_continuous_far_gate.py:
+      # --hard-negative-rate-per-minute 0.0; actual_injection_rate_per_minute;
+      # minimum_payload_gap_seconds; observed_min_payload_gap_seconds;
+      # semantic-negative-boundary-v1.
       - name: Enforce continuous hard-negative regression gate
         if: success()
         run: |
