@@ -276,12 +276,27 @@ def main() -> int:
         encoding="utf-8",
     )
     failures = [row for row in results if not bool(row["qualified"])]
+    runtime_failures = [row for row in failures if not bool(row["runtime_qualified"])]
+    separation_failures = [
+        row for row in failures if not bool(row["surrogate_separation_qualified"])
+    ]
+    both_failures = [
+        row
+        for row in failures
+        if not bool(row["runtime_qualified"])
+        and not bool(row["surrogate_separation_qualified"])
+    ]
     failure_summary = {
         "schema_version": 1,
         "evidence_class": "compact-shadow-failure-diagnostics",
         "qualified": all_qualified,
         "required_separation": float(policy["min_surrogate_separation"]),
         "failure_count": len(failures),
+        "runtime_failure_count": len(runtime_failures),
+        "separation_failure_count": len(separation_failures),
+        "both_failure_count": len(both_failures),
+        "runtime_only_failure_count": len(runtime_failures) - len(both_failures),
+        "separation_only_failure_count": len(separation_failures) - len(both_failures),
         "failures": [
             {
                 "seed": int(row["seed"]),
