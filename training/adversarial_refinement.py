@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import pathlib
@@ -35,6 +36,7 @@ from render_qualification_holdout import require_strict_development_candidate
 from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
+REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
 
 
 def _selected_record(manifest: dict) -> dict:
@@ -76,6 +78,19 @@ def _audit(dataset: pathlib.Path) -> None:
         argv.extend(["--split", f"{split}={dataset / (split + '.tsv')}"])
     argv.extend(["--report", str(dataset / "audit.json"), "--fail-within-split"])
     run(argv)
+
+
+def _write_effective_seed_config(cfg: dict, seed: int, path: pathlib.Path) -> pathlib.Path:
+    rendered = copy.deepcopy(cfg)
+    rendered["seed"] = seed
+    rendered.pop("qualification_holdout_seed", None)
+    rendered.pop("retired_qualification_holdout_seeds", None)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(rendered, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return path
 
 
 def _train_refinement(
@@ -181,6 +196,7 @@ def _update_record_candidate(
     score: float,
     qualification_repair_used: bool,
 ) -> None:
+    gates = record["_gates"]
     record.update(
         {
             "score": score,
@@ -195,8 +211,8 @@ def _update_record_candidate(
             "calibration_domains": cal_domains,
             "test": test_base,
             "test_domains": test_domains,
-            "calibration_gate": _strict(cal_base, cal_domains, record["_gates"]),
-            "test_gate": _strict(test_base, test_domains, record["_gates"]),
+            "calibration_gate": _strict(cal_base, cal_domains, gates),
+            "test_gate": _strict(test_base, test_domains, gates),
             "failure_replay_observed_unique_failures": int(failure["observed_unique_failures"]),
             "failure_replay_selected_unique_failures": int(failure["selected_unique_failures"]),
             "failure_replay_examples": int(failure["examples"]),
@@ -205,6 +221,12 @@ def _update_record_candidate(
             "qualification_repair_used": qualification_repair_used,
         }
     )
+
+
+def _write_failed_summary(work: pathlib.Path, value: dict) -> None:
+    out = work / "adversarial-refinement" / "summary.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -373,44 +395,45 @@ def main() -> int:
         "_gates": gates,
     }
     if not cal_gate or not test_gate:
-        summary = {
-            "schema_version": 3,
-            "policy": POLICY,
-            "qualified": False,
-            "input_development_manifest_sha256": input_manifest_sha,
-            "source_round": source_round,
-            "refinement_round": refinement_round,
-            "adversarial_data_augmentation_policy": adversarial_data_policy,
-            "adversarial_selection_policy": adversarial_selection_policy,
-            "failure_replay_policy": str(failure["policy"]),
-            "failure_replay_examples": int(failure["examples"]),
-            "qualification_repair_used": False,
-            "record": {key: value for key, value in record.items() if key != "_gates"},
-        }
-        out = work / "adversarial-refinement" / "summary.json"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+        _write_failed_summary(
+            work,
+            {
+                "schema_version": 3,
+                "policy": POLICY,
+                "qualified": False,
+                "input_development_manifest_sha256": input_manifest_sha,
+                "source_round": source_round,
+                "refinement_round": refinement_round,
+                "adversarial_data_augmentation_policy": adversarial_data_policy,
+                "adversarial_selection_policy": adversarial_selection_policy,
+                "failure_replay_policy": str(failure["policy"]),
+                "failure_replay_examples": int(failure["examples"]),
+                "qualification_repair_used": False,
+                "record": {key: value for key, value in record.items() if key != "_gates"},
+            },
+        )
         raise ValueError("adversarial refinement did not retain calibration/test strict dual-pass")
 
-    development_qualification = work / "qualification-dataset"
-    render_domain_dataset(config_path, development_qualification, curriculum_weights=None)
-    initial_qualification_dir = candidate_dir / "development-qualification"
-    qual_base, qual_domains = evaluate(
+    mining_qualification = work / "development-qualification-mining"
+    render_domain_dataset(config_path, mining_qualification, curriculum_weights=None)
+    mining_eval = candidate_dir / "development-qualification-mining"
+    mining_qual_base, mining_qual_domains = evaluate(
         runner=runner,
         model=model,
         pack=pack,
-        references=development_qualification / "qualification.references.jsonl",
-        output=initial_qualification_dir,
+        references=mining_qualification / "qualification.references.jsonl",
+        output=mining_eval,
     )
-    qualification_qualified = _strict(qual_base, qual_domains, gates)
-    initial_qualification = dict(qual_base)
+    mining_qualification_qualified = _strict(mining_qual_base, mining_qual_domains, gates)
     qualification_repair = None
+    validation_seed = int(cfg.get("seed", 1337))
+    validation_config = config_path
 
-    if not qualification_qualified:
+    if not mining_qualification_qualified:
         failure = render_qualification_failure_replay(
             config_path,
-            development_qualification,
-            initial_qualification_dir,
+            mining_qualification,
+            mining_eval,
             failure_evidence,
             work / "development-failure-replay" / f"round-{refinement_round:02d}-qualification-repair",
         )
@@ -456,19 +479,31 @@ def main() -> int:
         repaired_score = objective(repaired_cal_base, repaired_cal_domains, gates) + objective(
             repaired_test_base, repaired_test_domains, gates
         )
+
+        validation_seed = int(cfg.get("seed", 1337)) + REPAIR_VALIDATION_SEED_NAMESPACE
+        validation_config = _write_effective_seed_config(
+            cfg,
+            validation_seed,
+            work / "development-qualification-repair-validation-config.json",
+        )
+        development_qualification = work / "qualification-dataset"
+        render_domain_dataset(validation_config, development_qualification, curriculum_weights=None)
         repaired_qual_base, repaired_qual_domains = evaluate(
             runner=runner,
             model=repaired_model,
             pack=repaired_pack,
             references=development_qualification / "qualification.references.jsonl",
-            output=repair_dir / "development-qualification",
+            output=repair_dir / "development-qualification-validation",
         )
         repaired_qual_gate = _strict(repaired_qual_base, repaired_qual_domains, gates)
         qualification_repair = {
             "policy": QUALIFICATION_REPAIR_POLICY,
             "epochs": REPAIR_EPOCHS,
             "lr_scale": REPAIR_LR_SCALE,
-            "initial_qualification": initial_qualification,
+            "mining_qualification": mining_qual_base,
+            "mining_seed": int(cfg.get("seed", 1337)),
+            "validation_seed": validation_seed,
+            "validation_config_sha256": sha256_file(validation_config),
             "calibration_gate": repaired_cal_gate,
             "test_gate": repaired_test_gate,
             "qualification_gate": repaired_qual_gate,
@@ -477,45 +512,48 @@ def main() -> int:
             "qualification_repair_selected_unique_failures": int(
                 failure.get("qualification_repair_selected_unique_failures", 0)
             ),
+            "mining_cohort_used_for_training": True,
+            "validation_cohort_used_for_training": False,
+            "formal_qualification_used": False,
         }
+        record["qualification_repair_used"] = True
+        record["qualification_repair"] = qualification_repair
+        _update_record_candidate(
+            record,
+            model=repaired_model,
+            checkpoint=repaired_checkpoint,
+            provenance=repaired_provenance,
+            calibrated=repaired_keywords,
+            pack=repaired_pack,
+            cal_base=repaired_cal_base,
+            cal_domains=repaired_cal_domains,
+            test_base=repaired_test_base,
+            test_domains=repaired_test_domains,
+            failure=failure,
+            failure_evidence=failure_evidence,
+            score=repaired_score,
+            qualification_repair_used=True,
+        )
         if not repaired_cal_gate or not repaired_test_gate or not repaired_qual_gate:
-            record["qualification_repair_used"] = True
-            record["qualification_repair"] = qualification_repair
-            _update_record_candidate(
-                record,
-                model=repaired_model,
-                checkpoint=repaired_checkpoint,
-                provenance=repaired_provenance,
-                calibrated=repaired_keywords,
-                pack=repaired_pack,
-                cal_base=repaired_cal_base,
-                cal_domains=repaired_cal_domains,
-                test_base=repaired_test_base,
-                test_domains=repaired_test_domains,
-                failure=failure,
-                failure_evidence=failure_evidence,
-                score=repaired_score,
-                qualification_repair_used=True,
+            _write_failed_summary(
+                work,
+                {
+                    "schema_version": 3,
+                    "policy": POLICY,
+                    "qualified": False,
+                    "input_development_manifest_sha256": input_manifest_sha,
+                    "source_round": source_round,
+                    "refinement_round": refinement_round,
+                    "adversarial_data_augmentation_policy": adversarial_data_policy,
+                    "adversarial_selection_policy": adversarial_selection_policy,
+                    "failure_replay_policy": str(failure["policy"]),
+                    "failure_replay_examples": int(failure["examples"]),
+                    "qualification_repair_used": True,
+                    "qualification_repair": qualification_repair,
+                    "record": {key: value for key, value in record.items() if key != "_gates"},
+                    "development_qualification": repaired_qual_base,
+                },
             )
-            summary = {
-                "schema_version": 3,
-                "policy": POLICY,
-                "qualified": False,
-                "input_development_manifest_sha256": input_manifest_sha,
-                "source_round": source_round,
-                "refinement_round": refinement_round,
-                "adversarial_data_augmentation_policy": adversarial_data_policy,
-                "adversarial_selection_policy": adversarial_selection_policy,
-                "failure_replay_policy": str(failure["policy"]),
-                "failure_replay_examples": int(failure["examples"]),
-                "qualification_repair_used": True,
-                "qualification_repair": qualification_repair,
-                "record": {key: value for key, value in record.items() if key != "_gates"},
-                "development_qualification": repaired_qual_base,
-            }
-            out = work / "adversarial-refinement" / "summary.json"
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
             raise ValueError("development qualification repair did not reach strict triple-pass")
 
         model = repaired_model
@@ -530,26 +568,9 @@ def main() -> int:
         cal_gate = repaired_cal_gate
         test_gate = repaired_test_gate
         score = repaired_score
-        qual_base = repaired_qual_base
-        qual_domains = repaired_qual_domains
-        qualification_qualified = repaired_qual_gate
-        record["qualification_repair"] = qualification_repair
-        _update_record_candidate(
-            record,
-            model=model,
-            checkpoint=checkpoint,
-            provenance=provenance,
-            calibrated=calibrated,
-            pack=pack,
-            cal_base=cal_base,
-            cal_domains=cal_domains,
-            test_base=test_base,
-            test_domains=test_domains,
-            failure=failure,
-            failure_evidence=failure_evidence,
-            score=score,
-            qualification_repair_used=True,
-        )
+    else:
+        development_qualification = work / "qualification-dataset"
+        render_domain_dataset(config_path, development_qualification, curriculum_weights=None)
 
     record.pop("_gates", None)
     manifest["records"].append(record)
@@ -579,6 +600,9 @@ def main() -> int:
             "development_qualification_repair_policy": (
                 QUALIFICATION_REPAIR_POLICY if qualification_repair is not None else None
             ),
+            "development_qualification_validation_seed": validation_seed,
+            "development_qualification_validation_config_sha256": sha256_file(validation_config),
+            "development_qualification_validation_used_for_training": False,
         }
     )
     manifest["best_round"] = refinement_round
@@ -651,6 +675,9 @@ def main() -> int:
         "failure_replay_development_source_wav_bytes_copied": False,
         "qualification_repair_used": qualification_repair is not None,
         "qualification_repair": qualification_repair,
+        "development_qualification_validation_seed": validation_seed,
+        "development_qualification_validation_config_sha256": sha256_file(validation_config),
+        "development_qualification_validation_used_for_training": False,
         "formal_qualification_used": False,
         "record": record,
         "development_qualification": canonical_qual_base,
