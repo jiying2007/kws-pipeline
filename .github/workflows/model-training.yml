@@ -187,6 +187,31 @@ jobs:
           .venv/bin/python eval/run_continuous_far_gate.py \
             --runner build/kws_raw_stream \
             --work-dir build/model-training
+      - name: Build compact model-training diagnostics
+        if: always()
+        run: |
+          python3 tools/build_training_diagnostics.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-training/compact-training-diagnostics.json
+      - name: Retain compact model-training diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-training-diagnostics
+          path: |
+            build/model-training/compact-training-diagnostics.json
+            build/model-training/base-stage-receipt.json
+            build/model-training/adversarial-refinement/summary.json
+            build/model-training/development-failure-replay/evidence.json
+            build/model-training/shadow-qualification/summary.json
+            build/model-training/shadow-qualification/failure-summary.json
+            build/model-training/formal-preflight.json
+            build/model-training/qualification-dataset/qualification-cohort.json
+            build/model-training/robustness-summary.json
+            build/model-training/hard-negative-stream/summary.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Retain trained model and iteration evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
