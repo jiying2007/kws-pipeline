@@ -38,6 +38,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Formal seed ownership is delegated to verify_training_entry_contract.py.
+      # It preserves the historical fail-closed checks verbatim in meaning:
+      # if active == frozen:
+      # if frozen not in retired:
+      # if active != reserved:
+      # qualification_seed_state; next_formal_candidate_seed_reserved; consumed/frozen.
       - name: Refuse consumed formal qualification seed
         run: python3 training/verify_training_entry_contract.py
       - name: Verify shipping wake-word contract
