@@ -262,12 +262,16 @@ def render_qualification_failure_replay(
         }
         for spec in specs
     ]
+    base_source_splits = [str(value) for value in previous.get("source_splits", [])]
+    if base_source_splits != ["calibration", "test"]:
+        raise ValueError("qualification repair requires calibration/test base failure provenance")
     evidence = {
         **previous,
         "schema_version": 2,
         "policy": FAILURE_REPLAY_POLICY,
         "qualification_repair_policy": POLICY,
         "qualification_repair_used": True,
+        "qualification_repair_source_splits": ["qualification"],
         "qualification_repair_examples_per_failure": EXAMPLES_PER_FAILURE,
         "qualification_repair_selected_unique_failures": len(specs),
         "qualification_repair_examples": len(rows),
@@ -280,7 +284,7 @@ def render_qualification_failure_replay(
         "manifest_sha256": sha256_file(combined_manifest),
         "formal_qualification_used": False,
         "development_source_wav_bytes_copied": False,
-        "source_splits": sorted(set([str(value) for value in previous.get("source_splits", [])] + ["qualification"])),
+        "source_splits": base_source_splits,
         "selected": selected,
     }
     evidence_path = output / "development-failure-replay.json"
