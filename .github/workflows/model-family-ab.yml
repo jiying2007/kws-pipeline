@@ -1,0 +1,186 @@
+name: model-family-ab
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/model-family-ab.yml'
+      - 'experiments/model_family/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: model-family-ab-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASELINE_RUN_ID: '34658981065'
+  BASELINE_HEAD_SHA: 'a84a4cfaa50cc87f03562a07561ff36d7d2d2aa7'
+
+jobs:
+  prepare-development-data:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify experiment never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          assert set(cfg['shadow_qualification']['seeds']).isdisjoint({271843, *cfg['retired_qualification_holdout_seeds']})
+          print('model-family experiment is development-only; formal renderer is absent')
+          PY
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact #140 Data V3 base state
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-domain-base-state
+          path: build/model-training
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.BASELINE_RUN_ID }}
+      - name: Download #140 compact baseline diagnostics
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-training-diagnostics
+          path: build/baseline-diagnostics
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.BASELINE_RUN_ID }}
+      - name: Verify reused base-stage provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 .github/scripts/verify_reused_base_state.py \
+            --source-run-id "$BASELINE_RUN_ID" \
+            --source-head "$BASELINE_HEAD_SHA" \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-family-reuse-receipt.json
+      - name: Prepare one shared development corpus for all arms
+        run: |
+          .venv/bin/python experiments/model_family/prepare_shared_data.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --rnn-work-dir build/model-training \
+            --baseline-shadow-summary build/baseline-diagnostics/shadow-qualification/summary.json \
+            --baseline-shadow-failure-summary build/baseline-diagnostics/shadow-qualification/failure-summary.json \
+            --output build/model-family-shared
+      - name: Retain shared development data
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-family-shared-development-data
+          path: |
+            build/model-family-shared/
+            build/model-family-reuse-receipt.json
+          if-no-files-found: error
+          retention-days: 3
+
+  evaluate-arm:
+    needs: prepare-development-data
+    strategy:
+      fail-fast: false
+      matrix:
+        arm:
+          - rnn-standard
+          - rnn-multiseed
+          - rnn-terminal
+          - gru-64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build shipping and GRU evaluation runners
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download identical shared development data
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/model-family-shared-download
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/model-family-shared-download/model-family-shared/shared-data.json
+          rm -rf build/model-family-shared
+          mv build/model-family-shared-download/model-family-shared build/model-family-shared
+      - name: Run ${{ matrix.arm }} on identical gates
+        run: |
+          .venv/bin/python experiments/model_family/run_arm.py \
+            --arm '${{ matrix.arm }}' \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --runner-rnn build/kws_wav \
+            --runner-gru build/kws_wav_gru \
+            --output 'build/model-family-arms/${{ matrix.arm }}'
+      - name: Retain compact arm evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-family-arm-${{ matrix.arm }}
+          path: |
+            build/model-family-arms/${{ matrix.arm }}/arm-summary.json
+            build/model-family-arms/${{ matrix.arm }}/domain-loop-manifest.json
+            build/model-family-arms/${{ matrix.arm }}/candidate/model.kwm.provenance.json
+            build/model-family-arms/${{ matrix.arm }}/candidate/model.kwg.provenance.json
+            build/model-family-arms/${{ matrix.arm }}/shadow-qualification/summary.json
+            build/model-family-arms/${{ matrix.arm }}/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare-arms:
+    if: always() && needs.prepare-development-data.result == 'success'
+    needs:
+      - prepare-development-data
+      - evaluate-arm
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download shared baseline metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+      - name: Download all arm evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: model-family-arm-*
+          path: build/arms
+      - name: Compare RNN and GRU families
+        run: |
+          python3 experiments/model_family/compare_arms.py \
+            --shared-data build/shared-download/model-family-shared/shared-data.json \
+            --arm-root build/arms \
+            --output build/model-family-comparison.json
+      - name: Retain model-family leaderboard
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-family-comparison
+          path: build/model-family-comparison.json
+          if-no-files-found: error
+          retention-days: 30
