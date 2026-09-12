@@ -37,14 +37,16 @@ from train_ctc import (
     frontend_id,
     keyword_sequence_margin_loss,
     load_keyword_operating_points,
+    load_tokens,
     optional_sha256,
     ordered_token_loss,
     recurrent_release_loss,
     sha256_file,
     strict_prefix_completion_loss,
     training_environment,
+    vocab_fingerprint,
+    vocab_size,
 )
-from kws_vocab import load_tokens, vocab_fingerprint, vocab_size
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
