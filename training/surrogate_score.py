@@ -5,22 +5,32 @@ import pathlib
 import wave
 
 import torch
+from torch import nn
 
 from frontend import features
+from gru_model import ARCHITECTURE as GRU_ARCHITECTURE, TinyStreamingGRU
 from model import TinyStreamingRNN
 from sequence_margin import _decoder_sequence_log_confidence
 
 FRAME_LENGTH_SAMPLES = 400
 FRAME_HOP_SAMPLES = 320
+RNN_ARCHITECTURE = "tiny-rnn-v1"
 
 
-def load_checkpoint_model(path: pathlib.Path) -> tuple[TinyStreamingRNN, dict]:
+def load_checkpoint_model(path: pathlib.Path) -> tuple[nn.Module, dict]:
     checkpoint = torch.load(path, map_location="cpu", weights_only=True)
-    model = TinyStreamingRNN(
+    architecture = str(checkpoint.get("architecture", RNN_ARCHITECTURE))
+    common = (
         int(checkpoint["feature_dim"]),
         int(checkpoint["hidden_dim"]),
         int(checkpoint["vocab_size"]),
     )
+    if architecture == RNN_ARCHITECTURE:
+        model: nn.Module = TinyStreamingRNN(*common)
+    elif architecture == GRU_ARCHITECTURE:
+        model = TinyStreamingGRU(*common)
+    else:
+        raise ValueError(f"unsupported checkpoint architecture: {architecture}")
     model.load_state_dict(checkpoint["state_dict"], strict=True)
     model.eval()
     return model, checkpoint
@@ -59,7 +69,7 @@ def read_pcm16(path: pathlib.Path) -> list[int]:
 
 
 def keyword_confidences(
-    model: TinyStreamingRNN,
+    model: nn.Module,
     samples: list[int],
     *,
     feature_dim: int,
@@ -77,7 +87,7 @@ def keyword_confidences(
 
 
 def score_wav(
-    model: TinyStreamingRNN,
+    model: nn.Module,
     path: pathlib.Path,
     *,
     feature_dim: int,
