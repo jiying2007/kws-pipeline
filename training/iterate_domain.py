@@ -219,6 +219,19 @@ def domain_gate(metrics: dict, gates: dict) -> bool:
     return isinstance(far, dict) and float(far["frr"]) <= gates["max_far_frr"]
 
 
+def strict_gate_candidate(record: dict) -> bool:
+    return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
+
+
+def select_strict_candidate(records: list[dict]) -> dict | None:
+    eligible = [record for record in records if strict_gate_candidate(record)]
+    if not eligible:
+        return None
+    latest_round = max(int(record["round"]) for record in eligible)
+    latest = [record for record in eligible if int(record["round"]) == latest_round]
+    return min(latest, key=lambda record: (float(record["score"]), str(record["frontend"])))
+
+
 def objective(base: dict, domains: dict, gates: dict) -> float:
     far = domains.get("domains", {}).get("distance:far", {})
     far_frr = float(far.get("frr", 1.0))
@@ -595,9 +608,7 @@ def main() -> int:
         curriculum_path.write_text(json.dumps(curriculum_result, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
         if (
             round_index + 1 >= min_rounds
-            and best is not None
-            and best["calibration_gate"]
-            and best["test_gate"]
+            and select_strict_candidate(records) is not None
             and bool(iteration.get("stop_on_gate", True))
         ):
             break
@@ -606,16 +617,21 @@ def main() -> int:
 
     if best is None:
         raise RuntimeError("domain iteration produced no candidates")
+    strict_best = select_strict_candidate(records)
+    selected = strict_best or best
+    eligible_rounds = sorted(
+        {int(record["round"]) for record in records if strict_gate_candidate(record)}
+    )
     best_dir = work / "best"
     best_dir.mkdir()
     best_model = best_dir / "model.kwm"
     best_pack = best_dir / "keywords.kwk"
     best_keywords = best_dir / "keywords.tsv"
     best_provenance = best_dir / "model-provenance.json"
-    shutil.copy2(best["model"], best_model)
-    shutil.copy2(best["pack"], best_pack)
-    shutil.copy2(best["keywords"], best_keywords)
-    shutil.copy2(best["provenance"], best_provenance)
+    shutil.copy2(selected["model"], best_model)
+    shutil.copy2(selected["pack"], best_pack)
+    shutil.copy2(selected["keywords"], best_keywords)
+    shutil.copy2(selected["provenance"], best_provenance)
 
     # Qualification is regenerated from the same pinned config but never used by
     # candidate selection, curriculum updates, or hard-negative replay.
@@ -628,16 +644,38 @@ def main() -> int:
         references=qualification_dataset / "qualification.references.jsonl",
         output=best_dir / "qualification",
     )
-    qualified = base_gate(qualification_base, gates) and domain_gate(qualification_domains, gates)
+    development_qualified = strict_best is not None
+    qualification_qualified = base_gate(qualification_base, gates) and domain_gate(
+        qualification_domains, gates
+    )
+    qualified = development_qualified and qualification_qualified
     manifest = {
         "schema_version": 2,
-        "evidence_class": "synthetic-domain-qualified",
+        "evidence_class": (
+            "synthetic-domain-qualified" if qualified else "synthetic-domain-unqualified"
+        ),
         "qualified": qualified,
+        "development_qualified": development_qualified,
+        "qualification_qualified": qualification_qualified,
+        "candidate_selection": {
+            "policy": "latest-strict-gate-passing-round",
+            "eligible_rounds": eligible_rounds,
+            "qualification_used_for_selection": False,
+            "selected_round": int(strict_best["round"]) if strict_best is not None else None,
+            "selected_frontend": (
+                str(strict_best["frontend"]) if strict_best is not None else None
+            ),
+            "selected_score": float(strict_best["score"]) if strict_best is not None else None,
+            "objective_fallback_used": strict_best is None,
+            "objective_best_round": int(best["round"]),
+            "objective_best_frontend": str(best["frontend"]),
+            "objective_best_score": float(best["score"]),
+        },
         "config_sha256": sha256_file(config_path),
         "runner_sha256": sha256_file(runner),
-        "best_round": best["round"],
-        "best_frontend": best["frontend"],
-        "best_score": best["score"],
+        "best_round": selected["round"],
+        "best_frontend": selected["frontend"],
+        "best_score": selected["score"],
         "best_model_sha256": sha256_file(best_model),
         "best_pack_sha256": sha256_file(best_pack),
         "warm_start_strategy": warm_start_strategy if backend == "torch_ctc" else None,

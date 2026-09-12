@@ -187,7 +187,6 @@ def confusion_matrix(
     pre_tolerance_s: float,
     post_tolerance_s: float,
 ) -> dict:
-    """Build keyword confusion from one global monotonic assignment per recording."""
     matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     exact = 0
     wrong = 0
@@ -237,6 +236,114 @@ def domain_is_eligible(
     return positive_supported or negative_supported
 
 
+def _worst_domain(domains: dict[str, dict]) -> tuple[str | None, float]:
+    worst_key = None
+    worst_score = -1.0
+    for key, value in domains.items():
+        score_value = (
+            float(value["frr"]) * 1000.0
+            + float(value["far_per_hour"])
+            + float(value["p95_post_end_latency_ms"]) * 0.001
+        )
+        if score_value > worst_score:
+            worst_score = score_value
+            worst_key = key
+    return worst_key, max(0.0, worst_score)
+
+
+def _keyword_ids(recordings: dict[str, dict]) -> list[int]:
+    return sorted(
+        {
+            int(event["keyword_id"])
+            for recording in recordings.values()
+            for event in recording["expected"]
+        }
+    )
+
+
+def _keyword_view(
+    keyword_id: int,
+    recordings: dict[str, dict],
+    detections: dict[str, list[dict]],
+) -> tuple[dict[str, dict], dict[str, list[dict]]]:
+    selected_recordings: dict[str, dict] = {}
+    selected_detections: dict[str, list[dict]] = {}
+    for name, recording in recordings.items():
+        expected = [
+            event
+            for event in recording["expected"]
+            if int(event["keyword_id"]) == keyword_id
+        ]
+        if recording["expected"] and not expected:
+            continue
+        selected_recordings[name] = {**recording, "expected": expected}
+        selected_detections[name] = [
+            detection
+            for detection in detections.get(name, [])
+            if int(detection["keyword_id"]) == keyword_id
+        ]
+    return selected_recordings, selected_detections
+
+
+def keyword_conditioned_metrics(
+    *,
+    groups: dict[str, list[str]],
+    recordings: dict[str, dict],
+    detections: dict[str, list[dict]],
+    pre_tolerance_s: float,
+    post_tolerance_s: float,
+    min_expected: int,
+    min_negative_hours: float,
+) -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    for keyword_id in _keyword_ids(recordings):
+        keyword_recordings, keyword_detections = _keyword_view(
+            keyword_id, recordings, detections
+        )
+        all_names = sorted(keyword_recordings)
+        overall = subset_score(
+            all_names,
+            keyword_recordings,
+            keyword_detections,
+            pre_tolerance_s,
+            post_tolerance_s,
+        )
+        domains: dict[str, dict] = {}
+        eligible: dict[str, dict] = {}
+        available = set(keyword_recordings)
+        for key, names in sorted(groups.items()):
+            selected = [name for name in names if name in available]
+            if not selected:
+                continue
+            summary = subset_score(
+                selected,
+                keyword_recordings,
+                keyword_detections,
+                pre_tolerance_s,
+                post_tolerance_s,
+            )
+            if key == "all" or domain_is_eligible(
+                summary,
+                min_expected=min_expected,
+                min_negative_hours=min_negative_hours,
+            ):
+                domains[key] = summary
+            if key != "all" and domain_is_eligible(
+                summary,
+                min_expected=min_expected,
+                min_negative_hours=min_negative_hours,
+            ):
+                eligible[key] = summary
+        worst_key, worst_score = _worst_domain(eligible)
+        result[str(keyword_id)] = {
+            "overall": overall,
+            "domains": domains,
+            "worst_domain": worst_key,
+            "worst_domain_score": worst_score,
+        }
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--references", required=True, type=pathlib.Path)
@@ -279,20 +386,9 @@ def main() -> int:
         ):
             eligible[key] = summary
 
-    worst_key = None
-    worst_score = -1.0
-    for key, value in eligible.items():
-        score_value = (
-            float(value["frr"]) * 1000.0
-            + float(value["far_per_hour"])
-            + float(value["p95_post_end_latency_ms"]) * 0.001
-        )
-        if score_value > worst_score:
-            worst_score = score_value
-            worst_key = key
-
+    worst_key, worst_score = _worst_domain(eligible)
     result = {
-        "schema_version": 5,
+        "schema_version": 6,
         "support_policy": {
             "min_domain_expected_wakes": args.min_domain_expected,
             "min_domain_negative_hours": min_negative_hours,
@@ -304,12 +400,24 @@ def main() -> int:
             "snr_bands": SNR_BAND_CONTRACT,
             "pairwise": PAIRWISE_SLICE_CONTRACT,
             "triple": TRIPLE_SLICE_CONTRACT,
+            "keyword_conditioning": (
+                "per-keyword positives + shared negative exposure with detections filtered to keyword"
+            ),
         },
         "overall": metrics.get("all", {}),
         "domains": metrics,
         "worst_domain": worst_key,
-        "worst_domain_score": max(0.0, worst_score),
+        "worst_domain_score": worst_score,
         "keyword_confusion": confusion_matrix(recordings, detections, pre, post),
+        "keyword_domains": keyword_conditioned_metrics(
+            groups=groups,
+            recordings=recordings,
+            detections=detections,
+            pre_tolerance_s=pre,
+            post_tolerance_s=post,
+            min_expected=args.min_domain_expected,
+            min_negative_hours=min_negative_hours,
+        ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

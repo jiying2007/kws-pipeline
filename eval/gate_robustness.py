@@ -151,6 +151,7 @@ def evaluate(summary: dict, config: dict) -> dict:
         "schema_version": 4,
         "evidence_class": "synthetic-domain-robustness-matrix",
         "qualified": not failures,
+        "blocked": False,
         "gates": {
             "max_frr": max_frr,
             "max_far_per_hour": max_far,
@@ -174,23 +175,48 @@ def evaluate(summary: dict, config: dict) -> dict:
     }
 
 
+def blocked_result(reason: str) -> dict:
+    return {
+        "schema_version": 4,
+        "evidence_class": "synthetic-domain-robustness-matrix",
+        "qualified": False,
+        "blocked": True,
+        "blocked_reason": reason,
+        "gates": {},
+        "slices": {},
+        "failures": [{"reason": reason}],
+        "limitations": [
+            "Robustness was not evaluated because an upstream training/finalization prerequisite was unavailable."
+        ],
+    }
+
+
+def write_result(path: pathlib.Path, result: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--summary", required=True, type=pathlib.Path)
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
+
+    if not args.summary.is_file() or args.summary.stat().st_size == 0:
+        write_result(args.output, blocked_result("training-summary-missing"))
+        return 0
+
     summary = json.loads(args.summary.read_text(encoding="utf-8"))
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if not isinstance(summary, dict) or not isinstance(config, dict):
         raise ValueError("summary/config must be JSON objects")
     result = evaluate(summary, config)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
-    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+    write_result(args.output, result)
     return 0 if result["qualified"] else 1
 
 
