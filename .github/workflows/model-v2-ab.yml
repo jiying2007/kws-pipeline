@@ -1,0 +1,148 @@
+name: model-v2-ab
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/model-v2-ab.yml'
+      - 'configs/training/**'
+      - 'eval/**'
+      - 'keywords/**'
+      - 'src/**'
+      - 'tools/**'
+      - 'training/**'
+      - 'CMakeLists.txt'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-v2-ab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rnn-development-base:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify experiment never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg = json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          print('development-only model-v2 experiment; formal renderer is not invoked')
+          PY
+      - name: Build shipping and experimental runners
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Build deterministic RNN development base state
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --runner build/kws_wav \
+            --work-dir build/model-v2-rnn-base
+          code=$?
+          set -e
+          test -s build/model-v2-rnn-base/domain-loop-manifest.json
+          python3 - <<'PY'
+          import json
+          p='build/model-v2-rnn-base/domain-loop-manifest.json'
+          d=json.load(open(p, encoding='utf-8'))
+          assert d.get('development_qualified') is True
+          assert d.get('candidate_selection', {}).get('policy') == 'latest-strict-gate-passing-round'
+          print(json.dumps({'iteration_exit_code': __import__('os').environ.get('code'), 'selection': d['candidate_selection']}, sort_keys=True))
+          PY
+          echo "base iteration exit code: $code"
+      - name: Retain RNN development base state
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-v2-rnn-development-base
+          path: build/model-v2-rnn-base/
+          if-no-files-found: error
+          retention-days: 3
+
+  gru-development-ab:
+    needs: rnn-development-base
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build experimental GRU runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact development base state
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-v2-rnn-development-base
+          path: build/model-v2-rnn-base
+      - name: Run Tiny-GRU development A/B
+        id: ab
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/model_v2_gru_ab.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --rnn-work-dir build/model-v2-rnn-base \
+            --runner build/kws_wav_gru \
+            --output build/model-v2-gru-ab
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Enforce A/B evidence exists
+        run: |
+          test -s build/model-v2-gru-ab/model-v2-ab-summary.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('build/model-v2-gru-ab/model-v2-ab-summary.json', encoding='utf-8'))
+          assert d['experimental'] is True
+          assert d['formal_qualification_used'] is False
+          assert d['architecture'] == 'tiny-gru-v1'
+          print(json.dumps({
+              'calibration_gate': d['calibration_gate'],
+              'test_gate': d['test_gate'],
+              'development_qualification_gate': d['development_qualification_gate'],
+              'shadow_qualified': None if d.get('shadow') is None else d['shadow'].get('qualified'),
+          }, sort_keys=True))
+          PY
+      - name: Retain compact Model V2 A/B evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-v2-gru-ab-evidence
+          path: |
+            build/model-v2-gru-ab/model-v2-ab-summary.json
+            build/model-v2-gru-ab/domain-loop-manifest.json
+            build/model-v2-gru-ab/candidate/model.kwg.provenance.json
+            build/model-v2-gru-ab/shadow-qualification/summary.json
+            build/model-v2-gru-ab/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Gate Model V2 shadow result
+        run: |
+          test "${{ steps.ab.outputs.exit_code }}" = "0"
