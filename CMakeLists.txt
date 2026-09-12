@@ -130,6 +130,10 @@ if(KWS_BUILD_TOOLS)
   add_executable(kws_wav tools/kws_wav.c)
   target_link_libraries(kws_wav PRIVATE KwsPipeline::core kws_tool_io)
 
+  add_executable(kws_wav_gru tools/kws_wav_gru.c)
+  target_include_directories(kws_wav_gru PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_wav_gru PRIVATE KwsPipeline::core kws_tool_io)
+
   add_executable(kws_raw_stream tools/kws_raw_stream.c)
   target_link_libraries(kws_raw_stream PRIVATE KwsPipeline::core kws_tool_io)
 
@@ -143,6 +147,7 @@ if(KWS_BUILD_TOOLS)
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tool_io PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_wav PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_wav_gru PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_raw_stream PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_board_bench PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_feature_dump PRIVATE ${KWS_STRICT_OPTIONS})
