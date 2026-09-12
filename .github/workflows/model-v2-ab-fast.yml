@@ -57,29 +57,15 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ env.BASELINE_RUN_ID }}
       - name: Verify reused base-stage provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          python3 - <<'PY'
-          import hashlib, json, pathlib, os
-          root=pathlib.Path('build/model-training')
-          receipt=json.load(open(root/'base-stage-receipt.json', encoding='utf-8'))
-          cfg=pathlib.Path('configs/training/xiaowo.torch-domain.json')
-          manifest=root/'domain-loop-manifest.json'
-          def sha(path):
-              h=hashlib.sha256(); h.update(path.read_bytes()); return h.hexdigest()
-          expected=os.environ['BASELINE_HEAD_SHA']
-          assert receipt['policy'] == 'staged-domain-base-handoff-v1'
-          assert receipt['workflow_sha'] == expected
-          assert receipt['checkout_commit_sha'] == expected
-          assert receipt['training_config_sha256'] == sha(cfg)
-          assert receipt['domain_manifest_sha256'] == sha(manifest)
-          assert receipt['qualification_holdout_seed'] == 271843
-          assert receipt['formal_seed_consumed'] is False
-          assert receipt['iteration_exit_code'] in (0, 1)
-          dev=json.load(open(manifest, encoding='utf-8'))
-          assert dev['development_qualified'] is True
-          assert dev['candidate_selection']['policy'] == 'latest-strict-gate-passing-round'
-          print(json.dumps({'baseline_run_id': os.environ['BASELINE_RUN_ID'], 'baseline_head': expected, 'selection': dev['candidate_selection']}, sort_keys=True))
-          PY
+          python3 .github/scripts/verify_reused_base_state.py \
+            --source-run-id "$BASELINE_RUN_ID" \
+            --source-head "$BASELINE_HEAD_SHA" \
+            --config configs/training/xiaowo.torch-domain.json \
+            --work-dir build/model-training \
+            --output build/model-v2-reuse-receipt.json
       - name: Run Tiny-GRU development A/B against #140 baseline
         id: ab
         shell: bash
@@ -118,6 +104,7 @@ jobs:
         with:
           name: model-v2-gru-ab-fast-evidence
           path: |
+            build/model-v2-reuse-receipt.json
             build/model-v2-gru-ab/model-v2-ab-summary.json
             build/model-v2-gru-ab/domain-loop-manifest.json
             build/model-v2-gru-ab/candidate/model.kwg.provenance.json
