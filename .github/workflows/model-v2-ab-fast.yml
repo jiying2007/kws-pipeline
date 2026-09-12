@@ -1,0 +1,129 @@
+name: model-v2-ab-fast
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/model-v2-ab-fast.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: model-v2-ab-fast-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASELINE_RUN_ID: '34658981065'
+  BASELINE_HEAD_SHA: 'a84a4cfaa50cc87f03562a07561ff36d7d2d2aa7'
+
+jobs:
+  gru-development-ab-fast:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify experiment never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          print('development-only GRU A/B; formal qualification is forbidden')
+          PY
+      - name: Build experimental GRU runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact #140 Data V3 base state
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-domain-base-state
+          path: build/model-training
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.BASELINE_RUN_ID }}
+      - name: Verify reused base-stage provenance
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, os
+          root=pathlib.Path('build/model-training')
+          receipt=json.load(open(root/'base-stage-receipt.json', encoding='utf-8'))
+          cfg=pathlib.Path('configs/training/xiaowo.torch-domain.json')
+          manifest=root/'domain-loop-manifest.json'
+          def sha(path):
+              h=hashlib.sha256(); h.update(path.read_bytes()); return h.hexdigest()
+          expected=os.environ['BASELINE_HEAD_SHA']
+          assert receipt['policy'] == 'staged-domain-base-handoff-v1'
+          assert receipt['workflow_sha'] == expected
+          assert receipt['checkout_commit_sha'] == expected
+          assert receipt['training_config_sha256'] == sha(cfg)
+          assert receipt['domain_manifest_sha256'] == sha(manifest)
+          assert receipt['qualification_holdout_seed'] == 271843
+          assert receipt['formal_seed_consumed'] is False
+          assert receipt['iteration_exit_code'] in (0, 1)
+          dev=json.load(open(manifest, encoding='utf-8'))
+          assert dev['development_qualified'] is True
+          assert dev['candidate_selection']['policy'] == 'latest-strict-gate-passing-round'
+          print(json.dumps({'baseline_run_id': os.environ['BASELINE_RUN_ID'], 'baseline_head': expected, 'selection': dev['candidate_selection']}, sort_keys=True))
+          PY
+      - name: Run Tiny-GRU development A/B against #140 baseline
+        id: ab
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/model_v2_gru_ab.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --rnn-work-dir build/model-training \
+            --runner build/kws_wav_gru \
+            --output build/model-v2-gru-ab
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Summarize Model V2 result
+        run: |
+          test -s build/model-v2-gru-ab/model-v2-ab-summary.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('build/model-v2-gru-ab/model-v2-ab-summary.json', encoding='utf-8'))
+          assert d['experimental'] is True
+          assert d['formal_qualification_used'] is False
+          assert d['architecture'] == 'tiny-gru-v1'
+          shadow=d.get('shadow')
+          failures=[] if shadow is None else [r for r in shadow.get('results', []) if not r.get('qualified')]
+          print(json.dumps({
+              'calibration': d['calibration'],
+              'test': d['test'],
+              'development_qualification': d['development_qualification'],
+              'shadow_qualified': None if shadow is None else shadow.get('qualified'),
+              'shadow_failure_count': len(failures),
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+      - name: Retain compact Model V2 A/B evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: model-v2-gru-ab-fast-evidence
+          path: |
+            build/model-v2-gru-ab/model-v2-ab-summary.json
+            build/model-v2-gru-ab/domain-loop-manifest.json
+            build/model-v2-gru-ab/candidate/model.kwg.provenance.json
+            build/model-v2-gru-ab/shadow-qualification/summary.json
+            build/model-v2-gru-ab/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Gate Model V2 shadow result
+        run: test "${{ steps.ab.outputs.exit_code }}" = "0"
