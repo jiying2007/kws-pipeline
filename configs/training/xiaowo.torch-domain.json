@@ -53,7 +53,7 @@
   },
   "dataset": {
     "train": {
-      "positive_families_per_keyword": 48,
+      "positive_families_per_keyword": 72,
       "confusable_families_per_keyword": 32,
       "random_negative_families": 48,
       "background_seconds_per_profile": 4.0,
