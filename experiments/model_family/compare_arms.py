@@ -28,12 +28,13 @@ def shadow_stats(shadow: dict | None) -> dict:
     fa = 0
     sep = 0
     for row in results:
-        runtime = row.get("runtime", {})
+        # shadow_qualification.py stores runtime gate evidence in the scored
+        # qualification summary for each seed.
+        runtime = row.get("qualification", {})
         if isinstance(runtime, dict):
             fr += int(runtime.get("false_rejects", 0))
             fa += int(runtime.get("false_accepts", 0))
-        separation = row.get("surrogate_separation", {})
-        if isinstance(separation, dict) and not bool(separation.get("qualified", True)):
+        if not bool(row.get("surrogate_separation_qualified", True)):
             sep += 1
     return {
         "qualified": bool(shadow.get("qualified")),
