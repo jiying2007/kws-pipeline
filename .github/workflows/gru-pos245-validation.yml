@@ -1,0 +1,125 @@
+name: gru-pos245-validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/gru-pos245-validation.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-pos245-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  EXPECTED_MODEL_SHA256: '83112b829edbc5969cb2f5eb6f50b01b4a35064f56dce812440126110b10236f'
+
+jobs:
+  reproduce-and-fresh-shadow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify validation never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          fresh=set(range(941101, 941109))
+          old=set(int(v) for v in cfg['shadow_qualification']['seeds'])
+          formal={int(cfg['qualification_holdout_seed']), *[int(v) for v in cfg.get('retired_qualification_holdout_seeds', [])]}
+          assert fresh.isdisjoint(old)
+          assert fresh.isdisjoint(formal)
+          assert 271843 not in fresh
+          print('fresh development shadow is disjoint from old shadow and all formal seeds')
+          PY
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+      - name: Reproduce exact pos-245 candidate
+        run: |
+          .venv/bin/python experiments/model_family/run_gru_tuning.py \
+            --candidate pos-245-repro \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --runner build/kws_wav_gru \
+            --output build/gru-pos245-validation \
+            --positive-example-weight 2.45 \
+            --epochs 36 \
+            --lr-scale 1.0
+      - name: Require byte-identical model reproduction
+        run: |
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open('build/gru-pos245-validation/domain-loop-manifest.json', encoding='utf-8'))
+          got=d['records'][0]['model_sha256']
+          expected=os.environ['EXPECTED_MODEL_SHA256']
+          assert got == expected, (got, expected)
+          print(f'byte-identical GRU reproduction: {got}')
+          PY
+      - name: Build fresh shadow config
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          src=pathlib.Path('configs/training/xiaowo.torch-domain.json')
+          cfg=json.loads(src.read_text(encoding='utf-8'))
+          cfg['shadow_qualification']['seeds']=list(range(941101, 941109))
+          out=pathlib.Path('build/gru-pos245-validation/fresh-shadow-config.json')
+          out.write_text(json.dumps(cfg, ensure_ascii=False, indent=2, sort_keys=True)+'\n', encoding='utf-8')
+          PY
+      - name: Run independent fresh shadow arena
+        id: fresh
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/shadow_qualification.py \
+            --config build/gru-pos245-validation/fresh-shadow-config.json \
+            --runner build/kws_wav_gru \
+            --work-dir build/gru-pos245-validation \
+            --output build/gru-pos245-validation/fresh-shadow
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Retain compact independent validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-pos245-independent-validation
+          path: |
+            build/gru-pos245-validation/tuning-summary.json
+            build/gru-pos245-validation/domain-loop-manifest.json
+            build/gru-pos245-validation/fresh-shadow-config.json
+            build/gru-pos245-validation/fresh-shadow/summary.json
+            build/gru-pos245-validation/fresh-shadow/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Gate independent fresh shadow result
+        run: test "${{ steps.fresh.outputs.exit_code }}" = "0"
