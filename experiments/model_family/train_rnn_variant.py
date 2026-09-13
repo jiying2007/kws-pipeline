@@ -53,7 +53,12 @@ from train_ctc import (  # noqa: E402
     validate_warm_start,
 )
 
-VARIANTS = {"rnn-standard", "rnn-multiseed", "rnn-terminal"}
+VARIANTS = {
+    "rnn-standard",
+    "rnn-multiseed",
+    "rnn-terminal",
+    "rnn-multiseed-terminal",
+}
 POSITIVE_TERMINAL_MARGIN_LOG = 0.15
 POSITIVE_TERMINAL_LOSS_WEIGHT = 0.10
 
@@ -84,8 +89,6 @@ def positive_terminal_completion_loss(
         if steps <= 0:
             raise ValueError("positive terminal loss received empty acoustic sequence")
         terminal = int(sequence[-1])
-        # Match ordered-token segmentation: the last target owns the last 1/N of
-        # the valid acoustic region. Include two preceding frames for jitter.
         start = max(0, ((length - 1) * steps) // length - 2)
         region = log_probs[start:steps, batch_index, :]
         if region.numel() == 0:
@@ -97,7 +100,12 @@ def positive_terminal_completion_loss(
         if not competitors:
             continue
         competitor_best = torch.cat(competitors).max()
-        losses.append(torch.relu(log_probs.new_tensor(POSITIVE_TERMINAL_MARGIN_LOG) - (terminal_best - competitor_best)))
+        losses.append(
+            torch.relu(
+                log_probs.new_tensor(POSITIVE_TERMINAL_MARGIN_LOG)
+                - (terminal_best - competitor_best)
+            )
+        )
     if offset != int(targets.numel()):
         raise ValueError("flattened targets do not match target lengths")
     if not losses:
@@ -160,7 +168,7 @@ def main() -> None:
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=WEIGHT_DECAY)
     loss_fn = nn.CTCLoss(blank=0, zero_infinity=True, reduction="none")
-    terminal_enabled = args.variant == "rnn-terminal"
+    terminal_enabled = args.variant in {"rnn-terminal", "rnn-multiseed-terminal"}
     model.train()
     for epoch in range(args.epochs):
         total = 0.0
