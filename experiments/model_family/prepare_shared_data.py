@@ -22,6 +22,7 @@ from synthetic_audio import load_config  # noqa: E402
 from iterate_domain import sha256_file  # noqa: E402
 
 POLICY = "model-family-shared-development-data-v1"
+TRAIN_ONLY_RENDER_POLICY = "training-only-domain-render-v1"
 TRAIN_ONLY_SEED_OFFSETS = (510_017, 620_033)
 
 
@@ -49,8 +50,11 @@ def write_train_only_config(cfg: dict, seed: int, path: pathlib.Path) -> pathlib
     value["seed"] = seed
     value.pop("qualification_holdout_seed", None)
     value.pop("retired_qualification_holdout_seeds", None)
-    # Only train.tsv is consumed from these namespaces. Minimize unrelated split
-    # generation while preserving train split bytes and acoustic policy.
+    # These namespaces are training-only augmentation sources. The canonical
+    # Data V3 calibration/test/qualification corpus remains the sole evaluation
+    # contract, so do not ask the renderer to reserve robustness support for
+    # tiny evaluation splits that are never consumed.
+    value.pop("robustness_gates", None)
     for split in ("calibration", "test", "qualification"):
         value["dataset"][split] = {
             "positive_families_per_keyword": 1,
@@ -131,20 +135,28 @@ def main() -> int:
         raise ValueError("shared failure replay touched formal qualification")
 
     extra_manifests: list[dict] = []
-    for index, seed in enumerate(train_only_seeds):
+    for seed in train_only_seeds:
         seed_root = output / "train-only" / f"seed-{seed}"
         seed_config = write_train_only_config(cfg, seed, seed_root / "effective-config.json")
+        rendered_config = json.loads(seed_config.read_text(encoding="utf-8"))
+        if "robustness_gates" in rendered_config:
+            raise ValueError("training-only config unexpectedly retained evaluation robustness gates")
         seed_dataset = seed_root / "dataset"
         render_domain_dataset(seed_config, seed_dataset, curriculum_weights=curriculum)
         train_manifest = seed_dataset / "train.tsv"
+        if not train_manifest.is_file() or train_manifest.stat().st_size == 0:
+            raise ValueError("training-only renderer did not produce train manifest")
         extra_manifests.append(
             {
                 "seed": seed,
+                "policy": TRAIN_ONLY_RENDER_POLICY,
                 "manifest": str(train_manifest),
                 "manifest_sha256": sha256_file(train_manifest),
                 "effective_config_sha256": sha256_file(seed_config),
                 "formal_qualification_used": False,
                 "shadow_qualification_used": False,
+                "evaluation_splits_consumed": False,
+                "robustness_gates_applied": False,
             }
         )
 
@@ -167,7 +179,7 @@ def main() -> int:
         baseline["shadow_failure_summary_sha256"] = sha256_file(target)
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "policy": POLICY,
         "formal_qualification_used": False,
         "source_round": source_round,
@@ -189,6 +201,7 @@ def main() -> int:
         "failure_manifest": str(failure["manifest"]),
         "failure_manifest_sha256": str(failure["manifest_sha256"]),
         "failure_replay_examples": int(failure.get("examples", 0)),
+        "train_only_render_policy": TRAIN_ONLY_RENDER_POLICY,
         "train_only_seed_manifests": extra_manifests,
         "shadow_seeds": sorted(shadow_seeds),
         "formal_seed": int(cfg["qualification_holdout_seed"]),
