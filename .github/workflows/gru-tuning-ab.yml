@@ -1,0 +1,151 @@
+name: gru-tuning-ab
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/gru-tuning-ab.yml'
+      - 'experiments/model_family/run_gru_tuning.py'
+      - 'experiments/model_family/compare_gru_tuning.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-tuning-ab-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+
+jobs:
+  tune:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: control
+            positive_weight: '2.00'
+            epochs: '36'
+            lr_scale: '1.00'
+          - name: pos-215
+            positive_weight: '2.15'
+            epochs: '36'
+            lr_scale: '1.00'
+          - name: pos-230
+            positive_weight: '2.30'
+            epochs: '36'
+            lr_scale: '1.00'
+          - name: pos-245
+            positive_weight: '2.45'
+            epochs: '36'
+            lr_scale: '1.00'
+          - name: pos-230-lr080
+            positive_weight: '2.30'
+            epochs: '36'
+            lr_scale: '0.80'
+          - name: pos-230-42ep
+            positive_weight: '2.30'
+            epochs: '42'
+            lr_scale: '1.00'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify tuning never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          print('GRU tuning is development-only; formal renderer is absent')
+          PY
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact shared development corpus from model-family #6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          rm -rf build/model-family-shared
+          mv build/shared-download/model-family-shared build/model-family-shared
+      - name: Run focused GRU tuning candidate
+        run: |
+          .venv/bin/python experiments/model_family/run_gru_tuning.py \
+            --candidate '${{ matrix.name }}' \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --runner build/kws_wav_gru \
+            --positive-example-weight '${{ matrix.positive_weight }}' \
+            --epochs '${{ matrix.epochs }}' \
+            --lr-scale '${{ matrix.lr_scale }}' \
+            --output 'build/gru-tuning/${{ matrix.name }}'
+      - name: Retain compact tuning evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-tuning-${{ matrix.name }}
+          path: |
+            build/gru-tuning/${{ matrix.name }}/tuning-summary.json
+            build/gru-tuning/${{ matrix.name }}/domain-loop-manifest.json
+            build/gru-tuning/${{ matrix.name }}/candidate/model.kwg.provenance.json
+            build/gru-tuning/${{ matrix.name }}/shadow-qualification/summary.json
+            build/gru-tuning/${{ matrix.name }}/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    if: always()
+    needs: tune
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download all GRU tuning evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: gru-tuning-*
+          path: build/gru-tuning-results
+      - name: Download first-round model-family leaderboard
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-comparison
+          path: build/reference
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Rank GRU tuning candidates against first-round references
+        run: |
+          python3 experiments/model_family/compare_gru_tuning.py \
+            --candidate-root build/gru-tuning-results \
+            --reference-comparison build/reference/model-family-comparison.json \
+            --output build/gru-tuning-comparison.json
+      - name: Retain GRU tuning leaderboard
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-tuning-comparison
+          path: build/gru-tuning-comparison.json
+          if-no-files-found: error
+          retention-days: 30
