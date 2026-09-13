@@ -1,0 +1,153 @@
+name: gru-generalization-v2
+
+on:
+  push:
+    branches:
+      - codex/gru-generalization-v2
+    paths:
+      - '.github/triggers/gru-generalization-v2.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-generalization-v2-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  DIAGNOSTIC_RUN_ID: '34759385245'
+  DIAGNOSTIC_ARTIFACT_NAME: 'gru-open-shadow-failure-diagnostics'
+  EXPECTED_DIAGNOSTIC_ARTIFACT_DIGEST: 'TO_BE_BOUND_BEFORE_TRIGGER'
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify formal and untouched-shadow isolation
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          arenas={row['name']: row for row in registry['arenas']}
+          arena=arenas['gru-independent-shadow-v2']
+          assert arena['status'] == 'reserved-untouched'
+          assert arena['seeds'] == list(range(951101, 951109))
+          print('formal seed 271843 and GRU shadow v2 remain untouched')
+          PY
+
+      - name: Require exact diagnostic artifact binding
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$EXPECTED_DIAGNOSTIC_ARTIFACT_DIGEST" != 'TO_BE_BOUND_BEFORE_TRIGGER'
+          actual="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${DIAGNOSTIC_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
+          test -n "$actual"
+          test "$actual" = "$EXPECTED_DIAGNOSTIC_ARTIFACT_DIGEST"
+          echo "diagnostic artifact digest bound: $actual"
+
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+
+      - name: Download exact compact GRU failure diagnostics
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-open-shadow-failure-diagnostics
+          path: build/gru-diagnostics
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.DIAGNOSTIC_RUN_ID }}
+
+      - name: Verify compact diagnostic input
+        run: |
+          test -s build/gru-diagnostics/gru-failure-diagnostics.json
+          python3 - <<'PY'
+          import json
+          path='build/gru-diagnostics/gru-failure-diagnostics.json'
+          data=json.load(open(path, encoding='utf-8'))
+          assert data['evidence_class'] == 'development-only-open-shadow-failure-diagnostics'
+          assert data['formal_qualification_used'] is False
+          assert data['formal_seed_consumed'] is False
+          assert data['open_development_seeds'] == [941102, 941105, 941107]
+          assert data['failure_event_count'] == 4
+          assert data['model_sha256'] == '83112b829edbc5969cb2f5eb6f50b01b4a35064f56dce812440126110b10236f'
+          print('compact diagnostic contract verified')
+          PY
+
+      - name: Resynthesize training-only GRU failure replay
+        run: |
+          .venv/bin/python experiments/gru_generalization_v2/render_replay.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --diagnostics build/gru-diagnostics/gru-failure-diagnostics.json \
+            --output build/gru-generalization-replay \
+            --examples-per-event 8
+
+      - name: Train one shadow-blind GRU V2 candidate
+        id: candidate
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python experiments/gru_generalization_v2/run_candidate.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --replay-evidence build/gru-generalization-replay/gru-generalization-replay.json \
+            --runner build/kws_wav_gru \
+            --output build/gru-generalization-v2
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Retain candidate and provenance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-generalization-v2-candidate
+          path: |
+            build/gru-generalization-replay/gru-generalization-replay.json
+            build/gru-generalization-replay/gru-generalization-replay.tsv
+            build/gru-generalization-v2/candidate-summary.json
+            build/gru-generalization-v2/domain-loop-manifest.json
+            build/gru-generalization-v2/best/model.kwm
+            build/gru-generalization-v2/best/model.pt
+            build/gru-generalization-v2/best/model-provenance.json
+            build/gru-generalization-v2/best/keywords.kwk
+            build/gru-generalization-v2/best/keywords.tsv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate canonical development candidate
+        run: test "${{ steps.candidate.outputs.exit_code }}" = '0'
