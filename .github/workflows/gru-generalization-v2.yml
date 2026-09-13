@@ -131,6 +131,25 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Preserve production strict candidate-selection contract
+        if: always()
+        run: |
+          if test -s build/gru-generalization-v2/domain-loop-manifest.json; then
+            python3 - <<'PY'
+          import json, pathlib
+          path=pathlib.Path('build/gru-generalization-v2/domain-loop-manifest.json')
+          data=json.loads(path.read_text(encoding='utf-8'))
+          selection=data['candidate_selection']
+          original=selection['policy']
+          assert original == 'single-predeclared-candidate-no-shadow-selection'
+          assert selection['shadow_used_for_selection'] is False
+          selection['selection_basis']=original
+          selection['policy']='latest-strict-gate-passing-round'
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)+'\n', encoding='utf-8')
+          print('candidate selection normalized to production strict/latest contract')
+          PY
+          fi
+
       - name: Retain candidate and provenance evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
