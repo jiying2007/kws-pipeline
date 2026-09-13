@@ -29,7 +29,13 @@ from iterate_domain import (  # noqa: E402
 )
 from synthetic_audio import load_config  # noqa: E402
 
-ARMS = {"rnn-standard", "rnn-multiseed", "rnn-terminal", "gru-64"}
+ARMS = {
+    "rnn-standard",
+    "rnn-multiseed",
+    "rnn-terminal",
+    "rnn-multiseed-terminal",
+    "gru-64",
+}
 POLICY = "development-only-model-family-ab-v1"
 
 
@@ -54,7 +60,7 @@ def manifest_paths(shared: dict, arm: str) -> list[pathlib.Path]:
     ]
     if int(shared.get("failure_replay_examples", 0)) > 0:
         paths.append(pathlib.Path(shared["failure_manifest"]))
-    if arm == "rnn-multiseed":
+    if arm in {"rnn-multiseed", "rnn-multiseed-terminal"}:
         paths.extend(
             pathlib.Path(item["manifest"])
             for item in shared.get("train_only_seed_manifests", [])
@@ -329,6 +335,7 @@ def main() -> int:
     checkpoint_payload = torch.load(checkpoint, map_location="cpu", weights_only=True)
     parameter_count = sum(int(t.numel()) for t in checkpoint_payload["state_dict"].values())
     failures = [] if shadow is None else [row for row in shadow.get("results", []) if not row.get("qualified")]
+    train_only_arm = arm in {"rnn-multiseed", "rnn-multiseed-terminal"}
     summary = {
         "schema_version": 1,
         "policy": POLICY,
@@ -349,7 +356,7 @@ def main() -> int:
         "parameter_count": parameter_count,
         "estimated_macs_per_frame": macs,
         "training_manifest_count": len(manifest_paths(shared, arm)),
-        "train_only_seed_count": len(shared.get("train_only_seed_manifests", [])) if arm == "rnn-multiseed" else 0,
+        "train_only_seed_count": len(shared.get("train_only_seed_manifests", [])) if train_only_arm else 0,
         "source_checkpoint_sha256": str(shared["source_checkpoint_sha256"]),
         "shared_data_policy": str(shared["policy"]),
     }
