@@ -1,0 +1,149 @@
+name: rnn-seed-probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/rnn-seed-probe.yml'
+      - 'experiments/rnn_seed_probe/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: rnn-seed-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+
+jobs:
+  seed-probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: exact-first-round
+            seed_offset: 5000003
+          - name: prior-tuning-seed
+            seed_offset: 5100019
+          - name: seed-b
+            seed_offset: 5200033
+          - name: seed-c
+            seed_offset: 5300047
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify probe never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          print('optimizer-seed probe is development-only')
+          PY
+      - name: Build shipping RNN evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+      - name: Run optimizer-seed probe
+        run: |
+          .venv/bin/python experiments/rnn_seed_probe/run.py \
+            --training-seed-offset '${{ matrix.seed_offset }}' \
+            --candidate '${{ matrix.name }}' \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --runner build/kws_wav \
+            --output 'build/rnn-seed-probe/${{ matrix.name }}' \
+            --terminal-margin-log 0.15 \
+            --terminal-loss-weight 0.10 \
+            --negative-example-weight 1.00 \
+            --extra-seed-count 2 \
+            --epochs 12
+      - name: Retain compact seed evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-seed-probe-${{ matrix.name }}
+          path: |
+            build/rnn-seed-probe/${{ matrix.name }}/tuning-summary.json
+            build/rnn-seed-probe/${{ matrix.name }}/domain-loop-manifest.json
+            build/rnn-seed-probe/${{ matrix.name }}/shadow-qualification/summary.json
+            build/rnn-seed-probe/${{ matrix.name }}/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    if: always()
+    needs: seed-probe
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: rnn-seed-probe-*
+          path: build/probes
+      - name: Compare optimizer seeds
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          rows=[]
+          for p in pathlib.Path('build/probes').rglob('tuning-summary.json'):
+              d=json.loads(p.read_text(encoding='utf-8'))
+              sh=d.get('shadow')
+              if isinstance(sh, dict):
+                  failures=[r for r in sh.get('results', []) if not r.get('qualified')]
+                  fr=sum(int(r.get('qualification',{}).get('false_rejects',0)) for r in sh.get('results', []))
+                  fa=sum(int(r.get('qualification',{}).get('false_accepts',0)) for r in sh.get('results', []))
+                  sep=sum(1 for r in sh.get('results', []) if not bool(r.get('surrogate_separation_qualified', True)))
+              else:
+                  failures=[]; fr=fa=sep=999
+              rows.append({
+                  'candidate': d['candidate'],
+                  'training_seed_offset': d['parameters']['training_seed_offset'],
+                  'training_seed': d['parameters']['training_seed'],
+                  'calibration_gate': d['calibration_gate'],
+                  'test_gate': d['test_gate'],
+                  'development_qualification_gate': d['development_qualification_gate'],
+                  'qualified': bool(sh and sh.get('qualified')),
+                  'failure_count': len(failures) if sh else 999,
+                  'false_rejects': fr,
+                  'false_accepts': fa,
+                  'separation_failures': sep,
+              })
+          rows.sort(key=lambda r:(0 if r['qualified'] else 1,r['failure_count'],r['false_rejects']+r['false_accepts'],r['separation_failures'],r['training_seed_offset']))
+          out={'schema_version':1,'policy':'rnn-optimizer-seed-comparison-v1','formal_qualification_used':False,'rows':rows,'leader':rows[0]['candidate'] if rows else None}
+          pathlib.Path('build/rnn-seed-comparison.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+      - name: Retain seed leaderboard
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-seed-comparison
+          path: build/rnn-seed-comparison.json
+          if-no-files-found: error
+          retention-days: 30
