@@ -1,0 +1,71 @@
+name: rnn-differential-repro
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/rnn-differential-repro.yml'
+      - 'experiments/rnn_differential_repro/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: rnn-differential-repro-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify differential probe never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          print('RNN differential reproduction is development-only')
+          PY
+      - name: Install exact first-round CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact first-round shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+      - name: Reproduce historical and tuned trainers side by side
+        run: |
+          .venv/bin/python experiments/rnn_differential_repro/run.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --output build/rnn-differential-repro
+      - name: Retain compact differential evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-differential-reproduction
+          path: build/rnn-differential-repro/differential-reproduction.json
+          if-no-files-found: warn
+          retention-days: 30
