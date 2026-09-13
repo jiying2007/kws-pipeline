@@ -98,6 +98,7 @@ jobs:
           - rnn-standard
           - rnn-multiseed
           - rnn-terminal
+          - rnn-multiseed-terminal
           - gru-64
     runs-on: ubuntu-24.04
     timeout-minutes: 360
