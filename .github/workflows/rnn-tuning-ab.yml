@@ -1,0 +1,166 @@
+name: rnn-tuning-ab
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/model-v2-gru-ab
+    paths:
+      - '.github/workflows/rnn-tuning-ab.yml'
+      - 'experiments/model_family/train_rnn_tuned.py'
+      - 'experiments/model_family/run_rnn_tuning.py'
+      - 'experiments/model_family/compare_rnn_tuning.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: rnn-tuning-ab-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+
+jobs:
+  tune:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: control
+            terminal_margin: '0.15'
+            terminal_weight: '0.10'
+            negative_weight: '1.00'
+            extra_seed_count: '2'
+            epochs: '12'
+          - name: balanced-075
+            terminal_margin: '0.15'
+            terminal_weight: '0.075'
+            negative_weight: '1.10'
+            extra_seed_count: '2'
+            epochs: '12'
+          - name: balanced-050
+            terminal_margin: '0.15'
+            terminal_weight: '0.05'
+            negative_weight: '1.25'
+            extra_seed_count: '2'
+            epochs: '12'
+          - name: lower-margin
+            terminal_margin: '0.10'
+            terminal_weight: '0.075'
+            negative_weight: '1.10'
+            extra_seed_count: '2'
+            epochs: '12'
+          - name: one-extra-seed
+            terminal_margin: '0.15'
+            terminal_weight: '0.075'
+            negative_weight: '1.10'
+            extra_seed_count: '1'
+            epochs: '12'
+          - name: longer-16ep
+            terminal_margin: '0.15'
+            terminal_weight: '0.075'
+            negative_weight: '1.10'
+            extra_seed_count: '2'
+            epochs: '16'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify tuning never owns formal seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          print('RNN tuning is development-only; formal renderer is absent')
+          PY
+      - name: Build shipping RNN evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Download exact shared development corpus from model-family #6
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          rm -rf build/model-family-shared
+          mv build/shared-download/model-family-shared build/model-family-shared
+      - name: Run focused RNN tuning candidate
+        run: |
+          .venv/bin/python experiments/model_family/run_rnn_tuning.py \
+            --candidate '${{ matrix.name }}' \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --runner build/kws_wav \
+            --terminal-margin-log '${{ matrix.terminal_margin }}' \
+            --terminal-loss-weight '${{ matrix.terminal_weight }}' \
+            --negative-example-weight '${{ matrix.negative_weight }}' \
+            --extra-seed-count '${{ matrix.extra_seed_count }}' \
+            --epochs '${{ matrix.epochs }}' \
+            --output 'build/rnn-tuning/${{ matrix.name }}'
+      - name: Retain compact tuning evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-tuning-${{ matrix.name }}
+          path: |
+            build/rnn-tuning/${{ matrix.name }}/tuning-summary.json
+            build/rnn-tuning/${{ matrix.name }}/domain-loop-manifest.json
+            build/rnn-tuning/${{ matrix.name }}/candidate/model.kwm.provenance.json
+            build/rnn-tuning/${{ matrix.name }}/shadow-qualification/summary.json
+            build/rnn-tuning/${{ matrix.name }}/shadow-qualification/failure-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    if: always()
+    needs: tune
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download all RNN tuning evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: rnn-tuning-*
+          path: build/rnn-tuning-results
+      - name: Download first-round model-family leaderboard
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-comparison
+          path: build/reference
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+      - name: Rank RNN tuning candidates against GRU reference
+        run: |
+          python3 experiments/model_family/compare_rnn_tuning.py \
+            --candidate-root build/rnn-tuning-results \
+            --reference-comparison build/reference/model-family-comparison.json \
+            --output build/rnn-tuning-comparison.json
+      - name: Retain RNN tuning leaderboard
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-tuning-comparison
+          path: build/rnn-tuning-comparison.json
+          if-no-files-found: error
+          retention-days: 30
