@@ -1,0 +1,20 @@
+GRU V2 one-shot candidate trigger
+
+shared_data_run=34728533518
+rnn_differential_run=34759069241
+rnn_differential_artifact_digest=sha256:cce10e60882b1db2474f195c75c63ffff7324fd423df59c493bac3d49b178fee
+rnn_model_byte_identical=true
+gru_diagnostic_run=34759385245
+gru_diagnostic_artifact_digest=sha256:ddd85122c55f090063244a0d01a79a9fe0855947c9d4ec72e069f72d05fe19f5
+
+candidate_positive_example_weight=2.45
+candidate_full_train_seed_count=3
+candidate_epochs=12
+candidate_replay_exposure_repeat=3
+candidate_shadow_used_for_selection=false
+
+formal_qualification_seed=271843
+formal_qualification_consumed=false
+reserved_shadow_seeds=951101,951102,951103,951104,951105,951106,951107,951108
+reserved_shadow_rendered=false
+shipping_approved=false
