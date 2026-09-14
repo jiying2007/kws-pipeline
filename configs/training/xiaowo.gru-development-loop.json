@@ -11,6 +11,8 @@
   "stable_strict_pass_rounds": 2,
   "epochs_per_round": 8,
   "training_seed_namespace": 190000019,
+  "training_acoustic_seed_namespace": 193000019,
+  "training_acoustic_seed_stride": 1009,
   "lr_decay_per_round": 0.85,
   "fixed_replay_repeat": 1,
   "failure_replay_repeat_max": 3,
