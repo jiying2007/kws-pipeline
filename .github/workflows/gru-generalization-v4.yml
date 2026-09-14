@@ -1,0 +1,219 @@
+name: gru-generalization-v4
+
+on:
+  push:
+    branches:
+      - codex/gru-generalization-v2
+    paths:
+      - '.github/triggers/gru-generalization-v4.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-generalization-v4-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  SHARED_ARTIFACT_NAME: 'model-family-shared-development-data'
+  SHARED_ARTIFACT_DIGEST: 'sha256:5f3a9ff810ac8c94faf3c02ed9afc7341e657733c48b4899e6212e90ad35ec9f'
+  OPEN_SHADOW_DIAGNOSTIC_RUN_ID: '34759385245'
+  OPEN_SHADOW_DIAGNOSTIC_ARTIFACT_NAME: 'gru-open-shadow-failure-diagnostics'
+  OPEN_SHADOW_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:ddd85122c55f090063244a0d01a79a9fe0855947c9d4ec72e069f72d05fe19f5'
+  V3_FAILURE_SOURCE_RUN_ID: '34813767878'
+  V3_FAILURE_SOURCE_ARTIFACT_NAME: 'gru-v3-failure-source-metadata'
+  V3_FAILURE_SOURCE_ARTIFACT_DIGEST: 'sha256:e96c8323629e93c4e6e48c1b73fdae0db86fdd38c900ea2b5eb85c40b32c1828'
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify formal and reserved-shadow isolation
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          arenas={row['name']: row for row in registry['arenas']}
+          arena=arenas['gru-independent-shadow-v2']
+          assert arena['status'] == 'reserved-untouched'
+          assert arena['seeds'] == list(range(951101, 951109))
+          print('formal qualification and reserved GRU shadow remain untouched')
+          PY
+
+      - name: Require exact development evidence bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          shared="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SHARED_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SHARED_ARTIFACT_NAME}\") | .digest")"
+          open_shadow="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${OPEN_SHADOW_DIAGNOSTIC_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${OPEN_SHADOW_DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
+          v3_source="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${V3_FAILURE_SOURCE_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${V3_FAILURE_SOURCE_ARTIFACT_NAME}\") | .digest")"
+          v3_source_conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${V3_FAILURE_SOURCE_RUN_ID}" --jq '.conclusion')"
+          test "$shared" = "$SHARED_ARTIFACT_DIGEST"
+          test "$open_shadow" = "$OPEN_SHADOW_DIAGNOSTIC_ARTIFACT_DIGEST"
+          test "$v3_source" = "$V3_FAILURE_SOURCE_ARTIFACT_DIGEST"
+          test "$v3_source_conclusion" = 'success'
+          printf 'shared=%s\nopen-shadow=%s\nv3-source=%s\n' "$shared" "$open_shadow" "$v3_source"
+
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          rm -rf build/model-family-shared
+          mv build/shared-download/model-family-shared build/model-family-shared
+
+      - name: Download exact open-shadow diagnostics
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-open-shadow-failure-diagnostics
+          path: build/gru-diagnostics
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.OPEN_SHADOW_DIAGNOSTIC_RUN_ID }}
+
+      - name: Download exact V3 failure source metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-v3-failure-source-metadata
+          path: build/v3-failure-source
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.V3_FAILURE_SOURCE_RUN_ID }}
+
+      - name: Verify development feedback contract
+        run: |
+          python3 - <<'PY'
+          import json
+          path='build/v3-failure-source/gru-v3-failure-source.json'
+          data=json.load(open(path, encoding='utf-8'))
+          assert data['evidence_class'] == 'development-only-gru-v3-failure-source-metadata'
+          assert data['formal_qualification_used'] is False
+          assert data['shadow_used'] is False
+          assert data['wav_bytes_copied'] is False
+          assert data['domain_index']['kind'] == 'confusable'
+          assert data['domain_index']['tokens'] == ['ni3', 'hao3', 'xiao3', 'xiao3']
+          assert data['domain_index']['target_ids'] == [1, 2, 3, 3]
+          assert data['false_positive']['keyword_id'] == 1
+          assert data['false_positive']['confidence'] >= 0.8
+          print('V3 development failure feedback is metadata-only and source-identity bound')
+          PY
+
+      - name: Resynthesize frozen open-shadow failure replay
+        run: |
+          .venv/bin/python experiments/gru_generalization_v2/render_replay.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --diagnostics build/gru-diagnostics/gru-failure-diagnostics.json \
+            --output build/gru-generalization-replay \
+            --examples-per-event 8
+
+      - name: Render frozen independent V3 training-only acoustic domains
+        run: |
+          .venv/bin/python experiments/gru_generalization_v3/render_independent_training_domains.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --output build/gru-v3-independent-training
+
+      - name: Resynthesize V3 high-confidence confusable without source WAV bytes
+        run: |
+          .venv/bin/python experiments/gru_generalization_v4/render_v3_failure_replay.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --source-metadata build/v3-failure-source/gru-v3-failure-source.json \
+            --output build/gru-v4-development-confusable-replay \
+            --examples 16
+
+      - name: Train one frozen shadow-blind GRU V4 candidate
+        id: candidate
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python experiments/gru_generalization_v4/run_candidate.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --replay-evidence build/gru-generalization-replay/gru-generalization-replay.json \
+            --v3-training-evidence build/gru-v3-independent-training/gru-v3-independent-training-domains.json \
+            --v3-failure-replay-evidence build/gru-v4-development-confusable-replay/gru-v4-development-confusable-replay.json \
+            --runner build/kws_wav_gru \
+            --output build/gru-generalization-v4
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Preserve production strict candidate-selection contract
+        if: always()
+        run: |
+          if test -s build/gru-generalization-v4/domain-loop-manifest.json; then
+            python3 - <<'PY'
+          import json, pathlib
+          path=pathlib.Path('build/gru-generalization-v4/domain-loop-manifest.json')
+          data=json.loads(path.read_text(encoding='utf-8'))
+          selection=data['candidate_selection']
+          original=selection['policy']
+          assert original == 'single-predeclared-candidate-no-shadow-selection'
+          assert selection['qualification_used_for_selection'] is False
+          assert selection['shadow_used_for_selection'] is False
+          assert data['formal_qualification_used'] is False
+          assert data['development_qualification_feedback_used_for_training'] is True
+          assert data['development_qualification_independent'] is False
+          assert data['independent_shadow_required_for_acceptance'] is True
+          selection['selection_basis']=original
+          selection['policy']='latest-strict-gate-passing-round'
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)+'\n', encoding='utf-8')
+          print('V4 candidate selection normalized; independent shadow still required')
+          PY
+          fi
+
+      - name: Retain V4 candidate and provenance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-generalization-v4-candidate
+          path: |
+            build/gru-generalization-replay/gru-generalization-replay.json
+            build/gru-generalization-replay/gru-generalization-replay.tsv
+            build/gru-v3-independent-training/gru-v3-independent-training-domains.json
+            build/gru-v4-development-confusable-replay/gru-v4-development-confusable-replay.json
+            build/gru-v4-development-confusable-replay/gru-v4-development-confusable-replay.tsv
+            build/gru-generalization-v4/v4-input/shared-data-v4-overlay.json
+            build/gru-generalization-v4/v4-input/combined-development-failure-replay.tsv
+            build/gru-generalization-v4/candidate-summary.json
+            build/gru-generalization-v4/domain-loop-manifest.json
+            build/gru-generalization-v4/best/model.kwm
+            build/gru-generalization-v4/best/model.pt
+            build/gru-generalization-v4/best/model-provenance.json
+            build/gru-generalization-v4/best/keywords.kwk
+            build/gru-generalization-v4/best/keywords.tsv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate frozen V4 development regression candidate
+        run: test "${{ steps.candidate.outputs.exit_code }}" = '0'
