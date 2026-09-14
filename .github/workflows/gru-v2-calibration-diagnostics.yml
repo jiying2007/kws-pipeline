@@ -1,0 +1,115 @@
+name: gru-v2-calibration-diagnostics
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/gru-generalization-v2
+    paths:
+      - '.github/workflows/gru-v2-calibration-diagnostics.yml'
+      - 'experiments/gru_generalization_v2/diagnose_calibration.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-v2-calibration-diagnostics-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  SHARED_ARTIFACT_NAME: 'model-family-shared-development-data'
+  EXPECTED_SHARED_ARTIFACT_DIGEST: 'sha256:5f3a9ff810ac8c94faf3c02ed9afc7341e657733c48b4899e6212e90ad35ec9f'
+  CANDIDATE_RUN_ID: '34790831573'
+  CANDIDATE_ARTIFACT_NAME: 'gru-generalization-v2-candidate'
+  EXPECTED_CANDIDATE_ARTIFACT_DIGEST: 'sha256:52626953d0a1bd7bbe00c4e17a7519807d1ba13b7fc1ca5f5c802bdcc875f565'
+  EXPECTED_CANDIDATE_HEAD: 'fbe64244e5752de1c5bffd78961738ad591a7d63'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify diagnostic never owns formal or shadow seed
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          arenas={row['name']: row for row in registry['arenas']}
+          arena=arenas['gru-independent-shadow-v2']
+          assert arena['status'] == 'reserved-untouched'
+          assert arena['seeds'] == list(range(951101, 951109))
+          print('calibration diagnostic is read-only; formal and shadow seeds remain untouched')
+          PY
+
+      - name: Require exact source artifact bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shared="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SHARED_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${SHARED_ARTIFACT_NAME}\") | .digest")"
+          candidate="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${CANDIDATE_ARTIFACT_NAME}\") | .digest")"
+          head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}" --jq '.head_sha')"
+          test -n "$shared" && test "$shared" = "$EXPECTED_SHARED_ARTIFACT_DIGEST"
+          test -n "$candidate" && test "$candidate" = "$EXPECTED_CANDIDATE_ARTIFACT_DIGEST"
+          test "$head" = "$EXPECTED_CANDIDATE_HEAD"
+          echo "shared artifact bound: $shared"
+          echo "candidate artifact bound: $candidate"
+          echo "candidate exact HEAD bound: $head"
+
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+
+      - name: Download exact failed GRU V2 candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-generalization-v2-candidate
+          path: build/gru-v2-candidate-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.CANDIDATE_RUN_ID }}
+
+      - name: Reproduce one calibration failure and join source metadata
+        run: |
+          python3 experiments/gru_generalization_v2/diagnose_calibration.py \
+            --shared-data build/model-family-shared/shared-data.json \
+            --candidate-root build/gru-v2-candidate-download/gru-generalization-v2 \
+            --runner build/kws_wav_gru \
+            --output build/gru-v2-calibration-diagnostics \
+            --candidate-run-id "$CANDIDATE_RUN_ID" \
+            --candidate-artifact-digest "$EXPECTED_CANDIDATE_ARTIFACT_DIGEST"
+
+      - name: Retain compact calibration diagnostics only
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-v2-calibration-failure-diagnostics
+          path: build/gru-v2-calibration-diagnostics/gru-v2-calibration-failure-diagnostics.json
+          if-no-files-found: warn
+          retention-days: 30
