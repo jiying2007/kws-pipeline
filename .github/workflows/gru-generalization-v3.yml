@@ -1,0 +1,166 @@
+name: gru-generalization-v3
+
+on:
+  push:
+    branches:
+      - codex/gru-generalization-v3
+    paths:
+      - '.github/triggers/gru-generalization-v3.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-generalization-v3-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  SHARED_ARTIFACT_NAME: 'model-family-shared-development-data'
+  EXPECTED_SHARED_ARTIFACT_DIGEST: 'sha256:5f3a9ff810ac8c94faf3c02ed9afc7341e657733c48b4899e6212e90ad35ec9f'
+  SOURCE_CANDIDATE_RUN_ID: '34790831573'
+  SOURCE_CANDIDATE_ARTIFACT_NAME: 'gru-generalization-v2-candidate'
+  EXPECTED_SOURCE_CANDIDATE_ARTIFACT_DIGEST: 'sha256:52626953d0a1bd7bbe00c4e17a7519807d1ba13b7fc1ca5f5c802bdcc875f565'
+  EXPECTED_SOURCE_CANDIDATE_HEAD: 'fbe64244e5752de1c5bffd78961738ad591a7d63'
+  CALIBRATION_DIAGNOSTIC_RUN_ID: '34793030728'
+  CALIBRATION_DIAGNOSTIC_ARTIFACT_NAME: 'gru-v2-calibration-failure-diagnostics'
+  EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:647178320b1f4fd3715a5996642ab5b5407a9c66f787a42aa88dac6f9f3a50f8'
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify protected seed isolation
+        run: |
+          python3 - <<'PY'
+          import json
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          assert cfg['qualification_holdout_seed'] == 271843
+          assert 271843 not in set(cfg['retired_qualification_holdout_seeds'])
+          arenas={row['name']: row for row in registry['arenas']}
+          arena=arenas['gru-independent-shadow-v2']
+          assert arena['status'] == 'reserved-untouched'
+          assert arena['seeds'] == list(range(951101, 951109))
+          validation_seed=int(cfg.get('seed', 1337)) + 181_000_019
+          protected={271843, *[int(v) for v in cfg.get('retired_qualification_holdout_seeds', [])], *arena['seeds']}
+          assert validation_seed not in protected
+          print(f'GRU V3 fresh validation seed {validation_seed} is development-only and protected namespaces remain untouched')
+          PY
+
+      - name: Require exact source artifact bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shared="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SHARED_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${SHARED_ARTIFACT_NAME}\") | .digest")"
+          source="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_CANDIDATE_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${SOURCE_CANDIDATE_ARTIFACT_NAME}\") | .digest")"
+          source_head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_CANDIDATE_RUN_ID}" --jq '.head_sha')"
+          diagnostic="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CALIBRATION_DIAGNOSTIC_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${CALIBRATION_DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
+          test -n "$shared" && test "$shared" = "$EXPECTED_SHARED_ARTIFACT_DIGEST"
+          test -n "$source" && test "$source" = "$EXPECTED_SOURCE_CANDIDATE_ARTIFACT_DIGEST"
+          test "$source_head" = "$EXPECTED_SOURCE_CANDIDATE_HEAD"
+          test -n "$diagnostic" && test "$diagnostic" = "$EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST"
+          echo "shared artifact bound: $shared"
+          echo "source candidate artifact bound: $source"
+          echo "source candidate exact HEAD bound: $source_head"
+          echo "calibration diagnostic artifact bound: $diagnostic"
+
+      - name: Build experimental GRU evaluation runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Normalize shared artifact root
+        run: |
+          test -s build/shared-download/model-family-shared/shared-data.json
+          mv build/shared-download/model-family-shared build/model-family-shared
+
+      - name: Download exact failed GRU V2 source candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-generalization-v2-candidate
+          path: build/gru-v2-source
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SOURCE_CANDIDATE_RUN_ID }}
+
+      - name: Download exact calibration failure diagnostics
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-v2-calibration-failure-diagnostics
+          path: build/gru-v2-calibration-diagnostics
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.CALIBRATION_DIAGNOSTIC_RUN_ID }}
+
+      - name: Resynthesize bounded calibration repair
+        run: |
+          .venv/bin/python experiments/gru_generalization_v3/render_calibration_repair.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --diagnostics build/gru-v2-calibration-diagnostics/gru-v2-calibration-failure-diagnostics.json \
+            --output build/gru-v3-calibration-repair
+
+      - name: Train one bounded GRU V3 repair candidate
+        id: candidate
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python experiments/gru_generalization_v3/run_candidate.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --shared-data build/model-family-shared/shared-data.json \
+            --base-replay-evidence build/gru-v2-source/gru-generalization-replay/gru-generalization-replay.json \
+            --calibration-repair-evidence build/gru-v3-calibration-repair/gru-v3-calibration-repair.json \
+            --source-candidate-root build/gru-v2-source/gru-generalization-v2 \
+            --runner build/kws_wav_gru \
+            --output build/gru-generalization-v3
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Retain bounded candidate and compact provenance
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-generalization-v3-candidate
+          path: |
+            build/gru-v3-calibration-repair/gru-v3-calibration-repair.json
+            build/gru-v3-calibration-repair/gru-v3-calibration-repair.tsv
+            build/gru-generalization-v3/fresh-development-validation-config.json
+            build/gru-generalization-v3/candidate-summary.json
+            build/gru-generalization-v3/domain-loop-manifest.json
+            build/gru-generalization-v3/best/model.kwm
+            build/gru-generalization-v3/best/model.pt
+            build/gru-generalization-v3/best/model-provenance.json
+            build/gru-generalization-v3/best/keywords.kwk
+            build/gru-generalization-v3/best/keywords.tsv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate bounded development candidate
+        run: test "${{ steps.candidate.outputs.exit_code }}" = '0'
