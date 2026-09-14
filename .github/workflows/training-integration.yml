@@ -25,6 +25,8 @@ jobs:
         run: python3 tests/test_gru_generalization_v3_contract.py
       - name: GRU development curriculum contract
         run: python3 tests/test_gru_development_curriculum_contract.py
+      - name: Frozen GRU qualification contract
+        run: python3 tests/test_gru_frozen_qualification_contract.py
       - name: Staged model-training handoff contract
         run: python3 tests/test_training_stage_handoff.py
       - name: Resolve immutable training image
