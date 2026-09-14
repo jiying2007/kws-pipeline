@@ -29,7 +29,7 @@
     "fresh_validation_required": true,
     "fresh_validation_seed_namespace": 191000019,
     "shadow_required": true,
-    "shadow_arena": "gru-independent-shadow-v2",
+    "shadow_arena": "gru-independent-shadow-v3",
     "formal_qualification_required": true,
     "bounded_repair_only_after_freeze": true,
     "validation_feedback_allowed": false,

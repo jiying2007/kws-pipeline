@@ -8,6 +8,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "gru-frozen-candidate-qualification.yml"
 POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
+REGISTRY = ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
 FRESH = ROOT / "training" / "validate_frozen_gru_candidate.py"
 FORMAL = ROOT / "training" / "qualify_frozen_gru_formal.py"
 MATERIALIZE = ROOT / "tools" / "materialize_gru_candidate_workspace.py"
@@ -18,9 +19,25 @@ INDEPENDENCE = ROOT / "tools" / "verify_gru_evaluation_independence.py"
 class GruFrozenQualificationContractTest(unittest.TestCase):
     def test_candidate_namespaces_are_frozen_before_qualification(self) -> None:
         policy = json.loads(POLICY.read_text(encoding="utf-8"))
+        registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
         freeze = policy["candidate_freeze"]
         self.assertEqual(freeze["fresh_validation_seed_namespace"], 191000019)
-        self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v2")
+        self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v3")
+        arenas = {row["name"]: row for row in registry["arenas"]}
+        current = arenas[freeze["shadow_arena"]]
+        self.assertEqual(current["model_family"], "gru")
+        self.assertEqual(current["status"], "reserved-untouched")
+        self.assertEqual(current["seeds"], list(range(971101, 971109)))
+        consumed = arenas["gru-independent-shadow-v2"]
+        self.assertEqual(consumed["status"], "opened")
+        self.assertEqual(consumed["source_run_id"], 34844874629)
+        self.assertEqual(
+            consumed["candidate_model_sha256"],
+            "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+        )
+        self.assertEqual(consumed["result"], "failed-5-of-8")
+        self.assertEqual(consumed["runtime_result"], "failed-4-of-8")
+        self.assertFalse(consumed["formal_qualification_seed_consumed"])
         self.assertTrue(freeze["formal_qualification_required"])
         self.assertFalse(freeze["validation_feedback_allowed"])
         self.assertFalse(freeze["threshold_feedback_allowed"])
@@ -89,6 +106,11 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn('arena.get("status") != "reserved-untouched"', text)
         self.assertIn('raw["seeds"] = seeds', text)
         self.assertIn("formal qualification namespace", text)
+        self.assertIn('consumed_model = row.get("candidate_model_sha256")', text)
+        self.assertIn(
+            "frozen candidate model already consumed by an earlier shadow arena",
+            text,
+        )
 
     def test_formal_gate_requires_fresh_and_shadow_and_all_sha_isolation(self) -> None:
         text = FORMAL.read_text(encoding="utf-8")

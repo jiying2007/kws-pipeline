@@ -32,12 +32,26 @@ def prepare(candidate: pathlib.Path, output: pathlib.Path) -> dict:
         raise ValueError("source development policy has no candidate_freeze")
     arena_name = str(candidate_policy.get("shadow_arena", ""))
     registry = load_object(ROOT / "experiments" / "model_family" / "shadow_arena_registry.json")
-    arenas = {str(row["name"]): row for row in registry.get("arenas", []) if isinstance(row, dict)}
+    rows = [row for row in registry.get("arenas", []) if isinstance(row, dict)]
+    arenas = {str(row["name"]): row for row in rows}
     arena = arenas.get(arena_name)
     if not isinstance(arena, dict):
         raise ValueError(f"shadow arena is not registered: {arena_name}")
     if arena.get("status") != "reserved-untouched":
         raise ValueError("shadow arena is no longer reserved-untouched")
+
+    candidate_model_sha256 = str(freeze["model_sha256"])
+    for row in rows:
+        if str(row.get("name", "")) == arena_name:
+            continue
+        if str(row.get("model_family", "")) != "gru":
+            continue
+        if str(row.get("status", "")) == "reserved-untouched":
+            continue
+        consumed_model = row.get("candidate_model_sha256")
+        if consumed_model is not None and str(consumed_model) == candidate_model_sha256:
+            raise ValueError("frozen candidate model already consumed by an earlier shadow arena")
+
     seeds = [int(value) for value in arena.get("seeds", [])]
     if not 8 <= len(seeds) <= 16 or len(set(seeds)) != len(seeds):
         raise ValueError("shadow arena seed contract is invalid")
@@ -64,7 +78,7 @@ def prepare(candidate: pathlib.Path, output: pathlib.Path) -> dict:
         "schema_version": 1,
         "policy": "frozen-gru-shadow-arena-binding-v1",
         "candidate_policy": str(freeze["policy"]),
-        "model_sha256": str(freeze["model_sha256"]),
+        "model_sha256": candidate_model_sha256,
         "arena": arena_name,
         "arena_status": str(arena["status"]),
         "seeds": seeds,

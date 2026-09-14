@@ -17,6 +17,7 @@ on:
       - 'tools/finalize_gru_frozen_candidate.py'
       - 'tools/verify_gru_frozen_candidate.py'
       - 'configs/training/xiaowo.gru-development-loop.json'
+      - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_development_curriculum_contract.py'
       - '.github/workflows/gru-development-curriculum.yml'
   workflow_dispatch:
@@ -66,9 +67,17 @@ jobs:
           assert policy['formal_qualification_used'] is False
           assert cfg['qualification_holdout_seed'] == 271843
           arenas={row['name']: row for row in registry['arenas']}
-          assert arenas['gru-independent-shadow-v2']['status'] == 'reserved-untouched'
-          assert arenas['gru-independent-shadow-v2']['seeds'] == list(range(951101, 951109))
-          print('development curriculum is isolated from formal/shadow qualification evidence')
+          arena_name=policy['candidate_freeze']['shadow_arena']
+          arena=arenas[arena_name]
+          assert arena['model_family'] == 'gru'
+          assert arena['status'] == 'reserved-untouched'
+          seeds=[int(value) for value in arena['seeds']]
+          assert 8 <= len(seeds) <= 16
+          assert len(seeds) == len(set(seeds))
+          protected={int(cfg['qualification_holdout_seed'])}
+          protected.update(int(value) for value in cfg.get('retired_qualification_holdout_seeds', []))
+          assert not (set(seeds) & protected)
+          print(f'development curriculum is isolated from protected evidence; shadow={arena_name}')
           PY
       - name: Build experimental GRU runner
         run: |
