@@ -133,6 +133,7 @@ def validate(candidate: pathlib.Path, runner: pathlib.Path, output: pathlib.Path
         "fresh_validation_seed": seed,
         "fresh_validation_seed_namespace": namespace,
         "fresh_validation_wav_count": len(fresh_hashes),
+        "fresh_validation_wav_sha256": sorted(fresh_hashes),
         "development_overlap_count": 0,
         "thresholds_recalibrated": False,
         "training_performed": False,
