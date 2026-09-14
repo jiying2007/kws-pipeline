@@ -27,7 +27,7 @@
   "candidate_freeze": {
     "selection_policy": "latest-strict-calibration-test-round",
     "fresh_validation_required": true,
-    "fresh_validation_seed_namespace": 191000019,
+    "fresh_validation_seed_namespace": 192000019,
     "shadow_required": true,
     "shadow_arena": "gru-independent-shadow-v3",
     "formal_qualification_required": true,
