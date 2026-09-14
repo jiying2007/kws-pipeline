@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/gru-development-curriculum
+      - codex/gru-two-layer-pipeline
     paths:
       - 'training/iterate_gru_development.py'
       - 'training/development_failure_replay.py'
