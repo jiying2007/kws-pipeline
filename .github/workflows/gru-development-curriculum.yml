@@ -17,6 +17,7 @@ on:
       - 'tools/finalize_gru_frozen_candidate.py'
       - 'tools/verify_gru_frozen_candidate.py'
       - 'configs/training/xiaowo.gru-development-loop.json'
+      - 'experiments/model_family/fresh_validation_registry.json'
       - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_development_curriculum_contract.py'
       - '.github/workflows/gru-development-curriculum.yml'
@@ -60,24 +61,38 @@ jobs:
           python3 - <<'PY'
           import json
           cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
-          registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          fresh_registry=json.load(open('experiments/model_family/fresh_validation_registry.json', encoding='utf-8'))
+          shadow_registry=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
           policy=json.load(open('configs/training/xiaowo.gru-development-loop.json', encoding='utf-8'))
           assert policy['qualification_used'] is False
           assert policy['shadow_used'] is False
           assert policy['formal_qualification_used'] is False
           assert cfg['qualification_holdout_seed'] == 271843
-          arenas={row['name']: row for row in registry['arenas']}
-          arena_name=policy['candidate_freeze']['shadow_arena']
+
+          freeze=policy['candidate_freeze']
+          namespace=int(freeze['fresh_validation_seed_namespace'])
+          matches=[row for row in fresh_registry['namespaces'] if int(row['namespace']) == namespace]
+          assert len(matches) == 1
+          fresh=matches[0]
+          assert fresh['model_family'] == 'gru'
+          assert fresh['status'] == 'reserved-untouched'
+          fresh_seed=int(cfg.get('seed', 1337)) + namespace
+
+          arenas={row['name']: row for row in shadow_registry['arenas']}
+          arena_name=freeze['shadow_arena']
           arena=arenas[arena_name]
           assert arena['model_family'] == 'gru'
           assert arena['status'] == 'reserved-untouched'
           seeds=[int(value) for value in arena['seeds']]
           assert 8 <= len(seeds) <= 16
           assert len(seeds) == len(set(seeds))
+
           protected={int(cfg['qualification_holdout_seed'])}
           protected.update(int(value) for value in cfg.get('retired_qualification_holdout_seeds', []))
+          assert fresh_seed not in protected
+          assert fresh_seed not in set(seeds)
           assert not (set(seeds) & protected)
-          print(f'development curriculum is isolated from protected evidence; shadow={arena_name}')
+          print(f'development curriculum is isolated from protected evidence; fresh={fresh["name"]} shadow={arena_name}')
           PY
       - name: Build experimental GRU runner
         run: |
