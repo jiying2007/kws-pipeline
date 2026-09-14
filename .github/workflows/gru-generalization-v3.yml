@@ -36,6 +36,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify frozen GRU V3 contract
+        run: python3 tests/test_gru_generalization_v3_contract.py
+
       - name: Verify protected seed isolation
         run: |
           python3 - <<'PY'
