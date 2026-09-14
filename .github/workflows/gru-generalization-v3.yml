@@ -23,6 +23,11 @@ env:
   SOURCE_CANDIDATE_ARTIFACT_NAME: 'gru-generalization-v2-candidate'
   EXPECTED_SOURCE_CANDIDATE_ARTIFACT_DIGEST: 'sha256:52626953d0a1bd7bbe00c4e17a7519807d1ba13b7fc1ca5f5c802bdcc875f565'
   EXPECTED_SOURCE_CANDIDATE_HEAD: 'fbe64244e5752de1c5bffd78961738ad591a7d63'
+  GRU_DIAGNOSTIC_RUN_ID: '34759385245'
+  GRU_DIAGNOSTIC_ARTIFACT_NAME: 'gru-open-shadow-failure-diagnostics'
+  EXPECTED_GRU_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:ddd85122c55f090063244a0d01a79a9fe0855947c9d4ec72e069f72d05fe19f5'
+  EXPECTED_V2_REPLAY_JSON_SHA256: 'ebcc784beeb0c3ce82d3c120ee54f9ee58b544dddf868928582028a5a5215e3b'
+  EXPECTED_V2_REPLAY_MANIFEST_SHA256: '633754b6adc6744f89e619db6e9eb0f5b0bb0a7ce17d48a135294dd92dad622e'
   CALIBRATION_DIAGNOSTIC_RUN_ID: '34793030728'
   CALIBRATION_DIAGNOSTIC_ARTIFACT_NAME: 'gru-v2-calibration-failure-diagnostics'
   EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:647178320b1f4fd3715a5996642ab5b5407a9c66f787a42aa88dac6f9f3a50f8'
@@ -66,16 +71,20 @@ jobs:
           source="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_CANDIDATE_RUN_ID}/artifacts" \
             --jq ".artifacts[] | select(.name == \"${SOURCE_CANDIDATE_ARTIFACT_NAME}\") | .digest")"
           source_head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_CANDIDATE_RUN_ID}" --jq '.head_sha')"
-          diagnostic="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CALIBRATION_DIAGNOSTIC_RUN_ID}/artifacts" \
+          gru_diagnostic="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GRU_DIAGNOSTIC_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"${GRU_DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
+          calibration_diagnostic="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CALIBRATION_DIAGNOSTIC_RUN_ID}/artifacts" \
             --jq ".artifacts[] | select(.name == \"${CALIBRATION_DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
           test -n "$shared" && test "$shared" = "$EXPECTED_SHARED_ARTIFACT_DIGEST"
           test -n "$source" && test "$source" = "$EXPECTED_SOURCE_CANDIDATE_ARTIFACT_DIGEST"
           test "$source_head" = "$EXPECTED_SOURCE_CANDIDATE_HEAD"
-          test -n "$diagnostic" && test "$diagnostic" = "$EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST"
+          test -n "$gru_diagnostic" && test "$gru_diagnostic" = "$EXPECTED_GRU_DIAGNOSTIC_ARTIFACT_DIGEST"
+          test -n "$calibration_diagnostic" && test "$calibration_diagnostic" = "$EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST"
           echo "shared artifact bound: $shared"
           echo "source candidate artifact bound: $source"
           echo "source candidate exact HEAD bound: $source_head"
-          echo "calibration diagnostic artifact bound: $diagnostic"
+          echo "GRU lexical diagnostic artifact bound: $gru_diagnostic"
+          echo "calibration diagnostic artifact bound: $calibration_diagnostic"
 
       - name: Build experimental GRU evaluation runner
         run: |
@@ -112,6 +121,41 @@ jobs:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ env.SOURCE_CANDIDATE_RUN_ID }}
+
+      - name: Download exact GRU lexical diagnostics
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-open-shadow-failure-diagnostics
+          path: build/gru-open-shadow-diagnostics
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.GRU_DIAGNOSTIC_RUN_ID }}
+
+      - name: Rematerialize exact V2 training replay
+        run: |
+          .venv/bin/python experiments/gru_generalization_v2/render_replay.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --diagnostics build/gru-open-shadow-diagnostics/gru-failure-diagnostics.json \
+            --output build/gru-generalization-replay \
+            --examples-per-event 8
+
+      - name: Require byte-identical V2 replay evidence
+        run: |
+          test "$(sha256sum build/gru-generalization-replay/gru-generalization-replay.json | awk '{print $1}')" = "$EXPECTED_V2_REPLAY_JSON_SHA256"
+          test "$(sha256sum build/gru-generalization-replay/gru-generalization-replay.tsv | awk '{print $1}')" = "$EXPECTED_V2_REPLAY_MANIFEST_SHA256"
+          cmp build/gru-generalization-replay/gru-generalization-replay.json \
+            build/gru-v2-source/gru-generalization-replay/gru-generalization-replay.json
+          cmp build/gru-generalization-replay/gru-generalization-replay.tsv \
+            build/gru-v2-source/gru-generalization-replay/gru-generalization-replay.tsv
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest=Path('build/gru-generalization-replay/gru-generalization-replay.tsv')
+          rows=[line.split('\t',1)[0] for line in manifest.read_text(encoding='utf-8').splitlines() if line.strip()]
+          assert len(rows) == 32
+          missing=[path for path in rows if not Path(path).is_file()]
+          assert not missing, missing
+          print('V2 replay evidence and 32 rematerialized WAVs are byte-identical/bound')
+          PY
 
       - name: Download exact calibration failure diagnostics
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
