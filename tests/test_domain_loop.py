@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import pathlib
 import subprocess
@@ -11,10 +12,19 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-from hard_negative_replay import normalize_hard_negative_replay  # noqa: E402
+from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
+from hard_negative_replay import (  # noqa: E402
+    adaptive_focus,
+    hard_negative_stress_focus,
+    normalize_hard_negative_replay,
+    normalize_positive_stress_replay,
+    positive_stress_focus,
+)
 from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
     select_calibration_threshold,
+    select_strict_candidate,
+    strict_gate_candidate,
     warm_start_args,
 )
 
@@ -75,12 +85,226 @@ def validate_torch_iteration_policy() -> None:
     else:
         raise AssertionError("empty calibration candidate set was accepted")
 
+    split_pass = [
+        {
+            "round": 0,
+            "frontend": "logmel",
+            "score": 1.0,
+            "calibration_gate": False,
+            "test_gate": True,
+        },
+        {
+            "round": 2,
+            "frontend": "logmel",
+            "score": 0.5,
+            "calibration_gate": True,
+            "test_gate": False,
+        },
+    ]
+    assert all(not strict_gate_candidate(record) for record in split_pass)
+    assert select_strict_candidate(split_pass) is None
+
+    strict_candidates = split_pass + [
+        {
+            "round": 1,
+            "frontend": "pcen-lite",
+            "score": 0.1,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+        {
+            "round": 3,
+            "frontend": "pcen-lite",
+            "score": 0.3,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+        {
+            "round": 3,
+            "frontend": "logmel",
+            "score": 0.2,
+            "calibration_gate": True,
+            "test_gate": True,
+        },
+    ]
+    selected_strict = select_strict_candidate(strict_candidates)
+    assert selected_strict is not None
+    assert int(selected_strict["round"]) == 3
+    assert selected_strict["frontend"] == "logmel"
+    assert float(selected_strict["score"]) == 0.2
+
     formal = json.loads(
         (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(encoding="utf-8")
     )
     assert float(formal["domain_gates"]["max_far_per_hour"]) == 0.0
     assert float(formal["domain_gates"]["max_frr"]) == 0.0
     assert float(formal["domain_gates"]["max_far_frr"]) == 0.0
+    assert 0.55 in formal["calibration"]["thresholds"]
+    assert len(formal["calibration"]["thresholds"]) >= 5
+    assert int(formal["calibration"]["coordinate_rounds"]) >= 2
+
+    shadow = formal["shadow_qualification"]
+    assert shadow["enabled"] is True
+    assert len(shadow["seeds"]) == 8
+    assert len(set(shadow["seeds"])) == 8
+    assert int(shadow["expected_wakes_per_seed"]) == 256
+    assert float(shadow["min_surrogate_separation"]) == 0.06
+    assert int(formal["qualification_holdout_seed"]) not in set(shadow["seeds"])
+    assert not set(formal["retired_qualification_holdout_seeds"]) & set(shadow["seeds"])
+
+    adversarial = formal["domain_iteration"]["adversarial_lexicon"]
+    assert set(adversarial) == {
+        "enabled",
+        "max_length",
+        "top_k",
+        "probes_per_sequence",
+        "replay_examples_per_sequence",
+        "refinement_epochs",
+        "refinement_lr_scale",
+    }
+    assert adversarial["enabled"] is True
+    assert int(adversarial["max_length"]) == 5
+    assert int(adversarial["top_k"]) == 24
+    assert int(adversarial["probes_per_sequence"]) == 1
+    assert int(adversarial["replay_examples_per_sequence"]) == 4
+    assert int(adversarial["refinement_epochs"]) == 12
+    assert float(adversarial["refinement_lr_scale"]) == 0.5
+
+    positive_stress = formal["domain_iteration"]["positive_stress_replay"]
+    assert {int(item["keyword_id"]) for item in positive_stress} == {1, 2}
+    assert all(item["focus"] == "adaptive" for item in positive_stress)
+    assert all(int(item["examples"]) == 32 for item in positive_stress)
+    assert all(item["fallback"]["distance_bin"] == "5m" for item in positive_stress)
+    assert all(item["fallback"]["azimuth"] == "rear" for item in positive_stress)
+    assert all(item["fallback"]["snr"] == "critical" for item in positive_stress)
+
+    formal_hard_negative = formal["domain_iteration"]["hard_negative_replay"]
+    assert formal_hard_negative
+    assert min(int(item["examples"]) for item in formal_hard_negative) >= 24
+    prefix = next(
+        item
+        for item in formal_hard_negative
+        if item["tokens"] == ["ni3", "hao3", "xiao3"]
+    )
+    assert int(prefix["examples"]) >= 24
+    assert int(prefix["focus_keyword_id"]) == 1
+
+    formal_domains = formal["domains"]
+    coverage_domains = {
+        "distance_bands": formal_domains["distance_bands"],
+        "azimuth_deg": formal_domains["azimuth_deg"],
+        "rt60_s": formal_domains["rt60_s"],
+        "snr_db": formal_domains["snr_db"],
+        "noise_profiles": formal_domains["noise_profiles"],
+        "playback_probability": formal_domains["playback"]["probability"],
+    }
+
+    def azimuth_band(value: float) -> str:
+        if abs(value) <= 30.0:
+            return "front"
+        if abs(value) <= 90.0:
+            return "side"
+        return "rear"
+
+    cube = [
+        hard_negative_stress_focus(
+            coverage_domains,
+            round_index=0,
+            item_index=3,
+            example_index=index,
+        )
+        for index in range(24)
+    ]
+    observed = {
+        (azimuth_band(float(item["azimuth"])), str(item["snr"]), bool(item["playback"]))
+        for item in cube
+    }
+    expected = {
+        (azimuth, snr, playback)
+        for playback in (False, True)
+        for snr in ("critical", "low", "mid", "high")
+        for azimuth in ("front", "side", "rear")
+    }
+    assert len(cube) == 24
+    assert observed == expected
+
+    factor_levels = {
+        "azimuth": ("front", "side", "rear"),
+        "snr": ("critical", "low", "mid", "high"),
+        "playback": (False, True),
+        "noise": tuple(formal_domains["noise_profiles"]),
+        "distance_bin": ("0.5m", "1m", "2m", "3m", "5m"),
+        "rt60": ("dry", "medium", "reverb"),
+    }
+
+    def factor_value(item: dict, factor: str):
+        if factor == "azimuth":
+            return azimuth_band(float(item["azimuth"]))
+        return item[factor]
+
+    assert all(set(item) == set(factor_levels) for item in cube)
+    for left, right in itertools.combinations(factor_levels, 2):
+        observed_pairs = {
+            (factor_value(item, left), factor_value(item, right)) for item in cube
+        }
+        expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
+        assert observed_pairs == expected_pairs, (left, right, expected_pairs - observed_pairs)
+
+    adaptive = {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"}
+    positive_cover = [
+        positive_stress_focus(
+            coverage_domains,
+            round_index=0,
+            keyword_id=1,
+            example_index=index,
+            total_examples=32,
+            adaptive=adaptive,
+        )
+        for index in range(24)
+    ]
+    assert len(positive_cover) == 24
+    for left, right in itertools.combinations(factor_levels, 2):
+        observed_pairs = {
+            (factor_value(item, left), factor_value(item, right))
+            for item in positive_cover
+        }
+        expected_pairs = set(itertools.product(factor_levels[left], factor_levels[right]))
+        assert observed_pairs == expected_pairs, ("positive", left, right)
+    for index in range(24, 32):
+        assert positive_stress_focus(
+            coverage_domains,
+            round_index=0,
+            keyword_id=1,
+            example_index=index,
+            total_examples=32,
+            adaptive=adaptive,
+        ) == adaptive
+
+    side_angles = {
+        float(item["azimuth"])
+        for round_index in range(4)
+        for example_index in range(24)
+        for item in [
+            hard_negative_stress_focus(
+                coverage_domains,
+                round_index=round_index,
+                item_index=3,
+                example_index=example_index,
+            )
+        ]
+        if azimuth_band(float(item["azimuth"])) == "side"
+    }
+    assert side_angles == {-90.0, -60.0, 60.0, 90.0}
+
+    measured_domains = {**coverage_domains, "rir_manifest": {"entries": []}}
+    measured_focus = hard_negative_stress_focus(
+        measured_domains,
+        round_index=0,
+        item_index=0,
+        example_index=0,
+    )
+    assert "azimuth" not in measured_focus
+    assert set(measured_focus) == {"snr", "playback"}
 
     active = ["ni3", "hao3", "xiao3", "wo1"]
     token_map = {"<blank>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4}
@@ -88,18 +312,36 @@ def validate_torch_iteration_policy() -> None:
         ["ni3", "hao3", "xiao3", "wo1"],
         ["xiao3", "wo1", "xiao3", "wo1"],
     ]
+
+    lexical = enumerate_safe_sequences(active, forbidden, max_length=5)
+    assert len(lexical) == 1330
+    assert lexical == enumerate_safe_sequences(active, forbidden, max_length=5)
+    assert ("ni3", "hao3", "xiao3") in lexical
+    assert ("ni3", "hao3", "xiao3", "wo1") not in lexical
+    assert ("xiao3", "wo1", "xiao3", "wo1") not in lexical
+
     replay = normalize_hard_negative_replay(
         [
-            {"tokens": ["hao3", "ni3", "xiao3", "wo1"], "examples": 24},
+            {
+                "tokens": ["hao3", "ni3", "xiao3", "wo1"],
+                "examples": 24,
+                "focus_keyword_id": 1,
+            },
             {"tokens": ["hao3", "hao3", "xiao3", "wo1"], "examples": 16},
-            {"tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"], "examples": 16},
+            {
+                "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
+                "examples": 16,
+                "focus_keyword_id": 1,
+            },
         ],
         active_tokens=active,
         forbidden=forbidden,
         token_map=token_map,
+        keyword_ids={1, 2},
     )
     assert [item["examples"] for item in replay] == [24, 16, 16]
     assert replay[0]["target_ids"] == [2, 1, 3, 4]
+    assert replay[0]["focus_keyword_id"] == 1
     assert replay[2]["target_ids"] == [2, 4, 3, 4, 1]
     try:
         normalize_hard_negative_replay(
@@ -112,6 +354,68 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("wake path was accepted as a hard negative")
+
+    keywords = [
+        {
+            "id": 1,
+            "text": "你好小窝",
+            "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+            "token_ids": [1, 2, 3, 4],
+        },
+        {
+            "id": 2,
+            "text": "小窝小窝",
+            "tokens": ["xiao3", "wo1", "xiao3", "wo1"],
+            "token_ids": [3, 4, 3, 4],
+        },
+    ]
+    normalized_positive = normalize_positive_stress_replay(
+        [
+            {
+                "keyword_id": 1,
+                "examples": 8,
+                "focus": "adaptive",
+                "fallback": {
+                    "distance_bin": "5m",
+                    "azimuth": "rear",
+                    "snr": "critical",
+                },
+            },
+            {
+                "keyword_id": 2,
+                "examples": 8,
+                "focus": "adaptive",
+                "fallback": {
+                    "distance_bin": "5m",
+                    "azimuth": "rear",
+                    "snr": "critical",
+                },
+            },
+        ],
+        keywords=keywords,
+    )
+    assert normalized_positive[0]["target_ids"] == [1, 2, 3, 4]
+    assert normalized_positive[1]["target_ids"] == [3, 4, 3, 4]
+    curriculum = {
+        "keyword_worst_domains": {
+            "2": [
+                {
+                    "domain": "distance_azimuth_snr:distance_bin=3m|azimuth=side|snr=low",
+                    "hardness": 2.0,
+                },
+                {
+                    "domain": "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical",
+                    "hardness": 4.0,
+                },
+            ]
+        }
+    }
+    focus = adaptive_focus(
+        curriculum,
+        2,
+        {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"},
+    )
+    assert focus == {"distance_bin": "5m", "azimuth": "rear", "snr": "critical"}
 
 
 def main() -> int:
@@ -143,11 +447,6 @@ def main() -> int:
         config["domains"]["snr_db"] = [22.0, 34.0]
         config["domains"]["playback"]["probability"] = 0.1
         config["model"]["frontends"] = ["logmel", "pcen-lite"]
-        # Keep the production minimum here. With only 8 variants the 75/25
-        # train/validation split leaves two validation scenes per token; PCEN's
-        # stateful compression makes that unnecessarily high-variance while not
-        # exercising a different contract. Sixteen gives 12 train + 4 held-out
-        # domain scenes per token and retains the hard 98.5% quantized-fit gate.
         config["model"]["domain_variants_per_token"] = 16
         config["model"]["prototype_candidates"] = [
             {"input_scale": 0.010, "output_scale": 0.050, "blank_bias": 1.8, "token_bias": -1.2}
@@ -162,8 +461,6 @@ def main() -> int:
             "max_domain_weight": 4.0,
             "stop_on_gate": True,
         }
-        # Smoke test validates orchestration and domain accounting, not the formal
-        # product-facing strict policy in xiaowo.domain.json.
         config["domain_gates"] = {
             "max_frr": 1.0,
             "max_far_per_hour": 1000000.0,
@@ -189,7 +486,12 @@ def main() -> int:
         assert completed.returncode == 0, completed.returncode
         manifest = json.loads((work / "domain-loop-manifest.json").read_text(encoding="utf-8"))
         assert manifest["qualified"] is True
+        assert manifest["development_qualified"] is True
+        assert manifest["qualification_qualified"] is True
         assert manifest["evidence_class"] == "synthetic-domain-qualified"
+        assert manifest["candidate_selection"]["policy"] == "latest-strict-gate-passing-round"
+        assert manifest["candidate_selection"]["qualification_used_for_selection"] is False
+        assert manifest["candidate_selection"]["objective_fallback_used"] is False
         assert manifest["best_frontend"] in {"logmel", "pcen-lite"}
         assert {row["frontend"] for row in manifest["records"]} == {"logmel", "pcen-lite"}
         far = manifest["qualification_domains"]["domains"]["distance:far"]

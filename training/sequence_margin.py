@@ -48,8 +48,6 @@ def _decoder_sequence_log_confidence(
     if steps <= 0:
         raise ValueError("decoder confidence requires positive input length")
 
-    # Each state means: best acoustic sum whose current token was consumed at
-    # exactly this frame. Strict chronological advance uses a shifted prefix max.
     score = sample_log_probs[:, sequence[0]]
     previous = sequence[0]
     for token in sequence[1:]:
@@ -64,6 +62,53 @@ def _decoder_sequence_log_confidence(
     return score.amax() / float(len(sequence))
 
 
+def _operating_points(
+    count: int,
+    *,
+    margin: float,
+    confidence_threshold: float,
+    keyword_operating_points: list[dict] | None,
+) -> list[tuple[float, float, float]]:
+    if not 0.0 < float(confidence_threshold) < 1.0:
+        raise ValueError("decoder confidence threshold must be in (0,1)")
+    if not 0.0 <= float(margin) < 0.5:
+        raise ValueError("keyword sequence margin is invalid")
+    if keyword_operating_points is None:
+        raw = [
+            {
+                "threshold": confidence_threshold,
+                "positive_margin": margin,
+                "negative_margin": margin,
+            }
+            for _ in range(count)
+        ]
+    else:
+        if len(keyword_operating_points) != count:
+            raise ValueError("keyword operating points must align with keyword sequences")
+        raw = keyword_operating_points
+
+    result: list[tuple[float, float, float]] = []
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"keyword operating point {index} must be an object")
+        threshold = float(item.get("threshold", confidence_threshold))
+        positive_margin = float(item.get("positive_margin", margin))
+        negative_margin = float(item.get("negative_margin", margin))
+        values = (threshold, positive_margin, negative_margin)
+        if any(not math.isfinite(value) for value in values):
+            raise ValueError("keyword operating point values must be finite")
+        if not 0.0 < threshold < 1.0:
+            raise ValueError("keyword threshold must be in (0,1)")
+        if positive_margin < 0.0 or negative_margin < 0.0:
+            raise ValueError("keyword margins must be non-negative")
+        lower = threshold - negative_margin
+        upper = threshold + positive_margin
+        if not 0.0 < lower < threshold <= upper < 1.0:
+            raise ValueError("keyword operating band must stay inside (0,1)")
+        result.append((threshold, positive_margin, negative_margin))
+    return result
+
+
 def keyword_sequence_margin_loss(
     *,
     log_probs: torch.Tensor,
@@ -75,24 +120,24 @@ def keyword_sequence_margin_loss(
     blank: int = 0,
     margin: float = 0.05,
     confidence_threshold: float = DECODER_CONFIDENCE_THRESHOLD,
+    keyword_operating_points: list[dict] | None = None,
 ) -> torch.Tensor:
     """Return a per-sample decoder-confidence operating-band hinge.
 
-    The previous relative CTC-likelihood margin improved development FR/FA but
-    still optimized a score different from the shipping decoder. Runtime wakes
-    on the geometric mean of token-transition acoustic probabilities crossing a
-    keyword threshold. Train that operating band directly:
+    Each wake path may now own an explicit runtime-aligned operating point. This
+    lets a multi-keyword product spend more negative margin on a confusion-prone
+    wake word without forcing the same recall/false-accept tradeoff onto every
+    other wake word.
 
-    * a genuine wake must reach at least ``threshold + margin``;
-    * every competing/non-wake keyword path must stay at or below
-      ``threshold - margin``;
-    * the worst competing path wins, never an average, because product semantics
-      are wake-on-any-keyword.
+    For each keyword:
 
-    Once a sample is safely inside the operating band this auxiliary loss is
-    exactly zero, avoiding the late-round over-driving seen with a purely
-    relative objective. CTC/ordered-token/recurrent-release remain the primary
-    sequence, alignment and recurrent-state objectives.
+    * a genuine wake must reach ``threshold + positive_margin``;
+    * that path, when competing or non-wake, must stay at or below
+      ``threshold - negative_margin``;
+    * the worst hinge wins because product semantics are wake-on-any-keyword.
+
+    Passing no per-keyword operating points preserves the historical single
+    threshold/symmetric-margin behavior exactly.
     """
     if log_probs.ndim != 3:
         raise ValueError("log_probs must be [T,B,V]")
@@ -105,14 +150,6 @@ def keyword_sequence_margin_loss(
         raise ValueError("target_lengths must contain one value per batch sample")
     if not keyword_sequences:
         return torch.zeros_like(true_ctc_nll)
-    if not 0.0 < float(confidence_threshold) < 1.0:
-        raise ValueError("decoder confidence threshold must be in (0,1)")
-    if not 0.0 <= float(margin) < 0.5:
-        raise ValueError("keyword sequence margin is invalid")
-    lower = float(confidence_threshold) - float(margin)
-    upper = float(confidence_threshold) + float(margin)
-    if not 0.0 < lower < upper < 1.0:
-        raise ValueError("decoder confidence operating band must stay inside (0,1)")
 
     vocab = int(log_probs.shape[2])
     normalized_keywords: list[tuple[int, ...]] = []
@@ -128,11 +165,23 @@ def keyword_sequence_margin_loss(
         seen.add(sequence)
         normalized_keywords.append(sequence)
 
-    true_rows = _target_rows(targets, target_lengths)
-    positive_floor = log_probs.new_tensor(math.log(upper))
-    negative_ceiling = log_probs.new_tensor(math.log(lower))
-    losses: list[torch.Tensor] = []
+    points = _operating_points(
+        len(normalized_keywords),
+        margin=margin,
+        confidence_threshold=confidence_threshold,
+        keyword_operating_points=keyword_operating_points,
+    )
+    positive_floors = [
+        log_probs.new_tensor(math.log(threshold + positive_margin))
+        for threshold, positive_margin, _ in points
+    ]
+    negative_ceilings = [
+        log_probs.new_tensor(math.log(threshold - negative_margin))
+        for threshold, _, negative_margin in points
+    ]
 
+    true_rows = _target_rows(targets, target_lengths)
+    losses: list[torch.Tensor] = []
     for batch_index, true_row in enumerate(true_rows):
         steps = int(input_lengths[batch_index])
         if steps <= 0 or steps > int(log_probs.shape[0]):
@@ -152,11 +201,13 @@ def keyword_sequence_margin_loss(
         )
         hinges: list[torch.Tensor] = []
         if wake_index is not None:
-            hinges.append(torch.relu(positive_floor - scores[wake_index]))
+            hinges.append(
+                torch.relu(positive_floors[wake_index] - scores[wake_index])
+            )
         for index, score in enumerate(scores):
             if index == wake_index:
                 continue
-            hinges.append(torch.relu(score - negative_ceiling))
+            hinges.append(torch.relu(score - negative_ceilings[index]))
         if hinges:
             losses.append(torch.stack(hinges).amax())
         else:

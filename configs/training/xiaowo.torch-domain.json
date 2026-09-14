@@ -2,42 +2,62 @@
   "schema_version": 1,
   "name": "xiaowo-torch-domain-iteration-v1",
   "seed": 1337,
-  "qualification_holdout_seed": 271838,
-  "retired_qualification_holdout_seeds": [271828, 271829, 271830, 271831, 271832, 271833, 271834, 271835, 271836, 271837],
+  "qualification_holdout_seed": 271843,
+  "retired_qualification_holdout_seeds": [271828, 271829, 271830, 271831, 271832, 271833, 271834, 271835, 271836, 271837, 271838, 271839, 271840, 271841, 271842],
   "far_holdout_round_namespace": 3000000,
   "retired_far_holdout_round_namespaces": [1000000, 2000000],
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
   "domain_work_dir": "build/model-training",
+  "shadow_qualification": {
+    "enabled": true,
+    "seeds": [731101, 731102, 731103, 731104, 731105, 731106, 731107, 731108],
+    "expected_wakes_per_seed": 256,
+    "min_surrogate_separation": 0.06
+  },
+  "data_augmentation_v3": {
+    "policy": "train-only-balanced-mining-v1",
+    "formal_qualification_used": false,
+    "expand_evaluation_splits": false,
+    "adversarial_top_k": 64,
+    "adversarial_probes_per_sequence": 2,
+    "adversarial_replay_examples_per_sequence": 8,
+    "adversarial_min_per_keyword": 24,
+    "adversarial_include_strict_prefix_anchors": true,
+    "failure_replay_enabled": true,
+    "failure_replay_examples_per_failure": 4,
+    "failure_replay_max_unique_failures": 64,
+    "failure_replay_max_per_keyword": 32
+  },
   "generator": {
     "continuous_gap_ms": 1600.0,
     "tts": {
       "backend": "tone",
       "token_ms": 180.0,
-      "token_ms_jitter": 30.0,
+      "token_ms_jitter": 45.0,
       "gap_ms": 85.0,
       "lead_ms": 180.0,
       "tail_ms": 200.0,
       "amplitude": 12500.0,
-      "pitch_jitter": 0.012
+      "pitch_jitter": 0.020
     },
     "augment": {
-      "gain_db_min": -5.0,
-      "gain_db_max": 3.0,
-      "snr_db_min": 5.0,
+      "gain_db_min": -7.0,
+      "gain_db_max": 4.0,
+      "snr_db_min": 3.0,
       "snr_db_max": 36.0,
-      "echo_max_ms": 70.0,
-      "echo_gain_max": 0.18,
+      "echo_max_ms": 90.0,
+      "echo_gain_max": 0.22,
       "noise_profiles": ["white", "fan", "motor", "media"]
     }
   },
   "dataset": {
     "train": {
-      "positive_families_per_keyword": 24,
-      "confusable_families_per_keyword": 16,
-      "random_negative_families": 24,
+      "positive_families_per_keyword": 72,
+      "confusable_families_per_keyword": 32,
+      "random_negative_families": 48,
       "background_seconds_per_profile": 4.0,
-      "variants_per_family": 4
+      "variants_per_family": 6
     },
     "calibration": {
       "positive_families_per_keyword": 8,
@@ -101,8 +121,8 @@
     "lr": 0.001
   },
   "calibration": {
-    "thresholds": [0.55],
-    "coordinate_rounds": 1
+    "thresholds": [0.50, 0.52, 0.54, 0.55, 0.56, 0.58, 0.60],
+    "coordinate_rounds": 2
   },
   "domain_iteration": {
     "backend": "torch_ctc",
@@ -113,26 +133,92 @@
     "max_domain_weight": 6.0,
     "stop_on_gate": false,
     "warm_start_strategy": "full",
+    "adversarial_lexicon": {
+      "enabled": true,
+      "max_length": 5,
+      "top_k": 24,
+      "probes_per_sequence": 1,
+      "replay_examples_per_sequence": 4,
+      "refinement_epochs": 12,
+      "refinement_lr_scale": 0.5
+    },
     "hard_negative_replay": [
       {
         "tokens": ["hao3", "ni3", "xiao3", "wo1"],
-        "examples": 24
+        "examples": 48,
+        "focus_keyword_id": 1
       },
       {
         "tokens": ["hao3", "hao3", "xiao3", "wo1"],
-        "examples": 24
+        "examples": 48,
+        "focus_keyword_id": 1
       },
       {
         "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
-        "examples": 32
+        "examples": 64,
+        "focus_keyword_id": 1
       },
       {
         "tokens": ["ni3", "hao3", "xiao3"],
-        "examples": 24
+        "examples": 48,
+        "focus_keyword_id": 1
+      },
+      {
+        "tokens": ["ni3", "hao3", "wo1"],
+        "examples": 48,
+        "focus_keyword_id": 1
+      },
+      {
+        "tokens": ["ni3", "xiao3", "wo1"],
+        "examples": 48,
+        "focus_keyword_id": 1
+      },
+      {
+        "tokens": ["hao3", "xiao3", "wo1"],
+        "examples": 48,
+        "focus_keyword_id": 1
       },
       {
         "tokens": ["xiao3", "wo1", "xiao3"],
-        "examples": 24
+        "examples": 64,
+        "focus_keyword_id": 2
+      },
+      {
+        "tokens": ["xiao3", "wo1"],
+        "examples": 64,
+        "focus_keyword_id": 2
+      },
+      {
+        "tokens": ["wo1", "xiao3", "wo1"],
+        "examples": 48,
+        "focus_keyword_id": 2
+      },
+      {
+        "tokens": ["xiao3", "wo1", "wo1"],
+        "examples": 48,
+        "focus_keyword_id": 2
+      }
+    ],
+    "positive_stress_replay": [
+      {
+        "keyword_id": 1,
+        "examples": 32,
+        "focus": "adaptive",
+        "fallback": {
+          "distance_bin": "5m",
+          "azimuth": "rear",
+          "snr": "critical"
+        }
+      },
+      {
+        "keyword_id": 2,
+        "examples": 32,
+        "focus": "adaptive",
+        "fallback": {
+          "distance_bin": "5m",
+          "azimuth": "rear",
+          "snr": "critical"
+        }
       }
     ]
   },
