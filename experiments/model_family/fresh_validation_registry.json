@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "policy": "gru-fresh-validation-one-shot-registry-v1",
+  "namespaces": [
+    {
+      "name": "gru-fresh-validation-v1",
+      "model_family": "gru",
+      "namespace": 191000019,
+      "status": "opened",
+      "source_run_id": 34844874629,
+      "source_head": "28f6fa02d041ab96be0c7e856302571ca6299c38",
+      "source_artifact_digest": "sha256:6d23bb780d79e5f51c5b21a449dbbe1054cbf67fe09a08ee1c5f764051fc2198",
+      "candidate_model_sha256": "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+      "result": "passed",
+      "shadow_consumed": true,
+      "formal_qualification_seed_consumed": false,
+      "purpose": "one-shot fresh validation consumed by qualification run 34844874629; historical validation evidence only and forbidden as candidate feedback"
+    },
+    {
+      "name": "gru-fresh-validation-v2",
+      "model_family": "gru",
+      "namespace": 192000019,
+      "status": "reserved-untouched",
+      "purpose": "one-shot fresh validation only after a future GRU candidate is frozen without v1 validation feedback"
+    }
+  ]
+}
