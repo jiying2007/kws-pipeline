@@ -80,16 +80,22 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertIn("render_hard_negative_replay", text)
         self.assertIn("update_curriculum", text)
 
-    def test_workflow_resolves_current_shadow_arena_from_policy(self) -> None:
+    def test_workflow_resolves_current_fresh_and_shadow_namespaces_from_policy(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("experiments/model_family/fresh_validation_registry.json", text)
+        self.assertIn("namespace=int(freeze['fresh_validation_seed_namespace'])", text)
+        self.assertIn("assert fresh['model_family'] == 'gru'", text)
+        self.assertIn("assert fresh['status'] == 'reserved-untouched'", text)
+        self.assertIn("fresh_seed=int(cfg.get('seed', 1337)) + namespace", text)
         self.assertIn("experiments/model_family/shadow_arena_registry.json", text)
-        self.assertIn("arena_name=policy['candidate_freeze']['shadow_arena']", text)
+        self.assertIn("arena_name=freeze['shadow_arena']", text)
         self.assertIn("arena=arenas[arena_name]", text)
         self.assertIn("assert arena['model_family'] == 'gru'", text)
         self.assertIn("assert arena['status'] == 'reserved-untouched'", text)
         self.assertIn("assert len(seeds) == len(set(seeds))", text)
+        self.assertIn("assert fresh_seed not in protected", text)
+        self.assertIn("assert fresh_seed not in set(seeds)", text)
         self.assertIn("assert not (set(seeds) & protected)", text)
-        self.assertNotIn("gru-independent-shadow-v2']['status']", text)
         self.assertNotIn("list(range(951101, 951109))", text)
 
     def _write_valid_candidate(self, root: pathlib.Path) -> dict:
