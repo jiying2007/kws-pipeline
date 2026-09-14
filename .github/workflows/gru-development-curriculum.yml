@@ -20,6 +20,7 @@ on:
       - 'experiments/model_family/fresh_validation_registry.json'
       - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_development_curriculum_contract.py'
+      - 'tests/test_gru_development_stability_gate.py'
       - '.github/workflows/gru-development-curriculum.yml'
   workflow_dispatch:
 
@@ -39,6 +40,8 @@ jobs:
           persist-credentials: false
       - name: Development / candidate boundary contract
         run: python3 tests/test_gru_development_curriculum_contract.py
+      - name: Stable strict-pass freeze contract
+        run: python3 tests/test_gru_development_stability_gate.py
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -46,6 +49,7 @@ jobs:
           tools/finalize_gru_frozen_candidate.py
           tools/verify_gru_frozen_candidate.py
           tests/test_gru_development_curriculum_contract.py
+          tests/test_gru_development_stability_gate.py
 
   development:
     if: github.event_name == 'workflow_dispatch'
