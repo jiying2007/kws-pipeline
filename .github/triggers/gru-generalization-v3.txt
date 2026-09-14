@@ -1,0 +1,11 @@
+staged_head=b97cc6f3adb42ae98c4e58904bc2f933afdeb586
+policy=shadow-blind-gru-generalization-v3-acoustic-diversity
+reason=one-shot-independent-acoustic-diversity
+positive_example_weight=2.45
+epochs=12
+replay_exposure_repeat=3
+calibration_feedback_used_for_training=false
+v2_candidate_metrics_used_for_training=false
+v2_failure_diagnostics_used_for_training=false
+shadow_arena=gru-independent-shadow-v2
+shadow_seeds=951101-951108
