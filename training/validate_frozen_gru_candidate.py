@@ -69,9 +69,44 @@ def validate(candidate: pathlib.Path, runner: pathlib.Path, output: pathlib.Path
         raise ValueError("fresh validation seed namespace is not frozen")
     seed = int(config.get("seed", 1337)) + namespace
 
-    registry = load_object(ROOT / "experiments" / "model_family" / "shadow_arena_registry.json")
+    fresh_registry = load_object(
+        ROOT / "experiments" / "model_family" / "fresh_validation_registry.json"
+    )
+    fresh_rows = [
+        row for row in fresh_registry.get("namespaces", []) if isinstance(row, dict)
+    ]
+    matches = [row for row in fresh_rows if int(row.get("namespace", -1)) == namespace]
+    if len(matches) != 1:
+        raise ValueError("fresh validation namespace is not uniquely registered")
+    fresh_entry = matches[0]
+    if str(fresh_entry.get("model_family", "")) != "gru":
+        raise ValueError("fresh validation namespace model family mismatch")
+    if fresh_entry.get("status") != "reserved-untouched":
+        raise ValueError("fresh validation namespace is no longer reserved-untouched")
+
+    candidate_model_sha256 = str(freeze["model_sha256"])
+    for row in fresh_rows:
+        if int(row.get("namespace", -1)) == namespace:
+            continue
+        if str(row.get("model_family", "")) != "gru":
+            continue
+        if str(row.get("status", "")) == "reserved-untouched":
+            continue
+        consumed_model = row.get("candidate_model_sha256")
+        if consumed_model is not None and str(consumed_model) == candidate_model_sha256:
+            raise ValueError(
+                "frozen candidate model already consumed by an earlier fresh validation namespace"
+            )
+
+    shadow_registry = load_object(
+        ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
+    )
     arena_name = str(freeze_policy.get("shadow_arena", ""))
-    arenas = {str(row["name"]): row for row in registry.get("arenas", []) if isinstance(row, dict)}
+    arenas = {
+        str(row["name"]): row
+        for row in shadow_registry.get("arenas", [])
+        if isinstance(row, dict)
+    }
     arena = arenas.get(arena_name)
     if not isinstance(arena, dict) or arena.get("status") != "reserved-untouched":
         raise ValueError("frozen shadow arena is not reserved-untouched")
@@ -128,8 +163,10 @@ def validate(candidate: pathlib.Path, runner: pathlib.Path, output: pathlib.Path
         "policy": POLICY,
         "qualified": all_qualified,
         "frozen_candidate_policy": str(freeze["policy"]),
-        "model_sha256": str(freeze["model_sha256"]),
+        "model_sha256": candidate_model_sha256,
         "pack_sha256": str(freeze["pack_sha256"]),
+        "fresh_validation_registry_entry": str(fresh_entry.get("name", "")),
+        "fresh_validation_registry_status": str(fresh_entry["status"]),
         "fresh_validation_seed": seed,
         "fresh_validation_seed_namespace": namespace,
         "fresh_validation_wav_count": len(fresh_hashes),
