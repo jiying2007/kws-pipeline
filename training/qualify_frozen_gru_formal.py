@@ -16,12 +16,12 @@ sys.path.insert(0, str(TOOLS))
 from iterate_domain import base_gate, domain_gate, evaluate, gate_values, sha256_file  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from render_qualification_holdout import (  # noqa: E402
-    _index_hashes,
     _qualification_render_config,
     _reference_stats,
     _render_retired_seed,
     normalize_retired_qualification_seeds,
 )
+from verify_gru_evaluation_independence import split_hashes  # noqa: E402
 from verify_gru_frozen_candidate import verify  # noqa: E402
 
 POLICY = "frozen-gru-formal-qualification-v1"
@@ -60,9 +60,12 @@ def shadow_hashes(shadow_root: pathlib.Path, seeds: list[int]) -> set[str]:
     result: set[str] = set()
     for seed in seeds:
         index = shadow_root / f"seed-{seed}" / "dataset" / "domain-index.jsonl"
-        values = _index_hashes(index, {"qualification"})
-        if not values:
-            raise ValueError(f"shadow seed {seed} has no qualification WAV identity evidence")
+        values = split_hashes(index, "qualification")
+        overlap = result & values
+        if overlap:
+            raise ValueError(
+                f"shadow seed {seed} overlaps {len(overlap)} WAV SHA256 identity(ies) with an earlier shadow seed"
+            )
         result.update(values)
     return result
 
@@ -135,9 +138,7 @@ def qualify(
     rendered = render_domain_dataset(effective, dataset, curriculum_weights=None)
     active_index = dataset / "domain-index.jsonl"
     active_references = dataset / "qualification.references.jsonl"
-    active_hashes = _index_hashes(active_index, {"qualification"})
-    if not active_hashes:
-        raise ValueError("active formal cohort has no qualification WAVs")
+    active_hashes = split_hashes(active_index, "qualification")
     if active_hashes & development_hashes:
         raise ValueError("formal qualification overlaps frozen development/training WAV identities")
     if active_hashes & fresh_hashes:
@@ -151,7 +152,13 @@ def qualify(
     scratch = output / "retired-scratch"
     for retired_seed in retired:
         row = _render_retired_seed(config, scratch, retired_seed)
-        hashes = {str(value) for value in row["wav_hashes"]}
+        retired_index = scratch / f"seed-{retired_seed}" / "dataset" / "domain-index.jsonl"
+        hashes = split_hashes(retired_index, "qualification")
+        rendered_hashes = {str(value) for value in row["wav_hashes"]}
+        if hashes != rendered_hashes:
+            raise ValueError(
+                f"retired formal seed {retired_seed} raw WAV identities disagree with renderer evidence"
+            )
         boundaries = (
             ("active formal cohort", active_hashes),
             ("frozen development/training corpus", development_hashes),
@@ -173,6 +180,7 @@ def qualify(
                 "seed": retired_seed,
                 "references_sha256": str(row["references_sha256"]),
                 "domain_index_sha256": str(row["domain_index_sha256"]),
+                "wav_sha256_count": len(hashes),
             }
         )
     shutil.rmtree(scratch, ignore_errors=True)
@@ -211,6 +219,7 @@ def qualify(
         "formal_wav_count": len(active_hashes),
         "retired_wav_count": len(seen_retired_hashes),
         "all_pairwise_sha_disjoint": True,
+        "all_formal_cohorts_internal_sha_unique": True,
         "references_sha256": sha256_file(active_references),
         "domain_index_sha256": str(rendered["domain_index_sha256"]),
         "metrics": base,
