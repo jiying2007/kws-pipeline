@@ -67,6 +67,20 @@ def shadow_hashes(shadow_root: pathlib.Path, seeds: list[int]) -> set[str]:
     return result
 
 
+def fresh_wav_hashes(fresh: dict) -> set[str]:
+    values = fresh.get("fresh_validation_wav_sha256")
+    if not isinstance(values, list) or not values:
+        raise ValueError("fresh validation WAV identity evidence is missing")
+    result = {str(value) for value in values}
+    if len(result) != len(values):
+        raise ValueError("fresh validation WAV identity evidence contains duplicates")
+    if any(len(value) != 64 for value in result):
+        raise ValueError("fresh validation WAV identity evidence contains an invalid SHA")
+    if int(fresh.get("fresh_validation_wav_count", -1)) != len(result):
+        raise ValueError("fresh validation WAV identity count does not match the retained evidence")
+    return result
+
+
 def qualify(
     candidate: pathlib.Path,
     runner: pathlib.Path,
@@ -85,6 +99,7 @@ def qualify(
     fresh, shadow = require_preformal(fresh_summary, shadow_root / "summary.json")
     if str(fresh.get("model_sha256")) != str(freeze["model_sha256"]):
         raise ValueError("fresh validation model identity does not match frozen candidate")
+    fresh_hashes = fresh_wav_hashes(fresh)
 
     config = load_object(candidate / "source-config.json")
     training_seed = int(config.get("seed", 1337))
@@ -105,8 +120,12 @@ def qualify(
     if not development_hashes:
         raise ValueError("frozen development WAV identity set is empty")
     seen_shadow_hashes = shadow_hashes(shadow_root, shadow_seeds)
+    if development_hashes & fresh_hashes:
+        raise ValueError("fresh validation overlaps frozen development/training WAV identities")
     if development_hashes & seen_shadow_hashes:
         raise ValueError("shadow qualification overlaps frozen development/training WAV identities")
+    if fresh_hashes & seen_shadow_hashes:
+        raise ValueError("reserved shadow qualification overlaps fresh validation WAV identities")
 
     shutil.rmtree(output, ignore_errors=True)
     output.mkdir(parents=True, exist_ok=True)
@@ -121,22 +140,34 @@ def qualify(
         raise ValueError("active formal cohort has no qualification WAVs")
     if active_hashes & development_hashes:
         raise ValueError("formal qualification overlaps frozen development/training WAV identities")
+    if active_hashes & fresh_hashes:
+        raise ValueError("formal qualification overlaps fresh validation WAV identities")
     if active_hashes & seen_shadow_hashes:
         raise ValueError("formal qualification overlaps reserved shadow WAV identities")
 
     recordings, expected_wakes = _reference_stats(active_references)
     retired_evidence: list[dict] = []
+    seen_retired_hashes: set[str] = set()
     scratch = output / "retired-scratch"
     for retired_seed in retired:
         row = _render_retired_seed(config, scratch, retired_seed)
         hashes = {str(value) for value in row["wav_hashes"]}
-        overlap = active_hashes & hashes
-        if overlap:
-            raise ValueError(
-                f"formal qualification overlaps {len(overlap)} WAV SHA(s) with retired seed {retired_seed}"
-            )
+        boundaries = (
+            ("active formal cohort", active_hashes),
+            ("frozen development/training corpus", development_hashes),
+            ("fresh validation cohort", fresh_hashes),
+            ("reserved shadow cohort", seen_shadow_hashes),
+            ("another retired formal cohort", seen_retired_hashes),
+        )
+        for label, boundary_hashes in boundaries:
+            overlap = hashes & boundary_hashes
+            if overlap:
+                raise ValueError(
+                    f"retired formal seed {retired_seed} overlaps {len(overlap)} WAV SHA(s) with {label}"
+                )
         if int(row["recordings"]) != recordings or int(row["expected_wakes"]) != expected_wakes:
             raise ValueError(f"retired formal seed {retired_seed} support differs from active cohort")
+        seen_retired_hashes.update(hashes)
         retired_evidence.append(
             {
                 "seed": retired_seed,
@@ -172,8 +203,14 @@ def qualify(
         "recordings": recordings,
         "expected_wakes": expected_wakes,
         "development_overlap_count": 0,
+        "fresh_overlap_count": 0,
         "shadow_overlap_count": 0,
         "retired_overlap_count": 0,
+        "fresh_validation_wav_count": len(fresh_hashes),
+        "shadow_wav_count": len(seen_shadow_hashes),
+        "formal_wav_count": len(active_hashes),
+        "retired_wav_count": len(seen_retired_hashes),
+        "all_pairwise_sha_disjoint": True,
         "references_sha256": sha256_file(active_references),
         "domain_index_sha256": str(rendered["domain_index_sha256"]),
         "metrics": base,
