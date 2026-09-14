@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "policy": "gru-development-curriculum-loop-v1",
+  "evidence_scope": "development-only",
+  "formal_qualification_used": false,
+  "shadow_used": false,
+  "qualification_used": false,
+  "max_rounds": 8,
+  "min_rounds": 3,
+  "patience": 2,
+  "stable_strict_pass_rounds": 2,
+  "epochs_per_round": 8,
+  "training_seed_namespace": 190000019,
+  "lr_decay_per_round": 0.85,
+  "fixed_replay_repeat": 1,
+  "failure_replay_repeat_max": 3,
+  "loss_controller": {
+    "positive_example_weight_initial": 2.0,
+    "positive_example_weight_min": 1.5,
+    "positive_example_weight_max": 3.0,
+    "positive_example_weight_step": 0.15,
+    "ordered_token_loss_weight_initial": 0.35,
+    "ordered_token_loss_weight_min": 0.25,
+    "ordered_token_loss_weight_max": 0.60,
+    "ordered_token_loss_weight_step": 0.05
+  },
+  "candidate_freeze": {
+    "selection_policy": "latest-strict-calibration-test-round",
+    "fresh_validation_required": true,
+    "fresh_validation_seed_namespace": 191000019,
+    "shadow_required": true,
+    "shadow_arena": "gru-independent-shadow-v2",
+    "formal_qualification_required": true,
+    "bounded_repair_only_after_freeze": true,
+    "validation_feedback_allowed": false,
+    "threshold_feedback_allowed": false,
+    "training_rule_feedback_allowed": false
+  }
+}
