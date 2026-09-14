@@ -60,6 +60,36 @@ def require_stable_strict_pass(development: dict, source_policy: dict) -> int:
     return observed
 
 
+def persist_stability_state(
+    development_path: pathlib.Path,
+    development: dict,
+    frozen: pathlib.Path,
+    source_policy: dict,
+) -> tuple[int, int]:
+    required = source_policy.get("stable_strict_pass_rounds")
+    if isinstance(required, bool) or not isinstance(required, int) or required <= 0:
+        raise ValueError("stable_strict_pass_rounds must be a positive integer")
+    observed = terminal_strict_streak(development.get("records"))
+    stable = observed >= required
+    development["stable_strict_pass_rounds_required"] = required
+    development["stable_strict_pass_rounds_observed"] = observed
+    development["development_qualified"] = stable
+    if not stable:
+        development["selected_round"] = None
+        development["selected_score"] = None
+    development_path.write_text(
+        json.dumps(development, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    if not stable:
+        shutil.rmtree(frozen, ignore_errors=True)
+        raise ValueError(
+            "development candidate lacks stable strict-pass streak: "
+            f"observed={observed} required={required}"
+        )
+    return required, observed
+
+
 def compact_base(value: dict) -> dict:
     excluded = {"false_positives_path", "false_rejects_path"}
     return {key: item for key, item in value.items() if key not in excluded}
@@ -137,16 +167,15 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         raise ValueError("unexpected freeze policy")
     if development.get("policy") != "gru-development-curriculum-loop-v1":
         raise ValueError("unexpected development loop policy")
-    if not bool(development.get("development_qualified")):
-        raise ValueError("cannot finalize an unqualified development loop")
     if sha256_file(config) != str(freeze.get("config_sha256", "")):
         raise ValueError("source config SHA drifted before freeze finalization")
     if sha256_file(policy) != str(freeze.get("development_policy_sha256", "")):
         raise ValueError("source development policy SHA drifted before freeze finalization")
 
     source_policy = load_object(policy)
-    stable_observed = require_stable_strict_pass(development, source_policy)
-    stable_required = int(source_policy["stable_strict_pass_rounds"])
+    stable_required, stable_observed = persist_stability_state(
+        development_path, development, frozen, source_policy
+    )
 
     selected = select_record(development)
     evidence = {
