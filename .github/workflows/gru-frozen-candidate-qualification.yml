@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/gru-development-curriculum
+      - codex/gru-two-layer-pipeline
     paths:
       - 'training/validate_frozen_gru_candidate.py'
       - 'training/qualify_frozen_gru_formal.py'
