@@ -16,6 +16,7 @@ on:
       - 'tools/verify_gru_evaluation_independence.py'
       - 'tools/materialize_gru_candidate_workspace.py'
       - 'tools/prepare_gru_shadow_config.py'
+      - 'experiments/model_family/fresh_validation_registry.json'
       - 'tests/test_gru_frozen_qualification_contract.py'
       - '.github/workflows/gru-frozen-candidate-qualification.yml'
   workflow_dispatch:
