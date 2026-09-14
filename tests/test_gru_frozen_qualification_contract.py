@@ -109,6 +109,17 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn('"formal_seed_consumed": True', text)
         self.assertIn('"validation_feedback_allowed": False', text)
 
+    def test_formal_cohorts_recheck_internal_sha_uniqueness(self) -> None:
+        text = FORMAL.read_text(encoding="utf-8")
+        self.assertIn("from verify_gru_evaluation_independence import split_hashes", text)
+        self.assertIn('values = split_hashes(index, "qualification")', text)
+        self.assertIn("with an earlier shadow seed", text)
+        self.assertIn('active_hashes = split_hashes(active_index, "qualification")', text)
+        self.assertIn('hashes = split_hashes(retired_index, "qualification")', text)
+        self.assertIn("raw WAV identities disagree with renderer evidence", text)
+        self.assertIn('"wav_sha256_count": len(hashes)', text)
+        self.assertIn('"all_formal_cohorts_internal_sha_unique": True', text)
+
     def test_materialized_workspace_preserves_strict_selection_contract(self) -> None:
         text = MATERIALIZE.read_text(encoding="utf-8")
         self.assertIn('"policy": "latest-strict-gate-passing-round"', text)
