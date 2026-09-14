@@ -12,6 +12,7 @@ FRESH = ROOT / "training" / "validate_frozen_gru_candidate.py"
 FORMAL = ROOT / "training" / "qualify_frozen_gru_formal.py"
 MATERIALIZE = ROOT / "tools" / "materialize_gru_candidate_workspace.py"
 SHADOW_CONFIG = ROOT / "tools" / "prepare_gru_shadow_config.py"
+INDEPENDENCE = ROOT / "tools" / "verify_gru_evaluation_independence.py"
 
 
 class GruFrozenQualificationContractTest(unittest.TestCase):
@@ -60,6 +61,27 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn('{"calibration", "test", "qualification"}', text)
         self.assertIn("fresh validation seed overlaps protected qualification namespace", text)
         self.assertIn('"fresh_validation_wav_sha256": sorted(fresh_hashes)', text)
+
+    def test_fresh_and_shadow_internal_sha_independence_precede_protected_stages(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        verifier = INDEPENDENCE.read_text(encoding="utf-8")
+        fresh = workflow.index("Run feedback-free fresh validation")
+        fresh_independence = workflow.index("Verify fresh validation split SHA independence")
+        shadow = workflow.index("Run reserved shadow qualification")
+        shadow_independence = workflow.index("Verify reserved shadow seed SHA independence")
+        formal = workflow.index("Run isolated formal qualification")
+        self.assertLess(fresh, fresh_independence)
+        self.assertLess(fresh_independence, shadow)
+        self.assertLess(shadow, shadow_independence)
+        self.assertLess(shadow_independence, formal)
+        self.assertIn("fresh-split-independence.json", workflow)
+        self.assertIn("shadow-seed-independence.json", workflow)
+        self.assertIn("tools/verify_gru_evaluation_independence.py", workflow)
+        self.assertIn("contains duplicate WAV SHA256 evidence", verifier)
+        self.assertIn("with an earlier fresh split", verifier)
+        self.assertIn("with an earlier shadow seed", verifier)
+        self.assertIn('"all_fresh_splits_sha_disjoint": True', verifier)
+        self.assertIn('"all_shadow_seeds_sha_disjoint": True', verifier)
 
     def test_shadow_is_bound_to_reserved_registry_arena(self) -> None:
         text = SHADOW_CONFIG.read_text(encoding="utf-8")
