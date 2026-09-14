@@ -146,8 +146,6 @@ def assert_formal_triple_stress_support() -> None:
     negative_count, _ = triple_count(negative_scenes)
     assert positive_count >= int(gates["min_expected_wakes"])
     assert negative_count >= int(gates["min_negative_recordings"])
-    # Current formal support is not four copies of one rear direction: the first
-    # four triple-stress positives cover all four configured rear azimuth points.
     assert {-150.0, -120.0, 150.0, 180.0}.issubset(positive_azimuths)
 
 
@@ -192,7 +190,7 @@ def main() -> int:
             ]
         )
         result = json.loads(out.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 5
+        assert result["schema_version"] == 6
         assert result["domains"]["distance:near"]["frr"] > 0.0
         assert result["domains"]["distance:far"]["frr"] == 1.0
         assert result["domains"]["distance_bin:0.5m"]["expected"] == 3
@@ -217,6 +215,8 @@ def main() -> int:
         assert result["slice_contract"]["azimuth_quantization_deg"] == 30
         assert "distance_snr" in result["slice_contract"]["pairwise"]
         assert "distance_azimuth_snr" in result["slice_contract"]["triple"]
+        assert "keyword" in result["slice_contract"]["keyword_conditioning"]
+
         confusion = result["keyword_confusion"]
         assert confusion["assignment"] == "global-monotonic-one-to-one-v1"
         assert confusion["expected_events"] == 4
@@ -224,6 +224,15 @@ def main() -> int:
         assert confusion["wrong_keyword"] == 1
         assert confusion["missed"] == 1
         assert confusion["matrix"]["1"]["2"] >= 1
+
+        keyword_domains = result["keyword_domains"]
+        assert set(keyword_domains) == {"1", "2"}
+        assert keyword_domains["1"]["overall"]["expected"] == 3
+        assert keyword_domains["2"]["overall"]["expected"] == 1
+        assert keyword_domains["1"]["domains"][triple]["false_accepts"] == 1
+        assert keyword_domains["1"]["domains"][triple]["negative_recordings"] == 1
+        assert keyword_domains["2"]["domains"][triple]["false_accepts"] == 0
+        assert keyword_domains["1"]["worst_domain"] is not None
 
         stress = [
             "distance_azimuth:distance_bin=5m|azimuth=rear",

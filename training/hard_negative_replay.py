@@ -26,6 +26,15 @@ from synthetic_audio import (  # noqa: E402
 )
 
 MAX_REPLAY_EXAMPLES_PER_SEQUENCE = 256
+MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD = 256
+DISTANCE_POINTS_M = {"0.5m": 0.5, "1m": 1.0, "2m": 2.0, "3m": 3.0, "5m": 5.0}
+HARD_NEGATIVE_DISTANCE_BINS = ("0.5m", "1m", "2m", "3m", "5m")
+HARD_NEGATIVE_AZIMUTH_BANDS = ("front", "side", "rear")
+HARD_NEGATIVE_SNR_BANDS = ("critical", "low", "mid", "high")
+HARD_NEGATIVE_RT60_BANDS = ("dry", "medium", "reverb")
+HARD_NEGATIVE_STRESS_POLICY = "hard-negative-pairwise-covering-v2"
+POSITIVE_STRESS_POLICY = "positive-pairwise-covering-plus-adaptive-v1"
+POSITIVE_STRESS_COVERING_EXAMPLES = 24
 
 
 def _repo_path(value: str) -> pathlib.Path:
@@ -39,6 +48,7 @@ def normalize_hard_negative_replay(
     active_tokens: list[str],
     forbidden: list[list[str]],
     token_map: dict[str, int],
+    keyword_ids: set[int] | None = None,
 ) -> list[dict]:
     if raw is None:
         return []
@@ -71,15 +81,376 @@ def normalize_hard_negative_replay(
             raise ValueError(
                 f"{label}.examples must be 1..{MAX_REPLAY_EXAMPLES_PER_SEQUENCE}"
             )
+        focus_keyword_id = item.get("focus_keyword_id")
+        if focus_keyword_id is not None:
+            focus_keyword_id = int(focus_keyword_id)
+            if focus_keyword_id <= 0:
+                raise ValueError(f"{label}.focus_keyword_id must be positive")
+            if keyword_ids is not None and focus_keyword_id not in keyword_ids:
+                raise ValueError(f"{label}.focus_keyword_id is not a configured keyword")
         normalized.append(
             {
                 "tokens": tokens,
                 "target_ids": [int(token_map[token]) for token in tokens],
                 "examples": examples,
+                "focus_keyword_id": focus_keyword_id,
             }
         )
         seen.add(key)
     return normalized
+
+
+def normalize_positive_stress_replay(
+    raw: object,
+    *,
+    keywords: list[dict],
+) -> list[dict]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ValueError("domain_iteration.positive_stress_replay must be a list")
+    by_id = {int(keyword["id"]): keyword for keyword in keywords}
+    normalized: list[dict] = []
+    seen: set[int] = set()
+    for index, item in enumerate(raw):
+        label = f"domain_iteration.positive_stress_replay[{index}]"
+        if not isinstance(item, dict):
+            raise ValueError(f"{label} must be an object")
+        keyword_id = int(item.get("keyword_id", 0))
+        if keyword_id not in by_id:
+            raise ValueError(f"{label}.keyword_id is not configured")
+        if keyword_id in seen:
+            raise ValueError(f"{label}.keyword_id duplicates an earlier entry")
+        examples = int(item.get("examples", 1))
+        if not 1 <= examples <= MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD:
+            raise ValueError(
+                f"{label}.examples must be 1..{MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD}"
+            )
+        mode = str(item.get("focus", "adaptive"))
+        if mode not in {"adaptive", "fallback"}:
+            raise ValueError(f"{label}.focus must be adaptive or fallback")
+        fallback = item.get("fallback", {})
+        if not isinstance(fallback, dict):
+            raise ValueError(f"{label}.fallback must be an object")
+        keyword = by_id[keyword_id]
+        normalized.append(
+            {
+                "keyword_id": keyword_id,
+                "text": str(keyword["text"]),
+                "tokens": list(keyword["tokens"]),
+                "target_ids": [int(value) for value in keyword["token_ids"]],
+                "examples": examples,
+                "focus": mode,
+                "fallback": {str(key): value for key, value in fallback.items()},
+            }
+        )
+        seen.add(keyword_id)
+    return normalized
+
+
+def _keyword_curriculum(curriculum: dict | None, keyword_id: int | None) -> dict | None:
+    if not isinstance(curriculum, dict) or keyword_id is None:
+        return curriculum
+    global_dimensions = curriculum.get("dimension_weights", {})
+    keyword_dimensions = curriculum.get("keyword_dimension_weights", {})
+    if not isinstance(global_dimensions, dict) or not isinstance(keyword_dimensions, dict):
+        return curriculum
+    specific = keyword_dimensions.get(str(keyword_id), {})
+    if not isinstance(specific, dict):
+        return curriculum
+    merged: dict[str, dict[str, float]] = {}
+    for dimension in sorted(set(global_dimensions) | set(specific)):
+        base = global_dimensions.get(dimension, {})
+        local = specific.get(dimension, {})
+        if not isinstance(base, dict) or not isinstance(local, dict):
+            continue
+        values = {str(key): float(value) for key, value in base.items()}
+        for key, value in local.items():
+            values[str(key)] = max(values.get(str(key), 1.0), float(value))
+        merged[str(dimension)] = values
+    return {**curriculum, "dimension_weights": merged}
+
+
+def _parse_focus_domain(value: str) -> dict[str, str]:
+    if ":" not in value:
+        return {}
+    _, payload = value.split(":", 1)
+    result: dict[str, str] = {}
+    for field in payload.split("|"):
+        if "=" not in field:
+            continue
+        key, item = field.split("=", 1)
+        if key and item:
+            result[key] = item
+    return result
+
+
+def adaptive_focus(
+    curriculum: dict | None,
+    keyword_id: int,
+    fallback: dict,
+) -> dict:
+    result = {str(key): value for key, value in fallback.items()}
+    if not isinstance(curriculum, dict):
+        return result
+    raw = curriculum.get("keyword_worst_domains", {})
+    if not isinstance(raw, dict):
+        return result
+    ranked = raw.get(str(keyword_id), [])
+    if not isinstance(ranked, list):
+        return result
+    candidates = [
+        item
+        for item in ranked
+        if isinstance(item, dict) and isinstance(item.get("domain"), str)
+    ]
+    candidates.sort(
+        key=lambda item: (
+            0 if str(item["domain"]).startswith("distance_azimuth_snr:") else 1,
+            -float(item.get("hardness", 0.0)),
+            str(item["domain"]),
+        )
+    )
+    if candidates:
+        result.update(_parse_focus_domain(str(candidates[0]["domain"])))
+    return result
+
+
+def _band_for_distance(domains: dict, distance_m: float) -> str:
+    candidates: list[tuple[float, str]] = []
+    for name, item in domains["distance_bands"].items():
+        low, high = item["distance_m"]
+        if float(low) - 1.0e-9 <= distance_m <= float(high) + 1.0e-9:
+            candidates.append((abs((float(low) + float(high)) * 0.5 - distance_m), str(name)))
+    if not candidates:
+        raise ValueError("focused replay distance is outside configured distance bands")
+    return min(candidates)[1]
+
+
+def _snr_point(domains: dict, name: str) -> float:
+    low, high = [float(value) for value in domains["snr_db"]]
+    ranges = {
+        "critical": (low, min(high, 6.0)),
+        "low": (max(low, 6.001), min(high, 12.0)),
+        "mid": (max(low, 12.001), min(high, 20.0)),
+        "high": (max(low, 20.001), high),
+    }
+    if name not in ranges:
+        return float(name)
+    start, end = ranges[name]
+    if start > end:
+        raise ValueError(f"focused replay SNR band is outside configured range: {name}")
+    return (start + end) * 0.5
+
+
+def _rt60_point(domains: dict, name: str) -> float:
+    low, high = [float(value) for value in domains["rt60_s"]]
+    epsilon = 1.0e-3
+    ranges = {
+        "dry": (low, min(high, 0.30 - epsilon)),
+        "medium": (max(low, 0.30), min(high, 0.55 - epsilon)),
+        "reverb": (max(low, 0.55), high),
+    }
+    if name not in ranges:
+        return float(name)
+    start, end = ranges[name]
+    if start > end:
+        raise ValueError(f"focused replay RT60 band is outside configured range: {name}")
+    return (start + end) * 0.5
+
+
+def _azimuth_band(value: float) -> str:
+    if abs(value) <= 30.0:
+        return "front"
+    if abs(value) <= 90.0:
+        return "side"
+    return "rear"
+
+
+def hard_negative_stress_focus(
+    domains: dict,
+    *,
+    round_index: int,
+    item_index: int,
+    example_index: int,
+) -> dict:
+    """Pairwise-cover hard-negative acoustics without increasing replay count.
+
+    For synthetic geometry, the primary 3x4x2 azimuth-band x SNR-band x playback
+    cube stays exact. Noise profile, canonical distance and RT60 are assigned by
+    orthogonal modular projections of those primary coordinates. With the formal
+    product's 24-example replay entries this is a covering array over all six
+    factors: every pair of configured levels appears in one round while exact
+    azimuth values and secondary assignments rotate across rounds/items.
+
+    Measured-RIR evidence never has geometry overridden; it preserves the prior
+    SNR/playback-only stratification instead of fabricating distance/azimuth/RT60.
+    """
+    snr_bands: list[str] = []
+    for name in HARD_NEGATIVE_SNR_BANDS:
+        try:
+            _snr_point(domains, name)
+        except ValueError:
+            continue
+        snr_bands.append(name)
+    if not snr_bands:
+        return {}
+
+    playback_probability = float(domains.get("playback_probability", 0.0))
+    if playback_probability <= 0.0:
+        playback_states = [False]
+    elif playback_probability >= 1.0:
+        playback_states = [True]
+    else:
+        playback_states = [False, True]
+
+    measured_rir = isinstance(domains.get("rir_manifest"), dict)
+    if measured_rir:
+        combinations = [
+            (snr, playback)
+            for playback in playback_states
+            for snr in snr_bands
+        ]
+        if not combinations:
+            return {}
+        rotation = (round_index + item_index) * 7
+        snr, playback = combinations[(example_index + rotation) % len(combinations)]
+        return {"snr": snr, "playback": playback}
+
+    azimuth_values: dict[str, list[float]] = {}
+    raw_azimuths = [float(value) for value in domains.get("azimuth_deg", [])]
+    for band in HARD_NEGATIVE_AZIMUTH_BANDS:
+        values = [value for value in raw_azimuths if _azimuth_band(value) == band]
+        if values:
+            azimuth_values[band] = values
+    azimuth_bands = [
+        band for band in HARD_NEGATIVE_AZIMUTH_BANDS if band in azimuth_values
+    ]
+    if not azimuth_bands:
+        return {}
+
+    combinations = [
+        (band, snr, playback)
+        for playback in playback_states
+        for snr in snr_bands
+        for band in azimuth_bands
+    ]
+    if not combinations:
+        return {}
+
+    rotation = (round_index + item_index) * 7
+    band, snr, playback = combinations[(example_index + rotation) % len(combinations)]
+    band_index = azimuth_bands.index(band)
+    snr_index = snr_bands.index(snr)
+    playback_index = playback_states.index(playback)
+    phase = round_index + item_index
+
+    values = azimuth_values[band]
+    cycle = example_index // len(combinations)
+    focus: dict[str, object] = {
+        "azimuth": values[(round_index + item_index + cycle) % len(values)],
+        "snr": snr,
+        "playback": playback,
+    }
+
+    noise_profiles = [str(value) for value in domains.get("noise_profiles", [])]
+    if noise_profiles:
+        focus["noise"] = noise_profiles[
+            (band_index + 2 * snr_index + playback_index + phase)
+            % len(noise_profiles)
+        ]
+
+    distance_bins: list[str] = []
+    for name in HARD_NEGATIVE_DISTANCE_BINS:
+        try:
+            _band_for_distance(domains, DISTANCE_POINTS_M[name])
+        except ValueError:
+            continue
+        distance_bins.append(name)
+    if distance_bins:
+        focus["distance_bin"] = distance_bins[
+            (band_index + snr_index + 2 * playback_index + phase)
+            % len(distance_bins)
+        ]
+
+    rt60_bands: list[str] = []
+    for name in HARD_NEGATIVE_RT60_BANDS:
+        try:
+            _rt60_point(domains, name)
+        except ValueError:
+            continue
+        rt60_bands.append(name)
+    if rt60_bands:
+        focus["rt60"] = rt60_bands[
+            (band_index + 2 * snr_index + phase) % len(rt60_bands)
+        ]
+    return focus
+
+
+def positive_stress_focus(
+    domains: dict,
+    *,
+    round_index: int,
+    keyword_id: int,
+    example_index: int,
+    total_examples: int,
+    adaptive: dict,
+) -> dict:
+    """Pairwise-cover positive acoustics, then spend residual capacity adaptively."""
+    if total_examples < POSITIVE_STRESS_COVERING_EXAMPLES:
+        return dict(adaptive)
+    if example_index < POSITIVE_STRESS_COVERING_EXAMPLES:
+        return hard_negative_stress_focus(
+            domains,
+            round_index=round_index,
+            item_index=1000 + int(keyword_id),
+            example_index=example_index,
+        )
+    return dict(adaptive)
+
+
+def apply_focus(scene: dict, focus: dict, domains: dict) -> dict:
+    if not focus:
+        return scene
+    result = dict(scene)
+    geometry_fields = {"distance_bin", "distance_m", "azimuth", "rt60"} & set(focus)
+    if geometry_fields and isinstance(domains.get("rir_manifest"), dict):
+        raise ValueError("focused synthetic geometry cannot override measured RIR evidence")
+
+    if "distance_bin" in focus:
+        key = str(focus["distance_bin"])
+        if key not in DISTANCE_POINTS_M:
+            raise ValueError(f"unsupported focused distance bin: {key}")
+        distance_m = DISTANCE_POINTS_M[key]
+        result["distance_m"] = distance_m
+        result["distance_band"] = _band_for_distance(domains, distance_m)
+    elif "distance_m" in focus:
+        distance_m = float(focus["distance_m"])
+        result["distance_m"] = distance_m
+        result["distance_band"] = _band_for_distance(domains, distance_m)
+
+    if "azimuth" in focus:
+        value = str(focus["azimuth"])
+        azimuth = {"front": 0.0, "side": 90.0, "rear": 180.0}.get(value)
+        result["azimuth_deg"] = float(value) if azimuth is None else azimuth
+    if "snr" in focus:
+        result["snr_db"] = _snr_point(domains, str(focus["snr"]))
+    if "rt60" in focus:
+        result["rt60_s"] = _rt60_point(domains, str(focus["rt60"]))
+    if "noise" in focus:
+        noise = str(focus["noise"])
+        if noise not in domains["noise_profiles"]:
+            raise ValueError(f"unsupported focused noise profile: {noise}")
+        result["noise_profile"] = noise
+    if "playback" in focus:
+        raw = focus["playback"]
+        enabled = raw if isinstance(raw, bool) else str(raw).lower() in {"1", "true", "on", "playback"}
+        if enabled:
+            low, high = domains["playback_sir_db"]
+            result["playback_sir_db"] = (float(low) + float(high)) * 0.5
+        else:
+            result["playback_sir_db"] = None
+    return result
 
 
 def render_hard_negative_replay(
@@ -100,6 +471,7 @@ def render_hard_negative_replay(
     keywords_path = _repo_path(str(config["keywords"]))
     token_map = load_tokens(tokens_path)
     keywords = parse_keywords(keywords_path, token_map)
+    keyword_ids = {int(keyword["id"]) for keyword in keywords}
     feature_dim = int(config.get("model", {}).get("feature_dim", 32))
     carriers = token_carriers(keywords, feature_dim)
     active_tokens = list(carriers)
@@ -109,18 +481,28 @@ def render_hard_negative_replay(
         active_tokens=active_tokens,
         forbidden=forbidden,
         token_map=token_map,
+        keyword_ids=keyword_ids,
+    )
+    positive_replay = normalize_positive_stress_replay(
+        iteration.get("positive_stress_replay", []),
+        keywords=keywords,
     )
 
     output.mkdir(parents=True, exist_ok=True)
     manifest = output / "hard-negatives.tsv"
     evidence_path = output / "hard-negatives.json"
-    if not sequences:
+    if not sequences and not positive_replay:
         manifest.write_text("", encoding="utf-8")
         evidence = {
             "schema_version": 1,
             "round": round_index,
             "examples": 0,
+            "hard_negative_examples": 0,
+            "positive_stress_examples": 0,
             "sequences": [],
+            "positive_stress": [],
+            "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
+            "positive_stress_policy": POSITIVE_STRESS_POLICY,
             "manifest": str(manifest),
             "manifest_sha256": sha256_file(manifest),
         }
@@ -139,7 +521,7 @@ def render_hard_negative_replay(
     validate_tone_config(tts)
     backend = str(tts.get("backend", "tone"))
     if backend not in {"tone", "command"}:
-        raise ValueError(f"unsupported hard-negative TTS backend: {backend}")
+        raise ValueError(f"unsupported replay TTS backend: {backend}")
     if backend == "command":
         command = tts.get("command")
         if not isinstance(command, list) or not command:
@@ -147,59 +529,118 @@ def render_hard_negative_replay(
     augment_config = generator.get("augment", {})
     validate_augment_config(augment_config)
     domains = validate_domains(config)
-
     seed = int(config.get("seed", 1337))
     rows: list[dict] = []
+
+    def render_item(
+        *,
+        kind: str,
+        item_index: int,
+        example_index: int,
+        token_names: list[str],
+        target_ids: list[int],
+        focus_keyword_id: int | None,
+        focus: dict | None,
+    ) -> None:
+        kind_offset = 0 if kind == "hard-negative" else 400_000_003
+        example_seed = (
+            seed
+            + 70_000_019
+            + kind_offset
+            + round_index * 1_000_003
+            + item_index * 65_537
+            + example_index * 4099
+        )
+        rng = random.Random(example_seed)
+        stem = ("h" if kind == "hard-negative" else "p") + f"{item_index:02d}-e{example_index:03d}"
+        clean_path = output / "clean" / f"{stem}.wav"
+        if backend == "tone":
+            clean = render_tone_tokens(token_names, carriers, rng, tts)
+        else:
+            clean = render_command_tts(
+                " ".join(token_names),
+                token_names,
+                kind,
+                clean_path,
+                tts,
+            )
+        augmented = augment(clean, rng, augment_config)
+        scene_seed = example_seed + 31_337
+        scene_rng = random.Random(scene_seed)
+        scene = sample_scene(
+            domains,
+            scene_rng,
+            curriculum_weights=_keyword_curriculum(
+                curriculum_weights, focus_keyword_id
+            ),
+            forced_band=None,
+        )
+        if focus:
+            scene = apply_focus(scene, focus, domains)
+        mono, scene_meta = render_scene(
+            augmented,
+            scene,
+            seed=scene_seed,
+            afe=domains["afe"],
+        )
+        wav_path = output / "wav" / f"{stem}.wav"
+        write_wav(wav_path, mono)
+        rows.append(
+            {
+                "kind": kind,
+                "path": str(wav_path.resolve()),
+                "tokens": token_names,
+                "target_ids": target_ids,
+                "focus_keyword_id": focus_keyword_id,
+                "focus": focus or {},
+                "example_seed": example_seed,
+                "scene_seed": scene_seed,
+                "scene": scene_meta,
+                "wav_sha256": sha256_file(wav_path),
+            }
+        )
+
     for sequence_index, sequence in enumerate(sequences):
-        token_names = list(sequence["tokens"])
-        target_ids = list(sequence["target_ids"])
         for example_index in range(int(sequence["examples"])):
-            example_seed = (
-                seed
-                + 70_000_019
-                + round_index * 1_000_003
-                + sequence_index * 65_537
-                + example_index * 4099
+            render_item(
+                kind="hard-negative",
+                item_index=sequence_index,
+                example_index=example_index,
+                token_names=list(sequence["tokens"]),
+                target_ids=list(sequence["target_ids"]),
+                focus_keyword_id=sequence.get("focus_keyword_id"),
+                focus=hard_negative_stress_focus(
+                    domains,
+                    round_index=round_index,
+                    item_index=sequence_index,
+                    example_index=example_index,
+                ),
             )
-            rng = random.Random(example_seed)
-            clean_path = output / "clean" / f"h{sequence_index:02d}-e{example_index:03d}.wav"
-            if backend == "tone":
-                clean = render_tone_tokens(token_names, carriers, rng, tts)
-            else:
-                clean = render_command_tts(
-                    " ".join(token_names),
-                    token_names,
-                    "hard-negative",
-                    clean_path,
-                    tts,
-                )
-            augmented = augment(clean, rng, augment_config)
-            scene_seed = example_seed + 31_337
-            scene_rng = random.Random(scene_seed)
-            scene = sample_scene(
+
+    for positive_index, item in enumerate(positive_replay):
+        adaptive = (
+            adaptive_focus(curriculum_weights, int(item["keyword_id"]), item["fallback"])
+            if item["focus"] == "adaptive"
+            else dict(item["fallback"])
+        )
+        total_examples = int(item["examples"])
+        for example_index in range(total_examples):
+            focus = positive_stress_focus(
                 domains,
-                scene_rng,
-                curriculum_weights=curriculum_weights,
-                forced_band=None,
+                round_index=round_index,
+                keyword_id=int(item["keyword_id"]),
+                example_index=example_index,
+                total_examples=total_examples,
+                adaptive=adaptive,
             )
-            mono, scene_meta = render_scene(
-                augmented,
-                scene,
-                seed=scene_seed,
-                afe=domains["afe"],
-            )
-            wav_path = output / "wav" / f"h{sequence_index:02d}-e{example_index:03d}.wav"
-            write_wav(wav_path, mono)
-            rows.append(
-                {
-                    "path": str(wav_path.resolve()),
-                    "tokens": token_names,
-                    "target_ids": target_ids,
-                    "example_seed": example_seed,
-                    "scene_seed": scene_seed,
-                    "scene": scene_meta,
-                    "wav_sha256": sha256_file(wav_path),
-                }
+            render_item(
+                kind="positive-stress",
+                item_index=positive_index,
+                example_index=example_index,
+                token_names=list(item["tokens"]),
+                target_ids=list(item["target_ids"]),
+                focus_keyword_id=int(item["keyword_id"]),
+                focus=focus,
             )
 
     manifest.write_text(
@@ -209,13 +650,34 @@ def render_hard_negative_replay(
         ),
         encoding="utf-8",
     )
+    hard_negative_examples = sum(int(item["examples"]) for item in sequences)
+    positive_stress_examples = sum(int(item["examples"]) for item in positive_replay)
     evidence = {
         "schema_version": 1,
         "round": round_index,
         "examples": len(rows),
+        "hard_negative_examples": hard_negative_examples,
+        "positive_stress_examples": positive_stress_examples,
+        "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
+        "positive_stress_policy": POSITIVE_STRESS_POLICY,
+        "positive_stress_covering_examples": POSITIVE_STRESS_COVERING_EXAMPLES,
         "sequences": [
-            {"tokens": item["tokens"], "examples": int(item["examples"])}
+            {
+                "tokens": item["tokens"],
+                "examples": int(item["examples"]),
+                "focus_keyword_id": item.get("focus_keyword_id"),
+            }
             for item in sequences
+        ],
+        "positive_stress": [
+            {
+                "keyword_id": int(item["keyword_id"]),
+                "text": item["text"],
+                "examples": int(item["examples"]),
+                "focus": item["focus"],
+                "fallback": item["fallback"],
+            }
+            for item in positive_replay
         ],
         "manifest": str(manifest),
         "manifest_sha256": sha256_file(manifest),

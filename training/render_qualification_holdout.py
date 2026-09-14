@@ -183,6 +183,71 @@ def _render_retired_seed(cfg: dict, scratch: pathlib.Path, retired_seed: int) ->
     }
 
 
+def require_strict_development_candidate(work: pathlib.Path) -> dict:
+    manifest_path = work / "domain-loop-manifest.json"
+    if not manifest_path.is_file() or manifest_path.stat().st_size == 0:
+        raise ValueError("development manifest is missing; refuse formal qualification")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("development manifest must be an object")
+
+    records = manifest.get("records")
+    if not isinstance(records, list):
+        raise ValueError("development manifest records are missing")
+    eligible = [
+        row
+        for row in records
+        if isinstance(row, dict)
+        and bool(row.get("calibration_gate"))
+        and bool(row.get("test_gate"))
+        and "checkpoint" in row
+    ]
+    if not eligible:
+        raise ValueError(
+            "no calibration/test strict development candidate; refuse formal qualification"
+        )
+    latest_round = max(int(row["round"]) for row in eligible)
+    latest = [row for row in eligible if int(row["round"]) == latest_round]
+    recomputed = min(
+        latest,
+        key=lambda row: (float(row["score"]), str(row["frontend"])),
+    )
+    recomputed_rounds = sorted({int(row["round"]) for row in eligible})
+
+    if not bool(manifest.get("development_qualified")):
+        raise ValueError("development_qualified disagrees with strict development records")
+    selection = manifest.get("candidate_selection")
+    if not isinstance(selection, dict):
+        raise ValueError("development candidate-selection evidence is missing")
+    if str(selection.get("policy")) != "latest-strict-gate-passing-round":
+        raise ValueError("development candidate-selection policy is not strict/latest")
+    eligible_rounds = selection.get("eligible_rounds")
+    if not isinstance(eligible_rounds, list):
+        raise ValueError("development manifest strict eligible rounds are missing")
+    try:
+        manifest_rounds = sorted(int(value) for value in eligible_rounds)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("development manifest strict eligible rounds are invalid") from exc
+    if manifest_rounds != recomputed_rounds:
+        raise ValueError("development strict eligible rounds disagree with records")
+
+    selected_round = selection.get("selected_round")
+    selected_frontend = selection.get("selected_frontend")
+    if isinstance(selected_round, bool) or not isinstance(selected_round, int):
+        raise ValueError("development selected round is missing")
+    if not isinstance(selected_frontend, str) or not selected_frontend:
+        raise ValueError("development selected frontend is missing")
+    if selected_round != int(recomputed["round"]):
+        raise ValueError("development selected round disagrees with strict records")
+    if selected_frontend != str(recomputed["frontend"]):
+        raise ValueError("development selected frontend disagrees with strict records")
+    if "selected_score" in selection and float(selection["selected_score"]) != float(
+        recomputed["score"]
+    ):
+        raise ValueError("development selected score disagrees with strict records")
+    return manifest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Retire exposed qualification cohorts and render a seed-disjoint replacement."
@@ -196,6 +261,8 @@ def main() -> int:
     work = args.work_dir.resolve()
     output = args.output.resolve()
     cfg = load_config(config_path)
+    development_manifest = require_strict_development_candidate(work)
+    development_manifest_path = work / "domain-loop-manifest.json"
     training_seed = int(cfg.get("seed", 1337))
     qualification_seed = int(cfg.get("qualification_holdout_seed", -1))
     if qualification_seed < 0:
@@ -327,17 +394,23 @@ def main() -> int:
             executor.shutdown(wait=True, cancel_futures=True)
         shutil.rmtree(scratch, ignore_errors=True)
 
+    selection = development_manifest["candidate_selection"]
     evidence = {
         "schema_version": 2,
         "policy": "retire-exposed-qualification-and-rotate-seed-v2",
         "source_config_sha256": sha256_file(config_path),
         "effective_config_sha256": sha256_file(effective_config),
+        "development_manifest_sha256": sha256_file(development_manifest_path),
+        "development_candidate_policy": str(selection["policy"]),
+        "development_selected_round": int(selection["selected_round"]),
+        "development_selected_frontend": str(selection["selected_frontend"]),
         "training_seed": training_seed,
         "qualification_seed": qualification_seed,
         "retired_exposed_qualification_seeds": retired_exposed_seeds,
         "retired_exposed_qualification": retired_exposed,
         "seed_disjoint": True,
         "generated_after_training": True,
+        "strict_development_candidate_required": True,
         "retired_references_sha256": retired_references_sha,
         "active_references_sha256": active_references_sha,
         "retired_qualification_wav_count": len(retired_hashes),

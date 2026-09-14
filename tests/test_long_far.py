@@ -15,6 +15,8 @@ from qualification_fixture import write_model, write_pack, write_tokens
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLE_RATE_HZ = 16000
+sys.path.insert(0, str(ROOT / "tools"))
+from plan_far_stream import plan_stream_capacity  # noqa: E402
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -77,10 +79,7 @@ def aggregate_far(
     min_injections: int,
     min_audio_seconds: float,
 ) -> tuple[int, dict]:
-    command = [
-        sys.executable,
-        str(ROOT / "eval" / "aggregate_far.py"),
-    ]
+    command = [sys.executable, str(ROOT / "eval" / "aggregate_far.py")]
     for output in outputs:
         command.extend(["--summary", str(output / "summary.json")])
     command.extend(
@@ -107,6 +106,44 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
+
+    workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
+    far_gate = (ROOT / "eval" / "run_continuous_far_gate.py").read_text(encoding="utf-8")
+    assert "eval/run_continuous_far_gate.py" in workflow
+    for needle in (
+        "tools/plan_far_stream.py",
+        'stream_root / "plan.json"',
+        'stream_seconds = int(plan["planned_seconds"])',
+        '"coverage-capacity-v1"',
+        '"capacity_plan_sha256"',
+        '"required_start_stride_seconds"',
+        '"false_accepts"',
+        '"far_per_hour"',
+        '"full_negative_manifest_coverage"',
+        '"semantic-negative-boundary-v1"',
+    ):
+        assert needle in far_gate, f"staged continuous FAR gate missing {needle!r}"
+
+    # Regression for model-training #134. The selected active FAR cohort grew to
+    # 352 clips and included a 2.318375 s clip. long_far_stream protects clip
+    # occupancy using ceil(duration)=3 s, so the old fixed 900 s stream cannot
+    # schedule all clips even once. Capacity planning must scale the stream while
+    # preserving both the 2 s semantic boundary and >=8 payloads/min contract.
+    capacity = plan_stream_capacity(
+        [2.318375] + [1.0] * 351,
+        baseline_seconds=900,
+        minimum_payload_gap_seconds=2.0,
+        minimum_payload_rate_per_minute=8.0,
+    )
+    assert capacity["negative_manifest_clips"] == 352
+    assert capacity["coverage_injections"] == 352
+    assert capacity["max_clip_span_seconds"] == 3
+    assert capacity["required_start_stride_seconds"] == 5
+    assert capacity["minimum_coverage_seconds"] == 1758
+    assert capacity["planned_seconds"] == 1758
+    assert capacity["planned_seconds"] > 900
+    assert capacity["planned_payload_rate_per_minute"] >= 8.0
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         tokens = root / "tokens.txt"
@@ -117,13 +154,7 @@ def main() -> int:
         write_pack(pack, fingerprint)
 
         output = root / "far"
-        summary = run_far(
-            runner=args.runner,
-            model=model,
-            pack=pack,
-            output=output,
-            seed=404,
-        )
+        summary = run_far(runner=args.runner, model=model, pack=pack, output=output, seed=404)
         assert summary["schema_version"] == 2
         assert summary["qualified"] is True
         assert summary["seconds"] == 3
@@ -180,9 +211,7 @@ def main() -> int:
             assert item["full_negative_manifest_coverage"] is True
             assert item["coverage_forced_injections"] == 1
             assert item["coverage_hard_negative_gain"] == 0.90
-            injections = (path / "hard-negative-injections.jsonl").read_text(
-                encoding="utf-8"
-            ).splitlines()
+            injections = (path / "hard-negative-injections.jsonl").read_text(encoding="utf-8").splitlines()
             assert len(injections) == 3
             parsed = [json.loads(line) for line in injections]
             assert sum(bool(row["coverage_required"]) for row in parsed) == 1
@@ -216,9 +245,7 @@ def main() -> int:
         assert coverage_summary["hard_negative_audio_seconds"] == 2.0
         coverage_rows = [
             json.loads(line)
-            for line in (coverage_output / "hard-negative-injections.jsonl")
-            .read_text(encoding="utf-8")
-            .splitlines()
+            for line in (coverage_output / "hard-negative-injections.jsonl").read_text(encoding="utf-8").splitlines()
         ]
         assert all(bool(row["coverage_required"]) for row in coverage_rows)
         assert {row["source_sha256"] for row in coverage_rows} == {
@@ -237,9 +264,7 @@ def main() -> int:
         assert aggregate_summary["schema_version"] == 1
         assert aggregate_summary["qualified"] is True
         assert aggregate_summary["false_accepts"] == 0
-        assert aggregate_summary["negative_manifest_sha256"] == sha256_file(
-            negative_manifest
-        )
+        assert aggregate_summary["negative_manifest_sha256"] == sha256_file(negative_manifest)
         assert aggregate_summary["hard_negative_rate_per_minute"] == 60.0
         assert aggregate_summary["hard_negative_injections"] == 6
         assert aggregate_summary["hard_negative_audio_seconds"] == 6.0

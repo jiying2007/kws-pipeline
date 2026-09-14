@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "policy": "development-shadow-arena-one-shot-registry-v1",
+  "formal_qualification_used": false,
+  "arenas": [
+    {
+      "name": "shipping-development-shadow-v1",
+      "model_family": "shared",
+      "seeds": [731101, 731102, 731103, 731104, 731105, 731106, 731107, 731108],
+      "status": "opened",
+      "purpose": "original development shadow; already used by model-family tuning"
+    },
+    {
+      "name": "gru-independent-shadow-v1",
+      "model_family": "gru",
+      "seeds": [941101, 941102, 941103, 941104, 941105, 941106, 941107, 941108],
+      "status": "opened",
+      "source_run_id": 34752361424,
+      "result": "failed-5-of-8",
+      "purpose": "independent post-tuning GRU validation; now development evidence"
+    },
+    {
+      "name": "gru-independent-shadow-v2",
+      "model_family": "gru",
+      "seeds": [951101, 951102, 951103, 951104, 951105, 951106, 951107, 951108],
+      "status": "reserved-untouched",
+      "purpose": "one-shot validation only after next GRU candidate and training policy are frozen"
+    },
+    {
+      "name": "rnn-independent-shadow-v2",
+      "model_family": "rnn",
+      "seeds": [961101, 961102, 961103, 961104, 961105, 961106, 961107, 961108],
+      "status": "reserved-untouched",
+      "purpose": "one-shot validation only after a reproducible RNN candidate is selected without shadow evidence"
+    }
+  ]
+}
