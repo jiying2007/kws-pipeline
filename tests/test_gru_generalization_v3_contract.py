@@ -74,6 +74,18 @@ class GruGeneralizationV3ContractTest(unittest.TestCase):
         self.assertIn("EXPECTED_SOURCE_CANDIDATE_ARTIFACT_DIGEST: 'sha256:52626953d0a1bd7bbe00c4e17a7519807d1ba13b7fc1ca5f5c802bdcc875f565'", text)
         self.assertIn("EXPECTED_CALIBRATION_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:647178320b1f4fd3715a5996642ab5b5407a9c66f787a42aa88dac6f9f3a50f8'", text)
 
+    def test_workflow_rematerializes_exact_v2_replay(self) -> None:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("GRU_DIAGNOSTIC_RUN_ID: '34759385245'", text)
+        self.assertIn("EXPECTED_GRU_DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:ddd85122c55f090063244a0d01a79a9fe0855947c9d4ec72e069f72d05fe19f5'", text)
+        self.assertIn("EXPECTED_V2_REPLAY_JSON_SHA256: 'ebcc784beeb0c3ce82d3c120ee54f9ee58b544dddf868928582028a5a5215e3b'", text)
+        self.assertIn("EXPECTED_V2_REPLAY_MANIFEST_SHA256: '633754b6adc6744f89e619db6e9eb0f5b0bb0a7ce17d48a135294dd92dad622e'", text)
+        self.assertIn("--output build/gru-generalization-replay", text)
+        self.assertIn("cmp build/gru-generalization-replay/gru-generalization-replay.json", text)
+        self.assertIn("cmp build/gru-generalization-replay/gru-generalization-replay.tsv", text)
+        self.assertIn("assert len(rows) == 32", text)
+        self.assertIn("assert not missing, missing", text)
+
 
 if __name__ == "__main__":
     unittest.main()
