@@ -31,6 +31,10 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         consumed = arenas["gru-independent-shadow-v2"]
         self.assertEqual(consumed["status"], "opened")
         self.assertEqual(consumed["source_run_id"], 34844874629)
+        self.assertEqual(
+            consumed["candidate_model_sha256"],
+            "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+        )
         self.assertEqual(consumed["result"], "failed-5-of-8")
         self.assertEqual(consumed["runtime_result"], "failed-4-of-8")
         self.assertFalse(consumed["formal_qualification_seed_consumed"])
@@ -102,6 +106,11 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn('arena.get("status") != "reserved-untouched"', text)
         self.assertIn('raw["seeds"] = seeds', text)
         self.assertIn("formal qualification namespace", text)
+        self.assertIn('consumed_model = row.get("candidate_model_sha256")', text)
+        self.assertIn(
+            "frozen candidate model already consumed by an earlier shadow arena",
+            text,
+        )
 
     def test_formal_gate_requires_fresh_and_shadow_and_all_sha_isolation(self) -> None:
         text = FORMAL.read_text(encoding="utf-8")
