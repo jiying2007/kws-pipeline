@@ -1,0 +1,171 @@
+name: gru-v3-failure-diagnostic
+
+on:
+  push:
+    branches:
+      - codex/gru-generalization-v2
+    paths:
+      - '.github/triggers/gru-v3-failure-diagnostic.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-v3-failure-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_RUN_ID: '34805937217'
+  CANDIDATE_HEAD_SHA: 'c11fcf52d4b2d91a88c7acb3e3dcbf97a1071e75'
+  CANDIDATE_ARTIFACT_NAME: 'gru-generalization-v3-candidate'
+  CANDIDATE_ARTIFACT_DIGEST: 'sha256:35a41d07a3e68756fadbfff031aa80978bd32e0f502fe099575a392b01a1546e'
+  CANDIDATE_MODEL_SHA256: '1547d5ca1ff835b95eca868e2b9784e1cf99dbd5ab81287742022d0b79a9682a'
+  SHARED_RUN_ID: '34728533518'
+  SHARED_ARTIFACT_NAME: 'model-family-shared-development-data'
+  SHARED_ARTIFACT_DIGEST: 'sha256:5f3a9ff810ac8c94faf3c02ed9afc7341e657733c48b4899e6212e90ad35ec9f'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify exact retained evidence bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          candidate_head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}" --jq '.head_sha')"
+          candidate_conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}" --jq '.conclusion')"
+          candidate_digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${CANDIDATE_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${CANDIDATE_ARTIFACT_NAME}\") | .digest")"
+          shared_digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SHARED_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SHARED_ARTIFACT_NAME}\") | .digest")"
+          test "$candidate_head" = "$CANDIDATE_HEAD_SHA"
+          test "$candidate_conclusion" = 'failure'
+          test "$candidate_digest" = "$CANDIDATE_ARTIFACT_DIGEST"
+          test "$shared_digest" = "$SHARED_ARTIFACT_DIGEST"
+          printf 'candidate=%s digest=%s\nshared=%s digest=%s\n' "$candidate_head" "$candidate_digest" "$SHARED_RUN_ID" "$shared_digest"
+
+      - name: Build exact GRU evaluator
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+
+      - name: Download exact V3 retained candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-generalization-v3-candidate
+          path: build/v3-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.CANDIDATE_RUN_ID }}
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Normalize and verify downloaded inputs
+        run: |
+          set -euo pipefail
+          test -s build/v3-download/gru-generalization-v3/candidate-summary.json
+          test -s build/v3-download/gru-generalization-v3/domain-loop-manifest.json
+          test -s build/v3-download/gru-generalization-v3/best/model.kwm
+          test -s build/v3-download/gru-generalization-v3/best/keywords.kwk
+          test -s build/shared-download/model-family-shared/shared-data.json
+          rm -rf build/model-family-shared
+          mv build/shared-download/model-family-shared build/model-family-shared
+          actual_model_sha="$(sha256sum build/v3-download/gru-generalization-v3/best/model.kwm | awk '{print $1}')"
+          test "$actual_model_sha" = "$CANDIDATE_MODEL_SHA256"
+
+      - name: Replay exact failed development qualification read-only
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          root = pathlib.Path.cwd()
+          sys.path.insert(0, str(root / 'training'))
+          sys.path.insert(0, str(root / 'tools'))
+          from iterate_domain import evaluate
+
+          shared = json.loads((root / 'build/model-family-shared/shared-data.json').read_text(encoding='utf-8'))
+          prior = json.loads((root / 'build/v3-download/gru-generalization-v3/domain-loop-manifest.json').read_text(encoding='utf-8'))
+          summary = json.loads((root / 'build/v3-download/gru-generalization-v3/candidate-summary.json').read_text(encoding='utf-8'))
+          assert shared['formal_qualification_used'] is False
+          assert prior['formal_qualification_used'] is False
+          assert summary['formal_qualification_used'] is False
+          assert summary['shadow_used'] is False
+          assert prior['qualification']['false_accepts'] == 1
+          assert prior['qualification']['false_rejects'] == 0
+
+          out = root / 'build/gru-v3-failure-diagnostic/qualification'
+          base, domains = evaluate(
+              runner=root / 'build/kws_wav_gru',
+              model=root / 'build/v3-download/gru-generalization-v3/best/model.kwm',
+              pack=root / 'build/v3-download/gru-generalization-v3/best/keywords.kwk',
+              references=pathlib.Path(shared['canonical_qualification_references']),
+              output=out,
+          )
+          assert base['references_sha256'] == prior['qualification']['references_sha256']
+          assert base['detections_sha256'] == prior['qualification']['detections_sha256']
+          assert base['expected'] == prior['qualification']['expected'] == 256
+          assert base['matched'] == prior['qualification']['matched'] == 256
+          assert base['false_accepts'] == prior['qualification']['false_accepts'] == 1
+          assert base['false_rejects'] == prior['qualification']['false_rejects'] == 0
+
+          fp_path = out / 'false-positives.jsonl'
+          fps = [json.loads(line) for line in fp_path.read_text(encoding='utf-8').splitlines() if line.strip()]
+          assert len(fps) == 1
+          evidence = {
+              'schema_version': 1,
+              'evidence_class': 'development-only-gru-v3-failure-diagnostic-replay',
+              'policy': 'exact-retained-candidate-read-only-replay-v1',
+              'candidate_run_id': 34805937217,
+              'candidate_head_sha': 'c11fcf52d4b2d91a88c7acb3e3dcbf97a1071e75',
+              'candidate_model_sha256': '1547d5ca1ff835b95eca868e2b9784e1cf99dbd5ab81287742022d0b79a9682a',
+              'shared_run_id': 34728533518,
+              'formal_qualification_used': False,
+              'shadow_used': False,
+              'training_performed': False,
+              'candidate_selection_performed': False,
+              'qualification_replay_only': True,
+              'references_sha256': base['references_sha256'],
+              'detections_sha256': base['detections_sha256'],
+              'false_accepts': 1,
+              'false_rejects': 0,
+              'false_positive': fps[0],
+              'domains': domains,
+          }
+          evidence_path = root / 'build/gru-v3-failure-diagnostic/gru-v3-failure-diagnostic.json'
+          evidence_path.parent.mkdir(parents=True, exist_ok=True)
+          evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + '\n', encoding='utf-8')
+          print(json.dumps({
+              'references_sha256': base['references_sha256'],
+              'detections_sha256': base['detections_sha256'],
+              'false_accepts': 1,
+              'false_rejects': 0,
+              'false_positive': fps[0],
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Retain compact failure diagnostic
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-v3-failure-diagnostic
+          path: |
+            build/gru-v3-failure-diagnostic/gru-v3-failure-diagnostic.json
+            build/gru-v3-failure-diagnostic/qualification/summary.json
+            build/gru-v3-failure-diagnostic/qualification/domains.json
+            build/gru-v3-failure-diagnostic/qualification/false-positives.jsonl
+            build/gru-v3-failure-diagnostic/qualification/false-rejects.jsonl
+          if-no-files-found: error
+          retention-days: 30
