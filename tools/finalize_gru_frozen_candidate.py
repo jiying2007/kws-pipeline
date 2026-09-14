@@ -26,6 +26,40 @@ def load_object(path: pathlib.Path) -> dict:
     return value
 
 
+def terminal_strict_streak(records: object) -> int:
+    if not isinstance(records, list) or not records:
+        raise ValueError("development records must be a non-empty list")
+    streak = 0
+    previous_round: int | None = None
+    for row in records:
+        if not isinstance(row, dict):
+            raise ValueError("development record must be an object")
+        round_value = row.get("round")
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("development record round must be an integer")
+        if previous_round is not None and round_value != previous_round + 1:
+            raise ValueError("development records must have contiguous rounds")
+        previous_round = round_value
+        if bool(row.get("calibration_gate")) and bool(row.get("test_gate")):
+            streak += 1
+        else:
+            streak = 0
+    return streak
+
+
+def require_stable_strict_pass(development: dict, source_policy: dict) -> int:
+    required = source_policy.get("stable_strict_pass_rounds")
+    if isinstance(required, bool) or not isinstance(required, int) or required <= 0:
+        raise ValueError("stable_strict_pass_rounds must be a positive integer")
+    observed = terminal_strict_streak(development.get("records"))
+    if observed < required:
+        raise ValueError(
+            "development candidate lacks stable strict-pass streak: "
+            f"observed={observed} required={required}"
+        )
+    return observed
+
+
 def compact_base(value: dict) -> dict:
     excluded = {"false_positives_path", "false_rejects_path"}
     return {key: item for key, item in value.items() if key not in excluded}
@@ -110,6 +144,10 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     if sha256_file(policy) != str(freeze.get("development_policy_sha256", "")):
         raise ValueError("source development policy SHA drifted before freeze finalization")
 
+    source_policy = load_object(policy)
+    stable_observed = require_stable_strict_pass(development, source_policy)
+    stable_required = int(source_policy["stable_strict_pass_rounds"])
+
     selected = select_record(development)
     evidence = {
         "schema_version": 1,
@@ -125,6 +163,8 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         "calibration_domains": selected["calibration_domains"],
         "test": compact_base(dict(selected["test"])),
         "test_domains": selected["test_domains"],
+        "stable_strict_pass_rounds_required": stable_required,
+        "stable_strict_pass_rounds_observed": stable_observed,
         "qualification_used": False,
         "shadow_used": False,
         "formal_qualification_used": False,
@@ -168,6 +208,8 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     freeze["source_development_policy_snapshot_sha256"] = sha256_file(
         frozen / "source-development-policy.json"
     )
+    freeze["stable_strict_pass_rounds_required"] = stable_required
+    freeze["stable_strict_pass_rounds_observed"] = stable_observed
     freeze["selected_model_matches_selection_evidence"] = (
         str(freeze["model_sha256"]) == str(evidence["model_sha256"])
     )
@@ -197,6 +239,12 @@ def main() -> int:
                 "selection_evidence_sha256": result["selection_evidence_sha256"],
                 "development_wav_identities_sha256": result[
                     "development_wav_identities_sha256"
+                ],
+                "stable_strict_pass_rounds_required": result[
+                    "stable_strict_pass_rounds_required"
+                ],
+                "stable_strict_pass_rounds_observed": result[
+                    "stable_strict_pass_rounds_observed"
                 ],
             },
             sort_keys=True,
