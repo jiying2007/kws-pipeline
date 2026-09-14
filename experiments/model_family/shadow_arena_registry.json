@@ -23,8 +23,14 @@
       "name": "gru-independent-shadow-v2",
       "model_family": "gru",
       "seeds": [951101, 951102, 951103, 951104, 951105, 951106, 951107, 951108],
-      "status": "reserved-untouched",
-      "purpose": "one-shot validation only after next GRU candidate and training policy are frozen"
+      "status": "opened",
+      "source_run_id": 34844874629,
+      "source_head": "28f6fa02d041ab96be0c7e856302571ca6299c38",
+      "source_artifact_digest": "sha256:6d23bb780d79e5f51c5b21a449dbbe1054cbf67fe09a08ee1c5f764051fc2198",
+      "result": "failed-5-of-8",
+      "runtime_result": "failed-4-of-8",
+      "formal_qualification_seed_consumed": false,
+      "purpose": "one-shot frozen GRU shadow consumed by qualification run 34844874629; historical validation evidence only and forbidden as candidate feedback"
     },
     {
       "name": "rnn-independent-shadow-v2",
@@ -32,6 +38,13 @@
       "seeds": [961101, 961102, 961103, 961104, 961105, 961106, 961107, 961108],
       "status": "reserved-untouched",
       "purpose": "one-shot validation only after a reproducible RNN candidate is selected without shadow evidence"
+    },
+    {
+      "name": "gru-independent-shadow-v3",
+      "model_family": "gru",
+      "seeds": [971101, 971102, 971103, 971104, 971105, 971106, 971107, 971108],
+      "status": "reserved-untouched",
+      "purpose": "one-shot validation only after a future GRU candidate and training policy are frozen without v1/v2 shadow feedback"
     }
   ]
 }
