@@ -8,7 +8,8 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "gru-frozen-candidate-qualification.yml"
 POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
-REGISTRY = ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
+FRESH_REGISTRY = ROOT / "experiments" / "model_family" / "fresh_validation_registry.json"
+SHADOW_REGISTRY = ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
 FRESH = ROOT / "training" / "validate_frozen_gru_candidate.py"
 FORMAL = ROOT / "training" / "qualify_frozen_gru_formal.py"
 MATERIALIZE = ROOT / "tools" / "materialize_gru_candidate_workspace.py"
@@ -19,11 +20,30 @@ INDEPENDENCE = ROOT / "tools" / "verify_gru_evaluation_independence.py"
 class GruFrozenQualificationContractTest(unittest.TestCase):
     def test_candidate_namespaces_are_frozen_before_qualification(self) -> None:
         policy = json.loads(POLICY.read_text(encoding="utf-8"))
-        registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+        fresh_registry = json.loads(FRESH_REGISTRY.read_text(encoding="utf-8"))
+        shadow_registry = json.loads(SHADOW_REGISTRY.read_text(encoding="utf-8"))
         freeze = policy["candidate_freeze"]
-        self.assertEqual(freeze["fresh_validation_seed_namespace"], 191000019)
+
+        self.assertEqual(freeze["fresh_validation_seed_namespace"], 192000019)
+        fresh_by_namespace = {
+            int(row["namespace"]): row for row in fresh_registry["namespaces"]
+        }
+        current_fresh = fresh_by_namespace[freeze["fresh_validation_seed_namespace"]]
+        self.assertEqual(current_fresh["name"], "gru-fresh-validation-v2")
+        self.assertEqual(current_fresh["model_family"], "gru")
+        self.assertEqual(current_fresh["status"], "reserved-untouched")
+        consumed_fresh = fresh_by_namespace[191000019]
+        self.assertEqual(consumed_fresh["status"], "opened")
+        self.assertEqual(consumed_fresh["source_run_id"], 34844874629)
+        self.assertEqual(consumed_fresh["result"], "passed")
+        self.assertEqual(
+            consumed_fresh["candidate_model_sha256"],
+            "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+        )
+        self.assertFalse(consumed_fresh["formal_qualification_seed_consumed"])
+
         self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v3")
-        arenas = {row["name"]: row for row in registry["arenas"]}
+        arenas = {row["name"]: row for row in shadow_registry["arenas"]}
         current = arenas[freeze["shadow_arena"]]
         self.assertEqual(current["model_family"], "gru")
         self.assertEqual(current["status"], "reserved-untouched")
@@ -50,6 +70,7 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn("expected_artifact_digest", text)
         self.assertIn("expected_source_head", text)
         self.assertIn("cancel-in-progress: false", text)
+        self.assertIn("experiments/model_family/fresh_validation_registry.json", text)
         fresh = text.index("Run feedback-free fresh validation")
         shadow = text.index("Run reserved shadow qualification")
         formal = text.index("Run isolated formal qualification")
@@ -71,13 +92,21 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn('"threshold_feedback_allowed": False', formal)
         self.assertIn('"training_rule_feedback_allowed": False', formal)
 
-    def test_fresh_validation_checks_development_sha_disjointness(self) -> None:
+    def test_fresh_validation_checks_one_shot_registry_and_development_disjointness(self) -> None:
         text = FRESH.read_text(encoding="utf-8")
+        self.assertIn("fresh_validation_registry.json", text)
+        self.assertIn("fresh validation namespace is no longer reserved-untouched", text)
+        self.assertIn('consumed_model = row.get("candidate_model_sha256")', text)
+        self.assertIn(
+            "frozen candidate model already consumed by an earlier fresh validation namespace",
+            text,
+        )
         self.assertIn("development-wav-sha256.json", text)
         self.assertIn("development_hashes & fresh_hashes", text)
         self.assertIn('{"calibration", "test", "qualification"}', text)
         self.assertIn("fresh validation seed overlaps protected qualification namespace", text)
         self.assertIn('"fresh_validation_wav_sha256": sorted(fresh_hashes)', text)
+        self.assertIn('"fresh_validation_registry_entry":', text)
 
     def test_fresh_and_shadow_internal_sha_independence_precede_protected_stages(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
