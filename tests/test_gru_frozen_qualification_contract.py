@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import pathlib
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+WORKFLOW = ROOT / ".github" / "workflows" / "gru-frozen-candidate-qualification.yml"
+POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
+FRESH = ROOT / "training" / "validate_frozen_gru_candidate.py"
+FORMAL = ROOT / "training" / "qualify_frozen_gru_formal.py"
+MATERIALIZE = ROOT / "tools" / "materialize_gru_candidate_workspace.py"
+SHADOW_CONFIG = ROOT / "tools" / "prepare_gru_shadow_config.py"
+
+
+class GruFrozenQualificationContractTest(unittest.TestCase):
+    def test_candidate_namespaces_are_frozen_before_qualification(self) -> None:
+        policy = json.loads(POLICY.read_text(encoding="utf-8"))
+        freeze = policy["candidate_freeze"]
+        self.assertEqual(freeze["fresh_validation_seed_namespace"], 191000019)
+        self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v2")
+        self.assertTrue(freeze["formal_qualification_required"])
+        self.assertFalse(freeze["validation_feedback_allowed"])
+        self.assertFalse(freeze["threshold_feedback_allowed"])
+        self.assertFalse(freeze["training_rule_feedback_allowed"])
+
+    def test_qualification_workflow_is_manual_for_data_consuming_stages(self) -> None:
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", text)
+        self.assertIn("if: github.event_name == 'workflow_dispatch'", text)
+        self.assertIn("expected_artifact_digest", text)
+        self.assertIn("expected_source_head", text)
+        self.assertIn("cancel-in-progress: false", text)
+        fresh = text.index("Run feedback-free fresh validation")
+        shadow = text.index("Run reserved shadow qualification")
+        formal = text.index("Run isolated formal qualification")
+        self.assertLess(fresh, shadow)
+        self.assertLess(shadow, formal)
+        self.assertIn("steps.fresh.outputs.exit_code == '0'", text)
+        self.assertIn("steps.shadow.outputs.exit_code == '0'", text)
+
+    def test_candidate_stages_cannot_train_or_recalibrate(self) -> None:
+        fresh = FRESH.read_text(encoding="utf-8")
+        formal = FORMAL.read_text(encoding="utf-8")
+        joined = fresh + "\n" + formal
+        self.assertNotIn("train_gru_ctc.py", joined)
+        self.assertNotIn("--warm-start", joined)
+        self.assertNotIn("calibrate(", fresh)
+        self.assertIn('"thresholds_recalibrated": False', fresh)
+        self.assertIn('"training_performed": False', fresh)
+        self.assertIn('"validation_feedback_allowed": False', fresh)
+        self.assertIn('"threshold_feedback_allowed": False', formal)
+        self.assertIn('"training_rule_feedback_allowed": False', formal)
+
+    def test_fresh_validation_checks_development_sha_disjointness(self) -> None:
+        text = FRESH.read_text(encoding="utf-8")
+        self.assertIn("development-wav-sha256.json", text)
+        self.assertIn("development_hashes & fresh_hashes", text)
+        self.assertIn('{"calibration", "test", "qualification"}', text)
+        self.assertIn("fresh validation seed overlaps protected qualification namespace", text)
+
+    def test_shadow_is_bound_to_reserved_registry_arena(self) -> None:
+        text = SHADOW_CONFIG.read_text(encoding="utf-8")
+        self.assertIn("shadow_arena_registry.json", text)
+        self.assertIn('arena.get("status") != "reserved-untouched"', text)
+        self.assertIn('raw["seeds"] = seeds', text)
+        self.assertIn("formal qualification namespace", text)
+
+    def test_formal_gate_requires_fresh_and_shadow_and_all_sha_isolation(self) -> None:
+        text = FORMAL.read_text(encoding="utf-8")
+        self.assertIn("fresh frozen-candidate validation is not qualified", text)
+        self.assertIn("reserved shadow qualification is not qualified", text)
+        self.assertIn("active_hashes & development_hashes", text)
+        self.assertIn("active_hashes & seen_shadow_hashes", text)
+        self.assertIn("retired formal seed", text)
+        self.assertIn('"formal_seed_consumed": True', text)
+        self.assertIn('"validation_feedback_allowed": False', text)
+
+    def test_materialized_workspace_preserves_strict_selection_contract(self) -> None:
+        text = MATERIALIZE.read_text(encoding="utf-8")
+        self.assertIn('"policy": "latest-strict-gate-passing-round"', text)
+        self.assertIn('"calibration_gate": True', text)
+        self.assertIn('"test_gate": True', text)
+        self.assertIn('"qualification_used_for_selection": False', text)
+        self.assertIn("verify(candidate)", text)
+
+
+if __name__ == "__main__":
+    unittest.main()
