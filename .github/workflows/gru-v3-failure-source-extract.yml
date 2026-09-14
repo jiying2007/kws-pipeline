@@ -1,0 +1,132 @@
+name: gru-v3-failure-source-extract
+
+on:
+  push:
+    branches:
+      - codex/gru-generalization-v2
+    paths:
+      - '.github/triggers/gru-v3-failure-source-extract.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gru-v3-failure-source-extract-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  SHARED_RUN_ID: '34728533518'
+  SHARED_ARTIFACT_NAME: 'model-family-shared-development-data'
+  SHARED_ARTIFACT_DIGEST: 'sha256:5f3a9ff810ac8c94faf3c02ed9afc7341e657733c48b4899e6212e90ad35ec9f'
+  DIAGNOSTIC_RUN_ID: '34813583895'
+  DIAGNOSTIC_ARTIFACT_NAME: 'gru-v3-failure-diagnostic'
+  DIAGNOSTIC_ARTIFACT_DIGEST: 'sha256:6ef5e08d92702da7fc1b17c7c51de1509531eedc393019776515f434b73b9050'
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify exact source artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          shared_digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SHARED_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SHARED_ARTIFACT_NAME}\") | .digest")"
+          diagnostic_digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${DIAGNOSTIC_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${DIAGNOSTIC_ARTIFACT_NAME}\") | .digest")"
+          test "$shared_digest" = "$SHARED_ARTIFACT_DIGEST"
+          test "$diagnostic_digest" = "$DIAGNOSTIC_ARTIFACT_DIGEST"
+
+      - name: Download exact shared development corpus
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: model-family-shared-development-data
+          path: build/shared-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.SHARED_RUN_ID }}
+
+      - name: Download exact V3 failure diagnostic
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gru-v3-failure-diagnostic
+          path: build/diagnostic-download
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.DIAGNOSTIC_RUN_ID }}
+
+      - name: Extract only matching development source metadata
+        run: |
+          set -euo pipefail
+          test -s build/shared-download/model-family-shared/shared-data.json
+          test -s build/diagnostic-download/gru-v3-failure-diagnostic.json
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+
+          root = pathlib.Path.cwd()
+          shared_root = root / 'build/shared-download/model-family-shared'
+          diag = json.loads((root / 'build/diagnostic-download/gru-v3-failure-diagnostic.json').read_text(encoding='utf-8'))
+          fp = diag['false_positive']
+          recording = str(fp['recording'])
+          wav_name = str(fp['path'])
+
+          def rows(path: pathlib.Path):
+              result = []
+              for raw in path.read_text(encoding='utf-8').splitlines():
+                  if not raw.strip():
+                      continue
+                  row = json.loads(raw)
+                  text = json.dumps(row, ensure_ascii=False, sort_keys=True)
+                  if recording in text or wav_name in text:
+                      result.append(row)
+              return result
+
+          refs_path = shared_root / 'canonical/dataset/qualification.references.jsonl'
+          index_path = shared_root / 'canonical/dataset/domain-index.jsonl'
+          ref_rows = rows(refs_path)
+          index_rows = rows(index_path)
+          assert len(ref_rows) == 1, (recording, wav_name, len(ref_rows))
+          assert len(index_rows) == 1, (recording, wav_name, len(index_rows))
+
+          evidence = {
+              'schema_version': 1,
+              'evidence_class': 'development-only-gru-v3-failure-source-metadata',
+              'policy': 'metadata-only-no-wav-copy-v1',
+              'source_diagnostic_run_id': 34813583895,
+              'source_shared_run_id': 34728533518,
+              'formal_qualification_used': False,
+              'shadow_used': False,
+              'wav_bytes_copied': False,
+              'training_performed': False,
+              'recording': recording,
+              'wav_name': wav_name,
+              'false_positive': fp,
+              'reference': ref_rows[0],
+              'domain_index': index_rows[0],
+          }
+          out = root / 'build/gru-v3-failure-source/gru-v3-failure-source.json'
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + '\n', encoding='utf-8')
+          print(json.dumps({
+              'recording': recording,
+              'wav_name': wav_name,
+              'reference_keys': sorted(ref_rows[0]),
+              'domain_index_keys': sorted(index_rows[0]),
+              'evidence_sha256': hashlib.sha256(out.read_bytes()).hexdigest(),
+          }, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Retain compact source metadata
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-v3-failure-source-metadata
+          path: build/gru-v3-failure-source/gru-v3-failure-source.json
+          if-no-files-found: error
+          retention-days: 30
