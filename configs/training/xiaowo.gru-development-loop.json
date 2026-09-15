@@ -29,7 +29,7 @@
   "candidate_freeze": {
     "selection_policy": "best-strict-development-objective-round",
     "fresh_validation_required": true,
-    "fresh_validation_seed_namespace": 194000019,
+    "fresh_validation_seed_namespace": 195000019,
     "shadow_required": true,
     "shadow_arena": "gru-independent-shadow-v4",
     "formal_qualification_required": true,
