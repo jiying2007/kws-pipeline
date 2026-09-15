@@ -24,9 +24,13 @@ jobs:
       - name: GRU development curriculum contract
         run: |
           python3 tests/test_gru_development_curriculum_contract.py
+          python3 tests/test_gru_development_stability_gate.py
+          python3 tests/test_gru_stability_evidence_contract.py
           python3 tests/test_gru_train_acoustic_rotation.py
       - name: Frozen GRU qualification contract
-        run: python3 tests/test_gru_frozen_qualification_contract.py
+        run: |
+          python3 tests/test_gru_frozen_qualification_contract.py
+          python3 tests/test_gru_stability_evidence_contract.py
       - name: Staged model-training handoff contract
         run: python3 tests/test_training_stage_handoff.py
       - name: Resolve immutable training image
