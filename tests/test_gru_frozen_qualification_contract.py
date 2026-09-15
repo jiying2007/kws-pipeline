@@ -24,39 +24,40 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         shadow_registry = json.loads(SHADOW_REGISTRY.read_text(encoding="utf-8"))
         freeze = policy["candidate_freeze"]
 
-        self.assertEqual(freeze["fresh_validation_seed_namespace"], 192000019)
+        self.assertEqual(freeze["fresh_validation_seed_namespace"], 194000019)
         fresh_by_namespace = {
             int(row["namespace"]): row for row in fresh_registry["namespaces"]
         }
         current_fresh = fresh_by_namespace[freeze["fresh_validation_seed_namespace"]]
-        self.assertEqual(current_fresh["name"], "gru-fresh-validation-v2")
+        self.assertEqual(current_fresh["name"], "gru-fresh-validation-v3")
         self.assertEqual(current_fresh["model_family"], "gru")
         self.assertEqual(current_fresh["status"], "reserved-untouched")
-        consumed_fresh = fresh_by_namespace[191000019]
+        consumed_fresh = fresh_by_namespace[192000019]
         self.assertEqual(consumed_fresh["status"], "opened")
-        self.assertEqual(consumed_fresh["source_run_id"], 34844874629)
+        self.assertEqual(consumed_fresh["source_run_id"], 34935659562)
         self.assertEqual(consumed_fresh["result"], "passed")
+        self.assertTrue(consumed_fresh["shadow_consumed"])
         self.assertEqual(
             consumed_fresh["candidate_model_sha256"],
-            "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+            "3b1e0b43126fa5d761a005f9cff3b3bdc2e9c14402d77a27024c2aa3578154de",
         )
         self.assertFalse(consumed_fresh["formal_qualification_seed_consumed"])
 
-        self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v3")
+        self.assertEqual(freeze["shadow_arena"], "gru-independent-shadow-v4")
         arenas = {row["name"]: row for row in shadow_registry["arenas"]}
         current = arenas[freeze["shadow_arena"]]
         self.assertEqual(current["model_family"], "gru")
         self.assertEqual(current["status"], "reserved-untouched")
-        self.assertEqual(current["seeds"], list(range(971101, 971109)))
-        consumed = arenas["gru-independent-shadow-v2"]
+        self.assertEqual(current["seeds"], list(range(981101, 981109)))
+        consumed = arenas["gru-independent-shadow-v3"]
         self.assertEqual(consumed["status"], "opened")
-        self.assertEqual(consumed["source_run_id"], 34844874629)
+        self.assertEqual(consumed["source_run_id"], 34935659562)
         self.assertEqual(
             consumed["candidate_model_sha256"],
-            "bf5d44b76bf1b32c4553b5a9c7eed8105add619f03b1e31af48ae58b52895822",
+            "3b1e0b43126fa5d761a005f9cff3b3bdc2e9c14402d77a27024c2aa3578154de",
         )
-        self.assertEqual(consumed["result"], "failed-5-of-8")
-        self.assertEqual(consumed["runtime_result"], "failed-4-of-8")
+        self.assertEqual(consumed["result"], "failed-3-of-8")
+        self.assertEqual(consumed["runtime_result"], "failed-3-of-8")
         self.assertFalse(consumed["formal_qualification_seed_consumed"])
         self.assertTrue(freeze["formal_qualification_required"])
         self.assertFalse(freeze["validation_feedback_allowed"])
@@ -71,6 +72,7 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn("expected_source_head", text)
         self.assertIn("cancel-in-progress: false", text)
         self.assertIn("experiments/model_family/fresh_validation_registry.json", text)
+        self.assertIn("experiments/model_family/shadow_arena_registry.json", text)
         fresh = text.index("Run feedback-free fresh validation")
         shadow = text.index("Run reserved shadow qualification")
         formal = text.index("Run isolated formal qualification")

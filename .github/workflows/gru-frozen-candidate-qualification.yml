@@ -17,6 +17,7 @@ on:
       - 'tools/materialize_gru_candidate_workspace.py'
       - 'tools/prepare_gru_shadow_config.py'
       - 'experiments/model_family/fresh_validation_registry.json'
+      - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_frozen_qualification_contract.py'
       - '.github/workflows/gru-frozen-candidate-qualification.yml'
   workflow_dispatch:
