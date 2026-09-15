@@ -10,6 +10,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SELECTION_POLICY = "best-strict-development-objective-round"
+STABILITY_EVIDENCE_POLICY = "gru-development-stability-evidence-v1"
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -25,6 +26,90 @@ def load_object(path: pathlib.Path) -> dict:
     if not isinstance(value, dict):
         raise ValueError(f"expected JSON object: {path}")
     return value
+
+
+def terminal_strict_streak(records: object) -> int:
+    if not isinstance(records, list) or not records:
+        raise ValueError("development records must be a non-empty list")
+    streak = 0
+    for expected_round, row in enumerate(records):
+        if not isinstance(row, dict):
+            raise ValueError("development record must be an object")
+        round_value = row.get("round")
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("development record round must be an integer")
+        if round_value != expected_round:
+            raise ValueError("development records must have contiguous rounds starting at zero")
+        if bool(row.get("calibration_gate")) and bool(row.get("test_gate")):
+            streak += 1
+        else:
+            streak = 0
+    return streak
+
+
+def require_stable_strict_pass(development: dict, source_policy: dict) -> int:
+    required = source_policy.get("stable_strict_pass_rounds")
+    if isinstance(required, bool) or not isinstance(required, int) or required <= 0:
+        raise ValueError("stable_strict_pass_rounds must be a positive integer")
+    observed = terminal_strict_streak(development.get("records"))
+    if observed < required:
+        raise ValueError(
+            "development candidate lacks stable strict-pass streak: "
+            f"observed={observed} required={required}"
+        )
+    return observed
+
+
+def persist_stability_state(
+    development_path: pathlib.Path,
+    development: dict,
+    frozen: pathlib.Path,
+    source_policy: dict,
+) -> tuple[int, int]:
+    required = source_policy.get("stable_strict_pass_rounds")
+    if isinstance(required, bool) or not isinstance(required, int) or required <= 0:
+        raise ValueError("stable_strict_pass_rounds must be a positive integer")
+    observed = terminal_strict_streak(development.get("records"))
+    stable = observed >= required
+    development["stable_strict_pass_rounds_required"] = required
+    development["stable_strict_pass_rounds_observed"] = observed
+    development["development_qualified"] = stable
+    if not stable:
+        development["selected_round"] = None
+        development["selected_score"] = None
+    development_path.write_text(
+        json.dumps(development, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    if not stable:
+        shutil.rmtree(frozen, ignore_errors=True)
+        raise ValueError(
+            "development candidate lacks stable strict-pass streak: "
+            f"observed={observed} required={required}"
+        )
+    return required, observed
+
+
+def round_gate_evidence(records: object) -> list[dict]:
+    if not isinstance(records, list) or not records:
+        raise ValueError("development records must be a non-empty list")
+    result: list[dict] = []
+    for expected_round, row in enumerate(records):
+        if not isinstance(row, dict):
+            raise ValueError("development record must be an object")
+        round_value = row.get("round")
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("development record round must be an integer")
+        if round_value != expected_round:
+            raise ValueError("development records must have contiguous rounds starting at zero")
+        result.append(
+            {
+                "round": round_value,
+                "calibration_gate": bool(row.get("calibration_gate")),
+                "test_gate": bool(row.get("test_gate")),
+            }
+        )
+    return result
 
 
 def compact_base(value: dict) -> dict:
@@ -123,12 +208,15 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     candidate_freeze = source_policy.get("candidate_freeze")
     if not isinstance(candidate_freeze, dict) or candidate_freeze.get("selection_policy") != SELECTION_POLICY:
         raise ValueError("source development selection policy mismatch")
-    if not bool(development.get("development_qualified")):
-        raise ValueError("cannot finalize an unqualified development loop")
     if sha256_file(config) != str(freeze.get("config_sha256", "")):
         raise ValueError("source config SHA drifted before freeze finalization")
     if sha256_file(policy) != str(freeze.get("development_policy_sha256", "")):
         raise ValueError("source development policy SHA drifted before freeze finalization")
+
+    stable_required, stable_observed = persist_stability_state(
+        development_path, development, frozen, source_policy
+    )
+    gate_records = round_gate_evidence(development.get("records"))
 
     selected = select_record(development)
     evidence = {
@@ -146,6 +234,8 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         "calibration_domains": selected["calibration_domains"],
         "test": compact_base(dict(selected["test"])),
         "test_domains": selected["test_domains"],
+        "stable_strict_pass_rounds_required": stable_required,
+        "stable_strict_pass_rounds_observed": stable_observed,
         "qualification_used": False,
         "shadow_used": False,
         "formal_qualification_used": False,
@@ -153,6 +243,31 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     evidence_path = frozen / "selection-evidence.json"
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+
+    stability_evidence = {
+        "schema_version": 1,
+        "policy": STABILITY_EVIDENCE_POLICY,
+        "source_policy": "gru-development-curriculum-loop-v1",
+        "development_only": True,
+        "stable_strict_pass_rounds_required": stable_required,
+        "stable_strict_pass_rounds_observed": stable_observed,
+        "round_gates": gate_records,
+        "qualification_used": False,
+        "shadow_used": False,
+        "formal_qualification_used": False,
+    }
+    stability_path = frozen / "stability-evidence.json"
+    stability_path.write_text(
+        json.dumps(
+            stability_evidence,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -184,11 +299,14 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     )
 
     freeze["selection_evidence_sha256"] = sha256_file(evidence_path)
+    freeze["stability_evidence_sha256"] = sha256_file(stability_path)
     freeze["development_wav_identities_sha256"] = sha256_file(corpus_path)
     freeze["source_config_snapshot_sha256"] = sha256_file(frozen / "source-config.json")
     freeze["source_development_policy_snapshot_sha256"] = sha256_file(
         frozen / "source-development-policy.json"
     )
+    freeze["stable_strict_pass_rounds_required"] = stable_required
+    freeze["stable_strict_pass_rounds_observed"] = stable_observed
     freeze["selected_model_matches_selection_evidence"] = (
         str(freeze["model_sha256"]) == str(evidence["model_sha256"])
     )
@@ -217,8 +335,15 @@ def main() -> int:
                 "selected_round": result["selected_round"],
                 "model_sha256": result["model_sha256"],
                 "selection_evidence_sha256": result["selection_evidence_sha256"],
+                "stability_evidence_sha256": result["stability_evidence_sha256"],
                 "development_wav_identities_sha256": result[
                     "development_wav_identities_sha256"
+                ],
+                "stable_strict_pass_rounds_required": result[
+                    "stable_strict_pass_rounds_required"
+                ],
+                "stable_strict_pass_rounds_observed": result[
+                    "stable_strict_pass_rounds_observed"
                 ],
             },
             sort_keys=True,
