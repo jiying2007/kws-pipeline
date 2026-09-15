@@ -24,22 +24,31 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         shadow_registry = json.loads(SHADOW_REGISTRY.read_text(encoding="utf-8"))
         freeze = policy["candidate_freeze"]
 
-        self.assertEqual(freeze["fresh_validation_seed_namespace"], 194000019)
+        self.assertEqual(freeze["fresh_validation_seed_namespace"], 195000019)
         fresh_by_namespace = {
             int(row["namespace"]): row for row in fresh_registry["namespaces"]
         }
         current_fresh = fresh_by_namespace[freeze["fresh_validation_seed_namespace"]]
-        self.assertEqual(current_fresh["name"], "gru-fresh-validation-v3")
+        self.assertEqual(current_fresh["name"], "gru-fresh-validation-v4")
         self.assertEqual(current_fresh["model_family"], "gru")
         self.assertEqual(current_fresh["status"], "reserved-untouched")
-        consumed_fresh = fresh_by_namespace[192000019]
+        consumed_fresh = fresh_by_namespace[194000019]
+        self.assertEqual(consumed_fresh["name"], "gru-fresh-validation-v3")
         self.assertEqual(consumed_fresh["status"], "opened")
-        self.assertEqual(consumed_fresh["source_run_id"], 34935659562)
-        self.assertEqual(consumed_fresh["result"], "passed")
-        self.assertTrue(consumed_fresh["shadow_consumed"])
+        self.assertEqual(consumed_fresh["source_run_id"], 34987002760)
+        self.assertEqual(
+            consumed_fresh["source_head"],
+            "ca3a78c476a6adaf99f210943951b790c952126c",
+        )
+        self.assertEqual(
+            consumed_fresh["source_artifact_digest"],
+            "sha256:4e18ebfd74ea74fbc6fcbb7c7ecd2ed3c92452cbbd4648c2f4f4efae3697fcf4",
+        )
+        self.assertEqual(consumed_fresh["result"], "failed")
+        self.assertFalse(consumed_fresh["shadow_consumed"])
         self.assertEqual(
             consumed_fresh["candidate_model_sha256"],
-            "3b1e0b43126fa5d761a005f9cff3b3bdc2e9c14402d77a27024c2aa3578154de",
+            "02d9011dd564c1544619e5535b8065e4dc192fecd02cb66fb4c8d33f9708946d",
         )
         self.assertFalse(consumed_fresh["formal_qualification_seed_consumed"])
 
