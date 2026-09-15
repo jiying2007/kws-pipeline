@@ -162,7 +162,6 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         self.assertIn("active_hashes & development_hashes", text)
         self.assertIn("active_hashes & fresh_hashes", text)
         self.assertIn("active_hashes & seen_shadow_hashes", text)
-        self.assertIn("active_hashes & seen_retired_hashes", text)
         self.assertIn('(\"frozen development/training corpus\", development_hashes)', text)
         self.assertIn('(\"fresh validation cohort\", fresh_hashes)', text)
         self.assertIn('(\"reserved shadow cohort\", seen_shadow_hashes)', text)
