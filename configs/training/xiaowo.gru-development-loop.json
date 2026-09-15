@@ -27,7 +27,7 @@
     "ordered_token_loss_weight_step": 0.05
   },
   "candidate_freeze": {
-    "selection_policy": "latest-strict-calibration-test-round",
+    "selection_policy": "best-strict-development-objective-round",
     "fresh_validation_required": true,
     "fresh_validation_seed_namespace": 194000019,
     "shadow_required": true,

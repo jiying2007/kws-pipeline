@@ -25,7 +25,6 @@ from iterate_domain import (  # noqa: E402
     repo_path,
     run,
     safe_reset,
-    select_strict_candidate,
     sha256_file,
 )
 from render_domains import render_domain_dataset  # noqa: E402
@@ -34,6 +33,7 @@ from synthetic_audio import load_config  # noqa: E402
 POLICY = "gru-development-curriculum-loop-v1"
 EVIDENCE_SCOPE = "development-only"
 FREEZE_POLICY = "gru-frozen-candidate-v1"
+SELECTION_POLICY = "best-strict-development-objective-round"
 
 
 def load_object(path: pathlib.Path) -> dict:
@@ -92,7 +92,7 @@ def validate_policy(path: pathlib.Path) -> dict:
     freeze = policy.get("candidate_freeze")
     if not isinstance(freeze, dict):
         raise ValueError("candidate_freeze must be an object")
-    if freeze.get("selection_policy") != "latest-strict-calibration-test-round":
+    if freeze.get("selection_policy") != SELECTION_POLICY:
         raise ValueError("candidate freeze selection policy drifted")
     for field in (
         "fresh_validation_required",
@@ -229,6 +229,22 @@ def strict(record: dict) -> bool:
     return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
 
 
+def select_best_strict_candidate(records: list[dict]) -> dict | None:
+    eligible = [record for record in records if strict(record)]
+    if not eligible:
+        return None
+    for record in eligible:
+        finite(record.get("score"), f"round-{record.get('round')}.score")
+    return min(
+        eligible,
+        key=lambda record: (
+            float(record["score"]),
+            -int(record["round"]),
+            str(record.get("frontend", "")),
+        ),
+    )
+
+
 def copy_frozen_candidate(selected: dict, output: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> dict:
     frozen = output / "frozen-candidate"
     frozen.mkdir(parents=True, exist_ok=True)
@@ -256,6 +272,7 @@ def copy_frozen_candidate(selected: dict, output: pathlib.Path, config: pathlib.
         "policy": FREEZE_POLICY,
         "source_policy": POLICY,
         "evidence_scope": EVIDENCE_SCOPE,
+        "selection_policy": SELECTION_POLICY,
         "selected_round": int(selected["round"]),
         "selected_score": float(selected["score"]),
         "model_sha256": sha256_file(frozen / "model.kwm"),
@@ -514,7 +531,7 @@ def main() -> int:
         if completed >= int(policy["min_rounds"]) and stale_rounds >= int(policy["patience"]):
             break
 
-    selected = select_strict_candidate(records)
+    selected = select_best_strict_candidate(records)
     manifest = {
         "schema_version": 1,
         "policy": POLICY,
@@ -523,7 +540,7 @@ def main() -> int:
         "qualification_used": False,
         "shadow_used": False,
         "formal_qualification_used": False,
-        "selection_policy": "latest-strict-calibration-test-round",
+        "selection_policy": SELECTION_POLICY,
         "selected_round": int(selected["round"]) if selected is not None else None,
         "selected_score": float(selected["score"]) if selected is not None else None,
         "candidate_stage_feedback_allowed": False,

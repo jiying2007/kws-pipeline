@@ -14,6 +14,7 @@ POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
 FINALIZER = ROOT / "tools" / "finalize_gru_frozen_candidate.py"
 VERIFIER = ROOT / "tools" / "verify_gru_frozen_candidate.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "gru-development-curriculum.yml"
+SELECTION_POLICY = "best-strict-development-objective-round"
 
 
 def load_module(path: pathlib.Path, name: str):
@@ -40,6 +41,7 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertFalse(value["shadow_used"])
         self.assertFalse(value["formal_qualification_used"])
         freeze = value["candidate_freeze"]
+        self.assertEqual(freeze["selection_policy"], SELECTION_POLICY)
         self.assertTrue(freeze["fresh_validation_required"])
         self.assertTrue(freeze["shadow_required"])
         self.assertTrue(freeze["formal_qualification_required"])
@@ -55,6 +57,91 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
             path.write_text(json.dumps(value), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "validation_feedback_allowed=false"):
                 self.iterator.validate_policy(path)
+
+    def test_policy_fails_closed_if_selection_policy_drifts(self) -> None:
+        value = copy.deepcopy(self.policy)
+        value["candidate_freeze"]["selection_policy"] = "latest-strict-calibration-test-round"
+        with tempfile.TemporaryDirectory() as temp:
+            path = pathlib.Path(temp) / "policy.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "selection policy drifted"):
+                self.iterator.validate_policy(path)
+
+    def test_best_strict_selection_uses_lowest_objective_across_rounds(self) -> None:
+        records = [
+            {
+                "round": 0,
+                "frontend": "logmel",
+                "score": 0.156051875,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+            {
+                "round": 1,
+                "frontend": "logmel",
+                "score": 0.211095625,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+            {
+                "round": 2,
+                "frontend": "logmel",
+                "score": 0.347451875,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+        ]
+        selected = self.iterator.select_best_strict_candidate(records)
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected["round"], 0)
+        records.append(
+            {
+                "round": 3,
+                "frontend": "logmel",
+                "score": 0.156051875,
+                "calibration_gate": True,
+                "test_gate": True,
+            }
+        )
+        tied = self.iterator.select_best_strict_candidate(records)
+        self.assertIsNotNone(tied)
+        self.assertEqual(tied["round"], 3)
+
+    def test_finalizer_independently_recomputes_best_strict_round(self) -> None:
+        records = [
+            {
+                "round": 0,
+                "frontend": "logmel",
+                "score": 0.15,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+            {
+                "round": 1,
+                "frontend": "logmel",
+                "score": 0.21,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+            {
+                "round": 2,
+                "frontend": "logmel",
+                "score": 0.34,
+                "calibration_gate": True,
+                "test_gate": True,
+            },
+        ]
+        manifest = {
+            "selection_policy": SELECTION_POLICY,
+            "selected_round": 0,
+            "selected_score": 0.15,
+            "records": records,
+        }
+        self.assertEqual(self.finalizer.select_record(manifest)["round"], 0)
+        manifest["selected_round"] = 2
+        manifest["selected_score"] = 0.34
+        with self.assertRaisesRegex(ValueError, "not the best strict development objective"):
+            self.finalizer.select_record(manifest)
 
     def test_loss_controller_is_bounded_and_directional(self) -> None:
         current = self.iterator.controller_initial(self.policy)
@@ -79,6 +166,7 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertIn("render_development_failure_replay", text)
         self.assertIn("render_hard_negative_replay", text)
         self.assertIn("update_curriculum", text)
+        self.assertIn("select_best_strict_candidate(records)", text)
 
     def test_workflow_resolves_current_fresh_and_shadow_namespaces_from_policy(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
@@ -125,11 +213,13 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
             "qualification_used": False,
             "shadow_used": False,
             "formal_qualification_used": False,
+            "candidate_freeze": {"selection_policy": SELECTION_POLICY},
         }
         selection = {
             "schema_version": 1,
             "evidence_class": "gru-frozen-development-selection",
             "source_policy": "gru-development-curriculum-loop-v1",
+            "selection_policy": SELECTION_POLICY,
             "selected_round": 3,
             "selected_frontend": "logmel",
             "selected_score": 0.0,
@@ -176,6 +266,7 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
             "policy": "gru-frozen-candidate-v1",
             "source_policy": "gru-development-curriculum-loop-v1",
             "evidence_scope": "development-only",
+            "selection_policy": SELECTION_POLICY,
             "selected_round": 3,
             "selected_score": 0.0,
             "selection_evidence": ["development-calibration", "development-test"],
@@ -231,6 +322,18 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "strict development pass"):
                 self.verifier.verify(root)
 
+    def test_frozen_candidate_verifier_rejects_selection_policy_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            manifest = self._write_valid_candidate(root)
+            self.verifier.verify(root)
+            manifest["selection_policy"] = "latest-strict-calibration-test-round"
+            (root / "freeze-manifest.json").write_text(
+                json.dumps(manifest, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "selection policy mismatch"):
+                self.verifier.verify(root)
+
     def test_frozen_candidate_verifier_rejects_feedback(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = pathlib.Path(temp)
@@ -255,6 +358,7 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertIn("development-wav-sha256.json", finalizer)
         self.assertIn("selection-evidence.json", finalizer)
         self.assertIn('{"train", "calibration", "test"}', finalizer)
+        self.assertIn("selected round is not the best strict development objective", finalizer)
 
 
 if __name__ == "__main__":
