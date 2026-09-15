@@ -13,12 +13,14 @@ on:
       - 'training/qualify_frozen_gru_formal.py'
       - 'tools/finalize_gru_frozen_candidate.py'
       - 'tools/verify_gru_frozen_candidate.py'
+      - 'tools/verify_gru_stability_evidence.py'
       - 'tools/verify_gru_evaluation_independence.py'
       - 'tools/materialize_gru_candidate_workspace.py'
       - 'tools/prepare_gru_shadow_config.py'
       - 'experiments/model_family/fresh_validation_registry.json'
       - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_frozen_qualification_contract.py'
+      - 'tests/test_gru_stability_evidence_contract.py'
       - '.github/workflows/gru-frozen-candidate-qualification.yml'
   workflow_dispatch:
     inputs:
@@ -56,7 +58,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Frozen qualification contract
-        run: python3 tests/test_gru_frozen_qualification_contract.py
+        run: |
+          python3 tests/test_gru_frozen_qualification_contract.py
+          python3 tests/test_gru_stability_evidence_contract.py
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -64,10 +68,12 @@ jobs:
           training/qualify_frozen_gru_formal.py
           tools/finalize_gru_frozen_candidate.py
           tools/verify_gru_frozen_candidate.py
+          tools/verify_gru_stability_evidence.py
           tools/verify_gru_evaluation_independence.py
           tools/materialize_gru_candidate_workspace.py
           tools/prepare_gru_shadow_config.py
           tests/test_gru_frozen_qualification_contract.py
+          tests/test_gru_stability_evidence_contract.py
 
   qualification:
     if: github.event_name == 'workflow_dispatch'
@@ -116,6 +122,7 @@ jobs:
           test -n "$freeze"
           candidate="$(dirname "$freeze")"
           python3 tools/verify_gru_frozen_candidate.py --candidate "$candidate"
+          python3 tools/verify_gru_stability_evidence.py --candidate "$candidate"
           echo "path=$candidate" >> "$GITHUB_OUTPUT"
 
       - name: Materialize qualification-only candidate workspace
