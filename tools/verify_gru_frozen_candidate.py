@@ -10,6 +10,7 @@ import sys
 
 FREEZE_POLICY = "gru-frozen-candidate-v1"
 SOURCE_POLICY = "gru-development-curriculum-loop-v1"
+SELECTION_POLICY = "best-strict-development-objective-round"
 MEMBERS = {
     "model_sha256": "model.kwm",
     "checkpoint_sha256": "model.pt",
@@ -68,6 +69,8 @@ def verify(root: pathlib.Path) -> dict:
     value = load_object(manifest_path)
     if value.get("policy") != FREEZE_POLICY or value.get("source_policy") != SOURCE_POLICY:
         raise ValueError("freeze policy identity mismatch")
+    if value.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("freeze selection policy mismatch")
     if value.get("evidence_scope") != "development-only":
         raise ValueError("frozen candidate source scope must be development-only")
     if value.get("selection_evidence") != ["development-calibration", "development-test"]:
@@ -116,6 +119,9 @@ def verify(root: pathlib.Path) -> dict:
         raise ValueError("source policy snapshot does not match frozen policy SHA")
     if policy.get("policy") != SOURCE_POLICY:
         raise ValueError("source development policy identity mismatch")
+    candidate_freeze = policy.get("candidate_freeze")
+    if not isinstance(candidate_freeze, dict) or candidate_freeze.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("source development selection policy mismatch")
     for field in ("qualification_used", "shadow_used", "formal_qualification_used"):
         if policy.get(field) is not False:
             raise ValueError(f"source policy requires {field}=false")
@@ -123,6 +129,8 @@ def verify(root: pathlib.Path) -> dict:
     evidence = load_object(root / "selection-evidence.json")
     if evidence.get("evidence_class") != "gru-frozen-development-selection":
         raise ValueError("selection evidence class mismatch")
+    if evidence.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("selection evidence policy mismatch")
     if int(evidence.get("selected_round", -1)) != int(value.get("selected_round", -2)):
         raise ValueError("selection evidence round mismatch")
     if float(evidence.get("selected_score")) != float(value.get("selected_score")):
@@ -172,6 +180,7 @@ def main() -> int:
             {
                 "verified": True,
                 "policy": value["policy"],
+                "selection_policy": value["selection_policy"],
                 "selected_round": value["selected_round"],
                 "model_sha256": value["model_sha256"],
                 "candidate_stage_feedback_allowed": False,
