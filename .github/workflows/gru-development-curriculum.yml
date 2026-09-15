@@ -21,6 +21,7 @@ on:
       - 'experiments/model_family/fresh_validation_registry.json'
       - 'experiments/model_family/shadow_arena_registry.json'
       - 'tests/test_gru_development_curriculum_contract.py'
+      - 'tests/test_gru_development_stability_gate.py'
       - 'tests/test_gru_train_acoustic_rotation.py'
       - '.github/workflows/gru-development-curriculum.yml'
   workflow_dispatch:
@@ -42,6 +43,7 @@ jobs:
       - name: Development / candidate boundary contract
         run: |
           python3 tests/test_gru_development_curriculum_contract.py
+          python3 tests/test_gru_development_stability_gate.py
           python3 tests/test_gru_train_acoustic_rotation.py
       - name: Python syntax
         run: >-
@@ -51,6 +53,7 @@ jobs:
           tools/finalize_gru_frozen_candidate.py
           tools/verify_gru_frozen_candidate.py
           tests/test_gru_development_curriculum_contract.py
+          tests/test_gru_development_stability_gate.py
           tests/test_gru_train_acoustic_rotation.py
 
   development:
