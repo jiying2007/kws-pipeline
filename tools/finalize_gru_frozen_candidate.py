@@ -9,6 +9,7 @@ import shutil
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+SELECTION_POLICY = "best-strict-development-objective-round"
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -72,6 +73,8 @@ def development_index_hashes(path: pathlib.Path) -> set[str]:
 
 
 def select_record(manifest: dict) -> dict:
+    if manifest.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("development selection policy mismatch")
     selected_round = manifest.get("selected_round")
     if isinstance(selected_round, bool) or not isinstance(selected_round, int):
         raise ValueError("development manifest does not contain a selected round")
@@ -79,13 +82,24 @@ def select_record(manifest: dict) -> dict:
         row
         for row in manifest.get("records", [])
         if isinstance(row, dict)
-        and int(row.get("round", -1)) == selected_round
         and bool(row.get("calibration_gate"))
         and bool(row.get("test_gate"))
     ]
     if not candidates:
         raise ValueError("cannot resolve selected strict development record")
-    return min(candidates, key=lambda row: (float(row["score"]), str(row.get("model", ""))))
+    selected = min(
+        candidates,
+        key=lambda row: (
+            float(row["score"]),
+            -int(row["round"]),
+            str(row.get("frontend", "")),
+        ),
+    )
+    if int(selected["round"]) != selected_round:
+        raise ValueError("selected round is not the best strict development objective")
+    if float(selected["score"]) != float(manifest.get("selected_score")):
+        raise ValueError("selected score does not match the best strict development objective")
+    return selected
 
 
 def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> dict:
@@ -99,10 +113,16 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         raise ValueError("development loop did not produce frozen candidate evidence")
     freeze = load_object(freeze_path)
     development = load_object(development_path)
+    source_policy = load_object(policy)
     if freeze.get("policy") != "gru-frozen-candidate-v1":
         raise ValueError("unexpected freeze policy")
+    if freeze.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("unexpected freeze selection policy")
     if development.get("policy") != "gru-development-curriculum-loop-v1":
         raise ValueError("unexpected development loop policy")
+    candidate_freeze = source_policy.get("candidate_freeze")
+    if not isinstance(candidate_freeze, dict) or candidate_freeze.get("selection_policy") != SELECTION_POLICY:
+        raise ValueError("source development selection policy mismatch")
     if not bool(development.get("development_qualified")):
         raise ValueError("cannot finalize an unqualified development loop")
     if sha256_file(config) != str(freeze.get("config_sha256", "")):
@@ -115,6 +135,7 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         "schema_version": 1,
         "evidence_class": "gru-frozen-development-selection",
         "source_policy": "gru-development-curriculum-loop-v1",
+        "selection_policy": SELECTION_POLICY,
         "selected_round": int(selected["round"]),
         "selected_frontend": str(selected.get("frontend", "logmel")),
         "selected_score": float(selected["score"]),
@@ -192,6 +213,7 @@ def main() -> int:
             {
                 "finalized": True,
                 "policy": result["policy"],
+                "selection_policy": result["selection_policy"],
                 "selected_round": result["selected_round"],
                 "model_sha256": result["model_sha256"],
                 "selection_evidence_sha256": result["selection_evidence_sha256"],
