@@ -10,6 +10,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SELECTION_POLICY = "best-strict-development-objective-round"
+STABILITY_EVIDENCE_POLICY = "gru-development-stability-evidence-v1"
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -87,6 +88,28 @@ def persist_stability_state(
             f"observed={observed} required={required}"
         )
     return required, observed
+
+
+def round_gate_evidence(records: object) -> list[dict]:
+    if not isinstance(records, list) or not records:
+        raise ValueError("development records must be a non-empty list")
+    result: list[dict] = []
+    for expected_round, row in enumerate(records):
+        if not isinstance(row, dict):
+            raise ValueError("development record must be an object")
+        round_value = row.get("round")
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("development record round must be an integer")
+        if round_value != expected_round:
+            raise ValueError("development records must have contiguous rounds starting at zero")
+        result.append(
+            {
+                "round": round_value,
+                "calibration_gate": bool(row.get("calibration_gate")),
+                "test_gate": bool(row.get("test_gate")),
+            }
+        )
+    return result
 
 
 def compact_base(value: dict) -> dict:
@@ -193,6 +216,7 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     stable_required, stable_observed = persist_stability_state(
         development_path, development, frozen, source_policy
     )
+    gate_records = round_gate_evidence(development.get("records"))
 
     selected = select_record(development)
     evidence = {
@@ -219,6 +243,31 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     evidence_path = frozen / "selection-evidence.json"
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+
+    stability_evidence = {
+        "schema_version": 1,
+        "policy": STABILITY_EVIDENCE_POLICY,
+        "source_policy": "gru-development-curriculum-loop-v1",
+        "development_only": True,
+        "stable_strict_pass_rounds_required": stable_required,
+        "stable_strict_pass_rounds_observed": stable_observed,
+        "round_gates": gate_records,
+        "qualification_used": False,
+        "shadow_used": False,
+        "formal_qualification_used": False,
+    }
+    stability_path = frozen / "stability-evidence.json"
+    stability_path.write_text(
+        json.dumps(
+            stability_evidence,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -250,6 +299,7 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
     )
 
     freeze["selection_evidence_sha256"] = sha256_file(evidence_path)
+    freeze["stability_evidence_sha256"] = sha256_file(stability_path)
     freeze["development_wav_identities_sha256"] = sha256_file(corpus_path)
     freeze["source_config_snapshot_sha256"] = sha256_file(frozen / "source-config.json")
     freeze["source_development_policy_snapshot_sha256"] = sha256_file(
@@ -285,6 +335,7 @@ def main() -> int:
                 "selected_round": result["selected_round"],
                 "model_sha256": result["model_sha256"],
                 "selection_evidence_sha256": result["selection_evidence_sha256"],
+                "stability_evidence_sha256": result["stability_evidence_sha256"],
                 "development_wav_identities_sha256": result[
                     "development_wav_identities_sha256"
                 ],
