@@ -34,8 +34,22 @@
       "name": "gru-fresh-validation-v3",
       "model_family": "gru",
       "namespace": 194000019,
+      "status": "opened",
+      "source_run_id": 34987002760,
+      "source_head": "ca3a78c476a6adaf99f210943951b790c952126c",
+      "source_artifact_digest": "sha256:4e18ebfd74ea74fbc6fcbb7c7ecd2ed3c92452cbbd4648c2f4f4efae3697fcf4",
+      "candidate_model_sha256": "02d9011dd564c1544619e5535b8065e4dc192fecd02cb66fb4c8d33f9708946d",
+      "result": "failed",
+      "shadow_consumed": false,
+      "formal_qualification_seed_consumed": false,
+      "purpose": "one-shot fresh validation consumed by qualification run 34987002760 and failed before shadow; historical validation evidence only and forbidden as candidate feedback"
+    },
+    {
+      "name": "gru-fresh-validation-v4",
+      "model_family": "gru",
+      "namespace": 195000019,
       "status": "reserved-untouched",
-      "purpose": "one-shot fresh validation only after a future GRU candidate is frozen without v1/v2 validation feedback; 193000019 is reserved by development train-acoustic rotation"
+      "purpose": "one-shot fresh validation only after a future GRU candidate is frozen without v1/v2/v3 validation feedback"
     }
   ]
 }
