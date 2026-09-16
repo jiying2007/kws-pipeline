@@ -18,6 +18,7 @@ on:
       - 'tools/verify_gru_frozen_candidate.py'
       - 'tools/verify_gru_stability_evidence.py'
       - 'tools/verify_gru_evaluation_independence.py'
+      - 'tools/verify_development_source_binding.py'
       - 'tools/materialize_gru_candidate_workspace.py'
       - 'tools/prepare_gru_shadow_config.py'
       - 'experiments/model_family/fresh_validation_registry.json'
@@ -41,7 +42,11 @@ on:
         required: true
         type: string
       expected_source_head:
-        description: Exact 40-hex source HEAD that produced the frozen artifact
+        description: Exact 40-hex workflow run HEAD that retained the artifact
+        required: true
+        type: string
+      expected_product_head:
+        description: Exact 40-hex product source HEAD used to train the frozen candidate
         required: true
         type: string
 
@@ -65,6 +70,7 @@ jobs:
           python3 tests/test_gru_frozen_qualification_contract.py
           python3 tests/test_gru_stability_evidence_contract.py
           python3 tools/verify_gru_development_gate.py --self-test
+          python3 tools/verify_development_source_binding.py --self-test
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -76,6 +82,7 @@ jobs:
           tools/verify_gru_frozen_candidate.py
           tools/verify_gru_stability_evidence.py
           tools/verify_gru_evaluation_independence.py
+          tools/verify_development_source_binding.py
           tools/materialize_gru_candidate_workspace.py
           tools/prepare_gru_shadow_config.py
           tests/test_gru_frozen_qualification_contract.py
@@ -97,18 +104,20 @@ jobs:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
           SOURCE_ARTIFACT_NAME: ${{ inputs.source_artifact_name }}
           EXPECTED_DIGEST: ${{ inputs.expected_artifact_digest }}
-          EXPECTED_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_SOURCE_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_PRODUCT_HEAD: ${{ inputs.expected_product_head }}
         run: |
           set -euo pipefail
           [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
           [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_SOURCE_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_PRODUCT_HEAD" =~ ^[0-9a-f]{40}$ ]]
           digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts" \
             --jq ".artifacts[] | select(.name == \"${SOURCE_ARTIFACT_NAME}\") | .digest")"
           head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" --jq '.head_sha')"
           test -n "$digest" && test "$digest" = "$EXPECTED_DIGEST"
-          test "$head" = "$EXPECTED_HEAD"
-          echo "frozen artifact bound: run=$SOURCE_RUN_ID head=$head digest=$digest"
+          test "$head" = "$EXPECTED_SOURCE_HEAD"
+          echo "frozen artifact bound: run=$SOURCE_RUN_ID workflow_head=$head product_head=$EXPECTED_PRODUCT_HEAD digest=$digest"
 
       - name: Download exact frozen development artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -119,14 +128,38 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.source_run_id }}
 
+      - name: Checkout exact development product source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.expected_product_head }}
+          path: build/product-source
+          persist-credentials: false
+
       - name: Resolve and verify frozen candidate bundle
         id: candidate
         shell: bash
+        env:
+          EXPECTED_SOURCE_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_PRODUCT_HEAD: ${{ inputs.expected_product_head }}
         run: |
           set -euo pipefail
+          test "$(git -C build/product-source rev-parse HEAD)" = "$EXPECTED_PRODUCT_HEAD"
           freeze="$(find build/source -type f -path '*/frozen-candidate/freeze-manifest.json' -print -quit)"
           test -n "$freeze"
           candidate="$(dirname "$freeze")"
+          binding="$(find build/source -type f -name 'development-source-binding.json' -print -quit)"
+          binding_args=()
+          if [ -n "$binding" ]; then
+            binding_args=(--binding "$binding")
+          fi
+          mkdir -p build/gru-frozen-qualification
+          python3 tools/verify_development_source_binding.py \
+            --candidate "$candidate" \
+            --product-root build/product-source \
+            --source-run-head "$EXPECTED_SOURCE_HEAD" \
+            --product-head "$EXPECTED_PRODUCT_HEAD" \
+            "${binding_args[@]}" \
+            > build/gru-frozen-qualification/development-product-source-binding.json
           python3 tools/verify_gru_frozen_candidate.py --candidate "$candidate"
           python3 tools/verify_gru_stability_evidence.py --candidate "$candidate"
           python3 tools/verify_gru_development_gate.py --candidate "$candidate"
@@ -225,6 +258,7 @@ jobs:
         with:
           name: gru-frozen-candidate-qualification
           path: |
+            build/gru-frozen-qualification/development-product-source-binding.json
             build/gru-frozen-candidate-workspace/frozen-candidate-manifest.json
             build/gru-frozen-candidate-workspace/frozen-selection-evidence.json
             build/gru-frozen-qualification/fresh-validation/fresh-validation-summary.json
