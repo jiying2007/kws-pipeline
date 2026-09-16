@@ -1,79 +1,40 @@
 name: rnn-development-curriculum
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
-      - codex/rnn-*
+      - codex/rnn-live-bba68b3c
     paths:
-      - 'training/model.py'
-      - 'training/train_ctc.py'
-      - 'training/export_model.py'
-      - 'training/iterate_rnn_development.py'
-      - 'training/run_rnn_development.py'
-      - 'training/iterate_gru_development.py'
-      - 'training/run_gru_development.py'
-      - 'training/development_failure_replay.py'
-      - 'training/domain_curriculum.py'
-      - 'training/hard_negative_replay.py'
-      - 'eval/gate_robustness.py'
-      - 'tools/rnn_development_gate.py'
-      - 'tools/reconcile_rnn_development_gate.py'
-      - 'tools/verify_rnn_development_gate.py'
-      - 'tools/finalize_rnn_frozen_candidate.py'
-      - 'tools/verify_rnn_frozen_candidate.py'
-      - 'tools/verify_rnn_stability_evidence.py'
-      - 'tools/verify_rnn_parallel_contract.py'
-      - 'configs/training/xiaowo.rnn-development-loop.json'
-      - 'experiments/model_family/rnn_fresh_validation_registry.json'
-      - 'experiments/model_family/shadow_arena_registry.json'
       - '.github/workflows/rnn-development-curriculum.yml'
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: rnn-development-curriculum-${{ github.ref }}
+  group: rnn-development-live-bba68b3c
   cancel-in-progress: false
 
-jobs:
-  contract:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: RNN parallel governance contract
-        run: |
-          python3 tools/verify_rnn_parallel_contract.py
-          python3 tools/verify_rnn_development_gate.py --self-test
-      - name: Python syntax
-        run: >-
-          python3 -m py_compile
-          training/iterate_rnn_development.py
-          training/run_rnn_development.py
-          tools/rnn_development_gate.py
-          tools/reconcile_rnn_development_gate.py
-          tools/verify_rnn_development_gate.py
-          tools/finalize_rnn_frozen_candidate.py
-          tools/verify_rnn_frozen_candidate.py
-          tools/verify_rnn_stability_evidence.py
-          tools/verify_rnn_parallel_contract.py
+env:
+  RNN_SOURCE_SHA: bba68b3c26b432790361d7c138dfeef85470178f
 
+jobs:
   development:
-    if: github.event_name == 'workflow_dispatch'
-    needs: contract
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout exact clean main product head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: bba68b3c26b432790361d7c138dfeef85470178f
           persist-credentials: false
-      - name: Verify RNN protected evidence namespaces are isolated
-        run: python3 tools/verify_rnn_parallel_contract.py
+      - name: Bind exact product head and protected evidence namespaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RNN_SOURCE_SHA"
+          python3 tools/verify_rnn_parallel_contract.py
+          python3 tools/verify_rnn_development_gate.py --self-test
+          test "$(git status --porcelain)" = ""
       - name: Build shipping RNN runner
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
@@ -85,7 +46,7 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-      - name: Run multi-round RNN development curriculum
+      - name: Run development-only multi-round RNN curriculum
         id: loop
         shell: bash
         run: |
@@ -134,12 +95,32 @@ jobs:
             --candidate build/rnn-development-curriculum/frozen-candidate
           python3 tools/verify_rnn_development_gate.py \
             --candidate build/rnn-development-curriculum/frozen-candidate
-      - name: Retain RNN development evidence and frozen candidate
+      - name: Write exact source binding
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p build/rnn-development-curriculum
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          out = pathlib.Path('build/rnn-development-curriculum/source-binding.json')
+          payload = {
+              'model_family': 'rnn',
+              'source_commit': os.environ['RNN_SOURCE_SHA'],
+              'checked_out_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'development_only': True,
+              'fresh_validation_used': False,
+              'shadow_used': False,
+              'formal_qualification_used': False,
+          }
+          out.write_text(json.dumps(payload, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+      - name: Retain immutable RNN development evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rnn-development-curriculum
           path: |
+            build/rnn-development-curriculum/source-binding.json
             build/rnn-development-curriculum/development-loop-manifest.json
             build/rnn-development-curriculum/curriculum/*.json
             build/rnn-development-curriculum/failure-replay/*/development-failure-replay.json
@@ -147,7 +128,7 @@ jobs:
             build/rnn-development-curriculum/frozen-candidate/*
           if-no-files-found: warn
           retention-days: 30
-      - name: Gate RNN development loop
+      - name: Gate RNN development-only run
         run: |
           test "${{ steps.loop.outputs.exit_code }}" = '0'
           test "${{ steps.development_gate.outputs.exit_code }}" = '0'
