@@ -1,0 +1,63 @@
+name: single-seed-direct-render-patch
+
+on:
+  push:
+    branches:
+      - tmp/single-seed-direct-render
+    paths:
+      - '.github/triggers/single-seed-direct-render-patch.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/single-seed-direct-render
+      - name: Patch direct train-only acoustic rotation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('training/run_gru_development.py')
+          text = path.read_text()
+          text = text.replace('import pathlib\nimport shutil\n', 'import pathlib\nimport random\nimport shutil\n', 1)
+          marker = '''def _reuse_canonical_base(canonical_base: pathlib.Path):\n'''
+          helper = '''def _render_rotated_train_rows(\n    config_path: pathlib.Path,\n    output: pathlib.Path,\n    canonical_rows: list[dict],\n    seed_offset: int,\n    *,\n    curriculum_weights: dict | None,\n) -> tuple[list[dict], pathlib.Path]:\n    config = load_object(config_path.resolve())\n    domains = renderer.validate_domains(config)\n    rotated = output / "train-acoustic-realization"\n    merged: list[dict] = []\n    manifest_rows: list[tuple[pathlib.Path, list[int]]] = []\n    for canonical_row in canonical_rows:\n        if str(canonical_row.get("split")) != "train":\n            merged.append(canonical_row)\n            continue\n        source = pathlib.Path(str(canonical_row.get("source_path", "")))\n        canonical_target = pathlib.Path(str(canonical_row.get("path", ""))).resolve()\n        if not source.is_file():\n            raise ValueError("canonical train source is missing")\n        try:\n            relative = canonical_target.relative_to(output.resolve())\n        except ValueError as exc:\n            raise ValueError("canonical train target escaped development dataset") from exc\n        target = rotated / relative\n        clean = renderer.read_wav(source)\n        scene_seed = int(canonical_row["scene_seed"]) + int(seed_offset)\n        rng = random.Random(scene_seed)\n        scene = renderer.sample_scene(\n            domains,\n            rng,\n            curriculum_weights=curriculum_weights,\n            forced_band=None,\n        )\n        mono, scene_meta = renderer.render_scene(\n            clean, scene, seed=scene_seed, afe=domains["afe"]\n        )\n        renderer.write_wav(target, mono)\n        replacement = dict(canonical_row)\n        replacement["path"] = str(target.resolve())\n        replacement["scene_seed"] = scene_seed\n        replacement["wav_sha256"] = sha256_file(target)\n        replacement["scene"] = scene_meta\n        replacement["domain_id"] = _scene_domain_id(scene_meta)\n        merged.append(replacement)\n        manifest_rows.append((target.resolve(), [int(v) for v in replacement["target_ids"]]))\n    manifest = rotated / "train.tsv"\n    manifest.parent.mkdir(parents=True, exist_ok=True)\n    manifest.write_text(\n        "".join(\n            f"{target}\\t{' '.join(str(v) for v in target_ids)}\\n"\n            for target, target_ids in manifest_rows\n        ),\n        encoding="utf-8",\n    )\n    return merged, manifest\n\n\n'''
+          if marker not in text:
+              raise SystemExit('insertion marker missing')
+          text = text.replace(marker, helper + marker, 1)
+          old = '''        config = load_object(config_path.resolve())\n        base_seed = int(config.get("seed", 1337))\n        config["seed"] = base_seed + seed_offset\n        rotated_config = output / "train-acoustic-effective-config.json"\n        write_object(rotated_config, config)\n        rotated = output / "train-acoustic-realization"\n\n        original_generate = renderer.generate_dataset\n        renderer.generate_dataset = _reuse_canonical_base(output / "base")\n        try:\n            original_render(\n                rotated_config,\n                rotated,\n                curriculum_weights=curriculum_weights,\n            )\n        finally:\n            renderer.generate_dataset = original_generate\n\n        shutil.copy2(rotated / "train.tsv", output / "train.tsv")\n        canonical_index = output / "domain-index.jsonl"\n        rotated_index = rotated / "domain-index.jsonl"\n        merged_rows = _merge_domain_rows(\n            _read_jsonl(canonical_index),\n            _read_jsonl(rotated_index),\n        )\n'''
+          new = '''        config = load_object(config_path.resolve())\n        base_seed = int(config.get("seed", 1337))\n        config["seed"] = base_seed + seed_offset\n        rotated_config = output / "train-acoustic-effective-config.json"\n        write_object(rotated_config, config)\n        canonical_index = output / "domain-index.jsonl"\n        merged_rows, rotated_train_manifest = _render_rotated_train_rows(\n            config_path,\n            output,\n            _read_jsonl(canonical_index),\n            seed_offset,\n            curriculum_weights=curriculum_weights,\n        )\n        shutil.copy2(rotated_train_manifest, output / "train.tsv")\n'''
+          if old not in text:
+              raise SystemExit('rotation block missing')
+          text = text.replace(old, new, 1)
+          old_evidence = '''            "base_utterance_reused": True,\n            "evaluation_seed_rotated": False,\n'''
+          new_evidence = '''            "base_utterance_reused": True,\n            "canonical_evaluation_rows_reused": True,\n            "acoustic_rendering": "direct-train-scene-v1",\n            "auxiliary_full_dataset_rendered": False,\n            "evaluation_seed_rotated": False,\n'''
+          if old_evidence not in text:
+              raise SystemExit('evidence block missing')
+          text = text.replace(old_evidence, new_evidence, 1)
+          path.write_text(text)
+
+          test = Path('tests/test_gru_train_acoustic_rotation.py')
+          t = test.read_text()
+          t = t.replace('import pathlib\nimport tempfile\n', 'import pathlib\nimport random\nimport tempfile\n', 1)
+          t = t.replace('    assert "renderer.generate_dataset = _reuse_canonical_base" in source\n    assert \'shutil.copy2(rotated / "train.tsv", output / "train.tsv")\' in source\n', '    assert "_render_rotated_train_rows(" in source\n    assert \'"acoustic_rendering": "direct-train-scene-v1"\' in source\n', 1)
+          needle = '''    with tempfile.TemporaryDirectory() as temp:\n        root = pathlib.Path(temp)\n'''
+          proof = '''    with tempfile.TemporaryDirectory() as temp:\n        root = pathlib.Path(temp)\n        source_wav = root / "source.wav"\n        target_wav = root / "dataset" / "clips" / "train" / "d00000-s00.wav"\n        target_wav.parent.mkdir(parents=True)\n        module.renderer.write_wav(source_wav, [0, 1000, -1000, 500] * 4000)\n        module.renderer.write_wav(target_wav, [0] * 16000)\n        direct_config = stress_config()\n        direct_config["seed"] = 1337\n        direct_path = root / "direct.json"\n        direct_path.write_text(json.dumps(direct_config), encoding="utf-8")\n        canonical_row = {\n            "split": "train",\n            "source_path": str(source_wav),\n            "path": str(target_wav),\n            "scene_seed": 9001,\n            "target_ids": [1, 2, 3, 4],\n        }\n        offset = 12345\n        rendered, manifest = module._render_rotated_train_rows(\n            direct_path,\n            root / "dataset",\n            [canonical_row],\n            offset,\n            curriculum_weights=None,\n        )\n        row = rendered[0]\n        expected_seed = int(canonical_row["scene_seed"]) + offset\n        domains = module.renderer.validate_domains(direct_config)\n        rng = random.Random(expected_seed)\n        scene = module.renderer.sample_scene(domains, rng, curriculum_weights=None, forced_band=None)\n        expected_pcm, expected_meta = module.renderer.render_scene(\n            module.renderer.read_wav(source_wav), scene, seed=expected_seed, afe=domains["afe"]\n        )\n        assert module.renderer.read_wav(pathlib.Path(row["path"])) == expected_pcm\n        assert row["scene_seed"] == expected_seed\n        assert row["scene"] == expected_meta\n        assert row["wav_sha256"] == module.sha256_file(pathlib.Path(row["path"]))\n        assert "train-acoustic-realization/clips/train" in pathlib.Path(row["path"]).as_posix()\n        assert manifest.read_text(encoding="utf-8").split("\\t", 1)[0] == row["path"]\n\n'''
+          if needle not in t:
+              raise SystemExit('test insertion marker missing')
+          t = t.replace(needle, proof + needle, 1)
+          test.write_text(t)
+          PY
+          python3 tests/test_gru_train_acoustic_rotation.py
+          python3 -m py_compile training/run_gru_development.py tests/test_gru_train_acoustic_rotation.py
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add training/run_gru_development.py tests/test_gru_train_acoustic_rotation.py
+          git commit -m 'perf(training): render only rotated train scenes'
+          git push origin HEAD:tmp/single-seed-direct-render
