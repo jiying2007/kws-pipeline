@@ -84,7 +84,7 @@ jobs:
           tools/verify_rnn_parallel_contract.py
 
   qualification:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: contract
     runs-on: ubuntu-24.04
     timeout-minutes: 360
@@ -106,11 +106,22 @@ jobs:
           [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           [[ "$EXPECTED_SOURCE_HEAD" =~ ^[0-9a-f]{40}$ ]]
           [[ "$EXPECTED_PRODUCT_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_REF" = 'refs/heads/main'
+          default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
+          test "$default_branch" = 'main'
+          ancestry_status="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${EXPECTED_PRODUCT_HEAD}...${default_branch}" --jq '.status')"
+          case "$ancestry_status" in
+            ahead|identical) ;;
+            *)
+              echo "RNN product head is not contained in main history: product=${EXPECTED_PRODUCT_HEAD} main_relation=${ancestry_status}" >&2
+              exit 2
+              ;;
+          esac
           digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SOURCE_ARTIFACT_NAME}\") | .digest")"
           head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" --jq '.head_sha')"
           test -n "$digest" && test "$digest" = "$EXPECTED_DIGEST"
           test "$head" = "$EXPECTED_SOURCE_HEAD"
-          echo "frozen RNN artifact bound: run=$SOURCE_RUN_ID workflow_head=$head product_head=$EXPECTED_PRODUCT_HEAD digest=$digest"
+          echo "frozen RNN artifact bound: run=$SOURCE_RUN_ID workflow_head=$head product_head=$EXPECTED_PRODUCT_HEAD main_relation=$ancestry_status digest=$digest"
       - name: Download exact frozen RNN development artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
