@@ -19,6 +19,46 @@ def load_module(path: pathlib.Path, name: str):
     return module
 
 
+def stress_config() -> dict:
+    azimuths = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180]
+    required_stress = [
+        "distance_azimuth:distance_bin=5m|azimuth=rear",
+        "distance_snr:distance_bin=5m|snr=critical",
+        "azimuth_snr:azimuth=rear|snr=critical",
+        "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical",
+    ]
+    return {
+        "domains": {
+            "distance_bands": {
+                "near": {"distance_m": [0.3, 1.0], "weight": 1.0},
+                "mid": {"distance_m": [1.0, 3.0], "weight": 1.5},
+                "far": {"distance_m": [3.0, 5.0], "weight": 2.5},
+            },
+            "azimuth_deg": azimuths,
+            "rt60_s": [0.15, 0.80],
+            "snr_db": [3.0, 30.0],
+            "noise_profiles": ["white", "fan", "motor", "media"],
+            "mic_spacing_m": 0.06,
+            "playback": {"probability": 0.35, "sir_db": [-8.0, 20.0]},
+            "afe": {"backend": "proxy"},
+            "scenes_per_example": {
+                "train": 1,
+                "calibration": 1,
+                "test": 1,
+                "qualification": 1,
+            },
+        },
+        "robustness_gates": {
+            "min_expected_wakes": 9,
+            "min_negative_recordings": 4,
+            "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
+            "required_azimuth_deg": azimuths,
+            "required_snr_bands": ["critical", "low", "mid", "high"],
+            "required_stress_slices": required_stress,
+        },
+    }
+
+
 def main() -> int:
     module = load_module(SCRIPT, "gru_train_acoustic_rotation_contract")
     policy = json.loads(POLICY.read_text(encoding="utf-8"))
@@ -62,12 +102,34 @@ def main() -> int:
     else:
         raise AssertionError("fresh namespace overlap was accepted")
 
+    config = stress_config()
+    domains = module.renderer.validate_domains(config)
+    axes = module.renderer._evaluation_axes(config, domains)
+    assert axes is not None
+    negative_plan = module._build_negative_stress_plan(
+        config,
+        axes,
+        split="calibration",
+        negative_scene_count=64,
+    )
+    triple = "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+    assert negative_plan["support_kind"] == "negative"
+    assert negative_plan["target_per_slice"] == 4
+    assert negative_plan["planned_support"][triple] >= 4
+    assert negative_plan["reserved_scenes"] > 0
+    assert config["robustness_gates"]["min_expected_wakes"] == 9
+    assert config["robustness_gates"]["min_negative_recordings"] == 4
+
     source = SCRIPT.read_text(encoding="utf-8")
     assert "renderer.generate_dataset = _reuse_canonical_base" in source
     assert 'shutil.copy2(rotated / "train.tsv", output / "train.tsv")' in source
     assert '"base_utterance_reused": True' in source
     assert '"evaluation_seed_rotated": False' in source
     assert "training_code_sha256" in source
+    assert module.NEGATIVE_STRESS_POLICY == "gru-development-negative-stress-support-v1"
+    assert "development_negative_stress_support" in source
+    assert '"qualification_overridden": False' in source
+    assert '"validation_feedback_used": False' in source
 
     with tempfile.TemporaryDirectory() as temp:
         root = pathlib.Path(temp)
