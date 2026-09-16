@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "policy": "rnn-fresh-validation-one-shot-registry-v1",
+  "namespaces": [
+    {
+      "name": "rnn-fresh-validation-v1",
+      "model_family": "rnn",
+      "namespace": 295000019,
+      "status": "reserved-untouched",
+      "purpose": "one-shot fresh validation only after an independently frozen RNN candidate; verdict-only and forbidden as training or selection feedback"
+    }
+  ]
+}
