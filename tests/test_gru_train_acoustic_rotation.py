@@ -9,6 +9,12 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "training" / "run_gru_development.py"
 POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
+MULTISEED_SCRIPT = ROOT / "training" / "run_gru_development_multiseed.py"
+MULTISEED_POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-multiseed-v1.json"
+CONFIG = ROOT / "configs" / "training" / "xiaowo.torch-domain.json"
+FRESH_REGISTRY = ROOT / "experiments" / "model_family" / "fresh_validation_registry.json"
+SHADOW_REGISTRY = ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
+RECONCILE = ROOT / "tools" / "reconcile_gru_development_gate.py"
 
 
 def load_module(path: pathlib.Path, name: str):
@@ -61,6 +67,8 @@ def stress_config() -> dict:
 
 def main() -> int:
     module = load_module(SCRIPT, "gru_train_acoustic_rotation_contract")
+    multiseed = load_module(MULTISEED_SCRIPT, "gru_train_acoustic_multiseed_contract")
+    reconcile = load_module(RECONCILE, "gru_reconcile_wrapper_contract")
     policy = json.loads(POLICY.read_text(encoding="utf-8"))
 
     assert policy["training_acoustic_seed_namespace"] == 193000019
@@ -131,12 +139,115 @@ def main() -> int:
     assert '"qualification_overridden": False' in source
     assert '"validation_feedback_used": False' in source
 
+    multi_policy = json.loads(MULTISEED_POLICY.read_text(encoding="utf-8"))
+    assert multi_policy["training_acoustic_exposures"] == 3
+    assert multi_policy["training_acoustic_exposure_stride"] == 104729
+    offsets0, round_stride, exposure_stride = multiseed.exposure_offsets(multi_policy, 0)
+    offsets1, _, _ = multiseed.exposure_offsets(multi_policy, 1)
+    assert offsets0 == [193000019, 193104748, 193209477]
+    assert offsets1 == [193001028, 193105757, 193210486]
+    assert round_stride == 1009
+    assert exposure_stride == 104729
+    all_offsets = multiseed.validate_exposure_namespace(multi_policy)
+    assert len(all_offsets) == int(multi_policy["max_rounds"]) * 3
+    assert len(all_offsets) == len(set(all_offsets))
+
+    real_config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    fresh_registry = json.loads(FRESH_REGISTRY.read_text(encoding="utf-8"))
+    shadow_registry = json.loads(SHADOW_REGISTRY.read_text(encoding="utf-8"))
+    protection = multiseed.validate_protected_seed_independence(
+        multi_policy,
+        real_config,
+        fresh_registry,
+        shadow_registry,
+    )
+    assert protection["fresh_registry_entry"] == "gru-fresh-validation-v4"
+    assert protection["fresh_registry_status"] == "reserved-untouched"
+    assert protection["shadow_arena"] == "gru-independent-shadow-v4"
+    assert protection["shadow_arena_status"] == "reserved-untouched"
+    assert protection["effective_exposure_seed_count"] == len(all_offsets)
+    assert protection["overlap_count"] == 0
+
+    bad_config = json.loads(json.dumps(real_config))
+    bad_config["qualification_holdout_seed"] = int(real_config.get("seed", 1337)) + offsets0[0]
+    try:
+        multiseed.validate_protected_seed_independence(
+            multi_policy,
+            bad_config,
+            fresh_registry,
+            shadow_registry,
+        )
+    except ValueError as exc:
+        assert "overlaps protected/model seed" in str(exc)
+    else:
+        raise AssertionError("formal qualification seed overlap was accepted")
+
     with tempfile.TemporaryDirectory() as temp:
         root = pathlib.Path(temp)
         path = root / "rows.jsonl"
         module._write_jsonl(path, merged)
         roundtrip = module._read_jsonl(path)
         assert [row["wav_sha256"] for row in roundtrip] == ["x", "b", "c", "z", "e"]
+
+        canonical_rows = [
+            {"split": "train", "path": str(root / f"target-{index}.wav")}
+            for index in range(4)
+        ]
+        exposure_rows: list[list[dict]] = []
+        for exposure in range(3):
+            rows: list[dict] = []
+            for index in range(4):
+                source_path = root / f"source-{exposure}-{index}.wav"
+                source_path.write_bytes(f"exposure={exposure};scene={index}\n".encode())
+                rows.append({"split": "train", "path": str(source_path)})
+            exposure_rows.append(rows)
+        selected, counts = multiseed._selected_train_rows(canonical_rows, exposure_rows)
+        assert counts == [2, 1, 1]
+        assert len(selected) == len(canonical_rows) == 4
+        for index, row in enumerate(selected):
+            expected_exposure = index % 3
+            expected_bytes = f"exposure={expected_exposure};scene={index}\n".encode()
+            target = root / f"target-{index}.wav"
+            assert target.read_bytes() == expected_bytes
+            assert row["path"] == str(target)
+            assert row["wav_sha256"] == module.sha256_file(target)
+
+    wrapper_sha = module.sha256_file(MULTISEED_SCRIPT)
+    bound = reconcile._bound_training_wrapper(
+        {
+            "development_training_wrapper": {
+                "policy": multiseed.POLICY,
+                "path": "training/run_gru_development_multiseed.py",
+                "sha256": wrapper_sha,
+            }
+        }
+    )
+    assert bound is not None
+    assert bound["policy"] == multiseed.POLICY
+    assert bound["sha256"] == wrapper_sha
+    assert bound["path"] == "training/run_gru_development_multiseed.py"
+    try:
+        reconcile._bound_training_wrapper(
+            {
+                "development_training_wrapper": {
+                    "policy": multiseed.POLICY,
+                    "path": "training/run_gru_development_multiseed.py",
+                    "sha256": "0" * 64,
+                }
+            }
+        )
+    except ValueError as exc:
+        assert "drifted before freeze" in str(exc)
+    else:
+        raise AssertionError("tampered multiseed wrapper provenance was accepted")
+
+    multiseed_source = MULTISEED_SCRIPT.read_text(encoding="utf-8")
+    reconcile_source = RECONCILE.read_text(encoding="utf-8")
+    assert '"training_example_count_preserved": True' in multiseed_source
+    assert '"evaluation_seed_rotated": False' in multiseed_source
+    assert 'manifest["development_training_wrapper"] = wrapper' in multiseed_source
+    assert 'code[wrapper["path"]] = wrapper["sha256"]' in multiseed_source
+    assert 'code[str(wrapper["path"])] = str(wrapper["sha256"])' in reconcile_source
 
     print("GRU train acoustic rotation contract: PASS")
     return 0
