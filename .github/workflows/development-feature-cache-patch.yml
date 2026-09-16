@@ -1,0 +1,143 @@
+name: development-feature-cache-patch
+
+on:
+  push:
+    branches:
+      - tmp/development-feature-cache
+    paths:
+      - '.github/triggers/development-feature-cache-patch.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: tmp/development-feature-cache
+          fetch-depth: 0
+      - name: Apply bounded feature-cache integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          def replace_once(path_text: str, old: str, new: str) -> None:
+              path = pathlib.Path(path_text)
+              text = path.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one replacement target, got {text.count(old)}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+
+          replace_once(
+              'training/run_gru_development.py',
+              'import iterate_gru_development as loop  # noqa: E402\nimport render_domains as renderer  # noqa: E402\n',
+              'import feature_cached_trainer as feature_cache  # noqa: E402\nimport iterate_gru_development as loop  # noqa: E402\nimport render_domains as renderer  # noqa: E402\n',
+          )
+          replace_once(
+              'training/run_gru_development.py',
+              '    policy_path = _argument_path("--policy")\n    work = _argument_path("--work-dir")\n    rotations, negative_stress_rounds = install_rotation(policy_path)\n',
+              '    policy_path = _argument_path("--policy")\n    work = _argument_path("--work-dir")\n    feature_cache.install_development_feature_cache(loop, load_object(policy_path))\n    rotations, negative_stress_rounds = install_rotation(policy_path)\n',
+          )
+          replace_once(
+              'training/run_rnn_development.py',
+              '    shared.NEGATIVE_STRESS_POLICY = NEGATIVE_STRESS_POLICY\n    rotations, negative_stress_rounds = shared.install_rotation(policy_path)\n',
+              '    shared.NEGATIVE_STRESS_POLICY = NEGATIVE_STRESS_POLICY\n    shared.feature_cache.install_development_feature_cache(\n        loop, shared.load_object(policy_path)\n    )\n    rotations, negative_stress_rounds = shared.install_rotation(policy_path)\n',
+          )
+          replace_once(
+              'training/iterate_gru_development.py',
+              '        TRAINING / "train_gru_ctc.py",\n        TRAINING / "gru_model.py",\n',
+              '        TRAINING / "train_gru_ctc.py",\n        TRAINING / "feature_cached_trainer.py",\n        TRAINING / "gru_model.py",\n',
+          )
+          replace_once(
+              'training/iterate_rnn_development.py',
+              'TRAINING / "train_ctc.py", TRAINING / "model.py",',
+              'TRAINING / "train_ctc.py", TRAINING / "feature_cached_trainer.py", TRAINING / "model.py",',
+          )
+
+          for path_text in (
+              'configs/training/xiaowo.gru-development-loop.json',
+              'configs/training/xiaowo.gru-development-multiseed-v1.json',
+              'configs/training/xiaowo.rnn-development-loop.json',
+          ):
+              path = pathlib.Path(path_text)
+              value = json.loads(path.read_text(encoding='utf-8'))
+              if 'feature_cache_max_items' in value:
+                  raise SystemExit(f'{path}: feature_cache_max_items already exists')
+              rebuilt = {}
+              inserted = False
+              for key, item in value.items():
+                  rebuilt[key] = item
+                  if key == 'epochs_per_round':
+                      rebuilt['feature_cache_max_items'] = 8192
+                      inserted = True
+              if not inserted:
+                  raise SystemExit(f'{path}: epochs_per_round missing')
+              path.write_text(json.dumps(rebuilt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          replace_once(
+              'tools/verify_rnn_parallel_contract.py',
+              '"max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "lr_decay_per_round",',
+              '"max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "feature_cache_max_items", "lr_decay_per_round",',
+          )
+          replace_once(
+              'tools/verify_rnn_parallel_contract.py',
+              '"training/model.py", "training/train_ctc.py", "training/export_model.py",\n',
+              '"training/model.py", "training/train_ctc.py", "training/feature_cached_trainer.py", "training/export_model.py",\n',
+          )
+          replace_once(
+              'tools/verify_rnn_parallel_contract.py',
+              '    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source:\n',
+              '    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source or "install_development_feature_cache" not in wrapper_source:\n',
+          )
+
+          for path_text, anchor in (
+              ('.github/workflows/gru-development-curriculum.yml', "      - 'training/run_gru_development.py'\n"),
+              ('.github/workflows/rnn-development-curriculum.yml', "      - 'training/run_rnn_development.py'\n"),
+          ):
+              replace_once(path_text, anchor, anchor + "      - 'training/feature_cached_trainer.py'\n")
+
+          replace_once(
+              '.github/workflows/gru-development-curriculum.yml',
+              '          python3 tools/verify_gru_development_gate.py --self-test\n',
+              '          python3 tools/verify_gru_development_gate.py --self-test\n          python3 training/feature_cached_trainer.py --self-test\n',
+          )
+          replace_once(
+              '.github/workflows/gru-development-curriculum.yml',
+              '          training/run_gru_development.py\n',
+              '          training/run_gru_development.py\n          training/feature_cached_trainer.py\n',
+          )
+          replace_once(
+              '.github/workflows/rnn-development-curriculum.yml',
+              '          python3 tools/verify_rnn_development_gate.py --self-test\n',
+              '          python3 tools/verify_rnn_development_gate.py --self-test\n          python3 training/feature_cached_trainer.py --self-test\n',
+          )
+          replace_once(
+              '.github/workflows/rnn-development-curriculum.yml',
+              '          training/run_rnn_development.py\n',
+              '          training/run_rnn_development.py\n          training/feature_cached_trainer.py\n',
+          )
+
+          # The staging workflow and trigger must never land in the product patch.
+          pathlib.Path('.github/workflows/development-feature-cache-patch.yml').unlink()
+          pathlib.Path('.github/triggers/development-feature-cache-patch.txt').unlink()
+          PY
+          python3 training/feature_cached_trainer.py --self-test
+          python3 -m py_compile \
+            training/feature_cached_trainer.py \
+            training/run_gru_development.py \
+            training/run_rnn_development.py \
+            training/iterate_gru_development.py \
+            training/iterate_rnn_development.py \
+            tools/verify_rnn_parallel_contract.py
+          git diff --check
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'perf(training): cache deterministic development features'
+          git push origin HEAD:tmp/development-feature-cache
