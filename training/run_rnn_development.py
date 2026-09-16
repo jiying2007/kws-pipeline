@@ -38,9 +38,10 @@ def _retain_rnn_identity(work: pathlib.Path) -> None:
 def main() -> int:
     policy_path = shared._argument_path("--policy")
     work = shared._argument_path("--work-dir")
-    # Keep run_gru_development.loop bound to the shared curriculum module so its
-    # renderer hook patches render_domain_dataset there. iterate_rnn_development
-    # delegates into that same module after swapping only trainer/export/freeze identity.
+    # run_gru_development contains the shared, already-governed acoustic-rotation
+    # and negative-stress implementation. Bind its hook to the independent RNN
+    # iterator so the real RNN development renderer, not the GRU iterator, is patched.
+    shared.loop = loop
     shared.POLICY = ROTATION_POLICY
     shared.NEGATIVE_STRESS_POLICY = NEGATIVE_STRESS_POLICY
     rotations, negative_stress_rounds = shared.install_rotation(policy_path)
