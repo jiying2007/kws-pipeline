@@ -71,11 +71,20 @@ def qualify(candidate: pathlib.Path, runner: pathlib.Path, fresh_summary: pathli
     fresh_hashes = fresh_wav_hashes(fresh)
 
     config = load_object(candidate / "source-config.json")
-    training_seed = int(config.get("seed", 1337)); formal_seed = int(config.get("qualification_holdout_seed", -1))
-    if formal_seed < 0 or formal_seed == training_seed: raise ValueError("active formal qualification seed invalid")
+    source_policy = load_object(candidate / "source-development-policy.json")
+    candidate_stage = source_policy.get("candidate_freeze")
+    if not isinstance(candidate_stage, dict): raise ValueError("RNN candidate freeze policy missing")
+    training_seed = int(config.get("seed", 1337))
+    formal_seed = int(candidate_stage.get("formal_qualification_seed", -1))
+    gru_active_formal = int(config.get("qualification_holdout_seed", -1))
     retired = normalize_retired_qualification_seeds(config.get("retired_qualification_holdout_seeds", []), training_seed=training_seed, qualification_seed=formal_seed)
+    if formal_seed < 0 or formal_seed == training_seed: raise ValueError("RNN formal qualification seed invalid")
+    if formal_seed == gru_active_formal or formal_seed in set(retired): raise ValueError("RNN formal seed overlaps GRU active/retired formal namespace")
+    if int(freeze.get("candidate_stage", {}).get("formal_qualification_seed", -1)) != formal_seed: raise ValueError("RNN frozen formal seed binding mismatch")
+
     shadow_seeds = [int(value) for value in shadow.get("seeds", [])]
     if formal_seed in set(shadow_seeds) or set(retired) & set(shadow_seeds): raise ValueError("RNN formal/shadow namespaces overlap")
+    if formal_seed == int(fresh.get("fresh_validation_seed", -1)): raise ValueError("RNN formal/Fresh namespaces overlap")
 
     corpus = load_object(candidate / "development-wav-sha256.json"); development_hashes = {str(value) for value in corpus["wav_sha256"]}
     if not development_hashes: raise ValueError("RNN development WAV evidence empty")
@@ -111,7 +120,7 @@ def qualify(candidate: pathlib.Path, runner: pathlib.Path, fresh_summary: pathli
         "schema_version": 1, "policy": POLICY, "model_family": "rnn", "qualified": qualified,
         "model_sha256": str(freeze["model_sha256"]), "pack_sha256": str(freeze["pack_sha256"]),
         "fresh_validation_summary_sha256": sha256_file(fresh_summary), "shadow_summary_sha256": sha256_file(shadow_root / "summary.json"),
-        "formal_seed": formal_seed, "formal_seed_consumed": True, "retired_formal_seeds": retired, "shadow_seeds": shadow_seeds,
+        "formal_seed": formal_seed, "gru_active_formal_seed_untouched": gru_active_formal, "formal_seed_consumed": True, "retired_formal_seeds": retired, "shadow_seeds": shadow_seeds,
         "recordings": recordings, "expected_wakes": expected_wakes, "development_overlap_count": 0, "fresh_overlap_count": 0, "shadow_overlap_count": 0, "retired_overlap_count": 0,
         "fresh_validation_wav_count": len(fresh_hashes), "shadow_wav_count": len(seen_shadow), "formal_wav_count": len(active_hashes), "retired_wav_count": len(seen_retired),
         "all_pairwise_sha_disjoint": True, "all_formal_cohorts_internal_sha_unique": True,
