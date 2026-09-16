@@ -14,6 +14,9 @@ import run_gru_development as base  # noqa: E402
 
 POLICY = "development-train-acoustic-multiseed-v1"
 EXPECTED_EXPOSURES = 3
+MODEL_SEED_STRIDE = 1009
+FRESH_REGISTRY = ROOT / "experiments" / "model_family" / "fresh_validation_registry.json"
+SHADOW_REGISTRY = ROOT / "experiments" / "model_family" / "shadow_arena_registry.json"
 
 
 def exposure_offsets(policy: dict, round_index: int) -> tuple[list[int], int, int]:
@@ -30,7 +33,7 @@ def exposure_offsets(policy: dict, round_index: int) -> tuple[list[int], int, in
     return offsets, round_stride, exposure_stride
 
 
-def validate_exposure_namespace(policy: dict) -> None:
+def validate_exposure_namespace(policy: dict) -> list[int]:
     rounds = int(policy.get("max_rounds", 0))
     if rounds <= 0:
         raise ValueError("max_rounds must be positive")
@@ -46,6 +49,74 @@ def validate_exposure_namespace(policy: dict) -> None:
     }
     if any(offset in protected_namespaces for offset in all_offsets):
         raise ValueError("training acoustic exposure overlaps model/fresh namespace")
+    return all_offsets
+
+
+def validate_protected_seed_independence(
+    policy: dict,
+    config: dict,
+    fresh_registry: dict,
+    shadow_registry: dict,
+) -> dict:
+    offsets = validate_exposure_namespace(policy)
+    base_seed = int(config.get("seed", 1337))
+    effective = {base_seed + offset for offset in offsets}
+    if len(effective) != len(offsets):
+        raise ValueError("effective training acoustic exposure seeds are not unique")
+
+    freeze = policy.get("candidate_freeze")
+    if not isinstance(freeze, dict):
+        raise ValueError("candidate_freeze policy is missing")
+    fresh_namespace = int(freeze.get("fresh_validation_seed_namespace", 0))
+    fresh_rows = [row for row in fresh_registry.get("namespaces", []) if isinstance(row, dict)]
+    fresh_matches = [row for row in fresh_rows if int(row.get("namespace", -1)) == fresh_namespace]
+    if len(fresh_matches) != 1:
+        raise ValueError("current fresh validation namespace is not uniquely registered")
+    fresh = fresh_matches[0]
+    if fresh.get("model_family") != "gru" or fresh.get("status") != "reserved-untouched":
+        raise ValueError("current fresh validation namespace is not reserved for GRU")
+
+    arena_name = str(freeze.get("shadow_arena", ""))
+    arenas = {
+        str(row.get("name")): row
+        for row in shadow_registry.get("arenas", [])
+        if isinstance(row, dict)
+    }
+    arena = arenas.get(arena_name)
+    if not isinstance(arena, dict):
+        raise ValueError("current shadow arena is not registered")
+    if arena.get("model_family") != "gru" or arena.get("status") != "reserved-untouched":
+        raise ValueError("current shadow arena is not reserved for GRU")
+
+    protected: set[int] = {
+        int(config.get("qualification_holdout_seed", -1)),
+        *[int(value) for value in config.get("retired_qualification_holdout_seeds", [])],
+    }
+    for row in fresh_rows:
+        namespace = int(row.get("namespace", -1))
+        if namespace > 0:
+            protected.add(base_seed + namespace)
+    for row in arenas.values():
+        protected.update(int(value) for value in row.get("seeds", []))
+
+    model_namespace = int(policy.get("training_seed_namespace", 0))
+    model_seeds = {
+        base_seed + model_namespace + round_index * MODEL_SEED_STRIDE
+        for round_index in range(int(policy.get("max_rounds", 0)))
+    }
+    overlap = sorted(effective & (protected | model_seeds))
+    if overlap:
+        raise ValueError(f"training acoustic exposure overlaps protected/model seed(s): {overlap}")
+    return {
+        "fresh_registry_entry": str(fresh.get("name", "")),
+        "fresh_registry_status": str(fresh.get("status", "")),
+        "shadow_arena": arena_name,
+        "shadow_arena_status": str(arena.get("status", "")),
+        "effective_exposure_seed_count": len(effective),
+        "protected_seed_count": len(protected),
+        "model_seed_count": len(model_seeds),
+        "overlap_count": 0,
+    }
 
 
 def exposure_for_train_ordinal(ordinal: int, exposure_count: int) -> int:
@@ -106,11 +177,7 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
         output = output.resolve()
         round_index = base._round_index(output)
         offsets, round_stride, exposure_stride = exposure_offsets(policy, round_index)
-        original_render(
-            config_path,
-            output,
-            curriculum_weights=curriculum_weights,
-        )
+        original_render(config_path, output, curriculum_weights=curriculum_weights)
 
         config = base.load_object(config_path.resolve())
         base_seed = int(config.get("seed", 1337))
@@ -126,11 +193,7 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
             original_generate = base.renderer.generate_dataset
             base.renderer.generate_dataset = base._reuse_canonical_base(output / "base")
             try:
-                original_render(
-                    effective_path,
-                    exposure_root,
-                    curriculum_weights=curriculum_weights,
-                )
+                original_render(effective_path, exposure_root, curriculum_weights=curriculum_weights)
             finally:
                 base.renderer.generate_dataset = original_generate
 
@@ -148,18 +211,11 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
 
         canonical_index = output / "domain-index.jsonl"
         canonical_rows = base._read_jsonl(canonical_index)
-        merged_rows, selected_counts = _selected_train_rows(
-            canonical_rows,
-            exposure_train_rows,
-        )
+        merged_rows, selected_counts = _selected_train_rows(canonical_rows, exposure_train_rows)
         for item, selected_count in zip(exposure_evidence, selected_counts):
             item["selected_scene_count"] = selected_count
 
-        negative_stress = base._apply_negative_stress_support(
-            config_path,
-            output,
-            merged_rows,
-        )
+        negative_stress = base._apply_negative_stress_support(config_path, output, merged_rows)
         negative_stress["round"] = round_index
         negative_stress_rounds.append(negative_stress)
         base._write_jsonl(canonical_index, merged_rows)
@@ -201,10 +257,49 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
     return rotations, negative_stress_rounds
 
 
+def retain_multiseed_wrapper_evidence(work: pathlib.Path, protection: dict) -> None:
+    manifest_path = work / "development-loop-manifest.json"
+    freeze_path = work / "frozen-candidate" / "freeze-manifest.json"
+    if not manifest_path.is_file() or not freeze_path.is_file():
+        raise ValueError("multiseed development evidence is incomplete")
+    implementation = pathlib.Path(__file__).resolve()
+    wrapper = {
+        "policy": POLICY,
+        "path": implementation.relative_to(ROOT).as_posix(),
+        "sha256": base.sha256_file(implementation),
+    }
+    manifest = base.load_object(manifest_path)
+    freeze = base.load_object(freeze_path)
+    manifest["development_training_wrapper"] = wrapper
+    manifest["training_acoustic_protected_seed_binding"] = protection
+    freeze["development_training_wrapper"] = wrapper
+    freeze["training_acoustic_protected_seed_binding"] = protection
+    code = freeze.setdefault("training_code_sha256", {})
+    if not isinstance(code, dict):
+        raise ValueError("freeze training_code_sha256 must be an object")
+    code[wrapper["path"]] = wrapper["sha256"]
+    base.write_object(manifest_path, manifest)
+    base.write_object(freeze_path, freeze)
+
+
 def main() -> int:
+    policy_path = base._argument_path("--policy")
+    config_path = base._argument_path("--config")
+    work = base._argument_path("--work-dir")
+    policy = base.load_object(policy_path)
+    config = base.load_object(config_path)
+    protection = validate_protected_seed_independence(
+        policy,
+        config,
+        base.load_object(FRESH_REGISTRY),
+        base.load_object(SHADOW_REGISTRY),
+    )
     base.POLICY = POLICY
     base.install_rotation = install_multiseed_rotation
-    return int(base.main())
+    code = int(base.main())
+    if code == 0:
+        retain_multiseed_wrapper_evidence(work, protection)
+    return code
 
 
 if __name__ == "__main__":
