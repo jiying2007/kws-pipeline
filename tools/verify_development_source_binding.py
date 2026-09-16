@@ -59,6 +59,7 @@ def verify(
     freeze = load_object(candidate / "freeze-manifest.json")
 
     binding_mode = "canonical-run-head"
+    binding_class = None
     if binding is None:
         if source_run_head != product_head:
             raise ValueError(
@@ -69,6 +70,12 @@ def verify(
         value = load_object(binding)
         if int(value.get("schema_version", 0)) != 1:
             raise ValueError("development source binding schema_version must be 1")
+        binding_class = value.get("evidence_class")
+        if (
+            not isinstance(binding_class, str)
+            or not binding_class.endswith("development-once-source-binding")
+        ):
+            raise ValueError("development source binding evidence_class is invalid")
         if value.get("development_only") is not True:
             raise ValueError("development source binding must be development-only")
         for field in ("fresh_used", "shadow_used", "formal_qualification_used"):
@@ -78,6 +85,18 @@ def verify(
             raise ValueError("development source binding workflow_head mismatch")
         if str(value.get("product_head", "")) != product_head:
             raise ValueError("development source binding product_head mismatch")
+        declared_policy = value.get("development_policy")
+        if declared_policy is not None:
+            if not isinstance(declared_policy, str) or not declared_policy:
+                raise ValueError("development source binding development_policy is invalid")
+            policy_path = repository_relative(product_root, declared_policy)
+            if not policy_path.is_file():
+                raise ValueError("declared development policy is missing from exact product head")
+            expected_policy = str(freeze.get("development_policy_sha256") or "")
+            if SHA256_RE.fullmatch(expected_policy) is None:
+                raise ValueError("frozen candidate development policy digest is invalid")
+            if sha256_file(policy_path) != expected_policy:
+                raise ValueError("development policy SHA drifted from exact product head")
         binding_mode = "one-shot-product-head"
 
     code = freeze.get("training_code_sha256")
@@ -97,6 +116,15 @@ def verify(
             raise ValueError(f"training code SHA drifted from exact product head: {name}")
         verified_paths.append(name)
 
+    if binding is not None:
+        value = load_object(binding)
+        declared_wrapper = value.get("training_wrapper")
+        if declared_wrapper is not None:
+            if not isinstance(declared_wrapper, str) or not declared_wrapper:
+                raise ValueError("development source binding training_wrapper is invalid")
+            if declared_wrapper not in code:
+                raise ValueError("declared training wrapper is not frozen in training_code_sha256")
+
     provenance = load_object(candidate / "model-provenance.json")
     training = provenance.get("training")
     if not isinstance(training, dict):
@@ -114,6 +142,7 @@ def verify(
         "schema_version": 1,
         "policy": "development-product-source-binding-v1",
         "binding_mode": binding_mode,
+        "binding_evidence_class": binding_class,
         "source_run_head": source_run_head,
         "product_head": product_head,
         "model_provenance_repository_sha": repository_sha,
@@ -134,12 +163,16 @@ def self_test() -> None:
         source = product / "training" / "example.py"
         source.parent.mkdir(parents=True)
         source.write_text("print('bound')\n", encoding="utf-8")
+        policy = product / "configs" / "policy.json"
+        policy.parent.mkdir(parents=True)
+        policy.write_text("{}\n", encoding="utf-8")
         (candidate / "freeze-manifest.json").write_text(
             json.dumps(
                 {
+                    "development_policy_sha256": sha256_file(policy),
                     "training_code_sha256": {
                         "training/example.py": sha256_file(source),
-                    }
+                    },
                 },
                 sort_keys=True,
             )
@@ -166,6 +199,7 @@ def self_test() -> None:
             json.dumps(
                 {
                     "schema_version": 1,
+                    "evidence_class": "gru-development-once-source-binding",
                     "workflow_head": run_head,
                     "product_head": product_head,
                     "development_only": True,
@@ -199,6 +233,23 @@ def self_test() -> None:
             assert "training code SHA drifted" in str(exc)
         else:
             raise AssertionError("tampered product source was accepted")
+
+        source.write_text("print('bound')\n", encoding="utf-8")
+        bound = load_object(binding)
+        bound["development_policy"] = "configs/policy.json"
+        bound["training_wrapper"] = "training/example.py"
+        binding.write_text(json.dumps(bound, sort_keys=True) + "\n", encoding="utf-8")
+        result = verify(candidate, product, run_head, product_head, binding)
+        assert result["binding_evidence_class"] == "gru-development-once-source-binding"
+
+        bound["evidence_class"] = "untrusted"
+        binding.write_text(json.dumps(bound, sort_keys=True) + "\n", encoding="utf-8")
+        try:
+            verify(candidate, product, run_head, product_head, binding)
+        except ValueError as exc:
+            assert "evidence_class" in str(exc)
+        else:
+            raise AssertionError("invalid source binding evidence class was accepted")
 
 
 def main() -> int:
