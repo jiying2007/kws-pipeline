@@ -15,6 +15,10 @@ on:
       - 'training/domain_curriculum.py'
       - 'training/hard_negative_replay.py'
       - 'training/train_gru_ctc.py'
+      - 'eval/gate_robustness.py'
+      - 'tools/gru_development_gate.py'
+      - 'tools/reconcile_gru_development_gate.py'
+      - 'tools/verify_gru_development_gate.py'
       - 'tools/finalize_gru_frozen_candidate.py'
       - 'tools/verify_gru_frozen_candidate.py'
       - 'tools/verify_gru_stability_evidence.py'
@@ -48,11 +52,15 @@ jobs:
           python3 tests/test_gru_development_stability_gate.py
           python3 tests/test_gru_stability_evidence_contract.py
           python3 tests/test_gru_train_acoustic_rotation.py
+          python3 tools/verify_gru_development_gate.py --self-test
       - name: Python syntax
         run: >-
           python3 -m py_compile
           training/iterate_gru_development.py
           training/run_gru_development.py
+          tools/gru_development_gate.py
+          tools/reconcile_gru_development_gate.py
+          tools/verify_gru_development_gate.py
           tools/finalize_gru_frozen_candidate.py
           tools/verify_gru_frozen_candidate.py
           tools/verify_gru_stability_evidence.py
@@ -143,19 +151,41 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
-      - name: Finalize self-contained frozen candidate evidence
+      - name: Reconcile full-robustness development gate
+        id: development_gate
         if: steps.loop.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          set +e
+          python3 tools/reconcile_gru_development_gate.py \
+            --work-dir build/gru-development-curriculum \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy configs/training/xiaowo.gru-development-loop.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Verify reconciled development gate
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: >-
+          python3 tools/verify_gru_development_gate.py
+          --work-dir build/gru-development-curriculum
+          --config configs/training/xiaowo.torch-domain.json
+          --policy configs/training/xiaowo.gru-development-loop.json
+      - name: Finalize self-contained frozen candidate evidence
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
         run: >-
           python3 tools/finalize_gru_frozen_candidate.py
           --work-dir build/gru-development-curriculum
           --config configs/training/xiaowo.torch-domain.json
           --policy configs/training/xiaowo.gru-development-loop.json
       - name: Verify frozen candidate handoff
-        if: steps.loop.outputs.exit_code == '0'
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
         run: |
           python3 tools/verify_gru_frozen_candidate.py \
             --candidate build/gru-development-curriculum/frozen-candidate
           python3 tools/verify_gru_stability_evidence.py \
+            --candidate build/gru-development-curriculum/frozen-candidate
+          python3 tools/verify_gru_development_gate.py \
             --candidate build/gru-development-curriculum/frozen-candidate
       - name: Retain development evidence and frozen candidate
         if: always()
@@ -171,4 +201,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
       - name: Gate development loop
-        run: test "${{ steps.loop.outputs.exit_code }}" = '0'
+        run: |
+          test "${{ steps.loop.outputs.exit_code }}" = '0'
+          test "${{ steps.development_gate.outputs.exit_code }}" = '0'
