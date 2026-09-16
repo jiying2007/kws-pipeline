@@ -29,8 +29,9 @@ jobs:
           def replace_once(path_text: str, old: str, new: str) -> None:
               path = pathlib.Path(path_text)
               text = path.read_text(encoding='utf-8')
-              if text.count(old) != 1:
-                  raise SystemExit(f'{path}: expected exactly one replacement target, got {text.count(old)}')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one replacement target, got {count}')
               path.write_text(text.replace(old, new), encoding='utf-8')
 
           replace_once(
@@ -95,49 +96,47 @@ jobs:
               '    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source or "install_development_feature_cache" not in wrapper_source:\n',
           )
 
-          for path_text, anchor in (
-              ('.github/workflows/gru-development-curriculum.yml', "      - 'training/run_gru_development.py'\n"),
-              ('.github/workflows/rnn-development-curriculum.yml', "      - 'training/run_rnn_development.py'\n"),
-          ):
-              replace_once(path_text, anchor, anchor + "      - 'training/feature_cached_trainer.py'\n")
-
           replace_once(
-              '.github/workflows/gru-development-curriculum.yml',
-              '          python3 tools/verify_gru_development_gate.py --self-test\n',
-              '          python3 tools/verify_gru_development_gate.py --self-test\n          python3 training/feature_cached_trainer.py --self-test\n',
+              'tests/test_gru_development_curriculum_contract.py',
+              'ITERATOR = ROOT / "training" / "iterate_gru_development.py"\n',
+              'ITERATOR = ROOT / "training" / "iterate_gru_development.py"\nFEATURE_CACHE = ROOT / "training" / "feature_cached_trainer.py"\n',
           )
           replace_once(
-              '.github/workflows/gru-development-curriculum.yml',
-              '          training/run_gru_development.py\n',
-              '          training/run_gru_development.py\n          training/feature_cached_trainer.py\n',
+              'tests/test_gru_development_curriculum_contract.py',
+              '        cls.iterator = load_module(ITERATOR, "iterate_gru_development_contract")\n',
+              '        cls.iterator = load_module(ITERATOR, "iterate_gru_development_contract")\n        cls.feature_cache = load_module(FEATURE_CACHE, "development_feature_cache_contract")\n',
           )
           replace_once(
-              '.github/workflows/rnn-development-curriculum.yml',
-              '          python3 tools/verify_rnn_development_gate.py --self-test\n',
-              '          python3 tools/verify_rnn_development_gate.py --self-test\n          python3 training/feature_cached_trainer.py --self-test\n',
+              'tests/test_gru_development_curriculum_contract.py',
+              '        self.assertFalse(value["formal_qualification_used"])\n',
+              '        self.assertFalse(value["formal_qualification_used"])\n        self.assertEqual(value["feature_cache_max_items"], 8192)\n        self.feature_cache.self_test()\n',
           )
-          replace_once(
-              '.github/workflows/rnn-development-curriculum.yml',
-              '          training/run_rnn_development.py\n',
-              '          training/run_rnn_development.py\n          training/feature_cached_trainer.py\n',
-          )
-
-          # The staging workflow and trigger must never land in the product patch.
-          pathlib.Path('.github/workflows/development-feature-cache-patch.yml').unlink()
-          pathlib.Path('.github/triggers/development-feature-cache-patch.txt').unlink()
           PY
           python3 training/feature_cached_trainer.py --self-test
+          python3 tests/test_gru_development_curriculum_contract.py
+          python3 tools/verify_rnn_parallel_contract.py
           python3 -m py_compile \
             training/feature_cached_trainer.py \
             training/run_gru_development.py \
             training/run_rnn_development.py \
             training/iterate_gru_development.py \
             training/iterate_rnn_development.py \
-            tools/verify_rnn_parallel_contract.py
+            tools/verify_rnn_parallel_contract.py \
+            tests/test_gru_development_curriculum_contract.py
           git diff --check
           git status --short
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add \
+            training/feature_cached_trainer.py \
+            training/run_gru_development.py \
+            training/run_rnn_development.py \
+            training/iterate_gru_development.py \
+            training/iterate_rnn_development.py \
+            configs/training/xiaowo.gru-development-loop.json \
+            configs/training/xiaowo.gru-development-multiseed-v1.json \
+            configs/training/xiaowo.rnn-development-loop.json \
+            tools/verify_rnn_parallel_contract.py \
+            tests/test_gru_development_curriculum_contract.py
           git commit -m 'perf(training): cache deterministic development features'
           git push origin HEAD:tmp/development-feature-cache
