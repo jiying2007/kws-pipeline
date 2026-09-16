@@ -11,6 +11,9 @@ on:
     paths:
       - 'training/validate_frozen_gru_candidate.py'
       - 'training/qualify_frozen_gru_formal.py'
+      - 'eval/gate_robustness.py'
+      - 'tools/gru_development_gate.py'
+      - 'tools/verify_gru_development_gate.py'
       - 'tools/finalize_gru_frozen_candidate.py'
       - 'tools/verify_gru_frozen_candidate.py'
       - 'tools/verify_gru_stability_evidence.py'
@@ -61,11 +64,14 @@ jobs:
         run: |
           python3 tests/test_gru_frozen_qualification_contract.py
           python3 tests/test_gru_stability_evidence_contract.py
+          python3 tools/verify_gru_development_gate.py --self-test
       - name: Python syntax
         run: >-
           python3 -m py_compile
           training/validate_frozen_gru_candidate.py
           training/qualify_frozen_gru_formal.py
+          tools/gru_development_gate.py
+          tools/verify_gru_development_gate.py
           tools/finalize_gru_frozen_candidate.py
           tools/verify_gru_frozen_candidate.py
           tools/verify_gru_stability_evidence.py
@@ -123,6 +129,7 @@ jobs:
           candidate="$(dirname "$freeze")"
           python3 tools/verify_gru_frozen_candidate.py --candidate "$candidate"
           python3 tools/verify_gru_stability_evidence.py --candidate "$candidate"
+          python3 tools/verify_gru_development_gate.py --candidate "$candidate"
           echo "path=$candidate" >> "$GITHUB_OUTPUT"
 
       - name: Materialize qualification-only candidate workspace
