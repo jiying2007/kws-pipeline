@@ -38,7 +38,7 @@ def main() -> int:
         if freeze.get(field) is not False:
             raise ValueError(f"RNN candidate freeze requires {field}=false")
 
-    for field in ("max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "lr_decay_per_round", "fixed_replay_repeat", "failure_replay_repeat_max"):
+    for field in ("max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "feature_cache_max_items", "lr_decay_per_round", "fixed_replay_repeat", "failure_replay_repeat_max"):
         if rnn.get(field) != gru.get(field):
             raise ValueError(f"RNN/GRU development policy drifted at {field}")
     if rnn.get("loss_controller") != gru.get("loss_controller"):
@@ -89,7 +89,7 @@ def main() -> int:
             raise ValueError("RNN acoustic seed overlaps protected evidence")
 
     required_files = (
-        "training/model.py", "training/train_ctc.py", "training/export_model.py",
+        "training/model.py", "training/train_ctc.py", "training/feature_cached_trainer.py", "training/export_model.py",
         "training/iterate_rnn_development.py", "training/run_rnn_development.py",
         "tools/rnn_development_gate.py", "tools/reconcile_rnn_development_gate.py",
         "tools/verify_rnn_development_gate.py", "tools/finalize_rnn_frozen_candidate.py",
@@ -116,7 +116,7 @@ def main() -> int:
         raise ValueError("RNN iterator is not bound exclusively to the vanilla RNN trainer/exporter")
     if "evaluate_development_split" not in iterator_source or "terminal_strict_streak" not in iterator_source:
         raise ValueError("RNN iterator does not enforce full robustness/stability at source")
-    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source:
+    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source or "install_development_feature_cache" not in wrapper_source:
         raise ValueError("RNN wrapper does not bind shared acoustic/stress hooks to the RNN iterator")
     if "if: github.event_name == 'workflow_dispatch'" not in workflow_source or "--runner build/kws_wav" not in workflow_source or "kws_wav_gru" in workflow_source:
         raise ValueError("RNN workflow trigger/runtime boundary is invalid")

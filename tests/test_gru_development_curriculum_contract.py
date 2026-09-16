@@ -10,6 +10,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ITERATOR = ROOT / "training" / "iterate_gru_development.py"
+FEATURE_CACHE = ROOT / "training" / "feature_cached_trainer.py"
 POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
 FINALIZER = ROOT / "tools" / "finalize_gru_frozen_candidate.py"
 VERIFIER = ROOT / "tools" / "verify_gru_frozen_candidate.py"
@@ -29,6 +30,7 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.iterator = load_module(ITERATOR, "iterate_gru_development_contract")
+        cls.feature_cache = load_module(FEATURE_CACHE, "development_feature_cache_contract")
         cls.finalizer = load_module(FINALIZER, "finalize_gru_frozen_candidate_contract")
         cls.verifier = load_module(VERIFIER, "verify_gru_frozen_candidate_contract")
         cls.policy = json.loads(POLICY.read_text(encoding="utf-8"))
@@ -40,6 +42,8 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertFalse(value["qualification_used"])
         self.assertFalse(value["shadow_used"])
         self.assertFalse(value["formal_qualification_used"])
+        self.assertEqual(value["feature_cache_max_items"], 8192)
+        self.feature_cache.self_test()
         freeze = value["candidate_freeze"]
         self.assertEqual(freeze["selection_policy"], SELECTION_POLICY)
         self.assertTrue(freeze["fresh_validation_required"])

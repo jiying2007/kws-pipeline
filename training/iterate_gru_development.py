@@ -262,6 +262,7 @@ def copy_frozen_candidate(selected: dict, output: pathlib.Path, config: pathlib.
     code_paths = [
         pathlib.Path(__file__).resolve(),
         TRAINING / "train_gru_ctc.py",
+        TRAINING / "feature_cached_trainer.py",
         TRAINING / "gru_model.py",
         TRAINING / "domain_curriculum.py",
         TRAINING / "hard_negative_replay.py",
