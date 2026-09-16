@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import pathlib
+import random
 import shutil
 import sys
 
@@ -266,6 +267,65 @@ def _apply_negative_stress_support(
     return evidence
 
 
+def _render_rotated_train_rows(
+    config_path: pathlib.Path,
+    output: pathlib.Path,
+    canonical_rows: list[dict],
+    seed_offset: int,
+    *,
+    curriculum_weights: dict | None,
+) -> tuple[list[dict], pathlib.Path]:
+    config = load_object(config_path.resolve())
+    domains = renderer.validate_domains(config)
+    rotated = output / "train-acoustic-realization"
+    merged: list[dict] = []
+    manifest_rows: list[tuple[pathlib.Path, list[int]]] = []
+    for canonical_row in canonical_rows:
+        if str(canonical_row.get("split")) != "train":
+            merged.append(canonical_row)
+            continue
+        source = pathlib.Path(str(canonical_row.get("source_path", "")))
+        canonical_target = pathlib.Path(str(canonical_row.get("path", ""))).resolve()
+        if not source.is_file():
+            raise ValueError("canonical train source is missing")
+        try:
+            relative = canonical_target.relative_to(output.resolve())
+        except ValueError as exc:
+            raise ValueError("canonical train target escaped development dataset") from exc
+        target = rotated / relative
+        clean = renderer.read_wav(source)
+        scene_seed = int(canonical_row["scene_seed"]) + int(seed_offset)
+        rng = random.Random(scene_seed)
+        scene = renderer.sample_scene(
+            domains,
+            rng,
+            curriculum_weights=curriculum_weights,
+            forced_band=None,
+        )
+        mono, scene_meta = renderer.render_scene(
+            clean, scene, seed=scene_seed, afe=domains["afe"]
+        )
+        renderer.write_wav(target, mono)
+        replacement = dict(canonical_row)
+        replacement["path"] = str(target.resolve())
+        replacement["scene_seed"] = scene_seed
+        replacement["wav_sha256"] = sha256_file(target)
+        replacement["scene"] = scene_meta
+        replacement["domain_id"] = _scene_domain_id(scene_meta)
+        merged.append(replacement)
+        manifest_rows.append((target.resolve(), [int(v) for v in replacement["target_ids"]]))
+    manifest = rotated / "train.tsv"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(
+        "".join(
+            f"{target}\t{' '.join(str(v) for v in target_ids)}\n"
+            for target, target_ids in manifest_rows
+        ),
+        encoding="utf-8",
+    )
+    return merged, manifest
+
+
 def _reuse_canonical_base(canonical_base: pathlib.Path):
     def reuse(_config: pathlib.Path, target: pathlib.Path) -> dict:
         target.mkdir(parents=True, exist_ok=True)
@@ -302,26 +362,15 @@ def install_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]
         config["seed"] = base_seed + seed_offset
         rotated_config = output / "train-acoustic-effective-config.json"
         write_object(rotated_config, config)
-        rotated = output / "train-acoustic-realization"
-
-        original_generate = renderer.generate_dataset
-        renderer.generate_dataset = _reuse_canonical_base(output / "base")
-        try:
-            original_render(
-                rotated_config,
-                rotated,
-                curriculum_weights=curriculum_weights,
-            )
-        finally:
-            renderer.generate_dataset = original_generate
-
-        shutil.copy2(rotated / "train.tsv", output / "train.tsv")
         canonical_index = output / "domain-index.jsonl"
-        rotated_index = rotated / "domain-index.jsonl"
-        merged_rows = _merge_domain_rows(
+        merged_rows, rotated_train_manifest = _render_rotated_train_rows(
+            config_path,
+            output,
             _read_jsonl(canonical_index),
-            _read_jsonl(rotated_index),
+            seed_offset,
+            curriculum_weights=curriculum_weights,
         )
+        shutil.copy2(rotated_train_manifest, output / "train.tsv")
         negative_stress = _apply_negative_stress_support(
             config_path,
             output,
@@ -351,6 +400,9 @@ def install_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]
             "effective_seed": base_seed + seed_offset,
             "seed_stride": stride,
             "base_utterance_reused": True,
+            "canonical_evaluation_rows_reused": True,
+            "acoustic_rendering": "direct-train-scene-v1",
+            "auxiliary_full_dataset_rendered": False,
             "evaluation_seed_rotated": False,
         }
         write_object(summary_path, summary)
