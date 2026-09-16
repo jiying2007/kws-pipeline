@@ -39,6 +39,7 @@ jobs:
           repo="${GITHUB_REPOSITORY}"
           owner="${GITHUB_REPOSITORY_OWNER}"
           remote="https://github.com/${repo}.git"
+          gh auth setup-git >/dev/null
 
           is_candidate() {
             case "$1" in
@@ -126,10 +127,17 @@ jobs:
             fi
             unsafe=0
             for path in "${changed[@]}"; do
-              if ! path_allowed "$path"; then
-                echo "skip unsafe path on ${branch}: ${path}"
-                unsafe=1
+              if path_allowed "$path"; then
+                continue
               fi
+              branch_blob="$(git -C "$graph" rev-parse "${branch_ref}:${path}" 2>/dev/null || true)"
+              default_blob="$(git -C "$graph" rev-parse "${default_ref}:${path}" 2>/dev/null || true)"
+              if [[ -n "$branch_blob" && "$branch_blob" == "$default_blob" ]]; then
+                echo "allow already-integrated identical blob on ${branch}: ${path}"
+                continue
+              fi
+              echo "skip unsafe path on ${branch}: ${path}"
+              unsafe=1
             done
             if (( unsafe != 0 )); then
               skipped=$((skipped + 1))
