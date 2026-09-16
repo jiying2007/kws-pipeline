@@ -94,6 +94,9 @@ def main() -> int:
         "tools/rnn_development_gate.py", "tools/reconcile_rnn_development_gate.py",
         "tools/verify_rnn_development_gate.py", "tools/finalize_rnn_frozen_candidate.py",
         "tools/verify_rnn_frozen_candidate.py", "tools/verify_rnn_stability_evidence.py",
+        "training/validate_frozen_rnn_candidate.py", "training/qualify_frozen_rnn_formal.py",
+        "tools/prepare_rnn_shadow_config.py", "tools/materialize_rnn_candidate_workspace.py",
+        "tools/verify_rnn_evaluation_independence.py",
     )
     for name in required_files:
         if not (ROOT / name).is_file():
@@ -102,7 +105,9 @@ def main() -> int:
     trainer_source = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
     exporter_source = (ROOT / "training/export_model.py").read_text(encoding="utf-8")
     iterator_source = (ROOT / "training/iterate_rnn_development.py").read_text(encoding="utf-8")
+    wrapper_source = (ROOT / "training/run_rnn_development.py").read_text(encoding="utf-8")
     workflow_source = (ROOT / ".github/workflows/rnn-development-curriculum.yml").read_text(encoding="utf-8")
+    qualification_workflow = (ROOT / ".github/workflows/rnn-frozen-candidate-qualification.yml").read_text(encoding="utf-8")
     if "class TinyStreamingRNN" not in model_source or "TinyStreamingRNN(" not in trainer_source:
         raise ValueError("vanilla RNN trainer/model binding is missing")
     if 'b"KWSP"' not in exporter_source:
@@ -111,8 +116,12 @@ def main() -> int:
         raise ValueError("RNN iterator is not bound exclusively to the vanilla RNN trainer/exporter")
     if "evaluate_development_split" not in iterator_source or "terminal_strict_streak" not in iterator_source:
         raise ValueError("RNN iterator does not enforce full robustness/stability at source")
+    if "shared.loop = loop" not in wrapper_source or "shared.install_rotation(policy_path)" not in wrapper_source:
+        raise ValueError("RNN wrapper does not bind shared acoustic/stress hooks to the RNN iterator")
     if "if: github.event_name == 'workflow_dispatch'" not in workflow_source or "--runner build/kws_wav" not in workflow_source or "kws_wav_gru" in workflow_source:
         raise ValueError("RNN workflow trigger/runtime boundary is invalid")
+    if "if: github.event_name == 'workflow_dispatch'" not in qualification_workflow or "--runner build/kws_wav" not in qualification_workflow or "kws_wav_gru" in qualification_workflow:
+        raise ValueError("RNN qualification workflow trigger/runtime boundary is invalid")
 
     print(json.dumps({"verified": True, "model_family": "rnn", "development_policy": rnn["policy"], "fresh_namespace": rnn_fresh_ns, "shadow_arena": arena_name, "formal_seed": rnn_formal, "gru_formal_seed": gru_formal, "parallel_with_gru": True}, sort_keys=True))
     return 0
