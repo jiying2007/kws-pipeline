@@ -16,6 +16,7 @@ on:
       - 'tools/verify_rnn_frozen_candidate.py'
       - 'tools/verify_rnn_stability_evidence.py'
       - 'tools/verify_rnn_evaluation_independence.py'
+      - 'tools/verify_development_source_binding.py'
       - 'tools/materialize_rnn_candidate_workspace.py'
       - 'tools/prepare_rnn_shadow_config.py'
       - 'tools/verify_rnn_parallel_contract.py'
@@ -38,7 +39,11 @@ on:
         required: true
         type: string
       expected_source_head:
-        description: Exact 40-hex source HEAD that produced the frozen artifact
+        description: Exact 40-hex workflow run HEAD that retained the artifact
+        required: true
+        type: string
+      expected_product_head:
+        description: Exact 40-hex product source HEAD used to train the frozen candidate
         required: true
         type: string
 
@@ -61,6 +66,7 @@ jobs:
         run: |
           python3 tools/verify_rnn_parallel_contract.py
           python3 tools/verify_rnn_development_gate.py --self-test
+          python3 tools/verify_development_source_binding.py --self-test
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -72,6 +78,7 @@ jobs:
           tools/verify_rnn_frozen_candidate.py
           tools/verify_rnn_stability_evidence.py
           tools/verify_rnn_evaluation_independence.py
+          tools/verify_development_source_binding.py
           tools/materialize_rnn_candidate_workspace.py
           tools/prepare_rnn_shadow_config.py
           tools/verify_rnn_parallel_contract.py
@@ -91,16 +98,19 @@ jobs:
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
           SOURCE_ARTIFACT_NAME: ${{ inputs.source_artifact_name }}
           EXPECTED_DIGEST: ${{ inputs.expected_artifact_digest }}
-          EXPECTED_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_SOURCE_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_PRODUCT_HEAD: ${{ inputs.expected_product_head }}
         run: |
           set -euo pipefail
           [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
           [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_SOURCE_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_PRODUCT_HEAD" =~ ^[0-9a-f]{40}$ ]]
           digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SOURCE_ARTIFACT_NAME}\") | .digest")"
           head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" --jq '.head_sha')"
           test -n "$digest" && test "$digest" = "$EXPECTED_DIGEST"
-          test "$head" = "$EXPECTED_HEAD"
+          test "$head" = "$EXPECTED_SOURCE_HEAD"
+          echo "frozen RNN artifact bound: run=$SOURCE_RUN_ID workflow_head=$head product_head=$EXPECTED_PRODUCT_HEAD digest=$digest"
       - name: Download exact frozen RNN development artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -109,14 +119,37 @@ jobs:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ inputs.source_run_id }}
+      - name: Checkout exact RNN development product source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.expected_product_head }}
+          path: build/product-source
+          persist-credentials: false
       - name: Resolve and verify frozen RNN candidate
         id: candidate
         shell: bash
+        env:
+          EXPECTED_SOURCE_HEAD: ${{ inputs.expected_source_head }}
+          EXPECTED_PRODUCT_HEAD: ${{ inputs.expected_product_head }}
         run: |
           set -euo pipefail
+          test "$(git -C build/product-source rev-parse HEAD)" = "$EXPECTED_PRODUCT_HEAD"
           freeze="$(find build/source -type f -path '*/frozen-candidate/freeze-manifest.json' -print -quit)"
           test -n "$freeze"
           candidate="$(dirname "$freeze")"
+          binding="$(find build/source -type f -name 'development-source-binding.json' -print -quit)"
+          binding_args=()
+          if [ -n "$binding" ]; then
+            binding_args=(--binding "$binding")
+          fi
+          mkdir -p build/rnn-frozen-qualification
+          python3 tools/verify_development_source_binding.py \
+            --candidate "$candidate" \
+            --product-root build/product-source \
+            --source-run-head "$EXPECTED_SOURCE_HEAD" \
+            --product-head "$EXPECTED_PRODUCT_HEAD" \
+            "${binding_args[@]}" \
+            > build/rnn-frozen-qualification/development-product-source-binding.json
           python3 tools/verify_rnn_frozen_candidate.py --candidate "$candidate"
           python3 tools/verify_rnn_stability_evidence.py --candidate "$candidate"
           python3 tools/verify_rnn_development_gate.py --candidate "$candidate"
@@ -204,6 +237,7 @@ jobs:
         with:
           name: rnn-frozen-candidate-qualification
           path: |
+            build/rnn-frozen-qualification/development-product-source-binding.json
             build/rnn-frozen-candidate-workspace/frozen-candidate-manifest.json
             build/rnn-frozen-candidate-workspace/frozen-selection-evidence.json
             build/rnn-frozen-qualification/fresh-validation/fresh-validation-summary.json
