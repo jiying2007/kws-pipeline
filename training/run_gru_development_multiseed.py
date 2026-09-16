@@ -119,6 +119,27 @@ def validate_protected_seed_independence(
     }
 
 
+def acoustic_exposure_config(config: dict, effective_seed: int) -> dict:
+    value = json.loads(json.dumps(config))
+    value["seed"] = int(effective_seed)
+    domains = value.get("domains")
+    if not isinstance(domains, dict):
+        raise ValueError("domains config is required for acoustic exposure")
+    scenes = domains.get("scenes_per_example")
+    if not isinstance(scenes, dict):
+        raise ValueError("domains.scenes_per_example is required for acoustic exposure")
+    train_scenes = int(scenes.get("train", 0))
+    if train_scenes <= 0:
+        raise ValueError("train scenes_per_example must remain positive")
+    for split in ("calibration", "test", "qualification"):
+        scenes[split] = 1
+    # Auxiliary exposure renders are used only for train rows. Removing the
+    # evaluation stress contract prevents discarded non-train rows from paying
+    # the deterministic stress-planning cost while leaving train sampling exact.
+    value.pop("robustness_gates", None)
+    return value
+
+
 def exposure_for_train_ordinal(ordinal: int, exposure_count: int) -> int:
     if ordinal < 0 or exposure_count <= 0:
         raise ValueError("train ordinal/exposure count is invalid")
@@ -184,8 +205,8 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
         exposure_train_rows: list[list[dict]] = []
         exposure_evidence: list[dict] = []
         for exposure_index, seed_offset in enumerate(offsets):
-            effective = json.loads(json.dumps(config))
-            effective["seed"] = base_seed + seed_offset
+            effective_seed = base_seed + seed_offset
+            effective = acoustic_exposure_config(config, effective_seed)
             exposure_root = output / f"train-acoustic-realization-{exposure_index:02d}"
             effective_path = output / f"train-acoustic-effective-config-{exposure_index:02d}.json"
             base.write_object(effective_path, effective)
@@ -204,8 +225,9 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
                 {
                     "exposure": exposure_index,
                     "seed_offset": seed_offset,
-                    "effective_seed": base_seed + seed_offset,
+                    "effective_seed": effective_seed,
                     "train_scene_count": len(train_rows),
+                    "auxiliary_nontrain_scenes_per_example": 1,
                 }
             )
 
@@ -246,6 +268,8 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
             "exposures": exposure_evidence,
             "training_example_count_preserved": True,
             "base_utterance_reused": True,
+            "canonical_evaluation_rows_reused": True,
+            "auxiliary_nontrain_outputs_discarded": True,
             "evaluation_seed_rotated": False,
         }
         summary["train_acoustic_rotation"] = rotation
