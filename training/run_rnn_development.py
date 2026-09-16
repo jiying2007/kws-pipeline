@@ -44,6 +44,9 @@ def main() -> int:
     shared.loop = loop
     shared.POLICY = ROTATION_POLICY
     shared.NEGATIVE_STRESS_POLICY = NEGATIVE_STRESS_POLICY
+    shared.feature_cache.install_development_feature_cache(
+        loop, shared.load_object(policy_path)
+    )
     rotations, negative_stress_rounds = shared.install_rotation(policy_path)
     code = int(loop.main())
     if code == 0:

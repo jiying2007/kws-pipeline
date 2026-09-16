@@ -11,6 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 sys.path.insert(0, str(TRAINING))
 
+import feature_cached_trainer as feature_cache  # noqa: E402
 import iterate_gru_development as loop  # noqa: E402
 import render_domains as renderer  # noqa: E402
 
@@ -418,6 +419,7 @@ def retain_rotation_evidence(
 def main() -> int:
     policy_path = _argument_path("--policy")
     work = _argument_path("--work-dir")
+    feature_cache.install_development_feature_cache(loop, load_object(policy_path))
     rotations, negative_stress_rounds = install_rotation(policy_path)
     code = int(loop.main())
     if code == 0:
