@@ -1,0 +1,221 @@
+name: rnn-frozen-candidate-qualification
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - codex/rnn-*
+    paths:
+      - 'training/validate_frozen_rnn_candidate.py'
+      - 'training/qualify_frozen_rnn_formal.py'
+      - 'tools/rnn_development_gate.py'
+      - 'tools/verify_rnn_development_gate.py'
+      - 'tools/finalize_rnn_frozen_candidate.py'
+      - 'tools/verify_rnn_frozen_candidate.py'
+      - 'tools/verify_rnn_stability_evidence.py'
+      - 'tools/verify_rnn_evaluation_independence.py'
+      - 'tools/materialize_rnn_candidate_workspace.py'
+      - 'tools/prepare_rnn_shadow_config.py'
+      - 'tools/verify_rnn_parallel_contract.py'
+      - 'experiments/model_family/rnn_fresh_validation_registry.json'
+      - 'experiments/model_family/shadow_arena_registry.json'
+      - '.github/workflows/rnn-frozen-candidate-qualification.yml'
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Workflow run containing the frozen RNN development artifact
+        required: true
+        type: string
+      source_artifact_name:
+        description: Frozen RNN development artifact name
+        required: true
+        default: rnn-development-curriculum
+        type: string
+      expected_artifact_digest:
+        description: Exact sha256:... digest of the frozen RNN development artifact
+        required: true
+        type: string
+      expected_source_head:
+        description: Exact 40-hex source HEAD that produced the frozen artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: rnn-frozen-candidate-qualification-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Frozen RNN qualification contract
+        run: |
+          python3 tools/verify_rnn_parallel_contract.py
+          python3 tools/verify_rnn_development_gate.py --self-test
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          training/validate_frozen_rnn_candidate.py
+          training/qualify_frozen_rnn_formal.py
+          tools/rnn_development_gate.py
+          tools/verify_rnn_development_gate.py
+          tools/finalize_rnn_frozen_candidate.py
+          tools/verify_rnn_frozen_candidate.py
+          tools/verify_rnn_stability_evidence.py
+          tools/verify_rnn_evaluation_independence.py
+          tools/materialize_rnn_candidate_workspace.py
+          tools/prepare_rnn_shadow_config.py
+          tools/verify_rnn_parallel_contract.py
+
+  qualification:
+    if: github.event_name == 'workflow_dispatch'
+    needs: contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Bind exact frozen RNN development artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_ARTIFACT_NAME: ${{ inputs.source_artifact_name }}
+          EXPECTED_DIGEST: ${{ inputs.expected_artifact_digest }}
+          EXPECTED_HEAD: ${{ inputs.expected_source_head }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts" --jq ".artifacts[] | select(.name == \"${SOURCE_ARTIFACT_NAME}\") | .digest")"
+          head="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" --jq '.head_sha')"
+          test -n "$digest" && test "$digest" = "$EXPECTED_DIGEST"
+          test "$head" = "$EXPECTED_HEAD"
+      - name: Download exact frozen RNN development artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.source_artifact_name }}
+          path: build/source
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+      - name: Resolve and verify frozen RNN candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          freeze="$(find build/source -type f -path '*/frozen-candidate/freeze-manifest.json' -print -quit)"
+          test -n "$freeze"
+          candidate="$(dirname "$freeze")"
+          python3 tools/verify_rnn_frozen_candidate.py --candidate "$candidate"
+          python3 tools/verify_rnn_stability_evidence.py --candidate "$candidate"
+          python3 tools/verify_rnn_development_gate.py --candidate "$candidate"
+          echo "path=$candidate" >> "$GITHUB_OUTPUT"
+      - name: Materialize RNN qualification-only workspace
+        run: >-
+          python3 tools/materialize_rnn_candidate_workspace.py
+          --candidate "${{ steps.candidate.outputs.path }}"
+          --output build/rnn-frozen-candidate-workspace
+      - name: Build shipping RNN runtime and decoder contracts
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+      - name: Install pinned CPU surrogate runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Run feedback-free RNN fresh validation
+        id: fresh
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/validate_frozen_rnn_candidate.py \
+            --candidate "${{ steps.candidate.outputs.path }}" \
+            --runner build/kws_wav \
+            --output build/rnn-frozen-qualification/fresh-validation
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Verify RNN fresh split SHA independence
+        if: steps.fresh.outputs.exit_code == '0'
+        run: >-
+          python3 tools/verify_rnn_evaluation_independence.py
+          --mode fresh
+          --fresh-index build/rnn-frozen-qualification/fresh-validation/dataset/domain-index.jsonl
+          --output build/rnn-frozen-qualification/fresh-validation/fresh-split-independence.json
+      - name: Bind reserved RNN shadow arena
+        if: steps.fresh.outputs.exit_code == '0'
+        run: >-
+          python3 tools/prepare_rnn_shadow_config.py
+          --candidate "${{ steps.candidate.outputs.path }}"
+          --output build/rnn-frozen-qualification/shadow-effective-config.json
+      - name: Run reserved RNN shadow qualification
+        if: steps.fresh.outputs.exit_code == '0'
+        id: shadow
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/shadow_qualification.py \
+            --config build/rnn-frozen-qualification/shadow-effective-config.json \
+            --runner build/kws_wav \
+            --work-dir build/rnn-frozen-candidate-workspace \
+            --output build/rnn-frozen-qualification/shadow
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Verify RNN shadow seed SHA independence
+        if: steps.fresh.outputs.exit_code == '0' && steps.shadow.outputs.exit_code == '0'
+        run: >-
+          python3 tools/verify_rnn_evaluation_independence.py
+          --mode shadow
+          --shadow-root build/rnn-frozen-qualification/shadow
+          --shadow-summary build/rnn-frozen-qualification/shadow/summary.json
+          --output build/rnn-frozen-qualification/shadow/shadow-seed-independence.json
+      - name: Run isolated formal RNN qualification
+        if: steps.fresh.outputs.exit_code == '0' && steps.shadow.outputs.exit_code == '0'
+        id: formal
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/qualify_frozen_rnn_formal.py \
+            --candidate "${{ steps.candidate.outputs.path }}" \
+            --runner build/kws_wav \
+            --fresh-summary build/rnn-frozen-qualification/fresh-validation/fresh-validation-summary.json \
+            --shadow-root build/rnn-frozen-qualification/shadow \
+            --output build/rnn-frozen-qualification/formal
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Retain immutable RNN qualification verdicts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-frozen-candidate-qualification
+          path: |
+            build/rnn-frozen-candidate-workspace/frozen-candidate-manifest.json
+            build/rnn-frozen-candidate-workspace/frozen-selection-evidence.json
+            build/rnn-frozen-qualification/fresh-validation/fresh-validation-summary.json
+            build/rnn-frozen-qualification/fresh-validation/fresh-split-independence.json
+            build/rnn-frozen-qualification/shadow/summary.json
+            build/rnn-frozen-qualification/shadow/failure-summary.json
+            build/rnn-frozen-qualification/shadow/shadow-seed-independence.json
+            build/rnn-frozen-qualification/formal/formal-qualification-summary.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Gate frozen RNN candidate qualification
+        run: |
+          test "${{ steps.fresh.outputs.exit_code }}" = '0'
+          test "${{ steps.shadow.outputs.exit_code }}" = '0'
+          test "${{ steps.formal.outputs.exit_code }}" = '0'
