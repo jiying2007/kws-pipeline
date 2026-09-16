@@ -25,6 +25,7 @@ WRAPPER_EVIDENCE_KEY = "development_training_wrapper"
 RETAINED_WRAPPER_KEYS = (
     "training_acoustic_rotation",
     "development_negative_stress_support",
+    "training_acoustic_protected_seed_binding",
     WRAPPER_EVIDENCE_KEY,
 )
 
