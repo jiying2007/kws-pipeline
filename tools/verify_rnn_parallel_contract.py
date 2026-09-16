@@ -38,7 +38,6 @@ def main() -> int:
         if freeze.get(field) is not False:
             raise ValueError(f"RNN candidate freeze requires {field}=false")
 
-    # Keep model-family A/B governance comparable. Only seed namespaces and model family may differ.
     for field in ("max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "lr_decay_per_round", "fixed_replay_repeat", "failure_replay_repeat_max"):
         if rnn.get(field) != gru.get(field):
             raise ValueError(f"RNN/GRU development policy drifted at {field}")
@@ -48,16 +47,20 @@ def main() -> int:
         raise ValueError("RNN/GRU selection policy drifted")
 
     base_seed = int(cfg.get("seed", 1337))
-    formal = {int(cfg["qualification_holdout_seed"])}
-    formal.update(int(value) for value in cfg.get("retired_qualification_holdout_seeds", []))
+    gru_formal = int(cfg["qualification_holdout_seed"])
+    retired_formal = {int(value) for value in cfg.get("retired_qualification_holdout_seeds", [])}
+    formal_evidence = {gru_formal, *retired_formal}
+    rnn_formal = int(freeze.get("formal_qualification_seed", -1))
+    if rnn_formal != 271844 or rnn_formal in formal_evidence:
+        raise ValueError("RNN formal seed is not independently reserved")
+
     rnn_fresh_ns = int(freeze["fresh_validation_seed_namespace"])
     rnn_fresh_seed = base_seed + rnn_fresh_ns
     rnn_rows = [row for row in rnn_fresh.get("namespaces", []) if int(row.get("namespace", -1)) == rnn_fresh_ns]
     if len(rnn_rows) != 1 or rnn_rows[0].get("model_family") != "rnn" or rnn_rows[0].get("status") != "reserved-untouched":
         raise ValueError("RNN Fresh namespace is not uniquely reserved and untouched")
-
-    gru_reserved_ns = {int(row["namespace"]) for row in gru_fresh.get("namespaces", []) if row.get("status") == "reserved-untouched"}
-    if rnn_fresh_ns in gru_reserved_ns or rnn_fresh_seed in formal:
+    gru_namespaces = {int(row["namespace"]) for row in gru_fresh.get("namespaces", [])}
+    if rnn_fresh_ns in gru_namespaces or rnn_fresh_seed in formal_evidence or rnn_fresh_seed == rnn_formal:
         raise ValueError("RNN Fresh namespace overlaps GRU/formal evidence")
 
     arenas = {str(row["name"]): row for row in shadow.get("arenas", [])}
@@ -66,43 +69,31 @@ def main() -> int:
     if not isinstance(arena, dict) or arena.get("model_family") != "rnn" or arena.get("status") != "reserved-untouched":
         raise ValueError("RNN shadow arena is not reserved and untouched")
     rnn_shadow = {int(value) for value in arena.get("seeds", [])}
-    if len(rnn_shadow) != 8:
+    if len(rnn_shadow) != 8 or len(rnn_shadow) != len(arena.get("seeds", [])):
         raise ValueError("RNN shadow arena must contain exactly 8 unique seeds")
-    if len(rnn_shadow) != len(arena.get("seeds", [])):
-        raise ValueError("RNN shadow arena contains duplicate seeds")
-    gru_shadow = {
-        int(value)
-        for row in shadow.get("arenas", [])
-        if row.get("model_family") == "gru" and row.get("status") == "reserved-untouched"
-        for value in row.get("seeds", [])
-    }
-    if rnn_shadow & gru_shadow or rnn_shadow & formal or rnn_fresh_seed in rnn_shadow:
+    gru_shadow = {int(value) for row in shadow.get("arenas", []) if row.get("model_family") == "gru" for value in row.get("seeds", [])}
+    if rnn_shadow & gru_shadow or rnn_shadow & formal_evidence or rnn_formal in rnn_shadow or rnn_fresh_seed in rnn_shadow:
         raise ValueError("RNN protected evidence overlaps GRU/formal/Fresh evidence")
 
     model_ns = int(rnn["training_seed_namespace"])
     acoustic_ns = int(rnn["training_acoustic_seed_namespace"])
     acoustic_stride = int(rnn["training_acoustic_seed_stride"])
-    if min(model_ns, acoustic_ns, acoustic_stride) <= 0:
-        raise ValueError("RNN development namespaces must be positive")
-    if len({model_ns, acoustic_ns, rnn_fresh_ns}) != 3:
-        raise ValueError("RNN model/acoustic/Fresh namespaces must be distinct")
+    gru_policy_ns = {int(gru["training_seed_namespace"]), int(gru["training_acoustic_seed_namespace"]), int(gru["candidate_freeze"]["fresh_validation_seed_namespace"])}
+    if min(model_ns, acoustic_ns, acoustic_stride) <= 0 or len({model_ns, acoustic_ns, rnn_fresh_ns}) != 3:
+        raise ValueError("RNN development namespaces are invalid")
+    if {model_ns, acoustic_ns, rnn_fresh_ns} & gru_policy_ns:
+        raise ValueError("RNN development namespaces overlap GRU namespaces")
     for round_index in range(int(rnn["max_rounds"])):
         acoustic_seed = base_seed + acoustic_ns + round_index * acoustic_stride
-        if acoustic_seed in formal or acoustic_seed in rnn_shadow or acoustic_seed == rnn_fresh_seed:
+        if acoustic_seed in formal_evidence or acoustic_seed in rnn_shadow or acoustic_seed in {rnn_fresh_seed, rnn_formal}:
             raise ValueError("RNN acoustic seed overlaps protected evidence")
 
     required_files = (
-        "training/model.py",
-        "training/train_ctc.py",
-        "training/export_model.py",
-        "training/iterate_rnn_development.py",
-        "training/run_rnn_development.py",
-        "tools/rnn_development_gate.py",
-        "tools/reconcile_rnn_development_gate.py",
-        "tools/verify_rnn_development_gate.py",
-        "tools/finalize_rnn_frozen_candidate.py",
-        "tools/verify_rnn_frozen_candidate.py",
-        "tools/verify_rnn_stability_evidence.py",
+        "training/model.py", "training/train_ctc.py", "training/export_model.py",
+        "training/iterate_rnn_development.py", "training/run_rnn_development.py",
+        "tools/rnn_development_gate.py", "tools/reconcile_rnn_development_gate.py",
+        "tools/verify_rnn_development_gate.py", "tools/finalize_rnn_frozen_candidate.py",
+        "tools/verify_rnn_frozen_candidate.py", "tools/verify_rnn_stability_evidence.py",
     )
     for name in required_files:
         if not (ROOT / name).is_file():
@@ -110,20 +101,20 @@ def main() -> int:
     model_source = (ROOT / "training/model.py").read_text(encoding="utf-8")
     trainer_source = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
     exporter_source = (ROOT / "training/export_model.py").read_text(encoding="utf-8")
+    iterator_source = (ROOT / "training/iterate_rnn_development.py").read_text(encoding="utf-8")
+    workflow_source = (ROOT / ".github/workflows/rnn-development-curriculum.yml").read_text(encoding="utf-8")
     if "class TinyStreamingRNN" not in model_source or "TinyStreamingRNN(" not in trainer_source:
         raise ValueError("vanilla RNN trainer/model binding is missing")
     if 'b"KWSP"' not in exporter_source:
         raise ValueError("RNN shipping model exporter ABI binding is missing")
+    if "train_ctc.py" not in iterator_source or "export_model.py" not in iterator_source or "train_gru_ctc.py" in iterator_source:
+        raise ValueError("RNN iterator is not bound exclusively to the vanilla RNN trainer/exporter")
+    if "evaluate_development_split" not in iterator_source or "terminal_strict_streak" not in iterator_source:
+        raise ValueError("RNN iterator does not enforce full robustness/stability at source")
+    if "if: github.event_name == 'workflow_dispatch'" not in workflow_source or "--runner build/kws_wav" not in workflow_source or "kws_wav_gru" in workflow_source:
+        raise ValueError("RNN workflow trigger/runtime boundary is invalid")
 
-    print(json.dumps({
-        "verified": True,
-        "model_family": "rnn",
-        "development_policy": rnn["policy"],
-        "fresh_namespace": rnn_fresh_ns,
-        "shadow_arena": arena_name,
-        "formal_seed_untouched": int(cfg["qualification_holdout_seed"]),
-        "parallel_with_gru": True,
-    }, sort_keys=True))
+    print(json.dumps({"verified": True, "model_family": "rnn", "development_policy": rnn["policy"], "fresh_namespace": rnn_fresh_ns, "shadow_arena": arena_name, "formal_seed": rnn_formal, "gru_formal_seed": gru_formal, "parallel_with_gru": True}, sort_keys=True))
     return 0
 
 
