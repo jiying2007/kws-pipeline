@@ -36,6 +36,7 @@
     "shadow_arena": "rnn-independent-shadow-v2",
     "shadow_registry": "experiments/model_family/shadow_arena_registry.json",
     "formal_qualification_required": true,
+    "formal_qualification_seed": 271844,
     "bounded_repair_only_after_freeze": true,
     "validation_feedback_allowed": false,
     "threshold_feedback_allowed": false,
