@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import pathlib
+import random
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -129,8 +130,8 @@ def main() -> int:
     assert config["robustness_gates"]["min_negative_recordings"] == 4
 
     source = SCRIPT.read_text(encoding="utf-8")
-    assert "renderer.generate_dataset = _reuse_canonical_base" in source
-    assert 'shutil.copy2(rotated / "train.tsv", output / "train.tsv")' in source
+    assert "_render_rotated_train_rows(" in source
+    assert '"acoustic_rendering": "direct-train-scene-v1"' in source
     assert '"base_utterance_reused": True' in source
     assert '"evaluation_seed_rotated": False' in source
     assert "training_code_sha256" in source
@@ -181,6 +182,47 @@ def main() -> int:
         assert "overlaps protected/model seed" in str(exc)
     else:
         raise AssertionError("formal qualification seed overlap was accepted")
+
+    with tempfile.TemporaryDirectory() as temp:
+        root = pathlib.Path(temp)
+        source_wav = root / "source.wav"
+        target_wav = root / "dataset" / "clips" / "train" / "d00000-s00.wav"
+        target_wav.parent.mkdir(parents=True)
+        module.renderer.write_wav(source_wav, [0, 1000, -1000, 500] * 4000)
+        module.renderer.write_wav(target_wav, [0] * 16000)
+        direct_config = stress_config()
+        direct_config["seed"] = 1337
+        direct_path = root / "direct.json"
+        direct_path.write_text(json.dumps(direct_config), encoding="utf-8")
+        canonical_row = {
+            "split": "train",
+            "source_path": str(source_wav),
+            "path": str(target_wav),
+            "scene_seed": 9001,
+            "target_ids": [1, 2, 3, 4],
+        }
+        offset = 12345
+        rendered, manifest = module._render_rotated_train_rows(
+            direct_path,
+            root / "dataset",
+            [canonical_row],
+            offset,
+            curriculum_weights=None,
+        )
+        row = rendered[0]
+        expected_seed = int(canonical_row["scene_seed"]) + offset
+        domains = module.renderer.validate_domains(direct_config)
+        rng = random.Random(expected_seed)
+        scene = module.renderer.sample_scene(domains, rng, curriculum_weights=None, forced_band=None)
+        expected_pcm, expected_meta = module.renderer.render_scene(
+            module.renderer.read_wav(source_wav), scene, seed=expected_seed, afe=domains["afe"]
+        )
+        assert module.renderer.read_wav(pathlib.Path(row["path"])) == expected_pcm
+        assert row["scene_seed"] == expected_seed
+        assert row["scene"] == expected_meta
+        assert row["wav_sha256"] == module.sha256_file(pathlib.Path(row["path"]))
+        assert "train-acoustic-realization/clips/train" in pathlib.Path(row["path"]).as_posix()
+        assert manifest.read_text(encoding="utf-8").split("\t", 1)[0] == row["path"]
 
     with tempfile.TemporaryDirectory() as temp:
         root = pathlib.Path(temp)
