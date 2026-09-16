@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+TRAINING = ROOT / "training"
+TOOLS = ROOT / "tools"
+sys.path.insert(0, str(TRAINING))
+sys.path.insert(0, str(TOOLS))
+
+import iterate_gru_development as loop  # noqa: E402
+from gru_development_gate import (  # noqa: E402
+    POLICY as DEVELOPMENT_GATE_POLICY,
+    evaluate_development_split,
+    terminal_strict_streak,
+)
+
+
+def load_object(path: pathlib.Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"expected JSON object: {path}")
+    return value
+
+
+def positive_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise ValueError(f"{label} must be a positive integer")
+    return value
+
+
+def _verify_record(record: dict, config: dict) -> tuple[dict, dict]:
+    calibration = evaluate_development_split(
+        record["calibration"], record["calibration_domains"], config
+    )
+    test = evaluate_development_split(
+        record["test"], record["test_domains"], config
+    )
+    if record.get("calibration_development_gate") != calibration:
+        raise ValueError("calibration development gate evidence mismatch")
+    if record.get("test_development_gate") != test:
+        raise ValueError("test development gate evidence mismatch")
+    if record.get("calibration_gate") is not bool(calibration["qualified"]):
+        raise ValueError("calibration gate flag mismatch")
+    if record.get("test_gate") is not bool(test["qualified"]):
+        raise ValueError("test gate flag mismatch")
+    return calibration, test
+
+
+def verify_manifest(
+    work: pathlib.Path,
+    config_path: pathlib.Path,
+    policy_path: pathlib.Path,
+) -> dict:
+    work = work.resolve()
+    manifest = load_object(work / "development-loop-manifest.json")
+    config = load_object(config_path.resolve())
+    policy = load_object(policy_path.resolve())
+    if manifest.get("development_gate_policy") != DEVELOPMENT_GATE_POLICY:
+        raise ValueError("development gate policy mismatch")
+    records = manifest.get("records")
+    if not isinstance(records, list) or not records:
+        raise ValueError("development manifest has no records")
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError("development record must be an object")
+        _verify_record(record, config)
+
+    required = positive_int(
+        policy.get("stable_strict_pass_rounds"), "stable_strict_pass_rounds"
+    )
+    observed = terminal_strict_streak(records)
+    stable = observed >= required
+    selected = loop.select_best_strict_candidate(records) if stable else None
+    qualified = stable and selected is not None
+    if manifest.get("development_qualified") is not qualified:
+        raise ValueError("development_qualified does not match full robustness/stability gate")
+    if int(manifest.get("stable_strict_pass_rounds_required", -1)) != required:
+        raise ValueError("required stable strict-pass streak mismatch")
+    if int(manifest.get("stable_strict_pass_rounds_observed", -1)) != observed:
+        raise ValueError("observed stable strict-pass streak mismatch")
+
+    selected_round = int(selected["round"]) if selected is not None else None
+    selected_score = float(selected["score"]) if selected is not None else None
+    if manifest.get("selected_round") != selected_round:
+        raise ValueError("selected round does not match best full-robustness strict round")
+    if manifest.get("selected_score") != selected_score:
+        raise ValueError("selected score does not match best full-robustness strict round")
+
+    freeze_path = work / "frozen-candidate" / "freeze-manifest.json"
+    if qualified:
+        if not freeze_path.is_file():
+            raise ValueError("qualified development manifest is missing frozen candidate")
+        freeze = load_object(freeze_path)
+        if freeze.get("development_gate_policy") != DEVELOPMENT_GATE_POLICY:
+            raise ValueError("frozen candidate development gate policy mismatch")
+        if str(freeze.get("model_sha256")) != str(selected.get("model_sha256")):
+            raise ValueError("frozen model does not match selected full-robustness round")
+    elif freeze_path.exists():
+        raise ValueError("unqualified development manifest retained a frozen candidate")
+
+    return {
+        "verified": True,
+        "mode": "manifest",
+        "policy": DEVELOPMENT_GATE_POLICY,
+        "qualified": qualified,
+        "stable_strict_pass_rounds_required": required,
+        "stable_strict_pass_rounds_observed": observed,
+        "selected_round": selected_round,
+        "selected_score": selected_score,
+    }
+
+
+def verify_candidate(candidate: pathlib.Path) -> dict:
+    candidate = candidate.resolve()
+    freeze = load_object(candidate / "freeze-manifest.json")
+    config = load_object(candidate / "source-config.json")
+    selection = load_object(candidate / "selection-evidence.json")
+    if freeze.get("development_gate_policy") != DEVELOPMENT_GATE_POLICY:
+        raise ValueError("frozen candidate development gate policy mismatch")
+    calibration = evaluate_development_split(
+        selection["calibration"], selection["calibration_domains"], config
+    )
+    test = evaluate_development_split(
+        selection["test"], selection["test_domains"], config
+    )
+    if not calibration["qualified"] or not test["qualified"]:
+        raise ValueError("frozen selection evidence does not pass full development robustness gate")
+    if selection.get("calibration_gate") is not True or selection.get("test_gate") is not True:
+        raise ValueError("frozen selection evidence gate flags are not strict-pass")
+    return {
+        "verified": True,
+        "mode": "candidate",
+        "policy": DEVELOPMENT_GATE_POLICY,
+        "selected_round": int(selection["selected_round"]),
+        "model_sha256": str(selection["model_sha256"]),
+        "calibration_robustness_qualified": True,
+        "test_robustness_qualified": True,
+    }
+
+
+def self_test() -> dict:
+    config = {
+        "domain_gates": {
+            "max_frr": 0.0,
+            "max_far_per_hour": 0.0,
+            "max_p95_latency_ms": 800.0,
+            "max_far_frr": 0.0,
+        },
+        "robustness_gates": {
+            "max_frr": 0.0,
+            "max_far_per_hour": 0.0,
+            "min_expected_wakes": 1,
+            "min_negative_recordings": 1,
+            "min_negative_audio_hours": 0.0,
+            "required_distance_bins": ["5m"],
+            "required_azimuth_deg": [],
+            "required_snr_bands": [],
+            "required_rt60_bands": [],
+            "required_noise_profiles": [],
+            "required_playback_states": [],
+            "required_stress_slices": [],
+        },
+    }
+    base = {"frr": 0.0, "far_per_hour": 0.0, "p95_post_end_latency_ms": 0.0}
+    domains = {
+        "domains": {
+            "distance:far": {"frr": 0.0},
+            "distance_bin:5m": {
+                "expected": 1,
+                "positive_recordings": 1,
+                "negative_recordings": 1,
+                "negative_audio_hours": 0.0,
+                "wake_rate": 1.0,
+                "frr": 0.0,
+                "far_per_hour": 0.0,
+            },
+        }
+    }
+    passed = evaluate_development_split(base, domains, config)
+    if passed["qualified"] is not True:
+        raise ValueError("self-test valid full robustness gate did not pass")
+    broken = json.loads(json.dumps(domains))
+    broken["domains"]["distance_bin:5m"]["negative_recordings"] = 0
+    failed = evaluate_development_split(base, broken, config)
+    if failed["qualified"] is not False:
+        raise ValueError("self-test insufficient negative support did not fail")
+    if terminal_strict_streak(
+        [
+            {"round": 0, "calibration_gate": True, "test_gate": True},
+            {"round": 1, "calibration_gate": True, "test_gate": True},
+            {"round": 2, "calibration_gate": False, "test_gate": True},
+        ]
+    ) != 0:
+        raise ValueError("self-test terminal streak did not reset")
+    return {"verified": True, "mode": "self-test", "policy": DEVELOPMENT_GATE_POLICY}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--work-dir", type=pathlib.Path)
+    group.add_argument("--candidate", type=pathlib.Path)
+    group.add_argument("--self-test", action="store_true")
+    parser.add_argument("--config", type=pathlib.Path)
+    parser.add_argument("--policy", type=pathlib.Path)
+    args = parser.parse_args()
+    if args.self_test:
+        result = self_test()
+    elif args.candidate is not None:
+        result = verify_candidate(args.candidate)
+    else:
+        if args.config is None or args.policy is None:
+            raise ValueError("--work-dir requires --config and --policy")
+        result = verify_manifest(args.work_dir, args.config, args.policy)
+    print(json.dumps(result, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2)
