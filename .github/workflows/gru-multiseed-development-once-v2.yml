@@ -1,0 +1,165 @@
+name: gru-multiseed-development-once-v2
+
+on:
+  push:
+    branches:
+      - tmp/gru-multiseed-development-once-v2
+    paths:
+      - '.github/triggers/gru-multiseed-development-once-v2.txt'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gru-multiseed-development-once-v2
+  cancel-in-progress: false
+
+env:
+  PRODUCT_HEAD: '179dbab74fd2e9880365eea73e4bf36518bac804'
+
+jobs:
+  development:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact clean main product head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          persist-credentials: false
+
+      - name: Bind exact product head and protected evidence namespaces
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          python3 - <<'PY'
+          import importlib.util, json, pathlib
+          root=pathlib.Path('.').resolve()
+          script=root/'training'/'run_gru_development_multiseed.py'
+          spec=importlib.util.spec_from_file_location('gru_multiseed_binding', script)
+          assert spec is not None and spec.loader is not None
+          module=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          policy=json.load(open('configs/training/xiaowo.gru-development-multiseed-v1.json', encoding='utf-8'))
+          config=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          fresh=json.load(open('experiments/model_family/fresh_validation_registry.json', encoding='utf-8'))
+          shadow=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          result=module.validate_protected_seed_independence(policy, config, fresh, shadow)
+          assert result['fresh_registry_entry'] == 'gru-fresh-validation-v4'
+          assert result['fresh_registry_status'] == 'reserved-untouched'
+          assert result['shadow_arena'] == 'gru-independent-shadow-v4'
+          assert result['shadow_arena_status'] == 'reserved-untouched'
+          assert result['overlap_count'] == 0
+          assert int(config['qualification_holdout_seed']) == 271843
+          assert int(policy['feature_cache_max_items']) == 8192
+          print(json.dumps(result, sort_keys=True))
+          print('GRU multiseed bounded feature cache enabled: 8192')
+          PY
+
+      - name: Build experimental GRU runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run multiseed development-only curriculum
+        id: loop
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/run_gru_development_multiseed.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy configs/training/xiaowo.gru-development-multiseed-v1.json \
+            --runner build/kws_wav_gru \
+            --work-dir build/gru-development-multiseed-v1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Reconcile full-robustness development gate
+        id: development_gate
+        if: steps.loop.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          set +e
+          python3 tools/reconcile_gru_development_gate.py \
+            --work-dir build/gru-development-multiseed-v1 \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy configs/training/xiaowo.gru-development-multiseed-v1.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Verify reconciled development gate
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: >-
+          python3 tools/verify_gru_development_gate.py
+          --work-dir build/gru-development-multiseed-v1
+          --config configs/training/xiaowo.torch-domain.json
+          --policy configs/training/xiaowo.gru-development-multiseed-v1.json
+
+      - name: Finalize self-contained frozen candidate evidence
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: >-
+          python3 tools/finalize_gru_frozen_candidate.py
+          --work-dir build/gru-development-multiseed-v1
+          --config configs/training/xiaowo.torch-domain.json
+          --policy configs/training/xiaowo.gru-development-multiseed-v1.json
+
+      - name: Verify frozen candidate handoff
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: |
+          python3 tools/verify_gru_frozen_candidate.py \
+            --candidate build/gru-development-multiseed-v1/frozen-candidate
+          python3 tools/verify_gru_stability_evidence.py \
+            --candidate build/gru-development-multiseed-v1/frozen-candidate
+          python3 tools/verify_gru_development_gate.py \
+            --candidate build/gru-development-multiseed-v1/frozen-candidate
+
+      - name: Write exact source binding
+        if: always()
+        run: |
+          mkdir -p build/gru-development-multiseed-v1
+          python3 - <<'PY'
+          import json, os, pathlib
+          path=pathlib.Path('build/gru-development-multiseed-v1/development-source-binding.json')
+          path.write_text(json.dumps({
+              'schema_version': 1,
+              'evidence_class': 'gru-multiseed-development-once-source-binding',
+              'workflow_head': os.environ['GITHUB_SHA'],
+              'product_head': os.environ['PRODUCT_HEAD'],
+              'development_policy': 'configs/training/xiaowo.gru-development-multiseed-v1.json',
+              'training_wrapper': 'training/run_gru_development_multiseed.py',
+              'development_only': True,
+              'fresh_used': False,
+              'shadow_used': False,
+              'formal_qualification_used': False,
+          }, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+
+      - name: Retain immutable multiseed development evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gru-development-multiseed-v2
+          path: |
+            build/gru-development-multiseed-v1/development-source-binding.json
+            build/gru-development-multiseed-v1/development-loop-manifest.json
+            build/gru-development-multiseed-v1/curriculum/*.json
+            build/gru-development-multiseed-v1/failure-replay/*/development-failure-replay.json
+            build/gru-development-multiseed-v1/fixed-replay/*/hard-negatives.json
+            build/gru-development-multiseed-v1/frozen-candidate/*
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate multiseed development-only run
+        run: |
+          test "${{ steps.loop.outputs.exit_code }}" = '0'
+          test "${{ steps.development_gate.outputs.exit_code }}" = '0'
