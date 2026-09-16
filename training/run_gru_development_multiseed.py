@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-import shutil
+import random
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -119,67 +119,90 @@ def validate_protected_seed_independence(
     }
 
 
-def acoustic_exposure_config(config: dict, effective_seed: int) -> dict:
-    value = json.loads(json.dumps(config))
-    value["seed"] = int(effective_seed)
-    domains = value.get("domains")
-    if not isinstance(domains, dict):
-        raise ValueError("domains config is required for acoustic exposure")
-    scenes = domains.get("scenes_per_example")
-    if not isinstance(scenes, dict):
-        raise ValueError("domains.scenes_per_example is required for acoustic exposure")
-    train_scenes = int(scenes.get("train", 0))
-    if train_scenes <= 0:
-        raise ValueError("train scenes_per_example must remain positive")
-    for split in ("calibration", "test", "qualification"):
-        scenes[split] = 1
-    # Auxiliary exposure renders are used only for train rows. Removing the
-    # evaluation stress contract prevents discarded non-train rows from paying
-    # the deterministic stress-planning cost while leaving train sampling exact.
-    value.pop("robustness_gates", None)
-    return value
-
-
 def exposure_for_train_ordinal(ordinal: int, exposure_count: int) -> int:
     if ordinal < 0 or exposure_count <= 0:
         raise ValueError("train ordinal/exposure count is invalid")
     return ordinal % exposure_count
 
 
-def _selected_train_rows(
+def _render_selected_train_row(
+    canonical_row: dict,
+    domains: dict,
+    seed_offset: int,
+    *,
+    curriculum_weights: dict | None,
+) -> dict:
+    if str(canonical_row.get("split")) != "train":
+        raise ValueError("direct multiseed renderer only accepts train rows")
+    source = pathlib.Path(str(canonical_row.get("source_path", "")))
+    target = pathlib.Path(str(canonical_row.get("path", "")))
+    if not source.is_file() or not target.parent.is_dir():
+        raise ValueError("canonical train source/target is missing")
+    clean = base.renderer.read_wav(source)
+    scene_seed = int(canonical_row["scene_seed"]) + int(seed_offset)
+    rng = random.Random(scene_seed)
+    scene = base.renderer.sample_scene(
+        domains,
+        rng,
+        curriculum_weights=curriculum_weights,
+        forced_band=None,
+    )
+    mono, scene_meta = base.renderer.render_scene(
+        clean, scene, seed=scene_seed, afe=domains["afe"]
+    )
+    base.renderer.write_wav(target, mono)
+    replacement = dict(canonical_row)
+    replacement["scene_seed"] = scene_seed
+    replacement["wav_sha256"] = base.sha256_file(target)
+    replacement["scene"] = scene_meta
+    replacement["domain_id"] = base._scene_domain_id(scene_meta)
+    return replacement
+
+
+def _render_selected_train_rows(
+    config_path: pathlib.Path,
     canonical: list[dict],
-    exposure_rows: list[list[dict]],
-) -> tuple[list[dict], list[int]]:
-    if not exposure_rows:
-        raise ValueError("no acoustic exposure rows")
-    expected = sum(str(row.get("split")) == "train" for row in canonical)
-    for rows in exposure_rows:
-        if len(rows) != expected:
-            raise ValueError(
-                f"train acoustic realization count drifted: expected {expected}, got {len(rows)}"
-            )
-    selected_counts = [0] * len(exposure_rows)
+    offsets: list[int],
+    *,
+    curriculum_weights: dict | None,
+) -> tuple[list[dict], list[dict]]:
+    if not offsets:
+        raise ValueError("no acoustic exposure offsets")
+    config = base.load_object(config_path.resolve())
+    domains = base.renderer.validate_domains(config)
+    base_seed = int(config.get("seed", 1337))
+    selected_counts = [0] * len(offsets)
     merged: list[dict] = []
     train_ordinal = 0
     for canonical_row in canonical:
         if str(canonical_row.get("split")) != "train":
             merged.append(canonical_row)
             continue
-        exposure = exposure_for_train_ordinal(train_ordinal, len(exposure_rows))
-        replacement = dict(exposure_rows[exposure][train_ordinal])
-        source = pathlib.Path(str(replacement["path"]))
-        target = pathlib.Path(str(canonical_row["path"]))
-        if not source.is_file() or not target.parent.is_dir():
-            raise ValueError("acoustic exposure source/canonical target is missing")
-        shutil.copy2(source, target)
-        replacement["path"] = str(target)
-        replacement["wav_sha256"] = base.sha256_file(target)
+        exposure = exposure_for_train_ordinal(train_ordinal, len(offsets))
+        replacement = _render_selected_train_row(
+            canonical_row,
+            domains,
+            offsets[exposure],
+            curriculum_weights=curriculum_weights,
+        )
         merged.append(replacement)
         selected_counts[exposure] += 1
         train_ordinal += 1
+    expected = sum(str(row.get("split")) == "train" for row in canonical)
     if train_ordinal != expected:
         raise ValueError("train acoustic exposure merge count drifted")
-    return merged, selected_counts
+    evidence = [
+        {
+            "exposure": exposure,
+            "seed_offset": int(seed_offset),
+            "effective_seed": base_seed + int(seed_offset),
+            "selected_scene_count": selected_counts[exposure],
+            "rendered_scene_count": selected_counts[exposure],
+            "direct_selected_scene_render": True,
+        }
+        for exposure, seed_offset in enumerate(offsets)
+    ]
+    return merged, evidence
 
 
 def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]:
@@ -202,40 +225,14 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
 
         config = base.load_object(config_path.resolve())
         base_seed = int(config.get("seed", 1337))
-        exposure_train_rows: list[list[dict]] = []
-        exposure_evidence: list[dict] = []
-        for exposure_index, seed_offset in enumerate(offsets):
-            effective_seed = base_seed + seed_offset
-            effective = acoustic_exposure_config(config, effective_seed)
-            exposure_root = output / f"train-acoustic-realization-{exposure_index:02d}"
-            effective_path = output / f"train-acoustic-effective-config-{exposure_index:02d}.json"
-            base.write_object(effective_path, effective)
-
-            original_generate = base.renderer.generate_dataset
-            base.renderer.generate_dataset = base._reuse_canonical_base(output / "base")
-            try:
-                original_render(effective_path, exposure_root, curriculum_weights=curriculum_weights)
-            finally:
-                base.renderer.generate_dataset = original_generate
-
-            rows = base._read_jsonl(exposure_root / "domain-index.jsonl")
-            train_rows = [row for row in rows if str(row.get("split")) == "train"]
-            exposure_train_rows.append(train_rows)
-            exposure_evidence.append(
-                {
-                    "exposure": exposure_index,
-                    "seed_offset": seed_offset,
-                    "effective_seed": effective_seed,
-                    "train_scene_count": len(train_rows),
-                    "auxiliary_nontrain_scenes_per_example": 1,
-                }
-            )
-
         canonical_index = output / "domain-index.jsonl"
         canonical_rows = base._read_jsonl(canonical_index)
-        merged_rows, selected_counts = _selected_train_rows(canonical_rows, exposure_train_rows)
-        for item, selected_count in zip(exposure_evidence, selected_counts):
-            item["selected_scene_count"] = selected_count
+        merged_rows, exposure_evidence = _render_selected_train_rows(
+            config_path,
+            canonical_rows,
+            offsets,
+            curriculum_weights=curriculum_weights,
+        )
 
         negative_stress = base._apply_negative_stress_support(config_path, output, merged_rows)
         negative_stress["round"] = round_index
@@ -269,7 +266,8 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
             "training_example_count_preserved": True,
             "base_utterance_reused": True,
             "canonical_evaluation_rows_reused": True,
-            "auxiliary_nontrain_outputs_discarded": True,
+            "exposure_rendering": "direct-selected-scene-v1",
+            "auxiliary_full_dataset_rendered": False,
             "evaluation_seed_rotated": False,
         }
         summary["train_acoustic_rotation"] = rotation

@@ -189,27 +189,49 @@ def main() -> int:
         roundtrip = module._read_jsonl(path)
         assert [row["wav_sha256"] for row in roundtrip] == ["x", "b", "c", "z", "e"]
 
+        direct_config = stress_config()
+        direct_config_path = root / "direct-config.json"
+        direct_config_path.write_text(json.dumps(direct_config), encoding="utf-8")
+        source = root / "clean.wav"
+        clean_samples = [800 if index % 2 == 0 else -800 for index in range(3200)]
+        module.renderer.write_wav(source, clean_samples)
         canonical_rows = [
-            {"split": "train", "path": str(root / f"target-{index}.wav")}
+            {
+                "split": "train",
+                "path": str(root / f"target-{index}.wav"),
+                "source_path": str(source),
+                "scene_seed": 1000 + index * 101,
+                "wav_sha256": "canonical",
+            }
             for index in range(4)
         ]
-        exposure_rows: list[list[dict]] = []
-        for exposure in range(3):
-            rows: list[dict] = []
-            for index in range(4):
-                source_path = root / f"source-{exposure}-{index}.wav"
-                source_path.write_bytes(f"exposure={exposure};scene={index}\n".encode())
-                rows.append({"split": "train", "path": str(source_path)})
-            exposure_rows.append(rows)
-        selected, counts = multiseed._selected_train_rows(canonical_rows, exposure_rows)
-        assert counts == [2, 1, 1]
-        assert len(selected) == len(canonical_rows) == 4
+        offsets = [11, 23, 37]
+        selected, evidence = multiseed._render_selected_train_rows(
+            direct_config_path,
+            canonical_rows,
+            offsets,
+            curriculum_weights=None,
+        )
+        assert [item["selected_scene_count"] for item in evidence] == [2, 1, 1]
+        assert [item["rendered_scene_count"] for item in evidence] == [2, 1, 1]
+        assert all(item["direct_selected_scene_render"] is True for item in evidence)
+        domains = module.renderer.validate_domains(direct_config)
+        clean = module.renderer.read_wav(source)
         for index, row in enumerate(selected):
-            expected_exposure = index % 3
-            expected_bytes = f"exposure={expected_exposure};scene={index}\n".encode()
+            exposure = index % 3
+            expected_seed = canonical_rows[index]["scene_seed"] + offsets[exposure]
+            assert row["scene_seed"] == expected_seed
+            rng = multiseed.random.Random(expected_seed)
+            scene = module.renderer.sample_scene(
+                domains, rng, curriculum_weights=None, forced_band=None
+            )
+            expected_mono, expected_meta = module.renderer.render_scene(
+                clean, scene, seed=expected_seed, afe=domains["afe"]
+            )
             target = root / f"target-{index}.wav"
-            assert target.read_bytes() == expected_bytes
-            assert row["path"] == str(target)
+            assert module.renderer.read_wav(target) == expected_mono
+            assert row["scene"] == expected_meta
+            assert row["domain_id"] == module._scene_domain_id(expected_meta)
             assert row["wav_sha256"] == module.sha256_file(target)
 
     wrapper_sha = module.sha256_file(MULTISEED_SCRIPT)
@@ -245,6 +267,8 @@ def main() -> int:
     reconcile_source = RECONCILE.read_text(encoding="utf-8")
     assert '"training_example_count_preserved": True' in multiseed_source
     assert '"evaluation_seed_rotated": False' in multiseed_source
+    assert '"exposure_rendering": "direct-selected-scene-v1"' in multiseed_source
+    assert "train-acoustic-realization-" not in multiseed_source
     assert 'manifest["development_training_wrapper"] = wrapper' in multiseed_source
     assert 'code[wrapper["path"]] = wrapper["sha256"]' in multiseed_source
     assert 'code[str(wrapper["path"])] = str(wrapper["sha256"])' in reconcile_source
