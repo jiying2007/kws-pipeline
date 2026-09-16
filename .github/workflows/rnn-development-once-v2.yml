@@ -1,0 +1,154 @@
+name: rnn-development-once-v2
+
+on:
+  push:
+    branches:
+      - tmp/rnn-development-once-v2
+    paths:
+      - '.github/triggers/rnn-development-once-v2.txt'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rnn-development-once-v2
+  cancel-in-progress: false
+
+env:
+  PRODUCT_HEAD: '179dbab74fd2e9880365eea73e4bf36518bac804'
+
+jobs:
+  development:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout exact clean main product head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.PRODUCT_HEAD }}
+          persist-credentials: false
+
+      - name: Bind exact product head and RNN evidence namespaces
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_HEAD"
+          python3 tools/verify_rnn_parallel_contract.py
+          python3 - <<'PY'
+          import json
+          policy=json.load(open('configs/training/xiaowo.rnn-development-loop.json', encoding='utf-8'))
+          registry=json.load(open('experiments/model_family/rnn_fresh_validation_registry.json', encoding='utf-8'))
+          freeze=policy['candidate_freeze']
+          matches=[row for row in registry['namespaces'] if int(row['namespace']) == int(freeze['fresh_validation_seed_namespace'])]
+          assert len(matches) == 1
+          assert matches[0]['model_family'] == 'rnn'
+          assert matches[0]['status'] == 'reserved-untouched'
+          assert int(freeze['formal_qualification_seed']) == 271844
+          assert int(policy['feature_cache_max_items']) == 8192
+          print('RNN protected evidence untouched; bounded feature cache enabled: 8192')
+          PY
+
+      - name: Build shipping RNN runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run development-only RNN curriculum
+        id: loop
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/run_rnn_development.py \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy configs/training/xiaowo.rnn-development-loop.json \
+            --runner build/kws_wav \
+            --work-dir build/rnn-development-curriculum
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Reconcile full-robustness RNN development gate
+        id: development_gate
+        if: steps.loop.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          set +e
+          python3 tools/reconcile_rnn_development_gate.py \
+            --work-dir build/rnn-development-curriculum \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy configs/training/xiaowo.rnn-development-loop.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Verify reconciled RNN development gate
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: >-
+          python3 tools/verify_rnn_development_gate.py
+          --work-dir build/rnn-development-curriculum
+          --config configs/training/xiaowo.torch-domain.json
+          --policy configs/training/xiaowo.rnn-development-loop.json
+
+      - name: Finalize self-contained frozen RNN candidate
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: >-
+          python3 tools/finalize_rnn_frozen_candidate.py
+          --work-dir build/rnn-development-curriculum
+          --config configs/training/xiaowo.torch-domain.json
+          --policy configs/training/xiaowo.rnn-development-loop.json
+
+      - name: Verify frozen RNN candidate handoff
+        if: steps.loop.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        run: |
+          python3 tools/verify_rnn_frozen_candidate.py \
+            --candidate build/rnn-development-curriculum/frozen-candidate
+          python3 tools/verify_rnn_stability_evidence.py \
+            --candidate build/rnn-development-curriculum/frozen-candidate
+          python3 tools/verify_rnn_development_gate.py \
+            --candidate build/rnn-development-curriculum/frozen-candidate
+
+      - name: Write exact source binding
+        if: always()
+        run: |
+          mkdir -p build/rnn-development-curriculum
+          python3 - <<'PY'
+          import json, os, pathlib
+          path=pathlib.Path('build/rnn-development-curriculum/development-source-binding.json')
+          path.write_text(json.dumps({
+              'schema_version': 1,
+              'evidence_class': 'rnn-development-once-source-binding',
+              'workflow_head': os.environ['GITHUB_SHA'],
+              'product_head': os.environ['PRODUCT_HEAD'],
+              'development_only': True,
+              'fresh_used': False,
+              'shadow_used': False,
+              'formal_qualification_used': False,
+          }, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+
+      - name: Retain immutable RNN development evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rnn-development-curriculum-v2
+          path: |
+            build/rnn-development-curriculum/development-source-binding.json
+            build/rnn-development-curriculum/development-loop-manifest.json
+            build/rnn-development-curriculum/curriculum/*.json
+            build/rnn-development-curriculum/failure-replay/*/development-failure-replay.json
+            build/rnn-development-curriculum/fixed-replay/*/hard-negatives.json
+            build/rnn-development-curriculum/frozen-candidate/*
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate RNN development-only run
+        run: |
+          test "${{ steps.loop.outputs.exit_code }}" = '0'
+          test "${{ steps.development_gate.outputs.exit_code }}" = '0'
