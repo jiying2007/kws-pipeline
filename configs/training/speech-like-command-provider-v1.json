@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "policy": "speech-like-command-provider-v1",
+  "provider_kind": "offline-tts",
+  "required_template_placeholders": [
+    "executable",
+    "text",
+    "output"
+  ],
+  "allowed_request_groups": [
+    "train",
+    "generalization-search",
+    "generalization-freeze"
+  ],
+  "output_format": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "container": "wav-pcm"
+  },
+  "execution": {
+    "shell": false,
+    "require_executable_sha256": true,
+    "require_asset_sha256": true,
+    "timeout_seconds_max": 300
+  },
+  "identity": {
+    "bind_provider_name": true,
+    "bind_provider_version": true,
+    "bind_license_id": true,
+    "bind_executable_sha256": true,
+    "bind_asset_sha256": true,
+    "bind_argv_template": true,
+    "bind_per_record_parameters": true
+  },
+  "notes": [
+    "The adapter is provider-neutral and intended for offline corpus generation only.",
+    "A sherpa-onnx offline TTS CLI is a reference provider, not a shipping runtime dependency.",
+    "Generated manifests must still pass speech-like-synthetic-v1 source/voice isolation validation."
+  ]
+}
