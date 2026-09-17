@@ -15,6 +15,7 @@ from development_stress import (
     build_development_stress_plan,
 )
 from frontend_spec import SAMPLE_RATE_HZ
+from external_base_dataset import load_external_base_bundle
 from rir_manifest import load_rir_manifest
 from synthetic_audio import SPLITS, generate_dataset, load_config, write_wav
 
@@ -616,8 +617,44 @@ def render_domain_dataset(
     domains = validate_domains(config)
     evaluation_axes = _evaluation_axes(config, domains)
     base_dir = output / "base"
-    base_summary = generate_dataset(config_path, base_dir)
-    base_rows = load_jsonl(base_dir / "dataset-index.jsonl")
+    external_base = load_external_base_bundle(config_path, config)
+    external_base_identity = None
+    if external_base is None:
+        base_summary = generate_dataset(config_path, base_dir)
+        base_rows = load_jsonl(base_dir / "dataset-index.jsonl")
+        base_dataset_summary_sha256 = sha256_file(base_dir / "dataset-summary.json")
+    else:
+        base_rows, external_summary = external_base
+        base_dir.mkdir(parents=True, exist_ok=True)
+        base_index_path = base_dir / "dataset-index.jsonl"
+        base_index_path.write_text(
+            "\n".join(
+                json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)
+                for row in base_rows
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        base_summary = dict(external_summary)
+        base_summary_path = base_dir / "dataset-summary.json"
+        base_summary_path.write_text(
+            json.dumps(
+                base_summary,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+                allow_nan=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        base_dataset_summary_sha256 = sha256_file(base_summary_path)
+        external_base_identity = {
+            "evidence_class": str(external_summary["evidence_class"]),
+            "bundle_sha256": str(external_summary["bundle_sha256"]),
+            "recordings": int(external_summary["recordings"]),
+            "summary_sha256": base_dataset_summary_sha256,
+        }
     seed = int(config.get("seed", 1337))
 
     development_stress_plans: dict[str, dict] = {}
@@ -813,9 +850,7 @@ def render_domain_dataset(
             "measured-rir-domain" if isinstance(rir_manifest, dict) else "synthetic-domain"
         ),
         "config_sha256": sha256_file(config_path),
-        "base_dataset_summary_sha256": sha256_file(
-            base_dir / "dataset-summary.json"
-        ),
+        "base_dataset_summary_sha256": base_dataset_summary_sha256,
         "domain_index_sha256": sha256_file(index_path),
         "distance_histogram": histogram,
         "distance_histogram_by_split": histogram_by_split,
@@ -865,6 +900,9 @@ def render_domain_dataset(
             for split in SPLITS
         },
     }
+    if external_base_identity is not None:
+        summary["external_base_dataset"] = external_base_identity
+
     summary_path = output / "domain-summary.json"
     summary_path.write_text(
         json.dumps(

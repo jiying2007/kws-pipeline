@@ -23,6 +23,7 @@ from render_domains import (  # noqa: E402
     _deterministic_eval_scene,
     _evaluation_axes,
     _sample_snr,
+    render_domain_dataset,
     validate_domains,
 )
 
@@ -225,8 +226,117 @@ def test_deterministic_robustness_axes() -> None:
     assert critical >= 160
 
 
+def test_external_speech_like_base_renderer() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = pathlib.Path(tmp)
+        config = json.loads(
+            (ROOT / "configs" / "training" / "xiaowo.torch-domain.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        config.pop("robustness_gates", None)
+        config["domains"]["scenes_per_example"] = {
+            split: 1 for split in ("train", "calibration", "test", "qualification")
+        }
+        external = {}
+        for index, split in enumerate(("train", "calibration", "test", "qualification")):
+            wav = root / f"{split}.wav"
+            active = [max(-32768, min(32767, value + index)) for value in clean_tone()[:3200]]
+            samples = [0] * 800 + active + [0] * 800
+            write_pcm16(wav, samples)
+            wav_sha = hashlib.sha256(wav.read_bytes()).hexdigest()
+            row = {
+                "split": split,
+                "kind": "positive",
+                "family_id": f"speech-like-{split}-000000",
+                "variant": 0,
+                "keyword_id": 1,
+                "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+                "target_ids": [1, 2, 3, 4],
+                "wav_sha256": wav_sha,
+                "frames": len(samples),
+                "event_start_frame": 800,
+                "event_end_frame": 4000,
+                "path": str(wav.resolve()),
+                "speech_like_provenance": {
+                    "provider_kind": "offline-tts",
+                    "provider_name": "fixture",
+                    "provider_version": "1",
+                    "license_id": "fixture-test-only",
+                    "voice_id": f"voice-{index}",
+                    "source_id": f"source-{index}",
+                    "generation_config_sha256": hashlib.sha256(
+                        f"generation-{index}".encode()
+                    ).hexdigest(),
+                    "label_provenance_sha256": hashlib.sha256(
+                        f"label-{index}".encode()
+                    ).hexdigest(),
+                    "pcm_sha256": hashlib.sha256(
+                        b"".join(struct.pack("<h", value) for value in samples)
+                    ).hexdigest(),
+                },
+            }
+            index_path = root / f"{split}.index.jsonl"
+            index_path.write_text(
+                json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            summary = {
+                "schema_version": 1,
+                "evidence_class": "speech-like-base-dataset-v1",
+                "split": split,
+                "recordings": 1,
+                "positive_recordings": 1,
+                "negative_recordings": 0,
+                "corpus_sha256": hashlib.sha256(
+                    f"corpus-{index}".encode()
+                ).hexdigest(),
+                "tone_backend_used": False,
+            }
+            summary_path = root / f"{split}.summary.json"
+            summary_path.write_text(
+                json.dumps(summary, ensure_ascii=False, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            external[split] = {
+                "index": str(index_path.resolve()),
+                "summary": str(summary_path.resolve()),
+                "index_sha256": hashlib.sha256(index_path.read_bytes()).hexdigest(),
+                "summary_sha256": hashlib.sha256(summary_path.read_bytes()).hexdigest(),
+            }
+        config["generator"]["external_base_dataset"] = external
+        config_path = root / "config.json"
+        config_path.write_text(
+            json.dumps(config, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        output = root / "rendered"
+        summary = render_domain_dataset(config_path, output)
+        assert summary["external_base_dataset"]["evidence_class"] == "external-speech-like-base-bundle-v1"
+        assert len(summary["external_base_dataset"]["bundle_sha256"]) == 64
+        assert summary["external_base_dataset"]["recordings"] == 4
+        assert not (output / "base" / "token-carriers.json").exists()
+        base_summary = json.loads((output / "base" / "dataset-summary.json").read_text())
+        assert base_summary["tone_backend_used"] is False
+        assert base_summary["recordings"] == 4
+        domain_rows = [
+            json.loads(line)
+            for line in (output / "domain-index.jsonl").read_text().splitlines()
+            if line.strip()
+        ]
+        assert len(domain_rows) == 4
+        assert {row["split"] for row in domain_rows} == {
+            "train", "calibration", "test", "qualification"
+        }
+        assert all(
+            row["speech_like_provenance"]["provider_kind"] == "offline-tts"
+            for row in domain_rows
+        )
+
+
 def main() -> int:
     test_deterministic_robustness_axes()
+    test_external_speech_like_base_renderer()
 
     clean = clean_tone()
     afe = {"backend": "proxy"}
