@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build contract fixtures
+      - name: Build fixtures and verify fail-closed readiness
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/v2-readiness"
@@ -73,17 +73,17 @@ jobs:
           (root / 'generalization.json').write_text(json.dumps(generalization) + '\n')
           (root / 'speech.json').write_text(json.dumps(speech) + '\n')
           PY
-      - name: Current report-only policy must block protected promotion
-        run: |
-          set -euo pipefail
-          root="$RUNNER_TEMP/v2-readiness"
+
+          common=(
+            --policy configs/training/v2-promotion-readiness-v1.json
+            --speech-like-audit "$root/speech.json"
+            --resource-report "$root/resource.json"
+            --candidate-id rnn-h48 --model-family rnn
+            --resource-vocabulary shipping-dedicated
+          )
+
           python3 tools/verify_v2_promotion_readiness.py \
-            --policy configs/training/v2-promotion-readiness-v1.json \
-            --generalization "$root/generalization.json" \
-            --speech-like-audit "$root/speech.json" \
-            --resource-report "$root/resource.json" \
-            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
-            --output "$root/blocked.json"
+            "${common[@]}" --generalization "$root/generalization.json" --output "$root/blocked.json"
           python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
@@ -93,19 +93,12 @@ jobs:
           assert 'generalization-statistical-gate-not-passed' in report['blockers']
           PY
           if python3 tools/verify_v2_promotion_readiness.py \
-            --policy configs/training/v2-promotion-readiness-v1.json \
-            --generalization "$root/generalization.json" \
-            --speech-like-audit "$root/speech.json" \
-            --resource-report "$root/resource.json" \
-            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            "${common[@]}" --generalization "$root/generalization.json" \
             --output "$root/blocked-required.json" --require-ready; then
             echo "report-only evidence unexpectedly allowed protected promotion" >&2
             exit 1
           fi
-      - name: Enforced passing evidence may become ready
-        run: |
-          set -euo pipefail
-          root="$RUNNER_TEMP/v2-readiness"
+
           python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
@@ -115,12 +108,9 @@ jobs:
           (root / 'generalization-enforced.json').write_text(json.dumps(value) + '\n')
           PY
           python3 tools/verify_v2_promotion_readiness.py \
-            --policy configs/training/v2-promotion-readiness-v1.json \
-            --generalization "$root/generalization-enforced.json" \
-            --speech-like-audit "$root/speech.json" \
-            --resource-report "$root/resource.json" \
-            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            "${common[@]}" --generalization "$root/generalization-enforced.json" \
             --output "$root/ready.json" --require-ready
+
           python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
@@ -128,14 +118,6 @@ jobs:
           assert report['protected_promotion_ready'] is True
           assert report['blockers'] == []
           assert report['resource']['candidate'] == 'rnn-h48'
-          PY
-      - name: Tone or protected-evidence contamination fails closed
-        run: |
-          set -euo pipefail
-          root="$RUNNER_TEMP/v2-readiness"
-          python3 - <<'PY'
-          import json, os, pathlib, subprocess, sys
-          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
           speech = json.loads((root / 'speech.json').read_text())
           speech['tone_backend_allowed'] = True
           (root / 'speech-tone.json').write_text(json.dumps(speech) + '\n')
@@ -148,18 +130,20 @@ jobs:
             --generalization "$root/generalization-enforced.json" \
             --speech-like-audit "$root/speech-tone.json" \
             --resource-report "$root/resource.json" \
-            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-dedicated \
             --output "$root/tone.json" --require-ready; then
-            echo "tone-backed evidence unexpectedly accepted" >&2; exit 1
+            echo "tone-backed evidence unexpectedly accepted" >&2
+            exit 1
           fi
           if python3 tools/verify_v2_promotion_readiness.py \
             --policy configs/training/v2-promotion-readiness-v1.json \
             --generalization "$root/generalization-protected.json" \
             --speech-like-audit "$root/speech.json" \
             --resource-report "$root/resource.json" \
-            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-dedicated \
             --output "$root/protected.json" --require-ready; then
-            echo "protected-evidence contamination unexpectedly accepted" >&2; exit 1
+            echo "protected-evidence contamination unexpectedly accepted" >&2
+            exit 1
           fi
       - name: Python syntax
         run: python3 -m py_compile tools/verify_v2_promotion_readiness.py
