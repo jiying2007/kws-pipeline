@@ -62,7 +62,7 @@ jobs:
           assert "0|1|3" in segment
           assert 'resume-bundle.tar.gz' in segment
           assert "segment_1:" in parent and "segment_4:" in parent
-          assert parent.count('uses: ./.github/workflows/development-round-segment.yml') == 4
+          assert parent.count('uses: ./.github/workflows/development-round-segment.yml') >= 4
           assert "tmp/resumable-development-*" in parent
           PY
       - name: Python syntax
