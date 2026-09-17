@@ -1,0 +1,90 @@
+name: development-generalization-plan-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/development_generalization_plan.py"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/development-generalization-plan-contract.yml"
+  pull_request:
+    paths:
+      - "tools/development_generalization_plan.py"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/development-generalization-plan-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build deterministic search/freeze plans
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/generalization-plan"
+          mkdir -p "$root"
+          model_sha="$(printf 'a%.0s' {1..64})"
+          product_head="$(printf 'b%.0s' {1..40})"
+          for name in search-a search-b; do
+            python3 tools/development_generalization_plan.py \
+              --policy configs/training/development-generalization-v1.json \
+              --tier search --candidate-id rnn-h48-logmel --model-family rnn \
+              --model-sha256 "$model_sha" --product-head "$product_head" \
+              --output "$root/$name.json"
+          done
+          cmp "$root/search-a.json" "$root/search-b.json"
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier freeze --candidate-id gru-h48-pcen --model-family gru \
+            --model-sha256 "$(printf 'c%.0s' {1..64})" --product-head "$product_head" \
+            --output "$root/freeze.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          search = json.loads((root / 'search-a.json').read_text())
+          freeze = json.loads((root / 'freeze.json').read_text())
+          assert search['independent_seed_count'] == 8
+          assert search['minimum_independent_seed_count'] == 4
+          assert freeze['independent_seed_count'] == 16
+          assert freeze['minimum_independent_seed_count'] == 8
+          assert freeze['maximum_independent_seed_count'] == 32
+          assert len({x['seed'] for x in freeze['seed_plan']}) == 16
+          assert len({x['source_identity'] for x in freeze['seed_plan']}) == 16
+          assert search['selection_before_results'] is True
+          assert search['fresh_used'] is False and search['shadow_used'] is False and search['formal_qualification_used'] is False
+          PY
+      - name: Forbidden seed collision fails closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/generalization-plan"
+          first_seed="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["seed_plan"][0]["seed"])' "$root/search-a.json")"
+          if python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier search --candidate-id rnn-h48-logmel --model-family rnn \
+            --model-sha256 "$(printf 'a%.0s' {1..64})" --product-head "$(printf 'b%.0s' {1..40})" \
+            --forbidden-seed "$first_seed" --output "$root/forbidden.json"; then
+            echo "forbidden derived seed unexpectedly accepted" >&2
+            exit 1
+          fi
+      - name: Protected namespaces can be passed as forbidden seeds
+        run: |
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier freeze --candidate-id gru-h48-logmel --model-family gru \
+            --model-sha256 "$(printf 'd%.0s' {1..64})" --product-head "$(printf 'e%.0s' {1..40})" \
+            --forbidden-seed 195000019 \
+            --forbidden-seed 295000019 \
+            --forbidden-seed 981101 --forbidden-seed 981102 --forbidden-seed 981103 --forbidden-seed 981104 \
+            --forbidden-seed 981105 --forbidden-seed 981106 --forbidden-seed 981107 --forbidden-seed 981108 \
+            --forbidden-seed 271843 --forbidden-seed 271844 \
+            --output "$RUNNER_TEMP/generalization-plan/protected-safe.json"
+      - name: Python syntax
+        run: python3 -m py_compile tools/development_generalization_plan.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
