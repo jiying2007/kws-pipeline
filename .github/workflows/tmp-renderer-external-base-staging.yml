@@ -18,6 +18,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: codex/speech-like-renderer-external-base-v1
+      - name: Make external split fixtures byte-distinct
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tmp/patch_renderer_external_base.py')
+          text = path.read_text(encoding='utf-8')
+          old = '            samples = [0] * 800 + clean_tone()[:3200] + [0] * 800\n'
+          new = '            active = [max(-32768, min(32767, value + index)) for value in clean_tone()[:3200]]\n            samples = [0] * 800 + active + [0] * 800\n'
+          assert old in text
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
       - name: Patch product files
         run: python3 tmp/patch_renderer_external_base.py
       - name: Scene renderer contract
