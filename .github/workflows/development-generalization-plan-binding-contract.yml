@@ -1,0 +1,168 @@
+name: development-generalization-plan-binding-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/development_generalization_plan.py"
+      - "tools/build_development_generalization_seed.py"
+      - "tools/development_generalization.py"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/development-generalization-plan-binding-contract.yml"
+  pull_request:
+    paths:
+      - "tools/development_generalization_plan.py"
+      - "tools/build_development_generalization_seed.py"
+      - "tools/development_generalization.py"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/development-generalization-plan-binding-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Build predeclared five-seed plan and metric fixtures
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          mkdir -p "$root"
+          model_sha="$(printf 'a%.0s' {1..64})"
+          product_head="$(printf 'b%.0s' {1..40})"
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier search --candidate-id rnn-h48 --model-family rnn \
+            --model-sha256 "$model_sha" --product-head "$product_head" \
+            --count 5 --output "$root/plan.json"
+          cat > "$root/domain.json" <<'EOF'
+          {
+            "schema_version": 6,
+            "overall": {"expected": 256, "false_rejects": 1, "false_accepts": 0, "negative_audio_hours": 4.0},
+            "keyword_domains": {
+              "1": {"overall": {"expected": 128, "false_rejects": 1}},
+              "2": {"overall": {"expected": 128, "false_rejects": 0}}
+            }
+          }
+          EOF
+          cat > "$root/robustness.json" <<'EOF'
+          {
+            "schema_version": 4,
+            "evidence_class": "synthetic-domain-robustness-matrix",
+            "qualified": false,
+            "blocked": false,
+            "gates": {},
+            "slices": {},
+            "failures": [{"slice":"distance_bin:5m","reason":"frr","actual":0.25,"limit":0.0}]
+          }
+          EOF
+      - name: Build only plan-bound seed summaries
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          for i in 0 1 2 3 4; do
+            seed="$(python3 - "$root/plan.json" "$i" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1])); print(p['seed_plan'][int(sys.argv[2])]['seed'])
+          PY
+          )"
+            source="$(python3 - "$root/plan.json" "$i" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1])); print(p['seed_plan'][int(sys.argv[2])]['source_identity'])
+          PY
+          )"
+            python3 tools/build_development_generalization_seed.py \
+              --domain-metrics "$root/domain.json" --robustness "$root/robustness.json" \
+              --tier search --model-family rnn --candidate-id rnn-h48 \
+              --source-identity "$source" --seed "$seed" \
+              --plan "$root/plan.json" --plan-ordinal "$i" \
+              --output "$root/seed-$i.json"
+          done
+      - name: Complete predeclared cohort aggregates
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          python3 tools/development_generalization.py \
+            --policy configs/training/development-generalization-v1.json --tier search \
+            --plan "$root/plan.json" \
+            --seed-summary "$root/seed-0.json" --seed-summary "$root/seed-1.json" \
+            --seed-summary "$root/seed-2.json" --seed-summary "$root/seed-3.json" \
+            --seed-summary "$root/seed-4.json" --output "$root/report.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['ROOT'])
+          p=json.loads((root/'plan.json').read_text()); r=json.loads((root/'report.json').read_text())
+          assert r['plan_complete'] is True and r['plan_sha256'] == p['plan_sha256']
+          assert r['independent_seed_count'] == 5
+          assert r['seed_ids'] == sorted(x['seed'] for x in p['seed_plan'])
+          PY
+      - name: Missing seed fails even when legacy minimum is still met
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          if python3 tools/development_generalization.py \
+            --policy configs/training/development-generalization-v1.json --tier search \
+            --plan "$root/plan.json" \
+            --seed-summary "$root/seed-0.json" --seed-summary "$root/seed-1.json" \
+            --seed-summary "$root/seed-2.json" --seed-summary "$root/seed-3.json" \
+            --output "$root/missing.json"; then
+            echo 'incomplete predeclared cohort unexpectedly accepted' >&2; exit 1
+          fi
+      - name: Seed/source substitution and unbound evidence fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['ROOT'])
+          value=json.loads((root/'seed-2.json').read_text()); value['seed'] += 1
+          (root/'seed-2-bad.json').write_text(json.dumps(value)+'\n')
+          value=json.loads((root/'seed-2.json').read_text()); value.pop('plan_sha256'); value.pop('plan_ordinal')
+          (root/'seed-2-unbound.json').write_text(json.dumps(value)+'\n')
+          PY
+          for bad in seed-2-bad seed-2-unbound; do
+            if python3 tools/development_generalization.py \
+              --policy configs/training/development-generalization-v1.json --tier search \
+              --plan "$root/plan.json" \
+              --seed-summary "$root/seed-0.json" --seed-summary "$root/seed-1.json" \
+              --seed-summary "$root/$bad.json" --seed-summary "$root/seed-3.json" \
+              --seed-summary "$root/seed-4.json" --output "$root/nope.json"; then
+              echo "$bad unexpectedly accepted" >&2; exit 1
+            fi
+          done
+      - name: Plan tamper fails before result consumption
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/plan-binding"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['ROOT']); p=json.loads((root/'plan.json').read_text())
+          p['seed_plan'][0]['seed'] += 7
+          (root/'plan-tampered.json').write_text(json.dumps(p)+'\n')
+          PY
+          source="$(python3 - "$root/plan.json" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1])); print(p['seed_plan'][0]['source_identity'])
+          PY
+          )"
+          seed="$(python3 - "$root/plan.json" <<'PY'
+          import json,sys
+          p=json.load(open(sys.argv[1])); print(p['seed_plan'][0]['seed'])
+          PY
+          )"
+          if python3 tools/build_development_generalization_seed.py \
+            --domain-metrics "$root/domain.json" --robustness "$root/robustness.json" \
+            --tier search --model-family rnn --candidate-id rnn-h48 \
+            --source-identity "$source" --seed "$seed" \
+            --plan "$root/plan-tampered.json" --plan-ordinal 0 --output "$root/nope-seed.json"; then
+            echo 'tampered plan unexpectedly accepted' >&2; exit 1
+          fi
+      - name: Python syntax
+        run: python3 -m py_compile tools/development_generalization_plan.py tools/build_development_generalization_seed.py tools/development_generalization.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
