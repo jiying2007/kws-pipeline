@@ -1,0 +1,413 @@
+name: resumable-development-curriculum
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/development-round-segment.yml'
+      - '.github/workflows/resumable-development-curriculum.yml'
+      - 'training/development_resume.py'
+      - 'training/iterate_gru_development.py'
+      - 'training/iterate_rnn_development.py'
+      - 'training/run_gru_development.py'
+      - 'training/run_gru_development_multiseed.py'
+      - 'training/run_rnn_development.py'
+      - 'configs/training/xiaowo.gru-development-loop.json'
+      - 'configs/training/xiaowo.gru-development-multiseed-v1.json'
+      - 'configs/training/xiaowo.rnn-development-loop.json'
+      - 'tests/test_gru_train_acoustic_rotation.py'
+  push:
+    branches:
+      - 'tmp/resumable-development-*'
+    paths:
+      - '.github/triggers/resumable-development.json'
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Development-only model path
+        required: true
+        type: choice
+        default: rnn
+        options:
+          - rnn
+          - gru-multiseed
+          - gru
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: resumable-development-curriculum-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Resumable development contract
+        run: |
+          python3 training/development_resume.py --self-test
+          python3 tests/test_gru_train_acoustic_rotation.py
+          python3 tools/verify_rnn_parallel_contract.py
+          python3 - <<'PY'
+          import pathlib
+          segment=pathlib.Path('.github/workflows/development-round-segment.yml').read_text(encoding='utf-8')
+          parent=pathlib.Path('.github/workflows/resumable-development-curriculum.yml').read_text(encoding='utf-8')
+          assert '--round-budget 2' in segment
+          assert "0|1|3" in segment
+          assert 'resume-bundle.tar.gz' in segment
+          assert "segment_1:" in parent and "segment_4:" in parent
+          assert parent.count('uses: ./.github/workflows/development-round-segment.yml') == 4
+          assert "tmp/resumable-development-*" in parent
+          PY
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          training/development_resume.py
+          training/iterate_gru_development.py
+          training/iterate_rnn_development.py
+          training/run_gru_development.py
+          training/run_gru_development_multiseed.py
+          training/run_rnn_development.py
+
+  resolve:
+    if: github.event_name != 'pull_request'
+    needs: contract
+    runs-on: ubuntu-24.04
+    outputs:
+      variant: ${{ steps.source.outputs.variant }}
+      product_head: ${{ steps.source.outputs.product_head }}
+      workflow_head: ${{ steps.source.outputs.workflow_head }}
+      family: ${{ steps.source.outputs.family }}
+      policy: ${{ steps.source.outputs.policy }}
+      wrapper: ${{ steps.source.outputs.wrapper }}
+      work_name: ${{ steps.source.outputs.work_name }}
+      final_artifact: ${{ steps.source.outputs.final_artifact }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve exact product source
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISPATCH_VARIANT: ${{ inputs.variant }}
+        run: |
+          set -euo pipefail
+          workflow_head="$GITHUB_SHA"
+          if [ "$GITHUB_EVENT_NAME" = 'workflow_dispatch' ]; then
+            test "$GITHUB_REF" = 'refs/heads/main'
+            variant="$DISPATCH_VARIANT"
+            product_head="$GITHUB_SHA"
+          elif [ "$GITHUB_EVENT_NAME" = 'push' ]; then
+            case "$GITHUB_REF" in refs/heads/tmp/resumable-development-*) ;; *) exit 2 ;; esac
+            test -s .github/triggers/resumable-development.json
+            readarray -t resolved < <(python3 - <<'PY'
+          import json
+          value=json.load(open('.github/triggers/resumable-development.json', encoding='utf-8'))
+          assert int(value.get('schema_version', 0)) == 1
+          variant=str(value.get('variant', ''))
+          product=str(value.get('product_head', ''))
+          assert variant in {'rnn','gru-multiseed','gru'}
+          assert len(product) == 40 and all(ch in '0123456789abcdef' for ch in product)
+          print(variant)
+          print(product)
+          PY
+          )
+            variant="${resolved[0]}"
+            product_head="${resolved[1]}"
+          else
+            exit 2
+          fi
+          [[ "$product_head" =~ ^[0-9a-f]{40}$ ]]
+          default_branch="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch')"
+          test "$default_branch" = 'main'
+          relation="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${product_head}...main" --jq '.status')"
+          case "$relation" in ahead|identical) ;; *) echo "product head is outside main history: $relation" >&2; exit 2 ;; esac
+          case "$variant" in
+            gru)
+              family=gru
+              policy=configs/training/xiaowo.gru-development-loop.json
+              wrapper=training/run_gru_development.py
+              work_name=gru-development-curriculum
+              final_artifact=gru-development-curriculum-segmented
+              ;;
+            gru-multiseed)
+              family=gru
+              policy=configs/training/xiaowo.gru-development-multiseed-v1.json
+              wrapper=training/run_gru_development_multiseed.py
+              work_name=gru-development-multiseed
+              final_artifact=gru-development-multiseed-segmented-v1
+              ;;
+            rnn)
+              family=rnn
+              policy=configs/training/xiaowo.rnn-development-loop.json
+              wrapper=training/run_rnn_development.py
+              work_name=rnn-development-curriculum
+              final_artifact=rnn-development-curriculum-segmented
+              ;;
+            *) exit 2 ;;
+          esac
+          {
+            echo "variant=$variant"
+            echo "product_head=$product_head"
+            echo "workflow_head=$workflow_head"
+            echo "family=$family"
+            echo "policy=$policy"
+            echo "wrapper=$wrapper"
+            echo "work_name=$work_name"
+            echo "final_artifact=$final_artifact"
+          } >> "$GITHUB_OUTPUT"
+          echo "resolved development source: variant=$variant workflow_head=$workflow_head product_head=$product_head main_relation=$relation"
+
+      - name: Checkout exact product source for protected-evidence preflight
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.source.outputs.product_head }}
+          path: build/product-source
+          persist-credentials: false
+
+      - name: Verify protected evidence is isolated
+        env:
+          PRODUCT_HEAD: ${{ steps.source.outputs.product_head }}
+          VARIANT: ${{ steps.source.outputs.variant }}
+          POLICY_PATH: ${{ steps.source.outputs.policy }}
+        run: |
+          test "$(git -C build/product-source rev-parse HEAD)" = "$PRODUCT_HEAD"
+          cd build/product-source
+          python3 - <<'PY'
+          import json, os
+          cfg=json.load(open('configs/training/xiaowo.torch-domain.json', encoding='utf-8'))
+          policy=json.load(open(os.environ['POLICY_PATH'], encoding='utf-8'))
+          fresh=json.load(open('experiments/model_family/fresh_validation_registry.json', encoding='utf-8'))
+          shadow=json.load(open('experiments/model_family/shadow_arena_registry.json', encoding='utf-8'))
+          assert int(policy['max_rounds']) == 8
+          assert int(policy['feature_cache_max_items']) == 8192
+          assert policy['qualification_used'] is False
+          assert policy['shadow_used'] is False
+          assert policy['formal_qualification_used'] is False
+          freeze=policy['candidate_freeze']
+          namespace=int(freeze['fresh_validation_seed_namespace'])
+          row=next(item for item in fresh['namespaces'] if int(item['namespace']) == namespace)
+          assert row['status'] == 'reserved-untouched'
+          arena=next(item for item in shadow['arenas'] if item['name'] == freeze['shadow_arena'])
+          assert arena['status'] == 'reserved-untouched'
+          shadow_seeds={int(value) for value in arena['seeds']}
+          protected={int(cfg['qualification_holdout_seed'])}
+          protected.update(int(value) for value in cfg.get('retired_qualification_holdout_seeds', []))
+          protected.update(shadow_seeds)
+          base=int(cfg.get('seed', 1337))
+          protected.add(base + namespace)
+          acoustic=int(policy['training_acoustic_seed_namespace'])
+          stride=int(policy['training_acoustic_seed_stride'])
+          model_namespace=int(policy['training_seed_namespace'])
+          assert acoustic != model_namespace and acoustic != namespace
+          exposures=int(policy.get('training_acoustic_exposures', 1))
+          exposure_stride=int(policy.get('training_acoustic_exposure_stride', 0))
+          if exposures > 1:
+              assert exposure_stride > 0
+          observed=set()
+          for round_index in range(int(policy['max_rounds'])):
+              for exposure in range(exposures):
+                  seed=base + acoustic + round_index * stride + exposure * exposure_stride
+                  assert seed not in protected
+                  assert seed not in observed
+                  observed.add(seed)
+          assert freeze['validation_feedback_allowed'] is False
+          assert freeze['threshold_feedback_allowed'] is False
+          assert freeze['training_rule_feedback_allowed'] is False
+          print(f"protected evidence isolated: variant={os.environ['VARIANT']} acoustic_seeds={len(observed)}")
+          PY
+
+  segment_1:
+    if: github.event_name != 'pull_request'
+    needs: [contract, resolve]
+    uses: ./.github/workflows/development-round-segment.yml
+    with:
+      variant: ${{ needs.resolve.outputs.variant }}
+      product_head: ${{ needs.resolve.outputs.product_head }}
+      segment_index: 1
+
+  segment_2:
+    if: github.event_name != 'pull_request'
+    needs: [resolve, segment_1]
+    uses: ./.github/workflows/development-round-segment.yml
+    with:
+      variant: ${{ needs.resolve.outputs.variant }}
+      product_head: ${{ needs.resolve.outputs.product_head }}
+      segment_index: 2
+      input_artifact: ${{ needs.segment_1.outputs.artifact_name }}
+
+  segment_3:
+    if: github.event_name != 'pull_request'
+    needs: [resolve, segment_2]
+    uses: ./.github/workflows/development-round-segment.yml
+    with:
+      variant: ${{ needs.resolve.outputs.variant }}
+      product_head: ${{ needs.resolve.outputs.product_head }}
+      segment_index: 3
+      input_artifact: ${{ needs.segment_2.outputs.artifact_name }}
+
+  segment_4:
+    if: github.event_name != 'pull_request'
+    needs: [resolve, segment_3]
+    uses: ./.github/workflows/development-round-segment.yml
+    with:
+      variant: ${{ needs.resolve.outputs.variant }}
+      product_head: ${{ needs.resolve.outputs.product_head }}
+      segment_index: 4
+      input_artifact: ${{ needs.segment_3.outputs.artifact_name }}
+
+  finalize:
+    if: github.event_name != 'pull_request'
+    needs: [resolve, segment_4]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.resolve.outputs.product_head }}
+          persist-credentials: false
+
+      - name: Download final development segment
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.segment_4.outputs.artifact_name }}
+          path: build/final-segment
+
+      - name: Restore final development workspace
+        env:
+          WORK_NAME: ${{ needs.resolve.outputs.work_name }}
+          LOOP_CODE: ${{ needs.segment_4.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          case "$LOOP_CODE" in 0|1) ;; *) echo "development did not reach terminal state: $LOOP_CODE" >&2; exit 2 ;; esac
+          mkdir -p "build/$WORK_NAME"
+          tar -xzf build/final-segment/resume-bundle.tar.gz -C "build/$WORK_NAME"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path('build') / os.environ['WORK_NAME']
+          state=json.load(open(root/'development-resume-state.json', encoding='utf-8'))
+          assert state['complete'] is True
+          assert 1 <= int(state['next_round']) <= 8
+          assert (root/'development-loop-manifest.json').is_file()
+          PY
+
+      - name: Reconcile full-robustness development gate
+        id: development_gate
+        if: needs.segment_4.outputs.exit_code == '0'
+        shell: bash
+        env:
+          FAMILY: ${{ needs.resolve.outputs.family }}
+          POLICY_PATH: ${{ needs.resolve.outputs.policy }}
+          WORK_NAME: ${{ needs.resolve.outputs.work_name }}
+        run: |
+          set +e
+          if [ "$FAMILY" = 'gru' ]; then
+            python3 tools/reconcile_gru_development_gate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+          else
+            python3 tools/reconcile_rnn_development_gate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+          fi
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Verify reconciled gate and finalize candidate
+        if: needs.segment_4.outputs.exit_code == '0' && steps.development_gate.outputs.exit_code == '0'
+        env:
+          FAMILY: ${{ needs.resolve.outputs.family }}
+          POLICY_PATH: ${{ needs.resolve.outputs.policy }}
+          WORK_NAME: ${{ needs.resolve.outputs.work_name }}
+        run: |
+          if [ "$FAMILY" = 'gru' ]; then
+            python3 tools/verify_gru_development_gate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+            python3 tools/finalize_gru_frozen_candidate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+            python3 tools/verify_gru_frozen_candidate.py --candidate "build/$WORK_NAME/frozen-candidate"
+            python3 tools/verify_gru_stability_evidence.py --candidate "build/$WORK_NAME/frozen-candidate"
+            python3 tools/verify_gru_development_gate.py --candidate "build/$WORK_NAME/frozen-candidate"
+          else
+            python3 tools/verify_rnn_development_gate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+            python3 tools/finalize_rnn_frozen_candidate.py \
+              --work-dir "build/$WORK_NAME" \
+              --config configs/training/xiaowo.torch-domain.json \
+              --policy "$POLICY_PATH"
+            python3 tools/verify_rnn_frozen_candidate.py --candidate "build/$WORK_NAME/frozen-candidate"
+            python3 tools/verify_rnn_stability_evidence.py --candidate "build/$WORK_NAME/frozen-candidate"
+            python3 tools/verify_rnn_development_gate.py --candidate "build/$WORK_NAME/frozen-candidate"
+          fi
+
+      - name: Bind workflow source to exact development product source
+        env:
+          FAMILY: ${{ needs.resolve.outputs.family }}
+          WORK_NAME: ${{ needs.resolve.outputs.work_name }}
+          WORKFLOW_HEAD: ${{ needs.resolve.outputs.workflow_head }}
+          PRODUCT_HEAD: ${{ needs.resolve.outputs.product_head }}
+          POLICY_PATH: ${{ needs.resolve.outputs.policy }}
+          WRAPPER: ${{ needs.resolve.outputs.wrapper }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path('build') / os.environ['WORK_NAME']
+          value={
+              'schema_version': 1,
+              'evidence_class': f"{os.environ['FAMILY']}-development-once-source-binding",
+              'workflow_head': os.environ['WORKFLOW_HEAD'],
+              'product_head': os.environ['PRODUCT_HEAD'],
+              'development_only': True,
+              'fresh_used': False,
+              'shadow_used': False,
+              'formal_qualification_used': False,
+              'development_policy': os.environ['POLICY_PATH'],
+              'training_wrapper': os.environ['WRAPPER'],
+          }
+          (root/'development-source-binding.json').write_text(
+              json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Retain final development evidence and frozen candidate
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ needs.resolve.outputs.final_artifact }}
+          path: |
+            build/${{ needs.resolve.outputs.work_name }}/development-loop-manifest.json
+            build/${{ needs.resolve.outputs.work_name }}/development-resume-state.json
+            build/${{ needs.resolve.outputs.work_name }}/development-source-binding.json
+            build/${{ needs.resolve.outputs.work_name }}/curriculum/*.json
+            build/${{ needs.resolve.outputs.work_name }}/training-acoustic-rotation-evidence/*.json
+            build/${{ needs.resolve.outputs.work_name }}/failure-replay/*/development-failure-replay.json
+            build/${{ needs.resolve.outputs.work_name }}/fixed-replay/*/hard-negatives.json
+            build/${{ needs.resolve.outputs.work_name }}/frozen-candidate/*
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Gate final development result
+        env:
+          LOOP_CODE: ${{ needs.segment_4.outputs.exit_code }}
+          GATE_CODE: ${{ steps.development_gate.outputs.exit_code }}
+        run: |
+          test "$LOOP_CODE" = '0'
+          test "$GATE_CODE" = '0'
