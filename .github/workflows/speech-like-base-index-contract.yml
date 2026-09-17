@@ -1,0 +1,127 @@
+name: speech-like-base-index-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/materialize_speech_like_base_index.py"
+      - "tools/attach_speech_like_labels.py"
+      - ".github/workflows/speech-like-base-index-contract.yml"
+  pull_request:
+    paths:
+      - "tools/materialize_speech_like_base_index.py"
+      - "tools/attach_speech_like_labels.py"
+      - ".github/workflows/speech-like-base-index-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build immutable speech-like fixtures
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-base"
+          mkdir -p "$root"
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, math, os, pathlib, struct, wave
+          root = pathlib.Path(os.environ['ROOT'])
+          rows = []
+          specs = [
+              ('positive', 1, ['ni3','hao3','xiao3','wo1'], 440.0),
+              ('confusable', None, ['ni3','hao3'], 330.0),
+              ('background', None, [], 120.0),
+          ]
+          for i, (kind, keyword, tokens, freq) in enumerate(specs):
+              path = root / f'clip-{i}.wav'
+              samples = []
+              for n in range(4800):
+                  if kind == 'background':
+                      value = int(500 * math.sin(2*math.pi*freq*n/16000.0))
+                  else:
+                      active = 800 <= n < 4000
+                      value = int(5000 * math.sin(2*math.pi*freq*n/16000.0)) if active else 0
+                  samples.append(value)
+              pcm = b''.join(struct.pack('<h', x) for x in samples)
+              with wave.open(str(path), 'wb') as w:
+                  w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(pcm)
+              rows.append({
+                  'schema_version':1,
+                  'evidence_class':'speech-like-synthetic-recording-v1',
+                  'synthetic':True,
+                  'provider_kind':'offline-tts',
+                  'provider_name':'fixture',
+                  'provider_version':'1',
+                  'license_id':'fixture-test-only',
+                  'voice_id':f'voice-{i}',
+                  'source_id':f'source-{i}',
+                  'locale':'zh-CN',
+                  'text':'你好小窝' if keyword == 1 else ('近音负例' if kind != 'background' else '背景'),
+                  'tokens':tokens,
+                  'generation_config_sha256':'a'*64,
+                  'audio':path.name,
+                  'file_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                  'pcm_sha256':hashlib.sha256(pcm).hexdigest(),
+                  'kind':kind,
+                  'keyword_id':keyword,
+                  'label_source':'fixture-plan-v1',
+                  'label_provenance_sha256':hashlib.sha256(f'label-{i}'.encode()).hexdigest(),
+              })
+          (root/'enriched.jsonl').write_text(''.join(json.dumps(x, ensure_ascii=False)+'\n' for x in rows), encoding='utf-8')
+          PY
+      - name: Materialize canonical base dataset index
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-base"
+          python3 tools/materialize_speech_like_base_index.py \
+            --manifest "$root/enriched.jsonl" --split train \
+            --tokens keywords/tokens.example.txt --keywords keywords/zh_cn_example.tsv \
+            --output-index "$root/dataset-index.jsonl" --output-summary "$root/summary.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          rows = [json.loads(x) for x in (root/'dataset-index.jsonl').read_text().splitlines() if x.strip()]
+          summary = json.loads((root/'summary.json').read_text())
+          assert len(rows) == 3
+          assert rows[0]['target_ids'] == [1,2,3,4]
+          assert rows[0]['event_start_frame'] is not None and rows[0]['event_end_frame'] > rows[0]['event_start_frame']
+          assert rows[1]['target_ids'] == [1,2] and rows[1]['keyword_id'] is None
+          assert rows[2]['target_ids'] == [] and rows[2]['kind'] == 'background'
+          assert all('speech_like_provenance' in row for row in rows)
+          assert summary['evidence_class'] == 'speech-like-base-dataset-v1'
+          assert summary['tone_backend_used'] is False
+          assert summary['positive_recordings'] == 1 and summary['negative_recordings'] == 2
+          PY
+      - name: Hash and positive-token tamper fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-base"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          rows = [json.loads(x) for x in (root/'enriched.jsonl').read_text().splitlines() if x.strip()]
+          bad = [dict(x) for x in rows]; bad[0]['file_sha256'] = '0'*64
+          (root/'bad-hash.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
+          bad = [dict(x) for x in rows]; bad[0]['tokens'] = ['xiao3','wo1','xiao3','wo1']
+          (root/'bad-tokens.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
+          bad = [dict(x) for x in rows]; bad[0]['provider_kind'] = 'tone'
+          (root/'bad-tone.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
+          PY
+          for bad in bad-hash bad-tokens bad-tone; do
+            if python3 tools/materialize_speech_like_base_index.py \
+              --manifest "$root/$bad.jsonl" --split train \
+              --tokens keywords/tokens.example.txt --keywords keywords/zh_cn_example.tsv \
+              --output-index "$root/nope.jsonl" --output-summary "$root/nope.json"; then
+              echo "$bad unexpectedly accepted" >&2; exit 1
+            fi
+          done
+      - name: Python syntax
+        run: python3 -m py_compile tools/materialize_speech_like_base_index.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
