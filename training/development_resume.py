@@ -52,6 +52,34 @@ def _under_root(path: pathlib.Path, root: pathlib.Path, label: str) -> pathlib.P
     return resolved
 
 
+def _optional_record_file_hashes(record: dict, work: pathlib.Path) -> dict:
+    result: dict[str, str] = {}
+    round_index = int(record["round"])
+    domain_index = _under_root(
+        work / "datasets" / f"round-{round_index:02d}" / "domain-index.jsonl",
+        work,
+        "domain-index",
+    )
+    if not domain_index.is_file() or domain_index.stat().st_size <= 0:
+        raise ValueError(f"resume domain index missing: {domain_index}")
+    result["domain_index"] = sha256_file(domain_index)
+    for split in ("calibration", "test"):
+        metrics = record.get(split)
+        if not isinstance(metrics, dict):
+            raise ValueError(f"resume record missing {split} metrics")
+        for field in ("false_rejects_path", "false_positives_path"):
+            raw = metrics.get(field)
+            if raw is None or raw == "":
+                continue
+            if not isinstance(raw, str):
+                raise ValueError(f"resume {split}.{field} must be a path string")
+            item = _under_root(pathlib.Path(raw), work, f"{split}.{field}")
+            if not item.is_file():
+                raise ValueError(f"resume failure evidence missing: {item}")
+            result[f"{split}.{field}"] = sha256_file(item)
+    return dict(sorted(result.items()))
+
+
 def _candidate_hashes(records: list[dict], work: pathlib.Path) -> list[dict]:
     result: list[dict] = []
     for record in records:
@@ -64,6 +92,7 @@ def _candidate_hashes(records: list[dict], work: pathlib.Path) -> list[dict]:
             if not path.is_file() or path.stat().st_size <= 0:
                 raise ValueError(f"resume candidate member missing: {path}")
             row["members"][field] = sha256_file(path)
+        row["replay_sources"] = _optional_record_file_hashes(record, work)
         result.append(row)
     return result
 
@@ -230,6 +259,15 @@ def self_test() -> None:
         curriculum = old / "curriculum" / "round-00.json"
         curriculum.parent.mkdir(parents=True)
         curriculum.write_text('{"weight":1}\n', encoding="utf-8")
+        domain_index = old / "datasets" / "round-00" / "domain-index.jsonl"
+        domain_index.parent.mkdir(parents=True)
+        domain_index.write_text('{"split":"test"}\n', encoding="utf-8")
+        failures = candidate / "calibration"
+        failures.mkdir(parents=True)
+        false_rejects = failures / "false-rejects.jsonl"
+        false_positives = failures / "false-positives.jsonl"
+        false_rejects.write_text('', encoding="utf-8")
+        false_positives.write_text('', encoding="utf-8")
         config = root / "config.json"
         policy = root / "policy.json"
         config.write_text('{"x":1}\n', encoding="utf-8")
@@ -241,6 +279,11 @@ def self_test() -> None:
             "false_accepts": 0,
             "calibration_gate": True,
             "test_gate": True,
+            "calibration": {
+                "false_rejects_path": str(false_rejects),
+                "false_positives_path": str(false_positives),
+            },
+            "test": {},
             **members,
         }
         state = old / "development-resume-state.json"
@@ -283,6 +326,25 @@ def self_test() -> None:
             assert "candidate bytes drifted" in str(exc)
         else:
             raise AssertionError("tampered resume candidate was accepted")
+        shutil.copy2(state, new / "development-resume-state.json")
+        # Restore the candidate byte and tamper a replay input instead.
+        pathlib.Path(loaded["records"][0]["model"]).write_bytes(b"model\n")
+        rebased_index = new / "datasets" / "round-00" / "domain-index.jsonl"
+        rebased_index.write_text('{"split":"tampered"}\n', encoding="utf-8")
+        try:
+            load_state(
+                new / "development-resume-state.json",
+                work=new,
+                model_family="test",
+                architecture="test-v1",
+                source_policy="test-policy",
+                config_path=config,
+                policy_path=policy,
+            )
+        except ValueError as exc:
+            assert "candidate bytes drifted" in str(exc)
+        else:
+            raise AssertionError("tampered resume replay source was accepted")
 
 
 def main() -> int:
