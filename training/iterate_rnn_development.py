@@ -76,6 +76,8 @@ def validate_policy(path: pathlib.Path) -> dict:
         raise ValueError("fixed_replay_repeat must be >= 1")
     if not 1 <= int(policy.get("failure_replay_repeat_max", 0)) <= 8:
         raise ValueError("failure_replay_repeat_max must be 1..8")
+    if policy.get("failure_replay_latch_after_failure") is not True:
+        raise ValueError("RNN development requires failure_replay_latch_after_failure=true")
     if int(policy.get("training_seed_namespace", 0)) <= 0:
         raise ValueError("training_seed_namespace must be positive")
     if int(policy.get("training_acoustic_seed_namespace", 0)) <= 0:
@@ -179,9 +181,13 @@ def controller_next(policy: dict, current: dict, fr: int, fa: int) -> dict:
     positive = clamp(positive, float(raw["positive_example_weight_min"]), float(raw["positive_example_weight_max"]))
     ordered = clamp(ordered, float(raw["ordered_token_loss_weight_min"]), float(raw["ordered_token_loss_weight_max"]))
     failures = fr + fa
-    repeat = 0 if failures <= 0 else 1 if failures <= 4 else 2
-    if failures > 16:
-        repeat = int(policy["failure_replay_repeat_max"])
+    previous_repeat = int(current.get("failure_replay_repeat", 0))
+    if failures <= 0:
+        repeat = previous_repeat if bool(policy["failure_replay_latch_after_failure"]) else 0
+    else:
+        repeat = 1 if failures <= 4 else 2
+        if failures > 16:
+            repeat = int(policy["failure_replay_repeat_max"])
     return {"positive_example_weight": positive, "ordered_token_loss_weight": ordered, "failure_replay_repeat": min(repeat, int(policy["failure_replay_repeat_max"]))}
 
 

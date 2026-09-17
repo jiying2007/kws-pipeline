@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import importlib.util
 import json
 import pathlib
 
@@ -43,6 +44,26 @@ def main() -> int:
             raise ValueError(f"RNN/GRU development policy drifted at {field}")
     if rnn.get("loss_controller") != gru.get("loss_controller"):
         raise ValueError("RNN/GRU loss-controller contract drifted")
+    if rnn.get("failure_replay_latch_after_failure") is not True:
+        raise ValueError("RNN failure replay latch policy is missing")
+
+    spec = importlib.util.spec_from_file_location(
+        "rnn_iterator_contract", ROOT / "training/iterate_rnn_development.py"
+    )
+    if spec is None or spec.loader is None:
+        raise ValueError("cannot load RNN iterator for controller contract")
+    iterator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(iterator)
+    initial = iterator.controller_initial(rnn)
+    clean_initial = iterator.controller_next(rnn, initial, 0, 0)
+    after_failure = iterator.controller_next(rnn, initial, 1, 0)
+    clean_after_failure = iterator.controller_next(rnn, after_failure, 0, 0)
+    if int(clean_initial["failure_replay_repeat"]) != 0:
+        raise ValueError("RNN clean initial controller unexpectedly enables failure replay")
+    if int(after_failure["failure_replay_repeat"]) != 1:
+        raise ValueError("RNN controller did not enable replay after a development failure")
+    if int(clean_after_failure["failure_replay_repeat"]) != 1:
+        raise ValueError("RNN controller dropped replay before stability confirmation")
     if freeze.get("selection_policy") != gru.get("candidate_freeze", {}).get("selection_policy"):
         raise ValueError("RNN/GRU selection policy drifted")
 
