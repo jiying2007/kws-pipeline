@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "policy": "v2-promotion-readiness-v1",
+  "required_generalization_tier": "freeze",
+  "minimum_independent_seeds": 8,
+  "require_coverage_passed": true,
+  "required_statistical_gate_mode": "enforced-v1",
+  "require_statistical_gate_passed": true,
+  "required_speech_groups": [
+    "train",
+    "generalization-search",
+    "generalization-freeze"
+  ],
+  "require_tone_backend_forbidden": true,
+  "required_resource_evidence_class": "static-model-family-resource-estimate",
+  "require_target_board_measurement_for_shipping": true,
+  "note": "This gate is intentionally NOT READY while development-generalization remains report-only. Protected Fresh/Shadow/Formal may only be entered after statistical thresholds are calibrated and frozen."
+}
