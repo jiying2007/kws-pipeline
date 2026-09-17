@@ -1,0 +1,200 @@
+name: speech-like-corpus-plan-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "configs/training/speech-like-corpus-plan-v1.json"
+      - "tools/speech_like_corpus_plan.py"
+      - ".github/workflows/speech-like-corpus-plan-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/speech-like-corpus-plan-v1.json"
+      - "tools/speech_like_corpus_plan.py"
+      - ".github/workflows/speech-like-corpus-plan-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Build exact voice inventory fixture
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          root.mkdir(parents=True, exist_ok=True)
+          plan = json.loads(pathlib.Path('configs/training/speech-like-corpus-plan-v1.json').read_text())
+          rows = []
+          index = 0
+          for split in ('train', 'calibration', 'test', 'qualification'):
+              for slot in plan['split_roles'][split]['voice_slots']:
+                  rows.append({
+                      'schema_version': 1,
+                      'evidence_class': 'speech-like-provider-voice-slot-v1',
+                      'slot': slot,
+                      'voice_id': f'fixture-voice-{index:02d}',
+                      'parameters': {'speaker': index, 'speed': 1.0},
+                  })
+                  index += 1
+          (root / 'voices.jsonl').write_text(''.join(json.dumps(x, sort_keys=True) + '\n' for x in rows))
+          assert len(rows) == 24
+          PY
+
+      - name: Build provider requests and immutable label intents
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-plan"
+          python3 tools/speech_like_corpus_plan.py build \
+            --plan configs/training/speech-like-corpus-plan-v1.json \
+            --voice-inventory "$root/voices.jsonl" \
+            --requests "$root/requests.jsonl" \
+            --intents "$root/intents.jsonl" \
+            --summary "$root/plan-summary.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          summary = json.loads((root / 'plan-summary.json').read_text())
+          assert summary['requests'] == 384
+          assert summary['voice_slots'] == 24
+          assert summary['utterances'] == 16
+          assert summary['split_counts'] == {
+              'train': 128,
+              'calibration': 64,
+              'test': 64,
+              'qualification': 128,
+          }
+          assert summary['provider_group_counts'] == {
+              'train': 128,
+              'generalization-search': 128,
+              'generalization-freeze': 128,
+          }
+          assert summary['protected_evidence_used'] is False
+          PY
+
+      - name: Simulate hash-bound provider manifests
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          requests = [json.loads(x) for x in (root / 'requests.jsonl').read_text().splitlines() if x.strip()]
+          by_group = {}
+          for index, row in enumerate(requests):
+              group = row['group']
+              by_group.setdefault(group, []).append({
+                  'schema_version': 1,
+                  'evidence_class': 'speech-like-synthetic-recording-v1',
+                  'synthetic': True,
+                  'provider_kind': 'offline-tts',
+                  'provider_name': 'fixture-provider',
+                  'provider_version': '1',
+                  'license_id': 'fixture-test-only',
+                  'voice_id': row['voice_id'],
+                  'source_id': row['source_id'],
+                  'locale': 'zh-CN',
+                  'text': row['text'],
+                  'tokens': row['tokens'],
+                  'generation_config_sha256': hashlib.sha256(f'generation-{index}'.encode()).hexdigest(),
+                  'audio': f'recording-{index:06d}.wav',
+                  'file_sha256': hashlib.sha256(f'file-{index}'.encode()).hexdigest(),
+                  'pcm_sha256': hashlib.sha256(f'pcm-{index}'.encode()).hexdigest(),
+              })
+          generated = root / 'generated'
+          for group, rows in by_group.items():
+              path = generated / group / 'manifest.jsonl'
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_text(''.join(json.dumps(x, sort_keys=True) + '\n' for x in rows))
+          PY
+
+      - name: Materialize split labels and labeled manifests
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-plan"
+          python3 tools/speech_like_corpus_plan.py materialize \
+            --intents "$root/intents.jsonl" \
+            --generated-root "$root/generated" \
+            --output-root "$root/materialized" \
+            --summary "$root/materialized-summary.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          summary = json.loads((root / 'materialized-summary.json').read_text())
+          assert summary['recordings'] == 384
+          expected = {
+              'train': (128, 32),
+              'calibration': (64, 16),
+              'test': (64, 16),
+              'qualification': (128, 32),
+          }
+          voices = {}
+          for split, (count, positives) in expected.items():
+              item = summary['splits'][split]
+              assert item['recordings'] == count
+              assert item['positive'] == positives
+              assert item['confusable'] + item['negative'] == count - positives
+              rows = [json.loads(x) for x in (root / 'materialized' / split / 'labeled-manifest.jsonl').read_text().splitlines() if x.strip()]
+              voices[split] = {x['voice_id'] for x in rows}
+              assert len(rows) == count
+              assert all(x['label_source'] == 'speech-like-corpus-plan-v1' for x in rows)
+          splits = list(expected)
+          for i, left in enumerate(splits):
+              for right in splits[i + 1:]:
+                  assert not (voices[left] & voices[right]), (left, right)
+          assert summary['protected_evidence_used'] is False
+          print('speech-like-corpus-plan-contract: ok')
+          PY
+
+      - name: Cross-split voice reuse must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-plan"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          rows = [json.loads(x) for x in (root / 'voices.jsonl').read_text().splitlines() if x.strip()]
+          rows[8]['voice_id'] = rows[0]['voice_id']
+          (root / 'bad-voices.jsonl').write_text(''.join(json.dumps(x, sort_keys=True) + '\n' for x in rows))
+          PY
+          if python3 tools/speech_like_corpus_plan.py build \
+            --plan configs/training/speech-like-corpus-plan-v1.json \
+            --voice-inventory "$root/bad-voices.jsonl" \
+            --requests "$root/bad-requests.jsonl" \
+            --intents "$root/bad-intents.jsonl" \
+            --summary "$root/bad-summary.json"; then
+            echo 'duplicate cross-split voice was accepted' >&2
+            exit 1
+          fi
+
+      - name: Missing generated request must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-plan"
+          cp -R "$root/generated" "$root/generated-missing"
+          python3 - <<'PY'
+          import os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
+          path = root / 'generated-missing' / 'generalization-freeze' / 'manifest.jsonl'
+          lines = path.read_text().splitlines()
+          path.write_text('\n'.join(lines[:-1]) + '\n')
+          PY
+          if python3 tools/speech_like_corpus_plan.py materialize \
+            --intents "$root/intents.jsonl" \
+            --generated-root "$root/generated-missing" \
+            --output-root "$root/materialized-missing" \
+            --summary "$root/materialized-missing-summary.json"; then
+            echo 'missing generated request was accepted' >&2
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: python3 -m py_compile tools/speech_like_corpus_plan.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
