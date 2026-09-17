@@ -1,0 +1,39 @@
+name: development-round-resume-complete-rebase
+
+on:
+  push:
+    branches:
+      - tmp/development-round-resume
+    paths:
+      - '.github/triggers/development-round-resume-complete-rebase.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/development-round-resume
+      - name: Rebase completed manifest paths
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('training/development_resume.py')
+          text=path.read_text()
+          old='''    if bool(value.get("complete")):\n        manifest = work / "development-loop-manifest.json"\n        if not manifest.is_file():\n            raise ValueError("complete development resume state lacks final manifest")\n'''
+          new='''    if bool(value.get("complete")):\n        manifest = work / "development-loop-manifest.json"\n        if not manifest.is_file():\n            raise ValueError("complete development resume state lacks final manifest")\n        manifest_value = json.loads(manifest.read_text(encoding="utf-8"))\n        if not isinstance(manifest_value, dict):\n            raise ValueError("complete development manifest must be an object")\n        rebased_manifest = _rebase(manifest_value, old_root, work)\n        manifest.write_text(\n            json.dumps(\n                rebased_manifest,\n                ensure_ascii=False,\n                indent=2,\n                sort_keys=True,\n                allow_nan=False,\n            )\n            + "\\n",\n            encoding="utf-8",\n        )\n'''
+          if old not in text:
+              raise SystemExit('complete-state marker missing')
+          path.write_text(text.replace(old,new,1))
+          PY
+          python3 training/development_resume.py --self-test
+          python3 -m py_compile training/development_resume.py
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add training/development_resume.py
+          git commit -m 'fix(training): rebase completed resume manifest paths'
+          git push origin HEAD:tmp/development-round-resume
