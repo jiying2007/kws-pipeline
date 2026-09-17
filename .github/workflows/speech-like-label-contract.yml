@@ -1,0 +1,119 @@
+name: speech-like-label-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/attach_speech_like_labels.py"
+      - ".github/workflows/speech-like-label-contract.yml"
+  pull_request:
+    paths:
+      - "tools/attach_speech_like_labels.py"
+      - ".github/workflows/speech-like-label-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build immutable manifest/label fixtures
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-labels"
+          mkdir -p "$root"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          rows = []
+          labels = []
+          kinds = [('positive', 1), ('confusable', None), ('negative', None)]
+          for i, (kind, keyword) in enumerate(kinds):
+              file_sha = f'{i+1:064x}'[-64:]
+              base = {
+                  'schema_version': 1,
+                  'evidence_class': 'speech-like-synthetic-recording-v1',
+                  'synthetic': True,
+                  'provider_kind': 'offline-tts',
+                  'provider_name': 'fixture',
+                  'provider_version': '1',
+                  'license_id': 'fixture-test-only',
+                  'voice_id': f'voice-{i}',
+                  'source_id': f'source-{i}',
+                  'locale': 'zh-CN',
+                  'text': '你好小窝' if i == 0 else '近音负例',
+                  'tokens': ['ni3', 'hao3', 'xiao3', 'wo1'] if i == 0 else ['ni3', 'hao3'],
+                  'generation_config_sha256': 'a' * 64,
+                  'audio': f'clip-{i}.wav',
+                  'file_sha256': file_sha,
+                  'pcm_sha256': 'b' * 64,
+              }
+              rows.append(base)
+              labels.append({
+                  'schema_version': 1,
+                  'evidence_class': 'speech-like-training-label-v1',
+                  'voice_id': base['voice_id'],
+                  'source_id': base['source_id'],
+                  'file_sha256': file_sha,
+                  'kind': kind,
+                  'keyword_id': keyword,
+                  'label_source': 'fixture-plan-v1',
+              })
+          (root / 'manifest.jsonl').write_text(''.join(json.dumps(x) + '\n' for x in rows))
+          (root / 'labels.jsonl').write_text(''.join(json.dumps(x) + '\n' for x in labels))
+          PY
+      - name: Attach complete labels
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-labels"
+          python3 tools/attach_speech_like_labels.py \
+            --manifest "$root/manifest.jsonl" --labels "$root/labels.jsonl" --output "$root/enriched.jsonl"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          rows = [json.loads(x) for x in (pathlib.Path(os.environ['ROOT']) / 'enriched.jsonl').read_text().splitlines() if x.strip()]
+          assert [x['kind'] for x in rows] == ['positive', 'confusable', 'negative']
+          assert rows[0]['keyword_id'] == 1
+          assert rows[1]['keyword_id'] is None and rows[2]['keyword_id'] is None
+          assert all(len(x['label_provenance_sha256']) == 64 for x in rows)
+          PY
+      - name: Missing and duplicate labels fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-labels"
+          head -n 2 "$root/labels.jsonl" > "$root/missing.jsonl"
+          if python3 tools/attach_speech_like_labels.py --manifest "$root/manifest.jsonl" --labels "$root/missing.jsonl" --output "$root/nope.jsonl"; then
+            echo "missing label unexpectedly accepted" >&2; exit 1
+          fi
+          cat "$root/labels.jsonl" "$root/labels.jsonl" > "$root/duplicate.jsonl"
+          if python3 tools/attach_speech_like_labels.py --manifest "$root/manifest.jsonl" --labels "$root/duplicate.jsonl" --output "$root/nope.jsonl"; then
+            echo "duplicate label unexpectedly accepted" >&2; exit 1
+          fi
+      - name: Invalid keyword semantics fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-labels"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          labels = [json.loads(x) for x in (root / 'labels.jsonl').read_text().splitlines() if x.strip()]
+          bad = [dict(x) for x in labels]
+          bad[0]['keyword_id'] = None
+          (root / 'positive-missing-keyword.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
+          bad = [dict(x) for x in labels]
+          bad[2]['keyword_id'] = 1
+          (root / 'negative-with-keyword.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
+          PY
+          for bad in positive-missing-keyword negative-with-keyword; do
+            if python3 tools/attach_speech_like_labels.py --manifest "$root/manifest.jsonl" --labels "$root/$bad.jsonl" --output "$root/nope.jsonl"; then
+              echo "$bad unexpectedly accepted" >&2; exit 1
+            fi
+          done
+      - name: Python syntax
+        run: python3 -m py_compile tools/attach_speech_like_labels.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
