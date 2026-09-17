@@ -157,10 +157,28 @@ def main() -> int:
     real_config = json.loads(CONFIG.read_text(encoding="utf-8"))
     fresh_registry = json.loads(FRESH_REGISTRY.read_text(encoding="utf-8"))
     shadow_registry = json.loads(SHADOW_REGISTRY.read_text(encoding="utf-8"))
+    try:
+        multiseed.validate_protected_seed_independence(
+            multi_policy,
+            real_config,
+            fresh_registry,
+            shadow_registry,
+        )
+    except ValueError as exc:
+        assert "current fresh validation namespace is not reserved for GRU" in str(exc)
+    else:
+        raise AssertionError("consumed Fresh v4 namespace was accepted for new development")
+
+    reserved_fresh_registry = json.loads(json.dumps(fresh_registry))
+    for row in reserved_fresh_registry["namespaces"]:
+        if int(row.get("namespace", -1)) == int(
+            multi_policy["candidate_freeze"]["fresh_validation_seed_namespace"]
+        ):
+            row["status"] = "reserved-untouched"
     protection = multiseed.validate_protected_seed_independence(
         multi_policy,
         real_config,
-        fresh_registry,
+        reserved_fresh_registry,
         shadow_registry,
     )
     assert protection["fresh_registry_entry"] == "gru-fresh-validation-v4"
@@ -176,7 +194,7 @@ def main() -> int:
         multiseed.validate_protected_seed_independence(
             multi_policy,
             bad_config,
-            fresh_registry,
+            reserved_fresh_registry,
             shadow_registry,
         )
     except ValueError as exc:
