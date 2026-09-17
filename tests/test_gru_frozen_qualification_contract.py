@@ -31,7 +31,23 @@ class GruFrozenQualificationContractTest(unittest.TestCase):
         current_fresh = fresh_by_namespace[freeze["fresh_validation_seed_namespace"]]
         self.assertEqual(current_fresh["name"], "gru-fresh-validation-v4")
         self.assertEqual(current_fresh["model_family"], "gru")
-        self.assertEqual(current_fresh["status"], "reserved-untouched")
+        self.assertEqual(current_fresh["status"], "opened")
+        self.assertEqual(current_fresh["source_run_id"], 35189536712)
+        self.assertEqual(
+            current_fresh["source_head"],
+            "88cfe044025602ab104e0e171707facd06d90500",
+        )
+        self.assertEqual(
+            current_fresh["source_artifact_digest"],
+            "sha256:47e96f7124438acccae3d2e3d74cbe10bff180d5856c0a86b4f1951e6081bd56",
+        )
+        self.assertEqual(
+            current_fresh["candidate_model_sha256"],
+            "6760e079a70bfd6291665dfb69c85c31e01aadfc61c48c77775caca753725aa6",
+        )
+        self.assertEqual(current_fresh["result"], "failed")
+        self.assertFalse(current_fresh["shadow_consumed"])
+        self.assertFalse(current_fresh["formal_qualification_seed_consumed"])
         consumed_fresh = fresh_by_namespace[194000019]
         self.assertEqual(consumed_fresh["name"], "gru-fresh-validation-v3")
         self.assertEqual(consumed_fresh["status"], "opened")
