@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import pathlib
@@ -15,6 +16,7 @@ from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
 POLICY = "development-generalization-v1"
 SEED_EVIDENCE_CLASS = "development-generalization-seed-v1"
 REPORT_EVIDENCE_CLASS = "development-generalization-report-v1"
+PLAN_EVIDENCE_CLASS = "development-generalization-plan-v1"
 
 
 def _load_object(path: pathlib.Path) -> dict:
@@ -22,6 +24,28 @@ def _load_object(path: pathlib.Path) -> dict:
     if not isinstance(value, dict):
         raise ValueError(f"expected JSON object: {path}")
     return value
+
+
+def _plan_sha256(value: dict) -> str:
+    if int(value.get("schema_version", 0)) != 1 or value.get("evidence_class") != PLAN_EVIDENCE_CLASS:
+        raise ValueError("generalization plan identity mismatch")
+    if value.get("policy") != POLICY or value.get("evidence_scope") != "development-only":
+        raise ValueError("generalization plan policy/scope mismatch")
+    for key in ("fresh_used", "shadow_used", "formal_qualification_used"):
+        if value.get(key) is not False:
+            raise ValueError(f"generalization plan protected flag {key} must be false")
+    if value.get("selection_before_results") is not True:
+        raise ValueError("generalization plan must be selected before results")
+    expected = value.get("plan_sha256")
+    if not isinstance(expected, str) or len(expected) != 64:
+        raise ValueError("generalization plan_sha256 is invalid")
+    body = dict(value)
+    body.pop("plan_sha256", None)
+    raw = json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    actual = hashlib.sha256(raw).hexdigest()
+    if actual != expected:
+        raise ValueError("generalization plan_sha256 mismatch")
+    return actual
 
 
 def _non_negative_int(value: object, label: str) -> int:
@@ -101,12 +125,23 @@ def validate_seed(path: pathlib.Path, value: dict, expected_tier: str) -> dict:
             "expected_wakes": k_expected,
             "false_rejects": k_fr,
         }
+    plan_sha = value.get("plan_sha256")
+    plan_ordinal = value.get("plan_ordinal")
+    if (plan_sha is None) != (plan_ordinal is None):
+        raise ValueError(f"{path}: incomplete plan binding")
+    if plan_sha is not None:
+        if not isinstance(plan_sha, str) or len(plan_sha) != 64:
+            raise ValueError(f"{path}: invalid plan_sha256")
+        plan_ordinal = _non_negative_int(plan_ordinal, f"{path}.plan_ordinal")
+
     return {
         "path": path.as_posix(),
         "model_family": model_family,
         "candidate_id": candidate_id,
         "source_identity": source_identity,
         "seed": seed,
+        "plan_sha256": plan_sha,
+        "plan_ordinal": plan_ordinal,
         "expected_wakes": expected,
         "false_rejects": false_rejects,
         "false_accepts": false_accepts,
@@ -116,7 +151,7 @@ def validate_seed(path: pathlib.Path, value: dict, expected_tier: str) -> dict:
     }
 
 
-def build_report(policy: dict, tier: str, seed_paths: list[pathlib.Path]) -> dict:
+def build_report(policy: dict, tier: str, seed_paths: list[pathlib.Path], plan: dict | None = None) -> dict:
     if tier not in policy["tiers"]:
         raise ValueError(f"unknown tier: {tier}")
     seeds = [validate_seed(path, _load_object(path), tier) for path in seed_paths]
@@ -133,6 +168,34 @@ def build_report(policy: dict, tier: str, seed_paths: list[pathlib.Path]) -> dic
         raise ValueError("generalization seed ids must be unique")
     if len(set(sources)) != len(sources):
         raise ValueError("generalization source identities must be unique")
+
+    plan_binding = {}
+    if plan is not None:
+        digest = _plan_sha256(plan)
+        if plan.get("tier") != tier or plan.get("model_family") != next(iter(families)) or plan.get("candidate_id") != next(iter(candidates)):
+            raise ValueError("generalization plan tier/family/candidate mismatch")
+        entries = plan.get("seed_plan")
+        if not isinstance(entries, list) or int(plan.get("independent_seed_count", -1)) != len(entries):
+            raise ValueError("generalization plan seed cohort is invalid")
+        if len(seeds) != len(entries):
+            raise ValueError("generalization report requires the complete predeclared seed cohort")
+        by_ordinal = {}
+        for item in seeds:
+            if item["plan_sha256"] != digest or item["plan_ordinal"] is None:
+                raise ValueError("seed summary is not bound to the supplied plan")
+            ordinal = int(item["plan_ordinal"])
+            if ordinal in by_ordinal:
+                raise ValueError("duplicate generalization plan ordinal")
+            by_ordinal[ordinal] = item
+        if set(by_ordinal) != set(range(len(entries))):
+            raise ValueError("generalization plan ordinals are incomplete")
+        for ordinal, entry in enumerate(entries):
+            if int(entry.get("ordinal", -1)) != ordinal:
+                raise ValueError("generalization plan ordinal identity mismatch")
+            item = by_ordinal[ordinal]
+            if item["seed"] != int(entry.get("seed", -1)) or item["source_identity"] != str(entry.get("source_identity", "")):
+                raise ValueError("seed summary does not match its predeclared plan entry")
+        plan_binding = {"plan_sha256": digest, "plan_complete": True}
 
     expected = sum(item["expected_wakes"] for item in seeds)
     false_rejects = sum(item["false_rejects"] for item in seeds)
@@ -173,6 +236,7 @@ def build_report(policy: dict, tier: str, seed_paths: list[pathlib.Path]) -> dic
         "tier": tier,
         "model_family": next(iter(families)),
         "candidate_id": next(iter(candidates)),
+        **plan_binding,
         "independent_seed_count": len(seeds),
         "minimum_independent_seed_count": min_seeds,
         "seed_ids": sorted(seed_ids),
@@ -205,10 +269,12 @@ def main() -> int:
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--tier", required=True, choices=("search", "freeze"))
     parser.add_argument("--seed-summary", required=True, action="append", type=pathlib.Path)
+    parser.add_argument("--plan", type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
     policy = load_policy(args.policy)
-    report = build_report(policy, args.tier, [path.resolve() for path in args.seed_summary])
+    plan = _load_object(args.plan.resolve()) if args.plan is not None else None
+    report = build_report(policy, args.tier, [path.resolve() for path in args.seed_summary], plan=plan)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(
