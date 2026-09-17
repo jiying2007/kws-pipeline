@@ -48,19 +48,28 @@ def inspect_pcm16(path: pathlib.Path) -> tuple[list[int], str]:
 
 
 def corpus_sha(rows: list[dict]) -> str:
-    value = [
-        {
-            "wav_sha256": row["wav_sha256"],
-            "kind": row["kind"],
-            "keyword_id": row["keyword_id"],
-            "tokens": row["tokens"],
-            "voice_id": row["voice_id"],
-            "source_id": row["source_id"],
-            "generation_config_sha256": row["generation_config_sha256"],
-            "label_provenance_sha256": row["label_provenance_sha256"],
-        }
-        for row in rows
-    ]
+    value = []
+    for row in rows:
+        provenance = row.get("speech_like_provenance")
+        if not isinstance(provenance, dict):
+            raise ValueError("base row is missing speech_like_provenance")
+        value.append(
+            {
+                "wav_sha256": row["wav_sha256"],
+                "kind": row["kind"],
+                "keyword_id": row["keyword_id"],
+                "tokens": row["tokens"],
+                "provider_kind": provenance["provider_kind"],
+                "provider_name": provenance["provider_name"],
+                "provider_version": provenance["provider_version"],
+                "license_id": provenance["license_id"],
+                "voice_id": provenance["voice_id"],
+                "source_id": provenance["source_id"],
+                "generation_config_sha256": provenance["generation_config_sha256"],
+                "label_provenance_sha256": provenance["label_provenance_sha256"],
+                "pcm_sha256": provenance["pcm_sha256"],
+            }
+        )
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
 
@@ -118,6 +127,21 @@ def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path
             raise ValueError(f"{label}: non-positive keyword_id must be null")
         if kind == "background" and tokens:
             raise ValueError(f"{label}: background must not carry token targets")
+        provenance = {
+            "provider_kind": source.get("provider_kind"),
+            "provider_name": source.get("provider_name"),
+            "provider_version": source.get("provider_version"),
+            "license_id": source.get("license_id"),
+            "voice_id": source.get("voice_id"),
+            "source_id": source.get("source_id"),
+            "generation_config_sha256": source.get("generation_config_sha256"),
+            "label_provenance_sha256": label_sha,
+            "pcm_sha256": pcm_sha,
+        }
+        for field in ("provider_kind", "provider_name", "provider_version", "license_id", "voice_id", "source_id", "generation_config_sha256"):
+            value = provenance[field]
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{label}: missing speech-like provenance field {field}")
         rows.append({
             "split": split,
             "kind": kind,
@@ -131,17 +155,7 @@ def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path
             "event_start_frame": event_start,
             "event_end_frame": event_end,
             "path": str(audio),
-            "speech_like_provenance": {
-                "provider_kind": source.get("provider_kind"),
-                "provider_name": source.get("provider_name"),
-                "provider_version": source.get("provider_version"),
-                "license_id": source.get("license_id"),
-                "voice_id": source.get("voice_id"),
-                "source_id": source.get("source_id"),
-                "generation_config_sha256": source.get("generation_config_sha256"),
-                "label_provenance_sha256": label_sha,
-                "pcm_sha256": pcm_sha,
-            },
+            "speech_like_provenance": provenance,
         })
     summary = {
         "schema_version": 1,
