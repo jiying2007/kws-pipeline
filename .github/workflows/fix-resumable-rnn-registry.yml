@@ -1,0 +1,45 @@
+name: fix-resumable-rnn-registry
+
+on:
+  push:
+    branches:
+      - tmp/fix-resumable-rnn-registry
+    paths:
+      - '.github/triggers/fix-resumable-rnn-registry.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/fix-resumable-rnn-registry
+      - name: Patch RNN fresh registry selection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/resumable-development-curriculum.yml')
+          text=p.read_text()
+          old="fresh=json.load(open('experiments/model_family/fresh_validation_registry.json', encoding='utf-8'))"
+          new="""fresh_registry = (\n              'experiments/model_family/rnn_fresh_validation_registry.json'\n              if os.environ['VARIANT'] == 'rnn'\n              else 'experiments/model_family/fresh_validation_registry.json'\n          )\n          fresh=json.load(open(fresh_registry, encoding='utf-8'))"""
+          if old not in text:
+              raise SystemExit('fresh registry marker missing')
+          text=text.replace(old,new,1)
+          p.write_text(text)
+          PY
+          python3 - <<'PY'
+          import json
+          gru=json.load(open('experiments/model_family/fresh_validation_registry.json'))
+          rnn=json.load(open('experiments/model_family/rnn_fresh_validation_registry.json'))
+          assert any(int(x['namespace']) == 195000019 and x['status'] == 'reserved-untouched' for x in gru['namespaces'])
+          assert any(int(x['namespace']) == 295000019 and x['status'] == 'reserved-untouched' for x in rnn['namespaces'])
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/resumable-development-curriculum.yml
+          git commit -m 'fix(training): select family-specific fresh registry'
+          git push origin HEAD:tmp/fix-resumable-rnn-registry
