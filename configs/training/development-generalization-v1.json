@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "policy": "development-generalization-v1",
+  "evidence_scope": "development-only",
+  "confidence": 0.95,
+  "statistical_gate_mode": "report-only-until-baseline-calibrated",
+  "tiers": {
+    "search": {
+      "min_independent_seeds": 4,
+      "purpose": "fast architecture/frontend/loss screening"
+    },
+    "freeze": {
+      "min_independent_seeds": 8,
+      "purpose": "candidate freeze precondition before protected evidence"
+    }
+  },
+  "required_properties": [
+    "unique acoustic seed per summary",
+    "unique source identity per summary",
+    "train/generalization acoustic realization isolation",
+    "development-only evidence scope",
+    "no Fresh/Shadow/Formal evidence consumption",
+    "required stress slice coverage result",
+    "pooled and per-keyword metrics"
+  ],
+  "selection_policy": {
+    "thresholds_frozen": false,
+    "freeze_thresholds_only_after_rnn_gru_baselines": true,
+    "future_dimensions": [
+      "pooled_frr_upper_bound",
+      "pooled_far_upper_bound_per_hour",
+      "worst_seed_frr",
+      "worst_seed_far_per_hour",
+      "per_keyword_frr_upper_bound",
+      "coverage_passed",
+      "resource_pareto"
+    ]
+  },
+  "protected_evidence_policy": {
+    "fresh_used": false,
+    "shadow_used": false,
+    "formal_qualification_used": false,
+    "may_feed_back_into_training": true
+  }
+}
