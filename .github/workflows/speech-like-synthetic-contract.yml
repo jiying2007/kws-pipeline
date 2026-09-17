@@ -1,0 +1,144 @@
+name: speech-like-synthetic-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/validate_speech_like_synthetic.py"
+      - "configs/training/speech-like-synthetic-v1.json"
+      - ".github/workflows/speech-like-synthetic-contract.yml"
+  pull_request:
+    paths:
+      - "tools/validate_speech_like_synthetic.py"
+      - "configs/training/speech-like-synthetic-v1.json"
+      - ".github/workflows/speech-like-synthetic-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build offline speech-like contract fixtures
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/speech-like"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import math
+          import os
+          import pathlib
+          import struct
+          import wave
+
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "speech-like"
+          groups = ["train", "generalization-search", "generalization-freeze"]
+          for group_index, group in enumerate(groups):
+              group_dir = root / group
+              group_dir.mkdir(parents=True, exist_ok=True)
+              rows = []
+              for row_index in range(2):
+                  samples = []
+                  frequency = 220.0 + 35.0 * group_index + 7.0 * row_index
+                  for i in range(3200):
+                      samples.append(int(5000 * math.sin(2.0 * math.pi * frequency * i / 16000.0)))
+                  pcm = b"".join(struct.pack("<h", value) for value in samples)
+                  wav_path = group_dir / f"fixture-{row_index}.wav"
+                  with wave.open(str(wav_path), "wb") as writer:
+                      writer.setnchannels(1)
+                      writer.setsampwidth(2)
+                      writer.setframerate(16000)
+                      writer.writeframes(pcm)
+                  rows.append({
+                      "schema_version": 1,
+                      "evidence_class": "speech-like-synthetic-recording-v1",
+                      "synthetic": True,
+                      "provider_kind": "offline-tts",
+                      "provider_name": "fixture-provider",
+                      "provider_version": "1",
+                      "license_id": "fixture-test-only",
+                      "voice_id": f"voice-{group_index}-{row_index}",
+                      "source_id": f"source-{group_index}-{row_index}",
+                      "locale": "zh-CN",
+                      "text": "你好小窝" if row_index == 0 else "小窝小窝",
+                      "tokens": ["ni3", "hao3", "xiao3", "wo1"] if row_index == 0 else ["xiao3", "wo1", "xiao3", "wo1"],
+                      "generation_config_sha256": hashlib.sha256(f"config-{group_index}-{row_index}".encode()).hexdigest(),
+                      "audio": wav_path.name,
+                      "file_sha256": hashlib.sha256(wav_path.read_bytes()).hexdigest(),
+                      "pcm_sha256": hashlib.sha256(pcm).hexdigest()
+                  })
+              (group_dir / "manifest.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+          PY
+      - name: Validate three-way source isolation
+        run: |
+          set -euo pipefail
+          python3 tools/validate_speech_like_synthetic.py \
+            --policy configs/training/speech-like-synthetic-v1.json \
+            --manifest "train=$RUNNER_TEMP/speech-like/train/manifest.jsonl" \
+            --manifest "generalization-search=$RUNNER_TEMP/speech-like/generalization-search/manifest.jsonl" \
+            --manifest "generalization-freeze=$RUNNER_TEMP/speech-like/generalization-freeze/manifest.jsonl" \
+            --output "$RUNNER_TEMP/speech-like-audit.json"
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          report = json.loads((pathlib.Path(os.environ["RUNNER_TEMP"]) / "speech-like-audit.json").read_text())
+          assert report["recordings"] == 6
+          assert report["tone_backend_allowed"] is False
+          assert report["cross_group_isolation"]["voice_id"] == []
+          assert report["cross_group_isolation"]["source_id"] == []
+          assert set(report["groups"]) == {"train", "generalization-search", "generalization-freeze"}
+          print("speech-like-synthetic-contract: ok")
+          PY
+      - name: Verify cross-group identity overlap fails closed
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "speech-like/generalization-freeze/manifest.jsonl"
+          rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+          rows[0]["voice_id"] = "voice-0-0"
+          bad = path.with_name("overlap.jsonl")
+          bad.write_text("".join(json.dumps(row) + "\n" for row in rows))
+          PY
+          if python3 tools/validate_speech_like_synthetic.py \
+            --policy configs/training/speech-like-synthetic-v1.json \
+            --manifest "train=$RUNNER_TEMP/speech-like/train/manifest.jsonl" \
+            --manifest "generalization-search=$RUNNER_TEMP/speech-like/generalization-search/manifest.jsonl" \
+            --manifest "generalization-freeze=$RUNNER_TEMP/speech-like/generalization-freeze/overlap.jsonl" \
+            --output "$RUNNER_TEMP/invalid-audit.json"; then
+            echo "cross-group voice overlap unexpectedly accepted" >&2
+            exit 1
+          fi
+      - name: Verify tone provider is rejected
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          src = pathlib.Path(os.environ["RUNNER_TEMP"]) / "speech-like/train/manifest.jsonl"
+          rows = [json.loads(line) for line in src.read_text().splitlines() if line.strip()]
+          rows[0]["provider_kind"] = "tone"
+          bad = src.with_name("tone.jsonl")
+          bad.write_text("".join(json.dumps(row) + "\n" for row in rows))
+          PY
+          if python3 tools/validate_speech_like_synthetic.py \
+            --policy configs/training/speech-like-synthetic-v1.json \
+            --manifest "train=$RUNNER_TEMP/speech-like/train/tone.jsonl" \
+            --output "$RUNNER_TEMP/tone-audit.json"; then
+            echo "tone provider unexpectedly accepted" >&2
+            exit 1
+          fi
+      - name: Python syntax
+        run: python3 -m py_compile tools/validate_speech_like_synthetic.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

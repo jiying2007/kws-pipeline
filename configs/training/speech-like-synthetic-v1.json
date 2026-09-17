@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "policy": "speech-like-synthetic-v1",
+  "product_scope": "xiaowo-dual-wake-development-v2",
+  "sample_rate_hz": 16000,
+  "channels": 1,
+  "sample_width_bits": 16,
+  "groups": [
+    "train",
+    "generalization-search",
+    "generalization-freeze"
+  ],
+  "allowed_provider_kinds": [
+    "offline-tts",
+    "pre-generated-synthetic-speech"
+  ],
+  "forbidden_provider_kinds": [
+    "tone"
+  ],
+  "required_cross_group_isolation_fields": [
+    "voice_id",
+    "source_id"
+  ],
+  "required_provenance": [
+    "provider_kind",
+    "provider_name",
+    "provider_version",
+    "license_id",
+    "voice_id",
+    "source_id",
+    "locale",
+    "generation_config_sha256",
+    "file_sha256",
+    "pcm_sha256"
+  ],
+  "network_policy": "offline-pre-generated-corpus-only-in-ci",
+  "tone_policy": "contract-and-regression-only-not-v2-acoustic-freeze",
+  "scene_processing": {
+    "reuse_existing_distance_azimuth_rt60_noise_playback_afe_renderer": true,
+    "preserve_source_identity_through_rendering": true
+  }
+}
