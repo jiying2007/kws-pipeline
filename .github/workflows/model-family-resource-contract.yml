@@ -1,0 +1,53 @@
+name: model-family-resource-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/model_family_resource_estimate.py"
+      - "configs/training/model-family-resource-contract-v1.json"
+      - ".github/workflows/model-family-resource-contract.yml"
+  pull_request:
+    paths:
+      - "tools/model_family_resource_estimate.py"
+      - "configs/training/model-family-resource-contract-v1.json"
+      - ".github/workflows/model-family-resource-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify static RNN/GRU resource contract
+        run: |
+          set -euo pipefail
+          python3 tools/model_family_resource_estimate.py \
+            --contract configs/training/model-family-resource-contract-v1.json \
+            --verify \
+            --output "$RUNNER_TEMP/model-family-resource-report.json"
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          report = json.loads((pathlib.Path(os.environ["RUNNER_TEMP"]) / "model-family-resource-report.json").read_text())
+          rows = {(row["candidate"], row["vocabulary"]): row for row in report["rows"]}
+          assert rows[("rnn-h48", "shipping-dedicated")]["model_bytes_estimate"] == 4364
+          assert rows[("rnn-h48", "shipping-dedicated")]["dense_mmac_per_s"] == 0.204
+          assert rows[("gru-h48", "shipping-dedicated")]["model_bytes_estimate"] == 13012
+          assert rows[("gru-h48", "shipping-dedicated")]["dense_mmac_per_s"] == 0.588
+          assert rows[("rnn-h48", "full-pinyin-sizing")]["dense_mmac_per_s"] == 1.2
+          assert rows[("gru-h48", "full-pinyin-sizing")]["dense_mmac_per_s"] == 1.584
+          assert report["hosted_timing_is_shipping_evidence"] is False
+          assert report["requires_target_board_measurement_for_shipping"] is True
+          print("model-family-resource-contract: ok")
+          PY
+      - name: Python syntax
+        run: python3 -m py_compile tools/model_family_resource_estimate.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

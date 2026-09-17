@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "policy": "model-family-resource-contract-v1",
+  "feature_dim": 32,
+  "steps_per_second": 50.0,
+  "selection_mode": "pareto-only-until-target-board-budget",
+  "hosted_timing_is_shipping_evidence": false,
+  "requires_target_board_measurement_for_shipping": true,
+  "vocabularies": [
+    {
+      "name": "shipping-dedicated",
+      "size": 5
+    },
+    {
+      "name": "full-pinyin-sizing",
+      "size": 420
+    }
+  ],
+  "candidates": [
+    {
+      "name": "rnn-h48",
+      "family": "rnn",
+      "hidden_dim": 48,
+      "role": "resource-floor"
+    },
+    {
+      "name": "rnn-h64",
+      "family": "rnn",
+      "hidden_dim": 64,
+      "role": "rnn-accuracy-upper-bound"
+    },
+    {
+      "name": "gru-h32",
+      "family": "gru",
+      "hidden_dim": 32,
+      "role": "gru-low-resource"
+    },
+    {
+      "name": "gru-h48",
+      "family": "gru",
+      "hidden_dim": 48,
+      "role": "gru-primary"
+    },
+    {
+      "name": "gru-h64",
+      "family": "gru",
+      "hidden_dim": 64,
+      "role": "accuracy-ceiling"
+    }
+  ],
+  "pareto_dimensions": [
+    "model_bytes_estimate",
+    "dense_mmac_per_s",
+    "development_generalization_quality",
+    "target_board_p99_headroom"
+  ],
+  "reference_assertions": [
+    {
+      "candidate": "rnn-h48",
+      "vocabulary": "full-pinyin-sizing",
+      "model_bytes_estimate": 25944,
+      "dense_mmac_per_s": 1.2
+    },
+    {
+      "candidate": "gru-h48",
+      "vocabulary": "shipping-dedicated",
+      "model_bytes_estimate": 13012,
+      "dense_mmac_per_s": 0.588
+    },
+    {
+      "candidate": "gru-h64",
+      "vocabulary": "full-pinyin-sizing",
+      "model_bytes_estimate": 48608,
+      "dense_mmac_per_s": 2.2656
+    }
+  ],
+  "limitations": [
+    "Static estimates cover dense recurrent/output MACs and serialized model layout only.",
+    "Nonlinear, frontend, decoder, cache and memory-system costs are not converted into CPU percentage.",
+    "Current shipping RNN engine arena is runtime-implementation-specific and must be measured with kws_engine_required_bytes().",
+    "GRU target runtime memory must be measured after a shipping-grade C GRU implementation exists.",
+    "Hosted timing is regression evidence only; target-board benchmark and soak remain mandatory for shipping."
+  ]
+}
