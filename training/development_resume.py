@@ -210,6 +210,21 @@ def load_state(
         manifest = work / "development-loop-manifest.json"
         if not manifest.is_file():
             raise ValueError("complete development resume state lacks final manifest")
+        manifest_value = json.loads(manifest.read_text(encoding="utf-8"))
+        if not isinstance(manifest_value, dict):
+            raise ValueError("complete development manifest must be an object")
+        rebased_manifest = _rebase(manifest_value, old_root, work)
+        manifest.write_text(
+            json.dumps(
+                rebased_manifest,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+                allow_nan=False,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     return {
         "records": records,
         "next_round": len(records),
