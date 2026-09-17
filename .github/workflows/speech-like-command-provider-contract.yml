@@ -1,0 +1,128 @@
+name: speech-like-command-provider-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/generate_speech_like_command_provider.py"
+      - "configs/training/speech-like-command-provider-v1.json"
+      - ".github/workflows/speech-like-command-provider-contract.yml"
+  pull_request:
+    paths:
+      - "tools/generate_speech_like_command_provider.py"
+      - "configs/training/speech-like-command-provider-v1.json"
+      - ".github/workflows/speech-like-command-provider-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build fake offline TTS provider and requests
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/command-provider"
+          mkdir -p "$root"
+          cat > "$root/fake_tts.py" <<'PY'
+          #!/usr/bin/env python3
+          import argparse, math, pathlib, struct, wave
+          p = argparse.ArgumentParser()
+          p.add_argument('--model', required=True)
+          p.add_argument('--text', required=True)
+          p.add_argument('--output', required=True)
+          p.add_argument('--speaker-id', required=True, type=int)
+          p.add_argument('--speed', required=True, type=float)
+          a = p.parse_args()
+          assert pathlib.Path(a.model).is_file()
+          frames = max(1600, int(3200 / a.speed))
+          freq = 220.0 + 17.0 * a.speaker_id + (len(a.text) % 7)
+          pcm = b''.join(struct.pack('<h', int(5000 * math.sin(2 * math.pi * freq * i / 16000.0))) for i in range(frames))
+          out = pathlib.Path(a.output)
+          out.parent.mkdir(parents=True, exist_ok=True)
+          with wave.open(str(out), 'wb') as w:
+              w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(pcm)
+          PY
+          chmod +x "$root/fake_tts.py"
+          printf 'fixture-model-v1\n' > "$root/model.bin"
+          cat > "$root/requests.jsonl" <<'EOF'
+          {"schema_version":1,"group":"train","text":"你好小窝","tokens":["ni3","hao3","xiao3","wo1"],"voice_id":"train-v0","source_id":"train-s0","parameters":{"speaker_id":0,"speed":0.95}}
+          {"schema_version":1,"group":"train","text":"小窝小窝","tokens":["xiao3","wo1","xiao3","wo1"],"voice_id":"train-v1","source_id":"train-s1","parameters":{"speaker_id":1,"speed":1.05}}
+          {"schema_version":1,"group":"generalization-search","text":"你好小窝","tokens":["ni3","hao3","xiao3","wo1"],"voice_id":"search-v0","source_id":"search-s0","parameters":{"speaker_id":2,"speed":0.90}}
+          {"schema_version":1,"group":"generalization-search","text":"小窝小窝","tokens":["xiao3","wo1","xiao3","wo1"],"voice_id":"search-v1","source_id":"search-s1","parameters":{"speaker_id":3,"speed":1.10}}
+          {"schema_version":1,"group":"generalization-freeze","text":"你好小窝","tokens":["ni3","hao3","xiao3","wo1"],"voice_id":"freeze-v0","source_id":"freeze-s0","parameters":{"speaker_id":4,"speed":0.92}}
+          {"schema_version":1,"group":"generalization-freeze","text":"小窝小窝","tokens":["xiao3","wo1","xiao3","wo1"],"voice_id":"freeze-v1","source_id":"freeze-s1","parameters":{"speaker_id":5,"speed":1.08}}
+          EOF
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'command-provider'
+          sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          provider = {
+              'schema_version': 1,
+              'provider_kind': 'offline-tts',
+              'provider_name': 'fake-offline-tts',
+              'provider_version': '1',
+              'license_id': 'fixture-test-only',
+              'locale': 'zh-CN',
+              'executable': {'path': str(root / 'fake_tts.py'), 'sha256': sha(root / 'fake_tts.py')},
+              'assets': [{'role': 'model', 'path': str(root / 'model.bin'), 'sha256': sha(root / 'model.bin')}],
+              'argv_template': ['{executable}', '--model', '{asset:model}', '--text', '{text}', '--output', '{output}', '--speaker-id', '{speaker_id}', '--speed', '{speed}'],
+              'timeout_seconds': 30,
+          }
+          (root / 'provider.json').write_text(json.dumps(provider, indent=2) + '\n')
+          PY
+      - name: Generate hash-bound offline speech-like corpus
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/command-provider"
+          python3 tools/generate_speech_like_command_provider.py \
+            --policy configs/training/speech-like-command-provider-v1.json \
+            --provider "$root/provider.json" \
+            --requests "$root/requests.jsonl" \
+            --output-root "$root/generated" \
+            --summary "$root/summary.json"
+      - name: Validate generated corpus with canonical speech-like audit
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/command-provider"
+          python3 tools/validate_speech_like_synthetic.py \
+            --policy configs/training/speech-like-synthetic-v1.json \
+            --manifest "train=$root/generated/train/manifest.jsonl" \
+            --manifest "generalization-search=$root/generated/generalization-search/manifest.jsonl" \
+            --manifest "generalization-freeze=$root/generated/generalization-freeze/manifest.jsonl" \
+            --output "$root/audit.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'command-provider'
+          summary = json.loads((root / 'summary.json').read_text())
+          audit = json.loads((root / 'audit.json').read_text())
+          assert summary['recordings'] == 6
+          assert set(summary['groups']) == {'train', 'generalization-search', 'generalization-freeze'}
+          assert audit['recordings'] == 6
+          assert audit['tone_backend_allowed'] is False
+          assert audit['cross_group_isolation'] == {'source_id': [], 'voice_id': []}
+          print('speech-like-command-provider-contract: ok')
+          PY
+      - name: Executable tamper fails closed before generation
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/command-provider"
+          printf '\n# tampered\n' >> "$root/fake_tts.py"
+          if python3 tools/generate_speech_like_command_provider.py \
+            --policy configs/training/speech-like-command-provider-v1.json \
+            --provider "$root/provider.json" \
+            --requests "$root/requests.jsonl" \
+            --output-root "$root/tampered" \
+            --summary "$root/tampered-summary.json"; then
+            echo "tampered executable unexpectedly accepted" >&2
+            exit 1
+          fi
+      - name: Python syntax
+        run: python3 -m py_compile tools/generate_speech_like_command_provider.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
