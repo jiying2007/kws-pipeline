@@ -1,0 +1,167 @@
+name: v2-promotion-readiness-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/verify_v2_promotion_readiness.py"
+      - "configs/training/v2-promotion-readiness-v1.json"
+      - ".github/workflows/v2-promotion-readiness-contract.yml"
+  pull_request:
+    paths:
+      - "tools/verify_v2_promotion_readiness.py"
+      - "configs/training/v2-promotion-readiness-v1.json"
+      - ".github/workflows/v2-promotion-readiness-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build contract fixtures
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/v2-readiness"
+          mkdir -p "$root"
+          python3 tools/model_family_resource_estimate.py \
+            --contract configs/training/model-family-resource-contract-v1.json \
+            --output "$root/resource.json" --verify
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
+          generalization = {
+              'schema_version': 1,
+              'policy': 'development-generalization-v1',
+              'evidence_class': 'development-generalization-report-v1',
+              'evidence_scope': 'development-only',
+              'tier': 'freeze',
+              'model_family': 'rnn',
+              'candidate_id': 'rnn-h48',
+              'independent_seed_count': 8,
+              'minimum_independent_seed_count': 8,
+              'seed_ids': list(range(8101, 8109)),
+              'confidence_level': 0.95,
+              'pooled': {'expected_wakes': 2048, 'false_rejects': 0, 'frr': 0.0, 'frr_upper_bound': 0.0019,
+                         'negative_audio_hours': 32.0, 'false_accepts': 0, 'far_per_hour': 0.0, 'far_upper_bound_per_hour': 0.094},
+              'worst_seed': {'frr': 0.0, 'far_per_hour': 0.0},
+              'coverage_passed': True,
+              'per_seed': [],
+              'keywords': {},
+              'statistical_gate_mode': 'report-only-until-baseline-calibrated',
+              'eligible_for_threshold_calibration': True,
+              'protected_evidence_used': False,
+          }
+          speech = {
+              'schema_version': 1,
+              'policy': 'speech-like-synthetic-v1',
+              'evidence_class': 'speech-like-synthetic-audit-v1',
+              'tone_backend_allowed': False,
+              'cross_group_isolation': {'voice_id': [], 'source_id': []},
+              'groups': {
+                  'train': {'recordings': 100},
+                  'generalization-search': {'recordings': 40},
+                  'generalization-freeze': {'recordings': 80},
+              },
+              'recordings': 220,
+          }
+          (root / 'generalization.json').write_text(json.dumps(generalization) + '\n')
+          (root / 'speech.json').write_text(json.dumps(speech) + '\n')
+          PY
+      - name: Current report-only policy must block protected promotion
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/v2-readiness"
+          python3 tools/verify_v2_promotion_readiness.py \
+            --policy configs/training/v2-promotion-readiness-v1.json \
+            --generalization "$root/generalization.json" \
+            --speech-like-audit "$root/speech.json" \
+            --resource-report "$root/resource.json" \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --output "$root/blocked.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
+          report = json.loads((root / 'blocked.json').read_text())
+          assert report['protected_promotion_ready'] is False
+          assert 'generalization-statistical-gate-not-enforced' in report['blockers']
+          assert 'generalization-statistical-gate-not-passed' in report['blockers']
+          PY
+          if python3 tools/verify_v2_promotion_readiness.py \
+            --policy configs/training/v2-promotion-readiness-v1.json \
+            --generalization "$root/generalization.json" \
+            --speech-like-audit "$root/speech.json" \
+            --resource-report "$root/resource.json" \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --output "$root/blocked-required.json" --require-ready; then
+            echo "report-only evidence unexpectedly allowed protected promotion" >&2
+            exit 1
+          fi
+      - name: Enforced passing evidence may become ready
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/v2-readiness"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
+          value = json.loads((root / 'generalization.json').read_text())
+          value['statistical_gate_mode'] = 'enforced-v1'
+          value['statistical_gate_passed'] = True
+          (root / 'generalization-enforced.json').write_text(json.dumps(value) + '\n')
+          PY
+          python3 tools/verify_v2_promotion_readiness.py \
+            --policy configs/training/v2-promotion-readiness-v1.json \
+            --generalization "$root/generalization-enforced.json" \
+            --speech-like-audit "$root/speech.json" \
+            --resource-report "$root/resource.json" \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --output "$root/ready.json" --require-ready
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
+          report = json.loads((root / 'ready.json').read_text())
+          assert report['protected_promotion_ready'] is True
+          assert report['blockers'] == []
+          assert report['resource']['candidate'] == 'rnn-h48'
+          PY
+      - name: Tone or protected-evidence contamination fails closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/v2-readiness"
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, sys
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'v2-readiness'
+          speech = json.loads((root / 'speech.json').read_text())
+          speech['tone_backend_allowed'] = True
+          (root / 'speech-tone.json').write_text(json.dumps(speech) + '\n')
+          gen = json.loads((root / 'generalization-enforced.json').read_text())
+          gen['protected_evidence_used'] = True
+          (root / 'generalization-protected.json').write_text(json.dumps(gen) + '\n')
+          PY
+          if python3 tools/verify_v2_promotion_readiness.py \
+            --policy configs/training/v2-promotion-readiness-v1.json \
+            --generalization "$root/generalization-enforced.json" \
+            --speech-like-audit "$root/speech-tone.json" \
+            --resource-report "$root/resource.json" \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --output "$root/tone.json" --require-ready; then
+            echo "tone-backed evidence unexpectedly accepted" >&2; exit 1
+          fi
+          if python3 tools/verify_v2_promotion_readiness.py \
+            --policy configs/training/v2-promotion-readiness-v1.json \
+            --generalization "$root/generalization-protected.json" \
+            --speech-like-audit "$root/speech.json" \
+            --resource-report "$root/resource.json" \
+            --candidate-id rnn-h48 --model-family rnn --resource-vocabulary shipping-five-token \
+            --output "$root/protected.json" --require-ready; then
+            echo "protected-evidence contamination unexpectedly accepted" >&2; exit 1
+          fi
+      - name: Python syntax
+        run: python3 -m py_compile tools/verify_v2_promotion_readiness.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
