@@ -1,0 +1,121 @@
+name: speech-like-external-base-bundle-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "training/external_base_dataset.py"
+      - ".github/workflows/speech-like-external-base-bundle-contract.yml"
+  pull_request:
+    paths:
+      - "training/external_base_dataset.py"
+      - ".github/workflows/speech-like-external-base-bundle-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build four immutable external base splits
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/external-base"
+          mkdir -p "$root"
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          splits = ['train','calibration','test','qualification']
+          cfg = {'schema_version':1,'generator':{'external_base_dataset':{}}}
+          for i, split in enumerate(splits):
+              wav = hashlib.sha256(f'wav-{split}'.encode()).hexdigest()
+              row = {
+                  'split':split,'kind':'positive' if split != 'qualification' else 'background',
+                  'family_id':f'{split}-0','variant':0,'keyword_id':1 if split != 'qualification' else None,
+                  'tokens':['ni3','hao3','xiao3','wo1'] if split != 'qualification' else [],
+                  'target_ids':[1,2,3,4] if split != 'qualification' else [],
+                  'wav_sha256':wav,'frames':1600,'event_start_frame':100 if split != 'qualification' else None,
+                  'event_end_frame':1400 if split != 'qualification' else None,
+                  'path':f'/immutable/{split}.wav',
+                  'speech_like_provenance':{
+                      'provider_kind':'offline-tts','provider_name':'fixture','provider_version':'1',
+                      'license_id':'fixture-test-only','voice_id':f'voice-{split}','source_id':f'source-{split}',
+                      'generation_config_sha256':'a'*64,'label_provenance_sha256':'b'*64,'pcm_sha256':'c'*64,
+                  },
+              }
+              index = root / f'{split}.jsonl'
+              index.write_text(json.dumps(row, sort_keys=True)+'\n')
+              summary = root / f'{split}.summary.json'
+              summary.write_text(json.dumps({
+                  'schema_version':1,'evidence_class':'speech-like-base-dataset-v1','split':split,
+                  'recordings':1,'positive_recordings':0 if split == 'qualification' else 1,
+                  'negative_recordings':1 if split == 'qualification' else 0,
+                  'corpus_sha256':hashlib.sha256(split.encode()).hexdigest(),'tone_backend_used':False,
+              }, sort_keys=True)+'\n')
+              cfg['generator']['external_base_dataset'][split] = {
+                  'index':index.name,'summary':summary.name,
+                  'index_sha256':hashlib.sha256(index.read_bytes()).hexdigest(),
+                  'summary_sha256':hashlib.sha256(summary.read_bytes()).hexdigest(),
+              }
+          (root/'config.json').write_text(json.dumps(cfg, indent=2, sort_keys=True)+'\n')
+          PY
+      - name: Accept complete isolated bundle deterministically
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/external-base"
+          python3 training/external_base_dataset.py --config "$root/config.json" --output "$root/out1.json"
+          python3 training/external_base_dataset.py --config "$root/config.json" --output "$root/out2.json"
+          cmp "$root/out1.json" "$root/out2.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          out = json.loads((root/'out1.json').read_text())
+          assert out['evidence_class'] == 'external-speech-like-base-bundle-v1'
+          assert out['tone_backend_used'] is False
+          assert out['recordings'] == 4
+          assert set(out['splits']) == {'train','calibration','test','qualification'}
+          assert len(out['bundle_sha256']) == 64
+          PY
+      - name: Missing split and hash mismatch fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/external-base"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          cfg = json.loads((root/'config.json').read_text())
+          missing = json.loads(json.dumps(cfg)); del missing['generator']['external_base_dataset']['qualification']
+          (root/'missing.json').write_text(json.dumps(missing))
+          bad = json.loads(json.dumps(cfg)); bad['generator']['external_base_dataset']['test']['index_sha256'] = '0'*64
+          (root/'bad-hash.json').write_text(json.dumps(bad))
+          PY
+          for cfg in missing bad-hash; do
+            if python3 training/external_base_dataset.py --config "$root/$cfg.json"; then
+              echo "$cfg unexpectedly accepted" >&2; exit 1
+            fi
+          done
+      - name: Cross-split voice identity overlap fails closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/external-base"
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ['ROOT'])
+          cfg = json.loads((root/'config.json').read_text())
+          p = root/'test.jsonl'; row = json.loads(p.read_text()); row['speech_like_provenance']['voice_id'] = 'voice-train'
+          p.write_text(json.dumps(row, sort_keys=True)+'\n')
+          cfg['generator']['external_base_dataset']['test']['index_sha256'] = hashlib.sha256(p.read_bytes()).hexdigest()
+          (root/'overlap.json').write_text(json.dumps(cfg))
+          PY
+          if python3 training/external_base_dataset.py --config "$root/overlap.json"; then
+            echo "cross-split overlap unexpectedly accepted" >&2; exit 1
+          fi
+      - name: Python syntax
+        run: python3 -m py_compile training/external_base_dataset.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
