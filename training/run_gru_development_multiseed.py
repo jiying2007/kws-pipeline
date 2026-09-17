@@ -272,6 +272,7 @@ def install_multiseed_rotation(policy_path: pathlib.Path) -> tuple[list[dict], l
         }
         summary["train_acoustic_rotation"] = rotation
         base.write_object(summary_path, summary)
+        base._persist_rotation_round(output, rotation, negative_stress)
         rotations.append(dict(rotation))
         return summary
 

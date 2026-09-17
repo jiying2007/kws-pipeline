@@ -132,6 +132,7 @@ def main() -> int:
     source = SCRIPT.read_text(encoding="utf-8")
     assert "_render_rotated_train_rows(" in source
     assert '"acoustic_rendering": "direct-train-scene-v1"' in source
+    assert "_persist_rotation_round(output" in source
     assert '"base_utterance_reused": True' in source
     assert '"evaluation_seed_rotated": False' in source
     assert "training_code_sha256" in source

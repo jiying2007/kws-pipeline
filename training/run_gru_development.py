@@ -336,6 +336,47 @@ def _reuse_canonical_base(canonical_base: pathlib.Path):
     return reuse
 
 
+ROTATION_EVIDENCE_DIR = "training-acoustic-rotation-evidence"
+
+
+def _persist_rotation_round(output: pathlib.Path, rotation: dict, negative_stress: dict) -> None:
+    work = output.resolve().parent.parent
+    evidence = work / ROTATION_EVIDENCE_DIR / f"round-{int(rotation['round']):02d}.json"
+    evidence.parent.mkdir(parents=True, exist_ok=True)
+    write_object(
+        evidence,
+        {
+            "schema_version": 1,
+            "round": int(rotation["round"]),
+            "rotation": rotation,
+            "negative_stress": negative_stress,
+        },
+    )
+
+
+def _load_rotation_rounds(work: pathlib.Path) -> tuple[list[dict], list[dict]]:
+    root = work / ROTATION_EVIDENCE_DIR
+    rotations: list[dict] = []
+    negative: list[dict] = []
+    if not root.is_dir():
+        return rotations, negative
+    for path in sorted(root.glob("round-*.json")):
+        value = load_object(path)
+        round_index = int(value.get("round", -1))
+        rotation = value.get("rotation")
+        stress = value.get("negative_stress")
+        if not isinstance(rotation, dict) or not isinstance(stress, dict):
+            raise ValueError(f"invalid persisted acoustic rotation evidence: {path}")
+        if int(rotation.get("round", -1)) != round_index or int(stress.get("round", -1)) != round_index:
+            raise ValueError(f"persisted acoustic rotation round mismatch: {path}")
+        rotations.append(rotation)
+        negative.append(stress)
+    observed = [int(row["round"]) for row in rotations]
+    if observed != list(range(len(observed))):
+        raise ValueError(f"persisted acoustic rotation rounds are not contiguous: {observed}")
+    return rotations, negative
+
+
 def install_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]:
     policy = load_object(policy_path)
     original_render = loop.render_domain_dataset
@@ -393,7 +434,7 @@ def install_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]
         sampling = summary.get("evaluation_sampling")
         if isinstance(sampling, dict):
             sampling["development_negative_override"] = negative_stress
-        summary["train_acoustic_rotation"] = {
+        rotation = {
             "policy": POLICY,
             "round": round_index,
             "seed_offset": seed_offset,
@@ -405,8 +446,10 @@ def install_rotation(policy_path: pathlib.Path) -> tuple[list[dict], list[dict]]
             "auxiliary_full_dataset_rendered": False,
             "evaluation_seed_rotated": False,
         }
+        summary["train_acoustic_rotation"] = rotation
         write_object(summary_path, summary)
-        rotations.append(dict(summary["train_acoustic_rotation"]))
+        _persist_rotation_round(output, rotation, negative_stress)
+        rotations.append(dict(rotation))
         return summary
 
     loop.render_domain_dataset = render_with_rotated_train
@@ -418,14 +461,22 @@ def retain_rotation_evidence(
     rotations: list[dict],
     negative_stress_rounds: list[dict],
 ) -> None:
-    if not rotations:
-        raise ValueError("development loop produced no train acoustic rotation evidence")
-    if len(negative_stress_rounds) != len(rotations):
-        raise ValueError("development negative stress evidence is incomplete")
     manifest_path = work / "development-loop-manifest.json"
     freeze_path = work / "frozen-candidate" / "freeze-manifest.json"
     manifest = load_object(manifest_path)
     freeze = load_object(freeze_path)
+    persisted_rotations, persisted_negative = _load_rotation_rounds(work)
+    rotation_by_round = {int(row["round"]): row for row in persisted_rotations}
+    negative_by_round = {int(row["round"]): row for row in persisted_negative}
+    rotation_by_round.update({int(row["round"]): row for row in rotations})
+    negative_by_round.update({int(row["round"]): row for row in negative_stress_rounds})
+    expected_rounds = [int(record["round"]) for record in manifest.get("records", [])]
+    if sorted(rotation_by_round) != expected_rounds:
+        raise ValueError("development acoustic rotation evidence is not complete for manifest rounds")
+    if sorted(negative_by_round) != expected_rounds:
+        raise ValueError("development negative stress evidence is not complete for manifest rounds")
+    rotations = [rotation_by_round[index] for index in expected_rounds]
+    negative_stress_rounds = [negative_by_round[index] for index in expected_rounds]
     manifest["training_acoustic_rotation"] = {
         "policy": POLICY,
         "rounds": rotations,

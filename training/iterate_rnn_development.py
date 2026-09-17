@@ -14,6 +14,7 @@ TOOLS = ROOT / "tools"
 sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TOOLS))
 
+import development_resume as development_resume  # noqa: E402
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -218,7 +219,8 @@ def _copy_frozen_candidate(selected: dict, output: pathlib.Path, config: pathlib
     selection = dict(selected)
     selection.update({"schema_version": 1, "policy": SELECTION_POLICY, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "evidence_scope": EVIDENCE_SCOPE, "selected_round": int(selected["round"]), "selected_score": float(selected["score"]), "qualification_used": False, "shadow_used": False, "formal_qualification_used": False})
     _write_object(frozen / "selection-evidence.json", selection)
-    code_paths = [pathlib.Path(__file__).resolve(), TRAINING / "train_ctc.py", TRAINING / "feature_cached_trainer.py", TRAINING / "model.py", TRAINING / "export_model.py", TRAINING / "domain_curriculum.py", TRAINING / "hard_negative_replay.py", TRAINING / "development_failure_replay.py", TOOLS / "rnn_development_gate.py"]
+    code_paths = [pathlib.Path(__file__).resolve(), TRAINING / "train_ctc.py", TRAINING / "feature_cached_trainer.py",
+        TRAINING / "development_resume.py", TRAINING / "model.py", TRAINING / "export_model.py", TRAINING / "domain_curriculum.py", TRAINING / "hard_negative_replay.py", TRAINING / "development_failure_replay.py", TOOLS / "rnn_development_gate.py"]
     freeze_cfg = policy_value["candidate_freeze"]
     freeze = {"schema_version": 1, "policy": FREEZE_POLICY, "source_policy": POLICY, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "evidence_scope": EVIDENCE_SCOPE, "selection_policy": SELECTION_POLICY, "selected_round": int(selected["round"]), "selected_score": float(selected["score"]), "model_sha256": sha256_file(frozen / "model.kwm"), "checkpoint_sha256": sha256_file(frozen / "model.pt"), "pack_sha256": sha256_file(frozen / "keywords.kwk"), "keywords_sha256": sha256_file(frozen / "keywords.tsv"), "provenance_sha256": sha256_file(frozen / "model-provenance.json"), "config_sha256": sha256_file(config), "development_policy_sha256": sha256_file(policy), "selection_evidence_sha256": sha256_file(frozen / "selection-evidence.json"), "training_code_sha256": {p.relative_to(ROOT).as_posix(): sha256_file(p) for p in code_paths if p.is_file()}, "selection_evidence": ["development-calibration", "development-test"], "qualification_used_for_selection": False, "shadow_used_for_selection": False, "formal_qualification_used_for_selection": False, "candidate_stage": {"fresh_validation_required": True, "fresh_validation_seed_namespace": int(freeze_cfg["fresh_validation_seed_namespace"]), "shadow_required": True, "shadow_arena": str(freeze_cfg["shadow_arena"]), "formal_qualification_required": True, "formal_qualification_seed": int(freeze_cfg["formal_qualification_seed"]), "bounded_repair_only": True, "validation_feedback_allowed": False, "threshold_feedback_allowed": False, "training_rule_feedback_allowed": False}}
     _write_object(frozen / "freeze-manifest.json", freeze)
@@ -231,6 +233,8 @@ def main() -> int:
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
+    parser.add_argument("--resume-state", type=pathlib.Path)
+    parser.add_argument("--round-budget", type=int)
     args = parser.parse_args()
     config_path = args.config.resolve()
     policy_path = args.policy.resolve()
@@ -239,7 +243,7 @@ def main() -> int:
     runner = args.runner.resolve()
     if not runner.is_file():
         raise ValueError("RNN runtime runner does not exist")
-    work = safe_reset(args.work_dir)
+    work = args.work_dir.resolve()
     tokens = repo_path(str(cfg["tokens"]))
     keywords = repo_path(str(cfg["keywords"]))
     train_cfg = cfg.get("train", {})
@@ -249,13 +253,46 @@ def main() -> int:
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
     if not thresholds:
         raise ValueError("calibration threshold grid is empty")
-    records: list[dict] = []
-    curriculum: dict | None = None
-    controller = controller_initial(policy)
-    previous_checkpoint: pathlib.Path | None = None
-    best_objective: float | None = None
-    stale_rounds = 0
-    for round_index in range(int(policy["max_rounds"])):
+    if args.round_budget is not None and args.round_budget <= 0:
+        raise ValueError("round budget must be positive")
+    state_path = work / "development-resume-state.json"
+    if args.resume_state is None:
+        work = safe_reset(work)
+        records: list[dict] = []
+        curriculum: dict | None = None
+        controller = controller_initial(policy)
+        previous_checkpoint: pathlib.Path | None = None
+        best_objective: float | None = None
+        stale_rounds = 0
+        start_round = 0
+    else:
+        work.mkdir(parents=True, exist_ok=True)
+        restored = development_resume.load_state(
+            args.resume_state.resolve(),
+            work=work,
+            model_family=MODEL_FAMILY,
+            architecture=ARCHITECTURE,
+            source_policy=POLICY,
+            config_path=config_path,
+            policy_path=policy_path,
+        )
+        records = restored["records"]
+        start_round = int(restored["next_round"])
+        if restored["complete"]:
+            manifest = load_object(work / "development-loop-manifest.json")
+            print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+            return 0 if bool(manifest.get("development_qualified")) else 1
+        curriculum = (
+            load_object(work / "curriculum" / f"round-{start_round - 1:02d}.json")
+            if start_round > 0
+            else None
+        )
+        controller, best_objective, stale_rounds, _ = development_resume.rebuild_progress(
+            records, policy, controller_initial, controller_next, strict
+        )
+        previous_checkpoint = pathlib.Path(str(records[-1]["checkpoint"])) if records else None
+    rounds_run = 0
+    for round_index in range(start_round, int(policy["max_rounds"])):
         dataset = work / "datasets" / f"round-{round_index:02d}"
         render_domain_dataset(config_path, dataset, curriculum_weights=curriculum)
         run([sys.executable, str(TRAINING / "audit_dataset.py"), "--split", f"train={dataset / 'train.tsv'}", "--split", f"calibration={dataset / 'calibration.tsv'}", "--split", f"test={dataset / 'test.tsv'}", "--report", str(dataset / "development-audit.json"), "--fail-within-split"])
@@ -305,10 +342,34 @@ def main() -> int:
             stale_rounds += 1
         completed = round_index + 1
         observed = terminal_strict_streak(records)
-        if completed >= int(policy["min_rounds"]) and observed >= int(policy["stable_strict_pass_rounds"]):
+        rounds_run += 1
+        development_resume.write_state(
+            state_path,
+            work=work,
+            model_family=MODEL_FAMILY,
+            architecture=ARCHITECTURE,
+            source_policy=POLICY,
+            config_path=config_path,
+            policy_path=policy_path,
+            records=records,
+            complete=False,
+        )
+        terminal_stop = (
+            completed >= int(policy["min_rounds"])
+            and (
+                observed >= int(policy["stable_strict_pass_rounds"])
+                or stale_rounds >= int(policy["patience"])
+            )
+        )
+        if terminal_stop:
             break
-        if completed >= int(policy["min_rounds"]) and stale_rounds >= int(policy["patience"]):
-            break
+        if (
+            args.round_budget is not None
+            and rounds_run >= args.round_budget
+            and completed < int(policy["max_rounds"])
+        ):
+            print(json.dumps({"segment_complete": True, "next_round": completed}, sort_keys=True))
+            return development_resume.SEGMENT_CONTINUE_EXIT_CODE
     required = int(policy["stable_strict_pass_rounds"])
     observed = terminal_strict_streak(records)
     selected = select_best_strict_candidate(records) if observed >= required else None
@@ -317,6 +378,17 @@ def main() -> int:
         manifest["frozen_candidate"] = _copy_frozen_candidate(selected, work, config_path, policy_path)
     manifest_path = work / "development-loop-manifest.json"
     _write_object(manifest_path, manifest)
+    development_resume.write_state(
+        state_path,
+        work=work,
+        model_family=MODEL_FAMILY,
+        architecture=ARCHITECTURE,
+        source_policy=POLICY,
+        config_path=config_path,
+        policy_path=policy_path,
+        records=records,
+        complete=True,
+    )
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
     return 0 if selected is not None else 1
 

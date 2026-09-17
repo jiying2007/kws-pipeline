@@ -12,6 +12,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
+import development_resume as development_resume  # noqa: E402
 from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
 from hard_negative_replay import (  # noqa: E402
     adaptive_focus,
@@ -30,6 +31,16 @@ from iterate_domain import (  # noqa: E402
 
 
 def validate_torch_iteration_policy() -> None:
+    development_resume.self_test()
+    for iterator in (
+        ROOT / "training" / "iterate_gru_development.py",
+        ROOT / "training" / "iterate_rnn_development.py",
+    ):
+        source = iterator.read_text(encoding="utf-8")
+        assert '"--resume-state"' in source
+        assert '"--round-budget"' in source
+        assert "development_resume.write_state(" in source
+        assert "SEGMENT_CONTINUE_EXIT_CODE" in source
     assert parse_warm_start_strategy({}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "full"}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "head-only"}) == "head-only"

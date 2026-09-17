@@ -14,6 +14,7 @@ TOOLS = ROOT / "tools"
 sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TOOLS))
 
+import development_resume as development_resume  # noqa: E402
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -34,6 +35,8 @@ POLICY = "gru-development-curriculum-loop-v1"
 EVIDENCE_SCOPE = "development-only"
 FREEZE_POLICY = "gru-frozen-candidate-v1"
 SELECTION_POLICY = "best-strict-development-objective-round"
+MODEL_FAMILY = "gru"
+ARCHITECTURE = "tiny-gru-v1"
 
 
 def load_object(path: pathlib.Path) -> dict:
@@ -263,6 +266,7 @@ def copy_frozen_candidate(selected: dict, output: pathlib.Path, config: pathlib.
         pathlib.Path(__file__).resolve(),
         TRAINING / "train_gru_ctc.py",
         TRAINING / "feature_cached_trainer.py",
+        TRAINING / "development_resume.py",
         TRAINING / "gru_model.py",
         TRAINING / "domain_curriculum.py",
         TRAINING / "hard_negative_replay.py",
@@ -316,6 +320,8 @@ def main() -> int:
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
+    parser.add_argument("--resume-state", type=pathlib.Path)
+    parser.add_argument("--round-budget", type=int)
     args = parser.parse_args()
 
     config_path = args.config.resolve()
@@ -325,7 +331,7 @@ def main() -> int:
     runner = args.runner.resolve()
     if not runner.is_file():
         raise ValueError("GRU runtime runner does not exist")
-    work = safe_reset(args.work_dir)
+    work = args.work_dir.resolve()
     tokens = repo_path(str(cfg["tokens"]))
     keywords = repo_path(str(cfg["keywords"]))
     train_cfg = cfg.get("train", {})
@@ -336,15 +342,48 @@ def main() -> int:
     if not thresholds:
         raise ValueError("calibration threshold grid is empty")
 
-    records: list[dict] = []
-    curriculum: dict | None = None
-    controller = controller_initial(policy)
-    previous_checkpoint: pathlib.Path | None = None
-    best_objective: float | None = None
-    stale_rounds = 0
-    strict_streak = 0
+    if args.round_budget is not None and args.round_budget <= 0:
+        raise ValueError("round budget must be positive")
+    state_path = work / "development-resume-state.json"
+    if args.resume_state is None:
+        work = safe_reset(work)
+        records: list[dict] = []
+        curriculum: dict | None = None
+        controller = controller_initial(policy)
+        previous_checkpoint: pathlib.Path | None = None
+        best_objective: float | None = None
+        stale_rounds = 0
+        strict_streak = 0
+        start_round = 0
+    else:
+        work.mkdir(parents=True, exist_ok=True)
+        restored = development_resume.load_state(
+            args.resume_state.resolve(),
+            work=work,
+            model_family=MODEL_FAMILY,
+            architecture=ARCHITECTURE,
+            source_policy=POLICY,
+            config_path=config_path,
+            policy_path=policy_path,
+        )
+        records = restored["records"]
+        start_round = int(restored["next_round"])
+        if restored["complete"]:
+            manifest = load_object(work / "development-loop-manifest.json")
+            print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+            return 0 if bool(manifest.get("development_qualified")) else 1
+        curriculum = (
+            load_object(work / "curriculum" / f"round-{start_round - 1:02d}.json")
+            if start_round > 0
+            else None
+        )
+        controller, best_objective, stale_rounds, strict_streak = development_resume.rebuild_progress(
+            records, policy, controller_initial, controller_next, strict
+        )
+        previous_checkpoint = pathlib.Path(str(records[-1]["checkpoint"])) if records else None
+    rounds_run = 0
 
-    for round_index in range(int(policy["max_rounds"])):
+    for round_index in range(start_round, int(policy["max_rounds"])):
         dataset = work / "datasets" / f"round-{round_index:02d}"
         render_domain_dataset(config_path, dataset, curriculum_weights=curriculum)
         run(
@@ -527,10 +566,34 @@ def main() -> int:
         else:
             stale_rounds += 1
         completed = round_index + 1
-        if completed >= int(policy["min_rounds"]) and strict_streak >= int(policy["stable_strict_pass_rounds"]):
+        rounds_run += 1
+        development_resume.write_state(
+            state_path,
+            work=work,
+            model_family=MODEL_FAMILY,
+            architecture=ARCHITECTURE,
+            source_policy=POLICY,
+            config_path=config_path,
+            policy_path=policy_path,
+            records=records,
+            complete=False,
+        )
+        terminal_stop = (
+            completed >= int(policy["min_rounds"])
+            and (
+                strict_streak >= int(policy["stable_strict_pass_rounds"])
+                or stale_rounds >= int(policy["patience"])
+            )
+        )
+        if terminal_stop:
             break
-        if completed >= int(policy["min_rounds"]) and stale_rounds >= int(policy["patience"]):
-            break
+        if (
+            args.round_budget is not None
+            and rounds_run >= args.round_budget
+            and completed < int(policy["max_rounds"])
+        ):
+            print(json.dumps({"segment_complete": True, "next_round": completed}, sort_keys=True))
+            return development_resume.SEGMENT_CONTINUE_EXIT_CODE
 
     selected = select_best_strict_candidate(records)
     manifest = {
@@ -559,6 +622,17 @@ def main() -> int:
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
+    )
+    development_resume.write_state(
+        state_path,
+        work=work,
+        model_family=MODEL_FAMILY,
+        architecture=ARCHITECTURE,
+        source_policy=POLICY,
+        config_path=config_path,
+        policy_path=policy_path,
+        records=records,
+        complete=True,
     )
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
     return 0 if selected is not None else 1
