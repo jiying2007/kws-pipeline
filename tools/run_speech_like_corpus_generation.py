@@ -283,12 +283,17 @@ def main() -> int:
         logs / "verify-runtime-bundle.log",
     )
     receipt = load_object(runtime_receipt)
+    required_runtime_roles = set(bundle_contract.get("required_files", {}))
+    if not {"model", "tokens", "lexicon"}.issubset(required_runtime_roles):
+        raise ValueError("runtime bundle contract must contain model/tokens/lexicon")
+    if set(receipt.get("files", {})) != required_runtime_roles:
+        raise ValueError("runtime receipt roles do not match provider reference")
     asset_paths = {
         role: require_file(
             runtime_root / pathlib.Path(str(receipt["files"][role]["path"])),
             f"runtime {role}",
         )
-        for role in ("model", "tokens", "lexicon")
+        for role in sorted(required_runtime_roles)
     }
 
     provider_dir = work / "provider"
@@ -339,6 +344,22 @@ def main() -> int:
         "--summary",
         str(provider_summary_path),
     ]
+    rule_roles = ("phone_fst", "date_fst", "number_fst", "rule_far")
+    if any(role in asset_paths for role in rule_roles):
+        if not all(role in asset_paths for role in rule_roles):
+            raise ValueError("runtime bundle must supply phone/date/number FSTs and rule.far together")
+        command.extend(
+            [
+                "--phone-fst",
+                str(asset_paths["phone_fst"]),
+                "--date-fst",
+                str(asset_paths["date_fst"]),
+                "--number-fst",
+                str(asset_paths["number_fst"]),
+                "--rule-far",
+                str(asset_paths["rule_far"]),
+            ]
+        )
     if profile == "sherpa-vits-resampled-to-16k-v1":
         command.extend(
             [
