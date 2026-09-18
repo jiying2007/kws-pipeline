@@ -14,6 +14,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
 from speech_like_corpus_plan import VOICE_CLASS, normalize_plan  # noqa: E402
 from verify_speech_like_runtime_bundle import RECEIPT_CLASS, inspect_verified_archive  # noqa: E402
+from verify_speech_like_backend_bundle import (  # noqa: E402
+    RECEIPT_CLASS as BACKEND_RECEIPT_CLASS,
+    inspect_verified_archive as inspect_verified_backend_archive,
+)
 
 SPEAKER_MAP_CLASS = "speech-like-provider-speaker-map-v1"
 NATIVE_PROFILE = "sherpa-vits-native-16k-v1"
@@ -247,6 +251,136 @@ def validate_runtime_asset_binding(
             }
             for role in sorted(inspected["files"])
         },
+        "safe_archive_verified": True,
+    }
+
+
+def validate_backend_bundle_binding(
+    *,
+    reference_path: pathlib.Path,
+    platform_key: str,
+    archive_path: pathlib.Path,
+    receipt_path: pathlib.Path,
+    bundle_root: pathlib.Path,
+    backend_executable: pathlib.Path,
+    backend_lib_dir: pathlib.Path,
+) -> dict:
+    archive_path = require_file(archive_path, "backend bundle archive")
+    receipt_path = require_file(receipt_path, "backend bundle receipt")
+    bundle_root = bundle_root.resolve()
+    backend_executable = require_file(
+        backend_executable, "backend executable", executable=True
+    )
+    backend_lib_dir = backend_lib_dir.resolve()
+    if not backend_lib_dir.is_dir():
+        raise ValueError(f"backend lib dir is missing: {backend_lib_dir}")
+
+    receipt = load_object(receipt_path)
+    if (
+        int(receipt.get("schema_version", 0)) != 1
+        or receipt.get("evidence_class") != BACKEND_RECEIPT_CLASS
+    ):
+        raise ValueError("backend bundle receipt identity mismatch")
+    inspected = inspect_verified_backend_archive(
+        reference_path=reference_path.resolve(),
+        platform_key=platform_key,
+        archive_path=archive_path,
+    )
+    if receipt != inspected:
+        raise ValueError("backend bundle receipt does not match the verified archive")
+
+    expected_executable = (
+        bundle_root
+        / pathlib.PurePosixPath(str(inspected["backend_executable"]["path"]))
+    ).resolve()
+    if backend_executable != expected_executable:
+        raise ValueError("backend executable path does not match verified bundle")
+    if backend_executable.stat().st_size != int(
+        inspected["backend_executable"]["size_bytes"]
+    ):
+        raise ValueError("backend executable size does not match verified bundle")
+    if sha256_file(backend_executable) != str(
+        inspected["backend_executable"]["sha256"]
+    ):
+        raise ValueError("backend executable sha256 does not match verified bundle")
+
+    expected_lib_dir = (
+        bundle_root / pathlib.PurePosixPath(str(inspected["lib_dir"]))
+    ).resolve()
+    if backend_lib_dir != expected_lib_dir:
+        raise ValueError("backend lib dir does not match verified bundle")
+
+    expected_regular = {
+        str(item["path"]): item for item in inspected["libraries"]
+    }
+    actual_regular: dict[str, pathlib.Path] = {}
+    actual_symlinks: dict[str, str] = {}
+    archive_root = pathlib.PurePosixPath(str(inspected["archive_root"]))
+    for path in sorted(backend_lib_dir.rglob("*")):
+        rel_from_bundle = path.relative_to(bundle_root).as_posix()
+        if path.is_symlink():
+            actual_symlinks[rel_from_bundle] = os.readlink(path)
+        elif path.is_file():
+            actual_regular[rel_from_bundle] = path
+        elif not path.is_dir():
+            raise ValueError(f"backend lib dir contains unsupported entry: {path}")
+
+    if set(actual_regular) != set(expected_regular):
+        missing = sorted(set(expected_regular) - set(actual_regular))
+        extra = sorted(set(actual_regular) - set(expected_regular))
+        raise ValueError(
+            f"backend library file set drifted; missing={missing} extra={extra}"
+        )
+    for rel, path in actual_regular.items():
+        expected = expected_regular[rel]
+        if path.stat().st_size != int(expected["size_bytes"]):
+            raise ValueError(f"backend library size mismatch: {rel}")
+        if sha256_file(path) != str(expected["sha256"]):
+            raise ValueError(f"backend library sha256 mismatch: {rel}")
+
+    expected_symlinks = {
+        str(item["path"]): str(item["target"])
+        for item in inspected["library_symlinks"]
+    }
+    if actual_symlinks != expected_symlinks:
+        raise ValueError("backend library symlink set/targets drifted")
+
+    assets = [
+        {
+            "role": "backend_bundle_archive",
+            "path": str(archive_path),
+            "sha256": sha256_file(archive_path),
+        },
+        {
+            "role": "backend_bundle_receipt",
+            "path": str(receipt_path),
+            "sha256": sha256_file(receipt_path),
+        },
+        {
+            "role": "backend_executable",
+            "path": str(backend_executable),
+            "sha256": sha256_file(backend_executable),
+        },
+    ]
+    for index, rel in enumerate(sorted(actual_regular)):
+        path = actual_regular[rel]
+        assets.append(
+            {
+                "role": f"backend_lib_{index:04d}",
+                "path": str(path),
+                "sha256": sha256_file(path),
+            }
+        )
+
+    return {
+        "platform": platform_key,
+        "archive_sha256": str(inspected["archive"]["sha256"]),
+        "receipt_sha256": sha256_file(receipt_path),
+        "backend_executable_sha256": sha256_file(backend_executable),
+        "backend_lib_dir": str(backend_lib_dir),
+        "library_count": len(actual_regular),
+        "library_symlink_count": len(actual_symlinks),
+        "assets": assets,
         "safe_archive_verified": True,
     }
 
