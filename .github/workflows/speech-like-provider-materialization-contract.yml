@@ -6,12 +6,14 @@ on:
     paths:
       - "tools/materialize_speech_like_provider.py"
       - "tools/speech_like_vits_resample_adapter.py"
+      - "tools/verify_speech_like_runtime_bundle.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - ".github/workflows/speech-like-provider-materialization-contract.yml"
   pull_request:
     paths:
       - "tools/materialize_speech_like_provider.py"
       - "tools/speech_like_vits_resample_adapter.py"
+      - "tools/verify_speech_like_runtime_bundle.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - ".github/workflows/speech-like-provider-materialization-contract.yml"
   workflow_dispatch:
@@ -95,6 +97,59 @@ jobs:
               "speakers": rows,
           }, indent=2) + "\n")
           PY
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, tarfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          package = root / "package" / "vits-icefall-zh-aishell3"
+          package.mkdir(parents=True, exist_ok=True)
+          for source, name in (
+              (root / "assets" / "model.onnx", "model.onnx"),
+              (root / "assets" / "tokens.txt", "tokens.txt"),
+              (root / "assets" / "lexicon.txt", "lexicon.txt"),
+          ):
+              (package / name).write_bytes(source.read_bytes())
+          archive = root / "vits-icefall-zh-aishell3.tar.bz2"
+          with tarfile.open(archive, "w:bz2") as tf:
+              tf.add(package, arcname="vits-icefall-zh-aishell3")
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          reference_path = pathlib.Path("configs/training/speech-like-provider-reference-v1.json")
+          reference = json.loads(reference_path.read_text())
+          preferred = reference["preferred_stage_a_candidate"]
+          row = next(x for x in reference["reference_candidates"] if x["name"] == preferred)
+          bundle = row["runtime_asset_bundle"]
+          bundle["expected_size_bytes"] = archive.stat().st_size
+          bundle["expected_sha256"] = digest
+          bundle["checksum_authority"] = "contract-fixture"
+          bundle["checksum_evidence"] = []
+          (root / "fixture-reference.json").write_text(
+              json.dumps(reference, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+
+      - name: Verify and safely extract fixture runtime bundle
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 tools/verify_speech_like_runtime_bundle.py \
+            --reference "$root/fixture-reference.json" \
+            --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --output-dir "$root/runtime-assets" \
+            --receipt "$root/runtime-asset-receipt.json"
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          receipt = json.loads((root / "runtime-asset-receipt.json").read_text())
+          assert receipt["evidence_class"] == "speech-like-runtime-asset-bundle-v1"
+          assert receipt["candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
+          assert receipt["safe_archive_verified"] is True
+          assert set(receipt["files"]) == {"model", "tokens", "lexicon"}
+          for role, item in receipt["files"].items():
+              path = root / "runtime-assets" / item["path"]
+              assert path.is_file()
+              assert path.stat().st_size == item["size_bytes"]
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
+          PY
 
       - name: Materialize provider and exact voice inventory
         run: |
@@ -151,6 +206,25 @@ jobs:
           assert evidence["revision"] == "57345c004e13ed640e408c4c29ab56187b18f065"
           assert evidence["path"] == "README.md"
           assert evidence["expected_sha256"] == "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
+          training = row["training_model_provenance"]
+          assert training["revision"] == "29953c80423f4c37918217808ecb308c1b9b7196"
+          assert training["model_path"] == "exp/vits-epoch-960.onnx"
+          assert training["model_sha256"] == "5511d651b7840c0a93a6bbfd4afd070a2c7f39ca1ec3ff2ecd73191519bbb852"
+          assert training["runtime_release_binary_equivalence"] == "not-assumed"
+          bundle = row["runtime_asset_bundle"]
+          assert bundle["repository"] == "k2-fsa/sherpa-onnx"
+          assert bundle["tag"] == "tts-models"
+          assert bundle["asset"] == "vits-icefall-zh-aishell3.tar.bz2"
+          assert bundle["expected_size_bytes"] == 31559701
+          assert bundle["expected_sha256"] == "ab468db3a3308cdd861495e0db2f25d79418a0c00639f74944c7cdf5dd8c6ec1"
+          assert bundle["archive_root"] == "vits-icefall-zh-aishell3"
+          assert bundle["required_files"] == {
+              "model": "model.onnx",
+              "tokens": "tokens.txt",
+              "lexicon": "lexicon.txt",
+          }
+          assert bundle["checksum_authority"] == "corroborated-not-upstream-digest"
+          assert len(bundle["checksum_evidence"]) == 2
           fanchen = next(x for x in ref["reference_candidates"] if x["name"] == "sherpa-onnx-vits-zh-hf-fanchen-C")
           assert fanchen["suitable_for_24_voice_baseline"] is False
           assert fanchen["license_status"].startswith("blocked-")
@@ -169,16 +243,18 @@ jobs:
             --provider-version fixture-v1 \
             --license-id Apache-2.0 \
             --license-file "$root/assets/AISHELL3-MODEL-CARD.md" \
-            --provider-reference configs/training/speech-like-provider-reference-v1.json \
+            --provider-reference "$root/fixture-reference.json" \
             --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --runtime-asset-archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --runtime-asset-receipt "$root/runtime-asset-receipt.json" \
             --executable "$(command -v python3)" \
             --adapter tools/speech_like_vits_resample_adapter.py \
             --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --source-sample-rate 8000 \
-            --model "$root/assets/model.onnx" \
-            --tokens "$root/assets/tokens.txt" \
-            --lexicon "$root/assets/lexicon.txt" \
+            --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
+            --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
+            --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
             --output-provider "$root/provider-resampled.json" \
             --output-inventory "$root/inventory-resampled.jsonl" \
             --summary "$root/provider-resampled-summary.json"
@@ -199,6 +275,7 @@ jobs:
           assert roles == {
               "adapter", "backend_executable", "resampler_executable",
               "model", "tokens", "lexicon", "license_evidence",
+              "runtime_asset_receipt",
           }
           summary = json.loads((root / "provider-resampled-summary.json").read_text())
           assert summary["provider_profile"] == "sherpa-vits-resampled-to-16k-v1"
@@ -209,6 +286,21 @@ jobs:
           assert reference["license_evidence_sha256"] == "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
           assert reference["license_source"]["revision"] == "57345c004e13ed640e408c4c29ab56187b18f065"
           assert reference["reported_speakers"] == 174
+          assert reference["runtime_asset_bundle_required"] is True
+          assert summary["runtime_asset_receipt_verified"] is True
+          runtime = summary["runtime_asset_binding"]
+          receipt = json.loads((root / "runtime-asset-receipt.json").read_text())
+          assert runtime["receipt_sha256"]
+          assert runtime["archive_sha256"] == receipt["archive"]["sha256"]
+          assert runtime["safe_archive_verified"] is True
+          assert runtime["files"] == {
+              role: {
+                  "archive_path": receipt["files"][role]["path"],
+                  "size_bytes": receipt["files"][role]["size_bytes"],
+                  "sha256": receipt["files"][role]["sha256"],
+              }
+              for role in ("model", "tokens", "lexicon")
+          }
           norm = summary["audio_normalization"]
           assert norm["source_sample_rate_hz"] == 8000
           assert norm["output_sample_rate_hz"] == 16000
@@ -236,20 +328,166 @@ jobs:
             --provider-version fixture-v1 \
             --license-id Apache-2.0 \
             --license-file "$root/assets/LICENSE.txt" \
-            --provider-reference configs/training/speech-like-provider-reference-v1.json \
+            --provider-reference "$root/fixture-reference.json" \
             --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --runtime-asset-archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --runtime-asset-receipt "$root/runtime-asset-receipt.json" \
             --executable "$(command -v python3)" \
             --adapter tools/speech_like_vits_resample_adapter.py \
             --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --source-sample-rate 8000 \
-            --model "$root/assets/model.onnx" \
-            --tokens "$root/assets/tokens.txt" \
-            --lexicon "$root/assets/lexicon.txt" \
+            --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
+            --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
+            --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
             --output-provider "$root/bad-reference-provider.json" \
             --output-inventory "$root/bad-reference-inventory.jsonl" \
             --summary "$root/bad-reference-summary.json"; then
             echo "unpinned license evidence unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Runtime archive tamper fails exact SHA verification
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          mkdir -p "$root/tampered"
+          cp "$root/vits-icefall-zh-aishell3.tar.bz2" "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
+          python3 - "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          assert data
+          index = len(data) // 2
+          data[index] ^= 0x01
+          path.write_bytes(data)
+          PY
+          if python3 tools/verify_speech_like_runtime_bundle.py \
+            --reference "$root/fixture-reference.json" \
+            --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --archive "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" \
+            --output-dir "$root/bad-runtime-assets" \
+            --receipt "$root/bad-runtime-receipt.json"; then
+            echo "tampered runtime archive unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Unsafe archive member fails even with matching fixture digest
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 - <<'PY'
+          import hashlib, io, json, os, pathlib, tarfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          unsafe_dir = root / "unsafe"
+          unsafe_dir.mkdir(parents=True, exist_ok=True)
+          archive = unsafe_dir / "vits-icefall-zh-aishell3.tar.bz2"
+          with tarfile.open(archive, "w:bz2") as tf:
+              for name, payload in (
+                  ("model.onnx", b"model"),
+                  ("tokens.txt", b"tokens"),
+                  ("lexicon.txt", b"lexicon"),
+              ):
+                  info = tarfile.TarInfo(f"vits-icefall-zh-aishell3/{name}")
+                  info.size = len(payload)
+                  tf.addfile(info, io.BytesIO(payload))
+              link = tarfile.TarInfo("vits-icefall-zh-aishell3/unsafe-link")
+              link.type = tarfile.SYMTYPE
+              link.linkname = "/tmp/outside"
+              tf.addfile(link)
+          reference = json.loads((root / "fixture-reference.json").read_text())
+          preferred = reference["preferred_stage_a_candidate"]
+          row = next(x for x in reference["reference_candidates"] if x["name"] == preferred)
+          bundle = row["runtime_asset_bundle"]
+          bundle["expected_size_bytes"] = archive.stat().st_size
+          bundle["expected_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+          (unsafe_dir / "reference.json").write_text(json.dumps(reference, indent=2) + "\n")
+          PY
+          if python3 tools/verify_speech_like_runtime_bundle.py \
+            --reference "$root/unsafe/reference.json" \
+            --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --archive "$root/unsafe/vits-icefall-zh-aishell3.tar.bz2" \
+            --output-dir "$root/unsafe/extracted" \
+            --receipt "$root/unsafe/receipt.json"; then
+            echo "unsafe runtime archive unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Forged runtime receipt fails against live archive inspection
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          value = json.loads((root / "runtime-asset-receipt.json").read_text())
+          value["files"]["model"]["sha256"] = "0" * 64
+          (root / "forged-runtime-receipt.json").write_text(json.dumps(value, indent=2) + "\n")
+          PY
+          if python3 tools/materialize_speech_like_provider.py \
+            --corpus-plan configs/training/speech-like-corpus-plan-v1.json \
+            --command-policy configs/training/speech-like-command-provider-v1.json \
+            --speaker-map "$root/speaker-map.json" \
+            --provider-profile sherpa-vits-resampled-to-16k-v1 \
+            --provider-name bad-receipt --provider-version fixture-v1 \
+            --license-id Apache-2.0 \
+            --license-file "$root/assets/AISHELL3-MODEL-CARD.md" \
+            --provider-reference "$root/fixture-reference.json" \
+            --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --runtime-asset-archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --runtime-asset-receipt "$root/forged-runtime-receipt.json" \
+            --executable "$(command -v python3)" \
+            --adapter tools/speech_like_vits_resample_adapter.py \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --source-sample-rate 8000 \
+            --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
+            --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
+            --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --output-provider "$root/bad-receipt-provider.json" \
+            --output-inventory "$root/bad-receipt-inventory.jsonl" \
+            --summary "$root/bad-receipt-summary.json"; then
+            echo "forged runtime receipt unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Extracted model tamper fails against verified archive member
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          cp "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" "$root/tampered-model.onnx"
+          python3 - "$root/tampered-model.onnx" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          assert data
+          data[0] ^= 0x01
+          path.write_bytes(data)
+          PY
+          if python3 tools/materialize_speech_like_provider.py \
+            --corpus-plan configs/training/speech-like-corpus-plan-v1.json \
+            --command-policy configs/training/speech-like-command-provider-v1.json \
+            --speaker-map "$root/speaker-map.json" \
+            --provider-profile sherpa-vits-resampled-to-16k-v1 \
+            --provider-name bad-model --provider-version fixture-v1 \
+            --license-id Apache-2.0 \
+            --license-file "$root/assets/AISHELL3-MODEL-CARD.md" \
+            --provider-reference "$root/fixture-reference.json" \
+            --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --runtime-asset-archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --runtime-asset-receipt "$root/runtime-asset-receipt.json" \
+            --executable "$(command -v python3)" \
+            --adapter tools/speech_like_vits_resample_adapter.py \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --source-sample-rate 8000 \
+            --model "$root/tampered-model.onnx" \
+            --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
+            --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --output-provider "$root/bad-model-provider.json" \
+            --output-inventory "$root/bad-model-inventory.jsonl" \
+            --summary "$root/bad-model-summary.json"; then
+            echo "tampered extracted model unexpectedly accepted" >&2
             exit 1
           fi
 
@@ -321,7 +559,7 @@ jobs:
           fi
 
       - name: Python syntax
-        run: python3 -m py_compile tools/materialize_speech_like_provider.py tools/speech_like_vits_resample_adapter.py
+        run: python3 -m py_compile tools/materialize_speech_like_provider.py tools/speech_like_vits_resample_adapter.py tools/verify_speech_like_runtime_bundle.py
 
       - name: Worktree remains clean
         run: git diff --exit-code -- .

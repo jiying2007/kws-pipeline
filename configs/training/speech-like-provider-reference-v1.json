@@ -28,7 +28,8 @@
         "model",
         "tokens",
         "lexicon",
-        "license_evidence"
+        "license_evidence",
+        "runtime_asset_receipt"
       ],
       "required_request_parameters": [
         "speaker_id",
@@ -43,12 +44,40 @@
         "path": "README.md",
         "expected_sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
       },
-      "model_source": {
+      "training_model_provenance": {
         "repository": "csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06",
-        "revision": "57345c004e13ed640e408c4c29ab56187b18f065",
+        "revision": "29953c80423f4c37918217808ecb308c1b9b7196",
         "model_path": "exp/vits-epoch-960.onnx",
-        "tokens_path": "data/tokens.txt",
-        "lexicon_path": "data/lexicon.txt"
+        "model_sha256": "5511d651b7840c0a93a6bbfd4afd070a2c7f39ca1ec3ff2ecd73191519bbb852",
+        "runtime_release_binary_equivalence": "not-assumed"
+      },
+      "runtime_asset_bundle": {
+        "kind": "github-release-archive",
+        "repository": "k2-fsa/sherpa-onnx",
+        "tag": "tts-models",
+        "asset": "vits-icefall-zh-aishell3.tar.bz2",
+        "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2",
+        "expected_size_bytes": 31559701,
+        "expected_sha256": "ab468db3a3308cdd861495e0db2f25d79418a0c00639f74944c7cdf5dd8c6ec1",
+        "archive_root": "vits-icefall-zh-aishell3",
+        "required_files": {
+          "model": "model.onnx",
+          "tokens": "tokens.txt",
+          "lexicon": "lexicon.txt"
+        },
+        "checksum_authority": "corroborated-not-upstream-digest",
+        "checksum_evidence": [
+          {
+            "repository": "Aulour/RK3588_vehiclehmi",
+            "revision": "fcd15571a15bcef15fbcc982d4b3f77532bfdd28",
+            "path": "rk3588-topeet-sdk/buildroot/package/rockchip/apps/sherpa-onnx-model-tts-zh/sherpa-onnx-model-tts-zh.hash"
+          },
+          {
+            "repository": "tuotuonuts/VoxSub",
+            "revision": "0882505ff52dd3c5e8ff691043e33ad0f47b8c10",
+            "path": "voxsub/model_catalog.py"
+          }
+        ]
       },
       "audio_normalization": {
         "source_sample_rate_hz": 8000,
@@ -105,14 +134,17 @@
     "model_assets_committed_to_repository": false,
     "license_evidence_file_required": true,
     "license_evidence_hash_bound": true,
+    "runtime_asset_archive_receipt_required_for_preferred_candidate": true,
     "source_sample_rate_must_be_verified_before_normalization": true,
     "normalized_output_must_match_command_provider_v1": true
   },
   "notes": [
     "This file is a non-executable reference policy; actual provider JSON is generated only in the corpus-generation environment.",
-    "The preferred Stage A baseline uses the license-declared AISHELL-3 icefall VITS model and explicitly records that its native 8-kHz bandwidth is retained after normalization to 16 kHz.",
-    "The resampling profile hash-binds the Python adapter, TTS backend executable, resampler executable, model, tokens, lexicon, and license evidence.",
-    "The model license/authorization evidence file remains a required local hash-bound provider asset; a license_id string alone is insufficient.",
+    "The preferred Stage A baseline separates license evidence, training-model provenance, and runnable release assets instead of claiming that all three come from one file tree.",
+    "The Apache-2.0 model-card is pinned independently from the sherpa-onnx release archive used at runtime.",
+    "The sherpa release archive checksum is corroborated by two independent downstream integrity manifests because the upstream GitHub release asset does not publish a digest; local generation remains fail-closed on the pinned archive size and SHA-256.",
+    "No binary equality is assumed between the HF training ONNX and the sherpa release model.onnx.",
+    "The resampling profile hash-binds the Python adapter, TTS backend executable, resampler executable, model, tokens, lexicon, license evidence, and verified runtime-asset receipt.",
     "fanchen-C stays blocked until explicit weight-license evidence is supplied; downloadability is not treated as authorization.",
     "No TTS runtime or model asset is part of the shipping KWS runtime."
   ]
