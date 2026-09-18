@@ -15,6 +15,7 @@ TRAINING = ROOT / "training"
 MATRIX_CLASS = "kws-v2-staged-experiment-matrix-v1"
 BINDING_CLASS = "kws-v2-runnable-candidate-binding-v1"
 STAGE_CLASS = "kws-v2-stage-a-search-run-v1"
+SHARD_CLASS = "kws-v2-stage-a-search-shard-v1"
 EXPECTED_STAGE_A = {
     ("rnn", "logmel", 64),
     ("rnn", "pcen-lite", 64),
@@ -223,6 +224,7 @@ def prepare(args: argparse.Namespace, root: pathlib.Path) -> tuple[pathlib.Path,
                 "model_family": family,
                 "frontend": str(row["frontend"]),
                 "hidden_dim": int(row["hidden_dim"]),
+                "resource_contract_candidate": str(row["resource_contract_candidate"]),
                 "generalization_tier": "search",
                 "generalization_cohort_id": str(binding["generalization_cohort_id"]),
                 "effective_config": str(effective),
@@ -376,6 +378,26 @@ def execute_candidate(
         raise ValueError(f"{candidate_id}: generalization report/plan binding mismatch")
     if report_value.get("plan_complete") is not True:
         raise ValueError(f"{candidate_id}: generalization cohort is incomplete")
+    if report_value.get("candidate_id") != candidate_id:
+        raise ValueError(f"{candidate_id}: generalization report candidate mismatch")
+    if report_value.get("model_family") != family:
+        raise ValueError(f"{candidate_id}: generalization report family mismatch")
+    if report_value.get("tier") != "search":
+        raise ValueError(f"{candidate_id}: generalization report tier mismatch")
+    if report_value.get("protected_evidence_used") is not False:
+        raise ValueError(f"{candidate_id}: generalization report used protected evidence")
+    metrics = {
+        "pooled": report_value["pooled"],
+        "worst_seed": report_value["worst_seed"],
+        "coverage_passed": bool(report_value["coverage_passed"]),
+        "seed_ids": report_value["seed_ids"],
+        "confidence_level": report_value["confidence_level"],
+        "keywords": report_value["keywords"],
+        "statistical_gate_mode": report_value["statistical_gate_mode"],
+        "eligible_for_threshold_calibration": bool(
+            report_value["eligible_for_threshold_calibration"]
+        ),
+    }
 
     result = dict(row)
     result.update(
@@ -392,11 +414,60 @@ def execute_candidate(
             "generalization_plan_sha256": str(plan_value["plan_sha256"]),
             "generalization_seed_plan": plan_value["seed_plan"],
             "generalization_report_sha256": sha256_file(report),
+            "generalization_metrics": metrics,
             "independent_seed_count": int(report_value["independent_seed_count"]),
             "generalization_plan_complete": True,
         }
     )
     return result
+
+
+def execute_shard(
+    args: argparse.Namespace,
+    manifest: dict,
+    candidate_id: str,
+    output: pathlib.Path,
+) -> dict:
+    generalization_policy = require_file(
+        args.generalization_policy, "development generalization policy"
+    )
+    product_head = current_head()
+    if product_head != str(manifest["product_head"]):
+        raise ValueError("repository HEAD moved after Stage A preparation")
+    matches = [
+        row for row in manifest["candidates"]
+        if str(row.get("candidate_id", "")) == candidate_id
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"Stage A candidate must match exactly once: {candidate_id}")
+    result = execute_candidate(
+        row=matches[0],
+        args=args,
+        generalization_policy=generalization_policy,
+        product_head=product_head,
+    )
+    shard = {
+        "schema_version": 1,
+        "evidence_class": SHARD_CLASS,
+        "evidence_scope": "development-only",
+        "stage": "A",
+        "status": "complete",
+        "product_head": product_head,
+        "matrix_sha256": str(manifest["matrix_sha256"]),
+        "generalization_cohort_id": str(manifest["generalization_cohort_id"]),
+        "generalization_tier": "search",
+        "external_base_bundle_sha256": str(manifest["external_base_bundle_sha256"]),
+        "full_training_round_budget": True,
+        "generalization_policy": str(generalization_policy),
+        "generalization_policy_sha256": sha256_file(generalization_policy),
+        "candidate": result,
+        "fresh_used": False,
+        "shadow_used": False,
+        "formal_qualification_used": False,
+        "protected_evidence_used": False,
+    }
+    write_json(output, shard)
+    return shard
 
 
 def execute(args: argparse.Namespace, manifest_path: pathlib.Path, manifest: dict) -> dict:
@@ -470,6 +541,8 @@ def main() -> int:
     parser.add_argument("--rnn-runner", type=pathlib.Path)
     parser.add_argument("--gru-runner", type=pathlib.Path)
     parser.add_argument("--generalization-workers", type=int, default=4)
+    parser.add_argument("--candidate-id")
+    parser.add_argument("--candidate-output", type=pathlib.Path)
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
@@ -482,10 +555,37 @@ def main() -> int:
     root.mkdir(parents=True, exist_ok=True)
 
     manifest_path, manifest = prepare(args, root)
+    if args.candidate_output is not None and args.candidate_id is None:
+        raise ValueError("--candidate-output requires --candidate-id")
     if args.prepare_only:
+        if args.candidate_id is not None:
+            matches = [
+                row for row in manifest["candidates"]
+                if str(row.get("candidate_id", "")) == args.candidate_id
+            ]
+            if len(matches) != 1:
+                raise ValueError(
+                    f"Stage A candidate must match exactly once: {args.candidate_id}"
+                )
         print(
             f"kws-v2-stage-a-search prepared: candidates={manifest['candidate_count']} "
             f"cohort={manifest['generalization_cohort_id']} bundle={manifest['external_base_bundle_sha256']}"
+        )
+        return 0
+
+    if args.candidate_id is not None:
+        output = (
+            args.candidate_output.resolve()
+            if args.candidate_output is not None
+            else root / f"{args.candidate_id}-result.json"
+        )
+        shard = execute_shard(args, manifest, args.candidate_id, output)
+        candidate = shard["candidate"]
+        print(
+            f"kws-v2-stage-a-shard complete: candidate={args.candidate_id} "
+            f"family={candidate['model_family']} "
+            f"seeds={candidate['independent_seed_count']} "
+            f"bundle={shard['external_base_bundle_sha256']}"
         )
         return 0
 
