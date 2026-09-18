@@ -225,8 +225,12 @@ def main() -> int:
     parser.add_argument("--backend-bundle-root", type=pathlib.Path)
     parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
+    parser.add_argument("--generation-workers", type=int, default=2)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
+
+    if args.generation_workers <= 0 or args.generation_workers > 4:
+        raise ValueError("generation-workers must be in [1,4]")
 
     reference_path = require_file(args.provider_reference, "provider reference")
     corpus_plan = require_file(args.corpus_plan, "corpus plan")
@@ -480,12 +484,16 @@ def main() -> int:
             str(generated_root),
             "--summary",
             str(generation_summary_path),
+            "--workers",
+            str(args.generation_workers),
         ],
         logs / "generate-recordings.log",
     )
     generation_summary = load_object(generation_summary_path)
     if int(generation_summary.get("recordings", 0)) != 384:
         raise ValueError("speech-like provider did not generate all 384 recordings")
+    if int(generation_summary.get("workers", 0)) != args.generation_workers:
+        raise ValueError("speech-like generation worker evidence mismatch")
 
     labeled_root = work / "labeled"
     label_summary_path = work / "label-summary.json"
@@ -642,6 +650,7 @@ def main() -> int:
         "recordings": 384,
         "voice_slots": 24,
         "utterances": 16,
+        "generation_workers": args.generation_workers,
         "external_base_bundle_sha256": str(external_summary["bundle_sha256"]),
         "source_sample_rate_hz": source_rate,
         "normalized_sample_rate_hz": int(candidate["normalized_sample_rate_hz"]),

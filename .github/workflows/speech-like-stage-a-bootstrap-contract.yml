@@ -215,6 +215,7 @@ jobs:
           corpus = json.loads(bundle.read_text())
           assert corpus["tone_backend_used"] is False
           assert corpus["recordings"] == 384
+          assert corpus["generation_workers"] == 2
           assert (root / "cache/vits-icefall-zh-aishell3.tar.bz2").is_file()
           license_path = pathlib.Path(summary["license_evidence"]["path"])
           assert hashlib.sha256(license_path.read_bytes()).hexdigest() == summary["license_evidence"]["sha256"]
