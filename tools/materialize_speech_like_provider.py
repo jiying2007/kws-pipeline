@@ -617,6 +617,11 @@ def materialize(
     reference_candidate: str | None = None,
     runtime_asset_archive: pathlib.Path | None = None,
     runtime_asset_receipt: pathlib.Path | None = None,
+    backend_platform: str | None = None,
+    backend_bundle_archive: pathlib.Path | None = None,
+    backend_bundle_receipt: pathlib.Path | None = None,
+    backend_bundle_root: pathlib.Path | None = None,
+    backend_lib_dir: pathlib.Path | None = None,
 ) -> tuple[dict, list[dict], dict]:
     plan = normalize_plan(corpus_plan)
     slots = [
@@ -670,6 +675,33 @@ def materialize(
     elif runtime_asset_archive is not None or runtime_asset_receipt is not None:
         raise ValueError("runtime asset archive/receipt require a pinned provider reference")
 
+    backend_bundle_binding = None
+    backend_bundle_values = (
+        backend_platform,
+        backend_bundle_archive,
+        backend_bundle_receipt,
+        backend_bundle_root,
+        backend_lib_dir,
+    )
+    if any(value is not None for value in backend_bundle_values):
+        if any(value is None for value in backend_bundle_values):
+            raise ValueError(
+                "backend platform/archive/receipt/root/lib-dir must be supplied together"
+            )
+        if provider_reference is None:
+            raise ValueError("backend bundle verification requires provider_reference")
+        if backend_executable is None:
+            raise ValueError("backend bundle verification requires backend_executable")
+        backend_bundle_binding = validate_backend_bundle_binding(
+            reference_path=provider_reference,
+            platform_key=require_text(backend_platform, "backend_platform"),
+            archive_path=backend_bundle_archive,
+            receipt_path=backend_bundle_receipt,
+            bundle_root=backend_bundle_root,
+            backend_executable=backend_executable,
+            backend_lib_dir=backend_lib_dir,
+        )
+
     provider, normalization = build_provider(
         provider_profile=provider_profile,
         provider_name=provider_name,
@@ -686,6 +718,12 @@ def materialize(
         rule_far=rule_far,
         adapter=adapter,
         backend_executable=backend_executable,
+        backend_lib_dir=backend_lib_dir,
+        backend_bundle_assets=(
+            backend_bundle_binding["assets"]
+            if backend_bundle_binding is not None
+            else None
+        ),
         resampler_executable=resampler_executable,
         source_sample_rate=source_sample_rate,
         runtime_asset_receipt=runtime_asset_receipt,
@@ -753,6 +791,13 @@ def materialize(
     if runtime_asset_binding is not None:
         summary["runtime_asset_binding"] = runtime_asset_binding
         summary["runtime_asset_receipt_verified"] = True
+    if backend_bundle_binding is not None:
+        summary["backend_bundle_binding"] = {
+            key: value
+            for key, value in backend_bundle_binding.items()
+            if key != "assets"
+        }
+        summary["backend_bundle_verified"] = True
     return provider, inventory, summary
 
 
@@ -784,6 +829,11 @@ def main() -> int:
     parser.add_argument("--reference-candidate")
     parser.add_argument("--runtime-asset-archive", type=pathlib.Path)
     parser.add_argument("--runtime-asset-receipt", type=pathlib.Path)
+    parser.add_argument("--backend-platform")
+    parser.add_argument("--backend-bundle-archive", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-receipt", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-root", type=pathlib.Path)
+    parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--output-provider", required=True, type=pathlib.Path)
     parser.add_argument("--output-inventory", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
@@ -814,6 +864,11 @@ def main() -> int:
         reference_candidate=args.reference_candidate,
         runtime_asset_archive=args.runtime_asset_archive,
         runtime_asset_receipt=args.runtime_asset_receipt,
+        backend_platform=args.backend_platform,
+        backend_bundle_archive=args.backend_bundle_archive,
+        backend_bundle_receipt=args.backend_bundle_receipt,
+        backend_bundle_root=args.backend_bundle_root,
+        backend_lib_dir=args.backend_lib_dir,
     )
     args.output_provider.parent.mkdir(parents=True, exist_ok=True)
     args.output_provider.write_text(
