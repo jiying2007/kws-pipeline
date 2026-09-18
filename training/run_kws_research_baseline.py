@@ -380,7 +380,7 @@ def main() -> int:
         "research_negative_threshold": chosen,
         "research_negative_unique_clips": negative_count,
         "research_negative_exposure": {
-            "seconds": negative_summary["duration_s"],
+            "seconds": float(negative_summary["audio_hours"]) * 3600.0,
             "false_accepts": negative_summary["false_accepts"],
             "far_per_hour": negative_summary["far_per_hour"],
             "shipping_far_claim_allowed": False,
