@@ -21,6 +21,7 @@ on:
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
+      - "tests/test_research_negative_sidecar.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -44,6 +45,7 @@ on:
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
+      - "tests/test_research_negative_sidecar.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -147,6 +149,30 @@ jobs:
       - name: Normalized controller regression
         run: python3 tests/test_development_loss_controller.py
 
+      - name: Research negative sidecar portability
+        run: python3 tests/test_research_negative_sidecar.py
+
+      - name: Research negative plan contract
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, pathlib
+          path=pathlib.Path("tools/build_kws_v2_research_negative_requests.py")
+          spec=importlib.util.spec_from_file_location("negative_plan", path)
+          module=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          value=module.validate_plan(
+              pathlib.Path("configs/training/kws-v2-research-negative-utterances-v1.json")
+          )
+          assert len(value["utterances"]) == 32
+          assert value["qualification_split_allowed"] is False
+          assert all(
+              not slot.startswith("freeze-")
+              for slots in value["split_voice_slots"].values()
+              for slot in slots
+          )
+          print("research negative plan contract: ok")
+          PY
+
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -157,6 +183,7 @@ jobs:
           training/iterate_gru_development.py
           training/iterate_rnn_development.py
           tests/test_development_loss_controller.py
+          tests/test_research_negative_sidecar.py
           training/research_keyword_classifier.py
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
