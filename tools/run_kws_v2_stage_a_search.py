@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import pathlib
 import subprocess
 import sys
@@ -274,13 +275,9 @@ def resolve_runner(family: str, args: argparse.Namespace) -> pathlib.Path:
     return require_file(raw, f"{family} runner")
 
 
-def validate_development_result(value: dict, candidate_id: str) -> None:
+def validate_development_protected_flags(value: dict, candidate_id: str) -> None:
     if value.get("evidence_scope") != "development-only":
         raise ValueError(f"{candidate_id}: development evidence scope mismatch")
-    if value.get("development_qualified") is not True:
-        raise ValueError(
-            f"{candidate_id}: development loop did not produce a qualified frozen candidate"
-        )
     for key in ("qualification_used", "shadow_used", "formal_qualification_used"):
         if value.get(key) is not False:
             raise ValueError(
@@ -289,6 +286,14 @@ def validate_development_result(value: dict, candidate_id: str) -> None:
     if value.get("candidate_stage_feedback_allowed") is not False:
         raise ValueError(
             f"{candidate_id}: development manifest candidate-stage feedback must remain false"
+        )
+
+
+def validate_development_result(value: dict, candidate_id: str) -> None:
+    validate_development_protected_flags(value, candidate_id)
+    if value.get("development_qualified") is not True:
+        raise ValueError(
+            f"{candidate_id}: development loop did not produce a qualified frozen candidate"
         )
     frozen = value.get("frozen_candidate")
     if not isinstance(frozen, dict):
@@ -304,6 +309,99 @@ def validate_development_result(value: dict, candidate_id: str) -> None:
             raise ValueError(
                 f"{candidate_id}: frozen candidate selection used protected evidence: {key}"
             )
+
+
+def _finite_metric(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    result = float(value)
+    return result if math.isfinite(result) else None
+
+
+def build_development_failure_evidence(
+    *,
+    row: dict,
+    candidate_root: pathlib.Path,
+    failure: str,
+) -> dict:
+    candidate_id = str(row["candidate_id"])
+    development_manifest = candidate_root / "development" / "development-loop-manifest.json"
+    evidence = {
+        "manifest_present": development_manifest.is_file(),
+        "failure": failure,
+        "completed_rounds": 0,
+        "development_qualified": False,
+        "best_observed_round": None,
+        "lowest_calibration_frr_round": None,
+        "lowest_test_frr_round": None,
+        "records": [],
+        "protected_evidence_used": False,
+    }
+    if not development_manifest.is_file():
+        return evidence
+
+    value = load_object(development_manifest)
+    validate_development_protected_flags(value, candidate_id)
+    records = value.get("records")
+    if not isinstance(records, list):
+        raise ValueError(f"{candidate_id}: failed development manifest records must be a list")
+    evidence["development_manifest"] = str(development_manifest)
+    evidence["development_manifest_sha256"] = sha256_file(development_manifest)
+    evidence["development_qualified"] = bool(value.get("development_qualified"))
+    evidence["completed_rounds"] = len(records)
+
+    compact: list[dict] = []
+    for item in records:
+        if not isinstance(item, dict):
+            raise ValueError(f"{candidate_id}: failed development record must be an object")
+        calibration = item.get("calibration") if isinstance(item.get("calibration"), dict) else {}
+        test = item.get("test") if isinstance(item.get("test"), dict) else {}
+        training = item.get("training") if isinstance(item.get("training"), dict) else {}
+        compact.append(
+            {
+                "round": int(item.get("round", -1)),
+                "score": _finite_metric(item.get("score")),
+                "calibration_gate": bool(item.get("calibration_gate")),
+                "test_gate": bool(item.get("test_gate")),
+                "calibration_frr": _finite_metric(calibration.get("frr")),
+                "calibration_far_per_hour": _finite_metric(calibration.get("far_per_hour")),
+                "test_frr": _finite_metric(test.get("frr")),
+                "test_far_per_hour": _finite_metric(test.get("far_per_hour")),
+                "false_rejects": int(item.get("false_rejects", 0)),
+                "false_accepts": int(item.get("false_accepts", 0)),
+                "learning_rate": _finite_metric(training.get("learning_rate")),
+                "positive_example_weight": _finite_metric(training.get("positive_example_weight")),
+                "ordered_token_loss_weight": _finite_metric(training.get("ordered_token_loss_weight")),
+            }
+        )
+    evidence["records"] = compact
+
+    scored = [item for item in compact if item["score"] is not None]
+    if scored:
+        evidence["best_observed_round"] = min(
+            scored, key=lambda item: (float(item["score"]), int(item["round"]))
+        )["round"]
+    cal = [item for item in compact if item["calibration_frr"] is not None]
+    if cal:
+        evidence["lowest_calibration_frr_round"] = min(
+            cal,
+            key=lambda item: (
+                float(item["calibration_frr"]),
+                float(item["calibration_far_per_hour"] or 0.0),
+                int(item["round"]),
+            ),
+        )["round"]
+    test = [item for item in compact if item["test_frr"] is not None]
+    if test:
+        evidence["lowest_test_frr_round"] = min(
+            test,
+            key=lambda item: (
+                float(item["test_frr"]),
+                float(item["test_far_per_hour"] or 0.0),
+                int(item["round"]),
+            ),
+        )["round"]
+    return evidence
 
 
 def execute_candidate(
@@ -471,12 +569,53 @@ def execute_shard(
     ]
     if len(matches) != 1:
         raise ValueError(f"Stage A candidate must match exactly once: {candidate_id}")
-    result = execute_candidate(
-        row=matches[0],
-        args=args,
-        generalization_policy=generalization_policy,
-        product_head=product_head,
-    )
+    prepared = matches[0]
+    candidate_root = pathlib.Path(str(prepared["binding"])).resolve().parent
+    try:
+        result = execute_candidate(
+            row=prepared,
+            args=args,
+            generalization_policy=generalization_policy,
+            product_head=product_head,
+        )
+    except Exception as exc:
+        failure_evidence = build_development_failure_evidence(
+            row=prepared,
+            candidate_root=candidate_root,
+            failure=str(exc),
+        )
+        failed_candidate = dict(prepared)
+        failed_candidate.update(
+            {
+                "status": "failed",
+                "failure": str(exc),
+                "development_failure_evidence": failure_evidence,
+                "generalization_started": (candidate_root / "generalization-plan.json").is_file(),
+            }
+        )
+        failed_shard = {
+            "schema_version": 1,
+            "evidence_class": SHARD_CLASS,
+            "evidence_scope": "development-only",
+            "stage": "A",
+            "status": "failed",
+            "product_head": product_head,
+            "matrix_sha256": str(manifest["matrix_sha256"]),
+            "generalization_cohort_id": str(manifest["generalization_cohort_id"]),
+            "generalization_tier": "search",
+            "external_base_bundle_sha256": str(manifest["external_base_bundle_sha256"]),
+            "full_training_round_budget": True,
+            "generalization_policy": str(generalization_policy),
+            "generalization_policy_sha256": sha256_file(generalization_policy),
+            "candidate": failed_candidate,
+            "fresh_used": False,
+            "shadow_used": False,
+            "formal_qualification_used": False,
+            "protected_evidence_used": False,
+        }
+        write_json(output, failed_shard)
+        raise
+
     shard = {
         "schema_version": 1,
         "evidence_class": SHARD_CLASS,
