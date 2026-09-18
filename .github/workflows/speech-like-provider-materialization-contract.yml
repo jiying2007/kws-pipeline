@@ -347,20 +347,61 @@ jobs:
             exit 1
           fi
 
-      - name: Runtime archive tamper fails before extraction
+      - name: Runtime archive tamper fails exact SHA verification
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/provider-materialization"
-          cp "$root/vits-icefall-zh-aishell3.tar.bz2" "$root/tampered-vits-icefall-zh-aishell3.tar.bz2"
-          printf 'tamper\n' >> "$root/tampered-vits-icefall-zh-aishell3.tar.bz2"
-          cp "$root/tampered-vits-icefall-zh-aishell3.tar.bz2" "$root/vits-icefall-zh-aishell3-tampered.tar.bz2"
+          mkdir -p "$root/tampered"
+          cp "$root/vits-icefall-zh-aishell3.tar.bz2" "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
+          printf 'tamper\n' >> "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
           if python3 tools/verify_speech_like_runtime_bundle.py \
             --reference "$root/fixture-reference.json" \
             --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
-            --archive "$root/vits-icefall-zh-aishell3-tampered.tar.bz2" \
+            --archive "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" \
             --output-dir "$root/bad-runtime-assets" \
             --receipt "$root/bad-runtime-receipt.json"; then
             echo "tampered runtime archive unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Unsafe archive member fails even with matching fixture digest
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 - <<'PY'
+          import hashlib, io, json, os, pathlib, tarfile
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          unsafe_dir = root / "unsafe"
+          unsafe_dir.mkdir(parents=True, exist_ok=True)
+          archive = unsafe_dir / "vits-icefall-zh-aishell3.tar.bz2"
+          with tarfile.open(archive, "w:bz2") as tf:
+              for name, payload in (
+                  ("model.onnx", b"model"),
+                  ("tokens.txt", b"tokens"),
+                  ("lexicon.txt", b"lexicon"),
+              ):
+                  info = tarfile.TarInfo(f"vits-icefall-zh-aishell3/{name}")
+                  info.size = len(payload)
+                  tf.addfile(info, io.BytesIO(payload))
+              link = tarfile.TarInfo("vits-icefall-zh-aishell3/unsafe-link")
+              link.type = tarfile.SYMTYPE
+              link.linkname = "/tmp/outside"
+              tf.addfile(link)
+          reference = json.loads((root / "fixture-reference.json").read_text())
+          preferred = reference["preferred_stage_a_candidate"]
+          row = next(x for x in reference["reference_candidates"] if x["name"] == preferred)
+          bundle = row["runtime_asset_bundle"]
+          bundle["expected_size_bytes"] = archive.stat().st_size
+          bundle["expected_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+          (unsafe_dir / "reference.json").write_text(json.dumps(reference, indent=2) + "\n")
+          PY
+          if python3 tools/verify_speech_like_runtime_bundle.py \
+            --reference "$root/unsafe/reference.json" \
+            --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --archive "$root/unsafe/vits-icefall-zh-aishell3.tar.bz2" \
+            --output-dir "$root/unsafe/extracted" \
+            --receipt "$root/unsafe/receipt.json"; then
+            echo "unsafe runtime archive unexpectedly accepted" >&2
             exit 1
           fi
 
