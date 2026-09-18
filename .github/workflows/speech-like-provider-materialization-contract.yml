@@ -353,7 +353,15 @@ jobs:
           root="$RUNNER_TEMP/provider-materialization"
           mkdir -p "$root/tampered"
           cp "$root/vits-icefall-zh-aishell3.tar.bz2" "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
-          printf 'tamper\n' >> "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
+          python3 - "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          assert data
+          index = len(data) // 2
+          data[index] ^= 0x01
+          path.write_bytes(data)
+          PY
           if python3 tools/verify_speech_like_runtime_bundle.py \
             --reference "$root/fixture-reference.json" \
             --candidate icefall-tts-aishell3-vits-low-2024-04-06 \
@@ -448,7 +456,14 @@ jobs:
           set -euo pipefail
           root="$RUNNER_TEMP/provider-materialization"
           cp "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" "$root/tampered-model.onnx"
-          printf 'tamper\n' >> "$root/tampered-model.onnx"
+          python3 - "$root/tampered-model.onnx" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          assert data
+          data[0] ^= 0x01
+          path.write_bytes(data)
+          PY
           if python3 tools/materialize_speech_like_provider.py \
             --corpus-plan configs/training/speech-like-corpus-plan-v1.json \
             --command-policy configs/training/speech-like-command-provider-v1.json \
