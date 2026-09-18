@@ -24,19 +24,32 @@ on:
           - m2-plus-margin
           - m3-plus-completion
           - m4-plus-release
+  push:
+    branches:
+      - "research/kws-training-reset-v1"
+    paths:
+      - "configs/training/kws-v2-research-reset-v1.json"
+      - "training/run_kws_research_baseline.py"
+      - "training/research_keyword_classifier.py"
+      - "training/train_ctc.py"
+      - "training/train_gru_ctc.py"
+      - ".github/workflows/kws-v2-research-reset.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id }}-${{ inputs.loss_profile }}
-  cancel-in-progress: false
+  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}-${{ inputs.loss_profile || 'm0-ctc-only' }}
+  cancel-in-progress: true
 
 jobs:
   research-baseline:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      CANDIDATE_ID: ${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}
+      LOSS_PROFILE: ${{ inputs.loss_profile || 'm0-ctc-only' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -51,6 +64,15 @@ jobs:
           repository: jiying2007/kws-pipeline
           run-id: 35333458390
 
+      - name: Download frozen research negative sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
       - name: Resolve corpus inputs
         id: corpus
         run: |
@@ -64,17 +86,18 @@ jobs:
             echo "${split}_index=$index" >> "$GITHUB_OUTPUT"
             echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
           done
+          test -f "$RUNNER_TEMP/negative-sidecar/sidecar-receipt.json"
 
       - name: Prepare immutable Stage-A binding
         run: |
           set -euo pipefail
-          python3 tools/run_kws_v2_stage_a_search.py             --train-index "${{ steps.corpus.outputs.train_index }}"             --train-summary "${{ steps.corpus.outputs.train_summary }}"             --calibration-index "${{ steps.corpus.outputs.calibration_index }}"             --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}"             --test-index "${{ steps.corpus.outputs.test_index }}"             --test-summary "${{ steps.corpus.outputs.test_summary }}"             --qualification-index "${{ steps.corpus.outputs.qualification_index }}"             --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}"             --candidate-id "${{ inputs.candidate_id }}"             --prepare-only             --work-dir "$RUNNER_TEMP/research-stage-a"
+          python3 tools/run_kws_v2_stage_a_search.py             --train-index "${{ steps.corpus.outputs.train_index }}"             --train-summary "${{ steps.corpus.outputs.train_summary }}"             --calibration-index "${{ steps.corpus.outputs.calibration_index }}"             --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}"             --test-index "${{ steps.corpus.outputs.test_index }}"             --test-summary "${{ steps.corpus.outputs.test_summary }}"             --qualification-index "${{ steps.corpus.outputs.qualification_index }}"             --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}"             --candidate-id "$CANDIDATE_ID"             --prepare-only             --work-dir "$RUNNER_TEMP/research-stage-a"
 
       - name: Resolve research candidate
         id: candidate
         run: |
           set -euo pipefail
-          ROOT="$RUNNER_TEMP/research-stage-a/candidates/${{ inputs.candidate_id }}"
+          ROOT="$RUNNER_TEMP/research-stage-a/candidates/$CANDIDATE_ID"
           test -f "$ROOT/effective-config.json"
           python3 - "$ROOT" >> "$GITHUB_OUTPUT" <<'PY'
           import json, pathlib, sys
@@ -103,7 +126,7 @@ jobs:
       - name: Run research-only baseline
         run: |
           set -euo pipefail
-          .venv/bin/python training/run_kws_research_baseline.py             --config "${{ steps.candidate.outputs.config }}"             --family "${{ steps.candidate.outputs.family }}"             --loss-profile "${{ inputs.loss_profile }}"             --runner "${{ steps.candidate.outputs.runner }}"             --work-dir "$RUNNER_TEMP/research-result"
+          .venv/bin/python training/run_kws_research_baseline.py             --config "${{ steps.candidate.outputs.config }}"             --family "${{ steps.candidate.outputs.family }}"             --loss-profile "$LOSS_PROFILE"             --runner "${{ steps.candidate.outputs.runner }}"             --negative-sidecar "$RUNNER_TEMP/negative-sidecar"             --work-dir "$RUNNER_TEMP/research-result"
 
       - name: Show research scorecard
         if: always()
@@ -116,7 +139,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-research-reset-${{ inputs.candidate_id }}-${{ inputs.loss_profile }}-${{ github.sha }}
+          name: kws-v2-research-reset-${{ env.CANDIDATE_ID }}-${{ env.LOSS_PROFILE }}-${{ github.sha }}
           path: ${{ runner.temp }}/research-result/
           if-no-files-found: error
           retention-days: 30
