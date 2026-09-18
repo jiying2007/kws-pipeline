@@ -86,6 +86,88 @@ def load_speaker_map(path: pathlib.Path, expected_slots: list[str]) -> dict[str,
     return result
 
 
+def validate_provider_reference(
+    path: pathlib.Path,
+    candidate_name: str,
+    *,
+    provider_profile: str,
+    license_id: str,
+    license_file: pathlib.Path,
+    source_sample_rate: int | None,
+    speakers: dict[str, dict],
+) -> dict:
+    reference = load_object(path.resolve())
+    if (
+        int(reference.get("schema_version", 0)) != 1
+        or reference.get("evidence_class") != "speech-like-provider-reference-v1"
+    ):
+        raise ValueError("provider reference identity mismatch")
+    rows = reference.get("reference_candidates")
+    if not isinstance(rows, list):
+        raise ValueError("provider reference candidates must be a list")
+    matches = [
+        row for row in rows
+        if isinstance(row, dict) and str(row.get("name", "")).strip() == candidate_name
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"reference candidate must match exactly once: {candidate_name}")
+    row = matches[0]
+    if row.get("suitable_for_24_voice_baseline") is not True:
+        raise ValueError("reference candidate is not approved for the 24-voice Stage A baseline")
+    status = str(row.get("license_status", ""))
+    if not status.startswith("verified-"):
+        raise ValueError("reference candidate license is not verified")
+    if str(row.get("provider_profile", "")) != provider_profile:
+        raise ValueError("provider profile does not match pinned reference")
+    expected_license = str(row.get("license_id", ""))
+    if expected_license != license_id:
+        raise ValueError("license_id does not match pinned reference")
+
+    evidence = row.get("license_evidence")
+    if not isinstance(evidence, dict):
+        raise ValueError("verified reference candidate must declare license_evidence")
+    expected_license_sha = str(evidence.get("expected_sha256", "")).lower()
+    if len(expected_license_sha) != 64 or sha256_file(license_file) != expected_license_sha:
+        raise ValueError("license evidence sha256 does not match pinned reference")
+
+    reported_speakers = int(row.get("reported_speakers", 0))
+    if reported_speakers < len(speakers):
+        raise ValueError("reference candidate does not have enough speakers for the planned slots")
+    speaker_ids = [int(item["speaker_id"]) for item in speakers.values()]
+    if any(sid >= reported_speakers for sid in speaker_ids):
+        raise ValueError("speaker map uses an id outside the pinned reference speaker range")
+
+    reported_rate = int(row.get("reported_sample_rate_hz", 0))
+    normalized_rate = int(row.get("normalized_sample_rate_hz", 0))
+    if normalized_rate != 16000:
+        raise ValueError("reference candidate normalized sample rate must remain 16000 Hz")
+    if provider_profile == RESAMPLED_PROFILE:
+        if source_sample_rate != reported_rate:
+            raise ValueError("source_sample_rate does not match pinned reference")
+        if reported_rate <= 0 or reported_rate >= 16000:
+            raise ValueError("resampled reference source rate must be below 16000 Hz")
+    elif provider_profile == NATIVE_PROFILE:
+        if reported_rate != 16000 or source_sample_rate is not None:
+            raise ValueError("native reference candidate must be native 16000 Hz")
+
+    return {
+        "reference_sha256": sha256_file(path.resolve()),
+        "candidate": candidate_name,
+        "provider_profile": provider_profile,
+        "license_id": expected_license,
+        "license_evidence_sha256": expected_license_sha,
+        "license_source": {
+            "kind": str(evidence.get("kind", "")),
+            "repository": str(evidence.get("repository", "")),
+            "revision": str(evidence.get("revision", "")),
+            "path": str(evidence.get("path", "")),
+        },
+        "reported_speakers": reported_speakers,
+        "reported_sample_rate_hz": reported_rate,
+        "normalized_sample_rate_hz": normalized_rate,
+    }
+
+
 def build_provider(
     *,
     provider_profile: str,
@@ -218,6 +300,8 @@ def materialize(
     backend_executable: pathlib.Path | None = None,
     resampler_executable: pathlib.Path | None = None,
     source_sample_rate: int | None = None,
+    provider_reference: pathlib.Path | None = None,
+    reference_candidate: str | None = None,
 ) -> tuple[dict, list[dict], dict]:
     plan = normalize_plan(corpus_plan)
     slots = [
@@ -232,6 +316,20 @@ def materialize(
     license_id = require_text(license_id, "license_id")
     if license_id.strip().lower() in BANNED_LICENSES:
         raise ValueError("license_id must be verified before generation")
+    license_file = require_file(license_file, "license evidence")
+    if (provider_reference is None) != (reference_candidate is None):
+        raise ValueError("provider_reference and reference_candidate must be supplied together")
+    reference_binding = None
+    if provider_reference is not None and reference_candidate is not None:
+        reference_binding = validate_provider_reference(
+            provider_reference,
+            require_text(reference_candidate, "reference_candidate"),
+            provider_profile=provider_profile,
+            license_id=license_id,
+            license_file=license_file,
+            source_sample_rate=source_sample_rate,
+            speakers=speakers,
+        )
 
     provider, normalization = build_provider(
         provider_profile=provider_profile,
@@ -305,6 +403,9 @@ def materialize(
         "executable_sha256": sha256_file(executable),
         "audio_normalization": normalization,
     }
+    if reference_binding is not None:
+        summary["provider_reference"] = reference_binding
+        summary["license_reference_verified"] = True
     return provider, inventory, summary
 
 
@@ -328,6 +429,8 @@ def main() -> int:
     parser.add_argument("--backend-executable", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
     parser.add_argument("--source-sample-rate", type=int)
+    parser.add_argument("--provider-reference", type=pathlib.Path)
+    parser.add_argument("--reference-candidate")
     parser.add_argument("--output-provider", required=True, type=pathlib.Path)
     parser.add_argument("--output-inventory", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
@@ -350,6 +453,8 @@ def main() -> int:
         backend_executable=args.backend_executable,
         resampler_executable=args.resampler_executable,
         source_sample_rate=args.source_sample_rate,
+        provider_reference=args.provider_reference,
+        reference_candidate=args.reference_candidate,
     )
     args.output_provider.parent.mkdir(parents=True, exist_ok=True)
     args.output_provider.write_text(
