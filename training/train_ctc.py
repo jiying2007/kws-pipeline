@@ -48,6 +48,16 @@ RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
+DETERMINISTIC_CPU_INTRAOP_THREADS = 1
+DETERMINISTIC_CPU_INTEROP_THREADS = 1
+
+
+def configure_deterministic_cpu_runtime() -> None:
+    torch.set_num_threads(DETERMINISTIC_CPU_INTRAOP_THREADS)
+    if torch.get_num_interop_threads() != DETERMINISTIC_CPU_INTEROP_THREADS:
+        torch.set_num_interop_threads(DETERMINISTIC_CPU_INTEROP_THREADS)
+    torch.backends.mkldnn.enabled = False
+    torch.use_deterministic_algorithms(True)
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -107,6 +117,10 @@ def training_environment() -> dict:
         "cudnn_version": int(cudnn) if cudnn is not None else None,
         "torch_num_threads": int(torch.get_num_threads()),
         "torch_num_interop_threads": int(torch.get_num_interop_threads()),
+        "torch_mkldnn_enabled": bool(torch.backends.mkldnn.enabled),
+        "torch_deterministic_algorithms_enabled": bool(
+            torch.are_deterministic_algorithms_enabled()
+        ),
         "repository_sha": repository_sha(),
         "training_image_digest": image_digest,
         "container_declared": os.environ.get("KWS_TRAINING_CONTAINER") == "1",
@@ -538,6 +552,7 @@ def main() -> None:
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
 
+    configure_deterministic_cpu_runtime()
     environment = training_environment()
     if args.require_container_digest and environment["training_image_digest"] is None:
         parser.error(
@@ -546,7 +561,6 @@ def main() -> None:
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.use_deterministic_algorithms(True)
     shuffle_generator = torch.Generator()
     shuffle_generator.manual_seed(args.seed)
 
