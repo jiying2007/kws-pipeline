@@ -1,0 +1,322 @@
+name: kws-v2-threshold-diagnostic-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/diagnose_kws_threshold_operating_curve.py"
+      - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-threshold-diagnostic-live.yml"
+  pull_request:
+    paths:
+      - "tools/diagnose_kws_threshold_operating_curve.py"
+      - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-threshold-diagnostic-live.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Diagnostic is report-only and preserves formal evidence
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, json, pathlib, sys, tempfile
+
+          root = pathlib.Path(tempfile.mkdtemp(prefix="threshold-diagnostic-contract-"))
+          runner = root / "runner"
+          model = root / "model.kwg"
+          tokens = root / "tokens.txt"
+          keywords = root / "keywords.tsv"
+          config = root / "config.json"
+          cal = root / "calibration.references.jsonl"
+          test = root / "test.references.jsonl"
+          manifest = root / "development-loop-manifest.json"
+          domain_summary = root / "domain-summary.json"
+          for path in (runner, model, tokens, cal, test):
+              path.write_text("fixture\n")
+          keywords.write_text(
+              "# id\ttext\tthreshold\texplicit-pinyin-tokens\n"
+              "1\t你好小窝\t0.55\tni3 hao3 xiao3 wo1\n"
+              "2\t小窝小窝\t0.55\txiao3 wo1 xiao3 wo1\n"
+          )
+          config.write_text(json.dumps({
+              "domain_gates": {
+                  "max_frr": 0.0,
+                  "max_far_per_hour": 0.0,
+                  "max_p95_latency_ms": 1000.0,
+                  "max_far_frr": 0.0,
+              }
+          }))
+          config_sha = hashlib.sha256(config.read_bytes()).hexdigest()
+          model_sha = hashlib.sha256(model.read_bytes()).hexdigest()
+          cal_sha = hashlib.sha256(cal.read_bytes()).hexdigest()
+          test_sha = hashlib.sha256(test.read_bytes()).hexdigest()
+          domain_summary.write_text(json.dumps({
+              "splits": {
+                  "calibration": {"references_sha256": cal_sha},
+                  "test": {"references_sha256": test_sha},
+              }
+          }))
+          manifest.write_text(json.dumps({
+              "evidence_scope": "development-only",
+              "qualification_used": False,
+              "shadow_used": False,
+              "formal_qualification_used": False,
+              "config_sha256": config_sha,
+              "development_qualified": True,
+              "selection_policy": "best-strict-development-score-v1",
+              "selected_round": 3,
+              "records": [{
+                  "round": 3,
+                  "frontend": "logmel",
+                  "score": 1.23,
+                  "model_sha256": model_sha,
+                  "provenance_sha256": "fixture-provenance-sha256",
+                  "calibration": {
+                      "frr": 0.90,
+                      "far_per_hour": 0.0,
+                      "p95_post_end_latency_ms": 123.0,
+                      "calibrated_thresholds": {"1": 0.58, "2": 0.60},
+                      "calibration_threshold_grid": [0.50, 0.55, 0.60],
+                      "calibration_coordinate_rounds": 2,
+                  },
+                  "calibration_domains": {"domains": {"distance:far": {"frr": 0.93}}},
+                  "test": {"frr": 0.85, "far_per_hour": 0.0, "p95_post_end_latency_ms": 111.0},
+                  "test_domains": {"domains": {"distance:far": {"frr": 0.90}}},
+              }],
+          }))
+          before = {
+              p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in (config, keywords, manifest, domain_summary)
+          }
+
+          spec = importlib.util.spec_from_file_location(
+              "diag", "tools/diagnose_kws_threshold_operating_curve.py"
+          )
+          module = importlib.util.module_from_spec(spec)
+          assert spec.loader is not None
+          spec.loader.exec_module(module)
+
+          threshold_by_pack = {}
+          real_compile = module.compile_pack
+          def fake_compile(tokens_path, tsv, pack):
+              rows = module.keyword_rows(tsv)
+              values = {float(row["threshold"]) for row in rows}
+              assert len(values) == 1
+              threshold_by_pack[str(pack)] = values.pop()
+              pack.parent.mkdir(parents=True, exist_ok=True)
+              pack.write_text("pack\n")
+          module.compile_pack = fake_compile
+
+          def fake_evaluate(*, runner, model, pack, references, output):
+              t = threshold_by_pack[str(pack)]
+              is_test = pathlib.Path(references).name.startswith("test")
+              frr = min(1.0, 0.05 + t * (1.35 if is_test else 1.25))
+              far = max(0.0, (0.48 - t) * (150.0 if is_test else 120.0))
+              base = {
+                  "frr": frr,
+                  "far_per_hour": far,
+                  "p95_post_end_latency_ms": 120.0,
+              }
+              domains = {
+                  "domains": {"distance:far": {"frr": min(1.0, frr + 0.05)}}
+              }
+              return base, domains
+          module.evaluate = fake_evaluate
+
+          output = root / "report.json"
+          work = root / "work"
+          old_argv = sys.argv
+          try:
+              sys.argv = [
+                  "diagnose",
+                  "--runner", str(runner),
+                  "--model", str(model),
+                  "--tokens", str(tokens),
+                  "--keywords", str(keywords),
+                  "--config", str(config),
+                  "--calibration-references", str(cal),
+                  "--test-references", str(test),
+                  "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
+                  "--development-manifest", str(manifest),
+                  "--development-domain-summary", str(domain_summary),
+                  "--round-index", "3",
+                  "--diagnostic-round-selection-policy", "contract-selected-round-v1",
+                  "--work-dir", str(work),
+                  "--output", str(output),
+              ]
+              assert module.main() == 0
+          finally:
+              sys.argv = old_argv
+              module.compile_pack = real_compile
+
+          def expect_rejected(argv, expected):
+              old_argv = sys.argv
+              try:
+                  sys.argv = argv
+                  try:
+                      module.main()
+                  except ValueError as exc:
+                      assert expected in str(exc), (expected, str(exc))
+                  else:
+                      raise AssertionError(f"expected diagnostic rejection: {expected}")
+              finally:
+                  sys.argv = old_argv
+
+          base_argv = [
+              "diagnose",
+              "--runner", str(runner),
+              "--model", str(model),
+              "--tokens", str(tokens),
+              "--keywords", str(keywords),
+              "--config", str(config),
+              "--calibration-references", str(cal),
+              "--test-references", str(test),
+              "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
+              "--development-manifest", str(manifest),
+              "--development-domain-summary", str(domain_summary),
+              "--round-index", "3",
+              "--diagnostic-round-selection-policy", "contract-selected-round-v1",
+              "--work-dir", str(root / "negative-work"),
+              "--output", str(root / "negative-report.json"),
+          ]
+
+          bad_model = root / "bad-model.kwg"
+          bad_model.write_text("tampered-model\n")
+          bad_model_argv = list(base_argv)
+          bad_model_argv[bad_model_argv.index("--model") + 1] = str(bad_model)
+          expect_rejected(
+              bad_model_argv,
+              "diagnostic model does not match development round model",
+          )
+
+          bad_config = root / "bad-config.json"
+          bad_config.write_text(config.read_text() + "\n")
+          bad_config_argv = list(base_argv)
+          bad_config_argv[bad_config_argv.index("--config") + 1] = str(bad_config)
+          expect_rejected(
+              bad_config_argv,
+              "diagnostic config does not match development manifest config",
+          )
+
+          bad_cal = root / "bad-calibration.references.jsonl"
+          bad_cal.write_text(cal.read_text() + "tampered\n")
+          bad_cal_argv = list(base_argv)
+          bad_cal_argv[bad_cal_argv.index("--calibration-references") + 1] = str(bad_cal)
+          expect_rejected(
+              bad_cal_argv,
+              "calibration references do not match development domain summary",
+          )
+
+          value = json.loads(output.read_text())
+          assert value["evidence_class"] == "kws-v2-threshold-operating-curve-diagnostic-v2"
+          assert value["evidence_scope"] == "development-only"
+          assert value["diagnostic_only"] is True
+          assert value["selection_feedback_allowed"] is False
+          assert value["protected_evidence_used"] is False
+          assert value["common_threshold_sweep_only"] is True
+          assert value["diagnostic_round_selection_policy"] == "contract-selected-round-v1"
+          assert len(value["operating_curve"]) == 5
+          development = value["development_round_evidence"]
+          assert development["round"] == 3
+          assert development["development_qualified"] is True
+          assert development["development_config_sha256"] == config_sha
+          assert development["development_record_model_sha256"] == model_sha
+          assert development["development_record_provenance_sha256"] == "fixture-provenance-sha256"
+          assert development["development_record_frontend"] == "logmel"
+          assert development["development_record_score"] == 1.23
+          assert development["development_manifest_selection_policy"] == "best-strict-development-score-v1"
+          assert development["development_manifest_selected_round"] == 3
+          assert development["round_matches_development_selected_round"] is True
+          assert development["calibrated_thresholds"] == {"1": 0.58, "2": 0.60}
+          assert development["threshold_grid"] == [0.50, 0.55, 0.60]
+          assert development["coordinate_rounds"] == 2
+          assert development["calibration_metrics"]["p95_post_end_latency_ms"] == 123.0
+          assert development["calibration_metrics"]["far_distance_frr"] == 0.93
+          assert development["test_metrics"]["p95_post_end_latency_ms"] == 111.0
+          assert development["test_metrics"]["far_distance_frr"] == 0.90
+          assert len(development["calibration_behavior_key"]) == 8
+          summary_evidence = value["development_domain_summary_evidence"]
+          assert summary_evidence["sha256"] == hashlib.sha256(domain_summary.read_bytes()).hexdigest()
+          assert summary_evidence["calibration_references_sha256"] == cal_sha
+          assert summary_evidence["test_references_sha256"] == test_sha
+          assert value["model_sha256"] == model_sha
+          assert value["config_sha256"] == config_sha
+          assert value["calibration_references_sha256"] == cal_sha
+          assert value["test_references_sha256"] == test_sha
+          assert value["min_calibration_frr_threshold"] == 0.20
+          assert 0.20 in value["min_calibration_frr_thresholds"]
+          assert value["min_calibration_far_threshold"] == 0.50
+          assert 0.50 in value["min_calibration_far_thresholds"]
+          assert 0.20 in value["calibration_frr_far_pareto_thresholds"]
+          assert 0.50 in value["calibration_frr_far_pareto_thresholds"]
+          official_candidates = [
+              (
+                  float(row["threshold"]),
+                  tuple(row["official_calibration_behavior_key"]),
+              )
+              for row in value["operating_curve"]
+          ]
+          expected_official = module.select_calibration_threshold(official_candidates)
+          best_official_key = min(key for _, key in official_candidates)
+          expected_plateau = [
+              threshold
+              for threshold, key in official_candidates
+              if key == best_official_key
+          ]
+          assert value["official_behavior_order_key"] == list(best_official_key)
+          assert value["official_behavior_order_thresholds"] == expected_plateau
+          assert value["official_behavior_order_threshold"] == expected_official
+          assert expected_official in expected_plateau
+
+          after = {
+              p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in (config, keywords, manifest, domain_summary)
+          }
+          assert before == after
+          print("threshold diagnostic contract: ok")
+          PY
+
+      - name: Live workflow wiring remains audit-complete
+        run: |
+          python3 - <<'PY'
+          import pathlib
+
+          path = pathlib.Path(".github/workflows/kws-v2-threshold-diagnostic-live.yml")
+          live = path.read_text(encoding="utf-8")
+          required = (
+              '--development-domain-summary "',
+              'steps.selected.outputs.domain_summary',
+              '--diagnostic-round-selection-policy "',
+              'steps.selected.outputs.selection_policy',
+              'manifest_selected_round=value.get("selected_round")',
+              'selected-calibration.references.jsonl',
+              'selected-test.references.jsonl',
+              'selected-domain-index.jsonl',
+              'selected-domain-summary.json',
+              'selected-development-audit.json',
+              'development-resume-state.json',
+              'training-acoustic-rotation-evidence',
+              'operating-curve-work',
+              'execution-metadata.json',
+              'evidence-inventory.json',
+          )
+          missing = [value for value in required if value not in live]
+          assert not missing, f"live diagnostic audit wiring missing: {missing}"
+          assert live.count("retention-days: 30") >= 2
+          print("live threshold diagnostic wiring: ok")
+          PY
+
+      - name: Python syntax
+        run: python3 -m py_compile tools/diagnose_kws_threshold_operating_curve.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
