@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import shutil
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -325,10 +326,26 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
 
     split_summary: dict[str, dict] = {}
     for split in SPLITS:
-        raw_manifest = output_root / split / "manifest.jsonl"
-        labels_path = output_root / split / "labels.jsonl"
-        labeled_manifest = output_root / split / "labeled-manifest.jsonl"
-        write_jsonl(raw_manifest, split_rows[split])
+        split_root = output_root / split
+        raw_manifest = split_root / "manifest.jsonl"
+        labels_path = split_root / "labels.jsonl"
+        labeled_manifest = split_root / "labeled-manifest.jsonl"
+        audio_dir = split_root / "audio"
+        audio_dir.mkdir(parents=True, exist_ok=True)
+        portable_rows: list[dict] = []
+        for ordinal, row in enumerate(split_rows[split]):
+            source = pathlib.Path(str(row["audio"])).resolve()
+            file_sha = require_text(row.get("file_sha256"), f"{split} row {ordinal}.file_sha256")
+            target = audio_dir / f"recording-{ordinal:06d}-{file_sha[:12]}.wav"
+            if target.exists():
+                raise ValueError(f"{split}: labeled audio target already exists: {target}")
+            shutil.copyfile(source, target)
+            if sha256_file(target) != file_sha:
+                raise ValueError(f"{split}: labeled audio sha256 mismatch after copy")
+            portable = dict(row)
+            portable["audio"] = target.relative_to(split_root).as_posix()
+            portable_rows.append(portable)
+        write_jsonl(raw_manifest, portable_rows)
         write_jsonl(labels_path, split_labels[split])
         enriched = attach_labels(raw_manifest, labels_path)
         write_jsonl(labeled_manifest, enriched)
