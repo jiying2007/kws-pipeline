@@ -181,6 +181,7 @@ jobs:
           assert manifest["recordings"] == 384
           assert manifest["voice_slots"] == 24
           assert manifest["utterances"] == 16
+          assert manifest["generation_workers"] == 2
           assert manifest["source_sample_rate_hz"] == 8000
           assert manifest["normalized_sample_rate_hz"] == 16000
           assert manifest["source_bandwidth_limitation_retained"] is True
