@@ -13,16 +13,28 @@
     "generalization_policy": "configs/training/development-generalization-v1.json",
     "corpus_requirement": "immutable-speech-like-external-base-v1",
     "generalization_tier": "search",
-    "require_predeclared_plan": true
+    "require_predeclared_plan": true,
+    "development_policies": {
+      "rnn": "configs/training/xiaowo.rnn-development-stage-a-v1.json",
+      "gru": "configs/training/xiaowo.gru-development-stage-a-v1.json"
+    }
   },
   "stage_a_frontend": {
     "enabled": true,
     "selection_mode": "report-only-until-speech-like-baseline-calibrated",
-    "families": ["rnn", "gru"],
+    "families": [
+      "rnn",
+      "gru"
+    ],
     "fixed_feature_dim": 32,
     "fixed_hidden_dim": 64,
-    "frontends": ["logmel", "pcen-lite"],
-    "mutable_paths": ["model.frontends"],
+    "frontends": [
+      "logmel",
+      "pcen-lite"
+    ],
+    "mutable_paths": [
+      "model.frontends"
+    ],
     "forbidden_simultaneous_mutations": [
       "model.hidden_dim",
       "train",
@@ -40,10 +52,19 @@
     "requires_frontend_choice": true,
     "selection_mode": "pareto-only-until-target-board-budget",
     "candidates": {
-      "rnn": [48, 64],
-      "gru": [32, 48, 64]
+      "rnn": [
+        48,
+        64
+      ],
+      "gru": [
+        32,
+        48,
+        64
+      ]
     },
-    "mutable_paths": ["model.hidden_dim"],
+    "mutable_paths": [
+      "model.hidden_dim"
+    ],
     "max_hidden_dim_current_runtime_contract": 64,
     "gru96_requires_separate_runtime_contract_change": true
   },
@@ -67,6 +88,7 @@
     "same_decoder_within_stage": true,
     "same_controller_within_stage": true,
     "single_primary_variable_per_stage": true,
-    "protected_feedback_allowed": false
+    "protected_feedback_allowed": false,
+    "full_training_round_budget_within_stage": true
   }
 }

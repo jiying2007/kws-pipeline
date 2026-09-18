@@ -18,6 +18,7 @@ import development_resume as development_resume  # noqa: E402
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
+from frontend_spec import FRONTEND_IDS  # noqa: E402
 from iterate_domain import (  # noqa: E402
     calibrate,
     evaluate,
@@ -57,6 +58,16 @@ def finite(value: object, label: str) -> float:
 
 def clamp(value: float, low: float, high: float) -> float:
     return min(high, max(low, value))
+
+
+def development_frontend(model_cfg: dict) -> str:
+    frontends = model_cfg.get("frontends")
+    if not isinstance(frontends, list) or len(frontends) != 1:
+        raise ValueError("GRU development requires exactly one frontend")
+    frontend = str(frontends[0])
+    if frontend not in FRONTEND_IDS:
+        raise ValueError(f"unsupported GRU development frontend: {frontend}")
+    return frontend
 
 
 def validate_policy(path: pathlib.Path) -> dict:
@@ -336,6 +347,9 @@ def main() -> int:
     keywords = repo_path(str(cfg["keywords"]))
     train_cfg = cfg.get("train", {})
     model_cfg = cfg.get("model", {})
+    if not isinstance(model_cfg, dict):
+        raise ValueError("model config must be an object")
+    frontend = development_frontend(model_cfg)
     gates = gate_values(cfg.get("domain_gates", {}))
     thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
@@ -436,7 +450,7 @@ def main() -> int:
                 "--keywords",
                 str(keywords),
                 "--frontend",
-                "logmel",
+                frontend,
                 "--feature-dim",
                 str(int(model_cfg.get("feature_dim", 32))),
                 "--hidden-dim",
@@ -508,7 +522,7 @@ def main() -> int:
         false_rejects, false_accepts = failure_counts(cal_base, test_base)
         record = {
             "round": round_index,
-            "frontend": "logmel",
+            "frontend": frontend,
             "candidate": 0,
             "score": score,
             "model": str(model),
