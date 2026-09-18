@@ -18,6 +18,7 @@ import development_resume as development_resume  # noqa: E402
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
+from frontend_spec import FRONTEND_IDS  # noqa: E402
 from iterate_domain import calibrate, evaluate, gate_values, objective, repo_path, run, safe_reset, sha256_file  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from rnn_development_gate import evaluate_development_split, terminal_strict_streak  # noqa: E402
@@ -49,6 +50,16 @@ def finite(value: object, label: str) -> float:
 
 def clamp(value: float, low: float, high: float) -> float:
     return min(high, max(low, value))
+
+
+def development_frontend(model_cfg: dict) -> str:
+    frontends = model_cfg.get("frontends")
+    if not isinstance(frontends, list) or len(frontends) != 1:
+        raise ValueError("RNN development requires exactly one frontend")
+    frontend = str(frontends[0])
+    if frontend not in FRONTEND_IDS:
+        raise ValueError(f"unsupported RNN development frontend: {frontend}")
+    return frontend
 
 
 def validate_policy(path: pathlib.Path) -> dict:
@@ -254,6 +265,9 @@ def main() -> int:
     keywords = repo_path(str(cfg["keywords"]))
     train_cfg = cfg.get("train", {})
     model_cfg = cfg.get("model", {})
+    if not isinstance(model_cfg, dict):
+        raise ValueError("model config must be an object")
+    frontend = development_frontend(model_cfg)
     gates = gate_values(cfg.get("domain_gates", {}))
     thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
@@ -319,7 +333,7 @@ def main() -> int:
         command = [sys.executable, str(TRAINING / "train_ctc.py")]
         for manifest in manifests:
             command.extend(["--manifest", str(manifest)])
-        command.extend(["--tokens", str(tokens), "--keywords", str(keywords), "--frontend", "logmel", "--feature-dim", str(int(model_cfg.get("feature_dim", 32))), "--hidden-dim", str(int(model_cfg.get("hidden_dim", 64))), "--epochs", str(int(policy["epochs_per_round"])), "--batch-size", str(int(train_cfg.get("batch_size", 16))), "--lr", str(learning_rate), "--seed", str(int(cfg.get("seed", 1337)) + int(policy["training_seed_namespace"]) + round_index * 1009), "--positive-example-weight", str(float(controller["positive_example_weight"])), "--ordered-token-loss-weight", str(float(controller["ordered_token_loss_weight"])), "--output", str(checkpoint)])
+        command.extend(["--tokens", str(tokens), "--keywords", str(keywords), "--frontend", frontend, "--feature-dim", str(int(model_cfg.get("feature_dim", 32))), "--hidden-dim", str(int(model_cfg.get("hidden_dim", 64))), "--epochs", str(int(policy["epochs_per_round"])), "--batch-size", str(int(train_cfg.get("batch_size", 16))), "--lr", str(learning_rate), "--seed", str(int(cfg.get("seed", 1337)) + int(policy["training_seed_namespace"]) + round_index * 1009), "--positive-example-weight", str(float(controller["positive_example_weight"])), "--ordered-token-loss-weight", str(float(controller["ordered_token_loss_weight"])), "--output", str(checkpoint)])
         if previous_checkpoint is not None:
             command.extend(["--warm-start", str(previous_checkpoint)])
         run(command)
@@ -332,7 +346,7 @@ def main() -> int:
         test_contract = evaluate_development_split(test_base, test_domains, cfg)
         score = objective(cal_base, cal_domains, gates) + objective(test_base, test_domains, gates)
         fr, fa = failure_counts(cal_base, test_base)
-        record = {"round": round_index, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "frontend": "logmel", "candidate": 0, "score": score, "model": str(model), "model_sha256": sha256_file(model), "checkpoint": str(checkpoint), "provenance": str(provenance), "provenance_sha256": sha256_file(provenance), "keywords": str(calibrated), "pack": str(pack), "calibration": cal_base, "calibration_domains": cal_domains, "calibration_development_gate": cal_contract, "test": test_base, "test_domains": test_domains, "test_development_gate": test_contract, "calibration_gate": bool(cal_contract["qualified"]), "test_gate": bool(test_contract["qualified"]), "false_rejects": fr, "false_accepts": fa, "training": {"architecture": ARCHITECTURE, "warm_started": previous_checkpoint is not None, "epochs": int(policy["epochs_per_round"]), "learning_rate": learning_rate, "positive_example_weight": float(controller["positive_example_weight"]), "ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]), "fixed_replay_repeat": int(policy["fixed_replay_repeat"]), "fixed_replay_examples": int(fixed_replay.get("examples", 0)), "failure_replay_repeat": int(controller["failure_replay_repeat"]), "failure_replay_examples": int(failure_replay.get("examples", 0)), "manifest_count": len(manifests)}}
+        record = {"round": round_index, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "frontend": frontend, "candidate": 0, "score": score, "model": str(model), "model_sha256": sha256_file(model), "checkpoint": str(checkpoint), "provenance": str(provenance), "provenance_sha256": sha256_file(provenance), "keywords": str(calibrated), "pack": str(pack), "calibration": cal_base, "calibration_domains": cal_domains, "calibration_development_gate": cal_contract, "test": test_base, "test_domains": test_domains, "test_development_gate": test_contract, "calibration_gate": bool(cal_contract["qualified"]), "test_gate": bool(test_contract["qualified"]), "false_rejects": fr, "false_accepts": fa, "training": {"architecture": ARCHITECTURE, "warm_started": previous_checkpoint is not None, "epochs": int(policy["epochs_per_round"]), "learning_rate": learning_rate, "positive_example_weight": float(controller["positive_example_weight"]), "ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]), "fixed_replay_repeat": int(policy["fixed_replay_repeat"]), "fixed_replay_examples": int(fixed_replay.get("examples", 0)), "failure_replay_repeat": int(controller["failure_replay_repeat"]), "failure_replay_examples": int(failure_replay.get("examples", 0)), "manifest_count": len(manifests)}}
         records.append(record)
         previous_checkpoint = checkpoint
         merged = merge_domain_metrics(cal_domains, test_domains)
