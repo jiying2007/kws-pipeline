@@ -24,7 +24,6 @@
       "required_generation_assets": [
         "adapter",
         "backend_executable",
-        "resampler_executable",
         "model",
         "tokens",
         "lexicon",
@@ -91,8 +90,9 @@
       "audio_normalization": {
         "source_sample_rate_hz": 8000,
         "target_sample_rate_hz": 16000,
-        "method": "hash-bound-external-resampler-v1",
-        "source_bandwidth_limitation_retained": true
+        "method": "builtin-lanczos-2x-v1",
+        "source_bandwidth_limitation_retained": true,
+        "external_resampler_optional": true
       }
     },
     {
@@ -146,7 +146,8 @@
     "runtime_asset_archive_receipt_required_for_preferred_candidate": true,
     "source_sample_rate_must_be_verified_before_normalization": true,
     "normalized_output_must_match_command_provider_v1": true,
-    "backend_bundle_hash_bound": true
+    "backend_bundle_hash_bound": true,
+    "default_resampler": "builtin-lanczos-2x-v1"
   },
   "notes": [
     "This file is a non-executable reference policy; actual provider JSON is generated only in the corpus-generation environment.",
@@ -158,7 +159,8 @@
     "fanchen-C stays blocked until explicit weight-license evidence is supplied; downloadability is not treated as authorization.",
     "No TTS runtime or model asset is part of the shipping KWS runtime.",
     "The AISHELL-3 sherpa runtime contract includes phone/date/number FSTs and rule.far because the upstream run-aishell3 example passes both --tts-rule-fsts and --tts-rule-fars.",
-    "On Linux x86_64, the optional backend bootstrap uses the official sherpa-onnx v1.13.8 shared release asset and its GitHub-published SHA-256 digest; the extracted TTS binary and shared-library set are rebound into provider identity before corpus generation."
+    "On Linux x86_64, the optional backend bootstrap uses the official sherpa-onnx v1.13.8 shared release asset and its GitHub-published SHA-256 digest; the extracted TTS binary and shared-library set are rebound into provider identity before corpus generation.",
+    "The preferred Stage A path defaults to the hash-bound Python adapter's deterministic Lanczos 2x interpolation, so ffmpeg is not a required generation dependency; an explicitly supplied external resampler remains supported and hash-bound."
   ],
   "backend_bootstrap": {
     "linux-x86_64": {
