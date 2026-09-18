@@ -6,10 +6,12 @@ on:
     paths:
       - "tools/diagnose_kws_threshold_operating_curve.py"
       - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-threshold-diagnostic-live.yml"
   pull_request:
     paths:
       - "tools/diagnose_kws_threshold_operating_curve.py"
       - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-threshold-diagnostic-live.yml"
   workflow_dispatch:
 
 permissions:
@@ -263,6 +265,32 @@ jobs:
           }
           assert before == after
           print("threshold diagnostic contract: ok")
+          PY
+
+      - name: Live workflow wiring remains audit-complete
+        run: |
+          python3 - <<'PY'
+          import pathlib
+
+          path = pathlib.Path(".github/workflows/kws-v2-threshold-diagnostic-live.yml")
+          live = path.read_text(encoding="utf-8")
+          required = (
+              '--development-domain-summary "${{ steps.selected.outputs.domain_summary }}"',
+              '--diagnostic-round-selection-policy "${{ steps.selected.outputs.selection_policy }}"',
+              'manifest_selected_round=value.get("selected_round")',
+              'selected-calibration.references.jsonl',
+              'selected-test.references.jsonl',
+              'selected-domain-index.jsonl',
+              'selected-domain-summary.json',
+              'selected-development-audit.json',
+              'operating-curve-work',
+              'execution-metadata.json',
+              'evidence-inventory.json',
+          )
+          missing = [value for value in required if value not in live]
+          assert not missing, f"live diagnostic audit wiring missing: {missing}"
+          assert live.count("retention-days: 30") >= 2
+          print("live threshold diagnostic wiring: ok")
           PY
 
       - name: Python syntax
