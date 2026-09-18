@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define CHECK(x)                                                              \
   do {                                                                        \
@@ -229,6 +230,50 @@ static void test_longest_prefix_emits_after_blank(void) {
   CHECK(keyword_id == 10u);
 }
 
+static void test_peek_matches_emitted_confidence_without_mutation(void) {
+  kws_decoder_t emitting;
+  kws_decoder_t probing;
+  kws_decoder_t snapshot;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = keyword(77u, tokens, 2u, 0.50f);
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float emitted_confidence = 0.0f;
+  float ignored_confidence = 0.0f;
+  float peek_confidence = 0.0f;
+  float retention_log = 0.0f;
+
+  kws_decoder_init(&emitting, 0.0f, 0.94f);
+  kws_decoder_init(&probing, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&emitting, &item, 1u, 4u) == KWS_OK);
+  CHECK(kws_decoder_set_keywords(&probing, &item, 1u, 4u) == KWS_OK);
+  probing.thresholds[0] = 2.0f;
+
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&emitting, logits, 4u, 1, &keyword_id,
+                         &emitted_confidence) == 0);
+  CHECK(kws_decoder_step(&probing, logits, 4u, 1, &keyword_id,
+                         &ignored_confidence) == 0);
+  snapshot = probing;
+  CHECK(kws_decoder_peek_keyword_confidence(
+            &probing, 0u, &peek_confidence, &retention_log) == 0);
+  CHECK(memcmp(&snapshot, &probing, sizeof(probing)) == 0);
+
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&probing, logits, 4u, 1, &keyword_id,
+                         &ignored_confidence) == 0);
+  snapshot = probing;
+  CHECK(kws_decoder_peek_keyword_confidence(
+            &probing, 0u, &peek_confidence, &retention_log) == 1);
+  CHECK(memcmp(&snapshot, &probing, sizeof(probing)) == 0);
+  CHECK(retention_log <= 0.0f);
+
+  CHECK(kws_decoder_step(&emitting, logits, 4u, 1, &keyword_id,
+                         &emitted_confidence) == 1);
+  CHECK(keyword_id == 77u);
+  CHECK(fabsf(peek_confidence - emitted_confidence) < 1.0e-6f);
+}
+
 static void test_grace_policy_holds_then_emits(void) {
   kws_decoder_t decoder;
   const uint16_t tokens[] = {1u};
@@ -255,6 +300,7 @@ int main(void) {
   test_blank_dominant_child_can_compete();
   test_trie_child_competes_with_global_nonblank();
   test_blank_retention_does_not_change_acoustic_confidence();
+  test_peek_matches_emitted_confidence_without_mutation();
   test_longest_prefix_waits_for_longer_keyword();
   test_longest_prefix_emits_after_blank();
   test_grace_policy_holds_then_emits();
