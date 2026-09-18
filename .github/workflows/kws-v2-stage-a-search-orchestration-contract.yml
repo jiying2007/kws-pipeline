@@ -161,6 +161,42 @@ jobs:
           print("kws-v2-stage-a-search-orchestration: prepare contract ok")
           PY
 
+      - name: Candidate shard selection prepare contract
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-shard-prepare"
+          mkdir -p "$root"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$RUNNER_TEMP/kws-v2-stage-a-fixture/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$RUNNER_TEMP/kws-v2-stage-a-fixture/bundle/$split/dataset-summary.json")
+          done
+          python3 tools/run_kws_v2_stage_a_search.py \
+            "${args[@]}" \
+            --candidate-id v2-a-gru-h64-pcen-lite \
+            --prepare-only \
+            --work-dir "$root/valid"
+          ROOT="$root/valid" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          manifest = json.loads((root / "stage-a-search-manifest.json").read_text())
+          assert manifest["status"] == "prepared"
+          assert manifest["candidate_count"] == 4
+          matches = [row for row in manifest["candidates"] if row["candidate_id"] == "v2-a-gru-h64-pcen-lite"]
+          assert len(matches) == 1
+          assert matches[0]["model_family"] == "gru"
+          assert matches[0]["frontend"] == "pcen-lite"
+          assert matches[0]["resource_contract_candidate"]
+          PY
+          if python3 tools/run_kws_v2_stage_a_search.py \
+            "${args[@]}" \
+            --candidate-id does-not-exist \
+            --prepare-only \
+            --work-dir "$root/invalid"; then
+            echo "invalid Stage A candidate unexpectedly accepted" >&2
+            exit 1
+          fi
+
       - name: Execution cannot silently fall back to legacy family workflow inputs
         run: |
           set -euo pipefail
