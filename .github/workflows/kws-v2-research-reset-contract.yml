@@ -110,6 +110,11 @@ jobs:
           assert p["threshold_diagnostic"]["select_shipping_threshold"] is False
           assert p["threshold_diagnostic"]["feed_threshold_back_into_training"] is False
           assert p["negative_exposure"]["shipping_far_claim_allowed"] is False
+          limits=p["data_limitations"]
+          assert limits["source_sample_rate_hz"] == 8000
+          assert limits["normalized_sample_rate_hz"] == 16000
+          assert limits["source_bandwidth_limitation_retained"] is True
+          assert limits["real_human_speech"] is False
           print("research reset policy contract: ok")
           PY
 
