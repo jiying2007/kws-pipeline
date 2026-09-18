@@ -136,5 +136,20 @@
     "source_bandwidth_limitation_retained": true,
     "real_human_speech": false,
     "product_far_claim_allowed": false
+  },
+  "confirm": {
+    "training_seeds": [
+      1337,
+      91337,
+      181337,
+      271337
+    ],
+    "minimum_seed_count": 4,
+    "same_acoustic_render_required": true,
+    "same_corpus_identity_required": true,
+    "same_loss_profile_required": true,
+    "negative_exposure_seconds": 3600,
+    "protected_evidence_used": false,
+    "promotion_allowed": false
   }
 }
