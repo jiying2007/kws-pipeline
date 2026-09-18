@@ -267,6 +267,119 @@ jobs:
           print("Stage A development protected-evidence guard: ok")
           PY
 
+      - name: Failed shard retains structured eight-round development evidence
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          sys.path.insert(0, "tools")
+          import run_kws_v2_stage_a_search as stage
+
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "stage-a-failed-shard-contract"
+          candidate_root = root / "candidate"
+          development = candidate_root / "development"
+          development.mkdir(parents=True, exist_ok=True)
+          binding = candidate_root / "binding.json"
+          binding.write_text("{}\n")
+          records = []
+          for round_index in range(8):
+              records.append({
+                  "round": round_index,
+                  "score": float(100 - round_index),
+                  "calibration_gate": False,
+                  "test_gate": False,
+                  "calibration": {
+                      "frr": 1.0 - round_index * 0.01,
+                      "far_per_hour": float(round_index),
+                  },
+                  "test": {
+                      "frr": 0.95 - round_index * 0.01,
+                      "far_per_hour": float(round_index + 1),
+                  },
+                  "false_rejects": 64 - round_index,
+                  "false_accepts": round_index,
+                  "training": {
+                      "learning_rate": 0.001,
+                      "positive_example_weight": 2.0,
+                      "ordered_token_loss_weight": 0.35,
+                  },
+              })
+          manifest_value = {
+              "schema_version": 1,
+              "evidence_scope": "development-only",
+              "development_qualified": False,
+              "qualification_used": False,
+              "shadow_used": False,
+              "formal_qualification_used": False,
+              "candidate_stage_feedback_allowed": False,
+              "records": records,
+          }
+          (development / "development-loop-manifest.json").write_text(
+              json.dumps(manifest_value, indent=2, sort_keys=True) + "\n"
+          )
+
+          policy = root / "generalization-policy.json"
+          policy.write_text("{}\n")
+          output = root / "failed-shard.json"
+          product_head = stage.current_head()
+          candidate_id = "v2-a-gru-h64-logmel"
+          prepared = {
+              "candidate_id": candidate_id,
+              "model_family": "gru",
+              "frontend": "logmel",
+              "hidden_dim": 64,
+              "binding": str(binding),
+          }
+          shard_manifest = {
+              "product_head": product_head,
+              "matrix_sha256": "1" * 64,
+              "generalization_cohort_id": "kws-v2-stage-a-search-v1",
+              "external_base_bundle_sha256": "2" * 64,
+              "candidates": [prepared],
+          }
+          class Args:
+              generalization_policy = policy
+
+          original = stage.execute_candidate
+          try:
+              def fail_candidate(**kwargs):
+                  raise RuntimeError("fixture development gate failed")
+              stage.execute_candidate = fail_candidate
+              try:
+                  stage.execute_shard(Args(), shard_manifest, candidate_id, output)
+              except RuntimeError as exc:
+                  assert "fixture development gate failed" in str(exc)
+              else:
+                  raise AssertionError("failed candidate unexpectedly succeeded")
+          finally:
+              stage.execute_candidate = original
+
+          failed = json.loads(output.read_text())
+          assert failed["status"] == "failed"
+          assert failed["protected_evidence_used"] is False
+          candidate = failed["candidate"]
+          assert candidate["status"] == "failed"
+          evidence = candidate["development_failure_evidence"]
+          assert evidence["manifest_present"] is True
+          assert evidence["completed_rounds"] == 8
+          assert evidence["development_qualified"] is False
+          assert evidence["protected_evidence_used"] is False
+          assert evidence["best_observed_round"] == 7
+          assert evidence["lowest_calibration_frr_round"] == 7
+          assert evidence["lowest_test_frr_round"] == 7
+          assert len(evidence["records"]) == 8
+          assert candidate["generalization_started"] is False
+
+          bad = dict(manifest_value)
+          bad["qualification_used"] = True
+          try:
+              stage.validate_development_protected_flags(bad, candidate_id)
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("protected development evidence unexpectedly accepted")
+          print("Stage A failed-shard evidence contract: ok")
+          PY
+
       - name: Python syntax
         run: >-
           python3 -m py_compile
