@@ -197,6 +197,9 @@ def validate_frames(
         retention_log = finite(
             row.get("retention_log"), f"probe[{index}].retention_log"
         )
+        retention_valid = row.get("retention_valid")
+        if not isinstance(retention_valid, bool):
+            raise ValueError(f"probe[{index}].retention_valid must be boolean")
         if time_s < 0.0 or time_s > references[recording]["duration_s"]:
             raise ValueError(f"probe[{index}]: time outside recording")
         if confidence < 0.0 or confidence > 1.0:
@@ -210,26 +213,66 @@ def validate_frames(
                 "time_s": time_s,
                 "confidence": confidence,
                 "retention_log": retention_log,
+                "retention_valid": retention_valid,
             }
         )
     return grouped
 
 
-def peak(items: list[dict], lower: float | None = None, upper: float | None = None) -> float:
+def peak(
+    items: list[dict],
+    lower: float | None = None,
+    upper: float | None = None,
+    *,
+    require_retention_valid: bool | None = True,
+) -> float:
     values = [
         float(item["confidence"])
         for item in items
         if (lower is None or float(item["time_s"]) >= lower)
         and (upper is None or float(item["time_s"]) <= upper)
+        and (
+            require_retention_valid is None
+            or bool(item["retention_valid"]) is require_retention_valid
+        )
     ]
     return max(values) if values else 0.0
 
 
-def outside_peak(items: list[dict], windows: list[tuple[float, float]]) -> float:
+def path_present(
+    items: list[dict],
+    lower: float | None = None,
+    upper: float | None = None,
+    *,
+    require_retention_valid: bool | None = True,
+) -> bool:
+    return any(
+        (lower is None or float(item["time_s"]) >= lower)
+        and (upper is None or float(item["time_s"]) <= upper)
+        and (
+            require_retention_valid is None
+            or bool(item["retention_valid"]) is require_retention_valid
+        )
+        for item in items
+    )
+
+
+def outside_peak(
+    items: list[dict],
+    windows: list[tuple[float, float]],
+    *,
+    require_retention_valid: bool | None = True,
+) -> float:
     values: list[float] = []
     for item in items:
         time_s = float(item["time_s"])
-        if not any(low <= time_s <= high for low, high in windows):
+        if (
+            not any(low <= time_s <= high for low, high in windows)
+            and (
+                require_retention_valid is None
+                or bool(item["retention_valid"]) is require_retention_valid
+            )
+        ):
             values.append(float(item["confidence"]))
     return max(values) if values else 0.0
 
@@ -312,17 +355,37 @@ def main() -> int:
     negative_scores: list[float] = []
     cross_keyword_scores: list[float] = []
     outside_target_scores: list[float] = []
-    by_keyword: dict[int, dict[str, list[float]]] = {
-        int(row["id"]): {
+    raw_target_scores: list[float] = []
+    raw_negative_scores: list[float] = []
+    raw_cross_keyword_scores: list[float] = []
+    raw_outside_target_scores: list[float] = []
+    target_raw_presence: list[bool] = []
+    target_viable_presence: list[bool] = []
+
+    def keyword_groups() -> dict[str, list]:
+        return {
             "target": [],
             "negative": [],
             "cross_keyword": [],
             "outside_target": [],
+            "raw_target": [],
+            "raw_negative": [],
+            "raw_cross_keyword": [],
+            "raw_outside_target": [],
+            "target_raw_presence": [],
+            "target_viable_presence": [],
         }
-        for row in keywords
+
+    by_keyword: dict[int, dict[str, list]] = {
+        int(row["id"]): keyword_groups() for row in keywords
     }
     by_distance: dict[str, dict[str, list[float]]] = defaultdict(
-        lambda: {"target": [], "background": []}
+        lambda: {
+            "target": [],
+            "background": [],
+            "raw_target": [],
+            "raw_background": [],
+        }
     )
 
     for recording, ref in references.items():
@@ -341,37 +404,80 @@ def main() -> int:
             items = grouped.get((recording, keyword_id), [])
             if is_negative:
                 value = peak(items)
+                raw_value = peak(items, require_retention_valid=None)
                 negative_scores.append(value)
+                raw_negative_scores.append(raw_value)
                 by_keyword[keyword_id]["negative"].append(value)
+                by_keyword[keyword_id]["raw_negative"].append(raw_value)
                 by_distance[distance]["background"].append(value)
+                by_distance[distance]["raw_background"].append(raw_value)
                 continue
 
             windows = expected_by_keyword.get(keyword_id, [])
             if windows:
                 for low, high in windows:
                     value = peak(items, low, high)
+                    raw_value = peak(
+                        items, low, high, require_retention_valid=None
+                    )
+                    raw_present = path_present(
+                        items, low, high, require_retention_valid=None
+                    )
+                    viable_present = path_present(items, low, high)
                     target_scores.append(value)
+                    raw_target_scores.append(raw_value)
+                    target_raw_presence.append(raw_present)
+                    target_viable_presence.append(viable_present)
                     by_keyword[keyword_id]["target"].append(value)
+                    by_keyword[keyword_id]["raw_target"].append(raw_value)
+                    by_keyword[keyword_id]["target_raw_presence"].append(raw_present)
+                    by_keyword[keyword_id]["target_viable_presence"].append(
+                        viable_present
+                    )
                     by_distance[distance]["target"].append(value)
+                    by_distance[distance]["raw_target"].append(raw_value)
                 value = outside_peak(items, windows)
+                raw_value = outside_peak(
+                    items, windows, require_retention_valid=None
+                )
                 outside_target_scores.append(value)
+                raw_outside_target_scores.append(raw_value)
                 by_keyword[keyword_id]["outside_target"].append(value)
+                by_keyword[keyword_id]["raw_outside_target"].append(raw_value)
                 by_distance[distance]["background"].append(value)
+                by_distance[distance]["raw_background"].append(raw_value)
             else:
                 value = peak(items)
+                raw_value = peak(items, require_retention_valid=None)
                 cross_keyword_scores.append(value)
+                raw_cross_keyword_scores.append(raw_value)
                 by_keyword[keyword_id]["cross_keyword"].append(value)
+                by_keyword[keyword_id]["raw_cross_keyword"].append(raw_value)
                 by_distance[distance]["background"].append(value)
+                by_distance[distance]["raw_background"].append(raw_value)
 
     background_scores = negative_scores + cross_keyword_scores + outside_target_scores
+    raw_background_scores = (
+        raw_negative_scores
+        + raw_cross_keyword_scores
+        + raw_outside_target_scores
+    )
     per_keyword: dict[str, dict] = {}
     keyword_lookup = {int(row["id"]): row for row in keywords}
     for keyword_id, groups in by_keyword.items():
         background = (
             groups["negative"] + groups["cross_keyword"] + groups["outside_target"]
         )
+        raw_background = (
+            groups["raw_negative"]
+            + groups["raw_cross_keyword"]
+            + groups["raw_outside_target"]
+        )
         threshold = float(keyword_lookup[keyword_id]["threshold"])
         targets = groups["target"]
+        raw_targets = groups["raw_target"]
+        raw_presence = groups["target_raw_presence"]
+        viable_presence = groups["target_viable_presence"]
         per_keyword[str(keyword_id)] = {
             "text": keyword_lookup[keyword_id]["text"],
             "formal_threshold": threshold,
@@ -380,6 +486,19 @@ def main() -> int:
             "cross_keyword": stats(groups["cross_keyword"]),
             "outside_target": stats(groups["outside_target"]),
             "background": stats(background),
+            "raw_target": stats(raw_targets),
+            "raw_negative": stats(groups["raw_negative"]),
+            "raw_cross_keyword": stats(groups["raw_cross_keyword"]),
+            "raw_outside_target": stats(groups["raw_outside_target"]),
+            "raw_background": stats(raw_background),
+            "target_terminal_state_presence": (
+                sum(raw_presence) / len(raw_presence) if raw_presence else 0.0
+            ),
+            "target_retention_valid_state_presence": (
+                sum(viable_presence) / len(viable_presence)
+                if viable_presence
+                else 0.0
+            ),
             "target_at_or_above_formal_threshold": (
                 sum(value >= threshold for value in targets) / len(targets)
                 if targets
@@ -390,11 +509,28 @@ def main() -> int:
                 if background
                 else 0.0
             ),
+            "raw_target_at_or_above_formal_threshold": (
+                sum(value >= threshold for value in raw_targets) / len(raw_targets)
+                if raw_targets
+                else 0.0
+            ),
+            "raw_background_at_or_above_formal_threshold": (
+                sum(value >= threshold for value in raw_background)
+                / len(raw_background)
+                if raw_background
+                else 0.0
+            ),
             "pairwise_target_over_background": pairwise_separation(
                 targets, background
             ),
+            "raw_pairwise_target_over_background": pairwise_separation(
+                raw_targets, raw_background
+            ),
             "p05_target_minus_p95_background": (
                 stats(targets)["p05"] - stats(background)["p95"]
+            ),
+            "raw_p05_target_minus_p95_background": (
+                stats(raw_targets)["p05"] - stats(raw_background)["p95"]
             ),
         }
 
@@ -402,24 +538,36 @@ def main() -> int:
         distance: {
             "target": stats(groups["target"]),
             "background": stats(groups["background"]),
+            "raw_target": stats(groups["raw_target"]),
+            "raw_background": stats(groups["raw_background"]),
             "pairwise_target_over_background": pairwise_separation(
                 groups["target"], groups["background"]
             ),
+            "raw_pairwise_target_over_background": pairwise_separation(
+                groups["raw_target"], groups["raw_background"]
+            ),
             "p05_target_minus_p95_background": (
                 stats(groups["target"])["p05"] - stats(groups["background"])["p95"]
+            ),
+            "raw_p05_target_minus_p95_background": (
+                stats(groups["raw_target"])["p05"]
+                - stats(groups["raw_background"])["p95"]
             ),
         }
         for distance, groups in sorted(by_distance.items())
     }
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": EVIDENCE_CLASS,
         "evidence_scope": "development-only",
         "diagnostic_only": True,
         "selection_feedback_allowed": False,
         "protected_evidence_used": False,
-        "observation": "decoder-terminal-confidence-before-keyword-threshold",
+        "observation": (
+            "decoder-terminal-acoustic-confidence-and-retention-validity-"
+            "before-keyword-threshold"
+        ),
         "normal_runtime_behavior_changed": False,
         "runner_sha256": runner_sha,
         "model_sha256": model_sha,
@@ -437,18 +585,42 @@ def main() -> int:
             "cross_keyword": stats(cross_keyword_scores),
             "outside_target": stats(outside_target_scores),
             "background": stats(background_scores),
+            "raw_target": stats(raw_target_scores),
+            "raw_negative": stats(raw_negative_scores),
+            "raw_cross_keyword": stats(raw_cross_keyword_scores),
+            "raw_outside_target": stats(raw_outside_target_scores),
+            "raw_background": stats(raw_background_scores),
+            "target_terminal_state_presence": (
+                sum(target_raw_presence) / len(target_raw_presence)
+                if target_raw_presence
+                else 0.0
+            ),
+            "target_retention_valid_state_presence": (
+                sum(target_viable_presence) / len(target_viable_presence)
+                if target_viable_presence
+                else 0.0
+            ),
             "pairwise_target_over_background": pairwise_separation(
                 target_scores, background_scores
             ),
+            "raw_pairwise_target_over_background": pairwise_separation(
+                raw_target_scores, raw_background_scores
+            ),
             "p05_target_minus_p95_background": (
                 stats(target_scores)["p05"] - stats(background_scores)["p95"]
+            ),
+            "raw_p05_target_minus_p95_background": (
+                stats(raw_target_scores)["p05"]
+                - stats(raw_background_scores)["p95"]
             ),
         },
         "by_keyword": per_keyword,
         "by_distance": distance_summary,
         "limitations": [
             "This is development-only descriptive evidence and cannot select or change a threshold.",
-            "Terminal confidence is observed before keyword threshold/prefix emission policy.",
+            "Raw terminal confidence observes formed terminal acoustic paths before the runtime retention budget and keyword threshold.",
+            "Retention-valid confidence applies the unchanged runtime retention budget but remains before keyword threshold/prefix emission policy.",
+            "A zero raw score means no terminal state formed in the observed scoring window, not merely that confidence was below threshold.",
             "Synthetic speech/domain evidence is not real-human or target-device qualification.",
         ],
     }
@@ -460,9 +632,10 @@ def main() -> int:
     print(
         "score separation diagnostic complete: "
         f"recordings={len(references)} frames={len(frame_rows)} "
-        f"target_p50={result['overall']['target']['p50']:.6f} "
-        f"background_p95={result['overall']['background']['p95']:.6f} "
-        f"margin={result['overall']['p05_target_minus_p95_background']:.6f}"
+        f"raw_target_p50={result['overall']['raw_target']['p50']:.6f} "
+        f"raw_background_p95={result['overall']['raw_background']['p95']:.6f} "
+        f"viable_target_p50={result['overall']['target']['p50']:.6f} "
+        f"retention_presence={result['overall']['target_retention_valid_state_presence']:.6f}"
     )
     return 0
 
