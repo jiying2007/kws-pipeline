@@ -278,6 +278,7 @@ def build_requests(plan_path: pathlib.Path, inventory_path: pathlib.Path) -> tup
         "provider_group_counts": group_counts,
         "voice_slots": len(expected_slots),
         "utterances": len(plan["utterances"]),
+        "deterministic_pause_separator": plan["deterministic_pause_separator"],
         "protected_evidence_used": False,
     }
     summary["request_set_sha256"] = canonical_sha256(requests)
