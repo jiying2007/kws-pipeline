@@ -187,6 +187,28 @@ jobs:
             --candidate build/gru-development-curriculum/frozen-candidate
           python3 tools/verify_gru_development_gate.py \
             --candidate build/gru-development-curriculum/frozen-candidate
+      - name: Verify calibrated threshold evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          manifest = pathlib.Path("build/gru-development-curriculum/development-loop-manifest.json")
+          value = json.loads(manifest.read_text())
+          records = value.get("records", [])
+          assert records, "development records are missing"
+          for record in records:
+              calibration = record["calibration"]
+              selected = calibration["calibrated_thresholds"]
+              grid = calibration["calibration_threshold_grid"]
+              rounds = calibration["calibration_coordinate_rounds"]
+              assert isinstance(selected, dict) and selected
+              assert isinstance(grid, list) and grid
+              assert isinstance(rounds, int) and rounds > 0
+              allowed = {float(x) for x in grid}
+              assert all(float(x) in allowed for x in selected.values())
+          print("GRU calibrated threshold evidence: ok")
+          PY
+
       - name: Retain development evidence and frozen candidate
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
