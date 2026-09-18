@@ -1,0 +1,147 @@
+name: speech-like-provider-materialization-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/materialize_speech_like_provider.py"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - ".github/workflows/speech-like-provider-materialization-contract.yml"
+  pull_request:
+    paths:
+      - "tools/materialize_speech_like_provider.py"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - ".github/workflows/speech-like-provider-materialization-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Build fake generation environment
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          mkdir -p "$root/assets"
+          cat > "$root/fake-tts" <<'EOF'
+          #!/usr/bin/env bash
+          exit 0
+          EOF
+          chmod +x "$root/fake-tts"
+          printf 'fake-model\n' > "$root/assets/model.onnx"
+          printf 'fake-tokens\n' > "$root/assets/tokens.txt"
+          printf 'fake-lexicon\n' > "$root/assets/lexicon.txt"
+          printf 'LicenseRef-test-fixture evidence\n' > "$root/assets/LICENSE.txt"
+          python3 - <<'PY'
+          import json, os, pathlib
+          plan = json.loads(pathlib.Path("configs/training/speech-like-corpus-plan-v1.json").read_text())
+          slots = []
+          for split in ("train", "calibration", "test", "qualification"):
+              slots.extend(plan["split_roles"][split]["voice_slots"])
+          rows = [
+              {"slot": slot, "speaker_id": index, "length_scale": 0.90 + (index % 5) * 0.05}
+              for index, slot in enumerate(slots)
+          ]
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          (root / "speaker-map.json").write_text(json.dumps({
+              "schema_version": 1,
+              "evidence_class": "speech-like-provider-speaker-map-v1",
+              "speakers": rows,
+          }, indent=2) + "\n")
+          PY
+
+      - name: Materialize provider and exact voice inventory
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name sherpa-onnx-test             --provider-version fixture-v1             --license-id LicenseRef-test-fixture             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx"             --tokens "$root/assets/tokens.txt"             --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/provider.json"             --output-inventory "$root/inventory.jsonl"             --summary "$root/provider-summary.json"
+
+      - name: Reuse canonical provider and corpus-plan validators
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          sys.path.insert(0, "tools")
+          from generate_speech_like_command_provider import load_policy, normalize_provider
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          path = root / "provider.json"
+          policy = load_policy(pathlib.Path("configs/training/speech-like-command-provider-v1.json"))
+          value = json.loads(path.read_text())
+          normalized = normalize_provider(path, value, policy)
+          assert normalized["provider_name"] == "sherpa-onnx-test"
+          assert {item["role"] for item in normalized["identity"]["assets"]} == {"model", "tokens", "lexicon", "license_evidence"}
+          summary = json.loads((root / "provider-summary.json").read_text())
+          assert summary["license_evidence_sha256"]
+          assert summary["voice_slots"] == 24
+          assert summary["protected_evidence_used"] is False
+          PY
+          python3 tools/speech_like_corpus_plan.py build             --plan configs/training/speech-like-corpus-plan-v1.json             --voice-inventory "$root/inventory.jsonl"             --requests "$root/requests.jsonl"             --intents "$root/intents.jsonl"             --summary "$root/request-summary.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          s = json.loads((root / "request-summary.json").read_text())
+          assert s["voice_slots"] == 24
+          assert s["requests"] == 384
+          assert s["protected_evidence_used"] is False
+          print("speech-like-provider-materialization-contract: ok")
+          PY
+
+      - name: Unknown license must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name bad --provider-version bad --license-id unknown             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad-provider.json" --output-inventory "$root/bad-inventory.jsonl" --summary "$root/bad-summary.json"; then
+            echo "unknown license unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Duplicate speaker reuse must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "provider-materialization"
+          value = json.loads((root / "speaker-map.json").read_text())
+          value["speakers"][1]["speaker_id"] = value["speakers"][0]["speaker_id"]
+          (root / "duplicate-speaker-map.json").write_text(json.dumps(value, indent=2) + "\n")
+          PY
+          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/duplicate-speaker-map.json"             --provider-name bad --provider-version bad --license-id LicenseRef-test             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad2-provider.json" --output-inventory "$root/bad2-inventory.jsonl" --summary "$root/bad2-summary.json"; then
+            echo "duplicate speaker unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: License evidence tamper must invalidate provider
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          printf 'tamper\n' >> "$root/assets/LICENSE.txt"
+          if python3 - "$root/provider.json" <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, "tools")
+          from generate_speech_like_command_provider import load_policy, normalize_provider
+          path = pathlib.Path(sys.argv[1])
+          normalize_provider(
+              path,
+              json.loads(path.read_text()),
+              load_policy(pathlib.Path("configs/training/speech-like-command-provider-v1.json")),
+          )
+          PY
+          then
+            echo "tampered model unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: python3 -m py_compile tools/materialize_speech_like_provider.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

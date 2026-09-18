@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "evidence_class": "speech-like-provider-reference-v1",
+  "provider_family": "sherpa-onnx-vits",
+  "purpose": "offline-development-corpus-generation-only",
+  "locale": "zh-CN",
+  "minimum_distinct_speakers": 24,
+  "required_output": {
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "sample_width_bits": 16,
+    "container": "wav-pcm"
+  },
+  "reference_candidates": [
+    {
+      "name": "sherpa-onnx-vits-zh-hf-fanchen-C",
+      "reported_speakers": 187,
+      "reported_sample_rate_hz": 16000,
+      "suitable_for_24_voice_baseline": true,
+      "required_generation_assets": [
+        "model",
+        "tokens",
+        "lexicon",
+        "license_evidence"
+      ],
+      "required_request_parameters": [
+        "speaker_id",
+        "length_scale"
+      ],
+      "license_status": "must-be-verified-before-generation"
+    },
+    {
+      "name": "sherpa-onnx-vits-zh-ll",
+      "reported_speakers": 5,
+      "reported_sample_rate_hz": 16000,
+      "suitable_for_24_voice_baseline": false,
+      "required_generation_assets": [
+        "model",
+        "tokens",
+        "lexicon",
+        "license_evidence"
+      ],
+      "required_request_parameters": [
+        "speaker_id",
+        "length_scale"
+      ],
+      "license_status": "must-be-verified-before-generation"
+    }
+  ],
+  "execution_contract": {
+    "executable": "sherpa-onnx-offline-tts",
+    "shell": false,
+    "argv_template": [
+      "{executable}",
+      "--vits-model={asset:model}",
+      "--vits-tokens={asset:tokens}",
+      "--vits-lexicon={asset:lexicon}",
+      "--sid={speaker_id}",
+      "--vits-length-scale={length_scale}",
+      "--output-filename={output}",
+      "{text}"
+    ],
+    "all_assets_hash_bound": true,
+    "license_id_required": true,
+    "model_assets_committed_to_repository": false,
+    "license_evidence_file_required": true,
+    "license_evidence_hash_bound": true
+  },
+  "notes": [
+    "This file is a non-executable reference policy; actual provider JSON is generated only in the corpus-generation environment.",
+    "The materializer computes executable/model/tokens/lexicon SHA-256 values from local files and emits the existing speech-like-command-provider-v1 schema.",
+    "The model license/authorization evidence file is a hash-bound provider asset; a license_id string alone is insufficient.",
+    "No TTS runtime or model asset is part of the shipping KWS runtime."
+  ]
+}
