@@ -5,11 +5,13 @@ on:
     branches: [main, "codex/**"]
     paths:
       - "tools/materialize_speech_like_provider.py"
+      - "tools/speech_like_vits_resample_adapter.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - ".github/workflows/speech-like-provider-materialization-contract.yml"
   pull_request:
     paths:
       - "tools/materialize_speech_like_provider.py"
+      - "tools/speech_like_vits_resample_adapter.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - ".github/workflows/speech-like-provider-materialization-contract.yml"
   workflow_dispatch:
@@ -35,6 +37,42 @@ jobs:
           exit 0
           EOF
           chmod +x "$root/fake-tts"
+          cat > "$root/fake-vits-8k" <<'PY'
+          #!/usr/bin/env python3
+          import math, pathlib, struct, sys, wave
+          output = None
+          for arg in sys.argv[1:]:
+              if arg.startswith("--output-filename="):
+                  output = pathlib.Path(arg.split("=", 1)[1])
+          if output is None:
+              raise SystemExit("missing --output-filename")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          frames = [int(4000 * math.sin(2.0 * math.pi * 440.0 * n / 8000.0)) for n in range(800)]
+          with wave.open(str(output), "wb") as w:
+              w.setnchannels(1)
+              w.setsampwidth(2)
+              w.setframerate(8000)
+              w.writeframes(b"".join(struct.pack("<h", x) for x in frames))
+          PY
+          chmod +x "$root/fake-vits-8k"
+          cat > "$root/fake-ffmpeg" <<'PY'
+          #!/usr/bin/env python3
+          import pathlib, struct, sys, wave
+          args = sys.argv[1:]
+          source = pathlib.Path(args[args.index("-i") + 1])
+          output = pathlib.Path(args[-1])
+          with wave.open(str(source), "rb") as r:
+              assert r.getnchannels() == 1 and r.getsampwidth() == 2 and r.getframerate() == 8000
+              raw = r.readframes(r.getnframes())
+          samples = struct.unpack("<" + "h" * (len(raw) // 2), raw)
+          output.parent.mkdir(parents=True, exist_ok=True)
+          with wave.open(str(output), "wb") as w:
+              w.setnchannels(1)
+              w.setsampwidth(2)
+              w.setframerate(16000)
+              w.writeframes(b"".join(struct.pack("<hh", x, x) for x in samples))
+          PY
+          chmod +x "$root/fake-ffmpeg"
           printf 'fake-model\n' > "$root/assets/model.onnx"
           printf 'fake-tokens\n' > "$root/assets/tokens.txt"
           printf 'fake-lexicon\n' > "$root/assets/lexicon.txt"
@@ -94,6 +132,108 @@ jobs:
           print("speech-like-provider-materialization-contract: ok")
           PY
 
+      - name: Verify pinned AISHELL3 license-safe reference
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          ref = json.loads(pathlib.Path("configs/training/speech-like-provider-reference-v1.json").read_text())
+          assert ref["preferred_stage_a_candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
+          row = next(x for x in ref["reference_candidates"] if x["name"] == ref["preferred_stage_a_candidate"])
+          assert row["provider_profile"] == "sherpa-vits-resampled-to-16k-v1"
+          assert row["reported_speakers"] == 174
+          assert row["reported_sample_rate_hz"] == 8000
+          assert row["normalized_sample_rate_hz"] == 16000
+          assert row["suitable_for_24_voice_baseline"] is True
+          assert row["license_id"] == "Apache-2.0"
+          assert row["license_status"] == "verified-apache-2.0-pinned-model-card"
+          evidence = row["license_evidence"]
+          assert evidence["revision"] == "57345c004e13ed640e408c4c29ab56187b18f065"
+          assert evidence["path"] == "README.md"
+          assert evidence["expected_sha256"] == "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
+          fanchen = next(x for x in ref["reference_candidates"] if x["name"] == "sherpa-onnx-vits-zh-hf-fanchen-C")
+          assert fanchen["suitable_for_24_voice_baseline"] is False
+          assert fanchen["license_status"].startswith("blocked-")
+          PY
+
+      - name: Materialize and execute resampled VITS provider
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          python3 tools/materialize_speech_like_provider.py \
+            --corpus-plan configs/training/speech-like-corpus-plan-v1.json \
+            --command-policy configs/training/speech-like-command-provider-v1.json \
+            --speaker-map "$root/speaker-map.json" \
+            --provider-profile sherpa-vits-resampled-to-16k-v1 \
+            --provider-name icefall-aishell3-fixture \
+            --provider-version fixture-v1 \
+            --license-id Apache-2.0 \
+            --license-file "$root/assets/LICENSE.txt" \
+            --executable "$(command -v python3)" \
+            --adapter tools/speech_like_vits_resample_adapter.py \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --source-sample-rate 8000 \
+            --model "$root/assets/model.onnx" \
+            --tokens "$root/assets/tokens.txt" \
+            --lexicon "$root/assets/lexicon.txt" \
+            --output-provider "$root/provider-resampled.json" \
+            --output-inventory "$root/inventory-resampled.jsonl" \
+            --summary "$root/provider-resampled-summary.json"
+          cat > "$root/one-request.jsonl" <<'EOF'
+          {"schema_version":1,"group":"train","text":"你好小窝","tokens":["ni3","hao3","xiao3","wo1"],"voice_id":"icefall-aishell3-fixture:sid-0000","source_id":"fixture:one","parameters":{"speaker_id":0,"length_scale":1.0}}
+          EOF
+          python3 tools/generate_speech_like_command_provider.py \
+            --policy configs/training/speech-like-command-provider-v1.json \
+            --provider "$root/provider-resampled.json" \
+            --requests "$root/one-request.jsonl" \
+            --output-root "$root/generated-resampled" \
+            --summary "$root/generated-resampled-summary.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib, wave
+          root = pathlib.Path(os.environ["ROOT"])
+          provider = json.loads((root / "provider-resampled.json").read_text())
+          roles = {item["role"] for item in provider["assets"]}
+          assert roles == {
+              "adapter", "backend_executable", "resampler_executable",
+              "model", "tokens", "lexicon", "license_evidence",
+          }
+          summary = json.loads((root / "provider-resampled-summary.json").read_text())
+          assert summary["provider_profile"] == "sherpa-vits-resampled-to-16k-v1"
+          norm = summary["audio_normalization"]
+          assert norm["source_sample_rate_hz"] == 8000
+          assert norm["output_sample_rate_hz"] == 16000
+          assert norm["resampled"] is True
+          wav = root / "generated-resampled" / "train" / "recording-000000.wav"
+          with wave.open(str(wav), "rb") as r:
+              assert r.getnchannels() == 1
+              assert r.getsampwidth() == 2
+              assert r.getframerate() == 16000
+              assert r.getnframes() > 0
+          generated = json.loads((root / "generated-resampled-summary.json").read_text())
+          assert generated["recordings"] == 1
+          PY
+
+      - name: Resampler tamper invalidates resampled provider
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          printf '# tamper\n' >> "$root/fake-ffmpeg"
+          if python3 - "$root/provider-resampled.json" <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, "tools")
+          from generate_speech_like_command_provider import load_policy, normalize_provider
+          path = pathlib.Path(sys.argv[1])
+          normalize_provider(
+              path,
+              json.loads(path.read_text()),
+              load_policy(pathlib.Path("configs/training/speech-like-command-provider-v1.json")),
+          )
+          PY
+          then
+            echo "tampered resampler unexpectedly accepted" >&2
+            exit 1
+          fi
+
       - name: Unknown license must fail closed
         run: |
           set -euo pipefail
@@ -141,7 +281,7 @@ jobs:
           fi
 
       - name: Python syntax
-        run: python3 -m py_compile tools/materialize_speech_like_provider.py
+        run: python3 -m py_compile tools/materialize_speech_like_provider.py tools/speech_like_vits_resample_adapter.py
 
       - name: Worktree remains clean
         run: git diff --exit-code -- .
