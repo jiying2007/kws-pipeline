@@ -6,6 +6,8 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
       - ".github/workflows/kws-v2-runnable-binding-contract.yml"
   pull_request:
@@ -122,6 +124,8 @@ jobs:
           assert binding["frontend"] == "pcen-lite"
           assert binding["hidden_dim"] == 64
           assert binding["requires_predeclared_generalization_plan"] is True
+          assert binding["speech_like_external_base_required"] is True
+          assert binding["tone_replay_allowed"] is False
           assert binding["fresh_used"] is False
           assert binding["shadow_used"] is False
           assert binding["formal_qualification_used"] is False
