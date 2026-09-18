@@ -1,0 +1,269 @@
+name: kws-v2-score-separation-diagnostic-live
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Completed hardened threshold diagnostic run id"
+        required: true
+        type: string
+      source_head_sha:
+        description: "Exact 40-hex HEAD of the threshold diagnostic run"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  clean-base-score-separation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Validate source identity input
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          run_id=os.environ["SOURCE_RUN_ID"]
+          sha=os.environ["SOURCE_HEAD_SHA"].lower()
+          assert run_id.isdigit() and int(run_id)>0
+          assert re.fullmatch(r"[0-9a-f]{40}", sha)
+          print("source identity input: ok")
+          PY
+
+      - name: Download hardened threshold evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-${{ inputs.source_head_sha }}
+          path: ${{ runner.temp }}/source-threshold
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Download deterministic production corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-production-corpus-${{ inputs.source_head_sha }}
+          path: ${{ runner.temp }}/source-production
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Verify source provenance and development-only authority
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}
+        run: |
+          set -euo pipefail
+          THRESHOLD="$RUNNER_TEMP/source-threshold"           PRODUCTION="$RUNNER_TEMP/source-production"           python3 - <<'PY'
+          import json, os, pathlib
+          threshold=pathlib.Path(os.environ["THRESHOLD"])
+          production=pathlib.Path(os.environ["PRODUCTION"])
+          source_run=os.environ["SOURCE_RUN_ID"]
+          source_sha=os.environ["SOURCE_HEAD_SHA"].lower()
+
+          execution=json.loads((threshold/"execution-metadata.json").read_text())
+          report=json.loads((threshold/"threshold-operating-curve.json").read_text())
+          binding=json.loads((threshold/"binding.json").read_text())
+          bundle=json.loads(
+              (production/"corpus/bundle/stage-a-base-bundle.json").read_text()
+          )
+          bootstrap=json.loads((production/"bootstrap-summary.json").read_text())
+
+          assert execution["run_id"]==source_run
+          assert execution["head_sha"]==source_sha
+          assert execution["diagnostic_only"] is True
+          assert execution["selection_feedback_allowed"] is False
+          assert execution["protected_evidence_used"] is False
+          assert report["evidence_scope"]=="development-only"
+          assert report["diagnostic_only"] is True
+          assert report["selection_feedback_allowed"] is False
+          assert report["protected_evidence_used"] is False
+          assert bootstrap["status"]=="complete"
+          assert bundle["tone_backend_used"] is False
+          assert bundle["protected_evidence_used"] is False
+          assert binding["external_base_bundle_sha256"]==bundle["external_base_bundle_sha256"]
+          for name in (
+              "selected-model.kwg",
+              "development-calibrated-keywords.tsv",
+              "development-calibrated-keywords.kwk",
+          ):
+              assert (threshold/name).is_file()
+          print("source provenance: ok", bundle["external_base_bundle_sha256"])
+          PY
+
+      - name: Build score-probe GRU runner
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+          test -x build/kws_wav_gru
+
+      - name: Materialize clean speech-like development references
+        run: |
+          set -euo pipefail
+          PRODUCTION="$RUNNER_TEMP/source-production"           OUTPUT="$RUNNER_TEMP/clean-base-references"           python3 - <<'PY'
+          import hashlib, json, os, pathlib, wave
+
+          production=pathlib.Path(os.environ["PRODUCTION"])/"corpus/bundle"
+          output=pathlib.Path(os.environ["OUTPUT"])
+          output.mkdir(parents=True, exist_ok=True)
+
+          for split in ("calibration", "test"):
+              split_root=production/split
+              index=split_root/"dataset-index.jsonl"
+              rows=[]
+              for ordinal, raw in enumerate(index.read_text().splitlines()):
+                  if not raw.strip():
+                      continue
+                  item=json.loads(raw)
+                  audio=(split_root/str(item["path"])).resolve()
+                  assert audio.is_file()
+                  with wave.open(str(audio), "rb") as reader:
+                      assert reader.getnchannels()==1
+                      assert reader.getframerate()==16000
+                      assert reader.getsampwidth()==2
+                      frames=reader.getnframes()
+                  expected=[]
+                  if item["kind"]=="positive":
+                      expected.append({
+                          "keyword_id": int(item["keyword_id"]),
+                          "start_s": int(item["event_start_frame"])/16000.0,
+                          "end_s": int(item["event_end_frame"])/16000.0,
+                      })
+                  rows.append({
+                      "recording": f"clean-{split}-{ordinal:06d}",
+                      "audio_path": str(audio),
+                      "duration_s": frames/16000.0,
+                      "expected": expected,
+                      "domain": {"distance_band":"clean-base"},
+                      "source_kind": str(item["kind"]),
+                      "source_family_id": str(item["family_id"]),
+                  })
+              target=output/f"{split}.references.jsonl"
+              target.write_text(
+                  "\n".join(json.dumps(row, sort_keys=True) for row in rows)+"\n"
+              )
+              print(split, "recordings=", len(rows),
+                    "sha256=", hashlib.sha256(target.read_bytes()).hexdigest())
+          PY
+
+      - name: Run clean-base calibration score separation
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/score-separation"
+          python3 tools/diagnose_kws_score_separation.py             --runner build/kws_wav_gru             --model "$RUNNER_TEMP/source-threshold/selected-model.kwg"             --keyword-pack "$RUNNER_TEMP/source-threshold/development-calibrated-keywords.kwk"             --keyword-table "$RUNNER_TEMP/source-threshold/development-calibrated-keywords.tsv"             --references "$RUNNER_TEMP/clean-base-references/calibration.references.jsonl"             --frames "$RUNNER_TEMP/score-separation/calibration.frames.jsonl"             --output "$RUNNER_TEMP/score-separation/calibration.report.json"
+
+      - name: Run clean-base test score separation
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_kws_score_separation.py             --runner build/kws_wav_gru             --model "$RUNNER_TEMP/source-threshold/selected-model.kwg"             --keyword-pack "$RUNNER_TEMP/source-threshold/development-calibrated-keywords.kwk"             --keyword-table "$RUNNER_TEMP/source-threshold/development-calibrated-keywords.tsv"             --references "$RUNNER_TEMP/clean-base-references/test.references.jsonl"             --frames "$RUNNER_TEMP/score-separation/test.frames.jsonl"             --output "$RUNNER_TEMP/score-separation/test.report.json"
+
+      - name: Print score separation scorecard
+        run: |
+          ROOT="$RUNNER_TEMP/score-separation" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["ROOT"])
+          for split in ("calibration","test"):
+              value=json.loads((root/f"{split}.report.json").read_text())
+              overall=value["overall"]
+              print(
+                  split,
+                  "target_p05=", overall["target"]["p05"],
+                  "target_p50=", overall["target"]["p50"],
+                  "background_p95=", overall["background"]["p95"],
+                  "margin=", overall["p05_target_minus_p95_background"],
+                  "pairwise=", overall["pairwise_target_over_background"],
+              )
+              for keyword_id, row in sorted(value["by_keyword"].items()):
+                  print(
+                      split, "keyword=", keyword_id,
+                      "threshold=", row["formal_threshold"],
+                      "target_p05=", row["target"]["p05"],
+                      "background_p95=", row["background"]["p95"],
+                      "target_pass=", row["target_at_or_above_formal_threshold"],
+                      "background_exceed=", row["background_at_or_above_formal_threshold"],
+                  )
+          PY
+
+      - name: Collect score separation evidence
+        if: always()
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_HEAD_SHA: ${{ inputs.source_head_sha }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/score-separation-evidence"
+          mkdir -p "$out"
+          if [[ -d "$RUNNER_TEMP/score-separation" ]]; then
+            cp -a "$RUNNER_TEMP/score-separation/." "$out/"
+          fi
+          if [[ -d "$RUNNER_TEMP/clean-base-references" ]]; then
+            cp -a "$RUNNER_TEMP/clean-base-references/." "$out/"
+          fi
+          for src in             "$RUNNER_TEMP/source-threshold/execution-metadata.json"             "$RUNNER_TEMP/source-threshold/threshold-operating-curve.json"             "$RUNNER_TEMP/source-threshold/binding.json"             "$RUNNER_TEMP/source-threshold/development-calibrated-keywords.tsv"; do
+            if [[ -f "$src" ]]; then
+              cp "$src" "$out/source-$(basename "$src")"
+            fi
+          done
+          OUT="$out" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ["OUT"])
+          metadata={
+              "schema_version":1,
+              "evidence_class":"kws-v2-clean-base-score-separation-live-v1",
+              "evidence_scope":"development-only",
+              "diagnostic_only":True,
+              "selection_feedback_allowed":False,
+              "protected_evidence_used":False,
+              "source_run_id":os.environ["SOURCE_RUN_ID"],
+              "source_head_sha":os.environ["SOURCE_HEAD_SHA"].lower(),
+              "diagnostic_code_head_sha":os.environ["GITHUB_SHA"],
+              "run_id":os.environ["GITHUB_RUN_ID"],
+              "run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+          }
+          (root/"execution-metadata.json").write_text(
+              json.dumps(metadata, indent=2, sort_keys=True)+"\n"
+          )
+          rows=[]
+          for path in sorted(p for p in root.rglob("*") if p.is_file()):
+              rows.append({
+                  "path":path.relative_to(root).as_posix(),
+                  "size_bytes":path.stat().st_size,
+                  "sha256":hashlib.sha256(path.read_bytes()).hexdigest(),
+              })
+          (root/"evidence-inventory.json").write_text(
+              json.dumps(
+                  {
+                      "schema_version":1,
+                      "evidence_class":"kws-v2-score-separation-retained-evidence-v1",
+                      "files":rows,
+                  },
+                  indent=2,
+                  sort_keys=True,
+              )+"\n"
+          )
+          PY
+
+      - name: Upload score separation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-clean-base-score-separation-${{ inputs.source_head_sha }}-${{ github.sha }}
+          path: ${{ runner.temp }}/score-separation-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce diagnostic completion
+        if: always()
+        run: |
+          test -f "$RUNNER_TEMP/score-separation/calibration.report.json"
+          test -f "$RUNNER_TEMP/score-separation/test.report.json"
