@@ -44,6 +44,7 @@ from train_ctc import (
     sha256_file,
     strict_prefix_completion_loss,
     training_environment,
+    configure_deterministic_cpu_runtime,
     vocab_fingerprint,
     vocab_size,
 )
@@ -117,6 +118,7 @@ def main() -> None:
     if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
         parser.error("--ordered-token-loss-weight must be finite and >= 0")
 
+    configure_deterministic_cpu_runtime()
     environment = training_environment()
     environment["training_code_sha256"]["training/gru_model.py"] = sha256_file(
         ROOT / "training" / "gru_model.py"
@@ -130,7 +132,6 @@ def main() -> None:
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.use_deterministic_algorithms(True)
     shuffle_generator = torch.Generator()
     shuffle_generator.manual_seed(args.seed)
 
