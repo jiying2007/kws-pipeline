@@ -145,7 +145,8 @@
     "license_evidence_hash_bound": true,
     "runtime_asset_archive_receipt_required_for_preferred_candidate": true,
     "source_sample_rate_must_be_verified_before_normalization": true,
-    "normalized_output_must_match_command_provider_v1": true
+    "normalized_output_must_match_command_provider_v1": true,
+    "backend_bundle_hash_bound": true
   },
   "notes": [
     "This file is a non-executable reference policy; actual provider JSON is generated only in the corpus-generation environment.",
@@ -156,6 +157,25 @@
     "The resampling profile hash-binds the Python adapter, TTS backend executable, resampler executable, model, tokens, lexicon, license evidence, and verified runtime-asset receipt.",
     "fanchen-C stays blocked until explicit weight-license evidence is supplied; downloadability is not treated as authorization.",
     "No TTS runtime or model asset is part of the shipping KWS runtime.",
-    "The AISHELL-3 sherpa runtime contract includes phone/date/number FSTs and rule.far because the upstream run-aishell3 example passes both --tts-rule-fsts and --tts-rule-fars."
-  ]
+    "The AISHELL-3 sherpa runtime contract includes phone/date/number FSTs and rule.far because the upstream run-aishell3 example passes both --tts-rule-fsts and --tts-rule-fars.",
+    "On Linux x86_64, the optional backend bootstrap uses the official sherpa-onnx v1.13.8 shared release asset and its GitHub-published SHA-256 digest; the extracted TTS binary and shared-library set are rebound into provider identity before corpus generation."
+  ],
+  "backend_bootstrap": {
+    "linux-x86_64": {
+      "kind": "github-release-archive",
+      "repository": "k2-fsa/sherpa-onnx",
+      "tag": "v1.13.8",
+      "version": "1.13.8",
+      "asset": "sherpa-onnx-v1.13.8-linux-x64-shared.tar.bz2",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-v1.13.8-linux-x64-shared.tar.bz2",
+      "expected_size_bytes": 28156791,
+      "expected_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+      "digest_authority": "github-release-asset-digest",
+      "archive_root": "sherpa-onnx-v1.13.8-linux-x64-shared",
+      "backend_executable": "bin/sherpa-onnx-offline-tts",
+      "lib_dir": "lib",
+      "upstream_release_workflow": ".github/workflows/linux.yaml",
+      "upstream_tts_enabled": true
+    }
+  }
 }
