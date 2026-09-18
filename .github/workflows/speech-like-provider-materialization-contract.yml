@@ -78,8 +78,8 @@ jobs:
           normalized = normalize_provider(path, value, policy)
           assert normalized["provider_name"] == "sherpa-onnx-test"
           assert {item["role"] for item in normalized["identity"]["assets"]} == {"model", "tokens", "lexicon", "license_evidence"}
-          assert summary["license_evidence_sha256"]
           summary = json.loads((root / "provider-summary.json").read_text())
+          assert summary["license_evidence_sha256"]
           assert summary["voice_slots"] == 24
           assert summary["protected_evidence_used"] is False
           PY
