@@ -6,7 +6,7 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
-      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
       - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
       - ".github/workflows/kws-v2-runnable-binding-contract.yml"
@@ -14,6 +14,8 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
       - ".github/workflows/kws-v2-runnable-binding-contract.yml"
   workflow_dispatch:
@@ -123,6 +125,9 @@ jobs:
           assert binding["model_family"] == "gru"
           assert binding["frontend"] == "pcen-lite"
           assert binding["hidden_dim"] == 64
+          assert binding["generalization_tier"] == "search"
+          assert binding["generalization_cohort_id"] == matrix["generalization_cohort_id"] == row["generalization_cohort_id"]
+          assert binding["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
           assert binding["requires_predeclared_generalization_plan"] is True
           assert binding["speech_like_external_base_required"] is True
           assert binding["tone_replay_allowed"] is False
@@ -151,6 +156,31 @@ jobs:
           done
           if python3 tools/bind_kws_v2_candidate.py             --matrix "$root/stage-a/experiment-matrix.json"             --candidate-id v2-a-gru-h64-pcen-lite             "${args[@]}"             --output-config "$root/bad/effective-config.json"             --output-binding "$root/bad/binding.json"; then
             echo "tampered speech-like bundle unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Candidate cohort drift must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-runnable"
+          src = root / "stage-a" / "experiment-matrix.json"
+          value = json.loads(src.read_text())
+          row = next(r for r in value["candidates"] if r["candidate_id"] == "v2-a-gru-h64-pcen-lite")
+          row["generalization_cohort_id"] = "kws-v2-stage-b-search-v1"
+          (root / "stage-a" / "experiment-matrix-cohort-drift.json").write_text(
+              json.dumps(value, indent=2) + "\n"
+          )
+          PY
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          if python3 tools/bind_kws_v2_candidate.py             --matrix "$root/stage-a/experiment-matrix-cohort-drift.json"             --candidate-id v2-a-gru-h64-pcen-lite             "${args[@]}"             --output-config "$root/bad-cohort/effective-config.json"             --output-binding "$root/bad-cohort/binding.json"; then
+            echo "candidate cohort drift unexpectedly accepted" >&2
             exit 1
           fi
 
