@@ -182,6 +182,7 @@ def candidate_record(
     mutation_paths: set[str],
     resource_name: str,
     development_policy: dict,
+    generalization_cohort_id: str,
 ) -> dict:
     return {
         "candidate_id": candidate_id,
@@ -201,6 +202,7 @@ def candidate_record(
         "development_policy_path_contract": "repository-relative-v1",
         "development_policy_sha256": development_policy["sha256"],
         "generalization_tier": "search",
+        "generalization_cohort_id": generalization_cohort_id,
         "protected_evidence_used": False,
     }
 
@@ -215,6 +217,9 @@ def build_stage_a(
     development_policies: dict[str, dict],
 ) -> list[dict]:
     stage = policy["stage_a_frontend"]
+    cohort_id = str(stage.get("generalization_cohort_id", "")).strip()
+    if not cohort_id:
+        raise ValueError("Stage A generalization_cohort_id is required")
     allowed = set(stage["mutable_paths"])
     fixed_hidden = int(stage["fixed_hidden_dim"])
     if fixed_hidden != 64:
@@ -242,6 +247,7 @@ def build_stage_a(
                     mutation_paths=mutations,
                     resource_name=resources[(family, 64)],
                     development_policy=development_policies[family],
+                    generalization_cohort_id=cohort_id,
                 )
             )
     return records
@@ -260,6 +266,9 @@ def build_stage_b(
     if frontend not in set(policy["stage_a_frontend"]["frontends"]):
         raise ValueError("stage B frontend must be a stage-A candidate")
     stage = policy["stage_b_capacity"]
+    cohort_id = str(stage.get("generalization_cohort_id", "")).strip()
+    if not cohort_id:
+        raise ValueError("Stage B generalization_cohort_id is required")
     if int(stage["max_hidden_dim_current_runtime_contract"]) != 64:
         raise ValueError("current runtime hidden-dimension ceiling drifted")
     stage_base = copy.deepcopy(base)
@@ -292,6 +301,7 @@ def build_stage_b(
                     mutation_paths=mutations,
                     resource_name=resources[(family, hidden)],
                     development_policy=development_policies[family],
+                    generalization_cohort_id=cohort_id,
                 )
             )
     return records
@@ -349,6 +359,8 @@ def main() -> int:
             development_policies=development_policies,
         )
 
+    stage_policy = policy["stage_a_frontend"] if args.stage == "A" else policy["stage_b_capacity"]
+    generalization_cohort_id = str(stage_policy["generalization_cohort_id"])
     matrix = {
         "schema_version": 1,
         "policy": POLICY_ID,
@@ -363,6 +375,7 @@ def main() -> int:
             family: development_policies[family]["sha256"] for family in ("rnn", "gru")
         },
         "generalization_policy_sha256": sha256_file(generalization_path),
+        "generalization_cohort_id": generalization_cohort_id,
         "recommended_generalization_search_seeds": int(
             generalization["tiers"]["search"]["recommended_independent_seeds"]
         ),
