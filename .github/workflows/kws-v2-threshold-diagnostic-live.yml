@@ -285,6 +285,8 @@ jobs:
           print("calibration FRR/FAR Pareto thresholds:", value["calibration_frr_far_pareto_thresholds"])
           print("min calibration FRR plateau:", value["min_calibration_frr_thresholds"])
           print("min calibration FAR plateau:", value["min_calibration_far_thresholds"])
+          print("official behavior-order key:", value["official_behavior_order_key"])
+          print("official behavior-order plateau:", value["official_behavior_order_thresholds"])
           print("official behavior-order threshold:", value["official_behavior_order_threshold"])
           for row in value["operating_curve"]:
               print(
@@ -315,9 +317,13 @@ jobs:
           }
           copy_as "$RUNNER_TEMP/threshold-operating-curve.json" "threshold-operating-curve.json"
           copy_as "$candidate/development-diagnostic.log" "development-diagnostic.log"
-          copy_as "${{ steps.selected.outputs.manifest }}" "development-loop-manifest.json"
-          copy_as "${{ steps.selected.outputs.effective_config }}" "effective-config.json"
-          copy_as "${{ steps.selected.outputs.binding }}" "binding.json"
+          copy_as "$candidate/development/development-loop-manifest.json" "development-loop-manifest.json"
+          copy_as "$candidate/development/development-resume-state.json" "development-resume-state.json"
+          copy_as "$candidate/effective-config.json" "effective-config.json"
+          copy_as "$candidate/binding.json" "binding.json"
+          if [[ -d "$candidate/development/training-acoustic-rotation-evidence" ]]; then
+            cp -a "$candidate/development/training-acoustic-rotation-evidence" "$out/training-acoustic-rotation-evidence"
+          fi
           copy_as "${{ steps.selected.outputs.model }}" "selected-model.kwg"
           copy_as "${{ steps.selected.outputs.model_provenance }}" "selected-model.provenance.json"
           copy_as "${{ steps.selected.outputs.calibrated_keywords }}" "development-calibrated-keywords.tsv"
@@ -349,8 +355,14 @@ jobs:
               "ref": os.environ.get("GITHUB_REF"),
               "run_id": os.environ.get("GITHUB_RUN_ID"),
               "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
-              "diagnostic_round": int(os.environ["DIAGNOSTIC_ROUND"]),
-              "diagnostic_round_selection_policy": os.environ["DIAGNOSTIC_SELECTION_POLICY"],
+              "diagnostic_round": (
+                  int(os.environ["DIAGNOSTIC_ROUND"])
+                  if os.environ.get("DIAGNOSTIC_ROUND", "").strip()
+                  else None
+              ),
+              "diagnostic_round_selection_policy": (
+                  os.environ.get("DIAGNOSTIC_SELECTION_POLICY") or None
+              ),
               "production_corpus_artifact": (
                   "kws-v2-threshold-production-corpus-" + os.environ["GITHUB_SHA"]
               ),
