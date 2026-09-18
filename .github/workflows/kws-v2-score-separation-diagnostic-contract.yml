@@ -10,6 +10,7 @@ on:
       - "tools/diagnose_kws_score_separation.py"
       - "tests/test_decoder.c"
       - ".github/workflows/kws-v2-score-separation-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-score-separation-diagnostic-live.yml"
   pull_request:
     paths:
       - "src/decoder.c"
@@ -18,6 +19,7 @@ on:
       - "tools/diagnose_kws_score_separation.py"
       - "tests/test_decoder.c"
       - ".github/workflows/kws-v2-score-separation-diagnostic-contract.yml"
+      - ".github/workflows/kws-v2-score-separation-diagnostic-live.yml"
   workflow_dispatch:
 
 permissions:
@@ -115,6 +117,38 @@ jobs:
           assert value["model_sha256"] is None
           assert value["keyword_pack_sha256"] is None
           print("score separation analyzer contract: ok")
+          PY
+
+      - name: Live score separation wiring remains development-only
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          live=pathlib.Path(
+              ".github/workflows/kws-v2-score-separation-diagnostic-live.yml"
+          ).read_text(encoding="utf-8")
+          required=(
+              "workflow_dispatch:",
+              "source_run_id:",
+              "source_head_sha:",
+              "actions: read",
+              "kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-",
+              "kws-v2-threshold-production-corpus-",
+              "selected-model.kwg",
+              "development-calibrated-keywords.kwk",
+              "development-calibrated-keywords.tsv",
+              "calibration.references.jsonl",
+              "test.references.jsonl",
+              "--score-probe",
+              "diagnostic_only",
+              "selection_feedback_allowed",
+              "protected_evidence_used",
+              "retention-days: 30",
+          )
+          missing=[value for value in required if value not in live]
+          assert not missing, f"live score-separation wiring missing: {missing}"
+          assert "qualification.references" not in live
+          assert "formal_qualification" not in live
+          print("live score separation wiring: ok")
           PY
 
       - name: Python syntax
