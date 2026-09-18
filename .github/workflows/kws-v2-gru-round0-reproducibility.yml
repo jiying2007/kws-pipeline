@@ -1,0 +1,104 @@
+name: kws-v2-gru-round0-reproducibility
+
+on:
+  push:
+    branches:
+      - "staging/kws-training-reproducibility-v1"
+    paths:
+      - "training/train_ctc.py"
+      - "training/train_gru_ctc.py"
+      - ".github/workflows/kws-v2-gru-round0-reproducibility.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  round0-bit-exact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Generate deterministic production Stage A corpus
+        run: |
+          set -euo pipefail
+          python3 tools/bootstrap_speech_like_stage_a.py             --cache-dir "$RUNNER_TEMP/repro-corpus-cache"             --work-dir "$RUNNER_TEMP/repro-corpus"
+
+      - name: Resolve split inputs
+        id: corpus
+        run: |
+          set -euo pipefail
+          for split in train calibration test qualification; do
+            index="$(find "$RUNNER_TEMP/repro-corpus" -path "*/$split/dataset-index.jsonl" -print -quit)"
+            summary="$(find "$RUNNER_TEMP/repro-corpus" -path "*/$split/dataset-summary.json" -print -quit)"
+            test -n "$index"; test -n "$summary"
+            echo "${split}_index=$index" >> "$GITHUB_OUTPUT"
+            echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Build GRU runtime runner
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Prepare exact GRU-logmel Stage A binding
+        run: |
+          .venv/bin/python tools/run_kws_v2_stage_a_search.py             --train-index "${{ steps.corpus.outputs.train_index }}"             --train-summary "${{ steps.corpus.outputs.train_summary }}"             --calibration-index "${{ steps.corpus.outputs.calibration_index }}"             --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}"             --test-index "${{ steps.corpus.outputs.test_index }}"             --test-summary "${{ steps.corpus.outputs.test_summary }}"             --qualification-index "${{ steps.corpus.outputs.qualification_index }}"             --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}"             --candidate-id v2-a-gru-h64-logmel             --prepare-only             --work-dir "$RUNNER_TEMP/repro-stage-a"
+
+      - name: Run round zero twice
+        run: |
+          set -euo pipefail
+          candidate="$RUNNER_TEMP/repro-stage-a/candidates/v2-a-gru-h64-logmel"
+          for tag in a b; do
+            set +e
+            .venv/bin/python training/run_gru_development.py               --config "$candidate/effective-config.json"               --policy configs/training/xiaowo.gru-development-stage-a-v1.json               --runner build/kws_wav_gru               --work-dir "$RUNNER_TEMP/repro-$tag"               --round-budget 1               > "$RUNNER_TEMP/repro-$tag.log" 2>&1
+            rc=$?
+            set -e
+            test -f "$RUNNER_TEMP/repro-$tag/candidates/round-00/model.kwg"
+            test -f "$RUNNER_TEMP/repro-$tag/candidates/round-00/model.pt"
+            echo "$tag rc=$rc"
+          done
+
+      - name: Require bit-exact round zero
+        run: |
+          A="$RUNNER_TEMP/repro-a" B="$RUNNER_TEMP/repro-b" .venv/bin/python - <<'PY'
+          import hashlib, json, os, pathlib, torch
+          a=pathlib.Path(os.environ["A"]); b=pathlib.Path(os.environ["B"])
+          def sha(p):
+              h=hashlib.sha256(); h.update(p.read_bytes()); return h.hexdigest()
+          am=a/"candidates/round-00/model.kwg"; bm=b/"candidates/round-00/model.kwg"
+          assert sha(am)==sha(bm), (sha(am), sha(bm))
+          ac=torch.load(a/"candidates/round-00/model.pt", map_location="cpu", weights_only=True)
+          bc=torch.load(b/"candidates/round-00/model.pt", map_location="cpu", weights_only=True)
+          assert ac["state_dict"].keys()==bc["state_dict"].keys()
+          for key in ac["state_dict"]:
+              assert torch.equal(ac["state_dict"][key], bc["state_dict"][key]), key
+          prov=json.loads(pathlib.Path(str(am)+".provenance.json").read_text())
+          env=prov["training"]["environment"]
+          assert env["torch_num_threads"]==1
+          assert env["torch_num_interop_threads"]==1
+          assert env["torch_mkldnn_enabled"] is False
+          assert env["torch_deterministic_algorithms_enabled"] is True
+          result={"schema_version":1,"round":0,"model_sha256":sha(am),"state_dict_bit_exact":True,"environment":{k:env[k] for k in ("torch_version","torch_num_threads","torch_num_interop_threads","torch_mkldnn_enabled","torch_deterministic_algorithms_enabled")}}
+          pathlib.Path(os.environ["RUNNER_TEMP"]+"/round0-reproducibility.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,sort_keys=True))
+          PY
+
+      - name: Upload reproducibility evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-gru-round0-reproducibility-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/round0-reproducibility.json
+            ${{ runner.temp }}/repro-a.log
+            ${{ runner.temp }}/repro-b.log
+          retention-days: 30
