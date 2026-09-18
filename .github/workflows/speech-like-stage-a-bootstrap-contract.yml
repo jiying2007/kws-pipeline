@@ -143,6 +143,10 @@ jobs:
           assert production_backend["lib_dir"] == "lib"
           assert production_backend["upstream_tts_enabled"] is True
           row = next(x for x in ref["reference_candidates"] if x["name"] == ref["preferred_stage_a_candidate"])
+          assert row["audio_normalization"]["method"] == "builtin-lanczos-2x-v1"
+          assert row["audio_normalization"]["external_resampler_optional"] is True
+          assert "resampler_executable" not in row["required_generation_assets"]
+          assert ref["execution_contract"]["default_resampler"] == "builtin-lanczos-2x-v1"
           row["license_evidence"]["url"] = license_path.resolve().as_uri()
           bundle = row["runtime_asset_bundle"]
           bundle["url"] = archive.resolve().as_uri()
@@ -167,7 +171,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/full-run" \
             --allow-file-urls
@@ -186,6 +189,9 @@ jobs:
           assert summary["backend"]["mode"] == "bootstrapped"
           assert summary["backend"]["platform"] == "linux-x86_64"
           assert summary["backend"]["archive_state"] == "downloaded"
+          assert summary["resampler"]["mode"] == "builtin-lanczos-2x-v1"
+          assert summary["resampler"]["path"] is None
+          assert summary["resampler"]["sha256"] is None
           assert pathlib.Path(summary["backend"]["receipt_path"]).is_file()
           assert pathlib.Path(summary["backend"]["lib_dir"]).is_dir()
           provider_summary = json.loads(
@@ -198,6 +204,8 @@ jobs:
           assert backend_binding["library_symlink_count"] == 1
           assert provider_summary["audio_normalization"]["backend_bundle_verified"] is True
           assert provider_summary["audio_normalization"]["backend_library_count"] == 1
+          assert provider_summary["audio_normalization"]["resampler_kind"] == "builtin-lanczos-2x-v1"
+          assert provider_summary["audio_normalization"]["resampler_executable_sha256"] is None
           assert summary["corpus"]["recordings"] == 384
           assert summary["corpus"]["voice_slots"] == 24
           assert len(summary["corpus"]["external_base_bundle_sha256"]) == 64
@@ -218,7 +226,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/cache-hit-run" \
             --assets-only \
@@ -232,6 +239,7 @@ jobs:
           assert s["license_evidence"]["state"] == "cache-hit"
           assert s["backend"]["mode"] == "bootstrapped"
           assert s["backend"]["archive_state"] == "cache-hit"
+          assert s["resampler"]["mode"] == "builtin-lanczos-2x-v1"
           PY
 
       - name: Tampered cache fails closed without refresh
@@ -248,7 +256,6 @@ jobs:
           PY
           if python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/tamper-run" \
             --assets-only \
@@ -263,7 +270,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/refresh-run" \
             --assets-only \
@@ -298,7 +304,6 @@ jobs:
           PY
           if python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/backend-tamper-run" \
             --assets-only \
@@ -313,7 +318,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           if python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/isolated-cache" \
             --work-dir "$root/no-file-url-run" \
             --assets-only; then

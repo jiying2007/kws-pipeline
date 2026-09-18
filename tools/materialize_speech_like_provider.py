@@ -477,10 +477,20 @@ def build_provider(
     elif provider_profile == RESAMPLED_PROFILE:
         adapter = require_file(adapter, "VITS resample adapter")
         backend_executable = require_file(backend_executable, "VITS backend executable", executable=True)
-        resampler_executable = require_file(resampler_executable, "resampler executable", executable=True)
+        resampler_executable = (
+            require_file(
+                resampler_executable, "resampler executable", executable=True
+            )
+            if resampler_executable is not None
+            else None
+        )
         source_sample_rate = int(source_sample_rate or 0)
         if source_sample_rate <= 0 or source_sample_rate >= 16000:
             raise ValueError("resampled VITS profile requires source_sample_rate in [1,15999]")
+        if resampler_executable is None and source_sample_rate != 8000:
+            raise ValueError(
+                "builtin Lanczos resampler requires source_sample_rate=8000"
+            )
         assets.append(
             {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)}
         )
@@ -515,13 +525,14 @@ def build_provider(
                 seen_roles.add(role)
             if "backend_executable" not in seen_roles:
                 raise ValueError("backend bundle assets must include backend_executable")
-        assets.append(
-            {
-                "role": "resampler_executable",
-                "path": str(resampler_executable),
-                "sha256": sha256_file(resampler_executable),
-            }
-        )
+        if resampler_executable is not None:
+            assets.append(
+                {
+                    "role": "resampler_executable",
+                    "path": str(resampler_executable),
+                    "sha256": sha256_file(resampler_executable),
+                }
+            )
         argv_template = [
             "{executable}",
             "{asset:adapter}",
@@ -529,9 +540,12 @@ def build_provider(
         ]
         if backend_lib_dir is not None:
             argv_template.append(f"--backend-lib-dir={backend_lib_dir.resolve()}")
+        if resampler_executable is not None:
+            argv_template.append(
+                "--resampler-executable={asset:resampler_executable}"
+            )
         argv_template.extend(
             [
-                "--resampler-executable={asset:resampler_executable}",
                 "--model={asset:model}",
                 "--tokens={asset:tokens}",
                 "--lexicon={asset:lexicon}",
@@ -571,7 +585,16 @@ def build_provider(
                     if str(item.get("role", "")).startswith("backend_lib_")
                 )
             ),
-            "resampler_executable_sha256": sha256_file(resampler_executable),
+            "resampler_kind": (
+                "external-executable"
+                if resampler_executable is not None
+                else "builtin-lanczos-2x-v1"
+            ),
+            "resampler_executable_sha256": (
+                sha256_file(resampler_executable)
+                if resampler_executable is not None
+                else None
+            ),
         }
     else:
         raise ValueError(f"unsupported provider_profile: {provider_profile}")

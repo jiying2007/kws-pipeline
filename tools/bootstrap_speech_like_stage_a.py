@@ -425,7 +425,10 @@ def main() -> int:
 
     resampler: pathlib.Path | None = None
     if profile == "sherpa-vits-resampled-to-16k-v1":
-        resampler = require_executable(args.resampler_executable, "ffmpeg", "ffmpeg")
+        if args.resampler_executable is not None:
+            resampler = require_executable(
+                args.resampler_executable, "resampler executable", "resampler executable"
+            )
     elif profile != "sherpa-vits-native-16k-v1":
         raise ValueError(f"unsupported provider profile: {profile}")
 
@@ -466,9 +469,17 @@ def main() -> int:
             "lib_dir": str(backend_lib_dir) if backend_lib_dir is not None else None,
         },
         "resampler": (
-            {"path": str(resampler), "sha256": sha256_file(resampler)}
+            {
+                "mode": "external-executable",
+                "path": str(resampler),
+                "sha256": sha256_file(resampler),
+            }
             if resampler is not None
-            else None
+            else {
+                "mode": "builtin-lanczos-2x-v1",
+                "path": None,
+                "sha256": None,
+            }
         ),
         "status": "assets-ready" if args.assets_only else "running-corpus-generation",
     }
