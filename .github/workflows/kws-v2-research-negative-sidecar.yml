@@ -120,3 +120,80 @@ jobs:
           path: ${{ runner.temp }}/negative-sidecar/
           if-no-files-found: error
           retention-days: 30
+
+  m0-gru-logmel-diagnostic:
+    needs: build-sidecar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download research negative sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-${{ github.sha }}
+          path: ${{ runner.temp }}/negative-sidecar
+
+      - name: Download immutable canonical speech-like corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-production-corpus-408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3
+          path: ${{ runner.temp }}/canonical-input
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35333458390
+
+      - name: Resolve canonical corpus inputs
+        id: corpus
+        run: |
+          set -euo pipefail
+          input="$RUNNER_TEMP/canonical-input"
+          for split in train calibration test qualification; do
+            index="$(find "$input" -path "*/$split/dataset-index.jsonl" -print -quit)"
+            summary="$(find "$input" -path "*/$split/dataset-summary.json" -print -quit)"
+            test -n "$index"
+            test -n "$summary"
+            echo "${split}_index=$index" >> "$GITHUB_OUTPUT"
+            echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Prepare exact GRU-logmel binding
+        run: |
+          set -euo pipefail
+          python3 tools/run_kws_v2_stage_a_search.py             --train-index "${{ steps.corpus.outputs.train_index }}"             --train-summary "${{ steps.corpus.outputs.train_summary }}"             --calibration-index "${{ steps.corpus.outputs.calibration_index }}"             --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}"             --test-index "${{ steps.corpus.outputs.test_index }}"             --test-summary "${{ steps.corpus.outputs.test_summary }}"             --qualification-index "${{ steps.corpus.outputs.qualification_index }}"             --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}"             --candidate-id v2-a-gru-h64-logmel             --prepare-only             --work-dir "$RUNNER_TEMP/research-stage-a"
+
+      - name: Build GRU evaluation runtime
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run Training Reset M0 with ordinary-speech sidecar
+        run: |
+          set -euo pipefail
+          candidate="$RUNNER_TEMP/research-stage-a/candidates/v2-a-gru-h64-logmel"
+          .venv/bin/python training/run_kws_research_baseline.py             --config "$candidate/effective-config.json"             --family gru             --loss-profile m0-ctc-only             --runner build/kws_wav_gru             --negative-sidecar "$RUNNER_TEMP/negative-sidecar"             --work-dir "$RUNNER_TEMP/m0-result"
+
+      - name: Show M0 scorecard
+        if: always()
+        run: |
+          test -f "$RUNNER_TEMP/m0-result/research-scorecard.json"
+          cat "$RUNNER_TEMP/m0-result/research-scorecard.json"
+
+      - name: Upload M0 diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-training-reset-m0-gru-logmel-${{ github.sha }}
+          path: ${{ runner.temp }}/m0-result/
+          if-no-files-found: error
+          retention-days: 30
