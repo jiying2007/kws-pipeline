@@ -17,8 +17,16 @@
       "reported_speakers": 187,
       "reported_sample_rate_hz": 16000,
       "suitable_for_24_voice_baseline": true,
-      "required_generation_assets": ["model", "tokens", "lexicon"],
-      "required_request_parameters": ["speaker_id", "length_scale"],
+      "required_generation_assets": [
+        "model",
+        "tokens",
+        "lexicon",
+        "license_evidence"
+      ],
+      "required_request_parameters": [
+        "speaker_id",
+        "length_scale"
+      ],
       "license_status": "must-be-verified-before-generation"
     },
     {
@@ -26,8 +34,16 @@
       "reported_speakers": 5,
       "reported_sample_rate_hz": 16000,
       "suitable_for_24_voice_baseline": false,
-      "required_generation_assets": ["model", "tokens", "lexicon"],
-      "required_request_parameters": ["speaker_id", "length_scale"],
+      "required_generation_assets": [
+        "model",
+        "tokens",
+        "lexicon",
+        "license_evidence"
+      ],
+      "required_request_parameters": [
+        "speaker_id",
+        "length_scale"
+      ],
       "license_status": "must-be-verified-before-generation"
     }
   ],
@@ -46,11 +62,14 @@
     ],
     "all_assets_hash_bound": true,
     "license_id_required": true,
-    "model_assets_committed_to_repository": false
+    "model_assets_committed_to_repository": false,
+    "license_evidence_file_required": true,
+    "license_evidence_hash_bound": true
   },
   "notes": [
     "This file is a non-executable reference policy; actual provider JSON is generated only in the corpus-generation environment.",
     "The materializer computes executable/model/tokens/lexicon SHA-256 values from local files and emits the existing speech-like-command-provider-v1 schema.",
+    "The model license/authorization evidence file is a hash-bound provider asset; a license_id string alone is insufficient.",
     "No TTS runtime or model asset is part of the shipping KWS runtime."
   ]
 }
