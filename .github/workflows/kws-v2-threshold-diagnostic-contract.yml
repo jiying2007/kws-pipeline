@@ -156,6 +156,64 @@ jobs:
               sys.argv = old_argv
               module.compile_pack = real_compile
 
+          def expect_rejected(argv, expected):
+              old_argv = sys.argv
+              try:
+                  sys.argv = argv
+                  try:
+                      module.main()
+                  except ValueError as exc:
+                      assert expected in str(exc), (expected, str(exc))
+                  else:
+                      raise AssertionError(f"expected diagnostic rejection: {expected}")
+              finally:
+                  sys.argv = old_argv
+
+          base_argv = [
+              "diagnose",
+              "--runner", str(runner),
+              "--model", str(model),
+              "--tokens", str(tokens),
+              "--keywords", str(keywords),
+              "--config", str(config),
+              "--calibration-references", str(cal),
+              "--test-references", str(test),
+              "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
+              "--development-manifest", str(manifest),
+              "--development-domain-summary", str(domain_summary),
+              "--round-index", "3",
+              "--diagnostic-round-selection-policy", "contract-selected-round-v1",
+              "--work-dir", str(root / "negative-work"),
+              "--output", str(root / "negative-report.json"),
+          ]
+
+          bad_model = root / "bad-model.kwg"
+          bad_model.write_text("tampered-model\n")
+          bad_model_argv = list(base_argv)
+          bad_model_argv[bad_model_argv.index("--model") + 1] = str(bad_model)
+          expect_rejected(
+              bad_model_argv,
+              "diagnostic model does not match development round model",
+          )
+
+          bad_config = root / "bad-config.json"
+          bad_config.write_text(config.read_text() + "\n")
+          bad_config_argv = list(base_argv)
+          bad_config_argv[bad_config_argv.index("--config") + 1] = str(bad_config)
+          expect_rejected(
+              bad_config_argv,
+              "diagnostic config does not match development manifest config",
+          )
+
+          bad_cal = root / "bad-calibration.references.jsonl"
+          bad_cal.write_text(cal.read_text() + "tampered\n")
+          bad_cal_argv = list(base_argv)
+          bad_cal_argv[bad_cal_argv.index("--calibration-references") + 1] = str(bad_cal)
+          expect_rejected(
+              bad_cal_argv,
+              "calibration references do not match development domain summary",
+          )
+
           value = json.loads(output.read_text())
           assert value["evidence_class"] == "kws-v2-threshold-operating-curve-diagnostic-v2"
           assert value["evidence_scope"] == "development-only"
