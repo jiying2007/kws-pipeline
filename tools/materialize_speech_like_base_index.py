@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import shutil
 import sys
 import wave
 
@@ -74,12 +75,34 @@ def corpus_sha(rows: list[dict]) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path, keywords_path: pathlib.Path) -> tuple[list[dict], dict]:
+def materialize(
+    *,
+    manifest: pathlib.Path,
+    split: str,
+    tokens_path: pathlib.Path,
+    keywords_path: pathlib.Path,
+    portable_audio_dir: pathlib.Path | None = None,
+    path_base: pathlib.Path | None = None,
+) -> tuple[list[dict], dict]:
     if split not in SPLITS:
         raise ValueError(f"unsupported split: {split}")
     token_map = load_tokens(tokens_path)
     keywords = parse_keywords(keywords_path, token_map)
     keyword_by_id = {int(item["id"]): item for item in keywords}
+    portable_root = None
+    portable_dir = None
+    if portable_audio_dir is not None:
+        if path_base is None:
+            raise ValueError("path_base is required with portable_audio_dir")
+        portable_root = path_base.resolve()
+        portable_dir = portable_audio_dir.resolve()
+        try:
+            portable_dir.relative_to(portable_root)
+        except ValueError as exc:
+            raise ValueError("portable_audio_dir must stay under the dataset-index directory") from exc
+        portable_dir.mkdir(parents=True, exist_ok=True)
+    elif path_base is not None:
+        raise ValueError("path_base is only valid with portable_audio_dir")
     rows: list[dict] = []
     seen_audio: set[str] = set()
     for index, source in enumerate(load_jsonl(manifest), 1):
@@ -142,6 +165,15 @@ def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path
             value = provenance[field]
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{label}: missing speech-like provenance field {field}")
+        stored_path = str(audio)
+        if portable_dir is not None and portable_root is not None:
+            target = portable_dir / f"recording-{index-1:06d}-{file_sha[:12]}.wav"
+            if target.exists():
+                raise ValueError(f"{label}: portable audio target already exists: {target}")
+            shutil.copyfile(audio, target)
+            if sha256_file(target) != file_sha:
+                raise ValueError(f"{label}: portable WAV sha256 mismatch after copy")
+            stored_path = target.relative_to(portable_root).as_posix()
         rows.append({
             "split": split,
             "kind": kind,
@@ -154,7 +186,7 @@ def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path
             "frames": len(samples),
             "event_start_frame": event_start,
             "event_end_frame": event_end,
-            "path": str(audio),
+            "path": stored_path,
             "speech_like_provenance": provenance,
         })
     summary = {
@@ -168,6 +200,7 @@ def materialize(*, manifest: pathlib.Path, split: str, tokens_path: pathlib.Path
         "positive_recordings": sum(1 for row in rows if row["kind"] == "positive"),
         "negative_recordings": sum(1 for row in rows if row["kind"] != "positive"),
         "corpus_sha256": corpus_sha(rows),
+        "audio_path_contract": "index-relative-v1" if portable_dir is not None else "absolute-v1",
         "tone_backend_used": False,
     }
     return rows, summary
@@ -181,15 +214,20 @@ def main() -> int:
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--output-index", required=True, type=pathlib.Path)
     parser.add_argument("--output-summary", required=True, type=pathlib.Path)
+    parser.add_argument("--portable-audio-dir", type=pathlib.Path)
     args = parser.parse_args()
+    output_index = args.output_index.resolve()
+    output_summary = args.output_summary.resolve()
     rows, summary = materialize(
         manifest=args.manifest.resolve(), split=args.split,
         tokens_path=args.tokens.resolve(), keywords_path=args.keywords.resolve(),
+        portable_audio_dir=args.portable_audio_dir,
+        path_base=output_index.parent if args.portable_audio_dir is not None else None,
     )
-    args.output_index.parent.mkdir(parents=True, exist_ok=True)
-    args.output_index.write_text("\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
-    args.output_summary.parent.mkdir(parents=True, exist_ok=True)
-    args.output_summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output_index.parent.mkdir(parents=True, exist_ok=True)
+    output_index.write_text("\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
+    output_summary.parent.mkdir(parents=True, exist_ok=True)
+    output_summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"speech-like base index: split={args.split} recordings={summary['recordings']} corpus={summary['corpus_sha256']}")
     return 0
 

@@ -92,6 +92,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
     root = config_path.parent.resolve()
     rows: list[dict] = []
     sources: dict[str, dict] = {}
+    identity_sources: dict[str, dict] = {}
     wav_owner: dict[str, str] = {}
     voice_owner: dict[str, str] = {}
     source_owner: dict[str, str] = {}
@@ -118,31 +119,88 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         split_rows = load_jsonl(index_path)
         if int(summary.get("recordings", -1)) != len(split_rows):
             raise ValueError(f"external base {split}: recording count mismatch")
+        path_contract = str(summary.get("audio_path_contract", "legacy-v0"))
+        if path_contract not in {"index-relative-v1", "absolute-v1", "legacy-v0"}:
+            raise ValueError(f"external base {split}: unsupported audio_path_contract={path_contract}")
+        normalized_rows: list[dict] = []
+        index_root = index_path.parent.resolve()
         for idx, row in enumerate(split_rows):
             wav_sha, voice, source = _identity(row, split, idx)
+            raw_audio = row.get("path")
+            if not isinstance(raw_audio, str) or not raw_audio.strip():
+                raise ValueError(f"external base {split} row {idx}: audio path is required")
+            audio_ref = pathlib.Path(raw_audio)
+            normalized = dict(row)
+            if path_contract == "index-relative-v1":
+                if audio_ref.is_absolute() or any(part in {"", ".", ".."} for part in audio_ref.parts):
+                    raise ValueError(f"external base {split} row {idx}: portable audio path is unsafe")
+                audio_path = (index_root / audio_ref).resolve()
+                try:
+                    audio_path.relative_to(index_root)
+                except ValueError as exc:
+                    raise ValueError(
+                        f"external base {split} row {idx}: portable audio path escaped index directory"
+                    ) from exc
+                if not audio_path.is_file():
+                    raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
+                if sha256_file(audio_path) != wav_sha:
+                    raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                normalized["path"] = str(audio_path)
+            elif path_contract == "absolute-v1":
+                if not audio_ref.is_absolute():
+                    raise ValueError(f"external base {split} row {idx}: absolute-v1 path must be absolute")
+                audio_path = audio_ref.resolve()
+                if not audio_path.is_file():
+                    raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
+                if sha256_file(audio_path) != wav_sha:
+                    raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                normalized["path"] = str(audio_path)
+            else:
+                # Historical bundles predate an explicit audio-path contract. Preserve
+                # their metadata/binding behavior; actual rendering still validates the
+                # referenced WAV when the corpus is consumed.
+                normalized["path"] = str(audio_ref)
+            normalized_rows.append(normalized)
             for identity, owners, label in ((wav_sha, wav_owner, "wav"), (voice, voice_owner, "voice"), (source, source_owner, "source")):
                 previous = owners.get(identity)
                 if previous is not None and previous != split:
                     raise ValueError(f"external base cross-split {label} overlap: {identity} in {previous}/{split}")
                 owners[identity] = split
-        rows.extend(split_rows)
+        rows.extend(normalized_rows)
         sources[split] = {
             "index": str(index_path),
             "summary": str(summary_path),
             "index_sha256": index_sha,
             "summary_sha256": summary_sha,
             "corpus_sha256": summary.get("corpus_sha256"),
-            "recordings": len(split_rows),
+            "recordings": len(normalized_rows),
+            "audio_path_contract": path_contract,
+        }
+        identity_sources[split] = {
+            "index_sha256": index_sha,
+            "summary_sha256": summary_sha,
+            "corpus_sha256": summary.get("corpus_sha256"),
+            "recordings": len(normalized_rows),
+            "audio_path_contract": path_contract,
         }
 
     aggregate = {
         "schema_version": 1,
         "evidence_class": "external-speech-like-base-bundle-v1",
         "tone_backend_used": False,
+        "bundle_identity_policy": "content-addressed-v2",
         "splits": sources,
         "recordings": len(rows),
     }
-    raw = json.dumps(aggregate, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    identity = {
+        "schema_version": 1,
+        "evidence_class": "external-speech-like-base-bundle-v1",
+        "tone_backend_used": False,
+        "bundle_identity_policy": "content-addressed-v2",
+        "splits": identity_sources,
+        "recordings": len(rows),
+    }
+    raw = json.dumps(identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     aggregate["bundle_sha256"] = hashlib.sha256(raw).hexdigest()
     return rows, aggregate
 

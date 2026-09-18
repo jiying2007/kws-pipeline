@@ -213,6 +213,8 @@ jobs:
               assert summary_value["recordings"] == expected
               assert summary_value["tone_backend_used"] is False
               assert summary_value["corpus_sha256"] == item["corpus_sha256"]
+              assert summary_value["audio_path_contract"] == "index-relative-v1"
+              assert item["audio_path_contract"] == "index-relative-v1"
               for row in rows:
                   row_count += 1
                   assert row["split"] == split
@@ -226,7 +228,11 @@ jobs:
                   voices[voice] = split
                   assert source not in sources
                   sources.add(source)
-                  wav = pathlib.Path(row["path"])
+                  wav_ref = pathlib.Path(row["path"])
+                  assert not wav_ref.is_absolute()
+                  assert ".." not in wav_ref.parts
+                  wav = (index.parent / wav_ref).resolve()
+                  assert index.parent.resolve() in wav.parents
                   assert wav.is_file()
                   digest = hashlib.sha256(wav.read_bytes()).hexdigest()
                   assert digest == row["wav_sha256"]
@@ -253,7 +259,13 @@ jobs:
           assert external["evidence_class"] == "external-speech-like-base-bundle-v1"
           assert external["recordings"] == 384
           assert external["tone_backend_used"] is False
+          assert external["bundle_identity_policy"] == "content-addressed-v2"
           assert external["bundle_sha256"] == manifest["external_base_bundle_sha256"]
+          portable = json.loads((root / manifest["portable_bundle_manifest"]).read_text())
+          assert portable["external_base_bundle_sha256"] == manifest["external_base_bundle_sha256"]
+          assert portable["recordings"] == 384
+          assert portable["splits"]["train"]["index"] == "train/dataset-index.jsonl"
+          assert portable["splits"]["qualification"]["summary"] == "qualification/dataset-summary.json"
 
           request = json.loads((root / "request-plan" / "summary.json").read_text())
           assert request["requests"] == 384
@@ -267,27 +279,56 @@ jobs:
           print("speech-like-corpus-generation-contract: full 384-recording chain ok")
           PY
 
-      - name: Stage A orchestrator accepts generated bundle
+      - name: Relocated self-contained bundle preserves identity and Stage A usability
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/speech-like-corpus-generation/run"
+          source_root="$RUNNER_TEMP/speech-like-corpus-generation/run"
+          moved="$RUNNER_TEMP/relocated-stage-a-bundle"
+          cp -a "$source_root/bundle" "$moved"
+          rm -rf "$source_root/generated" "$source_root/labeled"
+
+          SOURCE_ROOT="$source_root" MOVED="$moved" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          source = pathlib.Path(os.environ["SOURCE_ROOT"])
+          moved = pathlib.Path(os.environ["MOVED"])
+          root_manifest = json.loads((source / "stage-a-base-bundle.json").read_text())
+          portable = json.loads((moved / "stage-a-base-bundle.json").read_text())
+          assert portable["external_base_bundle_sha256"] == root_manifest["external_base_bundle_sha256"]
+          for split in ("train", "calibration", "test", "qualification"):
+              item = portable["splits"][split]
+              index = moved / item["index"]
+              summary = moved / item["summary"]
+              assert index.is_file() and summary.is_file()
+              assert hashlib.sha256(index.read_bytes()).hexdigest() == item["index_sha256"]
+              assert hashlib.sha256(summary.read_bytes()).hexdigest() == item["summary_sha256"]
+              rows = [json.loads(line) for line in index.read_text().splitlines() if line.strip()]
+              for row in rows:
+                  ref = pathlib.Path(row["path"])
+                  assert not ref.is_absolute()
+                  audio = (index.parent / ref).resolve()
+                  assert index.parent.resolve() in audio.parents
+                  assert audio.is_file()
+          PY
+
           args=()
           for split in train calibration test qualification; do
-            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
-            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+            args+=(--"$split"-index "$moved/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$moved/$split/dataset-summary.json")
           done
           python3 tools/run_kws_v2_stage_a_search.py \
             "${args[@]}" \
             --prepare-only \
-            --work-dir "$RUNNER_TEMP/stage-a-from-generated-bundle"
-          ROOT="$RUNNER_TEMP/stage-a-from-generated-bundle" python3 - <<'PY'
+            --work-dir "$RUNNER_TEMP/stage-a-from-relocated-bundle"
+          SOURCE_ROOT="$source_root" STAGE="$RUNNER_TEMP/stage-a-from-relocated-bundle" python3 - <<'PY'
           import json, os, pathlib
-          root = pathlib.Path(os.environ["ROOT"])
-          manifest = json.loads((root / "stage-a-search-manifest.json").read_text())
+          source = pathlib.Path(os.environ["SOURCE_ROOT"])
+          stage = pathlib.Path(os.environ["STAGE"])
+          original = json.loads((source / "stage-a-base-bundle.json").read_text())
+          manifest = json.loads((stage / "stage-a-search-manifest.json").read_text())
           assert manifest["status"] == "prepared"
           assert manifest["candidate_count"] == 4
           assert manifest["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
-          assert manifest["external_base_bundle_sha256"]
+          assert manifest["external_base_bundle_sha256"] == original["external_base_bundle_sha256"]
           assert {row["status"] for row in manifest["candidates"]} == {"prepared"}
           PY
 
