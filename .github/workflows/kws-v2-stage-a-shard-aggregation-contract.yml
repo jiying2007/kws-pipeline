@@ -1,0 +1,213 @@
+name: kws-v2-stage-a-shard-aggregation-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/run_kws_v2_stage_a_search.py"
+      - "tools/aggregate_kws_v2_stage_a_shards.py"
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/development_generalization_plan.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/kws-v2-stage-a-shard-aggregation-contract.yml"
+  pull_request:
+    paths:
+      - "tools/run_kws_v2_stage_a_search.py"
+      - "tools/aggregate_kws_v2_stage_a_shards.py"
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/development_generalization_plan.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/development-generalization-v1.json"
+      - ".github/workflows/kws-v2-stage-a-shard-aggregation-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Build Stage A matrix and four shared-cohort shard fixtures
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-shards"
+          mkdir -p "$root"
+          python3 tools/kws_v2_experiment_plan.py             --policy configs/training/kws-v2-staged-experiments-v1.json             --stage A             --output-dir "$root/matrix"
+
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+
+          root = pathlib.Path(os.environ["ROOT"])
+          matrix_path = root / "matrix/experiment-matrix.json"
+          matrix = json.loads(matrix_path.read_text())
+          policy = pathlib.Path("configs/training/development-generalization-v1.json")
+          policy_sha = hashlib.sha256(policy.read_bytes()).hexdigest()
+          matrix_sha = hashlib.sha256(matrix_path.read_bytes()).hexdigest()
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          cohort = matrix["generalization_cohort_id"]
+          bundle_sha = hashlib.sha256(b"stage-a-shard-bundle").hexdigest()
+
+          for ordinal, row in enumerate(matrix["candidates"]):
+              candidate_id = row["candidate_id"]
+              model_sha = hashlib.sha256(f"model:{candidate_id}".encode()).hexdigest()
+              plan_path = root / f"plan-{ordinal}.json"
+              subprocess.run(
+                  [
+                      "python3", "tools/development_generalization_plan.py",
+                      "--policy", str(policy),
+                      "--tier", "search",
+                      "--candidate-id", candidate_id,
+                      "--model-family", row["model_family"],
+                      "--model-sha256", model_sha,
+                      "--product-head", head,
+                      "--cohort-id", cohort,
+                      "--output", str(plan_path),
+                  ],
+                  check=True,
+              )
+              plan = json.loads(plan_path.read_text())
+              pooled_frr = 0.01 + ordinal * 0.005
+              pooled_far = 0.02 + ordinal * 0.005
+              candidate = {
+                  "candidate_id": candidate_id,
+                  "model_family": row["model_family"],
+                  "frontend": row["frontend"],
+                  "hidden_dim": row["hidden_dim"],
+                  "resource_contract_candidate": row["resource_contract_candidate"],
+                  "status": "complete",
+                  "frozen_model_sha256": model_sha,
+                  "generalization_plan_sha256": plan["plan_sha256"],
+                  "generalization_seed_plan": plan["seed_plan"],
+                  "generalization_plan_complete": True,
+                  "independent_seed_count": plan["independent_seed_count"],
+                  "generalization_metrics": {
+                      "pooled": {
+                          "expected_wakes": 800,
+                          "false_rejects": ordinal,
+                          "frr": pooled_frr,
+                          "frr_upper_bound": pooled_frr + 0.01,
+                          "negative_audio_hours": 16.0,
+                          "false_accepts": ordinal,
+                          "far_per_hour": pooled_far,
+                          "far_upper_bound_per_hour": pooled_far + 0.02,
+                      },
+                      "worst_seed": {
+                          "frr": pooled_frr + 0.02,
+                          "far_per_hour": pooled_far + 0.03,
+                      },
+                      "coverage_passed": True,
+                      "seed_ids": [item["seed"] for item in plan["seed_plan"]],
+                      "confidence_level": 0.95,
+                      "keywords": {
+                          "1": {"expected_wakes": 400, "false_rejects": 0, "frr": 0.0, "frr_upper_bound": 0.01},
+                          "2": {"expected_wakes": 400, "false_rejects": 0, "frr": 0.0, "frr_upper_bound": 0.01},
+                      },
+                      "statistical_gate_mode": "wilson-poisson-v1",
+                      "eligible_for_threshold_calibration": True,
+                  },
+              }
+              shard = {
+                  "schema_version": 1,
+                  "evidence_class": "kws-v2-stage-a-search-shard-v1",
+                  "evidence_scope": "development-only",
+                  "stage": "A",
+                  "status": "complete",
+                  "product_head": head,
+                  "matrix_sha256": matrix_sha,
+                  "generalization_cohort_id": cohort,
+                  "generalization_tier": "search",
+                  "external_base_bundle_sha256": bundle_sha,
+                  "full_training_round_budget": True,
+                  "generalization_policy": str(policy.resolve()),
+                  "generalization_policy_sha256": policy_sha,
+                  "candidate": candidate,
+                  "fresh_used": False,
+                  "shadow_used": False,
+                  "formal_qualification_used": False,
+                  "protected_evidence_used": False,
+              }
+              (root / f"shard-{ordinal}.json").write_text(
+                  json.dumps(shard, indent=2, sort_keys=True) + "\n"
+              )
+          PY
+
+      - name: Aggregate complete four-candidate Stage A evidence
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-shards"
+          python3 tools/aggregate_kws_v2_stage_a_shards.py             --shard "$root/shard-0.json"             --shard "$root/shard-1.json"             --shard "$root/shard-2.json"             --shard "$root/shard-3.json"             --output "$root/aggregate.json"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          out = json.loads((root / "aggregate.json").read_text())
+          assert out["evidence_class"] == "kws-v2-stage-a-search-run-v1"
+          assert out["status"] == "complete"
+          assert out["execution_mode"] == "sharded-v1"
+          assert out["candidate_count"] == 4
+          assert out["all_candidates_complete"] is True
+          assert len(out["shared_seed_plan"]) == 8
+          assert len(out["scorecard"]) == 4
+          assert {row["frontend"] for row in out["scorecard"]} == {"logmel", "pcen-lite"}
+          assert {row["model_family"] for row in out["scorecard"]} == {"rnn", "gru"}
+          assert all(row["coverage_passed"] for row in out["scorecard"])
+          assert all(row["eligible_for_threshold_calibration"] for row in out["scorecard"])
+          assert out["fresh_used"] is False
+          assert out["shadow_used"] is False
+          assert out["formal_qualification_used"] is False
+          assert out["protected_evidence_used"] is False
+          PY
+
+      - name: Seed cohort drift must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-shards"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          value = json.loads((root / "shard-3.json").read_text())
+          value["candidate"]["generalization_seed_plan"][0]["seed"] += 1
+          (root / "bad-seed.json").write_text(json.dumps(value, indent=2) + "\n")
+          PY
+          if python3 tools/aggregate_kws_v2_stage_a_shards.py             --shard "$root/shard-0.json" --shard "$root/shard-1.json"             --shard "$root/shard-2.json" --shard "$root/bad-seed.json"             --output "$root/nope-seed.json"; then
+            echo "seed-cohort drift unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Duplicate candidate and bundle drift must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-shards"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          first = json.loads((root / "shard-0.json").read_text())
+          dup = json.loads((root / "shard-3.json").read_text())
+          dup["candidate"]["candidate_id"] = first["candidate"]["candidate_id"]
+          (root / "bad-duplicate.json").write_text(json.dumps(dup, indent=2) + "\n")
+          drift = json.loads((root / "shard-3.json").read_text())
+          drift["external_base_bundle_sha256"] = "0" * 64
+          (root / "bad-bundle.json").write_text(json.dumps(drift, indent=2) + "\n")
+          PY
+          if python3 tools/aggregate_kws_v2_stage_a_shards.py             --shard "$root/shard-0.json" --shard "$root/shard-1.json"             --shard "$root/shard-2.json" --shard "$root/bad-duplicate.json"             --output "$root/nope-dup.json"; then
+            echo "duplicate candidate unexpectedly accepted" >&2
+            exit 1
+          fi
+          if python3 tools/aggregate_kws_v2_stage_a_shards.py             --shard "$root/shard-0.json" --shard "$root/shard-1.json"             --shard "$root/shard-2.json" --shard "$root/bad-bundle.json"             --output "$root/nope-bundle.json"; then
+            echo "bundle drift unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          tools/run_kws_v2_stage_a_search.py
+          tools/aggregate_kws_v2_stage_a_shards.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
