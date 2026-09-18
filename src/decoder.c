@@ -251,10 +251,11 @@ void kws_decoder_reset(kws_decoder_t *d) {
   clear_pending(d);
 }
 
-int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
-                                        uint16_t keyword_index,
-                                        float *confidence,
-                                        float *retention_log) {
+int kws_decoder_peek_keyword_state(const kws_decoder_t *d,
+                                   uint16_t keyword_index,
+                                   float *confidence,
+                                   float *retention_log,
+                                   int *retention_valid) {
   const kws_trie_node_t *node;
   float terminal_score;
   float terminal_acoustic;
@@ -262,7 +263,7 @@ int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
   float conf;
 
   if (d == NULL || confidence == NULL || retention_log == NULL ||
-      keyword_index >= d->keyword_count) {
+      retention_valid == NULL || keyword_index >= d->keyword_count) {
     return 0;
   }
   node = &d->nodes[d->terminal_nodes[keyword_index]];
@@ -280,9 +281,6 @@ int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
 
   retention =
       terminal_score - terminal_acoustic - d->token_boost * (float)node->depth;
-  if (retention < MIN_PATH_RETENTION_LOG) {
-    return 0;
-  }
   conf = expf(terminal_acoustic / (float)node->depth);
   if (conf > 1.0f) {
     conf = 1.0f;
@@ -290,7 +288,20 @@ int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
 
   *confidence = conf;
   *retention_log = retention;
+  *retention_valid = retention >= MIN_PATH_RETENTION_LOG ? 1 : 0;
   return 1;
+}
+
+int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
+                                        uint16_t keyword_index,
+                                        float *confidence,
+                                        float *retention_log) {
+  int retention_valid = 0;
+  if (kws_decoder_peek_keyword_state(d, keyword_index, confidence,
+                                     retention_log, &retention_valid) == 0) {
+    return 0;
+  }
+  return retention_valid;
 }
 
 static int immediate_better(const kws_decoder_t *d,
