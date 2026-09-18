@@ -19,6 +19,15 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_stream(stream) -> tuple[int, str]:
+    digest = hashlib.sha256()
+    total = 0
+    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+        total += len(chunk)
+        digest.update(chunk)
+    return total, digest.hexdigest()
+
+
 def load_object(path: pathlib.Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -69,18 +78,16 @@ def safe_member_path(name: str, archive_root: str) -> pathlib.PurePosixPath:
     return raw
 
 
-def extract_verified_bundle(
+def inspect_verified_archive(
     *,
     reference_path: pathlib.Path,
     candidate_name: str,
     archive_path: pathlib.Path,
-    output_dir: pathlib.Path,
 ) -> dict:
     reference_path = reference_path.resolve()
     archive_path = archive_path.resolve()
-    output_dir = output_dir.resolve()
-
     _, bundle = reference_candidate(reference_path, candidate_name)
+
     expected_name = require_text(bundle.get("asset"), "runtime asset name")
     expected_size = int(bundle.get("expected_size_bytes", 0))
     expected_sha = require_text(bundle.get("expected_sha256"), "runtime asset sha256").lower()
@@ -108,16 +115,12 @@ def extract_verified_bundle(
             f"runtime archive sha256 mismatch: expected {expected_sha}, got {actual_sha}"
         )
 
-    if output_dir.exists() and any(output_dir.iterdir()):
-        raise ValueError("runtime bundle output-dir must be empty")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
     required_paths = {
         role: pathlib.PurePosixPath(archive_root) / require_text(rel, f"required_files.{role}")
         for role, rel in required.items()
     }
     seen_members: set[pathlib.PurePosixPath] = set()
-    extracted_required: dict[str, pathlib.Path] = {}
+    required_members: dict[str, tarfile.TarInfo] = {}
 
     with tarfile.open(archive_path, mode="r:bz2") as archive:
         members = archive.getmembers()
@@ -143,35 +146,23 @@ def extract_verified_bundle(
                 raise ValueError(
                     f"runtime archive must contain exactly one {role}: {required_path}"
                 )
+            required_members[role] = matches[0]
 
-        for member in members:
-            member_path = pathlib.PurePosixPath(member.name)
-            destination = output_dir.joinpath(*member_path.parts)
-            if member.isdir():
-                destination.mkdir(parents=True, exist_ok=True)
-                continue
-            source = archive.extractfile(member)
-            if source is None:
+        files: dict[str, dict] = {}
+        for role in ("model", "tokens", "lexicon"):
+            member = required_members[role]
+            stream = archive.extractfile(member)
+            if stream is None:
                 raise ValueError(f"cannot read runtime archive member: {member.name}")
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            with source, destination.open("wb") as sink:
-                for chunk in iter(lambda: source.read(1024 * 1024), b""):
-                    sink.write(chunk)
-
-    for role, required_path in required_paths.items():
-        path = output_dir.joinpath(*required_path.parts)
-        if not path.is_file() or path.stat().st_size <= 0:
-            raise ValueError(f"extracted runtime {role} is missing/empty: {path}")
-        extracted_required[role] = path
-
-    files = {
-        role: {
-            "path": extracted_required[role].relative_to(output_dir).as_posix(),
-            "size_bytes": extracted_required[role].stat().st_size,
-            "sha256": sha256_file(extracted_required[role]),
-        }
-        for role in ("model", "tokens", "lexicon")
-    }
+            with stream:
+                size_bytes, digest = sha256_stream(stream)
+            if size_bytes <= 0 or size_bytes != int(member.size):
+                raise ValueError(f"runtime archive member size is invalid: {member.name}")
+            files[role] = {
+                "path": pathlib.PurePosixPath(member.name).as_posix(),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+            }
 
     return {
         "schema_version": 1,
@@ -188,6 +179,59 @@ def extract_verified_bundle(
         "files": files,
         "safe_archive_verified": True,
     }
+
+
+def extract_verified_bundle(
+    *,
+    reference_path: pathlib.Path,
+    candidate_name: str,
+    archive_path: pathlib.Path,
+    output_dir: pathlib.Path,
+) -> dict:
+    reference_path = reference_path.resolve()
+    archive_path = archive_path.resolve()
+    output_dir = output_dir.resolve()
+    receipt = inspect_verified_archive(
+        reference_path=reference_path,
+        candidate_name=candidate_name,
+        archive_path=archive_path,
+    )
+
+    if output_dir.exists() and any(output_dir.iterdir()):
+        raise ValueError("runtime bundle output-dir must be empty")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    archive_root = str(receipt["archive_root"])
+
+    with tarfile.open(archive_path, mode="r:bz2") as archive:
+        for member in archive.getmembers():
+            member_path = safe_member_path(member.name, archive_root)
+            if member.issym() or member.islnk() or member.isdev() or member.isfifo():
+                raise ValueError(f"runtime archive contains unsupported member type: {member.name}")
+            if not member.isdir() and not member.isfile():
+                raise ValueError(f"runtime archive contains unsupported member type: {member.name}")
+            destination = output_dir.joinpath(*member_path.parts)
+            if member.isdir():
+                destination.mkdir(parents=True, exist_ok=True)
+                continue
+            source = archive.extractfile(member)
+            if source is None:
+                raise ValueError(f"cannot read runtime archive member: {member.name}")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with source, destination.open("wb") as sink:
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    sink.write(chunk)
+
+    for role, item in receipt["files"].items():
+        relative = pathlib.PurePosixPath(str(item["path"]))
+        path = output_dir.joinpath(*relative.parts)
+        if not path.is_file():
+            raise ValueError(f"extracted runtime {role} is missing: {path}")
+        if path.stat().st_size != int(item["size_bytes"]):
+            raise ValueError(f"extracted runtime {role} size mismatch")
+        if sha256_file(path) != str(item["sha256"]):
+            raise ValueError(f"extracted runtime {role} sha256 mismatch")
+
+    return receipt
 
 
 def main() -> int:
