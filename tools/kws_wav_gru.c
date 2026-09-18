@@ -244,10 +244,15 @@ int main(int argc, char **argv) {
   int16_t pcm[BLOCK_SAMPLES];
   uint64_t processed_samples = 0u;
   uint64_t suppress_until_sample = 0u;
+  int probe_mode = 0;
   int exit_code = 1;
 
-  if (argc != 5) {
-    fprintf(stderr, "usage: %s model.kwg keywords.kwk audio.wav recording-id\n", argv[0]);
+  if (argc == 6 && strcmp(argv[5], "--score-probe") == 0) {
+    probe_mode = 1;
+  } else if (argc != 5) {
+    fprintf(stderr,
+            "usage: %s model.kwg keywords.kwk audio.wav recording-id [--score-probe]\n",
+            argv[0]);
     return 2;
   }
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
@@ -280,6 +285,14 @@ int main(int argc, char **argv) {
                                gru.vocab_size) != KWS_OK) {
     fprintf(stderr, "cannot initialize decoder for experimental GRU model\n");
     goto cleanup;
+  }
+  if (probe_mode != 0) {
+    /* Diagnostic-only observation mode: keep the exact decoder transition path
+     * but suppress threshold-triggered emit/reset so terminal confidence can be
+     * observed continuously across the recording. */
+    for (uint16_t k = 0u; k < decoder.keyword_count; ++k) {
+      decoder.thresholds[k] = 2.0f;
+    }
   }
 
   wav = fopen(argv[3], "rb");
@@ -316,7 +329,31 @@ int main(int argc, char **argv) {
         infer_gru(&gru, features, hidden, next_hidden, logits);
         decoder_hit = kws_decoder_step(&decoder, logits, gru.vocab_size,
                                        speech_active, &keyword_id, &confidence);
-        if (decoder_hit != 0 && processed_samples >= suppress_until_sample) {
+        if (probe_mode != 0) {
+          if (decoder_hit != 0) {
+            fprintf(stderr, "score probe unexpectedly emitted a detection\n");
+            goto cleanup;
+          }
+          if (speech_active != 0) {
+            for (uint16_t k = 0u; k < decoder.keyword_count; ++k) {
+              float probe_confidence = 0.0f;
+              float retention_log = 0.0f;
+              if (kws_decoder_peek_keyword_confidence(
+                      &decoder, k, &probe_confidence, &retention_log) != 0) {
+                fputs("{\"recording\":", stdout);
+                kws_tool_print_json_string(stdout, argv[4]);
+                fprintf(stdout,
+                        ",\"keyword_id\":%u,\"time_s\":%.6f,"
+                        "\"confidence\":%.6f,\"retention_log\":%.6f}\n",
+                        decoder.keyword_ids[k],
+                        (double)processed_samples / (double)KWS_SAMPLE_RATE_HZ,
+                        (double)probe_confidence,
+                        (double)retention_log);
+              }
+            }
+          }
+        } else if (decoder_hit != 0 &&
+                   processed_samples >= suppress_until_sample) {
           uint64_t refractory_samples =
               ((uint64_t)config.refractory_ms * (uint64_t)KWS_SAMPLE_RATE_HZ) /
               1000u;
