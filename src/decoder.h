@@ -54,10 +54,18 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
                                       size_t count,
                                       uint16_t vocab_size);
 void kws_decoder_reset(kws_decoder_t *d);
-/* Repository-internal diagnostic observation. Returns the current terminal
- * acoustic confidence for one configured keyword without applying its
- * threshold or mutating decoder state. Callers are responsible for honoring
- * the same speech-activity condition as kws_decoder_step(). */
+/* Repository-internal diagnostic observation. Reads the current terminal
+ * acoustic confidence for one configured keyword without applying its product
+ * threshold or mutating decoder state. The state variant reports terminal
+ * acoustic evidence even when the runtime retention budget would reject it;
+ * the compatibility confidence variant returns success only when retention is
+ * valid. Callers are responsible for honoring the same speech-activity
+ * condition as kws_decoder_step(). */
+int kws_decoder_peek_keyword_state(const kws_decoder_t *d,
+                                   uint16_t keyword_index,
+                                   float *confidence,
+                                   float *retention_log,
+                                   int *retention_valid);
 int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
                                         uint16_t keyword_index,
                                         float *confidence,
