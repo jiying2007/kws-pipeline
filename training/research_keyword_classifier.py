@@ -51,23 +51,24 @@ def quantile(values: list[float], q: float) -> float | None:
 class ClipDataset(Dataset):
     def __init__(
         self,
-        manifest: pathlib.Path,
+        manifests: list[pathlib.Path],
         keyword_sequences: list[list[int]],
         feature_dim: int,
         frontend: str,
     ):
         self.items: list[tuple[torch.Tensor, int]] = []
-        roots = manifest.resolve().parent
         lookup = {tuple(seq): index + 1 for index, seq in enumerate(keyword_sequences)}
-        for row in manifest_rows(manifest.resolve()):
-            raw = pathlib.Path(str(row["audio"]))
-            path = raw.resolve() if raw.is_absolute() else (roots / raw).resolve()
-            target = tuple(int(v) for v in row["tokens"])
-            label = int(lookup.get(target, 0))
-            feat = features(read_pcm(path), feature_dim=feature_dim, frontend=frontend)
-            self.items.append((feat, label))
+        for manifest in manifests:
+            root = manifest.resolve().parent
+            for row in manifest_rows(manifest.resolve()):
+                raw = pathlib.Path(str(row["audio"]))
+                path = raw.resolve() if raw.is_absolute() else (root / raw).resolve()
+                target = tuple(int(v) for v in row["tokens"])
+                label = int(lookup.get(target, 0))
+                feat = features(read_pcm(path), feature_dim=feature_dim, frontend=frontend)
+                self.items.append((feat, label))
         if not self.items:
-            raise ValueError(f"empty classifier manifest: {manifest}")
+            raise ValueError("classifier manifests are empty")
 
     def __len__(self) -> int:
         return len(self.items)
@@ -157,9 +158,9 @@ def evaluate(model: nn.Module, loader: DataLoader, classes: int) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Research-only clip classifier separability baseline.")
-    parser.add_argument("--train-manifest", required=True, type=pathlib.Path)
-    parser.add_argument("--calibration-manifest", required=True, type=pathlib.Path)
-    parser.add_argument("--test-manifest", required=True, type=pathlib.Path)
+    parser.add_argument("--train-manifest", required=True, action="append", type=pathlib.Path)
+    parser.add_argument("--calibration-manifest", required=True, action="append", type=pathlib.Path)
+    parser.add_argument("--test-manifest", required=True, action="append", type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--keywords", required=True, type=pathlib.Path)
     parser.add_argument("--frontend", choices=sorted(FRONTEND_IDS), required=True)
