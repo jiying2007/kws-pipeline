@@ -112,6 +112,26 @@ def main() -> int:
     matrix = validate_matrix(matrix_path)
     row, candidate_config_path = candidate_from_matrix(matrix_path, matrix, args.candidate_id)
     candidate = load_object(candidate_config_path)
+    speech_like = candidate.get("kws_v2_speech_like_training")
+    if not isinstance(speech_like, dict):
+        raise ValueError("candidate is missing kws_v2_speech_like_training contract")
+    if speech_like.get("external_base_required") is not True:
+        raise ValueError("candidate must require external speech-like base")
+    if speech_like.get("tone_replay_allowed") is not False:
+        raise ValueError("candidate must forbid tone replay")
+    if speech_like.get("fixed_hard_negative_replay") != "disabled":
+        raise ValueError("candidate fixed hard-negative replay must be disabled")
+    if speech_like.get("positive_stress_replay") != "disabled":
+        raise ValueError("candidate positive-stress replay must be disabled")
+    if speech_like.get("failure_replay") != "disabled":
+        raise ValueError("candidate failure replay must be disabled")
+    if candidate.get("data_augmentation_v3", {}).get("failure_replay_enabled") is not False:
+        raise ValueError("candidate failure replay must be disabled in data_augmentation_v3")
+    iteration = candidate.get("domain_iteration")
+    if not isinstance(iteration, dict):
+        raise ValueError("candidate domain_iteration must be an object")
+    if iteration.get("hard_negative_replay") != [] or iteration.get("positive_stress_replay") != []:
+        raise ValueError("candidate synthetic replay lists must be empty")
     inputs = split_inputs(args)
 
     output_config = args.output_config.resolve()
@@ -160,6 +180,8 @@ def main() -> int:
         "resource_contract_candidate": row["resource_contract_candidate"],
         "generalization_tier": row["generalization_tier"],
         "requires_predeclared_generalization_plan": True,
+        "speech_like_external_base_required": True,
+        "tone_replay_allowed": False,
         "fresh_used": False,
         "shadow_used": False,
         "formal_qualification_used": False,
