@@ -6,6 +6,7 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "training/external_base_dataset.py"
       - "tools/build_kws_v2_generalization_plan.py"
       - "tools/development_generalization_plan.py"
       - "configs/training/development-generalization-v1.json"
@@ -17,6 +18,7 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "training/external_base_dataset.py"
       - "tools/build_kws_v2_generalization_plan.py"
       - "tools/development_generalization_plan.py"
       - "configs/training/development-generalization-v1.json"
