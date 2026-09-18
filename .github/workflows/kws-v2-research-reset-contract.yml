@@ -1,35 +1,51 @@
-name: kws-v2-research-reset-contract
-
 on:
   push:
     branches: [main, "research/**", "codex/**"]
     paths:
       - "configs/training/kws-v2-research-reset-v1.json"
+      - "configs/training/kws-v2-research-negative-utterances-v1.json"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
+      - "training/train_ctc.py"
+      - "training/train_gru_ctc.py"
       - "training/development_loss_controller.py"
       - "training/development_resume.py"
       - "training/iterate_gru_development.py"
       - "training/iterate_rnn_development.py"
-      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
-      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
-      - "tests/test_development_loss_controller.py"
-      - "training/train_ctc.py"
-      - "training/train_gru_ctc.py"
       - "training/research_keyword_classifier.py"
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
+      - "tools/build_kws_v2_research_negative_requests.py"
+      - "tools/materialize_kws_v2_research_negative_sidecar.py"
+      - "tools/run_speech_like_corpus_generation.py"
+      - "tests/test_development_loss_controller.py"
       - ".github/workflows/kws-v2-research-reset.yml"
+      - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
+      - "docs/KWS_RESEARCH_RESET.md"
   pull_request:
     paths:
       - "configs/training/kws-v2-research-reset-v1.json"
+      - "configs/training/kws-v2-research-negative-utterances-v1.json"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
       - "training/train_ctc.py"
       - "training/train_gru_ctc.py"
+      - "training/development_loss_controller.py"
+      - "training/development_resume.py"
+      - "training/iterate_gru_development.py"
+      - "training/iterate_rnn_development.py"
       - "training/research_keyword_classifier.py"
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
+      - "tools/build_kws_v2_research_negative_requests.py"
+      - "tools/materialize_kws_v2_research_negative_sidecar.py"
+      - "tools/run_speech_like_corpus_generation.py"
+      - "tests/test_development_loss_controller.py"
       - ".github/workflows/kws-v2-research-reset.yml"
+      - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
-
+      - "docs/KWS_RESEARCH_RESET.md"
 permissions:
   contents: read
 
@@ -142,6 +158,9 @@ jobs:
           training/research_keyword_classifier.py
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
+          tools/build_kws_v2_research_negative_requests.py
+          tools/materialize_kws_v2_research_negative_sidecar.py
+          tools/run_speech_like_corpus_generation.py
 
       - name: Worktree remains clean
         run: git diff --exit-code -- .
