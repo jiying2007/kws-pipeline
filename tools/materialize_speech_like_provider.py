@@ -15,6 +15,9 @@ from generate_speech_like_command_provider import load_policy, normalize_provide
 from speech_like_corpus_plan import VOICE_CLASS, normalize_plan  # noqa: E402
 
 SPEAKER_MAP_CLASS = "speech-like-provider-speaker-map-v1"
+NATIVE_PROFILE = "sherpa-vits-native-16k-v1"
+RESAMPLED_PROFILE = "sherpa-vits-resampled-to-16k-v1"
+PROFILES = (NATIVE_PROFILE, RESAMPLED_PROFILE)
 BANNED_LICENSES = {"", "unknown", "todo", "tbd", "required", "required-before-generation", "n/a", "na"}
 
 
@@ -33,7 +36,9 @@ def load_object(path: pathlib.Path) -> dict:
     return value
 
 
-def require_file(path: pathlib.Path, label: str, executable: bool = False) -> pathlib.Path:
+def require_file(path: pathlib.Path | None, label: str, executable: bool = False) -> pathlib.Path:
+    if path is None:
+        raise ValueError(f"{label} is required")
     result = path.resolve()
     if not result.is_file():
         raise ValueError(f"{label} is missing: {result}")
@@ -81,11 +86,9 @@ def load_speaker_map(path: pathlib.Path, expected_slots: list[str]) -> dict[str,
     return result
 
 
-def materialize(
+def build_provider(
     *,
-    corpus_plan: pathlib.Path,
-    command_policy: pathlib.Path,
-    speaker_map: pathlib.Path,
+    provider_profile: str,
     provider_name: str,
     provider_version: str,
     license_id: str,
@@ -94,22 +97,93 @@ def materialize(
     model: pathlib.Path,
     tokens: pathlib.Path,
     lexicon: pathlib.Path,
-) -> tuple[dict, list[dict], dict]:
-    plan = normalize_plan(corpus_plan)
-    slots = [slot for split in ("train", "calibration", "test", "qualification") for slot in plan["roles"][split]["voice_slots"]]
-    speakers = load_speaker_map(speaker_map, slots)
-
-    provider_name = require_text(provider_name, "provider_name")
-    provider_version = require_text(provider_version, "provider_version")
-    license_id = require_text(license_id, "license_id")
-    if license_id.strip().lower() in BANNED_LICENSES:
-        raise ValueError("license_id must be verified before generation")
-
+    adapter: pathlib.Path | None,
+    backend_executable: pathlib.Path | None,
+    resampler_executable: pathlib.Path | None,
+    source_sample_rate: int | None,
+) -> tuple[dict, dict]:
     executable = require_file(executable, "provider executable", executable=True)
     model = require_file(model, "VITS model")
     tokens = require_file(tokens, "VITS tokens")
     lexicon = require_file(lexicon, "VITS lexicon")
     license_file = require_file(license_file, "license evidence")
+
+    assets = [
+        {"role": "model", "path": str(model), "sha256": sha256_file(model)},
+        {"role": "tokens", "path": str(tokens), "sha256": sha256_file(tokens)},
+        {"role": "lexicon", "path": str(lexicon), "sha256": sha256_file(lexicon)},
+        {"role": "license_evidence", "path": str(license_file), "sha256": sha256_file(license_file)},
+    ]
+    normalization: dict
+
+    if provider_profile == NATIVE_PROFILE:
+        if any(value is not None for value in (adapter, backend_executable, resampler_executable, source_sample_rate)):
+            raise ValueError("native VITS profile does not accept adapter/backend/resampler/source-sample-rate")
+        argv_template = [
+            "{executable}",
+            "--vits-model={asset:model}",
+            "--vits-tokens={asset:tokens}",
+            "--vits-lexicon={asset:lexicon}",
+            "--sid={speaker_id}",
+            "--vits-length-scale={length_scale}",
+            "--output-filename={output}",
+            "{text}",
+        ]
+        timeout_seconds = 120
+        normalization = {
+            "policy": "native-16k-v1",
+            "source_sample_rate_hz": 16000,
+            "output_sample_rate_hz": 16000,
+            "resampled": False,
+        }
+    elif provider_profile == RESAMPLED_PROFILE:
+        adapter = require_file(adapter, "VITS resample adapter")
+        backend_executable = require_file(backend_executable, "VITS backend executable", executable=True)
+        resampler_executable = require_file(resampler_executable, "resampler executable", executable=True)
+        source_sample_rate = int(source_sample_rate or 0)
+        if source_sample_rate <= 0 or source_sample_rate >= 16000:
+            raise ValueError("resampled VITS profile requires source_sample_rate in [1,15999]")
+        assets.extend(
+            [
+                {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)},
+                {
+                    "role": "backend_executable",
+                    "path": str(backend_executable),
+                    "sha256": sha256_file(backend_executable),
+                },
+                {
+                    "role": "resampler_executable",
+                    "path": str(resampler_executable),
+                    "sha256": sha256_file(resampler_executable),
+                },
+            ]
+        )
+        argv_template = [
+            "{executable}",
+            "{asset:adapter}",
+            "--backend-executable={asset:backend_executable}",
+            "--resampler-executable={asset:resampler_executable}",
+            "--model={asset:model}",
+            "--tokens={asset:tokens}",
+            "--lexicon={asset:lexicon}",
+            "--speaker-id={speaker_id}",
+            "--length-scale={length_scale}",
+            f"--source-sample-rate={source_sample_rate}",
+            "--output={output}",
+            "{text}",
+        ]
+        timeout_seconds = 300
+        normalization = {
+            "policy": "verified-source-rate-to-pcm16-16k-v1",
+            "source_sample_rate_hz": source_sample_rate,
+            "output_sample_rate_hz": 16000,
+            "resampled": True,
+            "adapter_sha256": sha256_file(adapter),
+            "backend_executable_sha256": sha256_file(backend_executable),
+            "resampler_executable_sha256": sha256_file(resampler_executable),
+        }
+    else:
+        raise ValueError(f"unsupported provider_profile: {provider_profile}")
 
     provider = {
         "schema_version": 1,
@@ -119,29 +193,69 @@ def materialize(
         "license_id": license_id,
         "locale": "zh-CN",
         "executable": {"path": str(executable), "sha256": sha256_file(executable)},
-        "assets": [
-            {"role": "model", "path": str(model), "sha256": sha256_file(model)},
-            {"role": "tokens", "path": str(tokens), "sha256": sha256_file(tokens)},
-            {"role": "lexicon", "path": str(lexicon), "sha256": sha256_file(lexicon)},
-            {"role": "license_evidence", "path": str(license_file), "sha256": sha256_file(license_file)},
-        ],
-        "argv_template": [
-            "{executable}",
-            "--vits-model={asset:model}",
-            "--vits-tokens={asset:tokens}",
-            "--vits-lexicon={asset:lexicon}",
-            "--sid={speaker_id}",
-            "--vits-length-scale={length_scale}",
-            "--output-filename={output}",
-            "{text}",
-        ],
-        "timeout_seconds": 120,
+        "assets": assets,
+        "argv_template": argv_template,
+        "timeout_seconds": timeout_seconds,
     }
+    return provider, normalization
+
+
+def materialize(
+    *,
+    corpus_plan: pathlib.Path,
+    command_policy: pathlib.Path,
+    speaker_map: pathlib.Path,
+    provider_profile: str,
+    provider_name: str,
+    provider_version: str,
+    license_id: str,
+    license_file: pathlib.Path,
+    executable: pathlib.Path,
+    model: pathlib.Path,
+    tokens: pathlib.Path,
+    lexicon: pathlib.Path,
+    adapter: pathlib.Path | None = None,
+    backend_executable: pathlib.Path | None = None,
+    resampler_executable: pathlib.Path | None = None,
+    source_sample_rate: int | None = None,
+) -> tuple[dict, list[dict], dict]:
+    plan = normalize_plan(corpus_plan)
+    slots = [
+        slot
+        for split in ("train", "calibration", "test", "qualification")
+        for slot in plan["roles"][split]["voice_slots"]
+    ]
+    speakers = load_speaker_map(speaker_map, slots)
+
+    provider_name = require_text(provider_name, "provider_name")
+    provider_version = require_text(provider_version, "provider_version")
+    license_id = require_text(license_id, "license_id")
+    if license_id.strip().lower() in BANNED_LICENSES:
+        raise ValueError("license_id must be verified before generation")
+
+    provider, normalization = build_provider(
+        provider_profile=provider_profile,
+        provider_name=provider_name,
+        provider_version=provider_version,
+        license_id=license_id,
+        license_file=license_file,
+        executable=executable,
+        model=model,
+        tokens=tokens,
+        lexicon=lexicon,
+        adapter=adapter,
+        backend_executable=backend_executable,
+        resampler_executable=resampler_executable,
+        source_sample_rate=source_sample_rate,
+    )
 
     # Reuse the canonical command-provider validator before emitting anything.
     policy = load_policy(command_policy)
     tmp_provider_path = speaker_map.parent / ".provider-materialize-validation.json"
-    tmp_provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp_provider_path.write_text(
+        json.dumps(provider, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     try:
         normalized = normalize_provider(tmp_provider_path, provider, policy)
     finally:
@@ -168,6 +282,7 @@ def materialize(
     summary = {
         "schema_version": 1,
         "evidence_class": "speech-like-provider-materialization-v1",
+        "provider_profile": provider_profile,
         "provider_name": provider_name,
         "provider_version": provider_version,
         "license_id": license_id,
@@ -176,22 +291,31 @@ def materialize(
         "speaker_map_sha256": sha256_file(speaker_map),
         "command_policy_sha256": sha256_file(command_policy),
         "provider_identity_sha256": hashlib.sha256(
-            json.dumps(normalized["identity"], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            json.dumps(
+                normalized["identity"],
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
         ).hexdigest(),
         "voice_slots": len(inventory),
         "speaker_ids": [row["parameters"]["speaker_id"] for row in inventory],
         "protected_evidence_used": False,
         "model_asset_sha256": sha256_file(model),
         "executable_sha256": sha256_file(executable),
+        "audio_normalization": normalization,
     }
     return provider, inventory, summary
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Materialize a hash-bound offline-TTS provider and exact corpus voice inventory.")
+    parser = argparse.ArgumentParser(
+        description="Materialize a hash-bound offline-TTS provider and exact corpus voice inventory."
+    )
     parser.add_argument("--corpus-plan", required=True, type=pathlib.Path)
     parser.add_argument("--command-policy", required=True, type=pathlib.Path)
     parser.add_argument("--speaker-map", required=True, type=pathlib.Path)
+    parser.add_argument("--provider-profile", choices=PROFILES, default=NATIVE_PROFILE)
     parser.add_argument("--provider-name", required=True)
     parser.add_argument("--provider-version", required=True)
     parser.add_argument("--license-id", required=True)
@@ -200,6 +324,10 @@ def main() -> int:
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--lexicon", required=True, type=pathlib.Path)
+    parser.add_argument("--adapter", type=pathlib.Path)
+    parser.add_argument("--backend-executable", type=pathlib.Path)
+    parser.add_argument("--resampler-executable", type=pathlib.Path)
+    parser.add_argument("--source-sample-rate", type=int)
     parser.add_argument("--output-provider", required=True, type=pathlib.Path)
     parser.add_argument("--output-inventory", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
@@ -209,6 +337,7 @@ def main() -> int:
         corpus_plan=args.corpus_plan.resolve(),
         command_policy=args.command_policy.resolve(),
         speaker_map=args.speaker_map.resolve(),
+        provider_profile=args.provider_profile,
         provider_name=args.provider_name,
         provider_version=args.provider_version,
         license_id=args.license_id,
@@ -217,19 +346,30 @@ def main() -> int:
         model=args.model,
         tokens=args.tokens,
         lexicon=args.lexicon,
+        adapter=args.adapter,
+        backend_executable=args.backend_executable,
+        resampler_executable=args.resampler_executable,
+        source_sample_rate=args.source_sample_rate,
     )
     args.output_provider.parent.mkdir(parents=True, exist_ok=True)
-    args.output_provider.write_text(json.dumps(provider, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    args.output_provider.write_text(
+        json.dumps(provider, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     args.output_inventory.parent.mkdir(parents=True, exist_ok=True)
     args.output_inventory.write_text(
         "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in inventory),
         encoding="utf-8",
     )
     args.summary.parent.mkdir(parents=True, exist_ok=True)
-    args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    args.summary.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(
-        f"speech-like provider materialized: provider={summary['provider_name']} "
-        f"voices={summary['voice_slots']} model={summary['model_asset_sha256']}"
+        f"speech-like provider materialized: profile={summary['provider_profile']} "
+        f"provider={summary['provider_name']} voices={summary['voice_slots']} "
+        f"model={summary['model_asset_sha256']}"
     )
     return 0
 
