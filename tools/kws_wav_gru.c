@@ -338,17 +338,21 @@ int main(int argc, char **argv) {
             for (uint16_t k = 0u; k < decoder.keyword_count; ++k) {
               float probe_confidence = 0.0f;
               float retention_log = 0.0f;
-              if (kws_decoder_peek_keyword_confidence(
-                      &decoder, k, &probe_confidence, &retention_log) != 0) {
+              int retention_valid = 0;
+              if (kws_decoder_peek_keyword_state(
+                      &decoder, k, &probe_confidence, &retention_log,
+                      &retention_valid) != 0) {
                 fputs("{\"recording\":", stdout);
                 kws_tool_print_json_string(stdout, argv[4]);
                 fprintf(stdout,
                         ",\"keyword_id\":%u,\"time_s\":%.6f,"
-                        "\"confidence\":%.6f,\"retention_log\":%.6f}\n",
+                        "\"confidence\":%.6f,\"retention_log\":%.6f,"
+                        "\"retention_valid\":%s}\n",
                         decoder.keyword_ids[k],
                         (double)processed_samples / (double)KWS_SAMPLE_RATE_HZ,
                         (double)probe_confidence,
-                        (double)retention_log);
+                        (double)retention_log,
+                        retention_valid != 0 ? "true" : "false");
               }
             }
           }
