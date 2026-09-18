@@ -1,0 +1,315 @@
+name: speech-like-corpus-generation-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/run_speech_like_corpus_generation.py"
+      - "tools/verify_speech_like_runtime_bundle.py"
+      - "tools/materialize_speech_like_provider.py"
+      - "tools/speech_like_vits_resample_adapter.py"
+      - "tools/generate_speech_like_command_provider.py"
+      - "tools/speech_like_corpus_plan.py"
+      - "tools/materialize_speech_like_base_index.py"
+      - "training/external_base_dataset.py"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - "configs/training/speech-like-corpus-plan-v1.json"
+      - "configs/training/speech-like-command-provider-v1.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
+      - ".github/workflows/speech-like-corpus-generation-contract.yml"
+  pull_request:
+    paths:
+      - "tools/run_speech_like_corpus_generation.py"
+      - "tools/verify_speech_like_runtime_bundle.py"
+      - "tools/materialize_speech_like_provider.py"
+      - "tools/speech_like_vits_resample_adapter.py"
+      - "tools/generate_speech_like_command_provider.py"
+      - "tools/speech_like_corpus_plan.py"
+      - "tools/materialize_speech_like_base_index.py"
+      - "training/external_base_dataset.py"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - "configs/training/speech-like-corpus-plan-v1.json"
+      - "configs/training/speech-like-command-provider-v1.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
+      - ".github/workflows/speech-like-corpus-generation-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Build deterministic 8-kHz TTS fixture runtime
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-generation"
+          mkdir -p "$root/assets" "$root/package/vits-icefall-zh-aishell3"
+
+          printf 'fake-model-v1\n' > "$root/package/vits-icefall-zh-aishell3/model.onnx"
+          printf 'fake-tokens-v1\n' > "$root/package/vits-icefall-zh-aishell3/tokens.txt"
+          printf 'fake-lexicon-v1\n' > "$root/package/vits-icefall-zh-aishell3/lexicon.txt"
+          printf '%s\n' '---' 'license: apache-2.0' '---' > "$root/assets/AISHELL3-MODEL-CARD.md"
+
+          cat > "$root/fake-vits-8k" <<'PY'
+          #!/usr/bin/env python3
+          import hashlib, math, pathlib, struct, sys, wave
+
+          output = None
+          sid = None
+          length_scale = None
+          text = sys.argv[-1]
+          for arg in sys.argv[1:-1]:
+              if arg.startswith("--output-filename="):
+                  output = pathlib.Path(arg.split("=", 1)[1])
+              elif arg.startswith("--sid="):
+                  sid = int(arg.split("=", 1)[1])
+              elif arg.startswith("--vits-length-scale="):
+                  length_scale = float(arg.split("=", 1)[1])
+          if output is None or sid is None or length_scale is None:
+              raise SystemExit("missing VITS request identity")
+          identity = f"{sid}|{length_scale:.4f}|{text}".encode("utf-8")
+          digest = hashlib.sha256(identity).digest()
+          freq = 220 + int.from_bytes(digest[:2], "big") % 1200
+          amplitude = 2500 + int.from_bytes(digest[2:4], "big") % 7000
+          phase = (digest[4] / 255.0) * math.pi
+          frames = 960 + digest[5]
+          samples = [
+              max(-32768, min(32767, int(amplitude * math.sin(2.0 * math.pi * freq * n / 8000.0 + phase))))
+              for n in range(frames)
+          ]
+          output.parent.mkdir(parents=True, exist_ok=True)
+          with wave.open(str(output), "wb") as w:
+              w.setnchannels(1)
+              w.setsampwidth(2)
+              w.setframerate(8000)
+              w.writeframes(b"".join(struct.pack("<h", sample) for sample in samples))
+          PY
+          chmod +x "$root/fake-vits-8k"
+
+          cat > "$root/fake-ffmpeg" <<'PY'
+          #!/usr/bin/env python3
+          import pathlib, struct, sys, wave
+
+          args = sys.argv[1:]
+          source = pathlib.Path(args[args.index("-i") + 1])
+          output = pathlib.Path(args[-1])
+          with wave.open(str(source), "rb") as r:
+              if r.getnchannels() != 1 or r.getsampwidth() != 2 or r.getframerate() != 8000:
+                  raise SystemExit("unexpected fake source format")
+              raw = r.readframes(r.getnframes())
+          samples = struct.unpack("<" + "h" * (len(raw) // 2), raw)
+          upsampled = []
+          for index, value in enumerate(samples):
+              nxt = samples[index + 1] if index + 1 < len(samples) else value
+              upsampled.extend((value, int((value + nxt) / 2)))
+          output.parent.mkdir(parents=True, exist_ok=True)
+          with wave.open(str(output), "wb") as w:
+              w.setnchannels(1)
+              w.setsampwidth(2)
+              w.setframerate(16000)
+              w.writeframes(b"".join(struct.pack("<h", x) for x in upsampled))
+          PY
+          chmod +x "$root/fake-ffmpeg"
+
+          tar -C "$root/package" -cjf "$root/vits-icefall-zh-aishell3.tar.bz2" vits-icefall-zh-aishell3
+
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          reference = json.loads(pathlib.Path("configs/training/speech-like-provider-reference-v1.json").read_text())
+          preferred = reference["preferred_stage_a_candidate"]
+          row = next(x for x in reference["reference_candidates"] if x["name"] == preferred)
+          archive = root / "vits-icefall-zh-aishell3.tar.bz2"
+          bundle = row["runtime_asset_bundle"]
+          bundle["expected_size_bytes"] = archive.stat().st_size
+          bundle["expected_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
+          bundle["checksum_authority"] = "contract-fixture"
+          bundle["checksum_evidence"] = []
+          (root / "fixture-reference.json").write_text(
+              json.dumps(reference, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+
+      - name: Generate complete 24-voice 384-recording Stage A bundle
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-generation"
+          python3 tools/run_speech_like_corpus_generation.py \
+            --provider-reference "$root/fixture-reference.json" \
+            --runtime-archive "$root/vits-icefall-zh-aishell3.tar.bz2" \
+            --license-evidence "$root/assets/AISHELL3-MODEL-CARD.md" \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --work-dir "$root/run"
+
+      - name: Verify full corpus identities formats and split contracts
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/speech-like-corpus-generation/run" python3 - <<'PY'
+          import hashlib, json, os, pathlib, wave
+
+          root = pathlib.Path(os.environ["ROOT"])
+          manifest = json.loads((root / "stage-a-base-bundle.json").read_text())
+          assert manifest["schema_version"] == 1
+          assert manifest["evidence_class"] == "speech-like-stage-a-base-bundle-v1"
+          assert manifest["evidence_scope"] == "development-only"
+          assert manifest["provider_candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
+          assert manifest["license_id"] == "Apache-2.0"
+          assert manifest["recordings"] == 384
+          assert manifest["voice_slots"] == 24
+          assert manifest["utterances"] == 16
+          assert manifest["source_sample_rate_hz"] == 8000
+          assert manifest["normalized_sample_rate_hz"] == 16000
+          assert manifest["source_bandwidth_limitation_retained"] is True
+          assert manifest["tone_backend_used"] is False
+          assert manifest["protected_evidence_used"] is False
+          assert len(manifest["external_base_bundle_sha256"]) == 64
+          assert len(manifest["bundle_manifest_sha256"]) == 64
+
+          expected_counts = {
+              "train": 128,
+              "calibration": 64,
+              "test": 64,
+              "qualification": 128,
+          }
+          assert {split: item["recordings"] for split, item in manifest["splits"].items()} == expected_counts
+
+          voices = {}
+          sources = set()
+          wavs = set()
+          row_count = 0
+          for split, expected in expected_counts.items():
+              item = manifest["splits"][split]
+              index = (root / item["index"]).resolve()
+              summary = (root / item["summary"]).resolve()
+              assert hashlib.sha256(index.read_bytes()).hexdigest() == item["index_sha256"]
+              assert hashlib.sha256(summary.read_bytes()).hexdigest() == item["summary_sha256"]
+              rows = [json.loads(line) for line in index.read_text().splitlines() if line.strip()]
+              assert len(rows) == expected
+              summary_value = json.loads(summary.read_text())
+              assert summary_value["recordings"] == expected
+              assert summary_value["tone_backend_used"] is False
+              assert summary_value["corpus_sha256"] == item["corpus_sha256"]
+              for row in rows:
+                  row_count += 1
+                  assert row["split"] == split
+                  provenance = row["speech_like_provenance"]
+                  assert provenance["provider_kind"] == "offline-tts"
+                  assert provenance["license_id"] == "Apache-2.0"
+                  voice = provenance["voice_id"]
+                  source = provenance["source_id"]
+                  previous = voices.get(voice)
+                  assert previous in (None, split)
+                  voices[voice] = split
+                  assert source not in sources
+                  sources.add(source)
+                  wav = pathlib.Path(row["path"])
+                  assert wav.is_file()
+                  digest = hashlib.sha256(wav.read_bytes()).hexdigest()
+                  assert digest == row["wav_sha256"]
+                  assert digest not in wavs
+                  wavs.add(digest)
+                  with wave.open(str(wav), "rb") as r:
+                      assert r.getnchannels() == 1
+                      assert r.getsampwidth() == 2
+                      assert r.getframerate() == 16000
+                      assert r.getcomptype() == "NONE"
+                      assert r.getnframes() > 0
+          assert row_count == 384
+          assert len(sources) == 384
+          assert len(wavs) == 384
+          assert len(voices) == 24
+          assert {split: sum(owner == split for owner in voices.values()) for split in expected_counts} == {
+              "train": 8,
+              "calibration": 4,
+              "test": 4,
+              "qualification": 8,
+          }
+
+          external = json.loads((root / "validation" / "external-base-summary.json").read_text())
+          assert external["evidence_class"] == "external-speech-like-base-bundle-v1"
+          assert external["recordings"] == 384
+          assert external["tone_backend_used"] is False
+          assert external["bundle_sha256"] == manifest["external_base_bundle_sha256"]
+
+          request = json.loads((root / "request-plan" / "summary.json").read_text())
+          assert request["requests"] == 384
+          assert request["voice_slots"] == 24
+          assert request["utterances"] == 16
+          assert request["split_counts"] == expected_counts
+          generation = json.loads((root / "generation-summary.json").read_text())
+          assert generation["recordings"] == 384
+          labels = json.loads((root / "label-summary.json").read_text())
+          assert labels["recordings"] == 384
+          print("speech-like-corpus-generation-contract: full 384-recording chain ok")
+          PY
+
+      - name: Stage A orchestrator accepts generated bundle
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-generation/run"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          python3 tools/run_kws_v2_stage_a_search.py \
+            "${args[@]}" \
+            --prepare-only \
+            --work-dir "$RUNNER_TEMP/stage-a-from-generated-bundle"
+          ROOT="$RUNNER_TEMP/stage-a-from-generated-bundle" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          manifest = json.loads((root / "stage-a-search-manifest.json").read_text())
+          assert manifest["status"] == "prepared"
+          assert manifest["candidate_count"] == 4
+          assert manifest["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
+          assert manifest["external_base_bundle_sha256"]
+          assert {row["status"] for row in manifest["candidates"]} == {"prepared"}
+          PY
+
+      - name: Runtime archive tamper fails before corpus generation
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-generation"
+          mkdir -p "$root/tampered"
+          cp "$root/vits-icefall-zh-aishell3.tar.bz2" "$root/tampered/vits-icefall-zh-aishell3.tar.bz2"
+          python3 - "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          data[len(data) // 2] ^= 1
+          path.write_bytes(data)
+          PY
+          if python3 tools/run_speech_like_corpus_generation.py \
+            --provider-reference "$root/fixture-reference.json" \
+            --runtime-archive "$root/tampered/vits-icefall-zh-aishell3.tar.bz2" \
+            --license-evidence "$root/assets/AISHELL3-MODEL-CARD.md" \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --work-dir "$root/bad-run"; then
+            echo "tampered runtime archive unexpectedly generated corpus" >&2
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          tools/run_speech_like_corpus_generation.py
+          tools/verify_speech_like_runtime_bundle.py
+          tools/materialize_speech_like_provider.py
+          tools/speech_like_vits_resample_adapter.py
+          tools/generate_speech_like_command_provider.py
+          tools/speech_like_corpus_plan.py
+          tools/materialize_speech_like_base_index.py
+          training/external_base_dataset.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
