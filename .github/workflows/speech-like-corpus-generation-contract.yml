@@ -11,6 +11,7 @@ on:
       - "tools/generate_speech_like_command_provider.py"
       - "tools/speech_like_corpus_plan.py"
       - "tools/materialize_speech_like_base_index.py"
+      - "tools/run_kws_v2_stage_a_search.py"
       - "training/external_base_dataset.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
@@ -26,6 +27,7 @@ on:
       - "tools/generate_speech_like_command_provider.py"
       - "tools/speech_like_corpus_plan.py"
       - "tools/materialize_speech_like_base_index.py"
+      - "tools/run_kws_v2_stage_a_search.py"
       - "training/external_base_dataset.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
@@ -55,6 +57,10 @@ jobs:
           printf 'fake-model-v1\n' > "$root/package/vits-icefall-zh-aishell3/model.onnx"
           printf 'fake-tokens-v1\n' > "$root/package/vits-icefall-zh-aishell3/tokens.txt"
           printf 'fake-lexicon-v1\n' > "$root/package/vits-icefall-zh-aishell3/lexicon.txt"
+          printf 'fake-phone-fst-v1\n' > "$root/package/vits-icefall-zh-aishell3/phone.fst"
+          printf 'fake-date-fst-v1\n' > "$root/package/vits-icefall-zh-aishell3/date.fst"
+          printf 'fake-number-fst-v1\n' > "$root/package/vits-icefall-zh-aishell3/number.fst"
+          printf 'fake-rule-far-v1\n' > "$root/package/vits-icefall-zh-aishell3/rule.far"
           printf '%s\n' '---' 'license: apache-2.0' '---' > "$root/assets/AISHELL3-MODEL-CARD.md"
 
           cat > "$root/fake-vits-8k" <<'PY'
@@ -64,6 +70,8 @@ jobs:
           output = None
           sid = None
           length_scale = None
+          rule_fsts = None
+          rule_far = None
           text = sys.argv[-1]
           for arg in sys.argv[1:-1]:
               if arg.startswith("--output-filename="):
@@ -72,8 +80,16 @@ jobs:
                   sid = int(arg.split("=", 1)[1])
               elif arg.startswith("--vits-length-scale="):
                   length_scale = float(arg.split("=", 1)[1])
+              elif arg.startswith("--tts-rule-fsts="):
+                  rule_fsts = [pathlib.Path(x) for x in arg.split("=", 1)[1].split(",")]
+              elif arg.startswith("--tts-rule-fars="):
+                  rule_far = pathlib.Path(arg.split("=", 1)[1])
           if output is None or sid is None or length_scale is None:
               raise SystemExit("missing VITS request identity")
+          if rule_fsts is None or len(rule_fsts) != 3 or rule_far is None:
+              raise SystemExit("missing AISHELL3 text-normalization rule arguments")
+          if any(not path.is_file() for path in [*rule_fsts, rule_far]):
+              raise SystemExit("missing AISHELL3 text-normalization rule file")
           identity = f"{sid}|{length_scale:.4f}|{text}".encode("utf-8")
           digest = hashlib.sha256(identity).digest()
           freq = 220 + int.from_bytes(digest[:2], "big") % 1200
