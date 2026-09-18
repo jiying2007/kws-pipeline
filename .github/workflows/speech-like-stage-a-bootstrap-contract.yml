@@ -233,6 +233,39 @@ jobs:
           assert hashlib.sha256(license_path.read_bytes()).hexdigest() == summary["license_evidence"]["sha256"]
           PY
 
+      - name: Relocated cache and work roots preserve provider and corpus identity
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-bootstrap"
+          python3 tools/bootstrap_speech_like_stage_a.py \
+            --provider-reference "$root/fixture-reference.json" \
+            --cache-dir "$root/relocated/cache" \
+            --work-dir "$root/relocated/full-run" \
+            --allow-file-urls
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          first = json.loads((root / "full-run/bootstrap-summary.json").read_text())
+          second = json.loads((root / "relocated/full-run/bootstrap-summary.json").read_text())
+          p1 = json.loads((root / "full-run/corpus/provider/provider-summary.json").read_text())
+          p2 = json.loads((root / "relocated/full-run/corpus/provider/provider-summary.json").read_text())
+          spec1 = json.loads((root / "full-run/corpus/provider/provider.json").read_text())
+          spec2 = json.loads((root / "relocated/full-run/corpus/provider/provider.json").read_text())
+          assert p1["provider_identity_sha256"] == p2["provider_identity_sha256"]
+          assert first["corpus"]["external_base_bundle_sha256"] == second["corpus"]["external_base_bundle_sha256"]
+          assert p1["audio_normalization"]["deterministic_vits_sampling"] is True
+          assert p2["audio_normalization"]["deterministic_vits_sampling"] is True
+          assert all("--backend-lib-dir=" not in arg for arg in spec1["argv_template"])
+          assert all("--backend-lib-dir=" not in arg for arg in spec2["argv_template"])
+          assert "--noise-scale=0.0" in spec1["argv_template"]
+          assert "--noise-scale-w=0.0" in spec1["argv_template"]
+          print(
+              "speech-like relocation identity stable:",
+              p1["provider_identity_sha256"],
+              first["corpus"]["external_base_bundle_sha256"],
+          )
+          PY
+
       - name: Second preflight reuses verified cache
         run: |
           set -euo pipefail
