@@ -38,6 +38,7 @@ jobs:
           printf 'fake-model\n' > "$root/assets/model.onnx"
           printf 'fake-tokens\n' > "$root/assets/tokens.txt"
           printf 'fake-lexicon\n' > "$root/assets/lexicon.txt"
+          printf 'LicenseRef-test-fixture evidence\n' > "$root/assets/LICENSE.txt"
           python3 - <<'PY'
           import json, os, pathlib
           plan = json.loads(pathlib.Path("configs/training/speech-like-corpus-plan-v1.json").read_text())
@@ -60,7 +61,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/provider-materialization"
-          python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name sherpa-onnx-test             --provider-version fixture-v1             --license-id LicenseRef-test-fixture             --executable "$root/fake-tts"             --model "$root/assets/model.onnx"             --tokens "$root/assets/tokens.txt"             --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/provider.json"             --output-inventory "$root/inventory.jsonl"             --summary "$root/provider-summary.json"
+          python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name sherpa-onnx-test             --provider-version fixture-v1             --license-id LicenseRef-test-fixture             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx"             --tokens "$root/assets/tokens.txt"             --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/provider.json"             --output-inventory "$root/inventory.jsonl"             --summary "$root/provider-summary.json"
 
       - name: Reuse canonical provider and corpus-plan validators
         run: |
@@ -76,7 +77,8 @@ jobs:
           value = json.loads(path.read_text())
           normalized = normalize_provider(path, value, policy)
           assert normalized["provider_name"] == "sherpa-onnx-test"
-          assert {item["role"] for item in normalized["identity"]["assets"]} == {"model", "tokens", "lexicon"}
+          assert {item["role"] for item in normalized["identity"]["assets"]} == {"model", "tokens", "lexicon", "license_evidence"}
+          assert summary["license_evidence_sha256"]
           summary = json.loads((root / "provider-summary.json").read_text())
           assert summary["voice_slots"] == 24
           assert summary["protected_evidence_used"] is False
@@ -96,7 +98,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/provider-materialization"
-          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name bad --provider-version bad --license-id unknown             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad-provider.json" --output-inventory "$root/bad-inventory.jsonl" --summary "$root/bad-summary.json"; then
+          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/speaker-map.json"             --provider-name bad --provider-version bad --license-id unknown             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad-provider.json" --output-inventory "$root/bad-inventory.jsonl" --summary "$root/bad-summary.json"; then
             echo "unknown license unexpectedly accepted" >&2
             exit 1
           fi
@@ -112,16 +114,16 @@ jobs:
           value["speakers"][1]["speaker_id"] = value["speakers"][0]["speaker_id"]
           (root / "duplicate-speaker-map.json").write_text(json.dumps(value, indent=2) + "\n")
           PY
-          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/duplicate-speaker-map.json"             --provider-name bad --provider-version bad --license-id LicenseRef-test             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad2-provider.json" --output-inventory "$root/bad2-inventory.jsonl" --summary "$root/bad2-summary.json"; then
+          if python3 tools/materialize_speech_like_provider.py             --corpus-plan configs/training/speech-like-corpus-plan-v1.json             --command-policy configs/training/speech-like-command-provider-v1.json             --speaker-map "$root/duplicate-speaker-map.json"             --provider-name bad --provider-version bad --license-id LicenseRef-test             --license-file "$root/assets/LICENSE.txt"             --executable "$root/fake-tts"             --model "$root/assets/model.onnx" --tokens "$root/assets/tokens.txt" --lexicon "$root/assets/lexicon.txt"             --output-provider "$root/bad2-provider.json" --output-inventory "$root/bad2-inventory.jsonl" --summary "$root/bad2-summary.json"; then
             echo "duplicate speaker unexpectedly accepted" >&2
             exit 1
           fi
 
-      - name: Asset tamper must invalidate provider
+      - name: License evidence tamper must invalidate provider
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/provider-materialization"
-          printf 'tamper\n' >> "$root/assets/model.onnx"
+          printf 'tamper\n' >> "$root/assets/LICENSE.txt"
           if python3 - "$root/provider.json" <<'PY'
           import json, pathlib, sys
           sys.path.insert(0, "tools")
