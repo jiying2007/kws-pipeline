@@ -125,6 +125,10 @@ jobs:
         run: python3 tests/test_development_loss_controller.py
       - name: Verify tracked worktree after Development loss controller
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Development loss controller"'
+      - name: Research negative sidecar portability
+        run: python3 tests/test_research_negative_sidecar.py
+      - name: Verify tracked worktree after Research negative sidecar portability
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research negative sidecar portability"'
       - name: Domain-aware multi-frontend training loop
         run: python3 tests/test_domain_loop.py --runner ./build/kws_wav
       - name: Verify tracked worktree after Domain-aware multi-frontend training loop
