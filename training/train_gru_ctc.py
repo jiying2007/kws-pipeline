@@ -94,6 +94,21 @@ def main() -> None:
     parser.add_argument("--warm-start", type=pathlib.Path)
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
     parser.add_argument("--ordered-token-loss-weight", type=float, default=ORDERED_TOKEN_LOSS_WEIGHT)
+    parser.add_argument(
+        "--keyword-sequence-margin-loss-weight",
+        type=float,
+        default=KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
+    )
+    parser.add_argument(
+        "--prefix-completion-loss-weight",
+        type=float,
+        default=PREFIX_COMPLETION_LOSS_WEIGHT,
+    )
+    parser.add_argument(
+        "--recurrent-release-loss-weight",
+        type=float,
+        default=RECURRENT_RELEASE_LOSS_WEIGHT,
+    )
     args = parser.parse_args()
 
     token_map = load_tokens(args.tokens)
@@ -116,6 +131,14 @@ def main() -> None:
         parser.error("--positive-example-weight must be finite and > 0")
     if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
         parser.error("--ordered-token-loss-weight must be finite and >= 0")
+    for name in (
+        "keyword_sequence_margin_loss_weight",
+        "prefix_completion_loss_weight",
+        "recurrent_release_loss_weight",
+    ):
+        value = float(getattr(args, name))
+        if not math.isfinite(value) or value < 0.0:
+            parser.error(f"--{name.replace('_', '-')} must be finite and >= 0")
 
     environment = training_environment()
     environment["training_code_sha256"]["training/gru_model.py"] = sha256_file(
@@ -194,9 +217,9 @@ def main() -> None:
             loss = (
                 ctc_loss
                 + args.ordered_token_loss_weight * ordered_loss
-                + KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT * margin_loss
-                + PREFIX_COMPLETION_LOSS_WEIGHT * completion_loss
-                + RECURRENT_RELEASE_LOSS_WEIGHT * release_loss
+                + args.keyword_sequence_margin_loss_weight * margin_loss
+                + args.prefix_completion_loss_weight * completion_loss
+                + args.recurrent_release_loss_weight * release_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -255,15 +278,15 @@ def main() -> None:
             "positive_example_weight": args.positive_example_weight,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
-            "keyword_sequence_margin_loss_weight": KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
-            "prefix_completion_loss_weight": PREFIX_COMPLETION_LOSS_WEIGHT,
+            "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
+            "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
             "prefix_completion_tail_steps": PREFIX_COMPLETION_TAIL_STEPS,
             "prefix_completion_policy": "strict-prefix-terminal-hinge-v1",
             "recurrent_release_tail_steps": RECURRENT_RELEASE_TAIL_STEPS,
             "recurrent_release_warmup_steps": RECURRENT_RELEASE_WARMUP_STEPS,
             "recurrent_release_context_steps": RECURRENT_RELEASE_CONTEXT_STEPS,
             "recurrent_release_tail_mode": "terminal-context-repeat",
-            "recurrent_release_loss_weight": RECURRENT_RELEASE_LOSS_WEIGHT,
+            "recurrent_release_loss_weight": args.recurrent_release_loss_weight,
             "hard_negative_capable": True,
             "experimental": True,
             "training_environment": environment,
