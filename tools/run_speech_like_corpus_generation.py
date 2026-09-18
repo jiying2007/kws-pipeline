@@ -260,9 +260,18 @@ def main() -> int:
 
     resampler: pathlib.Path | None = None
     if profile == "sherpa-vits-resampled-to-16k-v1":
-        resampler = require_file(args.resampler_executable, "resampler executable", executable=True)
+        if args.resampler_executable is not None:
+            resampler = require_file(
+                args.resampler_executable,
+                "resampler executable",
+                executable=True,
+            )
         if source_rate <= 0 or source_rate >= 16000:
             raise ValueError("resampled provider source rate must be below 16000 Hz")
+        if resampler is None and source_rate != 8000:
+            raise ValueError(
+                "builtin Lanczos resampler requires source sample rate 8000 Hz"
+            )
     elif profile == "sherpa-vits-native-16k-v1":
         if source_rate != 16000:
             raise ValueError("native provider source rate must be 16000 Hz")
@@ -387,12 +396,17 @@ def main() -> int:
                 str(TOOLS / "speech_like_vits_resample_adapter.py"),
                 "--backend-executable",
                 str(backend),
-                "--resampler-executable",
-                str(resampler),
                 "--source-sample-rate",
                 str(source_rate),
             ]
         )
+        if resampler is not None:
+            command.extend(
+                [
+                    "--resampler-executable",
+                    str(resampler),
+                ]
+            )
         if args.backend_platform is not None:
             command.extend(
                 [
