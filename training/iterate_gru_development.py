@@ -617,7 +617,17 @@ def main() -> int:
             json.dumps(curriculum, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",
         )
-        controller = controller_next(policy, controller, false_rejects, false_accepts)
+        controller = controller_next(
+            policy,
+            controller,
+            false_rejects,
+            false_accepts,
+            frr=max(float(cal_base["frr"]), float(test_base["frr"])),
+            far_per_hour=max(
+                float(cal_base["far_per_hour"]),
+                float(test_base["far_per_hour"]),
+            ),
+        )
         if strict(record):
             strict_streak += 1
         else:
