@@ -5,6 +5,13 @@ on:
     branches: [main, "research/**", "codex/**"]
     paths:
       - "configs/training/kws-v2-research-reset-v1.json"
+      - "training/development_loss_controller.py"
+      - "training/development_resume.py"
+      - "training/iterate_gru_development.py"
+      - "training/iterate_rnn_development.py"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
+      - "tests/test_development_loss_controller.py"
       - "training/train_ctc.py"
       - "training/train_gru_ctc.py"
       - "training/research_keyword_classifier.py"
@@ -119,11 +126,19 @@ jobs:
           print("research isolation contract: ok")
           PY
 
+      - name: Normalized controller regression
+        run: python3 tests/test_development_loss_controller.py
+
       - name: Python syntax
         run: >-
           python3 -m py_compile
           training/train_ctc.py
           training/train_gru_ctc.py
+          training/development_loss_controller.py
+          training/development_resume.py
+          training/iterate_gru_development.py
+          training/iterate_rnn_development.py
+          tests/test_development_loss_controller.py
           training/research_keyword_classifier.py
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
