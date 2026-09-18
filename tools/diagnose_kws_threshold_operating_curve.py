@@ -145,6 +145,11 @@ def development_round_evidence(
     return {
         "round": round_index,
         "development_manifest_sha256": sha256_file(manifest_path),
+        "development_config_sha256": str(value.get("config_sha256", "")),
+        "development_record_model_sha256": str(row.get("model_sha256", "")),
+        "development_record_provenance_sha256": str(row.get("provenance_sha256", "")),
+        "development_record_frontend": str(row.get("frontend", "")),
+        "development_record_score": finite(row.get("score"), "development record score"),
         "development_qualified": bool(value.get("development_qualified", False)),
         "development_manifest_selection_policy": (
             str(selection_policy) if selection_policy is not None else None
@@ -192,6 +197,7 @@ def main() -> int:
     parser.add_argument("--test-references", required=True, type=pathlib.Path)
     parser.add_argument("--thresholds", required=True, nargs="+", type=float)
     parser.add_argument("--development-manifest", type=pathlib.Path)
+    parser.add_argument("--development-domain-summary", type=pathlib.Path)
     parser.add_argument("--round-index", type=int)
     parser.add_argument(
         "--diagnostic-round-selection-policy",
@@ -225,6 +231,49 @@ def main() -> int:
     development_evidence = development_round_evidence(
         args.development_manifest, args.round_index, gates
     )
+    model_sha256 = sha256_file(args.model)
+    config_sha256 = sha256_file(args.config)
+    if development_evidence is not None:
+        if not development_evidence["development_record_model_sha256"]:
+            raise ValueError("development round is missing model SHA256")
+        if development_evidence["development_record_model_sha256"] != model_sha256:
+            raise ValueError("diagnostic model does not match development round model")
+        if not development_evidence["development_config_sha256"]:
+            raise ValueError("development manifest is missing config SHA256")
+        if development_evidence["development_config_sha256"] != config_sha256:
+            raise ValueError("diagnostic config does not match development manifest config")
+
+    domain_summary_evidence = None
+    if args.development_manifest is not None and args.development_domain_summary is None:
+        raise ValueError(
+            "--development-domain-summary is required with --development-manifest"
+        )
+    if args.development_domain_summary is not None:
+        if not args.development_domain_summary.is_file():
+            raise ValueError(
+                f"development domain summary is missing: {args.development_domain_summary}"
+            )
+        summary = load_object(args.development_domain_summary)
+        splits = summary.get("splits")
+        if not isinstance(splits, dict):
+            raise ValueError("development domain summary has no split evidence")
+        calibration_split = splits.get("calibration")
+        test_split = splits.get("test")
+        if not isinstance(calibration_split, dict) or not isinstance(test_split, dict):
+            raise ValueError("development domain summary lacks calibration/test splits")
+        expected_calibration = str(calibration_split.get("references_sha256", ""))
+        expected_test = str(test_split.get("references_sha256", ""))
+        actual_calibration = sha256_file(args.calibration_references)
+        actual_test = sha256_file(args.test_references)
+        if not expected_calibration or expected_calibration != actual_calibration:
+            raise ValueError("calibration references do not match development domain summary")
+        if not expected_test or expected_test != actual_test:
+            raise ValueError("test references do not match development domain summary")
+        domain_summary_evidence = {
+            "sha256": sha256_file(args.development_domain_summary),
+            "calibration_references_sha256": actual_calibration,
+            "test_references_sha256": actual_test,
+        }
 
     work = args.work_dir.resolve()
     if work.exists():
@@ -320,16 +369,17 @@ def main() -> int:
         "diagnostic_only": True,
         "selection_feedback_allowed": False,
         "protected_evidence_used": False,
-        "model_sha256": sha256_file(args.model),
+        "model_sha256": model_sha256,
         "tokens_sha256": sha256_file(args.tokens),
         "keywords_sha256": sha256_file(args.keywords),
-        "config_sha256": sha256_file(args.config),
+        "config_sha256": config_sha256,
         "calibration_references_sha256": sha256_file(args.calibration_references),
         "test_references_sha256": sha256_file(args.test_references),
         "thresholds": thresholds,
         "diagnostic_round_selection_policy": str(args.diagnostic_round_selection_policy),
         "common_threshold_sweep_only": True,
         "development_round_evidence": development_evidence,
+        "development_domain_summary_evidence": domain_summary_evidence,
         "operating_curve": rows,
         "calibration_frr_far_pareto_thresholds": [
             rows[index]["threshold"] for index in pareto
