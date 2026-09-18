@@ -74,16 +74,16 @@ jobs:
               },
           ]
           frames=[
-              {"recording":"p1","keyword_id":1,"time_s":0.8,"confidence":0.80,"retention_log":-1.0},
-              {"recording":"p1","keyword_id":1,"time_s":1.8,"confidence":0.30,"retention_log":-1.0},
-              {"recording":"p1","keyword_id":2,"time_s":0.8,"confidence":0.45,"retention_log":-1.0},
-              {"recording":"p2","keyword_id":2,"time_s":0.9,"confidence":0.55,"retention_log":-1.0},
-              {"recording":"p2","keyword_id":2,"time_s":1.8,"confidence":0.20,"retention_log":-1.0},
-              {"recording":"p2","keyword_id":1,"time_s":0.8,"confidence":0.50,"retention_log":-1.0},
-              {"recording":"n1","keyword_id":1,"time_s":0.7,"confidence":0.40,"retention_log":-1.0},
-              {"recording":"n1","keyword_id":2,"time_s":0.7,"confidence":0.35,"retention_log":-1.0},
-              {"recording":"n2","keyword_id":1,"time_s":0.7,"confidence":0.60,"retention_log":-1.0},
-              {"recording":"n2","keyword_id":2,"time_s":0.7,"confidence":0.50,"retention_log":-1.0},
+              {"recording":"p1","keyword_id":1,"time_s":0.8,"confidence":0.80,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"p1","keyword_id":1,"time_s":1.8,"confidence":0.30,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"p1","keyword_id":2,"time_s":0.8,"confidence":0.45,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"p2","keyword_id":2,"time_s":0.9,"confidence":0.55,"retention_log":-20.0,"retention_valid":False},
+              {"recording":"p2","keyword_id":2,"time_s":1.8,"confidence":0.20,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"p2","keyword_id":1,"time_s":0.8,"confidence":0.50,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"n1","keyword_id":1,"time_s":0.7,"confidence":0.40,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"n1","keyword_id":2,"time_s":0.7,"confidence":0.35,"retention_log":-1.0,"retention_valid":True},
+              {"recording":"n2","keyword_id":1,"time_s":0.7,"confidence":0.60,"retention_log":-20.0,"retention_valid":False},
+              {"recording":"n2","keyword_id":2,"time_s":0.7,"confidence":0.50,"retention_log":-1.0,"retention_valid":True},
           ]
           for name, rows in (("references.jsonl", refs), ("frames.jsonl", frames)):
               (root/name).write_text(
@@ -94,6 +94,7 @@ jobs:
           ROOT="$root" python3 - <<'PY'
           import json, os, pathlib
           value=json.loads((pathlib.Path(os.environ["ROOT"])/"report.json").read_text())
+          assert value["schema_version"]==2
           assert value["evidence_class"]=="kws-v2-score-separation-diagnostic-v1"
           assert value["evidence_scope"]=="development-only"
           assert value["diagnostic_only"] is True
@@ -110,7 +111,14 @@ jobs:
           assert value["by_keyword"]["1"]["formal_threshold"]==0.60
           assert value["by_keyword"]["2"]["formal_threshold"]==0.60
           assert value["by_keyword"]["1"]["target"]["max"]==0.80
-          assert value["by_keyword"]["2"]["target"]["max"]==0.55
+          assert value["by_keyword"]["2"]["target"]["max"]==0.0
+          assert value["by_keyword"]["2"]["raw_target"]["max"]==0.55
+          assert value["by_keyword"]["2"]["target_terminal_state_presence"]==1.0
+          assert value["by_keyword"]["2"]["target_retention_valid_state_presence"]==0.0
+          assert value["by_keyword"]["1"]["negative"]["max"]==0.40
+          assert value["by_keyword"]["1"]["raw_negative"]["max"]==0.60
+          assert value["overall"]["target_terminal_state_presence"]==1.0
+          assert value["overall"]["target_retention_valid_state_presence"]==0.5
           assert value["by_distance"]["near"]["target"]["count"]==1
           assert value["by_distance"]["far"]["target"]["count"]==1
           assert value["runner_sha256"] is None
@@ -154,6 +162,9 @@ jobs:
           assert "formal_qualification" not in live
           assert '"--score-probe"' in analyzer
           assert '"--score-probe"' in runner
+          assert '"retention_valid"' in analyzer
+          assert '"retention_valid"' in runner
+          assert "kws_decoder_peek_keyword_state" in runner
           assert "decoder.thresholds[k] = 2.0f" in runner
           print("live score separation wiring: ok")
           PY
