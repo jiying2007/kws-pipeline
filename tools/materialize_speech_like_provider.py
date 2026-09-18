@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
 from speech_like_corpus_plan import VOICE_CLASS, normalize_plan  # noqa: E402
+from verify_speech_like_runtime_bundle import RECEIPT_CLASS, inspect_verified_archive  # noqa: E402
 
 SPEAKER_MAP_CLASS = "speech-like-provider-speaker-map-v1"
 NATIVE_PROFILE = "sherpa-vits-native-16k-v1"
@@ -165,6 +166,63 @@ def validate_provider_reference(
         "reported_speakers": reported_speakers,
         "reported_sample_rate_hz": reported_rate,
         "normalized_sample_rate_hz": normalized_rate,
+        "runtime_asset_bundle_required": isinstance(row.get("runtime_asset_bundle"), dict),
+    }
+
+
+def validate_runtime_asset_binding(
+    *,
+    reference_path: pathlib.Path,
+    candidate_name: str,
+    archive_path: pathlib.Path,
+    receipt_path: pathlib.Path,
+    model: pathlib.Path,
+    tokens: pathlib.Path,
+    lexicon: pathlib.Path,
+) -> dict:
+    archive_path = require_file(archive_path, "runtime asset archive")
+    receipt_path = require_file(receipt_path, "runtime asset receipt")
+    receipt = load_object(receipt_path)
+    if (
+        int(receipt.get("schema_version", 0)) != 1
+        or receipt.get("evidence_class") != RECEIPT_CLASS
+    ):
+        raise ValueError("runtime asset receipt identity mismatch")
+
+    inspected = inspect_verified_archive(
+        reference_path=reference_path.resolve(),
+        candidate_name=candidate_name,
+        archive_path=archive_path,
+    )
+    if receipt != inspected:
+        raise ValueError("runtime asset receipt does not match the verified archive")
+
+    supplied = {
+        "model": require_file(model, "VITS model"),
+        "tokens": require_file(tokens, "VITS tokens"),
+        "lexicon": require_file(lexicon, "VITS lexicon"),
+    }
+    for role, path in supplied.items():
+        expected = inspected["files"][role]
+        if path.stat().st_size != int(expected["size_bytes"]):
+            raise ValueError(f"runtime {role} size does not match verified archive member")
+        if sha256_file(path) != str(expected["sha256"]):
+            raise ValueError(f"runtime {role} sha256 does not match verified archive member")
+
+    return {
+        "receipt_sha256": sha256_file(receipt_path),
+        "archive_sha256": str(inspected["archive"]["sha256"]),
+        "archive_size_bytes": int(inspected["archive"]["size_bytes"]),
+        "archive_source_url": str(inspected["archive"]["source_url"]),
+        "files": {
+            role: {
+                "archive_path": str(inspected["files"][role]["path"]),
+                "size_bytes": int(inspected["files"][role]["size_bytes"]),
+                "sha256": str(inspected["files"][role]["sha256"]),
+            }
+            for role in ("model", "tokens", "lexicon")
+        },
+        "safe_archive_verified": True,
     }
 
 
@@ -183,6 +241,7 @@ def build_provider(
     backend_executable: pathlib.Path | None,
     resampler_executable: pathlib.Path | None,
     source_sample_rate: int | None,
+    runtime_asset_receipt: pathlib.Path | None,
 ) -> tuple[dict, dict]:
     executable = require_file(executable, "provider executable", executable=True)
     model = require_file(model, "VITS model")
@@ -196,6 +255,15 @@ def build_provider(
         {"role": "lexicon", "path": str(lexicon), "sha256": sha256_file(lexicon)},
         {"role": "license_evidence", "path": str(license_file), "sha256": sha256_file(license_file)},
     ]
+    if runtime_asset_receipt is not None:
+        runtime_asset_receipt = require_file(runtime_asset_receipt, "runtime asset receipt")
+        assets.append(
+            {
+                "role": "runtime_asset_receipt",
+                "path": str(runtime_asset_receipt),
+                "sha256": sha256_file(runtime_asset_receipt),
+            }
+        )
     normalization: dict
 
     if provider_profile == NATIVE_PROFILE:
@@ -302,6 +370,8 @@ def materialize(
     source_sample_rate: int | None = None,
     provider_reference: pathlib.Path | None = None,
     reference_candidate: str | None = None,
+    runtime_asset_archive: pathlib.Path | None = None,
+    runtime_asset_receipt: pathlib.Path | None = None,
 ) -> tuple[dict, list[dict], dict]:
     plan = normalize_plan(corpus_plan)
     slots = [
@@ -320,16 +390,36 @@ def materialize(
     if (provider_reference is None) != (reference_candidate is None):
         raise ValueError("provider_reference and reference_candidate must be supplied together")
     reference_binding = None
+    runtime_asset_binding = None
     if provider_reference is not None and reference_candidate is not None:
+        candidate_name = require_text(reference_candidate, "reference_candidate")
         reference_binding = validate_provider_reference(
             provider_reference,
-            require_text(reference_candidate, "reference_candidate"),
+            candidate_name,
             provider_profile=provider_profile,
             license_id=license_id,
             license_file=license_file,
             source_sample_rate=source_sample_rate,
             speakers=speakers,
         )
+        if reference_binding["runtime_asset_bundle_required"]:
+            if runtime_asset_archive is None or runtime_asset_receipt is None:
+                raise ValueError(
+                    "pinned reference candidate requires runtime asset archive and receipt"
+                )
+            runtime_asset_binding = validate_runtime_asset_binding(
+                reference_path=provider_reference,
+                candidate_name=candidate_name,
+                archive_path=runtime_asset_archive,
+                receipt_path=runtime_asset_receipt,
+                model=model,
+                tokens=tokens,
+                lexicon=lexicon,
+            )
+        elif runtime_asset_archive is not None or runtime_asset_receipt is not None:
+            raise ValueError("reference candidate does not declare a runtime asset bundle")
+    elif runtime_asset_archive is not None or runtime_asset_receipt is not None:
+        raise ValueError("runtime asset archive/receipt require a pinned provider reference")
 
     provider, normalization = build_provider(
         provider_profile=provider_profile,
@@ -345,6 +435,7 @@ def materialize(
         backend_executable=backend_executable,
         resampler_executable=resampler_executable,
         source_sample_rate=source_sample_rate,
+        runtime_asset_receipt=runtime_asset_receipt,
     )
 
     # Reuse the canonical command-provider validator before emitting anything.
@@ -406,6 +497,9 @@ def materialize(
     if reference_binding is not None:
         summary["provider_reference"] = reference_binding
         summary["license_reference_verified"] = True
+    if runtime_asset_binding is not None:
+        summary["runtime_asset_binding"] = runtime_asset_binding
+        summary["runtime_asset_receipt_verified"] = True
     return provider, inventory, summary
 
 
@@ -431,6 +525,8 @@ def main() -> int:
     parser.add_argument("--source-sample-rate", type=int)
     parser.add_argument("--provider-reference", type=pathlib.Path)
     parser.add_argument("--reference-candidate")
+    parser.add_argument("--runtime-asset-archive", type=pathlib.Path)
+    parser.add_argument("--runtime-asset-receipt", type=pathlib.Path)
     parser.add_argument("--output-provider", required=True, type=pathlib.Path)
     parser.add_argument("--output-inventory", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
@@ -455,6 +551,8 @@ def main() -> int:
         source_sample_rate=args.source_sample_rate,
         provider_reference=args.provider_reference,
         reference_candidate=args.reference_candidate,
+        runtime_asset_archive=args.runtime_asset_archive,
+        runtime_asset_receipt=args.runtime_asset_receipt,
     )
     args.output_provider.parent.mkdir(parents=True, exist_ok=True)
     args.output_provider.write_text(
