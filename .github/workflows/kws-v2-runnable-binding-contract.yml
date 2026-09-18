@@ -6,6 +6,9 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "tools/build_kws_v2_generalization_plan.py"
+      - "tools/development_generalization_plan.py"
+      - "configs/training/development-generalization-v1.json"
       - "configs/training/kws-v2-staged-experiments-v1.json"
       - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
@@ -14,6 +17,9 @@ on:
     paths:
       - "tools/kws_v2_experiment_plan.py"
       - "tools/bind_kws_v2_candidate.py"
+      - "tools/build_kws_v2_generalization_plan.py"
+      - "tools/development_generalization_plan.py"
+      - "configs/training/development-generalization-v1.json"
       - "configs/training/kws-v2-staged-experiments-v1.json"
       - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
@@ -144,6 +150,55 @@ jobs:
           print("kws-v2-runnable-binding-contract: ok")
           PY
 
+      - name: Build binding-aware shared generalization plans
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          python3 tools/bind_kws_v2_candidate.py             --matrix "$root/stage-a/experiment-matrix.json"             --candidate-id v2-a-rnn-h64-logmel             "${args[@]}"             --output-config "$root/runnable-rnn/effective-config.json"             --output-binding "$root/runnable-rnn/binding.json"
+
+          product_head="$(printf 'b%.0s' {1..40})"
+          python3 tools/build_kws_v2_generalization_plan.py             --binding "$root/runnable/binding.json"             --policy configs/training/development-generalization-v1.json             --model-sha256 "$(printf 'c%.0s' {1..64})"             --product-head "$product_head"             --output "$root/runnable/generalization-plan.json"
+          python3 tools/build_kws_v2_generalization_plan.py             --binding "$root/runnable-rnn/binding.json"             --policy configs/training/development-generalization-v1.json             --model-sha256 "$(printf 'a%.0s' {1..64})"             --product-head "$product_head"             --output "$root/runnable-rnn/generalization-plan.json"
+
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          gru_binding = json.loads((root / "runnable" / "binding.json").read_text())
+          rnn_binding = json.loads((root / "runnable-rnn" / "binding.json").read_text())
+          gru = json.loads((root / "runnable" / "generalization-plan.json").read_text())
+          rnn = json.loads((root / "runnable-rnn" / "generalization-plan.json").read_text())
+          assert gru_binding["generalization_cohort_id"] == rnn_binding["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
+          assert gru["cohort_id"] == gru_binding["generalization_cohort_id"]
+          assert rnn["cohort_id"] == rnn_binding["generalization_cohort_id"]
+          assert gru["candidate_id"] == gru_binding["candidate_id"]
+          assert rnn["candidate_id"] == rnn_binding["candidate_id"]
+          assert gru["model_family"] == "gru" and rnn["model_family"] == "rnn"
+          assert gru["model_sha256"] != rnn["model_sha256"]
+          assert gru["seed_plan"] == rnn["seed_plan"]
+          assert gru["plan_sha256"] != rnn["plan_sha256"]
+          PY
+
+      - name: Binding without cohort must fail closed at plan materialization
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-runnable"
+          value = json.loads((root / "runnable" / "binding.json").read_text())
+          value.pop("generalization_cohort_id")
+          (root / "binding-without-cohort.json").write_text(json.dumps(value, indent=2) + "\n")
+          PY
+          if python3 tools/build_kws_v2_generalization_plan.py             --binding "$root/binding-without-cohort.json"             --policy configs/training/development-generalization-v1.json             --model-sha256 "$(printf 'd%.0s' {1..64})"             --product-head "$(printf 'e%.0s' {1..40})"             --output "$root/bad-plan.json"; then
+            echo "binding without cohort unexpectedly produced a plan" >&2
+            exit 1
+          fi
+
       - name: Bundle tamper must fail closed
         run: |
           set -euo pipefail
@@ -207,7 +262,7 @@ jobs:
           fi
 
       - name: Python syntax
-        run: python3 -m py_compile tools/kws_v2_experiment_plan.py tools/bind_kws_v2_candidate.py
+        run: python3 -m py_compile tools/kws_v2_experiment_plan.py tools/bind_kws_v2_candidate.py tools/build_kws_v2_generalization_plan.py tools/development_generalization_plan.py
 
       - name: Worktree remains clean
         run: git diff --exit-code -- .
