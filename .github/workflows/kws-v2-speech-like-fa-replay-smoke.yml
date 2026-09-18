@@ -1,0 +1,278 @@
+name: kws-v2-speech-like-fa-replay-smoke
+
+on:
+  push:
+    branches:
+      - "experiment/kws-speech-like-fa-replay-*"
+    paths:
+      - ".github/workflows/kws-v2-speech-like-fa-replay-smoke.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-speech-like-fa-replay-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  four-round-ablation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download immutable production corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-production-corpus-408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3
+          path: ${{ runner.temp }}/replay-input
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35333458390
+
+      - name: Download exact baseline development evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3
+          path: ${{ runner.temp }}/baseline-v2
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35333458390
+
+      - name: Resolve immutable corpus inputs
+        id: corpus
+        run: |
+          set -euo pipefail
+          input="$RUNNER_TEMP/replay-input"
+          for split in train calibration test qualification; do
+            index="$(find "$input" -path "*/$split/dataset-index.jsonl" -print -quit)"
+            summary="$(find "$input" -path "*/$split/dataset-summary.json" -print -quit)"
+            test -n "$index"
+            test -n "$summary"
+            echo "${split}_index=$index" >> "$GITHUB_OUTPUT"
+            echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Prepare exact GRU-logmel Stage A binding
+        run: |
+          set -euo pipefail
+          python3 tools/run_kws_v2_stage_a_search.py \
+            --train-index "${{ steps.corpus.outputs.train_index }}" \
+            --train-summary "${{ steps.corpus.outputs.train_summary }}" \
+            --calibration-index "${{ steps.corpus.outputs.calibration_index }}" \
+            --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}" \
+            --test-index "${{ steps.corpus.outputs.test_index }}" \
+            --test-summary "${{ steps.corpus.outputs.test_summary }}" \
+            --qualification-index "${{ steps.corpus.outputs.qualification_index }}" \
+            --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}" \
+            --candidate-id v2-a-gru-h64-logmel \
+            --prepare-only \
+            --work-dir "$RUNNER_TEMP/replay-stage-a"
+
+      - name: Apply one-variable FA source-reuse ablation
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
+          candidate=temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel"
+          baseline=candidate/"effective-config.json"
+          cfg=json.loads(baseline.read_text())
+          aug=cfg["data_augmentation_v3"]
+          assert aug["failure_replay_enabled"] is False
+          assert cfg["domain_iteration"]["hard_negative_replay"] == []
+          assert cfg["domain_iteration"]["positive_stress_replay"] == []
+          speech=cfg["kws_v2_speech_like_training"]
+          assert speech["tone_replay_allowed"] is False
+          assert speech["failure_replay"] == "disabled"
+
+          aug["failure_replay_enabled"]=True
+          aug["failure_replay_mode"]="train-source-reuse-v1"
+          aug["failure_replay_kinds"]=["false-accept"]
+          speech["failure_replay"]="train-source-reuse-v1"
+          effective=candidate/"fa-replay-effective-config.json"
+          effective.write_text(json.dumps(cfg, indent=2, sort_keys=True)+"\n")
+
+          policy_path=pathlib.Path("configs/training/xiaowo.gru-development-stage-a-v1.json")
+          policy=json.loads(policy_path.read_text())
+          assert policy["min_rounds"]==8 and policy["max_rounds"]==8
+          assert policy["epochs_per_round"]==8
+          policy["min_rounds"]=4
+          policy["max_rounds"]=4
+          policy["patience"]=4
+          policy["experiment_context"]="kws-v2-fa-source-reuse-four-round-ablation-v1"
+          out=temp/"fa-replay-policy.json"
+          out.write_text(json.dumps(policy, indent=2, sort_keys=True)+"\n")
+
+          experiment={
+              "schema_version":1,
+              "evidence_class":"kws-v2-fa-source-reuse-four-round-ablation-v1",
+              "evidence_scope":"development-only",
+              "baseline_head_sha":"408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3",
+              "baseline_run_id":35333458390,
+              "candidate_id":"v2-a-gru-h64-logmel",
+              "primary_delta":"failure-replay=train-source-reuse-v1; failure-kinds=false-accept-only",
+              "fixed_hard_negative_replay_changed":False,
+              "positive_stress_replay_changed":False,
+              "threshold_changed":False,
+              "gate_changed":False,
+              "decoder_changed":False,
+              "training_epochs_per_round_changed":False,
+              "selection_feedback_allowed":False,
+              "protected_evidence_used":False,
+          }
+          (temp/"fa-replay-experiment.json").write_text(
+              json.dumps(experiment, indent=2, sort_keys=True)+"\n"
+          )
+          PY
+
+      - name: Build GRU runtime runner
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run four exact eight-epoch development rounds
+        id: develop
+        run: |
+          set +e
+          candidate="$RUNNER_TEMP/replay-stage-a/candidates/v2-a-gru-h64-logmel"
+          .venv/bin/python training/run_gru_development.py \
+            --config "$candidate/fa-replay-effective-config.json" \
+            --policy "$RUNNER_TEMP/fa-replay-policy.json" \
+            --runner build/kws_wav_gru \
+            --work-dir "$candidate/development" \
+            > "$RUNNER_TEMP/fa-replay-development.log" 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Verify replay was exercised without tone or eval-byte reuse
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
+          work=temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel/development"
+          manifest=json.loads((work/"development-loop-manifest.json").read_text())
+          assert manifest["evidence_scope"]=="development-only"
+          assert manifest["qualification_used"] is False
+          assert manifest["shadow_used"] is False
+          assert manifest["formal_qualification_used"] is False
+          records=manifest["records"]
+          assert [int(row["round"]) for row in records]==[0,1,2,3]
+          assert all(int(row["training"]["fixed_replay_examples"])==0 for row in records)
+          activated=[row for row in records if int(row["training"]["failure_replay_examples"])>0]
+          assert activated, "FA-only source replay was never exercised"
+          assert all(int(row["training"]["manifest_count"])>1 for row in activated)
+
+          evidence=[]
+          for path in sorted((work/"failure-replay").glob("round-*/development-failure-replay.json")):
+              value=json.loads(path.read_text())
+              if int(value.get("examples",0))<=0:
+                  continue
+              assert value["evidence_class"]=="development-only-failure-train-source-reuse"
+              assert value["mode"]=="train-source-reuse-v1"
+              assert value["failure_kinds"]==["false-accept"]
+              assert value["training_source_split"]=="train"
+              assert value["tone_backend_used"] is False
+              assert value["development_source_wav_bytes_copied"] is False
+              assert value["train_clean_source_wav_bytes_reused"] is True
+              assert value["formal_qualification_used"] is False
+              for row in value["rows"]:
+                  assert row["train_source_wav_sha256"] != row["source_evaluation_wav_sha256"]
+                  assert row["wav_sha256"] != row["source_evaluation_wav_sha256"]
+              evidence.append(value)
+          assert evidence
+          print("activated replay rounds:", [int(row["round"]) for row in activated])
+          print("replay examples:", [int(row["training"]["failure_replay_examples"]) for row in records])
+          PY
+
+      - name: Compare four rounds with exact retained baseline
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
+          baseline=json.loads((temp/"baseline-v2/development-loop-manifest.json").read_text())
+          experiment=json.loads((
+              temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel/development/development-loop-manifest.json"
+          ).read_text())
+          rows=[]
+          for base, trial in zip(baseline["records"][:4], experiment["records"]):
+              assert int(base["round"])==int(trial["round"])
+              rows.append({
+                  "round":int(trial["round"]),
+                  "failure_replay_examples":int(trial["training"]["failure_replay_examples"]),
+                  "manifest_count":int(trial["training"]["manifest_count"]),
+                  "baseline":{
+                      "cal_frr":float(base["calibration"]["frr"]),
+                      "cal_far_per_hour":float(base["calibration"]["far_per_hour"]),
+                      "test_frr":float(base["test"]["frr"]),
+                      "test_far_per_hour":float(base["test"]["far_per_hour"]),
+                  },
+                  "trial":{
+                      "cal_frr":float(trial["calibration"]["frr"]),
+                      "cal_far_per_hour":float(trial["calibration"]["far_per_hour"]),
+                      "test_frr":float(trial["test"]["frr"]),
+                      "test_far_per_hour":float(trial["test"]["far_per_hour"]),
+                  },
+              })
+          scorecard={
+              "schema_version":1,
+              "evidence_class":"kws-v2-fa-source-reuse-four-round-scorecard-v1",
+              "diagnostic_only":True,
+              "selection_feedback_allowed":False,
+              "protected_evidence_used":False,
+              "rows":rows,
+          }
+          (temp/"fa-replay-scorecard.json").write_text(
+              json.dumps(scorecard, indent=2, sort_keys=True)+"\n"
+          )
+          for row in rows:
+              print(row)
+          PY
+
+      - name: Collect bounded ablation evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/fa-replay-evidence"
+          work="$RUNNER_TEMP/replay-stage-a/candidates/v2-a-gru-h64-logmel/development"
+          mkdir -p "$out"
+          for src in \
+            "$RUNNER_TEMP/fa-replay-experiment.json" \
+            "$RUNNER_TEMP/fa-replay-policy.json" \
+            "$RUNNER_TEMP/fa-replay-scorecard.json" \
+            "$RUNNER_TEMP/fa-replay-development.log" \
+            "$work/development-loop-manifest.json"; do
+            if [[ -f "$src" ]]; then cp "$src" "$out/$(basename "$src")"; fi
+          done
+          if [[ -d "$work/failure-replay" ]]; then
+            find "$work/failure-replay" -name 'development-failure-replay.json' -exec cp --parents {} "$out/" \;
+          fi
+
+      - name: Upload bounded ablation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-fa-source-reuse-four-round-${{ github.sha }}
+          path: ${{ runner.temp }}/fa-replay-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce bounded ablation completion
+        if: always()
+        run: |
+          test -f "$RUNNER_TEMP/fa-replay-scorecard.json"
