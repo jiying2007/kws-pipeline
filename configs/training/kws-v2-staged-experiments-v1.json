@@ -44,7 +44,8 @@
       "development_loop",
       "decoder",
       "threshold"
-    ]
+    ],
+    "generalization_cohort_id": "kws-v2-stage-a-search-v1"
   },
   "stage_b_capacity": {
     "enabled": true,
@@ -66,7 +67,8 @@
       "model.hidden_dim"
     ],
     "max_hidden_dim_current_runtime_contract": 64,
-    "gru96_requires_separate_runtime_contract_change": true
+    "gru96_requires_separate_runtime_contract_change": true,
+    "generalization_cohort_id": "kws-v2-stage-b-search-v1"
   },
   "stage_c_loss_ablation": {
     "enabled": false,
@@ -83,13 +85,13 @@
   },
   "invariants": {
     "same_corpus_identity_within_stage": true,
-    "same_generalization_plan_within_stage": true,
     "same_threshold_grid_within_stage": true,
     "same_decoder_within_stage": true,
     "same_controller_within_stage": true,
     "single_primary_variable_per_stage": true,
     "protected_feedback_allowed": false,
     "full_training_round_budget_within_stage": true,
-    "tone_replay_allowed": false
+    "tone_replay_allowed": false,
+    "same_generalization_seed_cohort_within_stage": true
   }
 }
