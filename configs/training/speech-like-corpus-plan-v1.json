@@ -38,7 +38,7 @@
       "id": "kw1-pause",
       "kind": "positive",
       "keyword_id": 1,
-      "text": "你好，小窝",
+      "text": "你好。小窝",
       "tokens": ["ni3", "hao3", "xiao3", "wo1"]
     },
     {
@@ -52,7 +52,7 @@
       "id": "kw2-pause",
       "kind": "positive",
       "keyword_id": 2,
-      "text": "小窝，小窝",
+      "text": "小窝。小窝",
       "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
     },
     {
@@ -144,11 +144,13 @@
     "require_unique_voice_id_across_splits": true,
     "require_unique_source_id_per_request": true,
     "tone_backend_allowed": false,
-    "protected_evidence_allowed": false
+    "protected_evidence_allowed": false,
+    "deterministic_pause_separator": "。"
   },
   "notes": [
     "Voice slots are abstract and must be mapped to real offline-TTS voices by a generation-environment inventory.",
     "Train, calibration, test and qualification voice identities are disjoint before any model result exists.",
-    "Background/noise exposure remains the responsibility of the domain scene renderer; this plan covers speech-like positive/confusable/negative utterances."
+    "Background/noise exposure remains the responsibility of the domain scene renderer; this plan covers speech-like positive/confusable/negative utterances.",
+    "The positive pause variants use the full stop '。' because the pinned sherpa AISHELL3 frontend collapses comma, ellipsis and whitespace variants to the exact utterance under deterministic zero-noise VITS sampling."
   ]
 }

@@ -65,6 +65,7 @@ jobs:
           assert summary['requests'] == 384
           assert summary['voice_slots'] == 24
           assert summary['utterances'] == 16
+          assert summary['deterministic_pause_separator'] == '。'
           assert summary['split_counts'] == {
               'train': 128,
               'calibration': 64,
@@ -162,6 +163,29 @@ jobs:
           assert summary['protected_evidence_used'] is False
           print('speech-like-corpus-plan-contract: ok')
           PY
+
+      - name: Collapsing comma pause variants must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-corpus-plan"
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          plan = json.loads(pathlib.Path("configs/training/speech-like-corpus-plan-v1.json").read_text())
+          for row in plan["utterances"]:
+              if row["id"] == "kw1-pause":
+                  row["text"] = "你好，小窝"
+          path = pathlib.Path(os.environ["ROOT"]) / "bad-pause-plan.json"
+          path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n")
+          PY
+          if python3 tools/speech_like_corpus_plan.py build \
+            --plan "$root/bad-pause-plan.json" \
+            --voice-inventory "$root/voices.jsonl" \
+            --requests "$root/bad-pause-requests.jsonl" \
+            --intents "$root/bad-pause-intents.jsonl" \
+            --summary "$root/bad-pause-summary.json"; then
+            echo 'comma pause variant unexpectedly accepted' >&2
+            exit 1
+          fi
 
       - name: Cross-split voice reuse must fail closed
         run: |

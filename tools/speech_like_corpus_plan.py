@@ -139,9 +139,45 @@ def normalize_plan(path: pathlib.Path) -> dict:
         )
     if len(positive_keywords) < 2:
         raise ValueError("corpus plan must cover at least two positive keyword ids")
+
+    constraints = value.get("constraints")
+    if not isinstance(constraints, dict):
+        raise ValueError("speech-like corpus plan constraints must be an object")
+    pause_separator = require_text(
+        constraints.get("deterministic_pause_separator"),
+        "constraints.deterministic_pause_separator",
+    )
+    if pause_separator != "。":
+        raise ValueError(
+            "deterministic pause separator must be the pinned sherpa-safe full stop '。'"
+        )
+    by_id = {row["id"]: row for row in normalized_utterances}
+    pause_ids = sorted(row_id for row_id in by_id if row_id.endswith("-pause"))
+    if not pause_ids:
+        raise ValueError("corpus plan must define positive deterministic pause variants")
+    for pause_id in pause_ids:
+        exact_id = pause_id.removesuffix("-pause") + "-exact"
+        if exact_id not in by_id:
+            raise ValueError(f"{pause_id}: matching exact utterance is missing")
+        pause = by_id[pause_id]
+        exact = by_id[exact_id]
+        if pause["kind"] != "positive" or exact["kind"] != "positive":
+            raise ValueError(f"{pause_id}: exact/pause pair must both be positive")
+        if pause["keyword_id"] != exact["keyword_id"] or pause["tokens"] != exact["tokens"]:
+            raise ValueError(f"{pause_id}: exact/pause pair keyword/tokens drifted")
+        if pause["text"].count(pause_separator) != 1:
+            raise ValueError(
+                f"{pause_id}: pause text must contain exactly one deterministic separator"
+            )
+        if pause["text"].replace(pause_separator, "") != exact["text"]:
+            raise ValueError(
+                f"{pause_id}: pause text must derive from exact text only by the separator"
+            )
+
     return {
         "roles": normalized_roles,
         "utterances": normalized_utterances,
+        "deterministic_pause_separator": pause_separator,
         "plan_sha256": sha256_file(path),
     }
 
@@ -242,6 +278,7 @@ def build_requests(plan_path: pathlib.Path, inventory_path: pathlib.Path) -> tup
         "provider_group_counts": group_counts,
         "voice_slots": len(expected_slots),
         "utterances": len(plan["utterances"]),
+        "deterministic_pause_separator": plan["deterministic_pause_separator"],
         "protected_evidence_used": False,
     }
     summary["request_set_sha256"] = canonical_sha256(requests)
