@@ -285,16 +285,41 @@ def main() -> int:
     p.add_argument("--archive", required=True, type=pathlib.Path)
     p.add_argument("--output-dir", required=True, type=pathlib.Path)
     p.add_argument("--receipt", required=True, type=pathlib.Path)
+    p.add_argument("--verify-only", action="store_true")
     args = p.parse_args()
-    receipt = extract_verified_bundle(
-        reference_path=args.reference,
-        platform_key=args.platform,
-        archive_path=args.archive,
-        output_dir=args.output_dir,
+    if args.verify_only:
+        if not args.receipt.is_file():
+            raise ValueError(f"backend receipt is missing: {args.receipt}")
+        receipt = load_object(args.receipt.resolve())
+        if (
+            int(receipt.get("schema_version", 0)) != 1
+            or receipt.get("evidence_class") != RECEIPT_CLASS
+        ):
+            raise ValueError("backend receipt identity mismatch")
+        inspected = inspect_verified_archive(
+            reference_path=args.reference,
+            platform_key=args.platform,
+            archive_path=args.archive,
+        )
+        if receipt != inspected:
+            raise ValueError("backend receipt does not match verified archive")
+        validate_extracted_bundle(receipt=receipt, output_dir=args.output_dir)
+    else:
+        receipt = extract_verified_bundle(
+            reference_path=args.reference,
+            platform_key=args.platform,
+            archive_path=args.archive,
+            output_dir=args.output_dir,
+        )
+        args.receipt.parent.mkdir(parents=True, exist_ok=True)
+        args.receipt.write_text(
+            json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    print(
+        f"speech-like sherpa backend: platform={receipt['platform']} "
+        f"archive={receipt['archive']['sha256']} verify_only={args.verify_only}"
     )
-    args.receipt.parent.mkdir(parents=True, exist_ok=True)
-    args.receipt.write_text(json.dumps(receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"speech-like sherpa backend: platform={receipt['platform']} archive={receipt['archive']['sha256']}")
     return 0
 
 
