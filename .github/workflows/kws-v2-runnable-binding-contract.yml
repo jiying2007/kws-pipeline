@@ -1,0 +1,179 @@
+name: kws-v2-runnable-binding-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/bind_kws_v2_candidate.py"
+      - ".github/workflows/kws-v2-experiment-plan-contract.yml"
+      - ".github/workflows/kws-v2-runnable-binding-contract.yml"
+  pull_request:
+    paths:
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/bind_kws_v2_candidate.py"
+      - ".github/workflows/kws-v2-experiment-plan-contract.yml"
+      - ".github/workflows/kws-v2-runnable-binding-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Materialize portable Stage A matrix
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          mkdir -p "$root"
+          python3 tools/kws_v2_experiment_plan.py             --policy configs/training/kws-v2-staged-experiments-v1.json             --stage A             --output-dir "$root/stage-a"
+
+      - name: Build four-split immutable speech-like bundle fixture
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-runnable" / "bundle"
+          root.mkdir(parents=True, exist_ok=True)
+          for ordinal, split in enumerate(("train", "calibration", "test", "qualification")):
+              split_dir = root / split
+              split_dir.mkdir(parents=True, exist_ok=True)
+              wav_sha = hashlib.sha256(f"wav:{split}".encode()).hexdigest()
+              row = {
+                  "split": split,
+                  "kind": "positive",
+                  "family_id": f"fixture-{split}",
+                  "variant": 0,
+                  "keyword_id": 1,
+                  "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+                  "target_ids": [1, 2, 3, 4],
+                  "wav_sha256": wav_sha,
+                  "frames": 16000,
+                  "event_start_frame": 100,
+                  "event_end_frame": 1000,
+                  "path": f"/fixture/{split}.wav",
+                  "speech_like_provenance": {
+                      "provider_kind": "offline-tts",
+                      "provider_name": "fixture-provider",
+                      "provider_version": "v1",
+                      "license_id": "LicenseRef-fixture",
+                      "voice_id": f"voice-{ordinal}",
+                      "source_id": f"source-{ordinal}",
+                      "generation_config_sha256": hashlib.sha256(f"gen:{split}".encode()).hexdigest(),
+                      "label_provenance_sha256": hashlib.sha256(f"label:{split}".encode()).hexdigest(),
+                      "pcm_sha256": hashlib.sha256(f"pcm:{split}".encode()).hexdigest(),
+                  },
+              }
+              index = split_dir / "dataset-index.jsonl"
+              index.write_text(json.dumps(row, sort_keys=True) + "\n")
+              summary = split_dir / "dataset-summary.json"
+              summary.write_text(json.dumps({
+                  "schema_version": 1,
+                  "evidence_class": "speech-like-base-dataset-v1",
+                  "split": split,
+                  "recordings": 1,
+                  "positive_recordings": 1,
+                  "negative_recordings": 0,
+                  "corpus_sha256": hashlib.sha256(f"corpus:{split}".encode()).hexdigest(),
+                  "tone_backend_used": False,
+              }, sort_keys=True, indent=2) + "\n")
+          PY
+
+      - name: Bind one Stage A candidate to the immutable bundle
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          python3 tools/bind_kws_v2_candidate.py             --matrix "$root/stage-a/experiment-matrix.json"             --candidate-id v2-a-gru-h64-pcen-lite             "${args[@]}"             --output-config "$root/runnable/effective-config.json"             --output-binding "$root/runnable/binding.json"
+
+      - name: Verify portable effective config and binding identity
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-runnable"
+          matrix = json.loads((root / "stage-a" / "experiment-matrix.json").read_text())
+          row = next(r for r in matrix["candidates"] if r["candidate_id"] == "v2-a-gru-h64-pcen-lite")
+          assert row["config_path_contract"] == "matrix-relative-v1"
+          assert not pathlib.Path(row["config"]).is_absolute()
+
+          config_path = root / "runnable" / "effective-config.json"
+          config = json.loads(config_path.read_text())
+          external = config["generator"]["external_base_dataset"]
+          for split, item in external.items():
+              assert not pathlib.Path(item["index"]).is_absolute()
+              assert not pathlib.Path(item["summary"]).is_absolute()
+
+          binding = json.loads((root / "runnable" / "binding.json").read_text())
+          assert binding["evidence_class"] == "kws-v2-runnable-candidate-binding-v1"
+          assert binding["candidate_id"] == "v2-a-gru-h64-pcen-lite"
+          assert binding["stage"] == "A"
+          assert binding["model_family"] == "gru"
+          assert binding["frontend"] == "pcen-lite"
+          assert binding["hidden_dim"] == 64
+          assert binding["requires_predeclared_generalization_plan"] is True
+          assert binding["fresh_used"] is False
+          assert binding["shadow_used"] is False
+          assert binding["formal_qualification_used"] is False
+
+          sys.path.insert(0, "training")
+          from external_base_dataset import load_external_base_bundle
+          result = load_external_base_bundle(config_path, config)
+          assert result is not None
+          _, bundle = result
+          assert binding["external_base_bundle_sha256"] == bundle["bundle_sha256"]
+          print("kws-v2-runnable-binding-contract: ok")
+          PY
+
+      - name: Bundle tamper must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          printf '{}\n' >> "$root/bundle/test/dataset-index.jsonl"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          if python3 tools/bind_kws_v2_candidate.py             --matrix "$root/stage-a/experiment-matrix.json"             --candidate-id v2-a-gru-h64-pcen-lite             "${args[@]}"             --output-config "$root/bad/effective-config.json"             --output-binding "$root/bad/binding.json"; then
+            echo "tampered speech-like bundle unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Matrix absolute-path drift must fail closed
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-runnable"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-runnable"
+          src = root / "stage-a" / "experiment-matrix.json"
+          value = json.loads(src.read_text())
+          value["candidates"][0]["config"] = str((root / "stage-a" / value["candidates"][0]["config"]).resolve())
+          (root / "absolute-matrix.json").write_text(json.dumps(value, indent=2) + "\n")
+          PY
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          if python3 tools/bind_kws_v2_candidate.py             --matrix "$root/absolute-matrix.json"             --candidate-id v2-a-rnn-h64-logmel             "${args[@]}"             --output-config "$root/bad2/effective-config.json"             --output-binding "$root/bad2/binding.json"; then
+            echo "absolute candidate path unexpectedly accepted" >&2
+            exit 1
+          fi
+
+      - name: Python syntax
+        run: python3 -m py_compile tools/kws_v2_experiment_plan.py tools/bind_kws_v2_candidate.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

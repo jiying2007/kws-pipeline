@@ -42,6 +42,8 @@ jobs:
           assert matrix["stage"] == "A"
           assert matrix["recommended_generalization_search_seeds"] >= 8
           assert matrix["single_primary_variable_per_stage"] is True
+          assert matrix["canonical_base_config_path_contract"] == "repository-relative-v1"
+          assert not pathlib.Path(matrix["canonical_base_config"]).is_absolute()
           assert matrix["fresh_used"] is False
           assert matrix["shadow_used"] is False
           assert matrix["formal_qualification_used"] is False
@@ -55,6 +57,8 @@ jobs:
           }
           for row in rows:
               assert row["primary_variable"] == "frontend"
+              assert row["config_path_contract"] == "matrix-relative-v1"
+              assert not pathlib.Path(row["config"]).is_absolute()
               assert set(row["mutation_paths_from_stage_base"]).issubset({"model.frontends"})
               assert row["protected_evidence_used"] is False
 
@@ -98,7 +102,8 @@ jobs:
               assert row["primary_variable"] == "hidden_dim"
               assert set(row["mutation_paths_from_stage_base"]).issubset({"model.hidden_dim"})
               assert row["protected_evidence_used"] is False
-              candidate = json.loads(pathlib.Path(row["config"]).read_text())
+              assert row["config_path_contract"] == "matrix-relative-v1"
+              candidate = json.loads((root / row["config"]).read_text())
               assert candidate["model"]["frontends"] == ["pcen-lite"]
           print("stage-b-single-variable: ok")
           PY
