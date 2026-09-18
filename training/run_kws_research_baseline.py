@@ -119,6 +119,50 @@ def combined_references(
     return output
 
 
+def training_class_balance(manifests: list[pathlib.Path], policy: dict) -> dict:
+    positive = 0
+    negative = 0
+    per_manifest: list[dict] = []
+    for manifest in manifests:
+        pos = neg = 0
+        for row in manifest_rows(manifest.resolve()):
+            if list(row["tokens"]):
+                pos += 1
+            else:
+                neg += 1
+        positive += pos
+        negative += neg
+        per_manifest.append(
+            {
+                "path": str(manifest),
+                "positive_examples": pos,
+                "negative_examples": neg,
+            }
+        )
+    if positive <= 0 or negative <= 0:
+        raise ValueError(
+            f"research class balance requires both positive and negative examples: "
+            f"positive={positive} negative={negative}"
+        )
+    raw = float(negative) / float(positive)
+    cfg = policy["class_balance"]
+    low = float(cfg["minimum_positive_example_weight"])
+    high = float(cfg["maximum_positive_example_weight"])
+    if not 0.0 < low <= high:
+        raise ValueError("research class-balance bounds are invalid")
+    weight = min(high, max(low, raw))
+    return {
+        "policy": str(cfg["policy"]),
+        "positive_examples": positive,
+        "negative_examples": negative,
+        "negative_to_positive_ratio": raw,
+        "effective_positive_example_weight": weight,
+        "minimum_positive_example_weight": low,
+        "maximum_positive_example_weight": high,
+        "manifests": per_manifest,
+    }
+
+
 def soft_operating_points(curve: dict, budgets: list[float]) -> dict:
     rows = curve.get("operating_curve")
     if not isinstance(rows, list) or not rows:
@@ -273,6 +317,12 @@ def main() -> int:
             sidecar_references[split] = references
 
     train_policy = policy["train"]
+    train_manifests = [dataset / "train.tsv"]
+    if "train" in sidecar_manifests:
+        train_manifests.append(sidecar_manifests["train"])
+    balance = training_class_balance(train_manifests, policy)
+    if loss.get("positive_example_weight_policy") != "class-balance":
+        raise ValueError("research loss profiles must use the shared class-balance policy")
     checkpoint = work / "model.pt"
     trainer = TRAINING / ("train_gru_ctc.py" if args.family == "gru" else "train_ctc.py")
     command = [
@@ -288,7 +338,8 @@ def main() -> int:
         "--batch-size", str(int(train_policy["batch_size"])),
         "--lr", str(float(train_policy["learning_rate"])),
         "--seed", str(int(train_policy["seed"])),
-        "--positive-example-weight", str(float(loss["positive_example_weight"])),
+        "--positive-example-weight",
+        str(float(balance["effective_positive_example_weight"])),
         "--ordered-token-loss-weight", str(float(loss["ordered_token_loss_weight"])),
         "--keyword-sequence-margin-loss-weight",
         str(float(loss["keyword_sequence_margin_loss_weight"])),
@@ -298,8 +349,8 @@ def main() -> int:
         str(float(loss["recurrent_release_loss_weight"])),
         "--output", str(checkpoint),
     ]
-    if "train" in sidecar_manifests:
-        command.extend(["--manifest", str(sidecar_manifests["train"])])
+    for extra_manifest in train_manifests[1:]:
+        command.extend(["--manifest", str(extra_manifest)])
     run(command, work / "logs" / "train.log")
 
     model = work / ("model.kwg" if args.family == "gru" else "model.kwm")
@@ -454,6 +505,7 @@ def main() -> int:
         "hidden_dim": hidden_dim,
         "loss_profile": args.loss_profile,
         "loss_weights": loss,
+        "class_balance": balance,
         "single_acoustic_render": True,
         "curriculum_feedback": False,
         "replay": False,
