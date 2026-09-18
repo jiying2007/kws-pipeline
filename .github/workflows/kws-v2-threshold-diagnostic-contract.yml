@@ -37,6 +37,7 @@ jobs:
           cal = root / "calibration.references.jsonl"
           test = root / "test.references.jsonl"
           manifest = root / "development-loop-manifest.json"
+          domain_summary = root / "domain-summary.json"
           for path in (runner, model, tokens, cal, test):
               path.write_text("fixture\n")
           keywords.write_text(
@@ -52,16 +53,31 @@ jobs:
                   "max_far_frr": 0.0,
               }
           }))
+          config_sha = hashlib.sha256(config.read_bytes()).hexdigest()
+          model_sha = hashlib.sha256(model.read_bytes()).hexdigest()
+          cal_sha = hashlib.sha256(cal.read_bytes()).hexdigest()
+          test_sha = hashlib.sha256(test.read_bytes()).hexdigest()
+          domain_summary.write_text(json.dumps({
+              "splits": {
+                  "calibration": {"references_sha256": cal_sha},
+                  "test": {"references_sha256": test_sha},
+              }
+          }))
           manifest.write_text(json.dumps({
               "evidence_scope": "development-only",
               "qualification_used": False,
               "shadow_used": False,
               "formal_qualification_used": False,
+              "config_sha256": config_sha,
               "development_qualified": True,
               "selection_policy": "best-strict-development-score-v1",
               "selected_round": 3,
               "records": [{
                   "round": 3,
+                  "frontend": "logmel",
+                  "score": 1.23,
+                  "model_sha256": model_sha,
+                  "provenance_sha256": "fixture-provenance-sha256",
                   "calibration": {
                       "frr": 0.90,
                       "far_per_hour": 0.0,
@@ -75,7 +91,10 @@ jobs:
                   "test_domains": {"domains": {"distance:far": {"frr": 0.90}}},
               }],
           }))
-          before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
+          before = {
+              p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in (config, keywords, manifest, domain_summary)
+          }
 
           spec = importlib.util.spec_from_file_location(
               "diag", "tools/diagnose_kws_threshold_operating_curve.py"
@@ -126,6 +145,7 @@ jobs:
                   "--test-references", str(test),
                   "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
                   "--development-manifest", str(manifest),
+                  "--development-domain-summary", str(domain_summary),
                   "--round-index", "3",
                   "--diagnostic-round-selection-policy", "contract-selected-round-v1",
                   "--work-dir", str(work),
@@ -148,6 +168,11 @@ jobs:
           development = value["development_round_evidence"]
           assert development["round"] == 3
           assert development["development_qualified"] is True
+          assert development["development_config_sha256"] == config_sha
+          assert development["development_record_model_sha256"] == model_sha
+          assert development["development_record_provenance_sha256"] == "fixture-provenance-sha256"
+          assert development["development_record_frontend"] == "logmel"
+          assert development["development_record_score"] == 1.23
           assert development["development_manifest_selection_policy"] == "best-strict-development-score-v1"
           assert development["development_manifest_selected_round"] == 3
           assert development["round_matches_development_selected_round"] is True
@@ -159,6 +184,14 @@ jobs:
           assert development["test_metrics"]["p95_post_end_latency_ms"] == 111.0
           assert development["test_metrics"]["far_distance_frr"] == 0.90
           assert len(development["calibration_behavior_key"]) == 8
+          summary_evidence = value["development_domain_summary_evidence"]
+          assert summary_evidence["sha256"] == hashlib.sha256(domain_summary.read_bytes()).hexdigest()
+          assert summary_evidence["calibration_references_sha256"] == cal_sha
+          assert summary_evidence["test_references_sha256"] == test_sha
+          assert value["model_sha256"] == model_sha
+          assert value["config_sha256"] == config_sha
+          assert value["calibration_references_sha256"] == cal_sha
+          assert value["test_references_sha256"] == test_sha
           assert value["min_calibration_frr_threshold"] == 0.20
           assert 0.20 in value["min_calibration_frr_thresholds"]
           assert value["min_calibration_far_threshold"] == 0.50
@@ -166,7 +199,10 @@ jobs:
           assert 0.20 in value["calibration_frr_far_pareto_thresholds"]
           assert 0.50 in value["calibration_frr_far_pareto_thresholds"]
 
-          after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
+          after = {
+              p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in (config, keywords, manifest, domain_summary)
+          }
           assert before == after
           print("threshold diagnostic contract: ok")
           PY
