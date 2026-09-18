@@ -1,0 +1,157 @@
+name: kws-v2-threshold-diagnostic-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/diagnose_kws_threshold_operating_curve.py"
+      - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+  pull_request:
+    paths:
+      - "tools/diagnose_kws_threshold_operating_curve.py"
+      - ".github/workflows/kws-v2-threshold-diagnostic-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Diagnostic is report-only and preserves formal evidence
+        run: |
+          python3 - <<'PY'
+          import hashlib, importlib.util, json, pathlib, sys, tempfile
+
+          root = pathlib.Path(tempfile.mkdtemp(prefix="threshold-diagnostic-contract-"))
+          runner = root / "runner"
+          model = root / "model.kwg"
+          tokens = root / "tokens.txt"
+          keywords = root / "keywords.tsv"
+          config = root / "config.json"
+          cal = root / "calibration.references.jsonl"
+          test = root / "test.references.jsonl"
+          manifest = root / "development-loop-manifest.json"
+          for path in (runner, model, tokens, cal, test):
+              path.write_text("fixture\n")
+          keywords.write_text(
+              "# id\ttext\tthreshold\texplicit-pinyin-tokens\n"
+              "1\t你好小窝\t0.55\tni3 hao3 xiao3 wo1\n"
+              "2\t小窝小窝\t0.55\txiao3 wo1 xiao3 wo1\n"
+          )
+          config.write_text(json.dumps({
+              "domain_gates": {
+                  "max_frr": 0.0,
+                  "max_far_per_hour": 0.0,
+                  "max_p95_latency_ms": 1000.0,
+                  "max_far_frr": 0.0,
+              }
+          }))
+          manifest.write_text(json.dumps({
+              "evidence_scope": "development-only",
+              "qualification_used": False,
+              "shadow_used": False,
+              "formal_qualification_used": False,
+              "records": [{
+                  "round": 3,
+                  "calibration": {
+                      "frr": 0.90,
+                      "far_per_hour": 0.0,
+                      "calibrated_thresholds": {"1": 0.58, "2": 0.60},
+                      "calibration_threshold_grid": [0.50, 0.55, 0.60],
+                      "calibration_coordinate_rounds": 2,
+                  },
+                  "test": {"frr": 0.85, "far_per_hour": 0.0},
+              }],
+          }))
+          before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
+
+          spec = importlib.util.spec_from_file_location(
+              "diag", "tools/diagnose_kws_threshold_operating_curve.py"
+          )
+          module = importlib.util.module_from_spec(spec)
+          assert spec.loader is not None
+          spec.loader.exec_module(module)
+
+          threshold_by_pack = {}
+          real_compile = module.compile_pack
+          def fake_compile(tokens_path, tsv, pack):
+              rows = module.keyword_rows(tsv)
+              values = {float(row["threshold"]) for row in rows}
+              assert len(values) == 1
+              threshold_by_pack[str(pack)] = values.pop()
+              pack.parent.mkdir(parents=True, exist_ok=True)
+              pack.write_text("pack\n")
+          module.compile_pack = fake_compile
+
+          def fake_evaluate(*, runner, model, pack, references, output):
+              t = threshold_by_pack[str(pack)]
+              is_test = pathlib.Path(references).name.startswith("test")
+              frr = min(1.0, 0.05 + t * (1.35 if is_test else 1.25))
+              far = max(0.0, (0.48 - t) * (150.0 if is_test else 120.0))
+              base = {
+                  "frr": frr,
+                  "far_per_hour": far,
+                  "p95_post_end_latency_ms": 120.0,
+              }
+              domains = {
+                  "domains": {"distance:far": {"frr": min(1.0, frr + 0.05)}}
+              }
+              return base, domains
+          module.evaluate = fake_evaluate
+
+          output = root / "report.json"
+          work = root / "work"
+          old_argv = sys.argv
+          try:
+              sys.argv = [
+                  "diagnose",
+                  "--runner", str(runner),
+                  "--model", str(model),
+                  "--tokens", str(tokens),
+                  "--keywords", str(keywords),
+                  "--config", str(config),
+                  "--calibration-references", str(cal),
+                  "--test-references", str(test),
+                  "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
+                  "--development-manifest", str(manifest),
+                  "--round-index", "3",
+                  "--work-dir", str(work),
+                  "--output", str(output),
+              ]
+              assert module.main() == 0
+          finally:
+              sys.argv = old_argv
+              module.compile_pack = real_compile
+
+          value = json.loads(output.read_text())
+          assert value["evidence_class"] == "kws-v2-threshold-operating-curve-diagnostic-v1"
+          assert value["evidence_scope"] == "development-only"
+          assert value["diagnostic_only"] is True
+          assert value["selection_feedback_allowed"] is False
+          assert value["protected_evidence_used"] is False
+          assert len(value["operating_curve"]) == 5
+          formal = value["formal_development_evidence"]
+          assert formal["round"] == 3
+          assert formal["formal_selected_thresholds"] == {"1": 0.58, "2": 0.60}
+          assert formal["formal_threshold_grid"] == [0.50, 0.55, 0.60]
+          assert value["min_calibration_frr_threshold"] == 0.20
+          assert value["min_calibration_far_threshold"] == 0.50
+          assert 0.20 in value["pareto_thresholds"]
+          assert 0.50 in value["pareto_thresholds"]
+
+          after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
+          assert before == after
+          print("threshold diagnostic contract: ok")
+          PY
+
+      - name: Python syntax
+        run: python3 -m py_compile tools/diagnose_kws_threshold_operating_curve.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
