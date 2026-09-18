@@ -255,6 +255,49 @@ def select_failure_specs(specs: list[dict], *, max_unique: int, max_per_keyword:
     return selected
 
 
+def _round_index_from_output(output: pathlib.Path) -> int:
+    name = output.name
+    if not name.startswith("round-"):
+        raise ValueError(f"cannot resolve failure replay round from output path: {output}")
+    return int(name.removeprefix("round-"))
+
+
+def _source_key(row: dict) -> tuple[str, tuple[str, ...], int]:
+    keyword = row.get("keyword_id")
+    return (
+        str(row.get("kind") or ""),
+        tuple(str(value) for value in row.get("tokens", [])),
+        int(keyword) if keyword is not None else 0,
+    )
+
+
+def _train_source_pool(
+    work: pathlib.Path, round_index: int
+) -> dict[tuple[str, tuple[str, ...], int], list[dict]]:
+    rows = _round_split_rows(work, round_index, "train")
+    unique: dict[tuple[tuple[str, tuple[str, ...], int], str], dict] = {}
+    for row in rows:
+        source_path = pathlib.Path(str(row.get("source_path") or ""))
+        source_sha = str(row.get("source_wav_sha256") or "")
+        provenance = row.get("speech_like_provenance")
+        if not source_path.is_file():
+            raise ValueError(f"train-source-reuse source is missing: {source_path}")
+        if len(source_sha) != 64 or sha256_file(source_path) != source_sha:
+            raise ValueError("train-source-reuse source SHA mismatch")
+        if not isinstance(provenance, dict):
+            raise ValueError("train-source-reuse source lacks speech-like provenance")
+        if str(row.get("split")) != "train":
+            raise ValueError("train-source-reuse source escaped train split")
+        unique[(_source_key(row), source_sha)] = row
+
+    result: dict[tuple[str, tuple[str, ...], int], list[dict]] = {}
+    for (key, _), row in unique.items():
+        result.setdefault(key, []).append(row)
+    for values in result.values():
+        values.sort(key=lambda row: str(row["source_wav_sha256"]))
+    return result
+
+
 def _clamp(value: float, low: float, high: float) -> float:
     return min(high, max(low, value))
 
@@ -293,6 +336,136 @@ def _jitter_scene(base: dict, domains: dict, rng: random.Random, example_index: 
     }
 
 
+def _render_train_source_reuse(
+    *,
+    cfg: dict,
+    policy: dict,
+    selected: list[dict],
+    work: pathlib.Path,
+    output: pathlib.Path,
+    manifest: pathlib.Path,
+    evidence_path: pathlib.Path,
+) -> dict:
+    round_index = _round_index_from_output(output)
+    pools = _train_source_pool(work, round_index)
+    domains = validate_domains(cfg)
+    seed = int(cfg.get("seed", 1337)) + SEED_NAMESPACE
+    rows: list[dict] = []
+
+    for spec_index, spec in enumerate(selected):
+        key = (
+            str(spec["source_kind"]),
+            tuple(str(value) for value in spec["tokens"]),
+            int(spec.get("source_keyword_id") or 0),
+        )
+        candidates = pools.get(key, [])
+        if not candidates:
+            raise ValueError(
+                "train-source-reuse cannot map development failure to train speech-like source"
+            )
+        for example_index in range(int(policy["examples_per_failure"])):
+            source = candidates[(spec_index + example_index) % len(candidates)]
+            source_path = pathlib.Path(str(source["source_path"]))
+            train_source_sha = str(source["source_wav_sha256"])
+            if train_source_sha == str(spec.get("source_base_wav_sha256") or ""):
+                raise ValueError(
+                    "train-source-reuse overlaps development evaluation clean source"
+                )
+            if [int(value) for value in source.get("target_ids", [])] != [
+                int(value) for value in spec["target_ids"]
+            ]:
+                raise ValueError("train-source-reuse target mismatch")
+
+            example_seed = (
+                seed
+                + spec_index * 65_537
+                + example_index * 4099
+                + int(train_source_sha[:8], 16)
+            ) & 0x7FFFFFFF
+            rng = random.Random(example_seed)
+            clean = read_wav(source_path)
+            scene = _jitter_scene(spec["scene"], domains, rng, example_index)
+            scene["room_id"] = "development-failure-train-source-reuse"
+            scene["rir_id"] = "development-failure-train-source-reuse"
+            rendered, scene_meta = render_scene(
+                clean,
+                scene,
+                seed=example_seed + 31_337,
+                afe=domains["afe"],
+            )
+            path = output / "wav" / f"f{spec_index:03d}-e{example_index:02d}.wav"
+            write_wav(path, rendered)
+            replay_sha = sha256_file(path)
+            if replay_sha == str(spec["source_wav_sha256"]):
+                raise ValueError(
+                    "train-source-reuse accidentally copied development evaluation WAV"
+                )
+            rows.append(
+                {
+                    "path": str(path.resolve()),
+                    "target_ids": [int(value) for value in spec["target_ids"]],
+                    "tokens": [str(value) for value in spec["tokens"]],
+                    "source_kind": str(spec["source_kind"]),
+                    "source_evaluation_wav_sha256": str(spec["source_wav_sha256"]),
+                    "train_source_wav_sha256": train_source_sha,
+                    "train_source_family_id": str(source.get("family_id") or ""),
+                    "train_source_provider": dict(source["speech_like_provenance"]),
+                    "failure_kinds": list(spec["failure_kinds"]),
+                    "failure_hits": int(spec["failure_hits"]),
+                    "focus_keyword_ids": list(spec["focus_keyword_ids"]),
+                    "example_seed": example_seed,
+                    "wav_sha256": replay_sha,
+                    "scene": scene_meta,
+                }
+            )
+
+    manifest.write_text(
+        "".join(
+            f"{row['path']}\t{' '.join(str(value) for value in row['target_ids'])}\n"
+            for row in rows
+        ),
+        encoding="utf-8",
+    )
+    evidence = {
+        "schema_version": 1,
+        "evidence_class": "development-only-failure-train-source-reuse",
+        "policy": SOURCE_REUSE_POLICY,
+        "mode": SOURCE_REUSE_MODE,
+        "enabled": True,
+        "failure_kinds": list(policy["failure_kinds"]),
+        "source_splits": ["calibration", "test"],
+        "training_source_split": "train",
+        "observed_unique_failures": len(selected),
+        "selected_unique_failures": len(selected),
+        "examples_per_failure": int(policy["examples_per_failure"]),
+        "max_unique_failures": int(policy["max_unique_failures"]),
+        "max_per_keyword": int(policy["max_per_keyword"]),
+        "examples": len(rows),
+        "selected": selected,
+        "rows": rows,
+        "manifest": str(manifest),
+        "manifest_sha256": sha256_file(manifest),
+        "formal_qualification_used": False,
+        "development_source_wav_bytes_copied": False,
+        "train_clean_source_wav_bytes_reused": True,
+        "tone_backend_used": False,
+        "seed_namespace": SEED_NAMESPACE,
+        "round": round_index,
+    }
+    evidence_path.write_text(
+        json.dumps(
+            evidence,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return {**evidence, "evidence": str(evidence_path)}
+
+
 def render_development_failure_replay(
     config_path: pathlib.Path,
     records: list[dict],
@@ -320,12 +493,23 @@ def render_development_failure_replay(
         evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return {**evidence, "evidence": str(evidence_path)}
 
-    specs = collect_failure_specs(records, work)
+    specs = collect_failure_specs(records, work, failure_kinds=policy["failure_kinds"])
     selected = select_failure_specs(
         specs,
         max_unique=int(policy["max_unique_failures"]),
         max_per_keyword=int(policy["max_per_keyword"]),
     )
+    if policy["mode"] == SOURCE_REUSE_MODE:
+        return _render_train_source_reuse(
+            cfg=cfg,
+            policy=policy,
+            selected=selected,
+            work=work,
+            output=output,
+            manifest=manifest,
+            evidence_path=evidence_path,
+        )
+
     token_path = pathlib.Path(str(cfg["tokens"]))
     keyword_path = pathlib.Path(str(cfg["keywords"]))
     if not token_path.is_absolute():
