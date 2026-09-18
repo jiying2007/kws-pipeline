@@ -172,32 +172,70 @@ jobs:
               assert cal["calibrated_thresholds"]
               assert cal["calibration_threshold_grid"]
               assert cal["calibration_coordinate_rounds"]==2
-          selected=min(
-              records,
-              key=lambda row: (
-                  float(row["calibration"]["frr"]),
-                  float(row["calibration"]["far_per_hour"]),
-                  float(row["score"]),
-                  int(row["round"]),
-              ),
+
+          manifest_selected_round=value.get("selected_round")
+          manifest_selection_policy=value.get("selection_policy")
+          if manifest_selected_round is not None:
+              round_index=int(manifest_selected_round)
+              matches=[row for row in records if int(row["round"])==round_index]
+              assert len(matches)==1
+              selected=matches[0]
+              selection_policy=f"development-manifest:{manifest_selection_policy or 'unspecified'}"
+          else:
+              selected=min(
+                  records,
+                  key=lambda row: (
+                      float(row["calibration"]["frr"]),
+                      float(row["calibration"]["far_per_hour"]),
+                      float(row["score"]),
+                      int(row["round"]),
+                  ),
+              )
+              round_index=int(selected["round"])
+              selection_policy="diagnostic-calibration-frr-far-score-round-fallback-v1"
+
+          dataset=root/f"development/datasets/round-{round_index:02d}"
+          model=pathlib.Path(selected["model"])
+          model_provenance=pathlib.Path(selected["provenance"])
+          calibrated_keywords=pathlib.Path(selected["keywords"])
+          calibrated_pack=pathlib.Path(selected["pack"])
+          cal_ref=dataset/"calibration.references.jsonl"
+          test_ref=dataset/"test.references.jsonl"
+          domain_index=dataset/"domain-index.jsonl"
+          domain_summary=dataset/"domain-summary.json"
+          development_audit=dataset/"development-audit.json"
+          effective_config=root/"effective-config.json"
+          binding=root/"binding.json"
+          required=(
+              model, model_provenance, calibrated_keywords, calibrated_pack,
+              cal_ref, test_ref, domain_index, domain_summary, development_audit,
+              effective_config, binding,
           )
-          round_index=int(selected["round"])
-          model=root/f"development/candidates/round-{round_index:02d}/model.kwg"
-          cal_ref=root/f"development/datasets/round-{round_index:02d}/calibration.references.jsonl"
-          test_ref=root/f"development/datasets/round-{round_index:02d}/test.references.jsonl"
-          assert model.is_file() and cal_ref.is_file() and test_ref.is_file()
+          assert all(path.is_file() for path in required)
+
           output=pathlib.Path(os.environ["GITHUB_OUTPUT"])
           with output.open("a") as f:
               f.write(f"round_index={round_index}\n")
+              f.write(f"selection_policy={selection_policy}\n")
               f.write(f"model={model}\n")
+              f.write(f"model_provenance={model_provenance}\n")
+              f.write(f"calibrated_keywords={calibrated_keywords}\n")
+              f.write(f"calibrated_pack={calibrated_pack}\n")
               f.write(f"calibration_references={cal_ref}\n")
               f.write(f"test_references={test_ref}\n")
+              f.write(f"domain_index={domain_index}\n")
+              f.write(f"domain_summary={domain_summary}\n")
+              f.write(f"development_audit={development_audit}\n")
               f.write(f"manifest={manifest}\n")
-              f.write(f"effective_config={root/'effective-config.json'}\n")
+              f.write(f"effective_config={effective_config}\n")
+              f.write(f"binding={binding}\n")
           print(
               "diagnostic round:",
               round_index,
-              "formal thresholds=", selected["calibration"]["calibrated_thresholds"],
+              "selection_policy=", selection_policy,
+              "development_selected_round=", manifest_selected_round,
+              "development_qualified=", value.get("development_qualified"),
+              "calibrated thresholds=", selected["calibration"]["calibrated_thresholds"],
               "cal frr=", selected["calibration"]["frr"],
               "cal far/h=", selected["calibration"]["far_per_hour"],
               "test frr=", selected["test"]["frr"],
@@ -219,6 +257,7 @@ jobs:
             --thresholds 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.52 0.54 0.55 0.56 0.58 0.60 \
             --development-manifest "${{ steps.selected.outputs.manifest }}" \
             --round-index "${{ steps.selected.outputs.round_index }}" \
+            --diagnostic-round-selection-policy "${{ steps.selected.outputs.selection_policy }}" \
             --work-dir "$RUNNER_TEMP/threshold-curve" \
             --output "$RUNNER_TEMP/threshold-operating-curve.json"
 
@@ -230,23 +269,32 @@ jobs:
           assert value["diagnostic_only"] is True
           assert value["selection_feedback_allowed"] is False
           assert value["protected_evidence_used"] is False
-          formal=value["formal_development_evidence"]
-          print("formal round:", formal["round"])
-          print("formal selected thresholds:", formal["formal_selected_thresholds"])
-          print("formal calibration:", formal["formal_calibration_metrics"])
-          print("formal test:", formal["formal_test_metrics"])
-          print("pareto thresholds:", value["pareto_thresholds"])
-          print("min calibration FRR threshold:", value["min_calibration_frr_threshold"])
-          print("min calibration FAR threshold:", value["min_calibration_far_threshold"])
+          assert value["common_threshold_sweep_only"] is True
+          development=value["development_round_evidence"]
+          if development["development_manifest_selected_round"] is not None:
+              assert development["round_matches_development_selected_round"] is True
+          print("diagnostic round selection policy:", value["diagnostic_round_selection_policy"])
+          print("development round:", development["round"])
+          print("development manifest selection policy:", development["development_manifest_selection_policy"])
+          print("development manifest selected round:", development["development_manifest_selected_round"])
+          print("development calibrated thresholds:", development["calibrated_thresholds"])
+          print("development calibration metrics:", development["calibration_metrics"])
+          print("development test metrics:", development["test_metrics"])
+          print("development calibration behavior key:", development["calibration_behavior_key"])
+          print("calibration FRR/FAR Pareto thresholds:", value["calibration_frr_far_pareto_thresholds"])
+          print("min calibration FRR plateau:", value["min_calibration_frr_thresholds"])
+          print("min calibration FAR plateau:", value["min_calibration_far_thresholds"])
           print("official behavior-order threshold:", value["official_behavior_order_threshold"])
           for row in value["operating_curve"]:
               print(
                   "threshold=", row["threshold"],
                   "cal_frr=", row["calibration"]["frr"],
                   "cal_far/h=", row["calibration"]["far_per_hour"],
+                  "cal_far_distance_frr=", row["calibration"]["far_distance_frr"],
+                  "cal_latency_ms=", row["calibration"]["p95_post_end_latency_ms"],
                   "test_frr=", row["test"]["frr"],
                   "test_far/h=", row["test"]["far_per_hour"],
-                  "far_distance_frr=", row["test"]["far_distance_frr"],
+                  "test_far_distance_frr=", row["test"]["far_distance_frr"],
               )
           PY
 
@@ -257,16 +305,54 @@ jobs:
           out="$RUNNER_TEMP/threshold-evidence"
           candidate="$RUNNER_TEMP/threshold-stage-a/candidates/v2-a-gru-h64-logmel"
           mkdir -p "$out"
-          for src in \
-            "$RUNNER_TEMP/threshold-operating-curve.json" \
-            "$candidate/development-diagnostic.log" \
-            "$candidate/development/development-loop-manifest.json" \
-            "$candidate/effective-config.json" \
-            "${{ steps.selected.outputs.model }}"; do
+          copy_as() {
+            src="$1"
+            dst="$2"
             if [[ -f "$src" ]]; then
-              cp "$src" "$out/$(basename "$src")"
+              cp "$src" "$out/$dst"
             fi
-          done
+          }
+          copy_as "$RUNNER_TEMP/threshold-operating-curve.json" "threshold-operating-curve.json"
+          copy_as "$candidate/development-diagnostic.log" "development-diagnostic.log"
+          copy_as "${{ steps.selected.outputs.manifest }}" "development-loop-manifest.json"
+          copy_as "${{ steps.selected.outputs.effective_config }}" "effective-config.json"
+          copy_as "${{ steps.selected.outputs.binding }}" "binding.json"
+          copy_as "${{ steps.selected.outputs.model }}" "selected-model.kwg"
+          copy_as "${{ steps.selected.outputs.model_provenance }}" "selected-model.provenance.json"
+          copy_as "${{ steps.selected.outputs.calibrated_keywords }}" "development-calibrated-keywords.tsv"
+          copy_as "${{ steps.selected.outputs.calibrated_pack }}" "development-calibrated-keywords.kwk"
+          copy_as "${{ steps.selected.outputs.calibration_references }}" "selected-calibration.references.jsonl"
+          copy_as "${{ steps.selected.outputs.test_references }}" "selected-test.references.jsonl"
+          copy_as "${{ steps.selected.outputs.domain_index }}" "selected-domain-index.jsonl"
+          copy_as "${{ steps.selected.outputs.domain_summary }}" "selected-domain-summary.json"
+          copy_as "${{ steps.selected.outputs.development_audit }}" "selected-development-audit.json"
+          if [[ -d "$RUNNER_TEMP/threshold-curve" ]]; then
+            cp -a "$RUNNER_TEMP/threshold-curve" "$out/operating-curve-work"
+          fi
+          OUT="$out" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ["OUT"])
+          rows=[]
+          for path in sorted(p for p in root.rglob("*") if p.is_file()):
+              digest=hashlib.sha256(path.read_bytes()).hexdigest()
+              rows.append({
+                  "path": path.relative_to(root).as_posix(),
+                  "size_bytes": path.stat().st_size,
+                  "sha256": digest,
+              })
+          (root/"evidence-inventory.json").write_text(
+              json.dumps(
+                  {
+                      "schema_version": 1,
+                      "evidence_class": "kws-v2-threshold-diagnostic-retained-evidence-v1",
+                      "files": rows,
+                  },
+                  indent=2,
+                  sort_keys=True,
+              )+"\n"
+          )
+          print("retained evidence files:", len(rows))
+          PY
 
       - name: Upload threshold diagnostic evidence
         if: always()
