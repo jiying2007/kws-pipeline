@@ -57,16 +57,22 @@ jobs:
               "qualification_used": False,
               "shadow_used": False,
               "formal_qualification_used": False,
+              "development_qualified": True,
+              "selection_policy": "best-strict-development-score-v1",
+              "selected_round": 3,
               "records": [{
                   "round": 3,
                   "calibration": {
                       "frr": 0.90,
                       "far_per_hour": 0.0,
+                      "p95_post_end_latency_ms": 123.0,
                       "calibrated_thresholds": {"1": 0.58, "2": 0.60},
                       "calibration_threshold_grid": [0.50, 0.55, 0.60],
                       "calibration_coordinate_rounds": 2,
                   },
-                  "test": {"frr": 0.85, "far_per_hour": 0.0},
+                  "calibration_domains": {"domains": {"distance:far": {"frr": 0.93}}},
+                  "test": {"frr": 0.85, "far_per_hour": 0.0, "p95_post_end_latency_ms": 111.0},
+                  "test_domains": {"domains": {"distance:far": {"frr": 0.90}}},
               }],
           }))
           before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
@@ -121,6 +127,7 @@ jobs:
                   "--thresholds", "0.20", "0.30", "0.40", "0.50", "0.60",
                   "--development-manifest", str(manifest),
                   "--round-index", "3",
+                  "--diagnostic-round-selection-policy", "contract-selected-round-v1",
                   "--work-dir", str(work),
                   "--output", str(output),
               ]
@@ -130,20 +137,34 @@ jobs:
               module.compile_pack = real_compile
 
           value = json.loads(output.read_text())
-          assert value["evidence_class"] == "kws-v2-threshold-operating-curve-diagnostic-v1"
+          assert value["evidence_class"] == "kws-v2-threshold-operating-curve-diagnostic-v2"
           assert value["evidence_scope"] == "development-only"
           assert value["diagnostic_only"] is True
           assert value["selection_feedback_allowed"] is False
           assert value["protected_evidence_used"] is False
+          assert value["common_threshold_sweep_only"] is True
+          assert value["diagnostic_round_selection_policy"] == "contract-selected-round-v1"
           assert len(value["operating_curve"]) == 5
-          formal = value["formal_development_evidence"]
-          assert formal["round"] == 3
-          assert formal["formal_selected_thresholds"] == {"1": 0.58, "2": 0.60}
-          assert formal["formal_threshold_grid"] == [0.50, 0.55, 0.60]
+          development = value["development_round_evidence"]
+          assert development["round"] == 3
+          assert development["development_qualified"] is True
+          assert development["development_manifest_selection_policy"] == "best-strict-development-score-v1"
+          assert development["development_manifest_selected_round"] == 3
+          assert development["round_matches_development_selected_round"] is True
+          assert development["calibrated_thresholds"] == {"1": 0.58, "2": 0.60}
+          assert development["threshold_grid"] == [0.50, 0.55, 0.60]
+          assert development["coordinate_rounds"] == 2
+          assert development["calibration_metrics"]["p95_post_end_latency_ms"] == 123.0
+          assert development["calibration_metrics"]["far_distance_frr"] == 0.93
+          assert development["test_metrics"]["p95_post_end_latency_ms"] == 111.0
+          assert development["test_metrics"]["far_distance_frr"] == 0.90
+          assert len(development["calibration_behavior_key"]) == 8
           assert value["min_calibration_frr_threshold"] == 0.20
+          assert 0.20 in value["min_calibration_frr_thresholds"]
           assert value["min_calibration_far_threshold"] == 0.50
-          assert 0.20 in value["pareto_thresholds"]
-          assert 0.50 in value["pareto_thresholds"]
+          assert 0.50 in value["min_calibration_far_thresholds"]
+          assert 0.20 in value["calibration_frr_far_pareto_thresholds"]
+          assert 0.50 in value["calibration_frr_far_pareto_thresholds"]
 
           after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (config, keywords, manifest)}
           assert before == after
