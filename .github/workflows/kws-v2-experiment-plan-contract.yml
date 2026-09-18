@@ -5,6 +5,8 @@ on:
     branches: [main, "codex/**"]
     paths:
       - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
+      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - "tools/kws_v2_experiment_plan.py"
       - "configs/training/xiaowo.gru-development-stage-a-v1.json"
       - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
@@ -47,6 +49,7 @@ jobs:
           assert matrix["recommended_generalization_search_seeds"] >= 8
           assert matrix["single_primary_variable_per_stage"] is True
           assert matrix["canonical_base_config_path_contract"] == "repository-relative-v1"
+          assert matrix["canonical_base_config"] == "configs/training/xiaowo.v2-speech-like-stage-base.json"
           assert not pathlib.Path(matrix["canonical_base_config"]).is_absolute()
           assert matrix["fresh_used"] is False
           assert matrix["shadow_used"] is False

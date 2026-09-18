@@ -8,7 +8,7 @@
     "formal_qualification_used": false
   },
   "inputs": {
-    "base_config": "configs/training/xiaowo.torch-domain.json",
+    "base_config": "configs/training/xiaowo.v2-speech-like-stage-base.json",
     "resource_contract": "configs/training/model-family-resource-contract-v1.json",
     "generalization_policy": "configs/training/development-generalization-v1.json",
     "corpus_requirement": "immutable-speech-like-external-base-v1",
@@ -89,6 +89,7 @@
     "same_controller_within_stage": true,
     "single_primary_variable_per_stage": true,
     "protected_feedback_allowed": false,
-    "full_training_round_budget_within_stage": true
+    "full_training_round_budget_within_stage": true,
+    "tone_replay_allowed": false
   }
 }
