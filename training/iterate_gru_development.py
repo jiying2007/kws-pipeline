@@ -192,20 +192,55 @@ def controller_initial(policy: dict) -> dict:
     }
 
 
-def controller_next(policy: dict, current: dict, false_rejects: int, false_accepts: int) -> dict:
+def controller_next(
+    policy: dict,
+    current: dict,
+    false_rejects: int,
+    false_accepts: int,
+    *,
+    frr: float | None = None,
+    far_per_hour: float | None = None,
+) -> dict:
     raw = policy["loss_controller"]
     positive = float(current["positive_example_weight"])
     ordered = float(current["ordered_token_loss_weight"])
     p_step = float(raw["positive_example_weight_step"])
     o_step = float(raw["ordered_token_loss_weight_step"])
-    if false_rejects > false_accepts:
-        positive += p_step
-        ordered -= 0.5 * o_step
-    elif false_accepts > false_rejects:
-        positive -= p_step
-        ordered += o_step
-    elif false_accepts > 0:
-        ordered += 0.5 * o_step
+    mode = str(raw.get("signal_mode", "legacy-counts-v1"))
+
+    severity = 0.0
+    if mode == "normalized-rates-v1":
+        if frr is None or far_per_hour is None:
+            raise ValueError("normalized controller requires FRR and FAR/hour signals")
+        frr_value = finite(frr, "controller.frr")
+        far_value = finite(far_per_hour, "controller.far_per_hour")
+        frr_scale = finite(raw.get("normalization_frr"), "normalization_frr")
+        far_scale = finite(raw.get("normalization_far_per_hour"), "normalization_far_per_hour")
+        deadband = finite(raw.get("pressure_deadband", 0.0), "pressure_deadband")
+        if frr_scale <= 0.0 or far_scale <= 0.0 or not 0.0 <= deadband < 1.0:
+            raise ValueError("normalized controller scales/deadband are invalid")
+        frr_pressure = frr_value / frr_scale
+        far_pressure = far_value / far_scale
+        severity = max(frr_pressure, far_pressure)
+        if frr_pressure > far_pressure * (1.0 + deadband):
+            positive += p_step
+            ordered -= 0.5 * o_step
+        elif far_pressure > frr_pressure * (1.0 + deadband):
+            positive -= p_step
+            ordered += o_step
+    elif mode == "legacy-counts-v1":
+        if false_rejects > false_accepts:
+            positive += p_step
+            ordered -= 0.5 * o_step
+        elif false_accepts > false_rejects:
+            positive -= p_step
+            ordered += o_step
+        elif false_accepts > 0:
+            ordered += 0.5 * o_step
+        severity = float(false_rejects + false_accepts)
+    else:
+        raise ValueError(f"unsupported loss controller signal_mode: {mode}")
+
     positive = clamp(
         positive,
         float(raw["positive_example_weight_min"]),
@@ -216,20 +251,33 @@ def controller_next(policy: dict, current: dict, false_rejects: int, false_accep
         float(raw["ordered_token_loss_weight_min"]),
         float(raw["ordered_token_loss_weight_max"]),
     )
-    failures = false_rejects + false_accepts
-    if failures <= 0:
-        repeat = 0
-    elif failures <= 4:
-        repeat = 1
-    elif failures <= 16:
-        repeat = 2
+
+    if mode == "normalized-rates-v1":
+        if severity <= 1.0:
+            repeat = 0
+        elif severity <= 2.0:
+            repeat = 1
+        elif severity <= 4.0:
+            repeat = 2
+        else:
+            repeat = int(policy["failure_replay_repeat_max"])
     else:
-        repeat = int(policy["failure_replay_repeat_max"])
+        failures = false_rejects + false_accepts
+        if failures <= 0:
+            repeat = 0
+        elif failures <= 4:
+            repeat = 1
+        elif failures <= 16:
+            repeat = 2
+        else:
+            repeat = int(policy["failure_replay_repeat_max"])
     repeat = min(repeat, int(policy["failure_replay_repeat_max"]))
     return {
         "positive_example_weight": positive,
         "ordered_token_loss_weight": ordered,
         "failure_replay_repeat": repeat,
+        "controller_signal_mode": mode,
+        "controller_severity": severity,
     }
 
 
