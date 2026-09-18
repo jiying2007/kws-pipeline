@@ -215,6 +215,58 @@ jobs:
           fi
           test -f "$root/search/stage-a-search-manifest.json"
 
+      - name: Development protected-evidence guard contract
+        run: |
+          python3 - <<'PY'
+          import copy, sys
+          sys.path.insert(0, "tools")
+          from run_kws_v2_stage_a_search import validate_development_result
+
+          good = {
+              "evidence_scope": "development-only",
+              "development_qualified": True,
+              "qualification_used": False,
+              "shadow_used": False,
+              "formal_qualification_used": False,
+              "candidate_stage_feedback_allowed": False,
+              "frozen_candidate": {
+                  "evidence_scope": "development-only",
+                  "qualification_used_for_selection": False,
+                  "shadow_used_for_selection": False,
+                  "formal_qualification_used_for_selection": False,
+                  "candidate_stage": {
+                      "fresh_validation_required": True,
+                      "shadow_required": True,
+                      "formal_qualification_required": True,
+                  },
+              },
+          }
+          validate_development_result(good, "fixture")
+
+          mutations = [
+              ("qualification_used",),
+              ("shadow_used",),
+              ("formal_qualification_used",),
+              ("candidate_stage_feedback_allowed",),
+              ("frozen_candidate", "qualification_used_for_selection"),
+              ("frozen_candidate", "shadow_used_for_selection"),
+              ("frozen_candidate", "formal_qualification_used_for_selection"),
+          ]
+          for path in mutations:
+              value = copy.deepcopy(good)
+              target = value
+              for key in path[:-1]:
+                  target = target[key]
+              target[path[-1]] = True
+              try:
+                  validate_development_result(value, "fixture")
+              except ValueError:
+                  pass
+              else:
+                  raise AssertionError(f"protected evidence mutation unexpectedly accepted: {path}")
+          print("Stage A development protected-evidence guard: ok")
+          PY
+
       - name: Python syntax
         run: >-
           python3 -m py_compile
