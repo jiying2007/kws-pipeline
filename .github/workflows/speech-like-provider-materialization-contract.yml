@@ -77,6 +77,7 @@ jobs:
           printf 'fake-tokens\n' > "$root/assets/tokens.txt"
           printf 'fake-lexicon\n' > "$root/assets/lexicon.txt"
           printf 'LicenseRef-test-fixture evidence\n' > "$root/assets/LICENSE.txt"
+          printf '%s\n' '---' 'license: apache-2.0' '---' > "$root/assets/AISHELL3-MODEL-CARD.md"
           python3 - <<'PY'
           import json, os, pathlib
           plan = json.loads(pathlib.Path("configs/training/speech-like-corpus-plan-v1.json").read_text())
@@ -167,7 +168,9 @@ jobs:
             --provider-name icefall-aishell3-fixture \
             --provider-version fixture-v1 \
             --license-id Apache-2.0 \
-            --license-file "$root/assets/LICENSE.txt" \
+            --license-file "$root/assets/AISHELL3-MODEL-CARD.md" \
+            --provider-reference configs/training/speech-like-provider-reference-v1.json \
+            --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
             --executable "$(command -v python3)" \
             --adapter tools/speech_like_vits_resample_adapter.py \
             --backend-executable "$root/fake-vits-8k" \
@@ -199,6 +202,13 @@ jobs:
           }
           summary = json.loads((root / "provider-resampled-summary.json").read_text())
           assert summary["provider_profile"] == "sherpa-vits-resampled-to-16k-v1"
+          assert summary["license_id"] == "Apache-2.0"
+          assert summary["license_reference_verified"] is True
+          reference = summary["provider_reference"]
+          assert reference["candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
+          assert reference["license_evidence_sha256"] == "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
+          assert reference["license_source"]["revision"] == "57345c004e13ed640e408c4c29ab56187b18f065"
+          assert reference["reported_speakers"] == 174
           norm = summary["audio_normalization"]
           assert norm["source_sample_rate_hz"] == 8000
           assert norm["output_sample_rate_hz"] == 16000
@@ -212,6 +222,36 @@ jobs:
           generated = json.loads((root / "generated-resampled-summary.json").read_text())
           assert generated["recordings"] == 1
           PY
+
+      - name: Wrong license evidence cannot impersonate pinned AISHELL3 reference
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/provider-materialization"
+          if python3 tools/materialize_speech_like_provider.py \
+            --corpus-plan configs/training/speech-like-corpus-plan-v1.json \
+            --command-policy configs/training/speech-like-command-provider-v1.json \
+            --speaker-map "$root/speaker-map.json" \
+            --provider-profile sherpa-vits-resampled-to-16k-v1 \
+            --provider-name icefall-aishell3-fixture \
+            --provider-version fixture-v1 \
+            --license-id Apache-2.0 \
+            --license-file "$root/assets/LICENSE.txt" \
+            --provider-reference configs/training/speech-like-provider-reference-v1.json \
+            --reference-candidate icefall-tts-aishell3-vits-low-2024-04-06 \
+            --executable "$(command -v python3)" \
+            --adapter tools/speech_like_vits_resample_adapter.py \
+            --backend-executable "$root/fake-vits-8k" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --source-sample-rate 8000 \
+            --model "$root/assets/model.onnx" \
+            --tokens "$root/assets/tokens.txt" \
+            --lexicon "$root/assets/lexicon.txt" \
+            --output-provider "$root/bad-reference-provider.json" \
+            --output-inventory "$root/bad-reference-inventory.jsonl" \
+            --summary "$root/bad-reference-summary.json"; then
+            echo "unpinned license evidence unexpectedly accepted" >&2
+            exit 1
+          fi
 
       - name: Resampler tamper invalidates resampled provider
         run: |
