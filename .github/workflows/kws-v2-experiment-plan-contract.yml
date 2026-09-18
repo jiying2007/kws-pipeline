@@ -6,11 +6,15 @@ on:
     paths:
       - "configs/training/kws-v2-staged-experiments-v1.json"
       - "tools/kws_v2_experiment_plan.py"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
   pull_request:
     paths:
       - "configs/training/kws-v2-staged-experiments-v1.json"
       - "tools/kws_v2_experiment_plan.py"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
       - ".github/workflows/kws-v2-experiment-plan-contract.yml"
   workflow_dispatch:
 
@@ -61,7 +65,14 @@ jobs:
               assert not pathlib.Path(row["config"]).is_absolute()
               assert set(row["mutation_paths_from_stage_base"]).issubset({"model.frontends"})
               assert row["protected_evidence_used"] is False
+              assert row["development_policy_path_contract"] == "repository-relative-v1"
+              assert not pathlib.Path(row["development_policy"]).is_absolute()
+              policy = json.loads(pathlib.Path(row["development_policy"]).read_text())
+              assert policy["min_rounds"] == policy["max_rounds"] == 8
+              assert policy["patience"] >= 8
+              assert policy["epochs_per_round"] == 8
 
+          assert set(matrix["development_policy_sha256"]) == {"rnn", "gru"}
           logmel = json.loads((root / "stage-a-rnn-h64-logmel.json").read_text())
           pcen = json.loads((root / "stage-a-rnn-h64-pcen-lite.json").read_text())
           assert logmel["model"]["frontends"] == ["logmel"]
@@ -103,6 +114,11 @@ jobs:
               assert set(row["mutation_paths_from_stage_base"]).issubset({"model.hidden_dim"})
               assert row["protected_evidence_used"] is False
               assert row["config_path_contract"] == "matrix-relative-v1"
+              assert row["development_policy_path_contract"] == "repository-relative-v1"
+              assert not pathlib.Path(row["development_policy"]).is_absolute()
+              policy = json.loads(pathlib.Path(row["development_policy"]).read_text())
+              assert policy["min_rounds"] == policy["max_rounds"] == 8
+              assert policy["patience"] >= 8
               candidate = json.loads((root / row["config"]).read_text())
               assert candidate["model"]["frontends"] == ["pcen-lite"]
           print("stage-b-single-variable: ok")
