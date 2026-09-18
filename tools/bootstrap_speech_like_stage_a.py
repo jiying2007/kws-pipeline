@@ -9,6 +9,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
