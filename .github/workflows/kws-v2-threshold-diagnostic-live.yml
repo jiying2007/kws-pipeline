@@ -74,7 +74,7 @@ jobs:
             ${{ runner.temp }}/threshold-corpus/corpus/bundle/
             ${{ runner.temp }}/threshold-corpus/corpus/provider/provider-summary.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
 
   diagnostic:
     needs: production-corpus
@@ -330,6 +330,35 @@ jobs:
           if [[ -d "$RUNNER_TEMP/threshold-curve" ]]; then
             cp -a "$RUNNER_TEMP/threshold-curve" "$out/operating-curve-work"
           fi
+          DIAGNOSTIC_ROUND="${{ steps.selected.outputs.round_index }}" \
+          DIAGNOSTIC_SELECTION_POLICY="${{ steps.selected.outputs.selection_policy }}" \
+          OUT="$out" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["OUT"])
+          metadata={
+              "schema_version": 1,
+              "evidence_class": "kws-v2-threshold-diagnostic-execution-metadata-v1",
+              "evidence_scope": "development-only",
+              "diagnostic_only": True,
+              "selection_feedback_allowed": False,
+              "protected_evidence_used": False,
+              "repository": os.environ.get("GITHUB_REPOSITORY"),
+              "workflow": os.environ.get("GITHUB_WORKFLOW"),
+              "workflow_ref": os.environ.get("GITHUB_WORKFLOW_REF"),
+              "head_sha": os.environ.get("GITHUB_SHA"),
+              "ref": os.environ.get("GITHUB_REF"),
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "diagnostic_round": int(os.environ["DIAGNOSTIC_ROUND"]),
+              "diagnostic_round_selection_policy": os.environ["DIAGNOSTIC_SELECTION_POLICY"],
+              "production_corpus_artifact": (
+                  "kws-v2-threshold-production-corpus-" + os.environ["GITHUB_SHA"]
+              ),
+          }
+          (root/"execution-metadata.json").write_text(
+              json.dumps(metadata, indent=2, sort_keys=True)+"\n"
+          )
+          PY
           OUT="$out" python3 - <<'PY'
           import hashlib, json, os, pathlib
           root=pathlib.Path(os.environ["OUT"])
