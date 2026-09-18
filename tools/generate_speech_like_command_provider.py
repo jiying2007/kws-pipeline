@@ -8,6 +8,7 @@ import pathlib
 import re
 import subprocess
 import wave
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 POLICY_ID = "speech-like-command-provider-v1"
 PROVIDER_SCHEMA = 1
@@ -246,17 +247,34 @@ def render_token(token: str, mapping: dict[str, str]) -> str:
     return PLACEHOLDER_RE.sub(replace, token)
 
 
-def generate(*, policy: dict, provider: dict, requests: list[dict], output_root: pathlib.Path) -> dict:
+def generate(
+    *,
+    policy: dict,
+    provider: dict,
+    requests: list[dict],
+    output_root: pathlib.Path,
+    workers: int = 1,
+) -> dict:
+    if workers <= 0 or workers > 4:
+        raise ValueError("generation workers must be in [1,4]")
     output_root.mkdir(parents=True, exist_ok=True)
-    manifests: dict[str, list[dict]] = {group: [] for group in policy["allowed_request_groups"]}
-    group_indexes: dict[str, int] = {group: 0 for group in manifests}
-    for row in requests:
+    group_indexes: dict[str, int] = {
+        group: 0 for group in policy["allowed_request_groups"]
+    }
+    tasks: list[tuple[int, dict, str, int, pathlib.Path]] = []
+    for ordinal, row in enumerate(requests):
         group = row["group"]
         index = group_indexes[group]
         group_indexes[group] += 1
         group_dir = output_root / group
         group_dir.mkdir(parents=True, exist_ok=True)
         wav_path = group_dir / f"recording-{index:06d}.wav"
+        tasks.append((ordinal, row, group, index, wav_path))
+
+    def render_one(
+        task: tuple[int, dict, str, int, pathlib.Path]
+    ) -> tuple[int, str, int, dict]:
+        ordinal, row, group, index, wav_path = task
         mapping = {
             "executable": provider["executable"].as_posix(),
             "text": row["text"],
@@ -265,16 +283,23 @@ def generate(*, policy: dict, provider: dict, requests: list[dict], output_root:
         }
         for role, asset in provider["assets"].items():
             mapping[f"asset:{role}"] = asset["path"].as_posix()
-        argv = [render_token(token, mapping) for token in provider["argv_template"]]
+        argv = [
+            render_token(token, mapping) for token in provider["argv_template"]
+        ]
         if pathlib.Path(argv[0]).resolve() != provider["executable"]:
             raise ValueError("rendered executable drifted from verified executable")
-        subprocess.run(argv, check=True, shell=False, timeout=provider["timeout_seconds"])
+        subprocess.run(
+            argv,
+            check=True,
+            shell=False,
+            timeout=provider["timeout_seconds"],
+        )
         inspected = inspect_wav(wav_path)
         generation_identity = {
             "provider": provider["identity"],
             "parameters": dict(sorted(row["parameters"].items())),
         }
-        manifests[group].append({
+        manifest = {
             "schema_version": MANIFEST_SCHEMA,
             "evidence_class": MANIFEST_CLASS,
             "synthetic": True,
@@ -291,24 +316,62 @@ def generate(*, policy: dict, provider: dict, requests: list[dict], output_root:
             "audio": wav_path.name,
             "file_sha256": inspected["file_sha256"],
             "pcm_sha256": inspected["pcm_sha256"],
-        })
+        }
+        return ordinal, group, index, manifest
+
+    rendered: list[tuple[int, str, int, dict]] = []
+    if workers == 1:
+        rendered = [render_one(task) for task in tasks]
+    else:
+        failures: list[str] = []
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            future_map = {
+                pool.submit(render_one, task): task[0] for task in tasks
+            }
+            for future in as_completed(future_map):
+                ordinal = future_map[future]
+                try:
+                    rendered.append(future.result())
+                except Exception as exc:  # noqa: BLE001
+                    failures.append(f"request {ordinal}: {exc}")
+        if failures:
+            raise RuntimeError(
+                "speech-like provider generation failed: "
+                + "; ".join(sorted(failures))
+            )
+
+    manifests: dict[str, list[tuple[int, dict]]] = {
+        group: [] for group in policy["allowed_request_groups"]
+    }
+    for _ordinal, group, index, manifest in rendered:
+        manifests[group].append((index, manifest))
 
     outputs: dict[str, str] = {}
-    for group, rows in manifests.items():
-        if not rows:
+    recording_count = 0
+    for group, indexed_rows in manifests.items():
+        if not indexed_rows:
             continue
+        indexed_rows.sort(key=lambda item: item[0])
+        rows = [row for _index, row in indexed_rows]
+        recording_count += len(rows)
         manifest_path = output_root / group / "manifest.jsonl"
-        manifest_path.write_text("".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in rows), encoding="utf-8")
+        manifest_path.write_text(
+            "".join(
+                json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+                for row in rows
+            ),
+            encoding="utf-8",
+        )
         outputs[group] = manifest_path.as_posix()
     return {
         "schema_version": 1,
         "policy": POLICY_ID,
         "evidence_class": "speech-like-command-generation-summary-v1",
         "provider_identity_sha256": canonical_sha256(provider["identity"]),
-        "recordings": sum(len(rows) for rows in manifests.values()),
+        "recordings": recording_count,
+        "workers": workers,
         "groups": outputs,
     }
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate offline speech-like corpus via a hash-bound command provider.")
@@ -317,15 +380,25 @@ def main() -> int:
     parser.add_argument("--requests", required=True, type=pathlib.Path)
     parser.add_argument("--output-root", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
     policy = load_policy(args.policy.resolve())
     provider_path = args.provider.resolve()
     provider = normalize_provider(provider_path, load_object(provider_path), policy)
     requests = normalize_requests(args.requests.resolve(), load_jsonl(args.requests.resolve()), policy)
-    summary = generate(policy=policy, provider=provider, requests=requests, output_root=args.output_root.resolve())
+    summary = generate(
+        policy=policy,
+        provider=provider,
+        requests=requests,
+        output_root=args.output_root.resolve(),
+        workers=args.workers,
+    )
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"speech-like command provider: recordings={summary['recordings']} provider={provider['provider_name']}")
+    print(
+        f"speech-like command provider: recordings={summary['recordings']} "
+        f"workers={summary['workers']} provider={provider['provider_name']}"
+    )
     return 0
 
 
