@@ -631,17 +631,28 @@ def main() -> int:
             json.dumps(curriculum, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",
         )
+        controller_frr = max(float(cal_base["frr"]), float(test_base["frr"]))
+        controller_far_per_hour = max(
+            float(cal_base["far_per_hour"]),
+            float(test_base["far_per_hour"]),
+        )
         controller = controller_next(
             policy,
             controller,
             false_rejects,
             false_accepts,
-            frr=max(float(cal_base["frr"]), float(test_base["frr"])),
-            far_per_hour=max(
-                float(cal_base["far_per_hour"]),
-                float(test_base["far_per_hour"]),
-            ),
+            frr=controller_frr,
+            far_per_hour=controller_far_per_hour,
         )
+        record["controller_feedback"] = {
+            "signal_mode": str(controller["controller_signal_mode"]),
+            "frr": controller_frr,
+            "far_per_hour": controller_far_per_hour,
+            "severity": float(controller["controller_severity"]),
+            "next_positive_example_weight": float(controller["positive_example_weight"]),
+            "next_ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]),
+            "next_failure_replay_repeat": int(controller["failure_replay_repeat"]),
+        }
         if strict(record):
             strict_streak += 1
         else:
