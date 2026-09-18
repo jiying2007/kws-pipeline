@@ -80,7 +80,8 @@ def _text_sha256(value: str) -> str:
 
 
 def _cpu_runtime_identity() -> dict:
-    model_name = platform.processor().strip() or None
+    fallback_model = platform.processor().strip() or None
+    model_name: str | None = None
     flags: list[str] = []
     cpuinfo = pathlib.Path("/proc/cpuinfo")
     if cpuinfo.is_file():
@@ -99,7 +100,8 @@ def _cpu_runtime_identity() -> dict:
             pass
     flags_text = " ".join(flags)
     return {
-        "model": model_name,
+        "model": model_name or fallback_model,
+        "logical_cpu_count": os.cpu_count(),
         "flags_sha256": _text_sha256(flags_text) if flags_text else None,
         "flag_count": len(flags),
     }
