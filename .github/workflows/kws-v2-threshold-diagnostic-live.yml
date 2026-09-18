@@ -1,0 +1,284 @@
+name: kws-v2-threshold-diagnostic-live
+
+on:
+  push:
+    branches:
+      - "codex/kws-v2-threshold-diagnostic-*"
+    paths:
+      - ".github/workflows/kws-v2-threshold-diagnostic-live.yml"
+      - "tools/diagnose_kws_threshold_operating_curve.py"
+      - "tools/bootstrap_speech_like_stage_a.py"
+      - "tools/run_kws_v2_stage_a_search.py"
+      - "tools/bind_kws_v2_candidate.py"
+      - "tools/kws_v2_experiment_plan.py"
+      - "training/run_gru_development.py"
+      - "training/iterate_gru_development.py"
+      - "training/iterate_domain.py"
+      - "training/train_gru_ctc.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - "configs/training/speech-like-corpus-plan-v1.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kws-v2-threshold-diagnostic-live-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  production-corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Generate deterministic production Stage A corpus
+        run: |
+          set -euo pipefail
+          python3 tools/bootstrap_speech_like_stage_a.py \
+            --cache-dir "$RUNNER_TEMP/threshold-corpus-cache" \
+            --work-dir "$RUNNER_TEMP/threshold-corpus"
+
+      - name: Verify production corpus contract
+        run: |
+          ROOT="$RUNNER_TEMP/threshold-corpus" python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["ROOT"])
+          boot=json.loads((root/"bootstrap-summary.json").read_text())
+          assert boot["status"]=="complete"
+          assert boot["corpus"]["recordings"]==384
+          assert boot["corpus"]["voice_slots"]==24
+          corpus=json.loads((root/"corpus/stage-a-base-bundle.json").read_text())
+          assert corpus["tone_backend_used"] is False
+          assert corpus["protected_evidence_used"] is False
+          assert corpus["generation_workers"]==2
+          provider=json.loads((root/"corpus/provider/provider-summary.json").read_text())
+          norm=provider["audio_normalization"]
+          assert norm["deterministic_vits_sampling"] is True
+          assert norm["vits_noise_scale"]==0.0
+          assert norm["vits_noise_scale_w"]==0.0
+          print("diagnostic production bundle:", corpus["external_base_bundle_sha256"])
+          PY
+
+      - name: Upload deterministic production corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-threshold-production-corpus-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/threshold-corpus/bootstrap-summary.json
+            ${{ runner.temp }}/threshold-corpus/corpus/bundle/
+            ${{ runner.temp }}/threshold-corpus/corpus/provider/provider-summary.json
+          if-no-files-found: error
+          retention-days: 14
+
+  diagnostic:
+    needs: production-corpus
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download deterministic production corpus
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-threshold-production-corpus-${{ github.sha }}
+          path: ${{ runner.temp }}/threshold-input
+
+      - name: Resolve four split inputs
+        id: corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          input="$RUNNER_TEMP/threshold-input"
+          for split in train calibration test qualification; do
+            index="$(find "$input" -path "*/$split/dataset-index.jsonl" -print -quit)"
+            summary="$(find "$input" -path "*/$split/dataset-summary.json" -print -quit)"
+            test -n "$index"
+            test -n "$summary"
+            echo "${split}_index=$index" >> "$GITHUB_OUTPUT"
+            echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Build GRU runtime runner
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav_gru
+          test -x build/kws_wav_gru
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Prepare exact Stage A GRU-logmel binding
+        run: |
+          set -euo pipefail
+          .venv/bin/python tools/run_kws_v2_stage_a_search.py \
+            --train-index "${{ steps.corpus.outputs.train_index }}" \
+            --train-summary "${{ steps.corpus.outputs.train_summary }}" \
+            --calibration-index "${{ steps.corpus.outputs.calibration_index }}" \
+            --calibration-summary "${{ steps.corpus.outputs.calibration_summary }}" \
+            --test-index "${{ steps.corpus.outputs.test_index }}" \
+            --test-summary "${{ steps.corpus.outputs.test_summary }}" \
+            --qualification-index "${{ steps.corpus.outputs.qualification_index }}" \
+            --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}" \
+            --candidate-id v2-a-gru-h64-logmel \
+            --prepare-only \
+            --work-dir "$RUNNER_TEMP/threshold-stage-a"
+
+      - name: Execute fixed 8x8 GRU-logmel development loop
+        id: develop
+        shell: bash
+        run: |
+          set +e
+          candidate="$RUNNER_TEMP/threshold-stage-a/candidates/v2-a-gru-h64-logmel"
+          .venv/bin/python training/run_gru_development.py \
+            --config "$candidate/effective-config.json" \
+            --policy configs/training/xiaowo.gru-development-stage-a-v1.json \
+            --runner build/kws_wav_gru \
+            --work-dir "$candidate/development" \
+            > "$candidate/development-diagnostic.log" 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Require complete development evidence and select diagnostic round
+        id: selected
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"threshold-stage-a/candidates/v2-a-gru-h64-logmel"
+          manifest=root/"development/development-loop-manifest.json"
+          value=json.loads(manifest.read_text())
+          assert value["evidence_scope"]=="development-only"
+          assert value["qualification_used"] is False
+          assert value["shadow_used"] is False
+          assert value["formal_qualification_used"] is False
+          records=value["records"]
+          assert len(records)==8
+          for row in records:
+              cal=row["calibration"]
+              assert cal["calibrated_thresholds"]
+              assert cal["calibration_threshold_grid"]
+              assert cal["calibration_coordinate_rounds"]==2
+          selected=min(
+              records,
+              key=lambda row: (
+                  float(row["calibration"]["frr"]),
+                  float(row["calibration"]["far_per_hour"]),
+                  float(row["score"]),
+                  int(row["round"]),
+              ),
+          )
+          round_index=int(selected["round"])
+          model=root/f"development/candidates/round-{round_index:02d}/model.kwg"
+          cal_ref=root/f"development/datasets/round-{round_index:02d}/calibration.references.jsonl"
+          test_ref=root/f"development/datasets/round-{round_index:02d}/test.references.jsonl"
+          assert model.is_file() and cal_ref.is_file() and test_ref.is_file()
+          output=pathlib.Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a") as f:
+              f.write(f"round_index={round_index}\n")
+              f.write(f"model={model}\n")
+              f.write(f"calibration_references={cal_ref}\n")
+              f.write(f"test_references={test_ref}\n")
+              f.write(f"manifest={manifest}\n")
+              f.write(f"effective_config={root/'effective-config.json'}\n")
+          print(
+              "diagnostic round:",
+              round_index,
+              "formal thresholds=", selected["calibration"]["calibrated_thresholds"],
+              "cal frr=", selected["calibration"]["frr"],
+              "cal far/h=", selected["calibration"]["far_per_hour"],
+              "test frr=", selected["test"]["frr"],
+              "test far/h=", selected["test"]["far_per_hour"],
+          )
+          PY
+
+      - name: Run development-only wide threshold operating curve
+        run: |
+          set -euo pipefail
+          .venv/bin/python tools/diagnose_kws_threshold_operating_curve.py \
+            --runner build/kws_wav_gru \
+            --model "${{ steps.selected.outputs.model }}" \
+            --tokens assets/tokens.txt \
+            --keywords keywords/zh_cn_example.tsv \
+            --config "${{ steps.selected.outputs.effective_config }}" \
+            --calibration-references "${{ steps.selected.outputs.calibration_references }}" \
+            --test-references "${{ steps.selected.outputs.test_references }}" \
+            --thresholds 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.52 0.54 0.55 0.56 0.58 0.60 \
+            --development-manifest "${{ steps.selected.outputs.manifest }}" \
+            --round-index "${{ steps.selected.outputs.round_index }}" \
+            --work-dir "$RUNNER_TEMP/threshold-curve" \
+            --output "$RUNNER_TEMP/threshold-operating-curve.json"
+
+      - name: Print threshold diagnostic scorecard
+        run: |
+          REPORT="$RUNNER_TEMP/threshold-operating-curve.json" python3 - <<'PY'
+          import json, os, pathlib
+          value=json.loads(pathlib.Path(os.environ["REPORT"]).read_text())
+          assert value["diagnostic_only"] is True
+          assert value["selection_feedback_allowed"] is False
+          assert value["protected_evidence_used"] is False
+          formal=value["formal_development_evidence"]
+          print("formal round:", formal["round"])
+          print("formal selected thresholds:", formal["formal_selected_thresholds"])
+          print("formal calibration:", formal["formal_calibration_metrics"])
+          print("formal test:", formal["formal_test_metrics"])
+          print("pareto thresholds:", value["pareto_thresholds"])
+          print("min calibration FRR threshold:", value["min_calibration_frr_threshold"])
+          print("min calibration FAR threshold:", value["min_calibration_far_threshold"])
+          print("official behavior-order threshold:", value["official_behavior_order_threshold"])
+          for row in value["operating_curve"]:
+              print(
+                  "threshold=", row["threshold"],
+                  "cal_frr=", row["calibration"]["frr"],
+                  "cal_far/h=", row["calibration"]["far_per_hour"],
+                  "test_frr=", row["test"]["frr"],
+                  "test_far/h=", row["test"]["far_per_hour"],
+                  "far_distance_frr=", row["test"]["far_distance_frr"],
+              )
+          PY
+
+      - name: Collect diagnostic evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/threshold-evidence"
+          candidate="$RUNNER_TEMP/threshold-stage-a/candidates/v2-a-gru-h64-logmel"
+          mkdir -p "$out"
+          for src in \
+            "$RUNNER_TEMP/threshold-operating-curve.json" \
+            "$candidate/development-diagnostic.log" \
+            "$candidate/development/development-loop-manifest.json" \
+            "$candidate/effective-config.json" \
+            "${{ steps.selected.outputs.model }}"; do
+            if [[ -f "$src" ]]; then
+              cp "$src" "$out/$(basename "$src")"
+            fi
+          done
+
+      - name: Upload threshold diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-${{ github.sha }}
+          path: ${{ runner.temp }}/threshold-evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce diagnostic completion
+        if: always()
+        run: |
+          set -euo pipefail
+          test -f "$RUNNER_TEMP/threshold-operating-curve.json"
