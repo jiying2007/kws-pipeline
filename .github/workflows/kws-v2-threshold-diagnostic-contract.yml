@@ -258,6 +258,24 @@ jobs:
           assert 0.50 in value["min_calibration_far_thresholds"]
           assert 0.20 in value["calibration_frr_far_pareto_thresholds"]
           assert 0.50 in value["calibration_frr_far_pareto_thresholds"]
+          official_candidates = [
+              (
+                  float(row["threshold"]),
+                  tuple(row["official_calibration_behavior_key"]),
+              )
+              for row in value["operating_curve"]
+          ]
+          expected_official = module.select_calibration_threshold(official_candidates)
+          best_official_key = min(key for _, key in official_candidates)
+          expected_plateau = [
+              threshold
+              for threshold, key in official_candidates
+              if key == best_official_key
+          ]
+          assert value["official_behavior_order_key"] == list(best_official_key)
+          assert value["official_behavior_order_thresholds"] == expected_plateau
+          assert value["official_behavior_order_threshold"] == expected_official
+          assert expected_official in expected_plateau
 
           after = {
               p.name: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -285,6 +303,8 @@ jobs:
               'selected-domain-index.jsonl',
               'selected-domain-summary.json',
               'selected-development-audit.json',
+              'development-resume-state.json',
+              'training-acoustic-rotation-evidence',
               'operating-curve-work',
               'execution-metadata.json',
               'evidence-inventory.json',
