@@ -88,12 +88,23 @@ jobs:
               "m3-plus-completion","m4-plus-release",
           ]
           assert ladder["m0-ctc-only"] == {
-              "positive_example_weight":1.0,
+              "positive_example_weight_policy":"class-balance",
               "ordered_token_loss_weight":0.0,
               "keyword_sequence_margin_loss_weight":0.0,
               "prefix_completion_loss_weight":0.0,
               "recurrent_release_loss_weight":0.0,
           }
+          balance=p["class_balance"]
+          assert balance["policy"]=="binary-positive-negative-count-ratio-v1"
+          assert balance["enabled"] is True
+          assert balance["derived_before_training"] is True
+          assert balance["same_weight_across_loss_ladder"] is True
+          assert balance["classifier_balance_mode"]=="equal-class-sampler-v1"
+          assert 0 < balance["minimum_positive_example_weight"] <= balance["maximum_positive_example_weight"]
+          assert all(
+              row["positive_example_weight_policy"]=="class-balance"
+              for row in ladder.values()
+          )
           previous=None
           keys=(
               "ordered_token_loss_weight",
