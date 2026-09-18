@@ -130,6 +130,18 @@ jobs:
           assert hashlib.sha256(license_path.read_bytes()).hexdigest() == "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
           archive = root / "source/vits-icefall-zh-aishell3.tar.bz2"
           ref = json.loads(pathlib.Path("configs/training/speech-like-provider-reference-v1.json").read_text())
+          production_backend = ref["backend_bootstrap"]["linux-x86_64"]
+          assert production_backend["repository"] == "k2-fsa/sherpa-onnx"
+          assert production_backend["tag"] == "v1.13.8"
+          assert production_backend["version"] == "1.13.8"
+          assert production_backend["asset"] == "sherpa-onnx-v1.13.8-linux-x64-shared.tar.bz2"
+          assert production_backend["expected_size_bytes"] == 28156791
+          assert production_backend["expected_sha256"] == "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4"
+          assert production_backend["digest_authority"] == "github-release-asset-digest"
+          assert production_backend["archive_root"] == "sherpa-onnx-v1.13.8-linux-x64-shared"
+          assert production_backend["backend_executable"] == "bin/sherpa-onnx-offline-tts"
+          assert production_backend["lib_dir"] == "lib"
+          assert production_backend["upstream_tts_enabled"] is True
           row = next(x for x in ref["reference_candidates"] if x["name"] == ref["preferred_stage_a_candidate"])
           row["license_evidence"]["url"] = license_path.resolve().as_uri()
           bundle = row["runtime_asset_bundle"]
