@@ -48,6 +48,10 @@ def main() -> int:
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--lexicon", required=True, type=pathlib.Path)
+    parser.add_argument("--phone-fst", type=pathlib.Path)
+    parser.add_argument("--date-fst", type=pathlib.Path)
+    parser.add_argument("--number-fst", type=pathlib.Path)
+    parser.add_argument("--rule-far", type=pathlib.Path)
     parser.add_argument("--speaker-id", required=True, type=int)
     parser.add_argument("--length-scale", required=True, type=float)
     parser.add_argument("--source-sample-rate", required=True, type=int)
@@ -67,6 +71,15 @@ def main() -> int:
     model = require_file(args.model, "VITS model")
     tokens = require_file(args.tokens, "VITS tokens")
     lexicon = require_file(args.lexicon, "VITS lexicon")
+    rule_values = (args.phone_fst, args.date_fst, args.number_fst, args.rule_far)
+    if any(value is not None for value in rule_values) and any(value is None for value in rule_values):
+        raise ValueError("phone/date/number FSTs and rule.far must be supplied together")
+    phone_fst = date_fst = number_fst = rule_far = None
+    if all(value is not None for value in rule_values):
+        phone_fst = require_file(args.phone_fst, "phone FST")
+        date_fst = require_file(args.date_fst, "date FST")
+        number_fst = require_file(args.number_fst, "number FST")
+        rule_far = require_file(args.rule_far, "rule FAR")
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -77,19 +90,28 @@ def main() -> int:
     native.unlink(missing_ok=True)
 
     try:
-        run_checked(
+        backend_command = [
+            str(backend),
+            f"--vits-model={model}",
+            f"--vits-tokens={tokens}",
+            f"--vits-lexicon={lexicon}",
+        ]
+        if phone_fst is not None:
+            backend_command.extend(
+                [
+                    f"--tts-rule-fsts={phone_fst},{date_fst},{number_fst}",
+                    f"--tts-rule-fars={rule_far}",
+                ]
+            )
+        backend_command.extend(
             [
-                str(backend),
-                f"--vits-model={model}",
-                f"--vits-tokens={tokens}",
-                f"--vits-lexicon={lexicon}",
                 f"--sid={args.speaker_id}",
                 f"--vits-length-scale={args.length_scale}",
                 f"--output-filename={native}",
                 args.text,
-            ],
-            "VITS backend",
+            ]
         )
+        run_checked(backend_command, "VITS backend")
         inspect_pcm16_mono(native, args.source_sample_rate, "VITS backend")
 
         run_checked(
