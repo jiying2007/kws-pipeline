@@ -465,6 +465,7 @@ def main() -> int:
         "checkpoint_sha256": sha256_file(checkpoint),
         "config_sha256": sha256_file(config_path),
         "policy_sha256": sha256_file(policy_path),
+        "data_limitations": policy["data_limitations"],
         "threshold_curve_sha256": sha256_file(curve_path),
         "pareto_thresholds": curve["pareto_thresholds"],
         "soft_operating_points_by_far_budget": operating,
