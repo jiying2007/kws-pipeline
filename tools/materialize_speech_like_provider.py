@@ -402,6 +402,8 @@ def build_provider(
     rule_far: pathlib.Path | None,
     adapter: pathlib.Path | None,
     backend_executable: pathlib.Path | None,
+    backend_lib_dir: pathlib.Path | None,
+    backend_bundle_assets: list[dict] | None,
     resampler_executable: pathlib.Path | None,
     source_sample_rate: int | None,
     runtime_asset_receipt: pathlib.Path | None,
@@ -479,30 +481,62 @@ def build_provider(
         source_sample_rate = int(source_sample_rate or 0)
         if source_sample_rate <= 0 or source_sample_rate >= 16000:
             raise ValueError("resampled VITS profile requires source_sample_rate in [1,15999]")
-        assets.extend(
-            [
-                {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)},
+        assets.append(
+            {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)}
+        )
+        if (backend_lib_dir is None) != (backend_bundle_assets is None):
+            raise ValueError(
+                "backend_lib_dir and backend_bundle_assets must be supplied together"
+            )
+        if backend_bundle_assets is None:
+            assets.append(
                 {
                     "role": "backend_executable",
                     "path": str(backend_executable),
                     "sha256": sha256_file(backend_executable),
-                },
-                {
-                    "role": "resampler_executable",
-                    "path": str(resampler_executable),
-                    "sha256": sha256_file(resampler_executable),
-                },
-            ]
+                }
+            )
+        else:
+            seen_roles = {item["role"] for item in assets}
+            for item in backend_bundle_assets:
+                role = require_text(item.get("role"), "backend bundle asset role")
+                if role in seen_roles:
+                    raise ValueError(f"duplicate provider asset role: {role}")
+                asset_path = require_file(
+                    pathlib.Path(str(item.get("path", ""))),
+                    f"backend bundle asset {role}",
+                )
+                expected = str(item.get("sha256", "")).lower()
+                if len(expected) != 64 or sha256_file(asset_path) != expected:
+                    raise ValueError(f"backend bundle asset sha256 mismatch: {role}")
+                assets.append(
+                    {"role": role, "path": str(asset_path), "sha256": expected}
+                )
+                seen_roles.add(role)
+            if "backend_executable" not in seen_roles:
+                raise ValueError("backend bundle assets must include backend_executable")
+        assets.append(
+            {
+                "role": "resampler_executable",
+                "path": str(resampler_executable),
+                "sha256": sha256_file(resampler_executable),
+            }
         )
         argv_template = [
             "{executable}",
             "{asset:adapter}",
             "--backend-executable={asset:backend_executable}",
-            "--resampler-executable={asset:resampler_executable}",
-            "--model={asset:model}",
-            "--tokens={asset:tokens}",
-            "--lexicon={asset:lexicon}",
         ]
+        if backend_lib_dir is not None:
+            argv_template.append(f"--backend-lib-dir={backend_lib_dir.resolve()}")
+        argv_template.extend(
+            [
+                "--resampler-executable={asset:resampler_executable}",
+                "--model={asset:model}",
+                "--tokens={asset:tokens}",
+                "--lexicon={asset:lexicon}",
+            ]
+        )
         if phone_fst is not None:
             argv_template.extend(
                 [
@@ -529,6 +563,14 @@ def build_provider(
             "resampled": True,
             "adapter_sha256": sha256_file(adapter),
             "backend_executable_sha256": sha256_file(backend_executable),
+            "backend_bundle_verified": backend_bundle_assets is not None,
+            "backend_library_count": (
+                sum(
+                    1
+                    for item in (backend_bundle_assets or [])
+                    if str(item.get("role", "")).startswith("backend_lib_")
+                )
+            ),
             "resampler_executable_sha256": sha256_file(resampler_executable),
         }
     else:
