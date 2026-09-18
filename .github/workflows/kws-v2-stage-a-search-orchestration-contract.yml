@@ -1,0 +1,190 @@
+name: kws-v2-stage-a-search-orchestration-contract
+
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "tools/run_kws_v2_stage_a_search.py"
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/bind_kws_v2_candidate.py"
+      - "tools/build_kws_v2_generalization_plan.py"
+      - "tools/run_development_generalization_arena.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/development-generalization-v1.json"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
+      - ".github/workflows/kws-v2-stage-a-search-orchestration-contract.yml"
+  pull_request:
+    paths:
+      - "tools/run_kws_v2_stage_a_search.py"
+      - "tools/kws_v2_experiment_plan.py"
+      - "tools/bind_kws_v2_candidate.py"
+      - "tools/build_kws_v2_generalization_plan.py"
+      - "tools/run_development_generalization_arena.py"
+      - "configs/training/kws-v2-staged-experiments-v1.json"
+      - "configs/training/development-generalization-v1.json"
+      - "configs/training/xiaowo.gru-development-stage-a-v1.json"
+      - "configs/training/xiaowo.rnn-development-stage-a-v1.json"
+      - ".github/workflows/kws-v2-stage-a-search-orchestration-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Build immutable speech-like fixture bundle
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-fixture"
+          mkdir -p "$root/bundle"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-stage-a-fixture" / "bundle"
+          for ordinal, split in enumerate(("train", "calibration", "test", "qualification")):
+              split_dir = root / split
+              split_dir.mkdir(parents=True, exist_ok=True)
+              row = {
+                  "split": split,
+                  "kind": "positive",
+                  "family_id": f"fixture-{split}",
+                  "variant": 0,
+                  "keyword_id": 1,
+                  "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+                  "target_ids": [1, 2, 3, 4],
+                  "wav_sha256": hashlib.sha256(f"wav:{split}".encode()).hexdigest(),
+                  "frames": 16000,
+                  "event_start_frame": 100,
+                  "event_end_frame": 1000,
+                  "path": f"/fixture/{split}.wav",
+                  "speech_like_provenance": {
+                      "provider_kind": "offline-tts",
+                      "provider_name": "fixture-provider",
+                      "provider_version": "v1",
+                      "license_id": "LicenseRef-fixture",
+                      "voice_id": f"voice-{ordinal}",
+                      "source_id": f"source-{ordinal}",
+                      "generation_config_sha256": hashlib.sha256(f"gen:{split}".encode()).hexdigest(),
+                      "label_provenance_sha256": hashlib.sha256(f"label:{split}".encode()).hexdigest(),
+                      "pcm_sha256": hashlib.sha256(f"pcm:{split}".encode()).hexdigest(),
+                  },
+              }
+              (split_dir / "dataset-index.jsonl").write_text(json.dumps(row, sort_keys=True) + "\n")
+              (split_dir / "dataset-summary.json").write_text(json.dumps({
+                  "schema_version": 1,
+                  "evidence_class": "speech-like-base-dataset-v1",
+                  "split": split,
+                  "recordings": 1,
+                  "positive_recordings": 1,
+                  "negative_recordings": 0,
+                  "corpus_sha256": hashlib.sha256(f"corpus:{split}".encode()).hexdigest(),
+                  "tone_backend_used": False,
+              }, sort_keys=True, indent=2) + "\n")
+          PY
+
+      - name: Prepare complete Stage A search
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-fixture"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$root/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$root/bundle/$split/dataset-summary.json")
+          done
+          python3 tools/run_kws_v2_stage_a_search.py \
+            "${args[@]}" \
+            --prepare-only \
+            --work-dir "$root/search"
+
+      - name: Verify four candidates share corpus cohort and fixed budget
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "kws-v2-stage-a-fixture" / "search"
+          manifest = json.loads((root / "stage-a-search-manifest.json").read_text())
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          assert manifest["schema_version"] == 1
+          assert manifest["evidence_class"] == "kws-v2-stage-a-search-run-v1"
+          assert manifest["evidence_scope"] == "development-only"
+          assert manifest["stage"] == "A"
+          assert manifest["status"] == "prepared"
+          assert manifest["product_head"] == head
+          assert manifest["candidate_count"] == 4
+          assert manifest["generalization_tier"] == "search"
+          assert manifest["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
+          assert manifest["full_training_round_budget"] is True
+          assert manifest["fresh_used"] is False
+          assert manifest["shadow_used"] is False
+          assert manifest["formal_qualification_used"] is False
+
+          rows = manifest["candidates"]
+          assert {(r["model_family"], r["frontend"], r["hidden_dim"]) for r in rows} == {
+              ("rnn", "logmel", 64),
+              ("rnn", "pcen-lite", 64),
+              ("gru", "logmel", 64),
+              ("gru", "pcen-lite", 64),
+          }
+          assert {r["generalization_cohort_id"] for r in rows} == {manifest["generalization_cohort_id"]}
+          assert {r["generalization_tier"] for r in rows} == {"search"}
+          assert {json.loads(pathlib.Path(r["binding"]).read_text())["external_base_bundle_sha256"] for r in rows} == {
+              manifest["external_base_bundle_sha256"]
+          }
+          for row in rows:
+              assert row["status"] == "prepared"
+              assert pathlib.Path(row["effective_config"]).is_file()
+              assert pathlib.Path(row["binding"]).is_file()
+              policy = json.loads(pathlib.Path(row["development_policy"]).read_text())
+              assert policy["min_rounds"] == policy["max_rounds"] == 8
+              assert policy["epochs_per_round"] == 8
+              assert policy["patience"] >= 8
+              script = pathlib.Path(row["development_runner_script"]).name
+              assert script == (
+                  "run_gru_development.py" if row["model_family"] == "gru"
+                  else "run_rnn_development.py"
+              )
+              cfg = json.loads(pathlib.Path(row["effective_config"]).read_text())
+              speech = cfg["kws_v2_speech_like_training"]
+              assert speech["external_base_required"] is True
+              assert speech["tone_replay_allowed"] is False
+              assert speech["fixed_hard_negative_replay"] == "disabled"
+              assert speech["positive_stress_replay"] == "disabled"
+              assert speech["failure_replay"] == "disabled"
+          print("kws-v2-stage-a-search-orchestration: prepare contract ok")
+          PY
+
+      - name: Execution cannot silently fall back to legacy family workflow inputs
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/kws-v2-stage-a-no-runner"
+          mkdir -p "$root"
+          args=()
+          for split in train calibration test qualification; do
+            args+=(--"$split"-index "$RUNNER_TEMP/kws-v2-stage-a-fixture/bundle/$split/dataset-index.jsonl")
+            args+=(--"$split"-summary "$RUNNER_TEMP/kws-v2-stage-a-fixture/bundle/$split/dataset-summary.json")
+          done
+          if python3 tools/run_kws_v2_stage_a_search.py \
+            "${args[@]}" \
+            --work-dir "$root/search"; then
+            echo "Stage A execution unexpectedly ran without explicit family runners" >&2
+            exit 1
+          fi
+          test -f "$root/search/stage-a-search-manifest.json"
+
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          tools/run_kws_v2_stage_a_search.py
+          tools/kws_v2_experiment_plan.py
+          tools/bind_kws_v2_candidate.py
+          tools/build_kws_v2_generalization_plan.py
+          tools/run_development_generalization_arena.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
