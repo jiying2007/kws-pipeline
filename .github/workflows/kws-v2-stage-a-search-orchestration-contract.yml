@@ -290,6 +290,9 @@ jobs:
                   "calibration": {
                       "frr": 1.0 - round_index * 0.01,
                       "far_per_hour": float(round_index),
+                      "calibrated_thresholds": {"1": 0.50, "2": 0.56},
+                      "calibration_threshold_grid": [0.50, 0.52, 0.54, 0.56, 0.58, 0.60],
+                      "calibration_coordinate_rounds": 2,
                   },
                   "test": {
                       "frr": 0.95 - round_index * 0.01,
@@ -367,6 +370,10 @@ jobs:
           assert evidence["lowest_calibration_frr_round"] == 7
           assert evidence["lowest_test_frr_round"] == 7
           assert len(evidence["records"]) == 8
+          for record in evidence["records"]:
+              assert record["calibrated_thresholds"] == {"1": 0.50, "2": 0.56}
+              assert record["calibration_threshold_grid"] == [0.50, 0.52, 0.54, 0.56, 0.58, 0.60]
+              assert record["calibration_coordinate_rounds"] == 2
           assert candidate["generalization_started"] is False
 
           bad = dict(manifest_value)
