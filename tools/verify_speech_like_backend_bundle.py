@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import pathlib
+import sys
 import tarfile
 
 REFERENCE_CLASS = "speech-like-provider-reference-v1"
