@@ -7,6 +7,7 @@ on:
       - "tools/bootstrap_speech_like_stage_a.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tools/verify_speech_like_runtime_bundle.py"
+      - "tools/verify_speech_like_backend_bundle.py"
       - "tools/materialize_speech_like_provider.py"
       - "tools/speech_like_vits_resample_adapter.py"
       - "configs/training/speech-like-provider-reference-v1.json"
@@ -18,6 +19,7 @@ on:
       - "tools/bootstrap_speech_like_stage_a.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tools/verify_speech_like_runtime_bundle.py"
+      - "tools/verify_speech_like_backend_bundle.py"
       - "tools/materialize_speech_like_provider.py"
       - "tools/speech_like_vits_resample_adapter.py"
       - "configs/training/speech-like-provider-reference-v1.json"
@@ -43,6 +45,8 @@ jobs:
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
           mkdir -p "$root/source/package/vits-icefall-zh-aishell3" "$root/source/license"
+          mkdir -p "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/bin"
+          mkdir -p "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/lib"
 
           for item in model.onnx tokens.txt lexicon.txt phone.fst date.fst number.fst rule.far; do
             printf 'fixture-%s-v1\n' "$item" > "$root/source/package/vits-icefall-zh-aishell3/$item"
@@ -90,6 +94,10 @@ jobs:
               w.writeframes(b"".join(struct.pack("<h", x) for x in samples))
           PY
           chmod +x "$root/fake-vits-8k"
+          cp "$root/fake-vits-8k" "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/bin/sherpa-onnx-offline-tts"
+          chmod +x "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/bin/sherpa-onnx-offline-tts"
+          printf 'fixture-shared-lib-v1\n' > "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/lib/libfixture.so.1"
+          ln -s libfixture.so.1 "$root/source/backend/sherpa-onnx-v1.13.8-linux-x64-shared/lib/libfixture.so"
 
           cat > "$root/fake-ffmpeg" <<'PY'
           #!/usr/bin/env python3
@@ -113,6 +121,7 @@ jobs:
           chmod +x "$root/fake-ffmpeg"
 
           tar -C "$root/source/package" -cjf "$root/source/vits-icefall-zh-aishell3.tar.bz2" vits-icefall-zh-aishell3
+          tar -C "$root/source/backend" -cjf "$root/source/sherpa-onnx-v1.13.8-linux-x64-shared.tar.bz2" sherpa-onnx-v1.13.8-linux-x64-shared
 
           ROOT="$root" python3 - <<'PY'
           import hashlib, json, os, pathlib
@@ -129,6 +138,12 @@ jobs:
           bundle["expected_sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
           bundle["checksum_authority"] = "contract-fixture"
           bundle["checksum_evidence"] = []
+          backend_archive = root / "source/sherpa-onnx-v1.13.8-linux-x64-shared.tar.bz2"
+          backend = ref["backend_bootstrap"]["linux-x86_64"]
+          backend["url"] = backend_archive.resolve().as_uri()
+          backend["expected_size_bytes"] = backend_archive.stat().st_size
+          backend["expected_sha256"] = hashlib.sha256(backend_archive.read_bytes()).hexdigest()
+          backend["digest_authority"] = "contract-fixture"
           (root / "fixture-reference.json").write_text(
               json.dumps(ref, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
           )
@@ -140,7 +155,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/full-run" \
@@ -157,6 +171,21 @@ jobs:
           assert summary["provider_candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
           assert summary["archive"]["state"] == "downloaded"
           assert summary["license_evidence"]["state"] == "downloaded"
+          assert summary["backend"]["mode"] == "bootstrapped"
+          assert summary["backend"]["platform"] == "linux-x86_64"
+          assert summary["backend"]["archive_state"] == "downloaded"
+          assert pathlib.Path(summary["backend"]["receipt_path"]).is_file()
+          assert pathlib.Path(summary["backend"]["lib_dir"]).is_dir()
+          provider_summary = json.loads(
+              (root / "full-run/corpus/provider/provider-summary.json").read_text()
+          )
+          assert provider_summary["backend_bundle_verified"] is True
+          backend_binding = provider_summary["backend_bundle_binding"]
+          assert backend_binding["platform"] == "linux-x86_64"
+          assert backend_binding["library_count"] == 1
+          assert backend_binding["library_symlink_count"] == 1
+          assert provider_summary["audio_normalization"]["backend_bundle_verified"] is True
+          assert provider_summary["audio_normalization"]["backend_library_count"] == 1
           assert summary["corpus"]["recordings"] == 384
           assert summary["corpus"]["voice_slots"] == 24
           assert len(summary["corpus"]["external_base_bundle_sha256"]) == 64
@@ -177,7 +206,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/cache-hit-run" \
@@ -190,6 +218,8 @@ jobs:
           assert s["status"] == "assets-ready"
           assert s["archive"]["state"] == "cache-hit"
           assert s["license_evidence"]["state"] == "cache-hit"
+          assert s["backend"]["mode"] == "bootstrapped"
+          assert s["backend"]["archive_state"] == "cache-hit"
           PY
 
       - name: Tampered cache fails closed without refresh
@@ -206,7 +236,6 @@ jobs:
           PY
           if python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/tamper-run" \
@@ -222,7 +251,6 @@ jobs:
           root="$RUNNER_TEMP/speech-like-bootstrap"
           python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/cache" \
             --work-dir "$root/refresh-run" \
@@ -237,13 +265,42 @@ jobs:
           assert s["license_evidence"]["state"] == "downloaded"
           PY
 
+      - name: Tampered extracted backend library fails cached preflight
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-bootstrap"
+          lib_path="$(ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          s = json.loads((root / "refresh-run/bootstrap-summary.json").read_text())
+          print(pathlib.Path(s["backend"]["lib_dir"]) / "libfixture.so.1")
+          PY
+          )"
+          python3 - "$lib_path" <<'PY'
+          import pathlib, sys
+          path = pathlib.Path(sys.argv[1])
+          data = bytearray(path.read_bytes())
+          assert data
+          data[0] ^= 1
+          path.write_bytes(data)
+          PY
+          if python3 tools/bootstrap_speech_like_stage_a.py \
+            --provider-reference "$root/fixture-reference.json" \
+            --resampler-executable "$root/fake-ffmpeg" \
+            --cache-dir "$root/cache" \
+            --work-dir "$root/backend-tamper-run" \
+            --assets-only \
+            --allow-file-urls; then
+            echo "tampered extracted backend library unexpectedly accepted" >&2
+            exit 1
+          fi
+
       - name: File URLs remain forbidden without explicit fixture flag
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
           if python3 tools/bootstrap_speech_like_stage_a.py \
             --provider-reference "$root/fixture-reference.json" \
-            --backend-executable "$root/fake-vits-8k" \
             --resampler-executable "$root/fake-ffmpeg" \
             --cache-dir "$root/isolated-cache" \
             --work-dir "$root/no-file-url-run" \
@@ -257,6 +314,9 @@ jobs:
           python3 -m py_compile
           tools/bootstrap_speech_like_stage_a.py
           tools/run_speech_like_corpus_generation.py
+          tools/verify_speech_like_backend_bundle.py
+          tools/materialize_speech_like_provider.py
+          tools/speech_like_vits_resample_adapter.py
 
       - name: Worktree remains clean
         run: git diff --exit-code -- .
