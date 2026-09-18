@@ -390,6 +390,24 @@ def main() -> int:
                     ],
                     work / "verify-backend-bundle.log",
                 )
+            run_checked(
+                [
+                    sys.executable,
+                    str(TOOLS / "verify_speech_like_backend_bundle.py"),
+                    "--reference",
+                    str(reference_path),
+                    "--platform",
+                    backend_platform,
+                    "--archive",
+                    str(backend_archive),
+                    "--output-dir",
+                    str(backend_root),
+                    "--receipt",
+                    str(backend_receipt),
+                    "--verify-only",
+                ],
+                work / "verify-backend-cache.log",
+            )
             receipt_value = load_object(backend_receipt)
             expected_root = pathlib.PurePosixPath(
                 str(receipt_value["backend_executable"]["path"])
