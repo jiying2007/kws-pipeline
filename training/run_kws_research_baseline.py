@@ -484,6 +484,7 @@ def main() -> int:
                 "--batch-size", str(int(train_policy["batch_size"])),
                 "--lr", str(float(classifier_cfg["learning_rate"])),
                 "--seed", str(int(train_policy["seed"])),
+                "--balance-mode", str(policy["class_balance"]["classifier_balance_mode"]),
                 "--output", str(classifier_path),
             ],
             work / "logs" / "classifier.log",
