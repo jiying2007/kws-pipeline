@@ -11,7 +11,7 @@ import wave
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
@@ -57,6 +57,7 @@ class ClipDataset(Dataset):
         frontend: str,
     ):
         self.items: list[tuple[torch.Tensor, int]] = []
+        self.labels: list[int] = []
         lookup = {tuple(seq): index + 1 for index, seq in enumerate(keyword_sequences)}
         for manifest in manifests:
             root = manifest.resolve().parent
@@ -67,6 +68,7 @@ class ClipDataset(Dataset):
                 label = int(lookup.get(target, 0))
                 feat = features(read_pcm(path), feature_dim=feature_dim, frontend=frontend)
                 self.items.append((feat, label))
+                self.labels.append(label)
         if not self.items:
             raise ValueError("classifier manifests are empty")
 
@@ -170,6 +172,11 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument(
+        "--balance-mode",
+        choices=("none", "equal-class-sampler-v1"),
+        default="equal-class-sampler-v1",
+    )
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
@@ -190,8 +197,30 @@ def main() -> int:
     test = ClipDataset(args.test_manifest, keyword_sequences, args.feature_dim, args.frontend)
 
     generator = torch.Generator().manual_seed(args.seed)
+    class_counts = [train.labels.count(index) for index in range(classes)]
+    if any(count <= 0 for count in class_counts):
+        raise ValueError(f"classifier train split is missing class coverage: {class_counts}")
+    sampler = None
+    shuffle = True
+    if args.balance_mode == "equal-class-sampler-v1":
+        sample_weights = [
+            1.0 / float(class_counts[label])
+            for label in train.labels
+        ]
+        sampler = WeightedRandomSampler(
+            sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+            generator=generator,
+        )
+        shuffle = False
     train_loader = DataLoader(
-        train, batch_size=args.batch_size, shuffle=True, collate_fn=collate, generator=generator
+        train,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        sampler=sampler,
+        collate_fn=collate,
+        generator=generator if sampler is None else None,
     )
     cal_loader = DataLoader(cal, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
     test_loader = DataLoader(test, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
@@ -227,6 +256,8 @@ def main() -> int:
         "classes": classes,
         "seed": args.seed,
         "epochs": args.epochs,
+        "balance_mode": args.balance_mode,
+        "training_class_counts": class_counts,
         "history": history,
         "calibration": evaluate(model, cal_loader, classes),
         "test": evaluate(model, test_loader, classes),
