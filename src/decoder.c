@@ -251,6 +251,48 @@ void kws_decoder_reset(kws_decoder_t *d) {
   clear_pending(d);
 }
 
+int kws_decoder_peek_keyword_confidence(const kws_decoder_t *d,
+                                        uint16_t keyword_index,
+                                        float *confidence,
+                                        float *retention_log) {
+  const kws_trie_node_t *node;
+  float terminal_score;
+  float terminal_acoustic;
+  float retention;
+  float conf;
+
+  if (d == NULL || confidence == NULL || retention_log == NULL ||
+      keyword_index >= d->keyword_count) {
+    return 0;
+  }
+  node = &d->nodes[d->terminal_nodes[keyword_index]];
+  if (node->score >= node->blank_score) {
+    terminal_score = node->score;
+    terminal_acoustic = node->acoustic_score;
+  } else {
+    terminal_score = node->blank_score;
+    terminal_acoustic = node->blank_acoustic_score;
+  }
+  if (terminal_score <= NEG_INF / 2.0f ||
+      terminal_acoustic <= NEG_INF / 2.0f || node->depth == 0u) {
+    return 0;
+  }
+
+  retention =
+      terminal_score - terminal_acoustic - d->token_boost * (float)node->depth;
+  if (retention < MIN_PATH_RETENTION_LOG) {
+    return 0;
+  }
+  conf = expf(terminal_acoustic / (float)node->depth);
+  if (conf > 1.0f) {
+    conf = 1.0f;
+  }
+
+  *confidence = conf;
+  *retention_log = retention;
+  return 1;
+}
+
 static int immediate_better(const kws_decoder_t *d,
                             int candidate,
                             float candidate_conf,
