@@ -1,6 +1,7 @@
 name: kws-v2-speech-like-fa-replay-paired
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "experiment/kws-speech-like-fa-replay-clean-*"
@@ -16,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  paired-three-round-ablation:
+  paired-four-round-ablation:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
@@ -90,6 +91,33 @@ jobs:
           aug["failure_replay_kinds"]=["false-accept"]
           speech["failure_replay"]="train-source-reuse-v1"
 
+          missing=object()
+          def diff_paths(left, right, prefix=()):
+              out=[]
+              if isinstance(left, dict) and isinstance(right, dict):
+                  for key in sorted(set(left) | set(right)):
+                      lv=left.get(key, missing)
+                      rv=right.get(key, missing)
+                      if lv is missing or rv is missing:
+                          out.append(".".join(prefix+(key,)))
+                      else:
+                          out.extend(diff_paths(lv, rv, prefix+(key,)))
+                  return out
+              if left != right:
+                  out.append(".".join(prefix))
+              return out
+
+          config_delta_paths=diff_paths(control, treatment)
+          allowed_delta_paths={
+              "data_augmentation_v3.failure_replay_enabled",
+              "data_augmentation_v3.failure_replay_mode",
+              "data_augmentation_v3.failure_replay_kinds",
+              "kws_v2_speech_like_training.failure_replay",
+          }
+          assert set(config_delta_paths) <= allowed_delta_paths, config_delta_paths
+          assert "data_augmentation_v3.failure_replay_enabled" in config_delta_paths
+          assert "kws_v2_speech_like_training.failure_replay" in config_delta_paths
+
           def write(path, value):
               path.write_text(json.dumps(value, indent=2, sort_keys=True)+"\n")
               return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -103,16 +131,16 @@ jobs:
               pathlib.Path("configs/training/xiaowo.gru-development-stage-a-v1.json").read_text()
           )
           assert policy["epochs_per_round"]==8
-          policy["min_rounds"]=3
-          policy["max_rounds"]=3
-          policy["patience"]=3
-          policy["experiment_context"]="kws-v2-fa-source-reuse-paired-three-round-v1"
+          policy["min_rounds"]=4
+          policy["max_rounds"]=4
+          policy["patience"]=4
+          policy["experiment_context"]="kws-v2-fa-source-reuse-paired-four-round-v2"
           policy_path=temp/"paired-policy.json"
           policy_sha=write(policy_path, policy)
 
           experiment={
-              "schema_version":1,
-              "evidence_class":"kws-v2-fa-source-reuse-paired-three-round-v1",
+              "schema_version":2,
+              "evidence_class":"kws-v2-fa-source-reuse-paired-four-round-v2",
               "evidence_scope":"development-only",
               "baseline_main_sha":"09d477bc3ca0f9ad0cfd33aad6ab0b531c0ec136",
               "production_source_run_id":35333458390,
@@ -121,8 +149,9 @@ jobs:
               "treatment_config_sha256":treatment_sha,
               "shared_policy_sha256":policy_sha,
               "primary_delta":"failure-replay=train-source-reuse-v1; failure-kinds=false-accept-only",
+              "config_delta_paths":config_delta_paths,
               "epochs_per_round":8,
-              "rounds":3,
+              "rounds":4,
               "single_thread_env":{
                   "OMP_NUM_THREADS":os.environ["OMP_NUM_THREADS"],
                   "MKL_NUM_THREADS":os.environ["MKL_NUM_THREADS"],
@@ -183,7 +212,7 @@ jobs:
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Require causal comparability and score first replay delta
+      - name: Require causal comparability and score replay path deltas
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -194,9 +223,11 @@ jobs:
           treatment=json.loads((candidate/"treatment/development-loop-manifest.json").read_text())
           crows=control["records"]
           trows=treatment["records"]
-          assert [int(x["round"]) for x in crows]==[0,1,2]
-          assert [int(x["round"]) for x in trows]==[0,1,2]
+          expected=[0,1,2,3]
+          assert [int(x["round"]) for x in crows]==expected
+          assert [int(x["round"]) for x in trows]==expected
           assert all(int(x["training"]["failure_replay_examples"])==0 for x in crows)
+
           active=[
               int(x["round"])
               for x in trows
@@ -204,6 +235,8 @@ jobs:
           ]
           assert active, "treatment never activated FA source replay"
           first=min(active)
+          assert first==2, f"expected first replay at round 2, got {first}"
+          assert 3 in active, f"second replay cycle did not activate: {active}"
 
           pre=[]
           for r in range(first):
@@ -225,25 +258,10 @@ jobs:
                   "identical":True,
               })
 
-          c=crows[first]
-          t=trows[first]
+          c0=crows[first]
+          t0=trows[first]
           for key in ("learning_rate","positive_example_weight","ordered_token_loss_weight"):
-              assert float(c["training"][key]) == float(t["training"][key])
-          assert int(c["training"]["fixed_replay_examples"]) == int(t["training"]["fixed_replay_examples"]) == 0
-          assert int(t["training"]["failure_replay_examples"]) > 0
-          assert int(t["training"]["manifest_count"]) > int(c["training"]["manifest_count"])
-
-          evidence_path=(
-              candidate/"treatment/failure-replay"/f"round-{first:02d}"/"development-failure-replay.json"
-          )
-          evidence=json.loads(evidence_path.read_text())
-          assert evidence["evidence_class"]=="development-only-failure-train-source-reuse"
-          assert evidence["mode"]=="train-source-reuse-v1"
-          assert evidence["failure_kinds"]==["false-accept"]
-          assert evidence["training_source_split"]=="train"
-          assert evidence["tone_backend_used"] is False
-          assert evidence["development_source_wav_bytes_copied"] is False
-          assert evidence["train_clean_source_wav_bytes_reused"] is True
+              assert float(c0["training"][key]) == float(t0["training"][key])
 
           def metrics(row):
               return {
@@ -256,26 +274,58 @@ jobs:
                   "model_sha256":row["model_sha256"],
                   "thresholds":row["calibration"]["calibrated_thresholds"],
               }
-          cm=metrics(c)
-          tm=metrics(t)
+
+          round_deltas=[]
+          for r in active:
+              c=crows[r]
+              t=trows[r]
+              assert int(c["training"]["fixed_replay_examples"]) == 0
+              assert int(t["training"]["fixed_replay_examples"]) == 0
+              assert int(t["training"]["failure_replay_examples"]) > 0
+              assert int(t["training"]["manifest_count"]) > int(c["training"]["manifest_count"])
+
+              evidence_path=(
+                  candidate/"treatment/failure-replay"/f"round-{r:02d}"/"development-failure-replay.json"
+              )
+              evidence=json.loads(evidence_path.read_text())
+              assert evidence["evidence_class"]=="development-only-failure-train-source-reuse"
+              assert evidence["mode"]=="train-source-reuse-v1"
+              assert evidence["failure_kinds"]==["false-accept"]
+              assert evidence["training_source_split"]=="train"
+              assert evidence["tone_backend_used"] is False
+              assert evidence["development_source_wav_bytes_copied"] is False
+              assert evidence["train_clean_source_wav_bytes_reused"] is True
+
+              cm=metrics(c)
+              tm=metrics(t)
+              round_deltas.append({
+                  "round":r,
+                  "replay_examples":int(t["training"]["failure_replay_examples"]),
+                  "control_manifest_count":int(c["training"]["manifest_count"]),
+                  "treatment_manifest_count":int(t["training"]["manifest_count"]),
+                  "control":cm,
+                  "treatment":tm,
+                  "delta_treatment_minus_control":{
+                      key:tm[key]-cm[key]
+                      for key in (
+                          "cal_frr","cal_far_per_hour","test_frr",
+                          "test_far_per_hour","false_accepts","false_rejects"
+                      )
+                  },
+              })
+
           scorecard={
-              "schema_version":1,
-              "evidence_class":"kws-v2-fa-source-reuse-paired-scorecard-v1",
+              "schema_version":2,
+              "evidence_class":"kws-v2-fa-source-reuse-paired-scorecard-v2",
               "diagnostic_only":True,
               "selection_feedback_allowed":False,
               "protected_evidence_used":False,
               "single_threaded":True,
               "pre_replay_identity":pre,
+              "active_replay_rounds":active,
               "first_replay_round":first,
-              "replay_examples":int(t["training"]["failure_replay_examples"]),
-              "control_manifest_count":int(c["training"]["manifest_count"]),
-              "treatment_manifest_count":int(t["training"]["manifest_count"]),
-              "control":cm,
-              "treatment":tm,
-              "delta_treatment_minus_control":{
-                  key:tm[key]-cm[key]
-                  for key in ("cal_frr","cal_far_per_hour","test_frr","test_far_per_hour","false_accepts","false_rejects")
-              },
+              "cumulative_path_round":max(active),
+              "round_deltas":round_deltas,
           }
           (temp/"paired-scorecard.json").write_text(
               json.dumps(scorecard, indent=2, sort_keys=True)+"\n"
@@ -316,4 +366,7 @@ jobs:
       - name: Enforce paired causal evidence
         if: always()
         run: |
+          set -euo pipefail
+          test "${{ steps.control.outputs.exit_code }}" = "0"
+          test "${{ steps.treatment.outputs.exit_code }}" = "0"
           test -f "$RUNNER_TEMP/paired-scorecard.json"
