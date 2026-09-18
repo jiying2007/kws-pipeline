@@ -187,6 +187,47 @@ def inspect_verified_archive(
     }
 
 
+def validate_extracted_bundle(*, receipt: dict, output_dir: pathlib.Path) -> None:
+    output_dir = output_dir.resolve()
+    executable_item = receipt["backend_executable"]
+    executable = output_dir / pathlib.PurePosixPath(str(executable_item["path"]))
+    if not executable.is_file():
+        raise ValueError("extracted backend executable is missing")
+    if executable.stat().st_size != int(executable_item["size_bytes"]):
+        raise ValueError("extracted backend executable size mismatch")
+    if sha256_file(executable) != str(executable_item["sha256"]):
+        raise ValueError("extracted backend executable sha256 mismatch")
+
+    lib_dir = output_dir / pathlib.PurePosixPath(str(receipt["lib_dir"]))
+    if not lib_dir.is_dir():
+        raise ValueError("extracted backend lib dir is missing")
+    expected_regular = {str(item["path"]): item for item in receipt["libraries"]}
+    actual_regular: dict[str, pathlib.Path] = {}
+    actual_symlinks: dict[str, str] = {}
+    for path in sorted(lib_dir.rglob("*")):
+        rel = path.relative_to(output_dir).as_posix()
+        if path.is_symlink():
+            actual_symlinks[rel] = os.readlink(path)
+        elif path.is_file():
+            actual_regular[rel] = path
+        elif not path.is_dir():
+            raise ValueError(f"backend lib dir contains unsupported entry: {path}")
+    if set(actual_regular) != set(expected_regular):
+        raise ValueError("extracted backend library file set mismatch")
+    for rel, path in actual_regular.items():
+        expected = expected_regular[rel]
+        if path.stat().st_size != int(expected["size_bytes"]):
+            raise ValueError(f"extracted backend library size mismatch: {rel}")
+        if sha256_file(path) != str(expected["sha256"]):
+            raise ValueError(f"extracted backend library sha256 mismatch: {rel}")
+    expected_symlinks = {
+        str(item["path"]): str(item["target"])
+        for item in receipt["library_symlinks"]
+    }
+    if actual_symlinks != expected_symlinks:
+        raise ValueError("extracted backend library symlink set/targets mismatch")
+
+
 def extract_verified_bundle(
     *,
     reference_path: pathlib.Path,
@@ -233,17 +274,7 @@ def extract_verified_bundle(
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.symlink_to(target)
 
-    executable = output_dir / pathlib.PurePosixPath(str(receipt["backend_executable"]["path"]))
-    if not executable.is_file() or sha256_file(executable) != receipt["backend_executable"]["sha256"]:
-        raise ValueError("extracted backend executable does not match receipt")
-    for item in receipt["libraries"]:
-        path = output_dir / pathlib.PurePosixPath(str(item["path"]))
-        if not path.is_file() or sha256_file(path) != item["sha256"]:
-            raise ValueError(f"extracted backend library does not match receipt: {item['path']}")
-    for item in receipt["library_symlinks"]:
-        path = output_dir / pathlib.PurePosixPath(str(item["path"]))
-        if not path.is_symlink() or os.readlink(path) != item["target"]:
-            raise ValueError(f"extracted backend symlink does not match receipt: {item['path']}")
+    validate_extracted_bundle(receipt=receipt, output_dir=output_dir)
     return receipt
 
 
