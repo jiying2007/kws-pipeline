@@ -26,11 +26,15 @@ def require_text(value: object, label: str) -> str:
     return value.strip()
 
 
-def require_sha(value: object, label: str) -> str:
+def require_hex(value: object, label: str, length: int) -> str:
     result = require_text(value, label).lower()
-    if len(result) != 64 or any(ch not in "0123456789abcdef" for ch in result):
-        raise ValueError(f"{label} must be lowercase sha256")
+    if len(result) != length or any(ch not in "0123456789abcdef" for ch in result):
+        raise ValueError(f"{label} must be lowercase {length}-hex")
     return result
+
+
+def require_sha(value: object, label: str) -> str:
+    return require_hex(value, label, 64)
 
 
 def load_shard(path: pathlib.Path) -> dict:
@@ -53,7 +57,7 @@ def load_shard(path: pathlib.Path) -> dict:
     ):
         if value.get(key) is not False:
             raise ValueError(f"{path}: protected flag {key} must be false")
-    require_sha(value.get("product_head"), f"{path}: product_head")
+    require_hex(value.get("product_head"), f"{path}: product_head", 40)
     require_sha(value.get("matrix_sha256"), f"{path}: matrix_sha256")
     require_sha(
         value.get("external_base_bundle_sha256"),
