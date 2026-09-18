@@ -1,3 +1,5 @@
+name: kws-v2-research-reset-contract
+
 on:
   push:
     branches: [main, "research/**", "codex/**"]
