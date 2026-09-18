@@ -1,0 +1,181 @@
+name: kws-v2-speech-like-source-replay-contract
+
+on:
+  push:
+    branches:
+      - "experiment/kws-speech-like-fa-replay-*"
+    paths:
+      - "training/development_failure_replay.py"
+      - ".github/workflows/kws-v2-speech-like-source-replay-contract.yml"
+  pull_request:
+    paths:
+      - "training/development_failure_replay.py"
+      - ".github/workflows/kws-v2-speech-like-source-replay-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Speech-like train-source failure replay is split-safe and tone-free
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys, tempfile
+
+          root=pathlib.Path(tempfile.mkdtemp(prefix="speech-like-source-replay-"))
+          repo=pathlib.Path.cwd()
+          sys.path.insert(0, str(repo/"training"))
+          import development_failure_replay as replay
+
+          cfg=json.loads(
+              (repo/"configs/training/xiaowo.v2-speech-like-stage-base.json").read_text()
+          )
+          aug=cfg["data_augmentation_v3"]
+          aug["failure_replay_enabled"]=True
+          aug["failure_replay_mode"]="train-source-reuse-v1"
+          aug["failure_replay_kinds"]=["false-accept"]
+          aug["failure_replay_examples_per_failure"]=2
+          aug["failure_replay_max_unique_failures"]=1
+          aug["failure_replay_max_per_keyword"]=1
+          cfg["kws_v2_speech_like_training"]["failure_replay"]="train-source-reuse-v1"
+          # Deliberately invalid for legacy resynthesis. Source-reuse must never inspect/use it.
+          cfg["generator"]["tts"]={"backend":"forbidden-source-reuse-contract"}
+          config=root/"config.json"
+          config.write_text(json.dumps(cfg))
+
+          train_clean=root/"train-clean.wav"
+          eval_clean=root/"eval-clean.wav"
+          eval_rendered=root/"eval-rendered.wav"
+          replay.write_wav(train_clean, [900 if i % 37 else -900 for i in range(16000)])
+          replay.write_wav(eval_clean, [700 if i % 41 else -700 for i in range(16000)])
+          replay.write_wav(eval_rendered, [500 if i % 43 else -500 for i in range(16000)])
+          train_sha=replay.sha256_file(train_clean)
+          eval_clean_sha=replay.sha256_file(eval_clean)
+          eval_sha=replay.sha256_file(eval_rendered)
+          assert len({train_sha, eval_clean_sha, eval_sha})==3
+
+          scene={
+              "distance_m": 3.5,
+              "azimuth_deg": 120.0,
+              "rt60_s": 0.62,
+              "snr_db": 7.0,
+              "noise_profile": "motor",
+              "playback_sir_db": -2.0,
+              "mic_spacing_m": 0.06,
+              "room_id": "fixture-eval",
+              "rir_id": "fixture-eval",
+          }
+          work=root/"work"
+          r0=work/"datasets/round-00"
+          r1=work/"datasets/round-01"
+          r0.mkdir(parents=True)
+          r1.mkdir(parents=True)
+          calibration={
+              "split":"calibration",
+              "kind":"confusable",
+              "tokens":["ni3","hao3","xiao3"],
+              "target_ids":[1,2,3],
+              "keyword_id":None,
+              "path":str(eval_rendered),
+              "source_path":str(eval_clean),
+              "source_wav_sha256":eval_clean_sha,
+              "wav_sha256":eval_sha,
+              "scene":scene,
+          }
+          test=dict(calibration)
+          test["split"]="test"
+          test["wav_sha256"]="1"*64
+          train={
+              "split":"train",
+              "kind":"confusable",
+              "tokens":["ni3","hao3","xiao3"],
+              "target_ids":[1,2,3],
+              "keyword_id":None,
+              "family_id":"speech-like-train-fixture",
+              "path":str(root/"unused-train-render.wav"),
+              "source_path":str(train_clean),
+              "source_wav_sha256":train_sha,
+              "wav_sha256":"2"*64,
+              "scene":scene,
+              "speech_like_provenance":{
+                  "provider_kind":"offline-tts",
+                  "provider_name":"fixture-provider",
+                  "provider_version":"fixture-v1",
+                  "voice_id":"fixture-train-voice",
+                  "source_id":"speech-like:train:fixture-confusable",
+                  "license_id":"Apache-2.0",
+              },
+          }
+          (r0/"domain-index.jsonl").write_text(
+              json.dumps(calibration)+"\n"+json.dumps(test)+"\n"
+          )
+          (r1/"domain-index.jsonl").write_text(json.dumps(train)+"\n")
+
+          false_positives=root/"false-positives.jsonl"
+          false_positives.write_text(json.dumps({
+              "recording":"domain-calibration-000000",
+              "keyword_id":1,
+              "time_s":0.8,
+              "confidence":0.91,
+          })+"\n")
+          records=[{
+              "round":0,
+              "calibration":{
+                  "false_positives_path":str(false_positives),
+                  "false_rejects_path":str(root/"unused-fr.jsonl"),
+              },
+              "test":{
+                  "false_positives_path":str(root/"unused-test-fp.jsonl"),
+                  "false_rejects_path":str(root/"unused-test-fr.jsonl"),
+              },
+          }]
+
+          out=work/"failure-replay/round-01"
+          evidence=replay.render_development_failure_replay(
+              config, records, work, out
+          )
+          assert evidence["evidence_class"]=="development-only-failure-train-source-reuse"
+          assert evidence["mode"]=="train-source-reuse-v1"
+          assert evidence["failure_kinds"]==["false-accept"]
+          assert evidence["training_source_split"]=="train"
+          assert evidence["tone_backend_used"] is False
+          assert evidence["formal_qualification_used"] is False
+          assert evidence["development_source_wav_bytes_copied"] is False
+          assert evidence["train_clean_source_wav_bytes_reused"] is True
+          assert evidence["examples"]==2
+          assert len(evidence["rows"])==2
+          assert len((out/"development-failure-replay.tsv").read_text().splitlines())==2
+          for row in evidence["rows"]:
+              assert row["train_source_wav_sha256"]==train_sha
+              assert row["source_evaluation_wav_sha256"]==eval_sha
+              assert row["failure_kinds"]==["false-accept"]
+              assert row["wav_sha256"] not in {train_sha, eval_sha}
+              assert pathlib.Path(row["path"]).is_file()
+
+          bad=json.loads(config.read_text())
+          bad["kws_v2_speech_like_training"]["tone_replay_allowed"]=True
+          bad_path=root/"bad.json"
+          bad_path.write_text(json.dumps(bad))
+          try:
+              replay.render_development_failure_replay(
+                  bad_path, records, work, work/"failure-replay/round-02"
+              )
+          except ValueError as exc:
+              assert "tone replay to stay disabled" in str(exc)
+          else:
+              raise AssertionError("source-reuse must reject tone replay permission")
+
+          print("speech-like train-source failure replay contract: ok")
+          PY
+
+      - name: Python syntax
+        run: python3 -m py_compile training/development_failure_replay.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
