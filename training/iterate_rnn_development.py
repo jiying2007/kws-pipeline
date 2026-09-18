@@ -431,17 +431,28 @@ def main() -> int:
         curriculum_path = work / "curriculum" / f"round-{round_index:02d}.json"
         curriculum_path.parent.mkdir(parents=True, exist_ok=True)
         _write_object(curriculum_path, curriculum)
+        controller_frr = max(float(cal_base["frr"]), float(test_base["frr"]))
+        controller_far_per_hour = max(
+            float(cal_base["far_per_hour"]),
+            float(test_base["far_per_hour"]),
+        )
         controller = controller_next(
             policy,
             controller,
             fr,
             fa,
-            frr=max(float(cal_base["frr"]), float(test_base["frr"])),
-            far_per_hour=max(
-                float(cal_base["far_per_hour"]),
-                float(test_base["far_per_hour"]),
-            ),
+            frr=controller_frr,
+            far_per_hour=controller_far_per_hour,
         )
+        record["controller_feedback"] = {
+            "signal_mode": str(controller["controller_signal_mode"]),
+            "frr": controller_frr,
+            "far_per_hour": controller_far_per_hour,
+            "severity": float(controller["controller_severity"]),
+            "next_positive_example_weight": float(controller["positive_example_weight"]),
+            "next_ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]),
+            "next_failure_replay_repeat": int(controller["failure_replay_repeat"]),
+        }
         if best_objective is None or score < best_objective - 1.0e-12:
             best_objective = score
             stale_rounds = 0
