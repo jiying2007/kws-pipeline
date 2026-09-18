@@ -46,7 +46,8 @@
         "repository": "csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06",
         "revision": "57345c004e13ed640e408c4c29ab56187b18f065",
         "path": "README.md",
-        "expected_sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74"
+        "expected_sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74",
+        "url": "https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/57345c004e13ed640e408c4c29ab56187b18f065/README.md"
       },
       "training_model_provenance": {
         "repository": "csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06",
