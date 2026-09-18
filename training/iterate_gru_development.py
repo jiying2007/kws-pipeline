@@ -103,6 +103,20 @@ def validate_policy(path: pathlib.Path) -> dict:
         step = finite(controller.get(f"{prefix}_step"), f"{prefix}_step")
         if not 0.0 < low <= initial <= high or step <= 0.0:
             raise ValueError(f"{prefix} controller bounds are invalid")
+    mode = str(controller.get("signal_mode", "legacy-counts-v1"))
+    if mode not in {"legacy-counts-v1", "normalized-rates-v1"}:
+        raise ValueError(f"unsupported loss controller signal_mode: {mode}")
+    if mode == "normalized-rates-v1":
+        frr_scale = finite(controller.get("normalization_frr"), "normalization_frr")
+        far_scale = finite(
+            controller.get("normalization_far_per_hour"),
+            "normalization_far_per_hour",
+        )
+        deadband = finite(controller.get("pressure_deadband", 0.0), "pressure_deadband")
+        if frr_scale <= 0.0 or far_scale <= 0.0:
+            raise ValueError("normalized controller scales must be > 0")
+        if not 0.0 <= deadband < 1.0:
+            raise ValueError("normalized controller pressure_deadband must be in [0,1)")
     freeze = policy.get("candidate_freeze")
     if not isinstance(freeze, dict):
         raise ValueError("candidate_freeze must be an object")
