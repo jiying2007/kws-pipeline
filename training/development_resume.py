@@ -236,7 +236,7 @@ def rebuild_progress(
     records: list[dict],
     policy: dict,
     controller_initial: Callable[[dict], dict],
-    controller_next: Callable[[dict, dict, int, int], dict],
+    controller_next: Callable[..., dict],
     strict_fn: Callable[[dict], bool],
 ) -> tuple[dict, float | None, int, int]:
     controller = controller_initial(policy)
@@ -249,7 +249,27 @@ def rebuild_progress(
             raise ValueError("development resume score must be finite")
         fr = int(record.get("false_rejects", 0))
         fa = int(record.get("false_accepts", 0))
-        controller = controller_next(policy, controller, fr, fa)
+        frr_values = [
+            float(metrics["frr"])
+            for split in ("calibration", "test")
+            for metrics in [record.get(split)]
+            if isinstance(metrics, dict) and isinstance(metrics.get("frr"), (int, float))
+        ]
+        far_values = [
+            float(metrics["far_per_hour"])
+            for split in ("calibration", "test")
+            for metrics in [record.get(split)]
+            if isinstance(metrics, dict)
+            and isinstance(metrics.get("far_per_hour"), (int, float))
+        ]
+        controller = controller_next(
+            policy,
+            controller,
+            fr,
+            fa,
+            frr=max(frr_values) if frr_values else None,
+            far_per_hour=max(far_values) if far_values else None,
+        )
         streak = streak + 1 if strict_fn(record) else 0
         if best is None or score < best - 1.0e-12:
             best = score
