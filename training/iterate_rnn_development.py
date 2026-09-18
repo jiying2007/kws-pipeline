@@ -15,6 +15,11 @@ sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TOOLS))
 
 import development_resume as development_resume  # noqa: E402
+from development_loss_controller import (  # noqa: E402
+    initial_controller,
+    next_controller as next_loss_controller,
+    validate_controller_config,
+)
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -94,29 +99,7 @@ def validate_policy(path: pathlib.Path) -> dict:
     if int(policy.get("training_acoustic_seed_namespace", 0)) <= 0:
         raise ValueError("training_acoustic_seed_namespace must be positive")
     controller = policy.get("loss_controller")
-    if not isinstance(controller, dict):
-        raise ValueError("loss_controller must be an object")
-    for prefix in ("positive_example_weight", "ordered_token_loss_weight"):
-        initial = finite(controller.get(f"{prefix}_initial"), f"{prefix}_initial")
-        low = finite(controller.get(f"{prefix}_min"), f"{prefix}_min")
-        high = finite(controller.get(f"{prefix}_max"), f"{prefix}_max")
-        step = finite(controller.get(f"{prefix}_step"), f"{prefix}_step")
-        if not 0.0 < low <= initial <= high or step <= 0.0:
-            raise ValueError(f"{prefix} controller bounds are invalid")
-    mode = str(controller.get("signal_mode", "legacy-counts-v1"))
-    if mode not in {"legacy-counts-v1", "normalized-rates-v1"}:
-        raise ValueError(f"unsupported loss controller signal_mode: {mode}")
-    if mode == "normalized-rates-v1":
-        frr_scale = finite(controller.get("normalization_frr"), "normalization_frr")
-        far_scale = finite(
-            controller.get("normalization_far_per_hour"),
-            "normalization_far_per_hour",
-        )
-        deadband = finite(controller.get("pressure_deadband", 0.0), "pressure_deadband")
-        if frr_scale <= 0.0 or far_scale <= 0.0:
-            raise ValueError("normalized controller scales must be > 0")
-        if not 0.0 <= deadband < 1.0:
-            raise ValueError("normalized controller pressure_deadband must be in [0,1)")
+    validate_controller_config(controller)
     freeze = policy.get("candidate_freeze")
     if not isinstance(freeze, dict):
         raise ValueError("candidate_freeze must be an object")
@@ -185,8 +168,7 @@ def merge_domain_metrics(calibration: dict, test: dict) -> dict:
 
 
 def controller_initial(policy: dict) -> dict:
-    raw = policy["loss_controller"]
-    return {"positive_example_weight": float(raw["positive_example_weight_initial"]), "ordered_token_loss_weight": float(raw["ordered_token_loss_weight_initial"]), "failure_replay_repeat": 0}
+    return initial_controller(policy)
 
 
 def controller_next(
@@ -198,85 +180,15 @@ def controller_next(
     frr: float | None = None,
     far_per_hour: float | None = None,
 ) -> dict:
-    raw = policy["loss_controller"]
-    positive = float(current["positive_example_weight"])
-    ordered = float(current["ordered_token_loss_weight"])
-    p_step = float(raw["positive_example_weight_step"])
-    o_step = float(raw["ordered_token_loss_weight_step"])
-    mode = str(raw.get("signal_mode", "legacy-counts-v1"))
-
-    severity = 0.0
-    if mode == "normalized-rates-v1":
-        if frr is None or far_per_hour is None:
-            raise ValueError("normalized controller requires FRR and FAR/hour signals")
-        frr_value = finite(frr, "controller.frr")
-        far_value = finite(far_per_hour, "controller.far_per_hour")
-        frr_scale = finite(raw.get("normalization_frr"), "normalization_frr")
-        far_scale = finite(raw.get("normalization_far_per_hour"), "normalization_far_per_hour")
-        deadband = finite(raw.get("pressure_deadband", 0.0), "pressure_deadband")
-        if frr_scale <= 0.0 or far_scale <= 0.0 or not 0.0 <= deadband < 1.0:
-            raise ValueError("normalized controller scales/deadband are invalid")
-        frr_pressure = frr_value / frr_scale
-        far_pressure = far_value / far_scale
-        severity = max(frr_pressure, far_pressure)
-        if frr_pressure > far_pressure * (1.0 + deadband):
-            positive += p_step
-            ordered -= 0.5 * o_step
-        elif far_pressure > frr_pressure * (1.0 + deadband):
-            positive -= p_step
-            ordered += o_step
-    elif mode == "legacy-counts-v1":
-        if false_rejects > false_accepts:
-            positive += p_step
-            ordered -= 0.5 * o_step
-        elif false_accepts > false_rejects:
-            positive -= p_step
-            ordered += o_step
-        elif false_accepts > 0:
-            ordered += 0.5 * o_step
-        severity = float(false_rejects + false_accepts)
-    else:
-        raise ValueError(f"unsupported loss controller signal_mode: {mode}")
-
-    positive = clamp(
-        positive,
-        float(raw["positive_example_weight_min"]),
-        float(raw["positive_example_weight_max"]),
+    return next_loss_controller(
+        policy,
+        current,
+        false_rejects,
+        false_accepts,
+        frr=frr,
+        far_per_hour=far_per_hour,
+        latch_after_failure=bool(policy.get("failure_replay_latch_after_failure", False)),
     )
-    ordered = clamp(
-        ordered,
-        float(raw["ordered_token_loss_weight_min"]),
-        float(raw["ordered_token_loss_weight_max"]),
-    )
-
-    if mode == "normalized-rates-v1":
-        if severity <= 1.0:
-            repeat = 0
-        elif severity <= 2.0:
-            repeat = 1
-        elif severity <= 4.0:
-            repeat = 2
-        else:
-            repeat = int(policy["failure_replay_repeat_max"])
-    else:
-        failures = false_rejects + false_accepts
-        previous_repeat = int(current.get("failure_replay_repeat", 0))
-        if failures <= 0:
-            repeat = previous_repeat if bool(policy.get("failure_replay_latch_after_failure", False)) else 0
-        elif failures <= 4:
-            repeat = 1
-        elif failures <= 16:
-            repeat = 2
-        else:
-            repeat = int(policy["failure_replay_repeat_max"])
-    repeat = min(repeat, int(policy["failure_replay_repeat_max"]))
-    return {
-        "positive_example_weight": positive,
-        "ordered_token_loss_weight": ordered,
-        "failure_replay_repeat": repeat,
-        "controller_signal_mode": mode,
-        "controller_severity": severity,
-    }
 
 
 def repeated(path: pathlib.Path | None, count: int) -> list[pathlib.Path]:
