@@ -275,8 +275,10 @@ jobs:
           path = pathlib.Path(".github/workflows/kws-v2-threshold-diagnostic-live.yml")
           live = path.read_text(encoding="utf-8")
           required = (
-              '--development-domain-summary "${{ steps.selected.outputs.domain_summary }}"',
-              '--diagnostic-round-selection-policy "${{ steps.selected.outputs.selection_policy }}"',
+              '--development-domain-summary "',
+              'steps.selected.outputs.domain_summary',
+              '--diagnostic-round-selection-policy "',
+              'steps.selected.outputs.selection_policy',
               'manifest_selected_round=value.get("selected_round")',
               'selected-calibration.references.jsonl',
               'selected-test.references.jsonl',
