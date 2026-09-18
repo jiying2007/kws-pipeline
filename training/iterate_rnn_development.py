@@ -417,7 +417,17 @@ def main() -> int:
         curriculum_path = work / "curriculum" / f"round-{round_index:02d}.json"
         curriculum_path.parent.mkdir(parents=True, exist_ok=True)
         _write_object(curriculum_path, curriculum)
-        controller = controller_next(policy, controller, fr, fa)
+        controller = controller_next(
+            policy,
+            controller,
+            fr,
+            fa,
+            frr=max(float(cal_base["frr"]), float(test_base["frr"])),
+            far_per_hour=max(
+                float(cal_base["far_per_hour"]),
+                float(test_base["far_per_hour"]),
+            ),
+        )
         if best_objective is None or score < best_objective - 1.0e-12:
             best_objective = score
             stale_rounds = 0
