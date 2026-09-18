@@ -487,6 +487,8 @@ def main() -> int:
                 str(index),
                 "--output-summary",
                 str(summary),
+                "--portable-audio-dir",
+                str(bundle_root / split / "audio"),
             ],
             logs / f"materialize-base-{split}.log",
         )
@@ -496,6 +498,16 @@ def main() -> int:
         if summary_value.get("tone_backend_used") is not False:
             raise ValueError(f"{split}: tone backend unexpectedly present")
         for row in load_jsonl(index):
+            audio_ref = pathlib.Path(str(row.get("path", "")))
+            if audio_ref.is_absolute() or any(part in {"", ".", ".."} for part in audio_ref.parts):
+                raise ValueError(f"{split}: portable base index audio path is unsafe")
+            audio_path = (index.parent / audio_ref).resolve()
+            try:
+                audio_path.relative_to(index.parent.resolve())
+            except ValueError as exc:
+                raise ValueError(f"{split}: portable audio path escaped split directory") from exc
+            if not audio_path.is_file() or sha256_file(audio_path) != str(row.get("wav_sha256", "")):
+                raise ValueError(f"{split}: portable audio file/hash mismatch")
             provenance = row.get("speech_like_provenance")
             if not isinstance(provenance, dict):
                 raise ValueError(f"{split}: speech-like provenance missing")
@@ -515,6 +527,7 @@ def main() -> int:
             "summary_sha256": sha256_file(summary),
             "corpus_sha256": str(summary_value["corpus_sha256"]),
             "recordings": int(summary_value["recordings"]),
+            "audio_path_contract": str(summary_value.get("audio_path_contract", "")),
         }
 
     if len(observed_sources) != 384 or len(observed_voice_owner) != 24:
@@ -598,12 +611,36 @@ def main() -> int:
                 "summary_sha256": split_spec[split]["summary_sha256"],
                 "corpus_sha256": split_spec[split]["corpus_sha256"],
                 "recordings": split_spec[split]["recordings"],
+                "audio_path_contract": split_spec[split]["audio_path_contract"],
             }
             for split in SPLITS
         },
         "tone_backend_used": False,
         "protected_evidence_used": False,
     }
+    portable_body = dict(manifest_body)
+    portable_body["splits"] = {
+        split: {
+            **{
+                key: value
+                for key, value in manifest_body["splits"][split].items()
+                if key not in {"index", "summary"}
+            },
+            "index": f"{split}/dataset-index.jsonl",
+            "summary": f"{split}/dataset-summary.json",
+        }
+        for split in SPLITS
+    }
+    portable_manifest = dict(portable_body)
+    portable_manifest["bundle_manifest_sha256"] = canonical_sha256(portable_body)
+    portable_manifest_path = bundle_root / "stage-a-base-bundle.json"
+    portable_manifest_path.write_text(
+        json.dumps(portable_manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    manifest_body["portable_bundle_manifest"] = relative_ref(portable_manifest_path, work)
+    manifest_body["portable_bundle_manifest_sha256"] = sha256_file(portable_manifest_path)
     manifest = dict(manifest_body)
     manifest["bundle_manifest_sha256"] = canonical_sha256(manifest_body)
     bundle_manifest = work / "stage-a-base-bundle.json"
@@ -613,7 +650,8 @@ def main() -> int:
     )
     print(
         f"speech-like Stage A corpus: recordings=384 voices=24 "
-        f"provider={candidate_name} bundle={manifest['external_base_bundle_sha256']}"
+        f"provider={candidate_name} bundle={manifest['external_base_bundle_sha256']} "
+        f"portable={portable_manifest_path}"
     )
     return 0
 
