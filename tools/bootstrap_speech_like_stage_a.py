@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -58,6 +59,14 @@ def require_executable(raw: pathlib.Path | None, fallback: str, label: str) -> p
     if not path.is_file() or not os.access(path, os.X_OK):
         raise ValueError(f"{label} is missing or not executable: {path}")
     return path
+
+
+def auto_backend_platform_key() -> str | None:
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    if system == "linux" and machine in {"x86_64", "amd64"}:
+        return "linux-x86_64"
+    return None
 
 
 def select_candidate(reference_path: pathlib.Path, requested: str | None) -> tuple[dict, dict]:
@@ -244,7 +253,7 @@ def main() -> int:
     reference_path = args.provider_reference.resolve()
     if not reference_path.is_file():
         raise ValueError(f"provider reference is missing: {reference_path}")
-    _, candidate = select_candidate(reference_path, args.reference_candidate)
+    reference, candidate = select_candidate(reference_path, args.reference_candidate)
     candidate_name = str(candidate["name"])
     profile = str(candidate.get("provider_profile", ""))
     runtime = candidate["runtime_asset_bundle"]
@@ -293,11 +302,127 @@ def main() -> int:
         refresh=args.refresh,
     )
 
-    backend = require_executable(
-        args.backend_executable,
-        "sherpa-onnx-offline-tts",
-        "sherpa-onnx-offline-tts",
-    )
+    backend_platform = None
+    backend_archive = None
+    backend_receipt = None
+    backend_root = None
+    backend_lib_dir = None
+    backend_archive_state = None
+    backend_source_url = None
+
+    if args.backend_executable is not None:
+        backend = require_executable(
+            args.backend_executable,
+            "sherpa-onnx-offline-tts",
+            "sherpa-onnx-offline-tts",
+        )
+        backend_mode = "explicit"
+    else:
+        backend_platform = auto_backend_platform_key()
+        if backend_platform is None:
+            backend = require_executable(
+                None,
+                "sherpa-onnx-offline-tts",
+                "sherpa-onnx-offline-tts",
+            )
+            backend_mode = "path"
+        else:
+            table = reference.get("backend_bootstrap")
+            if not isinstance(table, dict) or backend_platform not in table:
+                raise ValueError(
+                    f"provider reference has no backend bootstrap for {backend_platform}"
+                )
+            backend_contract = table[backend_platform]
+            if not isinstance(backend_contract, dict):
+                raise ValueError("backend bootstrap contract must be an object")
+            backend_name = require_text(
+                backend_contract.get("asset"), "backend asset name"
+            )
+            backend_source_url = require_text(
+                backend_contract.get("url"), "backend asset URL"
+            )
+            backend_sha = require_sha256(
+                backend_contract.get("expected_sha256"), "backend asset sha256"
+            )
+            backend_size = int(backend_contract.get("expected_size_bytes", 0))
+            if backend_size <= 0:
+                raise ValueError("backend expected_size_bytes must be positive")
+            backend_archive = cache / backend_name
+            backend_archive_state = download_verified(
+                url=backend_source_url,
+                target=backend_archive,
+                expected_sha256=backend_sha,
+                expected_size=backend_size,
+                label="sherpa backend archive",
+                allow_file_urls=args.allow_file_urls,
+                refresh=args.refresh,
+            )
+            backend_root = cache / (
+                "backend-" + backend_platform + "-" + backend_sha[:12]
+            )
+            backend_receipt = cache / (
+                "backend-receipt-" + backend_platform + "-" + backend_sha[:12] + ".json"
+            )
+            if args.refresh and backend_root.exists():
+                shutil.rmtree(backend_root)
+            if args.refresh:
+                backend_receipt.unlink(missing_ok=True)
+            if not backend_receipt.is_file():
+                if backend_root.exists() and any(backend_root.iterdir()):
+                    raise ValueError(
+                        "backend extraction cache exists without a verified receipt; "
+                        "use --refresh to rebuild it"
+                    )
+                run_checked(
+                    [
+                        sys.executable,
+                        str(TOOLS / "verify_speech_like_backend_bundle.py"),
+                        "--reference",
+                        str(reference_path),
+                        "--platform",
+                        backend_platform,
+                        "--archive",
+                        str(backend_archive),
+                        "--output-dir",
+                        str(backend_root),
+                        "--receipt",
+                        str(backend_receipt),
+                    ],
+                    work / "verify-backend-bundle.log",
+                )
+            run_checked(
+                [
+                    sys.executable,
+                    str(TOOLS / "verify_speech_like_backend_bundle.py"),
+                    "--reference",
+                    str(reference_path),
+                    "--platform",
+                    backend_platform,
+                    "--archive",
+                    str(backend_archive),
+                    "--output-dir",
+                    str(backend_root),
+                    "--receipt",
+                    str(backend_receipt),
+                    "--verify-only",
+                ],
+                work / "verify-backend-cache.log",
+            )
+            receipt_value = load_object(backend_receipt)
+            expected_root = pathlib.PurePosixPath(
+                str(receipt_value["backend_executable"]["path"])
+            )
+            backend = require_executable(
+                backend_root.joinpath(*expected_root.parts),
+                "sherpa-onnx-offline-tts",
+                "sherpa-onnx-offline-tts",
+            )
+            lib_rel = pathlib.PurePosixPath(str(receipt_value["lib_dir"]))
+            backend_lib_dir = backend_root.joinpath(*lib_rel.parts).resolve()
+            if not backend_lib_dir.is_dir():
+                raise ValueError(f"verified backend lib dir is missing: {backend_lib_dir}")
+            backend_mode = "bootstrapped"
+
     resampler: pathlib.Path | None = None
     if profile == "sherpa-vits-resampled-to-16k-v1":
         resampler = require_executable(args.resampler_executable, "ffmpeg", "ffmpeg")
@@ -324,8 +449,21 @@ def main() -> int:
             "source_url": license_url,
         },
         "backend": {
+            "mode": backend_mode,
             "path": str(backend),
             "sha256": sha256_file(backend),
+            "platform": backend_platform,
+            "archive_path": str(backend_archive) if backend_archive is not None else None,
+            "archive_state": backend_archive_state,
+            "archive_source_url": backend_source_url,
+            "receipt_path": str(backend_receipt) if backend_receipt is not None else None,
+            "receipt_sha256": (
+                sha256_file(backend_receipt)
+                if backend_receipt is not None and backend_receipt.is_file()
+                else None
+            ),
+            "bundle_root": str(backend_root) if backend_root is not None else None,
+            "lib_dir": str(backend_lib_dir) if backend_lib_dir is not None else None,
         },
         "resampler": (
             {"path": str(resampler), "sha256": sha256_file(resampler)}
@@ -365,6 +503,21 @@ def main() -> int:
         "--work-dir",
         str(corpus_work),
     ]
+    if backend_platform is not None:
+        command.extend(
+            [
+                "--backend-platform",
+                backend_platform,
+                "--backend-bundle-archive",
+                str(backend_archive),
+                "--backend-bundle-receipt",
+                str(backend_receipt),
+                "--backend-bundle-root",
+                str(backend_root),
+                "--backend-lib-dir",
+                str(backend_lib_dir),
+            ]
+        )
     if resampler is not None:
         command.extend(["--resampler-executable", str(resampler)])
     run_checked(command, work / "corpus-generation.log")

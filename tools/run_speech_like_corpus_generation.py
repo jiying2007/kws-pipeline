@@ -219,6 +219,11 @@ def main() -> int:
     parser.add_argument("--runtime-archive", required=True, type=pathlib.Path)
     parser.add_argument("--license-evidence", required=True, type=pathlib.Path)
     parser.add_argument("--backend-executable", required=True, type=pathlib.Path)
+    parser.add_argument("--backend-platform")
+    parser.add_argument("--backend-bundle-archive", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-receipt", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-root", type=pathlib.Path)
+    parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
@@ -230,6 +235,19 @@ def main() -> int:
     runtime_archive = require_file(args.runtime_archive, "runtime archive")
     license_evidence = require_file(args.license_evidence, "license evidence")
     backend = require_file(args.backend_executable, "TTS backend executable", executable=True)
+    backend_bundle_values = (
+        args.backend_platform,
+        args.backend_bundle_archive,
+        args.backend_bundle_receipt,
+        args.backend_bundle_root,
+        args.backend_lib_dir,
+    )
+    if any(value is not None for value in backend_bundle_values) and any(
+        value is None for value in backend_bundle_values
+    ):
+        raise ValueError(
+            "backend platform/archive/receipt/root/lib-dir must be supplied together"
+        )
 
     reference, candidate = select_reference_candidate(reference_path, args.reference_candidate)
     candidate_name = str(candidate["name"])
@@ -375,6 +393,21 @@ def main() -> int:
                 str(source_rate),
             ]
         )
+        if args.backend_platform is not None:
+            command.extend(
+                [
+                    "--backend-platform",
+                    str(args.backend_platform),
+                    "--backend-bundle-archive",
+                    str(args.backend_bundle_archive.resolve()),
+                    "--backend-bundle-receipt",
+                    str(args.backend_bundle_receipt.resolve()),
+                    "--backend-bundle-root",
+                    str(args.backend_bundle_root.resolve()),
+                    "--backend-lib-dir",
+                    str(args.backend_lib_dir.resolve()),
+                ]
+            )
     else:
         command.extend(["--executable", str(backend)])
     run_checked(command, logs / "materialize-provider.log")

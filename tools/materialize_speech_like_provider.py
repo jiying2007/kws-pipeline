@@ -14,6 +14,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
 from speech_like_corpus_plan import VOICE_CLASS, normalize_plan  # noqa: E402
 from verify_speech_like_runtime_bundle import RECEIPT_CLASS, inspect_verified_archive  # noqa: E402
+from verify_speech_like_backend_bundle import (  # noqa: E402
+    RECEIPT_CLASS as BACKEND_RECEIPT_CLASS,
+    inspect_verified_archive as inspect_verified_backend_archive,
+)
 
 SPEAKER_MAP_CLASS = "speech-like-provider-speaker-map-v1"
 NATIVE_PROFILE = "sherpa-vits-native-16k-v1"
@@ -251,6 +255,136 @@ def validate_runtime_asset_binding(
     }
 
 
+def validate_backend_bundle_binding(
+    *,
+    reference_path: pathlib.Path,
+    platform_key: str,
+    archive_path: pathlib.Path,
+    receipt_path: pathlib.Path,
+    bundle_root: pathlib.Path,
+    backend_executable: pathlib.Path,
+    backend_lib_dir: pathlib.Path,
+) -> dict:
+    archive_path = require_file(archive_path, "backend bundle archive")
+    receipt_path = require_file(receipt_path, "backend bundle receipt")
+    bundle_root = bundle_root.resolve()
+    backend_executable = require_file(
+        backend_executable, "backend executable", executable=True
+    )
+    backend_lib_dir = backend_lib_dir.resolve()
+    if not backend_lib_dir.is_dir():
+        raise ValueError(f"backend lib dir is missing: {backend_lib_dir}")
+
+    receipt = load_object(receipt_path)
+    if (
+        int(receipt.get("schema_version", 0)) != 1
+        or receipt.get("evidence_class") != BACKEND_RECEIPT_CLASS
+    ):
+        raise ValueError("backend bundle receipt identity mismatch")
+    inspected = inspect_verified_backend_archive(
+        reference_path=reference_path.resolve(),
+        platform_key=platform_key,
+        archive_path=archive_path,
+    )
+    if receipt != inspected:
+        raise ValueError("backend bundle receipt does not match the verified archive")
+
+    expected_executable = (
+        bundle_root
+        / pathlib.PurePosixPath(str(inspected["backend_executable"]["path"]))
+    ).resolve()
+    if backend_executable != expected_executable:
+        raise ValueError("backend executable path does not match verified bundle")
+    if backend_executable.stat().st_size != int(
+        inspected["backend_executable"]["size_bytes"]
+    ):
+        raise ValueError("backend executable size does not match verified bundle")
+    if sha256_file(backend_executable) != str(
+        inspected["backend_executable"]["sha256"]
+    ):
+        raise ValueError("backend executable sha256 does not match verified bundle")
+
+    expected_lib_dir = (
+        bundle_root / pathlib.PurePosixPath(str(inspected["lib_dir"]))
+    ).resolve()
+    if backend_lib_dir != expected_lib_dir:
+        raise ValueError("backend lib dir does not match verified bundle")
+
+    expected_regular = {
+        str(item["path"]): item for item in inspected["libraries"]
+    }
+    actual_regular: dict[str, pathlib.Path] = {}
+    actual_symlinks: dict[str, str] = {}
+    archive_root = pathlib.PurePosixPath(str(inspected["archive_root"]))
+    for path in sorted(backend_lib_dir.rglob("*")):
+        rel_from_bundle = path.relative_to(bundle_root).as_posix()
+        if path.is_symlink():
+            actual_symlinks[rel_from_bundle] = os.readlink(path)
+        elif path.is_file():
+            actual_regular[rel_from_bundle] = path
+        elif not path.is_dir():
+            raise ValueError(f"backend lib dir contains unsupported entry: {path}")
+
+    if set(actual_regular) != set(expected_regular):
+        missing = sorted(set(expected_regular) - set(actual_regular))
+        extra = sorted(set(actual_regular) - set(expected_regular))
+        raise ValueError(
+            f"backend library file set drifted; missing={missing} extra={extra}"
+        )
+    for rel, path in actual_regular.items():
+        expected = expected_regular[rel]
+        if path.stat().st_size != int(expected["size_bytes"]):
+            raise ValueError(f"backend library size mismatch: {rel}")
+        if sha256_file(path) != str(expected["sha256"]):
+            raise ValueError(f"backend library sha256 mismatch: {rel}")
+
+    expected_symlinks = {
+        str(item["path"]): str(item["target"])
+        for item in inspected["library_symlinks"]
+    }
+    if actual_symlinks != expected_symlinks:
+        raise ValueError("backend library symlink set/targets drifted")
+
+    assets = [
+        {
+            "role": "backend_bundle_archive",
+            "path": str(archive_path),
+            "sha256": sha256_file(archive_path),
+        },
+        {
+            "role": "backend_bundle_receipt",
+            "path": str(receipt_path),
+            "sha256": sha256_file(receipt_path),
+        },
+        {
+            "role": "backend_executable",
+            "path": str(backend_executable),
+            "sha256": sha256_file(backend_executable),
+        },
+    ]
+    for index, rel in enumerate(sorted(actual_regular)):
+        path = actual_regular[rel]
+        assets.append(
+            {
+                "role": f"backend_lib_{index:04d}",
+                "path": str(path),
+                "sha256": sha256_file(path),
+            }
+        )
+
+    return {
+        "platform": platform_key,
+        "archive_sha256": str(inspected["archive"]["sha256"]),
+        "receipt_sha256": sha256_file(receipt_path),
+        "backend_executable_sha256": sha256_file(backend_executable),
+        "backend_lib_dir": str(backend_lib_dir),
+        "library_count": len(actual_regular),
+        "library_symlink_count": len(actual_symlinks),
+        "assets": assets,
+        "safe_archive_verified": True,
+    }
+
+
 def build_provider(
     *,
     provider_profile: str,
@@ -268,6 +402,8 @@ def build_provider(
     rule_far: pathlib.Path | None,
     adapter: pathlib.Path | None,
     backend_executable: pathlib.Path | None,
+    backend_lib_dir: pathlib.Path | None,
+    backend_bundle_assets: list[dict] | None,
     resampler_executable: pathlib.Path | None,
     source_sample_rate: int | None,
     runtime_asset_receipt: pathlib.Path | None,
@@ -345,30 +481,62 @@ def build_provider(
         source_sample_rate = int(source_sample_rate or 0)
         if source_sample_rate <= 0 or source_sample_rate >= 16000:
             raise ValueError("resampled VITS profile requires source_sample_rate in [1,15999]")
-        assets.extend(
-            [
-                {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)},
+        assets.append(
+            {"role": "adapter", "path": str(adapter), "sha256": sha256_file(adapter)}
+        )
+        if (backend_lib_dir is None) != (backend_bundle_assets is None):
+            raise ValueError(
+                "backend_lib_dir and backend_bundle_assets must be supplied together"
+            )
+        if backend_bundle_assets is None:
+            assets.append(
                 {
                     "role": "backend_executable",
                     "path": str(backend_executable),
                     "sha256": sha256_file(backend_executable),
-                },
-                {
-                    "role": "resampler_executable",
-                    "path": str(resampler_executable),
-                    "sha256": sha256_file(resampler_executable),
-                },
-            ]
+                }
+            )
+        else:
+            seen_roles = {item["role"] for item in assets}
+            for item in backend_bundle_assets:
+                role = require_text(item.get("role"), "backend bundle asset role")
+                if role in seen_roles:
+                    raise ValueError(f"duplicate provider asset role: {role}")
+                asset_path = require_file(
+                    pathlib.Path(str(item.get("path", ""))),
+                    f"backend bundle asset {role}",
+                )
+                expected = str(item.get("sha256", "")).lower()
+                if len(expected) != 64 or sha256_file(asset_path) != expected:
+                    raise ValueError(f"backend bundle asset sha256 mismatch: {role}")
+                assets.append(
+                    {"role": role, "path": str(asset_path), "sha256": expected}
+                )
+                seen_roles.add(role)
+            if "backend_executable" not in seen_roles:
+                raise ValueError("backend bundle assets must include backend_executable")
+        assets.append(
+            {
+                "role": "resampler_executable",
+                "path": str(resampler_executable),
+                "sha256": sha256_file(resampler_executable),
+            }
         )
         argv_template = [
             "{executable}",
             "{asset:adapter}",
             "--backend-executable={asset:backend_executable}",
-            "--resampler-executable={asset:resampler_executable}",
-            "--model={asset:model}",
-            "--tokens={asset:tokens}",
-            "--lexicon={asset:lexicon}",
         ]
+        if backend_lib_dir is not None:
+            argv_template.append(f"--backend-lib-dir={backend_lib_dir.resolve()}")
+        argv_template.extend(
+            [
+                "--resampler-executable={asset:resampler_executable}",
+                "--model={asset:model}",
+                "--tokens={asset:tokens}",
+                "--lexicon={asset:lexicon}",
+            ]
+        )
         if phone_fst is not None:
             argv_template.extend(
                 [
@@ -395,6 +563,14 @@ def build_provider(
             "resampled": True,
             "adapter_sha256": sha256_file(adapter),
             "backend_executable_sha256": sha256_file(backend_executable),
+            "backend_bundle_verified": backend_bundle_assets is not None,
+            "backend_library_count": (
+                sum(
+                    1
+                    for item in (backend_bundle_assets or [])
+                    if str(item.get("role", "")).startswith("backend_lib_")
+                )
+            ),
             "resampler_executable_sha256": sha256_file(resampler_executable),
         }
     else:
@@ -441,6 +617,11 @@ def materialize(
     reference_candidate: str | None = None,
     runtime_asset_archive: pathlib.Path | None = None,
     runtime_asset_receipt: pathlib.Path | None = None,
+    backend_platform: str | None = None,
+    backend_bundle_archive: pathlib.Path | None = None,
+    backend_bundle_receipt: pathlib.Path | None = None,
+    backend_bundle_root: pathlib.Path | None = None,
+    backend_lib_dir: pathlib.Path | None = None,
 ) -> tuple[dict, list[dict], dict]:
     plan = normalize_plan(corpus_plan)
     slots = [
@@ -494,6 +675,33 @@ def materialize(
     elif runtime_asset_archive is not None or runtime_asset_receipt is not None:
         raise ValueError("runtime asset archive/receipt require a pinned provider reference")
 
+    backend_bundle_binding = None
+    backend_bundle_values = (
+        backend_platform,
+        backend_bundle_archive,
+        backend_bundle_receipt,
+        backend_bundle_root,
+        backend_lib_dir,
+    )
+    if any(value is not None for value in backend_bundle_values):
+        if any(value is None for value in backend_bundle_values):
+            raise ValueError(
+                "backend platform/archive/receipt/root/lib-dir must be supplied together"
+            )
+        if provider_reference is None:
+            raise ValueError("backend bundle verification requires provider_reference")
+        if backend_executable is None:
+            raise ValueError("backend bundle verification requires backend_executable")
+        backend_bundle_binding = validate_backend_bundle_binding(
+            reference_path=provider_reference,
+            platform_key=require_text(backend_platform, "backend_platform"),
+            archive_path=backend_bundle_archive,
+            receipt_path=backend_bundle_receipt,
+            bundle_root=backend_bundle_root,
+            backend_executable=backend_executable,
+            backend_lib_dir=backend_lib_dir,
+        )
+
     provider, normalization = build_provider(
         provider_profile=provider_profile,
         provider_name=provider_name,
@@ -510,6 +718,12 @@ def materialize(
         rule_far=rule_far,
         adapter=adapter,
         backend_executable=backend_executable,
+        backend_lib_dir=backend_lib_dir,
+        backend_bundle_assets=(
+            backend_bundle_binding["assets"]
+            if backend_bundle_binding is not None
+            else None
+        ),
         resampler_executable=resampler_executable,
         source_sample_rate=source_sample_rate,
         runtime_asset_receipt=runtime_asset_receipt,
@@ -577,6 +791,13 @@ def materialize(
     if runtime_asset_binding is not None:
         summary["runtime_asset_binding"] = runtime_asset_binding
         summary["runtime_asset_receipt_verified"] = True
+    if backend_bundle_binding is not None:
+        summary["backend_bundle_binding"] = {
+            key: value
+            for key, value in backend_bundle_binding.items()
+            if key != "assets"
+        }
+        summary["backend_bundle_verified"] = True
     return provider, inventory, summary
 
 
@@ -608,6 +829,11 @@ def main() -> int:
     parser.add_argument("--reference-candidate")
     parser.add_argument("--runtime-asset-archive", type=pathlib.Path)
     parser.add_argument("--runtime-asset-receipt", type=pathlib.Path)
+    parser.add_argument("--backend-platform")
+    parser.add_argument("--backend-bundle-archive", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-receipt", type=pathlib.Path)
+    parser.add_argument("--backend-bundle-root", type=pathlib.Path)
+    parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--output-provider", required=True, type=pathlib.Path)
     parser.add_argument("--output-inventory", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
@@ -638,6 +864,11 @@ def main() -> int:
         reference_candidate=args.reference_candidate,
         runtime_asset_archive=args.runtime_asset_archive,
         runtime_asset_receipt=args.runtime_asset_receipt,
+        backend_platform=args.backend_platform,
+        backend_bundle_archive=args.backend_bundle_archive,
+        backend_bundle_receipt=args.backend_bundle_receipt,
+        backend_bundle_root=args.backend_bundle_root,
+        backend_lib_dir=args.backend_lib_dir,
     )
     args.output_provider.parent.mkdir(parents=True, exist_ok=True)
     args.output_provider.write_text(

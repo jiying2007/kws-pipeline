@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import subprocess
 import tempfile
@@ -33,8 +34,8 @@ def inspect_pcm16_mono(path: pathlib.Path, expected_rate: int, label: str) -> No
         )
 
 
-def run_checked(command: list[str], label: str) -> None:
-    completed = subprocess.run(command, shell=False)
+def run_checked(command: list[str], label: str, env: dict[str, str] | None = None) -> None:
+    completed = subprocess.run(command, shell=False, env=env)
     if completed.returncode != 0:
         raise RuntimeError(f"{label} failed with exit {completed.returncode}")
 
@@ -44,6 +45,7 @@ def main() -> int:
         description="Run one VITS TTS request at its native rate and normalize it to mono PCM16 16 kHz."
     )
     parser.add_argument("--backend-executable", required=True, type=pathlib.Path)
+    parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--resampler-executable", required=True, type=pathlib.Path)
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
@@ -67,6 +69,11 @@ def main() -> int:
         raise ValueError("source-sample-rate must be positive and below 16000 for this adapter")
 
     backend = require_file(args.backend_executable, "TTS backend executable")
+    backend_lib_dir = None
+    if args.backend_lib_dir is not None:
+        backend_lib_dir = args.backend_lib_dir.resolve()
+        if not backend_lib_dir.is_dir():
+            raise ValueError(f"backend lib dir is missing: {backend_lib_dir}")
     resampler = require_file(args.resampler_executable, "resampler executable")
     model = require_file(args.model, "VITS model")
     tokens = require_file(args.tokens, "VITS tokens")
@@ -111,7 +118,16 @@ def main() -> int:
                 args.text,
             ]
         )
-        run_checked(backend_command, "VITS backend")
+        backend_env = None
+        if backend_lib_dir is not None:
+            backend_env = dict(os.environ)
+            current = backend_env.get("LD_LIBRARY_PATH", "")
+            backend_env["LD_LIBRARY_PATH"] = (
+                str(backend_lib_dir)
+                if not current
+                else str(backend_lib_dir) + os.pathsep + current
+            )
+        run_checked(backend_command, "VITS backend", env=backend_env)
         inspect_pcm16_mono(native, args.source_sample_rate, "VITS backend")
 
         run_checked(
