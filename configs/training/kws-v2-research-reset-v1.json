@@ -28,39 +28,39 @@
   },
   "loss_ladder": {
     "m0-ctc-only": {
-      "positive_example_weight": 1,
       "ordered_token_loss_weight": 0,
       "keyword_sequence_margin_loss_weight": 0,
       "prefix_completion_loss_weight": 0,
-      "recurrent_release_loss_weight": 0
+      "recurrent_release_loss_weight": 0,
+      "positive_example_weight_policy": "class-balance"
     },
     "m1-ctc-ordered": {
-      "positive_example_weight": 1,
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0,
       "prefix_completion_loss_weight": 0,
-      "recurrent_release_loss_weight": 0
+      "recurrent_release_loss_weight": 0,
+      "positive_example_weight_policy": "class-balance"
     },
     "m2-plus-margin": {
-      "positive_example_weight": 1,
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0,
-      "recurrent_release_loss_weight": 0
+      "recurrent_release_loss_weight": 0,
+      "positive_example_weight_policy": "class-balance"
     },
     "m3-plus-completion": {
-      "positive_example_weight": 1,
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0.1,
-      "recurrent_release_loss_weight": 0
+      "recurrent_release_loss_weight": 0,
+      "positive_example_weight_policy": "class-balance"
     },
     "m4-plus-release": {
-      "positive_example_weight": 1,
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0.1,
-      "recurrent_release_loss_weight": 0.05
+      "recurrent_release_loss_weight": 0.05,
+      "positive_example_weight_policy": "class-balance"
     }
   },
   "threshold_diagnostic": {
@@ -151,5 +151,15 @@
     "negative_exposure_seconds": 3600,
     "protected_evidence_used": false,
     "promotion_allowed": false
+  },
+  "class_balance": {
+    "policy": "binary-positive-negative-count-ratio-v1",
+    "enabled": true,
+    "positive_example_weight_formula": "negative_examples / positive_examples",
+    "minimum_positive_example_weight": 1,
+    "maximum_positive_example_weight": 12,
+    "derived_before_training": true,
+    "same_weight_across_loss_ladder": true,
+    "classifier_balance_mode": "equal-class-sampler-v1"
   }
 }
