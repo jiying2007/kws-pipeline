@@ -120,6 +120,42 @@ def validate_generalization_policy(path: pathlib.Path) -> dict:
     return value
 
 
+def validate_development_policies(policy_path: pathlib.Path, inputs: dict) -> dict[str, dict]:
+    raw = inputs.get("development_policies")
+    if not isinstance(raw, dict) or set(raw) != {"rnn", "gru"}:
+        raise ValueError("development_policies must define exactly rnn/gru")
+    repo_root = policy_path.resolve().parents[2]
+    result: dict[str, dict] = {}
+    expected_ids = {
+        "rnn": "rnn-development-curriculum-loop-v1",
+        "gru": "gru-development-curriculum-loop-v1",
+    }
+    for family in ("rnn", "gru"):
+        path = resolve_input(policy_path, str(raw[family]))
+        value = load_object(path)
+        if value.get("policy") != expected_ids[family] or value.get("evidence_scope") != "development-only":
+            raise ValueError(f"{family} Stage-A development policy identity mismatch")
+        if family == "rnn" and value.get("model_family") != "rnn":
+            raise ValueError("RNN Stage-A policy model_family mismatch")
+        for field in ("qualification_used", "shadow_used", "formal_qualification_used"):
+            if value.get(field) is not False:
+                raise ValueError(f"{family} Stage-A policy requires {field}=false")
+        if int(value.get("min_rounds", 0)) != 8 or int(value.get("max_rounds", 0)) != 8:
+            raise ValueError(f"{family} Stage-A policy must use a fixed eight-round budget")
+        if int(value.get("patience", 0)) < 8:
+            raise ValueError(f"{family} Stage-A policy patience must not stop before round eight")
+        if int(value.get("epochs_per_round", 0)) != 8:
+            raise ValueError(f"{family} Stage-A policy epochs_per_round must remain 8")
+        if int(value.get("stable_strict_pass_rounds", 0)) != 2:
+            raise ValueError(f"{family} Stage-A policy stable_strict_pass_rounds must remain 2")
+        result[family] = {
+            "path": path,
+            "relative": path.relative_to(repo_root).as_posix(),
+            "sha256": sha256_file(path),
+        }
+    return result
+
+
 def validate_base_config(value: dict) -> None:
     model = value.get("model")
     if not isinstance(model, dict):
@@ -145,6 +181,7 @@ def candidate_record(
     stage_base_sha: str,
     mutation_paths: set[str],
     resource_name: str,
+    development_policy: dict,
 ) -> dict:
     return {
         "candidate_id": candidate_id,
@@ -160,6 +197,9 @@ def candidate_record(
         "stage_base_config_sha256": stage_base_sha,
         "mutation_paths_from_stage_base": sorted(mutation_paths),
         "resource_contract_candidate": resource_name,
+        "development_policy": development_policy["relative"],
+        "development_policy_path_contract": "repository-relative-v1",
+        "development_policy_sha256": development_policy["sha256"],
         "generalization_tier": "search",
         "protected_evidence_used": False,
     }
@@ -172,6 +212,7 @@ def build_stage_a(
     base_sha: str,
     out: pathlib.Path,
     resources: dict[tuple[str, int], str],
+    development_policies: dict[str, dict],
 ) -> list[dict]:
     stage = policy["stage_a_frontend"]
     allowed = set(stage["mutable_paths"])
@@ -200,6 +241,7 @@ def build_stage_a(
                     stage_base_sha=base_sha,
                     mutation_paths=mutations,
                     resource_name=resources[(family, 64)],
+                    development_policy=development_policies[family],
                 )
             )
     return records
@@ -213,6 +255,7 @@ def build_stage_b(
     frontend: str,
     out: pathlib.Path,
     resources: dict[tuple[str, int], str],
+    development_policies: dict[str, dict],
 ) -> list[dict]:
     if frontend not in set(policy["stage_a_frontend"]["frontends"]):
         raise ValueError("stage B frontend must be a stage-A candidate")
@@ -248,6 +291,7 @@ def build_stage_b(
                     stage_base_sha=stage_base_sha,
                     mutation_paths=mutations,
                     resource_name=resources[(family, hidden)],
+                    development_policy=development_policies[family],
                 )
             )
     return records
@@ -271,6 +315,7 @@ def main() -> int:
     validate_base_config(base)
     resources = validate_resource_contract(resource_path, policy)
     generalization = validate_generalization_policy(generalization_path)
+    development_policies = validate_development_policies(policy_path, inputs)
 
     if args.stage == "C":
         if policy["stage_c_loss_ablation"].get("enabled") is not False:
@@ -289,6 +334,7 @@ def main() -> int:
             base_sha=base_sha,
             out=out,
             resources=resources,
+            development_policies=development_policies,
         )
     else:
         if args.frontend is None:
@@ -300,6 +346,7 @@ def main() -> int:
             frontend=args.frontend,
             out=out,
             resources=resources,
+            development_policies=development_policies,
         )
 
     matrix = {
@@ -312,6 +359,9 @@ def main() -> int:
         "canonical_base_config_path_contract": "repository-relative-v1",
         "canonical_base_config_sha256": base_sha,
         "resource_contract_sha256": sha256_file(resource_path),
+        "development_policy_sha256": {
+            family: development_policies[family]["sha256"] for family in ("rnn", "gru")
+        },
         "generalization_policy_sha256": sha256_file(generalization_path),
         "recommended_generalization_search_seeds": int(
             generalization["tiers"]["search"]["recommended_independent_seeds"]
