@@ -75,6 +75,77 @@ def repository_sha() -> str | None:
     return value if re.fullmatch(r"[0-9a-f]{40,64}", value) else None
 
 
+def _text_sha256(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _cpu_runtime_identity() -> dict:
+    fallback_model = platform.processor().strip() or None
+    model_name: str | None = None
+    flags: list[str] = []
+    cpuinfo = pathlib.Path("/proc/cpuinfo")
+    if cpuinfo.is_file():
+        try:
+            for raw in cpuinfo.read_text(encoding="utf-8", errors="replace").splitlines():
+                key, sep, value = raw.partition(":")
+                if not sep:
+                    continue
+                normalized = key.strip().lower()
+                payload = value.strip()
+                if normalized in {"model name", "hardware"} and model_name is None and payload:
+                    model_name = payload
+                elif normalized in {"flags", "features"} and not flags:
+                    flags = sorted(set(payload.split()))
+        except OSError:
+            pass
+    flags_text = " ".join(flags)
+    return {
+        "model": model_name or fallback_model,
+        "logical_cpu_count": os.cpu_count(),
+        "flags_sha256": _text_sha256(flags_text) if flags_text else None,
+        "flag_count": len(flags),
+    }
+
+
+def _torch_runtime_identity() -> dict:
+    config_text = str(torch.__config__.show())
+    parallel_fn = getattr(torch.__config__, "parallel_info", None)
+    parallel_text = str(parallel_fn()) if callable(parallel_fn) else ""
+    mkl_backend = getattr(torch.backends, "mkl", None)
+    openmp_backend = getattr(torch.backends, "openmp", None)
+    mkldnn_backend = getattr(torch.backends, "mkldnn", None)
+    return {
+        "config_sha256": _text_sha256(config_text),
+        "parallel_info_sha256": (
+            _text_sha256(parallel_text) if parallel_text else None
+        ),
+        "mkl_available": (
+            bool(mkl_backend.is_available())
+            if mkl_backend is not None and hasattr(mkl_backend, "is_available")
+            else None
+        ),
+        "openmp_available": (
+            bool(openmp_backend.is_available())
+            if openmp_backend is not None and hasattr(openmp_backend, "is_available")
+            else None
+        ),
+        "mkldnn_available": (
+            bool(mkldnn_backend.is_available())
+            if mkldnn_backend is not None and hasattr(mkldnn_backend, "is_available")
+            else None
+        ),
+        "mkldnn_enabled": (
+            bool(mkldnn_backend.enabled)
+            if mkldnn_backend is not None and hasattr(mkldnn_backend, "enabled")
+            else None
+        ),
+        "thread_env": {
+            key: os.environ.get(key)
+            for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+        },
+    }
+
+
 def training_environment() -> dict:
     code_paths = [
         pathlib.Path(__file__).resolve(),
@@ -102,7 +173,9 @@ def training_environment() -> dict:
         "python_implementation": platform.python_implementation(),
         "platform": platform.platform(),
         "machine": platform.machine(),
+        "cpu_runtime": _cpu_runtime_identity(),
         "torch_version": str(torch.__version__),
+        "torch_runtime": _torch_runtime_identity(),
         "cuda_version": str(torch.version.cuda) if torch.version.cuda is not None else None,
         "cudnn_version": int(cudnn) if cudnn is not None else None,
         "torch_num_threads": int(torch.get_num_threads()),
