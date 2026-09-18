@@ -26,7 +26,7 @@ permissions:
 
 concurrency:
   group: kws-v2-threshold-diagnostic-live-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   production-corpus:
@@ -211,7 +211,7 @@ jobs:
           .venv/bin/python tools/diagnose_kws_threshold_operating_curve.py \
             --runner build/kws_wav_gru \
             --model "${{ steps.selected.outputs.model }}" \
-            --tokens assets/tokens.txt \
+            --tokens keywords/tokens.example.txt \
             --keywords keywords/zh_cn_example.tsv \
             --config "${{ steps.selected.outputs.effective_config }}" \
             --calibration-references "${{ steps.selected.outputs.calibration_references }}" \
