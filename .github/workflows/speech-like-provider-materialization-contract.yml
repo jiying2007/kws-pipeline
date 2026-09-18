@@ -43,11 +43,19 @@ jobs:
           #!/usr/bin/env python3
           import math, pathlib, struct, sys, wave
           output = None
+          rule_fsts = None
+          rule_fars = None
           for arg in sys.argv[1:]:
               if arg.startswith("--output-filename="):
                   output = pathlib.Path(arg.split("=", 1)[1])
+              elif arg.startswith("--tts-rule-fsts="):
+                  rule_fsts = arg.split("=", 1)[1]
+              elif arg.startswith("--tts-rule-fars="):
+                  rule_fars = arg.split("=", 1)[1]
           if output is None:
               raise SystemExit("missing --output-filename")
+          if rule_fsts is None or len(rule_fsts.split(",")) != 3 or rule_fars is None:
+              raise SystemExit("missing AISHELL3 text-normalization rule assets")
           output.parent.mkdir(parents=True, exist_ok=True)
           frames = [int(4000 * math.sin(2.0 * math.pi * 440.0 * n / 8000.0)) for n in range(800)]
           with wave.open(str(output), "wb") as w:
@@ -78,6 +86,10 @@ jobs:
           printf 'fake-model\n' > "$root/assets/model.onnx"
           printf 'fake-tokens\n' > "$root/assets/tokens.txt"
           printf 'fake-lexicon\n' > "$root/assets/lexicon.txt"
+          printf 'fake-phone-fst\n' > "$root/assets/phone.fst"
+          printf 'fake-date-fst\n' > "$root/assets/date.fst"
+          printf 'fake-number-fst\n' > "$root/assets/number.fst"
+          printf 'fake-rule-far\n' > "$root/assets/rule.far"
           printf 'LicenseRef-test-fixture evidence\n' > "$root/assets/LICENSE.txt"
           printf '%s\n' '---' 'license: apache-2.0' '---' > "$root/assets/AISHELL3-MODEL-CARD.md"
           python3 - <<'PY'
@@ -106,6 +118,10 @@ jobs:
               (root / "assets" / "model.onnx", "model.onnx"),
               (root / "assets" / "tokens.txt", "tokens.txt"),
               (root / "assets" / "lexicon.txt", "lexicon.txt"),
+              (root / "assets" / "phone.fst", "phone.fst"),
+              (root / "assets" / "date.fst", "date.fst"),
+              (root / "assets" / "number.fst", "number.fst"),
+              (root / "assets" / "rule.far", "rule.far"),
           ):
               (package / name).write_bytes(source.read_bytes())
           archive = root / "vits-icefall-zh-aishell3.tar.bz2"
@@ -143,7 +159,10 @@ jobs:
           assert receipt["evidence_class"] == "speech-like-runtime-asset-bundle-v1"
           assert receipt["candidate"] == "icefall-tts-aishell3-vits-low-2024-04-06"
           assert receipt["safe_archive_verified"] is True
-          assert set(receipt["files"]) == {"model", "tokens", "lexicon"}
+          assert set(receipt["files"]) == {
+              "model", "tokens", "lexicon",
+              "phone_fst", "date_fst", "number_fst", "rule_far",
+          }
           for role, item in receipt["files"].items():
               path = root / "runtime-assets" / item["path"]
               assert path.is_file()
@@ -222,6 +241,10 @@ jobs:
               "model": "model.onnx",
               "tokens": "tokens.txt",
               "lexicon": "lexicon.txt",
+              "phone_fst": "phone.fst",
+              "date_fst": "date.fst",
+              "number_fst": "number.fst",
+              "rule_far": "rule.far",
           }
           assert bundle["checksum_authority"] == "corroborated-not-upstream-digest"
           assert len(bundle["checksum_evidence"]) == 2
@@ -255,6 +278,10 @@ jobs:
             --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
             --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
             --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --phone-fst "$root/runtime-assets/vits-icefall-zh-aishell3/phone.fst" \
+            --date-fst "$root/runtime-assets/vits-icefall-zh-aishell3/date.fst" \
+            --number-fst "$root/runtime-assets/vits-icefall-zh-aishell3/number.fst" \
+            --rule-far "$root/runtime-assets/vits-icefall-zh-aishell3/rule.far" \
             --output-provider "$root/provider-resampled.json" \
             --output-inventory "$root/inventory-resampled.jsonl" \
             --summary "$root/provider-resampled-summary.json"
@@ -274,8 +301,9 @@ jobs:
           roles = {item["role"] for item in provider["assets"]}
           assert roles == {
               "adapter", "backend_executable", "resampler_executable",
-              "model", "tokens", "lexicon", "license_evidence",
-              "runtime_asset_receipt",
+              "model", "tokens", "lexicon",
+              "phone_fst", "date_fst", "number_fst", "rule_far",
+              "license_evidence", "runtime_asset_receipt",
           }
           summary = json.loads((root / "provider-resampled-summary.json").read_text())
           assert summary["provider_profile"] == "sherpa-vits-resampled-to-16k-v1"
@@ -299,7 +327,7 @@ jobs:
                   "size_bytes": receipt["files"][role]["size_bytes"],
                   "sha256": receipt["files"][role]["sha256"],
               }
-              for role in ("model", "tokens", "lexicon")
+              for role in sorted(receipt["files"])
           }
           norm = summary["audio_normalization"]
           assert norm["source_sample_rate_hz"] == 8000
@@ -340,6 +368,10 @@ jobs:
             --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
             --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
             --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --phone-fst "$root/runtime-assets/vits-icefall-zh-aishell3/phone.fst" \
+            --date-fst "$root/runtime-assets/vits-icefall-zh-aishell3/date.fst" \
+            --number-fst "$root/runtime-assets/vits-icefall-zh-aishell3/number.fst" \
+            --rule-far "$root/runtime-assets/vits-icefall-zh-aishell3/rule.far" \
             --output-provider "$root/bad-reference-provider.json" \
             --output-inventory "$root/bad-reference-inventory.jsonl" \
             --summary "$root/bad-reference-summary.json"; then
@@ -387,6 +419,10 @@ jobs:
                   ("model.onnx", b"model"),
                   ("tokens.txt", b"tokens"),
                   ("lexicon.txt", b"lexicon"),
+                  ("phone.fst", b"phone"),
+                  ("date.fst", b"date"),
+                  ("number.fst", b"number"),
+                  ("rule.far", b"rule"),
               ):
                   info = tarfile.TarInfo(f"vits-icefall-zh-aishell3/{name}")
                   info.size = len(payload)
@@ -444,6 +480,10 @@ jobs:
             --model "$root/runtime-assets/vits-icefall-zh-aishell3/model.onnx" \
             --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
             --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --phone-fst "$root/runtime-assets/vits-icefall-zh-aishell3/phone.fst" \
+            --date-fst "$root/runtime-assets/vits-icefall-zh-aishell3/date.fst" \
+            --number-fst "$root/runtime-assets/vits-icefall-zh-aishell3/number.fst" \
+            --rule-far "$root/runtime-assets/vits-icefall-zh-aishell3/rule.far" \
             --output-provider "$root/bad-receipt-provider.json" \
             --output-inventory "$root/bad-receipt-inventory.jsonl" \
             --summary "$root/bad-receipt-summary.json"; then
@@ -484,6 +524,10 @@ jobs:
             --model "$root/tampered-model.onnx" \
             --tokens "$root/runtime-assets/vits-icefall-zh-aishell3/tokens.txt" \
             --lexicon "$root/runtime-assets/vits-icefall-zh-aishell3/lexicon.txt" \
+            --phone-fst "$root/runtime-assets/vits-icefall-zh-aishell3/phone.fst" \
+            --date-fst "$root/runtime-assets/vits-icefall-zh-aishell3/date.fst" \
+            --number-fst "$root/runtime-assets/vits-icefall-zh-aishell3/number.fst" \
+            --rule-far "$root/runtime-assets/vits-icefall-zh-aishell3/rule.far" \
             --output-provider "$root/bad-model-provider.json" \
             --output-inventory "$root/bad-model-inventory.jsonl" \
             --summary "$root/bad-model-summary.json"; then

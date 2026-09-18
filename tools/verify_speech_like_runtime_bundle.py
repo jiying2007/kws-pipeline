@@ -94,8 +94,14 @@ def inspect_verified_archive(
     source_url = require_text(bundle.get("url"), "runtime asset url")
     archive_root = require_text(bundle.get("archive_root"), "runtime archive root")
     required = bundle.get("required_files")
-    if not isinstance(required, dict) or set(required) != {"model", "tokens", "lexicon"}:
+    if not isinstance(required, dict) or not required:
+        raise ValueError("runtime required_files must be a non-empty object")
+    minimum_roles = {"model", "tokens", "lexicon"}
+    if not minimum_roles.issubset(set(required)):
         raise ValueError("runtime required_files must contain model/tokens/lexicon")
+    for role, rel in required.items():
+        require_text(role, "runtime required_files role")
+        require_text(rel, f"required_files.{role}")
     if expected_size <= 0 or len(expected_sha) != 64:
         raise ValueError("runtime archive size/sha256 contract is invalid")
     if archive_path.name != expected_name:
@@ -149,7 +155,7 @@ def inspect_verified_archive(
             required_members[role] = matches[0]
 
         files: dict[str, dict] = {}
-        for role in ("model", "tokens", "lexicon"):
+        for role in sorted(required_members):
             member = required_members[role]
             stream = archive.extractfile(member)
             if stream is None:

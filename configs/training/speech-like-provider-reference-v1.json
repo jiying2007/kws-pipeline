@@ -28,6 +28,10 @@
         "model",
         "tokens",
         "lexicon",
+        "phone_fst",
+        "date_fst",
+        "number_fst",
+        "rule_far",
         "license_evidence",
         "runtime_asset_receipt"
       ],
@@ -63,7 +67,11 @@
         "required_files": {
           "model": "model.onnx",
           "tokens": "tokens.txt",
-          "lexicon": "lexicon.txt"
+          "lexicon": "lexicon.txt",
+          "phone_fst": "phone.fst",
+          "date_fst": "date.fst",
+          "number_fst": "number.fst",
+          "rule_far": "rule.far"
         },
         "checksum_authority": "corroborated-not-upstream-digest",
         "checksum_evidence": [
@@ -146,6 +154,7 @@
     "No binary equality is assumed between the HF training ONNX and the sherpa release model.onnx.",
     "The resampling profile hash-binds the Python adapter, TTS backend executable, resampler executable, model, tokens, lexicon, license evidence, and verified runtime-asset receipt.",
     "fanchen-C stays blocked until explicit weight-license evidence is supplied; downloadability is not treated as authorization.",
-    "No TTS runtime or model asset is part of the shipping KWS runtime."
+    "No TTS runtime or model asset is part of the shipping KWS runtime.",
+    "The AISHELL-3 sherpa runtime contract includes phone/date/number FSTs and rule.far because the upstream run-aishell3 example passes both --tts-rule-fsts and --tts-rule-fars."
   ]
 }

@@ -179,6 +179,10 @@ def validate_runtime_asset_binding(
     model: pathlib.Path,
     tokens: pathlib.Path,
     lexicon: pathlib.Path,
+    phone_fst: pathlib.Path | None,
+    date_fst: pathlib.Path | None,
+    number_fst: pathlib.Path | None,
+    rule_far: pathlib.Path | None,
 ) -> dict:
     archive_path = require_file(archive_path, "runtime asset archive")
     receipt_path = require_file(receipt_path, "runtime asset receipt")
@@ -202,6 +206,27 @@ def validate_runtime_asset_binding(
         "tokens": require_file(tokens, "VITS tokens"),
         "lexicon": require_file(lexicon, "VITS lexicon"),
     }
+    rule_values = {
+        "phone_fst": phone_fst,
+        "date_fst": date_fst,
+        "number_fst": number_fst,
+        "rule_far": rule_far,
+    }
+    if any(value is not None for value in rule_values.values()):
+        if any(value is None for value in rule_values.values()):
+            raise ValueError("phone/date/number FSTs and rule.far must be supplied together")
+        supplied.update(
+            {
+                role: require_file(value, role.replace("_", " "))
+                for role, value in rule_values.items()
+            }
+        )
+    if set(supplied) != set(inspected["files"]):
+        missing = sorted(set(inspected["files"]) - set(supplied))
+        extra = sorted(set(supplied) - set(inspected["files"]))
+        raise ValueError(
+            f"supplied runtime asset roles do not match verified archive; missing={missing} extra={extra}"
+        )
     for role, path in supplied.items():
         expected = inspected["files"][role]
         if path.stat().st_size != int(expected["size_bytes"]):
@@ -220,7 +245,7 @@ def validate_runtime_asset_binding(
                 "size_bytes": int(inspected["files"][role]["size_bytes"]),
                 "sha256": str(inspected["files"][role]["sha256"]),
             }
-            for role in ("model", "tokens", "lexicon")
+            for role in sorted(inspected["files"])
         },
         "safe_archive_verified": True,
     }
@@ -237,6 +262,10 @@ def build_provider(
     model: pathlib.Path,
     tokens: pathlib.Path,
     lexicon: pathlib.Path,
+    phone_fst: pathlib.Path | None,
+    date_fst: pathlib.Path | None,
+    number_fst: pathlib.Path | None,
+    rule_far: pathlib.Path | None,
     adapter: pathlib.Path | None,
     backend_executable: pathlib.Path | None,
     resampler_executable: pathlib.Path | None,
@@ -255,6 +284,18 @@ def build_provider(
         {"role": "lexicon", "path": str(lexicon), "sha256": sha256_file(lexicon)},
         {"role": "license_evidence", "path": str(license_file), "sha256": sha256_file(license_file)},
     ]
+    rule_values = {
+        "phone_fst": phone_fst,
+        "date_fst": date_fst,
+        "number_fst": number_fst,
+        "rule_far": rule_far,
+    }
+    if any(value is not None for value in rule_values.values()):
+        if any(value is None for value in rule_values.values()):
+            raise ValueError("phone/date/number FSTs and rule.far must be supplied together")
+        for role, value in rule_values.items():
+            path = require_file(value, role.replace("_", " "))
+            assets.append({"role": role, "path": str(path), "sha256": sha256_file(path)})
     if runtime_asset_receipt is not None:
         runtime_asset_receipt = require_file(runtime_asset_receipt, "runtime asset receipt")
         assets.append(
@@ -274,11 +315,22 @@ def build_provider(
             "--vits-model={asset:model}",
             "--vits-tokens={asset:tokens}",
             "--vits-lexicon={asset:lexicon}",
-            "--sid={speaker_id}",
-            "--vits-length-scale={length_scale}",
-            "--output-filename={output}",
-            "{text}",
         ]
+        if phone_fst is not None:
+            argv_template.extend(
+                [
+                    "--tts-rule-fsts={asset:phone_fst},{asset:date_fst},{asset:number_fst}",
+                    "--tts-rule-fars={asset:rule_far}",
+                ]
+            )
+        argv_template.extend(
+            [
+                "--sid={speaker_id}",
+                "--vits-length-scale={length_scale}",
+                "--output-filename={output}",
+                "{text}",
+            ]
+        )
         timeout_seconds = 120
         normalization = {
             "policy": "native-16k-v1",
@@ -316,12 +368,25 @@ def build_provider(
             "--model={asset:model}",
             "--tokens={asset:tokens}",
             "--lexicon={asset:lexicon}",
-            "--speaker-id={speaker_id}",
-            "--length-scale={length_scale}",
-            f"--source-sample-rate={source_sample_rate}",
-            "--output={output}",
-            "{text}",
         ]
+        if phone_fst is not None:
+            argv_template.extend(
+                [
+                    "--phone-fst={asset:phone_fst}",
+                    "--date-fst={asset:date_fst}",
+                    "--number-fst={asset:number_fst}",
+                    "--rule-far={asset:rule_far}",
+                ]
+            )
+        argv_template.extend(
+            [
+                "--speaker-id={speaker_id}",
+                "--length-scale={length_scale}",
+                f"--source-sample-rate={source_sample_rate}",
+                "--output={output}",
+                "{text}",
+            ]
+        )
         timeout_seconds = 300
         normalization = {
             "policy": "verified-source-rate-to-pcm16-16k-v1",
@@ -364,6 +429,10 @@ def materialize(
     model: pathlib.Path,
     tokens: pathlib.Path,
     lexicon: pathlib.Path,
+    phone_fst: pathlib.Path | None = None,
+    date_fst: pathlib.Path | None = None,
+    number_fst: pathlib.Path | None = None,
+    rule_far: pathlib.Path | None = None,
     adapter: pathlib.Path | None = None,
     backend_executable: pathlib.Path | None = None,
     resampler_executable: pathlib.Path | None = None,
@@ -415,6 +484,10 @@ def materialize(
                 model=model,
                 tokens=tokens,
                 lexicon=lexicon,
+                phone_fst=phone_fst,
+                date_fst=date_fst,
+                number_fst=number_fst,
+                rule_far=rule_far,
             )
         elif runtime_asset_archive is not None or runtime_asset_receipt is not None:
             raise ValueError("reference candidate does not declare a runtime asset bundle")
@@ -431,6 +504,10 @@ def materialize(
         model=model,
         tokens=tokens,
         lexicon=lexicon,
+        phone_fst=phone_fst,
+        date_fst=date_fst,
+        number_fst=number_fst,
+        rule_far=rule_far,
         adapter=adapter,
         backend_executable=backend_executable,
         resampler_executable=resampler_executable,
@@ -519,6 +596,10 @@ def main() -> int:
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--lexicon", required=True, type=pathlib.Path)
+    parser.add_argument("--phone-fst", type=pathlib.Path)
+    parser.add_argument("--date-fst", type=pathlib.Path)
+    parser.add_argument("--number-fst", type=pathlib.Path)
+    parser.add_argument("--rule-far", type=pathlib.Path)
     parser.add_argument("--adapter", type=pathlib.Path)
     parser.add_argument("--backend-executable", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
@@ -545,6 +626,10 @@ def main() -> int:
         model=args.model,
         tokens=args.tokens,
         lexicon=args.lexicon,
+        phone_fst=args.phone_fst,
+        date_fst=args.date_fst,
+        number_fst=args.number_fst,
+        rule_far=args.rule_far,
         adapter=args.adapter,
         backend_executable=args.backend_executable,
         resampler_executable=args.resampler_executable,
