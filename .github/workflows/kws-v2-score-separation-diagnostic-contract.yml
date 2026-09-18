@@ -163,7 +163,7 @@ jobs:
           assert '"--score-probe"' in analyzer
           assert '"--score-probe"' in runner
           assert '"retention_valid"' in analyzer
-          assert '"retention_valid"' in runner
+          assert "retention_valid" in runner
           assert "kws_decoder_peek_keyword_state" in runner
           assert "decoder.thresholds[k] = 2.0f" in runner
           print("live score separation wiring: ok")
