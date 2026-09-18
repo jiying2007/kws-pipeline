@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import pathlib
 import subprocess
+import struct
 import tempfile
 import wave
 
@@ -34,6 +36,63 @@ def inspect_pcm16_mono(path: pathlib.Path, expected_rate: int, label: str) -> No
         )
 
 
+def _sinc(value: float) -> float:
+    if abs(value) < 1e-12:
+        return 1.0
+    x = math.pi * value
+    return math.sin(x) / x
+
+
+def resample_8k_to_16k_lanczos(source: pathlib.Path, output: pathlib.Path, radius: int = 8) -> None:
+    with wave.open(str(source), "rb") as reader:
+        if (
+            reader.getnchannels() != 1
+            or reader.getsampwidth() != 2
+            or reader.getframerate() != 8000
+            or reader.getcomptype() != "NONE"
+        ):
+            raise ValueError("builtin resampler requires mono PCM16 8000-Hz WAV")
+        raw = reader.readframes(reader.getnframes())
+    if not raw:
+        raise ValueError("builtin resampler source WAV is empty")
+    samples = struct.unpack("<" + "h" * (len(raw) // 2), raw)
+
+    taps: list[tuple[int, float]] = []
+    for offset in range(-radius + 1, radius + 1):
+        distance = 0.5 - offset
+        if abs(distance) >= radius:
+            continue
+        weight = _sinc(distance) * _sinc(distance / radius)
+        taps.append((offset, weight))
+    norm = sum(weight for _, weight in taps)
+    if abs(norm) < 1e-12:
+        raise ValueError("builtin resampler coefficient normalization failed")
+    taps = [(offset, weight / norm) for offset, weight in taps]
+
+    rendered: list[int] = []
+    last = len(samples) - 1
+    for index, value in enumerate(samples):
+        rendered.append(int(value))
+        if index == last:
+            rendered.append(int(value))
+            continue
+        acc = 0.0
+        for offset, weight in taps:
+            source_index = min(max(index + offset, 0), last)
+            acc += samples[source_index] * weight
+        interpolated = max(-32768, min(32767, int(round(acc))))
+        rendered.append(interpolated)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(output), "wb") as writer:
+        writer.setnchannels(1)
+        writer.setsampwidth(2)
+        writer.setframerate(TARGET_SAMPLE_RATE)
+        writer.writeframes(
+            b"".join(struct.pack("<h", sample) for sample in rendered)
+        )
+
+
 def run_checked(command: list[str], label: str, env: dict[str, str] | None = None) -> None:
     completed = subprocess.run(command, shell=False, env=env)
     if completed.returncode != 0:
@@ -46,7 +105,7 @@ def main() -> int:
     )
     parser.add_argument("--backend-executable", required=True, type=pathlib.Path)
     parser.add_argument("--backend-lib-dir", type=pathlib.Path)
-    parser.add_argument("--resampler-executable", required=True, type=pathlib.Path)
+    parser.add_argument("--resampler-executable", type=pathlib.Path)
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
     parser.add_argument("--lexicon", required=True, type=pathlib.Path)
@@ -74,7 +133,11 @@ def main() -> int:
         backend_lib_dir = args.backend_lib_dir.resolve()
         if not backend_lib_dir.is_dir():
             raise ValueError(f"backend lib dir is missing: {backend_lib_dir}")
-    resampler = require_file(args.resampler_executable, "resampler executable")
+    resampler = (
+        require_file(args.resampler_executable, "resampler executable")
+        if args.resampler_executable is not None
+        else None
+    )
     model = require_file(args.model, "VITS model")
     tokens = require_file(args.tokens, "VITS tokens")
     lexicon = require_file(args.lexicon, "VITS lexicon")
@@ -130,26 +193,33 @@ def main() -> int:
         run_checked(backend_command, "VITS backend", env=backend_env)
         inspect_pcm16_mono(native, args.source_sample_rate, "VITS backend")
 
-        run_checked(
-            [
-                str(resampler),
-                "-nostdin",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-y",
-                "-i",
-                str(native),
-                "-ac",
-                "1",
-                "-ar",
-                str(TARGET_SAMPLE_RATE),
-                "-c:a",
-                "pcm_s16le",
-                str(output),
-            ],
-            "resampler",
-        )
+        if resampler is not None:
+            run_checked(
+                [
+                    str(resampler),
+                    "-nostdin",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-i",
+                    str(native),
+                    "-ac",
+                    "1",
+                    "-ar",
+                    str(TARGET_SAMPLE_RATE),
+                    "-c:a",
+                    "pcm_s16le",
+                    str(output),
+                ],
+                "resampler",
+            )
+        else:
+            if args.source_sample_rate != 8000:
+                raise ValueError(
+                    "builtin Lanczos resampler supports only 8000->16000 Hz"
+                )
+            resample_8k_to_16k_lanczos(native, output)
         inspect_pcm16_mono(output, TARGET_SAMPLE_RATE, "normalized provider")
     finally:
         native.unlink(missing_ok=True)
