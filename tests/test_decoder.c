@@ -274,6 +274,38 @@ static void test_peek_matches_emitted_confidence_without_mutation(void) {
   CHECK(fabsf(peek_confidence - emitted_confidence) < 1.0e-6f);
 }
 
+static void test_raw_peek_reports_retention_invalid_without_mutation(void) {
+  kws_decoder_t decoder;
+  kws_decoder_t snapshot;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = keyword(78u, tokens, 2u, 0.50f);
+  uint16_t terminal;
+  float confidence = 0.0f;
+  float retention_log = 0.0f;
+  int retention_valid = 1;
+
+  kws_decoder_init(&decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+  terminal = decoder.terminal_nodes[0];
+  decoder.nodes[terminal].score = -20.0f;
+  decoder.nodes[terminal].acoustic_score = 0.0f;
+  decoder.nodes[terminal].blank_score = -1.0e30f;
+  decoder.nodes[terminal].blank_acoustic_score = -1.0e30f;
+
+  snapshot = decoder;
+  CHECK(kws_decoder_peek_keyword_state(
+            &decoder, 0u, &confidence, &retention_log, &retention_valid) == 1);
+  CHECK(memcmp(&snapshot, &decoder, sizeof(decoder)) == 0);
+  CHECK(fabsf(confidence - 1.0f) < 1.0e-6f);
+  CHECK(retention_log < -16.0f);
+  CHECK(retention_valid == 0);
+
+  snapshot = decoder;
+  CHECK(kws_decoder_peek_keyword_confidence(
+            &decoder, 0u, &confidence, &retention_log) == 0);
+  CHECK(memcmp(&snapshot, &decoder, sizeof(decoder)) == 0);
+}
+
 static void test_grace_policy_holds_then_emits(void) {
   kws_decoder_t decoder;
   const uint16_t tokens[] = {1u};
@@ -301,6 +333,7 @@ int main(void) {
   test_trie_child_competes_with_global_nonblank();
   test_blank_retention_does_not_change_acoustic_confidence();
   test_peek_matches_emitted_confidence_without_mutation();
+  test_raw_peek_reports_retention_invalid_without_mutation();
   test_longest_prefix_waits_for_longer_keyword();
   test_longest_prefix_emits_after_blank();
   test_grace_policy_holds_then_emits();
