@@ -89,6 +89,7 @@ def materialize(
     provider_name: str,
     provider_version: str,
     license_id: str,
+    license_file: pathlib.Path,
     executable: pathlib.Path,
     model: pathlib.Path,
     tokens: pathlib.Path,
@@ -108,6 +109,7 @@ def materialize(
     model = require_file(model, "VITS model")
     tokens = require_file(tokens, "VITS tokens")
     lexicon = require_file(lexicon, "VITS lexicon")
+    license_file = require_file(license_file, "license evidence")
 
     provider = {
         "schema_version": 1,
@@ -121,6 +123,7 @@ def materialize(
             {"role": "model", "path": str(model), "sha256": sha256_file(model)},
             {"role": "tokens", "path": str(tokens), "sha256": sha256_file(tokens)},
             {"role": "lexicon", "path": str(lexicon), "sha256": sha256_file(lexicon)},
+            {"role": "license_evidence", "path": str(license_file), "sha256": sha256_file(license_file)},
         ],
         "argv_template": [
             "{executable}",
@@ -168,6 +171,7 @@ def materialize(
         "provider_name": provider_name,
         "provider_version": provider_version,
         "license_id": license_id,
+        "license_evidence_sha256": sha256_file(license_file),
         "corpus_plan_sha256": sha256_file(corpus_plan),
         "speaker_map_sha256": sha256_file(speaker_map),
         "command_policy_sha256": sha256_file(command_policy),
@@ -191,6 +195,7 @@ def main() -> int:
     parser.add_argument("--provider-name", required=True)
     parser.add_argument("--provider-version", required=True)
     parser.add_argument("--license-id", required=True)
+    parser.add_argument("--license-file", required=True, type=pathlib.Path)
     parser.add_argument("--executable", required=True, type=pathlib.Path)
     parser.add_argument("--model", required=True, type=pathlib.Path)
     parser.add_argument("--tokens", required=True, type=pathlib.Path)
@@ -207,6 +212,7 @@ def main() -> int:
         provider_name=args.provider_name,
         provider_version=args.provider_version,
         license_id=args.license_id,
+        license_file=args.license_file,
         executable=args.executable,
         model=args.model,
         tokens=args.tokens,
