@@ -130,6 +130,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
             if not isinstance(raw_audio, str) or not raw_audio.strip():
                 raise ValueError(f"external base {split} row {idx}: audio path is required")
             audio_ref = pathlib.Path(raw_audio)
+            normalized = dict(row)
             if path_contract == "index-relative-v1":
                 if audio_ref.is_absolute() or any(part in {"", ".", ".."} for part in audio_ref.parts):
                     raise ValueError(f"external base {split} row {idx}: portable audio path is unsafe")
@@ -140,18 +141,25 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                     raise ValueError(
                         f"external base {split} row {idx}: portable audio path escaped index directory"
                     ) from exc
+                if not audio_path.is_file():
+                    raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
+                if sha256_file(audio_path) != wav_sha:
+                    raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                normalized["path"] = str(audio_path)
+            elif path_contract == "absolute-v1":
+                if not audio_ref.is_absolute():
+                    raise ValueError(f"external base {split} row {idx}: absolute-v1 path must be absolute")
+                audio_path = audio_ref.resolve()
+                if not audio_path.is_file():
+                    raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
+                if sha256_file(audio_path) != wav_sha:
+                    raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                normalized["path"] = str(audio_path)
             else:
-                audio_path = (
-                    audio_ref.resolve()
-                    if audio_ref.is_absolute()
-                    else (index_root / audio_ref).resolve()
-                )
-            if not audio_path.is_file():
-                raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
-            if sha256_file(audio_path) != wav_sha:
-                raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
-            normalized = dict(row)
-            normalized["path"] = str(audio_path)
+                # Historical bundles predate an explicit audio-path contract. Preserve
+                # their metadata/binding behavior; actual rendering still validates the
+                # referenced WAV when the corpus is consumed.
+                normalized["path"] = str(audio_ref)
             normalized_rows.append(normalized)
             for identity, owners, label in ((wav_sha, wav_owner, "wav"), (voice, voice_owner, "voice"), (source, source_owner, "source")):
                 previous = owners.get(identity)
