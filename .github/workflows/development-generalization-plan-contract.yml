@@ -44,11 +44,44 @@ jobs:
             --tier freeze --candidate-id gru-h48-pcen --model-family gru \
             --model-sha256 "$(printf 'c%.0s' {1..64})" --product-head "$product_head" \
             --output "$root/freeze.json"
+
+          shared_cohort="kws-v2-stage-a-search-v1"
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier search --candidate-id v2-a-rnn-h64-logmel --model-family rnn \
+            --model-sha256 "$(printf 'a%.0s' {1..64})" --product-head "$product_head" \
+            --cohort-id "$shared_cohort" --output "$root/shared-rnn.json"
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier search --candidate-id v2-a-gru-h64-pcen-lite --model-family gru \
+            --model-sha256 "$(printf 'd%.0s' {1..64})" --product-head "$product_head" \
+            --cohort-id "$shared_cohort" --output "$root/shared-gru.json"
+          python3 tools/development_generalization_plan.py \
+            --policy configs/training/development-generalization-v1.json \
+            --tier search --candidate-id v2-a-rnn-h64-logmel --model-family rnn \
+            --model-sha256 "$(printf 'a%.0s' {1..64})" --product-head "$product_head" \
+            --cohort-id "kws-v2-stage-b-search-v1" --output "$root/other-cohort.json"
+
           ROOT="$root" python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['ROOT'])
           search = json.loads((root / 'search-a.json').read_text())
           freeze = json.loads((root / 'freeze.json').read_text())
+          shared_rnn = json.loads((root / 'shared-rnn.json').read_text())
+          shared_gru = json.loads((root / 'shared-gru.json').read_text())
+          other_cohort = json.loads((root / 'other-cohort.json').read_text())
+
+          assert shared_rnn['cohort_id'] == shared_gru['cohort_id'] == 'kws-v2-stage-a-search-v1'
+          assert shared_rnn['seed_derivation_policy'] == shared_gru['seed_derivation_policy'] == 'shared-cohort-v1'
+          assert shared_rnn['model_family'] != shared_gru['model_family']
+          assert shared_rnn['candidate_id'] != shared_gru['candidate_id']
+          assert shared_rnn['model_sha256'] != shared_gru['model_sha256']
+          assert shared_rnn['seed_plan'] == shared_gru['seed_plan']
+          assert shared_rnn['plan_sha256'] != shared_gru['plan_sha256']
+          assert other_cohort['cohort_id'] == 'kws-v2-stage-b-search-v1'
+          assert [x['seed'] for x in other_cohort['seed_plan']] != [x['seed'] for x in shared_rnn['seed_plan']]
+          assert other_cohort['seed_plan'] != shared_rnn['seed_plan']
+
           assert search['independent_seed_count'] == 8
           assert search['minimum_independent_seed_count'] == 4
           assert freeze['independent_seed_count'] == 16

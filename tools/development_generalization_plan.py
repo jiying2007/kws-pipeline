@@ -59,6 +59,7 @@ def build_plan(
     product_head: str,
     count: int | None,
     forbidden: set[int],
+    cohort_id: str | None = None,
 ) -> dict:
     if tier not in policy["tiers"]:
         raise ValueError(f"unsupported tier: {tier}")
@@ -66,6 +67,13 @@ def build_plan(
         raise ValueError("model_family must be rnn/gru")
     if not candidate_id.strip():
         raise ValueError("candidate_id must be non-empty")
+    cohort = None
+    if cohort_id is not None:
+        cohort = cohort_id.strip()
+        if not cohort or len(cohort) > 128:
+            raise ValueError("cohort_id must be non-empty and <=128 characters")
+        if any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-" for ch in cohort):
+            raise ValueError("cohort_id contains unsupported characters")
     tier_policy = policy["tiers"][tier]
     minimum = int(tier_policy["min_independent_seeds"])
     recommended = int(tier_policy["recommended_independent_seeds"])
@@ -77,9 +85,14 @@ def build_plan(
     entries: list[dict] = []
     seen: set[int] = set()
     for ordinal in range(count):
-        material = ":".join(
-            [POLICY, policy_sha, tier, model_family, candidate_id, model_sha, product_head, str(ordinal)]
-        )
+        if cohort is None:
+            material = ":".join(
+                [POLICY, policy_sha, tier, model_family, candidate_id, model_sha, product_head, str(ordinal)]
+            )
+        else:
+            material = ":".join(
+                [POLICY, policy_sha, tier, "shared-cohort-v1", cohort, product_head, str(ordinal)]
+            )
         seed, digest = derive_seed(material)
         if seed in forbidden:
             raise ValueError(f"derived seed collides with forbidden namespace: {seed}")
@@ -116,6 +129,9 @@ def build_plan(
         "formal_qualification_used": False,
         "selection_before_results": True,
     }
+    if cohort is not None:
+        body["cohort_id"] = cohort
+        body["seed_derivation_policy"] = "shared-cohort-v1"
     canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     body["plan_sha256"] = hashlib.sha256(canonical).hexdigest()
     return body
@@ -130,6 +146,7 @@ def main() -> int:
     parser.add_argument("--model-sha256", required=True)
     parser.add_argument("--product-head", required=True)
     parser.add_argument("--count", type=int)
+    parser.add_argument("--cohort-id")
     parser.add_argument("--forbidden-seed", action="append", default=[], type=int)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
@@ -150,12 +167,14 @@ def main() -> int:
         product_head=product_head,
         count=args.count,
         forbidden=forbidden,
+        cohort_id=args.cohort_id,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(plan, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(
         f"development-generalization-plan: tier={args.tier} family={args.model_family} "
-        f"candidate={args.candidate_id} seeds={plan['independent_seed_count']} plan={plan['plan_sha256']}"
+        f"candidate={args.candidate_id} cohort={plan.get('cohort_id', 'candidate-bound')} "
+        f"seeds={plan['independent_seed_count']} plan={plan['plan_sha256']}"
     )
     return 0
 
