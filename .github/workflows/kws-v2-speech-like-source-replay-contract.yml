@@ -7,10 +7,12 @@ on:
     paths:
       - "training/development_failure_replay.py"
       - ".github/workflows/kws-v2-speech-like-source-replay-contract.yml"
+      - ".github/workflows/kws-v2-speech-like-fa-replay-smoke.yml"
   pull_request:
     paths:
       - "training/development_failure_replay.py"
       - ".github/workflows/kws-v2-speech-like-source-replay-contract.yml"
+      - ".github/workflows/kws-v2-speech-like-fa-replay-smoke.yml"
 
 permissions:
   contents: read
@@ -172,6 +174,30 @@ jobs:
               raise AssertionError("source-reuse must reject tone replay permission")
 
           print("speech-like train-source failure replay contract: ok")
+          PY
+
+      - name: Paired workflow remains causally fail-closed
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          live=pathlib.Path(".github/workflows/kws-v2-speech-like-fa-replay-smoke.yml").read_text()
+          required=(
+              'name: kws-v2-speech-like-fa-replay-paired',
+              'OMP_NUM_THREADS: "1"',
+              'MKL_NUM_THREADS: "1"',
+              'OPENBLAS_NUM_THREADS: "1"',
+              'Run paired control',
+              'Run paired treatment',
+              'pre-replay model identity drifted',
+              'first_replay_round',
+              'failure_replay_examples',
+              'selection_feedback_allowed',
+              'protected_evidence_used',
+              'Enforce paired causal evidence',
+          )
+          missing=[item for item in required if item not in live]
+          assert not missing, f"paired workflow causal contract missing: {missing}"
+          print("paired FA replay workflow contract: ok")
           PY
 
       - name: Python syntax
