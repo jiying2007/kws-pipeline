@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
 
 from acoustic_scene import render_scene, sha256_file  # noqa: E402
-from render_domains import validate_domains  # noqa: E402
+from render_domains import read_wav, validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     augment,
     generate_background,
@@ -29,6 +29,10 @@ from synthetic_audio import (  # noqa: E402
 )
 
 POLICY = "development-failure-resynthesis-v1"
+SOURCE_REUSE_POLICY = "development-failure-train-source-reuse-v1"
+RESYNTHESIS_MODE = "resynthesis-v1"
+SOURCE_REUSE_MODE = "train-source-reuse-v1"
+FAILURE_KINDS = ("false-accept", "false-reject")
 RECORDING_RE = re.compile(r"^domain-(calibration|test)-(\d{6})$")
 SEED_NAMESPACE = 151_000_003
 
@@ -52,6 +56,19 @@ def _policy(cfg: dict) -> dict:
     if not isinstance(raw, dict):
         raise ValueError("data_augmentation_v3 must be an object")
     enabled = bool(raw.get("failure_replay_enabled", False))
+    mode = str(raw.get("failure_replay_mode", RESYNTHESIS_MODE))
+    if mode not in {RESYNTHESIS_MODE, SOURCE_REUSE_MODE}:
+        raise ValueError(
+            "failure_replay_mode must be resynthesis-v1 or train-source-reuse-v1"
+        )
+    raw_kinds = raw.get("failure_replay_kinds", list(FAILURE_KINDS))
+    if not isinstance(raw_kinds, list) or not raw_kinds:
+        raise ValueError("failure_replay_kinds must be a non-empty list")
+    failure_kinds = tuple(str(value) for value in raw_kinds)
+    if len(set(failure_kinds)) != len(failure_kinds):
+        raise ValueError("failure_replay_kinds must not contain duplicates")
+    if any(value not in FAILURE_KINDS for value in failure_kinds):
+        raise ValueError("failure_replay_kinds contains an unsupported failure kind")
     if enabled:
         if str(raw.get("policy")) != "train-only-balanced-mining-v1":
             raise ValueError("failure replay requires train-only data v3 policy")
@@ -59,6 +76,20 @@ def _policy(cfg: dict) -> dict:
             raise ValueError("failure replay must not use formal qualification")
         if raw.get("expand_evaluation_splits") is not False:
             raise ValueError("failure replay must not mutate evaluation splits")
+        if mode == SOURCE_REUSE_MODE:
+            speech_like = cfg.get("kws_v2_speech_like_training")
+            if not isinstance(speech_like, dict):
+                raise ValueError(
+                    "train-source-reuse failure replay requires speech-like training contract"
+                )
+            if speech_like.get("external_base_required") is not True:
+                raise ValueError(
+                    "train-source-reuse failure replay requires external speech-like base"
+                )
+            if speech_like.get("tone_replay_allowed") is not False:
+                raise ValueError(
+                    "train-source-reuse failure replay requires tone replay to stay disabled"
+                )
     examples = int(raw.get("failure_replay_examples_per_failure", 4))
     max_unique = int(raw.get("failure_replay_max_unique_failures", 64))
     max_per_keyword = int(raw.get("failure_replay_max_per_keyword", 32))
@@ -70,6 +101,8 @@ def _policy(cfg: dict) -> dict:
         raise ValueError("failure replay max_per_keyword is invalid")
     return {
         "enabled": enabled,
+        "mode": mode,
+        "failure_kinds": failure_kinds,
         "examples_per_failure": examples,
         "max_unique_failures": max_unique,
         "max_per_keyword": max_per_keyword,
@@ -104,7 +137,12 @@ def _scene_signature(scene: dict) -> tuple:
     )
 
 
-def collect_failure_specs(records: list[dict], work: pathlib.Path) -> list[dict]:
+def collect_failure_specs(
+    records: list[dict],
+    work: pathlib.Path,
+    *,
+    failure_kinds: tuple[str, ...] = FAILURE_KINDS,
+) -> list[dict]:
     aggregated: dict[str, dict] = {}
     row_cache: dict[tuple[int, str], list[dict]] = {}
     for record in records:
@@ -121,7 +159,7 @@ def collect_failure_specs(records: list[dict], work: pathlib.Path) -> list[dict]
             if cache_key not in row_cache:
                 row_cache[cache_key] = _round_split_rows(work, round_index, split)
             domain_rows = row_cache[cache_key]
-            for failure_kind in ("false-accept", "false-reject"):
+            for failure_kind in failure_kinds:
                 for failure in _failure_rows(metrics, failure_kind):
                     match = RECORDING_RE.match(str(failure.get("recording", "")))
                     if match is None or match.group(1) != split:
