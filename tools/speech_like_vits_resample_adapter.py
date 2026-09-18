@@ -115,6 +115,8 @@ def main() -> int:
     parser.add_argument("--rule-far", type=pathlib.Path)
     parser.add_argument("--speaker-id", required=True, type=int)
     parser.add_argument("--length-scale", required=True, type=float)
+    parser.add_argument("--noise-scale", type=float, default=0.0)
+    parser.add_argument("--noise-scale-w", type=float, default=0.0)
     parser.add_argument("--source-sample-rate", required=True, type=int)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("text")
@@ -124,6 +126,10 @@ def main() -> int:
         raise ValueError("speaker-id must be non-negative")
     if not 0.5 <= args.length_scale <= 2.0:
         raise ValueError("length-scale must be in [0.5,2.0]")
+    if not 0.0 <= args.noise_scale <= 2.0:
+        raise ValueError("noise-scale must be in [0,2]")
+    if not 0.0 <= args.noise_scale_w <= 2.0:
+        raise ValueError("noise-scale-w must be in [0,2]")
     if args.source_sample_rate <= 0 or args.source_sample_rate >= TARGET_SAMPLE_RATE:
         raise ValueError("source-sample-rate must be positive and below 16000 for this adapter")
 
@@ -133,6 +139,10 @@ def main() -> int:
         backend_lib_dir = args.backend_lib_dir.resolve()
         if not backend_lib_dir.is_dir():
             raise ValueError(f"backend lib dir is missing: {backend_lib_dir}")
+    else:
+        inferred_lib_dir = (backend.parent.parent / "lib").resolve()
+        if inferred_lib_dir.is_dir():
+            backend_lib_dir = inferred_lib_dir
     resampler = (
         require_file(args.resampler_executable, "resampler executable")
         if args.resampler_executable is not None
@@ -177,6 +187,8 @@ def main() -> int:
             [
                 f"--sid={args.speaker_id}",
                 f"--vits-length-scale={args.length_scale}",
+                f"--vits-noise-scale={args.noise_scale}",
+                f"--vits-noise-scale-w={args.noise_scale_w}",
                 f"--output-filename={native}",
                 args.text,
             ]

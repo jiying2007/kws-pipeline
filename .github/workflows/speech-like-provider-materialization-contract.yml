@@ -45,6 +45,8 @@ jobs:
           output = None
           rule_fsts = None
           rule_fars = None
+          noise_scale = None
+          noise_scale_w = None
           for arg in sys.argv[1:]:
               if arg.startswith("--output-filename="):
                   output = pathlib.Path(arg.split("=", 1)[1])
@@ -52,10 +54,16 @@ jobs:
                   rule_fsts = arg.split("=", 1)[1]
               elif arg.startswith("--tts-rule-fars="):
                   rule_fars = arg.split("=", 1)[1]
+              elif arg.startswith("--vits-noise-scale="):
+                  noise_scale = float(arg.split("=", 1)[1])
+              elif arg.startswith("--vits-noise-scale-w="):
+                  noise_scale_w = float(arg.split("=", 1)[1])
           if output is None:
               raise SystemExit("missing --output-filename")
           if rule_fsts is None or len(rule_fsts.split(",")) != 3 or rule_fars is None:
               raise SystemExit("missing AISHELL3 text-normalization rule assets")
+          if noise_scale != 0.0 or noise_scale_w != 0.0:
+              raise SystemExit("deterministic VITS noise scales are required")
           output.parent.mkdir(parents=True, exist_ok=True)
           frames = [int(4000 * math.sin(2.0 * math.pi * 440.0 * n / 8000.0)) for n in range(800)]
           with wave.open(str(output), "wb") as w:
@@ -333,6 +341,12 @@ jobs:
           assert norm["source_sample_rate_hz"] == 8000
           assert norm["output_sample_rate_hz"] == 16000
           assert norm["resampled"] is True
+          assert norm["vits_noise_scale"] == 0.0
+          assert norm["vits_noise_scale_w"] == 0.0
+          assert norm["deterministic_vits_sampling"] is True
+          assert all("--backend-lib-dir=" not in arg for arg in provider["argv_template"])
+          assert "--noise-scale=0.0" in provider["argv_template"]
+          assert "--noise-scale-w=0.0" in provider["argv_template"]
           wav = root / "generated-resampled" / "train" / "recording-000000.wav"
           with wave.open(str(wav), "rb") as r:
               assert r.getnchannels() == 1

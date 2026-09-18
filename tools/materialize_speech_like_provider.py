@@ -473,6 +473,9 @@ def build_provider(
             "source_sample_rate_hz": 16000,
             "output_sample_rate_hz": 16000,
             "resampled": False,
+            "vits_noise_scale": 0.0,
+            "vits_noise_scale_w": 0.0,
+            "deterministic_vits_sampling": True,
         }
     elif provider_profile == RESAMPLED_PROFILE:
         adapter = require_file(adapter, "VITS resample adapter")
@@ -538,8 +541,6 @@ def build_provider(
             "{asset:adapter}",
             "--backend-executable={asset:backend_executable}",
         ]
-        if backend_lib_dir is not None:
-            argv_template.append(f"--backend-lib-dir={backend_lib_dir.resolve()}")
         if resampler_executable is not None:
             argv_template.append(
                 "--resampler-executable={asset:resampler_executable}"
@@ -564,6 +565,8 @@ def build_provider(
             [
                 "--speaker-id={speaker_id}",
                 "--length-scale={length_scale}",
+                "--noise-scale=0.0",
+                "--noise-scale-w=0.0",
                 f"--source-sample-rate={source_sample_rate}",
                 "--output={output}",
                 "{text}",
@@ -575,6 +578,14 @@ def build_provider(
             "source_sample_rate_hz": source_sample_rate,
             "output_sample_rate_hz": 16000,
             "resampled": True,
+            "vits_noise_scale": 0.0,
+            "vits_noise_scale_w": 0.0,
+            "deterministic_vits_sampling": True,
+            "backend_lib_resolution": (
+                "sibling-lib-from-verified-backend"
+                if backend_bundle_assets is not None
+                else "process-environment"
+            ),
             "adapter_sha256": sha256_file(adapter),
             "backend_executable_sha256": sha256_file(backend_executable),
             "backend_bundle_verified": backend_bundle_assets is not None,

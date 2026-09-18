@@ -55,11 +55,13 @@ jobs:
 
           cat > "$root/fake-vits-8k" <<'PY'
           #!/usr/bin/env python3
-          import hashlib, math, pathlib, struct, sys, wave
+          import hashlib, math, os, pathlib, struct, sys, wave
 
           output = None
           sid = None
           length_scale = None
+          noise_scale = None
+          noise_scale_w = None
           rule_fsts = None
           rule_far = None
           text = sys.argv[-1]
@@ -70,12 +72,22 @@ jobs:
                   sid = int(arg.split("=", 1)[1])
               elif arg.startswith("--vits-length-scale="):
                   length_scale = float(arg.split("=", 1)[1])
+              elif arg.startswith("--vits-noise-scale="):
+                  noise_scale = float(arg.split("=", 1)[1])
+              elif arg.startswith("--vits-noise-scale-w="):
+                  noise_scale_w = float(arg.split("=", 1)[1])
               elif arg.startswith("--tts-rule-fsts="):
                   rule_fsts = [pathlib.Path(x) for x in arg.split("=", 1)[1].split(",")]
               elif arg.startswith("--tts-rule-fars="):
                   rule_far = pathlib.Path(arg.split("=", 1)[1])
           if output is None or sid is None or length_scale is None:
               raise SystemExit("missing VITS request identity")
+          if noise_scale != 0.0 or noise_scale_w != 0.0:
+              raise SystemExit("deterministic VITS noise scales are required")
+          expected_lib = pathlib.Path(__file__).resolve().parents[1] / "lib"
+          ld_paths = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+          if str(expected_lib.resolve()) not in ld_paths:
+              raise SystemExit("verified sibling backend lib dir was not injected")
           if rule_fsts is None or len(rule_fsts) != 3 or rule_far is None:
               raise SystemExit("missing AISHELL3 text-normalization rules")
           if any(not p.is_file() for p in [*rule_fsts, rule_far]):
@@ -219,6 +231,39 @@ jobs:
           assert (root / "cache/vits-icefall-zh-aishell3.tar.bz2").is_file()
           license_path = pathlib.Path(summary["license_evidence"]["path"])
           assert hashlib.sha256(license_path.read_bytes()).hexdigest() == summary["license_evidence"]["sha256"]
+          PY
+
+      - name: Relocated cache and work roots preserve provider and corpus identity
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/speech-like-bootstrap"
+          python3 tools/bootstrap_speech_like_stage_a.py \
+            --provider-reference "$root/fixture-reference.json" \
+            --cache-dir "$root/relocated/cache" \
+            --work-dir "$root/relocated/full-run" \
+            --allow-file-urls
+          ROOT="$root" python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          first = json.loads((root / "full-run/bootstrap-summary.json").read_text())
+          second = json.loads((root / "relocated/full-run/bootstrap-summary.json").read_text())
+          p1 = json.loads((root / "full-run/corpus/provider/provider-summary.json").read_text())
+          p2 = json.loads((root / "relocated/full-run/corpus/provider/provider-summary.json").read_text())
+          spec1 = json.loads((root / "full-run/corpus/provider/provider.json").read_text())
+          spec2 = json.loads((root / "relocated/full-run/corpus/provider/provider.json").read_text())
+          assert p1["provider_identity_sha256"] == p2["provider_identity_sha256"]
+          assert first["corpus"]["external_base_bundle_sha256"] == second["corpus"]["external_base_bundle_sha256"]
+          assert p1["audio_normalization"]["deterministic_vits_sampling"] is True
+          assert p2["audio_normalization"]["deterministic_vits_sampling"] is True
+          assert all("--backend-lib-dir=" not in arg for arg in spec1["argv_template"])
+          assert all("--backend-lib-dir=" not in arg for arg in spec2["argv_template"])
+          assert "--noise-scale=0.0" in spec1["argv_template"]
+          assert "--noise-scale-w=0.0" in spec1["argv_template"]
+          print(
+              "speech-like relocation identity stable:",
+              p1["provider_identity_sha256"],
+              first["corpus"]["external_base_bundle_sha256"],
+          )
           PY
 
       - name: Second preflight reuses verified cache
