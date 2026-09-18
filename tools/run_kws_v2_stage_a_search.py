@@ -274,6 +274,38 @@ def resolve_runner(family: str, args: argparse.Namespace) -> pathlib.Path:
     return require_file(raw, f"{family} runner")
 
 
+def validate_development_result(value: dict, candidate_id: str) -> None:
+    if value.get("evidence_scope") != "development-only":
+        raise ValueError(f"{candidate_id}: development evidence scope mismatch")
+    if value.get("development_qualified") is not True:
+        raise ValueError(
+            f"{candidate_id}: development loop did not produce a qualified frozen candidate"
+        )
+    for key in ("qualification_used", "shadow_used", "formal_qualification_used"):
+        if value.get(key) is not False:
+            raise ValueError(
+                f"{candidate_id}: development manifest used protected evidence: {key}"
+            )
+    if value.get("candidate_stage_feedback_allowed") is not False:
+        raise ValueError(
+            f"{candidate_id}: development manifest candidate-stage feedback must remain false"
+        )
+    frozen = value.get("frozen_candidate")
+    if not isinstance(frozen, dict):
+        raise ValueError(f"{candidate_id}: frozen candidate evidence is missing")
+    if frozen.get("evidence_scope") != "development-only":
+        raise ValueError(f"{candidate_id}: frozen candidate evidence scope mismatch")
+    for key in (
+        "qualification_used_for_selection",
+        "shadow_used_for_selection",
+        "formal_qualification_used_for_selection",
+    ):
+        if frozen.get(key) is not False:
+            raise ValueError(
+                f"{candidate_id}: frozen candidate selection used protected evidence: {key}"
+            )
+
+
 def execute_candidate(
     *,
     row: dict,
@@ -318,8 +350,7 @@ def execute_candidate(
         development_work / "development-loop-manifest.json", f"{candidate_id} development manifest"
     )
     development_value = load_object(development_manifest)
-    if development_value.get("development_qualified") is not True:
-        raise ValueError(f"{candidate_id}: development loop did not produce a qualified frozen candidate")
+    validate_development_result(development_value, candidate_id)
 
     plan = candidate_root / "generalization-plan.json"
     run_checked(
