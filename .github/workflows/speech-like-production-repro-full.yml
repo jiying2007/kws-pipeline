@@ -1,0 +1,163 @@
+name: speech-like-production-repro-full
+
+on:
+  push:
+    branches:
+      - "codex/speech-like-production-repro-full-*"
+    paths:
+      - ".github/workflows/speech-like-production-repro-full.yml"
+      - "tools/bootstrap_speech_like_stage_a.py"
+      - "tools/run_speech_like_corpus_generation.py"
+      - "tools/materialize_speech_like_provider.py"
+      - "tools/speech_like_vits_resample_adapter.py"
+      - "tools/speech_like_corpus_plan.py"
+      - "tools/materialize_speech_like_base_index.py"
+      - "training/external_base_dataset.py"
+      - "configs/training/speech-like-provider-reference-v1.json"
+      - "configs/training/speech-like-corpus-plan-v1.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: speech-like-production-repro-full-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  production-repro:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Generate first pinned production corpus
+        run: |
+          set -euo pipefail
+          python3 tools/bootstrap_speech_like_stage_a.py \
+            --cache-dir "$RUNNER_TEMP/repro-a-cache" \
+            --work-dir "$RUNNER_TEMP/repro-a"
+
+      - name: Generate second pinned production corpus in independent roots
+        run: |
+          set -euo pipefail
+          python3 tools/bootstrap_speech_like_stage_a.py \
+            --cache-dir "$RUNNER_TEMP/repro-b-cache" \
+            --work-dir "$RUNNER_TEMP/repro-b"
+
+      - name: Require exact production corpus reproducibility
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+
+          root = pathlib.Path(os.environ["RUNNER_TEMP"])
+          work_a = root / "repro-a"
+          work_b = root / "repro-b"
+
+          boot_a = json.loads((work_a / "bootstrap-summary.json").read_text())
+          boot_b = json.loads((work_b / "bootstrap-summary.json").read_text())
+          assert boot_a["status"] == boot_b["status"] == "complete"
+          assert boot_a["provider_candidate"] == boot_b["provider_candidate"]
+          assert boot_a["archive"]["sha256"] == boot_b["archive"]["sha256"]
+          assert boot_a["backend"]["archive_path"] != boot_b["backend"]["archive_path"]
+          assert boot_a["archive"]["path"] != boot_b["archive"]["path"]
+
+          provider_a = json.loads((work_a / "corpus/provider/provider-summary.json").read_text())
+          provider_b = json.loads((work_b / "corpus/provider/provider-summary.json").read_text())
+          assert provider_a["provider_identity_sha256"] == provider_b["provider_identity_sha256"]
+          for provider in (provider_a, provider_b):
+              norm = provider["audio_normalization"]
+              assert norm["deterministic_vits_sampling"] is True
+              assert norm["vits_noise_scale"] == 0.0
+              assert norm["vits_noise_scale_w"] == 0.0
+              assert norm["backend_bundle_verified"] is True
+              assert norm["resampler_kind"] == "builtin-lanczos-2x-v1"
+
+          corpus_a = json.loads((work_a / "corpus/stage-a-base-bundle.json").read_text())
+          corpus_b = json.loads((work_b / "corpus/stage-a-base-bundle.json").read_text())
+          assert corpus_a["recordings"] == corpus_b["recordings"] == 384
+          assert corpus_a["voice_slots"] == corpus_b["voice_slots"] == 24
+          assert corpus_a["generation_workers"] == corpus_b["generation_workers"] == 2
+          assert corpus_a["tone_backend_used"] is corpus_b["tone_backend_used"] is False
+          assert corpus_a["protected_evidence_used"] is corpus_b["protected_evidence_used"] is False
+          assert corpus_a["provider_identity_sha256"] == corpus_b["provider_identity_sha256"]
+          assert corpus_a["external_base_bundle_sha256"] == corpus_b["external_base_bundle_sha256"]
+
+          def sha(path: pathlib.Path) -> str:
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          split_evidence = {}
+          total_audio = 0
+          expected = {"train": 128, "calibration": 64, "test": 64, "qualification": 128}
+          for split in ("train", "calibration", "test", "qualification"):
+              base_a = work_a / "corpus/bundle" / split
+              base_b = work_b / "corpus/bundle" / split
+              index_a = base_a / "dataset-index.jsonl"
+              index_b = base_b / "dataset-index.jsonl"
+              summary_a = base_a / "dataset-summary.json"
+              summary_b = base_b / "dataset-summary.json"
+              assert index_a.read_bytes() == index_b.read_bytes(), split
+              assert summary_a.read_bytes() == summary_b.read_bytes(), split
+
+              rows_a = [json.loads(line) for line in index_a.read_text().splitlines() if line.strip()]
+              rows_b = [json.loads(line) for line in index_b.read_text().splitlines() if line.strip()]
+              assert rows_a == rows_b
+              assert len(rows_a) == expected[split]
+
+              audio_shas = []
+              for row in rows_a:
+                  rel = pathlib.Path(row["path"])
+                  assert not rel.is_absolute()
+                  audio_a = base_a / rel
+                  audio_b = base_b / rel
+                  assert audio_a.is_file() and audio_b.is_file()
+                  sha_a = sha(audio_a)
+                  sha_b = sha(audio_b)
+                  assert sha_a == sha_b == row["wav_sha256"], (split, rel)
+                  audio_shas.append(sha_a)
+              total_audio += len(audio_shas)
+              split_evidence[split] = {
+                  "recordings": len(rows_a),
+                  "index_sha256": sha(index_a),
+                  "summary_sha256": sha(summary_a),
+                  "audio_set_sha256": hashlib.sha256(
+                      "\n".join(audio_shas).encode()
+                  ).hexdigest(),
+              }
+
+          assert total_audio == 384
+          evidence = {
+              "schema_version": 1,
+              "evidence_class": "speech-like-production-reproducibility-v1",
+              "product_head": os.environ["GITHUB_SHA"],
+              "provider_candidate": boot_a["provider_candidate"],
+              "provider_identity_sha256": provider_a["provider_identity_sha256"],
+              "external_base_bundle_sha256": corpus_a["external_base_bundle_sha256"],
+              "recordings": 384,
+              "voice_slots": 24,
+              "generation_workers": 2,
+              "deterministic_vits_sampling": {
+                  "noise_scale": 0.0,
+                  "noise_scale_w": 0.0,
+              },
+              "splits": split_evidence,
+              "reproducible": True,
+          }
+          out = root / "speech-like-production-reproducibility.json"
+          out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+          print(
+              "production 384x2 reproducible:",
+              evidence["provider_identity_sha256"],
+              evidence["external_base_bundle_sha256"],
+          )
+          PY
+
+      - name: Upload reproducibility evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: speech-like-production-reproducibility-${{ github.sha }}
+          path: ${{ runner.temp }}/speech-like-production-reproducibility.json
+          if-no-files-found: error
+          retention-days: 30
