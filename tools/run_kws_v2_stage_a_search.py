@@ -318,6 +318,34 @@ def _finite_metric(value: object) -> float | None:
     return result if math.isfinite(result) else None
 
 
+def _threshold_map(value: object, candidate_id: str, round_index: int) -> dict[str, float]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, float] = {}
+    for key, raw in value.items():
+        metric = _finite_metric(raw)
+        if metric is None or not 0.0 < metric < 1.0:
+            raise ValueError(
+                f"{candidate_id}: round {round_index} calibrated threshold is invalid: {key}"
+            )
+        result[str(key)] = metric
+    return result
+
+
+def _threshold_grid(value: object, candidate_id: str, round_index: int) -> list[float]:
+    if not isinstance(value, list):
+        return []
+    result: list[float] = []
+    for raw in value:
+        metric = _finite_metric(raw)
+        if metric is None or not 0.0 < metric < 1.0:
+            raise ValueError(
+                f"{candidate_id}: round {round_index} threshold grid contains invalid value"
+            )
+        result.append(metric)
+    return result
+
+
 def build_development_failure_evidence(
     *,
     row: dict,
@@ -357,14 +385,27 @@ def build_development_failure_evidence(
         calibration = item.get("calibration") if isinstance(item.get("calibration"), dict) else {}
         test = item.get("test") if isinstance(item.get("test"), dict) else {}
         training = item.get("training") if isinstance(item.get("training"), dict) else {}
+        round_index = int(item.get("round", -1))
         compact.append(
             {
-                "round": int(item.get("round", -1)),
+                "round": round_index,
                 "score": _finite_metric(item.get("score")),
                 "calibration_gate": bool(item.get("calibration_gate")),
                 "test_gate": bool(item.get("test_gate")),
                 "calibration_frr": _finite_metric(calibration.get("frr")),
                 "calibration_far_per_hour": _finite_metric(calibration.get("far_per_hour")),
+                "calibrated_thresholds": _threshold_map(
+                    calibration.get("calibrated_thresholds"), candidate_id, round_index
+                ),
+                "calibration_threshold_grid": _threshold_grid(
+                    calibration.get("calibration_threshold_grid"), candidate_id, round_index
+                ),
+                "calibration_coordinate_rounds": (
+                    int(calibration["calibration_coordinate_rounds"])
+                    if isinstance(calibration.get("calibration_coordinate_rounds"), int)
+                    and not isinstance(calibration.get("calibration_coordinate_rounds"), bool)
+                    else None
+                ),
                 "test_frr": _finite_metric(test.get("frr")),
                 "test_far_per_hour": _finite_metric(test.get("far_per_hour")),
                 "false_rejects": int(item.get("false_rejects", 0)),

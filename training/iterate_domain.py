@@ -334,6 +334,11 @@ def calibrate(
         references=references,
         output=output / "final-eval",
     )
+    base["calibrated_thresholds"] = {
+        str(row["id"]): float(row["threshold"]) for row in current
+    }
+    base["calibration_threshold_grid"] = [float(value) for value in thresholds]
+    base["calibration_coordinate_rounds"] = int(rounds)
     return tsv, pack, base, domains
 
 
