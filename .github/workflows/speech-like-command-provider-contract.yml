@@ -102,12 +102,47 @@ jobs:
           summary = json.loads((root / 'summary.json').read_text())
           audit = json.loads((root / 'audit.json').read_text())
           assert summary['recordings'] == 6
+          assert summary['workers'] == 1
           assert set(summary['groups']) == {'train', 'generalization-search', 'generalization-freeze'}
           assert audit['recordings'] == 6
           assert audit['tone_backend_allowed'] is False
           assert audit['cross_group_isolation'] == {'source_id': [], 'voice_id': []}
           print('speech-like-command-provider-contract: ok')
           PY
+      - name: Two-worker generation preserves exact corpus identity
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/command-provider"
+          python3 tools/generate_speech_like_command_provider.py \
+            --policy configs/training/speech-like-command-provider-v1.json \
+            --provider "$root/provider.json" \
+            --requests "$root/requests.jsonl" \
+            --output-root "$root/generated-parallel" \
+            --summary "$root/summary-parallel.json" \
+            --workers 2
+          ROOT="$root" python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["ROOT"])
+          serial = json.loads((root / "summary.json").read_text())
+          parallel = json.loads((root / "summary-parallel.json").read_text())
+          assert serial["recordings"] == parallel["recordings"] == 6
+          assert serial["workers"] == 1
+          assert parallel["workers"] == 2
+          assert serial["provider_identity_sha256"] == parallel["provider_identity_sha256"]
+          assert set(serial["groups"]) == set(parallel["groups"])
+          for group in sorted(serial["groups"]):
+              a = root / "generated" / group / "manifest.jsonl"
+              b = root / "generated-parallel" / group / "manifest.jsonl"
+              assert a.read_bytes() == b.read_bytes()
+              rows = [json.loads(line) for line in a.read_text().splitlines() if line.strip()]
+              for row in rows:
+                  wav_a = root / "generated" / group / row["audio"]
+                  wav_b = root / "generated-parallel" / group / row["audio"]
+                  assert hashlib.sha256(wav_a.read_bytes()).hexdigest() == row["file_sha256"]
+                  assert hashlib.sha256(wav_b.read_bytes()).hexdigest() == row["file_sha256"]
+          print("speech-like-command-provider workers: serial/parallel identity stable")
+          PY
+
       - name: Executable tamper fails closed before generation
         run: |
           set -euo pipefail
