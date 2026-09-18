@@ -1,9 +1,9 @@
-name: kws-v2-speech-like-fa-replay-smoke
+name: kws-v2-speech-like-fa-replay-paired
 
 on:
   push:
     branches:
-      - "experiment/kws-speech-like-fa-replay-*"
+      - "experiment/kws-speech-like-fa-replay-clean-*"
     paths:
       - ".github/workflows/kws-v2-speech-like-fa-replay-smoke.yml"
 
@@ -12,13 +12,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: kws-v2-speech-like-fa-replay-smoke-${{ github.ref }}
+  group: kws-v2-speech-like-fa-replay-paired-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  four-round-ablation:
+  paired-three-round-ablation:
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 180
+    env:
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -28,16 +32,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: kws-v2-threshold-production-corpus-408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3
-          path: ${{ runner.temp }}/replay-input
-          github-token: ${{ github.token }}
-          repository: jiying2007/kws-pipeline
-          run-id: 35333458390
-
-      - name: Download exact baseline development evidence
-        uses: actions/download-artifact@v4
-        with:
-          name: kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3
-          path: ${{ runner.temp }}/baseline-v2
+          path: ${{ runner.temp }}/paired-input
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35333458390
@@ -46,7 +41,7 @@ jobs:
         id: corpus
         run: |
           set -euo pipefail
-          input="$RUNNER_TEMP/replay-input"
+          input="$RUNNER_TEMP/paired-input"
           for split in train calibration test qualification; do
             index="$(find "$input" -path "*/$split/dataset-index.jsonl" -print -quit)"
             summary="$(find "$input" -path "*/$split/dataset-summary.json" -print -quit)"
@@ -70,63 +65,78 @@ jobs:
             --qualification-summary "${{ steps.corpus.outputs.qualification_summary }}" \
             --candidate-id v2-a-gru-h64-logmel \
             --prepare-only \
-            --work-dir "$RUNNER_TEMP/replay-stage-a"
+            --work-dir "$RUNNER_TEMP/paired-stage-a"
 
-      - name: Apply one-variable FA source-reuse ablation
+      - name: Materialize paired control and treatment
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json, os, pathlib
+          import hashlib, json, os, pathlib
           temp=pathlib.Path(os.environ["RUNNER_TEMP"])
-          candidate=temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel"
-          baseline=candidate/"effective-config.json"
-          cfg=json.loads(baseline.read_text())
-          aug=cfg["data_augmentation_v3"]
+          candidate=temp/"paired-stage-a/candidates/v2-a-gru-h64-logmel"
+          base=json.loads((candidate/"effective-config.json").read_text())
+
+          control=json.loads(json.dumps(base))
+          treatment=json.loads(json.dumps(base))
+          aug=treatment["data_augmentation_v3"]
           assert aug["failure_replay_enabled"] is False
-          assert cfg["domain_iteration"]["hard_negative_replay"] == []
-          assert cfg["domain_iteration"]["positive_stress_replay"] == []
-          speech=cfg["kws_v2_speech_like_training"]
+          assert treatment["domain_iteration"]["hard_negative_replay"] == []
+          assert treatment["domain_iteration"]["positive_stress_replay"] == []
+          speech=treatment["kws_v2_speech_like_training"]
           assert speech["tone_replay_allowed"] is False
           assert speech["failure_replay"] == "disabled"
-
           aug["failure_replay_enabled"]=True
           aug["failure_replay_mode"]="train-source-reuse-v1"
           aug["failure_replay_kinds"]=["false-accept"]
           speech["failure_replay"]="train-source-reuse-v1"
-          effective=candidate/"fa-replay-effective-config.json"
-          effective.write_text(json.dumps(cfg, indent=2, sort_keys=True)+"\n")
 
-          policy_path=pathlib.Path("configs/training/xiaowo.gru-development-stage-a-v1.json")
-          policy=json.loads(policy_path.read_text())
-          assert policy["min_rounds"]==8 and policy["max_rounds"]==8
+          def write(path, value):
+              path.write_text(json.dumps(value, indent=2, sort_keys=True)+"\n")
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          control_path=candidate/"paired-control-config.json"
+          treatment_path=candidate/"paired-treatment-config.json"
+          control_sha=write(control_path, control)
+          treatment_sha=write(treatment_path, treatment)
+
+          policy=json.loads(
+              pathlib.Path("configs/training/xiaowo.gru-development-stage-a-v1.json").read_text()
+          )
           assert policy["epochs_per_round"]==8
-          policy["min_rounds"]=4
-          policy["max_rounds"]=4
-          policy["patience"]=4
-          policy["experiment_context"]="kws-v2-fa-source-reuse-four-round-ablation-v1"
-          out=temp/"fa-replay-policy.json"
-          out.write_text(json.dumps(policy, indent=2, sort_keys=True)+"\n")
+          policy["min_rounds"]=3
+          policy["max_rounds"]=3
+          policy["patience"]=3
+          policy["experiment_context"]="kws-v2-fa-source-reuse-paired-three-round-v1"
+          policy_path=temp/"paired-policy.json"
+          policy_sha=write(policy_path, policy)
 
           experiment={
               "schema_version":1,
-              "evidence_class":"kws-v2-fa-source-reuse-four-round-ablation-v1",
+              "evidence_class":"kws-v2-fa-source-reuse-paired-three-round-v1",
               "evidence_scope":"development-only",
-              "baseline_head_sha":"408aa33be33f30a8b2728ba1cf5e3ccedf2fd0f3",
-              "baseline_run_id":35333458390,
+              "baseline_main_sha":"09d477bc3ca0f9ad0cfd33aad6ab0b531c0ec136",
+              "production_source_run_id":35333458390,
               "candidate_id":"v2-a-gru-h64-logmel",
+              "control_config_sha256":control_sha,
+              "treatment_config_sha256":treatment_sha,
+              "shared_policy_sha256":policy_sha,
               "primary_delta":"failure-replay=train-source-reuse-v1; failure-kinds=false-accept-only",
+              "epochs_per_round":8,
+              "rounds":3,
+              "single_thread_env":{
+                  "OMP_NUM_THREADS":os.environ["OMP_NUM_THREADS"],
+                  "MKL_NUM_THREADS":os.environ["MKL_NUM_THREADS"],
+                  "OPENBLAS_NUM_THREADS":os.environ["OPENBLAS_NUM_THREADS"],
+              },
               "fixed_hard_negative_replay_changed":False,
               "positive_stress_replay_changed":False,
               "threshold_changed":False,
               "gate_changed":False,
               "decoder_changed":False,
-              "training_epochs_per_round_changed":False,
               "selection_feedback_allowed":False,
               "protected_evidence_used":False,
           }
-          (temp/"fa-replay-experiment.json").write_text(
-              json.dumps(experiment, indent=2, sort_keys=True)+"\n"
-          )
+          write(temp/"paired-experiment.json", experiment)
           PY
 
       - name: Build GRU runtime runner
@@ -143,136 +153,167 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Run four exact eight-epoch development rounds
-        id: develop
+      - name: Run paired control
+        id: control
         run: |
           set +e
-          candidate="$RUNNER_TEMP/replay-stage-a/candidates/v2-a-gru-h64-logmel"
+          candidate="$RUNNER_TEMP/paired-stage-a/candidates/v2-a-gru-h64-logmel"
           .venv/bin/python training/run_gru_development.py \
-            --config "$candidate/fa-replay-effective-config.json" \
-            --policy "$RUNNER_TEMP/fa-replay-policy.json" \
+            --config "$candidate/paired-control-config.json" \
+            --policy "$RUNNER_TEMP/paired-policy.json" \
             --runner build/kws_wav_gru \
-            --work-dir "$candidate/development" \
-            > "$RUNNER_TEMP/fa-replay-development.log" 2>&1
+            --work-dir "$candidate/control" \
+            > "$RUNNER_TEMP/paired-control.log" 2>&1
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Verify replay was exercised without tone or eval-byte reuse
+      - name: Run paired treatment
+        id: treatment
+        run: |
+          set +e
+          candidate="$RUNNER_TEMP/paired-stage-a/candidates/v2-a-gru-h64-logmel"
+          .venv/bin/python training/run_gru_development.py \
+            --config "$candidate/paired-treatment-config.json" \
+            --policy "$RUNNER_TEMP/paired-policy.json" \
+            --runner build/kws_wav_gru \
+            --work-dir "$candidate/treatment" \
+            > "$RUNNER_TEMP/paired-treatment.log" 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Require causal comparability and score first replay delta
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import json, os, pathlib
           temp=pathlib.Path(os.environ["RUNNER_TEMP"])
-          work=temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel/development"
-          manifest=json.loads((work/"development-loop-manifest.json").read_text())
-          assert manifest["evidence_scope"]=="development-only"
-          assert manifest["qualification_used"] is False
-          assert manifest["shadow_used"] is False
-          assert manifest["formal_qualification_used"] is False
-          records=manifest["records"]
-          assert [int(row["round"]) for row in records]==[0,1,2,3]
-          assert all(int(row["training"]["fixed_replay_examples"])==0 for row in records)
-          activated=[row for row in records if int(row["training"]["failure_replay_examples"])>0]
-          assert activated, "FA-only source replay was never exercised"
-          assert all(int(row["training"]["manifest_count"])>1 for row in activated)
+          candidate=temp/"paired-stage-a/candidates/v2-a-gru-h64-logmel"
+          control=json.loads((candidate/"control/development-loop-manifest.json").read_text())
+          treatment=json.loads((candidate/"treatment/development-loop-manifest.json").read_text())
+          crows=control["records"]
+          trows=treatment["records"]
+          assert [int(x["round"]) for x in crows]==[0,1,2]
+          assert [int(x["round"]) for x in trows]==[0,1,2]
+          assert all(int(x["training"]["failure_replay_examples"])==0 for x in crows)
+          active=[
+              int(x["round"])
+              for x in trows
+              if int(x["training"]["failure_replay_examples"])>0
+          ]
+          assert active, "treatment never activated FA source replay"
+          first=min(active)
 
-          evidence=[]
-          for path in sorted((work/"failure-replay").glob("round-*/development-failure-replay.json")):
-              value=json.loads(path.read_text())
-              if int(value.get("examples",0))<=0:
-                  continue
-              assert value["evidence_class"]=="development-only-failure-train-source-reuse"
-              assert value["mode"]=="train-source-reuse-v1"
-              assert value["failure_kinds"]==["false-accept"]
-              assert value["training_source_split"]=="train"
-              assert value["tone_backend_used"] is False
-              assert value["development_source_wav_bytes_copied"] is False
-              assert value["train_clean_source_wav_bytes_reused"] is True
-              assert value["formal_qualification_used"] is False
-              for row in value["rows"]:
-                  assert row["train_source_wav_sha256"] != row["source_evaluation_wav_sha256"]
-                  assert row["wav_sha256"] != row["source_evaluation_wav_sha256"]
-              evidence.append(value)
-          assert evidence
-          print("activated replay rounds:", [int(row["round"]) for row in activated])
-          print("replay examples:", [int(row["training"]["failure_replay_examples"]) for row in records])
-          PY
-
-      - name: Compare four rounds with exact retained baseline
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json, os, pathlib
-          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
-          baseline=json.loads((temp/"baseline-v2/development-loop-manifest.json").read_text())
-          experiment=json.loads((
-              temp/"replay-stage-a/candidates/v2-a-gru-h64-logmel/development/development-loop-manifest.json"
-          ).read_text())
-          rows=[]
-          for base, trial in zip(baseline["records"][:4], experiment["records"]):
-              assert int(base["round"])==int(trial["round"])
-              rows.append({
-                  "round":int(trial["round"]),
-                  "failure_replay_examples":int(trial["training"]["failure_replay_examples"]),
-                  "manifest_count":int(trial["training"]["manifest_count"]),
-                  "baseline":{
-                      "cal_frr":float(base["calibration"]["frr"]),
-                      "cal_far_per_hour":float(base["calibration"]["far_per_hour"]),
-                      "test_frr":float(base["test"]["frr"]),
-                      "test_far_per_hour":float(base["test"]["far_per_hour"]),
-                  },
-                  "trial":{
-                      "cal_frr":float(trial["calibration"]["frr"]),
-                      "cal_far_per_hour":float(trial["calibration"]["far_per_hour"]),
-                      "test_frr":float(trial["test"]["frr"]),
-                      "test_far_per_hour":float(trial["test"]["far_per_hour"]),
-                  },
+          pre=[]
+          for r in range(first):
+              c=crows[r]
+              t=trows[r]
+              assert int(t["training"]["failure_replay_examples"])==0
+              assert c["model_sha256"]==t["model_sha256"], (
+                  f"pre-replay model identity drifted at round {r}: "
+                  f"{c['model_sha256']} != {t['model_sha256']}"
+              )
+              assert c["calibration"]["calibrated_thresholds"] == t["calibration"]["calibrated_thresholds"]
+              assert float(c["calibration"]["frr"]) == float(t["calibration"]["frr"])
+              assert float(c["calibration"]["far_per_hour"]) == float(t["calibration"]["far_per_hour"])
+              assert float(c["test"]["frr"]) == float(t["test"]["frr"])
+              assert float(c["test"]["far_per_hour"]) == float(t["test"]["far_per_hour"])
+              pre.append({
+                  "round":r,
+                  "model_sha256":c["model_sha256"],
+                  "identical":True,
               })
+
+          c=crows[first]
+          t=trows[first]
+          for key in ("learning_rate","positive_example_weight","ordered_token_loss_weight"):
+              assert float(c["training"][key]) == float(t["training"][key])
+          assert int(c["training"]["fixed_replay_examples"]) == int(t["training"]["fixed_replay_examples"]) == 0
+          assert int(t["training"]["failure_replay_examples"]) > 0
+          assert int(t["training"]["manifest_count"]) > int(c["training"]["manifest_count"])
+
+          evidence_path=(
+              candidate/"treatment/failure-replay"/f"round-{first:02d}"/"development-failure-replay.json"
+          )
+          evidence=json.loads(evidence_path.read_text())
+          assert evidence["evidence_class"]=="development-only-failure-train-source-reuse"
+          assert evidence["mode"]=="train-source-reuse-v1"
+          assert evidence["failure_kinds"]==["false-accept"]
+          assert evidence["training_source_split"]=="train"
+          assert evidence["tone_backend_used"] is False
+          assert evidence["development_source_wav_bytes_copied"] is False
+          assert evidence["train_clean_source_wav_bytes_reused"] is True
+
+          def metrics(row):
+              return {
+                  "cal_frr":float(row["calibration"]["frr"]),
+                  "cal_far_per_hour":float(row["calibration"]["far_per_hour"]),
+                  "test_frr":float(row["test"]["frr"]),
+                  "test_far_per_hour":float(row["test"]["far_per_hour"]),
+                  "false_accepts":int(row["false_accepts"]),
+                  "false_rejects":int(row["false_rejects"]),
+                  "model_sha256":row["model_sha256"],
+                  "thresholds":row["calibration"]["calibrated_thresholds"],
+              }
+          cm=metrics(c)
+          tm=metrics(t)
           scorecard={
               "schema_version":1,
-              "evidence_class":"kws-v2-fa-source-reuse-four-round-scorecard-v1",
+              "evidence_class":"kws-v2-fa-source-reuse-paired-scorecard-v1",
               "diagnostic_only":True,
               "selection_feedback_allowed":False,
               "protected_evidence_used":False,
-              "rows":rows,
+              "single_threaded":True,
+              "pre_replay_identity":pre,
+              "first_replay_round":first,
+              "replay_examples":int(t["training"]["failure_replay_examples"]),
+              "control_manifest_count":int(c["training"]["manifest_count"]),
+              "treatment_manifest_count":int(t["training"]["manifest_count"]),
+              "control":cm,
+              "treatment":tm,
+              "delta_treatment_minus_control":{
+                  key:tm[key]-cm[key]
+                  for key in ("cal_frr","cal_far_per_hour","test_frr","test_far_per_hour","false_accepts","false_rejects")
+              },
           }
-          (temp/"fa-replay-scorecard.json").write_text(
+          (temp/"paired-scorecard.json").write_text(
               json.dumps(scorecard, indent=2, sort_keys=True)+"\n"
           )
-          for row in rows:
-              print(row)
+          print(json.dumps(scorecard, indent=2, sort_keys=True))
           PY
 
-      - name: Collect bounded ablation evidence
+      - name: Collect paired evidence
         if: always()
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/fa-replay-evidence"
-          work="$RUNNER_TEMP/replay-stage-a/candidates/v2-a-gru-h64-logmel/development"
+          out="$RUNNER_TEMP/paired-evidence"
+          candidate="$RUNNER_TEMP/paired-stage-a/candidates/v2-a-gru-h64-logmel"
           mkdir -p "$out"
           for src in \
-            "$RUNNER_TEMP/fa-replay-experiment.json" \
-            "$RUNNER_TEMP/fa-replay-policy.json" \
-            "$RUNNER_TEMP/fa-replay-scorecard.json" \
-            "$RUNNER_TEMP/fa-replay-development.log" \
-            "$work/development-loop-manifest.json"; do
+            "$RUNNER_TEMP/paired-experiment.json" \
+            "$RUNNER_TEMP/paired-policy.json" \
+            "$RUNNER_TEMP/paired-scorecard.json" \
+            "$RUNNER_TEMP/paired-control.log" \
+            "$RUNNER_TEMP/paired-treatment.log" \
+            "$candidate/control/development-loop-manifest.json" \
+            "$candidate/treatment/development-loop-manifest.json"; do
             if [[ -f "$src" ]]; then cp "$src" "$out/$(basename "$src")"; fi
           done
-          if [[ -d "$work/failure-replay" ]]; then
-            find "$work/failure-replay" -name 'development-failure-replay.json' -exec cp --parents {} "$out/" \;
+          if [[ -d "$candidate/treatment/failure-replay" ]]; then
+            find "$candidate/treatment/failure-replay" -name 'development-failure-replay.json' -exec cp --parents {} "$out/" \;
           fi
 
-      - name: Upload bounded ablation evidence
+      - name: Upload paired evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-fa-source-reuse-four-round-${{ github.sha }}
-          path: ${{ runner.temp }}/fa-replay-evidence/
+          name: kws-v2-fa-source-reuse-paired-${{ github.sha }}
+          path: ${{ runner.temp }}/paired-evidence/
           if-no-files-found: error
           retention-days: 30
 
-      - name: Enforce bounded ablation completion
+      - name: Enforce paired causal evidence
         if: always()
         run: |
-          test -f "$RUNNER_TEMP/fa-replay-scorecard.json"
+          test -f "$RUNNER_TEMP/paired-scorecard.json"
