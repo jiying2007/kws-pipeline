@@ -126,6 +126,10 @@ jobs:
           live=pathlib.Path(
               ".github/workflows/kws-v2-score-separation-diagnostic-live.yml"
           ).read_text(encoding="utf-8")
+          analyzer=pathlib.Path(
+              "tools/diagnose_kws_score_separation.py"
+          ).read_text(encoding="utf-8")
+          runner=pathlib.Path("tools/kws_wav_gru.c").read_text(encoding="utf-8")
           required=(
               "workflow_dispatch:",
               "source_run_id:",
@@ -138,7 +142,7 @@ jobs:
               "development-calibrated-keywords.tsv",
               "calibration.references.jsonl",
               "test.references.jsonl",
-              "--score-probe",
+              "tools/diagnose_kws_score_separation.py",
               "diagnostic_only",
               "selection_feedback_allowed",
               "protected_evidence_used",
@@ -148,6 +152,9 @@ jobs:
           assert not missing, f"live score-separation wiring missing: {missing}"
           assert "qualification.references" not in live
           assert "formal_qualification" not in live
+          assert '"--score-probe"' in analyzer
+          assert '"--score-probe"' in runner
+          assert "decoder.thresholds[k] = 2.0f" in runner
           print("live score separation wiring: ok")
           PY
 
