@@ -21,10 +21,11 @@ from iterate_domain import (  # noqa: E402
     evaluate,
     gate_values,
     keyword_rows,
+    select_calibration_threshold,
     write_keywords,
 )
 
-EVIDENCE_CLASS = "kws-v2-threshold-operating-curve-diagnostic-v1"
+EVIDENCE_CLASS = "kws-v2-threshold-operating-curve-diagnostic-v2"
 MODE = "common-threshold-sweep-v1"
 
 
@@ -96,7 +97,9 @@ def pareto_indices(rows: list[dict]) -> list[int]:
 
 
 def development_round_evidence(
-    manifest_path: pathlib.Path | None, round_index: int | None
+    manifest_path: pathlib.Path | None,
+    round_index: int | None,
+    gates: dict,
 ) -> dict | None:
     if manifest_path is None:
         if round_index is not None:
@@ -122,8 +125,13 @@ def development_round_evidence(
         raise ValueError(f"development round must match exactly once: {round_index}")
     row = matches[0]
     calibration = row.get("calibration")
-    if not isinstance(calibration, dict):
+    calibration_domains = row.get("calibration_domains")
+    test = row.get("test")
+    test_domains = row.get("test_domains")
+    if not isinstance(calibration, dict) or not isinstance(calibration_domains, dict):
         raise ValueError("selected development round lacks calibration evidence")
+    if not isinstance(test, dict) or not isinstance(test_domains, dict):
+        raise ValueError("selected development round lacks test evidence")
     selected = calibration.get("calibrated_thresholds")
     grid = calibration.get("calibration_threshold_grid")
     coordinate_rounds = calibration.get("calibration_coordinate_rounds")
@@ -131,29 +139,46 @@ def development_round_evidence(
         raise ValueError("selected development round lacks calibrated thresholds")
     if not isinstance(grid, list) or not grid:
         raise ValueError("selected development round lacks threshold grid")
+    manifest_selected_round = value.get("selected_round")
+    if manifest_selected_round is not None:
+        manifest_selected_round = int(manifest_selected_round)
+    selection_policy = value.get("selection_policy")
     return {
         "round": round_index,
         "development_manifest_sha256": sha256_file(manifest_path),
-        "formal_selected_thresholds": {
-            str(key): finite(value, f"formal threshold {key}")
+        "development_config_sha256": str(value.get("config_sha256", "")),
+        "development_record_model_sha256": str(row.get("model_sha256", "")),
+        "development_record_provenance_sha256": str(row.get("provenance_sha256", "")),
+        "development_record_frontend": str(row.get("frontend", "")),
+        "development_record_score": finite(row.get("score"), "development record score"),
+        "development_qualified": bool(value.get("development_qualified", False)),
+        "development_manifest_selection_policy": (
+            str(selection_policy) if selection_policy is not None else None
+        ),
+        "development_manifest_selected_round": manifest_selected_round,
+        "round_matches_development_selected_round": (
+            manifest_selected_round == round_index
+            if manifest_selected_round is not None
+            else False
+        ),
+        "calibrated_thresholds": {
+            str(key): finite(value, f"development threshold {key}")
             for key, value in selected.items()
         },
-        "formal_threshold_grid": [
-            finite(value, "formal threshold grid") for value in grid
+        "threshold_grid": [
+            finite(value, "development threshold grid") for value in grid
         ],
-        "formal_coordinate_rounds": int(coordinate_rounds),
-        "formal_calibration_metrics": {
-            "frr": finite(calibration["frr"], "formal calibration frr"),
-            "far_per_hour": finite(
-                calibration["far_per_hour"], "formal calibration far_per_hour"
-            ),
-        },
-        "formal_test_metrics": {
-            "frr": finite(row["test"]["frr"], "formal test frr"),
-            "far_per_hour": finite(
-                row["test"]["far_per_hour"], "formal test far_per_hour"
-            ),
-        },
+        "coordinate_rounds": int(coordinate_rounds),
+        "calibration_metrics": compact_metrics(
+            calibration, calibration_domains, gates
+        ),
+        "test_metrics": compact_metrics(test, test_domains, gates),
+        "calibration_behavior_key": list(
+            calibration_behavior_key(calibration, calibration_domains, gates)
+        ),
+        "test_behavior_key": list(
+            calibration_behavior_key(test, test_domains, gates)
+        ),
     }
 
 
@@ -173,7 +198,12 @@ def main() -> int:
     parser.add_argument("--test-references", required=True, type=pathlib.Path)
     parser.add_argument("--thresholds", required=True, nargs="+", type=float)
     parser.add_argument("--development-manifest", type=pathlib.Path)
+    parser.add_argument("--development-domain-summary", type=pathlib.Path)
     parser.add_argument("--round-index", type=int)
+    parser.add_argument(
+        "--diagnostic-round-selection-policy",
+        default="caller-supplied-round-v1",
+    )
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
@@ -199,9 +229,52 @@ def main() -> int:
 
     cfg = load_object(args.config)
     gates = gate_values(cfg.get("domain_gates", {}))
-    formal = development_round_evidence(
-        args.development_manifest, args.round_index
+    development_evidence = development_round_evidence(
+        args.development_manifest, args.round_index, gates
     )
+    model_sha256 = sha256_file(args.model)
+    config_sha256 = sha256_file(args.config)
+    if development_evidence is not None:
+        if not development_evidence["development_record_model_sha256"]:
+            raise ValueError("development round is missing model SHA256")
+        if development_evidence["development_record_model_sha256"] != model_sha256:
+            raise ValueError("diagnostic model does not match development round model")
+        if not development_evidence["development_config_sha256"]:
+            raise ValueError("development manifest is missing config SHA256")
+        if development_evidence["development_config_sha256"] != config_sha256:
+            raise ValueError("diagnostic config does not match development manifest config")
+
+    domain_summary_evidence = None
+    if args.development_manifest is not None and args.development_domain_summary is None:
+        raise ValueError(
+            "--development-domain-summary is required with --development-manifest"
+        )
+    if args.development_domain_summary is not None:
+        if not args.development_domain_summary.is_file():
+            raise ValueError(
+                f"development domain summary is missing: {args.development_domain_summary}"
+            )
+        summary = load_object(args.development_domain_summary)
+        splits = summary.get("splits")
+        if not isinstance(splits, dict):
+            raise ValueError("development domain summary has no split evidence")
+        calibration_split = splits.get("calibration")
+        test_split = splits.get("test")
+        if not isinstance(calibration_split, dict) or not isinstance(test_split, dict):
+            raise ValueError("development domain summary lacks calibration/test splits")
+        expected_calibration = str(calibration_split.get("references_sha256", ""))
+        expected_test = str(test_split.get("references_sha256", ""))
+        actual_calibration = sha256_file(args.calibration_references)
+        actual_test = sha256_file(args.test_references)
+        if not expected_calibration or expected_calibration != actual_calibration:
+            raise ValueError("calibration references do not match development domain summary")
+        if not expected_test or expected_test != actual_test:
+            raise ValueError("test references do not match development domain summary")
+        domain_summary_evidence = {
+            "sha256": sha256_file(args.development_domain_summary),
+            "calibration_references_sha256": actual_calibration,
+            "test_references_sha256": actual_test,
+        }
 
     work = args.work_dir.resolve()
     if work.exists():
@@ -248,26 +321,57 @@ def main() -> int:
         )
 
     pareto = pareto_indices(rows)
+    min_frr_value = min(float(row["calibration"]["frr"]) for row in rows)
+    min_far_value = min(float(row["calibration"]["far_per_hour"]) for row in rows)
+    min_frr_plateau = [
+        index
+        for index, row in enumerate(rows)
+        if math.isclose(
+            float(row["calibration"]["frr"]),
+            min_frr_value,
+            rel_tol=0.0,
+            abs_tol=1.0e-12,
+        )
+    ]
+    min_far_plateau = [
+        index
+        for index, row in enumerate(rows)
+        if math.isclose(
+            float(row["calibration"]["far_per_hour"]),
+            min_far_value,
+            rel_tol=0.0,
+            abs_tol=1.0e-12,
+        )
+    ]
     min_calibration_frr = min(
-        range(len(rows)),
+        min_frr_plateau,
         key=lambda index: (
-            float(rows[index]["calibration"]["frr"]),
             float(rows[index]["calibration"]["far_per_hour"]),
             rows[index]["threshold"],
         ),
     )
     min_calibration_far = min(
-        range(len(rows)),
+        min_far_plateau,
         key=lambda index: (
-            float(rows[index]["calibration"]["far_per_hour"]),
             float(rows[index]["calibration"]["frr"]),
             -rows[index]["threshold"],
         ),
     )
-    official_order = min(
-        range(len(rows)),
-        key=lambda index: tuple(rows[index]["official_calibration_behavior_key"]),
-    )
+    official_candidates = [
+        (
+            float(row["threshold"]),
+            tuple(float(value) for value in row["official_calibration_behavior_key"]),
+        )
+        for row in rows
+    ]
+    official_best_key = min(key for _, key in official_candidates)
+    official_order_plateau = [
+        index
+        for index, row in enumerate(rows)
+        if tuple(float(value) for value in row["official_calibration_behavior_key"])
+        == official_best_key
+    ]
+    official_order_threshold = select_calibration_threshold(official_candidates)
 
     result = {
         "schema_version": 1,
@@ -277,19 +381,35 @@ def main() -> int:
         "diagnostic_only": True,
         "selection_feedback_allowed": False,
         "protected_evidence_used": False,
-        "model_sha256": sha256_file(args.model),
+        "model_sha256": model_sha256,
         "tokens_sha256": sha256_file(args.tokens),
         "keywords_sha256": sha256_file(args.keywords),
-        "config_sha256": sha256_file(args.config),
+        "config_sha256": config_sha256,
         "calibration_references_sha256": sha256_file(args.calibration_references),
         "test_references_sha256": sha256_file(args.test_references),
         "thresholds": thresholds,
-        "formal_development_evidence": formal,
+        "diagnostic_round_selection_policy": str(args.diagnostic_round_selection_policy),
+        "common_threshold_sweep_only": True,
+        "development_round_evidence": development_evidence,
+        "development_domain_summary_evidence": domain_summary_evidence,
         "operating_curve": rows,
+        "calibration_frr_far_pareto_thresholds": [
+            rows[index]["threshold"] for index in pareto
+        ],
         "pareto_thresholds": [rows[index]["threshold"] for index in pareto],
+        "min_calibration_frr_thresholds": [
+            rows[index]["threshold"] for index in min_frr_plateau
+        ],
+        "min_calibration_far_thresholds": [
+            rows[index]["threshold"] for index in min_far_plateau
+        ],
         "min_calibration_frr_threshold": rows[min_calibration_frr]["threshold"],
         "min_calibration_far_threshold": rows[min_calibration_far]["threshold"],
-        "official_behavior_order_threshold": rows[official_order]["threshold"],
+        "official_behavior_order_key": list(official_best_key),
+        "official_behavior_order_thresholds": [
+            rows[index]["threshold"] for index in official_order_plateau
+        ],
+        "official_behavior_order_threshold": official_order_threshold,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
