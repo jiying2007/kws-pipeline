@@ -21,6 +21,7 @@ from iterate_domain import (  # noqa: E402
     evaluate,
     gate_values,
     keyword_rows,
+    select_calibration_threshold,
     write_keywords,
 )
 
@@ -356,10 +357,21 @@ def main() -> int:
             -rows[index]["threshold"],
         ),
     )
-    official_order = min(
-        range(len(rows)),
-        key=lambda index: tuple(rows[index]["official_calibration_behavior_key"]),
-    )
+    official_candidates = [
+        (
+            float(row["threshold"]),
+            tuple(float(value) for value in row["official_calibration_behavior_key"]),
+        )
+        for row in rows
+    ]
+    official_best_key = min(key for _, key in official_candidates)
+    official_order_plateau = [
+        index
+        for index, row in enumerate(rows)
+        if tuple(float(value) for value in row["official_calibration_behavior_key"])
+        == official_best_key
+    ]
+    official_order_threshold = select_calibration_threshold(official_candidates)
 
     result = {
         "schema_version": 1,
@@ -393,7 +405,11 @@ def main() -> int:
         ],
         "min_calibration_frr_threshold": rows[min_calibration_frr]["threshold"],
         "min_calibration_far_threshold": rows[min_calibration_far]["threshold"],
-        "official_behavior_order_threshold": rows[official_order]["threshold"],
+        "official_behavior_order_key": list(official_best_key),
+        "official_behavior_order_thresholds": [
+            rows[index]["threshold"] for index in official_order_plateau
+        ],
+        "official_behavior_order_threshold": official_order_threshold,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
