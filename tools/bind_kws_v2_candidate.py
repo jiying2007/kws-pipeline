@@ -57,6 +57,11 @@ def validate_matrix(path: pathlib.Path) -> dict:
             raise ValueError(f"protected evidence flag {key} must be false")
     if value.get("requires_predeclared_generalization_plan") is not True:
         raise ValueError("experiment matrix must require predeclared generalization plan")
+    cohort_id = value.get("generalization_cohort_id")
+    if not isinstance(cohort_id, str) or not cohort_id.strip() or len(cohort_id) > 128:
+        raise ValueError("experiment matrix generalization_cohort_id is invalid")
+    if any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._:-" for ch in cohort_id):
+        raise ValueError("experiment matrix generalization_cohort_id contains unsupported characters")
     return value
 
 
@@ -70,6 +75,8 @@ def candidate_from_matrix(matrix_path: pathlib.Path, matrix: dict, candidate_id:
     row = matches[0]
     if row.get("protected_evidence_used") is not False:
         raise ValueError("candidate row protected_evidence_used must be false")
+    if row.get("generalization_cohort_id") != matrix["generalization_cohort_id"]:
+        raise ValueError("candidate generalization_cohort_id must match experiment matrix")
     if row.get("config_path_contract") != "matrix-relative-v1":
         raise ValueError("candidate config path contract mismatch")
     raw = row.get("config")
@@ -179,6 +186,7 @@ def main() -> int:
         },
         "resource_contract_candidate": row["resource_contract_candidate"],
         "generalization_tier": row["generalization_tier"],
+        "generalization_cohort_id": row["generalization_cohort_id"],
         "requires_predeclared_generalization_plan": True,
         "speech_like_external_base_required": True,
         "tone_replay_allowed": False,
