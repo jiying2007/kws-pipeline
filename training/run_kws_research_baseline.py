@@ -64,25 +64,59 @@ def safe_reset(path: pathlib.Path) -> pathlib.Path:
     return root
 
 
-def negative_manifest(source: pathlib.Path, output: pathlib.Path) -> int:
-    root = source.resolve().parent
+def negative_manifest(sources: list[pathlib.Path], output: pathlib.Path) -> int:
     paths: list[pathlib.Path] = []
     seen: set[str] = set()
-    for row in manifest_rows(source.resolve()):
-        if list(row["tokens"]):
-            continue
-        raw = pathlib.Path(str(row["audio"]))
-        path = raw.resolve() if raw.is_absolute() else (root / raw).resolve()
-        digest = sha256_file(path)
-        if digest in seen:
-            continue
-        seen.add(digest)
-        paths.append(path)
+    for source in sources:
+        root = source.resolve().parent
+        for row in manifest_rows(source.resolve()):
+            if list(row["tokens"]):
+                continue
+            raw = pathlib.Path(str(row["audio"]))
+            path = raw.resolve() if raw.is_absolute() else (root / raw).resolve()
+            digest = sha256_file(path)
+            if digest in seen:
+                continue
+            seen.add(digest)
+            paths.append(path)
     if not paths:
-        raise ValueError(f"no negative examples found in {source}")
+        raise ValueError("negative manifests contain no empty-target examples")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("".join(f"{path}\n" for path in paths), encoding="utf-8")
     return len(paths)
+
+
+def combined_references(
+    sources: list[pathlib.Path],
+    output: pathlib.Path,
+) -> pathlib.Path:
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for source in sources:
+        root = source.resolve().parent
+        for line_no, raw in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            row = json.loads(raw)
+            if not isinstance(row, dict):
+                raise ValueError(f"{source}:{line_no}: expected JSON object")
+            recording = str(row.get("recording", ""))
+            path_value = row.get("audio_path") or row.get("path")
+            if not recording or recording in seen or not isinstance(path_value, str):
+                raise ValueError(f"{source}:{line_no}: invalid/duplicate reference identity")
+            audio = pathlib.Path(path_value)
+            if not audio.is_absolute():
+                audio = (root / audio).resolve()
+            row["path"] = str(audio)
+            row.pop("audio_path", None)
+            rows.append(row)
+            seen.add(recording)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    return output
 
 
 def soft_operating_points(curve: dict, budgets: list[float]) -> dict:
@@ -146,6 +180,11 @@ def main() -> int:
     parser.add_argument("--family", required=True, choices=("rnn", "gru"))
     parser.add_argument("--loss-profile", default="m0-ctc-only")
     parser.add_argument("--runner", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--negative-sidecar",
+        type=pathlib.Path,
+        help="optional portable kws-v2-research-negative-sidecar-v1 root",
+    )
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
@@ -206,6 +245,33 @@ def main() -> int:
         work / "logs" / "audit.log",
     )
 
+    sidecar_root: pathlib.Path | None = None
+    sidecar_receipt: dict | None = None
+    sidecar_manifests: dict[str, pathlib.Path] = {}
+    sidecar_references: dict[str, pathlib.Path] = {}
+    if args.negative_sidecar is not None:
+        sidecar_root = args.negative_sidecar.resolve()
+        receipt_path = sidecar_root / "sidecar-receipt.json"
+        if not receipt_path.is_file():
+            raise ValueError(f"negative sidecar receipt missing: {receipt_path}")
+        sidecar_receipt = load_object(receipt_path)
+        if (
+            sidecar_receipt.get("evidence_class") != "kws-v2-research-negative-sidecar-v1"
+            or sidecar_receipt.get("evidence_scope") != "research-only"
+            or sidecar_receipt.get("target_policy") != "empty-target-nonwake"
+            or sidecar_receipt.get("qualification_split_consumed") is not False
+            or sidecar_receipt.get("protected_evidence_used") is not False
+        ):
+            raise ValueError("negative sidecar research/protection contract mismatch")
+        for split in ("train", "calibration", "test"):
+            item = sidecar_receipt["splits"][split]
+            manifest = sidecar_root / str(item["tsv"])
+            references = sidecar_root / str(item["references"])
+            if not manifest.is_file() or not references.is_file():
+                raise ValueError(f"negative sidecar split is incomplete: {split}")
+            sidecar_manifests[split] = manifest
+            sidecar_references[split] = references
+
     train_policy = policy["train"]
     checkpoint = work / "model.pt"
     trainer = TRAINING / ("train_gru_ctc.py" if args.family == "gru" else "train_ctc.py")
@@ -232,6 +298,8 @@ def main() -> int:
         str(float(loss["recurrent_release_loss_weight"])),
         "--output", str(checkpoint),
     ]
+    if "train" in sidecar_manifests:
+        command.extend(["--manifest", str(sidecar_manifests["train"])])
     run(command, work / "logs" / "train.log")
 
     model = work / ("model.kwg" if args.family == "gru" else "model.kwm")
@@ -248,6 +316,17 @@ def main() -> int:
     )
 
     thresholds = [float(v) for v in policy["threshold_diagnostic"]["common_thresholds"]]
+    calibration_references = dataset / "calibration.references.jsonl"
+    test_references = dataset / "test.references.jsonl"
+    if sidecar_references:
+        calibration_references = combined_references(
+            [calibration_references, sidecar_references["calibration"]],
+            work / "combined-calibration.references.jsonl",
+        )
+        test_references = combined_references(
+            [test_references, sidecar_references["test"]],
+            work / "combined-test.references.jsonl",
+        )
     curve_path = work / "threshold-operating-curve.json"
     threshold_work = work / "threshold-sweep"
     run(
@@ -259,8 +338,8 @@ def main() -> int:
             "--tokens", str(tokens),
             "--keywords", str(keywords),
             "--config", str(config_path),
-            "--calibration-references", str(dataset / "calibration.references.jsonl"),
-            "--test-references", str(dataset / "test.references.jsonl"),
+            "--calibration-references", str(calibration_references),
+            "--test-references", str(test_references),
             "--thresholds", *[str(v) for v in thresholds],
             "--diagnostic-round-selection-policy", "research-reset-fixed-checkpoint-v1",
             "--work-dir", str(threshold_work),
@@ -277,7 +356,10 @@ def main() -> int:
         raise ValueError(f"diagnostic keyword pack missing for threshold {chosen:.3f}")
 
     neg_manifest = work / "test-negative-manifest.tsv"
-    negative_count = negative_manifest(dataset / "test.tsv", neg_manifest)
+    negative_sources = [dataset / "test.tsv"]
+    if "test" in sidecar_manifests:
+        negative_sources.append(sidecar_manifests["test"])
+    negative_count = negative_manifest(negative_sources, neg_manifest)
     exposure_cfg = policy["negative_exposure"]
     exposure_wav = work / "negative-exposure.wav"
     exposure_refs = work / "negative-exposure.references.jsonl"
@@ -333,6 +415,15 @@ def main() -> int:
                 "--train-manifest", str(dataset / "train.tsv"),
                 "--calibration-manifest", str(dataset / "calibration.tsv"),
                 "--test-manifest", str(dataset / "test.tsv"),
+                *(
+                    [
+                        "--train-manifest", str(sidecar_manifests["train"]),
+                        "--calibration-manifest", str(sidecar_manifests["calibration"]),
+                        "--test-manifest", str(sidecar_manifests["test"]),
+                    ]
+                    if sidecar_manifests
+                    else []
+                ),
                 "--tokens", str(tokens),
                 "--keywords", str(keywords),
                 "--frontend", frontend,
@@ -386,6 +477,19 @@ def main() -> int:
             "shipping_far_claim_allowed": False,
         },
         "classifier_baseline": classifier,
+        "ordinary_speech_negative_sidecar": (
+            {
+                "enabled": True,
+                "receipt_sha256": sha256_file(sidecar_root / "sidecar-receipt.json"),
+                "total_recordings": int(sidecar_receipt["total_recordings"]),
+                "train_recordings": int(sidecar_receipt["splits"]["train"]["recordings"]),
+                "calibration_recordings": int(sidecar_receipt["splits"]["calibration"]["recordings"]),
+                "test_recordings": int(sidecar_receipt["splits"]["test"]["recordings"]),
+                "target_policy": "empty-target-nonwake",
+            }
+            if sidecar_receipt is not None and sidecar_root is not None
+            else {"enabled": False}
+        ),
     }
     target = work / "research-scorecard.json"
     target.write_text(
