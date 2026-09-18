@@ -6,45 +6,23 @@
     "train": {
       "provider_group": "train",
       "voice_slots": [
-        "train-00",
-        "train-01",
-        "train-02",
-        "train-03",
-        "train-04",
-        "train-05",
-        "train-06",
-        "train-07"
+        "train-00", "train-01", "train-02", "train-03",
+        "train-04", "train-05", "train-06", "train-07"
       ]
     },
     "calibration": {
       "provider_group": "generalization-search",
-      "voice_slots": [
-        "search-cal-00",
-        "search-cal-01",
-        "search-cal-02",
-        "search-cal-03"
-      ]
+      "voice_slots": ["search-cal-00", "search-cal-01", "search-cal-02", "search-cal-03"]
     },
     "test": {
       "provider_group": "generalization-search",
-      "voice_slots": [
-        "search-test-00",
-        "search-test-01",
-        "search-test-02",
-        "search-test-03"
-      ]
+      "voice_slots": ["search-test-00", "search-test-01", "search-test-02", "search-test-03"]
     },
     "qualification": {
       "provider_group": "generalization-freeze",
       "voice_slots": [
-        "freeze-00",
-        "freeze-01",
-        "freeze-02",
-        "freeze-03",
-        "freeze-04",
-        "freeze-05",
-        "freeze-06",
-        "freeze-07"
+        "freeze-00", "freeze-01", "freeze-02", "freeze-03",
+        "freeze-04", "freeze-05", "freeze-06", "freeze-07"
       ]
     }
   },
@@ -54,181 +32,112 @@
       "kind": "positive",
       "keyword_id": 1,
       "text": "你好小窝",
-      "tokens": [
-        "ni3",
-        "hao3",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["ni3", "hao3", "xiao3", "wo1"]
     },
     {
       "id": "kw1-pause",
       "kind": "positive",
       "keyword_id": 1,
       "text": "你好。小窝",
-      "tokens": [
-        "ni3",
-        "hao3",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["ni3", "hao3", "xiao3", "wo1"]
     },
     {
       "id": "kw2-exact",
       "kind": "positive",
       "keyword_id": 2,
       "text": "小窝小窝",
-      "tokens": [
-        "xiao3",
-        "wo1",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
     },
     {
       "id": "kw2-pause",
       "kind": "positive",
       "keyword_id": 2,
       "text": "小窝。小窝",
-      "tokens": [
-        "xiao3",
-        "wo1",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
     },
     {
       "id": "conf-prefix-kw1",
       "kind": "confusable",
       "keyword_id": null,
       "text": "你好小",
-      "tokens": [
-        "ni3",
-        "hao3",
-        "xiao3"
-      ]
+      "tokens": ["ni3", "hao3", "xiao3"]
     },
     {
       "id": "conf-suffix-kw1",
       "kind": "confusable",
       "keyword_id": null,
       "text": "好小窝",
-      "tokens": [
-        "hao3",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["hao3", "xiao3", "wo1"]
     },
     {
       "id": "conf-prefix-kw2",
       "kind": "confusable",
       "keyword_id": null,
       "text": "小窝小",
-      "tokens": [
-        "xiao3",
-        "wo1",
-        "xiao3"
-      ]
+      "tokens": ["xiao3", "wo1", "xiao3"]
     },
     {
       "id": "conf-suffix-kw2",
       "kind": "confusable",
       "keyword_id": null,
       "text": "窝小窝",
-      "tokens": [
-        "wo1",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["wo1", "xiao3", "wo1"]
     },
     {
       "id": "conf-order-1",
       "kind": "confusable",
       "keyword_id": null,
       "text": "小窝你好",
-      "tokens": [
-        "xiao3",
-        "wo1",
-        "ni3",
-        "hao3"
-      ]
+      "tokens": ["xiao3", "wo1", "ni3", "hao3"]
     },
     {
       "id": "conf-repeat-1",
       "kind": "confusable",
       "keyword_id": null,
       "text": "你好你好",
-      "tokens": [
-        "ni3",
-        "hao3",
-        "ni3",
-        "hao3"
-      ]
+      "tokens": ["ni3", "hao3", "ni3", "hao3"]
     },
     {
       "id": "neg-short-nihao",
       "kind": "negative",
       "keyword_id": null,
       "text": "你好",
-      "tokens": [
-        "ni3",
-        "hao3"
-      ]
+      "tokens": ["ni3", "hao3"]
     },
     {
       "id": "neg-short-xiaowo",
       "kind": "negative",
       "keyword_id": null,
       "text": "小窝",
-      "tokens": [
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["xiao3", "wo1"]
     },
     {
       "id": "neg-repeat-xiao",
       "kind": "negative",
       "keyword_id": null,
       "text": "小小窝",
-      "tokens": [
-        "xiao3",
-        "xiao3",
-        "wo1"
-      ]
+      "tokens": ["xiao3", "xiao3", "wo1"]
     },
     {
       "id": "neg-drop-xiao",
       "kind": "negative",
       "keyword_id": null,
       "text": "你好窝",
-      "tokens": [
-        "ni3",
-        "hao3",
-        "wo1"
-      ]
+      "tokens": ["ni3", "hao3", "wo1"]
     },
     {
       "id": "neg-reorder-2",
       "kind": "negative",
       "keyword_id": null,
       "text": "窝你好",
-      "tokens": [
-        "wo1",
-        "ni3",
-        "hao3"
-      ]
+      "tokens": ["wo1", "ni3", "hao3"]
     },
     {
       "id": "neg-reorder-3",
       "kind": "negative",
       "keyword_id": null,
       "text": "小你好窝",
-      "tokens": [
-        "xiao3",
-        "ni3",
-        "hao3",
-        "wo1"
-      ]
+      "tokens": ["xiao3", "ni3", "hao3", "wo1"]
     }
   ],
   "constraints": {
