@@ -1,0 +1,118 @@
+name: kws-v2-encoder-upper-bound-contract
+
+on:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify fixed-keyword upper-bound authority
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-fixed-keyword-upper-bound-v1.json").read_text())
+          assert p["policy"]=="kws-v2-fixed-keyword-upper-bound-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["data"]["qualification_split_consumed"] is False
+          assert p["model"]=={
+              "architecture":"clip-gru-v1",
+              "frontend":"logmel",
+              "feature_dim":32,
+              "hidden_dim":64,
+              "classes":["nonwake","keyword-1","keyword-2"],
+          }
+          assert p["train"]=={
+              "epochs":24,
+              "batch_size":16,
+              "learning_rate":0.001,
+              "seed":1337,
+              "balance_mode":"equal-class-sampler-v1",
+          }
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          print("fixed-keyword upper-bound contract: ok")
+          PY
+
+      - name: Verify sweep candidates change one variable
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          assert p["policy"]=="kws-v2-encoder-frontend-upper-bound-sweep-v1"
+          assert p["evidence_scope"]=="research-only"
+          b=p["baseline"]
+          assert (b["frontend"],b["hidden_dim"],b["epochs"],b["seed"])==("logmel",64,24,1337)
+          fixed=p["fixed"]
+          assert fixed["qualification_split_consumed"] is False
+          assert fixed["rendered_cache_run_id"]==35412153192
+          assert fixed["sidecar_run_id"]==35367960968
+          f=p["candidates"]["f1-pcen64"]
+          assert f["single_variable"]=="frontend"
+          assert f["frontend"]=="pcen-lite" and f["hidden_dim"]==64
+          c=p["candidates"]["c1-logmel128"]
+          assert c["single_variable"]=="hidden_dim"
+          assert c["frontend"]=="logmel" and c["hidden_dim"]==128
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          print("encoder/frontend sweep single-variable contract: ok")
+          PY
+
+      - name: Verify workflows avoid protected evidence
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml",
+          ):
+              text=pathlib.Path(name).read_text().lower()
+              assert "run-id: 35412153192" in text
+              assert "run-id: 35367960968" in text
+              for forbidden in (
+                  "qualification-index",
+                  "qualification-summary",
+                  "generalization-freeze",
+                  "fresh-validation",
+                  "shadow-validation",
+                  "formal-qualification",
+              ):
+                  assert forbidden not in text, (name, forbidden)
+          print("upper-bound workflow evidence boundary: ok")
+          PY
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
