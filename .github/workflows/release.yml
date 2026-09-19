@@ -75,6 +75,7 @@ jobs:
           python3 tests/test_reproducible_sdk.py
           python3 tests/test_terminal_docs.py
           python3 tests/test_test_inventory.py
+          python3 tests/test_product_training_entry_contract.py
       - name: Hosted benchmark signal
         run: ./build/kws_bench
       - name: Python test inventory
