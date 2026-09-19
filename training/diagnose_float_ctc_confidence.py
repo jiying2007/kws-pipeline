@@ -86,6 +86,14 @@ def evaluate_split(
     keyword_lookup = {row: index for index, row in enumerate(keyword_tuples)}
     positive_scores: list[float] = []
     nonwake_scores: list[float] = []
+    tokenized_nonwake_scores: list[float] = []
+    empty_target_nonwake_scores: list[float] = []
+    wake_frames = 0
+    wake_blank_top1_frames = 0
+    wake_keyword_root_top1_frames = 0
+    wake_any_keyword_token_top1_frames = 0
+    keyword_roots = {sequence[0] for sequence in keyword_tuples}
+    keyword_tokens = {token for sequence in keyword_tuples for token in sequence}
     keyword_positive: dict[str, list[float]] = {
         str(index + 1): [] for index in range(len(keyword_tuples))
     }
@@ -103,11 +111,25 @@ def evaluate_split(
                 ]
                 wake_index = keyword_lookup.get(true_row)
                 if wake_index is None:
-                    nonwake_scores.append(max(confidences))
+                    score = max(confidences)
+                    nonwake_scores.append(score)
+                    if true_row:
+                        tokenized_nonwake_scores.append(score)
+                    else:
+                        empty_target_nonwake_scores.append(score)
                 else:
                     score = confidences[wake_index]
                     positive_scores.append(score)
                     keyword_positive[str(wake_index + 1)].append(score)
+                    top1 = sample.argmax(dim=1)
+                    wake_frames += int(top1.numel())
+                    wake_blank_top1_frames += int((top1 == 0).sum())
+                    wake_keyword_root_top1_frames += int(
+                        sum(int(token in keyword_roots) for token in top1.tolist())
+                    )
+                    wake_any_keyword_token_top1_frames += int(
+                        sum(int(token in keyword_tokens) for token in top1.tolist())
+                    )
 
     operating_curve: list[dict] = []
     for threshold in thresholds:
@@ -133,6 +155,27 @@ def evaluate_split(
         "nonwake_examples": len(nonwake_scores),
         "positive_true_keyword_confidence": compact_distribution(positive_scores),
         "nonwake_max_keyword_confidence": compact_distribution(nonwake_scores),
+        "tokenized_nonwake_max_keyword_confidence": compact_distribution(
+            tokenized_nonwake_scores
+        ),
+        "empty_target_nonwake_max_keyword_confidence": compact_distribution(
+            empty_target_nonwake_scores
+        ),
+        "wake_top1_frame_diagnostics": {
+            "frames": wake_frames,
+            "blank_top1_frames": wake_blank_top1_frames,
+            "blank_top1_fraction": (
+                wake_blank_top1_frames / wake_frames if wake_frames else None
+            ),
+            "keyword_root_top1_frames": wake_keyword_root_top1_frames,
+            "keyword_root_top1_fraction": (
+                wake_keyword_root_top1_frames / wake_frames if wake_frames else None
+            ),
+            "any_keyword_token_top1_frames": wake_any_keyword_token_top1_frames,
+            "any_keyword_token_top1_fraction": (
+                wake_any_keyword_token_top1_frames / wake_frames if wake_frames else None
+            ),
+        },
         "per_keyword_positive_confidence": {
             key: compact_distribution(value) for key, value in keyword_positive.items()
         },
