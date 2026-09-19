@@ -40,6 +40,15 @@ ALLOWED_LIBC = frozenset(
     """.split()
 )
 
+# BSD spellings of the same three memory primitives. They are not a new
+# capability: glibc exports them as aliases, and a compiler is free to lower a
+# memory operation to whichever spelling it likes. clang turns a memcmp whose
+# result is only tested for equality into bcmp, so a gate written against the
+# ISO C names alone fails a clang build that is pure by every measure this
+# contract cares about. Judged semantically -- move, compare, fill, over
+# caller-owned memory -- these are the operations already allowed above.
+ALLOWED_LIBC_ALIASES = frozenset("bcmp bcopy bzero".split())
+
 # Compiler-generated EABI runtime helpers. ARMv7 has no 64-bit integer divide
 # instruction, so the compiler emits calls to these for `uint64_t` division and
 # modulo -- both of which the engine performs on its sample counters. They are
@@ -90,6 +99,8 @@ def allowed(symbol: str) -> bool:
     if symbol.startswith(INTERNAL_PREFIX):
         return True
     if symbol in ALLOWED_LIBC:
+        return True
+    if symbol in ALLOWED_LIBC_ALIASES:
         return True
     if symbol in ALLOWED_ABI_HELPERS:
         return True

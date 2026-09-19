@@ -42,6 +42,13 @@ OBSERVED = [
 # allowlist the gate would false-fail on the architecture that actually ships.
 OBSERVED_ARM = sorted([*OBSERVED, "__aeabi_ldivmod", "__aeabi_uldivmod"])
 
+# The same sources built by clang: fixed-size memory ops are inlined away
+# entirely, and the one comparison that survives is lowered to its BSD
+# spelling. Both differences are code-generation choices, not new capabilities.
+OBSERVED_CLANG = sorted(
+    [symbol for symbol in OBSERVED if not symbol.startswith("mem")] + ["bcmp"]
+)
+
 # One representative per category the README claim enumerates, plus a few that
 # are only reachable through an include nobody thinks about.
 DENIED_SAMPLES = {
@@ -88,14 +95,24 @@ def main() -> int:
         # So is the ARMv7-hard-float build of the same sources.
         assert run(root, OBSERVED_ARM) == 0, "the ARMv7 dependency set must satisfy the contract"
 
-        # A build that emits no mem* call at all must also pass. clang at -O2
-        # inlines fixed-size memory ops rather than calling them, so its archive
-        # references none; rejecting it would be a false failure on a toolchain
-        # the gate is supposed to protect equally. This is the regression test
-        # for the sentinel, not a relaxation of the allowlist.
+        # The clang shape, in two parts.
+        #
+        # 1. No mem* call at all: clang at -O2 inlines fixed-size memory ops
+        #    rather than calling them, so its archive may reference none.
+        #    Rejecting it would fail a toolchain the gate exists to protect.
+        #    This is the regression test for the sentinel, not a relaxation.
         without_mem = [symbol for symbol in OBSERVED if not symbol.startswith("mem")]
         assert without_mem, "the fixture must keep non-mem symbols"
         assert run(root, without_mem) == 0, "a build without mem* must satisfy the contract"
+
+        # 2. The memcmp that does survive is lowered to its BSD spelling:
+        #    clang rewrites a memcmp whose result is only tested for equality
+        #    into bcmp. Same operation, different name, and it must not read
+        #    as a new dependency.
+        assert run(root, OBSERVED_CLANG) == 0, "the clang dependency set must satisfy the contract"
+        for alias in ("bcmp", "bcopy", "bzero"):
+            code = run(root, [*without_mem, alias])
+            assert code == 0, f"{alias} is a spelling of an allowed primitive, got {code}"
 
         # Every enumerated category must be rejected. Without this the checker
         # could be broken into always passing and the run above would not notice.
