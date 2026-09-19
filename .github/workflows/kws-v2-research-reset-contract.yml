@@ -112,6 +112,21 @@ jobs:
               and row["wake_example_weight_policy"]=="class-balance"
               for row in ladder.values()
           )
+          tuning=p["tuning_profiles"]
+          assert list(tuning)==["m2-margin-030"]
+          m2=ladder["m2-plus-margin"]
+          m2b=tuning["m2-margin-030"]
+          assert m2b["base_profile"]=="m2-plus-margin"
+          assert m2b["single_variable"]=="keyword_sequence_margin_loss_weight"
+          assert float(m2b["keyword_sequence_margin_loss_weight"])==0.3
+          for key in (
+              "ordered_token_loss_weight",
+              "prefix_completion_loss_weight",
+              "recurrent_release_loss_weight",
+              "target_bearing_weight_policy",
+              "wake_example_weight_policy",
+          ):
+              assert m2b[key]==m2[key], key
           previous=None
           keys=(
               "ordered_token_loss_weight",
