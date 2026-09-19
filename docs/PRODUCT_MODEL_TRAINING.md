@@ -74,3 +74,22 @@ Shipping approval still requires:
 If Phase A exposes a repeatable model-capacity failure, use a separate
 real-human **development** corpus for retraining; never feed the consumed
 held-out qualification corpus back into training.
+
+## Replay/resynthesis boundary
+
+The external speech-like base alone is not sufficient: the development loop also
+resynthesizes hard negatives and failure cases. Those paths historically read
+`generator.tts` directly and could therefore reintroduce tone audio even when
+the base corpus was speech-like.
+
+Governed product training now prepares the same hash-bound offline-TTS provider
+in provider-only mode and overrides `generator.tts` with its verified command
+backend. Replay provider identity must equal the production base-corpus provider
+identity.
+
+Replay voice selection is deterministic and restricted to the eight
+`train-*` voice slots. Calibration, test and qualification voice identities are
+never used for replay.
+
+Model-training run `35439346929` was cancelled after this hidden tone replay
+path was identified. It is diagnostic-only and is not eligible for promotion.

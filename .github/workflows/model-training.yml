@@ -30,6 +30,7 @@ env:
   KWS_PRODUCT_BASE_CONTRACT: configs/training/product-speech-like-base-v1.json
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
+  KWS_REPLAY_PROVIDER_ROOT: .generated/product-replay-provider
 
 concurrency:
   group: model-training-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -82,7 +83,9 @@ jobs:
           gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
           (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
           tar -xzf ".generated/product-speech-like-release/$archive"             -C "$KWS_PRODUCT_BASE_ROOT"
-          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          rm -rf "$KWS_REPLAY_PROVIDER_ROOT" .generated/product-replay-provider-cache
+          python3 tools/bootstrap_speech_like_stage_a.py             --provider-only             --cache-dir .generated/product-replay-provider-cache             --work-dir "$KWS_REPLAY_PROVIDER_ROOT"
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --replay-provider "$KWS_REPLAY_PROVIDER_ROOT/corpus/provider/provider.json"             --voice-inventory "$KWS_REPLAY_PROVIDER_ROOT/corpus/provider/voice-inventory.jsonl"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
           python3 training/verify_training_entry_contract.py             --config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --require-product-speech-like-base
       # Formal seed ownership is delegated to verify_training_entry_contract.py.
       # It preserves the historical fail-closed checks verbatim in meaning:
@@ -182,7 +185,9 @@ jobs:
           gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
           (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
           tar -xzf ".generated/product-speech-like-release/$archive"             -C "$KWS_PRODUCT_BASE_ROOT"
-          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          rm -rf "$KWS_REPLAY_PROVIDER_ROOT" .generated/product-replay-provider-cache
+          python3 tools/bootstrap_speech_like_stage_a.py             --provider-only             --cache-dir .generated/product-replay-provider-cache             --work-dir "$KWS_REPLAY_PROVIDER_ROOT"
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --replay-provider "$KWS_REPLAY_PROVIDER_ROOT/corpus/provider/provider.json"             --voice-inventory "$KWS_REPLAY_PROVIDER_ROOT/corpus/provider/voice-inventory.jsonl"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
           python3 training/verify_training_entry_contract.py             --config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --require-product-speech-like-base
       - name: Refuse consumed formal qualification seed
         run: >-

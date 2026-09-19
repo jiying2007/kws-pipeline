@@ -246,9 +246,12 @@ def main() -> int:
     parser.add_argument("--cache-dir", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--assets-only", action="store_true")
+    parser.add_argument("--provider-only", action="store_true")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--allow-file-urls", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.assets_only and args.provider_only:
+        raise ValueError("--assets-only and --provider-only are mutually exclusive")
 
     reference_path = args.provider_reference.resolve()
     if not reference_path.is_file():
@@ -481,7 +484,13 @@ def main() -> int:
                 "sha256": None,
             }
         ),
-        "status": "assets-ready" if args.assets_only else "running-corpus-generation",
+        "status": (
+            "assets-ready"
+            if args.assets_only
+            else "running-provider-preparation"
+            if args.provider_only
+            else "running-corpus-generation"
+        ),
     }
 
     summary_path = work / "bootstrap-summary.json"
@@ -531,7 +540,28 @@ def main() -> int:
         )
     if resampler is not None:
         command.extend(["--resampler-executable", str(resampler)])
+    if args.provider_only:
+        command.append("--prepare-provider-only")
     run_checked(command, work / "corpus-generation.log")
+
+    if args.provider_only:
+        preparation = corpus_work / "provider-preparation.json"
+        provider = corpus_work / "provider" / "provider.json"
+        inventory = corpus_work / "provider" / "voice-inventory.jsonl"
+        provider_summary = corpus_work / "provider" / "provider-summary.json"
+        for path, label in (
+            (preparation, "provider preparation"),
+            (provider, "provider spec"),
+            (inventory, "voice inventory"),
+            (provider_summary, "provider summary"),
+        ):
+            if not path.is_file() or path.stat().st_size == 0:
+                raise ValueError(f"provider-only bootstrap missing {label}: {path}")
+        print(
+            f"speech-like Stage A bootstrap: provider-ready candidate={candidate_name} "
+            f"provider={provider}"
+        )
+        return 0
 
     corpus_manifest = corpus_work / "stage-a-base-bundle.json"
     if not corpus_manifest.is_file():

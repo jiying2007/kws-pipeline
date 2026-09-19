@@ -71,6 +71,26 @@ def verify(
         generator = config.get("generator")
         if not isinstance(generator, dict):
             raise ValueError("governed product training generator must be an object")
+        tts = generator.get("tts")
+        if not isinstance(tts, dict) or tts.get("backend") != "command":
+            raise ValueError("governed product training replay TTS must use command backend")
+        command = tts.get("command")
+        if not isinstance(command, list) or not command:
+            raise ValueError("governed product training replay TTS command is missing")
+        profiles = tts.get("speaker_profiles")
+        if not isinstance(profiles, list) or len(profiles) != int(
+            product_data.get("replay_train_voice_slots", -1)
+        ):
+            raise ValueError("governed product training replay speaker profiles drifted")
+        if tts.get("replay_voice_scope") != "train-only":
+            raise ValueError("governed product replay may use only train voice slots")
+        provider_identity = str(tts.get("provider_identity_sha256") or "")
+        if provider_identity != str(product_data.get("replay_provider_identity_sha256") or ""):
+            raise ValueError("governed product replay provider identity drifted")
+        if provider_identity != str(product_data.get("provider_identity_sha256") or ""):
+            raise ValueError("replay provider must match product base provider identity")
+        if product_data.get("replay_tone_allowed") is not False:
+            raise ValueError("tone replay is forbidden for governed product candidate training")
         external = generator.get("external_base_dataset")
         required_splits = {"train", "calibration", "test", "qualification"}
         if not isinstance(external, dict) or set(external) != required_splits:
