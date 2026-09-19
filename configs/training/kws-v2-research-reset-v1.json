@@ -169,5 +169,18 @@
     "derived_before_training": true,
     "same_weights_across_loss_ladder": true,
     "classifier_balance_mode": "equal-class-sampler-v1"
+  },
+  "tuning_profiles": {
+    "m2-margin-030": {
+      "base_profile": "m2-plus-margin",
+      "hypothesis": "sequence-margin direction is correct but weight 0.1 is underpowered",
+      "single_variable": "keyword_sequence_margin_loss_weight",
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.3,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    }
   }
 }
