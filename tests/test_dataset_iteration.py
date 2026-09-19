@@ -169,6 +169,22 @@ def main() -> int:
     assert done.returncode == 2, done.stdout
     assert "not found" in done.stderr, done.stderr
 
+
+    # The workflow must be executable from protected main without bypassing the
+    # repository ruleset, and its default model must be the Git-registry tuple.
+    workflow = (ROOT / ".github/workflows/dataset-driven-iteration.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "bash governance/require_current_main.sh" in workflow
+    assert "pull-requests: write" in workflow
+    assert "persist-credentials: false" in workflow
+    assert "models/registry/$tag/xiaowo-model.kwm" in workflow
+    assert "models/registry/$tag/xiaowo-keywords.kwk" in workflow
+    assert "tools/verify_model_registry.py" in workflow
+    assert 'branch="dataset-iteration/$run_id"' in workflow
+    assert "gh pr create" in workflow
+    assert "\n          git push\n" not in workflow
+
     print("test_dataset_iteration: ok")
     return 0
 
