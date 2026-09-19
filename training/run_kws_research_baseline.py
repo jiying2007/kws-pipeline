@@ -14,10 +14,12 @@ TRAINING = ROOT / "training"
 TOOLS = ROOT / "tools"
 EVAL = ROOT / "eval"
 sys.path.insert(0, str(TRAINING))
+sys.path.insert(0, str(TOOLS))
 
+from kws_vocab import load_tokens  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
-from train_ctc import manifest_rows  # noqa: E402
+from train_ctc import load_keyword_operating_points, manifest_rows  # noqa: E402
 
 POLICY_ID = "kws-v2-research-reset-v1"
 EVIDENCE_CLASS = "kws-v2-research-baseline-scorecard-v1"
@@ -119,46 +121,66 @@ def combined_references(
     return output
 
 
-def training_class_balance(manifests: list[pathlib.Path], policy: dict) -> dict:
-    positive = 0
-    negative = 0
+def training_class_balance(
+    manifests: list[pathlib.Path],
+    policy: dict,
+    keyword_sequences: list[list[int]],
+) -> dict:
+    keyword_targets = {
+        tuple(int(value) for value in sequence) for sequence in keyword_sequences
+    }
+    wake = 0
+    tokenized_nonwake = 0
+    empty = 0
     per_manifest: list[dict] = []
     for manifest in manifests:
-        pos = neg = 0
+        m_wake = m_tokenized = m_empty = 0
         for row in manifest_rows(manifest.resolve()):
-            if list(row["tokens"]):
-                pos += 1
+            target = tuple(int(value) for value in row["tokens"])
+            if not target:
+                m_empty += 1
+            elif target in keyword_targets:
+                m_wake += 1
             else:
-                neg += 1
-        positive += pos
-        negative += neg
+                m_tokenized += 1
+        wake += m_wake
+        tokenized_nonwake += m_tokenized
+        empty += m_empty
         per_manifest.append(
             {
                 "path": str(manifest),
-                "positive_examples": pos,
-                "negative_examples": neg,
+                "wake_examples": m_wake,
+                "tokenized_nonwake_examples": m_tokenized,
+                "empty_target_examples": m_empty,
             }
         )
-    if positive <= 0 or negative <= 0:
+    target_bearing = wake + tokenized_nonwake
+    if wake <= 0 or tokenized_nonwake <= 0 or empty <= 0:
         raise ValueError(
-            f"research class balance requires both positive and negative examples: "
-            f"positive={positive} negative={negative}"
+            "research class balance requires wake, tokenized-nonwake, and empty-target "
+            f"coverage: wake={wake} tokenized_nonwake={tokenized_nonwake} empty={empty}"
         )
-    raw = float(negative) / float(positive)
     cfg = policy["class_balance"]
-    low = float(cfg["minimum_positive_example_weight"])
-    high = float(cfg["maximum_positive_example_weight"])
-    if not 0.0 < low <= high:
+    target_raw = float(empty) / float(target_bearing)
+    target_low = float(cfg["minimum_target_bearing_weight"])
+    target_high = float(cfg["maximum_target_bearing_weight"])
+    wake_raw = float(tokenized_nonwake) / float(wake)
+    wake_low = float(cfg["minimum_wake_weight"])
+    wake_high = float(cfg["maximum_wake_weight"])
+    if not 0.0 < target_low <= target_high or not 0.0 < wake_low <= wake_high:
         raise ValueError("research class-balance bounds are invalid")
-    weight = min(high, max(low, raw))
     return {
         "policy": str(cfg["policy"]),
-        "positive_examples": positive,
-        "negative_examples": negative,
-        "negative_to_positive_ratio": raw,
-        "effective_positive_example_weight": weight,
-        "minimum_positive_example_weight": low,
-        "maximum_positive_example_weight": high,
+        "wake_examples": wake,
+        "tokenized_nonwake_examples": tokenized_nonwake,
+        "empty_target_examples": empty,
+        "target_bearing_examples": target_bearing,
+        "empty_to_target_bearing_ratio": target_raw,
+        "tokenized_nonwake_to_wake_ratio": wake_raw,
+        "effective_target_bearing_weight": min(target_high, max(target_low, target_raw)),
+        "effective_wake_example_weight": min(wake_high, max(wake_low, wake_raw)),
+        "target_bearing_weight_bounds": [target_low, target_high],
+        "wake_weight_bounds": [wake_low, wake_high],
         "manifests": per_manifest,
     }
 
@@ -272,6 +294,8 @@ def main() -> int:
     hidden_dim = int(model_cfg.get("hidden_dim", 64))
     tokens = (ROOT / str(cfg["tokens"])).resolve()
     keywords = (ROOT / str(cfg["keywords"])).resolve()
+    token_map = load_tokens(tokens)
+    keyword_sequences, _, _ = load_keyword_operating_points(keywords, token_map)
 
     work = safe_reset(args.work_dir)
     dataset = work / "dataset"
@@ -320,9 +344,12 @@ def main() -> int:
     train_manifests = [dataset / "train.tsv"]
     if "train" in sidecar_manifests:
         train_manifests.append(sidecar_manifests["train"])
-    balance = training_class_balance(train_manifests, policy)
-    if loss.get("positive_example_weight_policy") != "class-balance":
-        raise ValueError("research loss profiles must use the shared class-balance policy")
+    balance = training_class_balance(train_manifests, policy, keyword_sequences)
+    if (
+        loss.get("target_bearing_weight_policy") != "class-balance"
+        or loss.get("wake_example_weight_policy") != "class-balance"
+    ):
+        raise ValueError("research loss profiles must use shared target/wake balance policies")
     checkpoint = work / "model.pt"
     trainer = TRAINING / ("train_gru_ctc.py" if args.family == "gru" else "train_ctc.py")
     command = [
@@ -339,7 +366,9 @@ def main() -> int:
         "--lr", str(float(train_policy["learning_rate"])),
         "--seed", str(int(train_policy["seed"])),
         "--positive-example-weight",
-        str(float(balance["effective_positive_example_weight"])),
+        str(float(balance["effective_target_bearing_weight"])),
+        "--wake-example-weight",
+        str(float(balance["effective_wake_example_weight"])),
         "--ordered-token-loss-weight", str(float(loss["ordered_token_loss_weight"])),
         "--keyword-sequence-margin-loss-weight",
         str(float(loss["keyword_sequence_margin_loss_weight"])),
