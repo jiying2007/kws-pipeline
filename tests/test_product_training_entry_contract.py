@@ -7,10 +7,16 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from training.training_request import self_test as training_request_self_test, verify_request
 from training.verify_training_entry_contract import read_json, verify
 
 
 def main() -> int:
+    training_request_self_test()
+    request_path = ROOT / ".github/triggers/model-training-request.json"
+    verified_request = verify_request(request_path)
+    assert verified_request["request_id"] == "speech-like-replay-v1-20260919"
+
     source = ROOT / "configs/training/xiaowo.torch-domain.json"
     shipping = ROOT / "configs/shipping.xiaowo.json"
     keywords = ROOT / "keywords/zh_cn_example.tsv"
@@ -92,12 +98,12 @@ def main() -> int:
     assert ".github/triggers/model-training-request.json" in workflow
     assert "Verify versioned training request" in workflow
     assert "governed-model-training-invocation-v1" in workflow
-    request = read_json(ROOT / ".github/triggers/model-training-request.json")
-    assert request["schema_version"] == 1
-    assert request["trigger_policy"] == "run-on-protected-main-change"
-    assert request["purpose"] == "governed-product-candidate-training"
-    assert request["source_policy"] == "exact-current-main"
-    assert request["request_id"] == "speech-like-replay-v1-20260919"
+    assert verified_request["schema_version"] == 1
+    assert verified_request["trigger_policy"] == "run-on-protected-main-change"
+    assert verified_request["purpose"] == "governed-product-candidate-training"
+    assert verified_request["source_policy"] == "exact-current-main"
+    assert "training/training_request.py verify" in workflow
+    assert "training/training_request.py write-receipt" in workflow
     assert "--provider-only" in workflow
     assert "--replay-provider" in workflow
     assert "--voice-inventory" in workflow
