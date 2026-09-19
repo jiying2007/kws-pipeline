@@ -277,7 +277,7 @@ class**, not the maximum wake-class probability.
 Architecture decisions use calibration-selected operating points transferred to
 test. Test metrics never choose a threshold or a start.
 
-Research classifier training has a separate cross-CPU deterministic contract:
+Research classifier training uses an explicit hosted numerical contract:
 
 - `OMP_NUM_THREADS=1`;
 - `MKL_NUM_THREADS=1`;
@@ -286,13 +286,22 @@ Research classifier training has a separate cross-CPU deterministic contract:
 - `ATEN_CPU_CAPABILITY=default`;
 - MKLDNN disabled;
 - deterministic torch algorithms;
+- scalar AdamW / gradient-clipping kernels (`foreach=false`, `fused=false`);
 - model initial/final state SHA256 retained.
 
-Run `35427343767` proved bit-exact initial state, final state, training history,
-calibration output and test output for B0/FC1 replicas on the selected seeds.
-One FC1 pair was bit-exact across different hosted AMD EPYC CPU models. Research
-architecture comparisons are not authoritative unless this numerical contract
-is preserved.
+Run `35427343767` showed bit-exact behavior for its selected B0/FC1 replicas,
+including one pair across different AMD EPYC models. A later broader verifier,
+run `35433157724`, demonstrated the actual boundary: same numerical-class
+replicas were bit-exact, while selected Intel-versus-AMD pairs with the same
+initial model SHA diverged after training. Hosted research therefore does **not**
+claim universal cross-vendor bit-exactness.
+
+Architecture causal authority is now stricter and simpler: every seed and every
+candidate in a discovery experiment must execute serially on one hosted runner,
+and the analyzer verifies identical CPU/torch/runtime identity across the whole
+experiment. Cross-runner replay remains diagnostic only. Product reproducibility
+continues to require the governed target/build evidence path rather than hosted
+CPU equivalence.
 
 ### Multiseed stabilization results
 

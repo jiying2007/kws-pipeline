@@ -20,17 +20,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  trial:
+  same-runner-discovery:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        model_seed: [35201, 36307, 37409]
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - name: Download frozen rendered research dataset
         uses: actions/download-artifact@v4
         with:
@@ -39,6 +36,7 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35412153192
+
       - name: Download frozen ordinary-speech sidecar
         uses: actions/download-artifact@v4
         with:
@@ -47,6 +45,7 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35367960968
+
       - name: Install pinned CPU training runtime
         run: |
           set -euo pipefail
@@ -54,12 +53,11 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-      - name: Train efficient encoder discovery candidates
-        env:
-          MODEL_SEED: ${{ matrix.model_seed }}
+
+      - name: Train all seeds and candidates on one runner
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/efficient/$MODEL_SEED"
+          root="$RUNNER_TEMP/efficient"
           mkdir -p "$root"
           common=(
             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"
@@ -76,67 +74,54 @@ jobs:
             --batch-size 16
             --lr 0.001
             --lr-schedule fixed-v1
-            --model-seed "$MODEL_SEED"
             --sampler-seed 1337
             --init-mode default-pytorch-v1
             --balance-mode equal-class-sampler-v1
           )
-          train() {
-            local name="$1" architecture="$2" hidden="$3"
-            mkdir -p "$root/$name"
-            .venv/bin/python training/research_keyword_classifier.py \
-              "${common[@]}" \
-              --encoder-architecture "$architecture" \
-              --hidden-dim "$hidden" \
-              --output "$root/$name/classifier.json"
-          }
-          train b0-gru64 single-gru-v1 64
-          train e40-gru2x40 stacked-gru-v2 40
-          train e48-gru2x48 stacked-gru-v2 48
-      - name: Build per-seed discovery evidence
-        env:
-          MODEL_SEED: ${{ matrix.model_seed }}
-        run: |
-          set -euo pipefail
-          root="$RUNNER_TEMP/efficient/$MODEL_SEED"
-          .venv/bin/python training/analyze_efficient_encoder_discovery.py trial \
-            --config configs/training/kws-v2-efficient-encoder-discovery-v1.json \
-            --model-seed "$MODEL_SEED" \
-            --root "$root" \
-            --output "$root/trial-evidence.json"
-      - name: Upload discovery evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: kws-v2-efficient-encoder-${{ matrix.model_seed }}-${{ github.sha }}
-          path: ${{ runner.temp }}/efficient/${{ matrix.model_seed }}/
-          if-no-files-found: error
-          retention-days: 30
+          seeds="$(python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-efficient-encoder-discovery-v1.json").read_text())
+          print(" ".join(str(v) for v in p["fixed"]["model_seeds"]))
+          PY
+          )"
+          for seed in $seeds; do
+            seed_root="$root/$seed"
+            mkdir -p "$seed_root"
+            train() {
+              local name="$1" architecture="$2" hidden="$3"
+              mkdir -p "$seed_root/$name"
+              .venv/bin/python training/research_keyword_classifier.py \
+                "${common[@]}" \
+                --model-seed "$seed" \
+                --encoder-architecture "$architecture" \
+                --hidden-dim "$hidden" \
+                --output "$seed_root/$name/classifier.json"
+            }
+            train b0-gru64 single-gru-v1 64
+            train e40-gru2x40 stacked-gru-v2 40
+            train e48-gru2x48 stacked-gru-v2 48
+            .venv/bin/python training/analyze_efficient_encoder_discovery.py trial \
+              --config configs/training/kws-v2-efficient-encoder-discovery-v1.json \
+              --model-seed "$seed" \
+              --root "$seed_root" \
+              --output "$seed_root/trial-evidence.json"
+          done
 
-  aggregate:
-    needs: trial
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - name: Download discovery evidence
-        uses: actions/download-artifact@v4
-        with:
-          pattern: kws-v2-efficient-encoder-*-${{ github.sha }}
-          path: ${{ runner.temp }}/efficient-evidence
-          merge-multiple: false
-      - name: Aggregate calibration-only discovery
+      - name: Aggregate same-runner calibration-only discovery
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/efficient-summary"
-          python3 training/analyze_efficient_encoder_discovery.py aggregate \
+          .venv/bin/python training/analyze_efficient_encoder_discovery.py aggregate \
             --config configs/training/kws-v2-efficient-encoder-discovery-v1.json \
-            --root "$RUNNER_TEMP/efficient-evidence" \
+            --root "$RUNNER_TEMP/efficient" \
             --output "$RUNNER_TEMP/efficient-summary/summary.json"
-      - name: Upload discovery summary
+
+      - name: Upload same-runner discovery evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-efficient-encoder-discovery-summary-${{ github.sha }}
-          path: ${{ runner.temp }}/efficient-summary/
+          name: kws-v2-efficient-encoder-same-runner-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/efficient/
+            ${{ runner.temp }}/efficient-summary/
           if-no-files-found: error
           retention-days: 30

@@ -123,11 +123,14 @@
     "shipping_metric": false
   },
   "numerical_contract": {
-    "policy": "research-scalar-optimizer-kernels-v2",
+    "policy": "research-same-runner-paired-v3",
     "adamw_foreach": false,
     "adamw_fused": false,
     "grad_clip_foreach": false,
-    "cross_runner_repro_required_before_architecture_decision": true
+    "causal_authority": "same-runner-all-seeds-paired-v1",
+    "all_discovery_seeds_same_runner": true,
+    "cross_vendor_bit_exact_required": false,
+    "cross_runner_repro_diagnostic_only": true
   },
   "source_pre_scalar_discovery": {
     "run_id": 35432871544,
@@ -136,5 +139,19 @@
     "discovery_pass": false,
     "selected_candidate": null,
     "note": "diagnostic-only because identical initial model SHA diverged across independent runs before scalar optimizer kernels were pinned"
+  },
+  "source_cross_runner_repro": {
+    "run_id": 35433157724,
+    "exact_head_sha": "fd3d481a5092db830065551e436ee8b0439071c9",
+    "evidence_class": "kws-v2-efficient-encoder-cross-runner-repro-summary-v1",
+    "reproducibility_pass": false,
+    "observations": {
+      "same_numeric_class_groups_passed": true,
+      "cross_vendor_groups_diverged": true,
+      "b0_seed_37409": "intel-vs-amd-diverged",
+      "e48_seed_37409": "intel-vs-amd-diverged",
+      "e40_seed_37409": "amd-vs-amd-bit-exact"
+    },
+    "interpretation": "hosted cross-vendor bit-exactness is not an architecture-selection authority; pair all seeds and candidates on one runner"
   }
 }

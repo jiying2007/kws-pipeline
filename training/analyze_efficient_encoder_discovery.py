@@ -65,7 +65,7 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
     if seed not in [int(v) for v in config["fixed"]["model_seeds"]]:
         raise ValueError("unregistered model seed")
     rows={}
-    contracts=[]
+    runtime_identities=[]
     for name,spec in config["candidates"].items():
         result=load_json(root/name/"classifier.json")
         if int(result["model_seed"])!=seed:
@@ -80,7 +80,13 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
             raise ValueError(f"{name}: hidden dimension drift")
         if int(result["encoder_layers"])!=int(spec["encoder_layers"]):
             raise ValueError(f"{name}: layer count drift")
-        contracts.append(result["research_cpu_contract"])
+        runtime_identity={
+            "research_cpu_contract":result["research_cpu_contract"],
+            "optimizer_kernel_contract":result["optimizer_kernel_contract"],
+            "cpu_runtime":result["training_environment"]["cpu_runtime"],
+            "torch_runtime":result["training_environment"]["torch_runtime"],
+        }
+        runtime_identities.append(runtime_identity)
         rows[name]={
             "encoder_architecture":result["encoder_architecture"],
             "hidden_dim":int(result["hidden_dim"]),
@@ -92,8 +98,8 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
             "operating_points":select_operating_points(result,config),
             "resource":spec["resource"],
         }
-    if any(value!=contracts[0] for value in contracts[1:]):
-        raise ValueError("paired discovery candidates did not share CPU contract")
+    if any(value!=runtime_identities[0] for value in runtime_identities[1:]):
+        raise ValueError("paired discovery candidates did not share identical runtime identity")
     reference_name=str(config["selection"]["reference_candidate"])
     reference=rows[reference_name]
     primary=str(config["selection"]["primary_operating_point"])
@@ -121,6 +127,8 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
         "protected_evidence_used":False,
         "shipping_metric":False,
         "model_seed":seed,
+        "same_runner_paired":True,
+        "runtime_identity":runtime_identities[0],
         "candidates":rows,
         "calibration_comparisons":comparisons,
     }
@@ -137,6 +145,14 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
     seeds=[int(v) for v in config["fixed"]["model_seeds"]]
     if set(trials)!=set(seeds):
         raise ValueError(f"seed mismatch: {sorted(trials)} vs {seeds}")
+    runtime_identity=trials[seeds[0]]["runtime_identity"]
+    same_runner_all_seeds=all(
+        trial["runtime_identity"]==runtime_identity
+        and trial.get("same_runner_paired") is True
+        for trial in trials.values()
+    )
+    if config["numerical_contract"]["all_discovery_seeds_same_runner"] and not same_runner_all_seeds:
+        raise ValueError("discovery seeds/candidates did not share one runtime identity")
     rules=config["decision_rules"]
     primary=str(config["selection"]["primary_operating_point"])
     secondary=str(config["selection"]["secondary_operating_point"])
@@ -242,6 +258,9 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
         "shipping_metric":False,
         "selection_authority":config["selection"]["authority"],
         "test_metrics_used_for_selection":False,
+        "causal_authority":config["numerical_contract"]["causal_authority"],
+        "same_runner_all_seeds":same_runner_all_seeds,
+        "runtime_identity":runtime_identity,
         "candidate_assessments":assessments,
         "selected_candidate":selected,
         "selected_candidate_test_after_selection":selected_test,

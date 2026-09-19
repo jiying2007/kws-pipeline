@@ -67,12 +67,19 @@ jobs:
           assert p["selection"]["test_metrics_used_for_selection"] is False
           assert p["authority"]["runtime_format_change_allowed"] is False
           assert p["numerical_contract"]=={
-              "policy":"research-scalar-optimizer-kernels-v2",
+              "policy":"research-same-runner-paired-v3",
               "adamw_foreach":False,
               "adamw_fused":False,
               "grad_clip_foreach":False,
-              "cross_runner_repro_required_before_architecture_decision":True,
+              "causal_authority":"same-runner-all-seeds-paired-v1",
+              "all_discovery_seeds_same_runner":True,
+              "cross_vendor_bit_exact_required":False,
+              "cross_runner_repro_diagnostic_only":True,
           }
+          source=p["source_cross_runner_repro"]
+          assert source["run_id"]==35433157724
+          assert source["reproducibility_pass"] is False
+          assert source["observations"]["cross_vendor_groups_diverged"] is True
           classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
           assert "StackedClipGRU" in classifier
           assert "stacked-gru-v2" in classifier
@@ -83,9 +90,11 @@ jobs:
           selection_body=analyzer.split("eligible=[",1)[1].split("# Test is reported",1)[0]
           assert '["test"]' not in selection_body
           workflow=pathlib.Path(".github/workflows/kws-v2-efficient-encoder-discovery.yml").read_text()
-          assert "Train efficient encoder discovery candidates" in workflow
+          assert "Train all seeds and candidates on one runner" in workflow
+          assert "Aggregate same-runner calibration-only discovery" in workflow
+          assert "matrix:" not in workflow
           for seed in p["fixed"]["model_seeds"]:
-              assert str(seed) in workflow
+              assert str(seed) in pathlib.Path("configs/training/kws-v2-efficient-encoder-discovery-v1.json").read_text()
           for forbidden in ("qualification-index","fresh-validation","shadow-validation","formal-qualification"):
               assert forbidden not in workflow.lower()
           print("efficient encoder discovery contract: ok")
@@ -107,6 +116,7 @@ jobs:
               "grad_clip_foreach":False,
           }
           workflow=pathlib.Path(".github/workflows/kws-v2-efficient-encoder-cross-runner-repro.yml").read_text()
+          assert "workflow_dispatch:" in workflow and "\n  push:" not in workflow
           assert "replica: [a, b]" in workflow
           assert "model_seed: [35201, 37409]" in workflow
           assert "Train cross-runner replica" in workflow
