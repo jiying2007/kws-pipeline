@@ -266,6 +266,10 @@ jobs:
         run: python3 tests/test_verify_corpus_identity.py
       - name: Verify tracked worktree after Corpus identity contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus identity contract"'
+      - name: Speech-like runtime bundle contract
+        run: python3 tests/test_verify_speech_like_runtime_bundle.py
+      - name: Verify tracked worktree after Speech-like runtime bundle contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Speech-like runtime bundle contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
