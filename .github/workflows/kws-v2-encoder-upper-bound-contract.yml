@@ -11,10 +11,13 @@ on:
       - "training/analyze_encoder_frontend_replication.py"
       - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
       - "training/analyze_classifier_seed_variance.py"
+      - "configs/training/kws-v2-classifier-init-stability-v1.json"
+      - "training/analyze_classifier_init_stability.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
+      - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -24,10 +27,13 @@ on:
       - "training/analyze_encoder_frontend_replication.py"
       - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
       - "training/analyze_classifier_seed_variance.py"
+      - "configs/training/kws-v2-classifier-init-stability-v1.json"
+      - "training/analyze_classifier_init_stability.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
+      - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -247,6 +253,30 @@ jobs:
               assert "workflow_dispatch:" in text
               assert "\n  push:" not in text
           print("random-source variance contract: ok")
+          PY
+
+      - name: Verify init stability contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_init_stability.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-init-stability-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-init-stability-v1"
+          assert p["source_variance_evidence"]["run_id"]==35424013188
+          assert p["source_variance_evidence"]["variance_classification"]=="model-initialization-dominant"
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["fixed"]["sampler_seed"]==1337
+          assert p["candidates"]["fc1-pcen128-stable-init"]["init_mode"]=="gru-orthogonal-xavier-v1"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_default"]==0.65
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.10
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "gru-orthogonal-xavier-v1" in classifier
+          assert "nn.init.orthogonal_" in classifier
+          variance=pathlib.Path(".github/workflows/kws-v2-classifier-seed-variance.yml").read_text()
+          assert "workflow_dispatch:" in variance and "\n  push:" not in variance
+          print("init stability contract: ok")
           PY
 
       - name: Worktree remains clean

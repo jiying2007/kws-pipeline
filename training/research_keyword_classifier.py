@@ -229,6 +229,24 @@ def model_state_sha256(model: nn.Module) -> str:
     return digest.hexdigest()
 
 
+def initialize_clip_gru(model: ClipGRU, mode: str, seed: int) -> None:
+    if mode == "default-pytorch-v1":
+        return
+    if mode != "gru-orthogonal-xavier-v1":
+        raise ValueError(f"unsupported init mode: {mode}")
+    torch.manual_seed(seed)
+    cell = model.encoder.gru
+    with torch.no_grad():
+        for gate in cell.weight_ih.chunk(3, dim=0):
+            nn.init.xavier_uniform_(gate)
+        for gate in cell.weight_hh.chunk(3, dim=0):
+            nn.init.orthogonal_(gate)
+        nn.init.zeros_(cell.bias_ih)
+        nn.init.zeros_(cell.bias_hh)
+        nn.init.xavier_uniform_(model.encoder.out_proj.weight)
+        nn.init.zeros_(model.encoder.out_proj.bias)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Research-only clip classifier separability baseline.")
     parser.add_argument("--train-manifest", required=True, action="append", type=pathlib.Path)
@@ -245,6 +263,11 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--model-seed", type=int)
     parser.add_argument("--sampler-seed", type=int)
+    parser.add_argument(
+        "--init-mode",
+        choices=("default-pytorch-v1", "gru-orthogonal-xavier-v1"),
+        default="default-pytorch-v1",
+    )
     parser.add_argument(
         "--thresholds",
         nargs="+",
@@ -316,6 +339,7 @@ def main() -> int:
     test_loader = DataLoader(test, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
 
     model = ClipGRU(args.feature_dim, args.hidden_dim, classes)
+    initialize_clip_gru(model, args.init_mode, model_seed)
     initial_model_state_sha256 = model_state_sha256(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     loss_fn = nn.CrossEntropyLoss()
@@ -361,6 +385,7 @@ def main() -> int:
         "model_seed": model_seed,
         "sampler_seed": sampler_seed,
         "seed_policy": "independent-model-sampler-v1",
+        "init_mode": args.init_mode,
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
