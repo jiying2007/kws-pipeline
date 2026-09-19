@@ -1,0 +1,92 @@
+name: product-speech-like-base-bootstrap
+
+on:
+  push:
+    branches:
+      - "fix/product-training-speech-like-v1"
+    paths:
+      - ".github/workflows/product-speech-like-base-bootstrap.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: product-speech-like-base-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: speech-like-base-5204b798033f
+      EXPECTED_BUNDLE_SHA: 5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35
+      EXPECTED_PROVIDER_SHA: d12728562db74951191575e9afe4922adc1260934b02d577dda67d91faa4aff9
+      REPRO_SOURCE_SHA: 46e6cc78634a16c90e1bfdadfe794f78db7994a6
+      REPRO_RUN_ID: "35318933124"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Refuse duplicate durable corpus release
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release already exists: $RELEASE_TAG" >&2
+            exit 2
+          fi
+
+      - name: Regenerate governed production speech-like base
+        run: |
+          set -euo pipefail
+          python3 tools/bootstrap_speech_like_stage_a.py             --cache-dir "$RUNNER_TEMP/product-base-cache"             --work-dir "$RUNNER_TEMP/product-base"
+
+      - name: Verify exact reproducible bundle identity
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"product-base"
+          boot=json.loads((root/"bootstrap-summary.json").read_text())
+          corpus=json.loads((root/"corpus/stage-a-base-bundle.json").read_text())
+          provider=json.loads((root/"corpus/provider/provider-summary.json").read_text())
+          assert boot["corpus"]["recordings"]==384
+          assert boot["corpus"]["voice_slots"]==24
+          assert corpus["recordings"]==384
+          assert corpus["voice_slots"]==24
+          assert corpus["tone_backend_used"] is False
+          assert corpus["protected_evidence_used"] is False
+          assert corpus["external_base_bundle_sha256"]==os.environ["EXPECTED_BUNDLE_SHA"]
+          assert corpus["provider_identity_sha256"]==os.environ["EXPECTED_PROVIDER_SHA"]
+          assert provider["provider_identity_sha256"]==os.environ["EXPECTED_PROVIDER_SHA"]
+          expected={"train":128,"calibration":64,"test":64,"qualification":128}
+          for split,count in expected.items():
+              summary=json.loads((root/f"corpus/bundle/{split}/dataset-summary.json").read_text())
+              assert summary["recordings"]==count
+              assert summary["tone_backend_used"] is False
+              assert summary["audio_path_contract"]=="index-relative-v1"
+          print("product speech-like base identity: ok")
+          PY
+
+      - name: Build durable corpus release payload
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner             -C "$RUNNER_TEMP/product-base"             -czf "dist/$RELEASE_TAG.tar.gz"             bootstrap-summary.json             corpus/stage-a-base-bundle.json             corpus/bundle             corpus/provider/provider-summary.json             corpus/runtime-asset-receipt.json
+          cp "$RUNNER_TEMP/product-base/corpus/stage-a-base-bundle.json" dist/
+          cp "$RUNNER_TEMP/product-base/corpus/provider/provider-summary.json" dist/
+          cp "$RUNNER_TEMP/product-base/bootstrap-summary.json" dist/
+          cp "$RUNNER_TEMP/product-base/corpus/runtime-asset-receipt.json" dist/
+          (cd dist && sha256sum             "$RELEASE_TAG.tar.gz"             stage-a-base-bundle.json             provider-summary.json             bootstrap-summary.json             runtime-asset-receipt.json             > SPEECH_LIKE_BASE_SHA256SUMS && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
+
+      - name: Publish immutable product training base
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG"             dist/*             --repo "$GITHUB_REPOSITORY"             --target "$REPRO_SOURCE_SHA"             --title "KWS production speech-like base $RELEASE_TAG"             --notes "Durable four-split external-base corpus regenerated from the production reproducibility contract. Source reproducibility run: $REPRO_RUN_ID. External-base bundle SHA256: $EXPECTED_BUNDLE_SHA. Provider identity SHA256: $EXPECTED_PROVIDER_SHA."
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release.json
+          jq -e --arg target "$REPRO_SOURCE_SHA" '
+            .draft == false and .prerelease == false and .immutable == true
+            and .target_commitish == $target
+          ' release.json >/dev/null
