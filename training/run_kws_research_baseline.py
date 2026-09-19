@@ -282,10 +282,22 @@ def main() -> int:
     if not isinstance(lane, dict) or any(lane.get(key) is not False for key in required_false):
         raise ValueError("research lane must keep adaptive/protected mechanisms disabled")
 
-    profiles = policy.get("loss_ladder")
-    if not isinstance(profiles, dict) or args.loss_profile not in profiles:
+    ladder = policy.get("loss_ladder")
+    tuning = policy.get("tuning_profiles", {})
+    if not isinstance(ladder, dict) or not isinstance(tuning, dict):
+        raise ValueError("research loss profiles must be objects")
+    if args.loss_profile in ladder:
+        loss = ladder[args.loss_profile]
+        loss_profile_origin = "loss-ladder"
+        loss_profile_base = args.loss_profile
+    elif args.loss_profile in tuning:
+        loss = tuning[args.loss_profile]
+        loss_profile_origin = "single-variable-tuning"
+        loss_profile_base = str(loss.get("base_profile", ""))
+        if loss_profile_base not in ladder:
+            raise ValueError("tuning profile base_profile is not in loss ladder")
+    else:
         raise ValueError(f"unknown loss profile: {args.loss_profile}")
-    loss = profiles[args.loss_profile]
     model_cfg = cfg.get("model")
     if not isinstance(model_cfg, dict):
         raise ValueError("config.model must be an object")
@@ -581,6 +593,8 @@ def main() -> int:
         "feature_dim": feature_dim,
         "hidden_dim": hidden_dim,
         "loss_profile": args.loss_profile,
+        "loss_profile_origin": loss_profile_origin,
+        "loss_profile_base": loss_profile_base,
         "loss_weights": loss,
         "class_balance": balance,
         "single_acoustic_render": True,
