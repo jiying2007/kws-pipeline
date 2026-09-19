@@ -35,17 +35,22 @@ jobs:
           import json, os, pathlib
           p=json.loads((pathlib.Path(os.environ["RUNNER_TEMP"])/"architecture-fit.json").read_text())
           b=p["candidates"]["b0-logmel64"]
+          f=p["candidates"]["f1-pcen64"]
           t=p["candidates"]["fc1-pcen128"]
           assert b["model_bytes_estimate"]==20388
           assert b["dense_mmac_per_s"]==0.9376
           assert b["static_runtime_fit"] is True
           assert b["shipping_candidate_allowed"] is False
+          assert f["model_bytes_estimate"]==20388
+          assert f["dense_mmac_per_s"]==0.9376
+          assert f["static_runtime_fit"] is True
+          assert f["shipping_candidate_allowed"] is False
           assert t["model_bytes_estimate"]==65252
           assert t["dense_mmac_per_s"]==3.104
           assert t["static_runtime_fit"] is False
           assert t["shipping_candidate_allowed"] is False
           assert p["research_target_static_runtime_fit"] is False
-          assert p["next_action"]=="efficient-encoder-architecture-v2"
+          assert p["next_action"]=="runtime-fit-pcen64-multistart-confirmation-v1"
           assert p["hosted_timing_is_shipping_evidence"] is False
           print("research architecture-fit contract: ok")
           PY

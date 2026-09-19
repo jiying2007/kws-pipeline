@@ -158,8 +158,12 @@ def cohort(config: dict, cohort_name: str, root: pathlib.Path) -> dict:
     }
     primary_name = str(config["selection"]["primary_operating_point"])
     secondary_name = str(config["selection"]["secondary_operating_point"])
-    reference = selected["b0-logmel64"]
-    target = selected["fc1-pcen128"]
+    reference_name = str(config["selection"]["reference_architecture"])
+    target_name = str(config["selection"]["target_architecture"])
+    if reference_name not in selected or target_name not in selected:
+        raise ValueError("selection architecture identity drift")
+    reference = selected[reference_name]
+    target = selected[target_name]
     primary_delta = test_delta(
         target["operating_points"].get(primary_name),
         reference["operating_points"].get(primary_name),
@@ -238,13 +242,15 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
     strong_passes = sum(bool(row["absolute_strong_pass"]) for row in ordered)
 
     primary_name = str(config["selection"]["primary_operating_point"])
+    reference_name = str(config["selection"]["reference_architecture"])
+    target_name = str(config["selection"]["target_architecture"])
     target_primary_recall = []
     target_primary_fp = []
     selected_target_seeds = []
     selected_reference_seeds = []
     for row in ordered:
-        selected_target = row["selected"]["fc1-pcen128"]
-        selected_reference = row["selected"]["b0-logmel64"]
+        selected_target = row["selected"][target_name]
+        selected_reference = row["selected"][reference_name]
         selected_target_seeds.append(int(selected_target["model_seed"]))
         selected_reference_seeds.append(int(selected_reference["model_seed"]))
         point = selected_target["operating_points"].get(primary_name)
@@ -278,6 +284,8 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
         "shipping_metric": False,
         "selection_authority": config["selection"]["authority"],
         "test_metrics_used_for_selection": False,
+        "reference_architecture": reference_name,
+        "target_architecture": target_name,
         "primary_directional_passes": primary_passes,
         "secondary_directional_passes": secondary_passes,
         "absolute_strong_passes": strong_passes,

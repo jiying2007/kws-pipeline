@@ -1,14 +1,21 @@
-name: kws-v2-classifier-multistart-calibration-selection
+name: kws-v2-runtime-fit-pcen64-multistart
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
+      - ".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-classifier-multistart-calibration-selection-${{ github.ref }}
+  group: kws-v2-runtime-fit-pcen64-multistart-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,12 +25,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cohort: [cohort-a, cohort-b, cohort-c, cohort-d, cohort-e]
+        cohort: [pcen-cohort-a, pcen-cohort-b, pcen-cohort-c, pcen-cohort-d, pcen-cohort-e]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
       - name: Download frozen rendered research dataset
         uses: actions/download-artifact@v4
         with:
@@ -32,7 +38,6 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35412153192
-
       - name: Download frozen ordinary-speech sidecar
         uses: actions/download-artifact@v4
         with:
@@ -41,7 +46,6 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35367960968
-
       - name: Install pinned CPU training runtime
         run: |
           set -euo pipefail
@@ -49,17 +53,16 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-
-      - name: Train calibration-only multi-start candidates
+      - name: Train runtime-fit PCEN64 multi-start candidates
         env:
           COHORT: ${{ matrix.cohort }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/multistart/$COHORT"
+          root="$RUNNER_TEMP/pcen-multistart/$COHORT"
           mkdir -p "$root"
           seeds="$(python3 - "$COHORT" <<'PY'
           import json, pathlib, sys
-          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json").read_text())
+          p=json.loads(pathlib.Path("configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json").read_text())
           print(" ".join(str(v) for v in p["cohorts"][sys.argv[1]]))
           PY
           )"
@@ -82,7 +85,7 @@ jobs:
             --balance-mode equal-class-sampler-v1
           )
           for seed in $seeds; do
-            for spec in "b0-logmel64 logmel 64" "fc1-pcen128 pcen-lite 128"; do
+            for spec in "b0-logmel64 logmel 64" "f1-pcen64 pcen-lite 64"; do
               read -r name frontend hidden <<< "$spec"
               out="$root/$name/$seed"
               mkdir -p "$out"
@@ -94,24 +97,22 @@ jobs:
                 --output "$out/classifier.json"
             done
           done
-
-      - name: Select starts using calibration only
+      - name: Select runtime-fit starts using calibration only
         env:
           COHORT: ${{ matrix.cohort }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/multistart/$COHORT"
+          root="$RUNNER_TEMP/pcen-multistart/$COHORT"
           .venv/bin/python training/analyze_classifier_multistart_selection.py cohort \
-            --config configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json \
+            --config configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json \
             --cohort "$COHORT" \
             --root "$root" \
             --output "$root/cohort-evidence.json"
-
       - name: Upload cohort evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-multistart-${{ matrix.cohort }}-${{ github.sha }}
-          path: ${{ runner.temp }}/multistart/${{ matrix.cohort }}/
+          name: kws-v2-pcen64-multistart-${{ matrix.cohort }}-${{ github.sha }}
+          path: ${{ runner.temp }}/pcen-multistart/${{ matrix.cohort }}/
           if-no-files-found: error
           retention-days: 30
 
@@ -125,21 +126,21 @@ jobs:
       - name: Download cohort evidence
         uses: actions/download-artifact@v4
         with:
-          pattern: kws-v2-multistart-*-${{ github.sha }}
-          path: ${{ runner.temp }}/multistart-evidence
+          pattern: kws-v2-pcen64-multistart-*-${{ github.sha }}
+          path: ${{ runner.temp }}/pcen-multistart-evidence
           merge-multiple: false
-      - name: Aggregate calibration-only selection evidence
+      - name: Aggregate runtime-fit PCEN64 evidence
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/multistart-summary"
+          mkdir -p "$RUNNER_TEMP/pcen-multistart-summary"
           python3 training/analyze_classifier_multistart_selection.py aggregate \
-            --config configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json \
-            --root "$RUNNER_TEMP/multistart-evidence" \
-            --output "$RUNNER_TEMP/multistart-summary/summary.json"
+            --config configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json \
+            --root "$RUNNER_TEMP/pcen-multistart-evidence" \
+            --output "$RUNNER_TEMP/pcen-multistart-summary/summary.json"
       - name: Upload aggregate evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-classifier-multistart-summary-${{ github.sha }}
-          path: ${{ runner.temp }}/multistart-summary/
+          name: kws-v2-runtime-fit-pcen64-multistart-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/pcen-multistart-summary/
           if-no-files-found: error
           retention-days: 30

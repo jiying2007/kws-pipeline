@@ -98,7 +98,9 @@
       "minimize-secondary-calibration-negative-fp",
       "minimize-model-seed"
     ],
-    "test_metrics_used_for_selection": false
+    "test_metrics_used_for_selection": false,
+    "reference_architecture": "b0-logmel64",
+    "target_architecture": "fc1-pcen128"
   },
   "decision_rules": {
     "authority": "pre-registered-multistart-calibration-transfer-v1",
@@ -122,5 +124,18 @@
     "promotion_allowed": false,
     "protected_evidence_used": false,
     "shipping_metric": false
+  },
+  "source_multistart_result": {
+    "run_id": 35428804016,
+    "exact_head_sha": "c0e8b935345b26514aa5a0975a4fd9f52296b66b",
+    "evidence_class": "kws-v2-classifier-multistart-summary-v1",
+    "primary_directional_passes": 3,
+    "secondary_directional_passes": 3,
+    "absolute_strong_passes": 4,
+    "selected_target_primary_test_wake_recall_mean": 0.834375,
+    "selected_target_primary_test_wake_recall_stddev": 0.04485218779502289,
+    "selected_target_primary_test_negative_fp_mean": 0.06375,
+    "multistart_pass": false,
+    "next_experiment": "efficient-encoder-architecture-v2"
   }
 }

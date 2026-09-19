@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-runtime-fit-pcen64-multistart-v1",
+  "evidence_scope": "research-only",
+  "source_fc1_multistart_evidence": {
+    "run_id": 35428804016,
+    "exact_head_sha": "c0e8b935345b26514aa5a0975a4fd9f52296b66b",
+    "multistart_pass": false,
+    "absolute_strong_passes": 4,
+    "primary_directional_passes": 3
+  },
+  "source_architecture_fit": {
+    "policy": "kws-v2-research-architecture-fit-v1",
+    "fc1_static_runtime_fit": false,
+    "f1_static_runtime_fit": true,
+    "current_max_hidden_dim": 64
+  },
+  "hypothesis": "PCEN-lite with the existing GRU64 runtime shape yields a calibration-only multi-start gain over logmel GRU64 without requiring a hidden-dimension or recurrent ABI change.",
+  "fixed": {
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "lr_schedule": "fixed-v1",
+    "init_mode": "default-pytorch-v1",
+    "balance_mode": "equal-class-sampler-v1",
+    "sampler_seed": 1337,
+    "starts_per_architecture": 3,
+    "qualification_split_consumed": false,
+    "prior_multistart_seeds_reused": false
+  },
+  "cohorts": {
+    "pcen-cohort-a": [
+      18701,
+      19801,
+      20903
+    ],
+    "pcen-cohort-b": [
+      22003,
+      23117,
+      24203
+    ],
+    "pcen-cohort-c": [
+      25301,
+      26417,
+      27509
+    ],
+    "pcen-cohort-d": [
+      28603,
+      29717,
+      30803
+    ],
+    "pcen-cohort-e": [
+      31907,
+      33013,
+      34123
+    ]
+  },
+  "architectures": {
+    "b0-logmel64": {
+      "role": "runtime-fit-reference",
+      "frontend": "logmel",
+      "hidden_dim": 64
+    },
+    "f1-pcen64": {
+      "role": "runtime-fit-target",
+      "frontend": "pcen-lite",
+      "hidden_dim": 64
+    }
+  },
+  "operating_points": {
+    "constraints": [
+      {
+        "name": "strict-10fp",
+        "max_negative_fp_rate": 0.1
+      },
+      {
+        "name": "strict-05fp",
+        "max_negative_fp_rate": 0.05
+      }
+    ]
+  },
+  "selection": {
+    "authority": "calibration-only-multistart-v1",
+    "architecture_independent_selection": true,
+    "reference_architecture": "b0-logmel64",
+    "target_architecture": "f1-pcen64",
+    "primary_operating_point": "strict-10fp",
+    "secondary_operating_point": "strict-05fp",
+    "ranking": [
+      "maximize-primary-calibration-wake-recall",
+      "maximize-secondary-calibration-wake-recall",
+      "minimize-primary-calibration-negative-fp",
+      "minimize-secondary-calibration-negative-fp",
+      "minimize-model-seed"
+    ],
+    "test_metrics_used_for_selection": false
+  },
+  "decision_rules": {
+    "authority": "pre-registered-runtime-fit-pcen64-multistart-v1",
+    "min_primary_directional_passes": 4,
+    "min_secondary_directional_passes": 3,
+    "min_absolute_strong_passes": 3,
+    "primary_min_test_wake_recall_delta": 0.1,
+    "secondary_min_test_wake_recall_delta": 0.05,
+    "max_test_negative_fp_delta_regression": 0.02,
+    "absolute_primary_min_test_wake_recall": 0.7,
+    "absolute_primary_max_test_negative_fp_rate": 0.1,
+    "absolute_secondary_min_test_wake_recall": 0.5,
+    "absolute_secondary_max_test_negative_fp_rate": 0.06,
+    "max_selected_target_primary_recall_stddev": 0.1,
+    "min_selected_target_primary_recall_mean": 0.7,
+    "pass_next": "runtime-fit-pcen64-ctc-objective-confirmation-v1",
+    "fail_next": "efficient-encoder-architecture-v2"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

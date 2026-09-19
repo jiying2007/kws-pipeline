@@ -32,6 +32,12 @@
       "family": "gru",
       "frontend": "pcen-lite",
       "hidden_dim": 128
+    },
+    "f1-pcen64": {
+      "role": "runtime-fit-frontend-candidate",
+      "family": "gru",
+      "frontend": "pcen-lite",
+      "hidden_dim": 64
     }
   },
   "target_board_evidence": {
@@ -44,7 +50,7 @@
   "decision_rules": {
     "research_target": "fc1-pcen128",
     "runtime_fit_next": "target-board-budget-and-measurement-binding",
-    "runtime_mismatch_next": "efficient-encoder-architecture-v2",
+    "runtime_mismatch_next": "runtime-fit-pcen64-multistart-confirmation-v1",
     "shipping_evidence_missing_next": "bind-approved-target-resource-budget"
   },
   "authority": {
@@ -53,5 +59,15 @@
     "shipping_approval_allowed": false,
     "protected_evidence_used": false,
     "shipping_metric": false
+  },
+  "source_multistart_evidence": {
+    "run_id": 35428804016,
+    "exact_head_sha": "c0e8b935345b26514aa5a0975a4fd9f52296b66b",
+    "primary_directional_passes": 3,
+    "secondary_directional_passes": 3,
+    "absolute_strong_passes": 4,
+    "selected_target_primary_test_wake_recall_mean": 0.834375,
+    "selected_target_primary_test_wake_recall_stddev": 0.04485218779502289,
+    "multistart_pass": false
   }
 }
