@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-encoder-frontend-upper-bound-sweep-v1",
+  "evidence_scope": "research-only",
+  "baseline": {
+    "run_id": 35418732590,
+    "exact_head_sha": "2eb3a881bdba69984f5305dc26a8ed0bc0b42377",
+    "frontend": "logmel",
+    "hidden_dim": 64,
+    "epochs": 24,
+    "seed": 1337,
+    "test_wake_recall": 0.796875,
+    "test_negative_fp_rate": 0.446875,
+    "test_gap": -0.5934407413005829
+  },
+  "fixed": {
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "seed": 1337,
+    "balance_mode": "equal-class-sampler-v1",
+    "classes": [
+      "nonwake",
+      "keyword-1",
+      "keyword-2"
+    ],
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "qualification_split_consumed": false
+  },
+  "candidates": {
+    "f1-pcen64": {
+      "single_variable": "frontend",
+      "frontend": "pcen-lite",
+      "hidden_dim": 64,
+      "hypothesis": "PCEN-lite improves acoustic separability under the same GRU64 capacity."
+    },
+    "c1-logmel128": {
+      "single_variable": "hidden_dim",
+      "frontend": "logmel",
+      "hidden_dim": 128,
+      "hypothesis": "GRU64 is capacity-limited; doubling hidden capacity improves near-miss discrimination."
+    }
+  },
+  "decision_rules": {
+    "strong_if_test_wake_recall_gte": 0.8,
+    "strong_if_test_negative_fp_lte": 0.2,
+    "strong_if_test_gap_gt": 0,
+    "material_gain_if_fp_reduction_gte": 0.1,
+    "material_gain_if_gap_improvement_gte": 0.1,
+    "frontend_gain_next": "pcen-model-lane",
+    "capacity_gain_next": "efficient-encoder-capacity-v2",
+    "neither_gain_next": "data-and-encoder-architecture-v2"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}
