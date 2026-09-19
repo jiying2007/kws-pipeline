@@ -7,8 +7,14 @@ on:
     paths:
       - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
       - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
+      - "training/analyze_encoder_frontend_replication.py"
+      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
+      - "training/analyze_encoder_frontend_replication.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -124,6 +130,7 @@ jobs:
           for name in (
               ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml",
               ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml",
           ):
               text=pathlib.Path(name).read_text().lower()
               assert "run-id: 35412153192" in text
@@ -162,6 +169,48 @@ jobs:
           assert 'fp_reduction >=' not in workflow
           assert 'gap_improvement >=' not in workflow
           print("classifier/decision semantics contract: ok")
+          PY
+
+      - name: Verify paired replication contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_encoder_frontend_replication.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json").read_text())
+          assert p["policy"]=="kws-v2-encoder-frontend-paired-seed-replication-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["source_factorial_evidence"]["run_id"]==35423534198
+          assert p["source_factorial_evidence"]["exact_head_sha"]=="c439296e0852aaa892398bc93fe98fb8114641b2"
+          assert p["source_factorial_evidence"]["decision_authorized"] is True
+          assert p["seeds"]==[2027,4099,7919,12011,16001]
+          assert 1337 not in p["seeds"]
+          assert p["candidates"]=={
+              "b0-logmel64":{"role":"reference","frontend":"logmel","hidden_dim":64},
+              "c1-logmel128":{"role":"mechanism-control","frontend":"logmel","hidden_dim":128},
+              "fc1-pcen128":{"role":"target","frontend":"pcen-lite","hidden_dim":128},
+          }
+          rules=p["replication_rules"]
+          assert rules["authority"]=="pre-registered-paired-seed-test-transfer-v1"
+          assert rules["discovery_seed_excluded"] is True
+          assert rules["min_primary_directional_passes"]==4
+          assert rules["min_secondary_directional_passes"]==3
+          assert rules["min_absolute_strong_passes"]==3
+          assert rules["pass_next"]=="deployability-budget-and-architecture-fit-gate"
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          workflow=pathlib.Path(".github/workflows/kws-v2-encoder-frontend-paired-replication.yml").read_text()
+          for seed in p["seeds"]:
+              assert str(seed) in workflow
+          assert "Train paired candidates on one runner" in workflow
+          assert "b0-logmel64 logmel 64" in workflow
+          assert "c1-logmel128 logmel 128" in workflow
+          assert "fc1-pcen128 pcen-lite 128" in workflow
+          print("paired replication contract: ok")
           PY
 
       - name: Worktree remains clean
