@@ -18,7 +18,7 @@ separate execution paths.
 
 ## Governed base for future candidates
 
-Future manual `model-training` runs use the immutable release:
+Future governed `model-training` runs use the immutable release:
 
 `speech-like-base-5204b798033f`
 
@@ -47,6 +47,24 @@ Before training begins, the workflow:
 
 The effective config SHA is bound across the two training jobs by the existing
 base-stage receipt.
+
+## Auditable training invocation
+
+Governed training keeps the existing manual `workflow_dispatch` entry point and
+also accepts a versioned request on protected `main`:
+
+`.github/triggers/model-training-request.json`
+
+The expensive training jobs run on a push only when that exact request file
+changes. Ordinary main pushes do not start model training. To request another
+governed run, change the request ID and reason through a normal protected-main
+pull request. After merge, the workflow still verifies that its checkout SHA is
+the repository's current `main` before doing any training.
+
+Each run writes `build/model-training/training-invocation.json` into the
+retained base-domain state. For a versioned request this binds the exact request
+content and SHA256 to the GitHub event SHA/ref; manual dispatches record the same
+source identity without claiming a versioned request.
 
 ## Promoted model lineage
 
