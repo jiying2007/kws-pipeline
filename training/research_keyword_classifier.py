@@ -5,10 +5,25 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import pathlib
 import random
 import sys
 import wave
+
+# The research classifier must be reproducible across heterogeneous hosted
+# runners. Apply a conservative cross-CPU contract before importing torch.
+_RESEARCH_CPU_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OMP_DYNAMIC": "FALSE",
+    "MKL_NUM_THREADS": "1",
+    "MKL_CBWR": "COMPATIBLE",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "ATEN_CPU_CAPABILITY": "default",
+}
+for _name, _value in _RESEARCH_CPU_ENV.items():
+    os.environ[_name] = _value
 
 import torch
 from torch import nn
@@ -28,6 +43,14 @@ from train_ctc import (  # noqa: E402
     sha256_file,
     training_environment,
 )
+
+# train_ctc imports model.py, whose production contract uses AVX2/two threads.
+# The research classifier deliberately uses the stronger compatible/single-thread
+# contract above. Re-assert the environment and thread pool after imports.
+for _name, _value in _RESEARCH_CPU_ENV.items():
+    os.environ[_name] = _value
+torch.set_num_threads(1)
+torch.backends.mkldnn.enabled = False
 
 EVIDENCE_CLASS = "kws-v2-research-keyword-classifier-v1"
 
@@ -455,6 +478,13 @@ def main() -> int:
         "model_state_sha256": model_state_sha256(model),
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "training_environment": environment,
+        "research_cpu_contract": {
+            "policy": "cross-cpu-compatible-single-thread-v1",
+            "environment": dict(sorted(_RESEARCH_CPU_ENV.items())),
+            "torch_num_threads": int(torch.get_num_threads()),
+            "torch_num_interop_threads": int(torch.get_num_interop_threads()),
+            "mkldnn_enabled": bool(torch.backends.mkldnn.enabled),
+        },
         "thresholds": thresholds,
         "history": history,
         "calibration": evaluate(model, cal_loader, classes, thresholds),

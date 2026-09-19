@@ -15,12 +15,15 @@ on:
       - "training/analyze_classifier_init_stability.py"
       - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
       - "training/analyze_classifier_optimizer_schedule_stability.py"
+      - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
+      - "training/verify_classifier_cross_runner_repro.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
+      - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -34,12 +37,15 @@ on:
       - "training/analyze_classifier_init_stability.py"
       - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
       - "training/analyze_classifier_optimizer_schedule_stability.py"
+      - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
+      - "training/verify_classifier_cross_runner_repro.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
+      - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -313,6 +319,39 @@ jobs:
           assert "Train paired optimizer/schedule candidates" in workflow
           assert "fc1-pcen128-warmup-cosine" in workflow
           print("optimizer schedule stability contract: ok")
+          PY
+
+      - name: Verify cross-runner classifier reproducibility contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/verify_classifier_cross_runner_repro.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-cross-runner-repro-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-cross-runner-repro-v1"
+          assert p["fixed"]["model_seeds"]==[2027,7919]
+          assert p["fixed"]["replicas"]==["a","b"]
+          assert set(p["candidates"])=={"b0-logmel64","fc1-pcen128"}
+          cpu=p["required_cpu_contract"]
+          assert cpu["environment"]["ATEN_CPU_CAPABILITY"]=="default"
+          assert cpu["environment"]["MKL_CBWR"]=="COMPATIBLE"
+          assert cpu["torch_num_threads"]==1
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "_RESEARCH_CPU_ENV" in classifier
+          assert '"ATEN_CPU_CAPABILITY": "default"' in classifier
+          assert '"MKL_CBWR": "COMPATIBLE"' in classifier
+          assert '"research_cpu_contract": {' in classifier
+          for name in (
+              ".github/workflows/kws-v2-classifier-init-stability.yml",
+              ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml",
+          ):
+              workflow=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in workflow
+              assert "\n  push:" not in workflow
+          repro=pathlib.Path(".github/workflows/kws-v2-classifier-cross-runner-repro.yml").read_text()
+          assert "model_seed: [2027, 7919]" in repro
+          assert "replica: [a, b]" in repro
+          print("cross-runner classifier reproducibility contract: ok")
           PY
 
       - name: Worktree remains clean

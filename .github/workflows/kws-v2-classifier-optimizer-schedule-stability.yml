@@ -2,14 +2,6 @@ name: kws-v2-classifier-optimizer-schedule-stability
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
-      - "training/research_keyword_classifier.py"
-      - "training/analyze_classifier_optimizer_schedule_stability.py"
-      - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
 
 permissions:
   actions: read
