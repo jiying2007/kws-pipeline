@@ -7,6 +7,7 @@ import sys
 
 GLOB_CHARS = set("*?[]{}$")
 WORKFLOW_SUFFIXES = {".yml", ".yaml"}
+ALLOW_MISSING_MARKER = "workflow-path-filter: allow-missing"
 
 
 def exact_path_filters(workflow: pathlib.Path) -> list[tuple[int, str]]:
@@ -23,6 +24,8 @@ def exact_path_filters(workflow: pathlib.Path) -> list[tuple[int, str]]:
             if indent <= paths_indent:
                 paths_indent = None
             elif stripped.startswith("- "):
+                if ALLOW_MISSING_MARKER in raw:
+                    continue
                 value = stripped[2:].strip()
                 if not value:
                     continue
@@ -85,6 +88,14 @@ def self_test() -> None:
         good = workflows / "good.yml"
         good.write_text(
             "on:\n  push:\n    paths:\n      - 'tools/ok.py'\n      - 'training/**'\n",
+            encoding="utf-8",
+        )
+        assert validate(workflows, root) == []
+
+        ephemeral = workflows / "ephemeral.yml"
+        ephemeral.write_text(
+            "on:\n  push:\n    paths:\n"
+            "      - '.github/triggers/generated.json' # workflow-path-filter: allow-missing\n",
             encoding="utf-8",
         )
         assert validate(workflows, root) == []
