@@ -93,6 +93,13 @@ jobs:
           assert (fc["frontend"],fc["hidden_dim"])==("pcen-lite",128)
           op=p["threshold_operating_point"]
           assert [row["max_negative_fp_rate"] for row in op["calibration_constraints"]]==[0.2,0.1,0.05]
+          rules=p["decision_rules"]
+          assert rules["decision_basis"]=="calibration-selected-threshold-transfer-to-test"
+          assert rules["primary_operating_point"]=="strict-10fp"
+          assert rules["secondary_operating_point"]=="strict-05fp"
+          assert rules["material_gain_min_test_wake_recall_delta"]==0.10
+          assert rules["material_gain_max_test_negative_fp_rate_regression"]==0.02
+          assert set(p["baseline"]["operating_points"])=={"balanced-20fp","strict-10fp","strict-05fp"}
           assert p["authority"]=={
               "diagnostic_only":True,
               "promotion_allowed":False,
@@ -124,6 +131,24 @@ jobs:
               ):
                   assert forbidden not in text, (name, forbidden)
           print("upper-bound workflow evidence boundary: ok")
+          PY
+
+      - name: Verify classifier and decision semantics
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          workflow=pathlib.Path(".github/workflows/kws-v2-encoder-frontend-upper-bound.yml").read_text()
+          assert 'positive_score_semantics": "true-keyword-probability"' in classifier
+          assert "true_class_score = probs.gather" in classifier
+          assert "model_state_sha256" in classifier
+          assert 'primary_name=rules["primary_operating_point"]' in workflow
+          assert '"decision_basis":{' in workflow
+          assert 'primary_recall_delta >=' in workflow
+          assert 'fp_reduction >=' not in workflow
+          assert 'gap_improvement >=' not in workflow
+          print("classifier/decision semantics contract: ok")
           PY
 
       - name: Worktree remains clean

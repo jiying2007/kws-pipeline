@@ -11,7 +11,21 @@
     "seed": 1337,
     "test_wake_recall": 0.796875,
     "test_negative_fp_rate": 0.446875,
-    "test_gap": -0.5934407413005829
+    "test_gap": -0.5934407413005829,
+    "operating_points": {
+      "balanced-20fp": {
+        "test_wake_recall": 0.5625,
+        "test_negative_fp_rate": 0.203125
+      },
+      "strict-10fp": {
+        "test_wake_recall": 0.34375,
+        "test_negative_fp_rate": 0.103125
+      },
+      "strict-05fp": {
+        "test_wake_recall": 0.078125,
+        "test_negative_fp_rate": 0.0375
+      }
+    }
   },
   "fixed": {
     "feature_dim": 32,
@@ -60,15 +74,19 @@
     }
   },
   "decision_rules": {
-    "strong_if_test_wake_recall_gte": 0.8,
-    "strong_if_test_negative_fp_lte": 0.2,
-    "strong_if_test_gap_gt": 0,
-    "material_gain_if_fp_reduction_gte": 0.1,
-    "material_gain_if_gap_improvement_gte": 0.1,
-    "frontend_gain_next": "pcen-model-lane",
-    "capacity_gain_next": "efficient-encoder-capacity-v2",
-    "neither_gain_next": "data-and-encoder-architecture-v2",
-    "joint_gain_next": "pcen-efficient-encoder-v2",
+    "decision_basis": "calibration-selected-threshold-transfer-to-test",
+    "primary_operating_point": "strict-10fp",
+    "secondary_operating_point": "strict-05fp",
+    "material_gain_min_test_wake_recall_delta": 0.1,
+    "material_gain_max_test_negative_fp_rate_regression": 0.02,
+    "strong_primary_min_test_wake_recall": 0.7,
+    "strong_primary_max_test_negative_fp_rate": 0.1,
+    "strong_secondary_min_test_wake_recall": 0.5,
+    "strong_secondary_max_test_negative_fp_rate": 0.06,
+    "strong_main_effect_next": "paired-seed-replication",
+    "strong_interaction_next": "paired-factorial-replication",
+    "material_gain_next": "paired-seed-replication",
+    "no_gain_next": "data-and-encoder-architecture-v2",
     "reference_next": "factorial-reference"
   },
   "authority": {

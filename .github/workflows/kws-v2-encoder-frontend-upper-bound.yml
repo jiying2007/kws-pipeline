@@ -139,28 +139,8 @@ jobs:
           fp_reduction=float(base["test_negative_fp_rate"])-fp
           gap_improvement=gap-float(base["test_gap"])
           rules=cfg["decision_rules"]
-          strong=(
-              recall >= float(rules["strong_if_test_wake_recall_gte"])
-              and fp <= float(rules["strong_if_test_negative_fp_lte"])
-              and gap > float(rules["strong_if_test_gap_gt"])
-          )
-          material=(
-              fp_reduction >= float(rules["material_gain_if_fp_reduction_gte"])
-              or gap_improvement >= float(rules["material_gain_if_gap_improvement_gte"])
-          )
           row=cfg["candidates"][name]
           mode=row["single_variable"]
-          if mode=="none":
-              next_action=rules["reference_next"]
-          elif strong or material:
-              if mode=="frontend":
-                  next_action=rules["frontend_gain_next"]
-              elif mode=="hidden_dim":
-                  next_action=rules["capacity_gain_next"]
-              else:
-                  next_action=rules["joint_gain_next"]
-          else:
-              next_action=rules["neither_gain_next"]
 
           cal_curve={float(item["threshold"]):item for item in cal["operating_curve"]}
           test_curve={float(item["threshold"]):item for item in test["operating_curve"]}
@@ -191,6 +171,69 @@ jobs:
                   "test":test_selected,
               }
 
+          primary_name=rules["primary_operating_point"]
+          secondary_name=rules["secondary_operating_point"]
+          primary=operating.get(primary_name)
+          secondary=operating.get(secondary_name)
+          base_primary=base["operating_points"][primary_name]
+          base_secondary=base["operating_points"][secondary_name]
+
+          def transfer(row):
+              if row is None:
+                  return None
+              test_row=row["test"]
+              return {
+                  "threshold":float(row["threshold"]),
+                  "test_wake_recall":float(test_row["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(test_row["negative_false_positive_rate"]),
+              }
+
+          primary_transfer=transfer(primary)
+          secondary_transfer=transfer(secondary)
+          primary_recall_delta=(
+              None if primary_transfer is None
+              else primary_transfer["test_wake_recall"]-float(base_primary["test_wake_recall"])
+          )
+          primary_fp_delta=(
+              None if primary_transfer is None
+              else primary_transfer["test_negative_fp_rate"]-float(base_primary["test_negative_fp_rate"])
+          )
+          secondary_recall_delta=(
+              None if secondary_transfer is None
+              else secondary_transfer["test_wake_recall"]-float(base_secondary["test_wake_recall"])
+          )
+          secondary_fp_delta=(
+              None if secondary_transfer is None
+              else secondary_transfer["test_negative_fp_rate"]-float(base_secondary["test_negative_fp_rate"])
+          )
+          material=(
+              mode!="none"
+              and primary_transfer is not None
+              and primary_recall_delta >= float(rules["material_gain_min_test_wake_recall_delta"])
+              and primary_fp_delta <= float(rules["material_gain_max_test_negative_fp_rate_regression"])
+          )
+          strong_primary=(
+              primary_transfer is not None
+              and primary_transfer["test_wake_recall"] >= float(rules["strong_primary_min_test_wake_recall"])
+              and primary_transfer["test_negative_fp_rate"] <= float(rules["strong_primary_max_test_negative_fp_rate"])
+          )
+          strong_secondary=(
+              secondary_transfer is not None
+              and secondary_transfer["test_wake_recall"] >= float(rules["strong_secondary_min_test_wake_recall"])
+              and secondary_transfer["test_negative_fp_rate"] <= float(rules["strong_secondary_max_test_negative_fp_rate"])
+          )
+          strong=mode!="none" and strong_primary and strong_secondary
+          if mode=="none":
+              next_action=rules["reference_next"]
+          elif strong and mode=="frontend+hidden_dim":
+              next_action=rules["strong_interaction_next"]
+          elif strong:
+              next_action=rules["strong_main_effect_next"]
+          elif material:
+              next_action=rules["material_gain_next"]
+          else:
+              next_action=rules["no_gain_next"]
+
           score={
               "schema_version":1,
               "evidence_class":"kws-v2-encoder-frontend-upper-bound-scorecard-v2",
@@ -216,6 +259,23 @@ jobs:
                   "gap":gap_improvement,
               },
               "operating_points":operating,
+              "decision_basis":{
+                  "authority":rules["decision_basis"],
+                  "primary_operating_point":primary_name,
+                  "secondary_operating_point":secondary_name,
+                  "primary_transfer":primary_transfer,
+                  "secondary_transfer":secondary_transfer,
+                  "primary_delta_vs_reference":{
+                      "test_wake_recall":primary_recall_delta,
+                      "test_negative_fp_rate":primary_fp_delta,
+                  },
+                  "secondary_delta_vs_reference":{
+                      "test_wake_recall":secondary_recall_delta,
+                      "test_negative_fp_rate":secondary_fp_delta,
+                  },
+                  "strong_primary":strong_primary,
+                  "strong_secondary":strong_secondary,
+              },
               "strong_upper_bound":strong,
               "material_gain":material,
               "next_architecture_action":next_action,

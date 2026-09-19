@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import pathlib
@@ -132,11 +133,13 @@ def evaluate(
             pred = probs.argmax(dim=1)
             keyword_score = probs[:, 1:].amax(dim=1)
             keyword_pred = probs[:, 1:].argmax(dim=1) + 1
-            for truth, guess, keyword_guess, score in zip(
+            true_class_score = probs.gather(1, labels.unsqueeze(1)).squeeze(1)
+            for truth, guess, keyword_guess, score, true_score in zip(
                 labels.tolist(),
                 pred.tolist(),
                 keyword_pred.tolist(),
                 keyword_score.tolist(),
+                true_class_score.tolist(),
             ):
                 confusion[int(truth)][int(guess)] += 1
                 for threshold, row in threshold_rows.items():
@@ -157,7 +160,7 @@ def evaluate(
                 else:
                     positive_total += 1
                     positive_correct += int(truth == guess)
-                    positive_scores.append(float(score))
+                    positive_scores.append(float(true_score))
     return {
         "examples": total,
         "accuracy": correct / max(1, total),
@@ -182,6 +185,8 @@ def evaluate(
             for threshold, row in sorted(threshold_rows.items())
         ],
         "score_distribution": {
+            "positive_score_semantics": "true-keyword-probability",
+            "negative_score_semantics": "max-keyword-probability",
             "positive_keyword_probability": {
                 "p10": quantile(positive_scores, 0.10),
                 "p50": quantile(positive_scores, 0.50),
@@ -200,6 +205,20 @@ def evaluate(
             ),
         },
     }
+
+
+def model_state_sha256(model: nn.Module) -> str:
+    digest = hashlib.sha256()
+    for name, tensor in sorted(model.state_dict().items()):
+        value = tensor.detach().cpu().contiguous()
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(str(value.dtype).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(b"\0")
+        digest.update(value.numpy().tobytes(order="C"))
+    return digest.hexdigest()
 
 
 def main() -> int:
@@ -317,6 +336,7 @@ def main() -> int:
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
+        "model_state_sha256": model_state_sha256(model),
         "thresholds": thresholds,
         "history": history,
         "calibration": evaluate(model, cal_loader, classes, thresholds),
