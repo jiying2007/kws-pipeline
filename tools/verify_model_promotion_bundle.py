@@ -74,6 +74,13 @@ def resolve_best(root: pathlib.Path, name: str) -> pathlib.Path:
     return require_file(matches[0], f"best/{name}")
 
 
+def resolve_best_optional(root: pathlib.Path, name: str) -> pathlib.Path | None:
+    matches = [path for path in root.rglob(name) if path.is_file() and path.parent.name == "best"]
+    if len(matches) > 1:
+        raise ValueError(f"expected at most one best/{name}, got {len(matches)}")
+    return matches[0] if matches else None
+
+
 def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.Path]:
     best = {
         "model.kwm": "xiaowo-model.kwm",
@@ -102,6 +109,26 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
         target = dist / target_name
         shutil.copy2(source, target)
         copied[target_name] = target
+
+    optional_lineage = {
+        "effective-training-config.json": "xiaowo-effective-training-config.json",
+        "product-speech-like-base-contract.json": "xiaowo-product-speech-like-base-contract.json",
+    }
+    present = {
+        source_name: resolve_best_optional(root, source_name)
+        for source_name in optional_lineage
+    }
+    present_count = sum(path is not None for path in present.values())
+    if present_count not in (0, len(optional_lineage)):
+        raise ValueError("product training lineage must be absent as legacy or present as a complete pair")
+    if present_count:
+        for source_name, target_name in optional_lineage.items():
+            source = present[source_name]
+            assert source is not None
+            target = dist / target_name
+            shutil.copy2(source, target)
+            copied[target_name] = target
+
     for source, target_name in evidence.items():
         target = dist / target_name
         shutil.copy2(require_file(source, target_name), target)
@@ -155,6 +182,55 @@ def verify(args: argparse.Namespace) -> dict:
     }.items():
         if artifacts.get(name) != files[target]["sha256"]:
             raise ValueError(f"training summary artifact SHA mismatch for {name}")
+
+    lineage_names = {
+        "effective-training-config.json": "xiaowo-effective-training-config.json",
+        "product-speech-like-base-contract.json": "xiaowo-product-speech-like-base-contract.json",
+    }
+    summary_has_lineage = any(name in artifacts for name in lineage_names)
+    copied_has_lineage = any(target in files for target in lineage_names.values())
+    if summary_has_lineage != copied_has_lineage:
+        raise ValueError("training summary and promoted bundle disagree on product training lineage")
+    if summary_has_lineage:
+        if not all(name in artifacts for name in lineage_names):
+            raise ValueError("training summary product lineage pair is incomplete")
+        if not all(target in files for target in lineage_names.values()):
+            raise ValueError("promoted product lineage pair is incomplete")
+        for name, target in lineage_names.items():
+            if artifacts.get(name) != files[target]["sha256"]:
+                raise ValueError(f"training summary artifact SHA mismatch for {name}")
+
+        effective = load_json(
+            dist / "xiaowo-effective-training-config.json",
+            "effective training config",
+        )
+        base_contract = load_json(
+            dist / "xiaowo-product-speech-like-base-contract.json",
+            "product speech-like base contract",
+        )
+        product_data = effective.get("product_candidate_data")
+        if not isinstance(product_data, dict):
+            raise ValueError("effective training config lacks product_candidate_data")
+        if product_data.get("policy") != "external-speech-like-product-base-v1":
+            raise ValueError("effective product candidate data policy mismatch")
+        if product_data.get("tone_fallback_allowed") is not False:
+            raise ValueError("promoted product candidate unexpectedly allows tone fallback")
+        if product_data.get("protected_evidence_used") is not False:
+            raise ValueError("promoted product candidate consumed protected evidence")
+        if base_contract.get("policy") != "product-speech-like-base-v1":
+            raise ValueError("promoted product base contract identity mismatch")
+        if sha256(dist / "xiaowo-product-speech-like-base-contract.json") != str(
+            product_data.get("base_contract_sha256") or ""
+        ):
+            raise ValueError("effective config base-contract SHA mismatch")
+        for field in ("release_tag", "external_base_bundle_sha256", "provider_identity_sha256"):
+            if str(product_data.get(field) or "") != str(base_contract.get(field) or ""):
+                raise ValueError(f"effective/base contract {field} mismatch")
+        external = effective.get("generator", {}).get("external_base_dataset")
+        if not isinstance(external, dict) or set(external) != {
+            "train", "calibration", "test", "qualification"
+        }:
+            raise ValueError("promoted effective config lacks all external-base splits")
 
     qualification = load_json(dist / "qualification-summary.json", "qualification summary")
     require_zero_error(qualification, expected=256, label="qualification evidence")
