@@ -2,18 +2,6 @@ name: kws-v2-phonetic-representation
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-phonetic-labels-v1.json"
-      - "configs/training/kws-v2-phonetic-representation-experiment-v1.json"
-      - "keywords/tokens.zh_cn_phonetic_v2.txt"
-      - "keywords/zh_cn_phonetic_v2.tsv"
-      - "keywords/zh_cn_phonetic_v2.tsv.margin.json"
-      - "tools/build_kws_v2_phonetic_representation_dataset.py"
-      - "training/run_kws_phonetic_representation.py"
-      - ".github/workflows/kws-v2-phonetic-representation.yml"
 
 permissions:
   actions: read

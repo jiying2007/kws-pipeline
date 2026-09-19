@@ -2,12 +2,6 @@ name: kws-v2-fixed-keyword-upper-bound
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
-      - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
 
 permissions:
   actions: read

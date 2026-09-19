@@ -2,12 +2,6 @@ name: kws-v2-phonetic-representation-24e
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-phonetic-representation-24e-v1.json"
-      - ".github/workflows/kws-v2-phonetic-representation-24e.yml"
 
 permissions:
   actions: read

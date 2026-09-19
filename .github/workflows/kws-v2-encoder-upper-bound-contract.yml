@@ -440,5 +440,19 @@ jobs:
           print("calibration-only multi-start contract: ok")
           PY
 
+      - name: Verify retired fixed-keyword upper bound is manual-only
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text, name
+              assert "\n  push:" not in text, name
+          print("Verify retired fixed-keyword upper bound is manual-only: ok")
+          PY
+
       - name: Worktree remains clean
         run: git diff --exit-code -- .

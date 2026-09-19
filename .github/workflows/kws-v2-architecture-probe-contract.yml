@@ -101,5 +101,19 @@ jobs:
           python3 -m py_compile
           training/probe_gru_hidden_verifier.py
 
+      - name: Verify retired architecture probe is manual-only
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-architecture-probe.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text, name
+              assert "\n  push:" not in text, name
+          print("Verify retired architecture probe is manual-only: ok")
+          PY
+
       - name: Worktree remains clean
         run: git diff --exit-code -- .

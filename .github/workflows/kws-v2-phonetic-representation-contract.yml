@@ -186,5 +186,20 @@ jobs:
           tools/build_kws_v2_phonetic_representation_dataset.py
           training/run_kws_phonetic_representation.py
 
+      - name: Verify retired phonetic experiments are manual-only
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-phonetic-representation.yml",
+              ".github/workflows/kws-v2-phonetic-representation-24e.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text, name
+              assert "\n  push:" not in text, name
+          print("Verify retired phonetic experiments are manual-only: ok")
+          PY
+
       - name: Worktree remains clean
         run: git diff --exit-code -- .
