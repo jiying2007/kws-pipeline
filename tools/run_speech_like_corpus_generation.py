@@ -214,7 +214,7 @@ def main() -> int:
     parser.add_argument(
         "--stage-base-config",
         type=pathlib.Path,
-        default=ROOT / "configs" / "training" / "xiaowo.v2-speech-like-stage-base.json",
+        default=ROOT / "configs" / "fixtures" / "speech-like" / "xiaowo.v2-speech-like-stage-base-v1.json",
     )
     parser.add_argument("--runtime-archive", required=True, type=pathlib.Path)
     parser.add_argument("--license-evidence", required=True, type=pathlib.Path)

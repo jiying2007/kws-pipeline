@@ -15,6 +15,7 @@ on:
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
       - "configs/training/speech-like-command-provider-v1.json"
+      - "configs/fixtures/speech-like/xiaowo.v2-speech-like-stage-base-v1.json"
       - ".github/workflows/speech-like-corpus-generation-contract.yml"
   pull_request:
     paths:
@@ -29,6 +30,7 @@ on:
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
       - "configs/training/speech-like-command-provider-v1.json"
+      - "configs/fixtures/speech-like/xiaowo.v2-speech-like-stage-base-v1.json"
       - ".github/workflows/speech-like-corpus-generation-contract.yml"
   workflow_dispatch:
 
