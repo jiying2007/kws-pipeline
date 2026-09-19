@@ -77,7 +77,7 @@ jobs:
           assert fixed["sidecar_run_id"]==35367960968
           candidates=p["candidates"]
           assert list(candidates)==[
-              "b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128"
+              "b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128","b0-logmel64-repeat"
           ]
           b0=candidates["b0-logmel64"]
           assert b0["single_variable"]=="none"
@@ -91,6 +91,13 @@ jobs:
           fc=candidates["fc1-pcen128"]
           assert fc["single_variable"]=="frontend+hidden_dim"
           assert (fc["frontend"],fc["hidden_dim"])==("pcen-lite",128)
+          repeat=candidates["b0-logmel64-repeat"]
+          assert repeat["role"]=="determinism-replica"
+          assert repeat["replicate_of"]=="b0-logmel64"
+          assert (repeat["frontend"],repeat["hidden_dim"])==("logmel",64)
+          assert p["decision_rules"]["reference_candidate"]=="b0-logmel64"
+          assert p["decision_rules"]["determinism_replica"]=="b0-logmel64-repeat"
+          assert p["decision_rules"]["decision_requires_bit_exact_reference_replica"] is True
           op=p["threshold_operating_point"]
           assert [row["max_negative_fp_rate"] for row in op["calibration_constraints"]]==[0.2,0.1,0.05]
           rules=p["decision_rules"]
@@ -142,10 +149,16 @@ jobs:
           workflow=pathlib.Path(".github/workflows/kws-v2-encoder-frontend-upper-bound.yml").read_text()
           assert 'positive_score_semantics": "true-keyword-probability"' in classifier
           assert "true_class_score = probs.gather" in classifier
+          assert "TinyStreamingGRU" in classifier
+          assert "self.encoder.gru(" in classifier
+          assert 'recurrent_impl": "tiny-streaming-gru-cell-v1"' in classifier
           assert "model_state_sha256" in classifier
+          assert "training_environment" in classifier
           assert 'primary_name=rules["primary_operating_point"]' in workflow
           assert '"decision_basis":{' in workflow
-          assert 'primary_recall_delta >=' in workflow
+          assert "b0-logmel64-repeat" in workflow
+          assert "reference_state==replica_state" in workflow
+          assert '"within_run_assessments":assessments' in workflow
           assert 'fp_reduction >=' not in workflow
           assert 'gap_improvement >=' not in workflow
           print("classifier/decision semantics contract: ok")

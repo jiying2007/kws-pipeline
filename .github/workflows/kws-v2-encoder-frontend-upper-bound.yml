@@ -38,6 +38,9 @@ jobs:
           - candidate: fc1-pcen128
             frontend: pcen-lite
             hidden_dim: 128
+          - candidate: b0-logmel64-repeat
+            frontend: logmel
+            hidden_dim: 64
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -75,6 +78,8 @@ jobs:
           row=cfg["candidates"][name]
           assert row["frontend"]==os.environ["FRONTEND"]
           assert int(row["hidden_dim"])==int(os.environ["HIDDEN_DIM"])
+          if row["role"]=="determinism-replica":
+              assert row["replicate_of"]==cfg["decision_rules"]["reference_candidate"]
           base=cfg["baseline"]
           mode=row["single_variable"]
           if mode=="none":
@@ -175,8 +180,6 @@ jobs:
           secondary_name=rules["secondary_operating_point"]
           primary=operating.get(primary_name)
           secondary=operating.get(secondary_name)
-          base_primary=base["operating_points"][primary_name]
-          base_secondary=base["operating_points"][secondary_name]
 
           def transfer(row):
               if row is None:
@@ -190,28 +193,6 @@ jobs:
 
           primary_transfer=transfer(primary)
           secondary_transfer=transfer(secondary)
-          primary_recall_delta=(
-              None if primary_transfer is None
-              else primary_transfer["test_wake_recall"]-float(base_primary["test_wake_recall"])
-          )
-          primary_fp_delta=(
-              None if primary_transfer is None
-              else primary_transfer["test_negative_fp_rate"]-float(base_primary["test_negative_fp_rate"])
-          )
-          secondary_recall_delta=(
-              None if secondary_transfer is None
-              else secondary_transfer["test_wake_recall"]-float(base_secondary["test_wake_recall"])
-          )
-          secondary_fp_delta=(
-              None if secondary_transfer is None
-              else secondary_transfer["test_negative_fp_rate"]-float(base_secondary["test_negative_fp_rate"])
-          )
-          material=(
-              mode!="none"
-              and primary_transfer is not None
-              and primary_recall_delta >= float(rules["material_gain_min_test_wake_recall_delta"])
-              and primary_fp_delta <= float(rules["material_gain_max_test_negative_fp_rate_regression"])
-          )
           strong_primary=(
               primary_transfer is not None
               and primary_transfer["test_wake_recall"] >= float(rules["strong_primary_min_test_wake_recall"])
@@ -222,17 +203,18 @@ jobs:
               and secondary_transfer["test_wake_recall"] >= float(rules["strong_secondary_min_test_wake_recall"])
               and secondary_transfer["test_negative_fp_rate"] <= float(rules["strong_secondary_max_test_negative_fp_rate"])
           )
-          strong=mode!="none" and strong_primary and strong_secondary
-          if mode=="none":
-              next_action=rules["reference_next"]
-          elif strong and mode=="frontend+hidden_dim":
-              next_action=rules["strong_interaction_next"]
-          elif strong:
-              next_action=rules["strong_main_effect_next"]
-          elif material:
-              next_action=rules["material_gain_next"]
-          else:
-              next_action=rules["no_gain_next"]
+          strong=(
+              mode!="none"
+              and row["role"]!="determinism-replica"
+              and strong_primary
+              and strong_secondary
+          )
+          material=None
+          next_action=(
+              rules["reference_next"]
+              if mode=="none"
+              else "aggregate-factorial-evidence"
+          )
 
           score={
               "schema_version":1,
@@ -265,14 +247,7 @@ jobs:
                   "secondary_operating_point":secondary_name,
                   "primary_transfer":primary_transfer,
                   "secondary_transfer":secondary_transfer,
-                  "primary_delta_vs_reference":{
-                      "test_wake_recall":primary_recall_delta,
-                      "test_negative_fp_rate":primary_fp_delta,
-                  },
-                  "secondary_delta_vs_reference":{
-                      "test_wake_recall":secondary_recall_delta,
-                      "test_negative_fp_rate":secondary_fp_delta,
-                  },
+                  "same_run_reference_required":True,
                   "strong_primary":strong_primary,
                   "strong_secondary":strong_secondary,
               },
@@ -319,7 +294,7 @@ jobs:
           for path in root.rglob("scorecard.json"):
               row=json.loads(path.read_text())
               rows[row["candidate"]]=row
-          expected={"b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128"}
+          expected={"b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128","b0-logmel64-repeat"}
           assert set(rows)==expected, (set(rows),expected)
 
           def op(candidate,name="balanced-20fp"):
@@ -334,6 +309,54 @@ jobs:
 
           def arg(candidate,key):
               return float(rows[candidate]["test_argmax"][key])
+
+          rules=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())["decision_rules"]
+          reference=rules["reference_candidate"]
+          replica=rules["determinism_replica"]
+          reference_state=rows[reference]["classifier"]["model_state_sha256"]
+          replica_state=rows[replica]["classifier"]["model_state_sha256"]
+          reproducible=(reference_state==replica_state)
+
+          primary_name=rules["primary_operating_point"]
+          secondary_name=rules["secondary_operating_point"]
+
+          def transfer(candidate, point):
+              row=rows[candidate]["operating_points"].get(point)
+              if row is None:
+                  return None
+              return {
+                  "threshold":float(row["threshold"]),
+                  "test_wake_recall":float(row["test"]["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(row["test"]["negative_false_positive_rate"]),
+              }
+
+          def compare(candidate, point):
+              current=transfer(candidate,point)
+              base=transfer(reference,point)
+              if current is None or base is None:
+                  return None
+              return {
+                  "test_wake_recall":current["test_wake_recall"]-base["test_wake_recall"],
+                  "test_negative_fp_rate":current["test_negative_fp_rate"]-base["test_negative_fp_rate"],
+              }
+
+          assessments={}
+          for candidate in ("f1-pcen64","c1-logmel128","fc1-pcen128"):
+              primary_delta=compare(candidate,primary_name)
+              secondary_delta=compare(candidate,secondary_name)
+              material=(
+                  primary_delta is not None
+                  and primary_delta["test_wake_recall"] >= float(rules["material_gain_min_test_wake_recall_delta"])
+                  and primary_delta["test_negative_fp_rate"] <= float(rules["material_gain_max_test_negative_fp_rate_regression"])
+              )
+              assessments[candidate]={
+                  "primary":transfer(candidate,primary_name),
+                  "secondary":transfer(candidate,secondary_name),
+                  "primary_delta_vs_same_run_reference":primary_delta,
+                  "secondary_delta_vs_same_run_reference":secondary_delta,
+                  "absolute_strong_upper_bound":bool(rows[candidate]["strong_upper_bound"]),
+                  "material_gain_vs_same_run_reference":bool(material),
+              }
 
           effects={
               "frontend_at_64":{
@@ -360,14 +383,49 @@ jobs:
           effects["interaction_gap"]=(
               effects["frontend_at_128"]["gap"]-effects["frontend_at_64"]["gap"]
           )
+          strong_candidates=[
+              name for name,row in assessments.items()
+              if row["absolute_strong_upper_bound"]
+          ]
+          material_candidates=[
+              name for name,row in assessments.items()
+              if row["material_gain_vs_same_run_reference"]
+          ]
+          if not reproducible:
+              next_experiment="fix-research-classifier-determinism"
+              decision_authorized=False
+          elif len(strong_candidates)==1:
+              next_experiment="paired-seed-replication:"+strong_candidates[0]
+              decision_authorized=True
+          elif len(strong_candidates)>1:
+              next_experiment="paired-factorial-replication"
+              decision_authorized=True
+          elif material_candidates:
+              next_experiment="paired-factorial-replication"
+              decision_authorized=True
+          else:
+              next_experiment=rules["no_gain_next"]
+              decision_authorized=True
+
           summary={
-              "schema_version":1,
-              "evidence_class":"kws-v2-encoder-frontend-factorial-summary-v1",
+              "schema_version":2,
+              "evidence_class":"kws-v2-encoder-frontend-factorial-summary-v2",
               "evidence_scope":"research-only",
               "diagnostic_only":True,
               "promotion_allowed":False,
               "protected_evidence_used":False,
               "shipping_metric":False,
+              "decision_authority":rules["decision_authority"],
+              "decision_authorized":decision_authorized,
+              "next_experiment":next_experiment,
+              "reference_reproducibility":{
+                  "reference_candidate":reference,
+                  "replica_candidate":replica,
+                  "reference_model_state_sha256":reference_state,
+                  "replica_model_state_sha256":replica_state,
+                  "bit_exact":reproducible,
+              },
+              "within_run_assessments":assessments,
               "candidates":{
                   name:{
                       "frontend":row["frontend"],
@@ -379,7 +437,7 @@ jobs:
                   }
                   for name,row in sorted(rows.items())
               },
-              "effects":effects,
+              "argmax_effects":effects,
           }
           target=pathlib.Path(os.environ["RUNNER_TEMP"])/"factorial-summary"/"summary.json"
           target.write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")

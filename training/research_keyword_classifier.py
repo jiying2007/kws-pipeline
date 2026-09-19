@@ -19,9 +19,15 @@ sys.path.insert(0, str(ROOT / "training"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from frontend import features  # noqa: E402
+from gru_model import TinyStreamingGRU  # noqa: E402
 from frontend_spec import FRONTEND_IDS  # noqa: E402
 from kws_vocab import load_tokens  # noqa: E402
-from train_ctc import load_keyword_operating_points, manifest_rows  # noqa: E402
+from train_ctc import (  # noqa: E402
+    load_keyword_operating_points,
+    manifest_rows,
+    sha256_file,
+    training_environment,
+)
 
 EVIDENCE_CLASS = "kws-v2-research-keyword-classifier-v1"
 
@@ -92,17 +98,19 @@ def collate(batch):
 
 
 class ClipGRU(nn.Module):
+    """Clip head over the exact TinyStreamingGRU recurrent cell."""
+
     def __init__(self, feature_dim: int, hidden_dim: int, classes: int):
         super().__init__()
-        self.gru = nn.GRU(feature_dim, hidden_dim, batch_first=True)
-        self.head = nn.Linear(hidden_dim, classes)
+        self.encoder = TinyStreamingGRU(feature_dim, hidden_dim, classes)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        packed = nn.utils.rnn.pack_padded_sequence(
-            x, lengths.cpu(), batch_first=True, enforce_sorted=False
-        )
-        _, hidden = self.gru(packed)
-        return self.head(hidden[-1])
+        hidden = x.new_zeros((x.shape[0], self.encoder.gru.hidden_size))
+        for frame_index in range(x.shape[1]):
+            next_hidden = self.encoder.gru(x[:, frame_index, :], hidden)
+            active = (lengths > frame_index).unsqueeze(1)
+            hidden = torch.where(active, next_hidden, hidden)
+        return self.encoder.out_proj(hidden)
 
 
 def evaluate(
@@ -320,6 +328,17 @@ def main() -> int:
             losses.append(float(loss.detach()))
         history.append({"epoch": epoch + 1, "loss": sum(losses) / max(1, len(losses))})
 
+    environment = training_environment()
+    environment["training_code_sha256"]["training/gru_model.py"] = sha256_file(
+        ROOT / "training" / "gru_model.py"
+    )
+    environment["training_code_sha256"]["training/research_keyword_classifier.py"] = sha256_file(
+        pathlib.Path(__file__).resolve()
+    )
+    environment["training_code_sha256"] = dict(
+        sorted(environment["training_code_sha256"].items())
+    )
+
     result = {
         "schema_version": 1,
         "evidence_class": EVIDENCE_CLASS,
@@ -328,6 +347,7 @@ def main() -> int:
         "protected_evidence_used": False,
         "shipping_metric": False,
         "architecture": "clip-gru-v1",
+        "recurrent_impl": "tiny-streaming-gru-cell-v1",
         "frontend": args.frontend,
         "feature_dim": args.feature_dim,
         "hidden_dim": args.hidden_dim,
@@ -337,6 +357,8 @@ def main() -> int:
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
         "model_state_sha256": model_state_sha256(model),
+        "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "training_environment": environment,
         "thresholds": thresholds,
         "history": history,
         "calibration": evaluate(model, cal_loader, classes, thresholds),

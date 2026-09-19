@@ -25,7 +25,8 @@
         "test_wake_recall": 0.078125,
         "test_negative_fp_rate": 0.0375
       }
-    }
+    },
+    "decision_authority": false
   },
   "fixed": {
     "feature_dim": 32,
@@ -71,6 +72,14 @@
       "frontend": "pcen-lite",
       "hidden_dim": 128,
       "hypothesis": "PCEN-lite and higher capacity may be complementary rather than independently sufficient."
+    },
+    "b0-logmel64-repeat": {
+      "role": "determinism-replica",
+      "single_variable": "none",
+      "replicate_of": "b0-logmel64",
+      "frontend": "logmel",
+      "hidden_dim": 64,
+      "hypothesis": "Independent hosted-runner replica of the reference; model state must be bit-exact before factorial conclusions are authorized."
     }
   },
   "decision_rules": {
@@ -87,7 +96,11 @@
     "strong_interaction_next": "paired-factorial-replication",
     "material_gain_next": "paired-seed-replication",
     "no_gain_next": "data-and-encoder-architecture-v2",
-    "reference_next": "factorial-reference"
+    "reference_next": "factorial-reference",
+    "reference_candidate": "b0-logmel64",
+    "determinism_replica": "b0-logmel64-repeat",
+    "decision_requires_bit_exact_reference_replica": true,
+    "decision_authority": "same-run-reference-with-bit-exact-sentinel"
   },
   "authority": {
     "diagnostic_only": true,
