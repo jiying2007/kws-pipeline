@@ -1,0 +1,98 @@
+name: kws-v2-architecture-probe-contract
+
+on:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-architecture-probe-v1.json"
+      - "training/probe_gru_hidden_verifier.py"
+      - ".github/workflows/kws-v2-architecture-probe.yml"
+      - ".github/workflows/kws-v2-architecture-probe-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-architecture-probe-v1.json"
+      - "training/probe_gru_hidden_verifier.py"
+      - ".github/workflows/kws-v2-architecture-probe.yml"
+      - ".github/workflows/kws-v2-architecture-probe-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify research-only architecture authority
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-architecture-probe-v1.json").read_text())
+          assert p["schema_version"]==1
+          assert p["policy"]=="kws-v2-architecture-probe-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["source_model"]["research_profile"]=="m2-plus-margin"
+          assert p["source_model"]["run_id"]==35410019255
+          assert p["source_model"]["exact_head_sha"]=="0d4b0cce201fed75a489a63b1c2bf35da2c2044f"
+          assert p["dataset"]["qualification_split_consumed"] is False
+          probe=p["probe"]
+          assert probe["architecture"]=="linear-softmax-v1"
+          assert probe["pooling_modes"]==["last","mean","max"]
+          assert probe["encoder_trainable"] is False
+          assert probe["classes"]==["nonwake","keyword-1","keyword-2"]
+          assert p["authority"]=={
+              "diagnostic_only": True,
+              "promotion_allowed": False,
+              "protected_evidence_used": False,
+              "shipping_metric": False,
+          }
+          rules=p["decision_rules"]
+          assert rules["strong_probe_next"]=="streaming-keyword-verifier-gate-v1"
+          assert rules["weak_probe_next"]=="encoder-or-representation-v2"
+          print("architecture probe policy contract: ok")
+          PY
+
+      - name: Verify frozen encoder implementation
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          text=pathlib.Path("training/probe_gru_hidden_verifier.py").read_text()
+          assert "model.eval()" in text
+          assert "with torch.no_grad()" in text
+          assert "optimizer = torch.optim.AdamW(" in text
+          assert "head.parameters()" in text
+          assert "model.parameters()" not in text
+          assert '"encoder_trainable": False' in text
+          assert '"promotion_allowed": False' in text
+          assert '"protected_evidence_used": False' in text
+          print("frozen encoder implementation contract: ok")
+          PY
+
+      - name: Verify workflow consumes only frozen research artifacts
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          text=pathlib.Path(".github/workflows/kws-v2-architecture-probe.yml").read_text()
+          assert "run-id: 35410019255" in text
+          assert "run-id: 35412153192" in text
+          assert "run-id: 35367960968" in text
+          assert "qualification" not in text.lower()
+          assert "fresh" not in text.lower()
+          assert "shadow" not in text.lower()
+          print("architecture probe workflow evidence boundary: ok")
+          PY
+
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          training/probe_gru_hidden_verifier.py
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
