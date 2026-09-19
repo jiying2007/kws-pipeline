@@ -2,6 +2,18 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+> **Evidence boundary — read this before quoting any number below.**
+> The qualification recorded in this repository was produced on a **synthetic
+> corpus**. It is engineering evidence, not a commercial acoustic claim. Two
+> product-evidence items are deliberately **not executable in this repository**:
+> real human speech through the final microphone/enclosure/AFE, and physical
+> target-board performance/soak. They need hardware and human subjects. The
+> workflows that would consume them (`real-human-qualification.yml`,
+> `target-dut-qualification.yml`) are `workflow_dispatch`-only and need a
+> self-hosted runner, so they never fire on `push` or in a fork.
+> `configs/shipping.xiaowo.json` keeps `shipping_approved=false` until both
+> exist. See [Validation boundary](#validation-boundary).
+
 `kws-pipeline` is a low-compute, always-on keyword spotting engine for embedded Linux/RTOS-class products. The **currently qualified synthetic product SKU** is deliberately narrow and ships exactly two four-character Mandarin wake phrases:
 
 - **你好小窝** — `ni3 hao3 xiao3 wo1`
@@ -24,7 +36,7 @@ PCM16 16 kHz
 
 ## Current engineering-qualified model
 
-The current immutable model release is `model-749187ec1d66` and is bound to:
+The current immutable model release is [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66) and is bound to:
 
 - model-training run `34134789576`;
 - exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`;
@@ -37,10 +49,34 @@ The current immutable model release is `model-749187ec1d66` and is bound to:
 
 `configs/shipping.xiaowo.json` is the machine-readable product contract. It intentionally records `shipping_approved=false`: synthetic qualification is engineering evidence, not a substitute for final real-human/final-AFE acoustic qualification and physical target-board evidence.
 
+### Fetching and verifying the release
+
+The model, checkpoint and keyword pack are release assets rather than tracked files (`.gitignore` excludes `*.kwm`/`*.pt`; `models/README.md` explains why). Fetch them, then check them against the contract:
+
+```bash
+gh release download model-749187ec1d66 \
+  --repo jiying2007/kws-pipeline --dir model-release
+python3 tools/verify_model_release.py \
+  --assets-dir model-release --release-tag model-749187ec1d66
+```
+
+The release is public, so plain HTTPS works when `gh` is unavailable:
+
+```bash
+base=https://github.com/jiying2007/kws-pipeline/releases/download/model-749187ec1d66
+mkdir -p model-release
+curl -sSL -o model-release/MODEL_SHA256SUMS "$base/MODEL_SHA256SUMS"
+awk '{print $2}' model-release/MODEL_SHA256SUMS \
+  | xargs -I{} curl -sSL --fail -o "model-release/{}" "$base/{}"
+python3 tools/verify_model_release.py --assets-dir model-release
+```
+
+`verify_model_release.py` checks two independent things, and the second one is the point. `MODEL_SHA256SUMS` ships *inside* the release, so on its own it only proves the download is internally consistent: whoever can replace an asset can regenerate the manifest to match it. The four digests pinned in `configs/shipping.xiaowo.json` (`xiaowo-model.kwm`, `xiaowo-model.pt`, `xiaowo-keywords.kwk`, `xiaowo-keywords.tsv`) live in this repository, so they are what actually binds a download to the qualified tuple. A regenerated manifest therefore cannot launder a substituted asset, and the tool refuses a manifest that omits a pinned asset rather than skipping it. `tests/test_model_release_pin.py` exercises each of those failure modes.
+
 ## Runtime and product properties
 
 - C11 + libm only in the real-time library; PyTorch and `pypinyin` remain offline.
-- No heap, hidden thread, lock, filesystem or text/pinyin conversion in the real-time path.
+- No heap, hidden thread, lock, filesystem or text/pinyin conversion in the real-time path. This is enforced rather than assumed: `tools/check_runtime_purity.py` checks the undefined symbols of `libkws_pipeline.a` against an explicit allowlist (internal `kws_*` calls, `mem*`, ISO C math, the stack protector and the ARMv7 EABI divide helpers), so a new external dependency fails CI instead of passing review unnoticed.
 - Caller-owned aligned engine arena; model tensors are zero-copy views into a read-only `.kwm` blob.
 - **KWSP ABI v2**: fixed 16-kHz / 400-sample / 320-sample geometry, vocabulary fingerprint and frontend identity.
 - **KWKP ABI v3**: per-keyword threshold, trailing-blank requirement, priority and `immediate` / `longest` / `grace` prefix policy.
@@ -257,9 +293,9 @@ The shipping gate requires model ABI v2, keyword-pack ABI v3, frontend-spec v2, 
 
 ## Validation boundary
 
-CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, Cortex-A32 cross-build, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility and model supply-chain integrity.
+CI proves software contracts and deterministic/synthetic regressions: GCC/Clang, CTest, static analysis, coverage, ASan/UBSan, libFuzzer, a Cortex-A32 cross-build **whose CTest suite is actually executed under `qemu-arm-static`** alongside a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel, frontend/decoder contracts, corpus identity, self-training, robustness/FAR regression, runtime-soak/target-evidence schema validation, SDK reproducibility, model supply-chain integrity and a model-release contract pin.
 
-It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval.
+It does **not** claim final commercial acoustic or physical-board qualification. After the non-real-data engineering closure, the only product-evidence phase intentionally left is: (1) real Mandarin through the final microphones/enclosure/AFE, then (2) physical target-board performance/soak and final tuple approval. Neither phase can run here: both need hardware, human subjects and a self-hosted runner, which is why `real-human-qualification.yml` and `target-dut-qualification.yml` are `workflow_dispatch`-only.
 
 See `docs/README.md`, `docs/CUSTOMIZATION.md`, `docs/RELEASE_QUALIFICATION.md`, `docs/TARGET_EVIDENCE.md`, `docs/CORPUS_IDENTITY.md`, `docs/AUDIO_DISCONTINUITY.md` and Issue #2.
 
