@@ -262,6 +262,10 @@ jobs:
         run: python3 tests/test_verify_rnn_stability_evidence.py
       - name: Verify tracked worktree after RNN stability evidence contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN stability evidence contract"'
+      - name: Corpus identity contract
+        run: python3 tests/test_verify_corpus_identity.py
+      - name: Verify tracked worktree after Corpus identity contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus identity contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
