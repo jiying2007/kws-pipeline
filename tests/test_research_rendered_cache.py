@@ -47,7 +47,8 @@ class ResearchRenderedCacheTest(unittest.TestCase):
                     json.dumps(
                         {
                             "recording": f"{split}-0",
-                            "path": str(wav.resolve()),
+                            "audio_path": str(wav.resolve()),
+                            "path": wav.name,
                             "duration_s": 0.1,
                             "expected": [],
                         }
