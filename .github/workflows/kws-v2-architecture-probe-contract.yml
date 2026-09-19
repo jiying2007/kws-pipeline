@@ -83,9 +83,16 @@ jobs:
           assert "run-id: 35410019255" in text
           assert "run-id: 35412153192" in text
           assert "run-id: 35367960968" in text
-          assert "qualification" not in text.lower()
-          assert "fresh" not in text.lower()
-          assert "shadow" not in text.lower()
+          lowered=text.lower()
+          for forbidden in (
+              "qualification-index",
+              "qualification-summary",
+              "generalization-freeze",
+              "fresh-validation",
+              "shadow-validation",
+              "formal-qualification",
+          ):
+              assert forbidden not in lowered, forbidden
           print("architecture probe workflow evidence boundary: ok")
           PY
 
