@@ -75,12 +75,24 @@ jobs:
           assert fixed["qualification_split_consumed"] is False
           assert fixed["rendered_cache_run_id"]==35412153192
           assert fixed["sidecar_run_id"]==35367960968
-          f=p["candidates"]["f1-pcen64"]
+          candidates=p["candidates"]
+          assert list(candidates)==[
+              "b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128"
+          ]
+          b0=candidates["b0-logmel64"]
+          assert b0["single_variable"]=="none"
+          assert (b0["frontend"],b0["hidden_dim"])==("logmel",64)
+          f=candidates["f1-pcen64"]
           assert f["single_variable"]=="frontend"
-          assert f["frontend"]=="pcen-lite" and f["hidden_dim"]==64
-          c=p["candidates"]["c1-logmel128"]
+          assert (f["frontend"],f["hidden_dim"])==("pcen-lite",64)
+          c=candidates["c1-logmel128"]
           assert c["single_variable"]=="hidden_dim"
-          assert c["frontend"]=="logmel" and c["hidden_dim"]==128
+          assert (c["frontend"],c["hidden_dim"])==("logmel",128)
+          fc=candidates["fc1-pcen128"]
+          assert fc["single_variable"]=="frontend+hidden_dim"
+          assert (fc["frontend"],fc["hidden_dim"])==("pcen-lite",128)
+          op=p["threshold_operating_point"]
+          assert [row["max_negative_fp_rate"] for row in op["calibration_constraints"]]==[0.2,0.1,0.05]
           assert p["authority"]=={
               "diagnostic_only":True,
               "promotion_allowed":False,
