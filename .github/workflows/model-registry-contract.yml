@@ -8,7 +8,7 @@ on:
       - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
-      - ".github/workflows/model-registry-bootstrap.yml"
+      - ".github/workflows/model-promotion.yml"
       - ".gitignore"
   pull_request:
     paths:
@@ -50,5 +50,20 @@ jobs:
           python3 tools/verify_model_registry.py \
             --registry-dir "models/registry/$pinned" \
             --config configs/shipping.xiaowo.json
+      - name: Verify future promotion Git-mirror contract
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          workflow=pathlib.Path(".github/workflows/model-promotion.yml").read_text()
+          assert "pull-requests: write" in workflow
+          assert "Mirror promoted model into Git registry" in workflow
+          assert "tools/materialize_model_registry.py" in workflow
+          assert "tools/verify_model_registry.py" in workflow
+          assert 'registry_branch="model-registry/$MODEL_RELEASE_TAG"' in workflow
+          assert "git push origin" in workflow
+          assert "gh pr create" in workflow
+          print("future model-promotion registry mirror: ok")
+          PY
       - name: Worktree remains clean
         run: git diff --exit-code -- .
