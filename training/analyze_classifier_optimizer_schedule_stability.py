@@ -177,25 +177,21 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
     scheduled = summarize(
         [row["scheduled_target_vs_reference_primary"] for row in ordered]
     )
-    source = config["source_init_stability_evidence"]
+    source = config["source_reproducibility_evidence"]
     rules = config["decision_rules"]
-    tolerance = float(rules["source_baseline_tolerance"])
-    baseline_reproduced = (
-        abs(
-            float(fixed["wake_recall_delta_mean"])
-            - float(source["default_primary_recall_delta_mean"])
-        )
-        <= tolerance
-        and abs(
-            float(fixed["wake_recall_delta_stddev"])
-            - float(source["default_primary_recall_delta_stddev"])
-        )
-        <= tolerance
-        and abs(
-            float(fixed["negative_fp_delta_mean"])
-            - float(source["default_primary_fp_delta_mean"])
-        )
-        <= tolerance
+    sentinels = source["final_state_sentinels"]
+    sentinel_checks = {}
+    for candidate, by_seed in sentinels.items():
+        for raw_seed, expected_sha in by_seed.items():
+            seed = int(raw_seed)
+            actual = rows[seed]["candidates"][candidate]["final_model_state_sha256"]
+            sentinel_checks[f"{candidate}:{seed}"] = {
+                "expected": str(expected_sha),
+                "actual": str(actual),
+                "match": str(actual) == str(expected_sha),
+            }
+    baseline_reproduced = bool(sentinel_checks) and all(
+        row["match"] for row in sentinel_checks.values()
     )
     ratio = (
         None
@@ -230,8 +226,9 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
         "promotion_allowed": False,
         "protected_evidence_used": False,
         "shipping_metric": False,
-        "source_init_stability_evidence": source,
+        "source_reproducibility_evidence": source,
         "baseline_reproduced": baseline_reproduced,
+        "baseline_sentinel_checks": sentinel_checks,
         "fixed_schedule": fixed,
         "warmup_cosine_schedule": scheduled,
         "scheduled_to_fixed_stddev_ratio": ratio,

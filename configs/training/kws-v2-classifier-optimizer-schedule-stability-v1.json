@@ -2,18 +2,7 @@
   "schema_version": 1,
   "policy": "kws-v2-classifier-optimizer-schedule-stability-v1",
   "evidence_scope": "research-only",
-  "source_init_stability_evidence": {
-    "run_id": 35424243735,
-    "exact_head_sha": "9bd92970eb02bf6d2225c771fcac95dcb674cbbe",
-    "evidence_class": "kws-v2-classifier-init-stability-summary-v1",
-    "baseline_reproduced": true,
-    "stability_pass": false,
-    "stable_to_default_stddev_ratio": 1.2671149180714585,
-    "default_primary_recall_delta_mean": 0.503125,
-    "default_primary_recall_delta_stddev": 0.17550151352623714,
-    "default_primary_fp_delta_mean": 0.01875
-  },
-  "hypothesis": "A conservative warmup-plus-cosine AdamW schedule reduces FC1 model-initialization sensitivity while preserving calibration-to-test operating-point gain.",
+  "hypothesis": "On the cross-CPU bit-exact research runtime, a conservative warmup-plus-cosine AdamW schedule reduces FC1 model-seed sensitivity while preserving calibration-to-test operating-point gain.",
   "fixed": {
     "rendered_cache_run_id": 35412153192,
     "sidecar_run_id": 35367960968,
@@ -77,7 +66,6 @@
   "decision_rules": {
     "authority": "pre-registered-optimizer-schedule-stability-v1",
     "primary_operating_point": "strict-10fp",
-    "source_baseline_tolerance": 1e-12,
     "max_stddev_ratio_vs_fixed": 0.65,
     "max_primary_wake_recall_delta_stddev": 0.1,
     "min_primary_wake_recall_delta_mean": 0.15,
@@ -85,12 +73,30 @@
     "min_positive_primary_delta_seeds": 4,
     "pass_next": "paired-architecture-replication-with-stable-schedule-v2",
     "fail_next": "exact-balanced-epoch-sampler-v2",
-    "baseline_drift_next": "fix-optimizer-schedule-baseline-reproduction"
+    "baseline_drift_next": "fix-reproducible-runtime-sentinel-mismatch",
+    "baseline_authority": "exact-final-state-sentinels-from-cross-runner-repro-v1"
   },
   "authority": {
     "diagnostic_only": true,
     "promotion_allowed": false,
     "protected_evidence_used": false,
     "shipping_metric": false
+  },
+  "source_reproducibility_evidence": {
+    "run_id": 35427343767,
+    "exact_head_sha": "c9a6da0ba99a2c20c31e84f0204dacff22af0c99",
+    "evidence_class": "kws-v2-classifier-cross-runner-repro-summary-v1",
+    "reproducibility_pass": true,
+    "cpu_contract": "cross-cpu-compatible-single-thread-v1",
+    "final_state_sentinels": {
+      "b0-logmel64-fixed": {
+        "2027": "05d5e91d3827df745da7f645ccd52b5cd8842a63c6f8a63434fbbea3be2c036a",
+        "7919": "75ac9d3073e2d1f1b0893eb4832717ee5a9f475064d3817852a8321e0ee280cd"
+      },
+      "fc1-pcen128-fixed": {
+        "2027": "c3f25a3a0fda79fc87b7c2bf7ed84c79bf9fcc78cc4077a3f818bed0cc9951b1",
+        "7919": "7a259d04f2bd2b8e69d8494a77bb9f6ef7aca7a6cf0bb98731ec21f390333164"
+      }
+    }
   }
 }

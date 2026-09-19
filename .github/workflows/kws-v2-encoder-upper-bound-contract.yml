@@ -299,8 +299,13 @@ jobs:
           import json, pathlib
           p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json").read_text())
           assert p["policy"]=="kws-v2-classifier-optimizer-schedule-stability-v1"
-          assert p["source_init_stability_evidence"]["run_id"]==35424243735
-          assert p["source_init_stability_evidence"]["stability_pass"] is False
+          source=p["source_reproducibility_evidence"]
+          assert source["run_id"]==35427343767
+          assert source["exact_head_sha"]=="c9a6da0ba99a2c20c31e84f0204dacff22af0c99"
+          assert source["reproducibility_pass"] is True
+          assert source["cpu_contract"]=="cross-cpu-compatible-single-thread-v1"
+          assert set(source["final_state_sentinels"])=={"b0-logmel64-fixed","fc1-pcen128-fixed"}
+          assert set(source["final_state_sentinels"]["b0-logmel64-fixed"])=={"2027","7919"}
           assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
           assert p["fixed"]["sampler_seed"]==1337
           assert p["fixed"]["init_mode"]=="default-pytorch-v1"
@@ -316,6 +321,8 @@ jobs:
           workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
           for seed in p["fixed"]["model_seeds"]:
               assert str(seed) in workflow
+          assert "workflow_dispatch:" in workflow
+          assert "\n  push:" in workflow
           assert "Train paired optimizer/schedule candidates" in workflow
           assert "fc1-pcen128-warmup-cosine" in workflow
           print("optimizer schedule stability contract: ok")
