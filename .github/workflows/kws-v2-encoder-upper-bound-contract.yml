@@ -9,19 +9,19 @@ on:
       - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
       - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
       - "training/analyze_encoder_frontend_replication.py"
-      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
-      - "training/analyze_encoder_frontend_replication.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
-      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
       - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
       - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
+      - "training/analyze_encoder_frontend_replication.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
