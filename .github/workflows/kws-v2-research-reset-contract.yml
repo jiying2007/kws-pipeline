@@ -15,6 +15,7 @@ on:
       - "training/iterate_gru_development.py"
       - "training/iterate_rnn_development.py"
       - "training/research_keyword_classifier.py"
+      - "training/diagnose_float_ctc_confidence.py"
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
@@ -39,6 +40,7 @@ on:
       - "training/iterate_gru_development.py"
       - "training/iterate_rnn_development.py"
       - "training/research_keyword_classifier.py"
+      - "training/diagnose_float_ctc_confidence.py"
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
@@ -206,6 +208,7 @@ jobs:
           tests/test_development_loss_controller.py
           tests/test_research_negative_sidecar.py
           training/research_keyword_classifier.py
+          training/diagnose_float_ctc_confidence.py
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
           tools/build_kws_v2_research_negative_requests.py
