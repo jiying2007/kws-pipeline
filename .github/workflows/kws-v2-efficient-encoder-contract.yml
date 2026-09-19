@@ -6,16 +6,22 @@ on:
       - "research/kws-efficient-encoder-v2"
     paths:
       - "configs/training/kws-v2-efficient-encoder-discovery-v1.json"
+      - "configs/training/kws-v2-efficient-encoder-cross-runner-repro-v1.json"
       - "training/research_keyword_classifier.py"
+      - "training/verify_efficient_encoder_cross_runner_repro.py"
       - "training/analyze_efficient_encoder_discovery.py"
       - ".github/workflows/kws-v2-efficient-encoder-discovery.yml"
+      - ".github/workflows/kws-v2-efficient-encoder-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-efficient-encoder-contract.yml"
   pull_request:
     paths:
       - "configs/training/kws-v2-efficient-encoder-discovery-v1.json"
+      - "configs/training/kws-v2-efficient-encoder-cross-runner-repro-v1.json"
       - "training/research_keyword_classifier.py"
+      - "training/verify_efficient_encoder_cross_runner_repro.py"
       - "training/analyze_efficient_encoder_discovery.py"
       - ".github/workflows/kws-v2-efficient-encoder-discovery.yml"
+      - ".github/workflows/kws-v2-efficient-encoder-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-efficient-encoder-contract.yml"
 
 permissions:
@@ -60,9 +66,19 @@ jobs:
           assert candidates["e40-gru2x40"]["resource"]["current_kwg1_runtime_fit"] is False
           assert p["selection"]["test_metrics_used_for_selection"] is False
           assert p["authority"]["runtime_format_change_allowed"] is False
+          assert p["numerical_contract"]=={
+              "policy":"research-scalar-optimizer-kernels-v2",
+              "adamw_foreach":False,
+              "adamw_fused":False,
+              "grad_clip_foreach":False,
+              "cross_runner_repro_required_before_architecture_decision":True,
+          }
           classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
           assert "StackedClipGRU" in classifier
           assert "stacked-gru-v2" in classifier
+          assert "foreach=False" in classifier
+          assert "fused=False" in classifier
+          assert '"grad_clip_foreach": False' in classifier
           analyzer=pathlib.Path("training/analyze_efficient_encoder_discovery.py").read_text()
           selection_body=analyzer.split("eligible=[",1)[1].split("# Test is reported",1)[0]
           assert '["test"]' not in selection_body
@@ -74,5 +90,28 @@ jobs:
               assert forbidden not in workflow.lower()
           print("efficient encoder discovery contract: ok")
           PY
+      - name: Verify efficient encoder cross-runner contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/verify_efficient_encoder_cross_runner_repro.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-efficient-encoder-cross-runner-repro-v1.json").read_text())
+          assert p["policy"]=="kws-v2-efficient-encoder-cross-runner-repro-v1"
+          assert p["fixed"]["model_seeds"]==[35201,37409]
+          assert p["fixed"]["replicas"]==["a","b"]
+          assert set(p["candidates"])=={"b0-gru64","e40-gru2x40","e48-gru2x48"}
+          assert p["required_kernel_contract"]=={
+              "foreach":False,
+              "fused":False,
+              "grad_clip_foreach":False,
+          }
+          workflow=pathlib.Path(".github/workflows/kws-v2-efficient-encoder-cross-runner-repro.yml").read_text()
+          assert "replica: [a, b]" in workflow
+          assert "model_seed: [35201, 37409]" in workflow
+          assert "Train cross-runner replica" in workflow
+          print("efficient encoder cross-runner contract: ok")
+          PY
+
       - name: Worktree remains clean
         run: git diff --exit-code -- .

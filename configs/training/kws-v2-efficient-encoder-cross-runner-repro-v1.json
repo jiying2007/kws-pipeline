@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-efficient-encoder-cross-runner-repro-v1",
+  "evidence_scope": "research-only",
+  "hypothesis": "Pinning AdamW and gradient-clipping foreach/fused paths removes the remaining cross-runner numerical drift for both single-layer and stacked GRU research architectures.",
+  "fixed": {
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "frontend": "logmel",
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "lr_schedule": "fixed-v1",
+    "init_mode": "default-pytorch-v1",
+    "balance_mode": "equal-class-sampler-v1",
+    "sampler_seed": 1337,
+    "model_seeds": [
+      35201,
+      37409
+    ],
+    "replicas": [
+      "a",
+      "b"
+    ],
+    "qualification_split_consumed": false
+  },
+  "candidates": {
+    "b0-gru64": {
+      "encoder_architecture": "single-gru-v1",
+      "hidden_dim": 64
+    },
+    "e40-gru2x40": {
+      "encoder_architecture": "stacked-gru-v2",
+      "hidden_dim": 40
+    },
+    "e48-gru2x48": {
+      "encoder_architecture": "stacked-gru-v2",
+      "hidden_dim": 48
+    }
+  },
+  "required_kernel_contract": {
+    "foreach": false,
+    "fused": false,
+    "grad_clip_foreach": false
+  },
+  "decision_rules": {
+    "require_initial_state_bit_exact": true,
+    "require_final_state_bit_exact": true,
+    "require_history_bit_exact": true,
+    "require_calibration_bit_exact": true,
+    "require_test_bit_exact": true,
+    "pass_next": "authorize-efficient-encoder-discovery-v1",
+    "fail_next": "isolate-research-optimizer-numerical-kernel-v3"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "runtime_format_change_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

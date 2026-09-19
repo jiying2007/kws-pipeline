@@ -500,7 +500,13 @@ def main() -> int:
         encoder_layers = 2
     initialize_clip_gru(model, args.init_mode, model_seed)
     initial_model_state_sha256 = model_state_sha256(model)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=args.lr,
+        weight_decay=1e-4,
+        foreach=False,
+        fused=False,
+    )
     loss_fn = nn.CrossEntropyLoss()
     history: list[dict] = []
     for epoch in range(args.epochs):
@@ -523,7 +529,11 @@ def main() -> int:
             loss = loss_fn(logits, labels)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-            nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+            nn.utils.clip_grad_norm_(
+                model.parameters(),
+                5.0,
+                foreach=False,
+            )
             optimizer.step()
             losses.append(float(loss.detach()))
         history.append(
@@ -566,6 +576,11 @@ def main() -> int:
         "seed_policy": "independent-model-sampler-v1",
         "init_mode": args.init_mode,
         "optimizer": "AdamW",
+        "optimizer_kernel_contract": {
+            "foreach": False,
+            "fused": False,
+            "grad_clip_foreach": False,
+        },
         "base_learning_rate": args.lr,
         "lr_schedule": args.lr_schedule,
         "warmup_epochs": args.warmup_epochs,

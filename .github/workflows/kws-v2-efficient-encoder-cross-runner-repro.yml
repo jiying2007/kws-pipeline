@@ -1,0 +1,141 @@
+name: kws-v2-efficient-encoder-cross-runner-repro
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-efficient-encoder-v2"
+    paths:
+      - "configs/training/kws-v2-efficient-encoder-cross-runner-repro-v1.json"
+      - "training/research_keyword_classifier.py"
+      - "training/verify_efficient_encoder_cross_runner_repro.py"
+      - ".github/workflows/kws-v2-efficient-encoder-cross-runner-repro.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-efficient-encoder-cross-runner-repro-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replica:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [b0-gru64, e40-gru2x40, e48-gru2x48]
+        model_seed: [35201, 37409]
+        replica: [a, b]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Train cross-runner replica
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          MODEL_SEED: ${{ matrix.model_seed }}
+          REPLICA: ${{ matrix.replica }}
+        run: |
+          set -euo pipefail
+          case "$CANDIDATE" in
+            b0-gru64) architecture=single-gru-v1; hidden=64 ;;
+            e40-gru2x40) architecture=stacked-gru-v2; hidden=40 ;;
+            e48-gru2x48) architecture=stacked-gru-v2; hidden=48 ;;
+            *) exit 2 ;;
+          esac
+          out="$RUNNER_TEMP/repro/$CANDIDATE/$MODEL_SEED/$REPLICA"
+          mkdir -p "$out"
+          .venv/bin/python training/research_keyword_classifier.py \
+            --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv" \
+            --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv" \
+            --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv" \
+            --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv" \
+            --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv" \
+            --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv" \
+            --tokens keywords/tokens.example.txt \
+            --keywords keywords/zh_cn_example.tsv \
+            --frontend logmel \
+            --feature-dim 32 \
+            --encoder-architecture "$architecture" \
+            --hidden-dim "$hidden" \
+            --epochs 24 \
+            --batch-size 16 \
+            --lr 0.001 \
+            --lr-schedule fixed-v1 \
+            --model-seed "$MODEL_SEED" \
+            --sampler-seed 1337 \
+            --init-mode default-pytorch-v1 \
+            --balance-mode equal-class-sampler-v1 \
+            --output "$out/classifier.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          out=pathlib.Path(os.environ["RUNNER_TEMP"])/"repro"/os.environ["CANDIDATE"]/os.environ["MODEL_SEED"]/os.environ["REPLICA"]
+          identity={
+              "candidate":os.environ["CANDIDATE"],
+              "model_seed":int(os.environ["MODEL_SEED"]),
+              "replica":os.environ["REPLICA"],
+          }
+          (out/"identity.json").write_text(json.dumps(identity,indent=2,sort_keys=True)+"\n")
+          PY
+      - name: Upload replica evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-efficient-repro-${{ matrix.candidate }}-${{ matrix.model_seed }}-${{ matrix.replica }}-${{ github.sha }}
+          path: ${{ runner.temp }}/repro/${{ matrix.candidate }}/${{ matrix.model_seed }}/${{ matrix.replica }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: replica
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Download replica evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: kws-v2-efficient-repro-*-${{ github.sha }}
+          path: ${{ runner.temp }}/repro-evidence
+          merge-multiple: false
+      - name: Verify bit-exact efficient encoder training
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/repro-summary"
+          python3 training/verify_efficient_encoder_cross_runner_repro.py \
+            --config configs/training/kws-v2-efficient-encoder-cross-runner-repro-v1.json \
+            --root "$RUNNER_TEMP/repro-evidence" \
+            --output "$RUNNER_TEMP/repro-summary/summary.json"
+      - name: Upload reproducibility summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-efficient-encoder-cross-runner-repro-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/repro-summary/
+          if-no-files-found: error
+          retention-days: 30

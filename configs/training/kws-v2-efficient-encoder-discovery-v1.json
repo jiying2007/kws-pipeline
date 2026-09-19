@@ -121,5 +121,20 @@
     "runtime_format_change_allowed": false,
     "protected_evidence_used": false,
     "shipping_metric": false
+  },
+  "numerical_contract": {
+    "policy": "research-scalar-optimizer-kernels-v2",
+    "adamw_foreach": false,
+    "adamw_fused": false,
+    "grad_clip_foreach": false,
+    "cross_runner_repro_required_before_architecture_decision": true
+  },
+  "source_pre_scalar_discovery": {
+    "run_id": 35432871544,
+    "exact_head_sha": "468e388599872d7aa59b0e4323bead0b914d26ae",
+    "evidence_class": "kws-v2-efficient-encoder-discovery-summary-v1",
+    "discovery_pass": false,
+    "selected_candidate": null,
+    "note": "diagnostic-only because identical initial model SHA diverged across independent runs before scalar optimizer kernels were pinned"
   }
 }
