@@ -88,6 +88,15 @@ def main() -> int:
         # So is the ARMv7-hard-float build of the same sources.
         assert run(root, OBSERVED_ARM) == 0, "the ARMv7 dependency set must satisfy the contract"
 
+        # A build that emits no mem* call at all must also pass. clang at -O2
+        # inlines fixed-size memory ops rather than calling them, so its archive
+        # references none; rejecting it would be a false failure on a toolchain
+        # the gate is supposed to protect equally. This is the regression test
+        # for the sentinel, not a relaxation of the allowlist.
+        without_mem = [symbol for symbol in OBSERVED if not symbol.startswith("mem")]
+        assert without_mem, "the fixture must keep non-mem symbols"
+        assert run(root, without_mem) == 0, "a build without mem* must satisfy the contract"
+
         # Every enumerated category must be rejected. Without this the checker
         # could be broken into always passing and the run above would not notice.
         for category, samples in sorted(DENIED_SAMPLES.items()):
@@ -96,15 +105,19 @@ def main() -> int:
                 assert code == 1, f"{category}: {symbol} must be rejected, got exit {code}"
 
         # A rejected symbol must fail even when it is the only dependency.
-        assert run(root, ["memcpy", "malloc"]) == 1
+        assert run(root, ["kws_frontend_init", "malloc"]) == 1
 
         # An empty or unreadable listing is not a pass: a vacuous result must be
         # an error rather than a green check.
         assert run(root, []) == 2, "an empty symbol set must not pass"
 
-        # Neither is an archive that references no memory primitive at all --
-        # that is a wrong input, not a clean library.
-        assert run(root, ["cosf", "sqrtf"]) == 2, "a listing without mem* must not pass"
+        # Neither is an archive that references none of the project's own
+        # symbols -- that is a wrong input, not a clean library. The sentinel is
+        # deliberately an internal symbol rather than a libc one: whether mem*
+        # calls are emitted is a code-generation detail, so a clang build that
+        # inlines them must not be mistaken for the wrong archive.
+        assert run(root, ["cosf", "sqrtf"]) == 2, "a listing without kws_* must not pass"
+        assert run(root, ["memcpy", "memset", "sqrtf"]) == 2, "libc-only is still not this library"
 
         # And a missing library must be an error, not a silent skip.
         assert (

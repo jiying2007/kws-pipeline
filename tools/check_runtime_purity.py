@@ -73,10 +73,17 @@ NM = "nm"
 # nm prints undefined symbols with a U (or a lowercase w/v for weak ones) in the
 # type column, under a header line naming the archive member.
 NM_LINE = re.compile(r"^\s*[Uwv]\s+(\S+)\s*$")
-# Anti-vacuity sentinel: the real-time library must reference at least one of
-# these. An archive that references none of them is the wrong input, not a
+# Anti-vacuity sentinel: the archive must reference at least one symbol of the
+# project's own. An archive that references none is the wrong input, not a
 # clean result, and must not be reported as a pass.
-EXPECTED_PRIMITIVES = ("memcpy", "memmove", "memset")
+#
+# The sentinel is an internal symbol rather than a libc one on purpose. An
+# earlier version required memcpy/memmove/memset, which held under gcc but not
+# under clang: at -O2 clang inlines fixed-size memory ops instead of calling
+# them, so the archive legitimately references no mem* at all and the sentinel
+# rejected a correct build. Whether a call is emitted is a code-generation
+# detail, not part of the runtime contract; whether the library calls into its
+# own translation units is.
 
 
 def allowed(symbol: str) -> bool:
@@ -135,14 +142,18 @@ def main() -> int:
     symbols = read_symbols(args.library, args.nm_output)
     if not symbols:
         raise ValueError("no undefined symbols parsed: refusing to pass vacuously")
-    if not set(EXPECTED_PRIMITIVES) & set(symbols):
+    if not any(symbol.startswith(INTERNAL_PREFIX) for symbol in symbols):
         raise ValueError(
-            "none of " + "/".join(EXPECTED_PRIMITIVES) + " is undefined: wrong archive?"
+            "no " + INTERNAL_PREFIX + "* symbol is undefined: wrong archive?"
         )
 
     violations = [symbol for symbol in symbols if not allowed(symbol)]
     if violations:
+        # Print the whole set, not just the offenders: on an unseen toolchain
+        # the useful question is usually "what else is in here", and a bare
+        # violation list makes that a second round trip.
         print("runtime purity violations: " + ", ".join(violations), file=sys.stderr)
+        print("all undefined symbols: " + ", ".join(symbols), file=sys.stderr)
         return 1
     print(f"check_runtime_purity: ok undefined_symbols={len(symbols)}")
     return 0
