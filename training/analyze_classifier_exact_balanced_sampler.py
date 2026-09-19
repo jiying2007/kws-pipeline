@@ -209,7 +209,6 @@ def aggregate(config: dict, root: pathlib.Path) -> dict:
         "seed_results": {str(seed): rows[seed] for seed in expected},
         "next_experiment": next_experiment,
     }
-    write_json(args.output.resolve(), result)
     return result
 
 
@@ -229,9 +228,9 @@ def main() -> int:
     config = load_json(args.config)
     if args.mode == "trial":
         result = trial(config, int(args.model_seed), args.root.resolve())
-        write_json(args.output.resolve(), result)
     else:
         result = aggregate(config, args.root.resolve())
+    write_json(args.output.resolve(), result)
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     return 0
 
