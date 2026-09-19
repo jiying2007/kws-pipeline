@@ -9,9 +9,12 @@ on:
       - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
       - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
       - "training/analyze_encoder_frontend_replication.py"
+      - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
+      - "training/analyze_classifier_seed_variance.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
+      - ".github/workflows/kws-v2-classifier-seed-variance.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -211,6 +214,36 @@ jobs:
           assert "c1-logmel128 logmel 128" in workflow
           assert "fc1-pcen128 pcen-lite 128" in workflow
           print("paired replication contract: ok")
+          PY
+
+      - name: Verify random-source variance contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/research_keyword_classifier.py training/analyze_classifier_seed_variance.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-seed-variance-decomposition-v1"
+          assert p["source_replication_evidence"]["run_id"]==35423717879
+          assert p["source_replication_evidence"]["replication_pass"] is False
+          assert p["axes"]["model-init"]["fixed_sampler_seed"]==1337
+          assert p["axes"]["sampler-path"]["fixed_model_seed"]==1337
+          assert p["axes"]["model-init"]["values"]==p["axes"]["sampler-path"]["values"]==[2027,4099,7919,12011,16001]
+          rules=p["decision_rules"]
+          assert rules["dominance_ratio"]==1.5
+          assert rules["material_wake_recall_stddev"]==0.05
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert '--model-seed' in classifier
+          assert '--sampler-seed' in classifier
+          assert '"initial_model_state_sha256"' in classifier
+          for name in (
+              ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text
+              assert "\n  push:" not in text
+          print("random-source variance contract: ok")
           PY
 
       - name: Worktree remains clean

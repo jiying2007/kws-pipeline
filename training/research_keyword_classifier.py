@@ -243,6 +243,8 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument("--model-seed", type=int)
+    parser.add_argument("--sampler-seed", type=int)
     parser.add_argument(
         "--thresholds",
         nargs="+",
@@ -271,8 +273,10 @@ def main() -> int:
     ):
         parser.error("--thresholds must contain unique finite values in (0,1)")
 
-    random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    model_seed = args.seed if args.model_seed is None else int(args.model_seed)
+    sampler_seed = args.seed if args.sampler_seed is None else int(args.sampler_seed)
+    random.seed(model_seed)
+    torch.manual_seed(model_seed)
     torch.use_deterministic_algorithms(True)
     token_map = load_tokens(args.tokens)
     keyword_sequences, _, _ = load_keyword_operating_points(args.keywords, token_map)
@@ -282,7 +286,7 @@ def main() -> int:
     cal = ClipDataset(args.calibration_manifest, keyword_sequences, args.feature_dim, args.frontend)
     test = ClipDataset(args.test_manifest, keyword_sequences, args.feature_dim, args.frontend)
 
-    generator = torch.Generator().manual_seed(args.seed)
+    generator = torch.Generator().manual_seed(sampler_seed)
     class_counts = [train.labels.count(index) for index in range(classes)]
     if any(count <= 0 for count in class_counts):
         raise ValueError(f"classifier train split is missing class coverage: {class_counts}")
@@ -312,6 +316,7 @@ def main() -> int:
     test_loader = DataLoader(test, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
 
     model = ClipGRU(args.feature_dim, args.hidden_dim, classes)
+    initial_model_state_sha256 = model_state_sha256(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     loss_fn = nn.CrossEntropyLoss()
     history: list[dict] = []
@@ -353,9 +358,13 @@ def main() -> int:
         "hidden_dim": args.hidden_dim,
         "classes": classes,
         "seed": args.seed,
+        "model_seed": model_seed,
+        "sampler_seed": sampler_seed,
+        "seed_policy": "independent-model-sampler-v1",
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
+        "initial_model_state_sha256": initial_model_state_sha256,
         "model_state_sha256": model_state_sha256(model),
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "training_environment": environment,

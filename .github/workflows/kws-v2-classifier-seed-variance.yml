@@ -1,45 +1,46 @@
-name: kws-v2-encoder-frontend-paired-replication
+name: kws-v2-classifier-seed-variance
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
+      - "training/research_keyword_classifier.py"
+      - "training/analyze_classifier_seed_variance.py"
+      - ".github/workflows/kws-v2-classifier-seed-variance.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-encoder-frontend-paired-replication-${{ github.ref }}
+  group: kws-v2-classifier-seed-variance-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  replicate:
+  trial:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        seed: [2027, 4099, 7919, 12011, 16001]
+        include:
+          - {axis: model-init, variable_seed: 2027, model_seed: 2027, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 4099, model_seed: 4099, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 7919, model_seed: 7919, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 12011, model_seed: 12011, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 16001, model_seed: 16001, sampler_seed: 1337}
+          - {axis: sampler-path, variable_seed: 2027, model_seed: 1337, sampler_seed: 2027}
+          - {axis: sampler-path, variable_seed: 4099, model_seed: 1337, sampler_seed: 4099}
+          - {axis: sampler-path, variable_seed: 7919, model_seed: 1337, sampler_seed: 7919}
+          - {axis: sampler-path, variable_seed: 12011, model_seed: 1337, sampler_seed: 12011}
+          - {axis: sampler-path, variable_seed: 16001, model_seed: 1337, sampler_seed: 16001}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
-      - name: Verify pre-registered seed
-        env:
-          SEED: ${{ matrix.seed }}
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json, os, pathlib
-          cfg=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json").read_text())
-          seed=int(os.environ["SEED"])
-          assert seed in cfg["seeds"]
-          assert seed != 1337
-          assert cfg["replication_rules"]["discovery_seed_excluded"] is True
-          assert cfg["authority"]["promotion_allowed"] is False
-          assert cfg["fixed"]["qualification_split_consumed"] is False
-          print(f"paired replication seed {seed}: pre-registered")
-          PY
 
       - name: Download frozen rendered research dataset
         uses: actions/download-artifact@v4
@@ -67,12 +68,15 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Train paired candidates on one runner
+      - name: Run paired variance trial
         env:
-          SEED: ${{ matrix.seed }}
+          AXIS: ${{ matrix.axis }}
+          VARIABLE_SEED: ${{ matrix.variable_seed }}
+          MODEL_SEED: ${{ matrix.model_seed }}
+          SAMPLER_SEED: ${{ matrix.sampler_seed }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/paired/$SEED"
+          root="$RUNNER_TEMP/variance/$AXIS-$VARIABLE_SEED"
           mkdir -p "$root"
           while read -r candidate frontend hidden_dim; do
             out="$root/$candidate"
@@ -92,61 +96,57 @@ jobs:
               --epochs 24 \
               --batch-size 16 \
               --lr 0.001 \
-              --seed "$SEED" \
+              --seed 1337 \
+              --model-seed "$MODEL_SEED" \
+              --sampler-seed "$SAMPLER_SEED" \
               --balance-mode equal-class-sampler-v1 \
               --output "$out/classifier.json"
           done <<'EOF'
           b0-logmel64 logmel 64
-          c1-logmel128 logmel 128
           fc1-pcen128 pcen-lite 128
           EOF
+          .venv/bin/python training/analyze_classifier_seed_variance.py trial \
+            --config configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json \
+            --axis "$AXIS" \
+            --variable-seed "$VARIABLE_SEED" \
+            --root "$root" \
+            --output "$root/trial-evidence.json"
 
-      - name: Build paired seed evidence
-        env:
-          SEED: ${{ matrix.seed }}
-        run: |
-          set -euo pipefail
-          .venv/bin/python training/analyze_encoder_frontend_replication.py seed \
-            --config configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json \
-            --seed "$SEED" \
-            --root "$RUNNER_TEMP/paired/$SEED" \
-            --output "$RUNNER_TEMP/paired/$SEED/seed-evidence.json"
-
-      - name: Upload paired seed evidence
+      - name: Upload variance trial
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-paired-seed-${{ matrix.seed }}-${{ github.sha }}
-          path: ${{ runner.temp }}/paired/${{ matrix.seed }}/
+          name: kws-v2-seed-variance-${{ matrix.axis }}-${{ matrix.variable_seed }}-${{ github.sha }}
+          path: ${{ runner.temp }}/variance/${{ matrix.axis }}-${{ matrix.variable_seed }}/
           if-no-files-found: error
           retention-days: 30
 
   aggregate:
-    needs: replicate
+    needs: trial
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
-      - name: Download paired seed evidence
+      - name: Download variance evidence
         uses: actions/download-artifact@v4
         with:
-          pattern: kws-v2-paired-seed-*-${{ github.sha }}
-          path: ${{ runner.temp }}/paired-evidence
+          pattern: kws-v2-seed-variance-*-${{ github.sha }}
+          path: ${{ runner.temp }}/variance-evidence
           merge-multiple: false
 
-      - name: Aggregate pre-registered paired replication
+      - name: Aggregate variance decomposition
         run: |
           set -euo pipefail
-          python3 training/analyze_encoder_frontend_replication.py aggregate \
-            --config configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json \
-            --root "$RUNNER_TEMP/paired-evidence" \
-            --output "$RUNNER_TEMP/paired-summary/summary.json"
+          python3 training/analyze_classifier_seed_variance.py aggregate \
+            --config configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json \
+            --root "$RUNNER_TEMP/variance-evidence" \
+            --output "$RUNNER_TEMP/variance-summary/summary.json"
 
-      - name: Upload paired replication summary
+      - name: Upload variance summary
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-encoder-frontend-paired-replication-summary-${{ github.sha }}
-          path: ${{ runner.temp }}/paired-summary/
+          name: kws-v2-classifier-seed-variance-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/variance-summary/
           if-no-files-found: error
           retention-days: 30

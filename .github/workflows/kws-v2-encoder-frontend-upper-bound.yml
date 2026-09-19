@@ -2,13 +2,6 @@ name: kws-v2-encoder-frontend-upper-bound
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
-      - "training/research_keyword_classifier.py"
-      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
 
 permissions:
   actions: read
