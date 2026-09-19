@@ -248,6 +248,25 @@ def main() -> int:
         logs / "export.log",
     )
 
+    threshold_config = work / "threshold-diagnostic-config.json"
+    threshold_config.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "evidence_class": "kws-v2-research-threshold-gates-v1",
+                "domain_gates": {
+                    "max_frr": 0.0,
+                    "max_far_per_hour": 0.0,
+                    "max_p95_latency_ms": 800.0,
+                    "max_far_frr": 0.0,
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     curve_path = work / "threshold-operating-curve.json"
     run(
         [
@@ -262,7 +281,7 @@ def main() -> int:
             "--keywords",
             str(keywords),
             "--config",
-            str(config_path),
+            str(threshold_config),
             "--calibration-references",
             str(dataset / "calibration.references.jsonl"),
             "--test-references",
@@ -310,6 +329,7 @@ def main() -> int:
         "representation_dataset_receipt_sha256": sha256_file(receipt_path),
         "checkpoint_sha256": sha256_file(checkpoint),
         "model_sha256": sha256_file(exported),
+        "threshold_diagnostic_config_sha256": sha256_file(threshold_config),
         "vocab_size": int(receipt["target_vocab_size"]),
         "model": config["model"],
         "train": config["train"],
