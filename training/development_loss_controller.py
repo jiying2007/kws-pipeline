@@ -32,6 +32,12 @@ def validate_controller_config(raw: dict) -> str:
     if mode not in SIGNAL_MODES:
         raise ValueError(f"unsupported loss controller signal_mode: {mode}")
     if mode == "normalized-rates-v1":
+        initial = finite(raw.get("wake_example_weight_initial"), "wake_example_weight_initial")
+        low = finite(raw.get("wake_example_weight_min"), "wake_example_weight_min")
+        high = finite(raw.get("wake_example_weight_max"), "wake_example_weight_max")
+        step = finite(raw.get("wake_example_weight_step"), "wake_example_weight_step")
+        if not 0.0 < low <= initial <= high or step <= 0.0:
+            raise ValueError("wake_example_weight controller bounds are invalid")
         frr_scale = finite(raw.get("normalization_frr"), "normalization_frr")
         far_scale = finite(
             raw.get("normalization_far_per_hour"),
@@ -50,6 +56,7 @@ def initial_controller(policy: dict) -> dict:
     mode = validate_controller_config(raw)
     return {
         "positive_example_weight": float(raw["positive_example_weight_initial"]),
+        "wake_example_weight": float(raw.get("wake_example_weight_initial", 1.0)),
         "ordered_token_loss_weight": float(raw["ordered_token_loss_weight_initial"]),
         "failure_replay_repeat": 0,
         "controller_signal_mode": mode,
@@ -70,8 +77,10 @@ def next_controller(
     raw = policy["loss_controller"]
     mode = validate_controller_config(raw)
     positive = float(current["positive_example_weight"])
+    wake = float(current.get("wake_example_weight", raw.get("wake_example_weight_initial", 1.0)))
     ordered = float(current["ordered_token_loss_weight"])
     p_step = float(raw["positive_example_weight_step"])
+    w_step = float(raw.get("wake_example_weight_step", 0.0))
     o_step = float(raw["ordered_token_loss_weight_step"])
 
     severity = 0.0
@@ -92,11 +101,11 @@ def next_controller(
         far_pressure = far_value / far_scale
         severity = max(frr_pressure, far_pressure)
         if frr_pressure > far_pressure * (1.0 + deadband):
-            positive += p_step
+            wake += w_step
             ordered -= 0.5 * o_step
             decision = "recall"
         elif far_pressure > frr_pressure * (1.0 + deadband):
-            positive -= p_step
+            wake -= w_step
             ordered += o_step
             decision = "precision"
     else:
@@ -117,6 +126,12 @@ def next_controller(
         float(raw["positive_example_weight_min"]),
         float(raw["positive_example_weight_max"]),
     )
+    if mode == "normalized-rates-v1":
+        wake = clamp(
+            wake,
+            float(raw["wake_example_weight_min"]),
+            float(raw["wake_example_weight_max"]),
+        )
     ordered = clamp(
         ordered,
         float(raw["ordered_token_loss_weight_min"]),
@@ -147,6 +162,7 @@ def next_controller(
 
     return {
         "positive_example_weight": positive,
+        "wake_example_weight": wake,
         "ordered_token_loss_weight": ordered,
         "failure_replay_repeat": repeat,
         "controller_signal_mode": mode,
