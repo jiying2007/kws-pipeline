@@ -82,6 +82,15 @@ class ResearchRenderedCacheTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = pathlib.Path(temp)
             source = self.build_source(root)
+            # Simulate a downloaded GitHub artifact whose manifests still
+            # contain the producing runner's now-stale absolute prefix.
+            train_wav = source / "clips" / "train" / "000.wav"
+            (source / "train.tsv").write_text(
+                f"/stale/runner/work/_temp/research-result/dataset/clips/train/000.wav\t1 2 3 4\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(train_wav.is_file())
+
             output = root / "portable"
             subprocess.run(
                 [
