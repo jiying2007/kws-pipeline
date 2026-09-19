@@ -1,0 +1,58 @@
+name: kws-landing-status
+
+on:
+  push:
+    branches: [main, "governance/kws-landing-status-v1"]
+    paths:
+      - "configs/shipping.xiaowo.json"
+      - "configs/training/kws-v2-efficient-encoder-closure-v1.json"
+      - "models/registry/**"
+      - "tools/kws_landing_status.py"
+      - "tools/verify_model_registry.py"
+      - "commercial/real-human-qualification.policy.json"
+      - "commercial/target-qualification.policy.json"
+      - ".github/workflows/dataset-driven-iteration.yml"
+      - ".github/workflows/real-human-qualification.yml"
+      - ".github/workflows/kws-landing-status.yml"
+  pull_request:
+    paths:
+      - "configs/shipping.xiaowo.json"
+      - "configs/training/kws-v2-efficient-encoder-closure-v1.json"
+      - "models/registry/**"
+      - "tools/kws_landing_status.py"
+      - "tools/verify_model_registry.py"
+      - "commercial/real-human-qualification.policy.json"
+      - "commercial/target-qualification.policy.json"
+      - ".github/workflows/dataset-driven-iteration.yml"
+      - ".github/workflows/real-human-qualification.yml"
+      - ".github/workflows/kws-landing-status.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify pinned model registry
+        run: |
+          set -euo pipefail
+          tag="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
+          python3 tools/verify_model_registry.py \
+            --registry-dir "models/registry/$tag" \
+            --config configs/shipping.xiaowo.json
+      - name: Build and verify product landing status
+        run: |
+          set -euo pipefail
+          python3 tools/kws_landing_status.py \
+            --verify \
+            --output "$RUNNER_TEMP/kws-landing-status.json"
+          cat "$RUNNER_TEMP/kws-landing-status.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Python syntax
+        run: python3 -m py_compile tools/kws_landing_status.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
