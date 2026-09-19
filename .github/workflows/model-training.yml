@@ -65,13 +65,19 @@ jobs:
           set -euo pipefail
           release_tag="$(jq -r '.release_tag' "$KWS_PRODUCT_BASE_CONTRACT")"
           release_target="$(jq -r '.source_repro_head_sha' "$KWS_PRODUCT_BASE_CONTRACT")"
+          release_id="$(jq -r '.release_id' "$KWS_PRODUCT_BASE_CONTRACT")"
           archive="$(jq -r '.release_archive' "$KWS_PRODUCT_BASE_CONTRACT")"
+          archive_sha="$(jq -r '.release_archive_sha256' "$KWS_PRODUCT_BASE_CONTRACT")"
           rm -rf .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
           mkdir -p .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag" > .generated/product-speech-like-release/release.json
-          jq -e --arg target "$release_target" '
-            .draft == false and .prerelease == false and .immutable == true
+          jq -e --arg target "$release_target" --argjson release_id "$release_id" '
+            .id == $release_id
+            and .draft == false and .prerelease == false and .immutable == true
             and .target_commitish == $target
+          ' .generated/product-speech-like-release/release.json >/dev/null
+          jq -e --arg name "$archive" --arg digest "sha256:$archive_sha" '
+            [.assets[] | select(.name == $name and .digest == $digest)] | length == 1
           ' .generated/product-speech-like-release/release.json >/dev/null
           gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
           (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
@@ -159,13 +165,19 @@ jobs:
           set -euo pipefail
           release_tag="$(jq -r '.release_tag' "$KWS_PRODUCT_BASE_CONTRACT")"
           release_target="$(jq -r '.source_repro_head_sha' "$KWS_PRODUCT_BASE_CONTRACT")"
+          release_id="$(jq -r '.release_id' "$KWS_PRODUCT_BASE_CONTRACT")"
           archive="$(jq -r '.release_archive' "$KWS_PRODUCT_BASE_CONTRACT")"
+          archive_sha="$(jq -r '.release_archive_sha256' "$KWS_PRODUCT_BASE_CONTRACT")"
           rm -rf .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
           mkdir -p .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag" > .generated/product-speech-like-release/release.json
-          jq -e --arg target "$release_target" '
-            .draft == false and .prerelease == false and .immutable == true
+          jq -e --arg target "$release_target" --argjson release_id "$release_id" '
+            .id == $release_id
+            and .draft == false and .prerelease == false and .immutable == true
             and .target_commitish == $target
+          ' .generated/product-speech-like-release/release.json >/dev/null
+          jq -e --arg name "$archive" --arg digest "sha256:$archive_sha" '
+            [.assets[] | select(.name == $name and .digest == $digest)] | length == 1
           ' .generated/product-speech-like-release/release.json >/dev/null
           gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
           (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
