@@ -483,6 +483,9 @@ jobs:
           assert p["candidates"]["fc1-pcen128"]["hidden_dim"]==128
           assert p["source_multistart_evidence"]["run_id"]==35428804016
           assert p["source_multistart_evidence"]["multistart_pass"] is False
+          assert p["source_runtime_fit_pcen64_evidence"]["run_id"]==35429252239
+          assert p["source_runtime_fit_pcen64_evidence"]["multistart_pass"] is False
+          assert p["decision_rules"]["runtime_mismatch_next"]=="efficient-encoder-architecture-v2"
           board=p["target_board_evidence"]
           assert board["bound"] is False
           assert board["required_for_shipping"] is True
@@ -505,6 +508,14 @@ jobs:
           assert p["source_fc1_multistart_evidence"]["multistart_pass"] is False
           assert p["source_architecture_fit"]["fc1_static_runtime_fit"] is False
           assert p["source_architecture_fit"]["f1_static_runtime_fit"] is True
+          result=p["source_multistart_result"]
+          assert result["run_id"]==35429252239
+          assert result["exact_head_sha"]=="438c7de80a91d6b75238e0685aca6352dde08436"
+          assert result["primary_directional_passes"]==1
+          assert result["secondary_directional_passes"]==0
+          assert result["absolute_strong_passes"]==0
+          assert result["multistart_pass"] is False
+          assert result["next_experiment"]=="efficient-encoder-architecture-v2"
           assert p["fixed"]["starts_per_architecture"]==3
           assert p["fixed"]["prior_multistart_seeds_reused"] is False
           seeds=[seed for values in p["cohorts"].values() for seed in values]
@@ -524,6 +535,7 @@ jobs:
           assert rules["min_secondary_directional_passes"]==3
           assert rules["pass_next"]=="runtime-fit-pcen64-ctc-objective-confirmation-v1"
           workflow=pathlib.Path(".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml").read_text()
+          assert "workflow_dispatch:" in workflow and "\n  push:" not in workflow
           for cohort in p["cohorts"]:
               assert cohort in workflow
           assert "Train runtime-fit PCEN64 multi-start candidates" in workflow

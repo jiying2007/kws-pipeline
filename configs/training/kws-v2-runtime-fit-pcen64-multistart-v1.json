@@ -120,5 +120,20 @@
     "promotion_allowed": false,
     "protected_evidence_used": false,
     "shipping_metric": false
+  },
+  "source_multistart_result": {
+    "run_id": 35429252239,
+    "exact_head_sha": "438c7de80a91d6b75238e0685aca6352dde08436",
+    "evidence_class": "kws-v2-classifier-multistart-summary-v1",
+    "reference_architecture": "b0-logmel64",
+    "target_architecture": "f1-pcen64",
+    "primary_directional_passes": 1,
+    "secondary_directional_passes": 0,
+    "absolute_strong_passes": 0,
+    "selected_target_primary_test_wake_recall_mean": 0.6875,
+    "selected_target_primary_test_wake_recall_stddev": 0.08326820371546392,
+    "selected_target_primary_test_negative_fp_mean": 0.09375,
+    "multistart_pass": false,
+    "next_experiment": "efficient-encoder-architecture-v2"
   }
 }

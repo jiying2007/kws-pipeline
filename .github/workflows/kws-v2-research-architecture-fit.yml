@@ -50,7 +50,7 @@ jobs:
           assert t["static_runtime_fit"] is False
           assert t["shipping_candidate_allowed"] is False
           assert p["research_target_static_runtime_fit"] is False
-          assert p["next_action"]=="runtime-fit-pcen64-multistart-confirmation-v1"
+          assert p["next_action"]=="efficient-encoder-architecture-v2"
           assert p["hosted_timing_is_shipping_evidence"] is False
           print("research architecture-fit contract: ok")
           PY

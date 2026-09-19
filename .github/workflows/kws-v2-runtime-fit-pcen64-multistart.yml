@@ -2,13 +2,6 @@ name: kws-v2-runtime-fit-pcen64-multistart
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json"
-      - "training/analyze_classifier_multistart_selection.py"
-      - ".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml"
 
 permissions:
   actions: read

@@ -50,7 +50,7 @@
   "decision_rules": {
     "research_target": "fc1-pcen128",
     "runtime_fit_next": "target-board-budget-and-measurement-binding",
-    "runtime_mismatch_next": "runtime-fit-pcen64-multistart-confirmation-v1",
+    "runtime_mismatch_next": "efficient-encoder-architecture-v2",
     "shipping_evidence_missing_next": "bind-approved-target-resource-budget"
   },
   "authority": {
@@ -69,5 +69,16 @@
     "selected_target_primary_test_wake_recall_mean": 0.834375,
     "selected_target_primary_test_wake_recall_stddev": 0.04485218779502289,
     "multistart_pass": false
+  },
+  "source_runtime_fit_pcen64_evidence": {
+    "run_id": 35429252239,
+    "exact_head_sha": "438c7de80a91d6b75238e0685aca6352dde08436",
+    "multistart_pass": false,
+    "primary_directional_passes": 1,
+    "secondary_directional_passes": 0,
+    "absolute_strong_passes": 0,
+    "selected_target_primary_test_wake_recall_mean": 0.6875,
+    "selected_target_primary_test_wake_recall_stddev": 0.08326820371546392,
+    "selected_target_primary_test_negative_fp_mean": 0.09375
   }
 }

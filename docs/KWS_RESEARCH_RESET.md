@@ -375,3 +375,37 @@ protected path, including:
 Research evidence informs what to build next. It never substitutes for those
 shipping gates.
 
+### Runtime-fit PCEN64 confirmation result
+
+The follow-up runtime-fit experiment is closed.
+
+Run `35429252239` used five new three-start cohorts that did not reuse the
+previous multistart seeds. Both arms stayed at GRU64; the only architecture-side
+difference was logmel versus PCEN-lite. Start selection remained calibration
+only.
+
+The pre-registered result was negative:
+
+- primary directional passes: `1 / 5` (required `4 / 5`);
+- secondary directional passes: `0 / 5` (required `3 / 5`);
+- absolute-strong passes: `0 / 5`;
+- selected PCEN64 strict-10 test wake recall mean: `0.6875`;
+- population standard deviation: `0.083268`;
+- selected strict-10 test negative FP mean: `0.09375`.
+
+Therefore PCEN-lite is not a reliable drop-in recovery for the existing GRU64
+capacity. The gate is not relaxed after observing the result.
+
+At this point both low-risk explanations are closed:
+
+1. more capacity helps in the direct-classifier upper bound, but GRU128 is
+   outside the current runtime/export hidden-dimension contract; and
+2. changing only the frontend while preserving GRU64 does not reproduce that
+   gain.
+
+The authorized next line is `efficient-encoder-architecture-v2`. It should be a
+separate research change set with an explicit resource envelope, fresh seeds and
+the same calibration-only/test-after-selection discipline. New runtime/model
+format work is not authorized until an efficient research architecture first
+demonstrates a repeatable gain.
+
