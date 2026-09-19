@@ -86,6 +86,17 @@ def main() -> int:
         raise ValueError(
             f"registry file-set mismatch: actual={sorted(actual)} expected={sorted(expected)}"
         )
+    product_lineage = {
+        "xiaowo-effective-training-config.json",
+        "xiaowo-product-speech-like-base-contract.json",
+        "training-invocation.json",
+    }
+    present_lineage = product_lineage & actual
+    if present_lineage and present_lineage != product_lineage:
+        missing_lineage = sorted(product_lineage - present_lineage)
+        raise ValueError(
+            f"speech-like product registry lineage is incomplete: missing={missing_lineage}"
+        )
     if total != int(storage.get("release_assets_bytes", -1)):
         raise ValueError("registry total byte count drift")
     if total > args.max_entry_bytes or total > int(storage.get("max_entry_bytes", 0)):
