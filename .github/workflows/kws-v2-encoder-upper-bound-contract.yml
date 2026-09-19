@@ -17,6 +17,8 @@ on:
       - "training/analyze_classifier_optimizer_schedule_stability.py"
       - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
       - "training/verify_classifier_cross_runner_repro.py"
+      - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
+      - "training/analyze_classifier_exact_balanced_sampler.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -24,6 +26,7 @@ on:
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
+      - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -39,6 +42,8 @@ on:
       - "training/analyze_classifier_optimizer_schedule_stability.py"
       - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
       - "training/verify_classifier_cross_runner_repro.py"
+      - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
+      - "training/analyze_classifier_exact_balanced_sampler.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -46,6 +51,7 @@ on:
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
+      - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -322,7 +328,7 @@ jobs:
           for seed in p["fixed"]["model_seeds"]:
               assert str(seed) in workflow
           assert "workflow_dispatch:" in workflow
-          assert "\n  push:" in workflow
+          assert "\n  push:" not in workflow
           assert "Train paired optimizer/schedule candidates" in workflow
           assert "fc1-pcen128-warmup-cosine" in workflow
           print("optimizer schedule stability contract: ok")
@@ -353,11 +359,39 @@ jobs:
           assert "\n  push:" not in init_workflow
           schedule_workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
           assert "workflow_dispatch:" in schedule_workflow
-          assert "\n  push:" in schedule_workflow
+          assert "\n  push:" not in schedule_workflow
           repro=pathlib.Path(".github/workflows/kws-v2-classifier-cross-runner-repro.yml").read_text()
           assert "model_seed: [2027, 7919]" in repro
           assert "replica: [a, b]" in repro
           print("cross-runner classifier reproducibility contract: ok")
+          PY
+
+      - name: Verify exact-balanced sampler contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_exact_balanced_sampler.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-exact-balanced-sampler-v2"
+          assert p["source_schedule_evidence"]["run_id"]==35427506968
+          assert p["source_schedule_evidence"]["stability_pass"] is False
+          assert p["source_reproducibility_evidence"]["reproducibility_pass"] is True
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["candidates"]["b0-logmel64-exact"]["balance_mode"]=="exact-balanced-epoch-v2"
+          assert p["candidates"]["fc1-pcen128-exact"]["balance_mode"]=="exact-balanced-epoch-v2"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_weighted"]==0.75
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.11
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "ExactBalancedEpochSampler" in classifier
+          assert "exact-balanced-epoch-v2" in classifier
+          schedule=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          assert "workflow_dispatch:" in schedule and "\n  push:" not in schedule
+          sampler=pathlib.Path(".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml").read_text()
+          assert "model_seed: [2027, 4099, 7919, 12011, 16001]" in sampler
+          assert "Train paired sampler candidates" in sampler
+          print("exact-balanced sampler contract: ok")
           PY
 
       - name: Worktree remains clean

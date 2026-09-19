@@ -1,20 +1,28 @@
-name: kws-v2-classifier-optimizer-schedule-stability
+name: kws-v2-classifier-exact-balanced-sampler
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
+      - "training/research_keyword_classifier.py"
+      - "training/analyze_classifier_exact_balanced_sampler.py"
+      - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-classifier-optimizer-schedule-stability-${{ github.ref }}
+  group: kws-v2-classifier-exact-balanced-sampler-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   trial:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -50,12 +58,12 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Train paired optimizer/schedule candidates
+      - name: Train paired sampler candidates
         env:
           MODEL_SEED: ${{ matrix.model_seed }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/schedule/$MODEL_SEED"
+          root="$RUNNER_TEMP/sampler/$MODEL_SEED"
           mkdir -p "$root"
           common=(
             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"
@@ -70,35 +78,34 @@ jobs:
             --epochs 24
             --batch-size 16
             --lr 0.001
+            --lr-schedule fixed-v1
             --model-seed "$MODEL_SEED"
             --sampler-seed 1337
             --init-mode default-pytorch-v1
-            --balance-mode equal-class-sampler-v1
           )
           train() {
-            local name="$1" frontend="$2" hidden="$3" schedule="$4"
+            local name="$1" frontend="$2" hidden="$3" balance="$4"
             mkdir -p "$root/$name"
             .venv/bin/python training/research_keyword_classifier.py \
               "${common[@]}" \
               --frontend "$frontend" \
               --hidden-dim "$hidden" \
-              --lr-schedule "$schedule" \
-              --warmup-epochs 4 \
-              --min-lr-ratio 0.1 \
+              --balance-mode "$balance" \
               --output "$root/$name/classifier.json"
           }
-          train b0-logmel64-fixed logmel 64 fixed-v1
-          train fc1-pcen128-fixed pcen-lite 128 fixed-v1
-          train fc1-pcen128-warmup-cosine pcen-lite 128 warmup-cosine-v1
+          train b0-logmel64-weighted logmel 64 equal-class-sampler-v1
+          train fc1-pcen128-weighted pcen-lite 128 equal-class-sampler-v1
+          train b0-logmel64-exact logmel 64 exact-balanced-epoch-v2
+          train fc1-pcen128-exact pcen-lite 128 exact-balanced-epoch-v2
 
-      - name: Build per-seed schedule evidence
+      - name: Build per-seed sampler evidence
         env:
           MODEL_SEED: ${{ matrix.model_seed }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/schedule/$MODEL_SEED"
-          .venv/bin/python training/analyze_classifier_optimizer_schedule_stability.py trial \
-            --config configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json \
+          root="$RUNNER_TEMP/sampler/$MODEL_SEED"
+          .venv/bin/python training/analyze_classifier_exact_balanced_sampler.py trial \
+            --config configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json \
             --model-seed "$MODEL_SEED" \
             --root "$root" \
             --output "$root/trial-evidence.json"
@@ -106,8 +113,8 @@ jobs:
       - name: Upload per-seed evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-optimizer-schedule-${{ matrix.model_seed }}-${{ github.sha }}
-          path: ${{ runner.temp }}/schedule/${{ matrix.model_seed }}/
+          name: kws-v2-exact-balanced-${{ matrix.model_seed }}-${{ github.sha }}
+          path: ${{ runner.temp }}/sampler/${{ matrix.model_seed }}/
           if-no-files-found: error
           retention-days: 30
 
@@ -118,27 +125,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
       - name: Download per-seed evidence
         uses: actions/download-artifact@v4
         with:
-          pattern: kws-v2-optimizer-schedule-*-${{ github.sha }}
-          path: ${{ runner.temp }}/schedule-evidence
+          pattern: kws-v2-exact-balanced-*-${{ github.sha }}
+          path: ${{ runner.temp }}/sampler-evidence
           merge-multiple: false
-
-      - name: Aggregate optimizer/schedule stability evidence
+      - name: Aggregate exact-balanced sampler evidence
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/schedule-summary"
-          python3 training/analyze_classifier_optimizer_schedule_stability.py aggregate \
-            --config configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json \
-            --root "$RUNNER_TEMP/schedule-evidence" \
-            --output "$RUNNER_TEMP/schedule-summary/summary.json"
-
+          mkdir -p "$RUNNER_TEMP/sampler-summary"
+          python3 training/analyze_classifier_exact_balanced_sampler.py aggregate \
+            --config configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json \
+            --root "$RUNNER_TEMP/sampler-evidence" \
+            --output "$RUNNER_TEMP/sampler-summary/summary.json"
       - name: Upload aggregate evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-classifier-optimizer-schedule-stability-summary-${{ github.sha }}
-          path: ${{ runner.temp }}/schedule-summary/
+          name: kws-v2-classifier-exact-balanced-sampler-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/sampler-summary/
           if-no-files-found: error
           retention-days: 30

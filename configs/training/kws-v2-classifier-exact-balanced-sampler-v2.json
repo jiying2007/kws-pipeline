@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-classifier-exact-balanced-sampler-v2",
+  "evidence_scope": "research-only",
+  "source_schedule_evidence": {
+    "run_id": 35427506968,
+    "exact_head_sha": "8d67c6e1c24cf6caa39ce3e87907124ac44cff14",
+    "evidence_class": "kws-v2-classifier-optimizer-schedule-stability-summary-v1",
+    "baseline_reproduced": true,
+    "stability_pass": false,
+    "fixed_primary_recall_delta_mean": 0.55625,
+    "fixed_primary_recall_delta_stddev": 0.14065971793658624,
+    "fixed_primary_fp_delta_mean": -0.0175
+  },
+  "source_reproducibility_evidence": {
+    "run_id": 35427343767,
+    "exact_head_sha": "c9a6da0ba99a2c20c31e84f0204dacff22af0c99",
+    "reproducibility_pass": true,
+    "final_state_sentinels": {
+      "b0-logmel64-weighted": {
+        "2027": "05d5e91d3827df745da7f645ccd52b5cd8842a63c6f8a63434fbbea3be2c036a",
+        "7919": "75ac9d3073e2d1f1b0893eb4832717ee5a9f475064d3817852a8321e0ee280cd"
+      },
+      "fc1-pcen128-weighted": {
+        "2027": "c3f25a3a0fda79fc87b7c2bf7ed84c79bf9fcc78cc4077a3f818bed0cc9951b1",
+        "7919": "7a259d04f2bd2b8e69d8494a77bb9f6ef7aca7a6cf0bb98731ec21f390333164"
+      }
+    }
+  },
+  "hypothesis": "Replacing replacement-based class balancing with exact per-class epoch counts reduces model-seed operating-point variance without suppressing the FC1 mean gain.",
+  "fixed": {
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "lr_schedule": "fixed-v1",
+    "init_mode": "default-pytorch-v1",
+    "sampler_seed": 1337,
+    "model_seeds": [
+      2027,
+      4099,
+      7919,
+      12011,
+      16001
+    ],
+    "qualification_split_consumed": false
+  },
+  "candidates": {
+    "b0-logmel64-weighted": {
+      "role": "weighted-reference",
+      "frontend": "logmel",
+      "hidden_dim": 64,
+      "balance_mode": "equal-class-sampler-v1"
+    },
+    "fc1-pcen128-weighted": {
+      "role": "weighted-target",
+      "frontend": "pcen-lite",
+      "hidden_dim": 128,
+      "balance_mode": "equal-class-sampler-v1"
+    },
+    "b0-logmel64-exact": {
+      "role": "exact-reference",
+      "frontend": "logmel",
+      "hidden_dim": 64,
+      "balance_mode": "exact-balanced-epoch-v2"
+    },
+    "fc1-pcen128-exact": {
+      "role": "exact-target",
+      "frontend": "pcen-lite",
+      "hidden_dim": 128,
+      "balance_mode": "exact-balanced-epoch-v2"
+    }
+  },
+  "operating_points": {
+    "constraints": [
+      {
+        "name": "strict-10fp",
+        "max_negative_fp_rate": 0.1
+      },
+      {
+        "name": "strict-05fp",
+        "max_negative_fp_rate": 0.05
+      }
+    ]
+  },
+  "decision_rules": {
+    "authority": "pre-registered-exact-balanced-sampler-v2",
+    "primary_operating_point": "strict-10fp",
+    "max_stddev_ratio_vs_weighted": 0.75,
+    "max_primary_wake_recall_delta_stddev": 0.11,
+    "min_primary_wake_recall_delta_mean": 0.15,
+    "max_primary_negative_fp_delta_mean": 0.02,
+    "min_positive_primary_delta_seeds": 4,
+    "pass_next": "paired-architecture-replication-with-exact-balanced-sampler-v2",
+    "fail_next": "multi-start-calibration-selection-v1",
+    "baseline_drift_next": "fix-weighted-sampler-sentinel-mismatch"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

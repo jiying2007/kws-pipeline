@@ -27,7 +27,7 @@ for _name, _value in _RESEARCH_CPU_ENV.items():
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+from torch.utils.data import DataLoader, Dataset, Sampler, WeightedRandomSampler
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
@@ -76,6 +76,47 @@ def quantile(values: list[float], q: float) -> float | None:
     ordered = sorted(values)
     index = int(round((len(ordered) - 1) * q))
     return float(ordered[index])
+
+
+class ExactBalancedEpochSampler(Sampler[int]):
+    """Exact per-class epoch counts with deterministic within-class cycling."""
+
+    def __init__(self, labels: list[int], classes: int, seed: int):
+        if classes <= 0:
+            raise ValueError("classes must be positive")
+        self.indices_by_class = [
+            [index for index, label in enumerate(labels) if int(label) == class_id]
+            for class_id in range(classes)
+        ]
+        if any(not indices for indices in self.indices_by_class):
+            raise ValueError("exact-balanced sampler requires every class")
+        self.samples_per_class = len(labels) // classes
+        if self.samples_per_class <= 0:
+            raise ValueError("not enough samples for exact-balanced sampler")
+        self.num_samples = self.samples_per_class * classes
+        self.seed = int(seed)
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = int(epoch)
+
+    def __iter__(self):
+        generator = torch.Generator().manual_seed(
+            self.seed + 1_000_003 * self.epoch
+        )
+        chosen: list[int] = []
+        for indices in self.indices_by_class:
+            remaining = self.samples_per_class
+            while remaining > 0:
+                order = torch.randperm(len(indices), generator=generator).tolist()
+                take = min(remaining, len(order))
+                chosen.extend(indices[position] for position in order[:take])
+                remaining -= take
+        mixing = torch.randperm(len(chosen), generator=generator).tolist()
+        return iter(chosen[position] for position in mixing)
+
+    def __len__(self) -> int:
+        return self.num_samples
 
 
 class ClipDataset(Dataset):
@@ -337,7 +378,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--balance-mode",
-        choices=("none", "equal-class-sampler-v1"),
+        choices=("none", "equal-class-sampler-v1", "exact-balanced-epoch-v2"),
         default="equal-class-sampler-v1",
     )
     parser.add_argument("--output", required=True, type=pathlib.Path)
@@ -391,6 +432,13 @@ def main() -> int:
             generator=generator,
         )
         shuffle = False
+    elif args.balance_mode == "exact-balanced-epoch-v2":
+        sampler = ExactBalancedEpochSampler(
+            train.labels,
+            classes=classes,
+            seed=sampler_seed,
+        )
+        shuffle = False
     train_loader = DataLoader(
         train,
         batch_size=args.batch_size,
@@ -409,6 +457,8 @@ def main() -> int:
     loss_fn = nn.CrossEntropyLoss()
     history: list[dict] = []
     for epoch in range(args.epochs):
+        if isinstance(sampler, ExactBalancedEpochSampler):
+            sampler.set_epoch(epoch)
         epoch_lr = learning_rate_for_epoch(
             args.lr,
             epoch,
@@ -474,6 +524,14 @@ def main() -> int:
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
+        "sampler_samples_per_epoch": (
+            int(len(sampler)) if sampler is not None else int(len(train))
+        ),
+        "sampler_exact_class_count_per_epoch": (
+            int(sampler.samples_per_class)
+            if isinstance(sampler, ExactBalancedEpochSampler)
+            else None
+        ),
         "initial_model_state_sha256": initial_model_state_sha256,
         "model_state_sha256": model_state_sha256(model),
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
