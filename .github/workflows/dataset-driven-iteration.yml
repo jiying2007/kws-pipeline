@@ -1,15 +1,8 @@
 name: dataset-driven-iteration
 
-# The fourth lane. Research changes the loss, Confirm repeats a hypothesis on
-# paired seeds, and Qualification judges a frozen candidate against a gate that
-# demands zero false rejects and zero false accepts at once -- a target that
-# cannot be measured, and which has failed every time it ran.
-#
-# This lane measures instead of judging. It binds a result to
-# (dataset, model, code, protocol), reports false accepts as an exposure-backed
-# upper bound rather than a bare rate, and compares two runs only when exactly
-# one declared variable moved. See docs/DATASET_ITERATION.md.
-
+# Product-facing measurement lane. A manual run is valid only from the exact
+# current protected main. By default it evaluates the model tuple pinned by the
+# shipping contract and mirrored in models/registry/.
 on:
   workflow_dispatch:
     inputs:
@@ -17,11 +10,13 @@ on:
         description: Path to references.jsonl inside the repo
         required: true
       model_path:
-        description: Path to the .kwm model
-        required: true
+        description: Optional .kwm path; leave empty to use the pinned Git-registry model
+        required: false
+        default: ""
       keywords_path:
-        description: Path to the .kwk keyword pack
-        required: true
+        description: Optional .kwk path; must be supplied with model_path
+        required: false
+        default: ""
       variable:
         description: Which controlled variable is under test
         required: true
@@ -41,6 +36,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: dataset-driven-iteration-${{ github.ref }}
@@ -50,10 +46,47 @@ jobs:
   measure:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require exact current protected main
+        run: bash governance/require_current_main.sh
+
+      - name: Resolve deployable model tuple
+        id: tuple
+        env:
+          INPUT_MODEL_PATH: ${{ inputs.model_path }}
+          INPUT_KEYWORDS_PATH: ${{ inputs.keywords_path }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$INPUT_MODEL_PATH" && -z "$INPUT_KEYWORDS_PATH" ]]; then
+            tag="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
+            model="models/registry/$tag/xiaowo-model.kwm"
+            keywords="models/registry/$tag/xiaowo-keywords.kwk"
+            python3 tools/verify_model_registry.py \
+              --registry-dir "models/registry/$tag" \
+              --config configs/shipping.xiaowo.json
+            label="git-registry:$tag"
+          elif [[ -n "$INPUT_MODEL_PATH" && -n "$INPUT_KEYWORDS_PATH" ]]; then
+            model="$INPUT_MODEL_PATH"
+            keywords="$INPUT_KEYWORDS_PATH"
+            label="custom:$INPUT_MODEL_PATH"
+          else
+            echo "model_path and keywords_path must either both be empty or both be supplied" >&2
+            exit 2
+          fi
+          test -f "$model"
+          test -f "$keywords"
+          {
+            echo "model_path=$model"
+            echo "keywords_path=$keywords"
+            echo "model_label=$label"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build the real C runtime
         run: |
@@ -65,19 +98,17 @@ jobs:
           set -euo pipefail
           python3 tools/run_dataset_iteration.py \
             --runner build/kws_wav \
-            --model "${{ inputs.model_path }}" \
-            --keywords "${{ inputs.keywords_path }}" \
+            --model "${{ steps.tuple.outputs.model_path }}" \
+            --keywords "${{ steps.tuple.outputs.keywords_path }}" \
             --references "${{ inputs.dataset_path }}" \
             --audio-root . \
             --work-dir build/dataset-iteration \
             --output build/dataset-iteration/scorecard.json \
             --variable "${{ inputs.variable }}" \
             --dataset-label "${{ inputs.dataset_path }}" \
-            --model-label "${{ inputs.model_path }}" \
+            --model-label "${{ steps.tuple.outputs.model_label }}" \
             --seed "${{ inputs.seed }}"
 
-      # A refused or regressed comparison must not erase the measurement: the
-      # scorecard is still recorded, and the verdict is what the operator reads.
       - name: Compare against the declared baseline
         id: compare
         if: inputs.baseline_card != ''
@@ -99,27 +130,62 @@ jobs:
             echo 'comparison was refused or failed; see the job log' >>"$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Record the scorecard in the repository
+      - name: Record scorecard through a protected-main PR
         run: |
           set -euo pipefail
           card=build/dataset-iteration/scorecard.json
           dataset="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["identity"]["dataset_id"])' "$card")"
           run_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$card")"
-          target="evidence/dataset-iterations/${dataset}/${run_id}.json"
+          target="evidence/dataset-iterations/$dataset/$run_id.json"
+          comparison_target="evidence/dataset-iterations/$dataset/$run_id.comparison.json"
+
+          if [[ -f "$target" ]]; then
+            cmp --silent "$card" "$target" || {
+              echo "scorecard identity collision with different bytes: $target" >&2
+              exit 2
+            }
+            echo "scorecard $run_id is already recorded on main" >>"$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           mkdir -p "$(dirname "$target")"
           cp "$card" "$target"
-          if [ -f build/dataset-iteration/comparison.json ]; then
-            cp build/dataset-iteration/comparison.json "$(dirname "$target")/${run_id}.comparison.json"
+          if [[ -f build/dataset-iteration/comparison.json ]]; then
+            cp build/dataset-iteration/comparison.json "$comparison_target"
           fi
+
+          branch="dataset-iteration/$run_id"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "dataset iteration branch already exists: $branch" >&2
+            exit 2
+          fi
+
+          git switch --create "$branch"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add evidence/dataset-iterations
-          if git diff --cached --quiet; then
-            echo "scorecard ${run_id} is already recorded"
-            exit 0
-          fi
-          git commit -m "chore(dataset-iteration): record ${run_id} for dataset ${dataset}"
-          git push
+          git commit -m "evidence(dataset): record $run_id for $dataset"
+          gh auth setup-git
+          git push origin "$branch"
+
+          cat > /tmp/dataset-iteration-pr.md <<EOF
+          Dataset-driven KWS measurement.
+
+          - dataset id: `$dataset`
+          - run id: `$run_id`
+          - controlled variable: `${{ inputs.variable }}`
+          - model: `${{ steps.tuple.outputs.model_label }}`
+
+          The scorecard is evidence only; it does not freeze, promote or
+          shipping-approve a model.
+          EOF
+          pr_url="$(gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$branch" \
+            --title "evidence(dataset): record $run_id" \
+            --body-file /tmp/dataset-iteration-pr.md)"
+          echo "scorecard PR: $pr_url" >>"$GITHUB_STEP_SUMMARY"
 
       - name: Upload the full evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

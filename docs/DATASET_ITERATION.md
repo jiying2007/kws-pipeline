@@ -64,8 +64,15 @@ that is a property of the dataset, not of the model.
 
 ## Running it
 
-Dispatch `.github/workflows/dataset-driven-iteration.yml` with a dataset
-(`references.jsonl`), a model, a keyword pack, and the variable under test.
+Dispatch `.github/workflows/dataset-driven-iteration.yml` from the exact
+current protected `main` with a dataset (`references.jsonl`) and the variable
+under test.
+
+Leave `model_path` and `keywords_path` empty to use the model tuple pinned by
+`configs/shipping.xiaowo.json` and mirrored under `models/registry/`. This is
+the default product-facing path. To compare another deployable model, supply
+**both** paths explicitly; supplying only one is refused.
+
 Optionally point `baseline_card` at a previously recorded scorecard.
 
 Locally the same thing is two commands:
@@ -95,3 +102,9 @@ claims still need real-human and physical-target evidence.
 
 Scorecards are committed to `evidence/dataset-iterations/<dataset-id>/<run-id>.json`
 so results outlive artifact retention and remain reviewable.
+
+Because `main` is protected and has no bypass actors, the workflow never pushes
+evidence directly to `main`. It creates a deterministic
+`dataset-iteration/<run-id>` branch and opens a pull request. This keeps the
+measurement lane compatible with the repository's required-PR/status-check
+ruleset.
