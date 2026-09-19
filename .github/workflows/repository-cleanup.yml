@@ -47,6 +47,7 @@ env:
     tmp/resumable-development-gru-multiseed-v3
     tmp/resumable-development-rnn-v3
     tmp/resumable-development-rnn-v4
+    fix/product-training-speech-like-replay-v1
 
 jobs:
   sweep-merged-branches:
