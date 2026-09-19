@@ -15,6 +15,8 @@ ROBUSTNESS = ROOT / "eval" / "gate_robustness.py"
 BASE_STAGE = ROOT / "training" / "base_stage_receipt.py"
 ENTRY_CONTRACT = ROOT / "training" / "verify_training_entry_contract.py"
 FINAL_GATES = ROOT / "training" / "verify_final_training_gates.py"
+FINALIZER = ROOT / "training" / "finalize_domain_candidate.py"
+TRAINING_REQUEST = ROOT / "training" / "training_request.py"
 FAR_GATE = ROOT / "eval" / "run_continuous_far_gate.py"
 
 
@@ -34,6 +36,8 @@ def main() -> int:
     base_stage = BASE_STAGE.read_text(encoding="utf-8")
     entry_contract = ENTRY_CONTRACT.read_text(encoding="utf-8")
     final_gates = FINAL_GATES.read_text(encoding="utf-8")
+    finalizer = FINALIZER.read_text(encoding="utf-8")
+    training_request = TRAINING_REQUEST.read_text(encoding="utf-8")
     far_gate = FAR_GATE.read_text(encoding="utf-8")
 
     for needle in (
@@ -92,6 +96,10 @@ def main() -> int:
         "adversarial-refinement-summary.json",
         "adversarial-lexicon.json",
         "formal-preflight.json",
+        "training-invocation.json",
+        "governed-model-training-invocation-v1",
+        "versioned governed training invocation lacks request",
+        "manual governed training must not claim a versioned request",
         "model-promotion-manifest.json",
         "MODEL_SHA256SUMS",
         "model provenance SHA does not match promoted model.kwm",
@@ -140,6 +148,8 @@ def main() -> int:
         "steps.base_stage.outputs.iteration_exit_code",
         "training/verify_final_training_gates.py",
         "eval/run_continuous_far_gate.py",
+        "build/model-training/training-invocation.json",
+        "training/training_request.py write-receipt",
     ):
         require(training, needle, "staged model-training workflow")
     timeouts = [int(value) for value in re.findall(r"timeout-minutes:\s*(\d+)", training)]
@@ -186,6 +196,23 @@ def main() -> int:
         require(training, needle, "model-training workflow")
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
+
+    for needle in (
+        'EVIDENCE_CLASS = "governed-model-training-invocation-v1"',
+        'SUPPORTED_EVENTS = {"push", "workflow_dispatch"}',
+        'TRIGGER_POLICY = "run-on-protected-main-change"',
+        'PURPOSE = "governed-product-candidate-training"',
+        'SOURCE_POLICY = "exact-current-main"',
+        'if ref != "refs/heads/main"',
+    ):
+        require(training_request, needle, "governed training request authority")
+
+    for needle in (
+        'root / "training-invocation.json"',
+        'best_dir / "training-invocation.json"',
+        'product_lineage.extend([effective_copy, base_contract_copy, invocation_copy])',
+    ):
+        require(finalizer, needle, "product lineage finalizer")
 
     for needle in (
         'POLICY = "staged-domain-base-handoff-v1"',

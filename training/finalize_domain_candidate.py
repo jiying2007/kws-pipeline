@@ -164,11 +164,15 @@ def main() -> int:
             raise RuntimeError("product speech-like base contract SHA drifted before finalization")
         if sha256_file(template_path) != str(product_data.get("source_template_config_sha256") or ""):
             raise RuntimeError("source training template SHA drifted before finalization")
+        invocation_path = root / "training-invocation.json"
+        require_file(invocation_path, "governed training invocation receipt")
         effective_copy = best_dir / "effective-training-config.json"
         base_contract_copy = best_dir / "product-speech-like-base-contract.json"
+        invocation_copy = best_dir / "training-invocation.json"
         shutil.copy2(config_path, effective_copy)
         shutil.copy2(contract_path, base_contract_copy)
-        product_lineage.extend([effective_copy, base_contract_copy])
+        shutil.copy2(invocation_path, invocation_copy)
+        product_lineage.extend([effective_copy, base_contract_copy, invocation_copy])
 
     # Training replay round N is rendered before training round N and its SHA is
     # recorded in the candidate. Freeze it only as generation/provenance proof;

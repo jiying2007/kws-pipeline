@@ -1,10 +1,15 @@
 name: model-training
 
 on:
+  push:
+    branches:
+      - main
+    paths:
   pull_request:
     branches:
       - main
     paths:
+      - '.github/triggers/model-training-request.json'
       - 'configs/training/**'
       - 'eval/run_corpus.py'
       - 'eval/score_events.py'
@@ -31,6 +36,7 @@ env:
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
   KWS_REPLAY_PROVIDER_ROOT: .generated/product-replay-provider
+  KWS_TRAINING_REQUEST: .github/triggers/model-training-request.json
 
 concurrency:
   group: model-training-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -38,20 +44,25 @@ concurrency:
 
 jobs:
   base-domain-training:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify versioned training request
+        if: github.event_name == 'push'
+        run: >-
+          python3 training/training_request.py verify
+          --request "$KWS_TRAINING_REQUEST"
       - name: Require current main training source
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/main" || {
-            echo "governed model training must be dispatched from main" >&2
+            echo "governed model training must run from current main" >&2
             exit 2
           }
           main_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
@@ -135,6 +146,18 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Bind training invocation receipt
+        env:
+          TRAINING_EVENT_NAME: ${{ github.event_name }}
+          TRAINING_HEAD_SHA: ${{ github.sha }}
+          TRAINING_REF: ${{ github.ref }}
+        run: >-
+          python3 training/training_request.py write-receipt
+          --event-name "$TRAINING_EVENT_NAME"
+          --head-sha "$TRAINING_HEAD_SHA"
+          --ref "$TRAINING_REF"
+          --request "$KWS_TRAINING_REQUEST"
+          --output build/model-training/training-invocation.json
       - name: Bind base-stage provenance receipt
         env:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
@@ -291,6 +314,7 @@ jobs:
           path: |
             build/model-training/compact-training-diagnostics.json
             build/model-training/base-stage-receipt.json
+            build/model-training/training-invocation.json
             build/model-training/adversarial-refinement/summary.json
             build/model-training/development-failure-replay/evidence.json
             build/model-training/shadow-qualification/summary.json
@@ -309,6 +333,7 @@ jobs:
           path: |
             build/model-training/best/
             build/model-training/base-stage-receipt.json
+            build/model-training/training-invocation.json
             build/model-training/domain-loop-manifest.json
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json

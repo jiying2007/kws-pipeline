@@ -113,6 +113,7 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
     optional_lineage = {
         "effective-training-config.json": "xiaowo-effective-training-config.json",
         "product-speech-like-base-contract.json": "xiaowo-product-speech-like-base-contract.json",
+        "training-invocation.json": "training-invocation.json",
     }
     present = {
         source_name: resolve_best_optional(root, source_name)
@@ -120,7 +121,7 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
     }
     present_count = sum(path is not None for path in present.values())
     if present_count not in (0, len(optional_lineage)):
-        raise ValueError("product training lineage must be absent as legacy or present as a complete pair")
+        raise ValueError("product training lineage must be absent as legacy or present as a complete set")
     if present_count:
         for source_name, target_name in optional_lineage.items():
             source = present[source_name]
@@ -186,16 +187,19 @@ def verify(args: argparse.Namespace) -> dict:
     lineage_names = {
         "effective-training-config.json": "xiaowo-effective-training-config.json",
         "product-speech-like-base-contract.json": "xiaowo-product-speech-like-base-contract.json",
+        "training-invocation.json": "training-invocation.json",
     }
     summary_has_lineage = any(name in artifacts for name in lineage_names)
     copied_has_lineage = any(target in files for target in lineage_names.values())
+    training_event_name = None
+    training_request_id = None
     if summary_has_lineage != copied_has_lineage:
         raise ValueError("training summary and promoted bundle disagree on product training lineage")
     if summary_has_lineage:
         if not all(name in artifacts for name in lineage_names):
-            raise ValueError("training summary product lineage pair is incomplete")
+            raise ValueError("training summary product lineage set is incomplete")
         if not all(target in files for target in lineage_names.values()):
-            raise ValueError("promoted product lineage pair is incomplete")
+            raise ValueError("promoted product lineage set is incomplete")
         for name, target in lineage_names.items():
             if artifacts.get(name) != files[target]["sha256"]:
                 raise ValueError(f"training summary artifact SHA mismatch for {name}")
@@ -208,6 +212,46 @@ def verify(args: argparse.Namespace) -> dict:
             dist / "xiaowo-product-speech-like-base-contract.json",
             "product speech-like base contract",
         )
+        invocation = load_json(
+            dist / "training-invocation.json",
+            "governed training invocation",
+        )
+        if int(invocation.get("schema_version", 0)) != 1:
+            raise ValueError("governed training invocation schema mismatch")
+        if str(invocation.get("evidence_class") or "") != "governed-model-training-invocation-v1":
+            raise ValueError("governed training invocation evidence class mismatch")
+        if str(invocation.get("head_sha") or "") != args.expected_head_sha:
+            raise ValueError("governed training invocation head SHA mismatch")
+        if str(invocation.get("ref") or "") != "refs/heads/main":
+            raise ValueError("governed training invocation ref mismatch")
+        if str(invocation.get("source_policy") or "") != "exact-current-main":
+            raise ValueError("governed training invocation source policy mismatch")
+        training_event_name = str(invocation.get("event_name") or "")
+        request = invocation.get("request")
+        request_sha = invocation.get("request_sha256")
+        if training_event_name == "push":
+            if not isinstance(request, dict):
+                raise ValueError("versioned governed training invocation lacks request")
+            if request.get("trigger_policy") != "run-on-protected-main-change":
+                raise ValueError("versioned governed training trigger policy mismatch")
+            if request.get("purpose") != "governed-product-candidate-training":
+                raise ValueError("versioned governed training purpose mismatch")
+            if request.get("source_policy") != "exact-current-main":
+                raise ValueError("versioned governed training request source policy mismatch")
+            training_request_id = str(request.get("request_id") or "")
+            if not training_request_id:
+                raise ValueError("versioned governed training request ID missing")
+            if (
+                not isinstance(request_sha, str)
+                or len(request_sha) != 64
+                or any(ch not in HEX for ch in request_sha)
+            ):
+                raise ValueError("versioned governed training request SHA invalid")
+        elif training_event_name == "workflow_dispatch":
+            if request is not None or request_sha is not None:
+                raise ValueError("manual governed training must not claim a versioned request")
+        else:
+            raise ValueError("unsupported governed training invocation event")
         product_data = effective.get("product_candidate_data")
         if not isinstance(product_data, dict):
             raise ValueError("effective training config lacks product_candidate_data")
@@ -544,6 +588,11 @@ def verify(args: argparse.Namespace) -> dict:
             "adversarial_refinement_summary_sha256": files["adversarial-refinement-summary.json"]["sha256"],
             "adversarial_lexicon_evidence_sha256": files["adversarial-lexicon.json"]["sha256"],
             "failure_replay_evidence_sha256": files["development-failure-replay.json"]["sha256"],
+            "training_invocation_sha256": (
+                files["training-invocation.json"]["sha256"] if summary_has_lineage else None
+            ),
+            "training_event_name": training_event_name,
+            "training_request_id": training_request_id,
         },
         "acceptance": {
             "qualification_expected": 256,

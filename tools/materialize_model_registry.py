@@ -74,6 +74,17 @@ def verify_assets(root: pathlib.Path) -> tuple[list[dict], int]:
         if sha256(path) != digest:
             raise ValueError(f"release asset checksum mismatch: {name}")
     actual = {path.name for path in root.iterdir() if path.is_file()}
+    product_lineage = {
+        "xiaowo-effective-training-config.json",
+        "xiaowo-product-speech-like-base-contract.json",
+        "training-invocation.json",
+    }
+    present_lineage = product_lineage & actual
+    if present_lineage and present_lineage != product_lineage:
+        missing_lineage = sorted(product_lineage - present_lineage)
+        raise ValueError(
+            f"speech-like product registry lineage is incomplete: missing={missing_lineage}"
+        )
     unexpected = sorted(actual - (set(sums) | {"MODEL_SHA256SUMS"}))
     if unexpected:
         raise ValueError(f"release directory has assets outside checksum manifest: {unexpected}")

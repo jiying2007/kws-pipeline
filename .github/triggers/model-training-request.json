@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "request_id": "speech-like-replay-v1-20260919",
+  "trigger_policy": "run-on-protected-main-change",
+  "purpose": "governed-product-candidate-training",
+  "source_policy": "exact-current-main",
+  "reason": "Run the first governed product-candidate training after speech-like replay isolation and retry-safe model-registry promotion."
+}
