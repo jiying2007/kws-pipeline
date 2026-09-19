@@ -314,6 +314,7 @@ jobs:
           path: |
             build/model-training/compact-training-diagnostics.json
             build/model-training/base-stage-receipt.json
+            build/model-training/training-invocation.json
             build/model-training/adversarial-refinement/summary.json
             build/model-training/development-failure-replay/evidence.json
             build/model-training/shadow-qualification/summary.json
@@ -332,6 +333,7 @@ jobs:
           path: |
             build/model-training/best/
             build/model-training/base-stage-receipt.json
+            build/model-training/training-invocation.json
             build/model-training/domain-loop-manifest.json
             build/model-training/training-run-summary.json
             build/model-training/robustness-summary.json
