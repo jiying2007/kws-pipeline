@@ -22,6 +22,7 @@ on:
           - m0-ctc-only
           - m1-ctc-ordered
           - m2-plus-margin
+          - m2-margin-030
           - m3-plus-completion
           - m4-plus-release
   push:
@@ -40,7 +41,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}-${{ github.event_name == 'push' && 'm2-plus-margin' || inputs.loss_profile }}
+  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}-${{ github.event_name == 'push' && 'm2-margin-030' || inputs.loss_profile }}
   cancel-in-progress: true
 
 jobs:
@@ -49,7 +50,7 @@ jobs:
     timeout-minutes: 180
     env:
       CANDIDATE_ID: ${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}
-      LOSS_PROFILE: ${{ github.event_name == 'push' && 'm2-plus-margin' || inputs.loss_profile }}
+      LOSS_PROFILE: ${{ github.event_name == 'push' && 'm2-margin-030' || inputs.loss_profile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
