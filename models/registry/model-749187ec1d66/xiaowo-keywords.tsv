@@ -1,0 +1,3 @@
+# id	text	threshold	explicit-pinyin-tokens	min_trailing_blanks	priority	prefix_policy	grace_frames
+1	你好小窝	0.550000	ni3 hao3 xiao3 wo1
+2	小窝小窝	0.550000	xiao3 wo1 xiao3 wo1

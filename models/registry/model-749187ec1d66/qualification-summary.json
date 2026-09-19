@@ -1,0 +1,30 @@
+{
+  "recordings": 640,
+  "audio_hours": 0.55650484375,
+  "expected": 256,
+  "matched": 256,
+  "false_rejects": 0,
+  "false_accepts": 0,
+  "frr": 0.0,
+  "far_per_hour": 0.0,
+  "p50_post_end_latency_ms": 0.0,
+  "p95_post_end_latency_ms": 13.437500000000048,
+  "per_keyword": {
+    "1": {
+      "expected": 128,
+      "matched": 128,
+      "false_rejects": 0,
+      "false_accepts": 0,
+      "frr": 0.0
+    },
+    "2": {
+      "expected": 128,
+      "matched": 128,
+      "false_rejects": 0,
+      "false_accepts": 0,
+      "frr": 0.0
+    }
+  },
+  "references_sha256": "76c047fee6fc606072063f45d5b0773400a824d401e1ac67b398e0dfa63c23e3",
+  "detections_sha256": "41b80976ba5dc14255d0ad14ce3199dd3d5432e68d7749d9a72ef5b3b4e0bbc5"
+}

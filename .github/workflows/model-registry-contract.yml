@@ -1,0 +1,72 @@
+name: model-registry-contract
+
+on:
+  push:
+    branches: [main, "ops/model-registry-v1", "model-registry/**"]
+    paths:
+      - "models/**"
+      - "tools/materialize_model_registry.py"
+      - "tools/verify_model_registry.py"
+      - ".github/workflows/model-registry-contract.yml"
+      - ".github/workflows/model-promotion.yml"
+      - ".gitignore"
+  pull_request:
+    paths:
+      - "models/**"
+      - "tools/materialize_model_registry.py"
+      - "tools/verify_model_registry.py"
+      - ".github/workflows/model-registry-contract.yml"
+      - ".gitignore"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Python syntax
+        run: python3 -m py_compile tools/materialize_model_registry.py tools/verify_model_registry.py
+      - name: Verify all registry entries and pinned model
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          entries=(models/registry/model-*)
+          test "${#entries[@]}" -gt 0 || {
+            echo "no promoted model registry entries found" >&2
+            exit 2
+          }
+          for entry in "${entries[@]}"; do
+            python3 tools/verify_model_registry.py --registry-dir "$entry"
+          done
+          pinned="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
+          test -d "models/registry/$pinned" || {
+            echo "current shipping contract model is missing from Git registry: $pinned" >&2
+            exit 2
+          }
+          python3 tools/verify_model_registry.py \
+            --registry-dir "models/registry/$pinned" \
+            --config configs/shipping.xiaowo.json
+      - name: Verify future promotion Git-mirror contract
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          workflow=pathlib.Path(".github/workflows/model-promotion.yml").read_text()
+          assert "pull-requests: write" in workflow
+          assert "Mirror promoted model into Git registry" in workflow
+          assert "tools/materialize_model_registry.py" in workflow
+          assert "tools/verify_model_registry.py" in workflow
+          assert (
+              'registry_branch="model-registry/$MODEL_RELEASE_TAG"' in workflow
+              or 'registry_branch="model-registry/${MODEL_RELEASE_TAG}"' in workflow
+          )
+          assert "git push origin" in workflow
+          assert "gh pr create" in workflow
+          print("future model-promotion registry mirror: ok")
+          PY
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
