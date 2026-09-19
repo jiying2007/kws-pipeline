@@ -234,6 +234,10 @@ jobs:
         run: python3 tests/test_deferred_verdicts.py
       - name: Verify tracked worktree after Deferred verdict contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict contract"'
+      - name: Workflow reference contract
+        run: python3 tests/test_workflow_references.py
+      - name: Verify tracked worktree after Workflow reference contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Workflow reference contract"'
       - name: Dataset iteration contract
         run: python3 tests/test_dataset_iteration.py
       - name: Verify tracked worktree after Dataset iteration contract
@@ -246,6 +250,10 @@ jobs:
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict gate"'
+      - name: Workflow reference gate
+        run: python3 tools/check_workflow_references.py --root . .github/workflows
+      - name: Verify tracked worktree after Workflow reference gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Workflow reference gate"'
       - name: Benchmark signal contract
         run: python3 tests/test_bench_signal.py
       - name: Verify tracked worktree after Benchmark signal contract
