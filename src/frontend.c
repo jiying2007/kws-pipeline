@@ -3,14 +3,16 @@
 #include <math.h>
 #include <string.h>
 
+#include "kws_parameter_limits.h"
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-#define PCEN_SMOOTHING 0.025f
-#define PCEN_ALPHA 0.98f
-#define PCEN_DELTA 2.0f
-#define PCEN_EPSILON 1.0e-6f
+/* sqrt(KWS_PCEN_DELTA): the PCEN-lite curve subtracts this root so that a zero
+ * input maps to zero.  The remaining frontend constants (smoothing, alpha,
+ * delta, epsilon, logmel compression, feature normalisation and the mel edges)
+ * come from configs/parameter-contract.json via the generated header. */
 #define PCEN_DELTA_ROOT 1.4142135623730950488f
 
 static float hz_to_mel(float hz) {
@@ -72,8 +74,8 @@ static void fft512(kws_frontend_t *fe) {
 }
 
 void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
-  float mel_lo = hz_to_mel(80.0f);
-  float mel_hi = hz_to_mel(7600.0f);
+  float mel_lo = hz_to_mel(KWS_MEL_LOW_HZ);
+  float mel_hi = hz_to_mel(KWS_MEL_HIGH_HZ);
   unsigned stage = 0u;
 
   memset(fe, 0, sizeof(*fe));
@@ -107,7 +109,9 @@ void kws_frontend_init(kws_frontend_t *fe, const kws_model_t *model) {
 
 void kws_frontend_reset(kws_frontend_t *fe) {
   fe->fill = 0u;
-  fe->last_dbfs = -120.0f;
+  /* Silence floor: must stay at or below the lowest legal speech gate so a
+   * freshly reset frontend never reports speech. */
+  fe->last_dbfs = KWS_PARAM_MIN_SPEECH_DBFS_MIN;
   fe->pcen_initialized = 0u;
   memset(fe->pcm, 0, sizeof(fe->pcm));
   memset(fe->pcen_smooth, 0, sizeof(fe->pcen_smooth));
@@ -121,14 +125,14 @@ static float transform_energy(kws_frontend_t *fe, uint16_t channel, float energy
       fe->pcen_smooth[channel] = energy;
     } else {
       fe->pcen_smooth[channel] =
-          (1.0f - PCEN_SMOOTHING) * fe->pcen_smooth[channel] +
-          PCEN_SMOOTHING * energy;
+          (1.0f - KWS_PCEN_SMOOTHING) * fe->pcen_smooth[channel] +
+          KWS_PCEN_SMOOTHING * energy;
     }
     smooth = fe->pcen_smooth[channel];
-    normalized = energy / powf(PCEN_EPSILON + smooth, PCEN_ALPHA);
-    return sqrtf(normalized + PCEN_DELTA) - PCEN_DELTA_ROOT;
+    normalized = energy / powf(KWS_PCEN_EPSILON + smooth, KWS_PCEN_ALPHA);
+    return sqrtf(normalized + KWS_PCEN_DELTA) - PCEN_DELTA_ROOT;
   }
-  return log1pf(32.0f * energy);
+  return log1pf(KWS_LOGMEL_COMPRESSION * energy);
 }
 
 static void make_features(kws_frontend_t *fe, float *out) {
@@ -185,7 +189,7 @@ static void make_features(kws_frontend_t *fe, float *out) {
 
   mean /= (float)fe->feature_dim;
   for (uint16_t m = 0u; m < fe->feature_dim; ++m) {
-    out[m] = (out[m] - mean) * 0.25f;
+    out[m] = (out[m] - mean) * KWS_FEATURE_NORMALIZATION;
   }
 }
 

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "kws_parameter_limits.h"
+
 #define KWS_KEYWORD_PACK_HEADER_BYTES 24u
 #define KWS_KEYWORD_PACK_RECORD_BYTES 48u
 
@@ -80,7 +82,10 @@ kws_status_t kws_keyword_pack_open(const void *blob,
     uint16_t reserved = rd16(record + 14u);
 
     if (num_tokens == 0u || num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
-        !isfinite(threshold) || threshold <= 0.0f || threshold >= 1.0f ||
+        !KWS_PARAM_THRESHOLD_VALID(threshold) ||
+        !KWS_PARAM_MIN_TRAILING_BLANKS_VALID(min_trailing_blanks) ||
+        !KWS_PARAM_PRIORITY_VALID(priority) ||
+        !KWS_PARAM_GRACE_FRAMES_VALID(grace_frames) ||
         prefix_policy > (uint8_t)KWS_PREFIX_GRACE || reserved != 0u) {
       return KWS_EFORMAT;
     }

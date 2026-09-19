@@ -10,6 +10,7 @@
 
 #include "decoder.h"
 #include "frontend.h"
+#include "kws_parameter_limits.h"
 
 struct kws_engine {
   kws_model_t model;
@@ -75,7 +76,13 @@ static int model_contract_valid(const kws_model_t *model) {
 }
 
 kws_config_t kws_default_config(void) {
-  kws_config_t c = {-55.0f, 1.5f, 0.94f, 1200u};
+  kws_config_t c = {
+      .min_speech_dbfs = KWS_PARAM_MIN_SPEECH_DBFS_DEFAULT,
+      .token_boost = KWS_PARAM_TOKEN_BOOST_DEFAULT,
+      .state_retention = KWS_PARAM_STATE_RETENTION_DEFAULT,
+      .refractory_ms = KWS_PARAM_REFRACTORY_MS_DEFAULT,
+      .external_vad_threshold = KWS_PARAM_EXTERNAL_VAD_THRESHOLD_DEFAULT,
+  };
   return c;
 }
 
@@ -99,15 +106,19 @@ kws_status_t kws_engine_init(void *arena,
       arena_bytes < sizeof(kws_engine_t)) {
     return KWS_EINVAL;
   }
+  /* Every return below leaves the caller with a null engine rather than a
+   * pointer to a partially initialised arena. */
+  *out_engine = NULL;
   if (((uintptr_t)arena % _Alignof(kws_engine_t)) != 0u) {
     return KWS_EINVAL;
   }
 
   c = config != NULL ? *config : kws_default_config();
-  if (!isfinite(c.min_speech_dbfs) || !isfinite(c.token_boost) ||
-      !isfinite(c.state_retention) || c.state_retention <= 0.0f ||
-      c.state_retention >= 1.0f || c.token_boost < 0.0f ||
-      c.refractory_ms > 10000u) {
+  if (!KWS_PARAM_MIN_SPEECH_DBFS_VALID(c.min_speech_dbfs) ||
+      !KWS_PARAM_TOKEN_BOOST_VALID(c.token_boost) ||
+      !KWS_PARAM_STATE_RETENTION_VALID(c.state_retention) ||
+      !KWS_PARAM_REFRACTORY_MS_VALID(c.refractory_ms) ||
+      !KWS_PARAM_EXTERNAL_VAD_THRESHOLD_VALID(c.external_vad_threshold)) {
     return KWS_EINVAL;
   }
 
@@ -261,6 +272,15 @@ static kws_status_t validate_frame_metadata(const kws_frame_metadata_t *metadata
                           KWS_FRAME_CODEC_REOPEN | KWS_FRAME_CLOCK_RESET)) == 0u) {
     return KWS_EINVAL;
   }
+  /* reserved words are part of the version contract: a non-zero value means the
+   * caller is built against a newer ABI than this engine understands, and
+   * silently ignoring it would drop whatever that version put there. */
+  for (size_t i = 0u;
+       i < (sizeof(metadata->reserved) / sizeof(metadata->reserved[0])); ++i) {
+    if (metadata->reserved[i] != 0u) {
+      return KWS_EINVAL;
+    }
+  }
   return KWS_OK;
 }
 
@@ -336,7 +356,8 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
       engine->processed_frames++;
       if (engine->block_external_vad_valid != 0u) {
         engine->external_vad_frames++;
-        speech_active = engine->block_external_vad_probability >= 0.45f;
+        speech_active = engine->block_external_vad_probability >=
+                        engine->config.external_vad_threshold;
       } else {
         speech_active = kws_frontend_last_dbfs(&engine->frontend) >=
                         engine->config.min_speech_dbfs;

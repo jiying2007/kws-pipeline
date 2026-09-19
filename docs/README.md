@@ -3,6 +3,7 @@
 Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, qualified for exactly `你好小窝` and `小窝小窝`. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.
 
 - `ARCHITECTURE.md` — runtime/offline architecture and hard bounds
+- `RUNTIME_CONFIG.md` — parameter contract, L0-L3 layers, ranges, tuning and change checklist
 - `CUSTOMIZATION.md` — framework L0/L1/L2 capability versus the current qualified two-word SKU
 - `EVALUATION.md` — continuous FAR/FRR and domain scoring
 - `INTEGRATION.md` — `audio-pipeline`, final AFE evidence and application integration
@@ -22,6 +23,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 
 Commercial-candidate contracts:
 
+- `configs/parameter-contract.json` — single source of truth for every tunable parameter, its layer, unit and validation range; consumed by the C build and by the python tools
 - `configs/shipping.xiaowo.json` — exact two-word product/model authority and remaining shipping evidence boundary
 - `configs/nightly.xiaowo-frozen-model.json` — independent frozen-model synthetic regression namespace; no formal qualification seed fields
 - `commercial/afe-evidence.schema.json` — fail-closed final command-AFE evidence schema

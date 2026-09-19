@@ -3,22 +3,13 @@
 #include <math.h>
 #include <string.h>
 
+/* L1 algorithm constants (silence retention, abandonment budget, root start
+ * margin, fuzzy child cost) come from configs/parameter-contract.json via the
+ * generated header.  See docs/RUNTIME_CONFIG.md for the human-unit conversion
+ * of each value. */
+#include "kws_parameter_limits.h"
+
 #define NEG_INF (-1.0e30f)
-#define SILENCE_RETENTION_LOG (-0.3566749439f)
-/* Bound partial keyword lifetime without narrowing normal phrase timing. The
- * search/acoustic score delta isolates cumulative retention decay because
- * token boost is added exactly once per trie depth. */
-#define MIN_PATH_RETENTION_LOG (-16.0f)
-/* A keyword root may follow a near-tied competing keyword root, but an
- * unrelated nonblank token must not shadow-start a wake path. This preserves
- * bounded ambiguity between configured wake starts without reopening the
- * continuous hard-negative false starts caused by arbitrary secondary peaks. */
-#define ROOT_START_LOGIT_MARGIN (0.5f)
-/* Keep one fuzzy child transition available for noisy/far-field recovery, but
- * charge it against the existing cumulative path-retention budget. Two fuzzy
- * child advances then exceed MIN_PATH_RETENTION_LOG and cannot synthesize a
- * full keyword from secondary posteriors across an unrelated hard negative. */
-#define FUZZY_CHILD_RETENTION_COST_LOG (-8.25f)
 
 static float fast_exp_nonpos(float x) {
   float y;
@@ -177,8 +168,10 @@ static kws_status_t validate_keywords(const kws_keyword_t *keywords,
   for (size_t k = 0u; k < count; ++k) {
     if (keywords[k].tokens == NULL || keywords[k].num_tokens == 0u ||
         keywords[k].num_tokens > KWS_MAX_TOKENS_PER_KEYWORD ||
-        !isfinite(keywords[k].threshold) || keywords[k].threshold <= 0.0f ||
-        keywords[k].threshold >= 1.0f ||
+        !KWS_PARAM_THRESHOLD_VALID(keywords[k].threshold) ||
+        !KWS_PARAM_MIN_TRAILING_BLANKS_VALID(keywords[k].min_trailing_blanks) ||
+        !KWS_PARAM_PRIORITY_VALID(keywords[k].priority) ||
+        !KWS_PARAM_GRACE_FRAMES_VALID(keywords[k].grace_frames) ||
         keywords[k].prefix_policy > (uint8_t)KWS_PREFIX_GRACE ||
         (keywords[k].prefix_policy == (uint8_t)KWS_PREFIX_LONGEST &&
          keywords[k].min_trailing_blanks == 0u) ||
@@ -234,6 +227,11 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
     for (uint16_t i = 0u; i < keywords[k].num_tokens; ++i) {
       node = find_or_add_child(d, node, keywords[k].tokens[i], &ok);
       if (!ok) {
+        /* Leave an empty decoder behind rather than the half-built trie that
+         * the keywords accepted so far would otherwise produce. The engine
+         * keeps running, so a partial trie would silently match a prefix of
+         * the caller's intent. */
+        init_structure(d, boost, retention_log);
         return KWS_ENOMEM;
       }
     }
@@ -334,7 +332,7 @@ int kws_decoder_step(kws_decoder_t *d,
   float norm = approx_logsumexp(logits, vocab_size);
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
-  float decay = speech_active ? d->retention_log : SILENCE_RETENTION_LOG;
+  float decay = speech_active ? d->retention_log : KWS_SILENCE_RETENTION_LOG;
   uint16_t top_token = dominant_token(logits, vocab_size);
   int blank_dominant = top_token == 0u;
   int top_is_keyword_root =
@@ -380,7 +378,7 @@ int kws_decoder_step(kws_decoder_t *d,
            * alive at the slower speech retention rate. */
           max_assign_pair(&d->nodes[i].next_blank_score,
                           &d->nodes[i].next_blank_acoustic_score,
-                          nonblank + SILENCE_RETENTION_LOG, nonblank_acoustic);
+                          nonblank + KWS_SILENCE_RETENTION_LOG, nonblank_acoustic);
         } else if (top_token == d->nodes[i].token) {
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
@@ -390,7 +388,7 @@ int kws_decoder_step(kws_decoder_t *d,
       if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
         max_assign_pair(&d->nodes[i].next_blank_score,
                         &d->nodes[i].next_blank_acoustic_score,
-                        separated + SILENCE_RETENTION_LOG, separated_acoustic);
+                        separated + KWS_SILENCE_RETENTION_LOG, separated_acoustic);
       }
     }
 
@@ -420,12 +418,12 @@ int kws_decoder_step(kws_decoder_t *d,
       if (base > NEG_INF / 2.0f &&
           (i != 0u || top_token == token ||
            (top_is_keyword_root != 0 &&
-            logits[top_token] - logits[token] <= ROOT_START_LOGIT_MARGIN))) {
+            logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
         if (i != 0u && top_token != token) {
-          search_log_probability += FUZZY_CHILD_RETENTION_COST_LOG;
+          search_log_probability += KWS_FUZZY_CHILD_RETENTION_COST_LOG;
         }
         max_assign_pair(&d->nodes[child].next_score,
                         &d->nodes[child].next_acoustic_score,
@@ -460,7 +458,7 @@ int kws_decoder_step(kws_decoder_t *d,
           d->token_boost * (float)d->nodes[i].depth;
       float conf;
 
-      if (retention_log < MIN_PATH_RETENTION_LOG) {
+      if (retention_log < KWS_MIN_PATH_RETENTION_LOG) {
         continue;
       }
 

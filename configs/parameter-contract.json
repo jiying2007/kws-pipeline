@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "contract_id": "kws-parameter-contract-v1",
+  "note": "Single source of truth for every tunable parameter and its validation range. src/*.c consume the generated header build/generated/kws_parameter_limits.h; the python tools read this file directly. tools/gen_parameter_limits.py --check verifies both sides agree.",
+  "layers": {
+    "L0": "model-bound: packaged in .kwm, not changeable by a product",
+    "L1": "firmware constant: compile-time macro, change requires rebuild plus regression",
+    "L2": "product config: kws_config_t field, change invalidates calibrated keyword thresholds",
+    "L3": "field policy: per-keyword KWKP v3 record field, change requires rerunning calibration"
+  },
+  "runtime": {
+    "min_speech_dbfs": {
+      "layer": "L2", "type": "float", "default": -55.0,
+      "min": -120.0, "max": 0.0, "min_exclusive": false, "max_exclusive": false,
+      "unit": "dBFS", "effective": true, "invalidates_thresholds": true,
+      "summary": "Speech gate applied to the 400-sample frame energy of the post-AFE PCM."
+    },
+    "token_boost": {
+      "layer": "L2", "type": "float", "default": 1.5,
+      "min": 0.0, "max": null, "min_exclusive": false, "max_exclusive": false,
+      "unit": "nat", "effective": false, "invalidates_thresholds": false,
+      "summary": "DEPRECATED / INEFFECTIVE. Retained for source and ABI compatibility. It is added once per trie depth, so it is a constant offset on the search score; emitted confidence uses exp(acoustic/depth) and the retention gate subtracts token_boost*depth, which cancels it exactly. See docs/RUNTIME_CONFIG.md."
+    },
+    "state_retention": {
+      "layer": "L2", "type": "float", "default": 0.94,
+      "min": 0.0, "max": 1.0, "min_exclusive": true, "max_exclusive": true,
+      "unit": "ratio per frame", "effective": true, "invalidates_thresholds": true,
+      "summary": "Per-frame retention factor applied to a live keyword prefix on a speech frame."
+    },
+    "refractory_ms": {
+      "layer": "L2", "type": "uint32", "default": 1200,
+      "min": 0, "max": 10000, "min_exclusive": false, "max_exclusive": false,
+      "unit": "ms", "effective": true, "invalidates_thresholds": false,
+      "summary": "Suppression window after an emitted detection, to stop immediate retrigger."
+    },
+    "external_vad_threshold": {
+      "layer": "L2", "type": "float", "default": 0.45,
+      "min": 0.0, "max": 1.0, "min_exclusive": true, "max_exclusive": true,
+      "unit": "probability", "effective": true, "invalidates_thresholds": true,
+      "summary": "Decision threshold applied to the external VAD probability supplied through frame metadata."
+    }
+  },
+  "keyword_pack": {
+    "threshold": {
+      "layer": "L3", "type": "float", "default": null,
+      "min": 0.0, "max": 1.0, "min_exclusive": true, "max_exclusive": true,
+      "unit": "probability", "effective": true,
+      "summary": "Per-keyword acceptance threshold on the emitted confidence."
+    },
+    "min_trailing_blanks": {
+      "layer": "L3", "type": "uint8", "default": 0,
+      "min": 0, "max": 8, "min_exclusive": false, "max_exclusive": false,
+      "unit": "frames", "effective": true,
+      "summary": "Blank-separated frames required before a held terminal may fire."
+    },
+    "priority": {
+      "layer": "L3", "type": "uint8", "default": 0,
+      "min": 0, "max": 15, "min_exclusive": false, "max_exclusive": false,
+      "unit": "rank", "effective": true,
+      "summary": "Arbitration rank. Higher wins. Ties are resolved by depth and then confidence, so duplicate ranks are allowed and deterministic."
+    },
+    "grace_frames": {
+      "layer": "L3", "type": "uint8", "default": 0,
+      "min": 0, "max": 32, "min_exclusive": false, "max_exclusive": false,
+      "unit": "frames", "effective": true,
+      "summary": "Hold window for the grace prefix policy."
+    }
+  },
+  "policy_defaults": {
+    "longest": {"min_trailing_blanks": 1},
+    "grace": {"grace_frames": 3}
+  },
+  "algorithm_constants": {
+    "KWS_SILENCE_RETENTION_LOG": {
+      "layer": "L1", "type": "float", "default": -0.3566749439,
+      "unit": "ln(0.70)",
+      "summary": "Per-frame retention factor applied to a live keyword prefix on a non-speech frame."
+    },
+    "KWS_MIN_PATH_RETENTION_LOG": {
+      "layer": "L1", "type": "float", "default": -16.0,
+      "unit": "nat",
+      "summary": "Abandonment budget for a partial prefix: about 45 non-speech frames (0.90 s) or 259 speech frames (5.17 s) at a 20 ms hop."
+    },
+    "KWS_ROOT_START_LOGIT_MARGIN": {
+      "layer": "L1", "type": "float", "default": 0.5,
+      "unit": "nat",
+      "summary": "A non-dominant token may start a keyword only within this logit margin of the top token, about a 1.65x probability ratio."
+    },
+    "KWS_FUZZY_CHILD_RETENTION_COST_LOG": {
+      "layer": "L1", "type": "float", "default": -8.25,
+      "unit": "nat",
+      "summary": "Cost charged for a fuzzy child advance: 51.6 percent of the abandonment budget, so two such advances can never complete a keyword."
+    },
+    "KWS_PCEN_SMOOTHING": {
+      "layer": "L1", "type": "float", "default": 0.025,
+      "unit": "ratio", "summary": "PCEN-lite smoothing coefficient."
+    },
+    "KWS_PCEN_ALPHA": {
+      "layer": "L1", "type": "float", "default": 0.98,
+      "unit": "exponent", "summary": "PCEN-lite exponent."
+    },
+    "KWS_PCEN_DELTA": {
+      "layer": "L1", "type": "float", "default": 2.0,
+      "unit": "offset", "summary": "PCEN-lite bias under the square root."
+    },
+    "KWS_PCEN_EPSILON": {
+      "layer": "L1", "type": "float", "default": 1e-06,
+      "unit": "energy", "summary": "PCEN-lite smoothing regulariser."
+    },
+    "KWS_LOGMEL_COMPRESSION": {
+      "layer": "L1", "type": "float", "default": 32.0,
+      "unit": "gain", "summary": "logmel compression applied as log1p(gain * energy)."
+    },
+    "KWS_FEATURE_NORMALIZATION": {
+      "layer": "L1", "type": "float", "default": 0.25,
+      "unit": "gain", "summary": "Scale applied to the mean-normalised feature vector."
+    },
+    "KWS_MEL_LOW_HZ": {
+      "layer": "L1", "type": "float", "default": 80.0,
+      "unit": "Hz", "summary": "Lower mel filterbank edge."
+    },
+    "KWS_MEL_HIGH_HZ": {
+      "layer": "L1", "type": "float", "default": 7600.0,
+      "unit": "Hz", "summary": "Upper mel filterbank edge."
+    }
+  }
+}

@@ -142,6 +142,30 @@ int main(void) {
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
   blob[85u] = 3u;
 
+  /* L3 fields are bounded by configs/parameter-contract.json. */
+  blob[35u] = 16u; /* priority ceiling is 15 */
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  blob[35u] = 3u;
+
+  blob[34u] = 9u; /* min_trailing_blanks ceiling is 8 */
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  blob[34u] = 1u;
+
+  blob[85u] = 33u; /* grace_frames ceiling is 32 */
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
+  blob[85u] = 3u;
+
+  /* The contract ceilings themselves must stay legal. */
+  blob[34u] = 8u;
+  blob[35u] = 15u;
+  blob[85u] = 32u;
+  CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_OK);
+  CHECK(pack.keywords[0].priority == 15u);
+  CHECK(pack.keywords[1].grace_frames == 32u);
+  blob[34u] = 1u;
+  blob[35u] = 3u;
+  blob[85u] = 3u;
+
   putf(blob + 28u, NAN);
   CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_EFORMAT);
   putf(blob + 28u, 0.55f);

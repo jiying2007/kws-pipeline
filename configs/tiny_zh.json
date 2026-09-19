@@ -9,6 +9,7 @@
     "min_speech_dbfs": -55.0,
     "token_boost": 1.5,
     "state_retention": 0.94,
-    "refractory_ms": 1200
+    "refractory_ms": 1200,
+    "external_vad_threshold": 0.45
   }
 }
