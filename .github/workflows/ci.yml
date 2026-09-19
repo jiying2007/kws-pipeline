@@ -244,6 +244,10 @@ jobs:
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product training data contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
+      - name: Workflow exact path-filter integrity
+        run: |
+          python3 tools/check_workflow_path_filters.py --self-test
+          python3 tools/check_workflow_path_filters.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict gate"'
       - name: Benchmark signal contract
