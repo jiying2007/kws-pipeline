@@ -1,0 +1,181 @@
+name: kws-v2-encoder-frontend-upper-bound
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-encoder-frontend-upper-bound-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - candidate: f1-pcen64
+            frontend: pcen-lite
+            hidden_dim: 64
+          - candidate: c1-logmel128
+            frontend: logmel
+            hidden_dim: 128
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Verify single-variable candidate
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          FRONTEND: ${{ matrix.frontend }}
+          HIDDEN_DIM: ${{ matrix.hidden_dim }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          name=os.environ["CANDIDATE"]
+          row=cfg["candidates"][name]
+          assert row["frontend"]==os.environ["FRONTEND"]
+          assert int(row["hidden_dim"])==int(os.environ["HIDDEN_DIM"])
+          base=cfg["baseline"]
+          if row["single_variable"]=="frontend":
+              assert row["hidden_dim"]==base["hidden_dim"]
+              assert row["frontend"]!=base["frontend"]
+          elif row["single_variable"]=="hidden_dim":
+              assert row["frontend"]==base["frontend"]
+              assert row["hidden_dim"]!=base["hidden_dim"]
+          else:
+              raise AssertionError(row["single_variable"])
+          fixed=cfg["fixed"]
+          assert fixed["epochs"]==24
+          assert fixed["seed"]==1337
+          assert fixed["rendered_cache_run_id"]==35412153192
+          assert fixed["sidecar_run_id"]==35367960968
+          assert fixed["qualification_split_consumed"] is False
+          assert cfg["authority"]["promotion_allowed"] is False
+          print(json.dumps(row,indent=2,sort_keys=True))
+          PY
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Train candidate upper bound
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          FRONTEND: ${{ matrix.frontend }}
+          HIDDEN_DIM: ${{ matrix.hidden_dim }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/upper-bound/$CANDIDATE"
+          mkdir -p "$out"
+          .venv/bin/python training/research_keyword_classifier.py             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"             --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv"             --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv"             --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv"             --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv"             --tokens keywords/tokens.example.txt             --keywords keywords/zh_cn_example.tsv             --frontend "$FRONTEND"             --feature-dim 32             --hidden-dim "$HIDDEN_DIM"             --epochs 24             --batch-size 16             --lr 0.001             --seed 1337             --balance-mode equal-class-sampler-v1             --output "$out/classifier.json"
+
+      - name: Build candidate decision evidence
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          name=os.environ["CANDIDATE"]
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"upper-bound"/name
+          result=json.loads((root/"classifier.json").read_text())
+          test=result["test"]
+          recall=float(test["positive_recall"])
+          fp=float(test["negative_false_positive_clip_rate"])
+          gap=float(test["score_distribution"]["separation_gap_p10_positive_minus_p99_negative"])
+          base=cfg["baseline"]
+          fp_reduction=float(base["test_negative_fp_rate"])-fp
+          gap_improvement=gap-float(base["test_gap"])
+          rules=cfg["decision_rules"]
+          strong=(
+              recall >= float(rules["strong_if_test_wake_recall_gte"])
+              and fp <= float(rules["strong_if_test_negative_fp_lte"])
+              and gap > float(rules["strong_if_test_gap_gt"])
+          )
+          material=(
+              fp_reduction >= float(rules["material_gain_if_fp_reduction_gte"])
+              or gap_improvement >= float(rules["material_gain_if_gap_improvement_gte"])
+          )
+          row=cfg["candidates"][name]
+          if strong or material:
+              next_action=(
+                  rules["frontend_gain_next"]
+                  if row["single_variable"]=="frontend"
+                  else rules["capacity_gain_next"]
+              )
+          else:
+              next_action=rules["neither_gain_next"]
+          score={
+              "schema_version":1,
+              "evidence_class":"kws-v2-encoder-frontend-upper-bound-scorecard-v1",
+              "evidence_scope":"research-only",
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+              "candidate":name,
+              "single_variable":row["single_variable"],
+              "frontend":row["frontend"],
+              "hidden_dim":row["hidden_dim"],
+              "test_wake_recall":recall,
+              "test_negative_fp_rate":fp,
+              "test_gap":gap,
+              "delta_vs_logmel64":{
+                  "wake_recall":recall-float(base["test_wake_recall"]),
+                  "negative_fp_rate":fp-float(base["test_negative_fp_rate"]),
+                  "negative_fp_reduction":fp_reduction,
+                  "gap":gap_improvement,
+              },
+              "strong_upper_bound":strong,
+              "material_gain":material,
+              "next_architecture_action":next_action,
+              "classifier":result,
+          }
+          (root/"scorecard.json").write_text(json.dumps(score,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(score,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload candidate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-encoder-upper-bound-${{ matrix.candidate }}-${{ github.sha }}
+          path: ${{ runner.temp }}/upper-bound/${{ matrix.candidate }}/
+          if-no-files-found: error
+          retention-days: 30
