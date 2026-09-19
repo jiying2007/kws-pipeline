@@ -60,7 +60,10 @@ jobs:
           assert "Mirror promoted model into Git registry" in workflow
           assert "tools/materialize_model_registry.py" in workflow
           assert "tools/verify_model_registry.py" in workflow
-          assert 'registry_branch="model-registry/$MODEL_RELEASE_TAG"' in workflow
+          assert (
+              'registry_branch="model-registry/$MODEL_RELEASE_TAG"' in workflow
+              or 'registry_branch="model-registry/${MODEL_RELEASE_TAG}"' in workflow
+          )
           assert "git push origin" in workflow
           assert "gh pr create" in workflow
           print("future model-promotion registry mirror: ok")
