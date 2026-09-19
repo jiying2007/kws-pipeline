@@ -11,12 +11,10 @@ on:
       - "tools/generate_speech_like_command_provider.py"
       - "tools/speech_like_corpus_plan.py"
       - "tools/materialize_speech_like_base_index.py"
-      - "tools/run_kws_v2_stage_a_search.py"
       - "training/external_base_dataset.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
       - "configs/training/speech-like-command-provider-v1.json"
-      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/speech-like-corpus-generation-contract.yml"
   pull_request:
     paths:
@@ -27,12 +25,10 @@ on:
       - "tools/generate_speech_like_command_provider.py"
       - "tools/speech_like_corpus_plan.py"
       - "tools/materialize_speech_like_base_index.py"
-      - "tools/run_kws_v2_stage_a_search.py"
       - "training/external_base_dataset.py"
       - "configs/training/speech-like-provider-reference-v1.json"
       - "configs/training/speech-like-corpus-plan-v1.json"
       - "configs/training/speech-like-command-provider-v1.json"
-      - "configs/training/xiaowo.v2-speech-like-stage-base.json"
       - ".github/workflows/speech-like-corpus-generation-contract.yml"
   workflow_dispatch:
 
@@ -311,27 +307,6 @@ jobs:
                   assert audio.is_file()
           PY
 
-          args=()
-          for split in train calibration test qualification; do
-            args+=(--"$split"-index "$moved/$split/dataset-index.jsonl")
-            args+=(--"$split"-summary "$moved/$split/dataset-summary.json")
-          done
-          python3 tools/run_kws_v2_stage_a_search.py \
-            "${args[@]}" \
-            --prepare-only \
-            --work-dir "$RUNNER_TEMP/stage-a-from-relocated-bundle"
-          SOURCE_ROOT="$source_root" STAGE="$RUNNER_TEMP/stage-a-from-relocated-bundle" python3 - <<'PY'
-          import json, os, pathlib
-          source = pathlib.Path(os.environ["SOURCE_ROOT"])
-          stage = pathlib.Path(os.environ["STAGE"])
-          original = json.loads((source / "stage-a-base-bundle.json").read_text())
-          manifest = json.loads((stage / "stage-a-search-manifest.json").read_text())
-          assert manifest["status"] == "prepared"
-          assert manifest["candidate_count"] == 4
-          assert manifest["generalization_cohort_id"] == "kws-v2-stage-a-search-v1"
-          assert manifest["external_base_bundle_sha256"] == original["external_base_bundle_sha256"]
-          assert {row["status"] for row in manifest["candidates"]} == {"prepared"}
-          PY
 
       - name: Runtime archive tamper fails before corpus generation
         run: |

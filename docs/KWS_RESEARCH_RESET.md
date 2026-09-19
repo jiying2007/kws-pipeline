@@ -425,3 +425,15 @@ are no longer maintained as live product code.
 This is intentional. Reopening one of those hypotheses requires a new scoped
 experiment against current product evidence rather than reviving a stale
 workflow/config compatibility surface.
+
+## V2 Stage-A control-plane retirement
+
+The pre-reset V2 Stage-A search/orchestration/promotion-readiness control plane is
+retired. It was superseded by Training Reset and then by the governed product
+path: model-training -> model-promotion -> Git model registry -> dataset-driven
+iteration -> real-human Phase A -> physical-target Phase B.
+
+The generic speech-like corpus generation/provider/materialization tools remain
+supported. Their contract no longer invokes the retired Stage-A candidate search
+or depends on the misleading tone-backed
+`xiaowo.v2-speech-like-stage-base.json`.
