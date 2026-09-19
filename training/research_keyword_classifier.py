@@ -104,7 +104,12 @@ class ClipGRU(nn.Module):
         return self.head(hidden[-1])
 
 
-def evaluate(model: nn.Module, loader: DataLoader, classes: int) -> dict:
+def evaluate(
+    model: nn.Module,
+    loader: DataLoader,
+    classes: int,
+    thresholds: list[float],
+) -> dict:
     model.eval()
     confusion = [[0 for _ in range(classes)] for _ in range(classes)]
     positive_scores: list[float] = []
@@ -112,13 +117,37 @@ def evaluate(model: nn.Module, loader: DataLoader, classes: int) -> dict:
     correct = total = 0
     positive_total = positive_correct = 0
     negative_total = negative_false_positive = 0
+    threshold_rows = {
+        threshold: {
+            "wake_examples": 0,
+            "wake_correct": 0,
+            "negative_examples": 0,
+            "false_accepts": 0,
+        }
+        for threshold in thresholds
+    }
     with torch.no_grad():
         for x, lengths, labels in loader:
             probs = model(x, lengths).softmax(dim=1)
             pred = probs.argmax(dim=1)
             keyword_score = probs[:, 1:].amax(dim=1)
-            for truth, guess, score in zip(labels.tolist(), pred.tolist(), keyword_score.tolist()):
+            keyword_pred = probs[:, 1:].argmax(dim=1) + 1
+            for truth, guess, keyword_guess, score in zip(
+                labels.tolist(),
+                pred.tolist(),
+                keyword_pred.tolist(),
+                keyword_score.tolist(),
+            ):
                 confusion[int(truth)][int(guess)] += 1
+                for threshold, row in threshold_rows.items():
+                    if truth == 0:
+                        row["negative_examples"] += 1
+                        row["false_accepts"] += int(score >= threshold)
+                    else:
+                        row["wake_examples"] += 1
+                        row["wake_correct"] += int(
+                            score >= threshold and int(keyword_guess) == int(truth)
+                        )
                 total += 1
                 correct += int(truth == guess)
                 if truth == 0:
@@ -137,6 +166,21 @@ def evaluate(model: nn.Module, loader: DataLoader, classes: int) -> dict:
         "negative_examples": negative_total,
         "negative_false_positive_clip_rate": negative_false_positive / max(1, negative_total),
         "confusion": confusion,
+        "operating_curve": [
+            {
+                "threshold": float(threshold),
+                "wake_examples": int(row["wake_examples"]),
+                "wake_exact_recall": (
+                    row["wake_correct"] / max(1, row["wake_examples"])
+                ),
+                "negative_examples": int(row["negative_examples"]),
+                "false_accepts": int(row["false_accepts"]),
+                "negative_false_positive_rate": (
+                    row["false_accepts"] / max(1, row["negative_examples"])
+                ),
+            }
+            for threshold, row in sorted(threshold_rows.items())
+        ],
         "score_distribution": {
             "positive_keyword_probability": {
                 "p10": quantile(positive_scores, 0.10),
@@ -173,6 +217,15 @@ def main() -> int:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument(
+        "--thresholds",
+        nargs="+",
+        type=float,
+        default=[
+            0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
+            0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95,
+        ],
+    )
+    parser.add_argument(
         "--balance-mode",
         choices=("none", "equal-class-sampler-v1"),
         default="equal-class-sampler-v1",
@@ -184,6 +237,12 @@ def main() -> int:
         parser.error("feature/hidden dims, epochs and batch size must be positive")
     if not math.isfinite(args.lr) or args.lr <= 0:
         parser.error("--lr must be finite and > 0")
+    thresholds = sorted(set(float(value) for value in args.thresholds))
+    if not thresholds or any(
+        not math.isfinite(value) or not 0.0 < value < 1.0
+        for value in thresholds
+    ):
+        parser.error("--thresholds must contain unique finite values in (0,1)")
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -258,9 +317,10 @@ def main() -> int:
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,
+        "thresholds": thresholds,
         "history": history,
-        "calibration": evaluate(model, cal_loader, classes),
-        "test": evaluate(model, test_loader, classes),
+        "calibration": evaluate(model, cal_loader, classes, thresholds),
+        "test": evaluate(model, test_loader, classes, thresholds),
     }
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
