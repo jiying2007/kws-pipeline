@@ -20,10 +20,12 @@ on:
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
       - "tools/aggregate_kws_v2_research_confirm.py"
+      - "tools/compare_kws_v2_research_scorecards.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
       - "tests/test_research_negative_sidecar.py"
+      - "tests/test_research_scorecard_compare.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -46,10 +48,12 @@ on:
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
       - "tools/aggregate_kws_v2_research_confirm.py"
+      - "tools/compare_kws_v2_research_scorecards.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
       - "tests/test_research_negative_sidecar.py"
+      - "tests/test_research_scorecard_compare.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -192,6 +196,9 @@ jobs:
       - name: Research negative sidecar portability
         run: python3 tests/test_research_negative_sidecar.py
 
+      - name: Research scorecard comparator
+        run: python3 tests/test_research_scorecard_compare.py
+
       - name: Research negative plan contract
         run: |
           python3 - <<'PY'
@@ -224,12 +231,14 @@ jobs:
           training/iterate_rnn_development.py
           tests/test_development_loss_controller.py
           tests/test_research_negative_sidecar.py
+          tests/test_research_scorecard_compare.py
           training/research_keyword_classifier.py
           training/diagnose_float_ctc_confidence.py
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
           tools/build_kws_v2_research_negative_requests.py
           tools/aggregate_kws_v2_research_confirm.py
+          tools/compare_kws_v2_research_scorecards.py
           tools/materialize_kws_v2_research_negative_sidecar.py
           tools/run_speech_like_corpus_generation.py
 
