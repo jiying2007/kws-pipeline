@@ -177,6 +177,28 @@ class ClipGRU(nn.Module):
         return self.encoder.out_proj(hidden)
 
 
+class StackedClipGRU(nn.Module):
+    """Two causal GRUCell layers with clip classification from the final state."""
+
+    def __init__(self, feature_dim: int, hidden_dim: int, classes: int):
+        super().__init__()
+        self.gru1 = nn.GRUCell(feature_dim, hidden_dim)
+        self.gru2 = nn.GRUCell(hidden_dim, hidden_dim)
+        self.head = nn.Linear(hidden_dim, classes)
+        self.hidden_dim = int(hidden_dim)
+
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        hidden1 = x.new_zeros((x.shape[0], self.hidden_dim))
+        hidden2 = x.new_zeros((x.shape[0], self.hidden_dim))
+        for frame_index in range(x.shape[1]):
+            next1 = self.gru1(x[:, frame_index, :], hidden1)
+            next2 = self.gru2(next1, hidden2)
+            active = (lengths > frame_index).unsqueeze(1)
+            hidden1 = torch.where(active, next1, hidden1)
+            hidden2 = torch.where(active, next2, hidden2)
+        return self.head(hidden2)
+
+
 def evaluate(
     model: nn.Module,
     loader: DataLoader,
@@ -293,22 +315,33 @@ def model_state_sha256(model: nn.Module) -> str:
     return digest.hexdigest()
 
 
-def initialize_clip_gru(model: ClipGRU, mode: str, seed: int) -> None:
+def _initialize_gru_cell(cell: nn.GRUCell) -> None:
+    for gate in cell.weight_ih.chunk(3, dim=0):
+        nn.init.xavier_uniform_(gate)
+    for gate in cell.weight_hh.chunk(3, dim=0):
+        nn.init.orthogonal_(gate)
+    nn.init.zeros_(cell.bias_ih)
+    nn.init.zeros_(cell.bias_hh)
+
+
+def initialize_clip_gru(model: nn.Module, mode: str, seed: int) -> None:
     if mode == "default-pytorch-v1":
         return
     if mode != "gru-orthogonal-xavier-v1":
         raise ValueError(f"unsupported init mode: {mode}")
     torch.manual_seed(seed)
-    cell = model.encoder.gru
     with torch.no_grad():
-        for gate in cell.weight_ih.chunk(3, dim=0):
-            nn.init.xavier_uniform_(gate)
-        for gate in cell.weight_hh.chunk(3, dim=0):
-            nn.init.orthogonal_(gate)
-        nn.init.zeros_(cell.bias_ih)
-        nn.init.zeros_(cell.bias_hh)
-        nn.init.xavier_uniform_(model.encoder.out_proj.weight)
-        nn.init.zeros_(model.encoder.out_proj.bias)
+        if isinstance(model, ClipGRU):
+            _initialize_gru_cell(model.encoder.gru)
+            nn.init.xavier_uniform_(model.encoder.out_proj.weight)
+            nn.init.zeros_(model.encoder.out_proj.bias)
+        elif isinstance(model, StackedClipGRU):
+            _initialize_gru_cell(model.gru1)
+            _initialize_gru_cell(model.gru2)
+            nn.init.xavier_uniform_(model.head.weight)
+            nn.init.zeros_(model.head.bias)
+        else:
+            raise ValueError(f"unsupported model type for init mode: {type(model).__name__}")
 
 
 def learning_rate_for_epoch(
@@ -349,6 +382,11 @@ def main() -> int:
     parser.add_argument("--frontend", choices=sorted(FRONTEND_IDS), required=True)
     parser.add_argument("--feature-dim", type=int, default=32)
     parser.add_argument("--hidden-dim", type=int, default=32)
+    parser.add_argument(
+        "--encoder-architecture",
+        choices=("single-gru-v1", "stacked-gru-v2"),
+        default="single-gru-v1",
+    )
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -450,7 +488,16 @@ def main() -> int:
     cal_loader = DataLoader(cal, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
     test_loader = DataLoader(test, batch_size=args.batch_size, shuffle=False, collate_fn=collate)
 
-    model = ClipGRU(args.feature_dim, args.hidden_dim, classes)
+    if args.encoder_architecture == "single-gru-v1":
+        model = ClipGRU(args.feature_dim, args.hidden_dim, classes)
+        model_architecture = "clip-gru-v1"
+        recurrent_impl = "tiny-streaming-gru-cell-v1"
+        encoder_layers = 1
+    else:
+        model = StackedClipGRU(args.feature_dim, args.hidden_dim, classes)
+        model_architecture = "clip-stacked-gru-v2"
+        recurrent_impl = "two-layer-gru-cell-v2"
+        encoder_layers = 2
     initialize_clip_gru(model, args.init_mode, model_seed)
     initial_model_state_sha256 = model_state_sha256(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -505,8 +552,10 @@ def main() -> int:
         "diagnostic_only": True,
         "protected_evidence_used": False,
         "shipping_metric": False,
-        "architecture": "clip-gru-v1",
-        "recurrent_impl": "tiny-streaming-gru-cell-v1",
+        "architecture": model_architecture,
+        "encoder_architecture": args.encoder_architecture,
+        "recurrent_impl": recurrent_impl,
+        "encoder_layers": encoder_layers,
         "frontend": args.frontend,
         "feature_dim": args.feature_dim,
         "hidden_dim": args.hidden_dim,

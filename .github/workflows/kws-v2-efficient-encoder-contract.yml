@@ -1,0 +1,78 @@
+name: kws-v2-efficient-encoder-contract
+
+on:
+  push:
+    branches:
+      - "research/kws-efficient-encoder-v2"
+    paths:
+      - "configs/training/kws-v2-efficient-encoder-discovery-v1.json"
+      - "training/research_keyword_classifier.py"
+      - "training/analyze_efficient_encoder_discovery.py"
+      - ".github/workflows/kws-v2-efficient-encoder-discovery.yml"
+      - ".github/workflows/kws-v2-efficient-encoder-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-efficient-encoder-discovery-v1.json"
+      - "training/research_keyword_classifier.py"
+      - "training/analyze_efficient_encoder_discovery.py"
+      - ".github/workflows/kws-v2-efficient-encoder-discovery.yml"
+      - ".github/workflows/kws-v2-efficient-encoder-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify efficient encoder experiment contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/research_keyword_classifier.py training/analyze_efficient_encoder_discovery.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-efficient-encoder-discovery-v1.json").read_text())
+          assert p["policy"]=="kws-v2-efficient-encoder-discovery-v1"
+          assert p["source_runtime_fit_pcen64_evidence"]["run_id"]==35429252239
+          assert p["source_runtime_fit_pcen64_evidence"]["multistart_pass"] is False
+          assert p["source_capacity_upper_bound"]["run_id"]==35428804016
+          assert p["fixed"]["model_seeds"]==[35201,36307,37409]
+          assert p["fixed"]["qualification_split_consumed"] is False
+          previous={1337,2027,4099,7919,12011,16001}
+          for name in (
+              "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json",
+              "configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json",
+          ):
+              old=json.loads(pathlib.Path(name).read_text())
+              previous.update(seed for values in old["cohorts"].values() for seed in values)
+          assert not (set(p["fixed"]["model_seeds"]) & previous)
+          candidates=p["candidates"]
+          assert candidates["b0-gru64"]["encoder_architecture"]=="single-gru-v1"
+          assert candidates["e40-gru2x40"]["encoder_architecture"]=="stacked-gru-v2"
+          assert candidates["e48-gru2x48"]["encoder_architecture"]=="stacked-gru-v2"
+          assert candidates["e40-gru2x40"]["resource"]["dense_mmac_per_s"]==0.922
+          assert candidates["e40-gru2x40"]["resource"]["int8_weight_float_bias_payload_bytes"]==20380
+          assert candidates["e48-gru2x48"]["resource"]["dense_mmac_per_s"]==1.2792
+          assert candidates["e48-gru2x48"]["resource"]["int8_weight_float_bias_payload_bytes"]==27908
+          assert candidates["e40-gru2x40"]["resource"]["current_kwg1_runtime_fit"] is False
+          assert p["selection"]["test_metrics_used_for_selection"] is False
+          assert p["authority"]["runtime_format_change_allowed"] is False
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "StackedClipGRU" in classifier
+          assert "stacked-gru-v2" in classifier
+          analyzer=pathlib.Path("training/analyze_efficient_encoder_discovery.py").read_text()
+          selection_body=analyzer.split("eligible=[",1)[1].split("# Test is reported",1)[0]
+          assert '["test"]' not in selection_body
+          workflow=pathlib.Path(".github/workflows/kws-v2-efficient-encoder-discovery.yml").read_text()
+          assert "Train efficient encoder discovery candidates" in workflow
+          for seed in p["fixed"]["model_seeds"]:
+              assert str(seed) in workflow
+          for forbidden in ("qualification-index","fresh-validation","shadow-validation","formal-qualification"):
+              assert forbidden not in workflow.lower()
+          print("efficient encoder discovery contract: ok")
+          PY
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
