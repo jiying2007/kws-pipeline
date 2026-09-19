@@ -57,6 +57,27 @@ Only one auxiliary term is introduced at each step. Existing trainer defaults re
 
 Do not advance from M0 merely because M0 misses a strict zero-error gate. Advance only when the M0 diagnostic identifies a loss-related failure mode and the next term has a testable hypothesis.
 
+
+## Sample-weight semantics
+
+The trainers now expose two distinct sample-weight actuators:
+
+- `positive_example_weight` is retained for backward compatibility but means **non-empty-target weight**. It is not a wake-positive weight.
+- `wake_example_weight` applies only when the complete CTC target sequence exactly equals one configured wake keyword.
+
+This distinction matters because all canonical Stage-A positive, confusable and negative speech rows carry non-empty token targets. On the historical canonical-only Stage-A corpus, changing `positive_example_weight` scales every sample equally and therefore cancels in the normalized weighted loss.
+
+Training Reset derives two fixed balancing factors before training:
+
+```
+target-bearing weight = clamp(empty-target / target-bearing, configured bounds)
+wake weight           = clamp(tokenized-nonwake / exact-wake, configured bounds)
+```
+
+The same two factors are held constant from M0 through M4. They are baseline sampling semantics, not auxiliary losses.
+
+The normalized development controller uses `wake_example_weight` as its recall actuator. It no longer changes the legacy target-bearing weight when reacting to FRR pressure.
+
 ## Operating-point diagnostics
 
 Research does not use the strict production gate to choose a threshold.
