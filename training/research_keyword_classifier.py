@@ -247,6 +247,34 @@ def initialize_clip_gru(model: ClipGRU, mode: str, seed: int) -> None:
         nn.init.zeros_(model.encoder.out_proj.bias)
 
 
+def learning_rate_for_epoch(
+    base_lr: float,
+    epoch_index: int,
+    total_epochs: int,
+    mode: str,
+    warmup_epochs: int,
+    min_lr_ratio: float,
+) -> float:
+    if mode == "fixed-v1":
+        return float(base_lr)
+    if mode != "warmup-cosine-v1":
+        raise ValueError(f"unsupported LR schedule: {mode}")
+    if warmup_epochs <= 0 or warmup_epochs >= total_epochs:
+        raise ValueError("warmup epochs must be in 1..epochs-1")
+    if not 0.0 < min_lr_ratio <= 1.0:
+        raise ValueError("min LR ratio must be in (0,1]")
+    if epoch_index < warmup_epochs:
+        return float(base_lr) * float(epoch_index + 1) / float(warmup_epochs)
+    tail_epochs = total_epochs - warmup_epochs
+    if tail_epochs <= 1:
+        return float(base_lr) * float(min_lr_ratio)
+    progress = float(epoch_index - warmup_epochs) / float(tail_epochs - 1)
+    cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
+    return float(base_lr) * (
+        float(min_lr_ratio) + (1.0 - float(min_lr_ratio)) * cosine
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Research-only clip classifier separability baseline.")
     parser.add_argument("--train-manifest", required=True, action="append", type=pathlib.Path)
@@ -260,6 +288,13 @@ def main() -> int:
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument(
+        "--lr-schedule",
+        choices=("fixed-v1", "warmup-cosine-v1"),
+        default="fixed-v1",
+    )
+    parser.add_argument("--warmup-epochs", type=int, default=4)
+    parser.add_argument("--min-lr-ratio", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--model-seed", type=int)
     parser.add_argument("--sampler-seed", type=int)
@@ -289,6 +324,12 @@ def main() -> int:
         parser.error("feature/hidden dims, epochs and batch size must be positive")
     if not math.isfinite(args.lr) or args.lr <= 0:
         parser.error("--lr must be finite and > 0")
+    if args.warmup_epochs <= 0:
+        parser.error("--warmup-epochs must be > 0")
+    if not math.isfinite(args.min_lr_ratio) or not 0.0 < args.min_lr_ratio <= 1.0:
+        parser.error("--min-lr-ratio must be finite and in (0,1]")
+    if args.lr_schedule == "warmup-cosine-v1" and args.warmup_epochs >= args.epochs:
+        parser.error("--warmup-epochs must be < --epochs for warmup-cosine-v1")
     thresholds = sorted(set(float(value) for value in args.thresholds))
     if not thresholds or any(
         not math.isfinite(value) or not 0.0 < value < 1.0
@@ -345,6 +386,16 @@ def main() -> int:
     loss_fn = nn.CrossEntropyLoss()
     history: list[dict] = []
     for epoch in range(args.epochs):
+        epoch_lr = learning_rate_for_epoch(
+            args.lr,
+            epoch,
+            args.epochs,
+            args.lr_schedule,
+            args.warmup_epochs,
+            args.min_lr_ratio,
+        )
+        for group in optimizer.param_groups:
+            group["lr"] = epoch_lr
         model.train()
         losses: list[float] = []
         for x, lengths, labels in train_loader:
@@ -355,7 +406,13 @@ def main() -> int:
             nn.utils.clip_grad_norm_(model.parameters(), 5.0)
             optimizer.step()
             losses.append(float(loss.detach()))
-        history.append({"epoch": epoch + 1, "loss": sum(losses) / max(1, len(losses))})
+        history.append(
+            {
+                "epoch": epoch + 1,
+                "learning_rate": epoch_lr,
+                "loss": sum(losses) / max(1, len(losses)),
+            }
+        )
 
     environment = training_environment()
     environment["training_code_sha256"]["training/gru_model.py"] = sha256_file(
@@ -386,6 +443,11 @@ def main() -> int:
         "sampler_seed": sampler_seed,
         "seed_policy": "independent-model-sampler-v1",
         "init_mode": args.init_mode,
+        "optimizer": "AdamW",
+        "base_learning_rate": args.lr,
+        "lr_schedule": args.lr_schedule,
+        "warmup_epochs": args.warmup_epochs,
+        "min_lr_ratio": args.min_lr_ratio,
         "epochs": args.epochs,
         "balance_mode": args.balance_mode,
         "training_class_counts": class_counts,

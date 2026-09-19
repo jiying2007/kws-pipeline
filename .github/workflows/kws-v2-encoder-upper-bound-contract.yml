@@ -13,11 +13,14 @@ on:
       - "training/analyze_classifier_seed_variance.py"
       - "configs/training/kws-v2-classifier-init-stability-v1.json"
       - "training/analyze_classifier_init_stability.py"
+      - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
+      - "training/analyze_classifier_optimizer_schedule_stability.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
+      - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -29,11 +32,14 @@ on:
       - "training/analyze_classifier_seed_variance.py"
       - "configs/training/kws-v2-classifier-init-stability-v1.json"
       - "training/analyze_classifier_init_stability.py"
+      - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
+      - "training/analyze_classifier_optimizer_schedule_stability.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
       - ".github/workflows/kws-v2-classifier-seed-variance.yml"
       - ".github/workflows/kws-v2-classifier-init-stability.yml"
+      - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -277,6 +283,36 @@ jobs:
           variance=pathlib.Path(".github/workflows/kws-v2-classifier-seed-variance.yml").read_text()
           assert "workflow_dispatch:" in variance and "\n  push:" not in variance
           print("init stability contract: ok")
+          PY
+
+      - name: Verify optimizer schedule stability contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_optimizer_schedule_stability.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-optimizer-schedule-stability-v1"
+          assert p["source_init_stability_evidence"]["run_id"]==35424243735
+          assert p["source_init_stability_evidence"]["stability_pass"] is False
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["fixed"]["sampler_seed"]==1337
+          assert p["fixed"]["init_mode"]=="default-pytorch-v1"
+          assert p["candidates"]["fc1-pcen128-fixed"]["lr_schedule"]=="fixed-v1"
+          assert p["candidates"]["fc1-pcen128-warmup-cosine"]["lr_schedule"]=="warmup-cosine-v1"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_fixed"]==0.65
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.10
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "warmup-cosine-v1" in classifier
+          assert "learning_rate_for_epoch" in classifier
+          assert '"lr_schedule": args.lr_schedule' in classifier
+          workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          for seed in p["fixed"]["model_seeds"]:
+              assert str(seed) in workflow
+          assert "Train paired optimizer/schedule candidates" in workflow
+          assert "fc1-pcen128-warmup-cosine" in workflow
+          print("optimizer schedule stability contract: ok")
           PY
 
       - name: Worktree remains clean
