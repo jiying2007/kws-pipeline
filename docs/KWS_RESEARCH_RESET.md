@@ -409,3 +409,19 @@ the same calibration-only/test-after-selection discipline. New runtime/model
 format work is not authorized until an efficient research architecture first
 demonstrates a repeatable gain.
 
+## Historical research implementation retirement
+
+The Training Reset / architecture-probe experiments are closed. Their durable
+conclusions are retained in this document, in
+`configs/training/kws-v2-efficient-encoder-closure-v1.json`, in PRs
+#141/#142/#143 and in the corresponding GitHub Actions run history.
+
+The executable experiment surface itself has been removed from `main`:
+manual-only architecture probes, phonetic-v2 experiments, fixed-keyword upper
+bounds, initialization/schedule/sampler studies, cross-runner research probes,
+research cache/negative-sidecar workflows and their dedicated analyzers/configs
+are no longer maintained as live product code.
+
+This is intentional. Reopening one of those hypotheses requires a new scoped
+experiment against current product evidence rather than reviving a stale
+workflow/config compatibility surface.

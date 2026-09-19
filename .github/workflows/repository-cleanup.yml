@@ -24,7 +24,29 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ staging-"
+  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ staging- experiment/ probe/ research/ staging/"
+  RETIRED_BRANCHES: >-
+    codex/kws-v2-stage-a-live-bootstrap-v1
+    codex/kws-v2-stage-a-live-bootstrap-v2
+    codex/kws-v2-stage-a-live-search-v1
+    codex/render-domains-external-base-v1
+    codex/speech-like-linux-backend-bootstrap-v1
+    codex/speech-like-production-repro-full-v1
+    codex/speech-like-production-repro-full-v2
+    codex/speech-like-vits-repro-live-v1
+    experiment/kws-speech-like-fa-replay-clean-v1
+    experiment/kws-speech-like-fa-replay-v1
+    probe/kws-score-separation-v1-evidence
+    probe/kws-stage-a-missing-baselines-v1
+    research/kws-architecture-v2
+    research/kws-efficient-encoder-v2
+    staging/kws-score-separation-diagnostic-v1
+    staging/kws-threshold-tail-diagnostic-v1
+    staging/kws-training-reproducibility-v1
+    tmp/dispatch-gru-fresh-v4
+    tmp/resumable-development-gru-multiseed-v3
+    tmp/resumable-development-rnn-v3
+    tmp/resumable-development-rnn-v4
 
 jobs:
   sweep-merged-branches:
@@ -48,6 +70,15 @@ jobs:
             local prefix
             for prefix in ${SAFE_BRANCH_PREFIXES}; do
               [[ "${candidate}" == "${prefix}"* ]] && return 0
+            done
+            return 1
+          }
+
+          is_explicitly_retired() {
+            local candidate="$1"
+            local retired
+            for retired in ${RETIRED_BRANCHES}; do
+              [[ "${candidate}" == "${retired}" ]] && return 0
             done
             return 1
           }
@@ -106,8 +137,16 @@ jobs:
 
             reason=""
             branch_ref="refs/remotes/origin/${branch}"
-            if git -C "${graph}" show-ref --verify --quiet "${branch_ref}" && \
-               git -C "${graph}" merge-base --is-ancestor "${branch_ref}" "${default_ref}"; then
+            if is_explicitly_retired "${branch}"; then
+              active_runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" \
+                -f branch="${branch}" -f per_page=100 --jq '[.workflow_runs[] | select(.status != "completed")] | length')"
+              if (( active_runs != 0 )); then
+                echo "skip active retired branch: ${branch}"
+                continue
+              fi
+              reason="explicitly retired historical branch"
+            elif git -C "${graph}" show-ref --verify --quiet "${branch_ref}" && \
+                 git -C "${graph}" merge-base --is-ancestor "${branch_ref}" "${default_ref}"; then
               reason="branch tip is already contained in ${default_branch}"
             else
               merged_same_head="$(
@@ -132,7 +171,9 @@ jobs:
             latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
             latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
-            if [[ "${latest_sha}" != "${sha}" || "${latest_open_prs}" != "0" ]]; then
+            latest_active_runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" \
+              -f branch="${branch}" -f per_page=100 --jq '[.workflow_runs[] | select(.status != "completed")] | length')"
+            if [[ "${latest_sha}" != "${sha}" || "${latest_open_prs}" != "0" || "${latest_active_runs}" != "0" ]]; then
               echo "skip race: ${branch} changed while cleanup was running"
               continue
             fi
