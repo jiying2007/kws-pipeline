@@ -163,7 +163,7 @@ def main() -> int:
             seen_recordings: set[str] = set()
             for index, row in enumerate(read_jsonl(source_refs), 1):
                 recording = str(row.get("recording", ""))
-                path_text = row.get("path", row.get("audio_path"))
+                path_text = row.get("audio_path") or row.get("path")
                 if not recording or recording in seen_recordings or not isinstance(path_text, str):
                     raise ValueError(f"{source_refs}:{index}: invalid reference identity")
                 src, relative = source_audio(path_text, source, f"{source_refs}:{index}")
