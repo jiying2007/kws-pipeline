@@ -149,6 +149,10 @@ jobs:
         run: python3 tests/test_keyword_compile.py
       - name: Verify tracked worktree after Keyword compiler
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Keyword compiler"'
+      - name: Parameter contract and generated header
+        run: python3 tests/test_parameter_contract.py
+      - name: Verify tracked worktree after Parameter contract and generated header
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Parameter contract and generated header"'
       - name: Product metric scorer
         run: python3 tests/test_eval.py
       - name: Verify tracked worktree after Product metric scorer
@@ -222,8 +226,41 @@ jobs:
         run: python3 tests/test_test_inventory.py
       - name: Verify tracked worktree after Test inventory tool contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Test inventory tool contract"'
+      - name: Model release contract pin
+        run: python3 tests/test_model_release_pin.py
+      - name: Verify tracked worktree after Model release contract pin
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model release contract pin"'
+      - name: Runtime purity contract
+        run: python3 tests/test_runtime_purity_contract.py
+      - name: Verify tracked worktree after Runtime purity contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime purity contract"'
+      - name: Runtime purity gate
+        run: python3 tools/check_runtime_purity.py --library build/libkws_pipeline.a
+      - name: Verify tracked worktree after Runtime purity gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Runtime purity gate"'
+      - name: Frozen qualification gate reporter
+        run: python3 tests/test_report_frozen_qualification_gate.py
+      - name: Verify tracked worktree after Frozen qualification gate reporter
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen qualification gate reporter"'
+      - name: Deferred verdict contract
+        run: python3 tests/test_deferred_verdicts.py
+      - name: Verify tracked worktree after Deferred verdict contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict contract"'
+      - name: Dataset iteration contract
+        run: python3 tests/test_dataset_iteration.py
+      - name: Verify tracked worktree after Dataset iteration contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset iteration contract"'
+      - name: Deferred verdict gate
+        run: python3 tools/check_deferred_verdicts.py .github/workflows
+      - name: Verify tracked worktree after Deferred verdict gate
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Deferred verdict gate"'
+      - name: Benchmark signal contract
+        run: python3 tests/test_bench_signal.py
+      - name: Verify tracked worktree after Benchmark signal contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Benchmark signal contract"'
       - name: Hosted benchmark signal
-        run: ./build/kws_bench
+        run: |
+          ./build/kws_bench | python3 tools/check_bench_signal.py --max-rtf 0.1
       - name: Verify tracked worktree after Hosted benchmark signal
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted benchmark signal"'
       - name: Install SDK
@@ -351,18 +388,59 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install cross compiler
-        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
+      - name: Install cross compiler and ARM user-mode emulator
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc-arm-linux-gnueabihf qemu-user-static
+      - name: Locate ARM sysroot for the emulator
+        run: |
+          set -euo pipefail
+          loader="$(find /usr/arm-linux-gnueabihf -name 'ld-linux-armhf.so.3' -print -quit)"
+          test -n "$loader"
+          sysroot="$(dirname "$(dirname "$loader")")"
+          echo "ARM sysroot for qemu-arm-static: $sysroot"
+          echo "KWS_ARM_SYSROOT=$sysroot" >>"$GITHUB_ENV"
+      - name: Configure hosted reference build
+        run: >-
+          cmake -S . -B build-ref
+          -DCMAKE_BUILD_TYPE=Release
+          -DKWS_BUILD_TESTS=OFF
+          -DKWS_BUILD_BENCH=OFF
+          -DKWS_BUILD_TOOLS=ON
+          -DKWS_BUILD_FUZZ=OFF
+          -DKWS_STRICT=ON
+      - name: Build hosted reference runners
+        run: cmake --build build-ref --parallel
       - name: Configure Cortex-A32
         run: >-
           cmake -S . -B build-arm
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc
           -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
-          -DKWS_BUILD_TESTS=OFF
+          -DCMAKE_CROSSCOMPILING_EMULATOR="/usr/bin/qemu-arm-static;-L;$KWS_ARM_SYSROOT"
+          -DKWS_BUILD_TESTS=ON
           -DKWS_BUILD_BENCH=OFF
           -DKWS_BUILD_TOOLS=ON
           -DKWS_BUILD_FUZZ=OFF
           -DKWS_STRICT=ON
-      - name: Cross build core and target qualification tools
+      - name: Cross build core, tests and target qualification tools
         run: cmake --build build-arm --parallel
+      - name: Run the Cortex-A32 test suite under qemu-arm-static
+        run: ctest --test-dir build-arm --output-on-failure
+      - name: Frontend C/spec parity on the Cortex-A32 build
+        run: |
+          set -euo pipefail
+          wrapper="$RUNNER_TEMP/qemu-arm-kws-feature-dump"
+          cat >"$wrapper" <<EOF
+          #!/usr/bin/env bash
+          exec /usr/bin/qemu-arm-static -L "$KWS_ARM_SYSROOT" ./build-arm/kws_feature_dump "\$@"
+          EOF
+          chmod +x "$wrapper"
+          python3 tests/test_frontend_parity.py "$wrapper"
+      - name: NEON int8 kernel parity against the hosted reference
+        run: >-
+          python3 tests/test_arm_parity.py
+          --reference-runner ./build-ref/kws_wav
+          --candidate-runner ./build-arm/kws_wav
+          --emulator /usr/bin/qemu-arm-static
+          --emulator-sysroot "$KWS_ARM_SYSROOT"

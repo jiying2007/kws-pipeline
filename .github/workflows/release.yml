@@ -207,17 +207,44 @@ jobs:
           expected="${release_tag#v}"
           actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
           test "$expected" = "$actual"
-      - name: Install Cortex-A32 cross compiler
-        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
+      - name: Install Cortex-A32 cross compiler and ARM user-mode emulator
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc-arm-linux-gnueabihf qemu-user-static
+      - name: Locate ARM sysroot for the emulator
+        run: |
+          set -euo pipefail
+          loader="$(find /usr/arm-linux-gnueabihf -name 'ld-linux-armhf.so.3' -print -quit)"
+          test -n "$loader"
+          sysroot="$(dirname "$(dirname "$loader")")"
+          echo "ARM sysroot for qemu-arm-static: $sysroot"
+          echo "KWS_ARM_SYSROOT=$sysroot" >>"$GITHUB_ENV"
+      - name: Configure hosted reference build
+        run: >-
+          cmake -S . -B build-ref -DCMAKE_BUILD_TYPE=Release
+          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF
+          -DKWS_BUILD_TOOLS=ON -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
+      - name: Build hosted reference runners
+        run: cmake --build build-ref --parallel
       - name: Configure
         run: >-
           cmake -S . -B build-arm -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc
           -DCMAKE_C_FLAGS="-mcpu=cortex-a32 -mfpu=neon-vfpv4 -mfloat-abi=hard"
-          -DKWS_BUILD_TESTS=OFF -DKWS_BUILD_BENCH=OFF
+          -DCMAKE_CROSSCOMPILING_EMULATOR="/usr/bin/qemu-arm-static;-L;$KWS_ARM_SYSROOT"
+          -DKWS_BUILD_TESTS=ON -DKWS_BUILD_BENCH=OFF
           -DKWS_BUILD_TOOLS=ON -DKWS_BUILD_FUZZ=OFF -DKWS_STRICT=ON
       - name: Cross build
         run: cmake --build build-arm --parallel
+      - name: Run the Cortex-A32 test suite under qemu-arm-static
+        run: ctest --test-dir build-arm --output-on-failure
+      - name: NEON int8 kernel parity against the hosted reference
+        run: >-
+          python3 tests/test_arm_parity.py
+          --reference-runner ./build-ref/kws_wav
+          --candidate-runner ./build-arm/kws_wav
+          --emulator /usr/bin/qemu-arm-static
+          --emulator-sysroot "$KWS_ARM_SYSROOT"
 
   publish:
     needs: [hosted, coverage, sanitizers, fuzz, armv7-cross]

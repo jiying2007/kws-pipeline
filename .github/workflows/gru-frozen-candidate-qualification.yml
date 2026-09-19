@@ -281,8 +281,16 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+      # Three bare `test` lines used to be the whole gate: a failure said
+      # nothing but "exit 1", and every number that would explain it sat inside
+      # the uploaded zip. This reports which stage ran, which split failed and
+      # which metric exceeded which limit, so a red run is diagnosable without
+      # downloading an artifact.
       - name: Gate frozen candidate qualification
         run: |
-          test "${{ steps.fresh.outputs.exit_code }}" = '0'
-          test "${{ steps.shadow.outputs.exit_code }}" = '0'
-          test "${{ steps.formal.outputs.exit_code }}" = '0'
+          python3 tools/report_frozen_qualification_gate.py \
+            --stage "fresh:build/gru-frozen-qualification/fresh-validation/fresh-validation-summary.json:${{ steps.fresh.outputs.exit_code }}" \
+            --stage "shadow:build/gru-frozen-qualification/shadow/summary.json:${{ steps.shadow.outputs.exit_code }}" \
+            --stage "formal:build/gru-frozen-qualification/formal/formal-qualification-summary.json:${{ steps.formal.outputs.exit_code }}" \
+            --gates "${{ steps.candidate.outputs.path }}/source-config.json" \
+            --step-summary "$GITHUB_STEP_SUMMARY"

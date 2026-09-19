@@ -259,8 +259,13 @@ jobs:
             build/rnn-frozen-qualification/formal/formal-qualification-summary.json
           if-no-files-found: warn
           retention-days: 30
+      # See the GRU workflow: three bare `test` lines left a failure
+      # undiagnosable, so the gate now names the stage, split and metric.
       - name: Gate frozen RNN candidate qualification
         run: |
-          test "${{ steps.fresh.outputs.exit_code }}" = '0'
-          test "${{ steps.shadow.outputs.exit_code }}" = '0'
-          test "${{ steps.formal.outputs.exit_code }}" = '0'
+          python3 tools/report_frozen_qualification_gate.py \
+            --stage "fresh:build/rnn-frozen-qualification/fresh-validation/fresh-validation-summary.json:${{ steps.fresh.outputs.exit_code }}" \
+            --stage "shadow:build/rnn-frozen-qualification/shadow/summary.json:${{ steps.shadow.outputs.exit_code }}" \
+            --stage "formal:build/rnn-frozen-qualification/formal/formal-qualification-summary.json:${{ steps.formal.outputs.exit_code }}" \
+            --gates "${{ steps.candidate.outputs.path }}/source-config.json" \
+            --step-summary "$GITHUB_STEP_SUMMARY"
