@@ -21,7 +21,7 @@ on:
     branches:
       - 'tmp/resumable-development-*'
     paths:
-      - '.github/triggers/resumable-development.json'
+      - '.github/triggers/resumable-development.json' # workflow-path-filter: allow-missing (created only on tmp/resumable-development-* branches)
   workflow_dispatch:
     inputs:
       variant:
