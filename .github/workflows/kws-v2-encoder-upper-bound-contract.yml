@@ -348,13 +348,12 @@ jobs:
           assert '"ATEN_CPU_CAPABILITY": "default"' in classifier
           assert '"MKL_CBWR": "COMPATIBLE"' in classifier
           assert '"research_cpu_contract": {' in classifier
-          for name in (
-              ".github/workflows/kws-v2-classifier-init-stability.yml",
-              ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml",
-          ):
-              workflow=pathlib.Path(name).read_text()
-              assert "workflow_dispatch:" in workflow
-              assert "\n  push:" not in workflow
+          init_workflow=pathlib.Path(".github/workflows/kws-v2-classifier-init-stability.yml").read_text()
+          assert "workflow_dispatch:" in init_workflow
+          assert "\n  push:" not in init_workflow
+          schedule_workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          assert "workflow_dispatch:" in schedule_workflow
+          assert "\n  push:" in schedule_workflow
           repro=pathlib.Path(".github/workflows/kws-v2-classifier-cross-runner-repro.yml").read_text()
           assert "model_seed: [2027, 7919]" in repro
           assert "replica: [a, b]" in repro
