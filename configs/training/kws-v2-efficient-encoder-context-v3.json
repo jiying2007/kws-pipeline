@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-efficient-encoder-context-v3",
+  "evidence_scope": "research-only",
+  "source_stacked_discovery": {
+    "run_id": 35433373024,
+    "exact_head_sha": "4d98584d87caf5ae1b6530a7dfea8137bd576c09",
+    "discovery_pass": false,
+    "selected_candidate": null,
+    "interpretation": "stacked GRU lowered training loss but did not create a stable calibration operating region"
+  },
+  "source_numeric_boundary": {
+    "run_id": 35433157724,
+    "cross_vendor_bit_exact": false,
+    "causal_authority": "same-runner-all-seeds-paired-v1"
+  },
+  "hypothesis": "A zero-initialized one-frame residual context adapter can add local temporal discrimination for token-sharing near misses while preserving the baseline GRU core at initialization and staying within a bounded embedded resource envelope.",
+  "fixed": {
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "frontend": "logmel",
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "lr_schedule": "fixed-v1",
+    "init_mode": "default-pytorch-v1",
+    "balance_mode": "equal-class-sampler-v1",
+    "sampler_seed": 1337,
+    "model_seeds": [
+      38501,
+      39607,
+      40709
+    ],
+    "qualification_split_consumed": false,
+    "prior_observed_seeds_reused": false
+  },
+  "candidates": {
+    "b0-gru64": {
+      "role": "single-layer-reference",
+      "encoder_architecture": "single-gru-v1",
+      "hidden_dim": 64,
+      "encoder_layers": 1,
+      "context_frames": 1,
+      "residual_context_adapter": false,
+      "resource": {
+        "dense_mmac_per_s": 0.9376,
+        "int8_weight_float_bias_payload_bytes": 20308,
+        "recurrent_state_bytes": 256,
+        "current_kwg1_runtime_fit": true
+      }
+    },
+    "c48-context2-gru48": {
+      "role": "low-resource-context-candidate",
+      "encoder_architecture": "context2-residual-gru-v3",
+      "hidden_dim": 48,
+      "encoder_layers": 1,
+      "context_frames": 2,
+      "residual_context_adapter": true,
+      "resource": {
+        "dense_mmac_per_s": 0.6904,
+        "int8_weight_float_bias_payload_bytes": 15108,
+        "recurrent_state_bytes": 320,
+        "current_kwg1_runtime_fit": false
+      }
+    },
+    "c64-context2-gru64": {
+      "role": "near-baseline-context-candidate",
+      "encoder_architecture": "context2-residual-gru-v3",
+      "hidden_dim": 64,
+      "encoder_layers": 1,
+      "context_frames": 2,
+      "residual_context_adapter": true,
+      "resource": {
+        "dense_mmac_per_s": 1.04,
+        "int8_weight_float_bias_payload_bytes": 22484,
+        "recurrent_state_bytes": 384,
+        "current_kwg1_runtime_fit": false
+      }
+    }
+  },
+  "core_identity_checks": [
+    {
+      "candidate": "c64-context2-gru64",
+      "reference": "b0-gru64",
+      "required": true
+    }
+  ],
+  "operating_points": {
+    "constraints": [
+      {
+        "name": "strict-10fp",
+        "max_negative_fp_rate": 0.1
+      },
+      {
+        "name": "strict-05fp",
+        "max_negative_fp_rate": 0.05
+      }
+    ]
+  },
+  "selection": {
+    "authority": "calibration-only-resource-aware-context-v3",
+    "reference_candidate": "b0-gru64",
+    "candidate_order": [
+      "c48-context2-gru48",
+      "c64-context2-gru64"
+    ],
+    "primary_operating_point": "strict-10fp",
+    "secondary_operating_point": "strict-05fp",
+    "test_metrics_used_for_selection": false,
+    "prefer_lower_dense_mmac_when_eligible": true
+  },
+  "numerical_contract": {
+    "causal_authority": "same-runner-all-seeds-paired-v1",
+    "all_discovery_seeds_same_runner": true,
+    "cross_vendor_bit_exact_required": false
+  },
+  "decision_rules": {
+    "min_primary_directional_passes": 2,
+    "min_secondary_directional_passes": 2,
+    "primary_min_calibration_wake_recall_delta": 0.1,
+    "secondary_min_calibration_wake_recall_delta": 0.05,
+    "max_calibration_negative_fp_delta_regression": 0.02,
+    "min_primary_calibration_wake_recall_mean": 0.7,
+    "max_candidate_dense_mmac_per_s": 1.1,
+    "max_candidate_payload_bytes": 23000,
+    "max_candidate_recurrent_state_bytes": 384,
+    "pass_next": "fresh-multirunner-multistart-confirmation-v3",
+    "fail_next": "encoder-architecture-search-v4"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "runtime_format_change_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

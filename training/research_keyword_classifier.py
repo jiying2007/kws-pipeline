@@ -199,6 +199,34 @@ class StackedClipGRU(nn.Module):
         return self.head(hidden2)
 
 
+class ContextResidualClipGRU(nn.Module):
+    """Zero-init one-frame context adapter feeding the existing streaming GRU core."""
+
+    def __init__(self, feature_dim: int, hidden_dim: int, classes: int):
+        super().__init__()
+        # Construct the canonical GRU core first so same-seed GRU64 weights
+        # exactly match ClipGRU before the extra adapter parameters are created.
+        self.encoder = TinyStreamingGRU(feature_dim, hidden_dim, classes)
+        self.context_proj = nn.Linear(feature_dim * 2, feature_dim)
+        self.feature_dim = int(feature_dim)
+        with torch.no_grad():
+            nn.init.zeros_(self.context_proj.weight)
+            nn.init.zeros_(self.context_proj.bias)
+
+    def forward(self, x: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        hidden = x.new_zeros((x.shape[0], self.encoder.gru.hidden_size))
+        previous = x.new_zeros((x.shape[0], self.feature_dim))
+        for frame_index in range(x.shape[1]):
+            frame = x[:, frame_index, :]
+            context = torch.cat((previous, frame), dim=1)
+            adapted = frame + torch.tanh(self.context_proj(context))
+            next_hidden = self.encoder.gru(adapted, hidden)
+            active = (lengths > frame_index).unsqueeze(1)
+            hidden = torch.where(active, next_hidden, hidden)
+            previous = torch.where(active, frame, previous)
+        return self.encoder.out_proj(hidden)
+
+
 def evaluate(
     model: nn.Module,
     loader: DataLoader,
@@ -340,8 +368,20 @@ def initialize_clip_gru(model: nn.Module, mode: str, seed: int) -> None:
             _initialize_gru_cell(model.gru2)
             nn.init.xavier_uniform_(model.head.weight)
             nn.init.zeros_(model.head.bias)
+        elif isinstance(model, ContextResidualClipGRU):
+            _initialize_gru_cell(model.encoder.gru)
+            nn.init.xavier_uniform_(model.encoder.out_proj.weight)
+            nn.init.zeros_(model.encoder.out_proj.bias)
+            nn.init.zeros_(model.context_proj.weight)
+            nn.init.zeros_(model.context_proj.bias)
         else:
             raise ValueError(f"unsupported model type for init mode: {type(model).__name__}")
+
+
+def encoder_core_state_sha256(model: nn.Module) -> str | None:
+    if isinstance(model, (ClipGRU, ContextResidualClipGRU)):
+        return model_state_sha256(model.encoder)
+    return None
 
 
 def learning_rate_for_epoch(
@@ -384,7 +424,7 @@ def main() -> int:
     parser.add_argument("--hidden-dim", type=int, default=32)
     parser.add_argument(
         "--encoder-architecture",
-        choices=("single-gru-v1", "stacked-gru-v2"),
+        choices=("single-gru-v1", "stacked-gru-v2", "context2-residual-gru-v3"),
         default="single-gru-v1",
     )
     parser.add_argument("--epochs", type=int, default=12)
@@ -493,13 +533,25 @@ def main() -> int:
         model_architecture = "clip-gru-v1"
         recurrent_impl = "tiny-streaming-gru-cell-v1"
         encoder_layers = 1
-    else:
+        context_frames = 1
+        residual_context_adapter = False
+    elif args.encoder_architecture == "stacked-gru-v2":
         model = StackedClipGRU(args.feature_dim, args.hidden_dim, classes)
         model_architecture = "clip-stacked-gru-v2"
         recurrent_impl = "two-layer-gru-cell-v2"
         encoder_layers = 2
+        context_frames = 1
+        residual_context_adapter = False
+    else:
+        model = ContextResidualClipGRU(args.feature_dim, args.hidden_dim, classes)
+        model_architecture = "clip-context2-residual-gru-v3"
+        recurrent_impl = "context2-residual-plus-gru-cell-v3"
+        encoder_layers = 1
+        context_frames = 2
+        residual_context_adapter = True
     initialize_clip_gru(model, args.init_mode, model_seed)
     initial_model_state_sha256 = model_state_sha256(model)
+    initial_encoder_core_sha256 = encoder_core_state_sha256(model)
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=args.lr,
@@ -566,6 +618,11 @@ def main() -> int:
         "encoder_architecture": args.encoder_architecture,
         "recurrent_impl": recurrent_impl,
         "encoder_layers": encoder_layers,
+        "context_frames": context_frames,
+        "residual_context_adapter": residual_context_adapter,
+        "context_projection_zero_initialized": bool(
+            isinstance(model, ContextResidualClipGRU)
+        ),
         "frontend": args.frontend,
         "feature_dim": args.feature_dim,
         "hidden_dim": args.hidden_dim,
@@ -597,6 +654,7 @@ def main() -> int:
             else None
         ),
         "initial_model_state_sha256": initial_model_state_sha256,
+        "initial_encoder_core_sha256": initial_encoder_core_sha256,
         "model_state_sha256": model_state_sha256(model),
         "trainable_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "training_environment": environment,

@@ -418,3 +418,38 @@ the same calibration-only/test-after-selection discipline. New runtime/model
 format work is not authorized until an efficient research architecture first
 demonstrates a repeatable gain.
 
+### Efficient encoder v2/v3 continuation
+
+The first resource-bounded encoder-v2 discovery is closed by same-runner evidence
+run `35433373024`. All three model seeds and all candidates executed serially
+on one AMD EPYC 7763 runner, and the analyzer verified a single CPU/torch/runtime
+identity across the complete experiment.
+
+The stacked-GRU candidates did not pass:
+
+- GRU40x2: strict-10 calibration wake-recall mean `0.08333`, primary
+  directional passes `1/3`, secondary `0/3`;
+- GRU48x2: strict-10 calibration wake-recall mean `0.359375`, primary
+  directional passes `0/3`, secondary `0/3`.
+
+In multiple seeds the deeper GRU achieved much lower training loss than GRU64
+while still producing a weak calibration operating region. This is evidence
+against "just add recurrent depth / train longer" and motivates a different
+inductive bias rather than more of the same recurrence.
+
+The v3 hypothesis is a zero-initialized one-frame residual context adapter ahead
+of a single GRU core. For the GRU64 variant the GRU core is constructed before
+the adapter and must have the same initial core SHA as the same-seed B0 model;
+the adapter starts at exactly zero, so the added path begins as a no-op and
+learns only a local temporal correction.
+
+Static research envelopes:
+
+- context2 + GRU48: `0.6904 MMAC/s`, ~`15.1 KB` payload, `320 B`
+  recurrent/context state;
+- context2 + GRU64: `1.04 MMAC/s`, ~`22.5 KB` payload, `384 B` state.
+
+These are research arithmetic estimates only. The current KWG1 runtime does not
+implement the context adapter, and runtime/model-format work remains prohibited
+until a fresh same-runner discovery and later multirunner confirmation pass.
+

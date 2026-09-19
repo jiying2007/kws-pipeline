@@ -153,5 +153,27 @@
       "e40_seed_37409": "amd-vs-amd-bit-exact"
     },
     "interpretation": "hosted cross-vendor bit-exactness is not an architecture-selection authority; pair all seeds and candidates on one runner"
+  },
+  "source_same_runner_result": {
+    "run_id": 35433373024,
+    "exact_head_sha": "4d98584d87caf5ae1b6530a7dfea8137bd576c09",
+    "evidence_class": "kws-v2-efficient-encoder-discovery-summary-v1",
+    "causal_authority": "same-runner-all-seeds-paired-v1",
+    "same_runner_all_seeds": true,
+    "discovery_pass": false,
+    "selected_candidate": null,
+    "candidate_summary": {
+      "e40-gru2x40": {
+        "primary_calibration_wake_recall_mean": 0.08333333333333333,
+        "primary_directional_passes": 1,
+        "secondary_directional_passes": 0
+      },
+      "e48-gru2x48": {
+        "primary_calibration_wake_recall_mean": 0.359375,
+        "primary_directional_passes": 0,
+        "secondary_directional_passes": 0
+      }
+    },
+    "next_experiment": "encoder-architecture-search-v3"
   }
 }

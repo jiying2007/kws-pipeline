@@ -80,6 +80,9 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
             raise ValueError(f"{name}: hidden dimension drift")
         if int(result["encoder_layers"])!=int(spec["encoder_layers"]):
             raise ValueError(f"{name}: layer count drift")
+        for key in ("context_frames","residual_context_adapter"):
+            if key in spec and result.get(key)!=spec[key]:
+                raise ValueError(f"{name}: {key} drift")
         runtime_identity={
             "research_cpu_contract":result["research_cpu_contract"],
             "optimizer_kernel_contract":result["optimizer_kernel_contract"],
@@ -91,6 +94,9 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
             "encoder_architecture":result["encoder_architecture"],
             "hidden_dim":int(result["hidden_dim"]),
             "encoder_layers":int(result["encoder_layers"]),
+            "context_frames":int(result["context_frames"]),
+            "residual_context_adapter":bool(result["residual_context_adapter"]),
+            "initial_encoder_core_sha256":result.get("initial_encoder_core_sha256"),
             "trainable_parameters":int(result["trainable_parameters"]),
             "initial_model_state_sha256":result["initial_model_state_sha256"],
             "final_model_state_sha256":result["model_state_sha256"],
@@ -102,6 +108,22 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
         raise ValueError("paired discovery candidates did not share identical runtime identity")
     reference_name=str(config["selection"]["reference_candidate"])
     reference=rows[reference_name]
+    core_identity_checks={}
+    for item in config.get("core_identity_checks",[]):
+        candidate=str(item["candidate"])
+        source=str(item["reference"])
+        matched=(
+            rows[candidate].get("initial_encoder_core_sha256") is not None
+            and rows[candidate].get("initial_encoder_core_sha256")
+            == rows[source].get("initial_encoder_core_sha256")
+        )
+        core_identity_checks[f"{candidate}:{source}"]={
+            "matched":matched,
+            "candidate_sha256":rows[candidate].get("initial_encoder_core_sha256"),
+            "reference_sha256":rows[source].get("initial_encoder_core_sha256"),
+        }
+        if bool(item.get("required",False)) and not matched:
+            raise ValueError(f"{candidate}: initial GRU core does not match {source}")
     primary=str(config["selection"]["primary_operating_point"])
     secondary=str(config["selection"]["secondary_operating_point"])
     comparisons={}
@@ -130,6 +152,7 @@ def trial(config: dict, seed: int, root: pathlib.Path) -> dict:
         "same_runner_paired":True,
         "runtime_identity":runtime_identities[0],
         "candidates":rows,
+        "core_identity_checks":core_identity_checks,
         "calibration_comparisons":comparisons,
     }
 

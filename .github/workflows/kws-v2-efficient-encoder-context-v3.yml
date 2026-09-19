@@ -1,25 +1,32 @@
-name: kws-v2-efficient-encoder-discovery
+name: kws-v2-efficient-encoder-context-v3
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-efficient-encoder-v2"
+    paths:
+      - "configs/training/kws-v2-efficient-encoder-context-v3.json"
+      - "training/research_keyword_classifier.py"
+      - "training/analyze_efficient_encoder_discovery.py"
+      - ".github/workflows/kws-v2-efficient-encoder-context-v3.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-efficient-encoder-discovery-${{ github.ref }}
+  group: kws-v2-efficient-encoder-context-v3-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  same-runner-discovery:
+  same-runner-context-discovery:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
       - name: Download frozen rendered research dataset
         uses: actions/download-artifact@v4
         with:
@@ -28,7 +35,6 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35412153192
-
       - name: Download frozen ordinary-speech sidecar
         uses: actions/download-artifact@v4
         with:
@@ -37,7 +43,6 @@ jobs:
           github-token: ${{ github.token }}
           repository: jiying2007/kws-pipeline
           run-id: 35367960968
-
       - name: Install pinned CPU training runtime
         run: |
           set -euo pipefail
@@ -45,11 +50,10 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-
-      - name: Train all seeds and candidates on one runner
+      - name: Train all context-v3 seeds and candidates on one runner
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/efficient"
+          root="$RUNNER_TEMP/context-v3"
           mkdir -p "$root"
           common=(
             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"
@@ -72,7 +76,7 @@ jobs:
           )
           seeds="$(python3 - <<'PY'
           import json, pathlib
-          p=json.loads(pathlib.Path("configs/training/kws-v2-efficient-encoder-discovery-v1.json").read_text())
+          p=json.loads(pathlib.Path("configs/training/kws-v2-efficient-encoder-context-v3.json").read_text())
           print(" ".join(str(v) for v in p["fixed"]["model_seeds"]))
           PY
           )"
@@ -90,30 +94,28 @@ jobs:
                 --output "$seed_root/$name/classifier.json"
             }
             train b0-gru64 single-gru-v1 64
-            train e40-gru2x40 stacked-gru-v2 40
-            train e48-gru2x48 stacked-gru-v2 48
+            train c48-context2-gru48 context2-residual-gru-v3 48
+            train c64-context2-gru64 context2-residual-gru-v3 64
             .venv/bin/python training/analyze_efficient_encoder_discovery.py trial \
-              --config configs/training/kws-v2-efficient-encoder-discovery-v1.json \
+              --config configs/training/kws-v2-efficient-encoder-context-v3.json \
               --model-seed "$seed" \
               --root "$seed_root" \
               --output "$seed_root/trial-evidence.json"
           done
-
-      - name: Aggregate same-runner calibration-only discovery
+      - name: Aggregate context-v3 calibration-only discovery
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/efficient-summary"
+          mkdir -p "$RUNNER_TEMP/context-v3-summary"
           .venv/bin/python training/analyze_efficient_encoder_discovery.py aggregate \
-            --config configs/training/kws-v2-efficient-encoder-discovery-v1.json \
-            --root "$RUNNER_TEMP/efficient" \
-            --output "$RUNNER_TEMP/efficient-summary/summary.json"
-
-      - name: Upload same-runner discovery evidence
+            --config configs/training/kws-v2-efficient-encoder-context-v3.json \
+            --root "$RUNNER_TEMP/context-v3" \
+            --output "$RUNNER_TEMP/context-v3-summary/summary.json"
+      - name: Upload context-v3 evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-efficient-encoder-same-runner-${{ github.sha }}
+          name: kws-v2-efficient-encoder-context-v3-${{ github.sha }}
           path: |
-            ${{ runner.temp }}/efficient/
-            ${{ runner.temp }}/efficient-summary/
+            ${{ runner.temp }}/context-v3/
+            ${{ runner.temp }}/context-v3-summary/
           if-no-files-found: error
           retention-days: 30
