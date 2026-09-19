@@ -254,6 +254,14 @@ jobs:
         run: python3 tests/test_verify_rnn_frozen_candidate.py
       - name: Verify tracked worktree after RNN frozen candidate contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN frozen candidate contract"'
+      - name: RNN development gate contract
+        run: python3 tests/test_rnn_development_gate.py
+      - name: Verify tracked worktree after RNN development gate contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN development gate contract"'
+      - name: RNN stability evidence contract
+        run: python3 tests/test_verify_rnn_stability_evidence.py
+      - name: Verify tracked worktree after RNN stability evidence contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN stability evidence contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
