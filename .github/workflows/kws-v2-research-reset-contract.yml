@@ -28,6 +28,7 @@ on:
       - "tests/test_research_negative_sidecar.py"
       - "tests/test_research_scorecard_compare.py"
       - "tests/test_research_rendered_cache.py"
+      - ".github/workflows/kws-v2-research-rendered-dataset-cache.yml"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -58,6 +59,7 @@ on:
       - "tests/test_research_negative_sidecar.py"
       - "tests/test_research_scorecard_compare.py"
       - "tests/test_research_rendered_cache.py"
+      - ".github/workflows/kws-v2-research-rendered-dataset-cache.yml"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -121,20 +123,24 @@ jobs:
               for row in ladder.values()
           )
           tuning=p["tuning_profiles"]
-          assert list(tuning)==["m2-margin-030"]
+          assert list(tuning)==["m2-margin-020","m2-margin-030"]
           m2=ladder["m2-plus-margin"]
-          m2b=tuning["m2-margin-030"]
-          assert m2b["base_profile"]=="m2-plus-margin"
-          assert m2b["single_variable"]=="keyword_sequence_margin_loss_weight"
-          assert float(m2b["keyword_sequence_margin_loss_weight"])==0.3
-          for key in (
-              "ordered_token_loss_weight",
-              "prefix_completion_loss_weight",
-              "recurrent_release_loss_weight",
-              "target_bearing_weight_policy",
-              "wake_example_weight_policy",
+          for name, expected_weight in (
+              ("m2-margin-020", 0.2),
+              ("m2-margin-030", 0.3),
           ):
-              assert m2b[key]==m2[key], key
+              row=tuning[name]
+              assert row["base_profile"]=="m2-plus-margin"
+              assert row["single_variable"]=="keyword_sequence_margin_loss_weight"
+              assert float(row["keyword_sequence_margin_loss_weight"])==expected_weight
+              for key in (
+                  "ordered_token_loss_weight",
+                  "prefix_completion_loss_weight",
+                  "recurrent_release_loss_weight",
+                  "target_bearing_weight_policy",
+                  "wake_example_weight_policy",
+              ):
+                  assert row[key]==m2[key], (name,key)
           previous=None
           keys=(
               "ordered_token_loss_weight",
@@ -191,6 +197,8 @@ jobs:
           assert "update_curriculum" not in text
           assert '"promotion_allowed": False' in text
           assert '"qualification_split_consumed": False' in text
+          assert "--prepared-dataset-cache" in text
+          assert "kws-v2-research-rendered-dataset-cache-v1" in text
           print("research isolation contract: ok")
           PY
 
