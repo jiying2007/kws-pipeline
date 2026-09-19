@@ -88,21 +88,24 @@ jobs:
               "m3-plus-completion","m4-plus-release",
           ]
           assert ladder["m0-ctc-only"] == {
-              "positive_example_weight_policy":"class-balance",
+              "target_bearing_weight_policy":"class-balance",
+              "wake_example_weight_policy":"class-balance",
               "ordered_token_loss_weight":0.0,
               "keyword_sequence_margin_loss_weight":0.0,
               "prefix_completion_loss_weight":0.0,
               "recurrent_release_loss_weight":0.0,
           }
           balance=p["class_balance"]
-          assert balance["policy"]=="binary-positive-negative-count-ratio-v1"
+          assert balance["policy"]=="ctc-target-and-wake-balance-v1"
           assert balance["enabled"] is True
           assert balance["derived_before_training"] is True
-          assert balance["same_weight_across_loss_ladder"] is True
+          assert balance["same_weights_across_loss_ladder"] is True
           assert balance["classifier_balance_mode"]=="equal-class-sampler-v1"
-          assert 0 < balance["minimum_positive_example_weight"] <= balance["maximum_positive_example_weight"]
+          assert 0 < balance["minimum_target_bearing_weight"] <= balance["maximum_target_bearing_weight"]
+          assert 0 < balance["minimum_wake_weight"] <= balance["maximum_wake_weight"]
           assert all(
-              row["positive_example_weight_policy"]=="class-balance"
+              row["target_bearing_weight_policy"]=="class-balance"
+              and row["wake_example_weight_policy"]=="class-balance"
               for row in ladder.values()
           )
           previous=None
@@ -136,10 +139,12 @@ jobs:
           import pathlib
           for path in ("training/train_ctc.py","training/train_gru_ctc.py"):
               text=pathlib.Path(path).read_text()
+              assert 'default=WAKE_EXAMPLE_WEIGHT' in text
               assert 'default=ORDERED_TOKEN_LOSS_WEIGHT' in text
               assert 'default=KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT' in text
               assert 'default=PREFIX_COMPLETION_LOSS_WEIGHT' in text
               assert 'default=RECURRENT_RELEASE_LOSS_WEIGHT' in text
+              assert 'args.wake_example_weight' in text
               assert 'args.keyword_sequence_margin_loss_weight * margin_loss' in text
               assert 'args.prefix_completion_loss_weight * completion_loss' in text
               assert 'args.recurrent_release_loss_weight * release_loss' in text
