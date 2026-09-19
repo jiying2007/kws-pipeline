@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-efficient-encoder-closure-v1",
+  "evidence_scope": "research-only",
+  "conclusion": "pause-synthetic-architecture-search",
+  "evidence": [
+    {
+      "experiment": "stacked-gru-resource-bounded-v2",
+      "run_id": 35433373024,
+      "exact_head_sha": "4d98584d87caf5ae1b6530a7dfea8137bd576c09",
+      "causal_authority": "same-runner-all-seeds-paired-v1",
+      "same_runner_all_seeds": true,
+      "selected_candidate": null,
+      "discovery_pass": false,
+      "candidates": {
+        "gru40x2": {
+          "strict10_calibration_wake_recall_mean": 0.08333333333333333,
+          "primary_directional_passes": 1,
+          "secondary_directional_passes": 0
+        },
+        "gru48x2": {
+          "strict10_calibration_wake_recall_mean": 0.359375,
+          "primary_directional_passes": 0,
+          "secondary_directional_passes": 0
+        }
+      }
+    },
+    {
+      "experiment": "context2-residual-gru-v3",
+      "run_id": 35433961420,
+      "exact_head_sha": "139a329315d3f6058c4b2be9f1de67de23dc1cb4",
+      "causal_authority": "same-runner-all-seeds-paired-v1",
+      "same_runner_all_seeds": true,
+      "initial_gru64_core_matched_reference_all_seeds": true,
+      "selected_candidate": null,
+      "discovery_pass": false,
+      "candidates": {
+        "context2-gru48": {
+          "strict10_calibration_wake_recall_mean": 0.026041666666666668,
+          "primary_directional_passes": 0,
+          "secondary_directional_passes": 0
+        },
+        "context2-gru64": {
+          "strict10_calibration_wake_recall_mean": 0.15625,
+          "primary_directional_passes": 0,
+          "secondary_directional_passes": 0
+        }
+      }
+    },
+    {
+      "experiment": "cross-runner-numerical-boundary",
+      "run_id": 35433157724,
+      "exact_head_sha": "fd3d481a5092db830065551e436ee8b0439071c9",
+      "universal_cross_vendor_bit_exact": false,
+      "same_numeric_class_bit_exact_observed": true,
+      "research_causal_authority": "same-runner-all-seeds-paired-v1"
+    }
+  ],
+  "interpretation": [
+    "wider-gru128-showed-mechanism-value-but-is-outside-current-runtime-hidden-bound",
+    "pcen64-did-not-reproduce-the-capacity-gain",
+    "stacked-gru-lowered-training-loss-without-stable-calibration-generalization",
+    "zero-init-local-context-residual-did-not-recover-a-stable-operating-region",
+    "continued-synthetic-architecture-search-is-not-the-highest-value-next-step"
+  ],
+  "decision": {
+    "architecture_search_paused": true,
+    "next_authorized_lane": "dataset-driven-deployable-model-iteration",
+    "deployable_model_must_be_primary_model_variable": true,
+    "use_real_human_final_afe_before_reopening_architecture_search": true,
+    "reopen_architecture_search_only_if_product_data_implicates_model_capacity": true
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "shipping_metric": false,
+    "protected_evidence_used": false
+  }
+}
