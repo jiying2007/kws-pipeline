@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import pathlib
 
@@ -11,7 +12,13 @@ def read_json(path: pathlib.Path) -> dict:
     return value
 
 
-def verify(config_path: pathlib.Path, shipping_path: pathlib.Path, keywords_path: pathlib.Path) -> dict:
+def verify(
+    config_path: pathlib.Path,
+    shipping_path: pathlib.Path,
+    keywords_path: pathlib.Path,
+    *,
+    require_product_speech_like_base: bool = False,
+) -> dict:
     config = read_json(config_path)
     shipping = read_json(shipping_path)
     active = int(config["qualification_holdout_seed"])
@@ -45,21 +52,79 @@ def verify(config_path: pathlib.Path, shipping_path: pathlib.Path, keywords_path
         raise ValueError(f"shipping wake-word contract drifted: {rows!r}")
     if any(len(row[1]) != 4 for row in rows) or any(row[1] == "小窝" for row in rows):
         raise ValueError("shipping wake words must remain exactly the two four-character phrases")
+
+    product_data = None
+    if require_product_speech_like_base:
+        product_data = config.get("product_candidate_data")
+        if not isinstance(product_data, dict):
+            raise ValueError("governed product training requires product_candidate_data")
+        if product_data.get("policy") != "external-speech-like-product-base-v1":
+            raise ValueError("product candidate data policy mismatch")
+        if product_data.get("tone_fallback_allowed") is not False:
+            raise ValueError("tone fallback is forbidden for governed product candidate training")
+        if product_data.get("protected_evidence_used") is not False:
+            raise ValueError("protected evidence may not feed governed candidate training")
+        for field in ("external_base_bundle_sha256", "provider_identity_sha256"):
+            value = str(product_data.get(field) or "")
+            if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
+                raise ValueError(f"product_candidate_data.{field} must be lowercase SHA256")
+        generator = config.get("generator")
+        if not isinstance(generator, dict):
+            raise ValueError("governed product training generator must be an object")
+        external = generator.get("external_base_dataset")
+        required_splits = {"train", "calibration", "test", "qualification"}
+        if not isinstance(external, dict) or set(external) != required_splits:
+            raise ValueError("governed product training requires all four external-base splits")
+        for split in sorted(required_splits):
+            row = external[split]
+            if not isinstance(row, dict):
+                raise ValueError(f"external base {split} must be an object")
+            for field in ("index", "summary"):
+                if not str(row.get(field) or ""):
+                    raise ValueError(f"external base {split}.{field} is required")
+            for field in ("index_sha256", "summary_sha256"):
+                value = str(row.get(field) or "")
+                if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
+                    raise ValueError(f"external base {split}.{field} must be lowercase SHA256")
+
     return {
         "active_formal_seed": active,
         "frozen_formal_seed": frozen,
         "reserved_formal_seed": reserved,
         "retired_seed_count": len(retired),
         "shipping_wake_words": [row[1] for row in rows],
+        "product_speech_like_base_required": require_product_speech_like_base,
+        "product_external_base_bundle_sha256": (
+            str(product_data["external_base_bundle_sha256"]) if product_data else None
+        ),
     }
 
 
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--config",
+        type=pathlib.Path,
+        default=root / "configs/training/xiaowo.torch-domain.json",
+    )
+    parser.add_argument(
+        "--shipping",
+        type=pathlib.Path,
+        default=root / "configs/shipping.xiaowo.json",
+    )
+    parser.add_argument(
+        "--keywords",
+        type=pathlib.Path,
+        default=root / "keywords/zh_cn_example.tsv",
+    )
+    parser.add_argument("--require-product-speech-like-base", action="store_true")
+    args = parser.parse_args()
     result = verify(
-        root / "configs/training/xiaowo.torch-domain.json",
-        root / "configs/shipping.xiaowo.json",
-        root / "keywords/zh_cn_example.tsv",
+        args.config.resolve(),
+        args.shipping.resolve(),
+        args.keywords.resolve(),
+        require_product_speech_like_base=args.require_product_speech_like_base,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0

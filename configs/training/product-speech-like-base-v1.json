@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "policy": "product-speech-like-base-v1",
+  "release_tag": "speech-like-base-5204b798033f",
+  "release_archive": "speech-like-base-5204b798033f.tar.gz",
+  "source_repro_run_id": 35318933124,
+  "source_repro_head_sha": "46e6cc78634a16c90e1bfdadfe794f78db7994a6",
+  "external_base_bundle_sha256": "5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35",
+  "provider_identity_sha256": "d12728562db74951191575e9afe4922adc1260934b02d577dda67d91faa4aff9",
+  "recordings": 384,
+  "voice_slots": 24,
+  "source_sample_rate_hz": 8000,
+  "normalized_sample_rate_hz": 16000,
+  "source_bandwidth_limitation_retained": true,
+  "tone_backend_used": false,
+  "protected_evidence_used": false,
+  "splits": {
+    "train": 128,
+    "calibration": 64,
+    "test": 64,
+    "qualification": 128
+  },
+  "use": "governed-deployable-model-training-base",
+  "notes": [
+    "This is synthetic/offline-TTS development data, not real-human product qualification evidence.",
+    "The original xiaowo.torch-domain tone generator remains only a template fallback for tests; governed product candidate training must bind this external base."
+  ],
+  "release_id": 392032606,
+  "release_archive_sha256": "18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6",
+  "release_bundle_manifest_sha256": "e979c4b4910346c529d48ee466375add267e06213e7b5c15a224fb2a0d97ba4d"
+}

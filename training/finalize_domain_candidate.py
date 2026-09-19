@@ -153,6 +153,23 @@ def main() -> int:
         require_file(source, "selected candidate artifact")
         shutil.copy2(source, destination)
 
+    product_lineage: list[pathlib.Path] = []
+    product_data = config.get("product_candidate_data")
+    if isinstance(product_data, dict) and product_data.get("policy") == "external-speech-like-product-base-v1":
+        contract_path = repo_path(str(product_data.get("base_contract_path") or ""))
+        template_path = repo_path(str(product_data.get("source_template_config_path") or ""))
+        require_file(contract_path, "product speech-like base contract")
+        require_file(template_path, "source training template config")
+        if sha256_file(contract_path) != str(product_data.get("base_contract_sha256") or ""):
+            raise RuntimeError("product speech-like base contract SHA drifted before finalization")
+        if sha256_file(template_path) != str(product_data.get("source_template_config_sha256") or ""):
+            raise RuntimeError("source training template SHA drifted before finalization")
+        effective_copy = best_dir / "effective-training-config.json"
+        base_contract_copy = best_dir / "product-speech-like-base-contract.json"
+        shutil.copy2(config_path, effective_copy)
+        shutil.copy2(contract_path, base_contract_copy)
+        product_lineage.extend([effective_copy, base_contract_copy])
+
     # Training replay round N is rendered before training round N and its SHA is
     # recorded in the candidate. Freeze it only as generation/provenance proof;
     # it must never serve as the final continuous-FAR validation corpus.
@@ -357,6 +374,7 @@ def main() -> int:
         best_dir / "hard-negative-holdout.json",
         best_dir / "far-holdout-cohort.json",
     ]
+    required.extend(product_lineage)
     for path in required:
         require_file(path, "final training artifact")
 
