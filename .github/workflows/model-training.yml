@@ -5,14 +5,11 @@ on:
     branches:
       - main
     paths:
-      - '.github/triggers/model-training-request.json'
   pull_request:
     branches:
       - main
     paths:
-      - '.github/workflows/model-training.yml'
       - '.github/triggers/model-training-request.json'
-      - 'tests/test_product_training_entry_contract.py'
       - 'configs/training/**'
       - 'eval/run_corpus.py'
       - 'eval/score_events.py'
