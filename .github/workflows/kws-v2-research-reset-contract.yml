@@ -19,6 +19,7 @@ on:
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
+      - "tools/aggregate_kws_v2_research_confirm.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
@@ -44,6 +45,7 @@ on:
       - "training/run_kws_research_baseline.py"
       - "eval/build_research_negative_exposure.py"
       - "tools/build_kws_v2_research_negative_requests.py"
+      - "tools/aggregate_kws_v2_research_confirm.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
@@ -212,6 +214,7 @@ jobs:
           training/run_kws_research_baseline.py
           eval/build_research_negative_exposure.py
           tools/build_kws_v2_research_negative_requests.py
+          tools/aggregate_kws_v2_research_confirm.py
           tools/materialize_kws_v2_research_negative_sidecar.py
           tools/run_speech_like_corpus_generation.py
 
