@@ -16,6 +16,7 @@ on:
       - "tools/materialize_model_registry.py"
       - "tools/verify_model_registry.py"
       - ".github/workflows/model-registry-contract.yml"
+      - ".github/workflows/model-promotion.yml"
       - ".gitignore"
 
 permissions:
@@ -66,7 +67,14 @@ jobs:
           )
           assert "git push origin" in workflow
           assert "gh pr create" in workflow
-          print("future model-promotion registry mirror: ok")
+          assert "gh pr list" in workflow
+          assert "Verify immutable model release" in workflow
+          assert "steps.release.outputs.exists != 'true'" in workflow
+          assert "model registry already present on main" in workflow
+          assert 'refs/remotes/origin/${registry_branch}' in workflow
+          assert "automatic PR creation failed" not in workflow
+          assert "2>/tmp/model-registry-pr.err || true" not in workflow
+          print("future model-promotion registry mirror/self-heal: ok")
           PY
       - name: Worktree remains clean
         run: git diff --exit-code -- .
