@@ -1,10 +1,18 @@
 name: model-training
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/model-training-request.json'
   pull_request:
     branches:
       - main
     paths:
+      - '.github/workflows/model-training.yml'
+      - '.github/triggers/model-training-request.json'
+      - 'tests/test_product_training_entry_contract.py'
       - 'configs/training/**'
       - 'eval/run_corpus.py'
       - 'eval/score_events.py'
@@ -38,20 +46,49 @@ concurrency:
 
 jobs:
   base-domain-training:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify versioned training request
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import re
+
+          path = pathlib.Path(".github/triggers/model-training-request.json")
+          value = json.loads(path.read_text(encoding="utf-8"))
+          if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
+              raise SystemExit("model training request schema_version must be 1")
+          request_id = str(value.get("request_id") or "")
+          if re.fullmatch(r"[a-z0-9][a-z0-9._-]{7,127}", request_id) is None:
+              raise SystemExit("model training request_id is invalid")
+          expected = {
+              "trigger_policy": "run-on-protected-main-change",
+              "purpose": "governed-product-candidate-training",
+              "source_policy": "exact-current-main",
+          }
+          for key, wanted in expected.items():
+              if value.get(key) != wanted:
+                  raise SystemExit(f"model training request {key} mismatch")
+          reason = value.get("reason")
+          if not isinstance(reason, str) or not reason.strip():
+              raise SystemExit("model training request reason is required")
+          print(f"versioned governed training request: {request_id}")
+          PY
       - name: Require current main training source
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = "refs/heads/main" || {
-            echo "governed model training must be dispatched from main" >&2
+            echo "governed model training must run from current main" >&2
             exit 2
           }
           main_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
@@ -135,6 +172,44 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Bind training invocation receipt
+        env:
+          TRAINING_EVENT_NAME: ${{ github.event_name }}
+          TRAINING_HEAD_SHA: ${{ github.sha }}
+          TRAINING_REF: ${{ github.ref }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+
+          request_path = pathlib.Path(".github/triggers/model-training-request.json")
+          event_name = os.environ["TRAINING_EVENT_NAME"]
+          request = None
+          request_sha256 = None
+          if event_name == "push":
+              request_bytes = request_path.read_bytes()
+              request = json.loads(request_bytes)
+              request_sha256 = hashlib.sha256(request_bytes).hexdigest()
+
+          output = pathlib.Path("build/model-training/training-invocation.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          payload = {
+              "schema_version": 1,
+              "evidence_class": "governed-model-training-invocation-v1",
+              "event_name": event_name,
+              "head_sha": os.environ["TRAINING_HEAD_SHA"],
+              "ref": os.environ["TRAINING_REF"],
+              "source_policy": "exact-current-main",
+              "request": request,
+              "request_sha256": request_sha256,
+          }
+          output.write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
       - name: Bind base-stage provenance receipt
         env:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
