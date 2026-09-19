@@ -7,7 +7,11 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from training.training_request import self_test as training_request_self_test, verify_request
+from training.training_request import (
+    EVIDENCE_CLASS as TRAINING_INVOCATION_EVIDENCE_CLASS,
+    self_test as training_request_self_test,
+    verify_request,
+)
 from training.verify_training_entry_contract import read_json, verify
 
 
@@ -97,7 +101,7 @@ def main() -> int:
     assert "github.event_name == 'workflow_dispatch' || github.event_name == 'push'" in workflow
     assert ".github/triggers/model-training-request.json" in workflow
     assert "Verify versioned training request" in workflow
-    assert "governed-model-training-invocation-v1" in workflow
+    assert TRAINING_INVOCATION_EVIDENCE_CLASS == "governed-model-training-invocation-v1"
     assert verified_request["schema_version"] == 1
     assert verified_request["trigger_policy"] == "run-on-protected-main-change"
     assert verified_request["purpose"] == "governed-product-candidate-training"
