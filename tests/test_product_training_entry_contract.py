@@ -87,7 +87,17 @@ def main() -> int:
     assert "--require-product-speech-like-base" in workflow
     assert '--config "$KWS_EFFECTIVE_TRAINING_CONFIG"' in workflow
     assert "--config configs/training/xiaowo.torch-domain.json" not in workflow
-    assert "governed model training must be dispatched from main" in workflow
+    assert "governed model training must run from current main" in workflow
+    assert "github.event_name == 'workflow_dispatch' || github.event_name == 'push'" in workflow
+    assert ".github/triggers/model-training-request.json" in workflow
+    assert "Verify versioned training request" in workflow
+    assert "governed-model-training-invocation-v1" in workflow
+    request = read_json(ROOT / ".github/triggers/model-training-request.json")
+    assert request["schema_version"] == 1
+    assert request["trigger_policy"] == "run-on-protected-main-change"
+    assert request["purpose"] == "governed-product-candidate-training"
+    assert request["source_policy"] == "exact-current-main"
+    assert request["request_id"] == "speech-like-replay-v1-20260919"
     assert "--provider-only" in workflow
     assert "--replay-provider" in workflow
     assert "--voice-inventory" in workflow
