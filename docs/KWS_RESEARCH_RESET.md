@@ -237,3 +237,141 @@ verified offline TTS
 ```
 
 This is the new entry point for model iteration.
+
+## Architecture investigation closure through 2026-09-19
+
+Training Reset has now falsified several earlier explanations for the inability to
+produce a useful KWS operating region. These results are retained as research
+evidence and must not be reinterpreted as shipping qualification.
+
+### What is no longer an authorized tuning direction
+
+The following hypotheses have been tested sufficiently to stop blind tuning:
+
+- threshold-only recovery: the retained threshold sweeps reach low/zero false
+  accepts only after wake recall collapses;
+- replay as the primary baseline mechanism: replay remains disabled until a
+  stable baseline exists and is not used to explain the current separation
+  failure;
+- stronger four-token margin tuning: M2 margin 0.1 was the best observed point;
+  0.2 and 0.3 raised confidence broadly without creating a transferable
+  wake/non-wake separation band;
+- lightweight verifier-only repair: a frozen-M2 hidden-state linear verifier did
+  not separate canonical token-sharing near misses;
+- "phonetic-v2 only needs more epochs": the 72-token tone-pinyin experiment
+  became worse at 24 epochs, with higher non-wake confidence;
+- initialization, learning-rate schedule, or exact class-count sampling as a
+  sufficient stabilization fix: the pre-registered multiseed experiments did
+  not pass their stability gates.
+
+These negative results are valuable closure. Repeating the same tuning axes with
+new arbitrary constants is not an authorized next action.
+
+### Research classifier semantics and deterministic runtime
+
+The clip classifier is diagnostic only. It now uses the same
+`TinyStreamingGRU` recurrent-cell semantics as the GRU research family, and
+positive score separation is computed from the **true configured keyword
+class**, not the maximum wake-class probability.
+
+Architecture decisions use calibration-selected operating points transferred to
+test. Test metrics never choose a threshold or a start.
+
+Research classifier training has a separate cross-CPU deterministic contract:
+
+- `OMP_NUM_THREADS=1`;
+- `MKL_NUM_THREADS=1`;
+- `MKL_CBWR=COMPATIBLE`;
+- `OPENBLAS_NUM_THREADS=1`;
+- `ATEN_CPU_CAPABILITY=default`;
+- MKLDNN disabled;
+- deterministic torch algorithms;
+- model initial/final state SHA256 retained.
+
+Run `35427343767` proved bit-exact initial state, final state, training history,
+calibration output and test output for B0/FC1 replicas on the selected seeds.
+One FC1 pair was bit-exact across different hosted AMD EPYC CPU models. Research
+architecture comparisons are not authoritative unless this numerical contract
+is preserved.
+
+### Multiseed stabilization results
+
+The direct fixed-keyword classifier remains an upper-bound diagnostic rather
+than a product model.
+
+The main stabilization experiments closed as follows:
+
+1. paired independent-seed replication: failed the pre-registered replication
+   gate;
+2. variance decomposition: model initialization was the dominant observed
+   random source;
+3. orthogonal/Xavier GRU initialization: failed to reduce variance and increased
+   the observed recall-delta spread;
+4. warmup + cosine schedule on the reproducible runtime: reduced spread only
+   modestly while materially reducing the mean recall gain;
+5. exact-balanced per-epoch sampling: did not reduce the spread versus the
+   replacement-based balanced sampler;
+6. calibration-only multi-start for PCEN-lite + GRU128: produced strong absolute
+   results but failed the pre-registered relative gate.
+
+For the last experiment, run `35428804016` selected starts using calibration
+only over five independent three-start cohorts. The selected PCEN128 target had
+strict-10 test wake recall mean `0.834375`, population standard deviation
+`0.044852`, and mean negative FP rate `0.06375`. It achieved four
+absolute-strong cohorts, but only three of five primary directional passes
+against independently selected B0; the pre-registered requirement was four.
+Therefore `multistart_pass=false`. The gate is not relaxed after observing the
+result.
+
+### Runtime and deployability boundary
+
+The capacity result is a **mechanism upper bound**, not a deployable candidate.
+
+The current C/export contract is:
+
+- maximum feature dimension: 40;
+- maximum recurrent hidden dimension: 64;
+- maximum vocabulary size: 512.
+
+The canonical static resource estimator gives the current five-token,
+32-feature, 50-step/s shapes approximately:
+
+| Research shape | Serialized GRU estimate | Dense work | Current static runtime fit |
+| --- | ---: | ---: | --- |
+| logmel + GRU64 | 20,388 bytes | 0.9376 MMAC/s | yes |
+| PCEN-lite + GRU64 | 20,388 bytes | 0.9376 MMAC/s | yes |
+| PCEN-lite + GRU128 | 65,252 bytes | 3.104 MMAC/s | **no** |
+
+`kws-v2-research-architecture-fit-v1` fails closed: hosted arithmetic estimates
+are never target CPU, RAM, thermal or power evidence. Even a runtime-fit research
+shape has `shipping_candidate_allowed=false` until an approved physical target
+resource budget and the required target-board measurements are bound.
+
+The next low-risk architecture question is therefore PCEN-lite + GRU64 under the
+same calibration-only fresh multi-start method. It uses a new seed namespace and
+does not reuse the already observed FC1 multistart seeds. A positive classifier
+result authorizes a streaming CTC/objective confirmation at the existing hidden
+dimension; a negative result authorizes an efficient encoder-v2 investigation.
+
+### Research closure versus product closure
+
+The repository may merge a completed research infrastructure/negative-result
+chain without real-human or target-board data. Missing product evidence must not
+force research experiments to pretend to be failed software runs.
+
+That does **not** make a model production-ready. Shipping promotion remains
+blocked until a frozen runtime-fit candidate independently satisfies the
+protected path, including:
+
+- fresh/shadow/formal qualification;
+- real human speech and near-confusable speech;
+- final microphones, enclosure and shipping AFE;
+- 3-5 m / azimuth / reverberation / playback and mechanical-noise behavior;
+- long continuous real-audio FAR exposure with confidence bounds;
+- exact target-board CPU/RTF/headroom, RSS/stack, thermal and power evidence;
+- required soak, discontinuity/XRUN and suspend/resume evidence;
+- exact source/model/pack/raw-evidence/attestation identity.
+
+Research evidence informs what to build next. It never substitutes for those
+shipping gates.
+
