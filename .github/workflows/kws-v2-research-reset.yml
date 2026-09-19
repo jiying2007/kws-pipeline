@@ -22,6 +22,7 @@ on:
           - m0-ctc-only
           - m1-ctc-ordered
           - m2-plus-margin
+          - m2-margin-020
           - m2-margin-030
           - m3-plus-completion
           - m4-plus-release
@@ -41,7 +42,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}-${{ github.event_name == 'push' && 'm2-margin-030' || inputs.loss_profile }}
+  group: kws-v2-research-reset-${{ github.ref }}-${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}-${{ github.event_name == 'push' && 'm2-margin-020' || inputs.loss_profile }}
   cancel-in-progress: true
 
 jobs:
@@ -50,7 +51,7 @@ jobs:
     timeout-minutes: 180
     env:
       CANDIDATE_ID: ${{ inputs.candidate_id || 'v2-a-gru-h64-logmel' }}
-      LOSS_PROFILE: ${{ github.event_name == 'push' && 'm2-margin-030' || inputs.loss_profile }}
+      LOSS_PROFILE: ${{ github.event_name == 'push' && 'm2-margin-020' || inputs.loss_profile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -74,6 +75,15 @@ jobs:
           repository: jiying2007/kws-pipeline
           run-id: 35367960968
 
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
       - name: Resolve corpus inputs
         id: corpus
         run: |
@@ -88,6 +98,7 @@ jobs:
             echo "${split}_summary=$summary" >> "$GITHUB_OUTPUT"
           done
           test -f "$RUNNER_TEMP/negative-sidecar/sidecar-receipt.json"
+          test -f "$RUNNER_TEMP/rendered-cache/cache-receipt.json"
 
       - name: Prepare immutable Stage-A binding
         run: |
@@ -127,7 +138,7 @@ jobs:
       - name: Run research-only baseline
         run: |
           set -euo pipefail
-          .venv/bin/python training/run_kws_research_baseline.py             --config "${{ steps.candidate.outputs.config }}"             --family "${{ steps.candidate.outputs.family }}"             --loss-profile "$LOSS_PROFILE"             --runner "${{ steps.candidate.outputs.runner }}"             --negative-sidecar "$RUNNER_TEMP/negative-sidecar"             --work-dir "$RUNNER_TEMP/research-result"
+          .venv/bin/python training/run_kws_research_baseline.py             --config "${{ steps.candidate.outputs.config }}"             --family "${{ steps.candidate.outputs.family }}"             --loss-profile "$LOSS_PROFILE"             --runner "${{ steps.candidate.outputs.runner }}"             --negative-sidecar "$RUNNER_TEMP/negative-sidecar"             --prepared-dataset-cache "$RUNNER_TEMP/rendered-cache"             --work-dir "$RUNNER_TEMP/research-result"
 
       - name: Show research scorecard
         if: always()
