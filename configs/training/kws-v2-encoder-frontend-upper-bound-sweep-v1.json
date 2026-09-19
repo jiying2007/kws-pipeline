@@ -67,7 +67,9 @@
     "material_gain_if_gap_improvement_gte": 0.1,
     "frontend_gain_next": "pcen-model-lane",
     "capacity_gain_next": "efficient-encoder-capacity-v2",
-    "neither_gain_next": "data-and-encoder-architecture-v2"
+    "neither_gain_next": "data-and-encoder-architecture-v2",
+    "joint_gain_next": "pcen-efficient-encoder-v2",
+    "reference_next": "factorial-reference"
   },
   "authority": {
     "diagnostic_only": true,
