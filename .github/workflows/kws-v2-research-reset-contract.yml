@@ -22,10 +22,12 @@ on:
       - "tools/aggregate_kws_v2_research_confirm.py"
       - "tools/compare_kws_v2_research_scorecards.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
+      - "tools/materialize_kws_v2_research_rendered_cache.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
       - "tests/test_research_negative_sidecar.py"
       - "tests/test_research_scorecard_compare.py"
+      - "tests/test_research_rendered_cache.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -50,10 +52,12 @@ on:
       - "tools/aggregate_kws_v2_research_confirm.py"
       - "tools/compare_kws_v2_research_scorecards.py"
       - "tools/materialize_kws_v2_research_negative_sidecar.py"
+      - "tools/materialize_kws_v2_research_rendered_cache.py"
       - "tools/run_speech_like_corpus_generation.py"
       - "tests/test_development_loss_controller.py"
       - "tests/test_research_negative_sidecar.py"
       - "tests/test_research_scorecard_compare.py"
+      - "tests/test_research_rendered_cache.py"
       - ".github/workflows/kws-v2-research-reset.yml"
       - ".github/workflows/kws-v2-research-negative-sidecar.yml"
       - ".github/workflows/kws-v2-research-reset-contract.yml"
@@ -199,6 +203,9 @@ jobs:
       - name: Research scorecard comparator
         run: python3 tests/test_research_scorecard_compare.py
 
+      - name: Research rendered cache portability
+        run: python3 tests/test_research_rendered_cache.py
+
       - name: Research negative plan contract
         run: |
           python3 - <<'PY'
@@ -232,6 +239,7 @@ jobs:
           tests/test_development_loss_controller.py
           tests/test_research_negative_sidecar.py
           tests/test_research_scorecard_compare.py
+          tests/test_research_rendered_cache.py
           training/research_keyword_classifier.py
           training/diagnose_float_ctc_confidence.py
           training/run_kws_research_baseline.py
@@ -240,6 +248,7 @@ jobs:
           tools/aggregate_kws_v2_research_confirm.py
           tools/compare_kws_v2_research_scorecards.py
           tools/materialize_kws_v2_research_negative_sidecar.py
+          tools/materialize_kws_v2_research_rendered_cache.py
           tools/run_speech_like_corpus_generation.py
 
       - name: Worktree remains clean
