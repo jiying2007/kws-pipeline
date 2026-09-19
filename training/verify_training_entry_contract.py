@@ -12,7 +12,14 @@ def read_json(path: pathlib.Path) -> dict:
     return value
 
 
-def verify(\n    config_path: pathlib.Path,\n    shipping_path: pathlib.Path,\n    keywords_path: pathlib.Path,\n    *,\n    require_product_speech_like_base: bool = False,\n) -> dict:\n    config = read_json(config_path)
+def verify(
+    config_path: pathlib.Path,
+    shipping_path: pathlib.Path,
+    keywords_path: pathlib.Path,
+    *,
+    require_product_speech_like_base: bool = False,
+) -> dict:
+    config = read_json(config_path)
     shipping = read_json(shipping_path)
     active = int(config["qualification_holdout_seed"])
     retired = [int(value) for value in config["retired_qualification_holdout_seeds"]]
