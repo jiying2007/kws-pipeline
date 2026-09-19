@@ -38,6 +38,7 @@ FRONTEND_SPEC_VERSION = 2
 WEIGHT_DECAY = 1.0e-4
 GRAD_CLIP_NORM = 5.0
 POSITIVE_EXAMPLE_WEIGHT = 2.0
+WAKE_EXAMPLE_WEIGHT = 1.0
 ORDERED_TOKEN_LOSS_WEIGHT = 0.35
 KEYWORD_SEQUENCE_MARGIN = 0.05
 KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT = 0.10
@@ -465,6 +466,25 @@ def collate(batch):
     return padded, targets, xlen, ylen
 
 
+def wake_example_mask(
+    targets: torch.Tensor,
+    target_lengths: torch.Tensor,
+    keyword_sequences: list[list[int]],
+) -> torch.Tensor:
+    keywords = {tuple(int(value) for value in sequence) for sequence in keyword_sequences}
+    result: list[bool] = []
+    offset = 0
+    flat = targets.detach().cpu().tolist()
+    for raw_length in target_lengths.detach().cpu().tolist():
+        length = int(raw_length)
+        row = tuple(int(value) for value in flat[offset : offset + length])
+        result.append(row in keywords)
+        offset += length
+    if offset != len(flat):
+        raise ValueError("flattened CTC targets do not match target lengths")
+    return torch.tensor(result, dtype=torch.bool, device=target_lengths.device)
+
+
 def ordered_token_loss(
     log_probs: torch.Tensor,
     targets: torch.Tensor,
@@ -563,6 +583,7 @@ def main() -> None:
     parser.add_argument("--warm-start", type=pathlib.Path)
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
+    parser.add_argument("--wake-example-weight", type=float, default=WAKE_EXAMPLE_WEIGHT)
     parser.add_argument("--ordered-token-loss-weight", type=float, default=ORDERED_TOKEN_LOSS_WEIGHT)
     parser.add_argument(
         "--keyword-sequence-margin-loss-weight",
@@ -606,6 +627,8 @@ def main() -> None:
         parser.error("--lr must be finite and > 0")
     if not math.isfinite(args.positive_example_weight) or args.positive_example_weight <= 0.0:
         parser.error("--positive-example-weight must be finite and > 0")
+    if not math.isfinite(args.wake_example_weight) or args.wake_example_weight <= 0.0:
+        parser.error("--wake-example-weight must be finite and > 0")
     if not math.isfinite(args.ordered_token_loss_weight) or args.ordered_token_loss_weight < 0.0:
         parser.error("--ordered-token-loss-weight must be finite and >= 0")
     for name in (
@@ -681,11 +704,18 @@ def main() -> None:
         for x, y, xlen, ylen in loader:
             log_probs = model(x).log_softmax(dim=2)
             raw_ctc = loss_fn(log_probs, y, xlen, ylen)
-            sample_weights = torch.where(
+            target_weights = torch.where(
                 ylen > 0,
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
                 torch.ones_like(ylen, dtype=torch.float32),
             )
+            wake_mask = wake_example_mask(y, ylen, keyword_sequences)
+            wake_weights = torch.where(
+                wake_mask,
+                torch.full_like(ylen, args.wake_example_weight, dtype=torch.float32),
+                torch.ones_like(ylen, dtype=torch.float32),
+            )
+            sample_weights = target_weights * wake_weights
             normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
             ctc_loss = (normalized_ctc * sample_weights).sum() / sample_weights.sum()
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
@@ -776,6 +806,9 @@ def main() -> None:
             "grad_clip_norm": GRAD_CLIP_NORM,
             "ctc_reduction": "per-frame-weighted",
             "positive_example_weight": args.positive_example_weight,
+            "positive_example_weight_semantics": "non-empty-target-v1",
+            "wake_example_weight": args.wake_example_weight,
+            "wake_example_weight_semantics": "exact-configured-keyword-target-v1",
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
