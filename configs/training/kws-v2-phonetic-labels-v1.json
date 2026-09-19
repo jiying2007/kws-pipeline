@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-phonetic-labels-v1",
+  "evidence_scope": "research-only",
+  "representation": "tone-pinyin-syllable-v1",
+  "pronunciation_policy": {
+    "lexical_tone_numbers": true,
+    "neutral_tone_number": 5,
+    "tone_sandhi_normalized": false,
+    "erhua": "separate-er2-token",
+    "purpose": "representation-capacity experiment, not canonical Mandarin pronunciation authority"
+  },
+  "wake_tokens_preserve_ids": {
+    "ni3": 1,
+    "hao3": 2,
+    "xiao3": 3,
+    "wo1": 4
+  },
+  "ordinary_utterances": {
+    "near-001": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "wang2"
+    ],
+    "near-002": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "wen2"
+    ],
+    "near-003": [
+      "ni3",
+      "yao4",
+      "xiao3",
+      "wo1"
+    ],
+    "near-004": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "wo4"
+    ],
+    "near-005": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "guo1"
+    ],
+    "near-006": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "wu2"
+    ],
+    "near-007": [
+      "xiao3",
+      "wang2",
+      "xiao3",
+      "wang2"
+    ],
+    "near-008": [
+      "xiao3",
+      "wo4",
+      "xiao3",
+      "wo4"
+    ],
+    "prefix-001": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "peng2",
+      "you3"
+    ],
+    "prefix-002": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "mao1"
+    ],
+    "prefix-003": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "gou3"
+    ],
+    "prefix-004": [
+      "ni3",
+      "hao3",
+      "xiao3",
+      "huo3"
+    ],
+    "suffix-001": [
+      "da4",
+      "jia1",
+      "hao3",
+      "xiao3",
+      "wo1"
+    ],
+    "suffix-002": [
+      "wan3",
+      "shang4",
+      "hao3",
+      "xiao3",
+      "wo1"
+    ],
+    "suffix-003": [
+      "zhen1",
+      "hao3",
+      "xiao3",
+      "wo1"
+    ],
+    "suffix-004": [
+      "hai2",
+      "hao3",
+      "xiao3",
+      "wo1"
+    ],
+    "repeat-001": [
+      "xiao3",
+      "xiao3",
+      "wo1",
+      "wo1"
+    ],
+    "repeat-002": [
+      "xiao3",
+      "wo1",
+      "xiao3",
+      "wang2"
+    ],
+    "repeat-003": [
+      "xiao3",
+      "wo3",
+      "xiao3",
+      "wo3"
+    ],
+    "repeat-004": [
+      "ni3",
+      "hao3",
+      "ni3",
+      "hao3",
+      "xiao3"
+    ],
+    "ordinary-001": [
+      "ni3",
+      "hao3",
+      "jin1",
+      "tian1",
+      "chi1",
+      "shen2",
+      "me5"
+    ],
+    "ordinary-002": [
+      "ni3",
+      "hao3",
+      "jin1",
+      "tian1",
+      "hui2",
+      "jia1",
+      "ma5"
+    ],
+    "ordinary-003": [
+      "wo3",
+      "yao4",
+      "chu1",
+      "qu4",
+      "yi1",
+      "xia4"
+    ],
+    "ordinary-004": [
+      "xiao3",
+      "mao1",
+      "pao3",
+      "dao4",
+      "wo1",
+      "li3",
+      "le5"
+    ],
+    "ordinary-005": [
+      "bang1",
+      "wo3",
+      "kan4",
+      "yi1",
+      "xia4",
+      "shi2",
+      "jian1"
+    ],
+    "ordinary-006": [
+      "jin1",
+      "tian1",
+      "wai4",
+      "mian4",
+      "you3",
+      "dian3",
+      "re4"
+    ],
+    "ordinary-007": [
+      "zhe4",
+      "ge5",
+      "sheng1",
+      "yin1",
+      "you3",
+      "dian3",
+      "xiao3"
+    ],
+    "ordinary-008": [
+      "wo3",
+      "men5",
+      "yi1",
+      "hui4",
+      "er2",
+      "zai4",
+      "shuo1"
+    ],
+    "device-001": [
+      "ni3",
+      "hao3",
+      "huan1",
+      "ying2",
+      "shou1",
+      "kan4",
+      "jin1",
+      "tian1",
+      "de5",
+      "jie2",
+      "mu4"
+    ],
+    "device-002": [
+      "xiao3",
+      "peng2",
+      "you3",
+      "men5",
+      "da4",
+      "jia1",
+      "hao3"
+    ],
+    "device-003": [
+      "xian4",
+      "zai4",
+      "kai1",
+      "shi3",
+      "bo1",
+      "fang4",
+      "yin1",
+      "yue4"
+    ],
+    "device-004": [
+      "qing3",
+      "shao1",
+      "hou4",
+      "zai4",
+      "shi4",
+      "yi1",
+      "ci4"
+    ]
+  },
+  "constraints": {
+    "expected_ordinary_utterances": 32,
+    "qualification_split_consumed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  },
+  "decision_scope": "Test whether explicit broader phonetic supervision improves the same GRU64/logmel encoder over the frozen four-token M2 representation."
+}
