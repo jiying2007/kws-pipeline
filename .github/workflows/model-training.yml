@@ -26,6 +26,11 @@ on:
 permissions:
   contents: read
 
+env:
+  KWS_PRODUCT_BASE_CONTRACT: configs/training/product-speech-like-base-v1.json
+  KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
+  KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
+
 concurrency:
   group: model-training-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -39,6 +44,40 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Require current main training source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main" || {
+            echo "governed model training must be dispatched from main" >&2
+            exit 2
+          }
+          main_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          test "$GITHUB_SHA" = "$main_sha" || {
+            echo "governed model training source is stale: workflow=$GITHUB_SHA main=$main_sha" >&2
+            exit 2
+          }
+      - name: Materialize governed product speech-like training base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_tag="$(jq -r '.release_tag' "$KWS_PRODUCT_BASE_CONTRACT")"
+          release_target="$(jq -r '.source_repro_head_sha' "$KWS_PRODUCT_BASE_CONTRACT")"
+          archive="$(jq -r '.release_archive' "$KWS_PRODUCT_BASE_CONTRACT")"
+          rm -rf .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
+          mkdir -p .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag" > .generated/product-speech-like-release/release.json
+          jq -e --arg target "$release_target" '
+            .draft == false and .prerelease == false and .immutable == true
+            and .target_commitish == $target
+          ' .generated/product-speech-like-release/release.json >/dev/null
+          gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
+          (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
+          tar -xzf ".generated/product-speech-like-release/$archive"             -C "$KWS_PRODUCT_BASE_ROOT"
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          python3 training/verify_training_entry_contract.py             --config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --require-product-speech-like-base
       # Formal seed ownership is delegated to verify_training_entry_contract.py.
       # It preserves the historical fail-closed checks verbatim in meaning:
       # if active == frozen:
@@ -46,9 +85,15 @@ jobs:
       # if active != reserved:
       # qualification_seed_state; next_formal_candidate_seed_reserved; consumed/frozen.
       - name: Refuse consumed formal qualification seed
-        run: python3 training/verify_training_entry_contract.py
+        run: >-
+          python3 training/verify_training_entry_contract.py
+          --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          --require-product-speech-like-base
       - name: Verify shipping wake-word contract
-        run: python3 training/verify_training_entry_contract.py
+        run: >-
+          python3 training/verify_training_entry_contract.py
+          --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          --require-product-speech-like-base
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
@@ -75,7 +120,7 @@ jobs:
         run: |
           set +e
           .venv/bin/python training/iterate_domain.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --runner build/kws_wav \
             --work-dir build/model-training
           code=$?
@@ -86,7 +131,7 @@ jobs:
           ITERATION_EXIT_CODE: ${{ steps.train.outputs.exit_code }}
         run: |
           python3 training/base_stage_receipt.py write \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --work-dir build/model-training \
             --output build/model-training/base-stage-receipt.json \
             --iteration-exit-code "$ITERATION_EXIT_CODE"
@@ -107,10 +152,36 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Materialize governed product speech-like training base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_tag="$(jq -r '.release_tag' "$KWS_PRODUCT_BASE_CONTRACT")"
+          release_target="$(jq -r '.source_repro_head_sha' "$KWS_PRODUCT_BASE_CONTRACT")"
+          archive="$(jq -r '.release_archive' "$KWS_PRODUCT_BASE_CONTRACT")"
+          rm -rf .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
+          mkdir -p .generated/product-speech-like-release "$KWS_PRODUCT_BASE_ROOT"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag" > .generated/product-speech-like-release/release.json
+          jq -e --arg target "$release_target" '
+            .draft == false and .prerelease == false and .immutable == true
+            and .target_commitish == $target
+          ' .generated/product-speech-like-release/release.json >/dev/null
+          gh release download "$release_tag"             --repo "$GITHUB_REPOSITORY"             --dir .generated/product-speech-like-release
+          (cd .generated/product-speech-like-release && sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS)
+          tar -xzf ".generated/product-speech-like-release/$archive"             -C "$KWS_PRODUCT_BASE_ROOT"
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract "$KWS_PRODUCT_BASE_CONTRACT"             --bundle-root "$KWS_PRODUCT_BASE_ROOT/corpus"             --output "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          python3 training/verify_training_entry_contract.py             --config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --require-product-speech-like-base
       - name: Refuse consumed formal qualification seed
-        run: python3 training/verify_training_entry_contract.py
+        run: >-
+          python3 training/verify_training_entry_contract.py
+          --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          --require-product-speech-like-base
       - name: Verify shipping wake-word contract
-        run: python3 training/verify_training_entry_contract.py
+        run: >-
+          python3 training/verify_training_entry_contract.py
+          --config "$KWS_EFFECTIVE_TRAINING_CONFIG"
+          --require-product-speech-like-base
       - name: Build and verify real C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
@@ -134,27 +205,27 @@ jobs:
         id: base_stage
         run: |
           python3 training/base_stage_receipt.py verify \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --work-dir build/model-training \
             --receipt build/model-training/base-stage-receipt.json \
             --github-output "$GITHUB_OUTPUT"
       - name: Refine strict candidate with model-mined adversarial lexicon
         run: |
           .venv/bin/python training/adversarial_refinement.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --runner build/kws_wav \
             --work-dir build/model-training
       - name: Enforce development shadow qualification arena
         run: |
           .venv/bin/python training/shadow_qualification.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --runner build/kws_wav \
             --work-dir build/model-training \
             --output build/model-training/shadow-qualification
       - name: Rotate untouched qualification cohort
         run: |
           .venv/bin/python training/render_qualification_guarded.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --work-dir build/model-training \
             --output build/model-training/qualification-dataset
       - name: Finalize latest strict gate-passing candidate and run summary
@@ -162,21 +233,21 @@ jobs:
           ITERATION_EXIT_CODE: ${{ steps.base_stage.outputs.iteration_exit_code }}
         run: |
           .venv/bin/python training/finalize_domain_candidate.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --runner build/kws_wav \
             --work-dir build/model-training \
             --iteration-exit-code "$ITERATION_EXIT_CODE"
       - name: Enforce synthetic qualification and holdout-isolation gates
         run: |
           python3 training/verify_final_training_gates.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --work-dir build/model-training
       - name: Enforce robustness matrix gate
         if: always()
         run: |
           python3 eval/gate_robustness.py \
             --summary build/model-training/training-run-summary.json \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --output build/model-training/robustness-summary.json
       # Strict continuous-FAR semantics are delegated to run_continuous_far_gate.py:
       # --hard-negative-rate-per-minute 0.0; actual_injection_rate_per_minute;
@@ -192,7 +263,7 @@ jobs:
         if: always()
         run: |
           python3 tools/build_training_diagnostics.py \
-            --config configs/training/xiaowo.torch-domain.json \
+            --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
             --work-dir build/model-training \
             --output build/model-training/compact-training-diagnostics.json
       - name: Retain compact model-training diagnostics

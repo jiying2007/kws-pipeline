@@ -1,0 +1,58 @@
+name: product-training-data-contract
+
+on:
+  push:
+    branches:
+      - main
+      - "fix/product-training-speech-like-v1"
+    paths:
+      - "configs/training/product-speech-like-base-v1.json"
+      - "training/materialize_product_training_config.py"
+      - "training/verify_training_entry_contract.py"
+      - "tests/test_product_training_entry_contract.py"
+      - ".github/workflows/model-training.yml"
+      - ".github/workflows/product-training-data-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/product-speech-like-base-v1.json"
+      - "training/materialize_product_training_config.py"
+      - "training/verify_training_entry_contract.py"
+      - "tests/test_product_training_entry_contract.py"
+      - ".github/workflows/model-training.yml"
+      - ".github/workflows/product-training-data-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Product training entry contract
+        run: python3 tests/test_product_training_entry_contract.py
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          training/materialize_product_training_config.py
+          training/verify_training_entry_contract.py
+          tests/test_product_training_entry_contract.py
+      - name: Static product base identity
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/product-speech-like-base-v1.json").read_text())
+          assert p["policy"]=="product-speech-like-base-v1"
+          assert p["release_tag"]=="speech-like-base-5204b798033f"
+          assert p["source_repro_run_id"]==35318933124
+          assert p["external_base_bundle_sha256"]=="5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35"
+          assert p["provider_identity_sha256"]=="d12728562db74951191575e9afe4922adc1260934b02d577dda67d91faa4aff9"
+          assert p["splits"]=={"train":128,"calibration":64,"test":64,"qualification":128}
+          assert p["tone_backend_used"] is False
+          assert p["protected_evidence_used"] is False
+          print("product speech-like base contract: ok")
+          PY
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .
