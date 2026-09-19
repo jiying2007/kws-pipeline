@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-architecture-probe-v1",
+  "evidence_scope": "research-only",
+  "purpose": "determine whether the frozen best four-token M2 encoder already contains separable wake/nonwake information before changing the streaming model ABI",
+  "source_model": {
+    "family": "gru",
+    "frontend": "logmel",
+    "hidden_dim": 64,
+    "research_profile": "m2-plus-margin",
+    "run_id": 35410019255,
+    "exact_head_sha": "0d4b0cce201fed75a489a63b1c2bf35da2c2044f",
+    "artifact_name": "kws-v2-research-reset-v2-a-gru-h64-logmel-m2-plus-margin-0d4b0cce201fed75a489a63b1c2bf35da2c2044f"
+  },
+  "dataset": {
+    "rendered_cache_run_id": 35412153192,
+    "rendered_cache_artifact": "kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3",
+    "ordinary_sidecar_run_id": 35367960968,
+    "ordinary_sidecar_artifact": "kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33",
+    "qualification_split_consumed": false
+  },
+  "probe": {
+    "architecture": "linear-softmax-v1",
+    "classes": ["nonwake", "keyword-1", "keyword-2"],
+    "pooling_modes": ["last", "mean", "max"],
+    "epochs": 100,
+    "batch_size": 64,
+    "learning_rate": 0.01,
+    "weight_decay": 0.0001,
+    "seed": 1337,
+    "balance_mode": "equal-class-sampler-v1",
+    "encoder_trainable": false,
+    "feature_standardization": "train-mean-std-v1"
+  },
+  "decision_rules": {
+    "probe_strong_if_test_wake_recall_gte": 0.8,
+    "probe_strong_if_test_negative_fp_lte": 0.2,
+    "probe_strong_if_test_gap_gt": 0.0,
+    "strong_probe_next": "streaming-keyword-verifier-gate-v1",
+    "weak_probe_next": "encoder-or-representation-v2"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-research-architecture-fit-v1",
+  "evidence_scope": "research-only",
+  "purpose": "Bridge research encoder/frontend evidence into fail-closed runtime/deployability constraints without treating hosted estimates as shipping evidence.",
+  "canonical_resource_estimator": "tools/model_family_resource_estimate.py",
+  "runtime_contract": {
+    "header": "include/kws_pipeline/kws.h",
+    "exporter": "training/export_model.py",
+    "gru_exporter": "training/export_gru_model.py",
+    "max_feature_dim": 40,
+    "max_hidden_dim": 64,
+    "max_vocab_size": 512,
+    "sample_rate_hz": 16000,
+    "frame_hop_samples": 320,
+    "steps_per_second": 50,
+    "model_format": "KWG1"
+  },
+  "shipping_shape": {
+    "feature_dim": 32,
+    "vocab_size": 5
+  },
+  "candidates": {
+    "b0-logmel64": {
+      "role": "runtime-shape-reference",
+      "family": "gru",
+      "frontend": "logmel",
+      "hidden_dim": 64
+    },
+    "fc1-pcen128": {
+      "role": "research-capacity-upper-bound",
+      "family": "gru",
+      "frontend": "pcen-lite",
+      "hidden_dim": 128
+    },
+    "f1-pcen64": {
+      "role": "runtime-fit-frontend-candidate",
+      "family": "gru",
+      "frontend": "pcen-lite",
+      "hidden_dim": 64
+    }
+  },
+  "target_board_evidence": {
+    "bound": false,
+    "required_for_shipping": true,
+    "approved_budget_required": true,
+    "physical_measurement_required": true,
+    "hosted_timing_is_shipping_evidence": false
+  },
+  "decision_rules": {
+    "research_target": "fc1-pcen128",
+    "runtime_fit_next": "target-board-budget-and-measurement-binding",
+    "runtime_mismatch_next": "efficient-encoder-architecture-v2",
+    "shipping_evidence_missing_next": "bind-approved-target-resource-budget"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "shipping_approval_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  },
+  "source_multistart_evidence": {
+    "run_id": 35428804016,
+    "exact_head_sha": "c0e8b935345b26514aa5a0975a4fd9f52296b66b",
+    "primary_directional_passes": 3,
+    "secondary_directional_passes": 3,
+    "absolute_strong_passes": 4,
+    "selected_target_primary_test_wake_recall_mean": 0.834375,
+    "selected_target_primary_test_wake_recall_stddev": 0.04485218779502289,
+    "multistart_pass": false
+  },
+  "source_runtime_fit_pcen64_evidence": {
+    "run_id": 35429252239,
+    "exact_head_sha": "438c7de80a91d6b75238e0685aca6352dde08436",
+    "multistart_pass": false,
+    "primary_directional_passes": 1,
+    "secondary_directional_passes": 0,
+    "absolute_strong_passes": 0,
+    "selected_target_primary_test_wake_recall_mean": 0.6875,
+    "selected_target_primary_test_wake_recall_stddev": 0.08326820371546392,
+    "selected_target_primary_test_negative_fp_mean": 0.09375
+  }
+}

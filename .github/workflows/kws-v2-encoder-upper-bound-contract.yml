@@ -1,0 +1,546 @@
+name: kws-v2-encoder-upper-bound-contract
+
+on:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
+      - "training/analyze_encoder_frontend_replication.py"
+      - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
+      - "training/analyze_classifier_seed_variance.py"
+      - "configs/training/kws-v2-classifier-init-stability-v1.json"
+      - "training/analyze_classifier_init_stability.py"
+      - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
+      - "training/analyze_classifier_optimizer_schedule_stability.py"
+      - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
+      - "training/verify_classifier_cross_runner_repro.py"
+      - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
+      - "training/analyze_classifier_exact_balanced_sampler.py"
+      - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
+      - "configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json"
+      - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
+      - ".github/workflows/kws-v2-classifier-seed-variance.yml"
+      - ".github/workflows/kws-v2-classifier-init-stability.yml"
+      - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
+      - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
+      - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
+      - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
+      - ".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml"
+      - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-fixed-keyword-upper-bound-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - "configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json"
+      - "training/analyze_encoder_frontend_replication.py"
+      - "configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json"
+      - "training/analyze_classifier_seed_variance.py"
+      - "configs/training/kws-v2-classifier-init-stability-v1.json"
+      - "training/analyze_classifier_init_stability.py"
+      - "configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json"
+      - "training/analyze_classifier_optimizer_schedule_stability.py"
+      - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
+      - "training/verify_classifier_cross_runner_repro.py"
+      - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
+      - "training/analyze_classifier_exact_balanced_sampler.py"
+      - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
+      - "configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json"
+      - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
+      - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
+      - ".github/workflows/kws-v2-classifier-seed-variance.yml"
+      - ".github/workflows/kws-v2-classifier-init-stability.yml"
+      - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
+      - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
+      - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
+      - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
+      - ".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml"
+      - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify fixed-keyword upper-bound authority
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-fixed-keyword-upper-bound-v1.json").read_text())
+          assert p["policy"]=="kws-v2-fixed-keyword-upper-bound-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["data"]["qualification_split_consumed"] is False
+          assert p["model"]=={
+              "architecture":"clip-gru-v1",
+              "frontend":"logmel",
+              "feature_dim":32,
+              "hidden_dim":64,
+              "classes":["nonwake","keyword-1","keyword-2"],
+          }
+          assert p["train"]=={
+              "epochs":24,
+              "batch_size":16,
+              "learning_rate":0.001,
+              "seed":1337,
+              "balance_mode":"equal-class-sampler-v1",
+          }
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          print("fixed-keyword upper-bound contract: ok")
+          PY
+
+      - name: Verify sweep candidates change one variable
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          assert p["policy"]=="kws-v2-encoder-frontend-upper-bound-sweep-v1"
+          assert p["evidence_scope"]=="research-only"
+          b=p["baseline"]
+          assert (b["frontend"],b["hidden_dim"],b["epochs"],b["seed"])==("logmel",64,24,1337)
+          fixed=p["fixed"]
+          assert fixed["qualification_split_consumed"] is False
+          assert fixed["rendered_cache_run_id"]==35412153192
+          assert fixed["sidecar_run_id"]==35367960968
+          candidates=p["candidates"]
+          assert list(candidates)==[
+              "b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128","b0-logmel64-repeat"
+          ]
+          b0=candidates["b0-logmel64"]
+          assert b0["single_variable"]=="none"
+          assert (b0["frontend"],b0["hidden_dim"])==("logmel",64)
+          f=candidates["f1-pcen64"]
+          assert f["single_variable"]=="frontend"
+          assert (f["frontend"],f["hidden_dim"])==("pcen-lite",64)
+          c=candidates["c1-logmel128"]
+          assert c["single_variable"]=="hidden_dim"
+          assert (c["frontend"],c["hidden_dim"])==("logmel",128)
+          fc=candidates["fc1-pcen128"]
+          assert fc["single_variable"]=="frontend+hidden_dim"
+          assert (fc["frontend"],fc["hidden_dim"])==("pcen-lite",128)
+          repeat=candidates["b0-logmel64-repeat"]
+          assert repeat["role"]=="determinism-replica"
+          assert repeat["replicate_of"]=="b0-logmel64"
+          assert (repeat["frontend"],repeat["hidden_dim"])==("logmel",64)
+          assert p["decision_rules"]["reference_candidate"]=="b0-logmel64"
+          assert p["decision_rules"]["determinism_replica"]=="b0-logmel64-repeat"
+          assert p["decision_rules"]["decision_requires_bit_exact_reference_replica"] is True
+          op=p["threshold_operating_point"]
+          assert [row["max_negative_fp_rate"] for row in op["calibration_constraints"]]==[0.2,0.1,0.05]
+          rules=p["decision_rules"]
+          assert rules["decision_basis"]=="calibration-selected-threshold-transfer-to-test"
+          assert rules["primary_operating_point"]=="strict-10fp"
+          assert rules["secondary_operating_point"]=="strict-05fp"
+          assert rules["material_gain_min_test_wake_recall_delta"]==0.10
+          assert rules["material_gain_max_test_negative_fp_rate_regression"]==0.02
+          assert set(p["baseline"]["operating_points"])=={"balanced-20fp","strict-10fp","strict-05fp"}
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          print("encoder/frontend sweep single-variable contract: ok")
+          PY
+
+      - name: Verify workflows avoid protected evidence
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml",
+          ):
+              text=pathlib.Path(name).read_text().lower()
+              assert "run-id: 35412153192" in text
+              assert "run-id: 35367960968" in text
+              for forbidden in (
+                  "qualification-index",
+                  "qualification-summary",
+                  "generalization-freeze",
+                  "fresh-validation",
+                  "shadow-validation",
+                  "formal-qualification",
+              ):
+                  assert forbidden not in text, (name, forbidden)
+          print("upper-bound workflow evidence boundary: ok")
+          PY
+
+      - name: Verify classifier and decision semantics
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          workflow=pathlib.Path(".github/workflows/kws-v2-encoder-frontend-upper-bound.yml").read_text()
+          assert 'positive_score_semantics": "true-keyword-probability"' in classifier
+          assert "true_class_score = probs.gather" in classifier
+          assert "TinyStreamingGRU" in classifier
+          assert "self.encoder.gru(" in classifier
+          assert 'recurrent_impl": "tiny-streaming-gru-cell-v1"' in classifier
+          assert "model_state_sha256" in classifier
+          assert "training_environment" in classifier
+          assert 'primary_name=rules["primary_operating_point"]' in workflow
+          assert '"decision_basis":{' in workflow
+          assert "b0-logmel64-repeat" in workflow
+          assert "reference_state==replica_state" in workflow
+          assert '"within_run_assessments":assessments' in workflow
+          assert 'fp_reduction >=' not in workflow
+          assert 'gap_improvement >=' not in workflow
+          print("classifier/decision semantics contract: ok")
+          PY
+
+      - name: Verify paired replication contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_encoder_frontend_replication.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-paired-seed-replication-v1.json").read_text())
+          assert p["policy"]=="kws-v2-encoder-frontend-paired-seed-replication-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["source_factorial_evidence"]["run_id"]==35423534198
+          assert p["source_factorial_evidence"]["exact_head_sha"]=="c439296e0852aaa892398bc93fe98fb8114641b2"
+          assert p["source_factorial_evidence"]["decision_authorized"] is True
+          assert p["seeds"]==[2027,4099,7919,12011,16001]
+          assert 1337 not in p["seeds"]
+          assert p["candidates"]=={
+              "b0-logmel64":{"role":"reference","frontend":"logmel","hidden_dim":64},
+              "c1-logmel128":{"role":"mechanism-control","frontend":"logmel","hidden_dim":128},
+              "fc1-pcen128":{"role":"target","frontend":"pcen-lite","hidden_dim":128},
+          }
+          rules=p["replication_rules"]
+          assert rules["authority"]=="pre-registered-paired-seed-test-transfer-v1"
+          assert rules["discovery_seed_excluded"] is True
+          assert rules["min_primary_directional_passes"]==4
+          assert rules["min_secondary_directional_passes"]==3
+          assert rules["min_absolute_strong_passes"]==3
+          assert rules["pass_next"]=="deployability-budget-and-architecture-fit-gate"
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          workflow=pathlib.Path(".github/workflows/kws-v2-encoder-frontend-paired-replication.yml").read_text()
+          for seed in p["seeds"]:
+              assert str(seed) in workflow
+          assert "Train paired candidates on one runner" in workflow
+          assert "b0-logmel64 logmel 64" in workflow
+          assert "c1-logmel128 logmel 128" in workflow
+          assert "fc1-pcen128 pcen-lite 128" in workflow
+          print("paired replication contract: ok")
+          PY
+
+      - name: Verify random-source variance contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/research_keyword_classifier.py training/analyze_classifier_seed_variance.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-seed-variance-decomposition-v1"
+          assert p["source_replication_evidence"]["run_id"]==35423717879
+          assert p["source_replication_evidence"]["replication_pass"] is False
+          assert p["axes"]["model-init"]["fixed_sampler_seed"]==1337
+          assert p["axes"]["sampler-path"]["fixed_model_seed"]==1337
+          assert p["axes"]["model-init"]["values"]==p["axes"]["sampler-path"]["values"]==[2027,4099,7919,12011,16001]
+          rules=p["decision_rules"]
+          assert rules["dominance_ratio"]==1.5
+          assert rules["material_wake_recall_stddev"]==0.05
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert '--model-seed' in classifier
+          assert '--sampler-seed' in classifier
+          assert '"initial_model_state_sha256"' in classifier
+          for name in (
+              ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml",
+              ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text
+              assert "\n  push:" not in text
+          print("random-source variance contract: ok")
+          PY
+
+      - name: Verify init stability contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_init_stability.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-init-stability-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-init-stability-v1"
+          assert p["source_variance_evidence"]["run_id"]==35424013188
+          assert p["source_variance_evidence"]["variance_classification"]=="model-initialization-dominant"
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["fixed"]["sampler_seed"]==1337
+          assert p["candidates"]["fc1-pcen128-stable-init"]["init_mode"]=="gru-orthogonal-xavier-v1"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_default"]==0.65
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.10
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "gru-orthogonal-xavier-v1" in classifier
+          assert "nn.init.orthogonal_" in classifier
+          variance=pathlib.Path(".github/workflows/kws-v2-classifier-seed-variance.yml").read_text()
+          assert "workflow_dispatch:" in variance and "\n  push:" not in variance
+          print("init stability contract: ok")
+          PY
+
+      - name: Verify optimizer schedule stability contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_optimizer_schedule_stability.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-optimizer-schedule-stability-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-optimizer-schedule-stability-v1"
+          source=p["source_reproducibility_evidence"]
+          assert source["run_id"]==35427343767
+          assert source["exact_head_sha"]=="c9a6da0ba99a2c20c31e84f0204dacff22af0c99"
+          assert source["reproducibility_pass"] is True
+          assert source["cpu_contract"]=="cross-cpu-compatible-single-thread-v1"
+          assert set(source["final_state_sentinels"])=={"b0-logmel64-fixed","fc1-pcen128-fixed"}
+          assert set(source["final_state_sentinels"]["b0-logmel64-fixed"])=={"2027","7919"}
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["fixed"]["sampler_seed"]==1337
+          assert p["fixed"]["init_mode"]=="default-pytorch-v1"
+          assert p["candidates"]["fc1-pcen128-fixed"]["lr_schedule"]=="fixed-v1"
+          assert p["candidates"]["fc1-pcen128-warmup-cosine"]["lr_schedule"]=="warmup-cosine-v1"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_fixed"]==0.65
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.10
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "warmup-cosine-v1" in classifier
+          assert "learning_rate_for_epoch" in classifier
+          assert '"lr_schedule": args.lr_schedule' in classifier
+          workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          for seed in p["fixed"]["model_seeds"]:
+              assert str(seed) in workflow
+          assert "workflow_dispatch:" in workflow
+          assert "\n  push:" not in workflow
+          assert "Train paired optimizer/schedule candidates" in workflow
+          assert "fc1-pcen128-warmup-cosine" in workflow
+          print("optimizer schedule stability contract: ok")
+          PY
+
+      - name: Verify cross-runner classifier reproducibility contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/verify_classifier_cross_runner_repro.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-cross-runner-repro-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-cross-runner-repro-v1"
+          assert p["fixed"]["model_seeds"]==[2027,7919]
+          assert p["fixed"]["replicas"]==["a","b"]
+          assert set(p["candidates"])=={"b0-logmel64","fc1-pcen128"}
+          cpu=p["required_cpu_contract"]
+          assert cpu["environment"]["ATEN_CPU_CAPABILITY"]=="default"
+          assert cpu["environment"]["MKL_CBWR"]=="COMPATIBLE"
+          assert cpu["torch_num_threads"]==1
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "_RESEARCH_CPU_ENV" in classifier
+          assert '"ATEN_CPU_CAPABILITY": "default"' in classifier
+          assert '"MKL_CBWR": "COMPATIBLE"' in classifier
+          assert '"research_cpu_contract": {' in classifier
+          init_workflow=pathlib.Path(".github/workflows/kws-v2-classifier-init-stability.yml").read_text()
+          assert "workflow_dispatch:" in init_workflow
+          assert "\n  push:" not in init_workflow
+          schedule_workflow=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          assert "workflow_dispatch:" in schedule_workflow
+          assert "\n  push:" not in schedule_workflow
+          repro=pathlib.Path(".github/workflows/kws-v2-classifier-cross-runner-repro.yml").read_text()
+          assert "workflow_dispatch:" in repro and "\n  push:" not in repro
+          assert "model_seed: [2027, 7919]" in repro
+          assert "replica: [a, b]" in repro
+          exact=pathlib.Path(".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml").read_text()
+          assert "workflow_dispatch:" in exact and "\n  push:" not in exact
+          print("cross-runner classifier reproducibility contract: ok")
+          PY
+
+      - name: Verify exact-balanced sampler contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_exact_balanced_sampler.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-exact-balanced-sampler-v2"
+          assert p["source_schedule_evidence"]["run_id"]==35427506968
+          assert p["source_schedule_evidence"]["stability_pass"] is False
+          assert p["source_reproducibility_evidence"]["reproducibility_pass"] is True
+          assert p["fixed"]["model_seeds"]==[2027,4099,7919,12011,16001]
+          assert p["candidates"]["b0-logmel64-exact"]["balance_mode"]=="exact-balanced-epoch-v2"
+          assert p["candidates"]["fc1-pcen128-exact"]["balance_mode"]=="exact-balanced-epoch-v2"
+          rules=p["decision_rules"]
+          assert rules["max_stddev_ratio_vs_weighted"]==0.75
+          assert rules["max_primary_wake_recall_delta_stddev"]==0.11
+          classifier=pathlib.Path("training/research_keyword_classifier.py").read_text()
+          assert "ExactBalancedEpochSampler" in classifier
+          assert "exact-balanced-epoch-v2" in classifier
+          schedule=pathlib.Path(".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml").read_text()
+          assert "workflow_dispatch:" in schedule and "\n  push:" not in schedule
+          sampler=pathlib.Path(".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml").read_text()
+          assert "model_seed: [2027, 4099, 7919, 12011, 16001]" in sampler
+          assert "Train paired sampler candidates" in sampler
+          print("exact-balanced sampler contract: ok")
+          PY
+
+      - name: Verify calibration-only multi-start contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_multistart_selection.py
+          python3 - <<'PY'
+          import json, pathlib, re
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-multistart-calibration-selection-v1"
+          assert p["source_sampler_evidence"]["run_id"]==35427824986
+          assert p["source_sampler_evidence"]["sampler_pass"] is False
+          assert p["source_reproducibility_evidence"]["reproducibility_pass"] is True
+          assert p["fixed"]["starts_per_architecture"]==3
+          assert p["fixed"]["discovery_seeds_reused"] is False
+          assert len(p["cohorts"])==5
+          seeds=[seed for values in p["cohorts"].values() for seed in values]
+          assert len(seeds)==15 and len(set(seeds))==15
+          assert not (set(seeds) & {1337,2027,4099,7919,12011,16001})
+          selection=p["selection"]
+          assert selection["authority"]=="calibration-only-multistart-v1"
+          assert selection["test_metrics_used_for_selection"] is False
+          assert selection["architecture_independent_selection"] is True
+          assert selection["reference_architecture"]=="b0-logmel64"
+          assert selection["target_architecture"]=="fc1-pcen128"
+          assert p["source_multistart_result"]["run_id"]==35428804016
+          assert p["source_multistart_result"]["multistart_pass"] is False
+          rules=p["decision_rules"]
+          assert rules["min_primary_directional_passes"]==4
+          assert rules["min_secondary_directional_passes"]==3
+          assert rules["min_absolute_strong_passes"]==3
+          analyzer=pathlib.Path("training/analyze_classifier_multistart_selection.py").read_text()
+          select_body=analyzer.split("def select_start",1)[1].split("def test_delta",1)[0]
+          assert '["test"]' not in select_body
+          assert "calibration_rank" in select_body
+          workflow=pathlib.Path(".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml").read_text()
+          assert "workflow_dispatch:" in workflow and "\n  push:" not in workflow
+          for cohort in p["cohorts"]:
+              assert cohort in workflow
+          assert "Select starts using calibration only" in workflow
+          assert "test_metrics_used_for_selection" in analyzer
+          print("calibration-only multi-start contract: ok")
+          PY
+
+      - name: Verify retired fixed-keyword upper bound is manual-only
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text, name
+              assert "\n  push:" not in text, name
+          print("Verify retired fixed-keyword upper bound is manual-only: ok")
+          PY
+
+      - name: Verify research architecture-fit boundary
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_research_architecture_fit.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-research-architecture-fit-v1.json").read_text())
+          assert p["policy"]=="kws-v2-research-architecture-fit-v1"
+          assert p["runtime_contract"]["max_hidden_dim"]==64
+          assert p["candidates"]["b0-logmel64"]["hidden_dim"]==64
+          assert p["candidates"]["f1-pcen64"]["hidden_dim"]==64
+          assert p["candidates"]["fc1-pcen128"]["hidden_dim"]==128
+          assert p["source_multistart_evidence"]["run_id"]==35428804016
+          assert p["source_multistart_evidence"]["multistart_pass"] is False
+          assert p["source_runtime_fit_pcen64_evidence"]["run_id"]==35429252239
+          assert p["source_runtime_fit_pcen64_evidence"]["multistart_pass"] is False
+          assert p["decision_rules"]["runtime_mismatch_next"]=="efficient-encoder-architecture-v2"
+          board=p["target_board_evidence"]
+          assert board["bound"] is False
+          assert board["required_for_shipping"] is True
+          assert board["approved_budget_required"] is True
+          assert board["physical_measurement_required"] is True
+          assert board["hosted_timing_is_shipping_evidence"] is False
+          assert p["authority"]["promotion_allowed"] is False
+          assert p["authority"]["shipping_approval_allowed"] is False
+          print("research architecture-fit boundary: ok")
+          PY
+
+      - name: Verify runtime-fit PCEN64 multi-start contract
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-runtime-fit-pcen64-multistart-v1.json").read_text())
+          assert p["policy"]=="kws-v2-runtime-fit-pcen64-multistart-v1"
+          assert p["source_fc1_multistart_evidence"]["run_id"]==35428804016
+          assert p["source_fc1_multistart_evidence"]["multistart_pass"] is False
+          assert p["source_architecture_fit"]["fc1_static_runtime_fit"] is False
+          assert p["source_architecture_fit"]["f1_static_runtime_fit"] is True
+          result=p["source_multistart_result"]
+          assert result["run_id"]==35429252239
+          assert result["exact_head_sha"]=="438c7de80a91d6b75238e0685aca6352dde08436"
+          assert result["primary_directional_passes"]==1
+          assert result["secondary_directional_passes"]==0
+          assert result["absolute_strong_passes"]==0
+          assert result["multistart_pass"] is False
+          assert result["next_experiment"]=="efficient-encoder-architecture-v2"
+          assert p["fixed"]["starts_per_architecture"]==3
+          assert p["fixed"]["prior_multistart_seeds_reused"] is False
+          seeds=[seed for values in p["cohorts"].values() for seed in values]
+          assert len(seeds)==15 and len(set(seeds))==15
+          prior={2309,3251,4447,5501,6679,7741,8803,9901,11003,12101,13217,14303,15401,16519,17609}
+          assert not (set(seeds) & prior)
+          assert p["architectures"]=={
+              "b0-logmel64":{"role":"runtime-fit-reference","frontend":"logmel","hidden_dim":64},
+              "f1-pcen64":{"role":"runtime-fit-target","frontend":"pcen-lite","hidden_dim":64},
+          }
+          selection=p["selection"]
+          assert selection["reference_architecture"]=="b0-logmel64"
+          assert selection["target_architecture"]=="f1-pcen64"
+          assert selection["test_metrics_used_for_selection"] is False
+          rules=p["decision_rules"]
+          assert rules["min_primary_directional_passes"]==4
+          assert rules["min_secondary_directional_passes"]==3
+          assert rules["pass_next"]=="runtime-fit-pcen64-ctc-objective-confirmation-v1"
+          workflow=pathlib.Path(".github/workflows/kws-v2-runtime-fit-pcen64-multistart.yml").read_text()
+          assert "workflow_dispatch:" in workflow and "\n  push:" not in workflow
+          for cohort in p["cohorts"]:
+              assert cohort in workflow
+          assert "Train runtime-fit PCEN64 multi-start candidates" in workflow
+          print("runtime-fit PCEN64 multi-start contract: ok")
+          PY
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

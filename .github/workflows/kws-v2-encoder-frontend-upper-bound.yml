@@ -1,0 +1,446 @@
+name: kws-v2-encoder-frontend-upper-bound
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-encoder-frontend-upper-bound-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - candidate: b0-logmel64
+            frontend: logmel
+            hidden_dim: 64
+          - candidate: f1-pcen64
+            frontend: pcen-lite
+            hidden_dim: 64
+          - candidate: c1-logmel128
+            frontend: logmel
+            hidden_dim: 128
+          - candidate: fc1-pcen128
+            frontend: pcen-lite
+            hidden_dim: 128
+          - candidate: b0-logmel64-repeat
+            frontend: logmel
+            hidden_dim: 64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Verify factorial candidate identity
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          FRONTEND: ${{ matrix.frontend }}
+          HIDDEN_DIM: ${{ matrix.hidden_dim }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          name=os.environ["CANDIDATE"]
+          row=cfg["candidates"][name]
+          assert row["frontend"]==os.environ["FRONTEND"]
+          assert int(row["hidden_dim"])==int(os.environ["HIDDEN_DIM"])
+          if row["role"]=="determinism-replica":
+              assert row["replicate_of"]==cfg["decision_rules"]["reference_candidate"]
+          base=cfg["baseline"]
+          mode=row["single_variable"]
+          if mode=="none":
+              assert row["frontend"]==base["frontend"]
+              assert row["hidden_dim"]==base["hidden_dim"]
+          elif mode=="frontend":
+              assert row["hidden_dim"]==base["hidden_dim"]
+              assert row["frontend"]!=base["frontend"]
+          elif mode=="hidden_dim":
+              assert row["frontend"]==base["frontend"]
+              assert row["hidden_dim"]!=base["hidden_dim"]
+          elif mode=="frontend+hidden_dim":
+              assert row["frontend"]!=base["frontend"]
+              assert row["hidden_dim"]!=base["hidden_dim"]
+          else:
+              raise AssertionError(mode)
+          fixed=cfg["fixed"]
+          assert fixed["epochs"]==24
+          assert fixed["seed"]==1337
+          assert fixed["rendered_cache_run_id"]==35412153192
+          assert fixed["sidecar_run_id"]==35367960968
+          assert fixed["qualification_split_consumed"] is False
+          assert cfg["authority"]["promotion_allowed"] is False
+          print(json.dumps(row,indent=2,sort_keys=True))
+          PY
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Train candidate upper bound
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+          FRONTEND: ${{ matrix.frontend }}
+          HIDDEN_DIM: ${{ matrix.hidden_dim }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/upper-bound/$CANDIDATE"
+          mkdir -p "$out"
+          .venv/bin/python training/research_keyword_classifier.py             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"             --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv"             --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv"             --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv"             --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv"             --tokens keywords/tokens.example.txt             --keywords keywords/zh_cn_example.tsv             --frontend "$FRONTEND"             --feature-dim 32             --hidden-dim "$HIDDEN_DIM"             --epochs 24             --batch-size 16             --lr 0.001             --seed 1337             --balance-mode equal-class-sampler-v1             --output "$out/classifier.json"
+
+      - name: Build threshold-aware candidate evidence
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())
+          name=os.environ["CANDIDATE"]
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"upper-bound"/name
+          result=json.loads((root/"classifier.json").read_text())
+          test=result["test"]
+          cal=result["calibration"]
+          recall=float(test["positive_recall"])
+          fp=float(test["negative_false_positive_clip_rate"])
+          gap=float(test["score_distribution"]["separation_gap_p10_positive_minus_p99_negative"])
+          base=cfg["baseline"]
+          fp_reduction=float(base["test_negative_fp_rate"])-fp
+          gap_improvement=gap-float(base["test_gap"])
+          rules=cfg["decision_rules"]
+          row=cfg["candidates"][name]
+          mode=row["single_variable"]
+
+          cal_curve={float(item["threshold"]):item for item in cal["operating_curve"]}
+          test_curve={float(item["threshold"]):item for item in test["operating_curve"]}
+          operating={}
+          for spec in cfg["threshold_operating_point"]["calibration_constraints"]:
+              limit=float(spec["max_negative_fp_rate"])
+              eligible=[
+                  item for item in cal["operating_curve"]
+                  if float(item["negative_false_positive_rate"]) <= limit
+              ]
+              if not eligible:
+                  operating[spec["name"]]=None
+                  continue
+              selected=max(
+                  eligible,
+                  key=lambda item: (
+                      float(item["wake_exact_recall"]),
+                      -float(item["negative_false_positive_rate"]),
+                      -float(item["threshold"]),
+                  ),
+              )
+              threshold=float(selected["threshold"])
+              test_selected=test_curve[threshold]
+              operating[spec["name"]]={
+                  "max_calibration_negative_fp_rate":limit,
+                  "threshold":threshold,
+                  "calibration":selected,
+                  "test":test_selected,
+              }
+
+          primary_name=rules["primary_operating_point"]
+          secondary_name=rules["secondary_operating_point"]
+          primary=operating.get(primary_name)
+          secondary=operating.get(secondary_name)
+
+          def transfer(row):
+              if row is None:
+                  return None
+              test_row=row["test"]
+              return {
+                  "threshold":float(row["threshold"]),
+                  "test_wake_recall":float(test_row["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(test_row["negative_false_positive_rate"]),
+              }
+
+          primary_transfer=transfer(primary)
+          secondary_transfer=transfer(secondary)
+          strong_primary=(
+              primary_transfer is not None
+              and primary_transfer["test_wake_recall"] >= float(rules["strong_primary_min_test_wake_recall"])
+              and primary_transfer["test_negative_fp_rate"] <= float(rules["strong_primary_max_test_negative_fp_rate"])
+          )
+          strong_secondary=(
+              secondary_transfer is not None
+              and secondary_transfer["test_wake_recall"] >= float(rules["strong_secondary_min_test_wake_recall"])
+              and secondary_transfer["test_negative_fp_rate"] <= float(rules["strong_secondary_max_test_negative_fp_rate"])
+          )
+          strong=(
+              mode!="none"
+              and row["role"]!="determinism-replica"
+              and strong_primary
+              and strong_secondary
+          )
+          material=None
+          next_action=(
+              rules["reference_next"]
+              if mode=="none"
+              else "aggregate-factorial-evidence"
+          )
+
+          score={
+              "schema_version":1,
+              "evidence_class":"kws-v2-encoder-frontend-upper-bound-scorecard-v2",
+              "evidence_scope":"research-only",
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+              "candidate":name,
+              "role":row["role"],
+              "single_variable":mode,
+              "frontend":row["frontend"],
+              "hidden_dim":row["hidden_dim"],
+              "test_argmax":{
+                  "wake_recall":recall,
+                  "negative_fp_rate":fp,
+                  "gap":gap,
+              },
+              "delta_vs_logmel64":{
+                  "wake_recall":recall-float(base["test_wake_recall"]),
+                  "negative_fp_rate":fp-float(base["test_negative_fp_rate"]),
+                  "negative_fp_reduction":fp_reduction,
+                  "gap":gap_improvement,
+              },
+              "operating_points":operating,
+              "decision_basis":{
+                  "authority":rules["decision_basis"],
+                  "primary_operating_point":primary_name,
+                  "secondary_operating_point":secondary_name,
+                  "primary_transfer":primary_transfer,
+                  "secondary_transfer":secondary_transfer,
+                  "same_run_reference_required":True,
+                  "strong_primary":strong_primary,
+                  "strong_secondary":strong_secondary,
+              },
+              "strong_upper_bound":strong,
+              "material_gain":material,
+              "next_architecture_action":next_action,
+              "classifier":result,
+          }
+          (root/"scorecard.json").write_text(json.dumps(score,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(score,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload candidate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-factorial-${{ matrix.candidate }}-${{ github.sha }}
+          path: ${{ runner.temp }}/upper-bound/${{ matrix.candidate }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: sweep
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download factorial evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: kws-v2-factorial-*-${{ github.sha }}
+          path: ${{ runner.temp }}/factorial
+          merge-multiple: false
+
+      - name: Aggregate main and interaction effects
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/factorial-summary"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"factorial"
+          rows={}
+          for path in root.rglob("scorecard.json"):
+              row=json.loads(path.read_text())
+              rows[row["candidate"]]=row
+          expected={"b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128","b0-logmel64-repeat"}
+          assert set(rows)==expected, (set(rows),expected)
+
+          def op(candidate,name="balanced-20fp"):
+              row=rows[candidate]["operating_points"][name]
+              if row is None:
+                  return None
+              return {
+                  "threshold":row["threshold"],
+                  "test_wake_recall":float(row["test"]["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(row["test"]["negative_false_positive_rate"]),
+              }
+
+          def arg(candidate,key):
+              return float(rows[candidate]["test_argmax"][key])
+
+          rules=json.loads(pathlib.Path("configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json").read_text())["decision_rules"]
+          reference=rules["reference_candidate"]
+          replica=rules["determinism_replica"]
+          reference_state=rows[reference]["classifier"]["model_state_sha256"]
+          replica_state=rows[replica]["classifier"]["model_state_sha256"]
+          reproducible=(reference_state==replica_state)
+
+          primary_name=rules["primary_operating_point"]
+          secondary_name=rules["secondary_operating_point"]
+
+          def transfer(candidate, point):
+              row=rows[candidate]["operating_points"].get(point)
+              if row is None:
+                  return None
+              return {
+                  "threshold":float(row["threshold"]),
+                  "test_wake_recall":float(row["test"]["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(row["test"]["negative_false_positive_rate"]),
+              }
+
+          def compare(candidate, point):
+              current=transfer(candidate,point)
+              base=transfer(reference,point)
+              if current is None or base is None:
+                  return None
+              return {
+                  "test_wake_recall":current["test_wake_recall"]-base["test_wake_recall"],
+                  "test_negative_fp_rate":current["test_negative_fp_rate"]-base["test_negative_fp_rate"],
+              }
+
+          assessments={}
+          for candidate in ("f1-pcen64","c1-logmel128","fc1-pcen128"):
+              primary_delta=compare(candidate,primary_name)
+              secondary_delta=compare(candidate,secondary_name)
+              material=(
+                  primary_delta is not None
+                  and primary_delta["test_wake_recall"] >= float(rules["material_gain_min_test_wake_recall_delta"])
+                  and primary_delta["test_negative_fp_rate"] <= float(rules["material_gain_max_test_negative_fp_rate_regression"])
+              )
+              assessments[candidate]={
+                  "primary":transfer(candidate,primary_name),
+                  "secondary":transfer(candidate,secondary_name),
+                  "primary_delta_vs_same_run_reference":primary_delta,
+                  "secondary_delta_vs_same_run_reference":secondary_delta,
+                  "absolute_strong_upper_bound":bool(rows[candidate]["strong_upper_bound"]),
+                  "material_gain_vs_same_run_reference":bool(material),
+              }
+
+          effects={
+              "frontend_at_64":{
+                  "wake_recall":arg("f1-pcen64","wake_recall")-arg("b0-logmel64","wake_recall"),
+                  "negative_fp_rate":arg("f1-pcen64","negative_fp_rate")-arg("b0-logmel64","negative_fp_rate"),
+                  "gap":arg("f1-pcen64","gap")-arg("b0-logmel64","gap"),
+              },
+              "frontend_at_128":{
+                  "wake_recall":arg("fc1-pcen128","wake_recall")-arg("c1-logmel128","wake_recall"),
+                  "negative_fp_rate":arg("fc1-pcen128","negative_fp_rate")-arg("c1-logmel128","negative_fp_rate"),
+                  "gap":arg("fc1-pcen128","gap")-arg("c1-logmel128","gap"),
+              },
+              "capacity_at_logmel":{
+                  "wake_recall":arg("c1-logmel128","wake_recall")-arg("b0-logmel64","wake_recall"),
+                  "negative_fp_rate":arg("c1-logmel128","negative_fp_rate")-arg("b0-logmel64","negative_fp_rate"),
+                  "gap":arg("c1-logmel128","gap")-arg("b0-logmel64","gap"),
+              },
+              "capacity_at_pcen":{
+                  "wake_recall":arg("fc1-pcen128","wake_recall")-arg("f1-pcen64","wake_recall"),
+                  "negative_fp_rate":arg("fc1-pcen128","negative_fp_rate")-arg("f1-pcen64","negative_fp_rate"),
+                  "gap":arg("fc1-pcen128","gap")-arg("f1-pcen64","gap"),
+              },
+          }
+          effects["interaction_gap"]=(
+              effects["frontend_at_128"]["gap"]-effects["frontend_at_64"]["gap"]
+          )
+          strong_candidates=[
+              name for name,row in assessments.items()
+              if row["absolute_strong_upper_bound"]
+          ]
+          material_candidates=[
+              name for name,row in assessments.items()
+              if row["material_gain_vs_same_run_reference"]
+          ]
+          if not reproducible:
+              next_experiment="fix-research-classifier-determinism"
+              decision_authorized=False
+          elif len(strong_candidates)==1:
+              next_experiment="paired-seed-replication:"+strong_candidates[0]
+              decision_authorized=True
+          elif len(strong_candidates)>1:
+              next_experiment="paired-factorial-replication"
+              decision_authorized=True
+          elif material_candidates:
+              next_experiment="paired-factorial-replication"
+              decision_authorized=True
+          else:
+              next_experiment=rules["no_gain_next"]
+              decision_authorized=True
+
+          summary={
+              "schema_version":2,
+              "evidence_class":"kws-v2-encoder-frontend-factorial-summary-v2",
+              "evidence_scope":"research-only",
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+              "decision_authority":rules["decision_authority"],
+              "decision_authorized":decision_authorized,
+              "next_experiment":next_experiment,
+              "reference_reproducibility":{
+                  "reference_candidate":reference,
+                  "replica_candidate":replica,
+                  "reference_model_state_sha256":reference_state,
+                  "replica_model_state_sha256":replica_state,
+                  "bit_exact":reproducible,
+              },
+              "within_run_assessments":assessments,
+              "candidates":{
+                  name:{
+                      "frontend":row["frontend"],
+                      "hidden_dim":row["hidden_dim"],
+                      "argmax":row["test_argmax"],
+                      "balanced_20fp":op(name,"balanced-20fp"),
+                      "strict_10fp":op(name,"strict-10fp"),
+                      "strict_05fp":op(name,"strict-05fp"),
+                  }
+                  for name,row in sorted(rows.items())
+              },
+              "argmax_effects":effects,
+          }
+          target=pathlib.Path(os.environ["RUNNER_TEMP"])/"factorial-summary"/"summary.json"
+          target.write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload factorial summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-encoder-frontend-factorial-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/factorial-summary/
+          if-no-files-found: error
+          retention-days: 30

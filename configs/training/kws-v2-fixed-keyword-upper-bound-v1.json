@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-fixed-keyword-upper-bound-v1",
+  "evidence_scope": "research-only",
+  "purpose": "Test whether the same GRU64/logmel capacity can learn fixed-keyword discrimination when the encoder is trained directly for nonwake/kw1/kw2 classification.",
+  "data": {
+    "rendered_cache_run_id": 35412153192,
+    "rendered_cache_artifact": "kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3",
+    "ordinary_sidecar_run_id": 35367960968,
+    "ordinary_sidecar_artifact": "kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33",
+    "qualification_split_consumed": false
+  },
+  "model": {
+    "architecture": "clip-gru-v1",
+    "frontend": "logmel",
+    "feature_dim": 32,
+    "hidden_dim": 64,
+    "classes": [
+      "nonwake",
+      "keyword-1",
+      "keyword-2"
+    ]
+  },
+  "train": {
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "seed": 1337,
+    "balance_mode": "equal-class-sampler-v1"
+  },
+  "decision_rules": {
+    "strong_if_test_wake_recall_gte": 0.8,
+    "strong_if_test_negative_fp_lte": 0.2,
+    "strong_if_test_gap_gt": 0,
+    "strong_next": "ctc-or-representation-objective-v2",
+    "weak_next": "encoder-capacity-or-frontend-v2"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

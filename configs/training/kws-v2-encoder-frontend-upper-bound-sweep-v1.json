@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-encoder-frontend-upper-bound-sweep-v1",
+  "evidence_scope": "research-only",
+  "baseline": {
+    "run_id": 35418732590,
+    "exact_head_sha": "2eb3a881bdba69984f5305dc26a8ed0bc0b42377",
+    "frontend": "logmel",
+    "hidden_dim": 64,
+    "epochs": 24,
+    "seed": 1337,
+    "test_wake_recall": 0.796875,
+    "test_negative_fp_rate": 0.446875,
+    "test_gap": -0.5934407413005829,
+    "operating_points": {
+      "balanced-20fp": {
+        "test_wake_recall": 0.5625,
+        "test_negative_fp_rate": 0.203125
+      },
+      "strict-10fp": {
+        "test_wake_recall": 0.34375,
+        "test_negative_fp_rate": 0.103125
+      },
+      "strict-05fp": {
+        "test_wake_recall": 0.078125,
+        "test_negative_fp_rate": 0.0375
+      }
+    },
+    "decision_authority": false
+  },
+  "fixed": {
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "seed": 1337,
+    "balance_mode": "equal-class-sampler-v1",
+    "classes": [
+      "nonwake",
+      "keyword-1",
+      "keyword-2"
+    ],
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "qualification_split_consumed": false
+  },
+  "candidates": {
+    "b0-logmel64": {
+      "role": "reference",
+      "single_variable": "none",
+      "frontend": "logmel",
+      "hidden_dim": 64,
+      "hypothesis": "Reproduce the fixed-keyword GRU64/logmel reference with threshold curves."
+    },
+    "f1-pcen64": {
+      "role": "frontend-main-effect",
+      "single_variable": "frontend",
+      "frontend": "pcen-lite",
+      "hidden_dim": 64,
+      "hypothesis": "PCEN-lite improves acoustic separability under the same GRU64 capacity."
+    },
+    "c1-logmel128": {
+      "role": "capacity-main-effect",
+      "single_variable": "hidden_dim",
+      "frontend": "logmel",
+      "hidden_dim": 128,
+      "hypothesis": "GRU64 is capacity-limited; doubling hidden capacity improves near-miss discrimination."
+    },
+    "fc1-pcen128": {
+      "role": "factorial-interaction",
+      "single_variable": "frontend+hidden_dim",
+      "frontend": "pcen-lite",
+      "hidden_dim": 128,
+      "hypothesis": "PCEN-lite and higher capacity may be complementary rather than independently sufficient."
+    },
+    "b0-logmel64-repeat": {
+      "role": "determinism-replica",
+      "single_variable": "none",
+      "replicate_of": "b0-logmel64",
+      "frontend": "logmel",
+      "hidden_dim": 64,
+      "hypothesis": "Independent hosted-runner replica of the reference; model state must be bit-exact before factorial conclusions are authorized."
+    }
+  },
+  "decision_rules": {
+    "decision_basis": "calibration-selected-threshold-transfer-to-test",
+    "primary_operating_point": "strict-10fp",
+    "secondary_operating_point": "strict-05fp",
+    "material_gain_min_test_wake_recall_delta": 0.1,
+    "material_gain_max_test_negative_fp_rate_regression": 0.02,
+    "strong_primary_min_test_wake_recall": 0.7,
+    "strong_primary_max_test_negative_fp_rate": 0.1,
+    "strong_secondary_min_test_wake_recall": 0.5,
+    "strong_secondary_max_test_negative_fp_rate": 0.06,
+    "strong_main_effect_next": "paired-seed-replication",
+    "strong_interaction_next": "paired-factorial-replication",
+    "material_gain_next": "paired-seed-replication",
+    "no_gain_next": "data-and-encoder-architecture-v2",
+    "reference_next": "factorial-reference",
+    "reference_candidate": "b0-logmel64",
+    "determinism_replica": "b0-logmel64-repeat",
+    "decision_requires_bit_exact_reference_replica": true,
+    "decision_authority": "same-run-reference-with-bit-exact-sentinel"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  },
+  "threshold_operating_point": {
+    "thresholds": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "calibration_constraints": [
+      {
+        "name": "balanced-20fp",
+        "max_negative_fp_rate": 0.2
+      },
+      {
+        "name": "strict-10fp",
+        "max_negative_fp_rate": 0.1
+      },
+      {
+        "name": "strict-05fp",
+        "max_negative_fp_rate": 0.05
+      }
+    ],
+    "selection": "maximize calibration wake exact recall within FP constraint, tie-break lower FP then lower threshold",
+    "evaluate_selected_threshold_on_test": true
+  }
+}

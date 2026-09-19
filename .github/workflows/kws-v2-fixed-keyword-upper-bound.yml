@@ -1,0 +1,97 @@
+name: kws-v2-fixed-keyword-upper-bound
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-fixed-keyword-upper-bound-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upper-bound:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Train end-to-end fixed-keyword upper bound
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fixed-upper-bound"
+          .venv/bin/python training/research_keyword_classifier.py             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"             --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv"             --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv"             --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv"             --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv"             --tokens keywords/tokens.example.txt             --keywords keywords/zh_cn_example.tsv             --frontend logmel             --feature-dim 32             --hidden-dim 64             --epochs 24             --batch-size 16             --lr 0.001             --seed 1337             --balance-mode equal-class-sampler-v1             --output "$RUNNER_TEMP/fixed-upper-bound/classifier.json"
+
+      - name: Build upper-bound decision scorecard
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"fixed-upper-bound"
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-fixed-keyword-upper-bound-v1.json").read_text())
+          result=json.loads((root/"classifier.json").read_text())
+          test=result["test"]
+          gap=float(test["score_distribution"]["separation_gap_p10_positive_minus_p99_negative"])
+          recall=float(test["positive_recall"])
+          fp=float(test["negative_false_positive_clip_rate"])
+          rules=cfg["decision_rules"]
+          strong=(
+              recall >= float(rules["strong_if_test_wake_recall_gte"])
+              and fp <= float(rules["strong_if_test_negative_fp_lte"])
+              and gap > float(rules["strong_if_test_gap_gt"])
+          )
+          score={
+              "schema_version":1,
+              "evidence_class":"kws-v2-fixed-keyword-upper-bound-scorecard-v1",
+              "evidence_scope":"research-only",
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+              "test_wake_recall":recall,
+              "test_negative_fp_rate":fp,
+              "test_gap":gap,
+              "strong_upper_bound":strong,
+              "next_architecture_action":rules["strong_next"] if strong else rules["weak_next"],
+              "classifier":result,
+          }
+          (root/"upper-bound-scorecard.json").write_text(json.dumps(score,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(score,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload fixed-keyword upper-bound evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-fixed-keyword-upper-bound-${{ github.sha }}
+          path: ${{ runner.temp }}/fixed-upper-bound/
+          if-no-files-found: error
+          retention-days: 30

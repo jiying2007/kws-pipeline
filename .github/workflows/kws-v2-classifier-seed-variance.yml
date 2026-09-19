@@ -1,0 +1,144 @@
+name: kws-v2-classifier-seed-variance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-classifier-seed-variance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {axis: model-init, variable_seed: 2027, model_seed: 2027, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 4099, model_seed: 4099, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 7919, model_seed: 7919, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 12011, model_seed: 12011, sampler_seed: 1337}
+          - {axis: model-init, variable_seed: 16001, model_seed: 16001, sampler_seed: 1337}
+          - {axis: sampler-path, variable_seed: 2027, model_seed: 1337, sampler_seed: 2027}
+          - {axis: sampler-path, variable_seed: 4099, model_seed: 1337, sampler_seed: 4099}
+          - {axis: sampler-path, variable_seed: 7919, model_seed: 1337, sampler_seed: 7919}
+          - {axis: sampler-path, variable_seed: 12011, model_seed: 1337, sampler_seed: 12011}
+          - {axis: sampler-path, variable_seed: 16001, model_seed: 1337, sampler_seed: 16001}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run paired variance trial
+        env:
+          AXIS: ${{ matrix.axis }}
+          VARIABLE_SEED: ${{ matrix.variable_seed }}
+          MODEL_SEED: ${{ matrix.model_seed }}
+          SAMPLER_SEED: ${{ matrix.sampler_seed }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/variance/$AXIS-$VARIABLE_SEED"
+          mkdir -p "$root"
+          while read -r candidate frontend hidden_dim; do
+            out="$root/$candidate"
+            mkdir -p "$out"
+            .venv/bin/python training/research_keyword_classifier.py \
+              --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv" \
+              --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv" \
+              --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv" \
+              --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv" \
+              --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv" \
+              --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv" \
+              --tokens keywords/tokens.example.txt \
+              --keywords keywords/zh_cn_example.tsv \
+              --frontend "$frontend" \
+              --feature-dim 32 \
+              --hidden-dim "$hidden_dim" \
+              --epochs 24 \
+              --batch-size 16 \
+              --lr 0.001 \
+              --seed 1337 \
+              --model-seed "$MODEL_SEED" \
+              --sampler-seed "$SAMPLER_SEED" \
+              --balance-mode equal-class-sampler-v1 \
+              --output "$out/classifier.json"
+          done <<'EOF'
+          b0-logmel64 logmel 64
+          fc1-pcen128 pcen-lite 128
+          EOF
+          .venv/bin/python training/analyze_classifier_seed_variance.py trial \
+            --config configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json \
+            --axis "$AXIS" \
+            --variable-seed "$VARIABLE_SEED" \
+            --root "$root" \
+            --output "$root/trial-evidence.json"
+
+      - name: Upload variance trial
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-seed-variance-${{ matrix.axis }}-${{ matrix.variable_seed }}-${{ github.sha }}
+          path: ${{ runner.temp }}/variance/${{ matrix.axis }}-${{ matrix.variable_seed }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: trial
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download variance evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: kws-v2-seed-variance-*-${{ github.sha }}
+          path: ${{ runner.temp }}/variance-evidence
+          merge-multiple: false
+
+      - name: Aggregate variance decomposition
+        run: |
+          set -euo pipefail
+          python3 training/analyze_classifier_seed_variance.py aggregate \
+            --config configs/training/kws-v2-classifier-seed-variance-decomposition-v1.json \
+            --root "$RUNNER_TEMP/variance-evidence" \
+            --output "$RUNNER_TEMP/variance-summary/summary.json"
+
+      - name: Upload variance summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-classifier-seed-variance-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/variance-summary/
+          if-no-files-found: error
+          retention-days: 30

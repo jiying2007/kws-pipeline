@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "keywords": {
+    "1": {
+      "text": "你好小窝",
+      "positive_margin": 0.05,
+      "negative_margin": 0.06
+    },
+    "2": {
+      "text": "小窝小窝",
+      "positive_margin": 0.055,
+      "negative_margin": 0.06
+    }
+  }
+}

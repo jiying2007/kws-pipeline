@@ -1,0 +1,205 @@
+name: kws-v2-phonetic-representation-contract
+
+on:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-phonetic-labels-v1.json"
+      - "configs/training/kws-v2-phonetic-representation-experiment-v1.json"
+      - "configs/training/kws-v2-phonetic-representation-24e-v1.json"
+      - "keywords/tokens.zh_cn_phonetic_v2.txt"
+      - "keywords/zh_cn_phonetic_v2.tsv"
+      - "keywords/zh_cn_phonetic_v2.tsv.margin.json"
+      - "tools/build_kws_v2_phonetic_representation_dataset.py"
+      - "training/run_kws_phonetic_representation.py"
+      - ".github/workflows/kws-v2-phonetic-representation.yml"
+      - ".github/workflows/kws-v2-phonetic-representation-24e.yml"
+      - ".github/workflows/kws-v2-phonetic-representation-contract.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-phonetic-labels-v1.json"
+      - "configs/training/kws-v2-phonetic-representation-experiment-v1.json"
+      - "configs/training/kws-v2-phonetic-representation-24e-v1.json"
+      - "keywords/tokens.zh_cn_phonetic_v2.txt"
+      - "keywords/zh_cn_phonetic_v2.tsv"
+      - "keywords/zh_cn_phonetic_v2.tsv.margin.json"
+      - "tools/build_kws_v2_phonetic_representation_dataset.py"
+      - "training/run_kws_phonetic_representation.py"
+      - ".github/workflows/kws-v2-phonetic-representation.yml"
+      - ".github/workflows/kws-v2-phonetic-representation-24e.yml"
+      - ".github/workflows/kws-v2-phonetic-representation-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify phonetic-v2 experiment is a representation-only A/B
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-phonetic-representation-experiment-v1.json").read_text())
+          assert p["schema_version"]==1
+          assert p["policy"]=="kws-v2-phonetic-representation-experiment-v1"
+          assert p["evidence_scope"]=="research-only"
+          assert p["baseline"]["run_id"]==35410019255
+          assert p["baseline"]["profile"]=="m2-plus-margin"
+          assert p["baseline"]["exact_head_sha"]=="0d4b0cce201fed75a489a63b1c2bf35da2c2044f"
+          assert p["data"]["qualification_split_consumed"] is False
+          assert p["model"]=={
+              "family":"gru",
+              "frontend":"logmel",
+              "feature_dim":32,
+              "hidden_dim":64,
+          }
+          assert p["train"]=={
+              "epochs":8,
+              "batch_size":16,
+              "learning_rate":0.001,
+              "seed":1337,
+              "target_bearing_weight":1.0,
+              "wake_example_weight":5.0,
+              "ordered_token_loss_weight":0.35,
+              "keyword_sequence_margin_loss_weight":0.1,
+              "prefix_completion_loss_weight":0.0,
+              "recurrent_release_loss_weight":0.0,
+          }
+          assert p["representation"]["expected_vocab_size"]==72
+          assert p["representation"]["preserve_wake_token_ids_1_to_4"] is True
+          assert p["authority"]=={
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+          print("phonetic-v2 representation-only experiment contract: ok")
+          PY
+
+      - name: Verify 24-epoch convergence changes only training budget
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import copy, json, pathlib
+          base=json.loads(pathlib.Path("configs/training/kws-v2-phonetic-representation-experiment-v1.json").read_text())
+          conv=json.loads(pathlib.Path("configs/training/kws-v2-phonetic-representation-24e-v1.json").read_text())
+          assert conv["experiment_id"]=="phonetic-v2-24e-convergence-v1"
+          assert conv["convergence_baseline"]["run_id"]==35418472716
+          assert conv["convergence_baseline"]["epochs"]==8
+          assert conv["convergence_baseline"]["exported_model_sha256"]=="823528e4cd6456a71363d2c335d7734c748b0db3d31632b977444907a0b345f6"
+          assert base["model"]==conv["model"]
+          assert base["data"]==conv["data"]
+          assert base["representation"]==conv["representation"]
+          assert base["authority"]==conv["authority"]
+          assert base["evaluation"]==conv["evaluation"]
+          base_train=dict(base["train"])
+          conv_train=dict(conv["train"])
+          assert base_train.pop("epochs")==8
+          assert conv_train.pop("epochs")==24
+          assert base_train==conv_train
+          print("phonetic-v2 24e convergence delta: epochs only")
+          PY
+
+      - name: Verify phonetic labels and vocabulary
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          labels=json.loads(pathlib.Path("configs/training/kws-v2-phonetic-labels-v1.json").read_text())
+          assert labels["policy"]=="kws-v2-phonetic-labels-v1"
+          assert labels["evidence_scope"]=="research-only"
+          assert labels["representation"]=="tone-pinyin-syllable-v1"
+          assert len(labels["ordinary_utterances"])==32
+          assert labels["constraints"]=={
+              "expected_ordinary_utterances":32,
+              "qualification_split_consumed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+          }
+
+          rows={}
+          for raw in pathlib.Path("keywords/tokens.zh_cn_phonetic_v2.txt").read_text().splitlines():
+              if not raw.strip() or raw.lstrip().startswith("#"):
+                  continue
+              name, value=raw.split()
+              value=int(value)
+              assert name not in rows
+              rows[name]=value
+          assert len(rows)==72
+          assert rows["<blk>"]==0
+          assert {name:rows[name] for name in ("ni3","hao3","xiao3","wo1")}=={
+              "ni3":1,"hao3":2,"xiao3":3,"wo1":4
+          }
+          used={token for seq in labels["ordinary_utterances"].values() for token in seq}
+          assert used <= set(rows)
+          assert all(rows[token] > 0 for token in used)
+          print(f"phonetic-v2 vocabulary contract: tokens={len(rows)} used={len(used)}")
+          PY
+
+      - name: Verify dataset builder never consumes qualification
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          text=pathlib.Path("tools/build_kws_v2_phonetic_representation_dataset.py").read_text()
+          assert 'SPLITS = ("train", "calibration", "test")' in text
+          assert '"qualification_split_consumed": False' in text
+          assert "qualification.tsv" not in text
+          assert "qualification.references" not in text
+          print("phonetic-v2 dataset boundary: ok")
+          PY
+
+      - name: Verify workflow uses only frozen research artifacts
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          texts=[
+              pathlib.Path(".github/workflows/kws-v2-phonetic-representation.yml").read_text().lower(),
+              pathlib.Path(".github/workflows/kws-v2-phonetic-representation-24e.yml").read_text().lower(),
+          ]
+          for text in texts:
+              assert "run-id: 35412153192" in text
+              assert "run-id: 35367960968" in text
+              for forbidden in (
+                  "qualification-index",
+                  "qualification-summary",
+                  "generalization-freeze",
+                  "fresh-validation",
+                  "shadow-validation",
+                  "formal-qualification",
+              ):
+                  assert forbidden not in text, forbidden
+          print("phonetic-v2 workflow evidence boundary: ok")
+          PY
+
+      - name: Python syntax
+        run: >-
+          python3 -m py_compile
+          tools/build_kws_v2_phonetic_representation_dataset.py
+          training/run_kws_phonetic_representation.py
+
+      - name: Verify retired phonetic experiments are manual-only
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          for name in (
+              ".github/workflows/kws-v2-phonetic-representation.yml",
+              ".github/workflows/kws-v2-phonetic-representation-24e.yml",
+          ):
+              text=pathlib.Path(name).read_text()
+              assert "workflow_dispatch:" in text, name
+              assert "\n  push:" not in text, name
+          print("Verify retired phonetic experiments are manual-only: ok")
+          PY
+
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

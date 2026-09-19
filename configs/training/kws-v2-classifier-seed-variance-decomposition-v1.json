@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-classifier-seed-variance-decomposition-v1",
+  "evidence_scope": "research-only",
+  "source_replication_evidence": {
+    "run_id": 35423717879,
+    "exact_head_sha": "0ce2451a2be5281b24867827fba7d1b6ac535b9e",
+    "evidence_class": "kws-v2-encoder-frontend-paired-seed-summary-v1",
+    "replication_pass": false,
+    "primary_directional_passes": 2,
+    "secondary_directional_passes": 1,
+    "absolute_strong_passes": 1
+  },
+  "hypothesis": "Separate model-initialization variance from balanced-sampler path variance before changing architecture.",
+  "fixed": {
+    "rendered_cache_run_id": 35412153192,
+    "sidecar_run_id": 35367960968,
+    "feature_dim": 32,
+    "epochs": 24,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "balance_mode": "equal-class-sampler-v1",
+    "legacy_seed": 1337,
+    "qualification_split_consumed": false
+  },
+  "candidates": {
+    "b0-logmel64": {
+      "role": "reference",
+      "frontend": "logmel",
+      "hidden_dim": 64
+    },
+    "fc1-pcen128": {
+      "role": "unstable-target",
+      "frontend": "pcen-lite",
+      "hidden_dim": 128
+    }
+  },
+  "axes": {
+    "model-init": {
+      "variable": "model_seed",
+      "values": [
+        2027,
+        4099,
+        7919,
+        12011,
+        16001
+      ],
+      "fixed_sampler_seed": 1337
+    },
+    "sampler-path": {
+      "variable": "sampler_seed",
+      "values": [
+        2027,
+        4099,
+        7919,
+        12011,
+        16001
+      ],
+      "fixed_model_seed": 1337
+    }
+  },
+  "operating_points": {
+    "thresholds": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "constraints": [
+      {
+        "name": "strict-10fp",
+        "max_negative_fp_rate": 0.1
+      },
+      {
+        "name": "strict-05fp",
+        "max_negative_fp_rate": 0.05
+      }
+    ]
+  },
+  "decision_rules": {
+    "authority": "pre-registered-random-source-variance-decomposition-v1",
+    "primary_operating_point": "strict-10fp",
+    "dominance_ratio": 1.5,
+    "material_wake_recall_stddev": 0.05,
+    "initialization_dominant_next": "optimizer-initialization-stability-v1",
+    "sampler_dominant_next": "exact-balanced-epoch-sampler-v2",
+    "mixed_next": "optimizer-and-sampler-stability-v1",
+    "low_variance_next": "architecture-v2-after-randomness-clearance"
+  },
+  "authority": {
+    "diagnostic_only": true,
+    "promotion_allowed": false,
+    "protected_evidence_used": false,
+    "shipping_metric": false
+  }
+}

@@ -1,0 +1,129 @@
+name: kws-v2-classifier-init-stability
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-classifier-init-stability-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        model_seed: [2027, 4099, 7919, 12011, 16001]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Install pinned CPU training runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Train init stability candidates
+        env:
+          MODEL_SEED: ${{ matrix.model_seed }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/init-stability/$MODEL_SEED"
+          mkdir -p "$root"
+          while read -r candidate frontend hidden_dim init_mode; do
+            out="$root/$candidate"
+            mkdir -p "$out"
+            .venv/bin/python training/research_keyword_classifier.py \
+              --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv" \
+              --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv" \
+              --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv" \
+              --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv" \
+              --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv" \
+              --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv" \
+              --tokens keywords/tokens.example.txt \
+              --keywords keywords/zh_cn_example.tsv \
+              --frontend "$frontend" \
+              --feature-dim 32 \
+              --hidden-dim "$hidden_dim" \
+              --epochs 24 \
+              --batch-size 16 \
+              --lr 0.001 \
+              --seed 1337 \
+              --model-seed "$MODEL_SEED" \
+              --sampler-seed 1337 \
+              --init-mode "$init_mode" \
+              --balance-mode equal-class-sampler-v1 \
+              --output "$out/classifier.json"
+          done <<'EOF'
+          b0-logmel64-default logmel 64 default-pytorch-v1
+          fc1-pcen128-default pcen-lite 128 default-pytorch-v1
+          fc1-pcen128-stable-init pcen-lite 128 gru-orthogonal-xavier-v1
+          EOF
+          .venv/bin/python training/analyze_classifier_init_stability.py trial \
+            --config configs/training/kws-v2-classifier-init-stability-v1.json \
+            --model-seed "$MODEL_SEED" \
+            --root "$root" \
+            --output "$root/trial-evidence.json"
+
+      - name: Upload init stability trial
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-init-stability-${{ matrix.model_seed }}-${{ github.sha }}
+          path: ${{ runner.temp }}/init-stability/${{ matrix.model_seed }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: trial
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Download init stability evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: kws-v2-init-stability-*-${{ github.sha }}
+          path: ${{ runner.temp }}/init-stability-evidence
+          merge-multiple: false
+      - name: Aggregate init stability
+        run: |
+          set -euo pipefail
+          python3 training/analyze_classifier_init_stability.py aggregate \
+            --config configs/training/kws-v2-classifier-init-stability-v1.json \
+            --root "$RUNNER_TEMP/init-stability-evidence" \
+            --output "$RUNNER_TEMP/init-stability-summary/summary.json"
+      - name: Upload init stability summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-classifier-init-stability-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/init-stability-summary/
+          if-no-files-found: error
+          retention-days: 30
