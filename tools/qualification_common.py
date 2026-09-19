@@ -28,6 +28,25 @@ FRONTEND_KINDS = {0: "logmel", 1: "pcen-lite"}
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA_RE = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})")
 
+# configs/parameter-contract.json is the single source of truth for the runtime
+# parameter ranges.  The C side reads the same file through the header generated
+# by tools/gen_parameter_limits.py, so a qualification record cannot be produced
+# against a range the firmware would reject.
+PARAMETER_CONTRACT_PATH = (
+    pathlib.Path(__file__).resolve().parent.parent
+    / "configs"
+    / "parameter-contract.json"
+)
+
+
+def parameter_contract() -> dict:
+    if not PARAMETER_CONTRACT_PATH.is_file():
+        raise ValueError(f"parameter contract not found: {PARAMETER_CONTRACT_PATH}")
+    contract = load_json(PARAMETER_CONTRACT_PATH)
+    if not isinstance(contract.get("runtime"), dict):
+        raise ValueError("parameter contract is missing the 'runtime' table")
+    return contract
+
 
 def reject_constant(value: str):
     raise ValueError(f"non-finite JSON constant is not allowed: {value}")
@@ -69,6 +88,38 @@ def finite(value, label: str, minimum: float | None = None) -> float:
     if not math.isfinite(result) or (minimum is not None and result < minimum):
         raise ValueError(f"{label} is out of range or non-finite")
     return result
+
+
+def bounded_float(value, label: str, entry: dict) -> float:
+    """Validate a float against a parameter-contract entry."""
+    result = finite(value, label)
+    low = entry.get("min")
+    high = entry.get("max")
+    if low is not None and (
+        result < low or (entry.get("min_exclusive") and result == low)
+    ):
+        raise ValueError(
+            f"{label} must be {'>' if entry.get('min_exclusive') else '>='} {low}"
+        )
+    if high is not None and (
+        result > high or (entry.get("max_exclusive") and result == high)
+    ):
+        raise ValueError(
+            f"{label} must be {'<' if entry.get('max_exclusive') else '<='} {high}"
+        )
+    return result
+
+
+def bounded_int(value, label: str, entry: dict) -> int:
+    """Validate an integer against a parameter-contract entry."""
+    low = entry.get("min")
+    high = entry.get("max")
+    return json_int(
+        value,
+        label,
+        0 if low is None else int(low),
+        None if high is None else int(high),
+    )
 
 
 def required_text(obj: dict, key: str, label: str) -> str:
@@ -257,22 +308,37 @@ def validate_runtime_config(path: pathlib.Path, model: dict) -> dict:
     runtime = config.get("runtime")
     if not isinstance(runtime, dict):
         raise ValueError("config.runtime must be an object")
+    ranges = parameter_contract()["runtime"]
     result = {
         "frontend_kind": model["frontend_kind"],
         "frontend_name": model["frontend_name"],
-        "min_speech_dbfs": finite(
-            runtime.get("min_speech_dbfs"), "config.runtime.min_speech_dbfs"
+        "min_speech_dbfs": bounded_float(
+            runtime.get("min_speech_dbfs"),
+            "config.runtime.min_speech_dbfs",
+            ranges["min_speech_dbfs"],
         ),
-        "token_boost": finite(
-            runtime.get("token_boost"), "config.runtime.token_boost", 0.0
+        "token_boost": bounded_float(
+            runtime.get("token_boost", ranges["token_boost"]["default"]),
+            "config.runtime.token_boost",
+            ranges["token_boost"],
         ),
-        "state_retention": finite(
-            runtime.get("state_retention"), "config.runtime.state_retention"
+        "state_retention": bounded_float(
+            runtime.get("state_retention"),
+            "config.runtime.state_retention",
+            ranges["state_retention"],
         ),
-        "refractory_ms": json_int(
-            runtime.get("refractory_ms"), "config.runtime.refractory_ms", 0, 10000
+        "refractory_ms": bounded_int(
+            runtime.get("refractory_ms"),
+            "config.runtime.refractory_ms",
+            ranges["refractory_ms"],
+        ),
+        "external_vad_threshold": bounded_float(
+            runtime.get(
+                "external_vad_threshold",
+                ranges["external_vad_threshold"]["default"],
+            ),
+            "config.runtime.external_vad_threshold",
+            ranges["external_vad_threshold"],
         ),
     }
-    if not 0.0 < result["state_retention"] < 1.0:
-        raise ValueError("config.runtime.state_retention must be in (0,1)")
     return result

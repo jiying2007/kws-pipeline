@@ -8,12 +8,13 @@ The repository carries:
 
 - strict GCC and Clang builds plus Clang static analysis;
 - C line-coverage gate, ASan/UBSan and parser fuzzing;
-- Cortex-A32 ARMv7 hard-float cross-build;
+- a symbol-level purity gate on `libkws_pipeline.a` so the "no heap, hidden thread, lock, filesystem or text/pinyin conversion" runtime claim cannot regress silently;
+- Cortex-A32 ARMv7 hard-float cross-build whose CTest suite is actually executed under `qemu-arm-static`, plus a hosted-vs-Cortex-A32 numerical parity gate on the int8 inference kernel;
 - frontend parity, dataset leakage/corpus-identity audits, synthetic/domain loops, long-FAR regression and release-qualification tests;
 - automatic Python test inventory so new `tests/test_*.py` files cannot silently miss Actions;
 - clean CMake/pkg-config SDK consumption and two-build installed-SDK byte comparison;
 - immutable-training-image contract and a real `torch_ctc` integration workflow when an immutable training image is configured;
-- deterministic release archives, SHA256SUMS, SPDX SBOM and GitHub attestations;
+- deterministic release archives, SHA256SUMS, SPDX SBOM and GitHub attestations, plus `tools/verify_model_release.py` so a downloaded model release is checked against the contract pins rather than only against the manifest shipped beside it;
 - self-cleaning version-bound `release/vX.Y.Z` bootstrap and merged-branch cleanup;
 - CODEOWNERS, product-evidence PR template and Dependabot for pinned Actions.
 

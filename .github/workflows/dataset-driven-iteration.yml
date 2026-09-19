@@ -1,0 +1,130 @@
+name: dataset-driven-iteration
+
+# The fourth lane. Research changes the loss, Confirm repeats a hypothesis on
+# paired seeds, and Qualification judges a frozen candidate against a gate that
+# demands zero false rejects and zero false accepts at once -- a target that
+# cannot be measured, and which has failed every time it ran.
+#
+# This lane measures instead of judging. It binds a result to
+# (dataset, model, code, protocol), reports false accepts as an exposure-backed
+# upper bound rather than a bare rate, and compares two runs only when exactly
+# one declared variable moved. See docs/DATASET_ITERATION.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset_path:
+        description: Path to references.jsonl inside the repo
+        required: true
+      model_path:
+        description: Path to the .kwm model
+        required: true
+      keywords_path:
+        description: Path to the .kwk keyword pack
+        required: true
+      variable:
+        description: Which controlled variable is under test
+        required: true
+        type: choice
+        options: [dataset, model]
+      baseline_card:
+        description: Scorecard to compare against (empty for the first run)
+        required: false
+      far_budget:
+        description: Ceiling on the 95% upper bound of false accepts per hour
+        required: false
+        default: "1.0"
+      seed:
+        description: Seed label recorded in the identity block
+        required: false
+        default: "dataset-iteration"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dataset-driven-iteration-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Build the real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav
+
+      - name: Run the dataset iteration
+        run: |
+          set -euo pipefail
+          python3 tools/run_dataset_iteration.py \
+            --runner build/kws_wav \
+            --model "${{ inputs.model_path }}" \
+            --keywords "${{ inputs.keywords_path }}" \
+            --references "${{ inputs.dataset_path }}" \
+            --audio-root . \
+            --work-dir build/dataset-iteration \
+            --output build/dataset-iteration/scorecard.json \
+            --variable "${{ inputs.variable }}" \
+            --dataset-label "${{ inputs.dataset_path }}" \
+            --model-label "${{ inputs.model_path }}" \
+            --seed "${{ inputs.seed }}"
+
+      # A refused or regressed comparison must not erase the measurement: the
+      # scorecard is still recorded, and the verdict is what the operator reads.
+      - name: Compare against the declared baseline
+        id: compare
+        if: inputs.baseline_card != ''
+        continue-on-error: true
+        run: |
+          python3 tools/compare_dataset_iterations.py \
+            --baseline "${{ inputs.baseline_card }}" \
+            --candidate build/dataset-iteration/scorecard.json \
+            --far-budget "${{ inputs.far_budget }}" \
+            --output build/dataset-iteration/comparison.json
+
+      - name: Show the comparison
+        if: inputs.baseline_card != ''
+        run: |
+          echo '## Dataset iteration comparison' >>"$GITHUB_STEP_SUMMARY"
+          if [ -f build/dataset-iteration/comparison.json ]; then
+            cat build/dataset-iteration/comparison.json >>"$GITHUB_STEP_SUMMARY"
+          else
+            echo 'comparison was refused or failed; see the job log' >>"$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Record the scorecard in the repository
+        run: |
+          set -euo pipefail
+          card=build/dataset-iteration/scorecard.json
+          dataset="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["identity"]["dataset_id"])' "$card")"
+          run_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["run_id"])' "$card")"
+          target="evidence/dataset-iterations/${dataset}/${run_id}.json"
+          mkdir -p "$(dirname "$target")"
+          cp "$card" "$target"
+          if [ -f build/dataset-iteration/comparison.json ]; then
+            cp build/dataset-iteration/comparison.json "$(dirname "$target")/${run_id}.comparison.json"
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add evidence/dataset-iterations
+          if git diff --cached --quiet; then
+            echo "scorecard ${run_id} is already recorded"
+            exit 0
+          fi
+          git commit -m "chore(dataset-iteration): record ${run_id} for dataset ${dataset}"
+          git push
+
+      - name: Upload the full evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dataset-iteration-evidence
+          path: build/dataset-iteration
+          if-no-files-found: error
+          retention-days: 90

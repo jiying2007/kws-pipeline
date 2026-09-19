@@ -4,6 +4,45 @@
   "product_scope": "dedicated-two-keyword-mandarin-kws",
   "evidence_status": "synthetic-qualified",
   "shipping_approved": false,
+  "runtime": {
+    "min_speech_dbfs": -55.0,
+    "token_boost": 1.5,
+    "state_retention": 0.94,
+    "refractory_ms": 1200,
+    "external_vad_threshold": 0.45
+  },
+  "parameter_contract": {
+    "contract_id": "kws-parameter-contract-v1",
+    "path": "configs/parameter-contract.json",
+    "sha256": "a11849f316d9fc8acc68975583b81897839a36a79fd0849c2f1e6d3b0577b29b"
+  },
+  "threshold_calibration": {
+    "method": "plateau-median",
+    "producer": "training/iterate_domain.py:select_calibration_threshold",
+    "corpus": "synthetic-qualified-domain-corpus",
+    "seed": 271838,
+    "parameter_contract_sha256": "a11849f316d9fc8acc68975583b81897839a36a79fd0849c2f1e6d3b0577b29b",
+    "invalidated_by": [
+      "runtime.min_speech_dbfs",
+      "runtime.state_retention",
+      "runtime.external_vad_threshold",
+      "model.release_tag"
+    ],
+    "thresholds": [
+      {
+        "id": 1,
+        "text": "你好小窝",
+        "value": 0.55
+      },
+      {
+        "id": 2,
+        "text": "小窝小窝",
+        "value": 0.55
+      }
+    ],
+    "recalibration_required": true,
+    "recalibration_reason": "thresholds were selected on a synthetic corpus; the real-human final-AFE corpus in shipping_evidence_boundary.pending has not been run"
+  },
   "shipping_wake_words": [
     {
       "id": 1,

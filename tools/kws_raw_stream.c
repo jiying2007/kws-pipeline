@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined(_WIN32)
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #define BLOCK_SAMPLES 320u
 
 int main(int argc, char **argv) {
@@ -23,6 +28,14 @@ int main(int argc, char **argv) {
     fprintf(stderr, "usage: %s model.kwm keywords.kwk recording-id < pcm16le.raw\n", argv[0]);
     return 2;
   }
+#if defined(_WIN32)
+  /* Text mode would translate CRLF and treat 0x1A as end of file, either of
+   * which corrupts a raw PCM16 stream arriving from a pipe or a redirect. */
+  if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
+    fprintf(stderr, "cannot switch stdin to binary mode\n");
+    return 2;
+  }
+#endif
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
       kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0) {
     fprintf(stderr, "cannot read model or keyword pack\n");

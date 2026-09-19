@@ -67,14 +67,24 @@ typedef struct kws_model {
   const float *bo;
 } kws_model_t;
 
+/* One keyword.  Field defaults and validation ranges live in
+ * configs/parameter-contract.json; tools/compile_keywords.py emits these
+ * records into a KWKP v3 pack and src/keyword_pack.c revalidates them on load,
+ * so a pack that bypasses the compiler is still rejected. */
 typedef struct kws_keyword {
   uint32_t id;
   const uint16_t *tokens;
   uint16_t num_tokens;
+  /* Acceptance threshold on the emitted confidence, in (0,1). */
   float threshold;
+  /* Blank-separated frames required before a held terminal may fire, 0..8. */
   uint8_t min_trailing_blanks;
+  /* Arbitration rank, 0..15.  Higher wins; ties break on depth, then
+   * confidence, so duplicate ranks stay deterministic. */
   uint8_t priority;
+  /* kws_prefix_policy_t. */
   uint8_t prefix_policy;
+  /* Hold window for KWS_PREFIX_GRACE, 0..32 frames. */
   uint8_t grace_frames;
 } kws_keyword_t;
 
@@ -85,11 +95,26 @@ typedef struct kws_keyword_pack {
   uint64_t vocab_fingerprint;
 } kws_keyword_pack_t;
 
+/* L2 product configuration.  Every field is validated against the ranges in
+ * configs/parameter-contract.json when the engine is initialised; an
+ * out-of-range value is rejected with KWS_EINVAL.  Changing any field whose
+ * contract entry sets invalidates_thresholds invalidates the calibrated
+ * per-keyword thresholds.  See docs/RUNTIME_CONFIG.md. */
 typedef struct kws_config {
+  /* Speech gate applied to the post-AFE frame energy, in dBFS. */
   float min_speech_dbfs;
+  /* DEPRECATED and INEFFECTIVE.  Added once per trie depth, so it is a constant
+   * offset on the search score; the emitted confidence uses exp(acoustic/depth)
+   * and the retention gate subtracts token_boost*depth, which cancels it
+   * exactly.  Retained for source and ABI compatibility only. */
   float token_boost;
+  /* Per-frame retention factor for a live prefix on a speech frame, in (0,1). */
   float state_retention;
+  /* Suppression window after an emitted detection, in milliseconds. */
   uint32_t refractory_ms;
+  /* Decision threshold on the external VAD probability carried in frame
+   * metadata, in (0,1). */
+  float external_vad_threshold;
 } kws_config_t;
 
 typedef struct kws_detection {
@@ -134,6 +159,9 @@ typedef struct kws_frame_metadata {
   float external_vad_probability;
   uint32_t afe_latency_samples;
   uint8_t afe_config_sha256[32];
+  /* Must be zero. A non-zero reserved word means the caller was built against a
+   * newer ABI than this engine understands, and kws_engine_accept_pcm16_ex()
+   * rejects the frame rather than silently dropping that field. */
   uint32_t reserved[8];
 } kws_frame_metadata_t;
 
@@ -176,6 +204,43 @@ typedef struct kws_build_info {
 } kws_build_info_t;
 
 typedef struct kws_engine kws_engine_t;
+
+/* ---------------------------------------------------------------------------
+ * API contract
+ *
+ * Arena ownership
+ *   The caller owns the memory passed to kws_engine_init(). The engine never
+ *   allocates, never frees and never retains a pointer past the arena's
+ *   lifetime. Release the arena only after the last call on that engine.
+ *
+ * Read-only blob views
+ *   kws_model_open() and kws_keyword_pack_open() do not copy. The structures
+ *   they return point into the caller's blob, so that blob must outlive every
+ *   engine built from it.
+ *
+ * Concurrency
+ *   Engines are independent: several may run in parallel on separate arenas.
+ *   A single engine is not thread-safe, so serialise calls per engine. There
+ *   is no locking, no thread and no file I/O anywhere on the audio path.
+ *
+ * Block size
+ *   kws_engine_accept_pcm16*() accepts at most KWS_MAX_PCM_BLOCK_SAMPLES
+ *   samples per call and returns KWS_EBOUNDS beyond that. The cap is one frame
+ *   hop, which is what bounds the worst-case work per call.
+ *
+ * Return codes
+ *   KWS_OK on success. KWS_EINVAL for a malformed argument, including a
+ *   rejected config or a frame whose metadata breaks the ABI contract;
+ *   KWS_EBOUNDS for an oversized block; KWS_EFORMAT for a blob or vocabulary
+ *   fingerprint mismatch; KWS_ENOMEM when the arena or the trie cannot hold
+ *   the request. A failing call never reports a detection, and a failing
+ *   kws_engine_init() sets *out_engine to NULL.
+ *
+ * Optional outputs
+ *   out_detection may be NULL when only the detected flag is wanted, and
+ *   out_detected may be NULL when only the detection is wanted. Outputs are
+ *   written only on KWS_OK.
+ * ------------------------------------------------------------------------ */
 
 kws_status_t kws_model_open(const void *blob,
                             size_t blob_bytes,
@@ -225,9 +290,14 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
 
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine);
 
+/* Legacy fixed-layout stats. Kept for ABI compatibility; the structure cannot
+ * grow, so every new counter goes to the v2 structure only. Prefer
+ * kws_engine_get_stats_v2() in new code. */
 kws_status_t kws_engine_get_stats(const kws_engine_t *engine,
                                   kws_engine_stats_t *out_stats);
 
+/* Standard stats interface: self-describing through struct_size and
+ * api_version, and the one to extend. */
 kws_status_t kws_engine_get_stats_v2(const kws_engine_t *engine,
                                      kws_engine_stats_v2_t *out_stats);
 

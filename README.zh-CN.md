@@ -2,6 +2,10 @@
 
 [English](README.md) | 简体中文
 
+> **证据边界 —— 引用下方任何数字前请先读这一段。**
+> 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
+> 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。消费这两项证据的 workflow（`real-human-qualification.yml`、`target-dut-qualification.yml`）均为 `workflow_dispatch` only 且需要 self-hosted runner，因此不会在 `push` 或 fork 中触发。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。
+
 `kws-pipeline` 是面向**低算力嵌入式 Linux / RTOS 产品**的常驻端侧唤醒引擎，目标包括 Cortex-A32、Cortex-A7 及相近 CPU 预算。
 
 当前已经完成 synthetic qualification 的产品 SKU **严格只包含两个四字中文唤醒词**：
@@ -28,7 +32,7 @@
 
 ## 当前 Engineering-Qualified 模型
 
-当前不可变模型 Release 为 `model-749187ec1d66`，精确绑定：
+当前不可变模型 Release 为 [`model-749187ec1d66`](https://github.com/jiying2007/kws-pipeline/releases/tag/model-749187ec1d66)，精确绑定：
 
 - model-training run `34134789576`；
 - exact trained HEAD `749187ec1d6662658f06aa9c76d47fde835968db`；
@@ -41,10 +45,34 @@
 
 `configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
 
+### 获取与校验 Release
+
+模型、checkpoint 与 keyword pack 是 Release 资产，不是仓库跟踪文件（`.gitignore` 排除 `*.kwm`/`*.pt`，原因见 `models/README.md`）。下载后用 contract 校验：
+
+```bash
+gh release download model-749187ec1d66 \
+  --repo jiying2007/kws-pipeline --dir model-release
+python3 tools/verify_model_release.py \
+  --assets-dir model-release --release-tag model-749187ec1d66
+```
+
+Release 是公开的，没有 `gh` 时可直接走 HTTPS：
+
+```bash
+base=https://github.com/jiying2007/kws-pipeline/releases/download/model-749187ec1d66
+mkdir -p model-release
+curl -sSL -o model-release/MODEL_SHA256SUMS "$base/MODEL_SHA256SUMS"
+awk '{print $2}' model-release/MODEL_SHA256SUMS \
+  | xargs -I{} curl -sSL --fail -o "model-release/{}" "$base/{}"
+python3 tools/verify_model_release.py --assets-dir model-release
+```
+
+`verify_model_release.py` 做两件相互独立的事，第二件才是关键。`MODEL_SHA256SUMS` 随 Release 一起下发，因此它只能证明「这次下载内部自洽」—— 能替换资产的人同样能重算 manifest 使其吻合。真正把下载绑定到已 qualification tuple 的，是仓库里 `configs/shipping.xiaowo.json` pin 住的四个摘要（`xiaowo-model.kwm`、`xiaowo-model.pt`、`xiaowo-keywords.kwk`、`xiaowo-keywords.tsv`）。所以重算过的 manifest 无法为被替换的资产背书；如果 manifest 漏掉了某个被 pin 的资产，工具会直接失败而不是跳过。`tests/test_model_release_pin.py` 逐一覆盖了这些失败模式。
+
 ## Runtime / 产品特性
 
 - 实时库只依赖 C11 + libm；PyTorch、`pypinyin` 仅在线下工具链。
-- 实时路径无 heap、隐藏线程、锁、文件系统和中文/拼音转换。
+- 实时路径无 heap、隐藏线程、锁、文件系统和中文/拼音转换。这一点是被门禁强制的，而不是靠约定：`tools/check_runtime_purity.py` 把 `libkws_pipeline.a` 的未定义符号集与显式白名单（内部 `kws_*` 调用、`mem*`、ISO C 数学函数、stack protector 与 ARMv7 EABI 除法辅助函数）比对，新增外部依赖会直接让 CI 失败，而不是静静通过评审。
 - 调用方提供对齐 engine arena；模型 tensor 零拷贝引用只读 `.kwm` blob。
 - **KWSP ABI v2**：固定 16 kHz / 400 sample / 320 sample 几何、vocabulary fingerprint、frontend identity。
 - **KWKP ABI v3**：每关键词 threshold、trailing blank、priority、`immediate/longest/grace` prefix policy。
@@ -262,9 +290,9 @@ python3 tools/qualification_gate.py \
 
 ## 验证边界
 
-CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain。
+CI 当前证明软件合同和 deterministic/synthetic regression：GCC/Clang、CTest、static analysis、coverage、ASan/UBSan、libFuzzer、Cortex-A32 cross-build（其 **CTest 套件实际在 `qemu-arm-static` 下执行**）以及 hosted-vs-Cortex-A32 的 int8 kernel 数值对拍门禁、frontend/decoder、corpus identity、自训练闭环、robustness/FAR regression、runtime-soak/target-evidence schema、SDK reproducibility、model supply-chain、model-release contract pin。
 
-它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。
+它**不宣称真实商用声学和物理板级 qualification 已完成**。完成本轮 non-real-data 工程闭环后，产品证据阶段只剩两步：① 真实普通话经过最终麦克风/结构/AFE；② 物理目标板 performance/soak 并最终批准完整 deployment tuple。这两步在本仓库**均无法执行**：都需要硬件、真人受试者与 self-hosted runner，所以 `real-human-qualification.yml` 与 `target-dut-qualification.yml` 都是 `workflow_dispatch` only。
 
 详见 `docs/README.md`、`docs/CUSTOMIZATION.md`、`docs/RELEASE_QUALIFICATION.md`、`docs/TARGET_EVIDENCE.md`、`docs/CORPUS_IDENTITY.md`、`docs/AUDIO_DISCONTINUITY.md` 和 Issue #2。
 

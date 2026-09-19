@@ -20,7 +20,7 @@ mono PCM16 @ 16 kHz
 
 The model ABI fixes 400-sample analysis frames and 320-sample acoustic hops. `kws_engine_accept_pcm16()` accepts at most `KWS_MAX_PCM_BLOCK_SAMPLES` (320) samples per call, so one call can produce at most one acoustic step and one detection. A 10-ms/160-sample upstream audio block is therefore safe without another resampler.
 
-The runtime is C11 + libm, owns no worker thread, performs no heap allocation or filesystem I/O and does no text/pinyin conversion. The caller owns one aligned arena and keeps the model blob alive for the engine lifetime.
+The runtime is C11 + libm, owns no worker thread, performs no heap allocation or filesystem I/O and does no text/pinyin conversion. The caller owns one aligned arena and keeps the model blob alive for the engine lifetime. That dependency surface is enforced rather than documented: `tools/check_runtime_purity.py` asserts that every undefined symbol of `libkws_pipeline.a` stays inside an explicit allowlist.
 
 ## Artifact ABIs
 
@@ -123,3 +123,47 @@ Shipping qualification then re-hashes the concrete checkpoint, training tokens, 
 Current limits are 16 keywords, 16 tokens per keyword, 40 features, 64 recurrent units and 512 acoustic tokens. Model ABI v2 fixes the acoustic geometry; keyword-pack ABI v3 fixes the prefix-policy record contract.
 
 Parser attack-surface hardening is covered by deterministic tests and Clang libFuzzer/ASan/UBSan smoke for `.kwm`/`.kwk`. It does not replace signing/authentication of production update artifacts.
+
+## Parameter governance
+
+Every tunable lives in exactly one place: `configs/parameter-contract.json`. The contract declares, per parameter, its layer, type, default, unit and inclusive or exclusive bounds. Two consumers read it and cannot drift apart:
+
+- `src/*.c` include `build/generated/kws_parameter_limits.h`, produced from the contract at CMake configure time by `tools/gen_parameter_limits.py`. A bound is therefore a compile-time constant, and `kws_engine_init()`/`kws_keyword_pack_open()` reject anything outside it with `KWS_EINVAL`/`KWS_EFORMAT`.
+- the python tools (`tools/compile_keywords.py`, `tools/qualification_common.py`) load the same JSON directly, so the compiler and the qualification recorder apply the identical range.
+
+`tests/test_parameter_contract.py` asserts that the generated header round-trips back to the contract values, that regeneration is byte-identical, and that an inconsistent contract fails generation instead of shipping.
+
+### Layers
+
+| Layer | Meaning | Where it lives |
+| --- | --- | --- |
+| L0 | model-bound | inside the `.kwm` blob; a product cannot change it |
+| L1 | firmware constant | compile-time macro; a change needs a rebuild and a regression |
+| L2 | product config | a `kws_config_t` field; a change invalidates calibrated thresholds |
+| L3 | field policy | a per-keyword KWKP v3 record field; a change needs recalibration |
+
+### L1 constant conversion table
+
+The decoder and the frontend work in log/nat space. These are the human-unit equivalents at 16 kHz with a 400-sample frame and a 320-sample hop (20 ms). The values come from `configs/parameter-contract.json`.
+
+| Constant | Value | Human unit |
+| --- | --- | --- |
+| `KWS_SILENCE_RETENTION_LOG` | `-0.3566749439` | `ln(0.70)` — a live prefix keeps 70% of its score per non-speech frame |
+| `KWS_MIN_PATH_RETENTION_LOG` | `-16.0` nat | abandonment budget: about 45 non-speech frames (0.90 s) or 259 speech frames (5.17 s) |
+| `KWS_ROOT_START_LOGIT_MARGIN` | `0.5` nat | a near-tied competing keyword root may start a path within a 1.65x probability ratio |
+| `KWS_FUZZY_CHILD_RETENTION_COST_LOG` | `-8.25` nat | 51.6% of the abandonment budget, so two fuzzy child advances can never complete a keyword |
+| `KWS_PCEN_SMOOTHING` | `0.025` | PCEN-lite smoothing ratio |
+| `KWS_PCEN_ALPHA` | `0.98` | PCEN-lite exponent |
+| `KWS_PCEN_DELTA` | `2.0` | PCEN-lite bias under the square root |
+| `KWS_PCEN_EPSILON` | `1e-06` | PCEN-lite smoothing regulariser |
+| `KWS_LOGMEL_COMPRESSION` | `32.0` | `log1p(32 * energy)` |
+| `KWS_FEATURE_NORMALIZATION` | `0.25` | scale applied to the mean-normalised feature vector |
+| `KWS_MEL_LOW_HZ` / `KWS_MEL_HIGH_HZ` | `80` / `7600` Hz | mel filterbank edges |
+
+The 512-point FFT and its bin mapping are not tunable: they are fixed by the frontend contract that the training-side feature spec implements, and `tests/test_frontend_parity.py` holds the two implementations together. The mapping follows this project's convention `bin = floor((N + 1) * f / fs)`, with `N = 512` bins for the real-input transform and `fs = 16000 Hz`, clamped to `N / 2 = 256`. The `N + 1` is deliberate, not an off-by-one: changing the convention shifts every mel edge and invalidates every calibrated threshold.
+
+## Confidence is an approximation
+
+`kws_detection_t.confidence` is a softmax probability computed with `fast_exp_nonpos()` in `src/decoder.c`, not with `expf()`. That helper clamps below `-8` to zero and at or above `0` to one, and approximates the interval in between with `(1 + x/256)^16` by repeated squaring. The result is deterministic, and `tests/test_arm_parity.py` observes it matching bit-for-bit between the hosted and Cortex-A32 builds, but it is not the exact softmax. Treat confidence as a monotone score carrying a small model-dependent bias, not as a calibrated probability: an absolute threshold derived from it has to be re-measured on the build that will ship.
+
+`docs/RUNTIME_CONFIG.md` is the operator-facing companion: what each L2/L3 field means, how to tune it, and what a change invalidates.

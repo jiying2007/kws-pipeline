@@ -10,7 +10,12 @@ option(KWS_BUILD_TOOLS "Build hosted evaluation tools" ON)
 option(KWS_BUILD_FUZZ "Build Clang/libFuzzer parser targets" OFF)
 option(KWS_STRICT "Enable strict warnings" ON)
 
-set(KWS_STRICT_OPTIONS -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow)
+# -Wcast-qual keeps the "model tensors are read-only zero-copy views into the
+# caller's blob" contract compiler-enforced rather than conventional. The tensor
+# pointers are const, but a single const-removing cast would let the runtime
+# write into the caller's model blob silently; without this flag nothing reports
+# it and -Werror has nothing to escalate.
+set(KWS_STRICT_OPTIONS -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual)
 
 set(KWS_SOURCE_REVISION "" CACHE STRING "Exact source revision embedded in build identity")
 if(KWS_SOURCE_REVISION STREQUAL "")
@@ -56,6 +61,43 @@ string(CONCAT KWS_CONFIG_IDENTITY
 string(SHA256 KWS_CONFIG_DIGEST "${KWS_CONFIG_IDENTITY}")
 configure_file(cmake/kws_build_config.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/generated/kws_build_config.h @ONLY)
+
+# configs/parameter-contract.json is the single source of truth for every
+# tunable parameter and its validation range.  src/*.c include the generated
+# header, so a contract edit that breaks a bound fails the build instead of
+# shipping.  The python tools read the same JSON directly.
+set(KWS_PARAMETER_CONTRACT
+    "${CMAKE_CURRENT_SOURCE_DIR}/configs/parameter-contract.json")
+set(KWS_PARAMETER_GENERATOR
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_parameter_limits.py")
+if(NOT EXISTS "${KWS_PARAMETER_CONTRACT}")
+  message(FATAL_ERROR "missing parameter contract: ${KWS_PARAMETER_CONTRACT}")
+endif()
+if(NOT EXISTS "${KWS_PARAMETER_GENERATOR}")
+  message(FATAL_ERROR "missing parameter generator: ${KWS_PARAMETER_GENERATOR}")
+endif()
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND)
+  set(KWS_PARAMETER_PYTHON "${Python3_EXECUTABLE}")
+else()
+  find_program(KWS_PARAMETER_PYTHON NAMES python3 python)
+endif()
+if(NOT KWS_PARAMETER_PYTHON)
+  message(FATAL_ERROR
+    "python3 is required to generate kws_parameter_limits.h from the contract")
+endif()
+execute_process(
+  COMMAND "${KWS_PARAMETER_PYTHON}" "${KWS_PARAMETER_GENERATOR}"
+          "${KWS_PARAMETER_CONTRACT}" "${CMAKE_CURRENT_BINARY_DIR}/generated"
+  RESULT_VARIABLE KWS_PARAMETER_GENERATE_RESULT
+  ERROR_VARIABLE KWS_PARAMETER_GENERATE_ERROR
+)
+if(NOT KWS_PARAMETER_GENERATE_RESULT EQUAL 0)
+  message(FATAL_ERROR
+    "parameter contract generation failed: ${KWS_PARAMETER_GENERATE_ERROR}")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             "${KWS_PARAMETER_CONTRACT}" "${KWS_PARAMETER_GENERATOR}")
 
 add_library(kws_pipeline STATIC
   src/kws.c

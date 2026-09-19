@@ -17,7 +17,7 @@ The `.kwm` stores int8 matrices while v0.3 uses float activations/accumulation. 
 
 ## Hosted regression matrix
 
-`kws_bench` runs the actual C frontend + model + decoder. CI runs GCC/Clang, static analysis, C coverage, sanitizers, fuzzing and Cortex-A32 cross-build. Hosted x86 timing must never be converted into target-device CPU percentage.
+`kws_bench` runs the actual C frontend + model + decoder. CI runs GCC/Clang, static analysis, C coverage, sanitizers, fuzzing, a Cortex-A32 cross-build whose CTest suite executes under `qemu-arm-static`, and a hosted-vs-Cortex-A32 numerical parity gate on the int8 kernel. Hosted x86 timing must never be converted into target-device CPU percentage.
 
 ## Optimization policy
 

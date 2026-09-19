@@ -66,7 +66,7 @@ jobs:
           PY
 
       - name: Upload deterministic production corpus
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: kws-v2-threshold-production-corpus-${{ github.sha }}
           path: |
@@ -86,7 +86,7 @@ jobs:
           persist-credentials: false
 
       - name: Download deterministic production corpus
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: kws-v2-threshold-production-corpus-${{ github.sha }}
           path: ${{ runner.temp }}/threshold-input
@@ -398,7 +398,7 @@ jobs:
 
       - name: Upload threshold diagnostic evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: kws-v2-threshold-diagnostic-v2-a-gru-h64-logmel-${{ github.sha }}
           path: ${{ runner.temp }}/threshold-evidence/
@@ -409,4 +409,14 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
+          # The development loop captures its exit code and exits 0 so the
+          # evidence below can still be collected. That deferred verdict has to
+          # be redeemed here: the curve file existing does not mean the loop
+          # that produced it succeeded, and a non-zero loop that still wrote a
+          # complete-looking manifest would otherwise stay green.
+          code="${{ steps.develop.outputs.exit_code }}"
+          if [ "$code" != '0' ]; then
+            echo "development loop failed (exit='$code'); see development-diagnostic.log in the retained evidence" >&2
+            exit 1
+          fi
           test -f "$RUNNER_TEMP/threshold-operating-curve.json"

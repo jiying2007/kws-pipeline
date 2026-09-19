@@ -21,11 +21,16 @@
 #define BENCH_VOCAB_FINGERPRINT UINT64_C(0x123456789abcdef0)
 #define BENCH_MODEL_BUDGET_BYTES 30000u
 #define BENCH_ENGINE_BUDGET_BYTES 65536u
+/* Lowest legal min_speech_dbfs in configs/parameter-contract.json.  Using it
+ * disables the speech gate so every frame takes the speech retention path, which
+ * is the decoder worst case.  A gated case keeps the contract default instead. */
+#define BENCH_GATE_DISABLED_DBFS (-120.0f)
 
 typedef struct bench_case {
   const char *name;
   uint16_t frontend_kind;
   size_t keyword_count;
+  int gate_enabled;
 } bench_case_t;
 
 static void put16(uint8_t *p, uint16_t value) {
@@ -143,7 +148,9 @@ static void run_case(const bench_case_t *bench_case) {
   CHECK(kws_model_open(model_blob, model_bytes, &model) == KWS_OK);
   CHECK(model_bytes <= BENCH_MODEL_BUDGET_BYTES);
   CHECK(kws_engine_required_bytes(&model) <= sizeof(arena));
-  config.min_speech_dbfs = -120.0f;
+  if (bench_case->gate_enabled == 0) {
+    config.min_speech_dbfs = BENCH_GATE_DISABLED_DBFS;
+  }
   CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) ==
         KWS_OK);
   make_keywords(keywords, token_storage, bench_case->keyword_count);
@@ -175,14 +182,16 @@ static void run_case(const bench_case_t *bench_case) {
   elapsed = (double)(end - begin) / (double)CLOCKS_PER_SEC;
   rtf = elapsed / (double)BENCH_SECONDS;
   printf("case=%s frontend=%s keywords=%zu trie_nodes=%u geometry=%ux%ux%u "
-         "model_bytes=%zu engine_bytes=%zu estimated_macs_per_frame=%llu "
+         "gate=%s model_bytes=%zu engine_bytes=%zu estimated_macs_per_frame=%llu "
          "audio_s=%u cpu_s=%.6f rtf=%.6f us_per_audio_s=%.1f\n",
          bench_case->name,
          bench_case->frontend_kind == KWS_FRONTEND_PCEN_LITE ? "pcen-lite"
                                                               : "logmel",
          bench_case->keyword_count, (unsigned)stats.trie_nodes,
          (unsigned)BENCH_FEATURE_DIM, (unsigned)BENCH_HIDDEN_DIM,
-         (unsigned)BENCH_VOCAB_SIZE, model_bytes,
+         (unsigned)BENCH_VOCAB_SIZE,
+         bench_case->gate_enabled != 0 ? "enabled" : "disabled",
+         model_bytes,
          kws_engine_required_bytes(&model),
          (unsigned long long)estimated_macs_per_frame,
          (unsigned)BENCH_SECONDS, elapsed, rtf,
@@ -191,10 +200,12 @@ static void run_case(const bench_case_t *bench_case) {
 
 int main(void) {
   const bench_case_t cases[] = {
-      {"baseline", KWS_FRONTEND_LOGMEL, 1u},
-      {"product", KWS_FRONTEND_LOGMEL, 4u},
-      {"pcen-product", KWS_FRONTEND_PCEN_LITE, 4u},
-      {"worst-case", KWS_FRONTEND_PCEN_LITE, KWS_MAX_KEYWORDS},
+      {"baseline", KWS_FRONTEND_LOGMEL, 1u, 0},
+      {"baseline-gated", KWS_FRONTEND_LOGMEL, 1u, 1},
+      {"product", KWS_FRONTEND_LOGMEL, 4u, 0},
+      {"pcen-product", KWS_FRONTEND_PCEN_LITE, 4u, 0},
+      {"worst-case", KWS_FRONTEND_PCEN_LITE, KWS_MAX_KEYWORDS, 0},
+      {"worst-case-gated", KWS_FRONTEND_PCEN_LITE, KWS_MAX_KEYWORDS, 1},
   };
 
   for (size_t i = 0u; i < sizeof(cases) / sizeof(cases[0]); ++i) {
