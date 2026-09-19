@@ -1,0 +1,125 @@
+name: kws-v2-architecture-probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-architecture-probe-v1.json"
+      - "training/probe_gru_hidden_verifier.py"
+      - ".github/workflows/kws-v2-architecture-probe.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kws-v2-architecture-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frozen-encoder-verifier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download frozen best M2 checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-reset-v2-a-gru-h64-logmel-m2-plus-margin-0d4b0cce201fed75a489a63b1c2bf35da2c2044f
+          path: ${{ runner.temp }}/m2
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35410019255
+
+      - name: Download frozen rendered research dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-rendered-dataset-gru-logmel-8961cfd981c80a3
+          path: ${{ runner.temp }}/rendered-cache
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35412153192
+
+      - name: Download frozen ordinary-speech sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: kws-v2-research-negative-sidecar-b1eb61db767122ebc8a28d40151b73667d135c33
+          path: ${{ runner.temp }}/negative-sidecar
+          github-token: ${{ github.token }}
+          repository: jiying2007/kws-pipeline
+          run-id: 35367960968
+
+      - name: Verify frozen probe inputs
+        run: |
+          set -euo pipefail
+          test -f "$RUNNER_TEMP/m2/model.pt"
+          test -f "$RUNNER_TEMP/rendered-cache/cache-receipt.json"
+          test -f "$RUNNER_TEMP/negative-sidecar/sidecar-receipt.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])
+          cfg=json.loads(pathlib.Path("configs/training/kws-v2-architecture-probe-v1.json").read_text())
+          cache=json.loads((root/"rendered-cache/cache-receipt.json").read_text())
+          sidecar=json.loads((root/"negative-sidecar/sidecar-receipt.json").read_text())
+
+          assert cfg["policy"]=="kws-v2-architecture-probe-v1"
+          assert cfg["evidence_scope"]=="research-only"
+          assert cfg["source_model"]["run_id"]==35410019255
+          assert cfg["source_model"]["exact_head_sha"]=="0d4b0cce201fed75a489a63b1c2bf35da2c2044f"
+          assert cfg["source_model"]["research_profile"]=="m2-plus-margin"
+          assert cfg["dataset"]["rendered_cache_run_id"]==35412153192
+          assert cfg["dataset"]["ordinary_sidecar_run_id"]==35367960968
+          assert cfg["dataset"]["qualification_split_consumed"] is False
+          assert cfg["probe"]["encoder_trainable"] is False
+          assert cfg["authority"] == {
+              "diagnostic_only": True,
+              "promotion_allowed": False,
+              "protected_evidence_used": False,
+              "shipping_metric": False,
+          }
+
+          assert cache["evidence_class"]=="kws-v2-research-rendered-dataset-cache-v1"
+          assert cache["evidence_scope"]=="research-only"
+          assert cache["qualification_split_consumed"] is False
+          assert cache["source_config_sha256"]=="8961cfd981c80a3e3a9e262b9039d846ac589a9e295bd868a57acda65bdeb69d"
+          assert cache["splits"]["train"]["recordings"]==512
+          assert cache["splits"]["calibration"]["recordings"]==256
+          assert cache["splits"]["test"]["recordings"]==256
+
+          assert sidecar["evidence_class"]=="kws-v2-research-negative-sidecar-v1"
+          assert sidecar["evidence_scope"]=="research-only"
+          assert sidecar["target_policy"]=="empty-target-nonwake"
+          assert sidecar["qualification_split_consumed"] is False
+          assert sidecar["train_recordings"] if "train_recordings" in sidecar else True
+          PY
+
+      - name: Install pinned CPU probe runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run frozen encoder verifier probe
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/architecture-probe"
+          .venv/bin/python training/probe_gru_hidden_verifier.py             --config configs/training/kws-v2-architecture-probe-v1.json             --checkpoint "$RUNNER_TEMP/m2/model.pt"             --tokens keywords/tokens.example.txt             --keywords keywords/zh_cn_example.tsv             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"             --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv"             --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv"             --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv"             --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv"             --output "$RUNNER_TEMP/architecture-probe/frozen-encoder-verifier.json"
+
+      - name: Show architecture decision evidence
+        run: |
+          set -euo pipefail
+          cat "$RUNNER_TEMP/architecture-probe/frozen-encoder-verifier.json"
+
+      - name: Upload architecture probe evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-architecture-probe-${{ github.sha }}
+          path: ${{ runner.temp }}/architecture-probe/
+          if-no-files-found: error
+          retention-days: 30
