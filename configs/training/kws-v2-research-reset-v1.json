@@ -32,35 +32,40 @@
       "keyword_sequence_margin_loss_weight": 0,
       "prefix_completion_loss_weight": 0,
       "recurrent_release_loss_weight": 0,
-      "positive_example_weight_policy": "class-balance"
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
     },
     "m1-ctc-ordered": {
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0,
       "prefix_completion_loss_weight": 0,
       "recurrent_release_loss_weight": 0,
-      "positive_example_weight_policy": "class-balance"
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
     },
     "m2-plus-margin": {
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0,
       "recurrent_release_loss_weight": 0,
-      "positive_example_weight_policy": "class-balance"
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
     },
     "m3-plus-completion": {
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0.1,
       "recurrent_release_loss_weight": 0,
-      "positive_example_weight_policy": "class-balance"
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
     },
     "m4-plus-release": {
       "ordered_token_loss_weight": 0.35,
       "keyword_sequence_margin_loss_weight": 0.1,
       "prefix_completion_loss_weight": 0.1,
       "recurrent_release_loss_weight": 0.05,
-      "positive_example_weight_policy": "class-balance"
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
     }
   },
   "threshold_diagnostic": {
@@ -153,13 +158,16 @@
     "promotion_allowed": false
   },
   "class_balance": {
-    "policy": "binary-positive-negative-count-ratio-v1",
+    "policy": "ctc-target-and-wake-balance-v1",
     "enabled": true,
-    "positive_example_weight_formula": "negative_examples / positive_examples",
-    "minimum_positive_example_weight": 1,
-    "maximum_positive_example_weight": 12,
+    "target_bearing_weight_formula": "empty_target_examples / target_bearing_examples",
+    "minimum_target_bearing_weight": 1,
+    "maximum_target_bearing_weight": 12,
+    "wake_weight_formula": "tokenized_nonwake_examples / wake_examples",
+    "minimum_wake_weight": 1,
+    "maximum_wake_weight": 12,
     "derived_before_training": true,
-    "same_weight_across_loss_ladder": true,
+    "same_weights_across_loss_ladder": true,
     "classifier_balance_mode": "equal-class-sampler-v1"
   }
 }
