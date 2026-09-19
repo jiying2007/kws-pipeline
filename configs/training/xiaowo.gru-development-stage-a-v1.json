@@ -29,7 +29,11 @@
     "signal_mode": "normalized-rates-v1",
     "normalization_frr": 0.1,
     "normalization_far_per_hour": 60,
-    "pressure_deadband": 0.1
+    "pressure_deadband": 0.1,
+    "wake_example_weight_initial": 3,
+    "wake_example_weight_min": 1,
+    "wake_example_weight_max": 6,
+    "wake_example_weight_step": 0.5
   },
   "candidate_freeze": {
     "selection_policy": "best-strict-development-objective-round",
