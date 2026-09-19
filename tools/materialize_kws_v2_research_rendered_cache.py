@@ -42,7 +42,21 @@ def read_jsonl(path: pathlib.Path) -> list[dict]:
 
 def source_audio(path_text: str, source_root: pathlib.Path, label: str) -> tuple[pathlib.Path, pathlib.Path]:
     raw = pathlib.Path(path_text)
-    path = raw.resolve() if raw.is_absolute() else (source_root / raw).resolve()
+    if raw.is_absolute():
+        direct = raw.resolve()
+        if direct.is_file():
+            path = direct
+        else:
+            parts = raw.parts
+            positions = [index for index, value in enumerate(parts) if value == "clips"]
+            if not positions:
+                raise ValueError(f"{label}: stale absolute path has no clips/ suffix: {raw}")
+            relative = pathlib.Path(*parts[positions[-1]:])
+            path = (source_root / relative).resolve()
+            if not path.is_file():
+                raise ValueError(f"{label}: missing rebased WAV {path}")
+    else:
+        path = (source_root / raw).resolve()
     if not path.is_file():
         raise ValueError(f"{label}: missing WAV {path}")
     try:
