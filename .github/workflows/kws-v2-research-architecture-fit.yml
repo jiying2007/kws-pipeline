@@ -1,0 +1,55 @@
+name: kws-v2-research-architecture-fit
+
+on:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
+  pull_request:
+    paths:
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Build fail-closed research architecture-fit report
+        run: |
+          set -euo pipefail
+          python3 training/analyze_research_architecture_fit.py \
+            --config configs/training/kws-v2-research-architecture-fit-v1.json \
+            --output "$RUNNER_TEMP/architecture-fit.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          p=json.loads((pathlib.Path(os.environ["RUNNER_TEMP"])/"architecture-fit.json").read_text())
+          b=p["candidates"]["b0-logmel64"]
+          t=p["candidates"]["fc1-pcen128"]
+          assert b["model_bytes_estimate"]==20388
+          assert b["dense_mmac_per_s"]==0.9376
+          assert b["static_runtime_fit"] is True
+          assert b["shipping_candidate_allowed"] is False
+          assert t["model_bytes_estimate"]==65252
+          assert t["dense_mmac_per_s"]==3.104
+          assert t["static_runtime_fit"] is False
+          assert t["shipping_candidate_allowed"] is False
+          assert p["research_target_static_runtime_fit"] is False
+          assert p["next_action"]=="efficient-encoder-architecture-v2"
+          assert p["hosted_timing_is_shipping_evidence"] is False
+          print("research architecture-fit contract: ok")
+          PY
+      - name: Python syntax
+        run: python3 -m py_compile training/analyze_research_architecture_fit.py
+      - name: Worktree remains clean
+        run: git diff --exit-code -- .

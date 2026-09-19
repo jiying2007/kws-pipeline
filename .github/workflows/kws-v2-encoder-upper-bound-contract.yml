@@ -21,6 +21,8 @@ on:
       - "training/analyze_classifier_exact_balanced_sampler.py"
       - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
       - "training/analyze_classifier_multistart_selection.py"
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -30,6 +32,7 @@ on:
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
       - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -49,6 +52,8 @@ on:
       - "training/analyze_classifier_exact_balanced_sampler.py"
       - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
       - "training/analyze_classifier_multistart_selection.py"
+      - "configs/training/kws-v2-research-architecture-fit-v1.json"
+      - "training/analyze_research_architecture_fit.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -58,6 +63,7 @@ on:
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
       - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
+      - ".github/workflows/kws-v2-research-architecture-fit.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -452,6 +458,28 @@ jobs:
               assert "workflow_dispatch:" in text, name
               assert "\n  push:" not in text, name
           print("Verify retired fixed-keyword upper bound is manual-only: ok")
+          PY
+
+      - name: Verify research architecture-fit boundary
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_research_architecture_fit.py
+          python3 - <<'PY'
+          import json, pathlib
+          p=json.loads(pathlib.Path("configs/training/kws-v2-research-architecture-fit-v1.json").read_text())
+          assert p["policy"]=="kws-v2-research-architecture-fit-v1"
+          assert p["runtime_contract"]["max_hidden_dim"]==64
+          assert p["candidates"]["b0-logmel64"]["hidden_dim"]==64
+          assert p["candidates"]["fc1-pcen128"]["hidden_dim"]==128
+          board=p["target_board_evidence"]
+          assert board["bound"] is False
+          assert board["required_for_shipping"] is True
+          assert board["approved_budget_required"] is True
+          assert board["physical_measurement_required"] is True
+          assert board["hosted_timing_is_shipping_evidence"] is False
+          assert p["authority"]["promotion_allowed"] is False
+          assert p["authority"]["shipping_approval_allowed"] is False
+          print("research architecture-fit boundary: ok")
           PY
 
       - name: Worktree remains clean
