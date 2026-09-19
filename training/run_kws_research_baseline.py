@@ -66,6 +66,138 @@ def safe_reset(path: pathlib.Path) -> pathlib.Path:
     return root
 
 
+def hydrate_rendered_dataset_cache(
+    cache_root: pathlib.Path,
+    dataset: pathlib.Path,
+    config_path: pathlib.Path,
+) -> dict:
+    cache = cache_root.resolve()
+    receipt_path = cache / "cache-receipt.json"
+    if not receipt_path.is_file():
+        raise ValueError(f"rendered dataset cache receipt missing: {receipt_path}")
+    receipt = load_object(receipt_path)
+    if (
+        receipt.get("evidence_class") != "kws-v2-research-rendered-dataset-cache-v1"
+        or receipt.get("evidence_scope") != "research-only"
+        or receipt.get("portable_paths_only") is not True
+        or receipt.get("qualification_split_consumed") is not False
+        or receipt.get("protected_evidence_used") is not False
+    ):
+        raise ValueError("rendered dataset cache evidence contract mismatch")
+    config_sha = sha256_file(config_path)
+    if str(receipt.get("source_config_sha256", "")) != config_sha:
+        raise ValueError("rendered dataset cache config SHA does not match candidate config")
+    splits = receipt.get("splits")
+    if not isinstance(splits, dict) or set(splits) != {"train", "calibration", "test"}:
+        raise ValueError("rendered dataset cache split contract mismatch")
+
+    clips = cache / "clips"
+    if not clips.is_dir():
+        raise ValueError("rendered dataset cache is missing clips/")
+    dataset.mkdir(parents=True, exist_ok=False)
+    shutil.copytree(clips, dataset / "clips")
+
+    hydrated: dict[str, dict] = {}
+    for split in ("train", "calibration", "test"):
+        item = splits[split]
+        if not isinstance(item, dict):
+            raise ValueError(f"rendered dataset cache split is invalid: {split}")
+        manifest_name = str(item.get("manifest", ""))
+        source_manifest = cache / manifest_name
+        if (
+            not manifest_name
+            or not source_manifest.is_file()
+            or sha256_file(source_manifest) != str(item.get("manifest_sha256", ""))
+        ):
+            raise ValueError(f"rendered dataset cache manifest hash mismatch: {split}")
+        rows: list[str] = []
+        for line_no, raw in enumerate(
+            source_manifest.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            if not raw.strip() or raw.lstrip().startswith("#"):
+                continue
+            if "\t" not in raw:
+                raise ValueError(f"{source_manifest}:{line_no}: expected WAV<TAB>targets")
+            audio_text, targets = raw.split("\t", 1)
+            relative = pathlib.Path(audio_text)
+            if relative.is_absolute() or not relative.parts or relative.parts[0] != "clips":
+                raise ValueError(f"{source_manifest}:{line_no}: cache audio path is not portable")
+            target_audio = (dataset / relative).resolve()
+            try:
+                target_audio.relative_to(dataset.resolve())
+            except ValueError as exc:
+                raise ValueError("rendered dataset cache audio escapes hydrated root") from exc
+            if not target_audio.is_file():
+                raise ValueError(f"hydrated cache WAV missing: {target_audio}")
+            rows.append(f"{target_audio}\t{targets}\n")
+        target_manifest = dataset / f"{split}.tsv"
+        target_manifest.write_text("".join(rows), encoding="utf-8")
+        evidence = {
+            "recordings": int(item["recordings"]),
+            "portable_manifest_sha256": str(item["manifest_sha256"]),
+            "hydrated_manifest_sha256": sha256_file(target_manifest),
+        }
+
+        refs_name = item.get("references")
+        if refs_name is not None:
+            source_refs = cache / str(refs_name)
+            if (
+                not source_refs.is_file()
+                or sha256_file(source_refs) != str(item.get("references_sha256", ""))
+            ):
+                raise ValueError(f"rendered dataset cache references hash mismatch: {split}")
+            refs: list[dict] = []
+            for line_no, raw in enumerate(
+                source_refs.read_text(encoding="utf-8").splitlines(), 1
+            ):
+                if not raw.strip() or raw.lstrip().startswith("#"):
+                    continue
+                row = json.loads(raw)
+                if not isinstance(row, dict):
+                    raise ValueError(f"{source_refs}:{line_no}: expected JSON object")
+                path_text = row.get("path")
+                if not isinstance(path_text, str):
+                    raise ValueError(f"{source_refs}:{line_no}: missing portable path")
+                relative = pathlib.Path(path_text)
+                if relative.is_absolute() or not relative.parts or relative.parts[0] != "clips":
+                    raise ValueError(f"{source_refs}:{line_no}: reference path is not portable")
+                target_audio = (dataset / relative).resolve()
+                try:
+                    target_audio.relative_to(dataset.resolve())
+                except ValueError as exc:
+                    raise ValueError("rendered reference escapes hydrated root") from exc
+                if not target_audio.is_file():
+                    raise ValueError(f"hydrated reference WAV missing: {target_audio}")
+                value = dict(row)
+                value["audio_path"] = str(target_audio)
+                value["path"] = target_audio.name
+                refs.append(value)
+            target_refs = dataset / f"{split}.references.jsonl"
+            target_refs.write_text(
+                "".join(
+                    json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+                    for row in refs
+                ),
+                encoding="utf-8",
+            )
+            evidence["portable_references_sha256"] = str(item["references_sha256"])
+            evidence["hydrated_references_sha256"] = sha256_file(target_refs)
+            evidence["reference_recordings"] = len(refs)
+        hydrated[split] = evidence
+
+    return {
+        "enabled": True,
+        "evidence_class": str(receipt["evidence_class"]),
+        "receipt_sha256": sha256_file(receipt_path),
+        "source_config_sha256": str(receipt["source_config_sha256"]),
+        "source_domain_index_sha256": str(receipt["source_domain_index_sha256"]),
+        "source_domain_summary_sha256": str(receipt["source_domain_summary_sha256"]),
+        "unique_wav_files": int(receipt["unique_wav_files"]),
+        "unique_wav_sha256": int(receipt["unique_wav_sha256"]),
+        "hydrated_splits": hydrated,
+    }
+
+
 def negative_manifest(sources: list[pathlib.Path], output: pathlib.Path) -> int:
     paths: list[pathlib.Path] = []
     seen: set[str] = set()
@@ -254,6 +386,11 @@ def main() -> int:
         type=pathlib.Path,
         help="optional portable kws-v2-research-negative-sidecar-v1 root",
     )
+    parser.add_argument(
+        "--prepared-dataset-cache",
+        type=pathlib.Path,
+        help="optional portable kws-v2-research-rendered-dataset-cache-v1 root",
+    )
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
@@ -314,7 +451,15 @@ def main() -> int:
 
     work = safe_reset(args.work_dir)
     dataset = work / "dataset"
-    render_domain_dataset(config_path, dataset, curriculum_weights=None)
+    if args.prepared_dataset_cache is not None:
+        rendered_dataset_cache = hydrate_rendered_dataset_cache(
+            args.prepared_dataset_cache,
+            dataset,
+            config_path,
+        )
+    else:
+        render_domain_dataset(config_path, dataset, curriculum_weights=None)
+        rendered_dataset_cache = {"enabled": False}
     run(
         [
             sys.executable,
@@ -598,6 +743,7 @@ def main() -> int:
         "loss_weights": loss,
         "class_balance": balance,
         "single_acoustic_render": True,
+        "rendered_dataset_cache": rendered_dataset_cache,
         "curriculum_feedback": False,
         "replay": False,
         "adaptive_controller": False,
