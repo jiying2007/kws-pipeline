@@ -11,6 +11,8 @@ on:
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
+      - "training/training_request.py"
+      - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
@@ -23,6 +25,8 @@ on:
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
+      - "training/training_request.py"
+      - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
@@ -48,6 +52,7 @@ jobs:
           training/synthetic_audio.py
           tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
+          training/training_request.py
           tests/test_product_training_entry_contract.py
       - name: Static product base identity
         run: |
@@ -81,10 +86,13 @@ jobs:
           materializer=pathlib.Path("training/materialize_product_training_config.py").read_text()
           assert "effective-training-config.json" in finalizer
           assert "product-speech-like-base-contract.json" in finalizer
+          assert "training-invocation.json" in finalizer
           assert "base_contract_sha256" in materializer
           assert "source_template_config_sha256" in materializer
           assert "xiaowo-effective-training-config.json" in promoter
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
+          assert "training-invocation.json" in promoter
+          assert "governed-model-training-invocation-v1" in promoter
           assert "tone fallback" in promoter
           print("promoted product data lineage contract: ok")
           PY
