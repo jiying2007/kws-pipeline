@@ -7,6 +7,7 @@ on:
       - "research/kws-architecture-v2-probe"
     paths:
       - "configs/training/kws-v2-encoder-frontend-upper-bound-sweep-v1.json"
+      - "training/research_keyword_classifier.py"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
 
 permissions:
@@ -25,11 +26,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - candidate: b0-logmel64
+            frontend: logmel
+            hidden_dim: 64
           - candidate: f1-pcen64
             frontend: pcen-lite
             hidden_dim: 64
           - candidate: c1-logmel128
             frontend: logmel
+            hidden_dim: 128
+          - candidate: fc1-pcen128
+            frontend: pcen-lite
             hidden_dim: 128
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -54,7 +61,7 @@ jobs:
           repository: jiying2007/kws-pipeline
           run-id: 35367960968
 
-      - name: Verify single-variable candidate
+      - name: Verify factorial candidate identity
         env:
           CANDIDATE: ${{ matrix.candidate }}
           FRONTEND: ${{ matrix.frontend }}
@@ -69,14 +76,21 @@ jobs:
           assert row["frontend"]==os.environ["FRONTEND"]
           assert int(row["hidden_dim"])==int(os.environ["HIDDEN_DIM"])
           base=cfg["baseline"]
-          if row["single_variable"]=="frontend":
+          mode=row["single_variable"]
+          if mode=="none":
+              assert row["frontend"]==base["frontend"]
+              assert row["hidden_dim"]==base["hidden_dim"]
+          elif mode=="frontend":
               assert row["hidden_dim"]==base["hidden_dim"]
               assert row["frontend"]!=base["frontend"]
-          elif row["single_variable"]=="hidden_dim":
+          elif mode=="hidden_dim":
               assert row["frontend"]==base["frontend"]
               assert row["hidden_dim"]!=base["hidden_dim"]
+          elif mode=="frontend+hidden_dim":
+              assert row["frontend"]!=base["frontend"]
+              assert row["hidden_dim"]!=base["hidden_dim"]
           else:
-              raise AssertionError(row["single_variable"])
+              raise AssertionError(mode)
           fixed=cfg["fixed"]
           assert fixed["epochs"]==24
           assert fixed["seed"]==1337
@@ -105,7 +119,7 @@ jobs:
           mkdir -p "$out"
           .venv/bin/python training/research_keyword_classifier.py             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"             --calibration-manifest "$RUNNER_TEMP/rendered-cache/calibration.tsv"             --calibration-manifest "$RUNNER_TEMP/negative-sidecar/calibration/negative-empty-target.tsv"             --test-manifest "$RUNNER_TEMP/rendered-cache/test.tsv"             --test-manifest "$RUNNER_TEMP/negative-sidecar/test/negative-empty-target.tsv"             --tokens keywords/tokens.example.txt             --keywords keywords/zh_cn_example.tsv             --frontend "$FRONTEND"             --feature-dim 32             --hidden-dim "$HIDDEN_DIM"             --epochs 24             --batch-size 16             --lr 0.001             --seed 1337             --balance-mode equal-class-sampler-v1             --output "$out/classifier.json"
 
-      - name: Build candidate decision evidence
+      - name: Build threshold-aware candidate evidence
         env:
           CANDIDATE: ${{ matrix.candidate }}
         run: |
@@ -117,6 +131,7 @@ jobs:
           root=pathlib.Path(os.environ["RUNNER_TEMP"])/"upper-bound"/name
           result=json.loads((root/"classifier.json").read_text())
           test=result["test"]
+          cal=result["calibration"]
           recall=float(test["positive_recall"])
           fp=float(test["negative_false_positive_clip_rate"])
           gap=float(test["score_distribution"]["separation_gap_p10_positive_minus_p99_negative"])
@@ -134,35 +149,73 @@ jobs:
               or gap_improvement >= float(rules["material_gain_if_gap_improvement_gte"])
           )
           row=cfg["candidates"][name]
-          if strong or material:
-              next_action=(
-                  rules["frontend_gain_next"]
-                  if row["single_variable"]=="frontend"
-                  else rules["capacity_gain_next"]
-              )
+          mode=row["single_variable"]
+          if mode=="none":
+              next_action=rules["reference_next"]
+          elif strong or material:
+              if mode=="frontend":
+                  next_action=rules["frontend_gain_next"]
+              elif mode=="hidden_dim":
+                  next_action=rules["capacity_gain_next"]
+              else:
+                  next_action=rules["joint_gain_next"]
           else:
               next_action=rules["neither_gain_next"]
+
+          cal_curve={float(item["threshold"]):item for item in cal["operating_curve"]}
+          test_curve={float(item["threshold"]):item for item in test["operating_curve"]}
+          operating={}
+          for spec in cfg["threshold_operating_point"]["calibration_constraints"]:
+              limit=float(spec["max_negative_fp_rate"])
+              eligible=[
+                  item for item in cal["operating_curve"]
+                  if float(item["negative_false_positive_rate"]) <= limit
+              ]
+              if not eligible:
+                  operating[spec["name"]]=None
+                  continue
+              selected=max(
+                  eligible,
+                  key=lambda item: (
+                      float(item["wake_exact_recall"]),
+                      -float(item["negative_false_positive_rate"]),
+                      -float(item["threshold"]),
+                  ),
+              )
+              threshold=float(selected["threshold"])
+              test_selected=test_curve[threshold]
+              operating[spec["name"]]={
+                  "max_calibration_negative_fp_rate":limit,
+                  "threshold":threshold,
+                  "calibration":selected,
+                  "test":test_selected,
+              }
+
           score={
               "schema_version":1,
-              "evidence_class":"kws-v2-encoder-frontend-upper-bound-scorecard-v1",
+              "evidence_class":"kws-v2-encoder-frontend-upper-bound-scorecard-v2",
               "evidence_scope":"research-only",
               "diagnostic_only":True,
               "promotion_allowed":False,
               "protected_evidence_used":False,
               "shipping_metric":False,
               "candidate":name,
-              "single_variable":row["single_variable"],
+              "role":row["role"],
+              "single_variable":mode,
               "frontend":row["frontend"],
               "hidden_dim":row["hidden_dim"],
-              "test_wake_recall":recall,
-              "test_negative_fp_rate":fp,
-              "test_gap":gap,
+              "test_argmax":{
+                  "wake_recall":recall,
+                  "negative_fp_rate":fp,
+                  "gap":gap,
+              },
               "delta_vs_logmel64":{
                   "wake_recall":recall-float(base["test_wake_recall"]),
                   "negative_fp_rate":fp-float(base["test_negative_fp_rate"]),
                   "negative_fp_reduction":fp_reduction,
                   "gap":gap_improvement,
               },
+              "operating_points":operating,
               "strong_upper_bound":strong,
               "material_gain":material,
               "next_architecture_action":next_action,
@@ -175,7 +228,108 @@ jobs:
       - name: Upload candidate evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-encoder-upper-bound-${{ matrix.candidate }}-${{ github.sha }}
+          name: kws-v2-factorial-${{ matrix.candidate }}-${{ github.sha }}
           path: ${{ runner.temp }}/upper-bound/${{ matrix.candidate }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    needs: sweep
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download factorial evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: kws-v2-factorial-*-${{ github.sha }}
+          path: ${{ runner.temp }}/factorial
+          merge-multiple: false
+
+      - name: Aggregate main and interaction effects
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/factorial-summary"
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"factorial"
+          rows={}
+          for path in root.rglob("scorecard.json"):
+              row=json.loads(path.read_text())
+              rows[row["candidate"]]=row
+          expected={"b0-logmel64","f1-pcen64","c1-logmel128","fc1-pcen128"}
+          assert set(rows)==expected, (set(rows),expected)
+
+          def op(candidate,name="balanced-20fp"):
+              row=rows[candidate]["operating_points"][name]
+              if row is None:
+                  return None
+              return {
+                  "threshold":row["threshold"],
+                  "test_wake_recall":float(row["test"]["wake_exact_recall"]),
+                  "test_negative_fp_rate":float(row["test"]["negative_false_positive_rate"]),
+              }
+
+          def arg(candidate,key):
+              return float(rows[candidate]["test_argmax"][key])
+
+          effects={
+              "frontend_at_64":{
+                  "wake_recall":arg("f1-pcen64","wake_recall")-arg("b0-logmel64","wake_recall"),
+                  "negative_fp_rate":arg("f1-pcen64","negative_fp_rate")-arg("b0-logmel64","negative_fp_rate"),
+                  "gap":arg("f1-pcen64","gap")-arg("b0-logmel64","gap"),
+              },
+              "frontend_at_128":{
+                  "wake_recall":arg("fc1-pcen128","wake_recall")-arg("c1-logmel128","wake_recall"),
+                  "negative_fp_rate":arg("fc1-pcen128","negative_fp_rate")-arg("c1-logmel128","negative_fp_rate"),
+                  "gap":arg("fc1-pcen128","gap")-arg("c1-logmel128","gap"),
+              },
+              "capacity_at_logmel":{
+                  "wake_recall":arg("c1-logmel128","wake_recall")-arg("b0-logmel64","wake_recall"),
+                  "negative_fp_rate":arg("c1-logmel128","negative_fp_rate")-arg("b0-logmel64","negative_fp_rate"),
+                  "gap":arg("c1-logmel128","gap")-arg("b0-logmel64","gap"),
+              },
+              "capacity_at_pcen":{
+                  "wake_recall":arg("fc1-pcen128","wake_recall")-arg("f1-pcen64","wake_recall"),
+                  "negative_fp_rate":arg("fc1-pcen128","negative_fp_rate")-arg("f1-pcen64","negative_fp_rate"),
+                  "gap":arg("fc1-pcen128","gap")-arg("f1-pcen64","gap"),
+              },
+          }
+          effects["interaction_gap"]=(
+              effects["frontend_at_128"]["gap"]-effects["frontend_at_64"]["gap"]
+          )
+          summary={
+              "schema_version":1,
+              "evidence_class":"kws-v2-encoder-frontend-factorial-summary-v1",
+              "evidence_scope":"research-only",
+              "diagnostic_only":True,
+              "promotion_allowed":False,
+              "protected_evidence_used":False,
+              "shipping_metric":False,
+              "candidates":{
+                  name:{
+                      "frontend":row["frontend"],
+                      "hidden_dim":row["hidden_dim"],
+                      "argmax":row["test_argmax"],
+                      "balanced_20fp":op(name,"balanced-20fp"),
+                      "strict_10fp":op(name,"strict-10fp"),
+                      "strict_05fp":op(name,"strict-05fp"),
+                  }
+                  for name,row in sorted(rows.items())
+              },
+              "effects":effects,
+          }
+          target=pathlib.Path(os.environ["RUNNER_TEMP"])/"factorial-summary"/"summary.json"
+          target.write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload factorial summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: kws-v2-encoder-frontend-factorial-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/factorial-summary/
           if-no-files-found: error
           retention-days: 30
