@@ -15,6 +15,11 @@ sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TOOLS))
 
 import development_resume as development_resume  # noqa: E402
+from development_loss_controller import (  # noqa: E402
+    initial_controller,
+    next_controller as next_loss_controller,
+    validate_controller_config,
+)
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -94,15 +99,7 @@ def validate_policy(path: pathlib.Path) -> dict:
     if not 1 <= int(policy.get("failure_replay_repeat_max", 0)) <= 8:
         raise ValueError("failure_replay_repeat_max must be 1..8")
     controller = policy.get("loss_controller")
-    if not isinstance(controller, dict):
-        raise ValueError("loss_controller must be an object")
-    for prefix in ("positive_example_weight", "ordered_token_loss_weight"):
-        initial = finite(controller.get(f"{prefix}_initial"), f"{prefix}_initial")
-        low = finite(controller.get(f"{prefix}_min"), f"{prefix}_min")
-        high = finite(controller.get(f"{prefix}_max"), f"{prefix}_max")
-        step = finite(controller.get(f"{prefix}_step"), f"{prefix}_step")
-        if not 0.0 < low <= initial <= high or step <= 0.0:
-            raise ValueError(f"{prefix} controller bounds are invalid")
+    validate_controller_config(controller)
     freeze = policy.get("candidate_freeze")
     if not isinstance(freeze, dict):
         raise ValueError("candidate_freeze must be an object")
@@ -184,53 +181,27 @@ def merge_domain_metrics(calibration: dict, test: dict) -> dict:
 
 
 def controller_initial(policy: dict) -> dict:
-    raw = policy["loss_controller"]
-    return {
-        "positive_example_weight": float(raw["positive_example_weight_initial"]),
-        "ordered_token_loss_weight": float(raw["ordered_token_loss_weight_initial"]),
-        "failure_replay_repeat": 0,
-    }
+    return initial_controller(policy)
 
 
-def controller_next(policy: dict, current: dict, false_rejects: int, false_accepts: int) -> dict:
-    raw = policy["loss_controller"]
-    positive = float(current["positive_example_weight"])
-    ordered = float(current["ordered_token_loss_weight"])
-    p_step = float(raw["positive_example_weight_step"])
-    o_step = float(raw["ordered_token_loss_weight_step"])
-    if false_rejects > false_accepts:
-        positive += p_step
-        ordered -= 0.5 * o_step
-    elif false_accepts > false_rejects:
-        positive -= p_step
-        ordered += o_step
-    elif false_accepts > 0:
-        ordered += 0.5 * o_step
-    positive = clamp(
-        positive,
-        float(raw["positive_example_weight_min"]),
-        float(raw["positive_example_weight_max"]),
+def controller_next(
+    policy: dict,
+    current: dict,
+    false_rejects: int,
+    false_accepts: int,
+    *,
+    frr: float | None = None,
+    far_per_hour: float | None = None,
+) -> dict:
+    return next_loss_controller(
+        policy,
+        current,
+        false_rejects,
+        false_accepts,
+        frr=frr,
+        far_per_hour=far_per_hour,
+        latch_after_failure=False,
     )
-    ordered = clamp(
-        ordered,
-        float(raw["ordered_token_loss_weight_min"]),
-        float(raw["ordered_token_loss_weight_max"]),
-    )
-    failures = false_rejects + false_accepts
-    if failures <= 0:
-        repeat = 0
-    elif failures <= 4:
-        repeat = 1
-    elif failures <= 16:
-        repeat = 2
-    else:
-        repeat = int(policy["failure_replay_repeat_max"])
-    repeat = min(repeat, int(policy["failure_replay_repeat_max"]))
-    return {
-        "positive_example_weight": positive,
-        "ordered_token_loss_weight": ordered,
-        "failure_replay_repeat": repeat,
-    }
 
 
 def repeated(path: pathlib.Path | None, count: int) -> list[pathlib.Path]:
@@ -465,6 +436,8 @@ def main() -> int:
                 str(int(cfg.get("seed", 1337)) + int(policy["training_seed_namespace"]) + round_index * 1009),
                 "--positive-example-weight",
                 str(float(controller["positive_example_weight"])),
+                "--wake-example-weight",
+                str(float(controller["wake_example_weight"])),
                 "--ordered-token-loss-weight",
                 str(float(controller["ordered_token_loss_weight"])),
                 "--output",
@@ -545,6 +518,7 @@ def main() -> int:
                 "epochs": int(policy["epochs_per_round"]),
                 "learning_rate": learning_rate,
                 "positive_example_weight": float(controller["positive_example_weight"]),
+                "wake_example_weight": float(controller["wake_example_weight"]),
                 "ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]),
                 "fixed_replay_repeat": int(policy["fixed_replay_repeat"]),
                 "fixed_replay_examples": int(fixed_replay.get("examples", 0)),
@@ -569,7 +543,29 @@ def main() -> int:
             json.dumps(curriculum, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n",
             encoding="utf-8",
         )
-        controller = controller_next(policy, controller, false_rejects, false_accepts)
+        controller_frr = max(float(cal_base["frr"]), float(test_base["frr"]))
+        controller_far_per_hour = max(
+            float(cal_base["far_per_hour"]),
+            float(test_base["far_per_hour"]),
+        )
+        controller = controller_next(
+            policy,
+            controller,
+            false_rejects,
+            false_accepts,
+            frr=controller_frr,
+            far_per_hour=controller_far_per_hour,
+        )
+        record["controller_feedback"] = {
+            "signal_mode": str(controller["controller_signal_mode"]),
+            "frr": controller_frr,
+            "far_per_hour": controller_far_per_hour,
+            "severity": float(controller["controller_severity"]),
+            "next_positive_example_weight": float(controller["positive_example_weight"]),
+            "next_wake_example_weight": float(controller["wake_example_weight"]),
+            "next_ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]),
+            "next_failure_replay_repeat": int(controller["failure_replay_repeat"]),
+        }
         if strict(record):
             strict_streak += 1
         else:

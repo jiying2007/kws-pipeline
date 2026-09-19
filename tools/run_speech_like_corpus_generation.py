@@ -226,6 +226,11 @@ def main() -> int:
     parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
     parser.add_argument("--generation-workers", type=int, default=2)
+    parser.add_argument(
+        "--prepare-provider-only",
+        action="store_true",
+        help="verify/materialize the pinned provider and voice inventory, then stop before corpus requests",
+    )
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
@@ -437,6 +442,32 @@ def main() -> int:
         raise ValueError("provider materialization did not verify runtime asset receipt")
     if int(provider_summary.get("voice_slots", 0)) != 24:
         raise ValueError("provider materialization did not produce exactly 24 voices")
+
+    if args.prepare_provider_only:
+        preparation = {
+            "schema_version": 1,
+            "evidence_class": "speech-like-provider-preparation-v1",
+            "provider_candidate": candidate_name,
+            "provider_profile": profile,
+            "provider": str(provider_path),
+            "provider_sha256": sha256_file(provider_path),
+            "voice_inventory": str(inventory_path),
+            "voice_inventory_sha256": sha256_file(inventory_path),
+            "provider_summary": str(provider_summary_path),
+            "provider_summary_sha256": sha256_file(provider_summary_path),
+            "voice_slots": int(provider_summary["voice_slots"]),
+            "protected_evidence_used": False,
+        }
+        preparation_path = work / "provider-preparation.json"
+        preparation_path.write_text(
+            json.dumps(preparation, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        print(
+            f"speech-like provider prepared: candidate={candidate_name} "
+            f"voices={preparation['voice_slots']}"
+        )
+        return 0
 
     plan_dir = work / "request-plan"
     requests = plan_dir / "requests.jsonl"

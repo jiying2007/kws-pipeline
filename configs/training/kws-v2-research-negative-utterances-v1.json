@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "evidence_class": "kws-v2-research-negative-utterance-plan-v1",
+  "evidence_scope": "research-only",
+  "locale": "zh-CN",
+  "target_policy": "empty-target-nonwake",
+  "canonical_kws_vocabulary_required": false,
+  "protected_evidence_used": false,
+  "qualification_split_allowed": false,
+  "split_voice_slots": {
+    "train": [
+      "train-00",
+      "train-01",
+      "train-02",
+      "train-03",
+      "train-04",
+      "train-05",
+      "train-06",
+      "train-07"
+    ],
+    "calibration": [
+      "search-cal-00",
+      "search-cal-01",
+      "search-cal-02",
+      "search-cal-03"
+    ],
+    "test": [
+      "search-test-00",
+      "search-test-01",
+      "search-test-02",
+      "search-test-03"
+    ]
+  },
+  "utterances": [
+    {
+      "id": "near-001",
+      "category": "near-homophone",
+      "text": "你好小王",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-002",
+      "category": "near-homophone",
+      "text": "你好晓雯",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-003",
+      "category": "near-homophone",
+      "text": "你要小窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-004",
+      "category": "near-homophone",
+      "text": "你好小沃",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-005",
+      "category": "near-homophone",
+      "text": "你好小郭",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-006",
+      "category": "near-homophone",
+      "text": "你好小吴",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-007",
+      "category": "near-homophone",
+      "text": "小王小王",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "near-008",
+      "category": "near-homophone",
+      "text": "小沃小沃",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "prefix-001",
+      "category": "shared-prefix",
+      "text": "你好小朋友",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "prefix-002",
+      "category": "shared-prefix",
+      "text": "你好小猫",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "prefix-003",
+      "category": "shared-prefix",
+      "text": "你好小狗",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "prefix-004",
+      "category": "shared-prefix",
+      "text": "你好小伙",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "suffix-001",
+      "category": "shared-suffix",
+      "text": "大家好小窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "suffix-002",
+      "category": "shared-suffix",
+      "text": "晚上好小窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "suffix-003",
+      "category": "shared-suffix",
+      "text": "真好小窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "suffix-004",
+      "category": "shared-suffix",
+      "text": "还好小窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "repeat-001",
+      "category": "repetition",
+      "text": "小小窝窝",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "repeat-002",
+      "category": "repetition",
+      "text": "小窝小王",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "repeat-003",
+      "category": "repetition",
+      "text": "小我小我",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "repeat-004",
+      "category": "repetition",
+      "text": "你好你好小",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-001",
+      "category": "ordinary-speech",
+      "text": "你好今天吃什么",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-002",
+      "category": "ordinary-speech",
+      "text": "你好今天回家吗",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-003",
+      "category": "ordinary-speech",
+      "text": "我要出去一下",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-004",
+      "category": "ordinary-speech",
+      "text": "小猫跑到窝里了",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-005",
+      "category": "ordinary-speech",
+      "text": "帮我看一下时间",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-006",
+      "category": "ordinary-speech",
+      "text": "今天外面有点热",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-007",
+      "category": "ordinary-speech",
+      "text": "这个声音有点小",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "ordinary-008",
+      "category": "ordinary-speech",
+      "text": "我们一会儿再说",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "device-001",
+      "category": "device-playback",
+      "text": "你好欢迎收看今天的节目",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "device-002",
+      "category": "device-playback",
+      "text": "小朋友们大家好",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "device-003",
+      "category": "device-playback",
+      "text": "现在开始播放音乐",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    },
+    {
+      "id": "device-004",
+      "category": "device-playback",
+      "text": "请稍后再试一次",
+      "provider_tokens": [
+        "nonwake"
+      ]
+    }
+  ],
+  "notes": [
+    "This corpus is research-only and deliberately bypasses the four-token canonical KWS vocabulary by assigning empty CTC targets.",
+    "It is used to test fixed-wake-word open-set rejection and classifier separability, not to claim shallow-customization support.",
+    "Train/calibration/test use disjoint Stage-A voice slots; qualification/freeze voices are never requested."
+  ]
+}

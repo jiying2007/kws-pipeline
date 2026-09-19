@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "policy": "kws-v2-research-reset-v1",
+  "evidence_scope": "research-only",
+  "purpose": "fast interpretable model-learning diagnostics before governed development/qualification",
+  "protected_evidence": {
+    "fresh_used": false,
+    "shadow_used": false,
+    "formal_qualification_used": false,
+    "qualification_split_consumed": false
+  },
+  "research_lane": {
+    "single_acoustic_render": true,
+    "curriculum_feedback": false,
+    "failure_replay": false,
+    "fixed_hard_negative_replay": false,
+    "adaptive_loss_controller": false,
+    "warm_start": false,
+    "hard_gate_required": false,
+    "candidate_freeze_allowed": false,
+    "promotion_allowed": false
+  },
+  "train": {
+    "epochs": 8,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "seed": 1337
+  },
+  "loss_ladder": {
+    "m0-ctc-only": {
+      "ordered_token_loss_weight": 0,
+      "keyword_sequence_margin_loss_weight": 0,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    },
+    "m1-ctc-ordered": {
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    },
+    "m2-plus-margin": {
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.1,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    },
+    "m3-plus-completion": {
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.1,
+      "prefix_completion_loss_weight": 0.1,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    },
+    "m4-plus-release": {
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.1,
+      "prefix_completion_loss_weight": 0.1,
+      "recurrent_release_loss_weight": 0.05,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    }
+  },
+  "threshold_diagnostic": {
+    "common_thresholds": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6,
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "far_budgets_per_hour": [
+      1,
+      5,
+      10,
+      30,
+      60,
+      120
+    ],
+    "report_pareto": true,
+    "select_shipping_threshold": false,
+    "feed_threshold_back_into_training": false
+  },
+  "negative_exposure": {
+    "research_seconds": 600,
+    "confirm_seconds": 3600,
+    "source_split": "test",
+    "minimum_each_negative_clip_injections": 1,
+    "synthetic_background_profiles": [
+      "white",
+      "fan",
+      "motor",
+      "media"
+    ],
+    "shipping_far_claim_allowed": false
+  },
+  "classifier_baseline": {
+    "enabled": true,
+    "architecture": "clip-gru-v1",
+    "hidden_dim": 32,
+    "epochs": 12,
+    "learning_rate": 0.001,
+    "purpose": "diagnose acoustic/frontend separability independent of CTC decoder"
+  },
+  "decision_diagnostics": {
+    "ctc_and_classifier_overlap": "data-or-frontend-limited",
+    "classifier_separates_ctc_does_not": "ctc-tokenization-or-decoder-limited",
+    "ctc_curve_separates_selected_point_collapses": "calibration-or-threshold-limited",
+    "single_seed_good_multiseed_unstable": "optimization-stability-limited"
+  },
+  "lane_boundaries": {
+    "research": "one seed, one render, no replay/controller/protected evidence",
+    "confirm": "paired or multiseed replication with fixed design",
+    "qualification": "fresh/shadow/formal/target/real-human only after candidate freeze"
+  },
+  "data_limitations": {
+    "canonical_stage_a_provider_profile": "sherpa-vits-resampled-to-16k-v1",
+    "source_sample_rate_hz": 8000,
+    "normalized_sample_rate_hz": 16000,
+    "source_bandwidth_limitation_retained": true,
+    "real_human_speech": false,
+    "product_far_claim_allowed": false
+  },
+  "confirm": {
+    "training_seeds": [
+      1337,
+      91337,
+      181337,
+      271337
+    ],
+    "minimum_seed_count": 4,
+    "same_acoustic_render_required": true,
+    "same_corpus_identity_required": true,
+    "same_loss_profile_required": true,
+    "negative_exposure_seconds": 3600,
+    "protected_evidence_used": false,
+    "promotion_allowed": false
+  },
+  "class_balance": {
+    "policy": "ctc-target-and-wake-balance-v1",
+    "enabled": true,
+    "target_bearing_weight_formula": "empty_target_examples / target_bearing_examples",
+    "minimum_target_bearing_weight": 1,
+    "maximum_target_bearing_weight": 12,
+    "wake_weight_formula": "tokenized_nonwake_examples / wake_examples",
+    "minimum_wake_weight": 1,
+    "maximum_wake_weight": 12,
+    "derived_before_training": true,
+    "same_weights_across_loss_ladder": true,
+    "classifier_balance_mode": "equal-class-sampler-v1"
+  },
+  "tuning_profiles": {
+    "m2-margin-020": {
+      "base_profile": "m2-plus-margin",
+      "hypothesis": "sequence-margin weight 0.1 helps while 0.3 overdrives confidence; test midpoint 0.2",
+      "single_variable": "keyword_sequence_margin_loss_weight",
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.2,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    },
+    "m2-margin-030": {
+      "base_profile": "m2-plus-margin",
+      "hypothesis": "sequence-margin direction is correct but weight 0.1 is underpowered",
+      "single_variable": "keyword_sequence_margin_loss_weight",
+      "ordered_token_loss_weight": 0.35,
+      "keyword_sequence_margin_loss_weight": 0.3,
+      "prefix_completion_loss_weight": 0,
+      "recurrent_release_loss_weight": 0,
+      "target_bearing_weight_policy": "class-balance",
+      "wake_example_weight_policy": "class-balance"
+    }
+  }
+}

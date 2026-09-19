@@ -213,6 +213,24 @@ def training_metadata(checkpoint: dict) -> dict:
             raise ValueError(f"checkpoint {key} must be finite and non-negative")
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
+    weighting = {}
+    for key in ("positive_example_weight", "wake_example_weight"):
+        if key in checkpoint:
+            value = float(checkpoint[key])
+            if not math.isfinite(value) or value <= 0.0:
+                raise ValueError(f"checkpoint {key} must be finite and positive")
+            weighting[key] = value
+    for key in (
+        "positive_example_weight_semantics",
+        "wake_example_weight_semantics",
+    ):
+        if key in checkpoint:
+            value = checkpoint[key]
+            if not isinstance(value, str) or not value:
+                raise ValueError(f"checkpoint {key} must be non-empty text")
+            weighting[key] = value
+    if weighting:
+        result["sample_weighting"] = weighting
     return result
 
 

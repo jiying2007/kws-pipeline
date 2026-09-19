@@ -15,6 +15,11 @@ sys.path.insert(0, str(TRAINING))
 sys.path.insert(0, str(TOOLS))
 
 import development_resume as development_resume  # noqa: E402
+from development_loss_controller import (  # noqa: E402
+    initial_controller,
+    next_controller as next_loss_controller,
+    validate_controller_config,
+)
 from development_failure_replay import render_development_failure_replay  # noqa: E402
 from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -94,15 +99,7 @@ def validate_policy(path: pathlib.Path) -> dict:
     if int(policy.get("training_acoustic_seed_namespace", 0)) <= 0:
         raise ValueError("training_acoustic_seed_namespace must be positive")
     controller = policy.get("loss_controller")
-    if not isinstance(controller, dict):
-        raise ValueError("loss_controller must be an object")
-    for prefix in ("positive_example_weight", "ordered_token_loss_weight"):
-        initial = finite(controller.get(f"{prefix}_initial"), f"{prefix}_initial")
-        low = finite(controller.get(f"{prefix}_min"), f"{prefix}_min")
-        high = finite(controller.get(f"{prefix}_max"), f"{prefix}_max")
-        step = finite(controller.get(f"{prefix}_step"), f"{prefix}_step")
-        if not 0.0 < low <= initial <= high or step <= 0.0:
-            raise ValueError(f"{prefix} controller bounds are invalid")
+    validate_controller_config(controller)
     freeze = policy.get("candidate_freeze")
     if not isinstance(freeze, dict):
         raise ValueError("candidate_freeze must be an object")
@@ -171,35 +168,27 @@ def merge_domain_metrics(calibration: dict, test: dict) -> dict:
 
 
 def controller_initial(policy: dict) -> dict:
-    raw = policy["loss_controller"]
-    return {"positive_example_weight": float(raw["positive_example_weight_initial"]), "ordered_token_loss_weight": float(raw["ordered_token_loss_weight_initial"]), "failure_replay_repeat": 0}
+    return initial_controller(policy)
 
 
-def controller_next(policy: dict, current: dict, fr: int, fa: int) -> dict:
-    raw = policy["loss_controller"]
-    positive = float(current["positive_example_weight"])
-    ordered = float(current["ordered_token_loss_weight"])
-    p_step = float(raw["positive_example_weight_step"])
-    o_step = float(raw["ordered_token_loss_weight_step"])
-    if fr > fa:
-        positive += p_step
-        ordered -= 0.5 * o_step
-    elif fa > fr:
-        positive -= p_step
-        ordered += o_step
-    elif fa > 0:
-        ordered += 0.5 * o_step
-    positive = clamp(positive, float(raw["positive_example_weight_min"]), float(raw["positive_example_weight_max"]))
-    ordered = clamp(ordered, float(raw["ordered_token_loss_weight_min"]), float(raw["ordered_token_loss_weight_max"]))
-    failures = fr + fa
-    previous_repeat = int(current.get("failure_replay_repeat", 0))
-    if failures <= 0:
-        repeat = previous_repeat if bool(policy["failure_replay_latch_after_failure"]) else 0
-    else:
-        repeat = 1 if failures <= 4 else 2
-        if failures > 16:
-            repeat = int(policy["failure_replay_repeat_max"])
-    return {"positive_example_weight": positive, "ordered_token_loss_weight": ordered, "failure_replay_repeat": min(repeat, int(policy["failure_replay_repeat_max"]))}
+def controller_next(
+    policy: dict,
+    current: dict,
+    false_rejects: int,
+    false_accepts: int,
+    *,
+    frr: float | None = None,
+    far_per_hour: float | None = None,
+) -> dict:
+    return next_loss_controller(
+        policy,
+        current,
+        false_rejects,
+        false_accepts,
+        frr=frr,
+        far_per_hour=far_per_hour,
+        latch_after_failure=bool(policy.get("failure_replay_latch_after_failure", False)),
+    )
 
 
 def repeated(path: pathlib.Path | None, count: int) -> list[pathlib.Path]:
@@ -333,7 +322,7 @@ def main() -> int:
         command = [sys.executable, str(TRAINING / "train_ctc.py")]
         for manifest in manifests:
             command.extend(["--manifest", str(manifest)])
-        command.extend(["--tokens", str(tokens), "--keywords", str(keywords), "--frontend", frontend, "--feature-dim", str(int(model_cfg.get("feature_dim", 32))), "--hidden-dim", str(int(model_cfg.get("hidden_dim", 64))), "--epochs", str(int(policy["epochs_per_round"])), "--batch-size", str(int(train_cfg.get("batch_size", 16))), "--lr", str(learning_rate), "--seed", str(int(cfg.get("seed", 1337)) + int(policy["training_seed_namespace"]) + round_index * 1009), "--positive-example-weight", str(float(controller["positive_example_weight"])), "--ordered-token-loss-weight", str(float(controller["ordered_token_loss_weight"])), "--output", str(checkpoint)])
+        command.extend(["--tokens", str(tokens), "--keywords", str(keywords), "--frontend", frontend, "--feature-dim", str(int(model_cfg.get("feature_dim", 32))), "--hidden-dim", str(int(model_cfg.get("hidden_dim", 64))), "--epochs", str(int(policy["epochs_per_round"])), "--batch-size", str(int(train_cfg.get("batch_size", 16))), "--lr", str(learning_rate), "--seed", str(int(cfg.get("seed", 1337)) + int(policy["training_seed_namespace"]) + round_index * 1009), "--positive-example-weight", str(float(controller["positive_example_weight"])), "--wake-example-weight", str(float(controller["wake_example_weight"])), "--ordered-token-loss-weight", str(float(controller["ordered_token_loss_weight"])), "--output", str(checkpoint)])
         if previous_checkpoint is not None:
             command.extend(["--warm-start", str(previous_checkpoint)])
         run(command)
@@ -346,7 +335,7 @@ def main() -> int:
         test_contract = evaluate_development_split(test_base, test_domains, cfg)
         score = objective(cal_base, cal_domains, gates) + objective(test_base, test_domains, gates)
         fr, fa = failure_counts(cal_base, test_base)
-        record = {"round": round_index, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "frontend": frontend, "candidate": 0, "score": score, "model": str(model), "model_sha256": sha256_file(model), "checkpoint": str(checkpoint), "provenance": str(provenance), "provenance_sha256": sha256_file(provenance), "keywords": str(calibrated), "pack": str(pack), "calibration": cal_base, "calibration_domains": cal_domains, "calibration_development_gate": cal_contract, "test": test_base, "test_domains": test_domains, "test_development_gate": test_contract, "calibration_gate": bool(cal_contract["qualified"]), "test_gate": bool(test_contract["qualified"]), "false_rejects": fr, "false_accepts": fa, "training": {"architecture": ARCHITECTURE, "warm_started": previous_checkpoint is not None, "epochs": int(policy["epochs_per_round"]), "learning_rate": learning_rate, "positive_example_weight": float(controller["positive_example_weight"]), "ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]), "fixed_replay_repeat": int(policy["fixed_replay_repeat"]), "fixed_replay_examples": int(fixed_replay.get("examples", 0)), "failure_replay_repeat": int(controller["failure_replay_repeat"]), "failure_replay_examples": int(failure_replay.get("examples", 0)), "manifest_count": len(manifests)}}
+        record = {"round": round_index, "model_family": MODEL_FAMILY, "architecture": ARCHITECTURE, "frontend": frontend, "candidate": 0, "score": score, "model": str(model), "model_sha256": sha256_file(model), "checkpoint": str(checkpoint), "provenance": str(provenance), "provenance_sha256": sha256_file(provenance), "keywords": str(calibrated), "pack": str(pack), "calibration": cal_base, "calibration_domains": cal_domains, "calibration_development_gate": cal_contract, "test": test_base, "test_domains": test_domains, "test_development_gate": test_contract, "calibration_gate": bool(cal_contract["qualified"]), "test_gate": bool(test_contract["qualified"]), "false_rejects": fr, "false_accepts": fa, "training": {"architecture": ARCHITECTURE, "warm_started": previous_checkpoint is not None, "epochs": int(policy["epochs_per_round"]), "learning_rate": learning_rate, "positive_example_weight": float(controller["positive_example_weight"]), "wake_example_weight": float(controller["wake_example_weight"]), "ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]), "fixed_replay_repeat": int(policy["fixed_replay_repeat"]), "fixed_replay_examples": int(fixed_replay.get("examples", 0)), "failure_replay_repeat": int(controller["failure_replay_repeat"]), "failure_replay_examples": int(failure_replay.get("examples", 0)), "manifest_count": len(manifests)}}
         records.append(record)
         previous_checkpoint = checkpoint
         merged = merge_domain_metrics(cal_domains, test_domains)
@@ -354,7 +343,29 @@ def main() -> int:
         curriculum_path = work / "curriculum" / f"round-{round_index:02d}.json"
         curriculum_path.parent.mkdir(parents=True, exist_ok=True)
         _write_object(curriculum_path, curriculum)
-        controller = controller_next(policy, controller, fr, fa)
+        controller_frr = max(float(cal_base["frr"]), float(test_base["frr"]))
+        controller_far_per_hour = max(
+            float(cal_base["far_per_hour"]),
+            float(test_base["far_per_hour"]),
+        )
+        controller = controller_next(
+            policy,
+            controller,
+            fr,
+            fa,
+            frr=controller_frr,
+            far_per_hour=controller_far_per_hour,
+        )
+        record["controller_feedback"] = {
+            "signal_mode": str(controller["controller_signal_mode"]),
+            "frr": controller_frr,
+            "far_per_hour": controller_far_per_hour,
+            "severity": float(controller["controller_severity"]),
+            "next_positive_example_weight": float(controller["positive_example_weight"]),
+            "next_wake_example_weight": float(controller["wake_example_weight"]),
+            "next_ordered_token_loss_weight": float(controller["ordered_token_loss_weight"]),
+            "next_failure_replay_repeat": int(controller["failure_replay_repeat"]),
+        }
         if best_objective is None or score < best_objective - 1.0e-12:
             best_objective = score
             stale_rounds = 0
