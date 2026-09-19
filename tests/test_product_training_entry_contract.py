@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import copy
 import pathlib
-
-from training.verify_training_entry_contract import read_json, verify
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from training.verify_training_entry_contract import read_json, verify
 
 
 def main() -> int:
