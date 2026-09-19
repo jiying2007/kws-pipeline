@@ -32,6 +32,8 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             self.assertEqual(validate_controller_config(raw), "normalized-rates-v1")
             self.assertGreater(float(raw["normalization_frr"]), 0.0)
             self.assertGreater(float(raw["normalization_far_per_hour"]), 0.0)
+            self.assertGreaterEqual(float(raw["wake_example_weight_initial"]), 1.0)
+            self.assertGreater(float(raw["wake_example_weight_step"]), 0.0)
 
     def test_rate_pressure_corrects_raw_count_inversion(self) -> None:
         policy = self.gru_policy
@@ -45,8 +47,11 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             far_per_hour=180.0,
         )
         self.assertEqual(result["controller_decision"], "precision")
-        self.assertLess(
+        self.assertEqual(
             result["positive_example_weight"], current["positive_example_weight"]
+        )
+        self.assertLess(
+            result["wake_example_weight"], current["wake_example_weight"]
         )
         self.assertGreater(
             result["ordered_token_loss_weight"], current["ordered_token_loss_weight"]
@@ -67,8 +72,11 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             far_per_hour=1.0,
         )
         self.assertEqual(result["controller_decision"], "recall")
-        self.assertGreater(
+        self.assertEqual(
             result["positive_example_weight"], current["positive_example_weight"]
+        )
+        self.assertGreater(
+            result["wake_example_weight"], current["wake_example_weight"]
         )
         self.assertLess(
             result["ordered_token_loss_weight"], current["ordered_token_loss_weight"]
@@ -112,6 +120,10 @@ class DevelopmentLossControllerTest(unittest.TestCase):
         result = next_controller(policy, current, 8, 3)
         self.assertEqual(result["controller_signal_mode"], "legacy-counts-v1")
         self.assertEqual(result["controller_decision"], "recall")
+        self.assertGreater(
+            result["positive_example_weight"], current["positive_example_weight"]
+        )
+        self.assertEqual(result["wake_example_weight"], 1.0)
 
 
 if __name__ == "__main__":
