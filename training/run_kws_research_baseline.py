@@ -245,6 +245,9 @@ def main() -> int:
     )
     parser.add_argument("--family", required=True, choices=("rnn", "gru"))
     parser.add_argument("--loss-profile", default="m0-ctc-only")
+    parser.add_argument("--epochs", type=int)
+    parser.add_argument("--training-seed", type=int)
+    parser.add_argument("--negative-exposure-seconds", type=int)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument(
         "--negative-sidecar",
@@ -341,6 +344,18 @@ def main() -> int:
             sidecar_references[split] = references
 
     train_policy = policy["train"]
+    training_epochs = (
+        int(args.epochs) if args.epochs is not None else int(train_policy["epochs"])
+    )
+    training_seed = (
+        int(args.training_seed)
+        if args.training_seed is not None
+        else int(train_policy["seed"])
+    )
+    if training_epochs <= 0:
+        raise ValueError("research training epochs must be positive")
+    if training_seed < 0:
+        raise ValueError("research training seed must be non-negative")
     train_manifests = [dataset / "train.tsv"]
     if "train" in sidecar_manifests:
         train_manifests.append(sidecar_manifests["train"])
@@ -361,10 +376,10 @@ def main() -> int:
         "--frontend", frontend,
         "--feature-dim", str(feature_dim),
         "--hidden-dim", str(hidden_dim),
-        "--epochs", str(int(train_policy["epochs"])),
+        "--epochs", str(training_epochs),
         "--batch-size", str(int(train_policy["batch_size"])),
         "--lr", str(float(train_policy["learning_rate"])),
-        "--seed", str(int(train_policy["seed"])),
+        "--seed", str(training_seed),
         "--positive-example-weight",
         str(float(balance["effective_target_bearing_weight"])),
         "--wake-example-weight",
@@ -382,6 +397,30 @@ def main() -> int:
         command.extend(["--manifest", str(extra_manifest)])
     run(command, work / "logs" / "train.log")
 
+    thresholds = [float(v) for v in policy["threshold_diagnostic"]["common_thresholds"]]
+    float_diagnostic = work / "float-ctc-confidence.json"
+    float_command = [
+        sys.executable,
+        str(TRAINING / "diagnose_float_ctc_confidence.py"),
+        "--family", args.family,
+        "--checkpoint", str(checkpoint),
+        "--tokens", str(tokens),
+        "--keywords", str(keywords),
+        "--split-manifest", f"calibration={dataset / 'calibration.tsv'}",
+        "--split-manifest", f"test={dataset / 'test.tsv'}",
+        "--thresholds", *[str(v) for v in thresholds],
+        "--batch-size", str(int(train_policy["batch_size"])),
+        "--output", str(float_diagnostic),
+    ]
+    if sidecar_manifests:
+        float_command.extend(
+            [
+                "--split-manifest", f"calibration={sidecar_manifests['calibration']}",
+                "--split-manifest", f"test={sidecar_manifests['test']}",
+            ]
+        )
+    run(float_command, work / "logs" / "float-ctc-confidence.log")
+
     model = work / ("model.kwg" if args.family == "gru" else "model.kwm")
     exporter = TRAINING / ("export_gru_model.py" if args.family == "gru" else "export_model.py")
     run(
@@ -395,7 +434,6 @@ def main() -> int:
         work / "logs" / "export.log",
     )
 
-    thresholds = [float(v) for v in policy["threshold_diagnostic"]["common_thresholds"]]
     calibration_references = dataset / "calibration.references.jsonl"
     test_references = dataset / "test.references.jsonl"
     if sidecar_references:
@@ -441,6 +479,13 @@ def main() -> int:
         negative_sources.append(sidecar_manifests["test"])
     negative_count = negative_manifest(negative_sources, neg_manifest)
     exposure_cfg = policy["negative_exposure"]
+    exposure_seconds = (
+        int(args.negative_exposure_seconds)
+        if args.negative_exposure_seconds is not None
+        else int(exposure_cfg["research_seconds"])
+    )
+    if exposure_seconds <= 0:
+        raise ValueError("negative exposure seconds must be positive")
     exposure_wav = work / "negative-exposure.wav"
     exposure_refs = work / "negative-exposure.references.jsonl"
     exposure_receipt = work / "negative-exposure.receipt.json"
@@ -449,8 +494,8 @@ def main() -> int:
             sys.executable,
             str(EVAL / "build_research_negative_exposure.py"),
             "--negative-manifest", str(neg_manifest),
-            "--seconds", str(int(exposure_cfg["research_seconds"])),
-            "--seed", str(int(train_policy["seed"]) + 9001),
+            "--seconds", str(exposure_seconds),
+            "--seed", str(training_seed + 9001),
             "--min-injections-per-clip",
             str(int(exposure_cfg["minimum_each_negative_clip_injections"])),
             "--output-wav", str(exposure_wav),
@@ -512,7 +557,7 @@ def main() -> int:
                 "--epochs", str(int(classifier_cfg["epochs"])),
                 "--batch-size", str(int(train_policy["batch_size"])),
                 "--lr", str(float(classifier_cfg["learning_rate"])),
-                "--seed", str(int(train_policy["seed"])),
+                "--seed", str(training_seed),
                 "--balance-mode", str(policy["class_balance"]["classifier_balance_mode"]),
                 "--output", str(classifier_path),
             ],
@@ -530,6 +575,8 @@ def main() -> int:
         "qualification_split_consumed": False,
         "promotion_allowed": False,
         "family": args.family,
+        "training_epochs": training_epochs,
+        "training_seed": training_seed,
         "frontend": frontend,
         "feature_dim": feature_dim,
         "hidden_dim": hidden_dim,
@@ -548,6 +595,8 @@ def main() -> int:
         "config_sha256": sha256_file(config_path),
         "policy_sha256": sha256_file(policy_path),
         "data_limitations": policy["data_limitations"],
+        "float_ctc_confidence": load_object(float_diagnostic),
+        "float_ctc_confidence_sha256": sha256_file(float_diagnostic),
         "threshold_curve_sha256": sha256_file(curve_path),
         "pareto_thresholds": curve["pareto_thresholds"],
         "soft_operating_points_by_far_budget": operating,
