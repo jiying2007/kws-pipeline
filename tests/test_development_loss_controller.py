@@ -114,6 +114,10 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             "normalization_frr",
             "normalization_far_per_hour",
             "pressure_deadband",
+            "wake_example_weight_initial",
+            "wake_example_weight_min",
+            "wake_example_weight_max",
+            "wake_example_weight_step",
         ):
             raw.pop(key, None)
         current = initial_controller(policy)
