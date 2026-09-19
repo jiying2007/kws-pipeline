@@ -306,11 +306,34 @@ def render_command_tts(
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         output.unlink()
+    profiles = cfg.get("speaker_profiles", [])
+    if profiles is None:
+        profiles = []
+    if not isinstance(profiles, list) or any(not isinstance(row, dict) for row in profiles):
+        raise ValueError("command TTS speaker_profiles must be a list of objects")
+    speaker_id = cfg.get("speaker_id", 0)
+    length_scale = cfg.get("length_scale", 1.0)
+    if profiles:
+        stable_key = (kind + "\n" + " ".join(token_names) + "\n" + output.name).encode("utf-8")
+        index = int.from_bytes(hashlib.sha256(stable_key).digest()[:8], "big") % len(profiles)
+        profile = profiles[index]
+        speaker_id = profile.get("speaker_id")
+        length_scale = profile.get("length_scale")
+    if isinstance(speaker_id, bool) or not isinstance(speaker_id, int) or speaker_id < 0:
+        raise ValueError("command TTS speaker_id must be a non-negative integer")
+    try:
+        length_scale_value = float(length_scale)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("command TTS length_scale must be numeric") from exc
+    if not math.isfinite(length_scale_value) or not 0.5 <= length_scale_value <= 2.0:
+        raise ValueError("command TTS length_scale must be finite and in [0.5,2.0]")
     substitutions = {
         "text": text,
         "tokens": " ".join(token_names),
         "kind": kind,
         "output": str(output),
+        "speaker_id": str(speaker_id),
+        "length_scale": f"{length_scale_value:.6g}",
     }
     argv = [str(part).format(**substitutions) for part in command]
     if any(not part for part in argv):

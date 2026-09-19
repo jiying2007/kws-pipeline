@@ -27,5 +27,10 @@
   ],
   "release_id": 392032606,
   "release_archive_sha256": "18c0401b6b8d2d4a01d6b28f3d17ffbacb33a6c359e50e890d7882f478e4bfd6",
-  "release_bundle_manifest_sha256": "e979c4b4910346c529d48ee466375add267e06213e7b5c15a224fb2a0d97ba4d"
+  "release_bundle_manifest_sha256": "e979c4b4910346c529d48ee466375add267e06213e7b5c15a224fb2a0d97ba4d",
+  "replay_provider_identity_sha256": "d12728562db74951191575e9afe4922adc1260934b02d577dda67d91faa4aff9",
+  "replay_train_voice_slots": 8,
+  "replay_voice_scope": "train-only",
+  "replay_backend": "command",
+  "replay_tone_allowed": false
 }

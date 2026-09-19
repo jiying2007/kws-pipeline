@@ -36,8 +36,28 @@ def main() -> int:
         "release_tag": "speech-like-base-fixture",
         "external_base_bundle_sha256": "1" * 64,
         "provider_identity_sha256": "2" * 64,
+        "replay_provider_identity_sha256": "2" * 64,
+        "replay_backend": "command",
+        "replay_train_voice_slots": 2,
+        "replay_tone_allowed": False,
         "tone_fallback_allowed": False,
         "protected_evidence_used": False,
+    }
+    config["generator"]["tts"] = {
+        "backend": "command",
+        "command": [
+            "/tmp/fake-tts",
+            "--speaker={speaker_id}",
+            "--scale={length_scale}",
+            "--output={output}",
+            "{text}",
+        ],
+        "speaker_profiles": [
+            {"speaker_id": 0, "length_scale": 1.0},
+            {"speaker_id": 1, "length_scale": 1.1},
+        ],
+        "provider_identity_sha256": "2" * 64,
+        "replay_voice_scope": "train-only",
     }
     config["generator"]["external_base_dataset"] = {
         split: {
@@ -68,6 +88,10 @@ def main() -> int:
     assert '--config "$KWS_EFFECTIVE_TRAINING_CONFIG"' in workflow
     assert "--config configs/training/xiaowo.torch-domain.json" not in workflow
     assert "governed model training must be dispatched from main" in workflow
+    assert "--provider-only" in workflow
+    assert "--replay-provider" in workflow
+    assert "--voice-inventory" in workflow
+    assert "product-replay-provider" in workflow
 
     print("test_product_training_entry_contract: ok")
     return 0

@@ -7,15 +7,19 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
+sys.path.insert(0, str(ROOT / "tools"))
 
 from external_base_dataset import load_external_base_bundle  # noqa: E402
+from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
 
 SPLITS = ("train", "calibration", "test", "qualification")
 HEX = set("0123456789abcdef")
+PLACEHOLDER_RE = re.compile(r"\{([^{}]+)\}")
 
 
 def load_json(path: pathlib.Path) -> dict:
@@ -49,12 +53,22 @@ def main() -> int:
     parser.add_argument("--source-config", required=True, type=pathlib.Path)
     parser.add_argument("--base-contract", required=True, type=pathlib.Path)
     parser.add_argument("--bundle-root", required=True, type=pathlib.Path)
+    parser.add_argument("--replay-provider", required=True, type=pathlib.Path)
+    parser.add_argument("--voice-inventory", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--command-policy",
+        type=pathlib.Path,
+        default=ROOT / "configs/training/speech-like-command-provider-v1.json",
+    )
     parser.add_argument("--output", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
     source_path = args.source_config.resolve()
     contract_path = args.base_contract.resolve()
     bundle_root = args.bundle_root.resolve()
+    replay_provider_path = args.replay_provider.resolve()
+    voice_inventory_path = args.voice_inventory.resolve()
+    command_policy_path = args.command_policy.resolve()
     output = args.output.resolve()
     source = load_json(source_path)
     contract = load_json(contract_path)
@@ -91,6 +105,85 @@ def main() -> int:
         contract["source_bandwidth_limitation_retained"]
     ):
         raise ValueError("source bandwidth-limitation contract drift")
+
+    provider_value = load_json(replay_provider_path)
+    command_policy = load_policy(command_policy_path)
+    normalized_provider = normalize_provider(
+        replay_provider_path,
+        provider_value,
+        command_policy,
+    )
+    provider_identity = hashlib.sha256(
+        json.dumps(
+            normalized_provider["identity"],
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    if provider_identity != expected_provider:
+        raise ValueError("replay provider identity differs from product speech-like base")
+
+    inventory_rows = []
+    for line_no, raw in enumerate(
+        voice_inventory_path.read_text(encoding="utf-8").splitlines(), 1
+    ):
+        if not raw.strip():
+            continue
+        row = json.loads(raw)
+        if not isinstance(row, dict):
+            raise ValueError(f"voice inventory line {line_no} must be an object")
+        inventory_rows.append(row)
+
+    train_profiles = []
+    for row in inventory_rows:
+        slot = str(row.get("slot") or "")
+        if not slot.startswith("train-"):
+            continue
+        params = row.get("parameters")
+        if not isinstance(params, dict):
+            raise ValueError(f"train voice {slot}: parameters are missing")
+        speaker_id = params.get("speaker_id")
+        length_scale = params.get("length_scale")
+        if isinstance(speaker_id, bool) or not isinstance(speaker_id, int) or speaker_id < 0:
+            raise ValueError(f"train voice {slot}: speaker_id is invalid")
+        length_scale = float(length_scale)
+        if not 0.5 <= length_scale <= 2.0:
+            raise ValueError(f"train voice {slot}: length_scale is invalid")
+        train_profiles.append(
+            {"slot": slot, "speaker_id": speaker_id, "length_scale": length_scale}
+        )
+    train_profiles.sort(key=lambda row: row["slot"])
+    expected_train_voices = int(contract.get("replay_train_voice_slots", 0))
+    if len(train_profiles) != expected_train_voices or expected_train_voices <= 0:
+        raise ValueError(
+            f"replay train voice count mismatch: {len(train_profiles)} != {expected_train_voices}"
+        )
+    if len({row["speaker_id"] for row in train_profiles}) != len(train_profiles):
+        raise ValueError("replay train speaker IDs must be unique")
+
+    static_mapping = {"executable": normalized_provider["executable"].as_posix()}
+    for role, asset in normalized_provider["assets"].items():
+        static_mapping[f"asset:{role}"] = asset["path"].as_posix()
+
+    resolved_command = []
+    allowed_dynamic = {"text", "output", "speaker_id", "length_scale"}
+    for token in normalized_provider["argv_template"]:
+        value = str(token)
+        for placeholder in PLACEHOLDER_RE.findall(value):
+            if placeholder in static_mapping:
+                value = value.replace("{" + placeholder + "}", static_mapping[placeholder])
+            elif placeholder not in allowed_dynamic:
+                raise ValueError(
+                    f"replay provider argv contains unsupported dynamic placeholder: {placeholder}"
+                )
+        resolved_command.append(value)
+    if (
+        not resolved_command
+        or pathlib.Path(resolved_command[0]).resolve()
+        != normalized_provider["executable"]
+    ):
+        raise ValueError("resolved replay provider executable drifted")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     effective = copy.deepcopy(source)
@@ -136,6 +229,25 @@ def main() -> int:
         }
 
     generator["external_base_dataset"] = split_spec
+    generator["tts"] = {
+        "backend": "command",
+        "command": resolved_command,
+        "speaker_profiles": [
+            {
+                "speaker_id": int(row["speaker_id"]),
+                "length_scale": float(row["length_scale"]),
+            }
+            for row in train_profiles
+        ],
+        "provider_identity_sha256": provider_identity,
+        "provider_name": normalized_provider["provider_name"],
+        "provider_version": normalized_provider["provider_version"],
+        "license_id": normalized_provider["license_id"],
+        "command_policy_sha256": sha256_file(command_policy_path),
+        "provider_spec_sha256": sha256_file(replay_provider_path),
+        "voice_inventory_sha256": sha256_file(voice_inventory_path),
+        "replay_voice_scope": "train-only",
+    }
     effective["product_candidate_data"] = {
         "schema_version": 1,
         "policy": "external-speech-like-product-base-v1",
@@ -144,6 +256,10 @@ def main() -> int:
         "source_repro_head_sha": str(contract["source_repro_head_sha"]),
         "external_base_bundle_sha256": expected_bundle,
         "provider_identity_sha256": expected_provider,
+        "replay_provider_identity_sha256": provider_identity,
+        "replay_backend": "command",
+        "replay_train_voice_slots": len(train_profiles),
+        "replay_tone_allowed": False,
         "base_contract_path": contract_path.relative_to(ROOT).as_posix(),
         "base_contract_sha256": sha256_file(contract_path),
         "source_template_config_path": source_path.relative_to(ROOT).as_posix(),

@@ -8,6 +8,8 @@ on:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
       - "training/materialize_product_training_config.py"
+      - "training/synthetic_audio.py"
+      - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/finalize_domain_candidate.py"
       - "tools/verify_model_promotion_bundle.py"
@@ -18,6 +20,8 @@ on:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
       - "training/materialize_product_training_config.py"
+      - "training/synthetic_audio.py"
+      - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/finalize_domain_candidate.py"
       - "tools/verify_model_promotion_bundle.py"
@@ -41,6 +45,8 @@ jobs:
         run: >-
           python3 -m py_compile
           training/materialize_product_training_config.py
+          training/synthetic_audio.py
+          tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
           tests/test_product_training_entry_contract.py
       - name: Static product base identity
@@ -59,6 +65,11 @@ jobs:
           assert p["splits"]=={"train":128,"calibration":64,"test":64,"qualification":128}
           assert p["tone_backend_used"] is False
           assert p["protected_evidence_used"] is False
+          assert p["replay_provider_identity_sha256"]==p["provider_identity_sha256"]
+          assert p["replay_train_voice_slots"]==8
+          assert p["replay_voice_scope"]=="train-only"
+          assert p["replay_backend"]=="command"
+          assert p["replay_tone_allowed"] is False
           print("product speech-like base contract: ok")
           PY
       - name: Verify promoted model keeps product data lineage
@@ -112,7 +123,8 @@ jobs:
       - name: Materialize exact effective product training config
         run: |
           set -euo pipefail
-          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract configs/training/product-speech-like-base-v1.json             --bundle-root .generated/product-speech-like-base/corpus             --output .generated/xiaowo.product-effective.json
+          python3 tools/bootstrap_speech_like_stage_a.py             --provider-only             --cache-dir .generated/replay-provider-cache             --work-dir .generated/replay-provider
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract configs/training/product-speech-like-base-v1.json             --bundle-root .generated/product-speech-like-base/corpus             --replay-provider .generated/replay-provider/corpus/provider/provider.json             --voice-inventory .generated/replay-provider/corpus/provider/voice-inventory.jsonl             --output .generated/xiaowo.product-effective.json
           python3 training/verify_training_entry_contract.py             --config .generated/xiaowo.product-effective.json             --require-product-speech-like-base
           python3 training/external_base_dataset.py             --config .generated/xiaowo.product-effective.json             --output .generated/external-base-summary.json
           python3 - <<'PY'
@@ -122,5 +134,14 @@ jobs:
           assert actual["bundle_sha256"]==expected["external_base_bundle_sha256"]
           assert actual["tone_backend_used"] is False
           assert set(actual["splits"])=={"train","calibration","test","qualification"}
-          print("live product speech-like base binding: ok")
+          effective=json.loads(pathlib.Path(".generated/xiaowo.product-effective.json").read_text())
+          tts=effective["generator"]["tts"]
+          product=effective["product_candidate_data"]
+          assert tts["backend"]=="command"
+          assert tts["provider_identity_sha256"]==expected["provider_identity_sha256"]
+          assert len(tts["speaker_profiles"])==expected["replay_train_voice_slots"]==8
+          assert tts["replay_voice_scope"]=="train-only"
+          assert product["replay_tone_allowed"] is False
+          assert product["replay_provider_identity_sha256"]==expected["provider_identity_sha256"]
+          print("live product speech-like base/replay binding: ok")
           PY
