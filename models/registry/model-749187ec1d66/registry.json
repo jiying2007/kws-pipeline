@@ -1,0 +1,96 @@
+{
+  "assets": [
+    {
+      "name": "MODEL_SHA256SUMS",
+      "sha256": "9e642432326e83e852616b632f43d7f5d43e987438f4e2d0c9447a171a9b201c",
+      "size_bytes": 1091
+    },
+    {
+      "name": "continuous-far-stream-contract.json",
+      "sha256": "391ee7a1e5e88858988255df340abc572f4da584411d079eea4670c6f6e13a65",
+      "size_bytes": 572
+    },
+    {
+      "name": "continuous-far-summary.json",
+      "sha256": "9afb29f5e27b429996d36e3a91c893af4017f5f2b8e2b3dc7250f9c2ef6fbc07",
+      "size_bytes": 1389
+    },
+    {
+      "name": "model-promotion-manifest.json",
+      "sha256": "75c31612bd2a0eeffe6463870ffce59d2d40a545edeaf3086d646e523033201e",
+      "size_bytes": 2559
+    },
+    {
+      "name": "qualification-cohort.json",
+      "sha256": "2d4add5ba3be5880ffc1db3c65501a2e3bd000d8e8c3c5828e257476a7646630",
+      "size_bytes": 5784
+    },
+    {
+      "name": "qualification-summary.json",
+      "sha256": "2cadd8705cce36c7f64c9db9f6f487faecc44ed50f8a147e07b2ea45123cd11e",
+      "size_bytes": 726
+    },
+    {
+      "name": "robustness-summary.json",
+      "sha256": "21081012b5f9a1d5f86e8c24925ff0578099b67f5afdfd597e1c4d6b9b158a8b",
+      "size_bytes": 9670
+    },
+    {
+      "name": "training-run-summary.json",
+      "sha256": "1d2bd46c7f97ea27f0e4d385f8919179458c10c92a84edb359f995befdef79bc",
+      "size_bytes": 309335
+    },
+    {
+      "name": "xiaowo-keywords.kwk",
+      "sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+      "size_bytes": 120
+    },
+    {
+      "name": "xiaowo-keywords.tsv",
+      "sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
+      "size_bytes": 186
+    },
+    {
+      "name": "xiaowo-model-provenance.json",
+      "sha256": "5a3d354f35eed4313da37e4d818000e747f1cbe5f39a7e925081e056687fbdee",
+      "size_bytes": 883535
+    },
+    {
+      "name": "xiaowo-model.kwm",
+      "sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+      "size_bytes": 6812
+    },
+    {
+      "name": "xiaowo-model.pt",
+      "sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+      "size_bytes": 639107
+    }
+  ],
+  "evidence_status": "synthetic-qualified",
+  "policy": "model-registry-entry-v1",
+  "release_tag": "model-749187ec1d66",
+  "schema_version": 1,
+  "shipping_approved": false,
+  "shipping_blockers": [
+    "real-human-final-afe-acoustic-qualification",
+    "physical-target-board-performance-and-soak"
+  ],
+  "shipping_config_sha256": "220b7096577a7abb0f921429ccf9f229270ead0ed2deb2b3c9212e888b47a674",
+  "source_release": {
+    "id": 384386882,
+    "immutable": true,
+    "published_at": "2026-09-08T01:12:26Z",
+    "tag_name": "model-749187ec1d66",
+    "target_commitish": "749187ec1d6662658f06aa9c76d47fde835968db"
+  },
+  "storage": {
+    "max_entry_bytes": 5000000,
+    "mode": "git-direct-no-lfs-v1",
+    "release_assets_bytes": 1860886
+  },
+  "training": {
+    "head_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
+    "qualification_seed": 271838,
+    "run_id": 34134789576
+  }
+}

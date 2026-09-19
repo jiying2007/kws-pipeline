@@ -1,0 +1,70 @@
+{
+  "acceptance": {
+    "continuous_far_full_negative_manifest_coverage": true,
+    "continuous_far_per_hour": 0.0,
+    "qualification_expected": 256,
+    "qualification_false_accepts": 0,
+    "qualification_false_rejects": 0,
+    "qualification_matched": 256,
+    "robustness_qualified": true
+  },
+  "files": {
+    "continuous-far-stream-contract.json": {
+      "sha256": "391ee7a1e5e88858988255df340abc572f4da584411d079eea4670c6f6e13a65",
+      "size_bytes": 572
+    },
+    "continuous-far-summary.json": {
+      "sha256": "9afb29f5e27b429996d36e3a91c893af4017f5f2b8e2b3dc7250f9c2ef6fbc07",
+      "size_bytes": 1389
+    },
+    "qualification-cohort.json": {
+      "sha256": "2d4add5ba3be5880ffc1db3c65501a2e3bd000d8e8c3c5828e257476a7646630",
+      "size_bytes": 5784
+    },
+    "qualification-summary.json": {
+      "sha256": "2cadd8705cce36c7f64c9db9f6f487faecc44ed50f8a147e07b2ea45123cd11e",
+      "size_bytes": 726
+    },
+    "robustness-summary.json": {
+      "sha256": "21081012b5f9a1d5f86e8c24925ff0578099b67f5afdfd597e1c4d6b9b158a8b",
+      "size_bytes": 9670
+    },
+    "training-run-summary.json": {
+      "sha256": "1d2bd46c7f97ea27f0e4d385f8919179458c10c92a84edb359f995befdef79bc",
+      "size_bytes": 309335
+    },
+    "xiaowo-keywords.kwk": {
+      "sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+      "size_bytes": 120
+    },
+    "xiaowo-keywords.tsv": {
+      "sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
+      "size_bytes": 186
+    },
+    "xiaowo-model-provenance.json": {
+      "sha256": "5a3d354f35eed4313da37e4d818000e747f1cbe5f39a7e925081e056687fbdee",
+      "size_bytes": 883535
+    },
+    "xiaowo-model.kwm": {
+      "sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+      "size_bytes": 6812
+    },
+    "xiaowo-model.pt": {
+      "sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+      "size_bytes": 639107
+    }
+  },
+  "schema_version": 2,
+  "source": {
+    "artifact_digest": "sha256:0328afd4353def103213d217b6a0a5f0618334d32c235147e9bffbcdeca54656",
+    "artifact_id": 10027820425,
+    "artifact_size_bytes": 48851013,
+    "head_sha": "749187ec1d6662658f06aa9c76d47fde835968db",
+    "head_tree_sha": "068ba2916084641884b66c65d56500677519a0ce",
+    "provenance_repository_sha": "a849d7ccbbfec83863115d726f40bbdd0121f948",
+    "provenance_tree_sha": "068ba2916084641884b66c65d56500677519a0ce",
+    "qualification_seed": 271838,
+    "repository": "jiying2007/kws-pipeline",
+    "training_run_id": 34134789576
+  }
+}

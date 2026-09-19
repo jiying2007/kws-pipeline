@@ -1,0 +1,349 @@
+{
+  "evidence_class": "synthetic-domain-robustness-matrix",
+  "failures": [],
+  "gates": {
+    "max_far_per_hour": 0.0,
+    "max_frr": 0.0,
+    "min_expected_wakes": 4,
+    "min_negative_audio_hours": 0.0,
+    "min_negative_recordings": 4,
+    "required_noise_profiles": [
+      "white",
+      "fan",
+      "motor",
+      "media"
+    ],
+    "required_playback_states": [
+      "no-playback",
+      "playback"
+    ],
+    "required_rt60_bands": [
+      "dry",
+      "medium",
+      "reverb"
+    ],
+    "required_stress_slices": [
+      "distance_azimuth:distance_bin=5m|azimuth=rear",
+      "distance_snr:distance_bin=5m|snr=critical",
+      "azimuth_snr:azimuth=rear|snr=critical",
+      "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical"
+    ]
+  },
+  "limitations": [
+    "Per-slice FAR is a synthetic coverage gate, not a production statistical FAR claim.",
+    "Distance, direction, SNR, RT60, noise and playback slices validate modeled nuisance coverage but do not replace physical room/device qualification.",
+    "Pairwise and triple stress slices validate modeled interactions but do not replace physical room/device qualification.",
+    "Long-duration/statistical FAR confidence remains the responsibility of the dedicated qualification evidence.",
+    "Physical rooms, real Mandarin speakers, shipping microphones and shipping AFE remain external qualification gates."
+  ],
+  "qualified": true,
+  "schema_version": 4,
+  "slices": {
+    "azimuth_deg:-120": {
+      "expected": 22,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.030096822916666672,
+      "negative_recordings": 32,
+      "positive_recordings": 22,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:-150": {
+      "expected": 22,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.030234600694444443,
+      "negative_recordings": 32,
+      "positive_recordings": 22,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:-30": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03825817708333333,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:-60": {
+      "expected": 22,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03028336805555555,
+      "negative_recordings": 32,
+      "positive_recordings": 22,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:-90": {
+      "expected": 22,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03029611111111111,
+      "negative_recordings": 32,
+      "positive_recordings": 22,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:0": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03915114583333333,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:120": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.038012083333333335,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:150": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03810637152777778,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:180": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03831991319444445,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:30": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03823272569444444,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:60": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03858717013888889,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_deg:90": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.03839288194444445,
+      "negative_recordings": 32,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "azimuth_snr:azimuth=rear|snr=critical": {
+      "expected": 26,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.05067958333333334,
+      "negative_recordings": 40,
+      "positive_recordings": 26,
+      "wake_rate": 1.0
+    },
+    "distance_azimuth:distance_bin=5m|azimuth=rear": {
+      "expected": 21,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.029565833333333336,
+      "negative_recordings": 31,
+      "positive_recordings": 21,
+      "wake_rate": 1.0
+    },
+    "distance_azimuth_snr:distance_bin=5m|azimuth=rear|snr=critical": {
+      "expected": 5,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.011072604166666668,
+      "negative_recordings": 7,
+      "positive_recordings": 5,
+      "wake_rate": 1.0
+    },
+    "distance_bin:0.5m": {
+      "expected": 52,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.08333690972222224,
+      "negative_recordings": 77,
+      "positive_recordings": 52,
+      "wake_rate": 1.0
+    },
+    "distance_bin:1m": {
+      "expected": 51,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.08217750000000001,
+      "negative_recordings": 77,
+      "positive_recordings": 51,
+      "wake_rate": 1.0
+    },
+    "distance_bin:2m": {
+      "expected": 51,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.08978243055555556,
+      "negative_recordings": 77,
+      "positive_recordings": 51,
+      "wake_rate": 1.0
+    },
+    "distance_bin:3m": {
+      "expected": 51,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.09024145833333333,
+      "negative_recordings": 77,
+      "positive_recordings": 51,
+      "wake_rate": 1.0
+    },
+    "distance_bin:5m": {
+      "expected": 51,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.08243307291666666,
+      "negative_recordings": 76,
+      "positive_recordings": 51,
+      "wake_rate": 1.0
+    },
+    "distance_snr:distance_bin=5m|snr=critical": {
+      "expected": 13,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.016567690972222222,
+      "negative_recordings": 19,
+      "positive_recordings": 13,
+      "wake_rate": 1.0
+    },
+    "noise:fan": {
+      "expected": 59,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.09875366319444444,
+      "negative_recordings": 78,
+      "positive_recordings": 59,
+      "wake_rate": 1.0
+    },
+    "noise:media": {
+      "expected": 74,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10058392361111111,
+      "negative_recordings": 102,
+      "positive_recordings": 74,
+      "wake_rate": 1.0
+    },
+    "noise:motor": {
+      "expected": 56,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10248532986111113,
+      "negative_recordings": 105,
+      "positive_recordings": 56,
+      "wake_rate": 1.0
+    },
+    "noise:white": {
+      "expected": 67,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.12614845486111112,
+      "negative_recordings": 99,
+      "positive_recordings": 67,
+      "wake_rate": 1.0
+    },
+    "playback:no-playback": {
+      "expected": 166,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.27023076388888884,
+      "negative_recordings": 247,
+      "positive_recordings": 166,
+      "wake_rate": 1.0
+    },
+    "playback:playback": {
+      "expected": 90,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.15774060763888886,
+      "negative_recordings": 137,
+      "positive_recordings": 90,
+      "wake_rate": 1.0
+    },
+    "rt60:dry": {
+      "expected": 70,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10151411458333333,
+      "negative_recordings": 96,
+      "positive_recordings": 70,
+      "wake_rate": 1.0
+    },
+    "rt60:medium": {
+      "expected": 81,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.13914074652777775,
+      "negative_recordings": 133,
+      "positive_recordings": 81,
+      "wake_rate": 1.0
+    },
+    "rt60:reverb": {
+      "expected": 105,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.18731651041666664,
+      "negative_recordings": 155,
+      "positive_recordings": 105,
+      "wake_rate": 1.0
+    },
+    "snr:critical": {
+      "expected": 64,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10704074652777779,
+      "negative_recordings": 96,
+      "positive_recordings": 64,
+      "wake_rate": 1.0
+    },
+    "snr:high": {
+      "expected": 64,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10716717013888886,
+      "negative_recordings": 96,
+      "positive_recordings": 64,
+      "wake_rate": 1.0
+    },
+    "snr:low": {
+      "expected": 64,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10706493055555553,
+      "negative_recordings": 96,
+      "positive_recordings": 64,
+      "wake_rate": 1.0
+    },
+    "snr:mid": {
+      "expected": 64,
+      "far_per_hour": 0.0,
+      "frr": 0.0,
+      "negative_audio_hours": 0.10669852430555556,
+      "negative_recordings": 96,
+      "positive_recordings": 64,
+      "wake_rate": 1.0
+    }
+  }
+}

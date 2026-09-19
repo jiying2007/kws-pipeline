@@ -1,0 +1,136 @@
+{
+  "active_qualification_wav_count": 640,
+  "active_references_sha256": "76c047fee6fc606072063f45d5b0773400a824d401e1ac67b398e0dfa63c23e3",
+  "development_training_wav_count": 6121,
+  "domain_index_sha256": "5c22f90cb3c0cfef44b0a4ce1c656539db6aaca106798a4b69f5dcea232d9501",
+  "effective_config_sha256": "88e55b207f7834dafdc5aabeee50ccb2ba7128ca4195a190632d95e1b13b3f1b",
+  "expected_wakes": 256,
+  "generated_after_training": true,
+  "overlapping_development_active_wav_sha256": 0,
+  "overlapping_exposed_active_wav_sha256": 0,
+  "overlapping_retired_active_wav_sha256": 0,
+  "policy": "retire-exposed-qualification-and-rotate-seed-v2",
+  "qualification_references_sha256": "76c047fee6fc606072063f45d5b0773400a824d401e1ac67b398e0dfa63c23e3",
+  "qualification_seed": 271838,
+  "recordings": 640,
+  "retired_exposed_qualification": [
+    {
+      "domain_index_sha256": "915a5a84f724464807ff0d31effdb5a16202864e42b6b66d31273a19f8628858",
+      "effective_config_sha256": "d7ea343568e4897591ee6d06317e896625b33cc3625b970fb5b8c37175b4fdee",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "7a69b45304b73bb324d2841d1f8da9ce82a41c3f703143c3521bae5d53c7587d",
+      "seed": 271828,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "2a71a3293e0cbee697742fe279f2f5a38a75e5b07163178b3edb393599a72968",
+      "effective_config_sha256": "5c1fb21b1ee750c3f83b7a802b4bd6db05262a2bdf5f9242b7e828205bb2aac1",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "070af145b96cbfde57964be28d1809cc62f154b7eb0b84a5804d32f7b3f5787c",
+      "seed": 271829,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "1873ccb88e9052e3462b71d4305cc9e1fe3b43079fb6cab7f431de5582cf060c",
+      "effective_config_sha256": "f6beb59c1b0d55a4a43e651c6b7803897bad2150dd33bd2053040f9167bf435c",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "3d4de7b08746b7db35c36518fbb7607ed34952b19f1b4fffaa744e884a3766e6",
+      "seed": 271830,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "329d5b30d40d90f3baecc913e759dc6c4b0a1b62a3e53404a6a48bda14a650f7",
+      "effective_config_sha256": "c489a3eb0fa5f4560033da30f31356f18bd4d46964aeb9e0835fa950f001434d",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "7784060c777685c0b564c562601ac236b9ec72cbae6765d249132a2ba905290d",
+      "seed": 271831,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "a18f9b7e9ec8160aadcc6ed87900dae9c02082fdc6d29d9ff7dd92a416ec74be",
+      "effective_config_sha256": "6b3199b0def626b838535cdea9ed25d18c2e54cb8964a47383116e5bf6d5fa3a",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "9127da4ece0acabdde1a493f46f785ede9868ba9293014801730946f3f6c42c9",
+      "seed": 271832,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "0c78efee814e4817a38c5a87c36f916bfa73fc2771bd38cfe7a09b36025a1d95",
+      "effective_config_sha256": "89bf1089cc9c1fa8b9c513bb952be94c9ccfeae794723bc919937e69fe733471",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "3bafb532a929bdfccf2883fbb48861070d8ccf09171c0d0a4ca842fbe82d867a",
+      "seed": 271833,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "445543dcc5774afde9dac3bbb13ab61c2ae07b9f21a685abf194130508da72a8",
+      "effective_config_sha256": "044fd78ef12096dbc7a7bee406813162ca7512e6c1becad761748763dd2d5048",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "28578278c0a575915080ef1099e4f9ff5c44be8fc74d15c4a085f1ba305a99d6",
+      "seed": 271834,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "a0c4f0e773370fa29d5cfc7831d4e3baafe415e3cf6b0650307ba7de6187338d",
+      "effective_config_sha256": "80cd9ccd910e125500a944a5a8b673e1e9cc187beb63b8551fb6e0c50b2521cd",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "2ae42ebd17ec6096632bc1271e81b8e6a2214561f22464258dc92d531bf46e7f",
+      "seed": 271835,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "97affe94aa09428703eff6c4de3e59415b3e6d160eec80322852876c07f18bba",
+      "effective_config_sha256": "cb2268c2c1bcaa09285aaea31e63f561750abd7c74845b93d877beff145ed4fa",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "e0cb05c229d48f0e89f407f959ab490ead469aae0f6add96fd063e8552413f5c",
+      "seed": 271836,
+      "wav_count": 640
+    },
+    {
+      "domain_index_sha256": "42b01bc418e1ac1416dc332eb0e3cdd0527302db1b3758a6998edba68fbe0818",
+      "effective_config_sha256": "28580b7aa11a4ba0b7aee78bbece7ff8b93f81e89312e5c7c2310a22c8068045",
+      "expected_wakes": 256,
+      "overlapping_active_wav_sha256": 0,
+      "recordings": 640,
+      "references_sha256": "e4131086efe31588fce8492ddd472d43cb5cbf3fd9ccddbc920230c72af26df7",
+      "seed": 271837,
+      "wav_count": 640
+    }
+  ],
+  "retired_exposed_qualification_seeds": [
+    271828,
+    271829,
+    271830,
+    271831,
+    271832,
+    271833,
+    271834,
+    271835,
+    271836,
+    271837
+  ],
+  "retired_qualification_wav_count": 640,
+  "retired_references_sha256": "9031d5844dfb19a782aaa5757d242b56acecc7d9644aa11ee7764f856bfcca3a",
+  "schema_version": 2,
+  "seed_disjoint": true,
+  "source_config_sha256": "3aa90e626bc9e0a3298cfa0c18943b3f32ab4d1bf43e59125b5c6ae85ec6b708",
+  "training_seed": 1337
+}

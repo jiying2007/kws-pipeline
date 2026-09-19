@@ -1,0 +1,13 @@
+{
+  "actual_injection_rate_per_minute": 8.533333333333333,
+  "all_injections_coverage_required": true,
+  "decoder_retention_proof_window_seconds": 1.6,
+  "full_negative_manifest_coverage": true,
+  "minimum_payload_gap_seconds": 2.0,
+  "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "negative_manifest_sha256": "384bb0c2695eadbb5d96089316605a6e2144835c1b759b935814f3eb0a0619b3",
+  "observed_min_payload_gap_seconds": 4.651624999999967,
+  "payload_injections": 128,
+  "policy": "semantic-negative-boundary-v1",
+  "schema_version": 1
+}
