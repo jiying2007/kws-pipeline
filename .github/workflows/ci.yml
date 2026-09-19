@@ -246,6 +246,10 @@ jobs:
         run: python3 tests/test_product_training_entry_contract.py
       - name: Verify tracked worktree after Product training data contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product training data contract"'
+      - name: RNN frozen candidate contract
+        run: python3 tests/test_verify_rnn_frozen_candidate.py
+      - name: Verify tracked worktree after RNN frozen candidate contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN frozen candidate contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
