@@ -19,6 +19,8 @@ on:
       - "training/verify_classifier_cross_runner_repro.py"
       - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
       - "training/analyze_classifier_exact_balanced_sampler.py"
+      - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -27,6 +29,7 @@ on:
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
+      - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
   pull_request:
     paths:
@@ -44,6 +47,8 @@ on:
       - "training/verify_classifier_cross_runner_repro.py"
       - "configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json"
       - "training/analyze_classifier_exact_balanced_sampler.py"
+      - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
       - ".github/workflows/kws-v2-fixed-keyword-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-upper-bound.yml"
       - ".github/workflows/kws-v2-encoder-frontend-paired-replication.yml"
@@ -52,6 +57,7 @@ on:
       - ".github/workflows/kws-v2-classifier-optimizer-schedule-stability.yml"
       - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
       - ".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml"
+      - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
       - ".github/workflows/kws-v2-encoder-upper-bound-contract.yml"
 
 permissions:
@@ -361,8 +367,11 @@ jobs:
           assert "workflow_dispatch:" in schedule_workflow
           assert "\n  push:" not in schedule_workflow
           repro=pathlib.Path(".github/workflows/kws-v2-classifier-cross-runner-repro.yml").read_text()
+          assert "workflow_dispatch:" in repro and "\n  push:" not in repro
           assert "model_seed: [2027, 7919]" in repro
           assert "replica: [a, b]" in repro
+          exact=pathlib.Path(".github/workflows/kws-v2-classifier-exact-balanced-sampler.yml").read_text()
+          assert "workflow_dispatch:" in exact and "\n  push:" not in exact
           print("cross-runner classifier reproducibility contract: ok")
           PY
 
@@ -392,6 +401,43 @@ jobs:
           assert "model_seed: [2027, 4099, 7919, 12011, 16001]" in sampler
           assert "Train paired sampler candidates" in sampler
           print("exact-balanced sampler contract: ok")
+          PY
+
+      - name: Verify calibration-only multi-start contract
+        run: |
+          set -euo pipefail
+          python3 -m py_compile training/analyze_classifier_multistart_selection.py
+          python3 - <<'PY'
+          import json, pathlib, re
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json").read_text())
+          assert p["policy"]=="kws-v2-classifier-multistart-calibration-selection-v1"
+          assert p["source_sampler_evidence"]["run_id"]==35427824986
+          assert p["source_sampler_evidence"]["sampler_pass"] is False
+          assert p["source_reproducibility_evidence"]["reproducibility_pass"] is True
+          assert p["fixed"]["starts_per_architecture"]==3
+          assert p["fixed"]["discovery_seeds_reused"] is False
+          assert len(p["cohorts"])==5
+          seeds=[seed for values in p["cohorts"].values() for seed in values]
+          assert len(seeds)==15 and len(set(seeds))==15
+          assert not (set(seeds) & {1337,2027,4099,7919,12011,16001})
+          selection=p["selection"]
+          assert selection["authority"]=="calibration-only-multistart-v1"
+          assert selection["test_metrics_used_for_selection"] is False
+          assert selection["architecture_independent_selection"] is True
+          rules=p["decision_rules"]
+          assert rules["min_primary_directional_passes"]==4
+          assert rules["min_secondary_directional_passes"]==3
+          assert rules["min_absolute_strong_passes"]==3
+          analyzer=pathlib.Path("training/analyze_classifier_multistart_selection.py").read_text()
+          select_body=analyzer.split("def select_start",1)[1].split("def test_delta",1)[0]
+          assert '["test"]' not in select_body
+          assert "calibration_rank" in select_body
+          workflow=pathlib.Path(".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml").read_text()
+          for cohort in p["cohorts"]:
+              assert cohort in workflow
+          assert "Select starts using calibration only" in workflow
+          assert "test_metrics_used_for_selection" in analyzer
+          print("calibration-only multi-start contract: ok")
           PY
 
       - name: Worktree remains clean

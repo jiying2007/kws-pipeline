@@ -1,24 +1,31 @@
-name: kws-v2-classifier-exact-balanced-sampler
+name: kws-v2-classifier-multistart-calibration-selection
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "research/kws-architecture-v2-probe"
+    paths:
+      - "configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json"
+      - "training/analyze_classifier_multistart_selection.py"
+      - ".github/workflows/kws-v2-classifier-multistart-calibration-selection.yml"
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: kws-v2-classifier-exact-balanced-sampler-${{ github.ref }}
+  group: kws-v2-classifier-multistart-calibration-selection-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  trial:
+  cohort:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        model_seed: [2027, 4099, 7919, 12011, 16001]
+        cohort: [cohort-a, cohort-b, cohort-c, cohort-d, cohort-e]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -50,13 +57,19 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
 
-      - name: Train paired sampler candidates
+      - name: Train calibration-only multi-start candidates
         env:
-          MODEL_SEED: ${{ matrix.model_seed }}
+          COHORT: ${{ matrix.cohort }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/sampler/$MODEL_SEED"
+          root="$RUNNER_TEMP/multistart/$COHORT"
           mkdir -p "$root"
+          seeds="$(python3 - "$COHORT" <<'PY'
+          import json, pathlib, sys
+          p=json.loads(pathlib.Path("configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json").read_text())
+          print(" ".join(str(v) for v in p["cohorts"][sys.argv[1]]))
+          PY
+          )"
           common=(
             --train-manifest "$RUNNER_TEMP/rendered-cache/train.tsv"
             --train-manifest "$RUNNER_TEMP/negative-sidecar/train/negative-empty-target.tsv"
@@ -71,70 +84,69 @@ jobs:
             --batch-size 16
             --lr 0.001
             --lr-schedule fixed-v1
-            --model-seed "$MODEL_SEED"
             --sampler-seed 1337
             --init-mode default-pytorch-v1
+            --balance-mode equal-class-sampler-v1
           )
-          train() {
-            local name="$1" frontend="$2" hidden="$3" balance="$4"
-            mkdir -p "$root/$name"
-            .venv/bin/python training/research_keyword_classifier.py \
-              "${common[@]}" \
-              --frontend "$frontend" \
-              --hidden-dim "$hidden" \
-              --balance-mode "$balance" \
-              --output "$root/$name/classifier.json"
-          }
-          train b0-logmel64-weighted logmel 64 equal-class-sampler-v1
-          train fc1-pcen128-weighted pcen-lite 128 equal-class-sampler-v1
-          train b0-logmel64-exact logmel 64 exact-balanced-epoch-v2
-          train fc1-pcen128-exact pcen-lite 128 exact-balanced-epoch-v2
+          for seed in $seeds; do
+            for spec in "b0-logmel64 logmel 64" "fc1-pcen128 pcen-lite 128"; do
+              read -r name frontend hidden <<< "$spec"
+              out="$root/$name/$seed"
+              mkdir -p "$out"
+              .venv/bin/python training/research_keyword_classifier.py \
+                "${common[@]}" \
+                --frontend "$frontend" \
+                --hidden-dim "$hidden" \
+                --model-seed "$seed" \
+                --output "$out/classifier.json"
+            done
+          done
 
-      - name: Build per-seed sampler evidence
+      - name: Select starts using calibration only
         env:
-          MODEL_SEED: ${{ matrix.model_seed }}
+          COHORT: ${{ matrix.cohort }}
         run: |
           set -euo pipefail
-          root="$RUNNER_TEMP/sampler/$MODEL_SEED"
-          .venv/bin/python training/analyze_classifier_exact_balanced_sampler.py trial \
-            --config configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json \
-            --model-seed "$MODEL_SEED" \
+          root="$RUNNER_TEMP/multistart/$COHORT"
+          .venv/bin/python training/analyze_classifier_multistart_selection.py cohort \
+            --config configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json \
+            --cohort "$COHORT" \
             --root "$root" \
-            --output "$root/trial-evidence.json"
+            --output "$root/cohort-evidence.json"
 
-      - name: Upload per-seed evidence
+      - name: Upload cohort evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-exact-balanced-${{ matrix.model_seed }}-${{ github.sha }}
-          path: ${{ runner.temp }}/sampler/${{ matrix.model_seed }}/
+          name: kws-v2-multistart-${{ matrix.cohort }}-${{ github.sha }}
+          path: ${{ runner.temp }}/multistart/${{ matrix.cohort }}/
           if-no-files-found: error
           retention-days: 30
 
   aggregate:
-    needs: trial
+    needs: cohort
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Download per-seed evidence
+      - name: Download cohort evidence
         uses: actions/download-artifact@v4
         with:
-          pattern: kws-v2-exact-balanced-*-${{ github.sha }}
-          path: ${{ runner.temp }}/sampler-evidence
+          pattern: kws-v2-multistart-*-${{ github.sha }}
+          path: ${{ runner.temp }}/multistart-evidence
           merge-multiple: false
-      - name: Aggregate exact-balanced sampler evidence
+      - name: Aggregate calibration-only selection evidence
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/sampler-summary"
-          python3 training/analyze_classifier_exact_balanced_sampler.py aggregate \
-            --config configs/training/kws-v2-classifier-exact-balanced-sampler-v2.json \
-            --root "$RUNNER_TEMP/sampler-evidence" \
-            --output "$RUNNER_TEMP/sampler-summary/summary.json"
+          mkdir -p "$RUNNER_TEMP/multistart-summary"
+          python3 training/analyze_classifier_multistart_selection.py aggregate \
+            --config configs/training/kws-v2-classifier-multistart-calibration-selection-v1.json \
+            --root "$RUNNER_TEMP/multistart-evidence" \
+            --output "$RUNNER_TEMP/multistart-summary/summary.json"
       - name: Upload aggregate evidence
         uses: actions/upload-artifact@v4
         with:
-          name: kws-v2-classifier-exact-balanced-sampler-summary-${{ github.sha }}
-          path: ${{ runner.temp }}/sampler-summary/
+          name: kws-v2-classifier-multistart-summary-${{ github.sha }}
+          path: ${{ runner.temp }}/multistart-summary/
           if-no-files-found: error
           retention-days: 30

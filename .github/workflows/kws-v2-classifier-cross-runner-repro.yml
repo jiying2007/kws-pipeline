@@ -2,14 +2,6 @@ name: kws-v2-classifier-cross-runner-repro
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "research/kws-architecture-v2-probe"
-    paths:
-      - "configs/training/kws-v2-classifier-cross-runner-repro-v1.json"
-      - "training/research_keyword_classifier.py"
-      - "training/verify_classifier_cross_runner_repro.py"
-      - ".github/workflows/kws-v2-classifier-cross-runner-repro.yml"
 
 permissions:
   actions: read
