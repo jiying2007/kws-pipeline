@@ -117,10 +117,11 @@ calibration/test candidate, refinement keeps using that strict candidate.
 
 If base iteration has no strict candidate, refinement may start from a
 development-only fallback selected without qualification feedback. The fallback
-is recall-first: it minimizes worst-case FRR across calibration, test, and their
-3-5 m far-distance slices, then total FRR, then FAR. This prevents a near
-all-reject checkpoint from winning refinement source selection merely because
-the frozen zero-error gate heavily penalizes FAR.
+is recall-first: it minimizes worst-case FRR across calibration, test, their
+3-5 m far-distance slices, and every shipping keyword; then total FRR; then FAR.
+This prevents either a near all-reject checkpoint or a checkpoint that collapses
+one wake word from winning refinement source selection merely because the frozen
+zero-error gate heavily penalizes FAR.
 
 Formal qualification remains unchanged: it still requires a strict
 calibration/test development candidate after refinement, and the guarded formal
