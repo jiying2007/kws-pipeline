@@ -274,6 +274,10 @@ jobs:
         run: python3 tests/test_check_gcov.py
       - name: Verify tracked worktree after Gcov coverage contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Gcov coverage contract"'
+      - name: RNN evaluation independence contract
+        run: python3 tests/test_verify_rnn_evaluation_independence.py
+      - name: Verify tracked worktree after RNN evaluation independence contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN evaluation independence contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
