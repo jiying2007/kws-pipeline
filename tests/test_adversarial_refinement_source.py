@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import pathlib
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from adversarial_refinement import (  # noqa: E402
     REFINEMENT_SOURCE_POLICY,
+    WAKE_BALANCE_POLICY,
+    derive_refinement_wake_balance,
     select_refinement_source,
 )
 
@@ -177,6 +180,77 @@ def main() -> int:
     assert selected["round"] == 4
     assert policy == "strict-development-candidate"
 
+    with tempfile.TemporaryDirectory(prefix="refinement-wake-balance-") as tmp:
+        root = pathlib.Path(tmp)
+        tokens = root / "tokens.txt"
+        keywords = root / "keywords.tsv"
+        tokens.write_text("<blk> 0\nni3 1\nhao3 2\nxiao3 3\nwo1 4\n", encoding="utf-8")
+        keywords.write_text(
+            "1\t你好小窝\t0.55\tni3 hao3 xiao3 wo1\n"
+            "2\t小窝小窝\t0.55\txiao3 wo1 xiao3 wo1\n",
+            encoding="utf-8",
+        )
+
+        manifests = []
+        specs = [
+            [
+                ("a.wav", "1 2 3 4"),
+                ("b.wav", "3 4 3 4"),
+                ("c.wav", "1 2 3"),
+                ("d.wav", ""),
+            ],
+            [
+                ("e.wav", "1 2 3 4"),
+                ("f.wav", "1 2"),
+                ("g.wav", "3 4"),
+                ("h.wav", "2 3 4"),
+            ],
+            [
+                ("i.wav", "1 3 4"),
+                ("j.wav", "4 3 4"),
+                ("k.wav", "1 2 4"),
+                ("l.wav", "3 1 2 4"),
+            ],
+        ]
+        for index, rows in enumerate(specs):
+            path = root / f"manifest-{index}.tsv"
+            path.write_text(
+                "".join(f"{audio}\t{targets}\n" for audio, targets in rows),
+                encoding="utf-8",
+            )
+            manifests.append(path)
+
+        balance = derive_refinement_wake_balance(
+            manifests=manifests,
+            tokens=tokens,
+            keywords=keywords,
+            positive_example_weight=2.0,
+        )
+        assert balance["policy"] == WAKE_BALANCE_POLICY
+        assert balance["wake_rows"] == 3
+        assert balance["tokenized_nonwake_rows"] == 8
+        assert balance["empty_nonwake_rows"] == 1
+        assert balance["wake_base_mass"] == 6.0
+        assert balance["nonwake_mass"] == 17.0
+        assert abs(balance["wake_example_weight"] - (17.0 / 6.0)) < 1.0e-12
+        assert abs(balance["effective_wake_mass"] - 17.0) < 1.0e-12
+        assert balance["capped"] is False
+
+        extreme = root / "extreme.tsv"
+        extreme.write_text(
+            "wake.wav\t1 2 3 4\n"
+            + "".join(f"n{index}.wav\t1 2\n" for index in range(100)),
+            encoding="utf-8",
+        )
+        capped = derive_refinement_wake_balance(
+            manifests=[extreme],
+            tokens=tokens,
+            keywords=keywords,
+            positive_example_weight=2.0,
+        )
+        assert capped["wake_example_weight"] == 12.0
+        assert capped["capped"] is True
+
     leaked = dict(manifest)
     leaked["candidate_selection"] = dict(manifest["candidate_selection"])
     leaked["candidate_selection"]["qualification_used_for_selection"] = True
@@ -187,7 +261,7 @@ def main() -> int:
     else:
         raise AssertionError("qualification-backed refinement source was accepted")
 
-    print("adversarial refinement source selection: PASS")
+    print("adversarial refinement source/wake balance: PASS")
     return 0
 
 

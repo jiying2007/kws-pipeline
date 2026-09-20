@@ -36,6 +36,9 @@ from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
 REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
+WAKE_BALANCE_POLICY = "exact-wake-effective-mass-balance-v1"
+DEFAULT_POSITIVE_EXAMPLE_WEIGHT = 2.0
+MAX_WAKE_EXAMPLE_WEIGHT = 12.0
 REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
 
 
@@ -136,6 +139,127 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     return min(candidates, key=refinement_source_key), REFINEMENT_SOURCE_POLICY
 
 
+def _manifest_targets(path: pathlib.Path) -> list[tuple[int, ...]]:
+    if not path.is_file() or path.stat().st_size == 0:
+        raise ValueError(f"refinement training manifest is missing/empty: {path}")
+    rows: list[tuple[int, ...]] = []
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        if "\t" not in raw:
+            raise ValueError(f"{path}:{line_no}: expected WAV<TAB>token_ids")
+        _, token_text = raw.split("\t", 1)
+        try:
+            targets = tuple(int(value) for value in token_text.split())
+        except ValueError as exc:
+            raise ValueError(f"{path}:{line_no}: invalid token id") from exc
+        if any(value < 0 for value in targets):
+            raise ValueError(f"{path}:{line_no}: token ids must be non-negative")
+        rows.append(targets)
+    if not rows:
+        raise ValueError(f"refinement training manifest has no examples: {path}")
+    return rows
+
+
+def _keyword_target_sequences(tokens: pathlib.Path, keywords: pathlib.Path) -> set[tuple[int, ...]]:
+    token_map: dict[str, int] = {}
+    for line_no, raw in enumerate(tokens.read_text(encoding="utf-8").splitlines(), 1):
+        value = raw.strip()
+        if not value or value.startswith("#"):
+            continue
+        cols = value.split()
+        if len(cols) == 1:
+            token = cols[0]
+            token_id = len(token_map)
+        elif len(cols) == 2:
+            token, raw_id = cols
+            token_id = int(raw_id)
+        else:
+            raise ValueError(f"{tokens}:{line_no}: invalid token row")
+        if token in token_map:
+            raise ValueError(f"{tokens}:{line_no}: duplicate token")
+        token_map[token] = token_id
+
+    sequences: set[tuple[int, ...]] = set()
+    for line_no, raw in enumerate(keywords.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        if len(cols) != 4:
+            raise ValueError(f"{keywords}:{line_no}: expected four columns")
+        names = cols[3].split()
+        try:
+            sequence = tuple(token_map[name] for name in names)
+        except KeyError as exc:
+            raise ValueError(f"{keywords}:{line_no}: unknown token {exc.args[0]}") from exc
+        if not sequence:
+            raise ValueError(f"{keywords}:{line_no}: empty wake sequence")
+        sequences.add(sequence)
+    if not sequences:
+        raise ValueError("shipping keyword TSV contains no wake sequences")
+    return sequences
+
+
+def derive_refinement_wake_balance(
+    *,
+    manifests: list[pathlib.Path],
+    tokens: pathlib.Path,
+    keywords: pathlib.Path,
+    positive_example_weight: float,
+) -> dict:
+    if (
+        not math.isfinite(positive_example_weight)
+        or positive_example_weight <= 0.0
+    ):
+        raise ValueError("refinement positive example weight must be finite and > 0")
+    wake_sequences = _keyword_target_sequences(tokens, keywords)
+    wake_rows = tokenized_nonwake_rows = empty_nonwake_rows = 0
+    per_manifest: list[dict] = []
+    for manifest in manifests:
+        targets = _manifest_targets(manifest)
+        wake = sum(1 for row in targets if row in wake_sequences)
+        empty = sum(1 for row in targets if not row)
+        tokenized_nonwake = len(targets) - wake - empty
+        wake_rows += wake
+        tokenized_nonwake_rows += tokenized_nonwake
+        empty_nonwake_rows += empty
+        per_manifest.append(
+            {
+                "path": str(manifest),
+                "sha256": sha256_file(manifest),
+                "rows": len(targets),
+                "wake_rows": wake,
+                "tokenized_nonwake_rows": tokenized_nonwake,
+                "empty_nonwake_rows": empty,
+            }
+        )
+    if wake_rows <= 0:
+        raise ValueError("refinement manifests contain no exact configured wake examples")
+
+    wake_base_mass = wake_rows * positive_example_weight
+    nonwake_mass = (
+        tokenized_nonwake_rows * positive_example_weight + empty_nonwake_rows
+    )
+    raw_weight = nonwake_mass / wake_base_mass
+    wake_weight = min(MAX_WAKE_EXAMPLE_WEIGHT, max(1.0, raw_weight))
+    return {
+        "schema_version": 1,
+        "policy": WAKE_BALANCE_POLICY,
+        "positive_example_weight": positive_example_weight,
+        "wake_example_weight": wake_weight,
+        "raw_wake_example_weight": raw_weight,
+        "max_wake_example_weight": MAX_WAKE_EXAMPLE_WEIGHT,
+        "capped": wake_weight != raw_weight,
+        "wake_rows": wake_rows,
+        "tokenized_nonwake_rows": tokenized_nonwake_rows,
+        "empty_nonwake_rows": empty_nonwake_rows,
+        "wake_base_mass": wake_base_mass,
+        "nonwake_mass": nonwake_mass,
+        "effective_wake_mass": wake_base_mass * wake_weight,
+        "manifests": per_manifest,
+    }
+
+
 def _refinement_policy(cfg: dict) -> dict:
     iteration = cfg.get("domain_iteration", {})
     if not isinstance(iteration, dict):
@@ -187,7 +311,7 @@ def _train_refinement(
     lr_scale: float,
     refinement_round: int,
     seed_offset: int = 0,
-) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path, dict]:
     train = cfg.get("train", {})
     if not isinstance(train, dict):
         raise ValueError("train config must be an object")
@@ -197,6 +321,18 @@ def _train_refinement(
     provenance = pathlib.Path(str(model) + ".provenance.json")
     learning_rate = float(train.get("lr", 0.001)) * lr_scale
     seed = int(cfg.get("seed", 1337)) + 4_000_003 + refinement_round * 1009 + seed_offset
+    training_manifests = [dataset_manifest, static_manifest, adversarial_manifest]
+    if failure_manifest is not None:
+        training_manifests.append(failure_manifest)
+    positive_example_weight = float(
+        train.get("positive_example_weight", DEFAULT_POSITIVE_EXAMPLE_WEIGHT)
+    )
+    wake_balance = derive_refinement_wake_balance(
+        manifests=training_manifests,
+        tokens=tokens,
+        keywords=keywords,
+        positive_example_weight=positive_example_weight,
+    )
     command = [
         sys.executable,
         str(TRAINING / "train_ctc.py"),
@@ -231,6 +367,10 @@ def _train_refinement(
             str(learning_rate),
             "--seed",
             str(seed),
+            "--positive-example-weight",
+            str(wake_balance["positive_example_weight"]),
+            "--wake-example-weight",
+            str(wake_balance["wake_example_weight"]),
             "--warm-start",
             str(warm_start),
             "--output",
@@ -250,7 +390,7 @@ def _train_refinement(
             str(model),
         ]
     )
-    return model, checkpoint, provenance
+    return model, checkpoint, provenance, wake_balance
 
 
 def _strict(base: dict, domains: dict, gates: dict) -> bool:
@@ -273,6 +413,7 @@ def _update_record_candidate(
     failure_evidence: pathlib.Path,
     score: float,
     qualification_repair_used: bool,
+    wake_balance: dict,
 ) -> None:
     gates = record["_gates"]
     record.update(
@@ -297,6 +438,7 @@ def _update_record_candidate(
             "failure_replay_manifest_sha256": str(failure["manifest_sha256"]),
             "failure_replay_evidence_sha256": sha256_file(failure_evidence),
             "qualification_repair_used": qualification_repair_used,
+            "wake_balance": wake_balance,
         }
     )
 
@@ -387,7 +529,7 @@ def main() -> int:
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
-    model, checkpoint, provenance = _train_refinement(
+    model, checkpoint, provenance, wake_balance = _train_refinement(
         cfg=cfg,
         frontend=frontend,
         tokens=tokens,
@@ -453,6 +595,7 @@ def main() -> int:
         "source_selection_policy": source_selection_policy,
         "source_was_strict": source_was_strict,
         "source_checkpoint_sha256": sha256_file(source_checkpoint),
+        "wake_balance": wake_balance,
         "hard_negative_replay_examples": int(static.get("examples", 0)),
         "hard_negative_replay_manifest_sha256": str(static["manifest_sha256"]),
         "adversarial_policy": adversarial_selection_policy,
@@ -495,6 +638,7 @@ def main() -> int:
                 "adversarial_selection_policy": adversarial_selection_policy,
                 "failure_replay_policy": str(failure["policy"]),
                 "failure_replay_examples": int(failure["examples"]),
+                "wake_balance": wake_balance,
                 "qualification_repair_used": False,
                 "record": {key: value for key, value in record.items() if key != "_gates"},
             },
@@ -527,7 +671,7 @@ def main() -> int:
         failure_manifest_path = pathlib.Path(str(failure["manifest"]))
         failure_evidence = pathlib.Path(str(failure["evidence"]))
         repair_dir = candidate_dir / "qualification-repair"
-        repaired_model, repaired_checkpoint, repaired_provenance = _train_refinement(
+        repaired_model, repaired_checkpoint, repaired_provenance, repaired_wake_balance = _train_refinement(
             cfg=cfg,
             frontend=frontend,
             tokens=tokens,
@@ -595,6 +739,7 @@ def main() -> int:
             "test_gate": repaired_test_gate,
             "qualification_gate": repaired_qual_gate,
             "failure_replay_examples": int(failure["examples"]),
+            "wake_balance": repaired_wake_balance,
             "qualification_repair_examples": int(failure.get("qualification_repair_examples", 0)),
             "qualification_repair_selected_unique_failures": int(
                 failure.get("qualification_repair_selected_unique_failures", 0)
@@ -620,7 +765,9 @@ def main() -> int:
             failure_evidence=failure_evidence,
             score=repaired_score,
             qualification_repair_used=True,
+            wake_balance=repaired_wake_balance,
         )
+        wake_balance = repaired_wake_balance
         if not repaired_cal_gate or not repaired_test_gate or not repaired_qual_gate:
             _write_failed_summary(
                 work,
@@ -765,6 +912,7 @@ def main() -> int:
         "failure_replay_observed_unique_failures": int(failure["observed_unique_failures"]),
         "failure_replay_selected_unique_failures": int(failure["selected_unique_failures"]),
         "failure_replay_examples": int(failure["examples"]),
+        "wake_balance": wake_balance,
         "failure_replay_development_source_wav_bytes_copied": False,
         "qualification_repair_used": qualification_repair is not None,
         "qualification_repair": qualification_repair,
