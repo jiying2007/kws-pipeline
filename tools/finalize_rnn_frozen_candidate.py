@@ -29,6 +29,20 @@ def load_object(path: pathlib.Path) -> dict:
     return value
 
 
+def gate_bool(record: dict, key: str) -> bool:
+    """Read a gate that is already a boolean.
+
+    bool("false") is True, so coercing here would count a round that did not
+    pass: it inflates the strict-pass streak, selects a failing round as the
+    stable candidate, and writes a pass into the frozen manifest. The producers
+    write real booleans, so require them.
+    """
+    value = record.get(key)
+    if not isinstance(value, bool):
+        raise ValueError("RNN development record " + key + " must be a boolean")
+    return value
+
+
 def terminal_strict_streak(records: object) -> int:
     if not isinstance(records, list) or not records:
         raise ValueError("RNN development records must be a non-empty list")
@@ -41,7 +55,10 @@ def terminal_strict_streak(records: object) -> int:
             raise ValueError("RNN development record round must be an integer")
         if round_value != expected_round:
             raise ValueError("RNN development records must be contiguous starting at zero")
-        streak = streak + 1 if bool(row.get("calibration_gate")) and bool(row.get("test_gate")) else 0
+        if gate_bool(row, "calibration_gate") and gate_bool(row, "test_gate"):
+            streak += 1
+        else:
+            streak = 0
     return streak
 
 
@@ -124,7 +141,7 @@ def select_record(manifest: dict) -> dict:
         raise ValueError("RNN development manifest does not contain a selected round")
     candidates = [
         row for row in manifest.get("records", [])
-        if isinstance(row, dict) and bool(row.get("calibration_gate")) and bool(row.get("test_gate"))
+        if isinstance(row, dict) and gate_bool(row, "calibration_gate") and gate_bool(row, "test_gate")
     ]
     if not candidates:
         raise ValueError("cannot resolve selected strict RNN development record")
@@ -190,8 +207,8 @@ def finalize(work: pathlib.Path, config: pathlib.Path, policy: pathlib.Path) -> 
         "selected_frontend": str(selected.get("frontend", "logmel")),
         "selected_score": float(selected["score"]),
         "model_sha256": str(selected["model_sha256"]),
-        "calibration_gate": bool(selected["calibration_gate"]),
-        "test_gate": bool(selected["test_gate"]),
+        "calibration_gate": gate_bool(selected, "calibration_gate"),
+        "test_gate": gate_bool(selected, "test_gate"),
         "calibration": compact_base(dict(selected["calibration"])),
         "calibration_domains": selected["calibration_domains"],
         "test": compact_base(dict(selected["test"])),
