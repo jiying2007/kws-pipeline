@@ -372,6 +372,10 @@ jobs:
         run: python3 tests/test_finalize_rnn_frozen_candidate_rounds.py
       - name: Verify tracked worktree after RNN frozen candidate finalize contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN frozen candidate finalize contract"'
+      - name: RNN frozen candidate finalizer
+        run: python3 tests/test_finalize_rnn_frozen_candidate.py
+      - name: Verify tracked worktree after RNN frozen candidate finalizer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN frozen candidate finalizer"'
       - name: Python test inventory
         run: >-
           python3 tools/test_inventory.py
