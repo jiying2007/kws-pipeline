@@ -384,6 +384,10 @@ jobs:
         run: python3 tests/test_finalize_gate_booleans.py
       - name: Verify tracked worktree after Frozen candidate gate booleans
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen candidate gate booleans"'
+      - name: Development gate booleans
+        run: python3 tests/test_development_gate_booleans.py
+      - name: Verify tracked worktree after Development gate booleans
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Development gate booleans"'
       - name: RNN shadow arena binding
         run: python3 tests/test_prepare_rnn_shadow_config.py
       - name: Verify tracked worktree after RNN shadow arena binding
