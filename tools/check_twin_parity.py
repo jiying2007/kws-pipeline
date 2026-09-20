@@ -140,6 +140,16 @@ def divergences(root: pathlib.Path, pair: tuple[str, str]) -> dict[str, tuple[st
     right = inventory(root / pair[1])
     found: dict[str, tuple[str, str, str]] = {}
     for name in sorted(set(left) | set(right)):
+        # One-sided function is not drift: a twin may reuse the other's copy.
+        # Comparing an absent function against a present one reports every
+        # guard of the present side and reads like N missing checks, when the
+        # fact is that there is nothing on this side to compare at all.
+        if name not in left:
+            found[f"{name}|right|missing-function"] = (pair[0], pair[1], f"{name}: only in right")
+            continue
+        if name not in right:
+            found[f"{name}|left|missing-function"] = (pair[0], pair[1], f"{name}: only in left")
+            continue
         only_left = left.get(name, set()) - right.get(name, set())
         only_right = right.get(name, set()) - left.get(name, set())
         for item in sorted(only_left):

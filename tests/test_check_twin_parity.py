@@ -78,11 +78,24 @@ def main() -> int:
         assert "open=0" in done.stdout, done.stdout
 
         # A check appears in only one twin and is not waived: fail, and name it.
+        write(root, "tools/thing_rnn_tool.py", LEFT + "\ndef other(value):\n    return value\n")
         write(root, "tools/thing_gru_tool.py", RIGHT + "\ndef other(value):\n    if value is not True:\n        raise ValueError('no')\n")
         done = run(root)
         assert done.returncode == 1, done.stdout
         assert "new twin divergence" in done.stderr, done.stderr
         assert "is-not:True" in done.stderr, done.stderr
+
+        # A function present on only one side is a different finding, not drift:
+        # one twin may reuse the other's copy. It is reported once as a missing
+        # function, never as each of its guards -- that would read like N missing
+        # checks and hide the fact that there is nothing to compare.
+        write(root, "tools/thing_rnn_tool.py", LEFT)
+        write(root, "tools/thing_gru_tool.py", RIGHT + "\ndef only_here(value):\n    if value is not True:\n        raise ValueError('no')\n")
+        done = run(root)
+        assert done.returncode == 1, done.stdout
+        assert "missing-function" in done.stderr, done.stderr
+        assert "only_here" in done.stderr, done.stderr
+        assert "is-not:True" not in done.stderr, done.stderr
 
         # A waived divergence that no longer exists is a stale waiver: fail too,
         # otherwise the baseline rots into a list of things that were once true.
