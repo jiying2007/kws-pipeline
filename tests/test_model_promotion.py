@@ -199,6 +199,10 @@ def main() -> int:
 
     for needle in (
         'REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"',
+        'WAKE_BALANCE_POLICY = "exact-wake-effective-mass-balance-v1"',
+        "derive_refinement_wake_balance",
+        '"--wake-example-weight"',
+        '"wake_balance"',
         "select_refinement_source",
         "refinement_source_policy",
         "source_was_strict",
