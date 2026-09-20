@@ -102,11 +102,17 @@ def round_gate_evidence(records: object) -> list[dict]:
             raise ValueError("development record round must be an integer")
         if round_value != expected_round:
             raise ValueError("development records must have contiguous rounds starting at zero")
+        calibration = row.get("calibration_gate")
+        test = row.get("test_gate")
+        # bool("false") is True, so a coercion here turns a recorded failure
+        # into a pass. The producers write real booleans, so require them.
+        if not isinstance(calibration, bool) or not isinstance(test, bool):
+            raise ValueError("development gate values must be booleans")
         result.append(
             {
                 "round": round_value,
-                "calibration_gate": bool(row.get("calibration_gate")),
-                "test_gate": bool(row.get("test_gate")),
+                "calibration_gate": calibration,
+                "test_gate": test,
             }
         )
     return result
