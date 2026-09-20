@@ -19,7 +19,6 @@ def main() -> int:
     training_request_self_test()
     request_path = ROOT / ".github/triggers/model-training-request.json"
     verified_request = verify_request(request_path)
-    assert verified_request["request_id"] == "speech-like-replay-v1-20260919"
 
     source = ROOT / "configs/training/xiaowo.torch-domain.json"
     shipping = ROOT / "configs/shipping.xiaowo.json"

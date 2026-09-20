@@ -243,7 +243,9 @@ jobs:
       - name: Verify tracked worktree after Dataset iteration contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset iteration contract"'
       - name: Product training data contract
-        run: python3 tests/test_product_training_entry_contract.py
+        run: |
+          python3 tests/test_product_training_entry_contract.py
+          python3 tests/test_adversarial_refinement_source.py
       - name: Verify tracked worktree after Product training data contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product training data contract"'
       - name: Deferred verdict gate

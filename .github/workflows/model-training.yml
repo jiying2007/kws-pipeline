@@ -249,7 +249,7 @@ jobs:
             --work-dir build/model-training \
             --receipt build/model-training/base-stage-receipt.json \
             --github-output "$GITHUB_OUTPUT"
-      - name: Refine strict candidate with model-mined adversarial lexicon
+      - name: Refine development candidate with model-mined adversarial lexicon
         run: |
           .venv/bin/python training/adversarial_refinement.py \
             --config "$KWS_EFFECTIVE_TRAINING_CONFIG" \

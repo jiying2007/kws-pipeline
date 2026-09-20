@@ -32,10 +32,10 @@ from qualification_failure_replay import (
     render_qualification_failure_replay,
 )
 from render_domains import render_domain_dataset
-from render_qualification_holdout import require_strict_development_candidate
 from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
+REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
 REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
 
 
@@ -56,6 +56,84 @@ def _selected_record(manifest: dict) -> dict:
     if not rows:
         raise ValueError("adversarial refinement cannot resolve selected strict checkpoint")
     return min(rows, key=lambda row: (float(row["score"]), str(row["checkpoint"])))
+
+
+def _far_domain_frr(record: dict, split: str) -> float:
+    domains = record.get(f"{split}_domains")
+    if not isinstance(domains, dict):
+        raise ValueError(f"refinement source {split} domains are missing")
+    far = domains.get("domains", {}).get("distance:far")
+    if not isinstance(far, dict):
+        raise ValueError(f"refinement source {split} far-domain metrics are missing")
+    return float(far["frr"])
+
+
+def _per_keyword_frr(metrics: dict, split: str) -> tuple[float, ...]:
+    raw = metrics.get("per_keyword")
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError(f"refinement source {split} per-keyword metrics are missing")
+    values: list[float] = []
+    for keyword_id in sorted(raw, key=str):
+        row = raw[keyword_id]
+        if not isinstance(row, dict):
+            raise ValueError(f"refinement source {split} keyword {keyword_id} metrics are invalid")
+        values.append(float(row["frr"]))
+    return tuple(values)
+
+
+def refinement_source_key(record: dict) -> tuple[float, float, float, float, float, int, str]:
+    calibration = record.get("calibration")
+    test = record.get("test")
+    if not isinstance(calibration, dict) or not isinstance(test, dict):
+        raise ValueError("refinement source calibration/test metrics are missing")
+    recall_terms = (
+        float(calibration["frr"]),
+        float(test["frr"]),
+        _far_domain_frr(record, "calibration"),
+        _far_domain_frr(record, "test"),
+        *_per_keyword_frr(calibration, "calibration"),
+        *_per_keyword_frr(test, "test"),
+    )
+    far_terms = (
+        float(calibration["far_per_hour"]),
+        float(test["far_per_hour"]),
+    )
+    if any(not math.isfinite(value) for value in (*recall_terms, *far_terms)):
+        raise ValueError("refinement source metrics must be finite")
+    return (
+        max(recall_terms),
+        sum(recall_terms),
+        max(far_terms),
+        sum(far_terms),
+        float(record["score"]),
+        int(record["round"]),
+        str(record["frontend"]),
+    )
+
+
+def select_refinement_source(manifest: dict) -> tuple[dict, str]:
+    selection = manifest.get("candidate_selection")
+    if not isinstance(selection, dict):
+        raise ValueError("development candidate-selection evidence is missing")
+    if selection.get("qualification_used_for_selection") is not False:
+        raise ValueError("refinement source selection must not use qualification")
+
+    if bool(manifest.get("development_qualified")):
+        return _selected_record(manifest), "strict-development-candidate"
+
+    if selection.get("objective_fallback_used") is not True:
+        raise ValueError("unqualified development manifest lacks objective fallback evidence")
+    if selection.get("selected_round") is not None or selection.get("selected_frontend") is not None:
+        raise ValueError("unqualified development manifest unexpectedly claims a strict selection")
+
+    candidates = [
+        row
+        for row in manifest.get("records", [])
+        if isinstance(row, dict) and "checkpoint" in row
+    ]
+    if not candidates:
+        raise ValueError("development manifest has no checkpoint eligible for refinement")
+    return min(candidates, key=refinement_source_key), REFINEMENT_SOURCE_POLICY
 
 
 def _refinement_policy(cfg: dict) -> dict:
@@ -231,7 +309,7 @@ def _write_failed_summary(work: pathlib.Path, value: dict) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Mine development-only lexical adversaries and refine the latest strict candidate."
+        description="Mine development-only lexical adversaries and refine a development candidate."
     )
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -246,9 +324,14 @@ def main() -> int:
         raise ValueError("adversarial refinement requires torch_ctc backend")
     policy = _refinement_policy(cfg)
     manifest_path = work / "domain-loop-manifest.json"
+    if not manifest_path.is_file() or manifest_path.stat().st_size == 0:
+        raise ValueError("development manifest is missing; refuse adversarial refinement")
     input_manifest_sha = sha256_file(manifest_path)
-    manifest = require_strict_development_candidate(work)
-    source = _selected_record(manifest)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("development manifest must be an object")
+    source, source_selection_policy = select_refinement_source(manifest)
+    source_was_strict = bool(source.get("calibration_gate")) and bool(source.get("test_gate"))
     source_checkpoint = repo_path(str(source["checkpoint"]))
     source_round = int(source["round"])
     frontend = str(source["frontend"])
@@ -367,6 +450,8 @@ def main() -> int:
         "warm_started": True,
         "warm_start_strategy": "full",
         "source_round": source_round,
+        "source_selection_policy": source_selection_policy,
+        "source_was_strict": source_was_strict,
         "source_checkpoint_sha256": sha256_file(source_checkpoint),
         "hard_negative_replay_examples": int(static.get("examples", 0)),
         "hard_negative_replay_manifest_sha256": str(static["manifest_sha256"]),
@@ -403,6 +488,8 @@ def main() -> int:
                 "qualified": False,
                 "input_development_manifest_sha256": input_manifest_sha,
                 "source_round": source_round,
+                "source_selection_policy": source_selection_policy,
+                "source_was_strict": source_was_strict,
                 "refinement_round": refinement_round,
                 "adversarial_data_augmentation_policy": adversarial_data_policy,
                 "adversarial_selection_policy": adversarial_selection_policy,
@@ -592,6 +679,10 @@ def main() -> int:
             "objective_fallback_used": False,
             "adversarial_refinement_used": True,
             "adversarial_refinement_policy": POLICY,
+            "refinement_source_policy": source_selection_policy,
+            "refinement_source_round": source_round,
+            "refinement_source_frontend": frontend,
+            "refinement_source_was_strict": source_was_strict,
             "adversarial_data_augmentation_policy": adversarial_data_policy,
             "adversarial_selection_policy": adversarial_selection_policy,
             "development_failure_replay_used": int(failure["examples"]) > 0,
@@ -652,6 +743,8 @@ def main() -> int:
         "input_development_manifest_sha256": input_manifest_sha,
         "output_development_manifest_sha256": sha256_file(manifest_path),
         "source_round": source_round,
+        "source_selection_policy": source_selection_policy,
+        "source_was_strict": source_was_strict,
         "refinement_round": refinement_round,
         "frontend": frontend,
         "adversarial_data_augmentation_policy": adversarial_data_policy,

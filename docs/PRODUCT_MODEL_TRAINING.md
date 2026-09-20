@@ -109,5 +109,23 @@ Replay voice selection is deterministic and restricted to the eight
 `train-*` voice slots. Calibration, test and qualification voice identities are
 never used for replay.
 
+## Development refinement source
+
+Adversarial refinement is a development-only optimization stage and does not
+consume formal qualification evidence. If base iteration already has a strict
+calibration/test candidate, refinement keeps using that strict candidate.
+
+If base iteration has no strict candidate, refinement may start from a
+development-only fallback selected without qualification feedback. The fallback
+is recall-first: it minimizes worst-case FRR across calibration, test, their
+3-5 m far-distance slices, and every shipping keyword; then total FRR; then FAR.
+This prevents either a near all-reject checkpoint or a checkpoint that collapses
+one wake word from winning refinement source selection merely because the frozen
+zero-error gate heavily penalizes FAR.
+
+Formal qualification remains unchanged: it still requires a strict
+calibration/test development candidate after refinement, and the guarded formal
+renderer still rejects any non-strict candidate.
+
 Model-training run `35439346929` was cancelled after this hidden tone replay
 path was identified. It is diagnostic-only and is not eligible for promotion.
