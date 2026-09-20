@@ -223,6 +223,7 @@ def training_metadata(checkpoint: dict) -> dict:
     for key in (
         "positive_example_weight_semantics",
         "wake_example_weight_semantics",
+        "ordered_token_sample_weighting",
     ):
         if key in checkpoint:
             value = checkpoint[key]

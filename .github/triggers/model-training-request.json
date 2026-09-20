@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-wake-balance-v1-20260920",
+  "request_id": "speech-like-refinement-ordered-weight-v1-20260920",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with automatic exact-wake effective-mass balancing during development-only adversarial refinement after model-training #337 failed strict dual-pass."
+  "reason": "Run governed product-candidate training after model-training #339 proved global wake mass balancing worked but ordered-token auxiliary loss remained unweighted and keyword 1 still had FRR 1.0."
 }

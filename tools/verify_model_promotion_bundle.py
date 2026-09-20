@@ -261,6 +261,11 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError("promoted product candidate unexpectedly allows tone fallback")
         if product_data.get("protected_evidence_used") is not False:
             raise ValueError("promoted product candidate consumed protected evidence")
+        weighting = provenance.get("training", {}).get("sample_weighting")
+        if not isinstance(weighting, dict):
+            raise ValueError("promoted product candidate lacks sample-weighting provenance")
+        if weighting.get("ordered_token_sample_weighting") != "training-sample-weights-v1":
+            raise ValueError("promoted product candidate lacks ordered-token sample weighting")
         if base_contract.get("policy") != "product-speech-like-base-v1":
             raise ValueError("promoted product base contract identity mismatch")
         if sha256(dist / "xiaowo-product-speech-like-base-contract.json") != str(
