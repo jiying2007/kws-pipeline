@@ -23,14 +23,20 @@ def evaluate_development_split(base: dict, domains: dict, config: dict) -> dict:
     robustness = evaluate_robustness({"qualification_domains": domains}, config)
     if robustness.get("blocked") is not False:
         raise ValueError("RNN development robustness gate unexpectedly blocked")
+    robustness_qualified = robustness.get("qualified")
+    # bool("false") is True, so a coercion here would certify a blocked
+    # robustness evaluation. kws_landing_status reads this field with `is
+    # True`, so the contract already assumes a real boolean.
+    if not isinstance(robustness_qualified, bool):
+        raise ValueError("RNN robustness qualification verdict must be a boolean")
     return {
         "schema_version": 1,
         "policy": POLICY,
         "model_family": "rnn",
         "development_only": True,
         "base_domain_qualified": base_domain_qualified,
-        "robustness_qualified": bool(robustness.get("qualified")),
-        "qualified": bool(base_domain_qualified and robustness.get("qualified")),
+        "robustness_qualified": robustness_qualified,
+        "qualified": bool(base_domain_qualified and robustness_qualified),
         "robustness": robustness,
     }
 

@@ -115,6 +115,13 @@ def main() -> int:
         if name not in expected or expected[name] != digest:
             raise ValueError(f"MODEL_SHA256SUMS mismatch: {name}")
 
+    shipping = registry.get("shipping_approved")
+    # bool("false") is True, so coercing this would report an unapproved
+    # release as approved, and would let a registry saying "false" match a
+    # config saying true. The writer already stores a real boolean.
+    if not isinstance(shipping, bool):
+        raise ValueError("registry shipping_approved must be a boolean")
+
     if args.config:
         report = verify_pinned_release(root, args.config, tag)
         config = load_json(args.config)
@@ -123,7 +130,10 @@ def main() -> int:
             raise ValueError("registry/config training run mismatch")
         if str(training.get("head_sha") or "") != str(model.get("trained_head_sha") or ""):
             raise ValueError("registry/config trained head mismatch")
-        if bool(registry.get("shipping_approved")) != bool(config.get("shipping_approved")):
+        config_shipping = config.get("shipping_approved")
+        if not isinstance(config_shipping, bool):
+            raise ValueError("config shipping_approved must be a boolean")
+        if shipping != config_shipping:
             raise ValueError("registry/config shipping_approved mismatch")
         pending = list(config.get("shipping_evidence_boundary", {}).get("pending") or [])
         if list(registry.get("shipping_blockers") or []) != pending:
@@ -137,7 +147,7 @@ def main() -> int:
         "release_tag": tag,
         "assets": len(expected),
         "bytes": total,
-        "shipping_approved": bool(registry.get("shipping_approved")),
+        "shipping_approved": shipping,
         "manifest_entries": report["manifest_entries"],
         "verified": True,
     }, indent=2, sort_keys=True))
