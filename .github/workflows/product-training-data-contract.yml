@@ -15,6 +15,9 @@ on:
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
+      - "training/train_ctc.py"
+      - "training/export_model.py"
+      - "training/test_sequence_margin.py"
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
@@ -31,6 +34,9 @@ on:
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
+      - "training/train_ctc.py"
+      - "training/export_model.py"
+      - "training/test_sequence_margin.py"
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
@@ -58,6 +64,9 @@ jobs:
           training/verify_training_entry_contract.py
           training/training_request.py
           training/adversarial_refinement.py
+          training/train_ctc.py
+          training/export_model.py
+          training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
           tests/test_adversarial_refinement_source.py
       - name: Development refinement source contract
@@ -101,6 +110,7 @@ jobs:
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
           assert "training-invocation.json" in promoter
           assert "governed-model-training-invocation-v1" in promoter
+          assert "ordered-token sample weighting" in promoter
           assert "tone fallback" in promoter
           print("promoted product data lineage contract: ok")
           PY
