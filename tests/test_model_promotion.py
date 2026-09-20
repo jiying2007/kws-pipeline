@@ -184,8 +184,6 @@ def main() -> int:
     for needle in (
         "Verify decoder-aligned training objectives",
         "training/adversarial_refinement.py",
-        "development-recall-first-refinement-source-v1",
-        "refinement_source_policy",
         "training/shadow_qualification.py",
         "training/render_qualification_guarded.py",
         "adversarial-refinement/",
@@ -198,6 +196,15 @@ def main() -> int:
         require(training, needle, "model-training workflow")
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
+
+    for needle in (
+        'REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"',
+        "select_refinement_source",
+        "refinement_source_policy",
+        "source_was_strict",
+        "refinement source selection must not use qualification",
+    ):
+        require(refinement, needle, "adversarial refinement source contract")
 
     for needle in (
         'EVIDENCE_CLASS = "governed-model-training-invocation-v1"',
