@@ -9,6 +9,20 @@ permissions:
   contents: read
 
 jobs:
+  # check_repo_terminal_state asserts that the branch *is* main. On a pull
+  # request the checkout is the PR head, so running it there would fail on
+  # every PR no matter what state the repository is in. It runs where its
+  # precondition holds: a push to main, which is what release automation
+  # starts from. This is the tool's only caller.
+  repo-terminal-state:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify repository terminal state
+        run: python3 tools/check_repo_terminal_state.py --expect-branch main
   hosted:
     runs-on: ubuntu-latest
     strategy:
