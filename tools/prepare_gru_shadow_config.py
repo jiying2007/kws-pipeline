@@ -35,7 +35,10 @@ def prepare(candidate: pathlib.Path, output: pathlib.Path) -> dict:
     rows = [row for row in registry.get("arenas", []) if isinstance(row, dict)]
     arenas = {str(row["name"]): row for row in rows}
     arena = arenas.get(arena_name)
-    if not isinstance(arena, dict):
+    # The RNN twin also requires the arena's own family to match. The registry
+    # holds one reserved one-shot arena per family, so binding another lane's
+    # arena would consume evidence that can never be regenerated.
+    if not isinstance(arena, dict) or arena.get("model_family") != "gru":
         raise ValueError(f"shadow arena is not registered: {arena_name}")
     if arena.get("status") != "reserved-untouched":
         raise ValueError("shadow arena is no longer reserved-untouched")
