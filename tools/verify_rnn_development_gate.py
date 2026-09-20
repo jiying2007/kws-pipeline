@@ -123,6 +123,10 @@ def verify_candidate(candidate: pathlib.Path) -> dict:
     test = evaluate_development_split(selection["test"], selection["test_domains"], config)
     if not calibration["qualified"] or not test["qualified"]:
         raise ValueError("frozen RNN selection evidence does not pass robustness gate")
+    # Recomputing the gate is not the same as reading the flags the evidence
+    # records for itself. The GRU twin requires both; require it here too.
+    if selection.get("calibration_gate") is not True or selection.get("test_gate") is not True:
+        raise ValueError("frozen RNN selection evidence gate flags are not strict-pass")
     required = positive_int(policy.get("stable_strict_pass_rounds"), "stable_strict_pass_rounds")
     if int(freeze.get("stable_strict_pass_rounds_required", -1)) != required:
         raise ValueError("frozen RNN required stability evidence mismatch")
