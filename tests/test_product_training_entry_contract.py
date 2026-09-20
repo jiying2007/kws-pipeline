@@ -90,6 +90,10 @@ def main() -> int:
         assert result["product_speech_like_base_required"] is True
         assert result["product_external_base_bundle_sha256"] == "1" * 64
 
+    trainer = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
+    assert "ordered_token_sample_weighting" in trainer
+    assert "log_probs, y, xlen, ylen, sample_weights" in trainer
+
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     assert "Materialize governed product speech-like training base" in workflow
     assert "materialize_product_training_config.py" in workflow
