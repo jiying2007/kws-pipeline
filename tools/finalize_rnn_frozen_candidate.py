@@ -50,10 +50,18 @@ def round_gate_evidence(records: object) -> list[dict]:
         raise ValueError("RNN development records must be a non-empty list")
     result: list[dict] = []
     for expected_round, row in enumerate(records):
-        if not isinstance(row, dict) or row.get("round") != expected_round:
+        if not isinstance(row, dict):
+            raise ValueError("RNN development record must be an object")
+        round_value = row.get("round")
+        # True == 1 and 1.0 == 1, so a bare != accepts both as a round number
+        # and the record is silently rewritten with the index instead of being
+        # rejected. The GRU twin and the stability verifier both check the type.
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("RNN development record round must be an integer")
+        if round_value != expected_round:
             raise ValueError("RNN development round evidence is malformed")
         result.append({
-            "round": expected_round,
+            "round": round_value,
             "calibration_gate": bool(row.get("calibration_gate")),
             "test_gate": bool(row.get("test_gate")),
         })
