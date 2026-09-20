@@ -86,6 +86,10 @@ def verify_shadow(root: pathlib.Path, summary_path: pathlib.Path) -> dict:
     summary = load_object(summary_path)
     if summary.get("evidence_class") != "development-only-shadow-qualification":
         raise ValueError("shadow summary evidence class mismatch")
+    # The receipt below asserts qualified: True, so it must not describe a
+    # shadow run that did not qualify. Boolean True only: 1 is not evidence.
+    if summary.get("qualified") is not True:
+        raise ValueError("shadow summary is not qualified")
     seeds_raw = summary.get("seeds")
     if not isinstance(seeds_raw, list) or not 8 <= len(seeds_raw) <= 16:
         raise ValueError("shadow summary must contain 8..16 seeds")
