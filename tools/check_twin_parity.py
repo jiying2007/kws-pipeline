@@ -139,6 +139,13 @@ def divergences(root: pathlib.Path, pair: tuple[str, str]) -> dict[str, tuple[st
     left = inventory(root / pair[0])
     right = inventory(root / pair[1])
     found: dict[str, tuple[str, str, str]] = {}
+
+    def owners(side: dict[str, set[str]], item: str) -> str:
+        # The same check moved into a helper is still the same check. Naming
+        # where the other twin performs it is what separates an organisation
+        # difference from a genuinely missing guard.
+        return ", ".join(sorted(n for n, guards in side.items() if item in guards))
+
     for name in sorted(set(left) | set(right)):
         # One-sided function is not drift: a twin may reuse the other's copy.
         # Comparing an absent function against a present one reports every
@@ -153,9 +160,17 @@ def divergences(root: pathlib.Path, pair: tuple[str, str]) -> dict[str, tuple[st
         only_left = left.get(name, set()) - right.get(name, set())
         only_right = right.get(name, set()) - left.get(name, set())
         for item in sorted(only_left):
-            found[f"{name}|left|{item}"] = (pair[0], pair[1], f"{name}: only in left")
+            where = owners(right, item)
+            note = f"{name}: only in left"
+            if where:
+                note += f" (right performs it in: {where})"
+            found[f"{name}|left|{item}"] = (pair[0], pair[1], note)
         for item in sorted(only_right):
-            found[f"{name}|right|{item}"] = (pair[0], pair[1], f"{name}: only in right")
+            where = owners(left, item)
+            note = f"{name}: only in right"
+            if where:
+                note += f" (left performs it in: {where})"
+            found[f"{name}|right|{item}"] = (pair[0], pair[1], note)
     return found
 
 
@@ -203,7 +218,10 @@ def main() -> int:
 
     if args.report:
         for item in sorted(current):
-            print(f"  {'waived ' if item in waived else 'OPEN   '} {item}")
+            # Print the note for waived entries too: a waived divergence is
+            # exactly the thing someone triages next, and the note is what says
+            # whether it is a missing guard or just one moved into a helper.
+            print(f"  {'waived ' if item in waived else 'OPEN   '} {item}  {current[item]}")
 
     print(f"twin parity: pairs={len(pairs)} divergences={len(current)} waived={len(waived) - len(stale)} open={len(unwaived)} stale={len(stale)}")
     if unwaived:
