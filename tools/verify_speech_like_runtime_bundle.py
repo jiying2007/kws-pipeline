@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import sys
 import tarfile
 
 REFERENCE_CLASS = "speech-like-provider-reference-v1"
@@ -273,5 +274,8 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (OSError, tarfile.TarError, TypeError, ValueError) as exc:
-        print(f"error: {exc}")
+        # stderr, like every other verifier in tools/ and like the backend
+        # twin of this file: a caller capturing stdout must not get a
+        # failure message mixed into what it captured.
+        print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

@@ -93,11 +93,11 @@ def run(home: pathlib.Path, ref: pathlib.Path, archive: pathlib.Path, candidate:
 
 def expect(needle: str, done) -> None:
     assert done.returncode != 0, done.stdout
-    # This verifier reports errors on stdout, unlike every other verifier in
-    # tools/, which uses stderr. Accept either: the assertion is about the
-    # failure, not about which stream it arrived on.
-    output = done.stdout + done.stderr
-    assert needle in output, f"expected {needle!r}, got: {output}"
+    # Errors belong on stderr, like every other verifier in tools/ and like
+    # the backend twin. Pinned per-stream, not accepting either, so that a
+    # later move back to stdout fails here.
+    assert "error:" in done.stderr, done.stderr
+    assert needle in done.stderr, done.stderr
 
 
 def check_member_paths() -> None:
