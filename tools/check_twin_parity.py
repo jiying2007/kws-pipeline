@@ -14,7 +14,13 @@ log messages are expected to differ; a missing isinstance guard or a missing
   * isinstance() type names per function
   * identity comparisons (is / is not) against True, False or None
   * membership tests (in / not in)
+  * field reads compared to a literal (x.get("k") != "v"), by field name
   * which functions exist at all
+
+The fourth is the one that pays for itself. A family binding such as
+`arena.get("model_family") != "gru"` is a bare `!=`, so none of the first
+three see it -- and a twin that omits it can bind the other lane's one-shot
+evidence. Two such defects shipped before this scanner learned the shape.
 
 Divergence is not automatically a defect: the twins are allowed to differ.
 So the current state is recorded in a baseline and the gate fails on two
@@ -58,6 +64,35 @@ def normalize(text: str) -> str:
     return TOKEN_RE.sub("*", text).strip().lower()
 
 
+# `str(row.get("status"))` reads the same field as `row.get("status")`; the
+# coercion is noise, and without peeling it the two twins look different.
+COERCIONS = ("str", "int", "float", "bool")
+
+
+def unwrap(node: ast.AST) -> ast.AST:
+    while isinstance(node, ast.Call):
+        func = node.func
+        if isinstance(func, ast.Name) and func.id in COERCIONS and len(node.args) == 1:
+            node = node.args[0]
+        else:
+            break
+    return node
+
+
+def field_read(node: ast.AST) -> str | None:
+    """`x.get("k")` -> "k". A field read is not a check by itself."""
+    call = unwrap(node)
+    if not isinstance(call, ast.Call):
+        return None
+    func = call.func
+    if not isinstance(func, ast.Attribute) or func.attr != "get" or not call.args:
+        return None
+    key = call.args[0]
+    if not isinstance(key, ast.Constant):
+        return None
+    return str(key.value)
+
+
 def guard_of(node: ast.AST) -> str | None:
     """Canonical form of a check, or None if this node is not one."""
     # `if not isinstance(x, dict): raise` is the dominant idiom here and is
@@ -84,6 +119,18 @@ def guard_of(node: ast.AST) -> str | None:
                     return f"{kind}:{comparator.value}"
             if isinstance(op, (ast.In, ast.NotIn)):
                 return "in" if isinstance(op, ast.In) else "not-in"
+            # `x.get("k") != "v"` is how this repo binds a model family, a
+            # status or an evidence class. Record the field, never the value:
+            # the value is "rnn" on one side and "gru" on the other by design,
+            # so comparing values would report every twin as divergent. What
+            # matters is that both twins read the field at all.
+            # A Name comparator is a module constant here (`!= FREEZE_POLICY`),
+            # and excluding it would hide every check written that way.
+            if isinstance(op, (ast.Eq, ast.NotEq)) and isinstance(comparator, (ast.Constant, ast.Name)):
+                field = field_read(node.left)
+                if field is not None:
+                    kind = "eq-get" if isinstance(op, ast.Eq) else "neq-get"
+                    return f"{kind}:{field}"
     return None
 
 
