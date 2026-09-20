@@ -490,9 +490,17 @@ def ordered_token_loss(
     targets: torch.Tensor,
     input_lengths: torch.Tensor,
     target_lengths: torch.Tensor,
+    sample_weights: torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, int, int]:
     """Encourage each target occurrence to own a chronological region."""
+    if sample_weights is not None:
+        if sample_weights.ndim != 1 or int(sample_weights.numel()) != int(target_lengths.numel()):
+            raise ValueError("ordered-token sample weights must match batch size")
+        if not torch.isfinite(sample_weights).all() or bool((sample_weights <= 0).any()):
+            raise ValueError("ordered-token sample weights must be finite and > 0")
+
     losses: list[torch.Tensor] = []
+    weights: list[torch.Tensor] = []
     correct = 0
     total = 0
     offset = 0
@@ -518,11 +526,18 @@ def ordered_token_loss(
             correct += int(predicted == token)
             total += 1
         losses.append(torch.stack(sample_losses).mean())
+        weights.append(
+            sample_weights[batch_index]
+            if sample_weights is not None
+            else log_probs.new_tensor(1.0)
+        )
     if offset != int(targets.numel()):
         raise ValueError("flattened CTC targets do not match target lengths")
     if not losses:
         return log_probs.sum() * 0.0, correct, total
-    return torch.stack(losses).mean(), correct, total
+    loss_values = torch.stack(losses)
+    weight_values = torch.stack(weights).to(dtype=loss_values.dtype, device=loss_values.device)
+    return (loss_values * weight_values).sum() / weight_values.sum(), correct, total
 
 
 def recurrent_release_loss(
@@ -719,7 +734,7 @@ def main() -> None:
             normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
             ctc_loss = (normalized_ctc * sample_weights).sum() / sample_weights.sum()
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
-                log_probs, y, xlen, ylen
+                log_probs, y, xlen, ylen, sample_weights
             )
             margin_per_sample = keyword_sequence_margin_loss(
                 log_probs=log_probs,
@@ -810,6 +825,7 @@ def main() -> None:
             "wake_example_weight": args.wake_example_weight,
             "wake_example_weight_semantics": "exact-configured-keyword-target-v1",
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
+            "ordered_token_sample_weighting": "training-sample-weights-v1",
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
