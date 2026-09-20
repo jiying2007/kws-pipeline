@@ -51,6 +51,12 @@ def main() -> int:
     expect("must be an integer", [row(0), row(1.0)])
     expect("must be an integer", [row(0), {"calibration_gate": True, "test_gate": True}])
 
+    # A coerced gate value would record a failure as a pass: bool("false") is
+    # True and bool(1) is True. They have to already be booleans.
+    expect("must be booleans", [{"round": 0, "calibration_gate": "false", "test_gate": True}])
+    expect("must be booleans", [{"round": 0, "calibration_gate": 1, "test_gate": True}])
+    expect("must be booleans", [{"round": 0, "calibration_gate": True, "test_gate": None}])
+
     # A gap is a different failure from a bad type, and keeps the message that
     # predates the split.
     expect("round evidence is malformed", [row(1)])
