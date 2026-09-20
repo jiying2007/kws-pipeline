@@ -48,7 +48,10 @@ def verify_shadow(root: pathlib.Path, summary_path: pathlib.Path) -> dict:
     summary = load_object(summary_path)
     if summary.get("evidence_class") != "development-only-shadow-qualification" or summary.get("qualified") is not True:
         raise ValueError("RNN shadow summary evidence mismatch")
-    seeds = [int(value) for value in summary.get("seeds", [])]
+    seeds_raw = summary.get("seeds")
+    # A string is iterable: without this the eight characters of "12345678" become eight seeds.
+    if not isinstance(seeds_raw, list): raise ValueError("RNN shadow seeds must be a list")
+    seeds = [int(value) for value in seeds_raw]
     if not 8 <= len(seeds) <= 16 or len(set(seeds)) != len(seeds): raise ValueError("RNN shadow seeds invalid")
     seen: set[str] = set(); per_seed: dict[str, int] = {}
     for seed in seeds:
