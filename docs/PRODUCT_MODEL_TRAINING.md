@@ -131,11 +131,18 @@ Refinement also derives an exact-wake sample weight from the actual manifests it
 trains on. The calculation uses the trainer's non-empty-target weight semantics:
 tokenized non-wake rows contribute the configured positive-example weight,
 empty-target rows contribute 1.0, and configured exact-wake rows are multiplied
-until their effective CTC sample-weight mass matches the non-wake mass, bounded
-to [1, 12]. The policy is
-`exact-wake-effective-mass-balance-v1`. This changes only refinement sample
-weighting; base training, replay counts, loss coefficients, thresholds, strict
-gates and formal qualification remain unchanged.
+until their effective sample-weight mass matches the non-wake mass, bounded to
+[1, 12]. The policy is `exact-wake-effective-mass-balance-v1`.
+
+That sample weight applies consistently to the target-sensitive objectives:
+per-frame CTC, sequence margin, strict-prefix completion, and ordered-token loss.
+Ordered-token loss preserves its legacy value when all participating samples have
+equal weights; only non-uniform refinement wake weighting changes its gradient.
+Recurrent-release loss remains unweighted because it models post-utterance blank
+release rather than wake/non-wake target identity.
+
+Base training, replay counts, loss coefficients, thresholds, strict gates and
+formal qualification remain unchanged.
 
 Model-training run `35439346929` was cancelled after this hidden tone replay
 path was identified. It is diagnostic-only and is not eligible for promotion.
