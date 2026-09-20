@@ -53,7 +53,12 @@ def main() -> int:
 
         # ...but a failure recorded as a string is not a pass, and must not be
         # counted as one. Every one of these is bool()-true.
-        for bad in ("false", "0", 0, 1, "no", None, [], {}):
+        # An absent gate is a fact, not an error: it did not pass, so it does
+        # not count -- and it must not be coerced into a pass either.
+        assert mod.terminal_strict_streak([passing(0), {"round": 1}]) == 0, prefix
+        assert mod.gate_bool({}, "calibration_gate") is False, prefix
+
+        for bad in ("false", "0", 0, 1, "no", [], {}):
             records = [passing(0), dict(passing(1), calibration_gate=bad)]
             expect(
                 f"{prefix}development record calibration_gate must be a boolean",

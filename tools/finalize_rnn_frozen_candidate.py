@@ -38,6 +38,10 @@ def gate_bool(record: dict, key: str) -> bool:
     write real booleans, so require them.
     """
     value = record.get(key)
+    if value is None:
+        # A round with no recorded gate did not pass. That is a fact, not
+        # an error, and it must not be coerced into a pass either.
+        return False
     if not isinstance(value, bool):
         raise ValueError("RNN development record " + key + " must be a boolean")
     return value
