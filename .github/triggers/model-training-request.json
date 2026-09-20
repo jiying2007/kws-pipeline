@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-fallback-v1-20260920",
+  "request_id": "speech-like-refinement-wake-balance-v1-20260920",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with development-only recall-first adversarial refinement fallback after run 35447750283 produced no strict base candidate."
+  "reason": "Run governed product-candidate training with automatic exact-wake effective-mass balancing during development-only adversarial refinement after model-training #337 failed strict dual-pass."
 }
