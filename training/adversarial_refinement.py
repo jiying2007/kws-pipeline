@@ -68,6 +68,19 @@ def _far_domain_frr(record: dict, split: str) -> float:
     return float(far["frr"])
 
 
+def _per_keyword_frr(metrics: dict, split: str) -> tuple[float, ...]:
+    raw = metrics.get("per_keyword")
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError(f"refinement source {split} per-keyword metrics are missing")
+    values: list[float] = []
+    for keyword_id in sorted(raw, key=str):
+        row = raw[keyword_id]
+        if not isinstance(row, dict):
+            raise ValueError(f"refinement source {split} keyword {keyword_id} metrics are invalid")
+        values.append(float(row["frr"]))
+    return tuple(values)
+
+
 def refinement_source_key(record: dict) -> tuple[float, float, float, float, float, int, str]:
     calibration = record.get("calibration")
     test = record.get("test")
@@ -78,6 +91,8 @@ def refinement_source_key(record: dict) -> tuple[float, float, float, float, flo
         float(test["frr"]),
         _far_domain_frr(record, "calibration"),
         _far_domain_frr(record, "test"),
+        *_per_keyword_frr(calibration, "calibration"),
+        *_per_keyword_frr(test, "test"),
     )
     far_terms = (
         float(calibration["far_per_hour"]),
