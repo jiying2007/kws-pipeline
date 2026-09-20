@@ -98,6 +98,14 @@ def check_split() -> None:
         value = split(stub)
         assert value["base_domain_qualified"] is (base_ok and domain_ok), value
         assert value["robustness_qualified"] is robust_ok, value
+
+    # The robustness verdict has to already be a boolean. bool("false") is
+    # True, so coercing it would certify a blocked evaluation; the landing
+    # status reads this field with `is True`, which assumes a real boolean.
+    for bogus in ("false", 1, 0, None, [], ""):
+        stub = install(Stub())
+        stub.qualified = bogus
+        expect("must be a boolean", lambda: split(stub))
         assert value["qualified"] is (base_ok and domain_ok and robust_ok), value
 
     # A blocked robustness report is an error, not a False: something is wrong
