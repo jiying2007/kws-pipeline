@@ -126,6 +126,7 @@ def main() -> int:
         "post-domain-adversarial-refinement-v1",
         "adversarial-hard-negatives.tsv",
         "promoted model provenance does not prove adversarial replay training",
+        "promoted product candidate lacks ordered-token sample weighting",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
         "xiao3 wo1 xiao3 wo1",
