@@ -114,6 +114,46 @@ def main() -> int:
         waived = json.loads(baseline(root).read_text(encoding="utf-8"))["waived"]
         assert any("check_*_value" in item for item in waived), waived
 
+    # A family binding is a bare `!=` on a field read, so none of the
+    # isinstance / is / in guards see it -- and a twin that drops it can bind
+    # the other lane's one-shot evidence. Two defects of exactly this shape
+    # shipped before the scanner learned it.
+    with tempfile.TemporaryDirectory() as tmp:
+        root = pathlib.Path(tmp)
+        pair(
+            root,
+            "def check(value):\n    if value.get('model_family') != 'rnn':\n        raise ValueError('no')\n",
+            "def check(value):\n    return value\n",
+        )
+        done = run(root, "--update")
+        assert done.returncode == 0, done.stderr
+        waived = json.loads(baseline(root).read_text(encoding="utf-8"))["waived"]
+        assert any("neq-get:model_family" in item for item in waived), waived
+
+        # str() around the read is the same field read. Without peeling the
+        # coercion, a twin that wraps and a twin that does not would look like
+        # a divergence that is not there.
+        pair(
+            root,
+            "def check(value):\n    if str(value.get('status')) == 'opened':\n        raise ValueError('no')\n",
+            "def check(value):\n    if value.get('status') == 'opened':\n        raise ValueError('no')\n",
+        )
+        done = run(root, "--update")
+        assert done.returncode == 0, done.stderr
+        waived = json.loads(baseline(root).read_text(encoding="utf-8"))["waived"]
+        assert waived == [], waived
+
+        # A module constant counts the same as a literal: `!= POLICY` is how
+        # most of this repo writes these checks.
+        pair(
+            root,
+            "def check(value):\n    if value.get('policy') != POLICY:\n        raise ValueError('no')\n",
+            "def check(value):\n    return value\n",
+        )
+        done = run(root)
+        assert done.returncode == 1, done.stdout
+        assert "neq-get:policy" in done.stderr, done.stderr
+
     print("test_check_twin_parity: ok")
     return 0
 
