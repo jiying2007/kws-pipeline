@@ -37,7 +37,14 @@ def terminal_strict_streak(records: object) -> int:
         raise ValueError("RNN stability evidence requires non-empty round_gates")
     streak = 0
     for expected_round, row in enumerate(records):
-        if not isinstance(row, dict) or row.get("round") != expected_round:
+        if not isinstance(row, dict):
+            raise ValueError("RNN stability round gate must be an object")
+        round_value = row.get("round")
+        # True == 1 and 1.0 == 1, so a bare != lets a boolean or a float stand
+        # in for a round number. The GRU twin rejects both explicitly.
+        if isinstance(round_value, bool) or not isinstance(round_value, int):
+            raise ValueError("RNN stability round must be an integer")
+        if round_value != expected_round:
             raise ValueError("RNN stability rounds must be contiguous from zero")
         cal = row.get("calibration_gate"); test = row.get("test_gate")
         if not isinstance(cal, bool) or not isinstance(test, bool):

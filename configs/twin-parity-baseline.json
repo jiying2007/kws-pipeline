@@ -24,7 +24,6 @@
     "tools/verify_rnn_evaluation_independence.py|tools/verify_gru_evaluation_independence.py|valid_sha256|right|in",
     "tools/verify_rnn_frozen_candidate.py|tools/verify_gru_frozen_candidate.py|gate_values|right|isinstance:dict",
     "tools/verify_rnn_frozen_candidate.py|tools/verify_gru_frozen_candidate.py|strict|right|isinstance:dict",
-    "tools/verify_rnn_stability_evidence.py|tools/verify_gru_stability_evidence.py|terminal_strict_streak|right|isinstance:int",
     "tools/verify_speech_like_runtime_bundle.py|tools/verify_speech_like_backend_bundle.py|*_contract|right|isinstance:dict",
     "tools/verify_speech_like_runtime_bundle.py|tools/verify_speech_like_backend_bundle.py|*_contract|right|not-in",
     "tools/verify_speech_like_runtime_bundle.py|tools/verify_speech_like_backend_bundle.py|inspect_verified_archive|left|isinstance:dict",
