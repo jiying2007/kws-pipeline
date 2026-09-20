@@ -158,7 +158,7 @@ def main() -> int:
     continuation = training.index("  refinement-and-qualification:")
     base_section = training[:continuation]
     for forbidden in (
-        "Refine strict candidate with model-mined adversarial lexicon",
+        "Refine development candidate with model-mined adversarial lexicon",
         "Enforce development shadow qualification arena",
         "Rotate untouched qualification cohort",
         "training/render_qualification_guarded.py",
@@ -169,7 +169,7 @@ def main() -> int:
 
     expected_order = [
         "Train and iterate domain rounds",
-        "Refine strict candidate with model-mined adversarial lexicon",
+        "Refine development candidate with model-mined adversarial lexicon",
         "Enforce development shadow qualification arena",
         "Rotate untouched qualification cohort",
         "training/render_qualification_guarded.py",
@@ -184,6 +184,8 @@ def main() -> int:
     for needle in (
         "Verify decoder-aligned training objectives",
         "training/adversarial_refinement.py",
+        "development-recall-first-refinement-source-v1",
+        "refinement_source_policy",
         "training/shadow_qualification.py",
         "training/render_qualification_guarded.py",
         "adversarial-refinement/",
