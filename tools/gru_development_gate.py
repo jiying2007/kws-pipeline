@@ -39,6 +39,22 @@ def evaluate_development_split(base: dict, domains: dict, config: dict) -> dict:
     }
 
 
+def gate_bool(record: dict, key: str) -> bool:
+    """Read a gate that is already a boolean.
+
+    bool("false") is True, so coercing here counts a round that did not pass
+    and inflates the streak that qualifies a development candidate.
+    """
+    value = record.get(key)
+    if value is None:
+        # A round with no recorded gate did not pass. That is a fact, not
+        # an error, and it must not be coerced into a pass either.
+        return False
+    if not isinstance(value, bool):
+        raise ValueError("development record " + key + " must be a boolean")
+    return value
+
+
 def terminal_strict_streak(records: object) -> int:
     if not isinstance(records, list) or not records:
         return 0
@@ -51,7 +67,7 @@ def terminal_strict_streak(records: object) -> int:
             raise ValueError("development record round must be an integer")
         if round_value != expected_round:
             raise ValueError("development records must have contiguous rounds starting at zero")
-        if bool(record.get("calibration_gate")) and bool(record.get("test_gate")):
+        if gate_bool(record, "calibration_gate") and gate_bool(record, "test_gate"):
             streak += 1
         else:
             streak = 0
