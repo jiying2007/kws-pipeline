@@ -60,6 +60,11 @@ def normalize(text: str) -> str:
 
 def guard_of(node: ast.AST) -> str | None:
     """Canonical form of a check, or None if this node is not one."""
+    # `if not isinstance(x, dict): raise` is the dominant idiom here and is
+    # the same check as the positive form, so look through the negation --
+    # otherwise the scanner misses most of the guards in the repo.
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        return guard_of(node.operand)
     if isinstance(node, ast.Call):
         func = node.func
         if isinstance(func, ast.Name) and func.id == "isinstance" and len(node.args) == 2:
