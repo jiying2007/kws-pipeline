@@ -380,6 +380,10 @@ jobs:
         run: python3 tests/test_finalize_gru_frozen_candidate.py
       - name: Verify tracked worktree after GRU frozen candidate finalizer
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GRU frozen candidate finalizer"'
+      - name: RNN shadow arena binding
+        run: python3 tests/test_prepare_rnn_shadow_config.py
+      - name: Verify tracked worktree after RNN shadow arena binding
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN shadow arena binding"'
       - name: GRU shadow arena binding
         run: python3 tests/test_prepare_gru_shadow_config.py
       - name: Verify tracked worktree after GRU shadow arena binding
