@@ -282,6 +282,10 @@ jobs:
         run: python3 tests/test_verify_gru_evaluation_independence.py
       - name: Verify tracked worktree after GRU evaluation independence contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GRU evaluation independence contract"'
+      - name: Speech-like backend bundle contract
+        run: python3 tests/test_verify_speech_like_backend_bundle.py
+      - name: Verify tracked worktree after Speech-like backend bundle contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Speech-like backend bundle contract"'
       - name: Deferred verdict gate
         run: python3 tools/check_deferred_verdicts.py .github/workflows
       - name: Verify tracked worktree after Deferred verdict gate
