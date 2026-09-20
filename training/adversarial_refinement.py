@@ -32,7 +32,6 @@ from qualification_failure_replay import (
     render_qualification_failure_replay,
 )
 from render_domains import render_domain_dataset
-from render_qualification_holdout import require_strict_development_candidate
 from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
@@ -69,7 +68,7 @@ def _far_domain_frr(record: dict, split: str) -> float:
     return float(far["frr"])
 
 
-def refinement_source_key(record: dict) -> tuple[float, ... | int | str]:
+def refinement_source_key(record: dict) -> tuple[float, float, float, float, float, int, str]:
     calibration = record.get("calibration")
     test = record.get("test")
     if not isinstance(calibration, dict) or not isinstance(test, dict):
