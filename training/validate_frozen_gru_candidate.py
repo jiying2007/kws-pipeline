@@ -108,7 +108,15 @@ def validate(candidate: pathlib.Path, runner: pathlib.Path, output: pathlib.Path
         if isinstance(row, dict)
     }
     arena = arenas.get(arena_name)
-    if not isinstance(arena, dict) or arena.get("status") != "reserved-untouched":
+    # The RNN twin also requires the arena's own family to match. The registry
+    # holds one reserved one-shot arena per family, so binding the other lane's
+    # arena would protect the wrong seeds and burn evidence that can never be
+    # regenerated.
+    if (
+        not isinstance(arena, dict)
+        or arena.get("model_family") != "gru"
+        or arena.get("status") != "reserved-untouched"
+    ):
         raise ValueError("frozen shadow arena is not reserved-untouched")
     protected = {
         int(config.get("qualification_holdout_seed", -1)),
