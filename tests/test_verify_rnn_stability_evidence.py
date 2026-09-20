@@ -228,6 +228,16 @@ def main() -> int:
     expect_streak("non-empty round_gates", None)
     expect_streak("contiguous from zero", [strict(1)])
     expect_streak("must be booleans", [{"round": 0, "calibration_gate": 1, "test_gate": True}])
+    # A round number that is not an integer is the same shape problem as a
+    # gap: True == 1 and 1.0 == 1, so a bare != comparison lets both stand in
+    # for round 1. The GRU twin of this counter rejects them, and so do the
+    # development-gate copies of this function on both sides.
+    expect_streak("must be an integer", [strict(0), {"round": True, "calibration_gate": True, "test_gate": True}])
+    expect_streak("must be an integer", [strict(0), {"round": 1.0, "calibration_gate": True, "test_gate": True}])
+    # A row that is not an object is a different shape problem from a gap, and
+    # the GRU twin names it separately instead of folding it into the round
+    # comparison.
+    expect_streak("must be an object", ["not-a-row"])
 
     print("test_verify_rnn_stability_evidence: ok")
     return 0
