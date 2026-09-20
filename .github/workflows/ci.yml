@@ -354,6 +354,10 @@ jobs:
           "$RUNNER_TEMP/kws-install" "$RUNNER_TEMP/kws-install-repro"
       - name: Verify tracked worktree after Reproducible installed SDK gate
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducible installed SDK gate"'
+      - name: RNN frozen candidate finalize contract
+        run: python3 tests/test_finalize_rnn_frozen_candidate_rounds.py
+      - name: Verify tracked worktree after RNN frozen candidate finalize contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "RNN frozen candidate finalize contract"'
       - name: Python test inventory
         run: >-
           python3 tools/test_inventory.py
