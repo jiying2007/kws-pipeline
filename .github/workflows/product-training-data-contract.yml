@@ -8,6 +8,11 @@ on:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
       - "training/materialize_product_training_config.py"
+      - "training/materialize_governed_product_base.sh"
+      - "training/require_product_development_preflight.sh"
+      - "training/verify_product_development_preflight.py"
+      - "tests/test_product_development_preflight.py"
+      - ".github/workflows/model-training-preflight.yml"
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
@@ -27,6 +32,11 @@ on:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
       - "training/materialize_product_training_config.py"
+      - "training/materialize_governed_product_base.sh"
+      - "training/require_product_development_preflight.sh"
+      - "training/verify_product_development_preflight.py"
+      - "tests/test_product_development_preflight.py"
+      - ".github/workflows/model-training-preflight.yml"
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
@@ -59,6 +69,8 @@ jobs:
         run: >-
           python3 -m py_compile
           training/materialize_product_training_config.py
+          training/verify_product_development_preflight.py
+          tests/test_product_development_preflight.py
           training/synthetic_audio.py
           tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
@@ -69,6 +81,31 @@ jobs:
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
           tests/test_adversarial_refinement_source.py
+      - name: Governed product training shell syntax
+        run: |
+          bash -n training/materialize_governed_product_base.sh
+          bash -n training/require_product_development_preflight.sh
+      - name: Product development preflight guard contract
+        run: python3 tests/test_product_development_preflight.py
+      - name: Product development preflight workflow contract
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          workflow=pathlib.Path(".github/workflows/model-training-preflight.yml").read_text(encoding="utf-8")
+          assert "--defer-qualification" in workflow
+          assert "--stop-after-development-eval" in workflow
+          assert 'train["epochs"]=12' in workflow
+          assert 'train["warm_start_epochs"]=6' in workflow
+          assert 'adversarial["refinement_epochs"]=6' in workflow
+          assert "verify_product_development_preflight.py" in workflow
+          assert "xiaowo-product-development-preflight" in workflow
+          full=pathlib.Path(".github/workflows/model-training.yml").read_text(encoding="utf-8")
+          assert "actions: read" in full
+          assert "pull-requests: read" in full
+          assert "Require successful product development preflight" in full
+          assert "require_product_development_preflight.sh" in full
+          print("product development preflight workflow: ok")
+          PY
       - name: Development refinement source contract
         run: python3 tests/test_adversarial_refinement_source.py
       - name: Static product base identity
