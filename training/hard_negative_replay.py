@@ -20,6 +20,8 @@ from synthetic_audio import (  # noqa: E402
     SAMPLE_RATE_HZ,
     UINT32_MAX,
     augment,
+    command_tts_surface_forms,
+    command_tts_text,
     keyword_render_context,
     load_config,
     parse_keywords,
@@ -66,6 +68,7 @@ def _read_pcm16_mono(path: pathlib.Path) -> list[int]:
 def _command_tts_cache_key(
     *,
     kind: str,
+    text: str,
     token_names: list[str],
     output_name: str,
     tts: dict,
@@ -73,6 +76,7 @@ def _command_tts_cache_key(
     payload = {
         "schema_version": 1,
         "kind": kind,
+        "text": text,
         "tokens": list(token_names),
         "output_name": output_name,
         "tts": tts,
@@ -104,6 +108,7 @@ def _render_command_tts_cached(
 
     key = _command_tts_cache_key(
         kind=kind,
+        text=text,
         token_names=token_names,
         output_name=clean_path.name,
         tts=tts,
@@ -562,6 +567,11 @@ def render_hard_negative_replay(
     if not isinstance(tts, dict):
         raise ValueError("generator.tts must be an object")
     active_tokens, carriers = keyword_render_context(keywords, feature_dim, tts)
+    command_surface_forms = (
+        command_tts_surface_forms(keywords, tts)
+        if str(tts.get("backend", "tone")) == "command"
+        else {}
+    )
     renderable_tokens = (
         active_tokens
         if str(tts.get("backend", "tone")) == "tone"
@@ -627,6 +637,7 @@ def render_hard_negative_replay(
         target_ids: list[int],
         focus_keyword_id: int | None,
         focus: dict | None,
+        command_text: str | None = None,
     ) -> None:
         kind_offset = 0 if kind == "hard-negative" else 400_000_003
         example_seed = (
@@ -644,7 +655,9 @@ def render_hard_negative_replay(
             clean = render_tone_tokens(token_names, carriers, rng, tts)
         else:
             clean = _render_command_tts_cached(
-                " ".join(token_names),
+                command_text
+                if command_text is not None
+                else command_tts_text(token_names, command_surface_forms),
                 token_names,
                 kind,
                 clean_path,
@@ -702,6 +715,14 @@ def render_hard_negative_replay(
                     item_index=sequence_index,
                     example_index=example_index,
                 ),
+                command_text=(
+                    command_tts_text(
+                        list(sequence["tokens"]),
+                        command_surface_forms,
+                    )
+                    if backend == "command"
+                    else None
+                ),
             )
 
     for positive_index, item in enumerate(positive_replay):
@@ -728,6 +749,7 @@ def render_hard_negative_replay(
                 target_ids=list(item["target_ids"]),
                 focus_keyword_id=int(item["keyword_id"]),
                 focus=focus,
+                command_text=str(item["text"]) if backend == "command" else None,
             )
 
     manifest.write_text(

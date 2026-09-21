@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 import adversarial_lexicon as adversarial  # noqa: E402
-from synthetic_audio import write_wav  # noqa: E402
+from synthetic_audio import command_tts_text, write_wav  # noqa: E402
 
 
 def main() -> int:
@@ -66,6 +66,13 @@ def main() -> int:
     assert adversarial._command_tts_worker_count(8, cpu_count=1) == 1
     assert adversarial._command_tts_worker_count(8, cpu_count=2) == 2
     assert adversarial._command_tts_worker_count(8, cpu_count=8) == 4
+    surface_forms = {
+        "ni3": "你",
+        "hao3": "好",
+        "xiao3": "小",
+        "wo1": "窝",
+    }
+    assert command_tts_text(["ni3", "hao3", "xiao3", "wo1"], surface_forms) == "你好小窝"
 
     original_render = adversarial.render_command_tts
     original_augment = adversarial.augment
@@ -130,6 +137,7 @@ def main() -> int:
             workers = adversarial._pre_render_command_tts(
                 tasks,
                 {"backend": "command"},
+                surface_forms,
                 workers=2,
             )
             assert workers == 2
@@ -138,7 +146,7 @@ def main() -> int:
             for token_names, path in tasks:
                 assert path.is_file()
                 samples = adversarial._read_command_tts_output(path)
-                assert samples[0] == len(" ".join(token_names)) * 10
+                assert samples[0] == len(command_tts_text(token_names, surface_forms)) * 10
 
             serial_dir = root / "serial"
             parallel_dir = root / "parallel"
@@ -155,6 +163,7 @@ def main() -> int:
                 "tts": {"backend": "command"},
                 "augment_config": {},
                 "domains": {"afe": {}},
+                "command_surface_forms": surface_forms,
             }
 
             serial_samples, serial_meta = adversarial._render_sequence(
@@ -166,6 +175,7 @@ def main() -> int:
             adversarial._pre_render_command_tts(
                 [(token_names, parallel_path)],
                 {"backend": "command"},
+                surface_forms,
                 workers=1,
             )
             after_prerender = len(calls)
@@ -182,6 +192,7 @@ def main() -> int:
             tone_workers = adversarial._pre_render_command_tts(
                 [(["ni3"], root / "tone.wav")],
                 {"backend": "tone"},
+                {},
                 workers=2,
             )
             assert tone_workers == 0
