@@ -246,6 +246,7 @@ def main() -> int:
         "command_policy_sha256": sha256_file(command_policy_path),
         "provider_spec_sha256": sha256_file(replay_provider_path),
         "voice_inventory_sha256": sha256_file(voice_inventory_path),
+        "timeout_seconds": int(normalized_provider["timeout_seconds"]),
         "replay_voice_scope": "train-only",
         "reuse_clean_across_rounds": True,
     }

@@ -92,14 +92,22 @@ def parse_keywords(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
     return items
 
 
-def token_carriers(keywords: list[dict], feature_dim: int) -> dict[str, dict]:
-    if feature_dim < 8 or feature_dim > 40:
-        raise ValueError("synthetic feature_dim must be in 8..40")
+def active_keyword_tokens(keywords: list[dict]) -> list[str]:
     active: list[str] = []
     for keyword in keywords:
         for token in keyword["tokens"]:
-            if token not in active:
-                active.append(token)
+            value = str(token)
+            if value not in active:
+                active.append(value)
+    if not active:
+        raise ValueError("configured keywords contain no active tokens")
+    return active
+
+
+def token_carriers(keywords: list[dict], feature_dim: int) -> dict[str, dict]:
+    if feature_dim < 8 or feature_dim > 40:
+        raise ValueError("synthetic feature_dim must be in 8..40")
+    active = active_keyword_tokens(keywords)
     if len(active) > min(feature_dim - 4, 24):
         raise ValueError("prototype tone backend supports at most 24 active tokens")
     bins = mel_bins(feature_dim)
@@ -120,6 +128,22 @@ def token_carriers(keywords: list[dict], feature_dim: int) -> dict[str, dict]:
             "frequency_hz": center_bin * SAMPLE_RATE_HZ / FFT_SIZE,
         }
     return result
+
+
+def keyword_render_context(
+    keywords: list[dict],
+    feature_dim: int,
+    tts: dict,
+) -> tuple[list[str], dict[str, dict]]:
+    if not isinstance(tts, dict):
+        raise ValueError("generator.tts must be an object")
+    backend = str(tts.get("backend", "tone"))
+    active = active_keyword_tokens(keywords)
+    if backend == "tone":
+        return active, token_carriers(keywords, feature_dim)
+    if backend == "command":
+        return active, {}
+    raise ValueError(f"unsupported TTS backend: {backend}")
 
 
 def clamp16(value: float) -> int:
@@ -293,6 +317,15 @@ def render_tone_tokens(
     return samples
 
 
+def command_tts_timeout_seconds(cfg: dict) -> int:
+    raw = cfg.get("timeout_seconds", 120)
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("generator.tts.timeout_seconds must be an integer")
+    if raw <= 0 or raw > 300:
+        raise ValueError("generator.tts.timeout_seconds must be in [1,300]")
+    return raw
+
+
 def render_command_tts(
     text: str,
     token_names: list[str],
@@ -338,7 +371,11 @@ def render_command_tts(
     argv = [str(part).format(**substitutions) for part in command]
     if any(not part for part in argv):
         raise ValueError("command TTS argv entries must be non-empty")
-    subprocess.run(argv, check=True)
+    subprocess.run(
+        argv,
+        check=True,
+        timeout=command_tts_timeout_seconds(cfg),
+    )
     if not output.is_file():
         raise ValueError("command TTS did not produce the requested output WAV")
     with wave.open(str(output), "rb") as reader:
@@ -456,8 +493,6 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
     token_map = load_tokens(tokens_path)
     keywords = parse_keywords(keywords_path, token_map)
     feature_dim = int(config.get("model", {}).get("feature_dim", 32))
-    carriers = token_carriers(keywords, feature_dim)
-    active = list(carriers)
     forbidden = [list(keyword["tokens"]) for keyword in keywords]
     seed = int(config.get("seed", 1337))
     generator_cfg = config.get("generator", {})
@@ -474,6 +509,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         command = tts_cfg.get("command")
         if not isinstance(command, list) or not command:
             raise ValueError("command TTS backend requires generator.tts.command argv list")
+    active, carriers = keyword_render_context(keywords, feature_dim, tts_cfg)
     augment_cfg = generator_cfg.get("augment", {})
     validate_augment_config(augment_cfg)
     noise_profiles = [
