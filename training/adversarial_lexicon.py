@@ -38,17 +38,28 @@ MAX_COMMAND_TTS_WORKERS = 4
 
 
 def enumerate_safe_sequences(
-    active_tokens: list[str], forbidden: list[list[str]], *, max_length: int = 5
+    active_tokens: list[str],
+    forbidden: list[list[str]],
+    *,
+    max_length: int = 5,
+    max_sequences: int | None = None,
 ) -> list[tuple[str, ...]]:
     if not active_tokens:
         raise ValueError("active token set is empty")
     if max_length <= 0 or max_length > 8:
         raise ValueError("adversarial max_length must be 1..8")
+    if max_sequences is not None and max_sequences <= 0:
+        raise ValueError("adversarial max_sequences must be positive")
     rows: list[tuple[str, ...]] = []
     for length in range(1, max_length + 1):
         for sequence in itertools.product(active_tokens, repeat=length):
             if safe_negative(list(sequence), forbidden):
                 rows.append(tuple(sequence))
+                if max_sequences is not None and len(rows) > max_sequences:
+                    raise ValueError(
+                        "adversarial safe-sequence search exceeds configured budget: "
+                        f"{len(rows)} > {max_sequences}"
+                    )
     return rows
 
 
@@ -73,6 +84,8 @@ def select_adversarial_candidates(
         raise ValueError("adversarial top_k must be positive")
     if min_per_keyword < 0:
         raise ValueError("adversarial min_per_keyword must be >= 0")
+    if max_enumerated_sequences <= 0:
+        raise ValueError("adversarial max_enumerated_sequences must be positive")
     keyword_ids = [int(keyword["id"]) for keyword in keywords]
     if len(set(keyword_ids)) != len(keyword_ids) or not keyword_ids:
         raise ValueError("adversarial keyword ids must be non-empty and unique")
@@ -294,6 +307,12 @@ def _effective_policy(cfg: dict, legacy: dict) -> dict:
             )
         ),
         "min_per_keyword": int(data_v3.get("adversarial_min_per_keyword", 0)),
+        "max_enumerated_sequences": int(
+            data_v3.get(
+                "adversarial_max_enumerated_sequences",
+                legacy.get("max_enumerated_sequences", 4096),
+            )
+        ),
         "include_strict_prefix_anchors": bool(
             data_v3.get("adversarial_include_strict_prefix_anchors", False)
         ),
@@ -319,6 +338,7 @@ def mine_adversarial_lexicon(
     probes_per_sequence = int(effective["probes_per_sequence"])
     replay_examples = int(effective["replay_examples_per_sequence"])
     min_per_keyword = int(effective["min_per_keyword"])
+    max_enumerated_sequences = int(effective["max_enumerated_sequences"])
     include_prefix_anchors = bool(effective["include_strict_prefix_anchors"])
     if top_k <= 0 or probes_per_sequence <= 0 or replay_examples <= 0:
         raise ValueError("adversarial lexicon counts must be positive")
@@ -336,7 +356,12 @@ def mine_adversarial_lexicon(
     carriers = token_carriers(keywords, int(cfg.get("model", {}).get("feature_dim", 32)))
     active_tokens = list(carriers)
     forbidden = [list(keyword["tokens"]) for keyword in keywords]
-    candidates = enumerate_safe_sequences(active_tokens, forbidden, max_length=max_length)
+    candidates = enumerate_safe_sequences(
+        active_tokens,
+        forbidden,
+        max_length=max_length,
+        max_sequences=max_enumerated_sequences,
+    )
     if not candidates:
         raise ValueError("adversarial lexicon enumeration produced no safe negatives")
 
@@ -496,6 +521,7 @@ def mine_adversarial_lexicon(
         "round": round_index,
         "frontend": frontend,
         "max_length": max_length,
+        "max_enumerated_sequences": max_enumerated_sequences,
         "enumerated_sequences": len(candidates),
         "top_k": len(selected),
         "probes_per_sequence": probes_per_sequence,
