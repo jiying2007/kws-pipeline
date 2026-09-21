@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - '.github/triggers/model-training-request.json'
   pull_request:
     branches:
       - main
