@@ -18,6 +18,7 @@ from acoustic_scene import render_scene, sha256_file  # noqa: E402
 from render_domains import sample_scene, validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     SAMPLE_RATE_HZ,
+    UINT32_MAX,
     augment,
     load_config,
     parse_keywords,
@@ -161,8 +162,8 @@ def normalize_hard_negative_replay(
         focus_keyword_id = item.get("focus_keyword_id")
         if focus_keyword_id is not None:
             focus_keyword_id = int(focus_keyword_id)
-            if focus_keyword_id <= 0:
-                raise ValueError(f"{label}.focus_keyword_id must be positive")
+            if focus_keyword_id < 0 or focus_keyword_id > UINT32_MAX:
+                raise ValueError(f"{label}.focus_keyword_id must fit uint32")
             if keyword_ids is not None and focus_keyword_id not in keyword_ids:
                 raise ValueError(f"{label}.focus_keyword_id is not a configured keyword")
         normalized.append(
@@ -193,7 +194,11 @@ def normalize_positive_stress_replay(
         label = f"domain_iteration.positive_stress_replay[{index}]"
         if not isinstance(item, dict):
             raise ValueError(f"{label} must be an object")
-        keyword_id = int(item.get("keyword_id", 0))
+        if "keyword_id" not in item:
+            raise ValueError(f"{label}.keyword_id is required")
+        keyword_id = int(item["keyword_id"])
+        if keyword_id < 0 or keyword_id > UINT32_MAX:
+            raise ValueError(f"{label}.keyword_id must fit uint32")
         if keyword_id not in by_id:
             raise ValueError(f"{label}.keyword_id is not configured")
         if keyword_id in seen:
