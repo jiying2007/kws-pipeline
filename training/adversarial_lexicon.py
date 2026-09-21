@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import itertools
 import json
+import os
 import pathlib
 import random
+import struct
 import sys
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -29,6 +33,8 @@ from synthetic_audio import (  # noqa: E402
 )
 
 SELECTION_POLICY = "balanced-strict-prefix-anchor-topk-v2"
+COMMAND_TTS_EXECUTION_POLICY = "bounded-parallel-clean-prerender-v1"
+MAX_COMMAND_TTS_WORKERS = 4
 
 
 def enumerate_safe_sequences(
@@ -141,6 +147,66 @@ def _stable_seed(text: str) -> int:
     return int.from_bytes(digest[:4], "little") & 0x7FFFFFFF
 
 
+
+def _command_tts_worker_count(task_count: int, *, cpu_count: int | None = None) -> int:
+    if task_count <= 0:
+        return 0
+    available = os.cpu_count() if cpu_count is None else cpu_count
+    if available is None or available <= 0:
+        available = 1
+    return min(MAX_COMMAND_TTS_WORKERS, int(available), task_count)
+
+
+def _read_command_tts_output(path: pathlib.Path) -> list[int]:
+    if not path.is_file():
+        raise ValueError(f"pre-rendered command TTS WAV is missing: {path}")
+    with wave.open(str(path), "rb") as reader:
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != 16000
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+        ):
+            raise ValueError("pre-rendered command TTS must be mono 16-kHz PCM16 WAV")
+        raw = reader.readframes(reader.getnframes())
+    if not raw:
+        raise ValueError("pre-rendered command TTS emitted an empty WAV")
+    return list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
+
+
+def _pre_render_command_tts(
+    tasks: list[tuple[list[str], pathlib.Path]],
+    tts: dict,
+    *,
+    workers: int | None = None,
+) -> int:
+    if str(tts.get("backend", "tone")) != "command" or not tasks:
+        return 0
+    worker_count = (
+        _command_tts_worker_count(len(tasks))
+        if workers is None
+        else min(max(1, int(workers)), len(tasks))
+    )
+
+    def render(task: tuple[list[str], pathlib.Path]) -> None:
+        token_names, output_path = task
+        render_command_tts(
+            " ".join(token_names),
+            token_names,
+            "adversarial-negative",
+            output_path,
+            tts,
+        )
+
+    if worker_count == 1:
+        for task in tasks:
+            render(task)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
+            list(executor.map(render, tasks))
+    return worker_count
+
+
 def _render_sequence(
     *,
     token_names: list[str],
@@ -153,6 +219,7 @@ def _render_sequence(
     augment_config: dict,
     domains: dict,
     output_path: pathlib.Path | None,
+    command_tts_pre_rendered: bool = False,
 ) -> tuple[list[int], dict]:
     example_seed = (
         seed
@@ -169,9 +236,16 @@ def _render_sequence(
     elif backend == "command":
         if output_path is None:
             raise ValueError("command TTS adversarial probe requires an output path")
-        clean = render_command_tts(
-            " ".join(token_names), token_names, "adversarial-negative", output_path, tts
-        )
+        if command_tts_pre_rendered:
+            clean = _read_command_tts_output(output_path)
+        else:
+            clean = render_command_tts(
+                " ".join(token_names),
+                token_names,
+                "adversarial-negative",
+                output_path,
+                tts,
+            )
     else:
         raise ValueError(f"unsupported adversarial TTS backend: {backend}")
     augmented = augment(clean, rng, augment_config)
@@ -288,6 +362,17 @@ def mine_adversarial_lexicon(
 
     ranked: list[dict] = []
     base_seed = int(cfg.get("seed", 1337))
+    command_backend = str(tts.get("backend", "tone")) == "command"
+    probe_tasks = [
+        (
+            list(sequence),
+            output / "probe-clean" / f"q{sequence_index:04d}-p{probe_index:02d}.wav",
+        )
+        for sequence_index, sequence in enumerate(candidates)
+        for probe_index in range(probes_per_sequence)
+    ]
+    probe_tts_workers = _pre_render_command_tts(probe_tasks, tts)
+
     for sequence_index, sequence in enumerate(candidates):
         probe_rows: list[dict] = []
         maximum = -1.0
@@ -305,6 +390,7 @@ def mine_adversarial_lexicon(
                 augment_config=augment_config,
                 domains=domains,
                 output_path=scratch,
+                command_tts_pre_rendered=command_backend,
             )
             confidences = keyword_confidences(
                 model,
@@ -345,6 +431,16 @@ def mine_adversarial_lexicon(
         include_strict_prefix_anchors=include_prefix_anchors,
     )
     replay_rows: list[dict] = []
+    replay_tasks = [
+        (
+            list(item["tokens"]),
+            output / "wav" / f"a{selected_index:03d}-e{example_index:02d}.wav",
+        )
+        for selected_index, item in enumerate(selected)
+        for example_index in range(replay_examples)
+    ]
+    replay_tts_workers = _pre_render_command_tts(replay_tasks, tts)
+
     for selected_index, item in enumerate(selected):
         for example_index in range(replay_examples):
             path = output / "wav" / f"a{selected_index:03d}-e{example_index:02d}.wav"
@@ -359,6 +455,7 @@ def mine_adversarial_lexicon(
                 augment_config=augment_config,
                 domains=domains,
                 output_path=path,
+                command_tts_pre_rendered=command_backend,
             )
             write_wav(path, samples)
             replay_rows.append(
@@ -392,6 +489,10 @@ def mine_adversarial_lexicon(
         "evidence_class": "development-only-adversarial-lexicon",
         "data_augmentation_policy": str(effective["data_policy"]),
         "selection_policy": SELECTION_POLICY,
+        "command_tts_execution_policy": COMMAND_TTS_EXECUTION_POLICY,
+        "command_tts_parallel_workers": max(probe_tts_workers, replay_tts_workers),
+        "command_tts_probe_pre_rendered": len(probe_tasks) if command_backend else 0,
+        "command_tts_replay_pre_rendered": len(replay_tasks) if command_backend else 0,
         "round": round_index,
         "frontend": frontend,
         "max_length": max_length,
