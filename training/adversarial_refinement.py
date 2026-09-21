@@ -36,6 +36,7 @@ from render_domains import render_domain_dataset
 from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
+PREFLIGHT_POLICY = "product-development-refinement-preflight-v1"
 REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
 WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"
 PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"
@@ -735,6 +736,11 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--stop-after-development-eval",
+        action="store_true",
+        help="write development-only refinement metrics and stop before any qualification work",
+    )
     args = parser.parse_args()
 
     config_path = args.config.resolve()
@@ -918,6 +924,35 @@ def main() -> int:
         "qualification_repair_used": False,
         "_gates": gates,
     }
+    if args.stop_after_development_eval:
+        preflight_record = {key: value for key, value in record.items() if key != "_gates"}
+        preflight = {
+            "schema_version": 1,
+            "policy": PREFLIGHT_POLICY,
+            "development_only": True,
+            "formal_qualification_used": False,
+            "qualification_used": False,
+            "shadow_used": False,
+            "input_development_manifest_sha256": input_manifest_sha,
+            "source_round": source_round,
+            "source_selection_policy": source_selection_policy,
+            "source_was_strict": source_was_strict,
+            "refinement_round": refinement_round,
+            "refinement_epochs": int(policy["epochs"]),
+            "refinement_lr_scale": float(policy["lr_scale"]),
+            "strict_dual_pass": bool(cal_gate and test_gate),
+            "wake_balance": wake_balance,
+            "record": preflight_record,
+        }
+        out = work / "adversarial-refinement" / "preflight-summary.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(preflight, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        print(json.dumps(preflight, indent=2, sort_keys=True, allow_nan=False))
+        return 0
+
     if not cal_gate or not test_gate:
         _write_failed_summary(
             work,
