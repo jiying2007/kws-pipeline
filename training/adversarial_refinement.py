@@ -342,11 +342,12 @@ def build_refinement_focus_rows(
         )
     if len(failure_rows) != int(failure.get("examples", -1)):
         raise ValueError("failure replay focus evidence row count drifted")
-    failure_manifest = pathlib.Path(str(failure.get("manifest") or "")).resolve()
-    result[failure_manifest] = failure_rows
+    if int(failure.get("examples", 0)) > 0:
+        failure_manifest = pathlib.Path(str(failure.get("manifest") or "")).resolve()
+        if failure_manifest in result:
+            raise ValueError("refinement replay focus manifests must be distinct")
+        result[failure_manifest] = failure_rows
 
-    if len(result) != 3:
-        raise ValueError("refinement replay focus manifests must be distinct")
     return result
 
 
@@ -575,6 +576,7 @@ def _train_refinement(
     static_manifest: pathlib.Path,
     adversarial_manifest: pathlib.Path,
     failure_manifest: pathlib.Path | None,
+    focus_rows_by_manifest: dict[pathlib.Path, list[tuple[int, ...]]],
     warm_start: pathlib.Path,
     output: pathlib.Path,
     epochs: int,
@@ -602,6 +604,7 @@ def _train_refinement(
         tokens=tokens,
         keywords=keywords,
         positive_example_weight=positive_example_weight,
+        focus_rows_by_manifest=focus_rows_by_manifest,
     )
     command = [
         sys.executable,
@@ -801,6 +804,11 @@ def main() -> int:
         raise ValueError("development failure replay copied evaluation WAV bytes")
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
+    focus_rows_by_manifest = build_refinement_focus_rows(
+        static=static,
+        adversarial=adversarial,
+        failure=failure,
+    )
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
     model, checkpoint, provenance, wake_balance = _train_refinement(
         cfg=cfg,
@@ -811,6 +819,7 @@ def main() -> int:
         static_manifest=static_manifest,
         adversarial_manifest=adversarial_manifest,
         failure_manifest=failure_manifest,
+        focus_rows_by_manifest=focus_rows_by_manifest,
         warm_start=source_checkpoint,
         output=candidate_dir,
         epochs=int(policy["epochs"]),
@@ -944,6 +953,11 @@ def main() -> int:
         failure_manifest_path = pathlib.Path(str(failure["manifest"]))
         failure_evidence = pathlib.Path(str(failure["evidence"]))
         repair_dir = candidate_dir / "qualification-repair"
+        repair_focus_rows_by_manifest = build_refinement_focus_rows(
+            static=static,
+            adversarial=adversarial,
+            failure=failure,
+        )
         repaired_model, repaired_checkpoint, repaired_provenance, repaired_wake_balance = _train_refinement(
             cfg=cfg,
             frontend=frontend,
@@ -953,6 +967,7 @@ def main() -> int:
             static_manifest=static_manifest,
             adversarial_manifest=adversarial_manifest,
             failure_manifest=failure_manifest_path,
+            focus_rows_by_manifest=repair_focus_rows_by_manifest,
             warm_start=checkpoint,
             output=repair_dir,
             epochs=REPAIR_EPOCHS,
