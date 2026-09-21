@@ -144,6 +144,15 @@ def main() -> int:
     ):
         require(verifier, needle, "promotion bundle verifier")
 
+    push_section = training.split("  pull_request:", 1)[0]
+    require(
+        push_section,
+        "- '.github/triggers/model-training-request.json'",
+        "request-only model-training push trigger",
+    )
+    if "paths:\n  pull_request:" in push_section:
+        raise AssertionError("model-training push paths must not be empty")
+
     # The model-training workflow is intentionally split across two independently
     # bounded hosted jobs. The base job must never expose the formal seed.
     for needle in (
