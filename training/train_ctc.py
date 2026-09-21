@@ -466,25 +466,6 @@ def collate(batch):
     return padded, targets, xlen, ylen
 
 
-def wake_example_mask(
-    targets: torch.Tensor,
-    target_lengths: torch.Tensor,
-    keyword_sequences: list[list[int]],
-) -> torch.Tensor:
-    keywords = {tuple(int(value) for value in sequence) for sequence in keyword_sequences}
-    result: list[bool] = []
-    offset = 0
-    flat = targets.detach().cpu().tolist()
-    for raw_length in target_lengths.detach().cpu().tolist():
-        length = int(raw_length)
-        row = tuple(int(value) for value in flat[offset : offset + length])
-        result.append(row in keywords)
-        offset += length
-    if offset != len(flat):
-        raise ValueError("flattened CTC targets do not match target lengths")
-    return torch.tensor(result, dtype=torch.bool, device=target_lengths.device)
-
-
 def parse_wake_keyword_weights(
     value: str,
     keyword_operating_points: list[dict],
