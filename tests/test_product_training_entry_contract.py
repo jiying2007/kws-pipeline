@@ -98,6 +98,9 @@ def main() -> int:
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     materializer = (ROOT / "training/materialize_governed_product_base.sh").read_text(encoding="utf-8")
+    config_materializer = (ROOT / "training/materialize_product_training_config.py").read_text(
+        encoding="utf-8"
+    )
     assert "Materialize governed product speech-like training base" in workflow
     assert "bash training/materialize_governed_product_base.sh" in workflow
     assert "training/materialize_product_training_config.py" in materializer
@@ -120,6 +123,7 @@ def main() -> int:
     assert "--replay-provider" in materializer
     assert "--voice-inventory" in materializer
     assert "product-replay-provider" in materializer
+    assert '"reuse_clean_across_rounds": True' in config_materializer
 
     print("test_product_training_entry_contract: ok")
     return 0
