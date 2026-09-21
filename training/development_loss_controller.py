@@ -139,8 +139,9 @@ def next_controller(
     )
 
     if mode == "normalized-rates-v1":
+        previous_repeat = int(current.get("failure_replay_repeat", 0))
         if severity <= 1.0:
-            repeat = 0
+            repeat = previous_repeat if latch_after_failure else 0
         elif severity <= 2.0:
             repeat = 1
         elif severity <= 4.0:
