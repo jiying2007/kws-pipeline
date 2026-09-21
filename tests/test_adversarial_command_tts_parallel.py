@@ -47,6 +47,20 @@ def main() -> int:
     else:
         raise AssertionError("adversarial search-space budget was not enforced")
 
+    ranked = [
+        {"tokens": ["ni3"], "focus_keyword_id": 1, "max_confidence": 0.9},
+        {"tokens": ["hao3"], "focus_keyword_id": 2, "max_confidence": 0.8},
+    ]
+    keywords = [{"id": 1, "tokens": ["ni3", "hao3"]}, {"id": 2, "tokens": ["xiao3", "wo1"]}]
+    selected = adversarial.select_adversarial_candidates(
+        ranked,
+        keywords,
+        top_k=2,
+        min_per_keyword=1,
+        include_strict_prefix_anchors=False,
+    )
+    assert len(selected) == 2
+
     assert adversarial._command_tts_worker_count(0, cpu_count=8) == 0
     assert adversarial._command_tts_worker_count(1, cpu_count=8) == 1
     assert adversarial._command_tts_worker_count(8, cpu_count=1) == 1

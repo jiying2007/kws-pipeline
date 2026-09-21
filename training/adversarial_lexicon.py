@@ -84,8 +84,6 @@ def select_adversarial_candidates(
         raise ValueError("adversarial top_k must be positive")
     if min_per_keyword < 0:
         raise ValueError("adversarial min_per_keyword must be >= 0")
-    if max_enumerated_sequences <= 0:
-        raise ValueError("adversarial max_enumerated_sequences must be positive")
     keyword_ids = [int(keyword["id"]) for keyword in keywords]
     if len(set(keyword_ids)) != len(keyword_ids) or not keyword_ids:
         raise ValueError("adversarial keyword ids must be non-empty and unique")
@@ -344,6 +342,8 @@ def mine_adversarial_lexicon(
         raise ValueError("adversarial lexicon counts must be positive")
     if min_per_keyword < 0:
         raise ValueError("adversarial min_per_keyword must be >= 0")
+    if max_enumerated_sequences <= 0:
+        raise ValueError("adversarial max_enumerated_sequences must be positive")
 
     tokens_path = pathlib.Path(str(cfg["tokens"]))
     keywords_path = pathlib.Path(str(cfg["keywords"]))
