@@ -10,6 +10,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -18,6 +19,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 REFERENCE_CLASS = "speech-like-provider-reference-v1"
 SUMMARY_CLASS = "speech-like-stage-a-bootstrap-v1"
+DOWNLOAD_MAX_ATTEMPTS = 4
+DOWNLOAD_BACKOFF_SECONDS = (1.0, 2.0, 4.0)
+TRANSIENT_HTTP_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -137,6 +141,19 @@ def validate_cached_file(
         )
 
 
+def retryable_download_error(exc: BaseException) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return int(exc.code) in TRANSIENT_HTTP_STATUS
+    return isinstance(
+        exc,
+        (
+            urllib.error.URLError,
+            TimeoutError,
+            ConnectionError,
+        ),
+    )
+
+
 def download_verified(
     *,
     url: str,
@@ -165,44 +182,65 @@ def download_verified(
                 raise
         target.unlink(missing_ok=True)
 
+    parsed = urllib.parse.urlparse(url)
+    attempts = DOWNLOAD_MAX_ATTEMPTS if parsed.scheme == "https" else 1
+    request: str | urllib.request.Request
+    if parsed.scheme == "https":
+        request = urllib.request.Request(
+            url,
+            headers={"User-Agent": "kws-pipeline-speech-like-bootstrap/1"},
+        )
+    else:
+        request = url
+
     part = target.with_name(target.name + ".part")
-    part.unlink(missing_ok=True)
-    digest = hashlib.sha256()
-    total = 0
-    try:
-        request: str | urllib.request.Request
-        parsed = urllib.parse.urlparse(url)
-        if parsed.scheme == "https":
-            request = urllib.request.Request(
-                url,
-                headers={"User-Agent": "kws-pipeline-speech-like-bootstrap/1"},
-            )
-        else:
-            request = url
-        with urllib.request.urlopen(request, timeout=120) as response, part.open("wb") as sink:
-            for chunk in iter(lambda: response.read(1024 * 1024), b""):
-                total += len(chunk)
-                if expected_size is not None and total > expected_size:
-                    raise ValueError(
-                        f"{label} download exceeded expected size {expected_size}"
-                    )
-                digest.update(chunk)
-                sink.write(chunk)
-            sink.flush()
-            os.fsync(sink.fileno())
-        if expected_size is not None and total != expected_size:
-            raise ValueError(
-                f"{label} download size mismatch: expected {expected_size}, got {total}"
-            )
-        actual_sha = digest.hexdigest()
-        if actual_sha != expected_sha256:
-            raise ValueError(
-                f"{label} download sha256 mismatch: expected {expected_sha256}, got {actual_sha}"
-            )
-        part.replace(target)
-    except Exception:
+    for attempt in range(1, attempts + 1):
         part.unlink(missing_ok=True)
-        raise
+        digest = hashlib.sha256()
+        total = 0
+        try:
+            with (
+                urllib.request.urlopen(request, timeout=120) as response,
+                part.open("wb") as sink,
+            ):
+                for chunk in iter(lambda: response.read(1024 * 1024), b""):
+                    total += len(chunk)
+                    if expected_size is not None and total > expected_size:
+                        raise ValueError(
+                            f"{label} download exceeded expected size {expected_size}"
+                        )
+                    digest.update(chunk)
+                    sink.write(chunk)
+                sink.flush()
+                os.fsync(sink.fileno())
+            if expected_size is not None and total != expected_size:
+                raise ValueError(
+                    f"{label} download size mismatch: expected {expected_size}, got {total}"
+                )
+            actual_sha = digest.hexdigest()
+            if actual_sha != expected_sha256:
+                raise ValueError(
+                    f"{label} download sha256 mismatch: "
+                    f"expected {expected_sha256}, got {actual_sha}"
+                )
+            part.replace(target)
+            break
+        except Exception as exc:
+            part.unlink(missing_ok=True)
+            if (
+                parsed.scheme != "https"
+                or not retryable_download_error(exc)
+                or attempt >= attempts
+            ):
+                raise
+            delay = DOWNLOAD_BACKOFF_SECONDS[attempt - 1]
+            print(
+                f"transient download failure for {label}: "
+                f"attempt {attempt}/{attempts}: {exc}; retrying in {delay:g}s",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+
     validate_cached_file(
         target,
         expected_sha256=expected_sha256,
