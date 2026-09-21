@@ -8,6 +8,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from synthetic_audio import (  # noqa: E402
+    command_tts_surface_forms,
+    command_tts_text,
     command_tts_timeout_seconds,
     keyword_render_context,
     token_carriers,
@@ -55,6 +57,52 @@ def main() -> int:
         keywords=keywords,
     )
     assert positive[0]["keyword_id"] == 0
+
+    surface_keywords = [
+        {
+            "id": 1,
+            "text": "你好小窝",
+            "tokens": ["ni3", "hao3", "xiao3", "wo1"],
+            "token_ids": [1, 2, 3, 4],
+        },
+        {
+            "id": 2,
+            "text": "小窝小窝",
+            "tokens": ["xiao3", "wo1", "xiao3", "wo1"],
+            "token_ids": [3, 4, 3, 4],
+        },
+    ]
+    forms = command_tts_surface_forms(surface_keywords, {"backend": "command"})
+    assert forms == {
+        "ni3": "你",
+        "hao3": "好",
+        "xiao3": "小",
+        "wo1": "窝",
+    }
+    assert command_tts_text(
+        ["hao3", "ni3", "xiao3", "wo1"],
+        forms,
+    ) == "好你小窝"
+    try:
+        command_tts_surface_forms(
+            [
+                {"id": 1, "text": "甲", "tokens": ["a"], "token_ids": [1]},
+                {"id": 2, "text": "乙", "tokens": ["a"], "token_ids": [1]},
+            ],
+            {"backend": "command"},
+        )
+    except ValueError as exc:
+        assert "ambiguous surface forms" in str(exc)
+    else:
+        raise AssertionError("ambiguous command-TTS surface form was accepted")
+    explicit = command_tts_surface_forms(
+        [
+            {"id": 1, "text": "甲", "tokens": ["a"], "token_ids": [1]},
+            {"id": 2, "text": "乙", "tokens": ["a"], "token_ids": [1]},
+        ],
+        {"backend": "command", "token_surface_forms": {"a": "啊"}},
+    )
+    assert explicit == {"a": "啊"}
 
     try:
         normalize_positive_stress_replay(
