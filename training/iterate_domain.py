@@ -503,6 +503,11 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", type=pathlib.Path)
+    parser.add_argument(
+        "--defer-qualification",
+        action="store_true",
+        help="stop after development candidate selection; later staged jobs own qualification",
+    )
     args = parser.parse_args()
     config_path = args.config.resolve()
     cfg = load_config(config_path)
@@ -732,34 +737,46 @@ def main() -> int:
     shutil.copy2(selected["keywords"], best_keywords)
     shutil.copy2(selected["provenance"], best_provenance)
 
-    # Qualification is regenerated from the same pinned config but never used by
-    # candidate selection, curriculum updates, or hard-negative replay.
-    qualification_dataset = work / "qualification-dataset"
-    render_domain_dataset(
-        config_path,
-        qualification_dataset,
-        curriculum_weights=None,
-        splits=("qualification",),
-    )
-    qualification_base, qualification_domains = evaluate(
-        runner=runner,
-        model=best_model,
-        pack=best_pack,
-        references=qualification_dataset / "qualification.references.jsonl",
-        output=best_dir / "qualification",
-    )
     development_qualified = strict_best is not None
-    qualification_qualified = base_gate(qualification_base, gates) and domain_gate(
-        qualification_domains, gates
-    )
-    qualified = development_qualified and qualification_qualified
+    qualification_deferred = bool(args.defer_qualification)
+    if qualification_deferred:
+        qualification_base: dict = {}
+        qualification_domains: dict = {}
+        qualification_qualified: bool | None = None
+        qualified = False
+        evidence_class = "synthetic-domain-development-only"
+    else:
+        # Standalone iteration keeps the historical qualification behavior.
+        # Staged product training defers this work until after refinement so an
+        # intermediate candidate is not qualified twice.
+        qualification_dataset = work / "qualification-dataset"
+        render_domain_dataset(
+            config_path,
+            qualification_dataset,
+            curriculum_weights=None,
+            splits=("qualification",),
+        )
+        qualification_base, qualification_domains = evaluate(
+            runner=runner,
+            model=best_model,
+            pack=best_pack,
+            references=qualification_dataset / "qualification.references.jsonl",
+            output=best_dir / "qualification",
+        )
+        qualification_qualified = base_gate(qualification_base, gates) and domain_gate(
+            qualification_domains, gates
+        )
+        qualified = development_qualified and qualification_qualified
+        evidence_class = (
+            "synthetic-domain-qualified" if qualified else "synthetic-domain-unqualified"
+        )
+
     manifest = {
         "schema_version": 2,
-        "evidence_class": (
-            "synthetic-domain-qualified" if qualified else "synthetic-domain-unqualified"
-        ),
+        "evidence_class": evidence_class,
         "qualified": qualified,
         "development_qualified": development_qualified,
+        "qualification_deferred": qualification_deferred,
         "qualification_qualified": qualification_qualified,
         "candidate_selection": {
             "policy": "latest-strict-gate-passing-round",
@@ -798,6 +815,8 @@ def main() -> int:
     manifest_path = work / "domain-loop-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+    if qualification_deferred:
+        return 0 if development_qualified else 1
     return 0 if qualified else 1
 
 
