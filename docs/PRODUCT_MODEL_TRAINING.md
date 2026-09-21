@@ -224,9 +224,29 @@ Each keyword receives its own bounded [1, 12] exact-wake multiplier from that
 row-pressure accounting. The trainer keeps a default wake multiplier of 1.0 and
 receives the per-keyword map explicitly. The map and assigned masses are
 retained in refinement evidence and model provenance, and model promotion
-verifies both copies are identical. Mini-batch weight normalization remains a
-separate optimization-semantics issue; v3 deliberately fixes pressure ownership
-without claiming that row-weight mass equals exact epoch gradient mass.
+verifies both copies are identical.
+
+## Dataset-mean sample-weight normalization
+
+The earlier trainer normalized target-sensitive sample weights by the sum of
+weights inside each mini-batch. That makes absolute multipliers partially
+self-cancelling: a homogeneous batch of 4x wake examples has the same normalized
+per-sample coefficients as a homogeneous batch of 1x examples. Dataset-level
+wake-mass accounting therefore did not map cleanly onto optimization pressure.
+
+The trainer now computes one deterministic weight profile from the complete
+training manifests before the first epoch. CTC, sequence-margin and
+prefix-completion losses divide each batch's weighted sum by
+`batch_size * dataset_mean_weight`. Ordered-token loss uses the equivalent
+mean over all non-empty targets because empty targets do not participate in that
+objective. This preserves the overall loss scale while making a sample's
+multiplier independent of which other samples happened to share its mini-batch.
+
+The policy is `dataset-mean-sample-weight-v1`. Checkpoint/model provenance
+records total rows, non-empty rows, exact-wake rows, total effective weights and
+both fixed means. Model promotion rejects product candidates that do not prove
+this normalization policy. Recurrent-release loss remains unweighted because it
+models post-utterance blank release rather than target identity.
 
 The resulting sample weights still apply consistently to all target-sensitive
 objectives: per-frame CTC, sequence margin, strict-prefix completion, and the
