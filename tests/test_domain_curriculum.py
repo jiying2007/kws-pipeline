@@ -6,7 +6,11 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
-from domain_curriculum import update_curriculum  # noqa: E402
+from domain_curriculum import (  # noqa: E402
+    CURRICULUM_FEEDBACK_POLICY,
+    merge_domain_metrics,
+    update_curriculum,
+)
 
 
 def metric(frr: float, far: float = 0.0, latency: float = 100.0) -> dict:
@@ -18,6 +22,48 @@ def metric(frr: float, far: float = 0.0, latency: float = 100.0) -> dict:
 
 
 def main() -> int:
+    calibration_feedback = {
+        "domains": {
+            "distance:far": metric(0.10, far=1.0),
+            "snr:critical": metric(0.30, far=0.0),
+        },
+        "keyword_domains": {
+            "1": {"domains": {"distance:far": metric(0.20)}},
+            "2": {"domains": {"distance:far": metric(0.05)}},
+        },
+    }
+    test_feedback = {
+        "domains": {
+            "distance:far": metric(0.40, far=0.0),
+            "snr:critical": metric(0.10, far=0.0),
+        },
+        "keyword_domains": {
+            "1": {"domains": {"distance:far": metric(0.15)}},
+            "2": {"domains": {"distance:far": metric(0.45)}},
+        },
+    }
+    merged_feedback = merge_domain_metrics(calibration_feedback, test_feedback)
+    assert merged_feedback["source_policy"] == CURRICULUM_FEEDBACK_POLICY
+    assert merged_feedback["domains"]["distance:far"]["frr"] == 0.40
+    assert merged_feedback["domains"]["snr:critical"]["frr"] == 0.30
+    assert (
+        merged_feedback["keyword_domains"]["1"]["domains"]["distance:far"]["frr"]
+        == 0.20
+    )
+    assert (
+        merged_feedback["keyword_domains"]["2"]["domains"]["distance:far"]["frr"]
+        == 0.45
+    )
+    merged_curriculum = update_curriculum(
+        merged_feedback,
+        strength=3.0,
+        max_weight=6.0,
+    )
+    assert (
+        merged_curriculum["feedback_source_policy"]
+        == CURRICULUM_FEEDBACK_POLICY
+    )
+
     metrics = {
         "domains": {
             "distance:near": metric(0.01),
