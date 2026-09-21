@@ -27,6 +27,120 @@ def main() -> int:
     )
     assert len(candidates) == 1330
     assert len(candidates) * 2 == 2660
+
+    current_keywords = [
+        {"id": 1, "tokens": ["ni3", "hao3", "xiao3", "wo1"]},
+        {"id": 2, "tokens": ["xiao3", "wo1", "xiao3", "wo1"]},
+    ]
+    current_plan = adversarial.build_adversarial_candidate_plan(
+        active_tokens=active_tokens,
+        keywords=current_keywords,
+        max_length=5,
+        max_sequences=4096,
+        hybrid_candidate_budget=2048,
+        seed=1337,
+    )
+    assert current_plan["mode"] == "exhaustive"
+    assert current_plan["raw_cartesian_sequences"] == 1364
+    assert current_plan["candidates"] == candidates
+
+    assert adversarial.effective_adversarial_top_k(
+        keyword_count=2,
+        configured_top_k=64,
+        min_per_keyword=24,
+        global_hardest_fill=16,
+        strict_prefix_anchor_count=0,
+        max_selected_sequences=256,
+    ) == 64
+    assert adversarial.effective_adversarial_top_k(
+        keyword_count=3,
+        configured_top_k=64,
+        min_per_keyword=24,
+        global_hardest_fill=16,
+        strict_prefix_anchor_count=0,
+        max_selected_sequences=256,
+    ) == 88
+    assert adversarial.effective_adversarial_top_k(
+        keyword_count=4,
+        configured_top_k=64,
+        min_per_keyword=24,
+        global_hardest_fill=16,
+        strict_prefix_anchor_count=0,
+        max_selected_sequences=256,
+    ) == 112
+
+    long_keywords = [
+        {"id": 1, "tokens": ["a", "b"]},
+        {"id": 2, "tokens": ["a", "b", "c"]},
+        {"id": 3, "tokens": ["c", "d", "e", "f", "g", "h", "i"]},
+    ]
+    anchors = adversarial.strict_prefix_anchors(long_keywords)
+    assert ("a", "b") not in anchors
+    assert ("a",) in anchors
+    assert ("c", "d", "e", "f", "g", "h") in anchors
+    assert adversarial.effective_adversarial_max_length(5, long_keywords) == 6
+
+    wide_tokens = [f"t{index}" for index in range(8)]
+    wide_keywords = [
+        {"id": 1, "tokens": ["t0", "t1", "t2"]},
+        {"id": 2, "tokens": ["t3", "t4", "t5"]},
+        {"id": 3, "tokens": ["t6", "t7", "t0"]},
+    ]
+    hybrid_a = adversarial.build_adversarial_candidate_plan(
+        active_tokens=wide_tokens,
+        keywords=wide_keywords,
+        max_length=5,
+        max_sequences=4096,
+        hybrid_candidate_budget=256,
+        seed=2026,
+    )
+    hybrid_b = adversarial.build_adversarial_candidate_plan(
+        active_tokens=wide_tokens,
+        keywords=wide_keywords,
+        max_length=5,
+        max_sequences=4096,
+        hybrid_candidate_budget=256,
+        seed=2026,
+    )
+    assert hybrid_a["mode"] == adversarial.HYBRID_CANDIDATE_POLICY
+    assert hybrid_a["raw_cartesian_sequences"] == 37448
+    assert len(hybrid_a["candidates"]) == 256
+    assert hybrid_a["candidates"] == hybrid_b["candidates"]
+    assert set(hybrid_a["strict_prefix_anchors"]).issubset(set(hybrid_a["candidates"]))
+
+    multi_ranked = [
+        {"tokens": ["a"], "focus_keyword_id": 1, "max_confidence": 0.90,
+         "per_keyword_max_confidence": {"1": 0.90, "2": 0.10, "3": 0.10}},
+        {"tokens": ["b"], "focus_keyword_id": 1, "max_confidence": 0.80,
+         "per_keyword_max_confidence": {"1": 0.80, "2": 0.20, "3": 0.20}},
+        {"tokens": ["c"], "focus_keyword_id": 1, "max_confidence": 0.95,
+         "per_keyword_max_confidence": {"1": 0.70, "2": 0.95, "3": 0.30}},
+        {"tokens": ["d"], "focus_keyword_id": 1, "max_confidence": 0.90,
+         "per_keyword_max_confidence": {"1": 0.60, "2": 0.90, "3": 0.40}},
+        {"tokens": ["e"], "focus_keyword_id": 1, "max_confidence": 0.98,
+         "per_keyword_max_confidence": {"1": 0.50, "2": 0.50, "3": 0.98}},
+        {"tokens": ["f"], "focus_keyword_id": 1, "max_confidence": 0.97,
+         "per_keyword_max_confidence": {"1": 0.40, "2": 0.40, "3": 0.97}},
+    ]
+    multi_keywords = [
+        {"id": 1, "tokens": ["x", "y"]},
+        {"id": 2, "tokens": ["y", "z"]},
+        {"id": 3, "tokens": ["z", "x"]},
+    ]
+    multi_selected = adversarial.select_adversarial_candidates(
+        multi_ranked,
+        multi_keywords,
+        top_k=6,
+        min_per_keyword=2,
+        include_strict_prefix_anchors=False,
+    )
+    assert len(multi_selected) == 6
+    assert {
+        keyword_id: sum(
+            int(row["focus_keyword_id"]) == keyword_id for row in multi_selected
+        )
+        for keyword_id in (1, 2, 3)
+    } == {1: 2, 2: 2, 3: 2}
     assert len(
         adversarial.enumerate_safe_sequences(
             active_tokens,
