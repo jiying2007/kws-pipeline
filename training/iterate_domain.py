@@ -372,6 +372,42 @@ def warm_start_args(previous: pathlib.Path | None, strategy: str) -> list[str]:
     return result
 
 
+def torch_round_training_values(
+    cfg: dict,
+    *,
+    round_index: int,
+    warm_started: bool,
+) -> tuple[int, float, int]:
+    if round_index < 0:
+        raise ValueError("round index must be non-negative")
+    train = cfg.get("train", {})
+    iteration = cfg.get("domain_iteration", {})
+    if not isinstance(train, dict) or not isinstance(iteration, dict):
+        raise ValueError("train/domain_iteration config must be objects")
+
+    cold_epochs = int(train.get("epochs", 10))
+    warm_epochs = int(train.get("warm_start_epochs", cold_epochs))
+    if cold_epochs <= 0 or warm_epochs <= 0 or warm_epochs > cold_epochs:
+        raise ValueError("train epochs/warm_start_epochs are invalid")
+
+    base_lr = float(train.get("lr", 0.001))
+    lr_decay = float(iteration.get("lr_decay_per_round", 1.0))
+    seed_stride = int(iteration.get("training_seed_stride", 0))
+    if (
+        not math.isfinite(base_lr)
+        or base_lr <= 0.0
+        or not math.isfinite(lr_decay)
+        or not 0.0 < lr_decay <= 1.0
+        or seed_stride < 0
+    ):
+        raise ValueError("torch round learning-rate/seed policy is invalid")
+
+    epochs = warm_epochs if warm_started else cold_epochs
+    learning_rate = base_lr * (lr_decay ** round_index)
+    seed = int(cfg.get("seed", 1337)) + round_index * seed_stride
+    return epochs, learning_rate, seed
+
+
 def build_torch(
     *,
     cfg: dict,
@@ -383,10 +419,16 @@ def build_torch(
     previous: pathlib.Path | None,
     hard_negative_manifest: pathlib.Path | None,
     warm_start_strategy: str,
+    round_index: int,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     checkpoint = output / "model.pt"
     model = output / "model.kwm"
     train = cfg.get("train", {})
+    epochs, learning_rate, seed = torch_round_training_values(
+        cfg,
+        round_index=round_index,
+        warm_started=previous is not None,
+    )
     command = [
         sys.executable,
         str(TRAINING / "train_ctc.py"),
@@ -403,13 +445,13 @@ def build_torch(
         "--hidden-dim",
         str(int(cfg.get("model", {}).get("hidden_dim", 48))),
         "--epochs",
-        str(int(train.get("epochs", 10))),
+        str(epochs),
         "--batch-size",
         str(int(train.get("batch_size", 16))),
         "--lr",
-        str(float(train.get("lr", 0.001))),
+        str(learning_rate),
         "--seed",
-        str(int(cfg.get("seed", 1337))),
+        str(seed),
         "--output",
         str(checkpoint),
     ]
@@ -550,6 +592,7 @@ def main() -> int:
                         previous=previous_checkpoint,
                         hard_negative_manifest=replay_manifest,
                         warm_start_strategy=warm_start_strategy,
+                        round_index=round_index,
                     )
                     provenance = pathlib.Path(str(model) + ".provenance.json")
                 calibrated, pack, cal_base, cal_domains = calibrate(
@@ -595,6 +638,16 @@ def main() -> int:
                     record["warm_start_strategy"] = (
                         warm_start_strategy if previous_checkpoint is not None else "cold-start"
                     )
+                    epochs_used, learning_rate_used, training_seed_used = (
+                        torch_round_training_values(
+                            cfg,
+                            round_index=round_index,
+                            warm_started=previous_checkpoint is not None,
+                        )
+                    )
+                    record["training_epochs"] = epochs_used
+                    record["training_learning_rate"] = learning_rate_used
+                    record["training_seed"] = training_seed_used
                     record["hard_negative_replay_examples"] = int(
                         replay.get("examples", 0) if isinstance(replay, dict) else 0
                     )
