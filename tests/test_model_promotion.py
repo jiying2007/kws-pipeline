@@ -13,6 +13,7 @@ DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
 ITERATE_DOMAIN = ROOT / "training" / "iterate_domain.py"
 FEATURE_CACHE = ROOT / "training" / "feature_cached_trainer.py"
+WAKE_BALANCE = ROOT / "training" / "wake_pressure_balance.py"
 TRAINING_CONFIG = ROOT / "configs" / "training" / "xiaowo.torch-domain.json"
 EXPORTER = ROOT / "training" / "export_model.py"
 REPAIR = ROOT / "training" / "qualification_failure_replay.py"
@@ -40,6 +41,7 @@ def main() -> int:
     refinement = REFINEMENT.read_text(encoding="utf-8")
     iterate_domain = ITERATE_DOMAIN.read_text(encoding="utf-8")
     feature_cache = FEATURE_CACHE.read_text(encoding="utf-8")
+    wake_balance = WAKE_BALANCE.read_text(encoding="utf-8")
     training_config = TRAINING_CONFIG.read_text(encoding="utf-8")
     exporter = EXPORTER.read_text(encoding="utf-8")
     repair = REPAIR.read_text(encoding="utf-8")
@@ -263,12 +265,8 @@ def main() -> int:
 
     for needle in (
         'REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"',
-        'WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"',
-        'PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"',
         "build_refinement_focus_rows",
         "derive_refinement_wake_balance",
-        '"explicit_focus_nonwake_rows"',
-        '"fallback_edit_distance_nonwake_rows"',
         '"--wake-example-weight"',
         '"--wake-keyword-weights"',
         '"wake_keyword_weights"',
@@ -279,6 +277,35 @@ def main() -> int:
         "refinement source selection must not use qualification",
     ):
         require(refinement, needle, "adversarial refinement source contract")
+
+    for needle in (
+        'WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"',
+        'PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"',
+        "derive_wake_pressure_balance",
+        "static_replay_focus_rows",
+        "keyword id must be unique and fit uint32",
+        '"explicit_focus_nonwake_rows"',
+        '"fallback_edit_distance_nonwake_rows"',
+        '"wake_keyword_weights"',
+        '"effective_wake_mass"',
+        '"nonwake_mass"',
+    ):
+        require(wake_balance, needle, "shared wake-pressure balance contract")
+
+    for needle in (
+        "derive_wake_pressure_balance",
+        "static_replay_focus_rows",
+        "wake_pressure_balance_policy",
+        '"--wake-keyword-weights"',
+        'record["wake_balance"]',
+    ):
+        require(iterate_domain, needle, "base wake-pressure balance contract")
+
+    require(
+        training_config,
+        '"wake_pressure_balance_policy": "per-keyword-provenance-pressure-balance-v3"',
+        "product training wake-pressure policy",
+    )
 
     for needle in (
         '"wake_keyword_weights"',

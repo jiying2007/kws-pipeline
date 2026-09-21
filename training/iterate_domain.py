@@ -25,6 +25,12 @@ from hard_negative_replay import render_hard_negative_replay  # noqa: E402
 from feature_cached_trainer import feature_cache_max_items, rewrite_training_command  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
+from wake_pressure_balance import (  # noqa: E402
+    DEFAULT_POSITIVE_EXAMPLE_WEIGHT,
+    WAKE_BALANCE_POLICY,
+    derive_wake_pressure_balance,
+    static_replay_focus_rows,
+)
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -438,6 +444,7 @@ def build_torch(
     output: pathlib.Path,
     previous: pathlib.Path | None,
     hard_negative_manifest: pathlib.Path | None,
+    wake_balance: dict | None,
     warm_start_strategy: str,
     round_index: int,
 ) -> tuple[pathlib.Path, pathlib.Path]:
@@ -481,6 +488,19 @@ def build_torch(
         and hard_negative_manifest.stat().st_size > 0
     ):
         command.extend(["--manifest", str(hard_negative_manifest)])
+    if wake_balance is not None:
+        if wake_balance.get("policy") != WAKE_BALANCE_POLICY:
+            raise ValueError("base wake-balance policy identity mismatch")
+        command.extend(
+            [
+                "--positive-example-weight",
+                str(float(wake_balance["positive_example_weight"])),
+                "--wake-example-weight",
+                str(float(wake_balance["default_wake_example_weight"])),
+                "--wake-keyword-weights",
+                json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
+            ]
+        )
     command.extend(warm_start_args(previous, warm_start_strategy))
     command = rewrite_training_command(command, feature_cache_max_items(train))
     run(command)
@@ -579,6 +599,7 @@ def main() -> int:
             ]
         )
         replay = None
+        wake_balance = None
         if backend == "torch_ctc":
             replay = render_hard_negative_replay(
                 config_path,
@@ -586,6 +607,33 @@ def main() -> int:
                 round_index=round_index,
                 curriculum_weights=curriculum,
             )
+            train_cfg = cfg.get("train", {})
+            if not isinstance(train_cfg, dict):
+                raise ValueError("train config must be an object")
+            wake_policy = train_cfg.get("wake_pressure_balance_policy")
+            if wake_policy is not None:
+                if str(wake_policy) != WAKE_BALANCE_POLICY:
+                    raise ValueError(
+                        f"unsupported wake-pressure balance policy: {wake_policy}"
+                    )
+                training_manifests = [dataset_dir / "train.tsv"]
+                focus_rows: dict[pathlib.Path, list[tuple[int, ...]]] = {}
+                if isinstance(replay, dict) and int(replay.get("examples", 0)) > 0:
+                    replay_manifest = pathlib.Path(str(replay["manifest"]))
+                    training_manifests.append(replay_manifest)
+                    focus_rows.update(static_replay_focus_rows(replay))
+                wake_balance = derive_wake_pressure_balance(
+                    manifests=training_manifests,
+                    tokens=tokens,
+                    keywords=keywords,
+                    positive_example_weight=float(
+                        train_cfg.get(
+                            "positive_example_weight",
+                            DEFAULT_POSITIVE_EXAMPLE_WEIGHT,
+                        )
+                    ),
+                    focus_rows_by_manifest=focus_rows,
+                )
         round_best = None
         for frontend_value in frontends:
             frontend = str(frontend_value)
@@ -629,6 +677,7 @@ def main() -> int:
                         output=candidate_dir,
                         previous=previous_checkpoint,
                         hard_negative_manifest=replay_manifest,
+                        wake_balance=wake_balance,
                         warm_start_strategy=warm_start_strategy,
                         round_index=round_index,
                     )
@@ -695,6 +744,7 @@ def main() -> int:
                         if isinstance(replay, dict)
                         else None
                     )
+                    record["wake_balance"] = wake_balance
                 records.append(record)
                 if round_best is None or score_value < round_best["score"]:
                     round_best = record

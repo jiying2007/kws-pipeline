@@ -121,7 +121,9 @@
     "warm_start_epochs": 12,
     "batch_size": 16,
     "lr": 0.001,
-    "feature_cache_max_items": 8192
+    "feature_cache_max_items": 8192,
+    "positive_example_weight": 2.0,
+    "wake_pressure_balance_policy": "per-keyword-provenance-pressure-balance-v3"
   },
   "calibration": {
     "thresholds": [0.50, 0.52, 0.54, 0.55, 0.56, 0.58, 0.60],

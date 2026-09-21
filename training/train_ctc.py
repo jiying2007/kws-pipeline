@@ -28,6 +28,7 @@ from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 from sequence_margin import keyword_sequence_margin_loss
+from synthetic_audio import UINT32_MAX
 
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
@@ -155,6 +156,8 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
         ROOT / "training" / "sequence_margin.py",
+        ROOT / "training" / "synthetic_audio.py",
+        ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
@@ -217,8 +220,10 @@ def _keyword_rows(path: pathlib.Path, token_map: dict[str, int]) -> list[dict]:
         if len(cols) < 4:
             raise ValueError(f"{path}:{line_no}: expected keyword TSV with token column")
         keyword_id = int(cols[0])
-        if keyword_id <= 0 or keyword_id in seen_ids:
-            raise ValueError(f"{path}:{line_no}: keyword id must be unique and positive")
+        if keyword_id < 0 or keyword_id > UINT32_MAX or keyword_id in seen_ids:
+            raise ValueError(
+                f"{path}:{line_no}: keyword id must be unique and fit uint32"
+            )
         threshold = float(cols[2])
         if not math.isfinite(threshold) or not 0.0 < threshold < 1.0:
             raise ValueError(f"{path}:{line_no}: threshold must be finite and in (0,1)")
