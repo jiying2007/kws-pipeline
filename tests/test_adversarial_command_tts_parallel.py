@@ -68,6 +68,14 @@ def main() -> int:
         strict_prefix_anchor_count=0,
         max_selected_sequences=256,
     ) == 112
+    assert adversarial.effective_adversarial_top_k(
+        keyword_count=3,
+        configured_top_k=64,
+        min_per_keyword=24,
+        global_hardest_fill=16,
+        strict_prefix_anchor_count=10,
+        max_selected_sequences=256,
+    ) == 98
 
     long_keywords = [
         {"id": 1, "tokens": ["a", "b"]},
@@ -78,7 +86,7 @@ def main() -> int:
     assert ("a", "b") not in anchors
     assert ("a",) in anchors
     assert ("c", "d", "e", "f", "g", "h") in anchors
-    assert adversarial.effective_adversarial_max_length(5, long_keywords) == 6
+    assert adversarial.effective_adversarial_max_length(5, long_keywords) == 7
 
     wide_tokens = [f"t{index}" for index in range(8)]
     wide_keywords = [
