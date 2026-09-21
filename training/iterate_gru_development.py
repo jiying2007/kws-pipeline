@@ -98,6 +98,8 @@ def validate_policy(path: pathlib.Path) -> dict:
         raise ValueError("fixed_replay_repeat must be >= 1")
     if not 1 <= int(policy.get("failure_replay_repeat_max", 0)) <= 8:
         raise ValueError("failure_replay_repeat_max must be 1..8")
+    if policy.get("failure_replay_latch_after_failure") is not True:
+        raise ValueError("GRU development requires failure_replay_latch_after_failure=true")
     controller = policy.get("loss_controller")
     validate_controller_config(controller)
     freeze = policy.get("candidate_freeze")
@@ -200,7 +202,8 @@ def controller_next(
         false_accepts,
         frr=frr,
         far_per_hour=far_per_hour,
-        latch_after_failure=False,
+        # Required to be exactly True by validate_policy above.
+        latch_after_failure=policy.get("failure_replay_latch_after_failure") is True,
     )
 
 

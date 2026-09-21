@@ -19,6 +19,7 @@
   "lr_decay_per_round": 0.85,
   "fixed_replay_repeat": 1,
   "failure_replay_repeat_max": 3,
+  "failure_replay_latch_after_failure": true,
   "loss_controller": {
     "positive_example_weight_initial": 2.0,
     "positive_example_weight_min": 1.5,
