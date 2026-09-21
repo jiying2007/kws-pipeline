@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import json
 import pathlib
+import shutil
 import sys
 import tempfile
 
@@ -11,6 +12,12 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from domain_progress import append_round_progress, build_round_progress  # noqa: E402
+from product_preflight_handoff import (  # noqa: E402
+    pack_handoff,
+    restore_handoff,
+    sha256_file,
+    verify_materialization,
+)
 from verify_product_development_preflight import verify  # noqa: E402
 
 
@@ -37,7 +44,155 @@ def metrics(matched1: int = 2, matched2: int = 2) -> dict:
     }
 
 
+
+def validate_split_job_handoff() -> None:
+    head_sha = "a" * 40
+    base_sha = "b" * 40
+    with tempfile.TemporaryDirectory(prefix="product-preflight-handoff-test-") as tmp:
+        root = pathlib.Path(tmp)
+        request = root / ".github/triggers/model-training-request.json"
+        effective = root / ".generated/xiaowo.product-effective.json"
+        config = root / ".generated/xiaowo.product-preflight.json"
+        work = root / "build/model-training-preflight"
+        for path, payload in (
+            (request, '{"request_id":"fixture"}\n'),
+            (effective, '{"effective":"fixture"}\n'),
+            (config, '{"preflight":"fixture"}\n'),
+        ):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(payload, encoding="utf-8")
+
+        candidate = work / "candidates/r00-logmel-00"
+        checkpoint = candidate / "model.pt"
+        model = candidate / "model.kwm"
+        provenance = candidate / "model.kwm.provenance.json"
+        keywords = candidate / "calibration/calibrated-keywords.tsv"
+        pack = candidate / "calibration/calibrated-keywords.kwk"
+        cal_fp = candidate / "calibration/final-eval/false-positives.jsonl"
+        cal_fr = candidate / "calibration/final-eval/false-rejects.jsonl"
+        test_fp = candidate / "test/false-positives.jsonl"
+        test_fr = candidate / "test/false-rejects.jsonl"
+        domain_index = work / "datasets/round-00/domain-index.jsonl"
+        audit = work / "datasets/round-00/audit.json"
+        curriculum = work / "curriculum/round-00.json"
+        clean_cache = (
+            work
+            / "hard-negative-replay/.clean-command-tts-cache/aa/cache.wav"
+        )
+        for path, payload in (
+            (checkpoint, b"checkpoint"),
+            (model, b"model"),
+            (provenance, b'{"provider":"fixture"}\n'),
+            (keywords, b"1\twake\t0.5\ta b\n"),
+            (pack, b"pack"),
+            (cal_fp, b""),
+            (cal_fr, b""),
+            (test_fp, b""),
+            (test_fr, b""),
+            (domain_index, b'{"split":"calibration"}\n'),
+            (audit, b'{"ok":true}\n'),
+            (curriculum, b'{"schema_version":1}\n'),
+            (clean_cache, b"RIFFfixture"),
+        ):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+
+        record_metrics = {
+            **metrics(),
+            "false_positives_path": str(cal_fp),
+            "false_rejects_path": str(cal_fr),
+        }
+        test_metrics = {
+            **metrics(),
+            "false_positives_path": str(test_fp),
+            "false_rejects_path": str(test_fr),
+        }
+        manifest = {
+            "qualification_deferred": True,
+            "qualification_qualified": None,
+            "records": [
+                {
+                    "round": 0,
+                    "frontend": "logmel",
+                    "candidate": 0,
+                    "score": 1.0,
+                    "model": str(model),
+                    "model_sha256": sha256_file(model),
+                    "checkpoint": str(checkpoint),
+                    "provenance": str(provenance),
+                    "provenance_sha256": sha256_file(provenance),
+                    "keywords": str(keywords),
+                    "pack": str(pack),
+                    "calibration": record_metrics,
+                    "test": test_metrics,
+                    "calibration_gate": False,
+                    "test_gate": False,
+                }
+            ],
+        }
+        manifest_path = work / "domain-loop-manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        (work / "domain-loop-progress.jsonl").write_text(
+            '{"round":0}\n', encoding="utf-8"
+        )
+
+        archive = root / "handoff/base-stage.tar"
+        metadata = pack_handoff(
+            work_dir=work,
+            config_path=config,
+            effective_config_path=effective,
+            request_path=request,
+            output_path=archive,
+            head_sha=head_sha,
+            base_sha=base_sha,
+            repo_root=root,
+        )
+        assert metadata["policy"] == "product-development-preflight-job-handoff-v1"
+        assert any(
+            row["path"].endswith(".clean-command-tts-cache/aa/cache.wav")
+            for row in metadata["files"]
+        )
+
+        shutil.rmtree(work)
+        config.unlink()
+        restored = restore_handoff(
+            archive_path=archive,
+            head_sha=head_sha,
+            base_sha=base_sha,
+            repo_root=root,
+        )
+        assert restored["development_manifest_sha256"] == metadata["development_manifest_sha256"]
+        assert checkpoint.read_bytes() == b"checkpoint"
+        assert clean_cache.read_bytes() == b"RIFFfixture"
+        metadata_path = root / "build/product-preflight-handoff/manifest.json"
+        verify_materialization(
+            metadata_path=metadata_path,
+            effective_config_path=effective,
+            request_path=request,
+            head_sha=head_sha,
+            base_sha=base_sha,
+            repo_root=root,
+        )
+
+        effective.write_text('{"effective":"drift"}\n', encoding="utf-8")
+        try:
+            verify_materialization(
+                metadata_path=metadata_path,
+                effective_config_path=effective,
+                request_path=request,
+                head_sha=head_sha,
+                base_sha=base_sha,
+                repo_root=root,
+            )
+        except ValueError as exc:
+            assert "materialization changed" in str(exc)
+        else:
+            raise AssertionError("cross-job materialization drift was accepted")
+
+
 def main() -> int:
+    validate_split_job_handoff()
     with tempfile.TemporaryDirectory(prefix="product-preflight-test-") as tmp:
         root = pathlib.Path(tmp)
         work = root / "work"
@@ -166,6 +321,14 @@ def main() -> int:
     )
     assert "--compact-log" in workflow
     assert "domain-loop-progress.jsonl" in workflow
+    assert "product-development-base-preflight:" in workflow
+    assert "product-development-refinement-preflight:" in workflow
+    assert workflow.count("timeout-minutes: 120") == 2
+    assert "product_preflight_handoff.py pack" in workflow
+    assert "product_preflight_handoff.py restore" in workflow
+    assert "product_preflight_handoff.py verify-materialization" in workflow
+    assert "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c" in workflow
+    assert "xiaowo-product-development-base-handoff-" in workflow
 
     print("product development preflight guard: PASS")
     return 0
