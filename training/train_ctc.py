@@ -156,6 +156,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
         ROOT / "training" / "sequence_margin.py",
+        ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
