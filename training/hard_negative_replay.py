@@ -555,6 +555,12 @@ def render_hard_negative_replay(
     keywords = parse_keywords(keywords_path, token_map)
     keyword_ids = {int(keyword["id"]) for keyword in keywords}
     feature_dim = int(config.get("model", {}).get("feature_dim", 32))
+    generator = config.get("generator", {})
+    if not isinstance(generator, dict):
+        raise ValueError("generator must be an object")
+    tts = generator.get("tts", {"backend": "tone"})
+    if not isinstance(tts, dict):
+        raise ValueError("generator.tts must be an object")
     active_tokens, carriers = keyword_render_context(keywords, feature_dim, tts)
     renderable_tokens = (
         active_tokens
@@ -598,12 +604,6 @@ def render_hard_negative_replay(
         )
         return {**evidence, "evidence": str(evidence_path)}
 
-    generator = config.get("generator", {})
-    if not isinstance(generator, dict):
-        raise ValueError("generator must be an object")
-    tts = generator.get("tts", {"backend": "tone"})
-    if not isinstance(tts, dict):
-        raise ValueError("generator.tts must be an object")
     validate_tone_config(tts)
     backend = str(tts.get("backend", "tone"))
     if backend not in {"tone", "command"}:
