@@ -13,14 +13,17 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 import development_resume as development_resume  # noqa: E402
+import hard_negative_replay as hard_negative_replay_module  # noqa: E402
 from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
 from hard_negative_replay import (  # noqa: E402
+    _render_command_tts_cached,
     adaptive_focus,
     hard_negative_stress_focus,
     normalize_hard_negative_replay,
     normalize_positive_stress_replay,
     positive_stress_focus,
 )
+from synthetic_audio import write_wav  # noqa: E402
 from iterate_domain import (  # noqa: E402
     calibration_behavior_key,
     parse_warm_start_strategy,
@@ -32,7 +35,102 @@ from iterate_domain import (  # noqa: E402
 )
 
 
+def validate_clean_tts_round_cache() -> None:
+    calls: list[tuple[str, tuple[str, ...], str, str]] = []
+    original = hard_negative_replay_module.render_command_tts
+
+    def fake_render_command_tts(
+        text: str,
+        token_names: list[str],
+        kind: str,
+        output: pathlib.Path,
+        cfg: dict,
+    ) -> list[int]:
+        del cfg
+        calls.append((text, tuple(token_names), kind, output.name))
+        samples = [1000, -1000, 500, -500]
+        output.parent.mkdir(parents=True, exist_ok=True)
+        write_wav(output, samples)
+        return samples
+
+    hard_negative_replay_module.render_command_tts = fake_render_command_tts
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            root = pathlib.Path(td)
+            cache = root / "cache"
+            tts = {
+                "backend": "command",
+                "command": ["fake", "--output={output}", "{text}"],
+                "speaker_profiles": [{"speaker_id": 7, "length_scale": 1.0}],
+                "provider_identity_sha256": "a" * 64,
+                "reuse_clean_across_rounds": True,
+            }
+            round0 = root / "round-00" / "clean" / "h00-e000.wav"
+            round1 = root / "round-01" / "clean" / "h00-e000.wav"
+            first = _render_command_tts_cached(
+                "hao3 ni3",
+                ["hao3", "ni3"],
+                "hard-negative",
+                round0,
+                tts,
+                cache_root=cache,
+            )
+            second = _render_command_tts_cached(
+                "hao3 ni3",
+                ["hao3", "ni3"],
+                "hard-negative",
+                round1,
+                tts,
+                cache_root=cache,
+            )
+            assert first == second
+            assert round0.read_bytes() == round1.read_bytes()
+            assert len(calls) == 1
+
+            changed = root / "round-02" / "clean" / "h00-e000.wav"
+            _render_command_tts_cached(
+                "hao3 xiao3",
+                ["hao3", "xiao3"],
+                "hard-negative",
+                changed,
+                tts,
+                cache_root=cache,
+            )
+            assert len(calls) == 2
+
+            uncached = dict(tts)
+            uncached["reuse_clean_across_rounds"] = False
+            _render_command_tts_cached(
+                "hao3 ni3",
+                ["hao3", "ni3"],
+                "hard-negative",
+                root / "round-03" / "clean" / "h00-e000.wav",
+                uncached,
+                cache_root=cache,
+            )
+            assert len(calls) == 3
+
+            invalid = dict(tts)
+            invalid["reuse_clean_across_rounds"] = "true"
+            try:
+                _render_command_tts_cached(
+                    "hao3 ni3",
+                    ["hao3", "ni3"],
+                    "hard-negative",
+                    root / "round-04" / "clean" / "h00-e000.wav",
+                    invalid,
+                    cache_root=cache,
+                )
+            except ValueError as exc:
+                assert "must be boolean" in str(exc)
+            else:
+                raise AssertionError("non-boolean clean-TTS reuse flag was accepted")
+    finally:
+        hard_negative_replay_module.render_command_tts = original
+
+
 def validate_torch_iteration_policy() -> None:
+    validate_clean_tts_round_cache()
     development_resume.self_test()
     for iterator in (
         ROOT / "training" / "iterate_gru_development.py",
