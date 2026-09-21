@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from external_base_dataset import load_external_base_bundle  # noqa: E402
 from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
+from keyword_set_identity import verify_keyword_set_contract  # noqa: E402
 
 SPLITS = ("train", "calibration", "test", "qualification")
 HEX = set("0123456789abcdef")
@@ -74,6 +75,25 @@ def main() -> int:
     contract = load_json(contract_path)
     if contract.get("policy") != "product-speech-like-base-v1":
         raise ValueError("product speech-like base contract identity mismatch")
+
+    source_keyword_contract = str(source.get("keyword_set_contract") or "")
+    base_keyword_contract = str(contract.get("keyword_set_contract") or "")
+    if not source_keyword_contract or source_keyword_contract != base_keyword_contract:
+        raise ValueError("source/base keyword-set contract binding mismatch")
+    keyword_contract_path = (ROOT / source_keyword_contract).resolve()
+    source_tokens_path = (ROOT / str(source.get("tokens") or "")).resolve()
+    source_keywords_path = (ROOT / str(source.get("keywords") or "")).resolve()
+    keyword_identity = verify_keyword_set_contract(
+        keyword_contract_path,
+        tokens_path=source_tokens_path,
+        keywords_path=source_keywords_path,
+    )
+    expected_keyword_set = require_sha(
+        contract.get("keyword_set_sha256"),
+        "contract keyword_set_sha256",
+    )
+    if keyword_identity["keyword_set_sha256"] != expected_keyword_set:
+        raise ValueError("product speech-like base keyword-set identity mismatch")
 
     manifest_path = bundle_root / "stage-a-base-bundle.json"
     manifest = load_json(manifest_path)
@@ -262,6 +282,9 @@ def main() -> int:
         "replay_backend": "command",
         "replay_train_voice_slots": len(train_profiles),
         "replay_tone_allowed": False,
+        "keyword_set_contract": source_keyword_contract,
+        "keyword_set_sha256": expected_keyword_set,
+        "keyword_count": int(keyword_identity["keyword_count"]),
         "base_contract_path": contract_path.relative_to(ROOT).as_posix(),
         "base_contract_sha256": sha256_file(contract_path),
         "source_template_config_path": source_path.relative_to(ROOT).as_posix(),
