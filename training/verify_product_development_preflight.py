@@ -73,6 +73,23 @@ def validate_metrics(metrics: object, label: str) -> dict:
     }
 
 
+def compact_base_round_metrics(records: list[dict]) -> list[dict]:
+    result: list[dict] = []
+    for row in records:
+        if not isinstance(row, dict):
+            raise ValueError("preflight base record must be an object")
+        item = {
+            "round": int(row.get("round", -1)),
+            "score": finite(row.get("score"), "base.score"),
+            "calibration": validate_metrics(row.get("calibration"), "base.calibration"),
+            "test": validate_metrics(row.get("test"), "base.test"),
+            "calibration_gate": bool(row.get("calibration_gate")),
+            "test_gate": bool(row.get("test_gate")),
+        }
+        result.append(item)
+    return result
+
+
 def verify(
     *,
     base_manifest_path: pathlib.Path,
@@ -89,6 +106,7 @@ def verify(
     records = base.get("records")
     if not isinstance(records, list) or len(records) != 2:
         raise ValueError("preflight base must contain exactly two development rounds")
+    base_round_metrics = compact_base_round_metrics(records)
     epochs = tuple(int(row.get("training_epochs", -1)) for row in records)
     if epochs != EXPECTED_BASE_EPOCHS:
         raise ValueError(f"preflight base epoch budget drifted: {epochs}")
@@ -138,6 +156,9 @@ def verify(
         "passed": True,
         "base_rounds": len(records),
         "base_epochs": list(epochs),
+        "base_round_metrics": base_round_metrics,
+        "refinement_source_round": int(refinement.get("source_round", -1)),
+        "refinement_source_was_strict": bool(refinement.get("source_was_strict")),
         "refinement_epochs": int(refinement["refinement_epochs"]),
         "strict_dual_pass": bool(refinement.get("strict_dual_pass")),
         "calibration": calibration,
