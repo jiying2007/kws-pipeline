@@ -830,6 +830,7 @@ def mine_adversarial_lexicon(
         "command_tts_replay_pre_rendered": len(replay_tasks) if command_backend else 0,
         "round": round_index,
         "frontend": frontend,
+        "configured_max_length": configured_max_length,
         "max_length": max_length,
         "max_enumerated_sequences": max_enumerated_sequences,
         "enumerated_sequences": len(candidates),
