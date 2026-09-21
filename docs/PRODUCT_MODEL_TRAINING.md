@@ -125,6 +125,25 @@ Replay voice selection is deterministic and restricted to the eight
 `train-*` voice slots. Calibration, test and qualification voice identities are
 never used for replay.
 
+## Bounded product round budget
+
+The product loop distinguishes cold-start fitting from warm-start refinement.
+Round 0 keeps the full 36-epoch budget. Later warm-start rounds use 12 epochs,
+matching the bounded fine-tune scale already used by adversarial refinement,
+and decay the learning rate by 0.85 per round. The trainer shuffle seed advances
+by 1009 per round so a warm-started model is not repeatedly optimized against
+the same batch permutation.
+
+The loop is bounded to two through four rounds. A strict calibration/test pass
+may stop the loop once the two-round minimum has been reached, and two stale
+objective rounds may also stop it. Persistent improvement may still consume all
+four rounds. Therefore the worst-case base-training epoch budget falls from
+144 to 72 without reducing the cold-start budget or relaxing any gate; successful
+or stale runs can terminate earlier.
+
+Each record retains the actual epochs, learning rate and training seed used for
+that round, and checkpoint/model provenance continues to retain the same values.
+
 ## Calibration fallback
 
 The shipping gates remain strict zero-error. Threshold calibration first prefers
