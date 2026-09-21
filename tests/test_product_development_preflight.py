@@ -18,7 +18,10 @@ from product_preflight_handoff import (  # noqa: E402
     sha256_file,
     verify_materialization,
 )
-from verify_product_development_preflight import verify  # noqa: E402
+from verify_product_development_preflight import (  # noqa: E402
+    expected_keyword_ids_from_config,
+    verify,
+)
 
 
 def metrics(matched1: int = 2, matched2: int = 2) -> dict:
@@ -198,6 +201,20 @@ def main() -> int:
         work = root / "work"
         work.mkdir()
         base_path = work / "domain-loop-manifest.json"
+        keyword_fixture = root / "keywords.tsv"
+        keyword_fixture.write_text(
+            "1\twake-one\t0.5\ta b\n"
+            "2\twake-two\t0.5\tb c\n"
+            "3\twake-three\t0.5\tc d\n",
+            encoding="utf-8",
+        )
+        config_fixture = root / "preflight.json"
+        config_fixture.write_text(
+            json.dumps({"keywords": str(keyword_fixture)}),
+            encoding="utf-8",
+        )
+        assert expected_keyword_ids_from_config(config_fixture) == ("1", "2", "3")
+
         refinement_path = work / "adversarial-refinement" / "preflight-summary.json"
         refinement_path.parent.mkdir(parents=True)
 
