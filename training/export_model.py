@@ -139,6 +139,24 @@ def training_environment(checkpoint: dict) -> dict:
             raise ValueError("checkpoint training code path is invalid")
         normalized_code[name] = checkpoint_sha(digest, f"training_code_sha256.{name}")
     result["training_code_sha256"] = dict(sorted(normalized_code.items()))
+    feature_cache = value.get("feature_cache")
+    if feature_cache is not None:
+        if not isinstance(feature_cache, dict):
+            raise ValueError("checkpoint training_environment.feature_cache must be an object")
+        if feature_cache.get("policy") != "deterministic-feature-cache-v1":
+            raise ValueError("checkpoint training_environment.feature_cache policy mismatch")
+        max_items = int(feature_cache.get("max_items", -1))
+        if not 0 <= max_items <= 32768:
+            raise ValueError("checkpoint training_environment.feature_cache max_items is invalid")
+        if feature_cache.get("training_math_changed") is not False:
+            raise ValueError(
+                "checkpoint training_environment.feature_cache must preserve training math"
+            )
+        result["feature_cache"] = {
+            "policy": "deterministic-feature-cache-v1",
+            "max_items": max_items,
+            "training_math_changed": False,
+        }
     return result
 
 
