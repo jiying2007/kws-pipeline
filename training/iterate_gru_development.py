@@ -211,7 +211,9 @@ def repeated(path: pathlib.Path | None, count: int) -> list[pathlib.Path]:
 
 
 def strict(record: dict) -> bool:
-    return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
+    # bool("false") is True. On a resumed run these records come from a
+    # checkpoint on disk, so a recorded failure must not become eligible.
+    return record.get("calibration_gate") is True and record.get("test_gate") is True
 
 
 def select_best_strict_candidate(records: list[dict]) -> dict | None:
