@@ -125,6 +125,20 @@ Replay voice selection is deterministic and restricted to the eight
 `train-*` voice slots. Calibration, test and qualification voice identities are
 never used for replay.
 
+## Calibration fallback
+
+The shipping gates remain strict zero-error. Threshold calibration first prefers
+any threshold that satisfies those gates, and equivalent strict operating points
+continue to use the lower-median plateau rule.
+
+When no threshold is strict, calibration must not use FAR-first lexicographic
+fallback. Under 0-FAR/0-FRR gates that policy can prefer an all-reject operating
+point solely because it has fewer false accepts, even when recall is unusable.
+Non-strict threshold candidates therefore use the same balanced development
+`objective()` used for model candidate ranking. This changes only development
+fallback selection; it does not relax the promotion, qualification, robustness
+or continuous-FAR gates.
+
 ## Development refinement source
 
 Adversarial refinement is a development-only optimization stage and does not
