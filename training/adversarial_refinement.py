@@ -261,11 +261,15 @@ def _repeat_focus_rows(
     if raw_focus is None:
         focus: tuple[int, ...] = ()
     elif isinstance(raw_focus, (list, tuple)):
-        values = [int(value) for value in raw_focus if int(value) > 0]
+        values = [int(value) for value in raw_focus]
+        if any(value < 0 for value in values):
+            raise ValueError(f"{label} focus keyword ids must be non-negative")
         focus = tuple(sorted(set(values)))
     else:
         value = int(raw_focus)
-        focus = (value,) if value > 0 else ()
+        if value < 0:
+            raise ValueError(f"{label} focus keyword id must be non-negative")
+        focus = (value,)
     output.extend([focus] * count)
 
 

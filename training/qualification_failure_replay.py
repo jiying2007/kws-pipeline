@@ -81,11 +81,12 @@ def _collect_specs(dataset: pathlib.Path, eval_dir: pathlib.Path) -> list[dict]:
             if not isinstance(scene, dict):
                 raise ValueError("qualification repair source is missing scene metadata")
             source_keyword = source.get("keyword_id")
-            focus_keyword = int(
+            focus_raw = (
                 failure.get("keyword_id")
                 if failure.get("keyword_id") is not None
-                else source_keyword or 0
+                else source_keyword
             )
+            focus_keyword = int(focus_raw) if focus_raw is not None else None
             item = aggregated.setdefault(
                 source_sha,
                 {
@@ -104,7 +105,7 @@ def _collect_specs(dataset: pathlib.Path, eval_dir: pathlib.Path) -> list[dict]:
             )
             item["failure_hits"] += 1
             item["failure_kinds"].add(kind)
-            if focus_keyword > 0:
+            if focus_keyword is not None:
                 item["focus_keyword_ids"].add(focus_keyword)
             if kind == "false-accept":
                 item["max_false_accept_confidence"] = max(
@@ -174,7 +175,7 @@ def _render_repair_rows(config_path: pathlib.Path, specs: list[dict], output: pa
                     source_keyword = spec.get("source_keyword_id")
                     text = (
                         keyword_text.get(int(source_keyword), " ".join(tokens))
-                        if source_keyword
+                        if source_keyword is not None
                         else " ".join(tokens)
                     )
                     clean = render_command_tts(text, tokens, str(spec["source_kind"]), clean_path, tts)
