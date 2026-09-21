@@ -32,5 +32,8 @@
   "replay_train_voice_slots": 8,
   "replay_voice_scope": "train-only",
   "replay_backend": "command",
-  "replay_tone_allowed": false
+  "replay_tone_allowed": false,
+  "keyword_set_contract_id": "xiaowo-dual-wake-v1",
+  "keyword_set_contract_path": "configs/training/xiaowo-keyword-set-v1.json",
+  "corpus_plan_path": "configs/training/speech-like-corpus-plan-v1.json"
 }
