@@ -194,6 +194,9 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         self.assertIn("render_hard_negative_replay", text)
         self.assertIn("update_curriculum", text)
         self.assertIn("select_best_strict_candidate(records)", text)
+        self.assertIn('splits=("train", "calibration", "test")', text)
+        self.assertIn("calibration_parallel_trials", text)
+        self.assertIn("parallel_trials=calibration_parallel_trials", text)
 
     def test_workflow_resolves_current_fresh_and_shadow_namespaces_from_policy(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
