@@ -584,6 +584,34 @@ def main() -> int:
         assert pathlib.Path(work / "best" / "model.kwm").is_file()
         assert pathlib.Path(work / "best" / "keywords.kwk").is_file()
 
+        deferred_work = root / "deferred-work"
+        deferred = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "training" / "iterate_domain.py"),
+                "--config",
+                str(path),
+                "--runner",
+                str(args.runner.resolve()),
+                "--work-dir",
+                str(deferred_work),
+                "--defer-qualification",
+            ],
+            check=False,
+        )
+        assert deferred.returncode == 0, deferred.returncode
+        deferred_manifest = json.loads(
+            (deferred_work / "domain-loop-manifest.json").read_text(encoding="utf-8")
+        )
+        assert deferred_manifest["development_qualified"] is True
+        assert deferred_manifest["qualification_deferred"] is True
+        assert deferred_manifest["qualification_qualified"] is None
+        assert deferred_manifest["qualified"] is False
+        assert deferred_manifest["qualification"] == {}
+        assert deferred_manifest["qualification_domains"] == {}
+        assert deferred_manifest["evidence_class"] == "synthetic-domain-development-only"
+        assert not (deferred_work / "best" / "qualification").exists()
+
     print("test_domain_loop: ok")
     return 0
 
