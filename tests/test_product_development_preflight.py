@@ -10,6 +10,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
+from domain_progress import append_round_progress, build_round_progress  # noqa: E402
 from verify_product_development_preflight import verify  # noqa: E402
 
 
@@ -103,6 +104,35 @@ def main() -> int:
         assert result["refinement_source_round"] == -1
         assert result["formal_qualification_used"] is False
 
+        progress = build_round_progress(
+            {
+                "round": 1,
+                "frontend": "logmel",
+                "candidate": 0,
+                "score": 8.0,
+                "calibration_gate": False,
+                "test_gate": False,
+                "training_epochs": 6,
+                "training_learning_rate": 0.0005,
+                "training_seed": 2026,
+                "calibration": metrics(2, 2),
+                "test": metrics(1, 3),
+            },
+            curriculum_sha256="a" * 64,
+        )
+        assert progress["training_epochs"] == 6
+        assert progress["test"]["per_keyword"]["1"]["matched"] == 1
+        progress_path = work / "domain-loop-progress.jsonl"
+        append_round_progress(progress_path, progress)
+        append_round_progress(progress_path, progress)
+        progress_rows = [
+            json.loads(line)
+            for line in progress_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        assert len(progress_rows) == 2
+        assert progress_rows[-1]["curriculum_sha256"] == "a" * 64
+
         collapsed = copy.deepcopy(refinement)
         collapsed["record"]["test"] = metrics(0, 3)
         refinement_path.write_text(json.dumps(collapsed), encoding="utf-8")
@@ -130,6 +160,12 @@ def main() -> int:
             assert "crossed qualification boundary" in str(exc)
         else:
             raise AssertionError("qualification leakage passed preflight")
+
+    workflow = (ROOT / ".github/workflows/model-training-preflight.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "--compact-log" in workflow
+    assert "domain-loop-progress.jsonl" in workflow
 
     print("product development preflight guard: PASS")
     return 0
