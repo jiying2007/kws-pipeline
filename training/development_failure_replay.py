@@ -17,6 +17,8 @@ from acoustic_scene import render_scene, sha256_file  # noqa: E402
 from render_domains import validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     augment,
+    command_tts_surface_forms,
+    command_tts_text,
     generate_background,
     keyword_render_context,
     load_config,
@@ -315,6 +317,11 @@ def render_development_failure_replay(
         int(cfg.get("model", {}).get("feature_dim", 32)),
         tts,
     )
+    command_surface_forms = (
+        command_tts_surface_forms(keywords, tts)
+        if str(tts.get("backend", "tone")) == "command"
+        else {}
+    )
     validate_tone_config(tts)
     validate_augment_config(augment_config)
     domains = validate_domains(cfg)
@@ -339,9 +346,12 @@ def render_development_failure_replay(
                 else:
                     source_keyword = spec.get("source_keyword_id")
                     text = (
-                        keyword_text.get(int(source_keyword), " ".join(tokens))
+                        keyword_text.get(
+                            int(source_keyword),
+                            command_tts_text(tokens, command_surface_forms),
+                        )
                         if source_keyword is not None
-                        else " ".join(tokens)
+                        else command_tts_text(tokens, command_surface_forms)
                     )
                     clean = render_command_tts(text, tokens, str(spec["source_kind"]), clean_path, tts)
             else:
