@@ -7,7 +7,11 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-from synthetic_audio import keyword_render_context, token_carriers  # noqa: E402
+from synthetic_audio import (  # noqa: E402
+    command_tts_timeout_seconds,
+    keyword_render_context,
+    token_carriers,
+)
 from hard_negative_replay import (  # noqa: E402
     normalize_hard_negative_replay,
     normalize_positive_stress_replay,
@@ -151,6 +155,22 @@ def main() -> int:
     assert filled[2]["auto_filled"] is True
     assert filled[2]["examples"] == 6
     assert filled[2]["focus"] == "adaptive"
+
+    assert command_tts_timeout_seconds({"backend": "command"}) == 120
+    assert command_tts_timeout_seconds(
+        {"backend": "command", "timeout_seconds": 45}
+    ) == 45
+    for invalid_timeout in (0, 301, True, 1.5):
+        try:
+            command_tts_timeout_seconds(
+                {"backend": "command", "timeout_seconds": invalid_timeout}
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                f"invalid command TTS timeout accepted: {invalid_timeout!r}"
+            )
 
     wide_keywords = [
         {
