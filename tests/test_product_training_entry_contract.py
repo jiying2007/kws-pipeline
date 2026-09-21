@@ -116,10 +116,10 @@ def main() -> int:
     assert verified_request["source_policy"] == "exact-current-main"
     assert "training/training_request.py verify" in workflow
     assert "training/training_request.py write-receipt" in workflow
-    assert "--provider-only" in workflow
-    assert "--replay-provider" in workflow
-    assert "--voice-inventory" in workflow
-    assert "product-replay-provider" in workflow
+    assert "--provider-only" in materializer
+    assert "--replay-provider" in materializer
+    assert "--voice-inventory" in materializer
+    assert "product-replay-provider" in materializer
 
     print("test_product_training_entry_contract: ok")
     return 0
