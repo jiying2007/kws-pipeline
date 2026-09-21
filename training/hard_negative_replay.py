@@ -182,6 +182,9 @@ def normalize_positive_stress_replay(
     raw: object,
     *,
     keywords: list[dict],
+    auto_fill_missing: bool = False,
+    auto_examples: int = 32,
+    auto_fallback: dict | None = None,
 ) -> list[dict]:
     if raw is None:
         return []
@@ -227,6 +230,33 @@ def normalize_positive_stress_replay(
             }
         )
         seen.add(keyword_id)
+
+    if auto_fill_missing:
+        if not 1 <= auto_examples <= MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD:
+            raise ValueError(
+                "positive-stress auto examples must be "
+                f"1..{MAX_POSITIVE_STRESS_EXAMPLES_PER_KEYWORD}"
+            )
+        fallback = auto_fallback if auto_fallback is not None else {}
+        if not isinstance(fallback, dict):
+            raise ValueError("positive-stress auto fallback must be an object")
+        for keyword in keywords:
+            keyword_id = int(keyword["id"])
+            if keyword_id in seen:
+                continue
+            normalized.append(
+                {
+                    "keyword_id": keyword_id,
+                    "text": str(keyword["text"]),
+                    "tokens": list(keyword["tokens"]),
+                    "target_ids": [int(value) for value in keyword["token_ids"]],
+                    "examples": auto_examples,
+                    "focus": "adaptive",
+                    "fallback": {str(key): value for key, value in fallback.items()},
+                    "auto_filled": True,
+                }
+            )
+            seen.add(keyword_id)
     return normalized
 
 
@@ -575,9 +605,36 @@ def render_hard_negative_replay(
         token_map=token_map,
         keyword_ids=keyword_ids,
     )
+    data_v3 = config.get("data_augmentation_v3", {})
+    if data_v3 is None:
+        data_v3 = {}
+    if not isinstance(data_v3, dict):
+        raise ValueError("data_augmentation_v3 must be an object")
+    auto_fill_positive = data_v3.get(
+        "positive_stress_auto_fill_missing_keywords",
+        False,
+    )
+    if not isinstance(auto_fill_positive, bool):
+        raise ValueError(
+            "data_augmentation_v3.positive_stress_auto_fill_missing_keywords "
+            "must be boolean"
+        )
+    auto_fallback = data_v3.get(
+        "positive_stress_auto_fallback",
+        {
+            "distance_bin": "5m",
+            "azimuth": "rear",
+            "snr": "critical",
+        },
+    )
     positive_replay = normalize_positive_stress_replay(
         iteration.get("positive_stress_replay", []),
         keywords=keywords,
+        auto_fill_missing=auto_fill_positive,
+        auto_examples=int(
+            data_v3.get("positive_stress_auto_examples_per_keyword", 32)
+        ),
+        auto_fallback=auto_fallback,
     )
 
     output.mkdir(parents=True, exist_ok=True)
@@ -748,6 +805,11 @@ def render_hard_negative_replay(
         "hard_negative_stress_policy": HARD_NEGATIVE_STRESS_POLICY,
         "positive_stress_policy": POSITIVE_STRESS_POLICY,
         "positive_stress_covering_examples": POSITIVE_STRESS_COVERING_EXAMPLES,
+        "positive_stress_auto_filled_keyword_ids": [
+            int(item["keyword_id"])
+            for item in positive_replay
+            if item.get("auto_filled") is True
+        ],
         "sequences": [
             {
                 "tokens": item["tokens"],
