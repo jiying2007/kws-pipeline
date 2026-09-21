@@ -59,6 +59,17 @@ def build_round_progress(record: dict, *, curriculum_sha256: str) -> dict:
         "test": compact_metrics(record["test"]),
         "curriculum_sha256": curriculum_sha256,
     }
+    wake_balance = record.get("wake_balance")
+    if isinstance(wake_balance, dict):
+        result["wake_balance"] = {
+            "policy": wake_balance.get("policy"),
+            "positive_example_weight": wake_balance.get("positive_example_weight"),
+            "wake_keyword_weights": wake_balance.get("wake_keyword_weights"),
+            "wake_rows": wake_balance.get("wake_rows"),
+            "nonwake_mass": wake_balance.get("nonwake_mass"),
+            "effective_wake_mass": wake_balance.get("effective_wake_mass"),
+            "bounded": wake_balance.get("bounded"),
+        }
     for key in (
         "training_epochs",
         "training_learning_rate",
