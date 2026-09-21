@@ -160,6 +160,24 @@ or stale runs can terminate earlier.
 Each record retains the actual epochs, learning rate and training seed used for
 that round, and checkpoint/model provenance continues to retain the same values.
 
+## Train-only acoustic round rotation
+
+Warm-start rounds must not repeatedly optimize against the same deterministic
+train-scene realization. Product training keeps round 0 unchanged and applies a
+train-only scene-seed offset of `round * 104729` thereafter. The offset changes
+distance/azimuth/SNR/noise/playback sampling only for the train split; base
+utterances are reused.
+
+Calibration, test and qualification scene seeds are never offset, so development
+metrics remain comparable across rounds and protected evidence does not rotate
+with training. Adversarial refinement uses the same round-derived train offset.
+
+Each candidate record retains
+`training_acoustic_seed_policy=train-only-scene-seed-offset-v1` and the exact
+offset, while each domain summary records that evaluation seeds were not
+rotated. Model provenance independently binds the resulting training WAV bytes
+through the training-corpus identity.
+
 ## Calibration execution budget
 
 Threshold trials for one keyword/coordinate are independent: they use the same
