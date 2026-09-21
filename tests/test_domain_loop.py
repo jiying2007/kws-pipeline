@@ -27,6 +27,7 @@ from iterate_domain import (  # noqa: E402
     select_calibration_threshold,
     select_strict_candidate,
     strict_gate_candidate,
+    torch_round_training_values,
     warm_start_args,
 )
 
@@ -59,6 +60,34 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("invalid warm-start strategy was accepted")
+
+    round_policy = {
+        "seed": 1337,
+        "train": {
+            "epochs": 36,
+            "warm_start_epochs": 12,
+            "lr": 0.001,
+        },
+        "domain_iteration": {
+            "lr_decay_per_round": 0.85,
+            "training_seed_stride": 1009,
+        },
+    }
+    assert torch_round_training_values(
+        round_policy, round_index=0, warm_started=False
+    ) == (36, 0.001, 1337)
+    warm_round_1 = torch_round_training_values(
+        round_policy, round_index=1, warm_started=True
+    )
+    assert warm_round_1[0] == 12
+    assert abs(warm_round_1[1] - 0.00085) < 1.0e-15
+    assert warm_round_1[2] == 2346
+    warm_round_3 = torch_round_training_values(
+        round_policy, round_index=3, warm_started=True
+    )
+    assert warm_round_3[0] == 12
+    assert abs(warm_round_3[1] - 0.001 * (0.85 ** 3)) < 1.0e-15
+    assert warm_round_3[2] == 4364
 
     thresholds = [
         0.01,
@@ -189,6 +218,14 @@ def validate_torch_iteration_policy() -> None:
     assert 0.55 in formal["calibration"]["thresholds"]
     assert len(formal["calibration"]["thresholds"]) >= 5
     assert int(formal["calibration"]["coordinate_rounds"]) >= 2
+    assert int(formal["train"]["epochs"]) == 36
+    assert int(formal["train"]["warm_start_epochs"]) == 12
+    assert abs(float(formal["domain_iteration"]["lr_decay_per_round"]) - 0.85) < 1.0e-12
+    assert int(formal["domain_iteration"]["training_seed_stride"]) == 1009
+    assert int(formal["domain_iteration"]["min_rounds"]) == 2
+    assert int(formal["domain_iteration"]["max_rounds"]) == 4
+    assert int(formal["domain_iteration"]["patience"]) == 2
+    assert formal["domain_iteration"]["stop_on_gate"] is True
 
     shadow = formal["shadow_qualification"]
     assert shadow["enabled"] is True
