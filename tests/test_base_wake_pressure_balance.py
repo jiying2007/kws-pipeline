@@ -131,7 +131,7 @@ def main() -> int:
     trainer_source = (ROOT / "training" / "train_ctc.py").read_text(
         encoding="utf-8"
     )
-    assert "from wake_pressure_balance import UINT32_MAX" in trainer_source
+    assert "from synthetic_audio import UINT32_MAX" in trainer_source
     assert "keyword_id < 0 or keyword_id > UINT32_MAX" in trainer_source
     assert "keyword id must be unique and fit uint32" in trainer_source
     assert "keyword_id <= 0" not in trainer_source
