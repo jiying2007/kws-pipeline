@@ -345,14 +345,13 @@ def render_development_failure_replay(
                     clean = render_tone_tokens(tokens, carriers, rng, tts)
                 else:
                     source_keyword = spec.get("source_keyword_id")
-                    text = (
-                        keyword_text.get(
-                            int(source_keyword),
-                            command_tts_text(tokens, command_surface_forms),
-                        )
-                        if source_keyword is not None
-                        else command_tts_text(tokens, command_surface_forms)
-                    )
+                    if (
+                        source_keyword is not None
+                        and int(source_keyword) in keyword_text
+                    ):
+                        text = keyword_text[int(source_keyword)]
+                    else:
+                        text = command_tts_text(tokens, command_surface_forms)
                     clean = render_command_tts(text, tokens, str(spec["source_kind"]), clean_path, tts)
             else:
                 clean = generate_background(
