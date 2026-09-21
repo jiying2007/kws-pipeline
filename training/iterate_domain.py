@@ -256,16 +256,27 @@ def calibration_behavior_key(base: dict, domains: dict, gates: dict) -> tuple[fl
     far_per_hour = float(base["far_per_hour"])
     latency = float(base["p95_post_end_latency_ms"])
     far_frr = float(far.get("frr", 1.0))
-    gate_failed = 0.0 if base_gate(base, gates) and domain_gate(domains, gates) else 1.0
+    strict = base_gate(base, gates) and domain_gate(domains, gates)
+    if strict:
+        # Preserve the historical strict-pass plateau semantics. Once all hard
+        # gates are satisfied, threshold calibration should not overfit minor
+        # objective/latency differences; select_calibration_threshold() can keep
+        # choosing the lower median of equivalent strict operating points.
+        return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    # When no threshold is strict, FAR-first lexicographic ordering degenerates
+    # toward all-reject under the product 0-FAR/0-FRR gates. Use the same
+    # balanced development objective that ranks model candidates instead.
+    score = objective(base, domains, gates)
     return (
-        gate_failed,
-        max(0.0, far_per_hour - gates["max_far_per_hour"]),
-        max(0.0, frr - gates["max_frr"]),
-        max(0.0, far_frr - gates["max_far_frr"]),
-        max(0.0, latency - gates["max_p95_latency_ms"]),
-        far_per_hour,
+        1.0,
+        score,
         frr,
+        far_per_hour,
         far_frr,
+        latency,
+        max(0.0, frr - gates["max_frr"]),
+        max(0.0, far_per_hour - gates["max_far_per_hour"]),
     )
 
 
