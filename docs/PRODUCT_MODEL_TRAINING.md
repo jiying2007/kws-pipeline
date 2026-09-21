@@ -208,6 +208,19 @@ decoder, scoring functions and controller inputs. They reduce feedback latency
 only, so development evidence remains comparable while the quick loop better
 serves as a preflight before governed product training.
 
+## Curriculum feedback source
+
+Product, RNN development and GRU development use one shared curriculum-feedback
+authority. After each development round, calibration and test domain metrics are
+merged per slice and per keyword by retaining the harder recognition-error
+measurement. The policy is
+`calibration-test-per-slice-hardest-v1`.
+
+This prevents a test-only far-field, azimuth, SNR, playback or keyword weakness
+from disappearing before the next training round. Formal qualification and
+shadow evidence are still excluded from curriculum feedback. The merged source
+policy is retained in each curriculum evidence file.
+
 ## Bounded product round budget
 
 The product loop distinguishes cold-start fitting from warm-start refinement.
