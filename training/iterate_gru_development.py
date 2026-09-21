@@ -324,6 +324,11 @@ def main() -> int:
     gates = gate_values(cfg.get("domain_gates", {}))
     thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
+    calibration_parallel_trials = int(
+        cfg.get("calibration", {}).get("max_parallel_trials", 1)
+    )
+    if not 1 <= calibration_parallel_trials <= 4:
+        raise ValueError("calibration.max_parallel_trials must be 1..4")
     if not thresholds:
         raise ValueError("calibration threshold grid is empty")
 
@@ -370,7 +375,12 @@ def main() -> int:
 
     for round_index in range(start_round, int(policy["max_rounds"])):
         dataset = work / "datasets" / f"round-{round_index:02d}"
-        render_domain_dataset(config_path, dataset, curriculum_weights=curriculum)
+        render_domain_dataset(
+            config_path,
+            dataset,
+            curriculum_weights=curriculum,
+            splits=("train", "calibration", "test"),
+        )
         run(
             [
                 sys.executable,
@@ -471,6 +481,7 @@ def main() -> int:
             thresholds=thresholds,
             rounds=coordinate_rounds,
             gates=gates,
+            parallel_trials=calibration_parallel_trials,
         )
         test_base, test_domains = evaluate(
             runner=runner,
