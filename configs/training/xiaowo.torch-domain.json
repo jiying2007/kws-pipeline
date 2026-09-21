@@ -117,6 +117,7 @@
   },
   "train": {
     "epochs": 36,
+    "warm_start_epochs": 12,
     "batch_size": 16,
     "lr": 0.001,
     "feature_cache_max_items": 8192
@@ -128,12 +129,14 @@
   "domain_iteration": {
     "backend": "torch_ctc",
     "max_rounds": 4,
-    "min_rounds": 4,
-    "patience": 3,
+    "min_rounds": 2,
+    "patience": 2,
     "curriculum_strength": 2.5,
     "max_domain_weight": 6.0,
-    "stop_on_gate": false,
+    "stop_on_gate": true,
     "warm_start_strategy": "full",
+    "lr_decay_per_round": 0.85,
+    "training_seed_stride": 1009,
     "adversarial_lexicon": {
       "enabled": true,
       "max_length": 5,
