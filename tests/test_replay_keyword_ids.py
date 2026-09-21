@@ -190,7 +190,12 @@ def main() -> int:
     active, command_carriers = keyword_render_context(
         wide_keywords,
         32,
-        {"backend": "command"},
+        {
+            "backend": "command",
+            "token_surface_forms": {
+                f"t{index}": f"wake{index}" for index in range(25)
+            },
+        },
     )
     assert len(active) == 25
     assert command_carriers == {}
