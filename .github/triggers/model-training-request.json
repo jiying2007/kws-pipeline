@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-keyword-balance-v2-20260921",
+  "request_id": "speech-like-product-preflight-v2-20260921",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with per-keyword exact-wake pressure balancing after model-training #339 proved global wake-mass balance reduced FAR but further degraded recall."
+  "reason": "Re-run the bounded product speech-like 12/6/6 development preflight on current main after the prior request reached both 12/6 base rounds but hit the 120-minute job timeout during refinement. This request includes clean command-TTS reuse across rounds and compact per-round development progress. Do not start full governed training unless refinement proves neither shipping wake word collapses."
 }
