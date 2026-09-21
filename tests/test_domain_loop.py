@@ -218,6 +218,7 @@ def validate_torch_iteration_policy() -> None:
     assert 0.55 in formal["calibration"]["thresholds"]
     assert len(formal["calibration"]["thresholds"]) >= 5
     assert int(formal["calibration"]["coordinate_rounds"]) >= 2
+    assert int(formal["calibration"]["max_parallel_trials"]) == 2
     assert int(formal["train"]["epochs"]) == 36
     assert int(formal["train"]["warm_start_epochs"]) == 12
     assert abs(float(formal["domain_iteration"]["lr_decay_per_round"]) - 0.85) < 1.0e-12
