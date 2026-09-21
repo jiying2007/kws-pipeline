@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import json
 import math
@@ -307,14 +308,22 @@ def calibrate(
     thresholds: list[float],
     rounds: int,
     gates: dict,
+    parallel_trials: int = 1,
 ) -> tuple[pathlib.Path, pathlib.Path, dict, dict]:
     current = keyword_rows(source_keywords)
+    if isinstance(parallel_trials, bool) or not 1 <= int(parallel_trials) <= 4:
+        raise ValueError("calibration parallel_trials must be 1..4")
+    parallel_trials = int(parallel_trials)
+
     for coordinate in range(rounds):
         changed = False
         for index, row in enumerate(current):
-            candidates: list[tuple[float, tuple[float, ...]]] = []
-            for threshold in thresholds:
-                trial = [dict(item) for item in current]
+            base_trial = [dict(item) for item in current]
+
+            def evaluate_threshold(
+                threshold: float,
+            ) -> tuple[float, tuple[float, ...]]:
+                trial = [dict(item) for item in base_trial]
                 trial[index]["threshold"] = threshold
                 trial_dir = output / f"coord{coordinate}-kw{row['id']}-t{threshold:.3f}"
                 tsv = trial_dir / "keywords.tsv"
@@ -328,7 +337,16 @@ def calibrate(
                     references=references,
                     output=trial_dir / "eval",
                 )
-                candidates.append((threshold, calibration_behavior_key(base, domains, gates)))
+                return threshold, calibration_behavior_key(base, domains, gates)
+
+            if parallel_trials == 1:
+                candidates = [evaluate_threshold(threshold) for threshold in thresholds]
+            else:
+                with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=min(parallel_trials, len(thresholds))
+                ) as executor:
+                    candidates = list(executor.map(evaluate_threshold, thresholds))
+            candidates.sort(key=lambda item: item[0])
             selected = select_calibration_threshold(candidates)
             if not math.isclose(float(current[index]["threshold"]), selected):
                 changed = True
@@ -351,6 +369,7 @@ def calibrate(
     }
     base["calibration_threshold_grid"] = [float(value) for value in thresholds]
     base["calibration_coordinate_rounds"] = int(rounds)
+    base["calibration_parallel_trials"] = parallel_trials
     return tsv, pack, base, domains
 
 
@@ -510,6 +529,11 @@ def main() -> int:
     if not thresholds or any(not math.isfinite(value) or not 0.0 < value < 1.0 for value in thresholds):
         raise ValueError("calibration.thresholds is invalid")
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
+    calibration_parallel_trials = int(
+        cfg.get("calibration", {}).get("max_parallel_trials", 1)
+    )
+    if not 1 <= calibration_parallel_trials <= 4:
+        raise ValueError("calibration.max_parallel_trials must be 1..4")
     gates = gate_values(cfg.get("domain_gates", {}))
     prototype_candidates = cfg.get("model", {}).get("prototype_candidates", [])
     if backend == "prototype" and (not isinstance(prototype_candidates, list) or not prototype_candidates):
@@ -605,6 +629,7 @@ def main() -> int:
                     thresholds=thresholds,
                     rounds=coordinate_rounds,
                     gates=gates,
+                    parallel_trials=calibration_parallel_trials,
                 )
                 test_base, test_domains = evaluate(
                     runner=runner,
