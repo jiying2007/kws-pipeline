@@ -3,15 +3,43 @@
   "name": "xiaowo-torch-domain-iteration-v1",
   "seed": 1337,
   "qualification_holdout_seed": 271843,
-  "retired_qualification_holdout_seeds": [271828, 271829, 271830, 271831, 271832, 271833, 271834, 271835, 271836, 271837, 271838, 271839, 271840, 271841, 271842],
+  "retired_qualification_holdout_seeds": [
+    271828,
+    271829,
+    271830,
+    271831,
+    271832,
+    271833,
+    271834,
+    271835,
+    271836,
+    271837,
+    271838,
+    271839,
+    271840,
+    271841,
+    271842
+  ],
   "far_holdout_round_namespace": 3000000,
-  "retired_far_holdout_round_namespaces": [1000000, 2000000],
+  "retired_far_holdout_round_namespaces": [
+    1000000,
+    2000000
+  ],
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
   "domain_work_dir": "build/model-training",
   "shadow_qualification": {
     "enabled": true,
-    "seeds": [731101, 731102, 731103, 731104, 731105, 731106, 731107, 731108],
+    "seeds": [
+      731101,
+      731102,
+      731103,
+      731104,
+      731105,
+      731106,
+      731107,
+      731108
+    ],
     "expected_wakes_per_seed": 256,
     "min_surrogate_separation": 0.06
   },
@@ -27,28 +55,34 @@
     "failure_replay_enabled": true,
     "failure_replay_examples_per_failure": 4,
     "failure_replay_max_unique_failures": 64,
-    "failure_replay_max_per_keyword": 32
+    "failure_replay_max_per_keyword": 32,
+    "adversarial_max_enumerated_sequences": 4096
   },
   "generator": {
-    "continuous_gap_ms": 1600.0,
+    "continuous_gap_ms": 1600,
     "tts": {
       "backend": "tone",
-      "token_ms": 180.0,
-      "token_ms_jitter": 45.0,
-      "gap_ms": 85.0,
-      "lead_ms": 180.0,
-      "tail_ms": 200.0,
-      "amplitude": 12500.0,
-      "pitch_jitter": 0.020
+      "token_ms": 180,
+      "token_ms_jitter": 45,
+      "gap_ms": 85,
+      "lead_ms": 180,
+      "tail_ms": 200,
+      "amplitude": 12500,
+      "pitch_jitter": 0.02
     },
     "augment": {
-      "gain_db_min": -7.0,
-      "gain_db_max": 4.0,
-      "snr_db_min": 3.0,
-      "snr_db_max": 36.0,
-      "echo_max_ms": 90.0,
+      "gain_db_min": -7,
+      "gain_db_max": 4,
+      "snr_db_min": 3,
+      "snr_db_max": 36,
+      "echo_max_ms": 90,
       "echo_gain_max": 0.22,
-      "noise_profiles": ["white", "fan", "motor", "media"]
+      "noise_profiles": [
+        "white",
+        "fan",
+        "motor",
+        "media"
+      ]
     }
   },
   "dataset": {
@@ -56,45 +90,90 @@
       "positive_families_per_keyword": 72,
       "confusable_families_per_keyword": 32,
       "random_negative_families": 48,
-      "background_seconds_per_profile": 4.0,
+      "background_seconds_per_profile": 4,
       "variants_per_family": 6
     },
     "calibration": {
       "positive_families_per_keyword": 8,
       "confusable_families_per_keyword": 8,
       "random_negative_families": 12,
-      "background_seconds_per_profile": 30.0,
+      "background_seconds_per_profile": 30,
       "variants_per_family": 1
     },
     "test": {
       "positive_families_per_keyword": 12,
       "confusable_families_per_keyword": 10,
       "random_negative_families": 16,
-      "background_seconds_per_profile": 15.0,
+      "background_seconds_per_profile": 15,
       "variants_per_family": 1
     },
     "qualification": {
       "positive_families_per_keyword": 16,
       "confusable_families_per_keyword": 12,
       "random_negative_families": 20,
-      "background_seconds_per_profile": 30.0,
+      "background_seconds_per_profile": 30,
       "variants_per_family": 1
     }
   },
   "domains": {
     "distance_bands": {
-      "near": {"distance_m": [0.3, 1.0], "weight": 1.0},
-      "mid": {"distance_m": [1.0, 3.0], "weight": 1.5},
-      "far": {"distance_m": [3.0, 5.0], "weight": 2.5}
+      "near": {
+        "distance_m": [
+          0.3,
+          1
+        ],
+        "weight": 1
+      },
+      "mid": {
+        "distance_m": [
+          1,
+          3
+        ],
+        "weight": 1.5
+      },
+      "far": {
+        "distance_m": [
+          3,
+          5
+        ],
+        "weight": 2.5
+      }
     },
-    "azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
-    "rt60_s": [0.15, 0.80],
-    "snr_db": [3.0, 30.0],
-    "noise_profiles": ["white", "fan", "motor", "media"],
+    "azimuth_deg": [
+      -150,
+      -120,
+      -90,
+      -60,
+      -30,
+      0,
+      30,
+      60,
+      90,
+      120,
+      150,
+      180
+    ],
+    "rt60_s": [
+      0.15,
+      0.8
+    ],
+    "snr_db": [
+      3,
+      30
+    ],
+    "noise_profiles": [
+      "white",
+      "fan",
+      "motor",
+      "media"
+    ],
     "mic_spacing_m": 0.06,
     "playback": {
       "probability": 0.35,
-      "sir_db": [-8.0, 20.0]
+      "sir_db": [
+        -8,
+        20
+      ]
     },
     "afe": {
       "backend": "proxy"
@@ -109,10 +188,17 @@
   "model": {
     "feature_dim": 32,
     "hidden_dim": 64,
-    "frontends": ["logmel"],
+    "frontends": [
+      "logmel"
+    ],
     "domain_variants_per_token": 24,
     "prototype_candidates": [
-      {"input_scale": 0.010, "output_scale": 0.050, "blank_bias": 1.8, "token_bias": -1.2}
+      {
+        "input_scale": 0.01,
+        "output_scale": 0.05,
+        "blank_bias": 1.8,
+        "token_bias": -1.2
+      }
     ]
   },
   "train": {
@@ -123,7 +209,15 @@
     "feature_cache_max_items": 8192
   },
   "calibration": {
-    "thresholds": [0.50, 0.52, 0.54, 0.55, 0.56, 0.58, 0.60],
+    "thresholds": [
+      0.5,
+      0.52,
+      0.54,
+      0.55,
+      0.56,
+      0.58,
+      0.6
+    ],
     "coordinate_rounds": 2,
     "max_parallel_trials": 2
   },
@@ -133,7 +227,7 @@
     "min_rounds": 2,
     "patience": 2,
     "curriculum_strength": 2.5,
-    "max_domain_weight": 6.0,
+    "max_domain_weight": 6,
     "stop_on_gate": true,
     "warm_start_strategy": "full",
     "lr_decay_per_round": 0.85,
@@ -149,57 +243,104 @@
     },
     "hard_negative_replay": [
       {
-        "tokens": ["hao3", "ni3", "xiao3", "wo1"],
+        "tokens": [
+          "hao3",
+          "ni3",
+          "xiao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["hao3", "hao3", "xiao3", "wo1"],
+        "tokens": [
+          "hao3",
+          "hao3",
+          "xiao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["hao3", "wo1", "xiao3", "wo1", "ni3"],
+        "tokens": [
+          "hao3",
+          "wo1",
+          "xiao3",
+          "wo1",
+          "ni3"
+        ],
         "examples": 64,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["ni3", "hao3", "xiao3"],
+        "tokens": [
+          "ni3",
+          "hao3",
+          "xiao3"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["ni3", "hao3", "wo1"],
+        "tokens": [
+          "ni3",
+          "hao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["ni3", "xiao3", "wo1"],
+        "tokens": [
+          "ni3",
+          "xiao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["hao3", "xiao3", "wo1"],
+        "tokens": [
+          "hao3",
+          "xiao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 1
       },
       {
-        "tokens": ["xiao3", "wo1", "xiao3"],
+        "tokens": [
+          "xiao3",
+          "wo1",
+          "xiao3"
+        ],
         "examples": 64,
         "focus_keyword_id": 2
       },
       {
-        "tokens": ["xiao3", "wo1"],
+        "tokens": [
+          "xiao3",
+          "wo1"
+        ],
         "examples": 64,
         "focus_keyword_id": 2
       },
       {
-        "tokens": ["wo1", "xiao3", "wo1"],
+        "tokens": [
+          "wo1",
+          "xiao3",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 2
       },
       {
-        "tokens": ["xiao3", "wo1", "wo1"],
+        "tokens": [
+          "xiao3",
+          "wo1",
+          "wo1"
+        ],
         "examples": 48,
         "focus_keyword_id": 2
       }
@@ -228,23 +369,59 @@
     ]
   },
   "domain_gates": {
-    "max_frr": 0.0,
-    "max_far_per_hour": 0.0,
-    "max_p95_latency_ms": 800.0,
-    "max_far_frr": 0.0
+    "max_frr": 0,
+    "max_far_per_hour": 0,
+    "max_p95_latency_ms": 800,
+    "max_far_frr": 0
   },
   "robustness_gates": {
-    "max_frr": 0.0,
-    "max_far_per_hour": 0.0,
+    "max_frr": 0,
+    "max_far_per_hour": 0,
     "min_expected_wakes": 4,
     "min_negative_recordings": 4,
-    "min_negative_audio_hours": 0.0,
-    "required_distance_bins": ["0.5m", "1m", "2m", "3m", "5m"],
-    "required_azimuth_deg": [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180],
-    "required_snr_bands": ["critical", "low", "mid", "high"],
-    "required_rt60_bands": ["dry", "medium", "reverb"],
-    "required_noise_profiles": ["white", "fan", "motor", "media"],
-    "required_playback_states": ["no-playback", "playback"],
+    "min_negative_audio_hours": 0,
+    "required_distance_bins": [
+      "0.5m",
+      "1m",
+      "2m",
+      "3m",
+      "5m"
+    ],
+    "required_azimuth_deg": [
+      -150,
+      -120,
+      -90,
+      -60,
+      -30,
+      0,
+      30,
+      60,
+      90,
+      120,
+      150,
+      180
+    ],
+    "required_snr_bands": [
+      "critical",
+      "low",
+      "mid",
+      "high"
+    ],
+    "required_rt60_bands": [
+      "dry",
+      "medium",
+      "reverb"
+    ],
+    "required_noise_profiles": [
+      "white",
+      "fan",
+      "motor",
+      "media"
+    ],
+    "required_playback_states": [
+      "no-playback",
+      "playback"
+    ],
     "required_stress_slices": [
       "distance_azimuth:distance_bin=5m|azimuth=rear",
       "distance_snr:distance_bin=5m|snr=critical",
