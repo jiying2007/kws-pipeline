@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "policy": "kws-keyword-set-contract-v1",
+  "contract_id": "xiaowo-dual-wake-v1",
+  "locale": "zh-CN",
+  "tokens_path": "keywords/tokens.example.txt",
+  "keywords_path": "keywords/zh_cn_example.tsv",
+  "keyword_count": 2,
+  "keyword_set_sha256": "e6ef665a066dbd5d0a7cd99542ab1fa51141ee13cf52368a95c7df859111e8ac"
+}
