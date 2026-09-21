@@ -612,7 +612,15 @@ def render_domain_dataset(
     output: pathlib.Path,
     *,
     curriculum_weights: dict | None = None,
+    splits: tuple[str, ...] | None = None,
 ) -> dict:
+    selected_splits = tuple(SPLITS if splits is None else splits)
+    if (
+        not selected_splits
+        or len(set(selected_splits)) != len(selected_splits)
+        or any(split not in SPLITS for split in selected_splits)
+    ):
+        raise ValueError("rendered domain splits must be a unique non-empty subset")
     config = load_config(config_path)
     domains = validate_domains(config)
     evaluation_axes = _evaluation_axes(config, domains)
@@ -660,6 +668,8 @@ def render_domain_dataset(
     development_stress_plans: dict[str, dict] = {}
     if evaluation_axes is not None:
         for split in ("calibration", "test"):
+            if split not in selected_splits:
+                continue
             positive_base_examples = sum(
                 1
                 for row in base_rows
@@ -676,16 +686,20 @@ def render_domain_dataset(
             )
 
     output.mkdir(parents=True, exist_ok=True)
-    rows_by_split: dict[str, list[dict]] = {split: [] for split in SPLITS}
+    rows_by_split: dict[str, list[dict]] = {
+        split: [] for split in selected_splits
+    }
     domain_rows: list[dict] = []
-    positive_scene_ordinals = {split: 0 for split in SPLITS}
+    positive_scene_ordinals = {split: 0 for split in selected_splits}
     evaluation_scene_ordinals = {
-        split: {"positive": 0, "negative": 0} for split in SPLITS
+        split: {"positive": 0, "negative": 0} for split in selected_splits
     }
     for base_index, row in enumerate(base_rows):
         split = str(row["split"])
-        if split not in rows_by_split:
+        if split not in SPLITS:
             raise ValueError(f"unknown base split: {split}")
+        if split not in rows_by_split:
+            continue
         source = pathlib.Path(row["path"])
         clean = read_wav(source)
         for scene_index in range(domains["scenes_per_example"][split]):
@@ -757,7 +771,7 @@ def render_domain_dataset(
 
     manifest_paths: dict[str, pathlib.Path] = {}
     reference_paths: dict[str, pathlib.Path] = {}
-    for split in SPLITS:
+    for split in selected_splits:
         manifest = output / f"{split}.tsv"
         manifest.write_text(
             "".join(
@@ -824,7 +838,9 @@ def render_domain_dataset(
         encoding="utf-8",
     )
     histogram: dict[str, int] = {}
-    histogram_by_split: dict[str, dict[str, int]] = {split: {} for split in SPLITS}
+    histogram_by_split: dict[str, dict[str, int]] = {
+        split: {} for split in selected_splits
+    }
     for row in domain_rows:
         key = str(row["scene"]["distance_band"])
         split = str(row["split"])
@@ -883,6 +899,7 @@ def render_domain_dataset(
             if isinstance(rir_manifest, dict)
             else None
         ),
+        "rendered_splits": list(selected_splits),
         "splits": {
             split: {
                 "examples": len(rows_by_split[split]),
@@ -897,7 +914,7 @@ def render_domain_dataset(
                     else {}
                 ),
             }
-            for split in SPLITS
+            for split in selected_splits
         },
     }
     if external_base_identity is not None:
