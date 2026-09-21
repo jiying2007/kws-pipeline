@@ -228,6 +228,13 @@ def validate_torch_iteration_policy() -> None:
     assert int(formal["domain_iteration"]["patience"]) == 2
     assert formal["domain_iteration"]["stop_on_gate"] is True
 
+    product_iterator = (ROOT / "training" / "iterate_domain.py").read_text(
+        encoding="utf-8"
+    )
+    assert "merge_domain_metrics(" in product_iterator
+    assert 'round_best["calibration_domains"]' in product_iterator
+    assert 'round_best["test_domains"]' in product_iterator
+
     shadow = formal["shadow_qualification"]
     assert shadow["enabled"] is True
     assert len(shadow["seeds"]) == 8
