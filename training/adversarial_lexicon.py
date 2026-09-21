@@ -21,6 +21,8 @@ from hard_negative_replay import apply_focus, hard_negative_stress_focus  # noqa
 from render_domains import sample_scene, validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     augment,
+    command_tts_surface_forms,
+    command_tts_text,
     keyword_render_context,
     load_config,
     parse_keywords,
@@ -188,6 +190,7 @@ def _read_command_tts_output(path: pathlib.Path) -> list[int]:
 def _pre_render_command_tts(
     tasks: list[tuple[list[str], pathlib.Path]],
     tts: dict,
+    surface_forms: dict[str, str],
     *,
     workers: int | None = None,
 ) -> int:
@@ -202,7 +205,7 @@ def _pre_render_command_tts(
     def render(task: tuple[list[str], pathlib.Path]) -> None:
         token_names, output_path = task
         render_command_tts(
-            " ".join(token_names),
+            command_tts_text(token_names, surface_forms),
             token_names,
             "adversarial-negative",
             output_path,
@@ -231,6 +234,7 @@ def _render_sequence(
     domains: dict,
     output_path: pathlib.Path | None,
     command_tts_pre_rendered: bool = False,
+    command_surface_forms: dict[str, str] | None = None,
 ) -> tuple[list[int], dict]:
     example_seed = (
         seed
@@ -250,8 +254,10 @@ def _render_sequence(
         if command_tts_pre_rendered:
             clean = _read_command_tts_output(output_path)
         else:
+            if command_surface_forms is None:
+                raise ValueError("command TTS adversarial render requires surface forms")
             clean = render_command_tts(
-                " ".join(token_names),
+                command_tts_text(token_names, command_surface_forms),
                 token_names,
                 "adversarial-negative",
                 output_path,
@@ -364,6 +370,11 @@ def mine_adversarial_lexicon(
         int(cfg.get("model", {}).get("feature_dim", 32)),
         tts,
     )
+    command_surface_forms = (
+        command_tts_surface_forms(keywords, tts)
+        if str(tts.get("backend", "tone")) == "command"
+        else {}
+    )
     forbidden = [list(keyword["tokens"]) for keyword in keywords]
     candidates = enumerate_safe_sequences(
         active_tokens,
@@ -401,7 +412,11 @@ def mine_adversarial_lexicon(
         for sequence_index, sequence in enumerate(candidates)
         for probe_index in range(probes_per_sequence)
     ]
-    probe_tts_workers = _pre_render_command_tts(probe_tasks, tts)
+    probe_tts_workers = _pre_render_command_tts(
+        probe_tasks,
+        tts,
+        command_surface_forms,
+    )
 
     for sequence_index, sequence in enumerate(candidates):
         probe_rows: list[dict] = []
@@ -421,6 +436,7 @@ def mine_adversarial_lexicon(
                 domains=domains,
                 output_path=scratch,
                 command_tts_pre_rendered=command_backend,
+                command_surface_forms=command_surface_forms,
             )
             confidences = keyword_confidences(
                 model,
@@ -469,7 +485,11 @@ def mine_adversarial_lexicon(
         for selected_index, item in enumerate(selected)
         for example_index in range(replay_examples)
     ]
-    replay_tts_workers = _pre_render_command_tts(replay_tasks, tts)
+    replay_tts_workers = _pre_render_command_tts(
+        replay_tasks,
+        tts,
+        command_surface_forms,
+    )
 
     for selected_index, item in enumerate(selected):
         for example_index in range(replay_examples):
@@ -486,6 +506,7 @@ def mine_adversarial_lexicon(
                 domains=domains,
                 output_path=path,
                 command_tts_pre_rendered=command_backend,
+                command_surface_forms=command_surface_forms,
             )
             write_wav(path, samples)
             replay_rows.append(
