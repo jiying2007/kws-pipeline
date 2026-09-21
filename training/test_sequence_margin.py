@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from completion_loss import strict_prefix_completion_loss
 from sequence_margin import keyword_sequence_margin_loss
-from train_ctc import ordered_token_loss
+from train_ctc import ordered_token_loss, wake_example_weights
 
 
 def make_logits(tokens: list[int], *, steps: int = 12, vocab: int = 5) -> torch.Tensor:
@@ -195,6 +195,26 @@ def main() -> int:
     )
     assert torch.isfinite(impossible_loss).all()
     assert float(impossible_loss.item()) == 0.0
+
+    # Per-keyword refinement weighting must distinguish the two exact wake
+    # targets while leaving tokenized near-misses and empty targets at 1.0.
+    wake_targets = torch.tensor(
+        [1, 2, 3, 4, 3, 4, 3, 4, 1, 2, 3],
+        dtype=torch.long,
+    )
+    wake_lengths = torch.tensor([4, 4, 3, 0], dtype=torch.long)
+    per_keyword_weights = wake_example_weights(
+        wake_targets,
+        wake_lengths,
+        [[1, 2, 3, 4], [3, 4, 3, 4]],
+        [1, 2],
+        default_weight=1.0,
+        keyword_weights={1: 4.25, 2: 2.75},
+    )
+    assert torch.allclose(
+        per_keyword_weights,
+        torch.tensor([4.25, 2.75, 1.0, 1.0], dtype=torch.float32),
+    )
 
     # Refinement wake balancing must also affect ordered-token loss. Equal
     # sample weights preserve the legacy mean exactly; only a non-uniform wake
