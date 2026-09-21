@@ -144,6 +144,20 @@ or stale runs can terminate earlier.
 Each record retains the actual epochs, learning rate and training seed used for
 that round, and checkpoint/model provenance continues to retain the same values.
 
+## Calibration execution budget
+
+Threshold trials for one keyword/coordinate are independent: they use the same
+frozen model and references but separate keyword packs and output directories.
+Product calibration therefore evaluates up to two threshold trials concurrently.
+Results are collected in threshold order before the existing selection logic is
+applied, so this changes wall-clock execution only.
+
+With two shipping keywords, seven thresholds and two coordinate rounds, the
+historical upper bound is 28 trial corpus evaluations plus one final calibration
+evaluation per candidate. Two-way execution reduces the trial wall-clock path
+without changing the threshold grid, decoder, metrics, gates or selected result.
+Base-domain and adversarial-refinement calibration use the same bounded setting.
+
 ## Calibration fallback
 
 The shipping gates remain strict zero-error. Threshold calibration first prefers
