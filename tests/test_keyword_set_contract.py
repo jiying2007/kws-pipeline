@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from keyword_set_contract import verify_keyword_set_contract  # noqa: E402
 from speech_like_corpus_plan import normalize_plan  # noqa: E402
+from generate_speech_like_corpus_plan import generate_plan, safe_nonwake  # noqa: E402
 
 
 def main() -> int:
@@ -32,6 +33,31 @@ def main() -> int:
             and row["tokens"] == keyword["tokens"]
             for row in positives
         )
+
+    with tempfile.TemporaryDirectory(prefix="generated-corpus-plan-") as generated_tmp:
+        generated_root = pathlib.Path(generated_tmp)
+        first = generated_root / "plan-a.json"
+        second = generated_root / "plan-b.json"
+        result_a = generate_plan(
+            keyword_contract=current_contract,
+            template_plan=current_plan,
+            output=first,
+        )
+        result_b = generate_plan(
+            keyword_contract=current_contract,
+            template_plan=current_plan,
+            output=second,
+        )
+        assert result_a["keyword_count"] == 2
+        assert result_a["utterances"] == result_b["utterances"]
+        assert first.read_bytes() == second.read_bytes()
+        generated = json.loads(first.read_text(encoding="utf-8"))
+        wake_paths = [
+            tuple(row["tokens"]) for row in identity["keywords"]
+        ]
+        for row in generated["utterances"]:
+            if row["kind"] != "positive":
+                assert safe_nonwake(tuple(row["tokens"]), wake_paths)
 
     with tempfile.TemporaryDirectory(prefix="keyword-set-contract-") as tmp:
         root = pathlib.Path(tmp)
@@ -134,6 +160,55 @@ def main() -> int:
             for row in normalized["utterances"]
             if row["kind"] == "positive"
         } == {0}
+
+        no_pause_plan = root / "single-char-plan.json"
+        no_pause_plan.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "policy": "speech-like-corpus-plan-v1",
+                    "locale": "zh-CN",
+                    "split_roles": {
+                        "train": {
+                            "provider_group": "train",
+                            "voice_slots": ["train-10"],
+                        },
+                        "calibration": {
+                            "provider_group": "generalization-search",
+                            "voice_slots": ["cal-10"],
+                        },
+                        "test": {
+                            "provider_group": "generalization-search",
+                            "voice_slots": ["test-10"],
+                        },
+                        "qualification": {
+                            "provider_group": "generalization-freeze",
+                            "voice_slots": ["qual-10"],
+                        },
+                    },
+                    "utterances": [
+                        {
+                            "id": "kw0-exact",
+                            "kind": "positive",
+                            "keyword_id": 0,
+                            "text": "窝",
+                            "tokens": ["a"],
+                        }
+                    ],
+                    "constraints": {
+                        "require_unique_voice_id_across_splits": True,
+                        "require_unique_source_id_per_request": True,
+                        "tone_backend_allowed": False,
+                        "protected_evidence_allowed": False,
+                        "deterministic_pause_separator": "。",
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        single_char = normalize_plan(no_pause_plan)
+        assert len(single_char["utterances"]) == 1
 
         tampered = json.loads(contract.read_text(encoding="utf-8"))
         tampered["keywords"][0]["text"] = "不是小窝"
