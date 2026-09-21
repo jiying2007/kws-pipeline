@@ -545,9 +545,12 @@ def _refinement_policy(cfg: dict) -> dict:
     return {"epochs": epochs, "lr_scale": lr_scale}
 
 
-def _audit(dataset: pathlib.Path) -> None:
+def _audit(
+    dataset: pathlib.Path,
+    splits: tuple[str, ...] = ("train", "calibration", "test", "qualification"),
+) -> None:
     argv = [sys.executable, str(TRAINING / "audit_dataset.py")]
-    for split in ("train", "calibration", "test", "qualification"):
+    for split in splits:
         argv.extend(["--split", f"{split}={dataset / (split + '.tsv')}"])
     argv.extend(["--report", str(dataset / "audit.json"), "--fail-within-split"])
     run(argv)
@@ -763,8 +766,13 @@ def main() -> int:
     curriculum = final_curriculum if isinstance(final_curriculum, dict) else None
 
     dataset = work / "datasets" / f"round-{refinement_round:02d}"
-    render_domain_dataset(config_path, dataset, curriculum_weights=curriculum)
-    _audit(dataset)
+    render_domain_dataset(
+        config_path,
+        dataset,
+        curriculum_weights=curriculum,
+        splits=("train", "calibration", "test"),
+    )
+    _audit(dataset, ("train", "calibration", "test"))
 
     static = render_hard_negative_replay(
         config_path,
@@ -934,7 +942,12 @@ def main() -> int:
         raise ValueError("adversarial refinement did not retain calibration/test strict dual-pass")
 
     mining_qualification = work / "development-qualification-mining"
-    render_domain_dataset(config_path, mining_qualification, curriculum_weights=None)
+    render_domain_dataset(
+        config_path,
+        mining_qualification,
+        curriculum_weights=None,
+        splits=("qualification",),
+    )
     mining_eval = candidate_dir / "development-qualification-mining"
     mining_qual_base, mining_qual_domains = evaluate(
         runner=runner,
@@ -1013,7 +1026,12 @@ def main() -> int:
             work / "development-qualification-repair-validation-config.json",
         )
         development_qualification = work / "qualification-dataset"
-        render_domain_dataset(validation_config, development_qualification, curriculum_weights=None)
+        render_domain_dataset(
+            validation_config,
+            development_qualification,
+            curriculum_weights=None,
+            splits=("qualification",),
+        )
         repaired_qual_base, repaired_qual_domains = evaluate(
             runner=runner,
             model=repaired_model,
@@ -1099,7 +1117,12 @@ def main() -> int:
         score = repaired_score
     else:
         development_qualification = work / "qualification-dataset"
-        render_domain_dataset(config_path, development_qualification, curriculum_weights=None)
+        render_domain_dataset(
+            config_path,
+            development_qualification,
+            curriculum_weights=None,
+            splits=("qualification",),
+        )
 
     record.pop("_gates", None)
     manifest["records"].append(record)
