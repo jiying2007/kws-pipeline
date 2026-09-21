@@ -48,6 +48,22 @@ Before training begins, the workflow:
 The effective config SHA is bound across the two training jobs by the existing
 base-stage receipt.
 
+## Split-scoped domain rendering
+
+Development rounds render only the splits they consume: train, calibration and
+test. Qualification is not rendered during those rounds because it is forbidden
+from candidate selection, curriculum feedback and replay mining. After candidate
+selection, qualification rendering requests only the qualification split.
+
+Adversarial refinement follows the same boundary: its training dataset contains
+train/calibration/test only, while mining and validation qualification cohorts
+are rendered separately as qualification-only datasets. The renderer keeps its
+historical four-split default for other callers; split scoping is explicit and
+recorded in each domain summary.
+
+This removes unused WAV rendering and audit work while making the development /
+qualification evidence boundary physical rather than merely conventional.
+
 ## Deterministic feature cache
 
 Product RNN training enables the existing deterministic frontend feature cache
