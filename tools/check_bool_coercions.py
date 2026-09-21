@@ -146,7 +146,10 @@ def coercions(path: pathlib.Path) -> list[str]:
             if not any(abs(line - node.lineno) <= 1 for line in kept):
                 continue
             target = min(kept, key=lambda line: abs(line - node.lineno))
-            found.append(f"{fn.name}:{node.lineno} {kept[target]} = {ast.unparse(node)}")
+            # No line number in the key: an edit anywhere above a coercion
+            # would otherwise move it and report one stale plus one new entry
+            # for a change that did not touch the coercion at all.
+            found.append(f"{fn.name}|{kept[target]} = {ast.unparse(node)}")
     return found
 
 
@@ -170,7 +173,7 @@ def main() -> int:
             relative = path.relative_to(root).as_posix()
             for item in coercions(path):
                 current.append(f"{relative}|{item}")
-    current = sorted(current)
+    current = sorted(set(current))
 
     if args.update:
         payload = {"version": 1, "waived": current}

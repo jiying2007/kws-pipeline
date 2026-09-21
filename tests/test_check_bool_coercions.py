@@ -76,6 +76,15 @@ def main() -> int:
         assert done.returncode == 0, done.stderr
         assert "open=0" in done.stdout, done.stdout
 
+        # The key carries no line number: an edit above a coercion would
+        # otherwise move it and report one stale plus one new entry for a
+        # change that never touched the coercion.
+        write(root, "# a comment shifts every line below it\n" + EXTERNAL)
+        done = run(root)
+        assert done.returncode == 0, done.stderr
+        assert "open=0" in done.stdout and "stale=0" in done.stdout, done.stdout
+        write(root, EXTERNAL)
+
         # A value built in the function is already the type it says it is.
         write(root, LOCAL)
         done = run(root)
