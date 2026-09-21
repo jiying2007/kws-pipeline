@@ -99,7 +99,8 @@ jobs:
           assert 'train["warm_start_epochs"]=6' in workflow
           assert 'adversarial["refinement_epochs"]=6' in workflow
           assert "verify_product_development_preflight.py" in workflow
-          assert 'xiaowo-product-development-preflight-${{ github.event.pull_request.base.sha }}' in workflow
+          assert "xiaowo-product-development-preflight-" in workflow
+          assert "github.event.pull_request.base.sha" in workflow
           assert "pr_base_sha" in verifier
           assert '.path == ".github/workflows/model-training-preflight.yml"' in verifier
           assert "/artifacts?per_page=100" in verifier
