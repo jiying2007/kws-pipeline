@@ -22,6 +22,7 @@ from hard_negative_replay import (  # noqa: E402
     positive_stress_focus,
 )
 from iterate_domain import (  # noqa: E402
+    calibration_behavior_key,
     parse_warm_start_strategy,
     select_calibration_threshold,
     select_strict_candidate,
@@ -95,6 +96,41 @@ def validate_torch_iteration_policy() -> None:
         pass
     else:
         raise AssertionError("empty calibration candidate set was accepted")
+
+    strict_gates = {
+        "max_frr": 0.0,
+        "max_far_per_hour": 0.0,
+        "max_p95_latency_ms": 800.0,
+        "max_far_frr": 0.0,
+    }
+
+    def calibration_metrics(frr: float, far_per_hour: float) -> tuple[dict, dict]:
+        base = {
+            "frr": frr,
+            "far_per_hour": far_per_hour,
+            "p95_post_end_latency_ms": 100.0,
+        }
+        domains = {
+            "domains": {"distance:far": {"frr": frr}},
+            "worst_domain_score": max(frr, far_per_hour / 1000.0),
+        }
+        return base, domains
+
+    reject_base, reject_domains = calibration_metrics(1.0, 0.0)
+    useful_base, useful_domains = calibration_metrics(0.10, 10.0)
+    reject_key = calibration_behavior_key(reject_base, reject_domains, strict_gates)
+    useful_key = calibration_behavior_key(useful_base, useful_domains, strict_gates)
+    assert useful_key < reject_key, (useful_key, reject_key)
+    assert select_calibration_threshold(
+        [(0.60, reject_key), (0.52, useful_key)]
+    ) == 0.52
+
+    strict_base, strict_domains = calibration_metrics(0.0, 0.0)
+    strict_key = calibration_behavior_key(strict_base, strict_domains, strict_gates)
+    assert strict_key == zero_error_key
+    assert select_calibration_threshold(
+        [(0.50, strict_key), (0.52, strict_key), (0.54, strict_key)]
+    ) == 0.52
 
     split_pass = [
         {
