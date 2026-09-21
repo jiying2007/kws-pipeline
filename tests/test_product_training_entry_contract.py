@@ -92,7 +92,9 @@ def main() -> int:
 
     trainer = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
     assert "ordered_token_sample_weighting" in trainer
-    assert "log_probs, y, xlen, ylen, sample_weights" in trainer
+    assert 'SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"' in trainer
+    assert "normalized_weighted_mean(" in trainer
+    assert "normalization_mean_weight=float(" in trainer
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     assert "Materialize governed product speech-like training base" in workflow
