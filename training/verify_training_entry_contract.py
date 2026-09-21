@@ -4,6 +4,10 @@ import argparse
 import json
 import pathlib
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+from keyword_set_contract import verify_keyword_set_contract  # noqa: E402
+
 
 def read_json(path: pathlib.Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -18,6 +22,7 @@ def verify(
     keywords_path: pathlib.Path,
     *,
     require_product_speech_like_base: bool = False,
+    keyword_set_contract_path: pathlib.Path | None = None,
 ) -> dict:
     config = read_json(config_path)
     shipping = read_json(shipping_path)
@@ -39,23 +44,33 @@ def verify(
     if active in retired:
         raise ValueError(f"active qualification seed {active} is already retired")
 
-    rows = [
-        raw.split("\t")
-        for raw in keywords_path.read_text(encoding="utf-8").splitlines()
-        if raw.strip() and not raw.lstrip().startswith("#")
-    ]
-    expected = [
-        ["1", "你好小窝", "0.55", "ni3 hao3 xiao3 wo1"],
-        ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
-    ]
-    if rows != expected:
-        raise ValueError(f"shipping wake-word contract drifted: {rows!r}")
-    if any(len(row[1]) != 4 for row in rows) or any(row[1] == "小窝" for row in rows):
-        raise ValueError("shipping wake words must remain exactly the two four-character phrases")
+    product_data = config.get("product_candidate_data")
+    if keyword_set_contract_path is None:
+        if require_product_speech_like_base and isinstance(product_data, dict):
+            raw_contract = str(product_data.get("keyword_set_contract_path") or "")
+            keyword_set_contract_path = (
+                ROOT / raw_contract
+                if raw_contract
+                else ROOT / "configs/training/xiaowo-keyword-set-v1.json"
+            )
+        else:
+            keyword_set_contract_path = (
+                ROOT / "configs/training/xiaowo-keyword-set-v1.json"
+            )
+    tokens_raw = pathlib.Path(str(config.get("tokens") or ""))
+    tokens_path = (
+        tokens_raw.resolve()
+        if tokens_raw.is_absolute()
+        else (ROOT / tokens_raw).resolve()
+    )
+    keyword_identity = verify_keyword_set_contract(
+        keyword_set_contract_path.resolve(),
+        root=ROOT,
+        expected_tokens_path=tokens_path,
+        expected_keywords_path=keywords_path.resolve(),
+    )
 
-    product_data = None
     if require_product_speech_like_base:
-        product_data = config.get("product_candidate_data")
         if not isinstance(product_data, dict):
             raise ValueError("governed product training requires product_candidate_data")
         if product_data.get("policy") != "external-speech-like-product-base-v1":
@@ -64,10 +79,30 @@ def verify(
             raise ValueError("tone fallback is forbidden for governed product candidate training")
         if product_data.get("protected_evidence_used") is not False:
             raise ValueError("protected evidence may not feed governed candidate training")
-        for field in ("external_base_bundle_sha256", "provider_identity_sha256"):
+        for field in (
+            "external_base_bundle_sha256",
+            "provider_identity_sha256",
+            "keyword_set_contract_sha256",
+            "keyword_set_semantic_sha256",
+            "keyword_tsv_sha256",
+            "tokens_sha256",
+            "corpus_plan_sha256",
+        ):
             value = str(product_data.get(field) or "")
             if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
                 raise ValueError(f"product_candidate_data.{field} must be lowercase SHA256")
+        identity_pairs = (
+            ("keyword_set_contract_id", keyword_identity["contract_id"]),
+            ("keyword_set_contract_sha256", keyword_identity["contract_sha256"]),
+            ("keyword_set_semantic_sha256", keyword_identity["semantic_sha256"]),
+            ("keyword_tsv_sha256", keyword_identity["keywords_sha256"]),
+            ("tokens_sha256", keyword_identity["tokens_sha256"]),
+        )
+        for field, expected in identity_pairs:
+            if str(product_data.get(field) or "") != str(expected):
+                raise ValueError(
+                    f"product_candidate_data.{field} differs from keyword-set identity"
+                )
         generator = config.get("generator")
         if not isinstance(generator, dict):
             raise ValueError("governed product training generator must be an object")
@@ -112,7 +147,11 @@ def verify(
         "frozen_formal_seed": frozen,
         "reserved_formal_seed": reserved,
         "retired_seed_count": len(retired),
-        "shipping_wake_words": [row[1] for row in rows],
+        "keyword_set_contract_id": keyword_identity["contract_id"],
+        "keyword_set_semantic_sha256": keyword_identity["semantic_sha256"],
+        "shipping_wake_words": [
+            str(row["text"]) for row in keyword_identity["keywords"]
+        ],
         "product_speech_like_base_required": require_product_speech_like_base,
         "product_external_base_bundle_sha256": (
             str(product_data["external_base_bundle_sha256"]) if product_data else None
@@ -121,7 +160,7 @@ def verify(
 
 
 def main() -> int:
-    root = pathlib.Path(__file__).resolve().parents[1]
+    root = ROOT
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
@@ -138,6 +177,11 @@ def main() -> int:
         type=pathlib.Path,
         default=root / "keywords/zh_cn_example.tsv",
     )
+    parser.add_argument(
+        "--keyword-set-contract",
+        type=pathlib.Path,
+        default=None,
+    )
     parser.add_argument("--require-product-speech-like-base", action="store_true")
     args = parser.parse_args()
     result = verify(
@@ -145,6 +189,11 @@ def main() -> int:
         args.shipping.resolve(),
         args.keywords.resolve(),
         require_product_speech_like_base=args.require_product_speech_like_base,
+        keyword_set_contract_path=(
+            args.keyword_set_contract.resolve()
+            if args.keyword_set_contract is not None
+            else None
+        ),
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
