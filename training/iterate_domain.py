@@ -17,7 +17,7 @@ EVAL = ROOT / "eval"
 TRAINING = ROOT / "training"
 sys.path.insert(0, str(TOOLS))
 
-from domain_curriculum import update_curriculum  # noqa: E402
+from domain_curriculum import merge_domain_metrics, update_curriculum  # noqa: E402
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -700,8 +700,12 @@ def main() -> int:
                 if checkpoint is not None:
                     previous_checkpoints[frontend] = checkpoint
         assert round_best is not None
-        curriculum_result = update_curriculum(
+        curriculum_feedback = merge_domain_metrics(
             round_best["calibration_domains"],
+            round_best["test_domains"],
+        )
+        curriculum_result = update_curriculum(
+            curriculum_feedback,
             previous=curriculum,
             strength=float(iteration.get("curriculum_strength", 2.0)),
             max_weight=float(iteration.get("max_domain_weight", 6.0)),
