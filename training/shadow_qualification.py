@@ -73,8 +73,8 @@ def _selected_record(manifest: dict) -> dict:
         for row in manifest["records"]
         if int(row["round"]) == selected_round
         and str(row["frontend"]) == selected_frontend
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not rows:
@@ -164,8 +164,8 @@ def _metric_compact(base: dict) -> dict:
 def _emit_failure_annotation(row: dict, required_separation: float) -> None:
     payload = {
         "seed": int(row["seed"]),
-        "runtime_qualified": bool(row["runtime_qualified"]),
-        "surrogate_separation_qualified": bool(row["surrogate_separation_qualified"]),
+        "runtime_qualified": row["runtime_qualified"] is True,
+        "surrogate_separation_qualified": row["surrogate_separation_qualified"] is True,
         "required_separation": float(required_separation),
         "qualification": _metric_compact(row["qualification"]),
         "surrogate": row["surrogate"],
@@ -275,16 +275,16 @@ def main() -> int:
         + "\n",
         encoding="utf-8",
     )
-    failures = [row for row in results if not bool(row["qualified"])]
-    runtime_failures = [row for row in failures if not bool(row["runtime_qualified"])]
+    failures = [row for row in results if row["qualified"] is not True]
+    runtime_failures = [row for row in failures if row["runtime_qualified"] is not True]
     separation_failures = [
-        row for row in failures if not bool(row["surrogate_separation_qualified"])
+        row for row in failures if row["surrogate_separation_qualified"] is not True
     ]
     both_failures = [
         row
         for row in failures
-        if not bool(row["runtime_qualified"])
-        and not bool(row["surrogate_separation_qualified"])
+        if row["runtime_qualified"] is not True
+        and row["surrogate_separation_qualified"] is not True
     ]
     failure_summary = {
         "schema_version": 1,
@@ -300,8 +300,8 @@ def main() -> int:
         "failures": [
             {
                 "seed": int(row["seed"]),
-                "runtime_qualified": bool(row["runtime_qualified"]),
-                "surrogate_separation_qualified": bool(row["surrogate_separation_qualified"]),
+                "runtime_qualified": row["runtime_qualified"] is True,
+                "surrogate_separation_qualified": row["surrogate_separation_qualified"] is True,
                 "qualification": _metric_compact(row["qualification"]),
                 "surrogate": row["surrogate"],
             }
