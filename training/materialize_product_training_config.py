@@ -16,6 +16,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from external_base_dataset import load_external_base_bundle  # noqa: E402
 from generate_speech_like_command_provider import load_policy, normalize_provider  # noqa: E402
+from keyword_set_contract import verify_keyword_set_contract  # noqa: E402
+from speech_like_corpus_plan import normalize_plan  # noqa: E402
 
 SPLITS = ("train", "calibration", "test", "qualification")
 HEX = set("0123456789abcdef")
@@ -75,6 +77,71 @@ def main() -> int:
     if contract.get("policy") != "product-speech-like-base-v1":
         raise ValueError("product speech-like base contract identity mismatch")
 
+    keyword_contract_path = (
+        ROOT / str(contract.get("keyword_set_contract_path") or "")
+    ).resolve()
+    corpus_plan_path = (
+        ROOT / str(contract.get("corpus_plan_path") or "")
+    ).resolve()
+    for path, label in (
+        (keyword_contract_path, "keyword-set contract"),
+        (corpus_plan_path, "speech-like corpus plan"),
+    ):
+        try:
+            path.relative_to(ROOT)
+        except ValueError as exc:
+            raise ValueError(f"{label} path escapes repository root") from exc
+        if not path.is_file():
+            raise ValueError(f"{label} is missing: {path}")
+
+    source_tokens = pathlib.Path(str(source.get("tokens") or ""))
+    source_keywords = pathlib.Path(str(source.get("keywords") or ""))
+    source_tokens = (
+        source_tokens.resolve()
+        if source_tokens.is_absolute()
+        else (ROOT / source_tokens).resolve()
+    )
+    source_keywords = (
+        source_keywords.resolve()
+        if source_keywords.is_absolute()
+        else (ROOT / source_keywords).resolve()
+    )
+    keyword_identity = verify_keyword_set_contract(
+        keyword_contract_path,
+        root=ROOT,
+        expected_tokens_path=source_tokens,
+        expected_keywords_path=source_keywords,
+    )
+    if keyword_identity["contract_id"] != str(
+        contract.get("keyword_set_contract_id") or ""
+    ):
+        raise ValueError("product base keyword-set contract id mismatch")
+
+    plan = normalize_plan(corpus_plan_path)
+    positive_rows = [
+        row
+        for row in plan["utterances"]
+        if row.get("kind") == "positive"
+    ]
+    contract_keywords = {
+        int(row["id"]): row for row in keyword_identity["keywords"]
+    }
+    positive_ids = {int(row["keyword_id"]) for row in positive_rows}
+    if positive_ids != set(contract_keywords):
+        raise ValueError(
+            "speech-like corpus plan positive keyword ids differ from keyword-set contract"
+        )
+    for keyword_id, expected_keyword in sorted(contract_keywords.items()):
+        if not any(
+            int(row["keyword_id"]) == keyword_id
+            and str(row["text"]) == str(expected_keyword["text"])
+            and list(row["tokens"]) == list(expected_keyword["tokens"])
+            for row in positive_rows
+        ):
+            raise ValueError(
+                f"speech-like corpus plan lacks exact positive for keyword {keyword_id}"
+            )
+
     manifest_path = bundle_root / "stage-a-base-bundle.json"
     manifest = load_json(manifest_path)
     expected_bundle = require_sha(
@@ -89,6 +156,9 @@ def main() -> int:
         raise ValueError("speech-like external-base bundle identity mismatch")
     if str(manifest.get("provider_identity_sha256") or "") != expected_provider:
         raise ValueError("speech-like provider identity mismatch")
+    corpus_plan_sha = sha256_file(corpus_plan_path)
+    if str(manifest.get("corpus_plan_sha256") or "") != corpus_plan_sha:
+        raise ValueError("release bundle corpus-plan identity mismatch")
     if int(manifest.get("recordings", -1)) != int(contract["recordings"]):
         raise ValueError("speech-like recording count mismatch")
     if int(manifest.get("voice_slots", -1)) != int(contract["voice_slots"]):
@@ -264,6 +334,14 @@ def main() -> int:
         "replay_tone_allowed": False,
         "base_contract_path": contract_path.relative_to(ROOT).as_posix(),
         "base_contract_sha256": sha256_file(contract_path),
+        "keyword_set_contract_id": keyword_identity["contract_id"],
+        "keyword_set_contract_path": keyword_contract_path.relative_to(ROOT).as_posix(),
+        "keyword_set_contract_sha256": keyword_identity["contract_sha256"],
+        "keyword_set_semantic_sha256": keyword_identity["semantic_sha256"],
+        "keyword_tsv_sha256": keyword_identity["keywords_sha256"],
+        "tokens_sha256": keyword_identity["tokens_sha256"],
+        "corpus_plan_path": corpus_plan_path.relative_to(ROOT).as_posix(),
+        "corpus_plan_sha256": corpus_plan_sha,
         "source_template_config_path": source_path.relative_to(ROOT).as_posix(),
         "source_template_config_sha256": sha256_file(source_path),
         "recordings": int(contract["recordings"]),
