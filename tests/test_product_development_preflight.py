@@ -53,8 +53,8 @@ def main() -> int:
                     "round": 0,
                     "training_epochs": 12,
                     "score": 10.0,
-                    "calibration": metrics(1, 2),
-                    "test": metrics(1, 1),
+                    "calibration": metrics(0, 2),
+                    "test": metrics(0, 1),
                     "calibration_gate": False,
                     "test_gate": False,
                 },
@@ -99,7 +99,7 @@ def main() -> int:
         assert result["passed"] is True
         assert result["base_epochs"] == [12, 6]
         assert len(result["base_round_metrics"]) == 2
-        assert result["base_round_metrics"][0]["test"]["per_keyword"]["1"]["matched"] == 1
+        assert result["base_round_metrics"][0]["test"]["per_keyword"]["1"]["matched"] == 0
         assert result["refinement_source_round"] == -1
         assert result["formal_qualification_used"] is False
 
