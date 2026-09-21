@@ -25,6 +25,13 @@
     "adversarial_replay_examples_per_sequence": 8,
     "adversarial_min_per_keyword": 24,
     "adversarial_include_strict_prefix_anchors": true,
+    "positive_stress_auto_fill_missing_keywords": true,
+    "positive_stress_auto_examples_per_keyword": 32,
+    "positive_stress_auto_fallback": {
+      "distance_bin": "5m",
+      "azimuth": "rear",
+      "snr": "critical"
+    },
     "failure_replay_enabled": true,
     "failure_replay_examples_per_failure": 4,
     "failure_replay_max_unique_failures": 64,
