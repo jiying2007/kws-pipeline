@@ -8,7 +8,7 @@ import pathlib
 
 PREFLIGHT_POLICY = "product-development-refinement-preflight-v1"
 WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"
-EXPECTED_KEYWORDS = ("1", "2")
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 EXPECTED_BASE_EPOCHS = (12, 6)
 EXPECTED_REFINEMENT_EPOCHS = 6
 
@@ -18,6 +18,36 @@ def load_object(path: pathlib.Path, label: str) -> dict:
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be a JSON object")
     return value
+
+
+def expected_keyword_ids_from_config(config_path: pathlib.Path) -> tuple[str, ...]:
+    config = load_object(config_path, "preflight config")
+    raw_keywords = config.get("keywords")
+    if not isinstance(raw_keywords, str) or not raw_keywords.strip():
+        raise ValueError("preflight config keywords path is missing")
+    keywords_path = pathlib.Path(raw_keywords)
+    if not keywords_path.is_absolute():
+        keywords_path = (ROOT / keywords_path).resolve()
+    rows: list[str] = []
+    for line_no, raw in enumerate(keywords_path.read_text(encoding="utf-8").splitlines(), 1):
+        text = raw.strip()
+        if not text or text.startswith("#"):
+            continue
+        parts = raw.split("\t")
+        if not parts or not parts[0].strip():
+            raise ValueError(f"keywords line {line_no} is missing an id")
+        try:
+            keyword_id = int(parts[0].strip())
+        except ValueError as exc:
+            raise ValueError(f"keywords line {line_no} id is invalid") from exc
+        if keyword_id <= 0:
+            raise ValueError(f"keywords line {line_no} id must be positive")
+        rows.append(str(keyword_id))
+    if not rows:
+        raise ValueError("preflight keyword set is empty")
+    if len(set(rows)) != len(rows):
+        raise ValueError("preflight keyword ids must be unique")
+    return tuple(rows)
 
 
 def finite(value: object, label: str) -> float:
@@ -33,6 +63,7 @@ def validate_metrics(
     metrics: object,
     label: str,
     *,
+    expected_keywords: tuple[str, ...],
     require_noncollapse: bool = True,
 ) -> dict:
     if not isinstance(metrics, dict):
@@ -45,7 +76,7 @@ def validate_metrics(
     if not isinstance(per_keyword, dict):
         raise ValueError(f"{label} per-keyword metrics are missing")
     result: dict[str, dict] = {}
-    for keyword_id in EXPECTED_KEYWORDS:
+    for keyword_id in expected_keywords:
         row = per_keyword.get(keyword_id)
         if not isinstance(row, dict):
             raise ValueError(f"{label} keyword {keyword_id} metrics are missing")
@@ -83,7 +114,11 @@ def validate_metrics(
     }
 
 
-def compact_base_round_metrics(records: list[dict]) -> list[dict]:
+def compact_base_round_metrics(
+    records: list[dict],
+    *,
+    expected_keywords: tuple[str, ...],
+) -> list[dict]:
     result: list[dict] = []
     for row in records:
         if not isinstance(row, dict):
@@ -94,11 +129,13 @@ def compact_base_round_metrics(records: list[dict]) -> list[dict]:
             "calibration": validate_metrics(
                 row.get("calibration"),
                 "base.calibration",
+                expected_keywords=expected_keywords,
                 require_noncollapse=False,
             ),
             "test": validate_metrics(
                 row.get("test"),
                 "base.test",
+                expected_keywords=expected_keywords,
                 require_noncollapse=False,
             ),
             "calibration_gate": bool(row.get("calibration_gate")),
@@ -113,6 +150,7 @@ def verify(
     base_manifest_path: pathlib.Path,
     refinement_summary_path: pathlib.Path,
     work_dir: pathlib.Path,
+    expected_keyword_ids: tuple[str, ...],
 ) -> dict:
     base = load_object(base_manifest_path, "base manifest")
     refinement = load_object(refinement_summary_path, "refinement preflight")
@@ -124,7 +162,12 @@ def verify(
     records = base.get("records")
     if not isinstance(records, list) or len(records) != 2:
         raise ValueError("preflight base must contain exactly two development rounds")
-    base_round_metrics = compact_base_round_metrics(records)
+    if not expected_keyword_ids or len(set(expected_keyword_ids)) != len(expected_keyword_ids):
+        raise ValueError("expected keyword ids must be non-empty and unique")
+    base_round_metrics = compact_base_round_metrics(
+        records,
+        expected_keywords=expected_keyword_ids,
+    )
     epochs = tuple(int(row.get("training_epochs", -1)) for row in records)
     if epochs != EXPECTED_BASE_EPOCHS:
         raise ValueError(f"preflight base epoch budget drifted: {epochs}")
@@ -153,8 +196,16 @@ def verify(
     record = refinement.get("record")
     if not isinstance(record, dict):
         raise ValueError("refinement preflight record is missing")
-    calibration = validate_metrics(record.get("calibration"), "calibration")
-    test = validate_metrics(record.get("test"), "test")
+    calibration = validate_metrics(
+        record.get("calibration"),
+        "calibration",
+        expected_keywords=expected_keyword_ids,
+    )
+    test = validate_metrics(
+        record.get("test"),
+        "test",
+        expected_keywords=expected_keyword_ids,
+    )
 
     forbidden = (
         work_dir / "development-qualification-mining",
@@ -172,6 +223,7 @@ def verify(
         "schema_version": 1,
         "policy": "product-development-preflight-guard-v1",
         "passed": True,
+        "expected_keyword_ids": list(expected_keyword_ids),
         "base_rounds": len(records),
         "base_epochs": list(epochs),
         "base_round_metrics": base_round_metrics,
@@ -188,6 +240,7 @@ def verify(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-manifest", required=True, type=pathlib.Path)
+    parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--refinement-summary", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
@@ -197,6 +250,7 @@ def main() -> int:
         base_manifest_path=args.base_manifest.resolve(),
         refinement_summary_path=args.refinement_summary.resolve(),
         work_dir=args.work_dir.resolve(),
+        expected_keyword_ids=expected_keyword_ids_from_config(args.config.resolve()),
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
