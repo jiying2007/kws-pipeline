@@ -172,6 +172,7 @@ def main() -> int:
         "eval/run_continuous_far_gate.py",
         "build/model-training/training-invocation.json",
         "training/training_request.py write-receipt",
+        "--defer-qualification",
     ):
         require(training, needle, "staged model-training workflow")
     timeouts = [int(value) for value in re.findall(r"timeout-minutes:\s*(\d+)", training)]
