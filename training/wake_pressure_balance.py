@@ -4,11 +4,12 @@ import hashlib
 import math
 import pathlib
 
+from synthetic_audio import UINT32_MAX
+
 WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"
 PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"
 DEFAULT_POSITIVE_EXAMPLE_WEIGHT = 2.0
 MAX_WAKE_EXAMPLE_WEIGHT = 12.0
-UINT32_MAX = 0xFFFFFFFF
 
 
 def sha256_file(path: pathlib.Path) -> str:
