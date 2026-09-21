@@ -247,6 +247,7 @@ def main() -> int:
         "provider_spec_sha256": sha256_file(replay_provider_path),
         "voice_inventory_sha256": sha256_file(voice_inventory_path),
         "replay_voice_scope": "train-only",
+        "reuse_clean_across_rounds": True,
     }
     effective["product_candidate_data"] = {
         "schema_version": 1,
