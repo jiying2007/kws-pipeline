@@ -7,6 +7,11 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
+from synthetic_audio import (  # noqa: E402
+    command_tts_timeout_seconds,
+    keyword_render_context,
+    token_carriers,
+)
 from hard_negative_replay import (  # noqa: E402
     normalize_hard_negative_replay,
     normalize_positive_stress_replay,
@@ -108,6 +113,45 @@ def main() -> int:
         label="keyword-zero",
     )
     assert expanded == [(0,), (0,)]
+
+    assert command_tts_timeout_seconds({"backend": "command"}) == 120
+    assert command_tts_timeout_seconds(
+        {"backend": "command", "timeout_seconds": 45}
+    ) == 45
+    for invalid_timeout in (0, 301, True, 1.5):
+        try:
+            command_tts_timeout_seconds(
+                {"backend": "command", "timeout_seconds": invalid_timeout}
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                f"invalid command TTS timeout accepted: {invalid_timeout!r}"
+            )
+
+    wide_keywords = [
+        {
+            "id": index,
+            "text": f"wake-{index}",
+            "tokens": [f"t{index}"],
+            "token_ids": [index + 1],
+        }
+        for index in range(25)
+    ]
+    active, command_carriers = keyword_render_context(
+        wide_keywords,
+        32,
+        {"backend": "command"},
+    )
+    assert len(active) == 25
+    assert command_carriers == {}
+    try:
+        token_carriers(wide_keywords, 32)
+    except ValueError as exc:
+        assert "tone backend supports at most 24" in str(exc)
+    else:
+        raise AssertionError("tone carrier limit unexpectedly disappeared")
 
     print("replay keyword id contract: PASS")
     return 0
