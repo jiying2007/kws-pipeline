@@ -32,5 +32,7 @@
   "replay_train_voice_slots": 8,
   "replay_voice_scope": "train-only",
   "replay_backend": "command",
-  "replay_tone_allowed": false
+  "replay_tone_allowed": false,
+  "keyword_set_contract": "configs/training/keyword-set.xiaowo-v1.json",
+  "keyword_set_sha256": "e6ef665a066dbd5d0a7cd99542ab1fa51141ee13cf52368a95c7df859111e8ac"
 }
