@@ -6,7 +6,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-from keyword_set_contract import verify_keyword_set_contract  # noqa: E402
+from keyword_set_contract import sha256_file, verify_keyword_set_contract  # noqa: E402
 
 
 def read_json(path: pathlib.Path) -> dict:
@@ -91,6 +91,29 @@ def verify(
             value = str(product_data.get(field) or "")
             if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
                 raise ValueError(f"product_candidate_data.{field} must be lowercase SHA256")
+        try:
+            keyword_contract_rel = (
+                keyword_set_contract_path.resolve().relative_to(ROOT).as_posix()
+            )
+        except ValueError as exc:
+            raise ValueError("keyword-set contract path escapes repository root") from exc
+        if str(product_data.get("keyword_set_contract_path") or "") != keyword_contract_rel:
+            raise ValueError(
+                "product_candidate_data.keyword_set_contract_path differs from loaded contract"
+            )
+        corpus_plan_raw = str(product_data.get("corpus_plan_path") or "")
+        corpus_plan_path = (ROOT / corpus_plan_raw).resolve()
+        try:
+            corpus_plan_path.relative_to(ROOT)
+        except ValueError as exc:
+            raise ValueError("product corpus-plan path escapes repository root") from exc
+        if not corpus_plan_path.is_file():
+            raise ValueError("product corpus-plan file is missing")
+        if sha256_file(corpus_plan_path) != str(
+            product_data.get("corpus_plan_sha256") or ""
+        ):
+            raise ValueError("product corpus-plan SHA differs from current file")
+
         identity_pairs = (
             ("keyword_set_contract_id", keyword_identity["contract_id"]),
             ("keyword_set_contract_sha256", keyword_identity["contract_sha256"]),
