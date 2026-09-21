@@ -80,6 +80,33 @@ bound into `training_code_sha256`, and exported model provenance records
 `training_math_changed=false`. Promotion rejects future product candidates
 that lack this evidence.
 
+## Product development preflight
+
+A versioned model-training request is validated on its pull request before any
+full governed training can start. The preflight uses the same immutable
+speech-like release, replay provider and effective product config materializer as
+the full workflow; it is not allowed to fall back to the tone development lane.
+
+The bounded budget is two base rounds with 12 cold-start and 6 warm-start epochs,
+followed by a 6-epoch adversarial refinement. Threshold grid, two coordinate
+calibration rounds, bounded two-way calibration execution, replay policies and
+strict product gates are retained. Base qualification is deferred and refinement
+uses `--stop-after-development-eval`, so the preflight never renders or consumes
+qualification, shadow or formal evidence.
+
+The guard is intentionally weaker than product qualification: it does not demand
+a strict zero-error candidate from the reduced budget. It does require both
+shipping wake words to record at least one correct match in both calibration and
+test after refinement. A 100% per-keyword collapse therefore fails the request
+PR before the multi-hour run is eligible to start.
+
+On the protected-main push, `model-training` independently resolves the merged
+pull request and requires the latest `model-training-preflight` run for that
+exact PR head to have completed successfully. This makes the preflight fail
+closed even if repository UI required-check configuration is incomplete.
+Manual `workflow_dispatch` remains an explicit operator path and does not claim
+a versioned preflight.
+
 ## Auditable training invocation
 
 Governed training keeps the existing manual `workflow_dispatch` entry point and
@@ -90,8 +117,9 @@ also accepts a versioned request on protected `main`:
 The expensive training jobs run on a push only when that exact request file
 changes. Ordinary main pushes do not start model training. To request another
 governed run, change the request ID and reason through a normal protected-main
-pull request. After merge, the workflow still verifies that its checkout SHA is
-the repository's current `main` before doing any training.
+pull request. The request PR must first pass the product development preflight.
+After merge, the workflow verifies both that preflight binding and that its
+checkout SHA is the repository's current `main` before doing any training.
 
 Each run writes `build/model-training/training-invocation.json` into the
 retained base-domain state. For a versioned request this binds the exact request

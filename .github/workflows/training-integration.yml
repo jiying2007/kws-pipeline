@@ -32,7 +32,9 @@ jobs:
           python3 tests/test_gru_frozen_qualification_contract.py
           python3 tests/test_gru_stability_evidence_contract.py
       - name: Staged model-training handoff contract
-        run: python3 tests/test_training_stage_handoff.py
+        run: |
+          python3 tests/test_training_stage_handoff.py
+          python3 tests/test_product_development_preflight.py
       - name: Resolve immutable training image
         id: image
         shell: bash
