@@ -135,6 +135,7 @@ def main() -> int:
         "adversarial-hard-negatives.tsv",
         "promoted model provenance does not prove adversarial replay training",
         "promoted product candidate lacks ordered-token sample weighting",
+        "promoted product candidate lacks dataset-mean sample-weight normalization",
         "promoted product candidate lacks deterministic feature-cache evidence",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
@@ -241,6 +242,8 @@ def main() -> int:
         '"wake_keyword_weights"',
         "checkpoint wake_keyword_weights must be an object",
         '"ordered_token_sample_weighting"',
+        '"dataset-mean-sample-weight-v1"',
+        '"sample_weight_normalization"',
         '"deterministic-feature-cache-v1"',
         '"training_math_changed"',
     ):
