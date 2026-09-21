@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-keyword-balance-v2-20260921",
+  "request_id": "speech-like-product-preflight-v1-20260921",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with per-keyword exact-wake pressure balancing after model-training #339 proved global wake-mass balance reduced FAR but further degraded recall."
+  "reason": "Run the bounded product speech-like 12/6/6 development preflight on current main after recorded-verdict boolean hardening, dataset-mean sample-weight normalization, provenance-first refinement pressure v3, and merged calibration/test curriculum feedback. Do not start full governed training until the request PR preflight proves neither shipping wake word collapses after refinement."
 }
