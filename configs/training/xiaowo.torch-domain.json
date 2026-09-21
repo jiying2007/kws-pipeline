@@ -138,6 +138,7 @@
     "warm_start_strategy": "full",
     "lr_decay_per_round": 0.85,
     "training_seed_stride": 1009,
+    "training_acoustic_seed_stride": 104729,
     "adversarial_lexicon": {
       "enabled": true,
       "max_length": 5,
