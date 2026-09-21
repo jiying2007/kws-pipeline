@@ -112,8 +112,8 @@ def main() -> int:
     eligible = [
         row
         for row in manifest["records"]
-        if bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        if row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not eligible:

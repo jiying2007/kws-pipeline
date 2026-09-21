@@ -206,7 +206,7 @@ def load_state(
             raise ValueError("development resume curriculum is missing")
         if sha256_file(curriculum) != value.get("last_curriculum_sha256"):
             raise ValueError("development resume curriculum bytes drifted")
-    if bool(value.get("complete")):
+    if value.get("complete") is True:
         manifest = work / "development-loop-manifest.json"
         if not manifest.is_file():
             raise ValueError("complete development resume state lacks final manifest")
@@ -228,7 +228,7 @@ def load_state(
     return {
         "records": records,
         "next_round": len(records),
-        "complete": bool(value.get("complete")),
+        "complete": value.get("complete") is True,
     }
 
 

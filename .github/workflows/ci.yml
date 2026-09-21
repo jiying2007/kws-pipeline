@@ -126,7 +126,9 @@ jobs:
       - name: Verify tracked worktree after Adaptive domain curriculum
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Adaptive domain curriculum"'
       - name: Development loss controller
-        run: python3 tests/test_development_loss_controller.py
+        run: |
+          python3 tests/test_development_loss_controller.py
+          python3 tests/test_recorded_verdict_booleans.py
       - name: Verify tracked worktree after Development loss controller
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Development loss controller"'
       - name: Domain-aware multi-frontend training loop

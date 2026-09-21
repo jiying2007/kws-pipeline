@@ -36,8 +36,8 @@ def _selected_record(manifest: dict) -> dict:
         if isinstance(row, dict)
         and int(row.get("round", -1)) == round_index
         and str(row.get("frontend") or "") == frontend
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not rows:
@@ -67,26 +67,26 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
     selection = development["candidate_selection"]
     selected = _selected_record(development)
 
-    if not bool(selection.get("adversarial_refinement_used")):
+    if selection.get("adversarial_refinement_used") is not True:
         raise ValueError("formal qualification requires adversarial refinement evidence")
     if str(selection.get("adversarial_refinement_policy")) != "post-domain-adversarial-refinement-v1":
         raise ValueError("formal qualification adversarial refinement policy drifted")
     if str(selected.get("stage")) != "post-domain-adversarial-refinement-v1":
         raise ValueError("selected candidate is not the adversarial refinement candidate")
-    if bool(selected.get("adversarial_formal_qualification_used", True)):
+    if selected.get("adversarial_formal_qualification_used", True) is not False:
         raise ValueError("adversarial refinement illegally used formal qualification")
-    if bool(selected.get("failure_replay_formal_qualification_used", True)):
+    if selected.get("failure_replay_formal_qualification_used", True) is not False:
         raise ValueError("failure replay illegally used formal qualification")
-    if bool(selected.get("failure_replay_development_source_wav_bytes_copied", True)):
+    if selected.get("failure_replay_development_source_wav_bytes_copied", True) is not False:
         raise ValueError("failure replay copied development evaluation WAV bytes")
 
     refinement_path = work / "adversarial-refinement" / "summary.json"
     refinement = _read_json(refinement_path, "adversarial refinement summary")
     if str(refinement.get("policy")) != "post-domain-adversarial-refinement-v1":
         raise ValueError("adversarial refinement summary policy drifted")
-    if not bool(refinement.get("qualified")):
+    if refinement.get("qualified") is not True:
         raise ValueError("adversarial refinement is not development-qualified")
-    if bool(refinement.get("formal_qualification_used", True)):
+    if refinement.get("formal_qualification_used", True) is not False:
         raise ValueError("adversarial refinement summary reports formal qualification use")
     if str(refinement.get("output_development_manifest_sha256") or "") != manifest_sha:
         raise ValueError("adversarial refinement output manifest SHA differs from current development manifest")
@@ -100,7 +100,7 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
     adversarial_sha = sha256_file(adversarial_path)
     if str(adversarial.get("evidence_class")) != "development-only-adversarial-lexicon":
         raise ValueError("adversarial lexicon evidence class drifted")
-    if bool(adversarial.get("formal_qualification_used", True)):
+    if adversarial.get("formal_qualification_used", True) is not False:
         raise ValueError("adversarial lexicon used formal qualification")
     if str(adversarial.get("manifest_sha256") or "") != str(selected.get("adversarial_manifest_sha256") or ""):
         raise ValueError("selected adversarial manifest SHA differs from retained evidence")
@@ -141,9 +141,9 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
         raise ValueError("failure replay evidence class drifted")
     if str(failure.get("policy")) != "development-failure-resynthesis-v1":
         raise ValueError("failure replay policy drifted")
-    if bool(failure.get("formal_qualification_used", True)):
+    if failure.get("formal_qualification_used", True) is not False:
         raise ValueError("failure replay evidence reports formal qualification use")
-    if bool(failure.get("development_source_wav_bytes_copied", True)):
+    if failure.get("development_source_wav_bytes_copied", True) is not False:
         raise ValueError("failure replay evidence reports copied development WAV bytes")
     if list(failure.get("source_splits", [])) != ["calibration", "test"]:
         raise ValueError("failure replay source splits must be development calibration/test only")
@@ -187,9 +187,9 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
         raise ValueError("shadow qualification summary schema drifted")
     if str(shadow.get("evidence_class")) != "development-only-shadow-qualification":
         raise ValueError("shadow qualification evidence class drifted")
-    if not bool(shadow.get("qualified")):
+    if shadow.get("qualified") is not True:
         raise ValueError("shadow qualification arena is not qualified")
-    if bool(shadow.get("formal_qualification_seed_consumed", True)):
+    if shadow.get("formal_qualification_seed_consumed", True) is not False:
         raise ValueError("shadow qualification reports formal seed consumption")
     if str(shadow.get("development_manifest_sha256") or "") != manifest_sha:
         raise ValueError("shadow qualification development manifest SHA differs from current manifest")
@@ -208,9 +208,9 @@ def validate_preflight(config_path: pathlib.Path, work: pathlib.Path) -> dict:
         raise ValueError("shadow qualification result count differs from seed arena")
     if any(
         not isinstance(row, dict)
-        or not bool(row.get("qualified"))
-        or not bool(row.get("runtime_qualified"))
-        or not bool(row.get("surrogate_separation_qualified"))
+        or row.get("qualified") is not True
+        or row.get("runtime_qualified") is not True
+        or row.get("surrogate_separation_qualified") is not True
         for row in results
     ):
         raise ValueError("shadow qualification contains a non-qualified seed")

@@ -222,7 +222,7 @@ def domain_gate(metrics: dict, gates: dict) -> bool:
 
 
 def strict_gate_candidate(record: dict) -> bool:
-    return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
+    return record.get("calibration_gate") is True and record.get("test_gate") is True
 
 
 def select_strict_candidate(records: list[dict]) -> dict | None:

@@ -187,7 +187,7 @@ def controller_next(
         false_accepts,
         frr=frr,
         far_per_hour=far_per_hour,
-        latch_after_failure=bool(policy.get("failure_replay_latch_after_failure", False)),
+        latch_after_failure=policy.get("failure_replay_latch_after_failure", False) is True,
     )
 
 
@@ -196,7 +196,7 @@ def repeated(path: pathlib.Path | None, count: int) -> list[pathlib.Path]:
 
 
 def strict(record: dict) -> bool:
-    return bool(record.get("calibration_gate")) and bool(record.get("test_gate"))
+    return record.get("calibration_gate") is True and record.get("test_gate") is True
 
 
 def select_best_strict_candidate(records: list[dict]) -> dict | None:
@@ -295,7 +295,7 @@ def main() -> int:
         if restored["complete"]:
             manifest = load_object(work / "development-loop-manifest.json")
             print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
-            return 0 if bool(manifest.get("development_qualified")) else 1
+            return 0 if manifest.get("development_qualified") is True else 1
         curriculum = (
             load_object(work / "curriculum" / f"round-{start_round - 1:02d}.json")
             if start_round > 0
