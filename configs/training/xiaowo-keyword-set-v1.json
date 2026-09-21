@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "policy": "kws-keyword-set-contract-v1",
+  "contract_id": "xiaowo-dual-wake-v1",
+  "locale": "zh-CN",
+  "tokens_path": "keywords/tokens.example.txt",
+  "keywords_path": "keywords/zh_cn_example.tsv",
+  "keywords": [
+    {
+      "id": 1,
+      "text": "你好小窝",
+      "threshold": 0.55,
+      "tokens": ["ni3", "hao3", "xiao3", "wo1"]
+    },
+    {
+      "id": 2,
+      "text": "小窝小窝",
+      "threshold": 0.55,
+      "tokens": ["xiao3", "wo1", "xiao3", "wo1"]
+    }
+  ]
+}
