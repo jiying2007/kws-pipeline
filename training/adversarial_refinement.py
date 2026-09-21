@@ -55,8 +55,8 @@ def _selected_record(manifest: dict) -> dict:
         if isinstance(row, dict)
         and int(row.get("round", -1)) == selected_round
         and str(row.get("frontend") or "") == selected_frontend
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not rows:
@@ -124,7 +124,7 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     if selection.get("qualification_used_for_selection") is not False:
         raise ValueError("refinement source selection must not use qualification")
 
-    if bool(manifest.get("development_qualified")):
+    if manifest.get("development_qualified") is True:
         return _selected_record(manifest), "strict-development-candidate"
 
     if selection.get("objective_fallback_used") is not True:
@@ -758,7 +758,7 @@ def main() -> int:
     if not isinstance(manifest, dict):
         raise ValueError("development manifest must be an object")
     source, source_selection_policy = select_refinement_source(manifest)
-    source_was_strict = bool(source.get("calibration_gate")) and bool(source.get("test_gate"))
+    source_was_strict = source.get("calibration_gate") is True and source.get("test_gate") is True
     source_checkpoint = repo_path(str(source["checkpoint"]))
     source_round = int(source["round"])
     frontend = str(source["frontend"])
@@ -797,7 +797,7 @@ def main() -> int:
     )
     adversarial_manifest = pathlib.Path(str(adversarial["manifest"]))
     adversarial_evidence = pathlib.Path(str(adversarial["evidence"]))
-    if bool(adversarial.get("formal_qualification_used", True)):
+    if adversarial.get("formal_qualification_used", True) is not False:
         raise ValueError("adversarial mining must not use formal qualification")
     adversarial_selection_policy = str(adversarial.get("selection_policy") or "")
     adversarial_data_policy = str(adversarial.get("data_augmentation_policy") or "")
@@ -812,9 +812,9 @@ def main() -> int:
     )
     failure_manifest_path = pathlib.Path(str(failure["manifest"]))
     failure_evidence = pathlib.Path(str(failure["evidence"]))
-    if bool(failure.get("formal_qualification_used", True)):
+    if failure.get("formal_qualification_used", True) is not False:
         raise ValueError("development failure replay must not use formal qualification")
-    if bool(failure.get("development_source_wav_bytes_copied", True)):
+    if failure.get("development_source_wav_bytes_copied", True) is not False:
         raise ValueError("development failure replay copied evaluation WAV bytes")
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
@@ -1165,7 +1165,7 @@ def main() -> int:
         {
             int(row["round"])
             for row in manifest["records"]
-            if bool(row.get("calibration_gate")) and bool(row.get("test_gate"))
+            if row.get("calibration_gate") is True and row.get("test_gate") is True
         }
     )
     selection = manifest["candidate_selection"]
