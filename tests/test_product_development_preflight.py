@@ -203,9 +203,9 @@ def main() -> int:
         base_path = work / "domain-loop-manifest.json"
         keyword_fixture = root / "keywords.tsv"
         keyword_fixture.write_text(
-            "1\twake-one\t0.5\ta b\n"
-            "2\twake-two\t0.5\tb c\n"
-            "3\twake-three\t0.5\tc d\n",
+            "0\twake-zero\t0.5\ta b\n"
+            "1\twake-one\t0.5\tb c\n"
+            "2\twake-two\t0.5\tc d\n",
             encoding="utf-8",
         )
         config_fixture = root / "preflight.json"
@@ -213,7 +213,7 @@ def main() -> int:
             json.dumps({"keywords": str(keyword_fixture)}),
             encoding="utf-8",
         )
-        assert expected_keyword_ids_from_config(config_fixture) == ("1", "2", "3")
+        assert expected_keyword_ids_from_config(config_fixture) == ("0", "1", "2")
 
         refinement_path = work / "adversarial-refinement" / "preflight-summary.json"
         refinement_path.parent.mkdir(parents=True)
