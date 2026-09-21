@@ -251,6 +251,7 @@ jobs:
           python3 tests/test_adversarial_command_tts_parallel.py
           python3 tests/test_base_wake_pressure_balance.py
           python3 tests/test_replay_keyword_ids.py
+          python3 tests/test_speech_like_download_retry.py
       - name: Verify tracked worktree after Product training data contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Product training data contract"'
       - name: Deferred verdict gate
