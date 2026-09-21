@@ -21,7 +21,7 @@ from development_loss_controller import (  # noqa: E402
     validate_controller_config,
 )
 from development_failure_replay import render_development_failure_replay  # noqa: E402
-from domain_curriculum import metric_hardness, update_curriculum  # noqa: E402
+from domain_curriculum import merge_domain_metrics, update_curriculum  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
 from frontend_spec import FRONTEND_IDS  # noqa: E402
 from iterate_domain import calibrate, evaluate, gate_values, objective, repo_path, run, safe_reset, sha256_file  # noqa: E402
@@ -134,37 +134,6 @@ def failure_counts(calibration: dict, test: dict) -> tuple[int, int]:
     fa = read_jsonl_count(calibration.get("false_positives_path")) + read_jsonl_count(test.get("false_positives_path"))
     return fr, fa
 
-
-def choose_harder(left: dict | None, right: dict | None, label: str) -> dict:
-    if not isinstance(left, dict):
-        return dict(right or {})
-    if not isinstance(right, dict):
-        return dict(left)
-    return dict(right) if metric_hardness(right, label) > metric_hardness(left, label) else dict(left)
-
-
-def merge_domain_metrics(calibration: dict, test: dict) -> dict:
-    result: dict = {"domains": {}, "keyword_domains": {}}
-    cal_domains = calibration.get("domains", {})
-    test_domains = test.get("domains", {})
-    if not isinstance(cal_domains, dict) or not isinstance(test_domains, dict):
-        raise ValueError("domain metrics are missing domains")
-    for key in sorted(set(cal_domains) | set(test_domains)):
-        result["domains"][key] = choose_harder(cal_domains.get(key), test_domains.get(key), f"merged.{key}")
-    cal_keywords = calibration.get("keyword_domains", {}) or {}
-    test_keywords = test.get("keyword_domains", {}) or {}
-    if not isinstance(cal_keywords, dict) or not isinstance(test_keywords, dict):
-        raise ValueError("keyword domain metrics must be objects")
-    for keyword_id in sorted(set(cal_keywords) | set(test_keywords), key=str):
-        cal_value = cal_keywords.get(keyword_id, {})
-        test_value = test_keywords.get(keyword_id, {})
-        cal_map = cal_value.get("domains", {}) if isinstance(cal_value, dict) else {}
-        test_map = test_value.get("domains", {}) if isinstance(test_value, dict) else {}
-        merged: dict[str, dict] = {}
-        for key in sorted(set(cal_map) | set(test_map)):
-            merged[key] = choose_harder(cal_map.get(key), test_map.get(key), f"merged.keyword.{keyword_id}.{key}")
-        result["keyword_domains"][str(keyword_id)] = {"domains": merged}
-    return result
 
 
 def controller_initial(policy: dict) -> dict:

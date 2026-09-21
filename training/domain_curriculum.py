@@ -61,6 +61,64 @@ def metric_hardness(item: dict, label: str) -> float:
     return error_hardness + min(latency, 1500.0) / 3000.0
 
 
+CURRICULUM_FEEDBACK_POLICY = "calibration-test-per-slice-hardest-v1"
+
+
+def _choose_harder_metric(
+    left: dict | None,
+    right: dict | None,
+    label: str,
+) -> dict:
+    if not isinstance(left, dict):
+        return dict(right or {})
+    if not isinstance(right, dict):
+        return dict(left)
+    return (
+        dict(right)
+        if metric_hardness(right, label) > metric_hardness(left, label)
+        else dict(left)
+    )
+
+
+def merge_domain_metrics(calibration: dict, test: dict) -> dict:
+    result: dict = {
+        "source_policy": CURRICULUM_FEEDBACK_POLICY,
+        "domains": {},
+        "keyword_domains": {},
+    }
+    cal_domains = calibration.get("domains", {})
+    test_domains = test.get("domains", {})
+    if not isinstance(cal_domains, dict) or not isinstance(test_domains, dict):
+        raise ValueError("domain metrics are missing domains")
+    for key in sorted(set(cal_domains) | set(test_domains)):
+        result["domains"][key] = _choose_harder_metric(
+            cal_domains.get(key),
+            test_domains.get(key),
+            f"merged.{key}",
+        )
+
+    cal_keywords = calibration.get("keyword_domains", {}) or {}
+    test_keywords = test.get("keyword_domains", {}) or {}
+    if not isinstance(cal_keywords, dict) or not isinstance(test_keywords, dict):
+        raise ValueError("keyword domain metrics must be objects")
+    for keyword_id in sorted(set(cal_keywords) | set(test_keywords), key=str):
+        cal_value = cal_keywords.get(keyword_id, {})
+        test_value = test_keywords.get(keyword_id, {})
+        cal_map = cal_value.get("domains", {}) if isinstance(cal_value, dict) else {}
+        test_map = test_value.get("domains", {}) if isinstance(test_value, dict) else {}
+        if not isinstance(cal_map, dict) or not isinstance(test_map, dict):
+            raise ValueError("keyword domain maps must be objects")
+        merged: dict[str, dict] = {}
+        for key in sorted(set(cal_map) | set(test_map)):
+            merged[key] = _choose_harder_metric(
+                cal_map.get(key),
+                test_map.get(key),
+                f"merged.keyword.{keyword_id}.{key}",
+            )
+        result["keyword_domains"][str(keyword_id)] = {"domains": merged}
+    return result
+
+
 def previous_dimension(previous: dict | None, name: str) -> dict[str, float]:
     if not isinstance(previous, dict):
         return {}
@@ -252,6 +310,9 @@ def update_curriculum(
     return {
         "schema_version": 2,
         "hardness_policy": "recognition-error-gated-latency-v1",
+        "feedback_source_policy": str(
+            domain_metrics.get("source_policy", "single-domain-metrics-v1")
+        ),
         "dimension_weights": dimension_weights,
         "dimension_hardness": dimension_hardness,
         "worst_domains": [
