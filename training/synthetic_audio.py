@@ -104,6 +104,80 @@ def active_keyword_tokens(keywords: list[dict]) -> list[str]:
     return active
 
 
+def command_tts_surface_forms(
+    keywords: list[dict],
+    tts: dict,
+) -> dict[str, str]:
+    if not isinstance(tts, dict):
+        raise ValueError("generator.tts must be an object")
+    explicit = tts.get("token_surface_forms", {})
+    if explicit is None:
+        explicit = {}
+    if not isinstance(explicit, dict):
+        raise ValueError("generator.tts.token_surface_forms must be an object")
+    result: dict[str, str] = {}
+    for raw_token, raw_text in explicit.items():
+        token = str(raw_token)
+        text = str(raw_text)
+        if not token or not text:
+            raise ValueError("generator.tts.token_surface_forms entries must be non-empty")
+        result[token] = text
+
+    ambiguous: dict[str, set[str]] = {}
+    for keyword in keywords:
+        tokens = [str(value) for value in keyword.get("tokens", [])]
+        text = str(keyword.get("text") or "")
+        characters = list(text)
+        if len(characters) != len(tokens):
+            missing = [token for token in tokens if token not in result]
+            if missing:
+                raise ValueError(
+                    "command TTS cannot derive token surface forms from keyword "
+                    f"{text!r}; configure generator.tts.token_surface_forms for: "
+                    + ", ".join(sorted(set(missing)))
+                )
+            continue
+        for token, character in zip(tokens, characters):
+            if token in result:
+                continue
+            ambiguous.setdefault(token, set()).add(character)
+
+    for token, forms in ambiguous.items():
+        if len(forms) != 1:
+            raise ValueError(
+                "command TTS token has ambiguous surface forms; configure "
+                f"generator.tts.token_surface_forms[{token!r}] explicitly"
+            )
+        result[token] = next(iter(forms))
+
+    required = active_keyword_tokens(keywords)
+    missing = [token for token in required if token not in result]
+    if missing:
+        raise ValueError(
+            "command TTS surface forms are missing configured keyword tokens: "
+            + ", ".join(missing)
+        )
+    return result
+
+
+def command_tts_text(
+    token_names: list[str],
+    surface_forms: dict[str, str],
+) -> str:
+    if not token_names:
+        raise ValueError("command TTS token sequence must be non-empty")
+    missing = [token for token in token_names if token not in surface_forms]
+    if missing:
+        raise ValueError(
+            "command TTS surface forms are missing tokens: "
+            + ", ".join(sorted(set(missing)))
+        )
+    text = "".join(surface_forms[token] for token in token_names)
+    if not text:
+        raise ValueError("command TTS resolved text must be non-empty")
+    return text
+
+
 def token_carriers(keywords: list[dict], feature_dim: int) -> dict[str, dict]:
     if feature_dim < 8 or feature_dim > 40:
         raise ValueError("synthetic feature_dim must be in 8..40")
@@ -142,6 +216,7 @@ def keyword_render_context(
     if backend == "tone":
         return active, token_carriers(keywords, feature_dim)
     if backend == "command":
+        command_tts_surface_forms(keywords, tts)
         return active, {}
     raise ValueError(f"unsupported TTS backend: {backend}")
 
@@ -510,6 +585,11 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
         if not isinstance(command, list) or not command:
             raise ValueError("command TTS backend requires generator.tts.command argv list")
     active, carriers = keyword_render_context(keywords, feature_dim, tts_cfg)
+    command_surface_forms = (
+        command_tts_surface_forms(keywords, tts_cfg)
+        if backend == "command"
+        else {}
+    )
     augment_cfg = generator_cfg.get("augment", {})
     validate_augment_config(augment_cfg)
     noise_profiles = [
@@ -591,7 +671,7 @@ def generate_dataset(config_path: pathlib.Path, output: pathlib.Path) -> dict:
                     tts_text = (
                         str(keyword["text"])
                         if keyword is not None and kind == "positive"
-                        else " ".join(token_names)
+                        else command_tts_text(token_names, command_surface_forms)
                     )
                     clean_samples = render_command_tts(
                         tts_text, token_names, kind, clip, tts_cfg
