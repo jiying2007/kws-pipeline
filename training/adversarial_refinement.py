@@ -36,7 +36,7 @@ from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
 REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
-WAKE_BALANCE_POLICY = "exact-wake-effective-mass-balance-v1"
+WAKE_BALANCE_POLICY = "per-keyword-exact-wake-pressure-balance-v2"
 DEFAULT_POSITIVE_EXAMPLE_WEIGHT = 2.0
 MAX_WAKE_EXAMPLE_WEIGHT = 12.0
 REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
@@ -161,7 +161,10 @@ def _manifest_targets(path: pathlib.Path) -> list[tuple[int, ...]]:
     return rows
 
 
-def _keyword_target_sequences(tokens: pathlib.Path, keywords: pathlib.Path) -> set[tuple[int, ...]]:
+def _keyword_target_sequences(
+    tokens: pathlib.Path,
+    keywords: pathlib.Path,
+) -> dict[int, tuple[int, ...]]:
     token_map: dict[str, int] = {}
     for line_no, raw in enumerate(tokens.read_text(encoding="utf-8").splitlines(), 1):
         value = raw.strip()
@@ -180,13 +183,17 @@ def _keyword_target_sequences(tokens: pathlib.Path, keywords: pathlib.Path) -> s
             raise ValueError(f"{tokens}:{line_no}: duplicate token")
         token_map[token] = token_id
 
-    sequences: set[tuple[int, ...]] = set()
+    sequences: dict[int, tuple[int, ...]] = {}
+    seen_sequences: set[tuple[int, ...]] = set()
     for line_no, raw in enumerate(keywords.read_text(encoding="utf-8").splitlines(), 1):
         if not raw.strip() or raw.lstrip().startswith("#"):
             continue
         cols = raw.split("\t")
         if len(cols) != 4:
             raise ValueError(f"{keywords}:{line_no}: expected four columns")
+        keyword_id = int(cols[0])
+        if keyword_id <= 0 or keyword_id in sequences:
+            raise ValueError(f"{keywords}:{line_no}: keyword id must be unique and positive")
         names = cols[3].split()
         try:
             sequence = tuple(token_map[name] for name in names)
@@ -194,10 +201,49 @@ def _keyword_target_sequences(tokens: pathlib.Path, keywords: pathlib.Path) -> s
             raise ValueError(f"{keywords}:{line_no}: unknown token {exc.args[0]}") from exc
         if not sequence:
             raise ValueError(f"{keywords}:{line_no}: empty wake sequence")
-        sequences.add(sequence)
+        if sequence in seen_sequences:
+            raise ValueError(f"{keywords}:{line_no}: duplicate wake sequence")
+        sequences[keyword_id] = sequence
+        seen_sequences.add(sequence)
     if not sequences:
         raise ValueError("shipping keyword TSV contains no wake sequences")
     return sequences
+
+
+def _sequence_edit_distance(left: tuple[int, ...], right: tuple[int, ...]) -> int:
+    previous = list(range(len(right) + 1))
+    for left_index, left_value in enumerate(left, 1):
+        current = [left_index]
+        for right_index, right_value in enumerate(right, 1):
+            substitution = previous[right_index - 1] + int(left_value != right_value)
+            current.append(
+                min(
+                    previous[right_index] + 1,
+                    current[right_index - 1] + 1,
+                    substitution,
+                )
+            )
+        previous = current
+    return previous[-1]
+
+
+def _nearest_keyword_ids(
+    targets: tuple[int, ...],
+    wake_sequences: dict[int, tuple[int, ...]],
+) -> list[int]:
+    keyword_ids = sorted(wake_sequences)
+    if not targets:
+        return keyword_ids
+    distances = {
+        keyword_id: _sequence_edit_distance(targets, wake_sequences[keyword_id])
+        for keyword_id in keyword_ids
+    }
+    minimum = min(distances.values())
+    return [
+        keyword_id
+        for keyword_id in keyword_ids
+        if distances[keyword_id] == minimum
+    ]
 
 
 def derive_refinement_wake_balance(
@@ -213,52 +259,131 @@ def derive_refinement_wake_balance(
     ):
         raise ValueError("refinement positive example weight must be finite and > 0")
     wake_sequences = _keyword_target_sequences(tokens, keywords)
+    sequence_to_keyword = {
+        sequence: keyword_id for keyword_id, sequence in wake_sequences.items()
+    }
+    wake_rows_by_keyword = {keyword_id: 0 for keyword_id in wake_sequences}
+    assigned_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
+    assigned_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
     wake_rows = tokenized_nonwake_rows = empty_nonwake_rows = 0
     per_manifest: list[dict] = []
+
     for manifest in manifests:
         targets = _manifest_targets(manifest)
-        wake = sum(1 for row in targets if row in wake_sequences)
-        empty = sum(1 for row in targets if not row)
-        tokenized_nonwake = len(targets) - wake - empty
-        wake_rows += wake
-        tokenized_nonwake_rows += tokenized_nonwake
-        empty_nonwake_rows += empty
+        local_wake = {keyword_id: 0 for keyword_id in wake_sequences}
+        local_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
+        local_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
+        local_tokenized = 0
+        local_empty = 0
+        for row in targets:
+            keyword_id = sequence_to_keyword.get(row)
+            if keyword_id is not None:
+                wake_rows += 1
+                wake_rows_by_keyword[keyword_id] += 1
+                local_wake[keyword_id] += 1
+                continue
+
+            mass = positive_example_weight if row else 1.0
+            if row:
+                tokenized_nonwake_rows += 1
+                local_tokenized += 1
+            else:
+                empty_nonwake_rows += 1
+                local_empty += 1
+            nearest = _nearest_keyword_ids(row, wake_sequences)
+            share = 1.0 / float(len(nearest))
+            for nearest_id in nearest:
+                assigned_nonwake_rows[nearest_id] += share
+                assigned_nonwake_mass[nearest_id] += mass * share
+                local_nonwake_rows[nearest_id] += share
+                local_nonwake_mass[nearest_id] += mass * share
+
         per_manifest.append(
             {
                 "path": str(manifest),
                 "sha256": sha256_file(manifest),
                 "rows": len(targets),
-                "wake_rows": wake,
-                "tokenized_nonwake_rows": tokenized_nonwake,
-                "empty_nonwake_rows": empty,
+                "wake_rows": sum(local_wake.values()),
+                "wake_rows_by_keyword": {
+                    str(keyword_id): int(local_wake[keyword_id])
+                    for keyword_id in sorted(local_wake)
+                },
+                "tokenized_nonwake_rows": local_tokenized,
+                "empty_nonwake_rows": local_empty,
+                "assigned_nonwake_rows_by_keyword": {
+                    str(keyword_id): local_nonwake_rows[keyword_id]
+                    for keyword_id in sorted(local_nonwake_rows)
+                },
+                "assigned_nonwake_mass_by_keyword": {
+                    str(keyword_id): local_nonwake_mass[keyword_id]
+                    for keyword_id in sorted(local_nonwake_mass)
+                },
             }
         )
+
     if wake_rows <= 0:
         raise ValueError("refinement manifests contain no exact configured wake examples")
+
+    keyword_balance: dict[str, dict] = {}
+    wake_keyword_weights: dict[str, float] = {}
+    effective_wake_mass = 0.0
+    any_bounded = False
+    for keyword_id in sorted(wake_sequences):
+        keyword_wake_rows = wake_rows_by_keyword[keyword_id]
+        if keyword_wake_rows <= 0:
+            raise ValueError(
+                f"refinement manifests contain no exact wake examples for keyword {keyword_id}"
+            )
+        wake_base_mass = keyword_wake_rows * positive_example_weight
+        target_mass = assigned_nonwake_mass[keyword_id]
+        raw_weight = target_mass / wake_base_mass
+        wake_weight = min(MAX_WAKE_EXAMPLE_WEIGHT, max(1.0, raw_weight))
+        bounded = wake_weight != raw_weight
+        effective_mass = wake_base_mass * wake_weight
+        any_bounded = any_bounded or bounded
+        effective_wake_mass += effective_mass
+        wake_keyword_weights[str(keyword_id)] = wake_weight
+        keyword_balance[str(keyword_id)] = {
+            "wake_rows": keyword_wake_rows,
+            "wake_base_mass": wake_base_mass,
+            "assigned_nonwake_rows": assigned_nonwake_rows[keyword_id],
+            "assigned_nonwake_mass": target_mass,
+            "raw_wake_example_weight": raw_weight,
+            "wake_example_weight": wake_weight,
+            "effective_wake_mass": effective_mass,
+            "bounded": bounded,
+        }
 
     wake_base_mass = wake_rows * positive_example_weight
     nonwake_mass = (
         tokenized_nonwake_rows * positive_example_weight + empty_nonwake_rows
     )
-    raw_weight = nonwake_mass / wake_base_mass
-    wake_weight = min(MAX_WAKE_EXAMPLE_WEIGHT, max(1.0, raw_weight))
+    assigned_mass_total = sum(assigned_nonwake_mass.values())
+    if not math.isclose(assigned_mass_total, nonwake_mass, rel_tol=0.0, abs_tol=1.0e-9):
+        raise ValueError("per-keyword non-wake pressure does not conserve effective mass")
+
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "policy": WAKE_BALANCE_POLICY,
         "positive_example_weight": positive_example_weight,
-        "wake_example_weight": wake_weight,
-        "raw_wake_example_weight": raw_weight,
+        "default_wake_example_weight": 1.0,
+        "wake_keyword_weights": wake_keyword_weights,
         "max_wake_example_weight": MAX_WAKE_EXAMPLE_WEIGHT,
-        "capped": wake_weight != raw_weight,
+        "bounded": any_bounded,
         "wake_rows": wake_rows,
+        "wake_rows_by_keyword": {
+            str(keyword_id): wake_rows_by_keyword[keyword_id]
+            for keyword_id in sorted(wake_rows_by_keyword)
+        },
         "tokenized_nonwake_rows": tokenized_nonwake_rows,
         "empty_nonwake_rows": empty_nonwake_rows,
         "wake_base_mass": wake_base_mass,
         "nonwake_mass": nonwake_mass,
-        "effective_wake_mass": wake_base_mass * wake_weight,
+        "effective_wake_mass": effective_wake_mass,
+        "keyword_balance": keyword_balance,
+        "pressure_assignment": "nearest-token-edit-distance-tie-split-v1",
         "manifests": per_manifest,
     }
-
 
 def _refinement_policy(cfg: dict) -> dict:
     iteration = cfg.get("domain_iteration", {})
@@ -370,7 +495,9 @@ def _train_refinement(
             "--positive-example-weight",
             str(wake_balance["positive_example_weight"]),
             "--wake-example-weight",
-            str(wake_balance["wake_example_weight"]),
+            str(wake_balance["default_wake_example_weight"]),
+            "--wake-keyword-weights",
+            json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
             "--warm-start",
             str(warm_start),
             "--output",

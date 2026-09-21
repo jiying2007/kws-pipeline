@@ -220,6 +220,26 @@ def training_metadata(checkpoint: dict) -> dict:
             if not math.isfinite(value) or value <= 0.0:
                 raise ValueError(f"checkpoint {key} must be finite and positive")
             weighting[key] = value
+    raw_wake_keyword_weights = checkpoint.get("wake_keyword_weights")
+    if raw_wake_keyword_weights is not None:
+        if not isinstance(raw_wake_keyword_weights, dict):
+            raise ValueError("checkpoint wake_keyword_weights must be an object")
+        wake_keyword_weights: dict[str, float] = {}
+        for raw_key, raw_value in raw_wake_keyword_weights.items():
+            keyword_id = str(raw_key)
+            if not keyword_id.isdigit() or int(keyword_id) <= 0:
+                raise ValueError("checkpoint wake_keyword_weights keys must be positive ids")
+            if isinstance(raw_value, bool):
+                raise ValueError(
+                    "checkpoint wake_keyword_weights values must be finite and positive"
+                )
+            value = float(raw_value)
+            if not math.isfinite(value) or value <= 0.0:
+                raise ValueError(
+                    "checkpoint wake_keyword_weights values must be finite and positive"
+                )
+            wake_keyword_weights[keyword_id] = value
+        weighting["wake_keyword_weights"] = wake_keyword_weights
     for key in (
         "positive_example_weight_semantics",
         "wake_example_weight_semantics",
