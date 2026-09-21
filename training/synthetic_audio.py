@@ -317,6 +317,15 @@ def render_tone_tokens(
     return samples
 
 
+def command_tts_timeout_seconds(cfg: dict) -> int:
+    raw = cfg.get("timeout_seconds", 120)
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("generator.tts.timeout_seconds must be an integer")
+    if raw <= 0 or raw > 300:
+        raise ValueError("generator.tts.timeout_seconds must be in [1,300]")
+    return raw
+
+
 def render_command_tts(
     text: str,
     token_names: list[str],
@@ -362,7 +371,11 @@ def render_command_tts(
     argv = [str(part).format(**substitutions) for part in command]
     if any(not part for part in argv):
         raise ValueError("command TTS argv entries must be non-empty")
-    subprocess.run(argv, check=True)
+    subprocess.run(
+        argv,
+        check=True,
+        timeout=command_tts_timeout_seconds(cfg),
+    )
     if not output.is_file():
         raise ValueError("command TTS did not produce the requested output WAV")
     with wave.open(str(output), "rb") as reader:
