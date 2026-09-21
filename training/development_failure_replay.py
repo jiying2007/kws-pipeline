@@ -139,11 +139,12 @@ def collect_failure_specs(records: list[dict], work: pathlib.Path) -> list[dict]
                     tokens = [str(value) for value in source.get("tokens", [])]
                     target_ids = [int(value) for value in source.get("target_ids", [])]
                     source_keyword = source.get("keyword_id")
-                    focus_keyword = int(
+                    focus_raw = (
                         failure.get("keyword_id")
                         if failure.get("keyword_id") is not None
-                        else source_keyword or 0
+                        else source_keyword
                     )
+                    focus_keyword = int(focus_raw) if focus_raw is not None else None
                     key = source_sha
                     current = aggregated.get(key)
                     if current is None:
@@ -172,7 +173,7 @@ def collect_failure_specs(records: list[dict], work: pathlib.Path) -> list[dict]
                     current["failure_kinds"].add(failure_kind)
                     current["source_splits"].add(split)
                     current["source_rounds"].add(round_index)
-                    if focus_keyword > 0:
+                    if focus_keyword is not None:
                         current["focus_keyword_ids"].add(focus_keyword)
                     if failure_kind == "false-accept":
                         current["max_false_accept_confidence"] = max(
@@ -205,12 +206,17 @@ def select_failure_specs(specs: list[dict], *, max_unique: int, max_per_keyword:
     selected: list[dict] = []
     counts: dict[int, int] = {}
     for item in specs:
-        focus = [int(value) for value in item.get("focus_keyword_ids", []) if int(value) > 0]
-        primary = focus[0] if focus else int(item.get("source_keyword_id") or 0)
-        if primary > 0 and counts.get(primary, 0) >= max_per_keyword:
+        focus = [int(value) for value in item.get("focus_keyword_ids", [])]
+        source_keyword = item.get("source_keyword_id")
+        primary = (
+            focus[0]
+            if focus
+            else int(source_keyword) if source_keyword is not None else None
+        )
+        if primary is not None and counts.get(primary, 0) >= max_per_keyword:
             continue
         selected.append(item)
-        if primary > 0:
+        if primary is not None:
             counts[primary] = counts.get(primary, 0) + 1
         if len(selected) >= max_unique:
             break
@@ -328,7 +334,11 @@ def render_development_failure_replay(
                     clean = render_tone_tokens(tokens, carriers, rng, tts)
                 else:
                     source_keyword = spec.get("source_keyword_id")
-                    text = keyword_text.get(int(source_keyword), " ".join(tokens)) if source_keyword else " ".join(tokens)
+                    text = (
+                        keyword_text.get(int(source_keyword), " ".join(tokens))
+                        if source_keyword is not None
+                        else " ".join(tokens)
+                    )
                     clean = render_command_tts(text, tokens, str(spec["source_kind"]), clean_path, tts)
             else:
                 clean = generate_background(
