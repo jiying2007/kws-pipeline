@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import pathlib
+
 import torch
 import torch.nn.functional as F
 
 from completion_loss import strict_prefix_completion_loss
 from sequence_margin import keyword_sequence_margin_loss
-from train_ctc import ordered_token_loss, wake_example_weights
+from train_ctc import (
+    normalized_weighted_mean,
+    ordered_token_loss,
+    sample_weight_statistics,
+    wake_example_weights,
+)
 
 
 def make_logits(tokens: list[int], *, steps: int = 12, vocab: int = 5) -> torch.Tensor:
@@ -216,6 +223,40 @@ def main() -> int:
         torch.tensor([4.25, 2.75, 1.0, 1.0], dtype=torch.float32),
     )
 
+    stats = sample_weight_statistics(
+        [
+            (pathlib.Path("wake1.wav"), [1, 2, 3, 4]),
+            (pathlib.Path("wake2.wav"), [3, 4, 3, 4]),
+            (pathlib.Path("near.wav"), [1, 2, 3]),
+            (pathlib.Path("negative.wav"), []),
+        ],
+        [[1, 2, 3, 4], [3, 4, 3, 4]],
+        [1, 2],
+        positive_example_weight=2.0,
+        default_wake_weight=1.0,
+        keyword_weights={1: 4.0, 2: 2.0},
+    )
+    assert stats["policy"] == "dataset-mean-sample-weight-v1"
+    assert stats["rows"] == 4
+    assert stats["nonempty_rows"] == 3
+    assert stats["exact_wake_rows"] == 2
+    assert abs(float(stats["all_weight_sum"]) - 15.0) < 1.0e-12
+    assert abs(float(stats["all_mean_weight"]) - 3.75) < 1.0e-12
+    assert abs(float(stats["nonempty_weight_sum"]) - 14.0) < 1.0e-12
+    assert abs(float(stats["nonempty_mean_weight"]) - (14.0 / 3.0)) < 1.0e-12
+
+    # Dataset-mean normalization is invariant to batch partitioning when batch
+    # losses are aggregated by sample count. A homogeneous high-weight batch
+    # therefore keeps its intended larger contribution instead of cancelling
+    # its own multiplier through a batch-local denominator.
+    values = torch.tensor([1.0, 3.0, 5.0, 7.0], dtype=torch.float32)
+    weights = torch.tensor([8.0, 4.0, 2.0, 1.0], dtype=torch.float32)
+    full = normalized_weighted_mean(values, weights, 3.75)
+    first = normalized_weighted_mean(values[:1], weights[:1], 3.75)
+    rest = normalized_weighted_mean(values[1:], weights[1:], 3.75)
+    partitioned = (first * 1.0 + rest * 3.0) / 4.0
+    assert abs(float(full.item()) - float(partitioned.item())) < 1.0e-7
+
     # Refinement wake balancing must also affect ordered-token loss. Equal
     # sample weights preserve the legacy mean exactly; only a non-uniform wake
     # weight may move this auxiliary objective.
@@ -248,8 +289,37 @@ def main() -> int:
         ordered_target_lengths,
         torch.tensor([4.0, 1.0], dtype=torch.float32),
     )
+    normalized_ordered, _, _ = ordered_token_loss(
+        ordered_log_probs,
+        ordered_targets,
+        ordered_input_lengths,
+        ordered_target_lengths,
+        torch.tensor([4.0, 1.0], dtype=torch.float32),
+        normalization_mean_weight=2.5,
+    )
+    ordered_first, _, _ = ordered_token_loss(
+        ordered_log_probs[:, :1, :],
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([4], dtype=torch.long),
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([4.0], dtype=torch.float32),
+        normalization_mean_weight=2.5,
+    )
+    ordered_second, _, _ = ordered_token_loss(
+        ordered_log_probs[:, 1:, :],
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([4], dtype=torch.long),
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([1.0], dtype=torch.float32),
+        normalization_mean_weight=2.5,
+    )
     assert abs(float(equal_weight_ordered.item()) - float(unweighted_ordered.item())) < 1.0e-7
     assert float(wake_weighted_ordered.item()) > float(unweighted_ordered.item())
+    assert abs(float(normalized_ordered.item()) - float(wake_weighted_ordered.item())) < 1.0e-7
+    assert abs(
+        float(normalized_ordered.item())
+        - float(((ordered_first + ordered_second) / 2.0).item())
+    ) < 1.0e-7
     try:
         ordered_token_loss(
             ordered_log_probs,
