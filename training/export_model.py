@@ -238,6 +238,55 @@ def training_metadata(checkpoint: dict) -> dict:
             if not math.isfinite(value) or value <= 0.0:
                 raise ValueError(f"checkpoint {key} must be finite and positive")
             weighting[key] = value
+    raw_normalization = checkpoint.get("sample_weight_normalization")
+    if raw_normalization is not None:
+        if (
+            not isinstance(raw_normalization, dict)
+            or int(raw_normalization.get("schema_version", 0)) != 1
+            or raw_normalization.get("policy") != "dataset-mean-sample-weight-v1"
+        ):
+            raise ValueError("checkpoint sample_weight_normalization contract mismatch")
+        normalized = {
+            "schema_version": 1,
+            "policy": "dataset-mean-sample-weight-v1",
+            "rows": int(raw_normalization.get("rows", 0)),
+            "nonempty_rows": int(raw_normalization.get("nonempty_rows", 0)),
+            "exact_wake_rows": int(raw_normalization.get("exact_wake_rows", 0)),
+            "all_weight_sum": float(raw_normalization.get("all_weight_sum", 0.0)),
+            "nonempty_weight_sum": float(raw_normalization.get("nonempty_weight_sum", 0.0)),
+            "all_mean_weight": float(raw_normalization.get("all_mean_weight", 0.0)),
+            "nonempty_mean_weight": float(raw_normalization.get("nonempty_mean_weight", 0.0)),
+        }
+        if (
+            normalized["rows"] <= 0
+            or not 0 < normalized["nonempty_rows"] <= normalized["rows"]
+            or not 0 <= normalized["exact_wake_rows"] <= normalized["nonempty_rows"]
+            or any(
+                not math.isfinite(normalized[key]) or normalized[key] <= 0.0
+                for key in (
+                    "all_weight_sum",
+                    "nonempty_weight_sum",
+                    "all_mean_weight",
+                    "nonempty_mean_weight",
+                )
+            )
+        ):
+            raise ValueError("checkpoint sample_weight_normalization values are invalid")
+        if not math.isclose(
+            normalized["all_weight_sum"] / normalized["rows"],
+            normalized["all_mean_weight"],
+            rel_tol=0.0,
+            abs_tol=1.0e-9,
+        ):
+            raise ValueError("checkpoint all sample-weight mean is inconsistent")
+        if not math.isclose(
+            normalized["nonempty_weight_sum"] / normalized["nonempty_rows"],
+            normalized["nonempty_mean_weight"],
+            rel_tol=0.0,
+            abs_tol=1.0e-9,
+        ):
+            raise ValueError("checkpoint nonempty sample-weight mean is inconsistent")
+        weighting["normalization"] = normalized
     raw_wake_keyword_weights = checkpoint.get("wake_keyword_weights")
     if raw_wake_keyword_weights is not None:
         if not isinstance(raw_wake_keyword_weights, dict):
