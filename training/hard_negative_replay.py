@@ -20,12 +20,12 @@ from synthetic_audio import (  # noqa: E402
     SAMPLE_RATE_HZ,
     UINT32_MAX,
     augment,
+    keyword_render_context,
     load_config,
     parse_keywords,
     render_command_tts,
     render_tone_tokens,
     safe_negative,
-    token_carriers,
     validate_augment_config,
     validate_tone_config,
     write_wav,
@@ -147,7 +147,7 @@ def normalize_hard_negative_replay(
         missing = [token for token in tokens if token not in active_tokens]
         if missing:
             raise ValueError(
-                f"{label}.tokens contain tokens without synthetic carriers: {', '.join(missing)}"
+                f"{label}.tokens contain tokens unavailable to the selected TTS backend: {', '.join(missing)}"
             )
         if not safe_negative(tokens, forbidden):
             raise ValueError(f"{label}.tokens contain a configured wake path")
@@ -555,12 +555,22 @@ def render_hard_negative_replay(
     keywords = parse_keywords(keywords_path, token_map)
     keyword_ids = {int(keyword["id"]) for keyword in keywords}
     feature_dim = int(config.get("model", {}).get("feature_dim", 32))
-    carriers = token_carriers(keywords, feature_dim)
-    active_tokens = list(carriers)
+    generator = config.get("generator", {})
+    if not isinstance(generator, dict):
+        raise ValueError("generator must be an object")
+    tts = generator.get("tts", {"backend": "tone"})
+    if not isinstance(tts, dict):
+        raise ValueError("generator.tts must be an object")
+    active_tokens, carriers = keyword_render_context(keywords, feature_dim, tts)
+    renderable_tokens = (
+        active_tokens
+        if str(tts.get("backend", "tone")) == "tone"
+        else [token for token, token_id in token_map.items() if int(token_id) != 0]
+    )
     forbidden = [list(keyword["tokens"]) for keyword in keywords]
     sequences = normalize_hard_negative_replay(
         iteration.get("hard_negative_replay", []),
-        active_tokens=active_tokens,
+        active_tokens=renderable_tokens,
         forbidden=forbidden,
         token_map=token_map,
         keyword_ids=keyword_ids,
@@ -594,12 +604,6 @@ def render_hard_negative_replay(
         )
         return {**evidence, "evidence": str(evidence_path)}
 
-    generator = config.get("generator", {})
-    if not isinstance(generator, dict):
-        raise ValueError("generator must be an object")
-    tts = generator.get("tts", {"backend": "tone"})
-    if not isinstance(tts, dict):
-        raise ValueError("generator.tts must be an object")
     validate_tone_config(tts)
     backend = str(tts.get("backend", "tone"))
     if backend not in {"tone", "command"}:
