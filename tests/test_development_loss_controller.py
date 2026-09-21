@@ -25,9 +25,20 @@ class DevelopmentLossControllerTest(unittest.TestCase):
         cls.rnn_policy = json.loads(
             (ROOT / "configs/training/xiaowo.rnn-development-stage-a-v1.json").read_text()
         )
+        cls.gru_loop_policy = json.loads(
+            (ROOT / "configs/training/xiaowo.gru-development-loop.json").read_text()
+        )
+        cls.rnn_loop_policy = json.loads(
+            (ROOT / "configs/training/xiaowo.rnn-development-loop.json").read_text()
+        )
 
-    def test_stage_a_policies_use_normalized_rates(self) -> None:
-        for policy in (self.gru_policy, self.rnn_policy):
+    def test_development_policies_use_normalized_rates(self) -> None:
+        for policy in (
+            self.gru_policy,
+            self.rnn_policy,
+            self.gru_loop_policy,
+            self.rnn_loop_policy,
+        ):
             raw = policy["loss_controller"]
             self.assertEqual(validate_controller_config(raw), "normalized-rates-v1")
             self.assertGreater(float(raw["normalization_frr"]), 0.0)
@@ -99,6 +110,30 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             low_counts["controller_severity"],
             high_counts["controller_severity"],
         )
+
+    def test_normalized_mode_preserves_requested_replay_latch(self) -> None:
+        policy = self.rnn_loop_policy
+        current = initial_controller(policy)
+        failed = next_controller(
+            policy,
+            current,
+            false_rejects=1,
+            false_accepts=0,
+            frr=0.20,
+            far_per_hour=0.0,
+            latch_after_failure=True,
+        )
+        self.assertEqual(failed["failure_replay_repeat"], 1)
+        clean = next_controller(
+            policy,
+            failed,
+            false_rejects=0,
+            false_accepts=0,
+            frr=0.0,
+            far_per_hour=0.0,
+            latch_after_failure=True,
+        )
+        self.assertEqual(clean["failure_replay_repeat"], 1)
 
     def test_normalized_mode_requires_rate_signals(self) -> None:
         policy = self.gru_policy
