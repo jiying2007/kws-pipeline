@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "waived": [
+    "tools/gen_parameter_limits.py|inspect_entry:164 low_exclusive = bool(entry.get('min_exclusive', False))",
+    "tools/gen_parameter_limits.py|inspect_entry:165 high_exclusive = bool(entry.get('max_exclusive', False))",
+    "training/development_resume.py|load_state:209 manifest = bool(value.get('complete'))",
+    "training/iterate_domain.py|strict_gate_candidate:223 <return> = bool(record.get('calibration_gate'))",
+    "training/iterate_domain.py|strict_gate_candidate:223 <return> = bool(record.get('test_gate'))",
+    "training/iterate_gru_development.py|main:359 <return> = bool(manifest.get('development_qualified'))",
+    "training/iterate_gru_development.py|strict:214 <return> = bool(record.get('calibration_gate'))",
+    "training/iterate_gru_development.py|strict:214 <return> = bool(record.get('test_gate'))",
+    "training/iterate_rnn_development.py|main:293 <return> = bool(manifest.get('development_qualified'))",
+    "training/iterate_rnn_development.py|strict:199 <return> = bool(record.get('calibration_gate'))",
+    "training/iterate_rnn_development.py|strict:199 <return> = bool(record.get('test_gate'))",
+    "training/synthetic_audio.py|safe_negative:393 <return> = bool(sequence)"
+  ]
+}
