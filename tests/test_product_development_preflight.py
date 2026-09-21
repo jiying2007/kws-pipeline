@@ -251,13 +251,63 @@ def main() -> int:
             base_manifest_path=base_path,
             refinement_summary_path=refinement_path,
             work_dir=work,
+            expected_keyword_ids=("1", "2"),
         )
         assert result["passed"] is True
+        assert result["expected_keyword_ids"] == ["1", "2"]
         assert result["base_epochs"] == [12, 6]
         assert len(result["base_round_metrics"]) == 2
         assert result["base_round_metrics"][0]["test"]["per_keyword"]["1"]["matched"] == 0
         assert result["refinement_source_round"] == -1
         assert result["formal_qualification_used"] is False
+
+        three_keyword_metrics = metrics()
+        three_keyword_metrics["per_keyword"]["3"] = {
+            "expected": 4,
+            "matched": 2,
+            "false_rejects": 2,
+            "false_accepts": 0,
+            "frr": 0.5,
+        }
+        three_keyword_metrics["expected"] += 4
+        three_keyword_metrics["matched"] += 2
+        three_keyword_metrics["false_rejects"] += 2
+        three_keyword_metrics["frr"] = (
+            three_keyword_metrics["false_rejects"] / three_keyword_metrics["expected"]
+        )
+        three_base = copy.deepcopy(base)
+        for row in three_base["records"]:
+            row["calibration"] = copy.deepcopy(three_keyword_metrics)
+            row["test"] = copy.deepcopy(three_keyword_metrics)
+        three_refinement = copy.deepcopy(refinement)
+        three_refinement["record"]["calibration"] = copy.deepcopy(three_keyword_metrics)
+        three_refinement["record"]["test"] = copy.deepcopy(three_keyword_metrics)
+        base_path.write_text(json.dumps(three_base), encoding="utf-8")
+        refinement_path.write_text(json.dumps(three_refinement), encoding="utf-8")
+        three_result = verify(
+            base_manifest_path=base_path,
+            refinement_summary_path=refinement_path,
+            work_dir=work,
+            expected_keyword_ids=("1", "2", "3"),
+        )
+        assert three_result["expected_keyword_ids"] == ["1", "2", "3"]
+        missing_third = copy.deepcopy(three_refinement)
+        del missing_third["record"]["test"]["per_keyword"]["3"]
+        refinement_path.write_text(json.dumps(missing_third), encoding="utf-8")
+        try:
+            verify(
+                base_manifest_path=base_path,
+                refinement_summary_path=refinement_path,
+                work_dir=work,
+                expected_keyword_ids=("1", "2", "3"),
+            )
+        except ValueError as exc:
+            assert "keyword 3 metrics are missing" in str(exc)
+        else:
+            raise AssertionError("configured third keyword was not enforced")
+
+        base_path.write_text(json.dumps(base), encoding="utf-8")
+        refinement_path.write_text(json.dumps(refinement), encoding="utf-8")
 
         progress = build_round_progress(
             {
@@ -296,6 +346,7 @@ def main() -> int:
                 base_manifest_path=base_path,
                 refinement_summary_path=refinement_path,
                 work_dir=work,
+                expected_keyword_ids=("1", "2"),
             )
         except ValueError as exc:
             assert "keyword 1 collapsed" in str(exc)
@@ -310,6 +361,7 @@ def main() -> int:
                 base_manifest_path=base_path,
                 refinement_summary_path=refinement_path,
                 work_dir=work,
+                expected_keyword_ids=("1", "2"),
             )
         except ValueError as exc:
             assert "crossed qualification boundary" in str(exc)
@@ -329,6 +381,7 @@ def main() -> int:
     assert "product_preflight_handoff.py verify-materialization" in workflow
     assert "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c" in workflow
     assert "xiaowo-product-development-base-handoff-" in workflow
+    assert '--config "$KWS_PREFLIGHT_CONFIG"' in workflow
 
     print("product development preflight guard: PASS")
     return 0
