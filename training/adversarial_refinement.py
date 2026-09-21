@@ -121,7 +121,10 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     if selection.get("qualification_used_for_selection") is not False:
         raise ValueError("refinement source selection must not use qualification")
 
-    if bool(manifest.get("development_qualified")):
+    # bool("false") is True, so a coercion here takes the strict-candidate
+    # branch for a development run that did not qualify, skipping the
+    # objective-fallback evidence check below. The manifest is read from disk.
+    if manifest.get("development_qualified") is True:
         return _selected_record(manifest), "strict-development-candidate"
 
     if selection.get("objective_fallback_used") is not True:
