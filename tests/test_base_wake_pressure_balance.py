@@ -10,6 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 import iterate_domain  # noqa: E402
+import train_ctc  # noqa: E402
 from wake_pressure_balance import (  # noqa: E402
     WAKE_BALANCE_POLICY,
     derive_wake_pressure_balance,
@@ -57,6 +58,12 @@ def main() -> int:
         }
         focus = static_replay_focus_rows(static)
         assert focus[replay_manifest.resolve()] == [(0,), (0,), (0,), (2,)]
+
+        trainer_keywords = train_ctc._keyword_rows(
+            keywords,
+            {"<blk>": 0, "a": 1, "b": 2, "c": 3, "d": 4},
+        )
+        assert [row["id"] for row in trainer_keywords] == [0, 2]
 
         balance = derive_wake_pressure_balance(
             manifests=[train_manifest, replay_manifest],
