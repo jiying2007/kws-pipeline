@@ -21,12 +21,12 @@ from hard_negative_replay import apply_focus, hard_negative_stress_focus  # noqa
 from render_domains import sample_scene, validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     augment,
+    keyword_render_context,
     load_config,
     parse_keywords,
     render_command_tts,
     render_tone_tokens,
     safe_negative,
-    token_carriers,
     validate_augment_config,
     validate_tone_config,
     write_wav,
@@ -353,8 +353,17 @@ def mine_adversarial_lexicon(
         keywords_path = (ROOT / keywords_path).resolve()
     token_map = load_tokens(tokens_path)
     keywords = parse_keywords(keywords_path, token_map)
-    carriers = token_carriers(keywords, int(cfg.get("model", {}).get("feature_dim", 32)))
-    active_tokens = list(carriers)
+    generator = cfg.get("generator", {})
+    if not isinstance(generator, dict):
+        raise ValueError("generator must be an object")
+    tts = generator.get("tts", {"backend": "tone"})
+    if not isinstance(tts, dict):
+        raise ValueError("generator.tts must be an object")
+    active_tokens, carriers = keyword_render_context(
+        keywords,
+        int(cfg.get("model", {}).get("feature_dim", 32)),
+        tts,
+    )
     forbidden = [list(keyword["tokens"]) for keyword in keywords]
     candidates = enumerate_safe_sequences(
         active_tokens,
@@ -365,13 +374,9 @@ def mine_adversarial_lexicon(
     if not candidates:
         raise ValueError("adversarial lexicon enumeration produced no safe negatives")
 
-    generator = cfg.get("generator", {})
-    if not isinstance(generator, dict):
-        raise ValueError("generator must be an object")
-    tts = generator.get("tts", {"backend": "tone"})
     augment_config = generator.get("augment", {})
-    if not isinstance(tts, dict) or not isinstance(augment_config, dict):
-        raise ValueError("generator TTS/augment config is invalid")
+    if not isinstance(augment_config, dict):
+        raise ValueError("generator augment config is invalid")
     validate_tone_config(tts)
     validate_augment_config(augment_config)
     domains = validate_domains(cfg)
