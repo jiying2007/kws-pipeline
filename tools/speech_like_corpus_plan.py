@@ -21,6 +21,7 @@ LABEL_CLASS = "speech-like-training-label-v1"
 SPLITS = ("train", "calibration", "test", "qualification")
 ALLOWED_KINDS = {"positive", "confusable", "negative"}
 ALLOWED_PROVIDER_GROUPS = {"train", "generalization-search", "generalization-freeze"}
+UINT32_MAX = 0xFFFFFFFF
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -123,8 +124,15 @@ def normalize_plan(path: pathlib.Path) -> dict:
             raise ValueError(f"utterance {utterance_id}.tokens must be non-empty strings")
         keyword_id = row.get("keyword_id")
         if kind == "positive":
-            if isinstance(keyword_id, bool) or not isinstance(keyword_id, int) or keyword_id <= 0:
-                raise ValueError(f"positive utterance {utterance_id} requires positive integer keyword_id")
+            if (
+                isinstance(keyword_id, bool)
+                or not isinstance(keyword_id, int)
+                or keyword_id < 0
+                or keyword_id > UINT32_MAX
+            ):
+                raise ValueError(
+                    f"positive utterance {utterance_id} requires uint32 keyword_id"
+                )
             positive_keywords.add(keyword_id)
         elif keyword_id is not None:
             raise ValueError(f"non-positive utterance {utterance_id} must use keyword_id=null")
@@ -137,8 +145,8 @@ def normalize_plan(path: pathlib.Path) -> dict:
                 "tokens": list(tokens),
             }
         )
-    if len(positive_keywords) < 2:
-        raise ValueError("corpus plan must cover at least two positive keyword ids")
+    if not positive_keywords:
+        raise ValueError("corpus plan must cover at least one positive keyword id")
 
     constraints = value.get("constraints")
     if not isinstance(constraints, dict):
