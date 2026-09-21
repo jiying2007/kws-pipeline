@@ -149,14 +149,37 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
 
     def test_loss_controller_is_bounded_and_directional(self) -> None:
         current = self.iterator.controller_initial(self.policy)
-        recall = self.iterator.controller_next(self.policy, current, 3, 0)
-        self.assertGreater(recall["positive_example_weight"], current["positive_example_weight"])
+        recall = self.iterator.controller_next(
+            self.policy,
+            current,
+            3,
+            0,
+            frr=0.30,
+            far_per_hour=1.0,
+        )
+        self.assertEqual(recall["positive_example_weight"], current["positive_example_weight"])
+        self.assertGreater(recall["wake_example_weight"], current["wake_example_weight"])
         self.assertLess(recall["ordered_token_loss_weight"], current["ordered_token_loss_weight"])
-        precision = self.iterator.controller_next(self.policy, current, 0, 5)
-        self.assertLess(precision["positive_example_weight"], current["positive_example_weight"])
+        precision = self.iterator.controller_next(
+            self.policy,
+            current,
+            0,
+            5,
+            frr=0.01,
+            far_per_hour=180.0,
+        )
+        self.assertEqual(precision["positive_example_weight"], current["positive_example_weight"])
+        self.assertLess(precision["wake_example_weight"], current["wake_example_weight"])
         self.assertGreater(precision["ordered_token_loss_weight"], current["ordered_token_loss_weight"])
         self.assertEqual(precision["failure_replay_repeat"], 2)
-        heavy = self.iterator.controller_next(self.policy, current, 30, 30)
+        heavy = self.iterator.controller_next(
+            self.policy,
+            current,
+            30,
+            30,
+            frr=0.50,
+            far_per_hour=300.0,
+        )
         self.assertLessEqual(
             heavy["failure_replay_repeat"], self.policy["failure_replay_repeat_max"]
         )
