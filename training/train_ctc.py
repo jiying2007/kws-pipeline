@@ -28,7 +28,7 @@ from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 from sequence_margin import keyword_sequence_margin_loss
-from wake_pressure_balance import UINT32_MAX
+from synthetic_audio import UINT32_MAX
 
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
@@ -156,6 +156,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
         ROOT / "training" / "sequence_margin.py",
+        ROOT / "training" / "synthetic_audio.py",
         ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
         ROOT / "tools" / "corpus_identity.py",
