@@ -18,6 +18,7 @@ TRAINING = ROOT / "training"
 sys.path.insert(0, str(TOOLS))
 
 from domain_curriculum import merge_domain_metrics, update_curriculum  # noqa: E402
+from domain_progress import append_round_progress, build_round_progress  # noqa: E402
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -508,6 +509,11 @@ def main() -> int:
         action="store_true",
         help="stop after development candidate selection; later staged jobs own qualification",
     )
+    parser.add_argument(
+        "--compact-log",
+        action="store_true",
+        help="emit compact round/final summaries instead of the full manifest on stdout",
+    )
     args = parser.parse_args()
     config_path = args.config.resolve()
     cfg = load_config(config_path)
@@ -714,6 +720,21 @@ def main() -> int:
         curriculum_path = work / "curriculum" / f"round-{round_index:02d}.json"
         curriculum_path.parent.mkdir(parents=True, exist_ok=True)
         curriculum_path.write_text(json.dumps(curriculum_result, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+        progress_record = build_round_progress(
+            round_best,
+            curriculum_sha256=sha256_file(curriculum_path),
+        )
+        append_round_progress(work / "domain-loop-progress.jsonl", progress_record)
+        print(
+            "domain-round-progress "
+            + json.dumps(
+                progress_record,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            )
+        )
         if (
             round_index + 1 >= min_rounds
             and select_strict_candidate(records) is not None
@@ -818,7 +839,36 @@ def main() -> int:
     }
     manifest_path = work / "domain-loop-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
-    print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
+    if args.compact_log:
+        print(
+            "domain-loop-final "
+            + json.dumps(
+                {
+                    "schema_version": 1,
+                    "manifest": str(manifest_path),
+                    "record_count": len(records),
+                    "development_qualified": development_qualified,
+                    "qualification_deferred": qualification_deferred,
+                    "selected_round": selected["round"],
+                    "selected_frontend": selected["frontend"],
+                    "selected_score": selected["score"],
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            )
+        )
+    else:
+        print(
+            json.dumps(
+                manifest,
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+                allow_nan=False,
+            )
+        )
     if qualification_deferred:
         return 0 if development_qualified else 1
     return 0 if qualified else 1
