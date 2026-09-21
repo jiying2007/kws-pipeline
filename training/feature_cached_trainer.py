@@ -9,7 +9,7 @@ from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
-CACHE_POLICY = "development-feature-cache-v1"
+CACHE_POLICY = "deterministic-feature-cache-v1"
 MAX_FEATURE_CACHE_ITEMS = 32768
 
 
