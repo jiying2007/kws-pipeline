@@ -177,27 +177,42 @@ calibration/test development candidate after refinement, and the guarded formal
 renderer still rejects any non-strict candidate.
 
 Model-training #339 (run `35501188138`) proved that a single global wake
-multiplier is not a sufficient refinement actuator. Its v1 balance was applied
-exactly: 432 exact-wake rows had base mass 864, 1,488 tokenized non-wake rows had
-mass 2,976, and the derived multiplier 3.4444 raised exact-wake mass to the same
-2,976. Even so, calibration/test FRR ended at 0.875/0.9375 while test FAR fell to
-493.73 h^-1; keyword 1 (`你好小窝`) remained 32/32 false rejects. The run is
-diagnostic-only and is not eligible for promotion.
+multiplier is not a sufficient refinement actuator. Its v1 row-weight
+bookkeeping matched 432 exact-wake rows from base mass 864 to non-wake mass
+2,976 with multiplier 3.4444. That is not an exact statement about gradient
+mass: the trainer currently normalizes sample weights independently inside each
+mini-batch. Even with the bookkeeping balance, calibration/test FRR ended at
+0.875/0.9375 while test FAR fell to 493.73 h^-1; keyword 1 (`你好小窝`)
+remained 32/32 false rejects. The run is diagnostic-only and is not eligible
+for promotion.
 
-Refinement therefore uses per-keyword pressure balancing rather than a global
-wake scalar. The policy is `per-keyword-exact-wake-pressure-balance-v2`.
-Configured exact-wake rows are counted per keyword. Every non-wake target
-sequence is assigned to the configured wake sequence(s) with minimum token edit
-distance; ties split the row's effective mass equally, and empty-target rows
-split equally across all keywords. This conserves the same total non-wake
-effective mass used by v1 while exposing asymmetric lexical pressure around
-individual shipping wake words.
+The first per-keyword policy also exposed a second authority problem. Product
+hard-negative replay already records `focus_keyword_id`, but v2 discarded that
+semantic evidence and inferred pressure only from token edit distance. For the
+fixed replay set, configured focus pressure is 352 examples for keyword 1 and
+224 for keyword 2, while edit-distance attribution changes it to roughly
+296/280. In particular, the 64-example `hao wo xiao wo ni` negative is
+explicitly focused on keyword 1 but is closer by token edit distance to keyword
+2.
 
-Each keyword receives its own exact-wake multiplier so its effective wake mass
-matches its assigned non-wake pressure, bounded independently to [1, 12]. The
-trainer keeps a default wake multiplier of 1.0 and receives the per-keyword map
-explicitly. The map and assigned masses are retained in refinement evidence and
-model provenance, and model promotion verifies both copies are identical.
+Refinement therefore uses
+`per-keyword-provenance-pressure-balance-v3`. Replay sidecars are the primary
+pressure authority: fixed hard-negative/positive-stress evidence,
+model-mined-adversarial evidence, and development/qualification-repair failure
+evidence are expanded in renderer row order and their explicit focus keyword(s)
+receive the non-wake row mass. Multiple explicit focus IDs split that row's
+mass. Token edit distance remains a fallback only for rows without semantic
+focus metadata, such as ordinary base-dataset negatives; ties still split
+equally. Evidence records explicit-focus and fallback row counts and promotion
+requires those counts to account for every non-wake row.
+
+Each keyword receives its own bounded [1, 12] exact-wake multiplier from that
+row-pressure accounting. The trainer keeps a default wake multiplier of 1.0 and
+receives the per-keyword map explicitly. The map and assigned masses are
+retained in refinement evidence and model provenance, and model promotion
+verifies both copies are identical. Mini-batch weight normalization remains a
+separate optimization-semantics issue; v3 deliberately fixes pressure ownership
+without claiming that row-weight mass equals exact epoch gradient mass.
 
 The resulting sample weights still apply consistently to all target-sensitive
 objectives: per-frame CTC, sequence margin, strict-prefix completion, and the

@@ -141,6 +141,7 @@ def main() -> int:
         "xiao3 wo1 xiao3 wo1",
         "model provenance repository tree differs from requested training HEAD tree",
         "model provenance per-keyword wake weights differ from refinement evidence",
+        "adversarial refinement wake-pressure focus accounting drifted",
     ):
         require(verifier, needle, "promotion bundle verifier")
 
@@ -219,9 +220,12 @@ def main() -> int:
 
     for needle in (
         'REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"',
-        'WAKE_BALANCE_POLICY = "per-keyword-exact-wake-pressure-balance-v2"',
+        'WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"',
+        'PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"',
+        "build_refinement_focus_rows",
         "derive_refinement_wake_balance",
-        '"nearest-token-edit-distance-tie-split-v1"',
+        '"explicit_focus_nonwake_rows"',
+        '"fallback_edit_distance_nonwake_rows"',
         '"--wake-example-weight"',
         '"--wake-keyword-weights"',
         '"wake_keyword_weights"',

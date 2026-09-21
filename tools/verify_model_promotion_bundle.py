@@ -444,13 +444,25 @@ def verify(args: argparse.Namespace) -> dict:
     wake_balance = refinement.get("wake_balance")
     if (
         not isinstance(wake_balance, dict)
-        or int(wake_balance.get("schema_version", 0)) != 2
-        or str(wake_balance.get("policy")) != "per-keyword-exact-wake-pressure-balance-v2"
+        or int(wake_balance.get("schema_version", 0)) != 3
+        or str(wake_balance.get("policy")) != "per-keyword-provenance-pressure-balance-v3"
         or str(wake_balance.get("pressure_assignment"))
-        != "nearest-token-edit-distance-tie-split-v1"
+        != "explicit-replay-focus-then-token-edit-distance-v2"
         or float(wake_balance.get("default_wake_example_weight", -1.0)) != 1.0
     ):
         raise ValueError("adversarial refinement wake-pressure balance evidence drifted")
+    explicit_focus_rows = int(wake_balance.get("explicit_focus_nonwake_rows", -1))
+    fallback_rows = int(wake_balance.get("fallback_edit_distance_nonwake_rows", -1))
+    total_nonwake_rows = int(wake_balance.get("tokenized_nonwake_rows", -1)) + int(
+        wake_balance.get("empty_nonwake_rows", -1)
+    )
+    if (
+        explicit_focus_rows <= 0
+        or fallback_rows < 0
+        or total_nonwake_rows < 0
+        or explicit_focus_rows + fallback_rows != total_nonwake_rows
+    ):
+        raise ValueError("adversarial refinement wake-pressure focus accounting drifted")
     wake_keyword_weights = wake_balance.get("wake_keyword_weights")
     if (
         not isinstance(wake_keyword_weights, dict)

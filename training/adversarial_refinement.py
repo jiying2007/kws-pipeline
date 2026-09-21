@@ -37,7 +37,8 @@ from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
 REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
-WAKE_BALANCE_POLICY = "per-keyword-exact-wake-pressure-balance-v2"
+WAKE_BALANCE_POLICY = "per-keyword-provenance-pressure-balance-v3"
+PRESSURE_ASSIGNMENT_POLICY = "explicit-replay-focus-then-token-edit-distance-v2"
 DEFAULT_POSITIVE_EXAMPLE_WEIGHT = 2.0
 MAX_WAKE_EXAMPLE_WEIGHT = 12.0
 REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
@@ -247,12 +248,116 @@ def _nearest_keyword_ids(
     ]
 
 
+def _repeat_focus_rows(
+    output: list[tuple[int, ...]],
+    raw_focus: object,
+    count: int,
+    *,
+    label: str,
+) -> None:
+    if count < 0:
+        raise ValueError(f"{label} example count must be non-negative")
+    if raw_focus is None:
+        focus: tuple[int, ...] = ()
+    elif isinstance(raw_focus, (list, tuple)):
+        values = [int(value) for value in raw_focus if int(value) > 0]
+        focus = tuple(sorted(set(values)))
+    else:
+        value = int(raw_focus)
+        focus = (value,) if value > 0 else ()
+    output.extend([focus] * count)
+
+
+def build_refinement_focus_rows(
+    *,
+    static: dict,
+    adversarial: dict,
+    failure: dict,
+) -> dict[pathlib.Path, list[tuple[int, ...]]]:
+    """Recover row-aligned replay focus from renderer evidence.
+
+    TSV manifests intentionally stay minimal for the trainer. The replay
+    renderers already retain semantic focus in their sidecar evidence, so wake
+    pressure attribution must consume that authority before falling back to
+    token edit distance.
+    """
+    result: dict[pathlib.Path, list[tuple[int, ...]]] = {}
+
+    static_rows: list[tuple[int, ...]] = []
+    for index, item in enumerate(static.get("sequences", [])):
+        if not isinstance(item, dict):
+            raise ValueError("hard-negative sequence evidence must be objects")
+        _repeat_focus_rows(
+            static_rows,
+            item.get("focus_keyword_id"),
+            int(item.get("examples", 0)),
+            label=f"hard-negative sequence {index}",
+        )
+    for index, item in enumerate(static.get("positive_stress", [])):
+        if not isinstance(item, dict):
+            raise ValueError("positive-stress evidence must be objects")
+        _repeat_focus_rows(
+            static_rows,
+            item.get("keyword_id"),
+            int(item.get("examples", 0)),
+            label=f"positive-stress keyword {index}",
+        )
+    if len(static_rows) != int(static.get("examples", -1)):
+        raise ValueError("hard-negative replay focus evidence row count drifted")
+    static_manifest = pathlib.Path(str(static.get("manifest") or "")).resolve()
+    result[static_manifest] = static_rows
+
+    adversarial_rows: list[tuple[int, ...]] = []
+    replay_per_sequence = int(adversarial.get("replay_examples_per_sequence", 0))
+    for index, item in enumerate(adversarial.get("selected", [])):
+        if not isinstance(item, dict):
+            raise ValueError("adversarial selected evidence must be objects")
+        _repeat_focus_rows(
+            adversarial_rows,
+            item.get("focus_keyword_id"),
+            replay_per_sequence,
+            label=f"adversarial sequence {index}",
+        )
+    if len(adversarial_rows) != int(adversarial.get("replay_examples", -1)):
+        raise ValueError("adversarial replay focus evidence row count drifted")
+    adversarial_manifest = pathlib.Path(str(adversarial.get("manifest") or "")).resolve()
+    result[adversarial_manifest] = adversarial_rows
+
+    failure_rows: list[tuple[int, ...]] = []
+    base_repeat = int(failure.get("examples_per_failure", 0))
+    repair_repeat = int(failure.get("qualification_repair_examples_per_failure", 0))
+    for index, item in enumerate(failure.get("selected", [])):
+        if not isinstance(item, dict):
+            raise ValueError("failure replay selected evidence must be objects")
+        source_splits = [str(value) for value in item.get("source_splits", [])]
+        repeat = repair_repeat if "qualification" in source_splits else base_repeat
+        focus = item.get("focus_keyword_ids", [])
+        if not focus and item.get("source_keyword_id") is not None:
+            focus = [int(item["source_keyword_id"])]
+        _repeat_focus_rows(
+            failure_rows,
+            focus,
+            repeat,
+            label=f"failure replay selection {index}",
+        )
+    if len(failure_rows) != int(failure.get("examples", -1)):
+        raise ValueError("failure replay focus evidence row count drifted")
+    if int(failure.get("examples", 0)) > 0:
+        failure_manifest = pathlib.Path(str(failure.get("manifest") or "")).resolve()
+        if failure_manifest in result:
+            raise ValueError("refinement replay focus manifests must be distinct")
+        result[failure_manifest] = failure_rows
+
+    return result
+
+
 def derive_refinement_wake_balance(
     *,
     manifests: list[pathlib.Path],
     tokens: pathlib.Path,
     keywords: pathlib.Path,
     positive_example_weight: float,
+    focus_rows_by_manifest: dict[pathlib.Path, list[tuple[int, ...]]] | None = None,
 ) -> dict:
     if (
         not math.isfinite(positive_example_weight)
@@ -267,16 +372,38 @@ def derive_refinement_wake_balance(
     assigned_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
     assigned_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
     wake_rows = tokenized_nonwake_rows = empty_nonwake_rows = 0
+    explicit_focus_nonwake_rows = fallback_edit_distance_nonwake_rows = 0
     per_manifest: list[dict] = []
+
+    manifest_keys = {manifest.resolve() for manifest in manifests}
+    normalized_focus = {
+        pathlib.Path(path).resolve(): list(rows)
+        for path, rows in (focus_rows_by_manifest or {}).items()
+    }
+    unknown_focus_manifests = sorted(
+        str(path) for path in set(normalized_focus) - manifest_keys
+    )
+    if unknown_focus_manifests:
+        raise ValueError(
+            "refinement focus evidence contains unknown manifest(s): "
+            + ", ".join(unknown_focus_manifests)
+        )
 
     for manifest in manifests:
         targets = _manifest_targets(manifest)
+        focus_rows = normalized_focus.get(manifest.resolve())
+        if focus_rows is not None and len(focus_rows) != len(targets):
+            raise ValueError(
+                f"refinement focus evidence row count differs from manifest: {manifest}"
+            )
         local_wake = {keyword_id: 0 for keyword_id in wake_sequences}
         local_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
         local_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
         local_tokenized = 0
         local_empty = 0
-        for row in targets:
+        local_explicit_focus = 0
+        local_fallback_focus = 0
+        for row_index, row in enumerate(targets):
             keyword_id = sequence_to_keyword.get(row)
             if keyword_id is not None:
                 wake_rows += 1
@@ -291,7 +418,21 @@ def derive_refinement_wake_balance(
             else:
                 empty_nonwake_rows += 1
                 local_empty += 1
-            nearest = _nearest_keyword_ids(row, wake_sequences)
+            raw_focus = focus_rows[row_index] if focus_rows is not None else ()
+            if raw_focus:
+                nearest = sorted({int(value) for value in raw_focus})
+                unknown = [value for value in nearest if value not in wake_sequences]
+                if unknown:
+                    raise ValueError(
+                        "refinement focus evidence references unknown keyword id(s): "
+                        + ", ".join(str(value) for value in unknown)
+                    )
+                explicit_focus_nonwake_rows += 1
+                local_explicit_focus += 1
+            else:
+                nearest = _nearest_keyword_ids(row, wake_sequences)
+                fallback_edit_distance_nonwake_rows += 1
+                local_fallback_focus += 1
             share = 1.0 / float(len(nearest))
             for nearest_id in nearest:
                 assigned_nonwake_rows[nearest_id] += share
@@ -311,6 +452,8 @@ def derive_refinement_wake_balance(
                 },
                 "tokenized_nonwake_rows": local_tokenized,
                 "empty_nonwake_rows": local_empty,
+                "explicit_focus_nonwake_rows": local_explicit_focus,
+                "fallback_edit_distance_nonwake_rows": local_fallback_focus,
                 "assigned_nonwake_rows_by_keyword": {
                     str(keyword_id): local_nonwake_rows[keyword_id]
                     for keyword_id in sorted(local_nonwake_rows)
@@ -364,7 +507,7 @@ def derive_refinement_wake_balance(
         raise ValueError("per-keyword non-wake pressure does not conserve effective mass")
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "policy": WAKE_BALANCE_POLICY,
         "positive_example_weight": positive_example_weight,
         "default_wake_example_weight": 1.0,
@@ -378,11 +521,13 @@ def derive_refinement_wake_balance(
         },
         "tokenized_nonwake_rows": tokenized_nonwake_rows,
         "empty_nonwake_rows": empty_nonwake_rows,
+        "explicit_focus_nonwake_rows": explicit_focus_nonwake_rows,
+        "fallback_edit_distance_nonwake_rows": fallback_edit_distance_nonwake_rows,
         "wake_base_mass": wake_base_mass,
         "nonwake_mass": nonwake_mass,
         "effective_wake_mass": effective_wake_mass,
         "keyword_balance": keyword_balance,
-        "pressure_assignment": "nearest-token-edit-distance-tie-split-v1",
+        "pressure_assignment": PRESSURE_ASSIGNMENT_POLICY,
         "manifests": per_manifest,
     }
 
@@ -431,6 +576,7 @@ def _train_refinement(
     static_manifest: pathlib.Path,
     adversarial_manifest: pathlib.Path,
     failure_manifest: pathlib.Path | None,
+    focus_rows_by_manifest: dict[pathlib.Path, list[tuple[int, ...]]],
     warm_start: pathlib.Path,
     output: pathlib.Path,
     epochs: int,
@@ -458,6 +604,7 @@ def _train_refinement(
         tokens=tokens,
         keywords=keywords,
         positive_example_weight=positive_example_weight,
+        focus_rows_by_manifest=focus_rows_by_manifest,
     )
     command = [
         sys.executable,
@@ -657,6 +804,11 @@ def main() -> int:
         raise ValueError("development failure replay copied evaluation WAV bytes")
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
+    focus_rows_by_manifest = build_refinement_focus_rows(
+        static=static,
+        adversarial=adversarial,
+        failure=failure,
+    )
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
     model, checkpoint, provenance, wake_balance = _train_refinement(
         cfg=cfg,
@@ -667,6 +819,7 @@ def main() -> int:
         static_manifest=static_manifest,
         adversarial_manifest=adversarial_manifest,
         failure_manifest=failure_manifest,
+        focus_rows_by_manifest=focus_rows_by_manifest,
         warm_start=source_checkpoint,
         output=candidate_dir,
         epochs=int(policy["epochs"]),
@@ -800,6 +953,11 @@ def main() -> int:
         failure_manifest_path = pathlib.Path(str(failure["manifest"]))
         failure_evidence = pathlib.Path(str(failure["evidence"]))
         repair_dir = candidate_dir / "qualification-repair"
+        repair_focus_rows_by_manifest = build_refinement_focus_rows(
+            static=static,
+            adversarial=adversarial,
+            failure=failure,
+        )
         repaired_model, repaired_checkpoint, repaired_provenance, repaired_wake_balance = _train_refinement(
             cfg=cfg,
             frontend=frontend,
@@ -809,6 +967,7 @@ def main() -> int:
             static_manifest=static_manifest,
             adversarial_manifest=adversarial_manifest,
             failure_manifest=failure_manifest_path,
+            focus_rows_by_manifest=repair_focus_rows_by_manifest,
             warm_start=checkpoint,
             output=repair_dir,
             epochs=REPAIR_EPOCHS,

@@ -9,8 +9,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from adversarial_refinement import (  # noqa: E402
+    PRESSURE_ASSIGNMENT_POLICY,
     REFINEMENT_SOURCE_POLICY,
     WAKE_BALANCE_POLICY,
+    build_refinement_focus_rows,
     derive_refinement_wake_balance,
     select_refinement_source,
 )
@@ -227,8 +229,10 @@ def main() -> int:
             positive_example_weight=2.0,
         )
         assert balance["policy"] == WAKE_BALANCE_POLICY
-        assert balance["schema_version"] == 2
-        assert balance["pressure_assignment"] == "nearest-token-edit-distance-tie-split-v1"
+        assert balance["schema_version"] == 3
+        assert balance["pressure_assignment"] == PRESSURE_ASSIGNMENT_POLICY
+        assert balance["explicit_focus_nonwake_rows"] == 0
+        assert balance["fallback_edit_distance_nonwake_rows"] == 9
         assert balance["wake_rows"] == 3
         assert balance["wake_rows_by_keyword"] == {"1": 2, "2": 1}
         assert balance["tokenized_nonwake_rows"] == 8
@@ -261,6 +265,73 @@ def main() -> int:
         assert capped["keyword_balance"]["2"]["bounded"] is True
         assert capped["bounded"] is True
 
+        # Explicit replay focus is authoritative even when token edit distance
+        # points at the other wake word. "hao wo xiao wo ni" is closer to
+        # keyword 2 by edit distance but is deliberately a keyword-1 negative
+        # in the product replay policy.
+        focused = root / "focused.tsv"
+        focused.write_text(
+            "wake1.wav\t1 2 3 4\n"
+            "wake2.wav\t3 4 3 4\n"
+            "negative.wav\t2 4 3 4 1\n",
+            encoding="utf-8",
+        )
+        focused_balance = derive_refinement_wake_balance(
+            manifests=[focused],
+            tokens=tokens,
+            keywords=keywords,
+            positive_example_weight=2.0,
+            focus_rows_by_manifest={
+                focused: [(), (), (1,)],
+            },
+        )
+        assert focused_balance["explicit_focus_nonwake_rows"] == 1
+        assert focused_balance["fallback_edit_distance_nonwake_rows"] == 0
+        assert focused_balance["keyword_balance"]["1"]["assigned_nonwake_mass"] == 2.0
+        assert focused_balance["keyword_balance"]["2"]["assigned_nonwake_mass"] == 0.0
+        assert focused_balance["manifests"][0]["explicit_focus_nonwake_rows"] == 1
+
+        # Sidecar evidence expansion must preserve renderer row order and repeat
+        # counts for all three replay sources.
+        static_manifest = root / "static.tsv"
+        adversarial_manifest = root / "adversarial.tsv"
+        failure_manifest = root / "failure.tsv"
+        focus_map = build_refinement_focus_rows(
+            static={
+                "manifest": str(static_manifest),
+                "examples": 3,
+                "sequences": [
+                    {"examples": 2, "focus_keyword_id": 1},
+                ],
+                "positive_stress": [
+                    {"examples": 1, "keyword_id": 2},
+                ],
+            },
+            adversarial={
+                "manifest": str(adversarial_manifest),
+                "replay_examples": 2,
+                "replay_examples_per_sequence": 2,
+                "selected": [
+                    {"focus_keyword_id": 2},
+                ],
+            },
+            failure={
+                "manifest": str(failure_manifest),
+                "examples": 2,
+                "examples_per_failure": 2,
+                "selected": [
+                    {
+                        "focus_keyword_ids": [1],
+                        "source_keyword_id": None,
+                        "source_splits": ["test"],
+                    }
+                ],
+            },
+        )
+        assert focus_map[static_manifest.resolve()] == [(1,), (1,), (2,)]
+        assert focus_map[adversarial_manifest.resolve()] == [(2,), (2,)]
+        assert focus_map[failure_manifest.resolve()] == [(1,), (1,)]
+
     leaked = dict(manifest)
     leaked["candidate_selection"] = dict(manifest["candidate_selection"])
     leaked["candidate_selection"]["qualification_used_for_selection"] = True
@@ -271,7 +342,7 @@ def main() -> int:
     else:
         raise AssertionError("qualification-backed refinement source was accepted")
 
-    print("adversarial refinement source/per-keyword wake pressure balance: PASS")
+    print("adversarial refinement source/provenance-first wake pressure balance: PASS")
     return 0
 
 
