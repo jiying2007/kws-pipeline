@@ -97,8 +97,11 @@ def main() -> int:
     assert "normalization_mean_weight=float(" in trainer
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
+    materializer = (ROOT / "training/materialize_governed_product_base.sh").read_text(encoding="utf-8")
     assert "Materialize governed product speech-like training base" in workflow
-    assert "materialize_product_training_config.py" in workflow
+    assert "bash training/materialize_governed_product_base.sh" in workflow
+    assert "training/materialize_product_training_config.py" in materializer
+    assert "--require-product-speech-like-base" in materializer
     assert "--require-product-speech-like-base" in workflow
     assert '--config "$KWS_EFFECTIVE_TRAINING_CONFIG"' in workflow
     assert "--config configs/training/xiaowo.torch-domain.json" not in workflow
