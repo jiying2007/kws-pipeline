@@ -260,6 +260,11 @@ def main() -> int:
     gates = gate_values(cfg.get("domain_gates", {}))
     thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
+    calibration_parallel_trials = int(
+        cfg.get("calibration", {}).get("max_parallel_trials", 1)
+    )
+    if not 1 <= calibration_parallel_trials <= 4:
+        raise ValueError("calibration.max_parallel_trials must be 1..4")
     if not thresholds:
         raise ValueError("calibration threshold grid is empty")
     if args.round_budget is not None and args.round_budget <= 0:
@@ -303,7 +308,12 @@ def main() -> int:
     rounds_run = 0
     for round_index in range(start_round, int(policy["max_rounds"])):
         dataset = work / "datasets" / f"round-{round_index:02d}"
-        render_domain_dataset(config_path, dataset, curriculum_weights=curriculum)
+        render_domain_dataset(
+            config_path,
+            dataset,
+            curriculum_weights=curriculum,
+            splits=("train", "calibration", "test"),
+        )
         run([sys.executable, str(TRAINING / "audit_dataset.py"), "--split", f"train={dataset / 'train.tsv'}", "--split", f"calibration={dataset / 'calibration.tsv'}", "--split", f"test={dataset / 'test.tsv'}", "--report", str(dataset / "development-audit.json"), "--fail-within-split"])
         fixed_replay = render_hard_negative_replay(config_path, work / "fixed-replay" / f"round-{round_index:02d}", round_index=round_index, curriculum_weights=curriculum)
         failure_replay = render_development_failure_replay(config_path, records, work, work / "failure-replay" / f"round-{round_index:02d}")
@@ -329,7 +339,18 @@ def main() -> int:
         model = candidate / "model.kwm"
         run([sys.executable, str(TRAINING / "export_model.py"), "--checkpoint", str(checkpoint), "--tokens", str(tokens), "--output", str(model)])
         provenance = pathlib.Path(str(model) + ".provenance.json")
-        calibrated, pack, cal_base, cal_domains = calibrate(runner=runner, model=model, tokens=tokens, source_keywords=keywords, references=dataset / "calibration.references.jsonl", output=candidate / "calibration", thresholds=thresholds, rounds=coordinate_rounds, gates=gates)
+        calibrated, pack, cal_base, cal_domains = calibrate(
+            runner=runner,
+            model=model,
+            tokens=tokens,
+            source_keywords=keywords,
+            references=dataset / "calibration.references.jsonl",
+            output=candidate / "calibration",
+            thresholds=thresholds,
+            rounds=coordinate_rounds,
+            gates=gates,
+            parallel_trials=calibration_parallel_trials,
+        )
         test_base, test_domains = evaluate(runner=runner, model=model, pack=pack, references=dataset / "test.references.jsonl", output=candidate / "test")
         cal_contract = evaluate_development_split(cal_base, cal_domains, cfg)
         test_contract = evaluate_development_split(test_base, test_domains, cfg)

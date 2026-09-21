@@ -47,6 +47,17 @@ def main() -> int:
     if rnn.get("failure_replay_latch_after_failure") is not True:
         raise ValueError("RNN failure replay latch policy is missing")
 
+    rnn_iterator = (ROOT / "training" / "iterate_rnn_development.py").read_text(
+        encoding="utf-8"
+    )
+    for needle in (
+        'splits=("train", "calibration", "test")',
+        "calibration_parallel_trials",
+        "parallel_trials=calibration_parallel_trials",
+    ):
+        if needle not in rnn_iterator:
+            raise ValueError(f"RNN accelerated development contract missing: {needle}")
+
     spec = importlib.util.spec_from_file_location(
         "rnn_iterator_contract", ROOT / "training/iterate_rnn_development.py"
     )
