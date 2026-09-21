@@ -151,7 +151,9 @@ def development_round_evidence(
         "development_record_provenance_sha256": str(row.get("provenance_sha256", "")),
         "development_record_frontend": str(row.get("frontend", "")),
         "development_record_score": finite(row.get("score"), "development record score"),
-        "development_qualified": bool(value.get("development_qualified", False)),
+        # bool("false") is True, and the three protected-evidence keys a few
+        # lines above are read with `is not False` for exactly that reason.
+        "development_qualified": value.get("development_qualified") is True,
         "development_manifest_selection_policy": (
             str(selection_policy) if selection_policy is not None else None
         ),

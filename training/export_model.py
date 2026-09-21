@@ -126,7 +126,9 @@ def training_environment(checkpoint: dict) -> dict:
     result["cudnn_version"] = value.get("cudnn_version")
     result["torch_num_threads"] = int(value.get("torch_num_threads", 0))
     result["torch_num_interop_threads"] = int(value.get("torch_num_interop_threads", 0))
-    result["container_declared"] = bool(value.get("container_declared", False))
+    # bool("false") is True. The checkpoint is read from disk, so an
+    # undeclared container must not be recorded as a declared one.
+    result["container_declared"] = value.get("container_declared") is True
     for key in ("requirements_lock_sha256", "dockerfile_sha256"):
         item = value.get(key)
         result[key] = None if item is None else checkpoint_sha(item, f"training_environment.{key}")

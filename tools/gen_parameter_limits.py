@@ -152,6 +152,18 @@ def require_table(contract: dict, key: str, required: tuple[str, ...]) -> dict:
     return table
 
 
+def exclusive_bound(entry: dict, key: str, label: str) -> bool:
+    """Read an exclusive-bound flag that is already a boolean.
+
+    bool("false") is True, so coercing here turns an inclusive bound into
+    an exclusive one in the generated C header. The contract is a file.
+    """
+    value = entry.get(key, False)
+    if not isinstance(value, bool):
+        raise ContractError(f"{label}: {key} must be a boolean")
+    return value
+
+
 def inspect_entry(label: str, entry: object) -> dict:
     """Validate one parameter entry and return its resolved bounds."""
     if not isinstance(entry, dict):
@@ -161,8 +173,8 @@ def inspect_entry(label: str, entry: object) -> dict:
         raise ContractError(f"{label}: unsupported type {ctype!r}")
     low = entry.get("min")
     high = entry.get("max")
-    low_exclusive = bool(entry.get("min_exclusive", False))
-    high_exclusive = bool(entry.get("max_exclusive", False))
+    low_exclusive = exclusive_bound(entry, "min_exclusive", label)
+    high_exclusive = exclusive_bound(entry, "max_exclusive", label)
     if low is not None and high is not None and float(low) >= float(high):
         raise ContractError(
             f"{label}: min {low} must be strictly below max {high}"

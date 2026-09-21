@@ -358,7 +358,9 @@ def main() -> int:
         if restored["complete"]:
             manifest = load_object(work / "development-loop-manifest.json")
             print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False))
-            return 0 if bool(manifest.get("development_qualified")) else 1
+            # bool("false") is True. The manifest is read back from disk, so a
+            # development run that did not qualify must not report success.
+            return 0 if manifest.get("development_qualified") is True else 1
         curriculum = (
             load_object(work / "curriculum" / f"round-{start_round - 1:02d}.json")
             if start_round > 0

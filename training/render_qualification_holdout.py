@@ -194,12 +194,14 @@ def require_strict_development_candidate(work: pathlib.Path) -> dict:
     records = manifest.get("records")
     if not isinstance(records, list):
         raise ValueError("development manifest records are missing")
+    # bool("false") is True. These records come from the manifest on disk, so
+    # a recorded gate failure must not become an eligible source.
     eligible = [
         row
         for row in records
         if isinstance(row, dict)
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not eligible:
@@ -214,7 +216,9 @@ def require_strict_development_candidate(work: pathlib.Path) -> dict:
     )
     recomputed_rounds = sorted({int(row["round"]) for row in eligible})
 
-    if not bool(manifest.get("development_qualified")):
+    # bool("false") is True, so a coercion here would let an unqualified
+    # development run into formal qualification.
+    if manifest.get("development_qualified") is not True:
         raise ValueError("development_qualified disagrees with strict development records")
     selection = manifest.get("candidate_selection")
     if not isinstance(selection, dict):

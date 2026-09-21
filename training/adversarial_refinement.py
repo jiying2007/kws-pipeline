@@ -46,14 +46,16 @@ def _selected_record(manifest: dict) -> dict:
     selection = manifest.get("candidate_selection", {})
     selected_round = int(selection.get("selected_round", -1))
     selected_frontend = str(selection.get("selected_frontend") or "")
+    # bool("false") is True. These records come from the manifest, so a
+    # recorded gate failure must not become a selectable checkpoint.
     rows = [
         row
         for row in manifest.get("records", [])
         if isinstance(row, dict)
         and int(row.get("round", -1)) == selected_round
         and str(row.get("frontend") or "") == selected_frontend
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not rows:
@@ -942,7 +944,7 @@ def main() -> int:
         {
             int(row["round"])
             for row in manifest["records"]
-            if bool(row.get("calibration_gate")) and bool(row.get("test_gate"))
+            if row.get("calibration_gate") is True and row.get("test_gate") is True
         }
     )
     selection = manifest["candidate_selection"]

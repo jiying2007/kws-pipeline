@@ -226,9 +226,12 @@ def render_qualification_failure_replay(
         raise ValueError("previous development failure evidence must be an object")
     if str(previous.get("policy")) != FAILURE_REPLAY_POLICY:
         raise ValueError("qualification repair requires development failure replay v1 evidence")
-    if bool(previous.get("formal_qualification_used", True)):
+    # bool(0) is False, so a coercion here lets a replay whose evidence is
+    # unknown through as if it had been checked. Anything but an explicit
+    # False is refused, which is what the default already meant.
+    if previous.get("formal_qualification_used", True) is not False:
         raise ValueError("qualification repair refuses formal qualification-derived training")
-    if bool(previous.get("development_source_wav_bytes_copied", True)):
+    if previous.get("development_source_wav_bytes_copied", True) is not False:
         raise ValueError("previous failure replay copied development WAV bytes")
     previous_manifest = pathlib.Path(str(previous.get("manifest") or ""))
     if not previous_manifest.is_file():

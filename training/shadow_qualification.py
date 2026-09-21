@@ -73,8 +73,8 @@ def _selected_record(manifest: dict) -> dict:
         for row in manifest["records"]
         if int(row["round"]) == selected_round
         and str(row["frontend"]) == selected_frontend
-        and bool(row.get("calibration_gate"))
-        and bool(row.get("test_gate"))
+        and row.get("calibration_gate") is True
+        and row.get("test_gate") is True
         and "checkpoint" in row
     ]
     if not rows:
@@ -164,8 +164,10 @@ def _metric_compact(base: dict) -> dict:
 def _emit_failure_annotation(row: dict, required_separation: float) -> None:
     payload = {
         "seed": int(row["seed"]),
-        "runtime_qualified": bool(row["runtime_qualified"]),
-        "surrogate_separation_qualified": bool(row["surrogate_separation_qualified"]),
+        # bool("false") is True, so a coercion here would report a failed
+        # separation as a pass in the annotation written for CI.
+        "runtime_qualified": row["runtime_qualified"] is True,
+        "surrogate_separation_qualified": row["surrogate_separation_qualified"] is True,
         "required_separation": float(required_separation),
         "qualification": _metric_compact(row["qualification"]),
         "surrogate": row["surrogate"],

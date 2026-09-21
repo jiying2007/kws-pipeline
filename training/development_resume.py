@@ -206,7 +206,9 @@ def load_state(
             raise ValueError("development resume curriculum is missing")
         if sha256_file(curriculum) != value.get("last_curriculum_sha256"):
             raise ValueError("development resume curriculum bytes drifted")
-    if bool(value.get("complete")):
+    # bool("false") is True. The state file is read from disk, so an
+    # incomplete resume state must not be treated as a finished loop.
+    if value.get("complete") is True:
         manifest = work / "development-loop-manifest.json"
         if not manifest.is_file():
             raise ValueError("complete development resume state lacks final manifest")
@@ -228,7 +230,8 @@ def load_state(
     return {
         "records": records,
         "next_round": len(records),
-        "complete": bool(value.get("complete")),
+        # bool("false") is True, and the caller branches on this.
+        "complete": value.get("complete") is True,
     }
 
 

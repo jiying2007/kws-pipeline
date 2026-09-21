@@ -7,16 +7,30 @@ in this tree are fine -- and it is a silent upgrade the moment the value comes
 from a file: a recorded failure becomes a pass, in a receipt, a registry or a
 manifest that the next gate reads.
 
-So the signal is deliberately narrow. A coercion is reported only when both
-hold:
+So the signal is deliberately narrow. A coercion is reported only when all of
+these hold:
 
-  * the value comes from outside the function -- a parameter, or a local read
-    out of JSON by load_object / json.loads / read_text;
-  * the result is kept -- assigned to a name, written into a subscript, or
-    returned -- so it can become evidence rather than just pick a branch.
+  * the value comes from outside the function -- a parameter, a local read out
+    of JSON by load_object / json.loads / read_text, or a field taken out of
+    one of those;
+  * the coercion reads a *named field* -- `x.get("k")` or `x["k"]` -- because
+    that is the shape that turns a recorded verdict into its opposite.
+    `bool(items)` only asks whether a container is empty, which is exactly
+    what it says it is;
+  * the result decides something -- it is assigned, returned, or it is the
+    test of an `if` / `while` / `assert` / comprehension filter. A coercion
+    under a `not` or an `and` / `or` is attributed to whatever that operator
+    feeds, so `x = bool(a.get("k")) and bool(b.get("k"))` is reported against
+    x and not against the operator, which is what makes the key readable.
 
-Coercing something the function computed itself is a no-op, and coercing
-something to choose a branch is a style question, not a correctness one.
+The third point used to be "assigned or returned only", and that was wrong.
+A gate reading `if not bool(manifest.get("development_qualified")): raise`
+produces no value at all, yet it decides whether formal qualification runs.
+Branch selection *is* evidence; "it only picks a branch" was the assumption
+that let a real fail-open defect through.
+
+Coercing something the function computed itself is a no-op, and coercing a
+container to ask whether it is empty is a truth test, not a verdict.
 
 Divergence is not automatically a defect, so the current state is recorded in
 a baseline and the gate fails on two things only -- a coercion that is not in
@@ -62,6 +76,20 @@ def base_name(node: ast.AST) -> str | None:
     return None
 
 
+def field_read(node: ast.AST) -> bool:
+    """True when the node reads a named field: `x.get("k")` or `x["k"]`.
+
+    `bool(sequence)` is a non-empty test and means what it says. Only a field
+    read can carry a recorded verdict that the coercion silently flips.
+    """
+    if isinstance(node, ast.Subscript):
+        return True
+    if isinstance(node, ast.Call):
+        func = node.func
+        return isinstance(func, ast.Attribute) and func.attr in EXTERNAL_ATTRS and bool(node.args)
+    return False
+
+
 def loader_call(node: ast.AST) -> bool:
     """True when this expression reads a value out of JSON or a file."""
     if isinstance(node, ast.Call):
@@ -96,9 +124,18 @@ def external_names(fn: ast.AST) -> set[str]:
             if isinstance(node, ast.For):
                 if base_name(node.iter) in names or loader_call(node.iter):
                     names.update(assigned_names(node.target))
+            elif isinstance(node, ast.comprehension):
+                # `[row for row in records if ...]` is the same read, and the
+                # filter is where the gate actually lives.
+                if base_name(node.iter) in names or loader_call(node.iter):
+                    names.update(assigned_names(node.target))
             elif isinstance(node, (ast.Assign, ast.AnnAssign)):
                 value = node.value
-                if value is None or not loader_call(value):
+                if value is None:
+                    continue
+                # `records = manifest.get("records")` stays external: taking a
+                # field out of an external object does not make it local.
+                if not (loader_call(value) or base_name(value) in names):
                     continue
                 targets = node.targets if isinstance(node, ast.Assign) else [node.target]
                 for target in targets:
@@ -106,23 +143,55 @@ def external_names(fn: ast.AST) -> set[str]:
     return names
 
 
-def kept_targets(fn: ast.AST) -> dict[int, str]:
-    """Map the line of a bool() call -> what its result is stored into."""
-    out: dict[int, str] = {}
+def parents_of(fn: ast.AST) -> dict[int, ast.AST]:
+    out: dict[int, ast.AST] = {}
     for node in ast.walk(fn):
+        for child in ast.iter_child_nodes(node):
+            out[id(child)] = node
+    return out
+
+
+def contains(node: ast.AST | None, target: ast.AST) -> bool:
+    if node is None:
+        return False
+    return any(child is target for child in ast.walk(node))
+
+
+def context_of(call: ast.Call, parents: dict[int, ast.AST]) -> str | None:
+    """What this coercion decides, or None when it decides nothing.
+
+    Walking up the real parent chain is what makes the key stable. Matching a
+    coercion to the nearest assignment by line number reported
+    `if bool(value.get("complete"))` as `manifest = bool(...)` because the next
+    line happened to assign to manifest -- a key that changed whenever
+    anything above it moved, and that pointed at a statement nobody wrote.
+    """
+    node = parents.get(id(call))
+    while node is not None:
         if isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
-            if isinstance(node, ast.AugAssign):
-                targets = [node.target]
-            elif isinstance(node, ast.Assign):
+            if not contains(node.value, call):
+                return None
+            if isinstance(node, ast.Assign):
                 targets = node.targets
+            elif isinstance(node, ast.AugAssign):
+                targets = [node.target]
             else:
                 targets = [node.target]
-            for target in targets:
-                if ast.unparse(target) != "_":
-                    out.setdefault(node.lineno, ast.unparse(target))
-        elif isinstance(node, ast.Return) and node.value is not None:
-            out.setdefault(node.lineno, "<return>")
-    return out
+            names = [ast.unparse(target) for target in targets]
+            kept = [name for name in names if name != "_"]
+            return "|".join(kept) if kept else None
+        if isinstance(node, ast.Return):
+            return "<return>" if contains(node.value, call) else None
+        if isinstance(node, ast.Assert):
+            return "<assert>" if contains(node.test, call) else None
+        if isinstance(node, ast.If):
+            return "<if>" if contains(node.test, call) else None
+        if isinstance(node, ast.While):
+            return "<while>" if contains(node.test, call) else None
+        if isinstance(node, ast.comprehension):
+            return "<filter>" if any(contains(item, call) for item in node.ifs) else None
+        node = parents.get(id(node))
+    return None
 
 
 def coercions(path: pathlib.Path) -> list[str]:
@@ -132,7 +201,7 @@ def coercions(path: pathlib.Path) -> list[str]:
         if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         external = external_names(fn)
-        kept = kept_targets(fn)
+        parents = parents_of(fn)
         for node in ast.walk(fn):
             if not isinstance(node, ast.Call):
                 continue
@@ -140,16 +209,18 @@ def coercions(path: pathlib.Path) -> list[str]:
                 continue
             if not node.args:
                 continue
-            if base_name(node.args[0]) not in external:
+            argument = node.args[0]
+            if not field_read(argument):
                 continue
-            # Same line as the enclosing assignment counts as kept.
-            if not any(abs(line - node.lineno) <= 1 for line in kept):
+            if base_name(argument) not in external:
                 continue
-            target = min(kept, key=lambda line: abs(line - node.lineno))
+            target = context_of(node, parents)
+            if target is None:
+                continue
             # No line number in the key: an edit anywhere above a coercion
             # would otherwise move it and report one stale plus one new entry
             # for a change that did not touch the coercion at all.
-            found.append(f"{fn.name}|{kept[target]} = {ast.unparse(node)}")
+            found.append(f"{fn.name}|{target} = {ast.unparse(node)}")
     return found
 
 
