@@ -48,6 +48,22 @@ Before training begins, the workflow:
 The effective config SHA is bound across the two training jobs by the existing
 base-stage receipt.
 
+## Deterministic feature cache
+
+Product RNN training enables the existing deterministic frontend feature cache
+with `train.feature_cache_max_items=8192`. Training manifests contain already
+rendered PCM WAV files and `Manifest.__getitem__` performs only deterministic
+WAV decoding plus frontend feature extraction, so caching does not freeze any
+stochastic augmentation or change the training sample stream.
+
+The same cache wrapper is used for base domain rounds and adversarial refinement.
+It changes wall-clock work only: epoch count, sample order, optimizer state,
+losses, replay composition, thresholds and gates are unchanged. The wrapper is
+bound into `training_code_sha256`, and exported model provenance records
+`deterministic-feature-cache-v1`, the configured capacity and
+`training_math_changed=false`. Promotion rejects future product candidates
+that lack this evidence.
+
 ## Auditable training invocation
 
 Governed training keeps the existing manual `workflow_dispatch` entry point and
