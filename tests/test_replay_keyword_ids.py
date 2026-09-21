@@ -110,6 +110,48 @@ def main() -> int:
     )
     assert expanded == [(0,), (0,)]
 
+    three_keywords = [
+        {"id": 0, "text": "zero", "tokens": ["a"], "token_ids": [1]},
+        {"id": 1, "text": "one", "tokens": ["b"], "token_ids": [2]},
+        {"id": 2, "text": "two", "tokens": ["c"], "token_ids": [3]},
+    ]
+    explicit = [
+        {
+            "keyword_id": 0,
+            "examples": 4,
+            "focus": "adaptive",
+            "fallback": {"distance_bin": "5m"},
+        },
+        {
+            "keyword_id": 1,
+            "examples": 4,
+            "focus": "adaptive",
+            "fallback": {"distance_bin": "5m"},
+        },
+    ]
+    no_fill = normalize_positive_stress_replay(
+        explicit,
+        keywords=three_keywords,
+    )
+    assert [row["keyword_id"] for row in no_fill] == [0, 1]
+    filled = normalize_positive_stress_replay(
+        explicit,
+        keywords=three_keywords,
+        auto_fill_missing=True,
+        auto_examples=6,
+        auto_fallback={
+            "distance_bin": "5m",
+            "azimuth": "rear",
+            "snr": "critical",
+        },
+    )
+    assert [row["keyword_id"] for row in filled] == [0, 1, 2]
+    assert filled[0].get("auto_filled") is None
+    assert filled[1].get("auto_filled") is None
+    assert filled[2]["auto_filled"] is True
+    assert filled[2]["examples"] == 6
+    assert filled[2]["focus"] == "adaptive"
+
     wide_keywords = [
         {
             "id": index,
