@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-keyword-balance-v2-20260921",
+  "request_id": "speech-like-base-wake-balanced-preflight-v1-20260921",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with per-keyword exact-wake pressure balancing after model-training #339 proved global wake-mass balance reduced FAR but further degraded recall."
+  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #213 added per-keyword provenance-pressure balancing to base rounds. Preserve 12 base epochs with 6 warm-start epochs, the full bounded adversarial search/replay semantics, and 6 refinement epochs; keep seeds, augmentation, scene rendering, scoring order, thresholds, curriculum, gates and qualification semantics unchanged. Full governed training remains blocked unless the existing per-keyword collapse guard passes."
 }
