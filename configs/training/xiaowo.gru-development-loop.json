@@ -25,7 +25,15 @@
     "ordered_token_loss_weight_initial": 0.35,
     "ordered_token_loss_weight_min": 0.25,
     "ordered_token_loss_weight_max": 0.6,
-    "ordered_token_loss_weight_step": 0.05
+    "ordered_token_loss_weight_step": 0.05,
+    "signal_mode": "normalized-rates-v1",
+    "normalization_frr": 0.1,
+    "normalization_far_per_hour": 60.0,
+    "pressure_deadband": 0.1,
+    "wake_example_weight_initial": 3.0,
+    "wake_example_weight_min": 1.0,
+    "wake_example_weight_max": 6.0,
+    "wake_example_weight_step": 0.5
   },
   "candidate_freeze": {
     "selection_policy": "best-strict-development-objective-round",
