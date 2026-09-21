@@ -172,6 +172,24 @@ Non-strict threshold candidates therefore use the same balanced development
 fallback selection; it does not relax the promotion, qualification, robustness
 or continuous-FAR gates.
 
+## Deferred base-stage qualification
+
+The staged product workflow stops the base iterator after development candidate
+selection. It does not render or evaluate the intermediate base candidate on a
+qualification cohort because adversarial refinement may immediately replace that
+candidate.
+
+The base manifest records `qualification_deferred=true`,
+`qualification_qualified=null` and a development-only evidence class. The base
+job exit code therefore represents development strict-candidate status only.
+Standalone `iterate_domain.py` keeps its historical immediate qualification
+behavior unless `--defer-qualification` is explicitly supplied.
+
+Refinement/qualification stages remain responsible for qualification after the
+candidate has been refined/frozen, and finalization still re-runs the untouched
+qualification cohort before promotion. No qualification gate is removed or
+relaxed; only an intermediate duplicate evaluation is eliminated.
+
 ## Development refinement source
 
 Adversarial refinement is a development-only optimization stage and does not
