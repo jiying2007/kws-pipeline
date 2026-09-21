@@ -429,6 +429,48 @@ def verify(args: argparse.Namespace) -> dict:
     if str(refinement.get("frontend") or "") != selected_frontend:
         raise ValueError("adversarial refinement frontend differs from promoted model")
 
+    wake_balance = refinement.get("wake_balance")
+    if (
+        not isinstance(wake_balance, dict)
+        or int(wake_balance.get("schema_version", 0)) != 2
+        or str(wake_balance.get("policy")) != "per-keyword-exact-wake-pressure-balance-v2"
+        or str(wake_balance.get("pressure_assignment"))
+        != "nearest-token-edit-distance-tie-split-v1"
+        or float(wake_balance.get("default_wake_example_weight", -1.0)) != 1.0
+    ):
+        raise ValueError("adversarial refinement wake-pressure balance evidence drifted")
+    wake_keyword_weights = wake_balance.get("wake_keyword_weights")
+    if (
+        not isinstance(wake_keyword_weights, dict)
+        or set(wake_keyword_weights) != {"1", "2"}
+    ):
+        raise ValueError("adversarial refinement wake-pressure keyword set drifted")
+    normalized_wake_keyword_weights: dict[str, float] = {}
+    for keyword_id, raw_weight in wake_keyword_weights.items():
+        weight = float(raw_weight)
+        if not math.isfinite(weight) or not 1.0 <= weight <= 12.0:
+            raise ValueError("adversarial refinement wake-pressure weight is invalid")
+        normalized_wake_keyword_weights[str(keyword_id)] = weight
+    sample_weighting = provenance.get("training", {}).get("sample_weighting", {})
+    if not isinstance(sample_weighting, dict):
+        raise ValueError("model provenance lacks sample weighting for refinement")
+    if float(sample_weighting.get("wake_example_weight", -1.0)) != 1.0:
+        raise ValueError("model provenance refinement default wake weight drifted")
+    if (
+        sample_weighting.get("wake_example_weight_semantics")
+        != "exact-configured-keyword-target-with-per-keyword-override-v2"
+    ):
+        raise ValueError("model provenance refinement wake-weight semantics drifted")
+    provenance_keyword_weights = sample_weighting.get("wake_keyword_weights")
+    if not isinstance(provenance_keyword_weights, dict):
+        raise ValueError("model provenance lacks per-keyword wake weights")
+    normalized_provenance_weights = {
+        str(keyword_id): float(weight)
+        for keyword_id, weight in provenance_keyword_weights.items()
+    }
+    if normalized_provenance_weights != normalized_wake_keyword_weights:
+        raise ValueError("model provenance per-keyword wake weights differ from refinement evidence")
+
     if (
         str(adversarial.get("evidence_class")) != "development-only-adversarial-lexicon"
         or bool(adversarial.get("formal_qualification_used", True))
