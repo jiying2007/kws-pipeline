@@ -333,6 +333,36 @@ def test_external_speech_like_base_renderer() -> None:
             for row in domain_rows
         )
 
+        subset_output = root / "rendered-subset"
+        subset = render_domain_dataset(
+            config_path,
+            subset_output,
+            splits=("train", "test"),
+        )
+        assert subset["rendered_splits"] == ["train", "test"]
+        assert set(subset["splits"]) == {"train", "test"}
+        assert (subset_output / "train.tsv").is_file()
+        assert (subset_output / "test.tsv").is_file()
+        assert (subset_output / "test.references.jsonl").is_file()
+        assert not (subset_output / "calibration.tsv").exists()
+        assert not (subset_output / "qualification.tsv").exists()
+        subset_rows = [
+            json.loads(line)
+            for line in (subset_output / "domain-index.jsonl").read_text().splitlines()
+            if line.strip()
+        ]
+        assert {row["split"] for row in subset_rows} == {"train", "test"}
+        try:
+            render_domain_dataset(
+                config_path,
+                root / "bad-subset",
+                splits=("test", "test"),
+            )
+        except ValueError as exc:
+            assert "unique non-empty subset" in str(exc)
+        else:
+            raise AssertionError("duplicate domain render split was accepted")
+
 
 def main() -> int:
     test_deterministic_robustness_axes()
