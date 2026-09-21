@@ -1,0 +1,154 @@
+name: model-training-preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/model-training-request.json'
+      - '.github/workflows/model-training-preflight.yml'
+
+permissions:
+  contents: read
+
+env:
+  KWS_PRODUCT_BASE_CONTRACT: configs/training/product-speech-like-base-v1.json
+  KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
+  KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
+  KWS_REPLAY_PROVIDER_ROOT: .generated/product-replay-provider
+  KWS_TRAINING_REQUEST: .github/triggers/model-training-request.json
+  KWS_PREFLIGHT_CONFIG: .generated/xiaowo.product-preflight.json
+  KWS_PREFLIGHT_WORK: build/model-training-preflight
+
+concurrency:
+  group: model-training-preflight-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  product-development-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify versioned training request
+        run: >-
+          python3 training/training_request.py verify
+          --request "$KWS_TRAINING_REQUEST"
+
+      - name: Materialize governed product speech-like training base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Create bounded development-only preflight config
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          src=pathlib.Path(os.environ["KWS_EFFECTIVE_TRAINING_CONFIG"])
+          dst=pathlib.Path(os.environ["KWS_PREFLIGHT_CONFIG"])
+          cfg=json.loads(src.read_text(encoding="utf-8"))
+          product=cfg.get("product_candidate_data")
+          assert isinstance(product, dict)
+          assert product.get("policy") == "external-speech-like-product-base-v1"
+          assert product.get("tone_fallback_allowed") is False
+          assert product.get("protected_evidence_used") is False
+
+          train=cfg.setdefault("train", {})
+          train["epochs"]=12
+          train["warm_start_epochs"]=6
+
+          iteration=cfg.setdefault("domain_iteration", {})
+          iteration["max_rounds"]=2
+          iteration["min_rounds"]=2
+          iteration["patience"]=1
+          iteration["stop_on_gate"]=True
+          adversarial=iteration.get("adversarial_lexicon")
+          assert isinstance(adversarial, dict) and adversarial.get("enabled") is True
+          adversarial["refinement_epochs"]=6
+
+          calibration=cfg.get("calibration")
+          assert isinstance(calibration, dict)
+          assert int(calibration.get("coordinate_rounds", 0)) == 2
+          assert int(calibration.get("max_parallel_trials", 0)) == 2
+
+          dst.parent.mkdir(parents=True, exist_ok=True)
+          dst.write_text(
+              json.dumps(cfg, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(
+              "bounded product preflight: "
+              "rounds=2 base_epochs=12/6 refinement_epochs=6 "
+              "qualification=false"
+          )
+          PY
+          python3 training/verify_training_entry_contract.py \
+            --config "$KWS_PREFLIGHT_CONFIG" \
+            --require-product-speech-like-base
+
+      - name: Build and verify real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify decoder-aligned training objectives
+        run: .venv/bin/python training/test_sequence_margin.py
+
+      - name: Run bounded base development rounds
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config "$KWS_PREFLIGHT_CONFIG" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_PREFLIGHT_WORK" \
+            --defer-qualification
+          code=$?
+          set -e
+          case "$code" in
+            0|1) ;;
+            *) echo "base development preflight infrastructure failed: $code" >&2; exit "$code" ;;
+          esac
+          test -s "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json"
+
+      - name: Run bounded refinement development evaluation
+        run: |
+          .venv/bin/python training/adversarial_refinement.py \
+            --config "$KWS_PREFLIGHT_CONFIG" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_PREFLIGHT_WORK" \
+            --stop-after-development-eval
+          test -s "$KWS_PREFLIGHT_WORK/adversarial-refinement/preflight-summary.json"
+
+      - name: Reject per-keyword collapse before full training
+        run: |
+          python3 training/verify_product_development_preflight.py \
+            --base-manifest "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json" \
+            --refinement-summary "$KWS_PREFLIGHT_WORK/adversarial-refinement/preflight-summary.json" \
+            --work-dir "$KWS_PREFLIGHT_WORK" \
+            --output "$KWS_PREFLIGHT_WORK/product-development-preflight.json"
+
+      - name: Retain compact development preflight evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-product-development-preflight
+          path: |
+            .generated/xiaowo.product-preflight.json
+            build/model-training-preflight/domain-loop-manifest.json
+            build/model-training-preflight/adversarial-refinement/preflight-summary.json
+            build/model-training-preflight/product-development-preflight.json
+          if-no-files-found: warn
+          retention-days: 14
