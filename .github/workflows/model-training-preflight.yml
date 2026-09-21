@@ -170,7 +170,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: xiaowo-product-development-preflight
+          name: xiaowo-product-development-preflight-${{ github.event.pull_request.base.sha }}
           path: |
             .generated/xiaowo.product-preflight.json
             build/model-training-preflight/domain-loop-manifest.json
