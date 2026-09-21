@@ -14,6 +14,7 @@ TRAINING = ROOT / "training"
 from adversarial_lexicon import mine_adversarial_lexicon
 from development_failure_replay import render_development_failure_replay
 from hard_negative_replay import render_hard_negative_replay
+from feature_cached_trainer import feature_cache_max_items, rewrite_training_command
 from iterate_domain import (
     base_gate,
     calibrate,
@@ -504,6 +505,7 @@ def _train_refinement(
             str(checkpoint),
         ]
     )
+    command = rewrite_training_command(command, feature_cache_max_items(train))
     run(command)
     run(
         [

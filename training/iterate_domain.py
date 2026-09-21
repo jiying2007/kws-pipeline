@@ -20,6 +20,7 @@ from domain_curriculum import update_curriculum  # noqa: E402
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
+from feature_cached_trainer import feature_cache_max_items, rewrite_training_command  # noqa: E402
 from render_domains import render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
 
@@ -408,6 +409,7 @@ def build_torch(
     ):
         command.extend(["--manifest", str(hard_negative_manifest)])
     command.extend(warm_start_args(previous, warm_start_strategy))
+    command = rewrite_training_command(command, feature_cache_max_items(train))
     run(command)
     run(
         [

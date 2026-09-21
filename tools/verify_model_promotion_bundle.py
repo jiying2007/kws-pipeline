@@ -267,6 +267,17 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError("promoted product candidate lacks sample-weighting provenance")
         if weighting.get("ordered_token_sample_weighting") != "training-sample-weights-v1":
             raise ValueError("promoted product candidate lacks ordered-token sample weighting")
+        training_environment = provenance.get("training", {}).get("environment")
+        if not isinstance(training_environment, dict):
+            raise ValueError("promoted product candidate lacks training environment")
+        feature_cache = training_environment.get("feature_cache")
+        if (
+            not isinstance(feature_cache, dict)
+            or feature_cache.get("policy") != "deterministic-feature-cache-v1"
+            or int(feature_cache.get("max_items", -1)) != 8192
+            or feature_cache.get("training_math_changed") is not False
+        ):
+            raise ValueError("promoted product candidate lacks deterministic feature-cache evidence")
         if base_contract.get("policy") != "product-speech-like-base-v1":
             raise ValueError("promoted product base contract identity mismatch")
         if sha256(dist / "xiaowo-product-speech-like-base-contract.json") != str(

@@ -9,7 +9,7 @@ from typing import Any
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
-CACHE_POLICY = "development-feature-cache-v1"
+CACHE_POLICY = "deterministic-feature-cache-v1"
 MAX_FEATURE_CACHE_ITEMS = 32768
 
 
@@ -88,7 +88,7 @@ def cached_manifest_class(base_manifest: type, max_items: int) -> type:
     return FeatureCachedManifest
 
 
-def _patch_training_environment(base_module: Any) -> None:
+def _patch_training_environment(base_module: Any, max_items: int) -> None:
     original = base_module.training_environment
     wrapper = pathlib.Path(__file__).resolve()
 
@@ -99,6 +99,11 @@ def _patch_training_environment(base_module: Any) -> None:
             raise ValueError("training environment code binding is missing")
         code[wrapper.relative_to(ROOT).as_posix()] = base_module.sha256_file(wrapper)
         value["training_code_sha256"] = dict(sorted(code.items()))
+        value["feature_cache"] = {
+            "policy": CACHE_POLICY,
+            "max_items": int(max_items),
+            "training_math_changed": False,
+        }
         return value
 
     base_module.training_environment = environment
@@ -109,7 +114,7 @@ def _run_trainer(trainer: str, max_items: int, trainer_args: list[str]) -> int:
     import train_ctc as base  # noqa: E402
 
     base.Manifest = cached_manifest_class(base.Manifest, max_items)
-    _patch_training_environment(base)
+    _patch_training_environment(base, max_items)
     if trainer == "rnn":
         sys.argv = [str(TRAINING / "train_ctc.py"), *trainer_args]
         base.main()

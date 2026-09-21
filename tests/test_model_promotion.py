@@ -10,6 +10,9 @@ VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
 DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
+ITERATE_DOMAIN = ROOT / "training" / "iterate_domain.py"
+FEATURE_CACHE = ROOT / "training" / "feature_cached_trainer.py"
+TRAINING_CONFIG = ROOT / "configs" / "training" / "xiaowo.torch-domain.json"
 EXPORTER = ROOT / "training" / "export_model.py"
 REPAIR = ROOT / "training" / "qualification_failure_replay.py"
 ROBUSTNESS = ROOT / "eval" / "gate_robustness.py"
@@ -32,6 +35,9 @@ def main() -> int:
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
     diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
     refinement = REFINEMENT.read_text(encoding="utf-8")
+    iterate_domain = ITERATE_DOMAIN.read_text(encoding="utf-8")
+    feature_cache = FEATURE_CACHE.read_text(encoding="utf-8")
+    training_config = TRAINING_CONFIG.read_text(encoding="utf-8")
     exporter = EXPORTER.read_text(encoding="utf-8")
     repair = REPAIR.read_text(encoding="utf-8")
     robustness = ROBUSTNESS.read_text(encoding="utf-8")
@@ -129,6 +135,7 @@ def main() -> int:
         "adversarial-hard-negatives.tsv",
         "promoted model provenance does not prove adversarial replay training",
         "promoted product candidate lacks ordered-token sample weighting",
+        "promoted product candidate lacks deterministic feature-cache evidence",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
         "xiao3 wo1 xiao3 wo1",
@@ -136,6 +143,15 @@ def main() -> int:
         "model provenance per-keyword wake weights differ from refinement evidence",
     ):
         require(verifier, needle, "promotion bundle verifier")
+
+    push_section = training.split("  pull_request:", 1)[0]
+    require(
+        push_section,
+        "- '.github/triggers/model-training-request.json'",
+        "request-only model-training push trigger",
+    )
+    if "paths:\n  pull_request:" in push_section:
+        raise AssertionError("model-training push paths must not be empty")
 
     # The model-training workflow is intentionally split across two independently
     # bounded hosted jobs. The base job must never expose the formal seed.
@@ -221,8 +237,33 @@ def main() -> int:
         '"wake_keyword_weights"',
         "checkpoint wake_keyword_weights must be an object",
         '"ordered_token_sample_weighting"',
+        '"deterministic-feature-cache-v1"',
+        '"training_math_changed"',
     ):
         require(exporter, needle, "model exporter weighting provenance")
+
+    for text, label in (
+        (iterate_domain, "product domain iterator"),
+        (refinement, "adversarial refinement"),
+    ):
+        for needle in (
+            "feature_cache_max_items",
+            "rewrite_training_command",
+        ):
+            require(text, needle, label)
+
+    for needle in (
+        'CACHE_POLICY = "deterministic-feature-cache-v1"',
+        '"training_math_changed": False',
+        '"feature_cache"',
+    ):
+        require(feature_cache, needle, "deterministic feature-cache wrapper")
+
+    require(
+        training_config,
+        '"feature_cache_max_items": 8192',
+        "product training feature-cache configuration",
+    )
 
     for needle in (
         'EVIDENCE_CLASS = "governed-model-training-invocation-v1"',
