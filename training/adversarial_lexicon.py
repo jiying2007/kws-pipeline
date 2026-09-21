@@ -229,8 +229,7 @@ def build_adversarial_candidate_plan(
             "seed": seed,
             "active_tokens": active_tokens,
             "keywords": [list(keyword.get("tokens", [])) for keyword in keywords],
-            "configured_max_length": configured_max_length,
-        "max_length": max_length,
+            "max_length": max_length,
             "max_sequences": max_sequences,
             "hybrid_candidate_budget": hybrid_candidate_budget,
         },
@@ -241,7 +240,7 @@ def build_adversarial_candidate_plan(
     rng = random.Random(_stable_seed(seed_material))
     attempts = 0
     max_attempts = max(10_000, candidate_budget * 128)
-    while len(candidates) < max_sequences and attempts < max_attempts:
+    while len(candidates) < candidate_budget and attempts < max_attempts:
         attempts += 1
         length = rng.randint(1, max_length)
         value = tuple(rng.choice(active_tokens) for _ in range(length))
