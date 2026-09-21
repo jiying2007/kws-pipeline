@@ -55,9 +55,15 @@ def main() -> int:
     iterator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(iterator)
     initial = iterator.controller_initial(rnn)
-    clean_initial = iterator.controller_next(rnn, initial, 0, 0)
-    after_failure = iterator.controller_next(rnn, initial, 1, 0)
-    clean_after_failure = iterator.controller_next(rnn, after_failure, 0, 0)
+    clean_initial = iterator.controller_next(
+        rnn, initial, 0, 0, frr=0.0, far_per_hour=0.0
+    )
+    after_failure = iterator.controller_next(
+        rnn, initial, 1, 0, frr=0.20, far_per_hour=0.0
+    )
+    clean_after_failure = iterator.controller_next(
+        rnn, after_failure, 0, 0, frr=0.0, far_per_hour=0.0
+    )
     if int(clean_initial["failure_replay_repeat"]) != 0:
         raise ValueError("RNN clean initial controller unexpectedly enables failure replay")
     if int(after_failure["failure_replay_repeat"]) != 1:
