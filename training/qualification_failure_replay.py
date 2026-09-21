@@ -17,11 +17,11 @@ from render_domains import validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
     augment,
     generate_background,
+    keyword_render_context,
     load_config,
     parse_keywords,
     render_command_tts,
     render_tone_tokens,
-    token_carriers,
     validate_augment_config,
     validate_tone_config,
     write_wav,
@@ -142,7 +142,6 @@ def _render_repair_rows(config_path: pathlib.Path, specs: list[dict], output: pa
     token_map = load_tokens(token_path)
     keywords = parse_keywords(keyword_path, token_map)
     keyword_text = {int(item["id"]): str(item["text"]) for item in keywords}
-    carriers = token_carriers(keywords, int(cfg.get("model", {}).get("feature_dim", 32)))
     generator = cfg.get("generator", {})
     if not isinstance(generator, dict):
         raise ValueError("generator must be an object")
@@ -150,6 +149,11 @@ def _render_repair_rows(config_path: pathlib.Path, specs: list[dict], output: pa
     augment_config = generator.get("augment", {})
     if not isinstance(tts, dict) or not isinstance(augment_config, dict):
         raise ValueError("qualification repair generator config is invalid")
+    _, carriers = keyword_render_context(
+        keywords,
+        int(cfg.get("model", {}).get("feature_dim", 32)),
+        tts,
+    )
     validate_tone_config(tts)
     validate_augment_config(augment_config)
     domains = validate_domains(cfg)
