@@ -47,6 +47,7 @@ RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
 RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
+SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -534,12 +535,88 @@ def wake_example_weights(
     return torch.tensor(result, dtype=torch.float32, device=target_lengths.device)
 
 
+def sample_weight_statistics(
+    rows: list[tuple[pathlib.Path, list[int]]],
+    keyword_sequences: list[list[int]],
+    keyword_ids: list[int],
+    *,
+    positive_example_weight: float,
+    default_wake_weight: float,
+    keyword_weights: dict[int, float],
+) -> dict:
+    if len(keyword_sequences) != len(keyword_ids):
+        raise ValueError("keyword ids must align with keyword sequences")
+    if not rows:
+        raise ValueError("sample-weight statistics require non-empty dataset rows")
+    if (
+        not math.isfinite(positive_example_weight)
+        or positive_example_weight <= 0.0
+        or not math.isfinite(default_wake_weight)
+        or default_wake_weight <= 0.0
+    ):
+        raise ValueError("sample-weight statistics require finite positive weights")
+    sequence_to_id = {
+        tuple(int(value) for value in sequence): int(keyword_id)
+        for sequence, keyword_id in zip(keyword_sequences, keyword_ids)
+    }
+    all_weight_sum = 0.0
+    nonempty_weight_sum = 0.0
+    nonempty_rows = 0
+    exact_wake_rows = 0
+    for _, raw_tokens in rows:
+        tokens = tuple(int(value) for value in raw_tokens)
+        weight = positive_example_weight if tokens else 1.0
+        keyword_id = sequence_to_id.get(tokens)
+        if keyword_id is not None:
+            wake_weight = float(keyword_weights.get(keyword_id, default_wake_weight))
+            if not math.isfinite(wake_weight) or wake_weight <= 0.0:
+                raise ValueError("sample-weight statistics contain invalid wake weight")
+            weight *= wake_weight
+            exact_wake_rows += 1
+        all_weight_sum += weight
+        if tokens:
+            nonempty_rows += 1
+            nonempty_weight_sum += weight
+    if nonempty_rows <= 0:
+        raise ValueError("sample-weight statistics require at least one non-empty target")
+    row_count = len(rows)
+    return {
+        "schema_version": 1,
+        "policy": SAMPLE_WEIGHT_NORMALIZATION_POLICY,
+        "rows": row_count,
+        "nonempty_rows": nonempty_rows,
+        "exact_wake_rows": exact_wake_rows,
+        "all_weight_sum": all_weight_sum,
+        "nonempty_weight_sum": nonempty_weight_sum,
+        "all_mean_weight": all_weight_sum / float(row_count),
+        "nonempty_mean_weight": nonempty_weight_sum / float(nonempty_rows),
+    }
+
+
+def normalized_weighted_mean(
+    values: torch.Tensor,
+    sample_weights: torch.Tensor,
+    mean_weight: float,
+) -> torch.Tensor:
+    if values.ndim != 1 or sample_weights.ndim != 1 or values.shape != sample_weights.shape:
+        raise ValueError("weighted mean values/weights must be aligned vectors")
+    if values.numel() <= 0:
+        raise ValueError("weighted mean requires at least one value")
+    if not torch.isfinite(sample_weights).all() or bool((sample_weights <= 0).any()):
+        raise ValueError("weighted mean sample weights must be finite and > 0")
+    if not math.isfinite(mean_weight) or mean_weight <= 0.0:
+        raise ValueError("weighted mean normalization must be finite and > 0")
+    denominator = values.new_tensor(float(values.numel()) * mean_weight)
+    return (values * sample_weights.to(dtype=values.dtype, device=values.device)).sum() / denominator
+
+
 def ordered_token_loss(
     log_probs: torch.Tensor,
     targets: torch.Tensor,
     input_lengths: torch.Tensor,
     target_lengths: torch.Tensor,
     sample_weights: torch.Tensor | None = None,
+    normalization_mean_weight: float | None = None,
 ) -> tuple[torch.Tensor, int, int]:
     """Encourage each target occurrence to own a chronological region."""
     if sample_weights is not None:
@@ -547,6 +624,12 @@ def ordered_token_loss(
             raise ValueError("ordered-token sample weights must match batch size")
         if not torch.isfinite(sample_weights).all() or bool((sample_weights <= 0).any()):
             raise ValueError("ordered-token sample weights must be finite and > 0")
+    if normalization_mean_weight is not None and sample_weights is None:
+        raise ValueError("ordered-token normalization requires sample weights")
+    if normalization_mean_weight is not None and (
+        not math.isfinite(normalization_mean_weight) or normalization_mean_weight <= 0.0
+    ):
+        raise ValueError("ordered-token normalization must be finite and > 0")
 
     losses: list[torch.Tensor] = []
     weights: list[torch.Tensor] = []
@@ -586,7 +669,15 @@ def ordered_token_loss(
         return log_probs.sum() * 0.0, correct, total
     loss_values = torch.stack(losses)
     weight_values = torch.stack(weights).to(dtype=loss_values.dtype, device=loss_values.device)
-    return (loss_values * weight_values).sum() / weight_values.sum(), correct, total
+    if normalization_mean_weight is None:
+        value = (loss_values * weight_values).sum() / weight_values.sum()
+    else:
+        value = normalized_weighted_mean(
+            loss_values,
+            weight_values,
+            normalization_mean_weight,
+        )
+    return value, correct, total
 
 
 def recurrent_release_loss(
@@ -744,6 +835,14 @@ def main() -> None:
     shuffle_generator.manual_seed(args.seed)
 
     dataset = Manifest(args.manifest, args.feature_dim, vocab_size_value, args.frontend)
+    weight_statistics = sample_weight_statistics(
+        dataset.rows,
+        keyword_sequences,
+        keyword_ids,
+        positive_example_weight=args.positive_example_weight,
+        default_wake_weight=args.wake_example_weight,
+        keyword_weights=wake_keyword_weights,
+    )
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -793,9 +892,20 @@ def main() -> None:
             )
             sample_weights = target_weights * wake_weights
             normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
-            ctc_loss = (normalized_ctc * sample_weights).sum() / sample_weights.sum()
+            ctc_loss = normalized_weighted_mean(
+                normalized_ctc,
+                sample_weights,
+                float(weight_statistics["all_mean_weight"]),
+            )
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
-                log_probs, y, xlen, ylen, sample_weights
+                log_probs,
+                y,
+                xlen,
+                ylen,
+                sample_weights,
+                normalization_mean_weight=float(
+                    weight_statistics["nonempty_mean_weight"]
+                ),
             )
             margin_per_sample = keyword_sequence_margin_loss(
                 log_probs=log_probs,
@@ -808,7 +918,11 @@ def main() -> None:
                 margin=KEYWORD_SEQUENCE_MARGIN,
                 keyword_operating_points=keyword_operating_points,
             )
-            margin_loss = (margin_per_sample * sample_weights).sum() / sample_weights.sum()
+            margin_loss = normalized_weighted_mean(
+                margin_per_sample,
+                sample_weights,
+                float(weight_statistics["all_mean_weight"]),
+            )
             completion_per_sample = strict_prefix_completion_loss(
                 log_probs=log_probs,
                 targets=y,
@@ -817,9 +931,11 @@ def main() -> None:
                 keyword_sequences=keyword_sequences,
                 keyword_operating_points=keyword_operating_points,
             )
-            completion_loss = (
-                completion_per_sample * sample_weights
-            ).sum() / sample_weights.sum()
+            completion_loss = normalized_weighted_mean(
+                completion_per_sample,
+                sample_weights,
+                float(weight_statistics["all_mean_weight"]),
+            )
             release_loss = recurrent_release_loss(log_probs, xlen)
             loss = (
                 ctc_loss
@@ -891,6 +1007,7 @@ def main() -> None:
             "wake_example_weight_semantics": (
                 "exact-configured-keyword-target-with-per-keyword-override-v2"
             ),
+            "sample_weight_normalization": weight_statistics,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "ordered_token_sample_weighting": "training-sample-weights-v1",
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
