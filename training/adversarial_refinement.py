@@ -160,7 +160,9 @@ def build_refinement_focus_rows(
     pressure attribution must consume that authority before falling back to
     token edit distance.
     """
-    result = static_replay_focus_rows(static)\n\n    adversarial_rows: list[tuple[int, ...]] = []
+    result = static_replay_focus_rows(static)
+
+    adversarial_rows: list[tuple[int, ...]] = []
     replay_per_sequence = int(adversarial.get("replay_examples_per_sequence", 0))
     for index, item in enumerate(adversarial.get("selected", [])):
         if not isinstance(item, dict):
