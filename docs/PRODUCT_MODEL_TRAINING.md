@@ -101,11 +101,20 @@ test after refinement. A 100% per-keyword collapse therefore fails the request
 PR before the multi-hour run is eligible to start.
 
 On the protected-main push, `model-training` independently resolves the merged
-pull request and requires the latest `model-training-preflight` run for that
-exact PR head to have completed successfully. This makes the preflight fail
-closed even if repository UI required-check configuration is incomplete.
-Manual `workflow_dispatch` remains an explicit operator path and does not claim
-a versioned preflight.
+pull request and requires a successful `model-training-preflight` run for the
+exact PR head **and** the exact PR base SHA. Successful behavior preflights retain
+an artifact named
+`xiaowo-product-development-preflight-<base-sha>`; infrastructure-only runs
+where the behavior job is skipped retain no such artifact. The full workflow
+queries successful runs by head SHA and accepts only one carrying the matching
+non-expired base-bound artifact.
+
+This avoids relying on GitHub's optional `workflow_run.pull_requests` metadata,
+which may be empty, and prevents an older successful preflight from a previous
+base revision being reused after `main` advances. The gate remains fail closed
+even if repository UI required-check configuration is incomplete. Manual
+`workflow_dispatch` remains an explicit operator path and does not claim a
+versioned preflight.
 
 ## Auditable training invocation
 
