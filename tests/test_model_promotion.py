@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "model-promotion.yml"
 VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
+PREFLIGHT_WORKFLOW = ROOT / ".github" / "workflows" / "model-training-preflight.yml"
 DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
 ITERATE_DOMAIN = ROOT / "training" / "iterate_domain.py"
@@ -21,6 +22,7 @@ ENTRY_CONTRACT = ROOT / "training" / "verify_training_entry_contract.py"
 FINAL_GATES = ROOT / "training" / "verify_final_training_gates.py"
 FINALIZER = ROOT / "training" / "finalize_domain_candidate.py"
 TRAINING_REQUEST = ROOT / "training" / "training_request.py"
+PRODUCT_MATERIALIZER = ROOT / "training" / "materialize_governed_product_base.sh"
 FAR_GATE = ROOT / "eval" / "run_continuous_far_gate.py"
 
 
@@ -33,6 +35,7 @@ def main() -> int:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     verifier = VERIFIER.read_text(encoding="utf-8")
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
+    preflight_workflow = PREFLIGHT_WORKFLOW.read_text(encoding="utf-8")
     diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
     refinement = REFINEMENT.read_text(encoding="utf-8")
     iterate_domain = ITERATE_DOMAIN.read_text(encoding="utf-8")
@@ -46,6 +49,7 @@ def main() -> int:
     final_gates = FINAL_GATES.read_text(encoding="utf-8")
     finalizer = FINALIZER.read_text(encoding="utf-8")
     training_request = TRAINING_REQUEST.read_text(encoding="utf-8")
+    product_materializer = PRODUCT_MATERIALIZER.read_text(encoding="utf-8")
     far_gate = FAR_GATE.read_text(encoding="utf-8")
 
     for needle in (
@@ -154,6 +158,43 @@ def main() -> int:
     )
     if "paths:\n  pull_request:" in push_section:
         raise AssertionError("model-training push paths must not be empty")
+
+    for needle in (
+        "model-training-preflight",
+        "bash training/materialize_governed_product_base.sh",
+        "--defer-qualification",
+        "--stop-after-development-eval",
+        "verify_product_development_preflight.py",
+        "xiaowo-product-development-preflight",
+    ):
+        require(preflight_workflow, needle, "model-training preflight workflow")
+    for forbidden in (
+        "render_qualification_guarded.py",
+        "shadow_qualification.py",
+        "run_continuous_far_gate.py",
+    ):
+        if forbidden in preflight_workflow:
+            raise AssertionError(
+                f"model-training preflight crossed protected evidence boundary: {forbidden}"
+            )
+
+    materializer_call = "run: bash training/materialize_governed_product_base.sh"
+    if training.count(materializer_call) != 2:
+        raise AssertionError("staged model-training must reuse the product materializer exactly twice")
+    if "release_tag=\"$(jq -r '.release_tag'" in training:
+        raise AssertionError("model-training workflow duplicated product release materialization")
+    for needle in (
+        'gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release_tag"',
+        '.immutable == true',
+        'digest "sha256:$archive_sha"',
+        'sha256sum -c SPEECH_LIKE_BASE_SHA256SUMS',
+        'tools/bootstrap_speech_like_stage_a.py',
+        '--provider-only',
+        'training/materialize_product_training_config.py',
+        'training/verify_training_entry_contract.py',
+        '--require-product-speech-like-base',
+    ):
+        require(product_materializer, needle, "governed product base materializer")
 
     # The model-training workflow is intentionally split across two independently
     # bounded hosted jobs. The base job must never expose the formal seed.
