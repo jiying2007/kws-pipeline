@@ -8,6 +8,7 @@
   "retired_far_holdout_round_namespaces": [1000000, 2000000],
   "tokens": "keywords/tokens.example.txt",
   "keywords": "keywords/zh_cn_example.tsv",
+  "keyword_set_contract": "configs/training/keyword-set.xiaowo-v1.json",
   "domain_work_dir": "build/model-training",
   "shadow_qualification": {
     "enabled": true,
