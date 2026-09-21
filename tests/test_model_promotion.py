@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "model-promotion.yml"
 VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
+PREFLIGHT_WORKFLOW = ROOT / ".github" / "workflows" / "model-training-preflight.yml"
 DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
 ITERATE_DOMAIN = ROOT / "training" / "iterate_domain.py"
@@ -34,6 +35,7 @@ def main() -> int:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     verifier = VERIFIER.read_text(encoding="utf-8")
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
+    preflight_workflow = PREFLIGHT_WORKFLOW.read_text(encoding="utf-8")
     diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
     refinement = REFINEMENT.read_text(encoding="utf-8")
     iterate_domain = ITERATE_DOMAIN.read_text(encoding="utf-8")
@@ -156,6 +158,25 @@ def main() -> int:
     )
     if "paths:\n  pull_request:" in push_section:
         raise AssertionError("model-training push paths must not be empty")
+
+    for needle in (
+        "model-training-preflight",
+        "bash training/materialize_governed_product_base.sh",
+        "--defer-qualification",
+        "--stop-after-development-eval",
+        "verify_product_development_preflight.py",
+        "xiaowo-product-development-preflight",
+    ):
+        require(preflight_workflow, needle, "model-training preflight workflow")
+    for forbidden in (
+        "render_qualification_guarded.py",
+        "shadow_qualification.py",
+        "run_continuous_far_gate.py",
+    ):
+        if forbidden in preflight_workflow:
+            raise AssertionError(
+                f"model-training preflight crossed protected evidence boundary: {forbidden}"
+            )
 
     materializer_call = "run: bash training/materialize_governed_product_base.sh"
     if training.count(materializer_call) != 2:
