@@ -140,7 +140,8 @@ jobs:
             --config "$KWS_PREFLIGHT_CONFIG" \
             --runner build/kws_wav \
             --work-dir "$KWS_PREFLIGHT_WORK" \
-            --defer-qualification
+            --defer-qualification \
+            --compact-log
           code=$?
           set -e
           case "$code" in
@@ -174,6 +175,7 @@ jobs:
           path: |
             .generated/xiaowo.product-preflight.json
             build/model-training-preflight/domain-loop-manifest.json
+            build/model-training-preflight/domain-loop-progress.jsonl
             build/model-training-preflight/adversarial-refinement/preflight-summary.json
             build/model-training-preflight/product-development-preflight.json
           if-no-files-found: warn
