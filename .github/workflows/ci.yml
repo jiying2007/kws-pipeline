@@ -388,6 +388,14 @@ jobs:
         run: python3 tests/test_development_gate_booleans.py
       - name: Verify tracked worktree after Development gate booleans
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Development gate booleans"'
+      - name: Bool coercions on external evidence
+        run: python3 tools/check_bool_coercions.py --root .
+      - name: Verify tracked worktree after Bool coercions on external evidence
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bool coercions on external evidence"'
+      - name: Bool coercion scanner
+        run: python3 tests/test_check_bool_coercions.py
+      - name: Verify tracked worktree after Bool coercion scanner
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bool coercion scanner"'
       - name: RNN shadow arena binding
         run: python3 tests/test_prepare_rnn_shadow_config.py
       - name: Verify tracked worktree after RNN shadow arena binding
