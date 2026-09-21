@@ -27,6 +27,25 @@ def main() -> int:
     )
     assert len(candidates) == 1330
     assert len(candidates) * 2 == 2660
+    assert len(
+        adversarial.enumerate_safe_sequences(
+            active_tokens,
+            forbidden,
+            max_length=5,
+            max_sequences=1330,
+        )
+    ) == 1330
+    try:
+        adversarial.enumerate_safe_sequences(
+            active_tokens,
+            forbidden,
+            max_length=5,
+            max_sequences=100,
+        )
+    except ValueError as exc:
+        assert "exceeds configured budget" in str(exc)
+    else:
+        raise AssertionError("adversarial search-space budget was not enforced")
 
     assert adversarial._command_tts_worker_count(0, cpu_count=8) == 0
     assert adversarial._command_tts_worker_count(1, cpu_count=8) == 1
