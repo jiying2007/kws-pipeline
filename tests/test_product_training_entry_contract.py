@@ -165,6 +165,23 @@ def main() -> int:
         )
         assert result["product_speech_like_base_required"] is True
         assert result["product_external_base_bundle_sha256"] == "1" * 64
+        assert result["keyword_set_contract_id"] == "xiaowo-dual-wake-v1"
+
+        tampered = copy.deepcopy(config)
+        tampered["product_candidate_data"]["keyword_set_semantic_sha256"] = "f" * 64
+        tampered_path = pathlib.Path(td) / "tampered-effective.json"
+        tampered_path.write_text(json.dumps(tampered), encoding="utf-8")
+        try:
+            verify(
+                tampered_path,
+                shipping,
+                keywords,
+                require_product_speech_like_base=True,
+            )
+        except ValueError as exc:
+            assert "keyword_set_semantic_sha256" in str(exc)
+        else:
+            raise AssertionError("tampered keyword semantic identity was accepted")
 
     trainer = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
     assert "ordered_token_sample_weighting" in trainer
