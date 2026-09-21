@@ -49,8 +49,24 @@ def main() -> int:
             "qualification_deferred": True,
             "qualification_qualified": None,
             "records": [
-                {"round": 0, "training_epochs": 12},
-                {"round": 1, "training_epochs": 6},
+                {
+                    "round": 0,
+                    "training_epochs": 12,
+                    "score": 10.0,
+                    "calibration": metrics(1, 2),
+                    "test": metrics(1, 1),
+                    "calibration_gate": False,
+                    "test_gate": False,
+                },
+                {
+                    "round": 1,
+                    "training_epochs": 6,
+                    "score": 8.0,
+                    "calibration": metrics(2, 2),
+                    "test": metrics(1, 3),
+                    "calibration_gate": False,
+                    "test_gate": False,
+                },
             ],
         }
         refinement = {
@@ -82,6 +98,9 @@ def main() -> int:
         )
         assert result["passed"] is True
         assert result["base_epochs"] == [12, 6]
+        assert len(result["base_round_metrics"]) == 2
+        assert result["base_round_metrics"][0]["test"]["per_keyword"]["1"]["matched"] == 1
+        assert result["refinement_source_round"] == -1
         assert result["formal_qualification_used"] is False
 
         collapsed = copy.deepcopy(refinement)
