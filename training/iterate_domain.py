@@ -546,7 +546,12 @@ def main() -> int:
     previous_checkpoints: dict[str, pathlib.Path] = {}
     for round_index in range(max_rounds):
         dataset_dir = work / "datasets" / f"round-{round_index:02d}"
-        render_domain_dataset(config_path, dataset_dir, curriculum_weights=curriculum)
+        render_domain_dataset(
+            config_path,
+            dataset_dir,
+            curriculum_weights=curriculum,
+            splits=("train", "calibration", "test"),
+        )
         run(
             [
                 sys.executable,
@@ -557,8 +562,6 @@ def main() -> int:
                 f"calibration={dataset_dir / 'calibration.tsv'}",
                 "--split",
                 f"test={dataset_dir / 'test.tsv'}",
-                "--split",
-                f"qualification={dataset_dir / 'qualification.tsv'}",
                 "--report",
                 str(dataset_dir / "audit.json"),
                 "--fail-within-split",
@@ -732,7 +735,12 @@ def main() -> int:
     # Qualification is regenerated from the same pinned config but never used by
     # candidate selection, curriculum updates, or hard-negative replay.
     qualification_dataset = work / "qualification-dataset"
-    render_domain_dataset(config_path, qualification_dataset, curriculum_weights=None)
+    render_domain_dataset(
+        config_path,
+        qualification_dataset,
+        curriculum_weights=None,
+        splits=("qualification",),
+    )
     qualification_base, qualification_domains = evaluate(
         runner=runner,
         model=best_model,
