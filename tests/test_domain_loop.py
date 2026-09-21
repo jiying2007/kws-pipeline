@@ -28,6 +28,7 @@ from iterate_domain import (  # noqa: E402
     select_strict_candidate,
     strict_gate_candidate,
     torch_round_training_values,
+    train_acoustic_seed_offset,
     warm_start_args,
 )
 
@@ -71,6 +72,7 @@ def validate_torch_iteration_policy() -> None:
         "domain_iteration": {
             "lr_decay_per_round": 0.85,
             "training_seed_stride": 1009,
+            "training_acoustic_seed_stride": 104729,
         },
     }
     assert torch_round_training_values(
@@ -88,6 +90,9 @@ def validate_torch_iteration_policy() -> None:
     assert warm_round_3[0] == 12
     assert abs(warm_round_3[1] - 0.001 * (0.85 ** 3)) < 1.0e-15
     assert warm_round_3[2] == 4364
+    assert train_acoustic_seed_offset(round_policy["domain_iteration"], 0) == 0
+    assert train_acoustic_seed_offset(round_policy["domain_iteration"], 1) == 104729
+    assert train_acoustic_seed_offset(round_policy["domain_iteration"], 3) == 314187
 
     thresholds = [
         0.01,
@@ -223,6 +228,7 @@ def validate_torch_iteration_policy() -> None:
     assert int(formal["train"]["warm_start_epochs"]) == 12
     assert abs(float(formal["domain_iteration"]["lr_decay_per_round"]) - 0.85) < 1.0e-12
     assert int(formal["domain_iteration"]["training_seed_stride"]) == 1009
+    assert int(formal["domain_iteration"]["training_acoustic_seed_stride"]) == 104729
     assert int(formal["domain_iteration"]["min_rounds"]) == 2
     assert int(formal["domain_iteration"]["max_rounds"]) == 4
     assert int(formal["domain_iteration"]["patience"]) == 2
@@ -577,6 +583,8 @@ def main() -> int:
         assert manifest["candidate_selection"]["policy"] == "latest-strict-gate-passing-round"
         assert manifest["candidate_selection"]["qualification_used_for_selection"] is False
         assert manifest["candidate_selection"]["objective_fallback_used"] is False
+        assert manifest["records"][0]["training_acoustic_seed_policy"] == "train-only-scene-seed-offset-v1"
+        assert int(manifest["records"][0]["training_acoustic_seed_offset"]) == 0
         assert manifest["best_frontend"] in {"logmel", "pcen-lite"}
         assert {row["frontend"] for row in manifest["records"]} == {"logmel", "pcen-lite"}
         far = manifest["qualification_domains"]["domains"]["distance:far"]
