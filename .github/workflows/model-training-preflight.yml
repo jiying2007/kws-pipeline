@@ -261,6 +261,7 @@ jobs:
       - name: Reject per-keyword collapse before full training
         run: |
           python3 training/verify_product_development_preflight.py \
+            --config "$KWS_PREFLIGHT_CONFIG" \
             --base-manifest "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json" \
             --refinement-summary "$KWS_PREFLIGHT_WORK/adversarial-refinement/preflight-summary.json" \
             --work-dir "$KWS_PREFLIGHT_WORK" \
