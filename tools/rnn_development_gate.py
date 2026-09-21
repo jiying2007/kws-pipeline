@@ -23,16 +23,28 @@ def evaluate_development_split(base: dict, domains: dict, config: dict) -> dict:
     robustness = evaluate_robustness({"qualification_domains": domains}, config)
     if robustness.get("blocked") is not False:
         raise ValueError("RNN development robustness gate unexpectedly blocked")
+    robustness_qualified = robustness.get("qualified")
+    if not isinstance(robustness_qualified, bool):
+        raise ValueError("RNN robustness qualification verdict must be a boolean")
     return {
         "schema_version": 1,
         "policy": POLICY,
         "model_family": "rnn",
         "development_only": True,
         "base_domain_qualified": base_domain_qualified,
-        "robustness_qualified": bool(robustness.get("qualified")),
-        "qualified": bool(base_domain_qualified and robustness.get("qualified")),
+        "robustness_qualified": robustness_qualified,
+        "qualified": bool(base_domain_qualified and robustness_qualified),
         "robustness": robustness,
     }
+
+
+def gate_bool(record: dict, key: str) -> bool:
+    value = record.get(key)
+    if value is None:
+        return False
+    if not isinstance(value, bool):
+        raise ValueError("RNN development record " + key + " must be a boolean")
+    return value
 
 
 def terminal_strict_streak(records: object) -> int:
@@ -47,7 +59,7 @@ def terminal_strict_streak(records: object) -> int:
             raise ValueError("RNN development record round must be an integer")
         if round_value != expected_round:
             raise ValueError("RNN development records must have contiguous rounds starting at zero")
-        if bool(record.get("calibration_gate")) and bool(record.get("test_gate")):
+        if gate_bool(record, "calibration_gate") and gate_bool(record, "test_gate"):
             streak += 1
         else:
             streak = 0
