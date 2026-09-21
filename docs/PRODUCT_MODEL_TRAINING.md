@@ -141,6 +141,24 @@ Replay voice selection is deterministic and restricted to the eight
 `train-*` voice slots. Calibration, test and qualification voice identities are
 never used for replay.
 
+## Development feedback units
+
+Development loss control compares normalized error rates, not raw event counts.
+FRR and FAR/hour have different denominators and units, so comparing false-reject
+and false-accept counts directly can reverse the intended recall/precision
+decision when corpus duration or wake count changes.
+
+Both RNN and GRU development loops therefore use
+`normalized-rates-v1`, with the same policy already exercised by Stage A:
+FRR is normalized to 0.10, FAR/hour to 60, and a 10% pressure deadband prevents
+small differences from oscillating the controller. Recall pressure adjusts the
+exact-wake multiplier upward and ordered-token pressure downward; precision
+pressure moves them in the opposite direction.
+
+RNN failure replay remains latched after a failure until stability confirmation.
+The normalized controller honors that latch even after the instantaneous error
+rates return to the low-pressure region; GRU retains its non-latched policy.
+
 ## Bounded product round budget
 
 The product loop distinguishes cold-start fitting from warm-start refinement.
