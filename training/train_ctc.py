@@ -485,6 +485,74 @@ def wake_example_mask(
     return torch.tensor(result, dtype=torch.bool, device=target_lengths.device)
 
 
+def parse_wake_keyword_weights(
+    value: str,
+    keyword_operating_points: list[dict],
+) -> dict[int, float]:
+    try:
+        raw = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ValueError("--wake-keyword-weights must be a JSON object") from exc
+    if not isinstance(raw, dict):
+        raise ValueError("--wake-keyword-weights must be a JSON object")
+    valid_ids = {int(item["keyword_id"]) for item in keyword_operating_points}
+    result: dict[int, float] = {}
+    for raw_key, raw_value in raw.items():
+        try:
+            keyword_id = int(raw_key)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("--wake-keyword-weights keys must be keyword ids") from exc
+        if keyword_id not in valid_ids:
+            raise ValueError(
+                f"--wake-keyword-weights contains unknown keyword id {keyword_id}"
+            )
+        if isinstance(raw_value, bool):
+            raise ValueError("--wake-keyword-weights values must be finite and > 0")
+        try:
+            weight = float(raw_value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "--wake-keyword-weights values must be finite and > 0"
+            ) from exc
+        if not math.isfinite(weight) or weight <= 0.0:
+            raise ValueError("--wake-keyword-weights values must be finite and > 0")
+        result[keyword_id] = weight
+    return result
+
+
+def wake_example_weights(
+    targets: torch.Tensor,
+    target_lengths: torch.Tensor,
+    keyword_sequences: list[list[int]],
+    keyword_ids: list[int],
+    *,
+    default_weight: float,
+    keyword_weights: dict[int, float],
+) -> torch.Tensor:
+    if len(keyword_sequences) != len(keyword_ids):
+        raise ValueError("keyword ids must align with keyword sequences")
+    sequence_to_id = {
+        tuple(int(value) for value in sequence): int(keyword_id)
+        for sequence, keyword_id in zip(keyword_sequences, keyword_ids)
+    }
+    result: list[float] = []
+    offset = 0
+    flat = targets.detach().cpu().tolist()
+    for raw_length in target_lengths.detach().cpu().tolist():
+        length = int(raw_length)
+        row = tuple(int(value) for value in flat[offset : offset + length])
+        keyword_id = sequence_to_id.get(row)
+        result.append(
+            float(keyword_weights.get(keyword_id, default_weight))
+            if keyword_id is not None
+            else 1.0
+        )
+        offset += length
+    if offset != len(flat):
+        raise ValueError("flattened CTC targets do not match target lengths")
+    return torch.tensor(result, dtype=torch.float32, device=target_lengths.device)
+
+
 def ordered_token_loss(
     log_probs: torch.Tensor,
     targets: torch.Tensor,
@@ -599,6 +667,11 @@ def main() -> None:
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
     parser.add_argument("--wake-example-weight", type=float, default=WAKE_EXAMPLE_WEIGHT)
+    parser.add_argument(
+        "--wake-keyword-weights",
+        default="{}",
+        help="JSON object mapping configured keyword id to exact-wake sample-weight override",
+    )
     parser.add_argument("--ordered-token-loss-weight", type=float, default=ORDERED_TOKEN_LOSS_WEIGHT)
     parser.add_argument(
         "--keyword-sequence-margin-loss-weight",
@@ -625,6 +698,11 @@ def main() -> None:
     token_map = load_tokens(args.tokens)
     keyword_sequences, keyword_operating_points, margin_profile_path = (
         load_keyword_operating_points(args.keywords, token_map)
+    )
+    keyword_ids = [int(item["keyword_id"]) for item in keyword_operating_points]
+    wake_keyword_weights = parse_wake_keyword_weights(
+        args.wake_keyword_weights,
+        keyword_operating_points,
     )
     vocab_size_value = vocab_size(token_map)
     fingerprint = vocab_fingerprint(token_map)
@@ -724,11 +802,13 @@ def main() -> None:
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
                 torch.ones_like(ylen, dtype=torch.float32),
             )
-            wake_mask = wake_example_mask(y, ylen, keyword_sequences)
-            wake_weights = torch.where(
-                wake_mask,
-                torch.full_like(ylen, args.wake_example_weight, dtype=torch.float32),
-                torch.ones_like(ylen, dtype=torch.float32),
+            wake_weights = wake_example_weights(
+                y,
+                ylen,
+                keyword_sequences,
+                keyword_ids,
+                default_weight=args.wake_example_weight,
+                keyword_weights=wake_keyword_weights,
             )
             sample_weights = target_weights * wake_weights
             normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
@@ -823,7 +903,13 @@ def main() -> None:
             "positive_example_weight": args.positive_example_weight,
             "positive_example_weight_semantics": "non-empty-target-v1",
             "wake_example_weight": args.wake_example_weight,
-            "wake_example_weight_semantics": "exact-configured-keyword-target-v1",
+            "wake_keyword_weights": {
+                str(keyword_id): float(weight)
+                for keyword_id, weight in sorted(wake_keyword_weights.items())
+            },
+            "wake_example_weight_semantics": (
+                "exact-configured-keyword-target-with-per-keyword-override-v2"
+            ),
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "ordered_token_sample_weighting": "training-sample-weights-v1",
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
