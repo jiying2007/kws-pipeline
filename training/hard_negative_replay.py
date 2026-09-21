@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import random
+import shutil
+import struct
 import sys
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -13,6 +17,7 @@ from kws_vocab import load_tokens  # noqa: E402
 from acoustic_scene import render_scene, sha256_file  # noqa: E402
 from render_domains import sample_scene, validate_domains  # noqa: E402
 from synthetic_audio import (  # noqa: E402
+    SAMPLE_RATE_HZ,
     augment,
     load_config,
     parse_keywords,
@@ -40,6 +45,78 @@ POSITIVE_STRESS_COVERING_EXAMPLES = 24
 def _repo_path(value: str) -> pathlib.Path:
     path = pathlib.Path(value)
     return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
+def _read_pcm16_mono(path: pathlib.Path) -> list[int]:
+    with wave.open(str(path), "rb") as reader:
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != SAMPLE_RATE_HZ
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+        ):
+            raise ValueError("cached command TTS must be mono 16-kHz PCM16 WAV")
+        raw = reader.readframes(reader.getnframes())
+    if not raw:
+        raise ValueError("cached command TTS WAV is empty")
+    return list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
+
+
+def _command_tts_cache_key(
+    *,
+    kind: str,
+    token_names: list[str],
+    output_name: str,
+    tts: dict,
+) -> str:
+    payload = {
+        "schema_version": 1,
+        "kind": kind,
+        "tokens": list(token_names),
+        "output_name": output_name,
+        "tts": tts,
+    }
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _render_command_tts_cached(
+    text: str,
+    token_names: list[str],
+    kind: str,
+    clean_path: pathlib.Path,
+    tts: dict,
+    *,
+    cache_root: pathlib.Path,
+) -> list[int]:
+    reuse = tts.get("reuse_clean_across_rounds", False)
+    if not isinstance(reuse, bool):
+        raise ValueError("generator.tts.reuse_clean_across_rounds must be boolean")
+    if not reuse:
+        return render_command_tts(text, token_names, kind, clean_path, tts)
+
+    key = _command_tts_cache_key(
+        kind=kind,
+        token_names=token_names,
+        output_name=clean_path.name,
+        tts=tts,
+    )
+    cache_path = cache_root / key[:2] / f"{key}.wav"
+    clean_path.parent.mkdir(parents=True, exist_ok=True)
+    if cache_path.is_file():
+        shutil.copyfile(cache_path, clean_path)
+        return _read_pcm16_mono(clean_path)
+
+    clean = render_command_tts(text, token_names, kind, clean_path, tts)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(clean_path, cache_path)
+    return clean
 
 
 def normalize_hard_negative_replay(
@@ -557,12 +634,13 @@ def render_hard_negative_replay(
         if backend == "tone":
             clean = render_tone_tokens(token_names, carriers, rng, tts)
         else:
-            clean = render_command_tts(
+            clean = _render_command_tts_cached(
                 " ".join(token_names),
                 token_names,
                 kind,
                 clean_path,
                 tts,
+                cache_root=output.parent / ".clean-command-tts-cache",
             )
         augmented = augment(clean, rng, augment_config)
         scene_seed = example_seed + 31_337
