@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-refinement-keyword-balance-v2-20260921",
+  "request_id": "speech-like-split-preflight-v1-20260921",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run governed product-candidate training with per-keyword exact-wake pressure balancing after model-training #339 proved global wake-mass balance reduced FAR but further degraded recall."
+  "reason": "Run the bounded product speech-like 12/6 base plus 6-epoch refinement preflight using the split-stage contract: an independent 120-minute base job, immutable SHA-bound handoff, and an independent 120-minute refinement job. Preserve all existing training math, thresholds, gates, replay, curriculum, and qualification semantics; full governed training remains blocked unless the final per-keyword collapse guard passes."
 }
