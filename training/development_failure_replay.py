@@ -51,7 +51,12 @@ def _policy(cfg: dict) -> dict:
     raw = cfg.get("data_augmentation_v3", {})
     if not isinstance(raw, dict):
         raise ValueError("data_augmentation_v3 must be an object")
-    enabled = bool(raw.get("failure_replay_enabled", False))
+    enabled = raw.get("failure_replay_enabled", False)
+    # bool("false") is True and bool(0) is False. Either coercion picks a
+    # branch silently, and the wrong one skips the protected-evidence
+    # checks below, so the config has to say which one it means.
+    if not isinstance(enabled, bool):
+        raise ValueError("data_augmentation_v3.failure_replay_enabled must be a boolean")
     if enabled:
         if str(raw.get("policy")) != "train-only-balanced-mining-v1":
             raise ValueError("failure replay requires train-only data v3 policy")

@@ -187,7 +187,8 @@ def controller_next(
         false_accepts,
         frr=frr,
         far_per_hour=far_per_hour,
-        latch_after_failure=bool(policy.get("failure_replay_latch_after_failure", False)),
+        # Already required to be exactly True above.
+        latch_after_failure=policy.get("failure_replay_latch_after_failure") is True,
     )
 
 

@@ -220,9 +220,9 @@ def _effective_policy(cfg: dict, legacy: dict) -> dict:
             )
         ),
         "min_per_keyword": int(data_v3.get("adversarial_min_per_keyword", 0)),
-        "include_strict_prefix_anchors": bool(
-            data_v3.get("adversarial_include_strict_prefix_anchors", False)
-        ),
+        # bool("false") is True, so a coercion here turns a disabled anchor
+        # set into an enabled one.
+        "include_strict_prefix_anchors": data_v3.get("adversarial_include_strict_prefix_anchors") is True,
     }
 
 

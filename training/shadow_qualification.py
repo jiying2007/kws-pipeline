@@ -19,7 +19,9 @@ from synthetic_audio import load_config, parse_keywords  # noqa: E402
 
 def validate_shadow_policy(cfg: dict) -> dict:
     raw = cfg.get("shadow_qualification")
-    if not isinstance(raw, dict) or not bool(raw.get("enabled", False)):
+    # bool("false") is True, so a coercion here runs shadow qualification
+    # for a configuration that disabled it.
+    if not isinstance(raw, dict) or raw.get("enabled") is not True:
         raise ValueError("shadow qualification must be enabled before formal qualification")
     seeds = raw.get("seeds")
     if not isinstance(seeds, list) or not 8 <= len(seeds) <= 16:

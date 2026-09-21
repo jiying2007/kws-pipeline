@@ -1,11 +1,4 @@
 {
   "version": 1,
-  "waived": [
-    "tools/development_generalization.py|validate_seed|<return> = bool(value['coverage_passed'])",
-    "training/adversarial_lexicon.py|_effective_policy|<return> = bool(data_v3.get('adversarial_include_strict_prefix_anchors', False))",
-    "training/adversarial_refinement.py|_refinement_policy|<if> = bool(raw.get('enabled', False))",
-    "training/development_failure_replay.py|_policy|enabled = bool(raw.get('failure_replay_enabled', False))",
-    "training/iterate_rnn_development.py|controller_next|<return> = bool(policy.get('failure_replay_latch_after_failure', False))",
-    "training/shadow_qualification.py|validate_shadow_policy|<if> = bool(raw.get('enabled', False))"
-  ]
+  "waived": []
 }

@@ -39,6 +39,7 @@
     "tools/verify_speech_like_runtime_bundle.py|tools/verify_speech_like_backend_bundle.py|validate_symlink|right|missing-function",
     "training/iterate_rnn_development.py|training/iterate_gru_development.py|_copy_frozen_candidate|left|missing-function",
     "training/iterate_rnn_development.py|training/iterate_gru_development.py|_write_object|left|missing-function",
+    "training/iterate_rnn_development.py|training/iterate_gru_development.py|controller_next|left|is:True",
     "training/iterate_rnn_development.py|training/iterate_gru_development.py|copy_frozen_candidate|right|missing-function",
     "training/iterate_rnn_development.py|training/iterate_gru_development.py|validate_policy|left|neq-get:model_family",
     "training/qualify_frozen_rnn_formal.py|training/qualify_frozen_gru_formal.py|qualify|left|isinstance:dict",

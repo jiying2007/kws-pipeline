@@ -395,7 +395,9 @@ def _refinement_policy(cfg: dict) -> dict:
     if not isinstance(iteration, dict):
         raise ValueError("domain_iteration must be an object")
     raw = iteration.get("adversarial_lexicon")
-    if not isinstance(raw, dict) or not bool(raw.get("enabled", False)):
+    # bool("false") is True, so a coercion here enables refinement for a
+    # configuration that disabled it.
+    if not isinstance(raw, dict) or raw.get("enabled") is not True:
         raise ValueError("adversarial lexicon must be enabled for refinement")
     epochs = int(raw.get("refinement_epochs", 12))
     lr_scale = float(raw.get("refinement_lr_scale", 0.5))

@@ -146,7 +146,8 @@ def validate_seed(path: pathlib.Path, value: dict, expected_tier: str) -> dict:
         "false_rejects": false_rejects,
         "false_accepts": false_accepts,
         "negative_audio_hours": negative_hours,
-        "coverage_passed": bool(value["coverage_passed"]),
+        # validate_seed rejected anything that is not a boolean above.
+        "coverage_passed": value["coverage_passed"],
         "keywords": normalized_keywords,
     }
 
