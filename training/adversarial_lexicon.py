@@ -92,11 +92,11 @@ def effective_adversarial_max_length(
 ) -> int:
     if configured_max_length <= 0:
         raise ValueError("adversarial configured max_length must be positive")
-    longest_prefix = max(
-        (max(1, len(keyword.get("tokens", [])) - 1) for keyword in keywords),
+    longest_wake = max(
+        (max(1, len(keyword.get("tokens", []))) for keyword in keywords),
         default=1,
     )
-    result = max(configured_max_length, longest_prefix)
+    result = max(configured_max_length, longest_wake)
     if result > MAX_ADVERSARIAL_SEQUENCE_LENGTH:
         raise ValueError(
             "configured wake path requires adversarial prefix length "
@@ -274,11 +274,19 @@ def effective_adversarial_top_k(
         raise ValueError("adversarial selection budgets are invalid")
     if max_selected_sequences <= 0:
         raise ValueError("adversarial max selected sequences must be positive")
-    required = max(
-        configured_top_k,
-        min_per_keyword * keyword_count + global_hardest_fill,
-        strict_prefix_anchor_count,
-    )
+    if keyword_count <= 2:
+        required = max(
+            configured_top_k,
+            min_per_keyword * keyword_count + global_hardest_fill,
+            strict_prefix_anchor_count,
+        )
+    else:
+        required = max(
+            configured_top_k,
+            strict_prefix_anchor_count
+            + min_per_keyword * keyword_count
+            + global_hardest_fill,
+        )
     if required > max_selected_sequences:
         raise ValueError(
             "adversarial selection budget exceeds configured maximum: "
