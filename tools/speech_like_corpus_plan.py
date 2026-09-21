@@ -161,8 +161,6 @@ def normalize_plan(path: pathlib.Path) -> dict:
         )
     by_id = {row["id"]: row for row in normalized_utterances}
     pause_ids = sorted(row_id for row_id in by_id if row_id.endswith("-pause"))
-    if not pause_ids:
-        raise ValueError("corpus plan must define positive deterministic pause variants")
     for pause_id in pause_ids:
         exact_id = pause_id.removesuffix("-pause") + "-exact"
         if exact_id not in by_id:
