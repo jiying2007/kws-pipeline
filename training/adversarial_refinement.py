@@ -25,6 +25,7 @@ from iterate_domain import (
     repo_path,
     run,
     sha256_file,
+    train_acoustic_seed_offset,
 )
 from qualification_failure_replay import (
     POLICY as QUALIFICATION_REPAIR_POLICY,
@@ -766,11 +767,16 @@ def main() -> int:
     curriculum = final_curriculum if isinstance(final_curriculum, dict) else None
 
     dataset = work / "datasets" / f"round-{refinement_round:02d}"
+    refinement_train_seed_offset = train_acoustic_seed_offset(
+        cfg.get("domain_iteration", {}),
+        refinement_round,
+    )
     render_domain_dataset(
         config_path,
         dataset,
         curriculum_weights=curriculum,
         splits=("train", "calibration", "test"),
+        train_seed_offset=refinement_train_seed_offset,
     )
     _audit(dataset, ("train", "calibration", "test"))
 
@@ -887,6 +893,8 @@ def main() -> int:
         "test_gate": test_gate,
         "warm_started": True,
         "warm_start_strategy": "full",
+        "training_acoustic_seed_policy": "train-only-scene-seed-offset-v1",
+        "training_acoustic_seed_offset": refinement_train_seed_offset,
         "source_round": source_round,
         "source_selection_policy": source_selection_policy,
         "source_was_strict": source_was_strict,
