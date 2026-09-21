@@ -19,7 +19,6 @@ def main() -> int:
     training_request_self_test()
     request_path = ROOT / ".github/triggers/model-training-request.json"
     verified_request = verify_request(request_path)
-    assert verified_request["request_id"] == "speech-like-replay-v1-20260919"
 
     source = ROOT / "configs/training/xiaowo.torch-domain.json"
     shipping = ROOT / "configs/shipping.xiaowo.json"
@@ -90,6 +89,10 @@ def main() -> int:
         )
         assert result["product_speech_like_base_required"] is True
         assert result["product_external_base_bundle_sha256"] == "1" * 64
+
+    trainer = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
+    assert "ordered_token_sample_weighting" in trainer
+    assert "log_probs, y, xlen, ylen, sample_weights" in trainer
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     assert "Materialize governed product speech-like training base" in workflow

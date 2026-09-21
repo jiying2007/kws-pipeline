@@ -32,10 +32,13 @@ from qualification_failure_replay import (
     render_qualification_failure_replay,
 )
 from render_domains import render_domain_dataset
-from render_qualification_holdout import require_strict_development_candidate
 from synthetic_audio import load_config
 
 POLICY = "post-domain-adversarial-refinement-v1"
+REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"
+WAKE_BALANCE_POLICY = "per-keyword-exact-wake-pressure-balance-v2"
+DEFAULT_POSITIVE_EXAMPLE_WEIGHT = 2.0
+MAX_WAKE_EXAMPLE_WEIGHT = 12.0
 REPAIR_VALIDATION_SEED_NAMESPACE = 171_000_003
 
 
@@ -57,6 +60,330 @@ def _selected_record(manifest: dict) -> dict:
         raise ValueError("adversarial refinement cannot resolve selected strict checkpoint")
     return min(rows, key=lambda row: (float(row["score"]), str(row["checkpoint"])))
 
+
+def _far_domain_frr(record: dict, split: str) -> float:
+    domains = record.get(f"{split}_domains")
+    if not isinstance(domains, dict):
+        raise ValueError(f"refinement source {split} domains are missing")
+    far = domains.get("domains", {}).get("distance:far")
+    if not isinstance(far, dict):
+        raise ValueError(f"refinement source {split} far-domain metrics are missing")
+    return float(far["frr"])
+
+
+def _per_keyword_frr(metrics: dict, split: str) -> tuple[float, ...]:
+    raw = metrics.get("per_keyword")
+    if not isinstance(raw, dict) or not raw:
+        raise ValueError(f"refinement source {split} per-keyword metrics are missing")
+    values: list[float] = []
+    for keyword_id in sorted(raw, key=str):
+        row = raw[keyword_id]
+        if not isinstance(row, dict):
+            raise ValueError(f"refinement source {split} keyword {keyword_id} metrics are invalid")
+        values.append(float(row["frr"]))
+    return tuple(values)
+
+
+def refinement_source_key(record: dict) -> tuple[float, float, float, float, float, int, str]:
+    calibration = record.get("calibration")
+    test = record.get("test")
+    if not isinstance(calibration, dict) or not isinstance(test, dict):
+        raise ValueError("refinement source calibration/test metrics are missing")
+    recall_terms = (
+        float(calibration["frr"]),
+        float(test["frr"]),
+        _far_domain_frr(record, "calibration"),
+        _far_domain_frr(record, "test"),
+        *_per_keyword_frr(calibration, "calibration"),
+        *_per_keyword_frr(test, "test"),
+    )
+    far_terms = (
+        float(calibration["far_per_hour"]),
+        float(test["far_per_hour"]),
+    )
+    if any(not math.isfinite(value) for value in (*recall_terms, *far_terms)):
+        raise ValueError("refinement source metrics must be finite")
+    return (
+        max(recall_terms),
+        sum(recall_terms),
+        max(far_terms),
+        sum(far_terms),
+        float(record["score"]),
+        int(record["round"]),
+        str(record["frontend"]),
+    )
+
+
+def select_refinement_source(manifest: dict) -> tuple[dict, str]:
+    selection = manifest.get("candidate_selection")
+    if not isinstance(selection, dict):
+        raise ValueError("development candidate-selection evidence is missing")
+    if selection.get("qualification_used_for_selection") is not False:
+        raise ValueError("refinement source selection must not use qualification")
+
+    if bool(manifest.get("development_qualified")):
+        return _selected_record(manifest), "strict-development-candidate"
+
+    if selection.get("objective_fallback_used") is not True:
+        raise ValueError("unqualified development manifest lacks objective fallback evidence")
+    if selection.get("selected_round") is not None or selection.get("selected_frontend") is not None:
+        raise ValueError("unqualified development manifest unexpectedly claims a strict selection")
+
+    candidates = [
+        row
+        for row in manifest.get("records", [])
+        if isinstance(row, dict) and "checkpoint" in row
+    ]
+    if not candidates:
+        raise ValueError("development manifest has no checkpoint eligible for refinement")
+    return min(candidates, key=refinement_source_key), REFINEMENT_SOURCE_POLICY
+
+
+def _manifest_targets(path: pathlib.Path) -> list[tuple[int, ...]]:
+    if not path.is_file() or path.stat().st_size == 0:
+        raise ValueError(f"refinement training manifest is missing/empty: {path}")
+    rows: list[tuple[int, ...]] = []
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        if "\t" not in raw:
+            raise ValueError(f"{path}:{line_no}: expected WAV<TAB>token_ids")
+        _, token_text = raw.split("\t", 1)
+        try:
+            targets = tuple(int(value) for value in token_text.split())
+        except ValueError as exc:
+            raise ValueError(f"{path}:{line_no}: invalid token id") from exc
+        if any(value < 0 for value in targets):
+            raise ValueError(f"{path}:{line_no}: token ids must be non-negative")
+        rows.append(targets)
+    if not rows:
+        raise ValueError(f"refinement training manifest has no examples: {path}")
+    return rows
+
+
+def _keyword_target_sequences(
+    tokens: pathlib.Path,
+    keywords: pathlib.Path,
+) -> dict[int, tuple[int, ...]]:
+    token_map: dict[str, int] = {}
+    for line_no, raw in enumerate(tokens.read_text(encoding="utf-8").splitlines(), 1):
+        value = raw.strip()
+        if not value or value.startswith("#"):
+            continue
+        cols = value.split()
+        if len(cols) == 1:
+            token = cols[0]
+            token_id = len(token_map)
+        elif len(cols) == 2:
+            token, raw_id = cols
+            token_id = int(raw_id)
+        else:
+            raise ValueError(f"{tokens}:{line_no}: invalid token row")
+        if token in token_map:
+            raise ValueError(f"{tokens}:{line_no}: duplicate token")
+        token_map[token] = token_id
+
+    sequences: dict[int, tuple[int, ...]] = {}
+    seen_sequences: set[tuple[int, ...]] = set()
+    for line_no, raw in enumerate(keywords.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        cols = raw.split("\t")
+        if len(cols) != 4:
+            raise ValueError(f"{keywords}:{line_no}: expected four columns")
+        keyword_id = int(cols[0])
+        if keyword_id <= 0 or keyword_id in sequences:
+            raise ValueError(f"{keywords}:{line_no}: keyword id must be unique and positive")
+        names = cols[3].split()
+        try:
+            sequence = tuple(token_map[name] for name in names)
+        except KeyError as exc:
+            raise ValueError(f"{keywords}:{line_no}: unknown token {exc.args[0]}") from exc
+        if not sequence:
+            raise ValueError(f"{keywords}:{line_no}: empty wake sequence")
+        if sequence in seen_sequences:
+            raise ValueError(f"{keywords}:{line_no}: duplicate wake sequence")
+        sequences[keyword_id] = sequence
+        seen_sequences.add(sequence)
+    if not sequences:
+        raise ValueError("shipping keyword TSV contains no wake sequences")
+    return sequences
+
+
+def _sequence_edit_distance(left: tuple[int, ...], right: tuple[int, ...]) -> int:
+    previous = list(range(len(right) + 1))
+    for left_index, left_value in enumerate(left, 1):
+        current = [left_index]
+        for right_index, right_value in enumerate(right, 1):
+            substitution = previous[right_index - 1] + int(left_value != right_value)
+            current.append(
+                min(
+                    previous[right_index] + 1,
+                    current[right_index - 1] + 1,
+                    substitution,
+                )
+            )
+        previous = current
+    return previous[-1]
+
+
+def _nearest_keyword_ids(
+    targets: tuple[int, ...],
+    wake_sequences: dict[int, tuple[int, ...]],
+) -> list[int]:
+    keyword_ids = sorted(wake_sequences)
+    if not targets:
+        return keyword_ids
+    distances = {
+        keyword_id: _sequence_edit_distance(targets, wake_sequences[keyword_id])
+        for keyword_id in keyword_ids
+    }
+    minimum = min(distances.values())
+    return [
+        keyword_id
+        for keyword_id in keyword_ids
+        if distances[keyword_id] == minimum
+    ]
+
+
+def derive_refinement_wake_balance(
+    *,
+    manifests: list[pathlib.Path],
+    tokens: pathlib.Path,
+    keywords: pathlib.Path,
+    positive_example_weight: float,
+) -> dict:
+    if (
+        not math.isfinite(positive_example_weight)
+        or positive_example_weight <= 0.0
+    ):
+        raise ValueError("refinement positive example weight must be finite and > 0")
+    wake_sequences = _keyword_target_sequences(tokens, keywords)
+    sequence_to_keyword = {
+        sequence: keyword_id for keyword_id, sequence in wake_sequences.items()
+    }
+    wake_rows_by_keyword = {keyword_id: 0 for keyword_id in wake_sequences}
+    assigned_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
+    assigned_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
+    wake_rows = tokenized_nonwake_rows = empty_nonwake_rows = 0
+    per_manifest: list[dict] = []
+
+    for manifest in manifests:
+        targets = _manifest_targets(manifest)
+        local_wake = {keyword_id: 0 for keyword_id in wake_sequences}
+        local_nonwake_mass = {keyword_id: 0.0 for keyword_id in wake_sequences}
+        local_nonwake_rows = {keyword_id: 0.0 for keyword_id in wake_sequences}
+        local_tokenized = 0
+        local_empty = 0
+        for row in targets:
+            keyword_id = sequence_to_keyword.get(row)
+            if keyword_id is not None:
+                wake_rows += 1
+                wake_rows_by_keyword[keyword_id] += 1
+                local_wake[keyword_id] += 1
+                continue
+
+            mass = positive_example_weight if row else 1.0
+            if row:
+                tokenized_nonwake_rows += 1
+                local_tokenized += 1
+            else:
+                empty_nonwake_rows += 1
+                local_empty += 1
+            nearest = _nearest_keyword_ids(row, wake_sequences)
+            share = 1.0 / float(len(nearest))
+            for nearest_id in nearest:
+                assigned_nonwake_rows[nearest_id] += share
+                assigned_nonwake_mass[nearest_id] += mass * share
+                local_nonwake_rows[nearest_id] += share
+                local_nonwake_mass[nearest_id] += mass * share
+
+        per_manifest.append(
+            {
+                "path": str(manifest),
+                "sha256": sha256_file(manifest),
+                "rows": len(targets),
+                "wake_rows": sum(local_wake.values()),
+                "wake_rows_by_keyword": {
+                    str(keyword_id): int(local_wake[keyword_id])
+                    for keyword_id in sorted(local_wake)
+                },
+                "tokenized_nonwake_rows": local_tokenized,
+                "empty_nonwake_rows": local_empty,
+                "assigned_nonwake_rows_by_keyword": {
+                    str(keyword_id): local_nonwake_rows[keyword_id]
+                    for keyword_id in sorted(local_nonwake_rows)
+                },
+                "assigned_nonwake_mass_by_keyword": {
+                    str(keyword_id): local_nonwake_mass[keyword_id]
+                    for keyword_id in sorted(local_nonwake_mass)
+                },
+            }
+        )
+
+    if wake_rows <= 0:
+        raise ValueError("refinement manifests contain no exact configured wake examples")
+
+    keyword_balance: dict[str, dict] = {}
+    wake_keyword_weights: dict[str, float] = {}
+    effective_wake_mass = 0.0
+    any_bounded = False
+    for keyword_id in sorted(wake_sequences):
+        keyword_wake_rows = wake_rows_by_keyword[keyword_id]
+        if keyword_wake_rows <= 0:
+            raise ValueError(
+                f"refinement manifests contain no exact wake examples for keyword {keyword_id}"
+            )
+        wake_base_mass = keyword_wake_rows * positive_example_weight
+        target_mass = assigned_nonwake_mass[keyword_id]
+        raw_weight = target_mass / wake_base_mass
+        wake_weight = min(MAX_WAKE_EXAMPLE_WEIGHT, max(1.0, raw_weight))
+        bounded = wake_weight != raw_weight
+        effective_mass = wake_base_mass * wake_weight
+        any_bounded = any_bounded or bounded
+        effective_wake_mass += effective_mass
+        wake_keyword_weights[str(keyword_id)] = wake_weight
+        keyword_balance[str(keyword_id)] = {
+            "wake_rows": keyword_wake_rows,
+            "wake_base_mass": wake_base_mass,
+            "assigned_nonwake_rows": assigned_nonwake_rows[keyword_id],
+            "assigned_nonwake_mass": target_mass,
+            "raw_wake_example_weight": raw_weight,
+            "wake_example_weight": wake_weight,
+            "effective_wake_mass": effective_mass,
+            "bounded": bounded,
+        }
+
+    wake_base_mass = wake_rows * positive_example_weight
+    nonwake_mass = (
+        tokenized_nonwake_rows * positive_example_weight + empty_nonwake_rows
+    )
+    assigned_mass_total = sum(assigned_nonwake_mass.values())
+    if not math.isclose(assigned_mass_total, nonwake_mass, rel_tol=0.0, abs_tol=1.0e-9):
+        raise ValueError("per-keyword non-wake pressure does not conserve effective mass")
+
+    return {
+        "schema_version": 2,
+        "policy": WAKE_BALANCE_POLICY,
+        "positive_example_weight": positive_example_weight,
+        "default_wake_example_weight": 1.0,
+        "wake_keyword_weights": wake_keyword_weights,
+        "max_wake_example_weight": MAX_WAKE_EXAMPLE_WEIGHT,
+        "bounded": any_bounded,
+        "wake_rows": wake_rows,
+        "wake_rows_by_keyword": {
+            str(keyword_id): wake_rows_by_keyword[keyword_id]
+            for keyword_id in sorted(wake_rows_by_keyword)
+        },
+        "tokenized_nonwake_rows": tokenized_nonwake_rows,
+        "empty_nonwake_rows": empty_nonwake_rows,
+        "wake_base_mass": wake_base_mass,
+        "nonwake_mass": nonwake_mass,
+        "effective_wake_mass": effective_wake_mass,
+        "keyword_balance": keyword_balance,
+        "pressure_assignment": "nearest-token-edit-distance-tie-split-v1",
+        "manifests": per_manifest,
+    }
 
 def _refinement_policy(cfg: dict) -> dict:
     iteration = cfg.get("domain_iteration", {})
@@ -109,7 +436,7 @@ def _train_refinement(
     lr_scale: float,
     refinement_round: int,
     seed_offset: int = 0,
-) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path, dict]:
     train = cfg.get("train", {})
     if not isinstance(train, dict):
         raise ValueError("train config must be an object")
@@ -119,6 +446,18 @@ def _train_refinement(
     provenance = pathlib.Path(str(model) + ".provenance.json")
     learning_rate = float(train.get("lr", 0.001)) * lr_scale
     seed = int(cfg.get("seed", 1337)) + 4_000_003 + refinement_round * 1009 + seed_offset
+    training_manifests = [dataset_manifest, static_manifest, adversarial_manifest]
+    if failure_manifest is not None:
+        training_manifests.append(failure_manifest)
+    positive_example_weight = float(
+        train.get("positive_example_weight", DEFAULT_POSITIVE_EXAMPLE_WEIGHT)
+    )
+    wake_balance = derive_refinement_wake_balance(
+        manifests=training_manifests,
+        tokens=tokens,
+        keywords=keywords,
+        positive_example_weight=positive_example_weight,
+    )
     command = [
         sys.executable,
         str(TRAINING / "train_ctc.py"),
@@ -153,6 +492,12 @@ def _train_refinement(
             str(learning_rate),
             "--seed",
             str(seed),
+            "--positive-example-weight",
+            str(wake_balance["positive_example_weight"]),
+            "--wake-example-weight",
+            str(wake_balance["default_wake_example_weight"]),
+            "--wake-keyword-weights",
+            json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
             "--warm-start",
             str(warm_start),
             "--output",
@@ -172,7 +517,7 @@ def _train_refinement(
             str(model),
         ]
     )
-    return model, checkpoint, provenance
+    return model, checkpoint, provenance, wake_balance
 
 
 def _strict(base: dict, domains: dict, gates: dict) -> bool:
@@ -195,6 +540,7 @@ def _update_record_candidate(
     failure_evidence: pathlib.Path,
     score: float,
     qualification_repair_used: bool,
+    wake_balance: dict,
 ) -> None:
     gates = record["_gates"]
     record.update(
@@ -219,6 +565,7 @@ def _update_record_candidate(
             "failure_replay_manifest_sha256": str(failure["manifest_sha256"]),
             "failure_replay_evidence_sha256": sha256_file(failure_evidence),
             "qualification_repair_used": qualification_repair_used,
+            "wake_balance": wake_balance,
         }
     )
 
@@ -231,7 +578,7 @@ def _write_failed_summary(work: pathlib.Path, value: dict) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Mine development-only lexical adversaries and refine the latest strict candidate."
+        description="Mine development-only lexical adversaries and refine a development candidate."
     )
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -246,9 +593,14 @@ def main() -> int:
         raise ValueError("adversarial refinement requires torch_ctc backend")
     policy = _refinement_policy(cfg)
     manifest_path = work / "domain-loop-manifest.json"
+    if not manifest_path.is_file() or manifest_path.stat().st_size == 0:
+        raise ValueError("development manifest is missing; refuse adversarial refinement")
     input_manifest_sha = sha256_file(manifest_path)
-    manifest = require_strict_development_candidate(work)
-    source = _selected_record(manifest)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError("development manifest must be an object")
+    source, source_selection_policy = select_refinement_source(manifest)
+    source_was_strict = bool(source.get("calibration_gate")) and bool(source.get("test_gate"))
     source_checkpoint = repo_path(str(source["checkpoint"]))
     source_round = int(source["round"])
     frontend = str(source["frontend"])
@@ -304,7 +656,7 @@ def main() -> int:
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
 
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
-    model, checkpoint, provenance = _train_refinement(
+    model, checkpoint, provenance, wake_balance = _train_refinement(
         cfg=cfg,
         frontend=frontend,
         tokens=tokens,
@@ -367,7 +719,10 @@ def main() -> int:
         "warm_started": True,
         "warm_start_strategy": "full",
         "source_round": source_round,
+        "source_selection_policy": source_selection_policy,
+        "source_was_strict": source_was_strict,
         "source_checkpoint_sha256": sha256_file(source_checkpoint),
+        "wake_balance": wake_balance,
         "hard_negative_replay_examples": int(static.get("examples", 0)),
         "hard_negative_replay_manifest_sha256": str(static["manifest_sha256"]),
         "adversarial_policy": adversarial_selection_policy,
@@ -403,11 +758,14 @@ def main() -> int:
                 "qualified": False,
                 "input_development_manifest_sha256": input_manifest_sha,
                 "source_round": source_round,
+                "source_selection_policy": source_selection_policy,
+                "source_was_strict": source_was_strict,
                 "refinement_round": refinement_round,
                 "adversarial_data_augmentation_policy": adversarial_data_policy,
                 "adversarial_selection_policy": adversarial_selection_policy,
                 "failure_replay_policy": str(failure["policy"]),
                 "failure_replay_examples": int(failure["examples"]),
+                "wake_balance": wake_balance,
                 "qualification_repair_used": False,
                 "record": {key: value for key, value in record.items() if key != "_gates"},
             },
@@ -440,7 +798,7 @@ def main() -> int:
         failure_manifest_path = pathlib.Path(str(failure["manifest"]))
         failure_evidence = pathlib.Path(str(failure["evidence"]))
         repair_dir = candidate_dir / "qualification-repair"
-        repaired_model, repaired_checkpoint, repaired_provenance = _train_refinement(
+        repaired_model, repaired_checkpoint, repaired_provenance, repaired_wake_balance = _train_refinement(
             cfg=cfg,
             frontend=frontend,
             tokens=tokens,
@@ -508,6 +866,7 @@ def main() -> int:
             "test_gate": repaired_test_gate,
             "qualification_gate": repaired_qual_gate,
             "failure_replay_examples": int(failure["examples"]),
+            "wake_balance": repaired_wake_balance,
             "qualification_repair_examples": int(failure.get("qualification_repair_examples", 0)),
             "qualification_repair_selected_unique_failures": int(
                 failure.get("qualification_repair_selected_unique_failures", 0)
@@ -533,7 +892,9 @@ def main() -> int:
             failure_evidence=failure_evidence,
             score=repaired_score,
             qualification_repair_used=True,
+            wake_balance=repaired_wake_balance,
         )
+        wake_balance = repaired_wake_balance
         if not repaired_cal_gate or not repaired_test_gate or not repaired_qual_gate:
             _write_failed_summary(
                 work,
@@ -592,6 +953,10 @@ def main() -> int:
             "objective_fallback_used": False,
             "adversarial_refinement_used": True,
             "adversarial_refinement_policy": POLICY,
+            "refinement_source_policy": source_selection_policy,
+            "refinement_source_round": source_round,
+            "refinement_source_frontend": frontend,
+            "refinement_source_was_strict": source_was_strict,
             "adversarial_data_augmentation_policy": adversarial_data_policy,
             "adversarial_selection_policy": adversarial_selection_policy,
             "development_failure_replay_used": int(failure["examples"]) > 0,
@@ -652,6 +1017,8 @@ def main() -> int:
         "input_development_manifest_sha256": input_manifest_sha,
         "output_development_manifest_sha256": sha256_file(manifest_path),
         "source_round": source_round,
+        "source_selection_policy": source_selection_policy,
+        "source_was_strict": source_was_strict,
         "refinement_round": refinement_round,
         "frontend": frontend,
         "adversarial_data_augmentation_policy": adversarial_data_policy,
@@ -672,6 +1039,7 @@ def main() -> int:
         "failure_replay_observed_unique_failures": int(failure["observed_unique_failures"]),
         "failure_replay_selected_unique_failures": int(failure["selected_unique_failures"]),
         "failure_replay_examples": int(failure["examples"]),
+        "wake_balance": wake_balance,
         "failure_replay_development_source_wav_bytes_copied": False,
         "qualification_repair_used": qualification_repair is not None,
         "qualification_repair": qualification_repair,

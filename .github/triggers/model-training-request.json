@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-replay-v1-20260919",
+  "request_id": "speech-like-refinement-keyword-balance-v2-20260921",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run the first governed product-candidate training after speech-like replay isolation and retry-safe model-registry promotion."
+  "reason": "Run governed product-candidate training with per-keyword exact-wake pressure balancing after model-training #339 proved global wake-mass balance reduced FAR but further degraded recall."
 }

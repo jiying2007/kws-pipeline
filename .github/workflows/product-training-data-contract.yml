@@ -14,6 +14,11 @@ on:
       - "training/training_request.py"
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
+      - "training/adversarial_refinement.py"
+      - "training/train_ctc.py"
+      - "training/export_model.py"
+      - "training/test_sequence_margin.py"
+      - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
       - ".github/workflows/model-training.yml"
@@ -28,6 +33,11 @@ on:
       - "training/training_request.py"
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
+      - "training/adversarial_refinement.py"
+      - "training/train_ctc.py"
+      - "training/export_model.py"
+      - "training/test_sequence_margin.py"
+      - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
       - ".github/workflows/model-training.yml"
@@ -53,7 +63,14 @@ jobs:
           tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
           training/training_request.py
+          training/adversarial_refinement.py
+          training/train_ctc.py
+          training/export_model.py
+          training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
+          tests/test_adversarial_refinement_source.py
+      - name: Development refinement source contract
+        run: python3 tests/test_adversarial_refinement_source.py
       - name: Static product base identity
         run: |
           python3 - <<'PY'
@@ -93,6 +110,7 @@ jobs:
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
           assert "training-invocation.json" in promoter
           assert "governed-model-training-invocation-v1" in promoter
+          assert "ordered-token sample weighting" in promoter
           assert "tone fallback" in promoter
           print("promoted product data lineage contract: ok")
           PY

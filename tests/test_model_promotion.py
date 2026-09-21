@@ -10,6 +10,7 @@ VERIFIER = ROOT / "tools" / "verify_model_promotion_bundle.py"
 TRAINING_WORKFLOW = ROOT / ".github" / "workflows" / "model-training.yml"
 DIAGNOSTICS = ROOT / "tools" / "build_training_diagnostics.py"
 REFINEMENT = ROOT / "training" / "adversarial_refinement.py"
+EXPORTER = ROOT / "training" / "export_model.py"
 REPAIR = ROOT / "training" / "qualification_failure_replay.py"
 ROBUSTNESS = ROOT / "eval" / "gate_robustness.py"
 BASE_STAGE = ROOT / "training" / "base_stage_receipt.py"
@@ -31,6 +32,7 @@ def main() -> int:
     training = TRAINING_WORKFLOW.read_text(encoding="utf-8")
     diagnostics = DIAGNOSTICS.read_text(encoding="utf-8")
     refinement = REFINEMENT.read_text(encoding="utf-8")
+    exporter = EXPORTER.read_text(encoding="utf-8")
     repair = REPAIR.read_text(encoding="utf-8")
     robustness = ROBUSTNESS.read_text(encoding="utf-8")
     base_stage = BASE_STAGE.read_text(encoding="utf-8")
@@ -126,10 +128,12 @@ def main() -> int:
         "post-domain-adversarial-refinement-v1",
         "adversarial-hard-negatives.tsv",
         "promoted model provenance does not prove adversarial replay training",
+        "promoted product candidate lacks ordered-token sample weighting",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
         "xiao3 wo1 xiao3 wo1",
         "model provenance repository tree differs from requested training HEAD tree",
+        "model provenance per-keyword wake weights differ from refinement evidence",
     ):
         require(verifier, needle, "promotion bundle verifier")
 
@@ -158,7 +162,7 @@ def main() -> int:
     continuation = training.index("  refinement-and-qualification:")
     base_section = training[:continuation]
     for forbidden in (
-        "Refine strict candidate with model-mined adversarial lexicon",
+        "Refine development candidate with model-mined adversarial lexicon",
         "Enforce development shadow qualification arena",
         "Rotate untouched qualification cohort",
         "training/render_qualification_guarded.py",
@@ -169,7 +173,7 @@ def main() -> int:
 
     expected_order = [
         "Train and iterate domain rounds",
-        "Refine strict candidate with model-mined adversarial lexicon",
+        "Refine development candidate with model-mined adversarial lexicon",
         "Enforce development shadow qualification arena",
         "Rotate untouched qualification cohort",
         "training/render_qualification_guarded.py",
@@ -196,6 +200,29 @@ def main() -> int:
         require(training, needle, "model-training workflow")
     if "training/render_qualification_holdout.py \\\n            --config" in training:
         raise AssertionError("model-training workflow must not bypass the guarded formal renderer")
+
+    for needle in (
+        'REFINEMENT_SOURCE_POLICY = "development-recall-first-refinement-source-v1"',
+        'WAKE_BALANCE_POLICY = "per-keyword-exact-wake-pressure-balance-v2"',
+        "derive_refinement_wake_balance",
+        '"nearest-token-edit-distance-tie-split-v1"',
+        '"--wake-example-weight"',
+        '"--wake-keyword-weights"',
+        '"wake_keyword_weights"',
+        '"wake_balance"',
+        "select_refinement_source",
+        "refinement_source_policy",
+        "source_was_strict",
+        "refinement source selection must not use qualification",
+    ):
+        require(refinement, needle, "adversarial refinement source contract")
+
+    for needle in (
+        '"wake_keyword_weights"',
+        "checkpoint wake_keyword_weights must be an object",
+        '"ordered_token_sample_weighting"',
+    ):
+        require(exporter, needle, "model exporter weighting provenance")
 
     for needle in (
         'EVIDENCE_CLASS = "governed-model-training-invocation-v1"',

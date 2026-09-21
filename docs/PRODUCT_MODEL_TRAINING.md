@@ -109,5 +109,57 @@ Replay voice selection is deterministic and restricted to the eight
 `train-*` voice slots. Calibration, test and qualification voice identities are
 never used for replay.
 
+## Development refinement source
+
+Adversarial refinement is a development-only optimization stage and does not
+consume formal qualification evidence. If base iteration already has a strict
+calibration/test candidate, refinement keeps using that strict candidate.
+
+If base iteration has no strict candidate, refinement may start from a
+development-only fallback selected without qualification feedback. The fallback
+is recall-first: it minimizes worst-case FRR across calibration, test, their
+3-5 m far-distance slices, and every shipping keyword; then total FRR; then FAR.
+This prevents either a near all-reject checkpoint or a checkpoint that collapses
+one wake word from winning refinement source selection merely because the frozen
+zero-error gate heavily penalizes FAR.
+
+Formal qualification remains unchanged: it still requires a strict
+calibration/test development candidate after refinement, and the guarded formal
+renderer still rejects any non-strict candidate.
+
+Model-training #339 (run `35501188138`) proved that a single global wake
+multiplier is not a sufficient refinement actuator. Its v1 balance was applied
+exactly: 432 exact-wake rows had base mass 864, 1,488 tokenized non-wake rows had
+mass 2,976, and the derived multiplier 3.4444 raised exact-wake mass to the same
+2,976. Even so, calibration/test FRR ended at 0.875/0.9375 while test FAR fell to
+493.73 h^-1; keyword 1 (`你好小窝`) remained 32/32 false rejects. The run is
+diagnostic-only and is not eligible for promotion.
+
+Refinement therefore uses per-keyword pressure balancing rather than a global
+wake scalar. The policy is `per-keyword-exact-wake-pressure-balance-v2`.
+Configured exact-wake rows are counted per keyword. Every non-wake target
+sequence is assigned to the configured wake sequence(s) with minimum token edit
+distance; ties split the row's effective mass equally, and empty-target rows
+split equally across all keywords. This conserves the same total non-wake
+effective mass used by v1 while exposing asymmetric lexical pressure around
+individual shipping wake words.
+
+Each keyword receives its own exact-wake multiplier so its effective wake mass
+matches its assigned non-wake pressure, bounded independently to [1, 12]. The
+trainer keeps a default wake multiplier of 1.0 and receives the per-keyword map
+explicitly. The map and assigned masses are retained in refinement evidence and
+model provenance, and model promotion verifies both copies are identical.
+
+The resulting sample weights still apply consistently to all target-sensitive
+objectives: per-frame CTC, sequence margin, strict-prefix completion, and the
+ordered-token loss added in #158. Ordered-token loss preserves its legacy value
+when all participating samples have equal weights; non-uniform per-keyword wake
+weights change its gradient in the same way as the other target-sensitive
+objectives. Recurrent-release loss remains unweighted because it models
+post-utterance blank release rather than wake/non-wake target identity.
+
+Base training, replay counts, loss coefficients, epochs, learning rate,
+thresholds, strict gates and formal qualification remain unchanged.
+
 Model-training run `35439346929` was cancelled after this hidden tone replay
 path was identified. It is diagnostic-only and is not eligible for promotion.
