@@ -80,6 +80,35 @@ def main() -> int:
     else:
         raise AssertionError("out-of-range replay keyword id was accepted")
 
+    from development_failure_replay import select_failure_specs
+    from adversarial_refinement import _repeat_focus_rows
+
+    specs = [
+        {
+            "focus_keyword_ids": [0],
+            "source_keyword_id": 0,
+        },
+        {
+            "focus_keyword_ids": [0],
+            "source_keyword_id": 0,
+        },
+    ]
+    selected_specs = select_failure_specs(
+        specs,
+        max_unique=10,
+        max_per_keyword=1,
+    )
+    assert len(selected_specs) == 1
+
+    expanded: list[tuple[int, ...]] = []
+    _repeat_focus_rows(
+        expanded,
+        [0],
+        2,
+        label="keyword-zero",
+    )
+    assert expanded == [(0,), (0,)]
+
     print("replay keyword id contract: PASS")
     return 0
 
