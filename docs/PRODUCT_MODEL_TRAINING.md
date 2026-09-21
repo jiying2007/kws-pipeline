@@ -159,6 +159,18 @@ RNN failure replay remains latched after a failure until stability confirmation.
 The normalized controller honors that latch even after the instantaneous error
 rates return to the low-pressure region; GRU retains its non-latched policy.
 
+## Development execution budget
+
+RNN and GRU development rounds render only train, calibration and test. Formal
+qualification remains outside the development loop and is not rendered as unused
+work. Development calibration also reuses the product configuration's bounded
+two-way threshold-trial parallelism.
+
+These changes preserve the development dataset members, threshold grid, runtime
+decoder, scoring functions and controller inputs. They reduce feedback latency
+only, so development evidence remains comparable while the quick loop better
+serves as a preflight before governed product training.
+
 ## Bounded product round budget
 
 The product loop distinguishes cold-start fitting from warm-start refinement.
