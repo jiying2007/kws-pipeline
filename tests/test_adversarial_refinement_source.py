@@ -227,19 +227,26 @@ def main() -> int:
             positive_example_weight=2.0,
         )
         assert balance["policy"] == WAKE_BALANCE_POLICY
+        assert balance["schema_version"] == 2
+        assert balance["pressure_assignment"] == "nearest-token-edit-distance-tie-split-v1"
         assert balance["wake_rows"] == 3
+        assert balance["wake_rows_by_keyword"] == {"1": 2, "2": 1}
         assert balance["tokenized_nonwake_rows"] == 8
         assert balance["empty_nonwake_rows"] == 1
         assert balance["wake_base_mass"] == 6.0
         assert balance["nonwake_mass"] == 17.0
-        assert abs(balance["wake_example_weight"] - (17.0 / 6.0)) < 1.0e-12
+        assert abs(balance["keyword_balance"]["1"]["assigned_nonwake_mass"] - 12.5) < 1.0e-12
+        assert abs(balance["keyword_balance"]["2"]["assigned_nonwake_mass"] - 4.5) < 1.0e-12
+        assert abs(balance["wake_keyword_weights"]["1"] - 3.125) < 1.0e-12
+        assert abs(balance["wake_keyword_weights"]["2"] - 2.25) < 1.0e-12
         assert abs(balance["effective_wake_mass"] - 17.0) < 1.0e-12
-        assert balance["capped"] is False
+        assert balance["bounded"] is False
 
         extreme = root / "extreme.tsv"
         extreme.write_text(
-            "wake.wav\t1 2 3 4\n"
-            + "".join(f"n{index}.wav\t1 2\n" for index in range(100)),
+            "wake1.wav\t1 2 3 4\n"
+            "wake2.wav\t3 4 3 4\n"
+            + "".join(f"n{index}.wav\t1 2 3\n" for index in range(100)),
             encoding="utf-8",
         )
         capped = derive_refinement_wake_balance(
@@ -248,8 +255,11 @@ def main() -> int:
             keywords=keywords,
             positive_example_weight=2.0,
         )
-        assert capped["wake_example_weight"] == 12.0
-        assert capped["capped"] is True
+        assert capped["wake_keyword_weights"]["1"] == 12.0
+        assert capped["wake_keyword_weights"]["2"] == 1.0
+        assert capped["keyword_balance"]["1"]["bounded"] is True
+        assert capped["keyword_balance"]["2"]["bounded"] is True
+        assert capped["bounded"] is True
 
     leaked = dict(manifest)
     leaked["candidate_selection"] = dict(manifest["candidate_selection"])
@@ -261,7 +271,7 @@ def main() -> int:
     else:
         raise AssertionError("qualification-backed refinement source was accepted")
 
-    print("adversarial refinement source/wake balance: PASS")
+    print("adversarial refinement source/per-keyword wake pressure balance: PASS")
     return 0
 
 
