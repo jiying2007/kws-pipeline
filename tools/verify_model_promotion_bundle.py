@@ -267,6 +267,17 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError("promoted product candidate lacks sample-weighting provenance")
         if weighting.get("ordered_token_sample_weighting") != "training-sample-weights-v1":
             raise ValueError("promoted product candidate lacks ordered-token sample weighting")
+        normalization = weighting.get("normalization")
+        if (
+            not isinstance(normalization, dict)
+            or int(normalization.get("schema_version", 0)) != 1
+            or normalization.get("policy") != "dataset-mean-sample-weight-v1"
+            or int(normalization.get("rows", 0)) <= 0
+            or not 0 < int(normalization.get("nonempty_rows", 0)) <= int(normalization.get("rows", 0))
+            or float(normalization.get("all_mean_weight", 0.0)) <= 0.0
+            or float(normalization.get("nonempty_mean_weight", 0.0)) <= 0.0
+        ):
+            raise ValueError("promoted product candidate lacks dataset-mean sample-weight normalization")
         training_environment = provenance.get("training", {}).get("environment")
         if not isinstance(training_environment, dict):
             raise ValueError("promoted product candidate lacks training environment")
