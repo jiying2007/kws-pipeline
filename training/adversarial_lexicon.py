@@ -35,6 +35,8 @@ from synthetic_audio import (  # noqa: E402
 SELECTION_POLICY = "balanced-strict-prefix-anchor-topk-v2"
 COMMAND_TTS_EXECUTION_POLICY = "bounded-parallel-clean-prerender-v1"
 MAX_COMMAND_TTS_WORKERS = 4
+CANDIDATE_POLICY = "exhaustive-when-bounded-else-hybrid-v1"
+HYBRID_CANDIDATE_POLICY = "prefix-edit-deterministic-sample-v1"
 
 
 def enumerate_safe_sequences(
@@ -64,12 +66,196 @@ def enumerate_safe_sequences(
 
 
 def strict_prefix_anchors(keywords: list[dict]) -> set[tuple[str, ...]]:
+    wake_paths = {
+        tuple(str(token) for token in keyword.get("tokens", []))
+        for keyword in keywords
+    }
     anchors: set[tuple[str, ...]] = set()
     for keyword in keywords:
         tokens = [str(token) for token in keyword.get("tokens", [])]
         for length in range(1, len(tokens)):
-            anchors.add(tuple(tokens[:length]))
+            anchor = tuple(tokens[:length])
+            # A configured wake path must never become a hard negative merely
+            # because it is a strict prefix of another configured wake path.
+            if anchor not in wake_paths:
+                anchors.add(anchor)
     return anchors
+
+
+def _raw_cartesian_count(active_token_count: int, max_length: int) -> int:
+    if active_token_count <= 0:
+        return 0
+    return sum(active_token_count**length for length in range(1, max_length + 1))
+
+
+def _keyword_edit_candidates(
+    tokens: tuple[str, ...],
+    active_tokens: list[str],
+) -> list[tuple[str, ...]]:
+    rows: list[tuple[str, ...]] = []
+    seen: set[tuple[str, ...]] = set()
+
+    def add(value: tuple[str, ...]) -> None:
+        if value and value != tokens and value not in seen:
+            seen.add(value)
+            rows.append(value)
+
+    for index in range(len(tokens)):
+        add(tokens[:index] + tokens[index + 1 :])
+    for index, original in enumerate(tokens):
+        for replacement in active_tokens:
+            if replacement == original:
+                continue
+            value = list(tokens)
+            value[index] = replacement
+            add(tuple(value))
+    for index in range(len(tokens) - 1):
+        value = list(tokens)
+        value[index], value[index + 1] = value[index + 1], value[index]
+        add(tuple(value))
+    return rows
+
+
+def build_adversarial_candidate_plan(
+    *,
+    active_tokens: list[str],
+    keywords: list[dict],
+    max_length: int,
+    max_sequences: int,
+    seed: int,
+) -> dict:
+    if not active_tokens:
+        raise ValueError("active token set is empty")
+    if max_length <= 0 or max_length > 8:
+        raise ValueError("adversarial max_length must be 1..8")
+    if max_sequences <= 0:
+        raise ValueError("adversarial max_sequences must be positive")
+    forbidden = [list(keyword.get("tokens", [])) for keyword in keywords]
+    raw_count = _raw_cartesian_count(len(active_tokens), max_length)
+    if raw_count <= max_sequences:
+        candidates = enumerate_safe_sequences(
+            active_tokens,
+            forbidden,
+            max_length=max_length,
+            max_sequences=max_sequences,
+        )
+        return {
+            "policy": CANDIDATE_POLICY,
+            "mode": "exhaustive",
+            "raw_cartesian_sequences": raw_count,
+            "candidates": candidates,
+            "strict_prefix_anchors": sorted(strict_prefix_anchors(keywords)),
+            "sample_attempts": 0,
+        }
+
+    anchors = sorted(
+        strict_prefix_anchors(keywords),
+        key=lambda value: (len(value), value),
+    )
+    if len(anchors) > max_sequences:
+        raise ValueError(
+            "adversarial strict-prefix anchors exceed candidate budget: "
+            f"{len(anchors)} > {max_sequences}"
+        )
+
+    candidates: list[tuple[str, ...]] = []
+    seen: set[tuple[str, ...]] = set()
+
+    def add(value: tuple[str, ...]) -> bool:
+        if (
+            not value
+            or value in seen
+            or not safe_negative(list(value), forbidden)
+            or len(candidates) >= max_sequences
+        ):
+            return False
+        seen.add(value)
+        candidates.append(value)
+        return True
+
+    for anchor in anchors:
+        add(anchor)
+
+    per_keyword_edits = [
+        [
+            value
+            for value in _keyword_edit_candidates(
+                tuple(str(token) for token in keyword.get("tokens", [])),
+                active_tokens,
+            )
+            if safe_negative(list(value), forbidden)
+        ]
+        for keyword in keywords
+    ]
+    edit_index = 0
+    while len(candidates) < max_sequences:
+        progressed = False
+        for rows in per_keyword_edits:
+            if edit_index < len(rows):
+                progressed = add(rows[edit_index]) or progressed
+        edit_index += 1
+        if not progressed and all(edit_index >= len(rows) for rows in per_keyword_edits):
+            break
+
+    seed_material = json.dumps(
+        {
+            "seed": seed,
+            "active_tokens": active_tokens,
+            "keywords": [list(keyword.get("tokens", [])) for keyword in keywords],
+            "max_length": max_length,
+            "max_sequences": max_sequences,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    rng = random.Random(_stable_seed(seed_material))
+    attempts = 0
+    max_attempts = max(10_000, max_sequences * 128)
+    while len(candidates) < max_sequences and attempts < max_attempts:
+        attempts += 1
+        length = rng.randint(1, max_length)
+        value = tuple(rng.choice(active_tokens) for _ in range(length))
+        add(value)
+
+    if not candidates:
+        raise ValueError("bounded adversarial candidate generation produced no safe negatives")
+    return {
+        "policy": CANDIDATE_POLICY,
+        "mode": HYBRID_CANDIDATE_POLICY,
+        "raw_cartesian_sequences": raw_count,
+        "candidates": candidates,
+        "strict_prefix_anchors": anchors,
+        "sample_attempts": attempts,
+    }
+
+
+def effective_adversarial_top_k(
+    *,
+    keyword_count: int,
+    configured_top_k: int,
+    min_per_keyword: int,
+    global_hardest_fill: int,
+    strict_prefix_anchor_count: int,
+    max_selected_sequences: int,
+) -> int:
+    if keyword_count <= 0:
+        raise ValueError("adversarial keyword count must be positive")
+    if configured_top_k <= 0 or min_per_keyword < 0 or global_hardest_fill < 0:
+        raise ValueError("adversarial selection budgets are invalid")
+    if max_selected_sequences <= 0:
+        raise ValueError("adversarial max selected sequences must be positive")
+    required = max(
+        configured_top_k,
+        min_per_keyword * keyword_count + global_hardest_fill,
+        strict_prefix_anchor_count,
+    )
+    if required > max_selected_sequences:
+        raise ValueError(
+            "adversarial selection budget exceeds configured maximum: "
+            f"{required} > {max_selected_sequences}"
+        )
+    return required
 
 
 def select_adversarial_candidates(
@@ -295,6 +481,13 @@ def _effective_policy(cfg: dict, legacy: dict) -> dict:
     return {
         "data_policy": str(data_v3.get("policy") or "legacy"),
         "top_k": int(data_v3.get("adversarial_top_k", legacy.get("top_k", 24))),
+        "global_hardest_fill": int(data_v3.get("adversarial_global_hardest_fill", 16)),
+        "max_selected_sequences": int(
+            data_v3.get("adversarial_max_selected_sequences", 256)
+        ),
+        "candidate_policy": str(
+            data_v3.get("adversarial_candidate_policy") or CANDIDATE_POLICY
+        ),
         "probes_per_sequence": int(
             data_v3.get("adversarial_probes_per_sequence", legacy.get("probes_per_sequence", 2))
         ),
@@ -332,14 +525,21 @@ def mine_adversarial_lexicon(
         raise ValueError("adversarial lexicon policy is not enabled")
     max_length = int(legacy.get("max_length", 5))
     effective = _effective_policy(cfg, legacy)
-    top_k = int(effective["top_k"])
+    configured_top_k = int(effective["top_k"])
+    global_hardest_fill = int(effective["global_hardest_fill"])
+    max_selected_sequences = int(effective["max_selected_sequences"])
+    candidate_policy = str(effective["candidate_policy"])
     probes_per_sequence = int(effective["probes_per_sequence"])
     replay_examples = int(effective["replay_examples_per_sequence"])
     min_per_keyword = int(effective["min_per_keyword"])
     max_enumerated_sequences = int(effective["max_enumerated_sequences"])
     include_prefix_anchors = bool(effective["include_strict_prefix_anchors"])
-    if top_k <= 0 or probes_per_sequence <= 0 or replay_examples <= 0:
+    if configured_top_k <= 0 or probes_per_sequence <= 0 or replay_examples <= 0:
         raise ValueError("adversarial lexicon counts must be positive")
+    if candidate_policy != CANDIDATE_POLICY:
+        raise ValueError(f"unsupported adversarial candidate policy: {candidate_policy}")
+    if global_hardest_fill < 0 or max_selected_sequences <= 0:
+        raise ValueError("adversarial selection budgets are invalid")
     if min_per_keyword < 0:
         raise ValueError("adversarial min_per_keyword must be >= 0")
     if max_enumerated_sequences <= 0:
@@ -355,15 +555,28 @@ def mine_adversarial_lexicon(
     keywords = parse_keywords(keywords_path, token_map)
     carriers = token_carriers(keywords, int(cfg.get("model", {}).get("feature_dim", 32)))
     active_tokens = list(carriers)
-    forbidden = [list(keyword["tokens"]) for keyword in keywords]
-    candidates = enumerate_safe_sequences(
-        active_tokens,
-        forbidden,
+    candidate_plan = build_adversarial_candidate_plan(
+        active_tokens=active_tokens,
+        keywords=keywords,
         max_length=max_length,
         max_sequences=max_enumerated_sequences,
+        seed=int(cfg.get("seed", 1337)),
     )
-    if not candidates:
-        raise ValueError("adversarial lexicon enumeration produced no safe negatives")
+    candidates = list(candidate_plan["candidates"])
+    anchors = strict_prefix_anchors(keywords) if include_prefix_anchors else set()
+    top_k = effective_adversarial_top_k(
+        keyword_count=len(keywords),
+        configured_top_k=configured_top_k,
+        min_per_keyword=min_per_keyword,
+        global_hardest_fill=global_hardest_fill,
+        strict_prefix_anchor_count=len(anchors),
+        max_selected_sequences=max_selected_sequences,
+    )
+    if len(candidates) < top_k:
+        raise ValueError(
+            "adversarial candidate pool is smaller than the selection budget: "
+            f"{len(candidates)} < {top_k}"
+        )
 
     generator = cfg.get("generator", {})
     if not isinstance(generator, dict):
@@ -508,12 +721,17 @@ def mine_adversarial_lexicon(
         )
         for keyword in keywords
     }
-    anchors = strict_prefix_anchors(keywords) if include_prefix_anchors else set()
     evidence = {
         "schema_version": 2,
         "evidence_class": "development-only-adversarial-lexicon",
         "data_augmentation_policy": str(effective["data_policy"]),
         "selection_policy": SELECTION_POLICY,
+        "candidate_policy": str(candidate_plan["policy"]),
+        "candidate_mode": str(candidate_plan["mode"]),
+        "candidate_raw_cartesian_sequences": int(
+            candidate_plan["raw_cartesian_sequences"]
+        ),
+        "candidate_sample_attempts": int(candidate_plan["sample_attempts"]),
         "command_tts_execution_policy": COMMAND_TTS_EXECUTION_POLICY,
         "command_tts_parallel_workers": max(probe_tts_workers, replay_tts_workers),
         "command_tts_probe_pre_rendered": len(probe_tasks) if command_backend else 0,
@@ -523,6 +741,10 @@ def mine_adversarial_lexicon(
         "max_length": max_length,
         "max_enumerated_sequences": max_enumerated_sequences,
         "enumerated_sequences": len(candidates),
+        "configured_top_k": configured_top_k,
+        "global_hardest_fill": global_hardest_fill,
+        "max_selected_sequences": max_selected_sequences,
+        "keyword_count": len(keywords),
         "top_k": len(selected),
         "probes_per_sequence": probes_per_sequence,
         "replay_examples_per_sequence": replay_examples,
