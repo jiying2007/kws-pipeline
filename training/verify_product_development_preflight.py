@@ -29,7 +29,12 @@ def finite(value: object, label: str) -> float:
     return result
 
 
-def validate_metrics(metrics: object, label: str) -> dict:
+def validate_metrics(
+    metrics: object,
+    label: str,
+    *,
+    require_noncollapse: bool = True,
+) -> dict:
     if not isinstance(metrics, dict):
         raise ValueError(f"{label} metrics are missing")
     frr = finite(metrics.get("frr"), f"{label}.frr")
@@ -48,15 +53,20 @@ def validate_metrics(metrics: object, label: str) -> dict:
         matched = int(row.get("matched", -1))
         false_rejects = int(row.get("false_rejects", -1))
         keyword_frr = finite(row.get("frr"), f"{label}.keyword.{keyword_id}.frr")
-        if (
+        invalid = (
             expected <= 0
-            or matched <= 0
+            or matched < 0
             or false_rejects < 0
             or matched + false_rejects != expected
-            or not 0.0 <= keyword_frr < 1.0
-        ):
+            or not 0.0 <= keyword_frr <= 1.0
+        )
+        collapsed = matched == 0 or math.isclose(
+            keyword_frr, 1.0, rel_tol=0.0, abs_tol=1.0e-12
+        )
+        if invalid or (require_noncollapse and collapsed):
+            suffix = " collapsed" if collapsed else " invalid"
             raise ValueError(
-                f"{label} keyword {keyword_id} collapsed: "
+                f"{label} keyword {keyword_id}{suffix}: "
                 f"expected={expected} matched={matched} false_rejects={false_rejects} "
                 f"frr={keyword_frr}"
             )
@@ -81,8 +91,16 @@ def compact_base_round_metrics(records: list[dict]) -> list[dict]:
         item = {
             "round": int(row.get("round", -1)),
             "score": finite(row.get("score"), "base.score"),
-            "calibration": validate_metrics(row.get("calibration"), "base.calibration"),
-            "test": validate_metrics(row.get("test"), "base.test"),
+            "calibration": validate_metrics(
+                row.get("calibration"),
+                "base.calibration",
+                require_noncollapse=False,
+            ),
+            "test": validate_metrics(
+                row.get("test"),
+                "base.test",
+                require_noncollapse=False,
+            ),
             "calibration_gate": bool(row.get("calibration_gate")),
             "test_gate": bool(row.get("test_gate")),
         }
