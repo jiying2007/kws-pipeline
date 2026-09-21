@@ -20,6 +20,7 @@
     "formal_qualification_used": false,
     "expand_evaluation_splits": false,
     "adversarial_top_k": 64,
+    "adversarial_max_enumerated_sequences": 4096,
     "adversarial_probes_per_sequence": 2,
     "adversarial_replay_examples_per_sequence": 8,
     "adversarial_min_per_keyword": 24,
