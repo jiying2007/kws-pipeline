@@ -3,6 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from keyword_set_identity import verify_keyword_set_contract  # noqa: E402
 
 
 def read_json(path: pathlib.Path) -> dict:
@@ -39,19 +45,45 @@ def verify(
     if active in retired:
         raise ValueError(f"active qualification seed {active} is already retired")
 
-    rows = [
-        raw.split("\t")
-        for raw in keywords_path.read_text(encoding="utf-8").splitlines()
-        if raw.strip() and not raw.lstrip().startswith("#")
-    ]
-    expected = [
-        ["1", "你好小窝", "0.55", "ni3 hao3 xiao3 wo1"],
-        ["2", "小窝小窝", "0.55", "xiao3 wo1 xiao3 wo1"],
-    ]
-    if rows != expected:
-        raise ValueError(f"shipping wake-word contract drifted: {rows!r}")
-    if any(len(row[1]) != 4 for row in rows) or any(row[1] == "小窝" for row in rows):
-        raise ValueError("shipping wake words must remain exactly the two four-character phrases")
+    keyword_contract_raw = str(config.get("keyword_set_contract") or "")
+    if not keyword_contract_raw:
+        raise ValueError("training config keyword_set_contract is required")
+    tokens_raw = str(config.get("tokens") or "")
+    if not tokens_raw:
+        raise ValueError("training config tokens path is required")
+    tokens_path = pathlib.Path(tokens_raw)
+    if not tokens_path.is_absolute():
+        tokens_path = (ROOT / tokens_path).resolve()
+    keyword_contract_path = pathlib.Path(keyword_contract_raw)
+    if not keyword_contract_path.is_absolute():
+        keyword_contract_path = (ROOT / keyword_contract_path).resolve()
+    keyword_identity = verify_keyword_set_contract(
+        keyword_contract_path,
+        tokens_path=tokens_path,
+        keywords_path=keywords_path.resolve(),
+    )
+
+    shipping_rows = shipping.get("shipping_wake_words")
+    if not isinstance(shipping_rows, list) or not shipping_rows:
+        raise ValueError("shipping_wake_words must be a non-empty list")
+    shipping_semantic = sorted(
+        [
+            {
+                "id": int(row["id"]),
+                "text": str(row["text"]),
+                "tokens": [str(value) for value in row["tokens"]],
+            }
+            for row in shipping_rows
+            if isinstance(row, dict)
+        ],
+        key=lambda row: int(row["id"]),
+    )
+    if len(shipping_semantic) != len(shipping_rows):
+        raise ValueError("shipping_wake_words entries must be objects")
+    if shipping_semantic != keyword_identity["keywords"]:
+        raise ValueError(
+            "shipping wake-word semantics differ from keyword-set contract"
+        )
 
     product_data = None
     if require_product_speech_like_base:
@@ -91,6 +123,16 @@ def verify(
             raise ValueError("replay provider must match product base provider identity")
         if product_data.get("replay_tone_allowed") is not False:
             raise ValueError("tone replay is forbidden for governed product candidate training")
+        if str(product_data.get("keyword_set_contract") or "") != keyword_contract_raw:
+            raise ValueError("product candidate keyword-set contract drifted")
+        if str(product_data.get("keyword_set_sha256") or "") != str(
+            keyword_identity["keyword_set_sha256"]
+        ):
+            raise ValueError("product candidate keyword-set identity drifted")
+        if int(product_data.get("keyword_count", -1)) != int(
+            keyword_identity["keyword_count"]
+        ):
+            raise ValueError("product candidate keyword_count drifted")
         external = generator.get("external_base_dataset")
         required_splits = {"train", "calibration", "test", "qualification"}
         if not isinstance(external, dict) or set(external) != required_splits:
@@ -112,7 +154,11 @@ def verify(
         "frozen_formal_seed": frozen,
         "reserved_formal_seed": reserved,
         "retired_seed_count": len(retired),
-        "shipping_wake_words": [row[1] for row in rows],
+        "shipping_wake_words": [
+            str(row["text"]) for row in keyword_identity["keywords"]
+        ],
+        "keyword_set_sha256": str(keyword_identity["keyword_set_sha256"]),
+        "keyword_count": int(keyword_identity["keyword_count"]),
         "product_speech_like_base_required": require_product_speech_like_base,
         "product_external_base_bundle_sha256": (
             str(product_data["external_base_bundle_sha256"]) if product_data else None
