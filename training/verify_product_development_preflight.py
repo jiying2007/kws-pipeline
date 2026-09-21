@@ -34,14 +34,14 @@ def expected_keyword_ids_from_config(config_path: pathlib.Path) -> tuple[str, ..
         if not text or text.startswith("#"):
             continue
         parts = raw.split("\t")
-        if not parts or not parts[0].strip():
-            raise ValueError(f"keywords line {line_no} is missing an id")
+        if len(parts) != 4 or not parts[0].strip():
+            raise ValueError(f"keywords line {line_no} must contain 4 TSV columns")
         try:
             keyword_id = int(parts[0].strip())
         except ValueError as exc:
             raise ValueError(f"keywords line {line_no} id is invalid") from exc
-        if keyword_id <= 0:
-            raise ValueError(f"keywords line {line_no} id must be positive")
+        if keyword_id < 0 or keyword_id > 0xFFFFFFFF:
+            raise ValueError(f"keywords line {line_no} id must fit uint32")
         rows.append(str(keyword_id))
     if not rows:
         raise ValueError("preflight keyword set is empty")
