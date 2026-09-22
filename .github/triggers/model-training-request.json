@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-base-wake-balanced-preflight-v1-20260921",
+  "request_id": "rotate-train-acoustics-preflight-v1-20260922",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #213 added per-keyword provenance-pressure balancing to base rounds. Preserve 12 base epochs with 6 warm-start epochs, the full bounded adversarial search/replay semantics, and 6 refinement epochs; keep seeds, augmentation, scene rendering, scoring order, thresholds, curriculum, gates and qualification semantics unchanged. Full governed training remains blocked unless the existing per-keyword collapse guard passes."
+  "reason": "Run only the split-stage bounded product speech-like preflight with #172 train-only acoustic round rotation applied on top of current main. Preserve fixed calibration/test/qualification scene seeds, existing thresholds, gates, curriculum, wake-pressure balancing, adversarial mining/replay semantics, and qualification semantics. Use this preflight to test whether rotating only training acoustics prevents the refinement strict dual-pass collapse observed in governed model-training run 35669966740. Do not authorize full governed training from this validation PR."
 }
