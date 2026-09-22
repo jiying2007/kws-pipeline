@@ -162,7 +162,12 @@ jobs:
           assert p["replay_voice_scope"]=="train-only"
           assert p["replay_backend"]=="command"
           assert p["replay_tone_allowed"] is False
-          print("product speech-like base contract: ok")
+          replay=json.loads(pathlib.Path("configs/training/product-replay-provider-semantic-v1.json").read_text())
+          assert replay["policy"]=="product-replay-provider-semantic-v1"
+          assert replay["semantic_identity_sha256"]=="9b0fd7f00914a074ce610d2b2d604848c8053b68c9bc044d9abcd20b2f6bf916"
+          assert replay["replay_train_voice_slots"]==8
+          assert replay["replay_voice_scope"]=="train-only"
+          print("product speech-like base + replay semantic contracts: ok")
           PY
       - name: Verify promoted model keeps product data lineage
         run: |
@@ -175,6 +180,10 @@ jobs:
           assert "product-speech-like-base-contract.json" in finalizer
           assert "training-invocation.json" in finalizer
           assert "base_contract_sha256" in materializer
+          assert "replay_provider_semantic_contract_sha256" in materializer
+          assert "replay_provider_execution_identity_sha256" in materializer
+          assert "replay-provider-semantic-contract.json" in finalizer
+          assert "xiaowo-replay-provider-semantic-contract.json" in promoter
           assert "source_template_config_sha256" in materializer
           assert "xiaowo-effective-training-config.json" in promoter
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
