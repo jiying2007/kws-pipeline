@@ -22,6 +22,7 @@ on:
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
       - "training/objective_config.py"
+      - "training/objective_contract.py"
       - "training/path_purity.py"
       - "training/export_model.py"
       - "training/test_sequence_margin.py"
@@ -48,6 +49,7 @@ on:
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
       - "training/objective_config.py"
+      - "training/objective_contract.py"
       - "training/path_purity.py"
       - "training/export_model.py"
       - "training/test_sequence_margin.py"
@@ -82,6 +84,7 @@ jobs:
           training/adversarial_refinement.py
           training/train_ctc.py
           training/objective_config.py
+          training/objective_contract.py
           training/path_purity.py
           training/export_model.py
           training/test_sequence_margin.py
