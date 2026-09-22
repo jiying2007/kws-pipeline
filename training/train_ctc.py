@@ -27,6 +27,12 @@ from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completi
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
+from objective_config import PATH_PURITY_LOSS_WEIGHT_DEFAULT
+from path_purity import (
+    PATH_PURITY_MARGIN_DEFAULT,
+    PATH_PURITY_MARGIN_MAX,
+    ordered_path_purity_loss,
+)
 from sequence_margin import keyword_sequence_margin_loss
 from synthetic_audio import UINT32_MAX
 
@@ -159,6 +165,8 @@ def training_environment() -> dict:
         ROOT / "training" / "synthetic_audio.py",
         ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
+        ROOT / "training" / "objective_config.py",
+        ROOT / "training" / "path_purity.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
@@ -766,6 +774,16 @@ def main() -> None:
         default=RECURRENT_RELEASE_LOSS_WEIGHT,
     )
     parser.add_argument(
+        "--path-purity-loss-weight",
+        type=float,
+        default=PATH_PURITY_LOSS_WEIGHT_DEFAULT,
+    )
+    parser.add_argument(
+        "--path-purity-margin",
+        type=float,
+        default=PATH_PURITY_MARGIN_DEFAULT,
+    )
+    parser.add_argument(
         "--require-container-digest",
         action="store_true",
         help="fail unless KWS_TRAINING_IMAGE_DIGEST is a pinned sha256 digest",
@@ -805,10 +823,18 @@ def main() -> None:
         "keyword_sequence_margin_loss_weight",
         "prefix_completion_loss_weight",
         "recurrent_release_loss_weight",
+        "path_purity_loss_weight",
     ):
         value = float(getattr(args, name))
         if not math.isfinite(value) or value < 0.0:
             parser.error(f"--{name.replace('_', '-')} must be finite and >= 0")
+    if (
+        not math.isfinite(args.path_purity_margin)
+        or not 0.0 <= args.path_purity_margin <= PATH_PURITY_MARGIN_MAX
+    ):
+        parser.error(
+            f"--path-purity-margin must be finite and in [0,{PATH_PURITY_MARGIN_MAX}]"
+        )
     if not math.isfinite(KEYWORD_SEQUENCE_MARGIN) or KEYWORD_SEQUENCE_MARGIN <= 0.0:
         parser.error("keyword sequence margin must be finite and > 0")
     if (
@@ -878,6 +904,7 @@ def main() -> None:
         total_margin = 0.0
         total_completion = 0.0
         total_release = 0.0
+        total_path_purity = 0.0
         ordered_correct = 0
         ordered_total = 0
         for x, y, xlen, ylen in loader:
@@ -943,12 +970,30 @@ def main() -> None:
                 float(weight_statistics["all_mean_weight"]),
             )
             release_loss = recurrent_release_loss(log_probs, xlen)
+            if args.path_purity_loss_weight > 0.0:
+                path_purity_per_sample = ordered_path_purity_loss(
+                    log_probs=log_probs,
+                    targets=y,
+                    input_lengths=xlen,
+                    target_lengths=ylen,
+                    keyword_sequences=keyword_sequences,
+                    blank=0,
+                    margin=args.path_purity_margin,
+                )
+                path_purity_loss = normalized_weighted_mean(
+                    path_purity_per_sample,
+                    sample_weights,
+                    float(weight_statistics["all_mean_weight"]),
+                )
+            else:
+                path_purity_loss = log_probs.sum() * 0.0
             loss = (
                 ctc_loss
                 + args.ordered_token_loss_weight * ordered_loss
                 + args.keyword_sequence_margin_loss_weight * margin_loss
                 + args.prefix_completion_loss_weight * completion_loss
                 + args.recurrent_release_loss_weight * release_loss
+                + args.path_purity_loss_weight * path_purity_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -960,6 +1005,7 @@ def main() -> None:
             total_margin += float(margin_loss.detach())
             total_completion += float(completion_loss.detach())
             total_release += float(release_loss.detach())
+            total_path_purity += float(path_purity_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
         batches = max(1, len(loader))
@@ -972,6 +1018,7 @@ def main() -> None:
             "margin": total_margin / batches,
             "completion": total_completion / batches,
             "release": total_release / batches,
+            "path_purity": total_path_purity / batches,
             "ordered_token_accuracy": ordered_accuracy,
         }
         epoch_history.append(epoch_metrics)
@@ -980,6 +1027,7 @@ def main() -> None:
             f"ctc={epoch_metrics['ctc']:.6f} ordered={epoch_metrics['ordered']:.6f} "
             f"margin={epoch_metrics['margin']:.6f} completion={epoch_metrics['completion']:.6f} "
             f"release={epoch_metrics['release']:.6f} "
+            f"path_purity={epoch_metrics['path_purity']:.6f} "
             f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}"
         )
 
@@ -1039,6 +1087,9 @@ def main() -> None:
             "recurrent_release_context_steps": RECURRENT_RELEASE_CONTEXT_STEPS,
             "recurrent_release_tail_mode": "terminal-context-repeat",
             "recurrent_release_loss_weight": args.recurrent_release_loss_weight,
+            "path_purity_loss_weight": args.path_purity_loss_weight,
+            "path_purity_margin": args.path_purity_margin,
+            "path_purity_policy": "ordered-active-wake-competitor-hinge-v1",
             "hard_negative_capable": True,
             "training_environment": environment,
         },
