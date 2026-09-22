@@ -130,6 +130,8 @@ def main() -> int:
             "keyword_pack_sha256": "4" * 64,
             "parameter_contract_sha256": "1" * 64,
             "root_start_logit_margin": 0.5,
+            "event_match_pre_tolerance_ms": 150.0,
+            "event_match_post_tolerance_ms": 500.0,
             "max_recordings_per_keyword_split": 8,
             "model": {"feature_dim": 32, "hidden_dim": 64, "vocab_size": 5},
             "aggregates": {
@@ -167,6 +169,8 @@ def main() -> int:
         assert compact_acoustic["aggregates"]["calibration"]["1"]["recordings"] == 8
         assert compact_acoustic["runner_sha256"] == "3" * 64
         assert compact_acoustic["keyword_pack_sha256"] == "4" * 64
+        assert compact_acoustic["event_match_pre_tolerance_ms"] == 150.0
+        assert compact_acoustic["event_match_post_tolerance_ms"] == 500.0
         assert "records" not in compact_acoustic
         row = result["development"]["rounds"][0]
         operating = row["calibration_operating_point"]
