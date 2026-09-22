@@ -410,14 +410,16 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      /* Starting a keyword from the root requires either dominant evidence or
-       * a near-tied competing token that is itself a configured keyword root.
-       * Once a prefix exists, preserve fuzzy child competition, but charge a
-       * non-top child against the cumulative path budget so repeated secondary
-       * posterior advances cannot synthesize a full wake sequence. */
+      /* Starting a keyword from the root accepts dominant evidence plus two
+       * bounded ambiguity cases: CTC blank may remain top-1 while a root token
+       * is already acoustically competitive, and two configured keyword roots
+       * may be near-tied. An unrelated non-root top token still blocks the
+       * start so hard-negative shadow paths cannot synthesize a wake. Once a
+       * prefix exists, preserve fuzzy child competition, but charge a non-top
+       * child against the cumulative path budget. */
       if (base > NEG_INF / 2.0f &&
           (i != 0u || top_token == token ||
-           (top_is_keyword_root != 0 &&
+           ((blank_dominant != 0 || top_is_keyword_root != 0) &&
             logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
