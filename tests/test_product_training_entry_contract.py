@@ -135,8 +135,14 @@ def main() -> int:
         ROOT / ".github/workflows/model-training-preflight.yml"
     ).read_text(encoding="utf-8")
     assert "governed preflight request PR must be request-only" in preflight_workflow
+    assert "development experiment PR must be experiment-only" in preflight_workflow
+    assert "governed request and development experiment may not change together" in preflight_workflow
+    assert ".github/triggers/model-training-experiment.json" in preflight_workflow
     assert 'git diff --name-only "$BASE_SHA" "$HEAD_SHA"' in preflight_workflow
-    assert 'if [[ "$path" != ".github/triggers/model-training-request.json" ]]' in preflight_workflow
+    assert "allowed_path=.github/triggers/model-training-request.json" in preflight_workflow
+    assert "allowed_path=.github/triggers/model-training-experiment.json" in preflight_workflow
+    assert "training/preflight_experiment.py apply" in preflight_workflow
+    assert "training/preflight_experiment.py verify-receipt" in preflight_workflow
     assert "--provider-only" in materializer
     assert "--replay-provider" in materializer
     assert "--voice-inventory" in materializer
