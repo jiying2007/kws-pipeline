@@ -124,7 +124,7 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
           cmake --build build --parallel --target \
-            kws_wav kws_decoder_tests kws_decoder_retention_tests
+            kws_wav kws_feature_dump kws_decoder_tests kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
 
       - name: Install pinned CPU training runtime
@@ -197,6 +197,16 @@ jobs:
           echo "refinement_eligible=$refinement_eligible" >> "$GITHUB_OUTPUT"
           echo "base refinement eligible: $refinement_eligible"
 
+      - name: Diagnose acoustic model before decoder
+        run: |
+          .venv/bin/python tools/diagnose_acoustic_alignment.py \
+            --config "$KWS_PREFLIGHT_CONFIG" \
+            --manifest "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json" \
+            --feature-dump build/kws_feature_dump \
+            --max-per-keyword-split 8 \
+            --output "$KWS_PREFLIGHT_WORK/acoustic-alignment.json"
+          test -s "$KWS_PREFLIGHT_WORK/acoustic-alignment.json"
+
       - name: Build compact base diagnostics
         run: |
           python3 tools/build_training_diagnostics.py \
@@ -235,6 +245,7 @@ jobs:
           path: |
             build/model-training-preflight/compact-base-diagnostics.json
             build/model-training-preflight/base-refinement-eligibility.json
+            build/model-training-preflight/acoustic-alignment.json
           if-no-files-found: error
           retention-days: 14
 
