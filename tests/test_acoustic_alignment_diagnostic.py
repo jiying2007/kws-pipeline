@@ -19,6 +19,7 @@ from diagnose_acoustic_alignment import (  # noqa: E402
     load_model,
     longest_prefix_subsequence,
     parse_runtime_detections,
+    runtime_match_summary,
     stable_sample,
 )
 
@@ -108,6 +109,27 @@ def main() -> int:
         )
         assert [row["keyword_id"] for row in detections] == [1, 2]
         assert detections[0]["confidence"] == 0.73
+        matched = runtime_match_summary(
+            [
+                {"keyword_id": 1, "time_s": 0.85, "confidence": 0.73},
+                {"keyword_id": 1, "time_s": 1.71, "confidence": 0.81},
+                {"keyword_id": 2, "time_s": 1.00, "confidence": 0.66},
+            ],
+            keyword_id=1,
+            event_start_frame=16000,
+            event_end_frame=19200,
+            recording_frames=32000,
+            sample_rate_hz=16000,
+        )
+        assert matched["runtime_expected_detection_count"] == 2
+        assert matched["runtime_expected_matched_count"] == 1
+        assert matched["runtime_out_of_window_expected_detection_count"] == 1
+        assert matched["runtime_wrong_keyword_in_window_count"] == 1
+        assert matched["runtime_matched_expected"] is True
+        assert matched["runtime_max_matched_expected_confidence"] == 0.73
+        assert matched["match_pre_tolerance_ms"] == 150.0
+        assert matched["match_post_tolerance_ms"] == 500.0
+
         try:
             parse_runtime_detections(
                 '{"recording":"other","keyword_id":1,"time_s":0.1,"confidence":0.7}\n',
