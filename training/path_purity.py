@@ -5,8 +5,7 @@ import math
 import torch
 
 
-PATH_PURITY_MARGIN_DEFAULT = 0.10
-PATH_PURITY_MARGIN_MAX = 2.0
+from objective_contract import PATH_PURITY_MARGIN_DEFAULT, PATH_PURITY_MARGIN_MAX
 
 
 def _target_rows(
