@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from adversarial_refinement import select_refinement_source  # noqa: E402
 from kws_vocab import load_tokens  # noqa: E402
 
-EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v1"
+EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v2"
 MODEL_HEADER = struct.Struct("<4sHHHHHHIIIfffQIIIIII")
 MODEL_MAGIC = b"KWSP"
 MODEL_VERSION = 2
