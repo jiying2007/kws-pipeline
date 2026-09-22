@@ -104,9 +104,43 @@ def main() -> int:
         (work / "base-refinement-eligibility.json").write_text(
             json.dumps(eligibility), encoding="utf-8"
         )
+        acoustic = {
+            "schema_version": 1,
+            "evidence_class": "kws-acoustic-alignment-diagnostic-v1",
+            "development_only": True,
+            "source_round": 0,
+            "source_frontend": "logmel",
+            "source_selection_policy": "development-recall-first-refinement-source-v1",
+            "source_was_strict": False,
+            "model_sha256": "b" * 64,
+            "tokens_sha256": "c" * 64,
+            "keywords_sha256": "d" * 64,
+            "domain_index_sha256": "e" * 64,
+            "feature_dump_sha256": "f" * 64,
+            "parameter_contract_sha256": "1" * 64,
+            "root_start_logit_margin": 0.5,
+            "max_recordings_per_keyword_split": 8,
+            "model": {"feature_dim": 32, "hidden_dim": 64, "vocab_size": 5},
+            "aggregates": {
+                "calibration": {
+                    "1": {"recordings": 8, "decoder_root_admissible_recordings": 1}
+                },
+                "test": {
+                    "1": {"recordings": 8, "decoder_root_admissible_recordings": 2}
+                },
+            },
+            "records": [{"wav_sha256": "2" * 64}],
+        }
+        (work / "acoustic-alignment.json").write_text(
+            json.dumps(acoustic), encoding="utf-8"
+        )
 
         result = build(config, work)
         assert result["development"]["refinement_eligibility"]["eligible"] is True
+        compact_acoustic = result["development"]["acoustic_alignment"]
+        assert compact_acoustic["source_round"] == 0
+        assert compact_acoustic["aggregates"]["calibration"]["1"]["recordings"] == 8
+        assert "records" not in compact_acoustic
         row = result["development"]["rounds"][0]
         operating = row["calibration_operating_point"]
         assert operating["grid_saturated"] is True
@@ -118,6 +152,7 @@ def main() -> int:
         assert confusion["matrix"] == {"1": {"2": 1}}
         file_rows = {item["path"]: item for item in result["files"]}
         assert file_rows["base-refinement-eligibility.json"]["present"] is True
+        assert file_rows["acoustic-alignment.json"]["present"] is True
         assert result["diagnostic_errors"] == {}
 
     print("compact training diagnostics: PASS")
