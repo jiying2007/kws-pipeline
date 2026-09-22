@@ -115,7 +115,7 @@ def main() -> int:
         )
         acoustic = {
             "schema_version": 1,
-            "evidence_class": "kws-acoustic-alignment-diagnostic-v2",
+            "evidence_class": "kws-acoustic-alignment-diagnostic-v3",
             "development_only": True,
             "source_round": 0,
             "source_frontend": "logmel",
@@ -142,6 +142,12 @@ def main() -> int:
                         "surrogate_above_threshold_recordings": 3,
                         "surrogate_above_threshold_runtime_miss_recordings": 2,
                         "greedy_subsequence_runtime_miss_recordings": 2,
+                        "runtime_decoder_hit_recordings": 2,
+                        "runtime_decoder_hit_without_expected_match_recordings": 1,
+                        "surrogate_above_threshold_without_decoder_hit_recordings": 1,
+                        "runtime_pending_prefix_recordings": 1,
+                        "runtime_refractory_suppressed_recordings": 0,
+                        "runtime_zero_speech_recordings": 0,
                         "decoder_root_admissible_recordings": 1,
                     }
                 },
@@ -152,6 +158,12 @@ def main() -> int:
                         "surrogate_above_threshold_recordings": 2,
                         "surrogate_above_threshold_runtime_miss_recordings": 1,
                         "greedy_subsequence_runtime_miss_recordings": 1,
+                        "runtime_decoder_hit_recordings": 1,
+                        "runtime_decoder_hit_without_expected_match_recordings": 1,
+                        "surrogate_above_threshold_without_decoder_hit_recordings": 0,
+                        "runtime_pending_prefix_recordings": 0,
+                        "runtime_refractory_suppressed_recordings": 0,
+                        "runtime_zero_speech_recordings": 1,
                         "decoder_root_admissible_recordings": 2,
                     }
                 },
@@ -225,6 +237,30 @@ def main() -> int:
             (row["split"], row["same_sample_runtime_misses"])
             for row in surrogate_gaps["occurrences"]
         } == {("calibration", 2), ("test", 1)}
+        path_gaps = signals["surrogate_above_threshold_without_decoder_hit"]
+        assert path_gaps["observed"] is True
+        assert path_gaps["occurrences"] == [
+            {
+                "round": 0,
+                "split": "calibration",
+                "keyword_id": "1",
+                "sampled_recordings": 8,
+                "same_sample_no_decoder_hit": 1,
+                "evidence": "same-sample-engine-stats-v1",
+            }
+        ]
+        event_gaps = signals["decoder_hit_without_expected_event_match"]
+        assert event_gaps["observed"] is True
+        assert {
+            (row["split"], row["same_sample_decoder_hit_event_miss"])
+            for row in event_gaps["occurrences"]
+        } == {("calibration", 1), ("test", 1)}
+        zero_speech = signals["runtime_zero_speech"]
+        assert zero_speech["observed"] is True
+        assert zero_speech["occurrences"][0]["split"] == "test"
+        pending = signals["runtime_pending_prefix"]
+        assert pending["observed"] is True
+        assert pending["occurrences"][0]["split"] == "calibration"
         assert signals["sampled_acoustic_sequence_absent"]["observed"] is False
         assert result["diagnostic_errors"] == {}
 

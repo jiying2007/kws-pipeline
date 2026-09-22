@@ -19,6 +19,7 @@ from diagnose_acoustic_alignment import (  # noqa: E402
     load_model,
     longest_prefix_subsequence,
     parse_runtime_detections,
+    parse_runtime_stats,
     runtime_match_summary,
     stable_sample,
 )
@@ -109,6 +110,45 @@ def main() -> int:
         )
         assert [row["keyword_id"] for row in detections] == [1, 2]
         assert detections[0]["confidence"] == 0.73
+        stats = parse_runtime_stats(
+            {
+                "schema_version": 1,
+                "processed_samples": 32000,
+                "processed_frames": 99,
+                "speech_frames": 61,
+                "blank_top1_frames": 72,
+                "decoder_hits": 3,
+                "refractory_suppressed": 1,
+                "detections": 2,
+                "pending_keyword_index": -1,
+                "pending_age_frames": 0,
+                "max_detection_confidence": 0.77,
+            }
+        )
+        assert stats["speech_frames"] == 61
+        assert stats["decoder_hits"] == 3
+        assert stats["refractory_suppressed"] == 1
+        try:
+            parse_runtime_stats(
+                {
+                    "schema_version": 1,
+                    "processed_samples": 32000,
+                    "processed_frames": 10,
+                    "speech_frames": 11,
+                    "blank_top1_frames": 5,
+                    "decoder_hits": 0,
+                    "refractory_suppressed": 0,
+                    "detections": 0,
+                    "pending_keyword_index": -1,
+                    "pending_age_frames": 0,
+                    "max_detection_confidence": 0.0,
+                }
+            )
+        except ValueError as exc:
+            assert "speech_frames exceeds processed_frames" in str(exc)
+        else:
+            raise AssertionError("invalid runtime stats were accepted")
+
         matched = runtime_match_summary(
             [
                 {"keyword_id": 1, "time_s": 0.85, "confidence": 0.73},
