@@ -433,6 +433,11 @@ def main() -> int:
     else:
         raise AssertionError("qualification-backed refinement source was accepted")
 
+    refinement_source = (ROOT / "training/adversarial_refinement.py").read_text(
+        encoding="utf-8"
+    )
+    assert "optional_objective_cli_args(train)" in refinement_source
+
     print("adversarial refinement source/provenance-first wake pressure balance: PASS")
     return 0
 
