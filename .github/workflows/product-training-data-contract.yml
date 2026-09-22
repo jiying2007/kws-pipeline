@@ -7,6 +7,7 @@ on:
       - "fix/product-training-speech-like-v1"
     paths:
       - "configs/training/product-speech-like-base-v1.json"
+      - "configs/training/product-replay-provider-semantic-v1.json"
       - "training/materialize_product_training_config.py"
       - "training/materialize_governed_product_base.sh"
       - "training/require_product_development_preflight.sh"
@@ -32,11 +33,13 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
   pull_request:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
+      - "configs/training/product-replay-provider-semantic-v1.json"
       - "training/materialize_product_training_config.py"
       - "training/materialize_governed_product_base.sh"
       - "training/require_product_development_preflight.sh"
@@ -62,6 +65,7 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
 
