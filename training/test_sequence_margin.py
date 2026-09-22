@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from completion_loss import strict_prefix_completion_loss
 from sequence_margin import keyword_sequence_margin_loss
 from train_ctc import (
+    exact_keyword_sample_mask,
     normalized_weighted_mean,
     ordered_token_loss,
     sample_weight_statistics,
@@ -222,6 +223,15 @@ def main() -> int:
         per_keyword_weights,
         torch.tensor([4.25, 2.75, 1.0, 1.0], dtype=torch.float32),
     )
+    exact_mask = exact_keyword_sample_mask(
+        wake_targets,
+        wake_lengths,
+        [[1, 2, 3, 4], [3, 4, 3, 4]],
+    )
+    assert torch.equal(
+        exact_mask,
+        torch.tensor([True, True, False, False], dtype=torch.bool),
+    )
 
     stats = sample_weight_statistics(
         [
@@ -240,6 +250,8 @@ def main() -> int:
     assert stats["rows"] == 4
     assert stats["nonempty_rows"] == 3
     assert stats["exact_wake_rows"] == 2
+    assert abs(float(stats["exact_wake_weight_sum"]) - 12.0) < 1.0e-12
+    assert abs(float(stats["exact_wake_mean_weight"]) - 6.0) < 1.0e-12
     assert abs(float(stats["all_weight_sum"]) - 15.0) < 1.0e-12
     assert abs(float(stats["all_mean_weight"]) - 3.75) < 1.0e-12
     assert abs(float(stats["nonempty_weight_sum"]) - 14.0) < 1.0e-12
@@ -297,6 +309,15 @@ def main() -> int:
         torch.tensor([4.0, 1.0], dtype=torch.float32),
         normalization_mean_weight=2.5,
     )
+    wake_only_ordered, wake_only_correct, wake_only_total = ordered_token_loss(
+        ordered_log_probs,
+        ordered_targets,
+        ordered_input_lengths,
+        ordered_target_lengths,
+        torch.tensor([4.0, 1.0], dtype=torch.float32),
+        normalization_mean_weight=4.0,
+        sample_mask=torch.tensor([True, False], dtype=torch.bool),
+    )
     ordered_first, _, _ = ordered_token_loss(
         ordered_log_probs[:, :1, :],
         torch.tensor([1], dtype=torch.long),
@@ -316,6 +337,11 @@ def main() -> int:
     assert abs(float(equal_weight_ordered.item()) - float(unweighted_ordered.item())) < 1.0e-7
     assert float(wake_weighted_ordered.item()) > float(unweighted_ordered.item())
     assert abs(float(normalized_ordered.item()) - float(wake_weighted_ordered.item())) < 1.0e-7
+    assert wake_only_total == 1
+    assert wake_only_correct == 0
+    assert abs(
+        float(wake_only_ordered.item()) - float(ordered_first.item())
+    ) < 1.0e-7
     assert abs(
         float(normalized_ordered.item())
         - float(((ordered_first + ordered_second) / 2.0).item())
