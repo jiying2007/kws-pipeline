@@ -112,6 +112,7 @@ def main() -> int:
         matched = runtime_match_summary(
             [
                 {"keyword_id": 1, "time_s": 0.85, "confidence": 0.73},
+                {"keyword_id": 1, "time_s": 1.19, "confidence": 0.77},
                 {"keyword_id": 1, "time_s": 1.71, "confidence": 0.81},
                 {"keyword_id": 2, "time_s": 1.00, "confidence": 0.66},
             ],
@@ -121,12 +122,15 @@ def main() -> int:
             recording_frames=32000,
             sample_rate_hz=16000,
         )
-        assert matched["runtime_expected_detection_count"] == 2
+        assert matched["runtime_expected_detection_count"] == 3
+        assert matched["runtime_expected_in_window_detection_count"] == 2
         assert matched["runtime_expected_matched_count"] == 1
         assert matched["runtime_out_of_window_expected_detection_count"] == 1
+        assert matched["runtime_extra_in_window_expected_detection_count"] == 1
+        assert matched["runtime_false_accept_like_detection_count"] == 3
         assert matched["runtime_wrong_keyword_in_window_count"] == 1
         assert matched["runtime_matched_expected"] is True
-        assert matched["runtime_max_matched_expected_confidence"] == 0.73
+        assert matched["runtime_matched_expected_confidence"] == 0.77
         assert matched["match_pre_tolerance_ms"] == 150.0
         assert matched["match_post_tolerance_ms"] == 500.0
 
