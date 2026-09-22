@@ -205,6 +205,13 @@ def main() -> int:
         assert result["domains"]["azimuth:rear"]["expected"] == 0
         assert result["domains"]["azimuth:rear"]["negative_audio_hours"] > 0.0
         assert result["domains"]["azimuth:rear"]["false_accepts"] == 1
+        assert result["domains"]["azimuth:rear"]["negative_recording_false_accepts"] == 1
+        assert result["domains"]["azimuth:rear"]["negative_recording_audio_hours"] > 0.0
+        assert result["domains"]["azimuth:rear"]["negative_recording_far_per_hour"] > 0.0
+        assert (
+            result["domains"]["azimuth:rear"]["negative_recording_far_upper_95_per_hour"]
+            > result["domains"]["azimuth:rear"]["negative_recording_far_per_hour"]
+        )
         assert result["domains"]["distance_azimuth:distance_bin=5m|azimuth=rear"]["false_accepts"] == 1
         assert result["domains"]["distance_snr:distance_bin=5m|snr=critical"]["false_accepts"] == 2
         assert result["domains"]["azimuth_snr:azimuth=rear|snr=critical"]["negative_recordings"] == 1
