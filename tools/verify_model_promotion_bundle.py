@@ -114,6 +114,7 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
     optional_lineage = {
         "effective-training-config.json": "xiaowo-effective-training-config.json",
         "product-speech-like-base-contract.json": "xiaowo-product-speech-like-base-contract.json",
+        "replay-provider-semantic-contract.json": "xiaowo-replay-provider-semantic-contract.json",
         "training-invocation.json": "training-invocation.json",
     }
     present = {
@@ -121,12 +122,25 @@ def copy_required(root: pathlib.Path, dist: pathlib.Path) -> dict[str, pathlib.P
         for source_name in optional_lineage
     }
     present_count = sum(path is not None for path in present.values())
-    if present_count not in (0, len(optional_lineage)):
-        raise ValueError("product training lineage must be absent as legacy or present as a complete set")
+    legacy_names = {
+        "effective-training-config.json",
+        "product-speech-like-base-contract.json",
+        "training-invocation.json",
+    }
+    legacy_complete = (
+        present_count == len(legacy_names)
+        and all(present[name] is not None for name in legacy_names)
+        and present["replay-provider-semantic-contract.json"] is None
+    )
+    if present_count != 0 and not legacy_complete and present_count != len(optional_lineage):
+        raise ValueError(
+            "product training lineage must be absent, legacy-complete, or semantic-complete"
+        )
     if present_count:
         for source_name, target_name in optional_lineage.items():
             source = present[source_name]
-            assert source is not None
+            if source is None:
+                continue
             target = dist / target_name
             shutil.copy2(source, target)
             copied[target_name] = target
@@ -298,6 +312,35 @@ def verify(args: argparse.Namespace) -> dict:
         for field in ("release_tag", "external_base_bundle_sha256", "provider_identity_sha256"):
             if str(product_data.get(field) or "") != str(base_contract.get(field) or ""):
                 raise ValueError(f"effective/base contract {field} mismatch")
+
+        replay_policy = str(
+            product_data.get("replay_provider_semantic_identity_policy") or ""
+        )
+        if replay_policy:
+            if replay_policy != "product-replay-provider-semantic-v1":
+                raise ValueError("promoted replay semantic identity policy mismatch")
+            replay_contract_path = dist / "xiaowo-replay-provider-semantic-contract.json"
+            require_file(replay_contract_path, "replay provider semantic contract")
+            if sha256(replay_contract_path) != str(
+                product_data.get("replay_provider_semantic_contract_sha256") or ""
+            ):
+                raise ValueError("effective replay semantic contract SHA mismatch")
+            replay_contract = load_json(
+                replay_contract_path, "replay provider semantic contract"
+            )
+            if replay_contract.get("policy") != replay_policy:
+                raise ValueError("promoted replay semantic contract policy mismatch")
+            if str(replay_contract.get("semantic_identity_sha256") or "") != str(
+                product_data.get("replay_provider_identity_sha256") or ""
+            ):
+                raise ValueError("promoted replay semantic identity mismatch")
+            execution_identity = str(
+                product_data.get("replay_provider_execution_identity_sha256") or ""
+            )
+            require_sha(execution_identity, "replay provider execution identity")
+        elif (dist / "xiaowo-replay-provider-semantic-contract.json").exists():
+            raise ValueError("legacy promoted model unexpectedly carries replay semantic contract")
+
         external = effective.get("generator", {}).get("external_base_dataset")
         if not isinstance(external, dict) or set(external) != {
             "train", "calibration", "test", "qualification"
