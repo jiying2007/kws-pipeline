@@ -48,6 +48,17 @@ jobs:
           if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
             echo "request_changed=false" >> "$GITHUB_OUTPUT"
           else
+            mapfile -t changed_paths < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+            unexpected=()
+            for path in "${changed_paths[@]}"; do
+              if [[ "$path" != ".github/triggers/model-training-request.json" ]]; then
+                unexpected+=("$path")
+              fi
+            done
+            if (( ${#unexpected[@]} != 0 )); then
+              printf 'governed preflight request PR must be request-only; unexpected path: %s\n' "${unexpected[@]}" >&2
+              exit 1
+            fi
             echo "request_changed=true" >> "$GITHUB_OUTPUT"
           fi
 

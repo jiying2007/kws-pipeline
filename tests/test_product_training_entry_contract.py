@@ -119,6 +119,12 @@ def main() -> int:
     assert verified_request["source_policy"] == "exact-current-main"
     assert "training/training_request.py verify" in workflow
     assert "training/training_request.py write-receipt" in workflow
+    preflight_workflow = (
+        ROOT / ".github/workflows/model-training-preflight.yml"
+    ).read_text(encoding="utf-8")
+    assert "governed preflight request PR must be request-only" in preflight_workflow
+    assert 'git diff --name-only "$BASE_SHA" "$HEAD_SHA"' in preflight_workflow
+    assert 'if [[ "$path" != ".github/triggers/model-training-request.json" ]]' in preflight_workflow
     assert "--provider-only" in materializer
     assert "--replay-provider" in materializer
     assert "--voice-inventory" in materializer
