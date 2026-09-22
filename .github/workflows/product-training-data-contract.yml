@@ -17,7 +17,9 @@ on:
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/training_request.py"
+      - "training/preflight_experiment.py"
       - ".github/triggers/model-training-request.json"
+      - ".github/triggers/model-training-experiment.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
@@ -44,7 +46,9 @@ on:
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/training_request.py"
+      - "training/preflight_experiment.py"
       - ".github/triggers/model-training-request.json"
+      - ".github/triggers/model-training-experiment.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
@@ -81,6 +85,7 @@ jobs:
           tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
           training/training_request.py
+          training/preflight_experiment.py
           training/adversarial_refinement.py
           training/train_ctc.py
           training/objective_config.py
@@ -90,6 +95,8 @@ jobs:
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
           tests/test_adversarial_refinement_source.py
+      - name: Development preflight experiment contract
+        run: python3 training/preflight_experiment.py --self-test
       - name: Governed product training shell syntax
         run: |
           bash -n training/materialize_governed_product_base.sh
