@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - '.github/triggers/model-training-request.json'
+      - '.github/triggers/model-training-experiment.json'
+      - 'training/preflight_experiment.py'
       - '.github/workflows/model-training-preflight.yml'
 
 permissions:
@@ -17,7 +19,9 @@ env:
   KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
   KWS_REPLAY_PROVIDER_ROOT: .generated/product-replay-provider
   KWS_TRAINING_REQUEST: .github/triggers/model-training-request.json
+  KWS_PREFLIGHT_EXPERIMENT: .github/triggers/model-training-experiment.json
   KWS_PREFLIGHT_CONFIG: .generated/xiaowo.product-preflight.json
+  KWS_PREFLIGHT_EXPERIMENT_RECEIPT: build/model-training-preflight/preflight-experiment-receipt.json
   KWS_PREFLIGHT_WORK: build/model-training-preflight
   KWS_PREFLIGHT_HANDOFF: build/product-preflight-handoff/base-stage.tar
   KWS_PREFLIGHT_HANDOFF_METADATA: build/product-preflight-handoff/manifest.json
@@ -31,6 +35,8 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       request_changed: ${{ steps.diff.outputs.request_changed }}
+      experiment_changed: ${{ steps.diff.outputs.experiment_changed }}
+      trigger_mode: ${{ steps.diff.outputs.trigger_mode }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,26 +51,57 @@ jobs:
           set -euo pipefail
           git cat-file -e "$BASE_SHA^{commit}"
           git cat-file -e "$HEAD_SHA^{commit}"
-          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
-            echo "request_changed=false" >> "$GITHUB_OUTPUT"
-          else
+          request_changed=false
+          experiment_changed=false
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
+            request_changed=true
+          fi
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-experiment.json; then
+            experiment_changed=true
+          fi
+          if [[ "$request_changed" == true && "$experiment_changed" == true ]]; then
+            echo "governed request and development experiment may not change together" >&2
+            exit 1
+          fi
+
+          trigger_mode=none
+          allowed_path=
+          if [[ "$request_changed" == true ]]; then
+            trigger_mode=request
+            allowed_path=.github/triggers/model-training-request.json
+          elif [[ "$experiment_changed" == true ]]; then
+            trigger_mode=experiment
+            allowed_path=.github/triggers/model-training-experiment.json
+          fi
+
+          if [[ "$trigger_mode" != none ]]; then
             mapfile -t changed_paths < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
             unexpected=()
             for path in "${changed_paths[@]}"; do
-              if [[ "$path" != ".github/triggers/model-training-request.json" ]]; then
+              if [[ "$path" != "$allowed_path" ]]; then
                 unexpected+=("$path")
               fi
             done
             if (( ${#unexpected[@]} != 0 )); then
-              printf 'governed preflight request PR must be request-only; unexpected path: %s\n' "${unexpected[@]}" >&2
+              if [[ "$trigger_mode" == request ]]; then
+                printf 'governed preflight request PR must be request-only; unexpected path: %s\n' "${unexpected[@]}" >&2
+              else
+                printf 'development experiment PR must be experiment-only; unexpected path: %s\n' "${unexpected[@]}" >&2
+              fi
               exit 1
             fi
-            echo "request_changed=true" >> "$GITHUB_OUTPUT"
           fi
+          {
+            echo "request_changed=$request_changed"
+            echo "experiment_changed=$experiment_changed"
+            echo "trigger_mode=$trigger_mode"
+          } >> "$GITHUB_OUTPUT"
 
   product-development-base-preflight:
     needs: resolve
-    if: needs.resolve.outputs.request_changed == 'true'
+    if: >-
+      needs.resolve.outputs.request_changed == 'true'
+      || needs.resolve.outputs.experiment_changed == 'true'
     outputs:
       development_qualified: ${{ steps.base_result.outputs.development_qualified }}
       refinement_eligible: ${{ steps.base_result.outputs.refinement_eligible }}
