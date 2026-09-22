@@ -41,8 +41,12 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
-def run(argv: list[str]) -> None:
-    completed = subprocess.run(argv, check=False)
+def run(argv: list[str], *, suppress_stdout: bool = False) -> None:
+    completed = subprocess.run(
+        argv,
+        check=False,
+        stdout=subprocess.DEVNULL if suppress_stdout else None,
+    )
     if completed.returncode != 0:
         raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(argv)}")
 
@@ -185,7 +189,8 @@ def evaluate(
             str(false_positives),
             "--false-rejects",
             str(false_rejects),
-        ]
+        ],
+        suppress_stdout=True,
     )
     run(
         [
@@ -197,7 +202,8 @@ def evaluate(
             str(detections),
             "--output",
             str(domains),
-        ]
+        ],
+        suppress_stdout=True,
     )
     base = json.loads(summary.read_text(encoding="utf-8"))
     base["false_positives_path"] = str(false_positives)
