@@ -27,12 +27,13 @@ from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completi
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
-from objective_config import PATH_PURITY_LOSS_WEIGHT_DEFAULT
-from path_purity import (
+from objective_contract import (
+    PATH_PURITY_LOSS_WEIGHT_DEFAULT,
     PATH_PURITY_MARGIN_DEFAULT,
     PATH_PURITY_MARGIN_MAX,
-    ordered_path_purity_loss,
+    PATH_PURITY_POLICY,
 )
+from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from synthetic_audio import UINT32_MAX
 
@@ -166,6 +167,7 @@ def training_environment() -> dict:
         ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
         ROOT / "training" / "objective_config.py",
+        ROOT / "training" / "objective_contract.py",
         ROOT / "training" / "path_purity.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
@@ -1089,7 +1091,7 @@ def main() -> None:
             "recurrent_release_loss_weight": args.recurrent_release_loss_weight,
             "path_purity_loss_weight": args.path_purity_loss_weight,
             "path_purity_margin": args.path_purity_margin,
-            "path_purity_policy": "ordered-active-wake-competitor-hinge-v1",
+            "path_purity_policy": PATH_PURITY_POLICY,
             "hard_negative_capable": True,
             "training_environment": environment,
         },
