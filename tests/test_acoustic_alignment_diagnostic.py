@@ -13,10 +13,12 @@ sys.path.insert(0, str(ROOT / "tools"))
 from diagnose_acoustic_alignment import (  # noqa: E402
     MODEL_HEADER,
     ctc_log_probability,
+    decoder_surrogate_log_confidence,
     greedy_collapse,
     infer_logits,
     load_model,
     longest_prefix_subsequence,
+    parse_runtime_detections,
     stable_sample,
 )
 
@@ -87,6 +89,34 @@ def main() -> int:
         assert math.isfinite(strong_logp)
         assert math.isfinite(weak_logp)
         assert strong_logp > weak_logp
+
+        surrogate_log = decoder_surrogate_log_confidence(
+            [
+                [0.0, 4.0, -4.0],
+                [4.0, 0.0, -4.0],
+                [0.0, -4.0, 4.0],
+            ],
+            (1, 2),
+        )
+        assert math.isfinite(surrogate_log)
+        assert 0.0 < math.exp(surrogate_log) < 1.0
+
+        detections = parse_runtime_detections(
+            '{"recording":"fixture","keyword_id":1,"time_s":0.42,"confidence":0.73}\n'
+            '{"recording":"fixture","keyword_id":2,"time_s":0.61,"confidence":0.66}\n',
+            "fixture",
+        )
+        assert [row["keyword_id"] for row in detections] == [1, 2]
+        assert detections[0]["confidence"] == 0.73
+        try:
+            parse_runtime_detections(
+                '{"recording":"other","keyword_id":1,"time_s":0.1,"confidence":0.7}\n',
+                "fixture",
+            )
+        except ValueError as exc:
+            assert "recording id drifted" in str(exc)
+        else:
+            raise AssertionError("runtime recording identity drift was accepted")
 
         rows = [
             {
