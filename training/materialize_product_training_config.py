@@ -373,6 +373,7 @@ def main() -> int:
         "replay_provider_identity_sha256": provider_identity,
         "replay_provider_execution_identity_sha256": provider_execution_identity,
         "replay_provider_semantic_identity_policy": "product-replay-provider-semantic-v1",
+        "replay_provider_semantic_contract_path": replay_provider_contract_path.relative_to(ROOT).as_posix(),
         "replay_provider_semantic_contract_sha256": sha256_file(replay_provider_contract_path),
         "replay_provider_semantic_payload_sha256": canonical_sha256(provider_semantic_payload),
         "replay_backend": "command",
