@@ -74,7 +74,7 @@ def threshold_slice(value: Any) -> dict | None:
             edge_keywords[key] = "min"
         elif math.isclose(threshold, upper, rel_tol=0.0, abs_tol=1.0e-12):
             edge_keywords[key] = "max"
-    return {
+    result = {
         "selected": normalized,
         "grid": thresholds,
         "grid_min": lower,
@@ -82,8 +82,21 @@ def threshold_slice(value: Any) -> dict | None:
         "edge_keywords": edge_keywords,
         "grid_saturated": bool(edge_keywords),
         "coordinate_rounds": value.get("calibration_coordinate_rounds"),
+        "coordinate_rounds_executed": value.get(
+            "calibration_coordinate_rounds_executed"
+        ),
         "parallel_trials": value.get("calibration_parallel_trials"),
     }
+    curve_summary = value.get("calibration_operating_curve_summary")
+    if isinstance(curve_summary, dict):
+        result["operating_curve_summary"] = curve_summary
+    curve_path = value.get("calibration_operating_curve_path")
+    if isinstance(curve_path, str) and curve_path:
+        result["operating_curve_path"] = curve_path
+    curve_sha = value.get("calibration_operating_curve_sha256")
+    if isinstance(curve_sha, str) and curve_sha:
+        result["operating_curve_sha256"] = curve_sha
+    return result
 
 
 def domain_slice(value: Any) -> dict | None:
