@@ -26,6 +26,8 @@ from hard_negative_replay import (  # noqa: E402
 from synthetic_audio import write_wav  # noqa: E402
 from iterate_domain import (  # noqa: E402
     calibration_behavior_key,
+    calibration_operating_curve_summary,
+    calibration_trial_evidence,
     parse_warm_start_strategy,
     select_calibration_threshold,
     select_strict_candidate,
@@ -263,6 +265,58 @@ def validate_torch_iteration_policy() -> None:
     assert select_calibration_threshold(
         [(0.50, strict_key), (0.52, strict_key), (0.54, strict_key)]
     ) == 0.52
+
+    trial = calibration_trial_evidence(
+        coordinate=0,
+        keyword_id=1,
+        threshold=0.60,
+        trial_keywords=[
+            {"id": 1, "threshold": 0.60},
+            {"id": 2, "threshold": 0.55},
+        ],
+        base={
+            "frr": 0.75,
+            "far_per_hour": 12.0,
+            "p95_post_end_latency_ms": 120.0,
+            "per_keyword": {
+                "1": {"frr": 1.0},
+                "2": {"frr": 0.5},
+            },
+        },
+        domains={
+            "domains": {"distance:far": {"frr": 0.8}},
+            "worst_domain_score": 12.0,
+        },
+        gates=strict_gates,
+    )
+    assert trial["keyword_thresholds"] == {"1": 0.60, "2": 0.55}
+    assert trial["strict"] is False
+    assert trial["metrics"]["per_keyword_frr"] == {"1": 1.0, "2": 0.5}
+
+    trial2 = dict(trial)
+    trial2["coordinate"] = 1
+    trial2["threshold"] = 0.55
+    trial2["keyword_thresholds"] = {"1": 0.55, "2": 0.55}
+    trial2["metrics"] = dict(trial["metrics"])
+    trial2["metrics"]["frr"] = 0.5
+    trial2["metrics"]["far_per_hour"] = 20.0
+    trial_kw2 = dict(trial)
+    trial_kw2["keyword_id"] = 2
+    trial_kw2["threshold"] = 0.50
+    trial_kw2["keyword_thresholds"] = {"1": 0.55, "2": 0.50}
+    curve = calibration_operating_curve_summary(
+        [trial, trial2, trial_kw2],
+        selected_thresholds={"1": 0.60, "2": 0.50},
+        threshold_grid=[0.50, 0.55, 0.60],
+        coordinates_executed=2,
+    )
+    assert curve["trial_count"] == 3
+    assert curve["coordinates_executed"] == 2
+    assert curve["grid_saturated"] is True
+    assert curve["per_keyword"]["1"]["selected_on_grid_max"] is True
+    assert curve["per_keyword"]["2"]["selected_on_grid_min"] is True
+    assert curve["per_keyword"]["1"]["min_frr"] == 0.5
+    assert curve["per_keyword"]["1"]["min_far_per_hour"] == 12.0
 
     split_pass = [
         {
