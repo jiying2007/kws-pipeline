@@ -142,9 +142,13 @@ int main(int argc, char **argv) {
             (int)stats.pending_keyword_index,
             (unsigned)stats.pending_age_frames,
             (double)stats.max_detection_confidence);
-    if (ferror(stats_file) != 0 || fclose(stats_file) != 0) {
-      fprintf(stderr, "cannot write stats output: %s\n", stats_path);
-      goto cleanup;
+    {
+      int write_failed = ferror(stats_file) != 0;
+      int close_failed = fclose(stats_file) != 0;
+      if (write_failed || close_failed) {
+        fprintf(stderr, "cannot write stats output: %s\n", stats_path);
+        goto cleanup;
+      }
     }
   }
   exit_code = ferror(stdout) != 0 ? 1 : 0;
