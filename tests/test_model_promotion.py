@@ -354,7 +354,8 @@ def main() -> int:
     for needle in (
         'root / "training-invocation.json"',
         'best_dir / "training-invocation.json"',
-        'product_lineage.extend([effective_copy, base_contract_copy, invocation_copy])',
+        'replay_contract_copy = best_dir / "replay-provider-semantic-contract.json"',
+        'product_lineage.extend(',
     ):
         require(finalizer, needle, "product lineage finalizer")
 
