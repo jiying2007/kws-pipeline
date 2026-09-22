@@ -246,6 +246,7 @@ jobs:
             build/model-training-preflight/compact-base-diagnostics.json
             build/model-training-preflight/base-refinement-eligibility.json
             build/model-training-preflight/acoustic-alignment.json
+            build/model-training-preflight/candidates/*/calibration/calibration-operating-curve.json
           if-no-files-found: error
           retention-days: 14
 
