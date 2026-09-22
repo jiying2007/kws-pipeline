@@ -59,6 +59,27 @@ def resolve_repo_path(raw: str) -> pathlib.Path:
     return path if path.is_absolute() else (ROOT / path).resolve()
 
 
+def load_keyword_thresholds(path: pathlib.Path) -> dict[int, float]:
+    result: dict[int, float] = {}
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        text = raw.strip()
+        if not text or text.startswith("#"):
+            continue
+        parts = raw.split("\t")
+        if len(parts) != 4:
+            raise ValueError(f"{path}:{line_no}: expected four TSV columns")
+        keyword_id = int(parts[0])
+        threshold = float(parts[2])
+        if not math.isfinite(threshold) or not 0.0 < threshold < 1.0:
+            raise ValueError(f"{path}:{line_no}: keyword threshold is invalid")
+        if keyword_id in result:
+            raise ValueError(f"{path}:{line_no}: duplicate keyword id {keyword_id}")
+        result[keyword_id] = threshold
+    if not result:
+        raise ValueError("keyword threshold set is empty")
+    return result
+
+
 def load_keywords(path: pathlib.Path, token_map: dict[str, int]) -> dict[int, tuple[int, ...]]:
     result: dict[int, tuple[int, ...]] = {}
     for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -200,6 +221,90 @@ def log_softmax(row: list[float]) -> list[float]:
     maximum = max(row)
     norm = maximum + math.log(sum(math.exp(value - maximum) for value in row))
     return [value - norm for value in row]
+
+
+def decoder_surrogate_log_confidence(
+    logits: list[list[float]], sequence: tuple[int, ...]
+) -> float:
+    """Match the differentiable training surrogate in sequence_margin.py."""
+    if not logits or not sequence:
+        raise ValueError("decoder surrogate requires logits and a keyword sequence")
+    log_probs = [log_softmax(row) for row in logits]
+    steps = len(log_probs)
+    score = [row[sequence[0]] for row in log_probs]
+    previous = sequence[0]
+    for token in sequence[1:]:
+        gap = 2 if token == previous else 1
+        if steps <= gap:
+            return NEG_INF
+        prefix_best: list[float] = []
+        running = NEG_INF
+        for value in score:
+            running = max(running, value)
+            prefix_best.append(running)
+        shifted = [NEG_INF] * steps
+        for index in range(gap, steps):
+            shifted[index] = prefix_best[index - gap]
+        score = [
+            shifted[index] + log_probs[index][token]
+            if shifted[index] != NEG_INF
+            else NEG_INF
+            for index in range(steps)
+        ]
+        previous = token
+    return max(score) / float(len(sequence))
+
+
+def parse_runtime_detections(stdout: str, recording_id: str) -> list[dict]:
+    rows: list[dict] = []
+    for line_no, raw in enumerate(stdout.splitlines(), 1):
+        if not raw.strip():
+            continue
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise ValueError(f"runtime output line {line_no} is not an object")
+        if str(value.get("recording")) != recording_id:
+            raise ValueError(f"runtime output line {line_no} recording id drifted")
+        keyword_id = int(value["keyword_id"])
+        confidence = float(value["confidence"])
+        time_s = float(value["time_s"])
+        if (
+            keyword_id < 0
+            or not math.isfinite(confidence)
+            or not 0.0 <= confidence <= 1.0
+            or not math.isfinite(time_s)
+            or time_s < 0.0
+        ):
+            raise ValueError(f"runtime output line {line_no} is invalid")
+        rows.append(
+            {
+                "keyword_id": keyword_id,
+                "confidence": confidence,
+                "time_s": time_s,
+            }
+        )
+    return rows
+
+
+def run_runtime(
+    runner: pathlib.Path,
+    model: pathlib.Path,
+    pack: pathlib.Path,
+    wav: pathlib.Path,
+    *,
+    recording_id: str,
+) -> list[dict]:
+    completed = subprocess.run(
+        [str(runner), str(model), str(pack), str(wav), recording_id],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"runtime evaluation failed for {wav}: {completed.stderr.strip()}"
+        )
+    return parse_runtime_detections(completed.stdout, recording_id)
 
 
 def logsumexp(values: list[float]) -> float:
@@ -350,8 +455,13 @@ def analyze_recording(
     *,
     row: dict,
     target: tuple[int, ...],
+    keyword_id: int,
+    threshold: float,
     model: dict[str, Any],
+    model_path: pathlib.Path,
+    pack_path: pathlib.Path,
     feature_dump: pathlib.Path,
+    runner: pathlib.Path,
     root_tokens: set[int],
     root_margin: float,
 ) -> dict:
@@ -389,6 +499,26 @@ def analyze_recording(
                 decoder_root_admissible_frames += 1
 
     ctc_logp = ctc_log_probability(logits, target)
+    surrogate_log_confidence = decoder_surrogate_log_confidence(logits, target)
+    surrogate_confidence = (
+        math.exp(surrogate_log_confidence)
+        if surrogate_log_confidence != NEG_INF
+        else 0.0
+    )
+    recording_id = str(row.get("wav_sha256") or sha256_file(wav))
+    runtime_detections = run_runtime(
+        runner,
+        model_path,
+        pack_path,
+        wav,
+        recording_id=recording_id,
+    )
+    expected_runtime = [
+        item for item in runtime_detections if int(item["keyword_id"]) == keyword_id
+    ]
+    wrong_runtime = [
+        item for item in runtime_detections if int(item["keyword_id"]) != keyword_id
+    ]
     depth = longest_prefix_subsequence(target, greedy)
     best_ranks = token_best_ranks(logits, target)
     return {
@@ -405,6 +535,22 @@ def analyze_recording(
         "longest_target_prefix_ratio": depth / len(target),
         "ctc_log_probability": ctc_logp,
         "ctc_nll_per_token": -ctc_logp / len(target),
+        "surrogate_log_confidence": surrogate_log_confidence,
+        "surrogate_confidence": surrogate_confidence,
+        "runtime_threshold": threshold,
+        "surrogate_above_runtime_threshold": surrogate_confidence >= threshold,
+        "runtime_detection_count": len(runtime_detections),
+        "runtime_expected_detection_count": len(expected_runtime),
+        "runtime_wrong_keyword_detection_count": len(wrong_runtime),
+        "runtime_detected_expected": bool(expected_runtime),
+        "runtime_detected_keyword_ids": sorted(
+            {int(item["keyword_id"]) for item in runtime_detections}
+        ),
+        "runtime_max_expected_confidence": (
+            max(float(item["confidence"]) for item in expected_runtime)
+            if expected_runtime
+            else None
+        ),
         "blank_top1_fraction": blank_top1_frames / len(logits),
         "root_top1_frames": root_top1_frames,
         "root_within_margin_frames": root_within_margin_frames,
@@ -430,6 +576,25 @@ def aggregate(records: list[dict]) -> dict:
         "greedy_subsequence_recordings": sum(
             bool(row["greedy_contains_target_as_subsequence"]) for row in records
         ),
+        "surrogate_above_threshold_recordings": sum(
+            bool(row["surrogate_above_runtime_threshold"]) for row in records
+        ),
+        "runtime_expected_detected_recordings": sum(
+            bool(row["runtime_detected_expected"]) for row in records
+        ),
+        "runtime_wrong_keyword_recordings": sum(
+            int(row["runtime_wrong_keyword_detection_count"]) > 0 for row in records
+        ),
+        "surrogate_above_threshold_runtime_miss_recordings": sum(
+            bool(row["surrogate_above_runtime_threshold"])
+            and not bool(row["runtime_detected_expected"])
+            for row in records
+        ),
+        "greedy_subsequence_runtime_miss_recordings": sum(
+            bool(row["greedy_contains_target_as_subsequence"])
+            and not bool(row["runtime_detected_expected"])
+            for row in records
+        ),
         "mean_longest_target_prefix_ratio": sum(prefix) / len(prefix),
         "root_top1_recordings": sum(int(row["root_top1_frames"]) > 0 for row in records),
         "root_within_margin_recordings": sum(
@@ -452,19 +617,28 @@ def build(
     config_path: pathlib.Path,
     manifest_path: pathlib.Path,
     feature_dump: pathlib.Path,
+    runner: pathlib.Path,
     max_per_keyword_split: int,
 ) -> dict:
     config = load_object(config_path, "preflight config")
     manifest = load_object(manifest_path, "development manifest")
     source, source_policy = select_refinement_source(manifest)
     model_path = pathlib.Path(str(source["model"]))
+    pack_path = pathlib.Path(str(source["pack"]))
     keywords_path = pathlib.Path(str(source["keywords"]))
     tokens_path = resolve_repo_path(str(config["tokens"]))
+    if not runner.is_file():
+        raise ValueError(f"runtime runner is missing: {runner}")
+    if not pack_path.is_file():
+        raise ValueError(f"keyword pack is missing: {pack_path}")
     model = load_model(model_path)
     token_map = load_tokens(tokens_path)
     if len(token_map) != int(model["vocab_size"]):
         raise ValueError("token vocabulary size differs from model")
     keywords = load_keywords(keywords_path, token_map)
+    thresholds = load_keyword_thresholds(keywords_path)
+    if set(thresholds) != set(keywords):
+        raise ValueError("keyword thresholds differ from keyword sequences")
     roots = {tokens[0] for tokens in keywords.values()}
 
     contract_path = ROOT / "configs/parameter-contract.json"
@@ -510,8 +684,13 @@ def build(
                     analyze_recording(
                         row=row,
                         target=keywords[keyword_id],
+                        keyword_id=keyword_id,
+                        threshold=thresholds[keyword_id],
                         model=model,
+                        model_path=model_path,
+                        pack_path=pack_path,
                         feature_dump=feature_dump,
+                        runner=runner,
                         root_tokens=roots,
                         root_margin=root_margin,
                     )
@@ -542,6 +721,8 @@ def build(
         "keywords_sha256": sha256_file(keywords_path),
         "domain_index_sha256": sha256_file(index_path),
         "feature_dump_sha256": sha256_file(feature_dump),
+        "runner_sha256": sha256_file(runner),
+        "keyword_pack_sha256": sha256_file(pack_path),
         "parameter_contract_sha256": sha256_file(contract_path),
         "root_start_logit_margin": root_margin,
         "max_recordings_per_keyword_split": max_per_keyword_split,
@@ -573,6 +754,7 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--manifest", required=True, type=pathlib.Path)
     parser.add_argument("--feature-dump", required=True, type=pathlib.Path)
+    parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
     parser.add_argument("--max-per-keyword-split", type=int, default=8)
     args = parser.parse_args()
@@ -582,6 +764,7 @@ def main() -> int:
         config_path=args.config.resolve(),
         manifest_path=args.manifest.resolve(),
         feature_dump=args.feature_dump.resolve(),
+        runner=args.runner.resolve(),
         max_per_keyword_split=args.max_per_keyword_split,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
