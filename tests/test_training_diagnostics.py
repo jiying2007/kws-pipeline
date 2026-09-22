@@ -54,7 +54,16 @@ def main() -> int:
             "calibrated_thresholds": {"1": 0.6, "2": 0.55},
             "calibration_threshold_grid": [0.5, 0.55, 0.6],
             "calibration_coordinate_rounds": 2,
+            "calibration_coordinate_rounds_executed": 2,
             "calibration_parallel_trials": 2,
+            "calibration_operating_curve_path": "build/calibration-operating-curve.json",
+            "calibration_operating_curve_sha256": "9" * 64,
+            "calibration_operating_curve_summary": {
+                "policy": "coordinate-threshold-trials-v1",
+                "trial_count": 28,
+                "coordinates_executed": 2,
+                "grid_saturated": True,
+            },
         }
         domains = {
             "worst_domain": "distance:far",
@@ -146,6 +155,10 @@ def main() -> int:
         assert operating["grid_saturated"] is True
         assert operating["edge_keywords"] == {"1": "max"}
         assert operating["selected"] == {"1": 0.6, "2": 0.55}
+        assert operating["coordinate_rounds_executed"] == 2
+        assert operating["operating_curve_summary"]["trial_count"] == 28
+        assert operating["operating_curve_summary"]["grid_saturated"] is True
+        assert operating["operating_curve_sha256"] == "9" * 64
         confusion = row["test_domain_summary"]["keyword_confusion"]
         assert confusion["wrong_keyword"] == 1
         assert confusion["missed"] == 5
