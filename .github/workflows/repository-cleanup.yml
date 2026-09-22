@@ -48,6 +48,19 @@ env:
     tmp/resumable-development-rnn-v3
     tmp/resumable-development-rnn-v4
     fix/product-training-speech-like-replay-v1
+    training/product-development-preflight
+    training/product-development-preflight-final
+    training/product-development-preflight-final2
+    training/product-development-preflight-squashed
+    training/product-development-preflight-verified
+    training/bind-preflight-base-artifact
+    training/merge-calibration-test-curriculum
+    training/merge-calibration-test-curriculum-final
+    training/merge-calibration-test-curriculum-final2
+    training/request-product-preflight-v1
+    training/request-product-preflight-v2
+    training/request-split-product-preflight-v1
+    training/request-parallel-refinement-preflight-v1
 
 jobs:
   sweep-merged-branches:
