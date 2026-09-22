@@ -262,6 +262,15 @@ def main() -> int:
         )
     train_profiles.sort(key=lambda row: row["slot"])
     expected_train_voices = int(contract.get("replay_train_voice_slots", 0))
+    semantic_train_voices = int(
+        replay_semantic_contract.get("replay_train_voice_slots", 0)
+    )
+    if expected_train_voices != semantic_train_voices:
+        raise ValueError("base/replay semantic train voice count contract drift")
+    if str(contract.get("replay_voice_scope") or "") != str(
+        replay_semantic_contract.get("replay_voice_scope") or ""
+    ):
+        raise ValueError("base/replay semantic voice scope contract drift")
     if len(train_profiles) != expected_train_voices or expected_train_voices <= 0:
         raise ValueError(
             f"replay train voice count mismatch: {len(train_profiles)} != {expected_train_voices}"
