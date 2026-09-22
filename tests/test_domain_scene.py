@@ -352,6 +352,47 @@ def test_external_speech_like_base_renderer() -> None:
             if line.strip()
         ]
         assert {row["split"] for row in subset_rows} == {"train", "test"}
+
+        rotated_output = root / "rendered-rotated"
+        rotated = render_domain_dataset(
+            config_path,
+            rotated_output,
+            splits=("train", "test"),
+            train_seed_offset=104729,
+        )
+        assert rotated["train_acoustic_rotation"] == {
+            "policy": "train-only-scene-seed-offset-v1",
+            "seed_offset": 104729,
+            "evaluation_seed_rotated": False,
+        }
+        rotated_rows = [
+            json.loads(line)
+            for line in (rotated_output / "domain-index.jsonl").read_text().splitlines()
+            if line.strip()
+        ]
+        baseline_by_split = {row["split"]: row for row in subset_rows}
+        rotated_by_split = {row["split"]: row for row in rotated_rows}
+        assert rotated_by_split["train"]["scene_seed"] == (
+            baseline_by_split["train"]["scene_seed"] + 104729
+        )
+        assert rotated_by_split["train"]["wav_sha256"] != baseline_by_split["train"]["wav_sha256"]
+        assert rotated_by_split["train"]["source_wav_sha256"] == baseline_by_split["train"]["source_wav_sha256"]
+        assert rotated_by_split["test"]["scene_seed"] == baseline_by_split["test"]["scene_seed"]
+        assert rotated_by_split["test"]["wav_sha256"] == baseline_by_split["test"]["wav_sha256"]
+        assert rotated_by_split["test"]["scene"] == baseline_by_split["test"]["scene"]
+
+        try:
+            render_domain_dataset(
+                config_path,
+                root / "bad-offset",
+                splits=("train",),
+                train_seed_offset=-1,
+            )
+        except ValueError as exc:
+            assert "non-negative" in str(exc)
+        else:
+            raise AssertionError("negative train acoustic seed offset was accepted")
+
         try:
             render_domain_dataset(
                 config_path,
