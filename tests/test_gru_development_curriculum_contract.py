@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import copy
 import importlib.util
 import json
@@ -10,6 +11,8 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ITERATOR = ROOT / "training" / "iterate_gru_development.py"
+TRAIN_GRU = ROOT / "training" / "train_gru_ctc.py"
+TRAIN_RNN = ROOT / "training" / "train_ctc.py"
 FEATURE_CACHE = ROOT / "training" / "feature_cached_trainer.py"
 POLICY = ROOT / "configs" / "training" / "xiaowo.gru-development-loop.json"
 FINALIZER = ROOT / "tools" / "finalize_gru_frozen_candidate.py"
@@ -34,6 +37,39 @@ class GruDevelopmentCurriculumContractTest(unittest.TestCase):
         cls.finalizer = load_module(FINALIZER, "finalize_gru_frozen_candidate_contract")
         cls.verifier = load_module(VERIFIER, "verify_gru_frozen_candidate_contract")
         cls.policy = json.loads(POLICY.read_text(encoding="utf-8"))
+
+    def test_gru_shared_trainer_imports_resolve(self) -> None:
+        def exported_names(path: pathlib.Path) -> set[str]:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            names: set[str] = set()
+            for node in tree.body:
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    names.add(node.name)
+                elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                    for alias in node.names:
+                        names.add(alias.asname or alias.name.split(".", 1)[0])
+                elif isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            names.add(target.id)
+                elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                    names.add(node.target.id)
+            return names
+
+        gru_tree = ast.parse(TRAIN_GRU.read_text(encoding="utf-8"), filename=str(TRAIN_GRU))
+        shared_imports = {
+            alias.name
+            for node in gru_tree.body
+            if isinstance(node, ast.ImportFrom) and node.module == "train_ctc"
+            for alias in node.names
+        }
+        missing = sorted(shared_imports - exported_names(TRAIN_RNN))
+        self.assertEqual(missing, [], f"GRU trainer imports missing train_ctc symbols: {missing}")
+        source = TRAIN_GRU.read_text(encoding="utf-8")
+        self.assertNotIn("wake_example_mask", source)
+        self.assertIn("wake_example_weights", source)
+        self.assertIn("log_probs, y, xlen, ylen, sample_weights", source)
+        self.assertIn('"ordered_token_sample_weighting": "training-sample-weights-v1"', source)
 
     def test_development_policy_is_explicitly_non_qualification(self) -> None:
         value = self.iterator.validate_policy(POLICY)
