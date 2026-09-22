@@ -426,6 +426,7 @@ def validate_torch_iteration_policy() -> None:
     assert 'round_best["calibration_domains"]' in product_iterator
     assert 'round_best["test_domains"]' in product_iterator
     assert product_iterator.count("suppress_stdout=True") == 2
+    assert "optional_objective_cli_args(train)" in product_iterator
     assert "exact-keyword-threshold-vector-v1" in product_iterator
     assert 'base["calibration_trial_cache_hits"]' in product_iterator
     assert 'base["calibration_unique_trial_vectors"]' in product_iterator

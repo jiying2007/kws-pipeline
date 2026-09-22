@@ -95,6 +95,18 @@ def main() -> int:
     assert 'SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"' in trainer
     assert "normalized_weighted_mean(" in trainer
     assert "normalization_mean_weight=float(" in trainer
+    assert 'PATH_PURITY_LOSS_WEIGHT_DEFAULT = 0.0' in (
+        ROOT / "training/objective_contract.py"
+    ).read_text(encoding="utf-8")
+    assert "--path-purity-loss-weight" in trainer
+    assert "--path-purity-margin" in trainer
+    assert 'path_purity_policy": PATH_PURITY_POLICY' in trainer
+    base_iterator = (ROOT / "training/iterate_domain.py").read_text(encoding="utf-8")
+    refinement = (ROOT / "training/adversarial_refinement.py").read_text(
+        encoding="utf-8"
+    )
+    assert "optional_objective_cli_args(train)" in base_iterator
+    assert "optional_objective_cli_args(train)" in refinement
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     materializer = (ROOT / "training/materialize_governed_product_base.sh").read_text(encoding="utf-8")
