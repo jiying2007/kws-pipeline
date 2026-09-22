@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "path-purity-weight-005-v2",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Fresh-main rerun of the single-variable path-purity bounded A/B after infrastructure retry hardening. Enable only train.path_purity_loss_weight=0.05; keep the default path-purity margin 0.10. Preserve product data, acoustic rotation, epochs, warm-start policy, wake-pressure balancing, replay, CTC, ordered, sequence-margin, completion/release losses, decoder, threshold grid, calibration, gates and refinement semantics. Compare strict dominance-compatible greedy-path rate, exact engine decoder hits, keyword confusion, FRR/FAR, threshold saturation and refinement tradeoffs against #240. No protected qualification evidence is allowed.",
+  "config_overrides": {
+    "train.path_purity_loss_weight": 0.05
+  }
+}
