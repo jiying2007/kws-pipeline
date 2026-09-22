@@ -163,11 +163,23 @@ jobs:
           python3 - <<'PY'
           import json, os, pathlib
           root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
-          receipt=json.loads((root/'experiment-receipt.json').read_text(encoding='utf-8'))
-          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
-          eligibility=json.loads((root/'base-refinement-eligibility.json').read_text(encoding='utf-8'))
-          refinement_path=root/'adversarial-refinement'/'preflight-summary.json'
-          refinement=json.loads(refinement_path.read_text(encoding='utf-8')) if refinement_path.is_file() else None
+          def load_optional(path):
+              if not path.is_file():
+                  return None
+              value=json.loads(path.read_text(encoding='utf-8'))
+              if not isinstance(value,dict):
+                  raise SystemExit(f'experiment evidence must be a JSON object: {path}')
+              return value
+
+          receipt=load_optional(root/'experiment-receipt.json')
+          manifest=load_optional(root/'domain-loop-manifest.json')
+          eligibility=load_optional(root/'base-refinement-eligibility.json')
+          refinement=load_optional(root/'adversarial-refinement'/'preflight-summary.json')
+          required={
+              'experiment_receipt': receipt is not None,
+              'domain_loop_manifest': manifest is not None,
+              'refinement_eligibility': eligibility is not None,
+          }
           summary={
               'schema_version':1,
               'evidence_class':'product-development-pr-head-experiment-summary-v1',
@@ -176,11 +188,21 @@ jobs:
               'source_policy':'exact-pr-head',
               'pr_base_sha':os.environ['BASE_SHA'],
               'pr_head_sha':os.environ['HEAD_SHA'],
+              'infrastructure_complete':all(required.values()),
+              'required_evidence_present':required,
               'experiment_receipt':receipt,
-              'base_exit_code':int(os.environ.get('BASE_EXIT') or 0),
-              'refinement_eligible':eligibility.get('eligible'),
-              'base_candidate_selection':manifest.get('candidate_selection'),
-              'base_records':manifest.get('records',[]),
+              'base_exit_code':(
+                  int(os.environ['BASE_EXIT'])
+                  if os.environ.get('BASE_EXIT') not in (None,'')
+                  else None
+              ),
+              'refinement_eligible':(
+                  eligibility.get('eligible') if eligibility is not None else None
+              ),
+              'base_candidate_selection':(
+                  manifest.get('candidate_selection') if manifest is not None else None
+              ),
+              'base_records':manifest.get('records',[]) if manifest is not None else [],
               'refinement':refinement,
           }
           (root/'experiment-summary.json').write_text(

@@ -32,6 +32,15 @@ def main() -> int:
     assert workflow.count("ref: ${{ github.event.pull_request.head.sha }}") == 2
     assert "product-development-experiment-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}" in workflow
     assert "steps.eligibility.outputs.eligible == 'true'" in workflow
+    assert "'infrastructure_complete':all(required.values())" in workflow
+    assert "'required_evidence_present':required" in workflow
+    materializer = (
+        ROOT / "training/materialize_governed_product_base.sh"
+    ).read_text(encoding="utf-8")
+    assert "retry_to_file()" in materializer
+    assert "retry_release_download()" in materializer
+    assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" in materializer
+    assert "--clobber" in materializer
 
     with tempfile.TemporaryDirectory(prefix="experiment-contract-") as tmp:
         root = pathlib.Path(tmp)
