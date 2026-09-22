@@ -10,6 +10,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import threading
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -313,6 +314,23 @@ def select_calibration_threshold(
 CALIBRATION_TRIAL_POLICY = "coordinate-threshold-trials-v1"
 
 
+def calibration_threshold_vector(keywords: list[dict]) -> tuple[tuple[int, float], ...]:
+    rows: list[tuple[int, float]] = []
+    seen: set[int] = set()
+    for item in keywords:
+        keyword_id = int(item["id"])
+        threshold = float(item["threshold"])
+        if keyword_id in seen:
+            raise ValueError("calibration threshold vector contains duplicate keyword ids")
+        if not math.isfinite(threshold) or not 0.0 < threshold < 1.0:
+            raise ValueError("calibration threshold vector contains invalid threshold")
+        seen.add(keyword_id)
+        rows.append((keyword_id, threshold))
+    if not rows:
+        raise ValueError("calibration threshold vector must not be empty")
+    return tuple(sorted(rows))
+
+
 def calibration_trial_evidence(
     *,
     coordinate: int,
@@ -418,6 +436,12 @@ def calibrate(
         raise ValueError("calibration parallel_trials must be 1..4")
     parallel_trials = int(parallel_trials)
     trial_evidence: list[dict] = []
+    trial_cache: dict[
+        tuple[tuple[int, float], ...],
+        tuple[dict, dict],
+    ] = {}
+    trial_cache_lock = threading.Lock()
+    trial_cache_hits = 0
     coordinates_executed = 0
 
     for coordinate in range(rounds):
@@ -429,20 +453,36 @@ def calibrate(
             def evaluate_threshold(
                 threshold: float,
             ) -> tuple[float, tuple[float, ...], dict]:
+                nonlocal trial_cache_hits
                 trial = [dict(item) for item in base_trial]
                 trial[index]["threshold"] = threshold
-                trial_dir = output / f"coord{coordinate}-kw{row['id']}-t{threshold:.3f}"
-                tsv = trial_dir / "keywords.tsv"
-                pack = trial_dir / "keywords.kwk"
-                write_keywords(trial, tsv)
-                compile_pack(tokens, tsv, pack)
-                base, domains = evaluate(
-                    runner=runner,
-                    model=model,
-                    pack=pack,
-                    references=references,
-                    output=trial_dir / "eval",
-                )
+                vector = calibration_threshold_vector(trial)
+                with trial_cache_lock:
+                    cached = trial_cache.get(vector)
+                if cached is None:
+                    trial_dir = output / f"coord{coordinate}-kw{row['id']}-t{threshold:.3f}"
+                    tsv = trial_dir / "keywords.tsv"
+                    pack = trial_dir / "keywords.kwk"
+                    write_keywords(trial, tsv)
+                    compile_pack(tokens, tsv, pack)
+                    base, domains = evaluate(
+                        runner=runner,
+                        model=model,
+                        pack=pack,
+                        references=references,
+                        output=trial_dir / "eval",
+                    )
+                    with trial_cache_lock:
+                        existing = trial_cache.get(vector)
+                        if existing is None:
+                            trial_cache[vector] = (base, domains)
+                        else:
+                            base, domains = existing
+                            trial_cache_hits += 1
+                else:
+                    base, domains = cached
+                    with trial_cache_lock:
+                        trial_cache_hits += 1
                 key = calibration_behavior_key(base, domains, gates)
                 evidence = calibration_trial_evidence(
                     coordinate=coordinate,
@@ -489,6 +529,11 @@ def calibrate(
     base["calibration_coordinate_rounds"] = int(rounds)
     base["calibration_coordinate_rounds_executed"] = int(coordinates_executed)
     base["calibration_parallel_trials"] = parallel_trials
+    base["calibration_trial_count"] = len(trial_evidence)
+    base["calibration_unique_trial_vectors"] = len(trial_cache)
+    base["calibration_trial_cache_hits"] = trial_cache_hits
+    if len(trial_cache) + trial_cache_hits != len(trial_evidence):
+        raise RuntimeError("calibration trial cache accounting drifted")
 
     curve_path = output / "calibration-operating-curve.json"
     curve = {
@@ -499,6 +544,10 @@ def calibrate(
         "coordinate_rounds_configured": int(rounds),
         "coordinate_rounds_executed": int(coordinates_executed),
         "parallel_trials": parallel_trials,
+        "trial_count": len(trial_evidence),
+        "unique_trial_vectors": len(trial_cache),
+        "cache_hits": trial_cache_hits,
+        "cache_policy": "exact-keyword-threshold-vector-v1",
         "trials": trial_evidence,
     }
     curve["summary"] = calibration_operating_curve_summary(
@@ -506,6 +555,13 @@ def calibrate(
         selected_thresholds=base["calibrated_thresholds"],
         threshold_grid=base["calibration_threshold_grid"],
         coordinates_executed=coordinates_executed,
+    )
+    curve["summary"].update(
+        {
+            "unique_trial_vectors": len(trial_cache),
+            "cache_hits": trial_cache_hits,
+            "cache_policy": "exact-keyword-threshold-vector-v1",
+        }
     )
     curve_path.write_text(
         json.dumps(curve, indent=2, sort_keys=True, allow_nan=False) + "\n",
