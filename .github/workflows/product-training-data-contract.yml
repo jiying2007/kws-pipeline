@@ -21,6 +21,8 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/objective_config.py"
+      - "training/path_purity.py"
       - "training/export_model.py"
       - "training/test_sequence_margin.py"
       - "tests/test_adversarial_refinement_source.py"
@@ -45,6 +47,8 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/objective_config.py"
+      - "training/path_purity.py"
       - "training/export_model.py"
       - "training/test_sequence_margin.py"
       - "tests/test_adversarial_refinement_source.py"
@@ -77,6 +81,8 @@ jobs:
           training/training_request.py
           training/adversarial_refinement.py
           training/train_ctc.py
+          training/objective_config.py
+          training/path_purity.py
           training/export_model.py
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
@@ -160,6 +166,19 @@ jobs:
           PY
       - name: Worktree remains clean
         run: git diff --exit-code -- .
+
+  objective-math:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU objective runtime
+        run: |
+          python3 -m venv .venv-objective
+          .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Decoder-aligned objective math contract
+        run: .venv-objective/bin/python training/test_sequence_margin.py
 
   live-base-binding:
     runs-on: ubuntu-24.04
