@@ -7,11 +7,12 @@ contract="${KWS_PRODUCT_BASE_CONTRACT:-configs/training/product-speech-like-base
 effective_config="${KWS_EFFECTIVE_TRAINING_CONFIG:-.generated/xiaowo.product-effective.json}"
 base_root="${KWS_PRODUCT_BASE_ROOT:-.generated/product-speech-like-base}"
 provider_root="${KWS_REPLAY_PROVIDER_ROOT:-.generated/product-replay-provider}"
+provider_contract="${KWS_REPLAY_PROVIDER_CONTRACT:-configs/training/product-replay-provider-semantic-v1.json}"
 release_root="${KWS_PRODUCT_RELEASE_ROOT:-.generated/product-speech-like-release}"
 provider_cache="${KWS_REPLAY_PROVIDER_CACHE:-.generated/product-replay-provider-cache}"
 source_config="${KWS_SOURCE_TRAINING_CONFIG:-configs/training/xiaowo.torch-domain.json}"
 
-for path in "$contract" "$source_config"; do
+for path in "$contract" "$provider_contract" "$source_config"; do
   test -s "$path" || {
     echo "required product training input is missing: $path" >&2
     exit 2
@@ -60,6 +61,8 @@ python3 training/materialize_product_training_config.py \
   --base-contract "$contract" \
   --bundle-root "$base_root/corpus" \
   --replay-provider "$provider_root/corpus/provider/provider.json" \
+  --replay-provider-summary "$provider_root/corpus/provider/provider-summary.json" \
+  --replay-provider-contract "$provider_contract" \
   --voice-inventory "$provider_root/corpus/provider/voice-inventory.jsonl" \
   --output "$effective_config"
 
