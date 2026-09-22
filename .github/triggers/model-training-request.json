@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-base-wake-balanced-preflight-v1-20260921",
+  "request_id": "speech-like-runtime-path-diagnostic-preflight-v1-20260922",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #213 added per-keyword provenance-pressure balancing to base rounds. Preserve 12 base epochs with 6 warm-start epochs, the full bounded adversarial search/replay semantics, and 6 refinement epochs; keep seeds, augmentation, scene rendering, scoring order, thresholds, curriculum, gates and qualification semantics unchanged. Full governed training remains blocked unless the existing per-keyword collapse guard passes."
+  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #236 added exact engine-stats correlation, #238 added strict dominance-compatible greedy-path diagnostics, and #239 added exact calibration trial-vector memoization. Training semantics remain unchanged: preserve the governed product speech-like base, train-only acoustic rotation, 12 base epochs with 6 warm-start epochs, 6 refinement epochs when the selected base source retains cross-split signal, existing wake-pressure balancing, hard-negative/adversarial replay, loss coefficients, threshold grid, scoring order, gates and qualification semantics. This request is evidence-only. Record calibration trial_count/unique_trial_vectors/cache_hits and use same-sample acoustic/surrogate/runtime/path evidence to determine whether keyword collapse is dominated by acoustic path pollution, decoder-path rejection, event matching, VAD, or threshold saturation. Full governed training remains blocked unless the existing development/qualification gates pass."
 }
