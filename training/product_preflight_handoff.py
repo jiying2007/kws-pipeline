@@ -87,6 +87,10 @@ def _collect_handoff_files(
                 raw = metrics.get(field)
                 if isinstance(raw, str) and raw:
                     _add_if_file(files, pathlib.Path(raw), repo_root, required=True)
+            if split == "calibration":
+                curve = metrics.get("calibration_operating_curve_path")
+                if isinstance(curve, str) and curve:
+                    _add_if_file(files, pathlib.Path(curve), repo_root, required=True)
 
     for round_index in sorted(rounds):
         dataset = work_dir / "datasets" / f"round-{round_index:02d}"
@@ -319,6 +323,19 @@ def verify_restored_handoff(*, metadata: dict, repo_root: pathlib.Path = ROOT) -
                     raise ValueError(
                         f"restored {split} failure evidence is missing for record {index}: {field}"
                     )
+            if split == "calibration":
+                curve = metrics.get("calibration_operating_curve_path")
+                if isinstance(curve, str) and curve:
+                    curve_path = pathlib.Path(curve)
+                    if not curve_path.is_file():
+                        raise ValueError(
+                            f"restored calibration operating curve is missing for record {index}"
+                        )
+                    expected_curve_sha = metrics.get("calibration_operating_curve_sha256")
+                    if expected_curve_sha and sha256_file(curve_path) != str(expected_curve_sha):
+                        raise ValueError(
+                            f"restored calibration operating curve SHA mismatch for record {index}"
+                        )
 
 
 def verify_materialization(
