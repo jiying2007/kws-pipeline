@@ -37,6 +37,17 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
+def canonical_sha256(value: object) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
 def require_sha(value: object, label: str) -> str:
     text = str(value or "")
     if len(text) != 64 or any(ch not in HEX for ch in text):
@@ -48,12 +59,107 @@ def relpath(path: pathlib.Path, root: pathlib.Path) -> str:
     return pathlib.Path(os.path.relpath(path.resolve(), root.resolve())).as_posix()
 
 
+REPLAY_SEMANTIC_FIELDS = (
+    "schema_version",
+    "policy",
+    "provider_candidate",
+    "provider_profile",
+    "provider_reference_sha256",
+    "corpus_plan_sha256",
+    "command_policy_sha256",
+    "adapter_sha256",
+    "runtime_asset_archive_sha256",
+    "backend_bundle_archive_sha256",
+    "license_evidence_sha256",
+    "source_sample_rate_hz",
+    "normalized_sample_rate_hz",
+    "resampler_kind",
+    "replay_voice_scope",
+    "replay_train_voice_slots",
+)
+
+
+def validate_replay_semantic_identity(
+    summary: dict,
+    contract: dict,
+) -> tuple[str, dict]:
+    if contract.get("policy") != "product-replay-provider-semantic-v1":
+        raise ValueError("replay provider semantic contract policy mismatch")
+    expected_payload = {
+        key: contract.get(key)
+        for key in REPLAY_SEMANTIC_FIELDS
+    }
+    if int(expected_payload.get("schema_version") or 0) != 1:
+        raise ValueError("replay provider semantic contract schema mismatch")
+    expected_identity = require_sha(
+        contract.get("semantic_identity_sha256"),
+        "replay semantic identity",
+    )
+    if canonical_sha256(expected_payload) != expected_identity:
+        raise ValueError("replay provider semantic contract hash mismatch")
+
+    reference = summary.get("provider_reference")
+    runtime = summary.get("runtime_asset_binding")
+    backend = summary.get("backend_bundle_binding")
+    normalization = summary.get("audio_normalization")
+    if not all(isinstance(value, dict) for value in (reference, runtime, backend, normalization)):
+        raise ValueError("replay provider summary is missing semantic binding evidence")
+
+    actual_payload = {
+        "schema_version": 1,
+        "policy": "product-replay-provider-semantic-v1",
+        "provider_candidate": str(reference.get("candidate") or ""),
+        "provider_profile": str(summary.get("provider_profile") or ""),
+        "provider_reference_sha256": str(reference.get("reference_sha256") or ""),
+        "corpus_plan_sha256": str(summary.get("corpus_plan_sha256") or ""),
+        "command_policy_sha256": str(summary.get("command_policy_sha256") or ""),
+        "adapter_sha256": str(normalization.get("adapter_sha256") or ""),
+        "runtime_asset_archive_sha256": str(runtime.get("archive_sha256") or ""),
+        "backend_bundle_archive_sha256": str(backend.get("archive_sha256") or ""),
+        "license_evidence_sha256": str(summary.get("license_evidence_sha256") or ""),
+        "source_sample_rate_hz": int(normalization.get("source_sample_rate_hz", -1)),
+        "normalized_sample_rate_hz": int(normalization.get("output_sample_rate_hz", -1)),
+        "resampler_kind": str(normalization.get("resampler_kind") or ""),
+        "replay_voice_scope": str(contract.get("replay_voice_scope") or ""),
+        "replay_train_voice_slots": int(contract.get("replay_train_voice_slots", -1)),
+    }
+    for key in (
+        "provider_reference_sha256",
+        "corpus_plan_sha256",
+        "command_policy_sha256",
+        "adapter_sha256",
+        "runtime_asset_archive_sha256",
+        "backend_bundle_archive_sha256",
+        "license_evidence_sha256",
+    ):
+        require_sha(actual_payload[key], f"replay semantic {key}")
+    if actual_payload != expected_payload:
+        mismatches = [
+            key
+            for key in REPLAY_SEMANTIC_FIELDS
+            if actual_payload.get(key) != expected_payload.get(key)
+        ]
+        raise ValueError(
+            "replay provider semantic binding drifted: " + ", ".join(mismatches)
+        )
+    actual_identity = canonical_sha256(actual_payload)
+    if actual_identity != expected_identity:
+        raise ValueError("replay provider semantic identity drifted")
+    return actual_identity, actual_payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-config", required=True, type=pathlib.Path)
     parser.add_argument("--base-contract", required=True, type=pathlib.Path)
     parser.add_argument("--bundle-root", required=True, type=pathlib.Path)
     parser.add_argument("--replay-provider", required=True, type=pathlib.Path)
+    parser.add_argument("--replay-provider-summary", required=True, type=pathlib.Path)
+    parser.add_argument(
+        "--replay-provider-contract",
+        type=pathlib.Path,
+        default=ROOT / "configs/training/product-replay-provider-semantic-v1.json",
+    )
     parser.add_argument("--voice-inventory", required=True, type=pathlib.Path)
     parser.add_argument(
         "--command-policy",
@@ -67,6 +173,8 @@ def main() -> int:
     contract_path = args.base_contract.resolve()
     bundle_root = args.bundle_root.resolve()
     replay_provider_path = args.replay_provider.resolve()
+    replay_provider_summary_path = args.replay_provider_summary.resolve()
+    replay_provider_contract_path = args.replay_provider_contract.resolve()
     voice_inventory_path = args.voice_inventory.resolve()
     command_policy_path = args.command_policy.resolve()
     output = args.output.resolve()
@@ -113,16 +221,15 @@ def main() -> int:
         provider_value,
         command_policy,
     )
-    provider_identity = hashlib.sha256(
-        json.dumps(
-            normalized_provider["identity"],
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
-    if provider_identity != expected_provider:
-        raise ValueError("replay provider identity differs from product speech-like base")
+    provider_execution_identity = canonical_sha256(
+        normalized_provider["identity"]
+    )
+    replay_summary = load_json(replay_provider_summary_path)
+    replay_semantic_contract = load_json(replay_provider_contract_path)
+    provider_identity, provider_semantic_payload = validate_replay_semantic_identity(
+        replay_summary,
+        replay_semantic_contract,
+    )
 
     inventory_rows = []
     for line_no, raw in enumerate(
@@ -155,6 +262,15 @@ def main() -> int:
         )
     train_profiles.sort(key=lambda row: row["slot"])
     expected_train_voices = int(contract.get("replay_train_voice_slots", 0))
+    semantic_train_voices = int(
+        replay_semantic_contract.get("replay_train_voice_slots", 0)
+    )
+    if expected_train_voices != semantic_train_voices:
+        raise ValueError("base/replay semantic train voice count contract drift")
+    if str(contract.get("replay_voice_scope") or "") != str(
+        replay_semantic_contract.get("replay_voice_scope") or ""
+    ):
+        raise ValueError("base/replay semantic voice scope contract drift")
     if len(train_profiles) != expected_train_voices or expected_train_voices <= 0:
         raise ValueError(
             f"replay train voice count mismatch: {len(train_profiles)} != {expected_train_voices}"
@@ -240,11 +356,16 @@ def main() -> int:
             for row in train_profiles
         ],
         "provider_identity_sha256": provider_identity,
+        "provider_execution_identity_sha256": provider_execution_identity,
+        "provider_semantic_identity_policy": "product-replay-provider-semantic-v1",
         "provider_name": normalized_provider["provider_name"],
         "provider_version": normalized_provider["provider_version"],
         "license_id": normalized_provider["license_id"],
         "command_policy_sha256": sha256_file(command_policy_path),
         "provider_spec_sha256": sha256_file(replay_provider_path),
+        "provider_summary_sha256": sha256_file(replay_provider_summary_path),
+        "provider_semantic_contract_path": replay_provider_contract_path.relative_to(ROOT).as_posix(),
+        "provider_semantic_contract_sha256": sha256_file(replay_provider_contract_path),
         "voice_inventory_sha256": sha256_file(voice_inventory_path),
         "timeout_seconds": int(normalized_provider["timeout_seconds"]),
         "replay_voice_scope": "train-only",
@@ -259,6 +380,11 @@ def main() -> int:
         "external_base_bundle_sha256": expected_bundle,
         "provider_identity_sha256": expected_provider,
         "replay_provider_identity_sha256": provider_identity,
+        "replay_provider_execution_identity_sha256": provider_execution_identity,
+        "replay_provider_semantic_identity_policy": "product-replay-provider-semantic-v1",
+        "replay_provider_semantic_contract_path": replay_provider_contract_path.relative_to(ROOT).as_posix(),
+        "replay_provider_semantic_contract_sha256": sha256_file(replay_provider_contract_path),
+        "replay_provider_semantic_payload_sha256": canonical_sha256(provider_semantic_payload),
         "replay_backend": "command",
         "replay_train_voice_slots": len(train_profiles),
         "replay_tone_allowed": False,
