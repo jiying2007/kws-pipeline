@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 
 from completion_loss import strict_prefix_completion_loss
+from objective_config import optional_objective_cli_args, path_purity_settings
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from train_ctc import (
@@ -98,6 +99,24 @@ def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
 
 
 def main() -> int:
+    assert optional_objective_cli_args({}) == []
+    weight, margin, configured = path_purity_settings({})
+    assert weight == 0.0 and margin == 0.10 and configured is False
+    assert optional_objective_cli_args(
+        {"path_purity_loss_weight": 0.10, "path_purity_margin": 0.10}
+    ) == [
+        "--path-purity-loss-weight",
+        "0.1",
+        "--path-purity-margin",
+        "0.1",
+    ]
+    try:
+        path_purity_settings({"path_purity_loss_weight": -0.1})
+    except ValueError as exc:
+        assert "path_purity_loss_weight" in str(exc)
+    else:
+        raise AssertionError("negative path-purity objective weight was accepted")
+
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])
     assert float(unsafe_loss.item()) > 0.05
