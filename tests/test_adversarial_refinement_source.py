@@ -17,6 +17,23 @@ from adversarial_refinement import (  # noqa: E402
     select_refinement_source,
 )
 
+from evaluate_refinement_eligibility import (  # noqa: E402
+    POLICY as REFINEMENT_ELIGIBILITY_POLICY,
+    evaluate_refinement_eligibility,
+)
+
+
+def keyword_metrics(frr: float) -> dict:
+    expected = 32
+    false_rejects = int(round(frr * expected))
+    matched = expected - false_rejects
+    return {
+        "expected": expected,
+        "matched": matched,
+        "false_rejects": false_rejects,
+        "frr": frr,
+    }
+
 
 def row(
     round_index: int,
@@ -43,16 +60,16 @@ def row(
             "frr": cal_frr,
             "far_per_hour": cal_far,
             "per_keyword": {
-                "1": {"frr": cal_kw1_frr},
-                "2": {"frr": cal_kw2_frr},
+                "1": keyword_metrics(cal_kw1_frr),
+                "2": keyword_metrics(cal_kw2_frr),
             },
         },
         "test": {
             "frr": test_frr,
             "far_per_hour": test_far,
             "per_keyword": {
-                "1": {"frr": test_kw1_frr},
-                "2": {"frr": test_kw2_frr},
+                "1": keyword_metrics(test_kw1_frr),
+                "2": keyword_metrics(test_kw2_frr),
             },
         },
         "calibration_domains": {
@@ -149,6 +166,80 @@ def main() -> int:
     selected, policy = select_refinement_source(manifest)
     assert selected["round"] == 0
     assert policy == REFINEMENT_SOURCE_POLICY
+
+    eligibility = evaluate_refinement_eligibility(
+        manifest,
+        expected_keyword_ids=("1", "2"),
+    )
+    assert eligibility["policy"] == REFINEMENT_ELIGIBILITY_POLICY
+    assert eligibility["eligible"] is True
+    assert eligibility["source_round"] == 0
+    assert eligibility["collapsed_keyword_ids"] == []
+
+    # One development split may completely miss a keyword while the other still
+    # carries a real recognition signal. This is weak, but it is not a total
+    # collapse and refinement is explicitly allowed to repair it.
+    weak = row(
+        0,
+        cal_frr=0.9375,
+        test_frr=0.921875,
+        cal_far_frr=0.9,
+        test_far_frr=0.8,
+        cal_far=100.0,
+        test_far=120.0,
+        cal_kw1_frr=1.0,
+        cal_kw2_frr=0.875,
+        test_kw1_frr=0.96875,
+        test_kw2_frr=0.875,
+        score=10.0,
+    )
+    weak_manifest = {
+        "development_qualified": False,
+        "candidate_selection": {
+            "policy": "latest-strict-gate-passing-round",
+            "eligible_rounds": [],
+            "qualification_used_for_selection": False,
+            "selected_round": None,
+            "selected_frontend": None,
+            "selected_score": None,
+            "objective_fallback_used": True,
+            "objective_best_round": 0,
+            "objective_best_frontend": "logmel",
+            "objective_best_score": 10.0,
+        },
+        "records": [weak],
+    }
+    weak_eligibility = evaluate_refinement_eligibility(
+        weak_manifest,
+        expected_keyword_ids=("1", "2"),
+    )
+    assert weak_eligibility["eligible"] is True
+    assert weak_eligibility["keyword_signal"]["1"]["calibration"]["matched"] == 0
+    assert weak_eligibility["keyword_signal"]["1"]["test"]["matched"] == 1
+    assert weak_eligibility["keyword_signal"]["1"]["combined_matched"] == 1
+
+    collapsed = row(
+        0,
+        cal_frr=0.9375,
+        test_frr=0.9375,
+        cal_far_frr=0.9,
+        test_far_frr=0.9,
+        cal_far=80.0,
+        test_far=90.0,
+        cal_kw1_frr=1.0,
+        cal_kw2_frr=0.875,
+        test_kw1_frr=1.0,
+        test_kw2_frr=0.875,
+        score=11.0,
+    )
+    collapsed_manifest = dict(weak_manifest)
+    collapsed_manifest["records"] = [collapsed]
+    collapsed_eligibility = evaluate_refinement_eligibility(
+        collapsed_manifest,
+        expected_keyword_ids=("1", "2"),
+    )
+    assert collapsed_eligibility["eligible"] is False
+    assert collapsed_eligibility["collapsed_keyword_ids"] == ["1"]
 
     strict = row(
         4,
