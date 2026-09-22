@@ -15,6 +15,7 @@ from adversarial_lexicon import mine_adversarial_lexicon
 from development_failure_replay import render_development_failure_replay
 from hard_negative_replay import render_hard_negative_replay
 from feature_cached_trainer import feature_cache_max_items, rewrite_training_command
+from objective_config import optional_objective_cli_args
 from iterate_domain import (
     base_gate,
     calibrate,
@@ -326,6 +327,11 @@ def _train_refinement(
             str(wake_balance["default_wake_example_weight"]),
             "--wake-keyword-weights",
             json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
+        ]
+    )
+    command.extend(optional_objective_cli_args(train))
+    command.extend(
+        [
             "--warm-start",
             str(warm_start),
             "--output",
