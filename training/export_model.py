@@ -18,7 +18,7 @@ from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend_spec import FRONTEND_IDS
-from path_purity import PATH_PURITY_MARGIN_MAX
+from objective_contract import PATH_PURITY_MARGIN_MAX, PATH_PURITY_POLICY
 
 MODEL_VERSION = 2
 MODEL_HEADER_BYTES = 72
@@ -256,7 +256,7 @@ def training_metadata(checkpoint: dict) -> dict:
             raise ValueError(
                 "checkpoint path_purity_margin is outside the supported range"
             )
-        if policy != "ordered-active-wake-competitor-hinge-v1":
+        if policy != PATH_PURITY_POLICY:
             raise ValueError("checkpoint path_purity_policy is unsupported")
         result["path_purity_objective"] = {
             "weight": weight,
