@@ -100,8 +100,8 @@ def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
 
 def main() -> int:
     assert optional_objective_cli_args({}) == []
-    weight, margin, configured = path_purity_settings({})
-    assert weight == 0.0 and margin == 0.10 and configured is False
+    weight, purity_margin, configured = path_purity_settings({})
+    assert weight == 0.0 and purity_margin == 0.10 and configured is False
     assert optional_objective_cli_args(
         {"path_purity_loss_weight": 0.10, "path_purity_margin": 0.10}
     ) == [
