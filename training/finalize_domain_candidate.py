@@ -157,22 +157,36 @@ def main() -> int:
     product_data = config.get("product_candidate_data")
     if isinstance(product_data, dict) and product_data.get("policy") == "external-speech-like-product-base-v1":
         contract_path = repo_path(str(product_data.get("base_contract_path") or ""))
+        replay_contract_path = repo_path(
+            str(product_data.get("replay_provider_semantic_contract_path") or "")
+        )
         template_path = repo_path(str(product_data.get("source_template_config_path") or ""))
         require_file(contract_path, "product speech-like base contract")
+        require_file(replay_contract_path, "product replay provider semantic contract")
         require_file(template_path, "source training template config")
         if sha256_file(contract_path) != str(product_data.get("base_contract_sha256") or ""):
             raise RuntimeError("product speech-like base contract SHA drifted before finalization")
+        if sha256_file(replay_contract_path) != str(
+            product_data.get("replay_provider_semantic_contract_sha256") or ""
+        ):
+            raise RuntimeError(
+                "product replay provider semantic contract SHA drifted before finalization"
+            )
         if sha256_file(template_path) != str(product_data.get("source_template_config_sha256") or ""):
             raise RuntimeError("source training template SHA drifted before finalization")
         invocation_path = root / "training-invocation.json"
         require_file(invocation_path, "governed training invocation receipt")
         effective_copy = best_dir / "effective-training-config.json"
         base_contract_copy = best_dir / "product-speech-like-base-contract.json"
+        replay_contract_copy = best_dir / "replay-provider-semantic-contract.json"
         invocation_copy = best_dir / "training-invocation.json"
         shutil.copy2(config_path, effective_copy)
         shutil.copy2(contract_path, base_contract_copy)
+        shutil.copy2(replay_contract_path, replay_contract_copy)
         shutil.copy2(invocation_path, invocation_copy)
-        product_lineage.extend([effective_copy, base_contract_copy, invocation_copy])
+        product_lineage.extend(
+            [effective_copy, base_contract_copy, replay_contract_copy, invocation_copy]
+        )
 
     # Training replay round N is rendered before training round N and its SHA is
     # recorded in the candidate. Freeze it only as generation/provenance proof;
