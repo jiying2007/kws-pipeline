@@ -9,6 +9,7 @@ import pathlib
 import struct
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 from typing import Any
 
@@ -24,7 +25,7 @@ from score_events import (  # noqa: E402
     DEFAULT_PRE_TOLERANCE_MS,
 )
 
-EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v2"
+EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v3"
 MODEL_HEADER = struct.Struct("<4sHHHHHHIIIfffQIIIIII")
 MODEL_MAGIC = b"KWSP"
 MODEL_VERSION = 2
@@ -291,6 +292,48 @@ def parse_runtime_detections(stdout: str, recording_id: str) -> list[dict]:
     return rows
 
 
+def parse_runtime_stats(value: object) -> dict:
+    if not isinstance(value, dict) or int(value.get("schema_version", 0)) != 1:
+        raise ValueError("runtime stats must be schema_version 1")
+    integer_fields = (
+        "processed_samples",
+        "processed_frames",
+        "speech_frames",
+        "blank_top1_frames",
+        "decoder_hits",
+        "refractory_suppressed",
+        "detections",
+        "pending_age_frames",
+    )
+    result: dict[str, int | float] = {"schema_version": 1}
+    for field in integer_fields:
+        raw = value.get(field)
+        if isinstance(raw, bool):
+            raise ValueError(f"runtime stats {field} must be an integer")
+        parsed = int(raw)
+        if parsed < 0:
+            raise ValueError(f"runtime stats {field} must be non-negative")
+        result[field] = parsed
+    pending_keyword_index = int(value.get("pending_keyword_index", -1))
+    if pending_keyword_index < -1:
+        raise ValueError("runtime stats pending_keyword_index is invalid")
+    result["pending_keyword_index"] = pending_keyword_index
+    confidence = float(value.get("max_detection_confidence", 0.0))
+    if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+        raise ValueError("runtime stats max_detection_confidence must be in [0,1]")
+    result["max_detection_confidence"] = confidence
+
+    processed_frames = int(result["processed_frames"])
+    for field in ("speech_frames", "blank_top1_frames"):
+        if int(result[field]) > processed_frames:
+            raise ValueError(f"runtime stats {field} exceeds processed_frames")
+    if int(result["detections"]) > int(result["decoder_hits"]):
+        raise ValueError("runtime stats detections exceed decoder_hits")
+    if int(result["refractory_suppressed"]) > int(result["decoder_hits"]):
+        raise ValueError("runtime stats refractory_suppressed exceed decoder_hits")
+    return result
+
+
 def run_runtime(
     runner: pathlib.Path,
     model: pathlib.Path,
@@ -298,18 +341,33 @@ def run_runtime(
     wav: pathlib.Path,
     *,
     recording_id: str,
-) -> list[dict]:
-    completed = subprocess.run(
-        [str(runner), str(model), str(pack), str(wav), recording_id],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(
-            f"runtime evaluation failed for {wav}: {completed.stderr.strip()}"
+) -> tuple[list[dict], dict]:
+    with tempfile.TemporaryDirectory(prefix="kws-runtime-stats-") as tmp:
+        stats_path = pathlib.Path(tmp) / "stats.json"
+        completed = subprocess.run(
+            [
+                str(runner),
+                str(model),
+                str(pack),
+                str(wav),
+                recording_id,
+                "--stats-json",
+                str(stats_path),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
         )
-    return parse_runtime_detections(completed.stdout, recording_id)
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"runtime evaluation failed for {wav}: {completed.stderr.strip()}"
+            )
+        if not stats_path.is_file():
+            raise RuntimeError(f"runtime stats were not written for {wav}")
+        stats = parse_runtime_stats(
+            json.loads(stats_path.read_text(encoding="utf-8"))
+        )
+    return parse_runtime_detections(completed.stdout, recording_id), stats
 
 
 def runtime_match_summary(
@@ -589,7 +647,7 @@ def analyze_recording(
         else 0.0
     )
     recording_id = str(row.get("wav_sha256") or sha256_file(wav))
-    runtime_detections = run_runtime(
+    runtime_detections, runtime_stats = run_runtime(
         runner,
         model_path,
         pack_path,
@@ -625,6 +683,17 @@ def analyze_recording(
         "runtime_threshold": threshold,
         "surrogate_above_runtime_threshold": surrogate_confidence >= threshold,
         **runtime_summary,
+        "runtime_stats": runtime_stats,
+        "runtime_speech_frame_fraction": (
+            int(runtime_stats["speech_frames"]) / int(runtime_stats["processed_frames"])
+            if int(runtime_stats["processed_frames"]) > 0
+            else 0.0
+        ),
+        "runtime_blank_top1_fraction": (
+            int(runtime_stats["blank_top1_frames"]) / int(runtime_stats["processed_frames"])
+            if int(runtime_stats["processed_frames"]) > 0
+            else 0.0
+        ),
         "blank_top1_fraction": blank_top1_frames / len(logits),
         "root_top1_frames": root_top1_frames,
         "root_within_margin_frames": root_within_margin_frames,
@@ -675,6 +744,34 @@ def aggregate(records: list[dict]) -> dict:
             and not bool(row["runtime_matched_expected"])
             for row in records
         ),
+        "runtime_decoder_hit_recordings": sum(
+            int(row["runtime_stats"]["decoder_hits"]) > 0 for row in records
+        ),
+        "runtime_decoder_hit_without_expected_match_recordings": sum(
+            int(row["runtime_stats"]["decoder_hits"]) > 0
+            and not bool(row["runtime_matched_expected"])
+            for row in records
+        ),
+        "surrogate_above_threshold_without_decoder_hit_recordings": sum(
+            bool(row["surrogate_above_runtime_threshold"])
+            and int(row["runtime_stats"]["decoder_hits"]) == 0
+            for row in records
+        ),
+        "runtime_pending_prefix_recordings": sum(
+            int(row["runtime_stats"]["pending_keyword_index"]) >= 0 for row in records
+        ),
+        "runtime_refractory_suppressed_recordings": sum(
+            int(row["runtime_stats"]["refractory_suppressed"]) > 0 for row in records
+        ),
+        "runtime_zero_speech_recordings": sum(
+            int(row["runtime_stats"]["speech_frames"]) == 0 for row in records
+        ),
+        "mean_runtime_speech_frame_fraction": sum(
+            float(row["runtime_speech_frame_fraction"]) for row in records
+        ) / len(records),
+        "mean_runtime_blank_top1_fraction": sum(
+            float(row["runtime_blank_top1_fraction"]) for row in records
+        ) / len(records),
         "mean_longest_target_prefix_ratio": sum(prefix) / len(prefix),
         "root_top1_recordings": sum(int(row["root_top1_frames"]) > 0 for row in records),
         "root_within_margin_recordings": sum(
