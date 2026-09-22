@@ -111,6 +111,8 @@ def main() -> int:
         "adversarial-lexicon.json",
         "formal-preflight.json",
         "training-invocation.json",
+        "xiaowo-replay-provider-semantic-contract.json",
+        "replay provider semantic contract",
         "governed-model-training-invocation-v1",
         "versioned governed training invocation lacks request",
         "manual governed training must not claim a versioned request",
@@ -354,7 +356,8 @@ def main() -> int:
     for needle in (
         'root / "training-invocation.json"',
         'best_dir / "training-invocation.json"',
-        'product_lineage.extend([effective_copy, base_contract_copy, invocation_copy])',
+        'replay_contract_copy = best_dir / "replay-provider-semantic-contract.json"',
+        'product_lineage.extend(',
     ):
         require(finalizer, needle, "product lineage finalizer")
 
