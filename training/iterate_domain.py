@@ -398,6 +398,19 @@ def warm_start_args(previous: pathlib.Path | None, strategy: str) -> list[str]:
     return result
 
 
+def train_acoustic_seed_offset(iteration: dict, round_index: int) -> int:
+    if round_index < 0:
+        raise ValueError("round index must be non-negative")
+    if not isinstance(iteration, dict):
+        raise ValueError("domain_iteration must be an object")
+    raw = iteration.get("training_acoustic_seed_stride", 0)
+    if isinstance(raw, bool) or not isinstance(raw, int) or raw < 0:
+        raise ValueError(
+            "domain_iteration.training_acoustic_seed_stride must be a non-negative integer"
+        )
+    return round_index * raw
+
+
 def torch_round_training_values(
     cfg: dict,
     *,
@@ -577,11 +590,13 @@ def main() -> int:
     previous_checkpoints: dict[str, pathlib.Path] = {}
     for round_index in range(max_rounds):
         dataset_dir = work / "datasets" / f"round-{round_index:02d}"
+        acoustic_seed_offset = train_acoustic_seed_offset(iteration, round_index)
         render_domain_dataset(
             config_path,
             dataset_dir,
             curriculum_weights=curriculum,
             splits=("train", "calibration", "test"),
+            train_seed_offset=acoustic_seed_offset,
         )
         run(
             [
@@ -719,6 +734,8 @@ def main() -> int:
                     "test_domains": test_domains,
                     "calibration_gate": base_gate(cal_base, gates) and domain_gate(cal_domains, gates),
                     "test_gate": base_gate(test_base, gates) and domain_gate(test_domains, gates),
+                    "training_acoustic_seed_policy": "train-only-scene-seed-offset-v1",
+                    "training_acoustic_seed_offset": acoustic_seed_offset,
                 }
                 if checkpoint is not None:
                     record["checkpoint"] = str(checkpoint)

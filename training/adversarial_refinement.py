@@ -25,6 +25,7 @@ from iterate_domain import (
     repo_path,
     run,
     sha256_file,
+    train_acoustic_seed_offset,
 )
 from refinement_progress import PhaseProgress
 from qualification_failure_replay import (
@@ -450,12 +451,17 @@ def main() -> int:
     )
 
     dataset = work / "datasets" / f"round-{refinement_round:02d}"
+    refinement_train_seed_offset = train_acoustic_seed_offset(
+        cfg.get("domain_iteration", {}),
+        refinement_round,
+    )
     progress.begin("dataset-render-audit")
     render_domain_dataset(
         config_path,
         dataset,
         curriculum_weights=curriculum,
         splits=("train", "calibration", "test"),
+        train_seed_offset=refinement_train_seed_offset,
     )
     _audit(dataset, ("train", "calibration", "test"))
     progress.finish("dataset-render-audit")
@@ -585,6 +591,8 @@ def main() -> int:
         "test_gate": test_gate,
         "warm_started": True,
         "warm_start_strategy": "full",
+        "training_acoustic_seed_policy": "train-only-scene-seed-offset-v1",
+        "training_acoustic_seed_offset": refinement_train_seed_offset,
         "source_round": source_round,
         "source_selection_policy": source_selection_policy,
         "source_was_strict": source_was_strict,
