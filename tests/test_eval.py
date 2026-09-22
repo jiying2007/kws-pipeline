@@ -128,6 +128,124 @@ def main() -> int:
         assert fr[0]["end_s"] == 20.0
         assert fr[0]["path"] == "room-1.wav"
 
+        negative_refs = root / "negative-references.jsonl"
+        negative_dets = root / "negative-detections.jsonl"
+        negative_summary = root / "negative-summary.json"
+        negative_refs.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "recording": "positive",
+                            "duration_s": 1800.0,
+                            "expected": [
+                                {"keyword_id": 1, "start_s": 10.0, "end_s": 11.0}
+                            ],
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "recording": "negative",
+                            "duration_s": 3600.0,
+                            "expected": [],
+                        }
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        negative_dets.write_text(
+            json.dumps(
+                {
+                    "recording": "positive",
+                    "keyword_id": 2,
+                    "time_s": 100.0,
+                    "confidence": 0.7,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        completed = run_score(negative_refs, negative_dets, negative_summary)
+        assert completed.returncode == 0, completed.stderr
+        negative_result = json.loads(
+            negative_summary.read_text(encoding="utf-8")
+        )
+        assert abs(negative_result["audio_hours"] - 1.5) < 1.0e-12
+        assert negative_result["false_accepts"] == 1
+        assert abs(negative_result["far_per_hour"] - (2.0 / 3.0)) < 1.0e-12
+        assert negative_result["negative_recording_false_accepts"] == 0
+        assert abs(negative_result["negative_recording_audio_hours"] - 1.0) < 1.0e-12
+        assert negative_result["negative_recording_far_per_hour"] == 0.0
+        assert (
+            2.9957
+            < negative_result["negative_recording_far_upper_95_per_hour"]
+            < 2.9958
+        )
+        assert negative_result["negative_recording_far_confidence"] == 0.95
+        assert (
+            negative_result["negative_recording_far_policy"]
+            == "negative-only-recordings-poisson-upper-v1"
+        )
+
+        negative_dets.write_text(
+            json.dumps(
+                {
+                    "recording": "negative",
+                    "keyword_id": 1,
+                    "time_s": 120.0,
+                    "confidence": 0.8,
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        completed = run_score(negative_refs, negative_dets, negative_summary)
+        assert completed.returncode == 0, completed.stderr
+        negative_result = json.loads(
+            negative_summary.read_text(encoding="utf-8")
+        )
+        assert negative_result["negative_recording_false_accepts"] == 1
+        assert negative_result["negative_recording_far_per_hour"] == 1.0
+        assert (
+            4.7438
+            < negative_result["negative_recording_far_upper_95_per_hour"]
+            < 4.7440
+        )
+
+        positive_only_refs = root / "positive-only-references.jsonl"
+        positive_only_summary = root / "positive-only-summary.json"
+        positive_only_refs.write_text(
+            json.dumps(
+                {
+                    "recording": "only-positive",
+                    "duration_s": 10.0,
+                    "expected": [
+                        {"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        empty_dets.write_text("", encoding="utf-8")
+        completed = run_score(
+            positive_only_refs,
+            empty_dets,
+            positive_only_summary,
+        )
+        assert completed.returncode == 0, completed.stderr
+        positive_only_result = json.loads(
+            positive_only_summary.read_text(encoding="utf-8")
+        )
+        assert positive_only_result["negative_recording_audio_hours"] == 0.0
+        assert positive_only_result["negative_recording_far_per_hour"] is None
+        assert (
+            positive_only_result["negative_recording_far_upper_95_per_hour"]
+            is None
+        )
+
         overlap_refs = root / "overlap-references.jsonl"
         overlap_dets = root / "overlap-detections.jsonl"
         overlap_summary = root / "overlap-summary.json"
