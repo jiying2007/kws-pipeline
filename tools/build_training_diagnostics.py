@@ -234,6 +234,10 @@ def evidence_signals(
 
     acoustic_runtime_gaps: list[dict] = []
     surrogate_runtime_gaps: list[dict] = []
+    surrogate_decoder_path_gaps: list[dict] = []
+    decoder_event_gaps: list[dict] = []
+    vad_zero_speech: list[dict] = []
+    pending_prefixes: list[dict] = []
     sampled_acoustic_sequence_absent: list[dict] = []
     if isinstance(acoustic_alignment, dict):
         source_round = int(acoustic_alignment.get("source_round", -1))
@@ -302,6 +306,68 @@ def evidence_signals(
                                     "evidence": "same-sample-exact-runtime-v1",
                                 }
                             )
+                        no_decoder_hit = int(
+                            aggregate.get(
+                                "surrogate_above_threshold_without_decoder_hit_recordings",
+                                0,
+                            )
+                        )
+                        if no_decoder_hit > 0:
+                            surrogate_decoder_path_gaps.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "same_sample_no_decoder_hit": no_decoder_hit,
+                                    "evidence": "same-sample-engine-stats-v1",
+                                }
+                            )
+                        decoder_event_miss = int(
+                            aggregate.get(
+                                "runtime_decoder_hit_without_expected_match_recordings",
+                                0,
+                            )
+                        )
+                        if decoder_event_miss > 0:
+                            decoder_event_gaps.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "same_sample_decoder_hit_event_miss": decoder_event_miss,
+                                    "evidence": "same-sample-engine-stats-v1",
+                                }
+                            )
+                        zero_speech = int(
+                            aggregate.get("runtime_zero_speech_recordings", 0)
+                        )
+                        if zero_speech > 0:
+                            vad_zero_speech.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "zero_speech_recordings": zero_speech,
+                                    "evidence": "same-sample-engine-stats-v1",
+                                }
+                            )
+                        pending = int(
+                            aggregate.get("runtime_pending_prefix_recordings", 0)
+                        )
+                        if pending > 0:
+                            pending_prefixes.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "pending_prefix_recordings": pending,
+                                    "evidence": "same-sample-engine-stats-v1",
+                                }
+                            )
                     else:
                         metrics = source.get(split)
                         per_keyword = (
@@ -359,6 +425,22 @@ def evidence_signals(
         "surrogate_above_threshold_but_runtime_missed": {
             "observed": bool(surrogate_runtime_gaps),
             "occurrences": surrogate_runtime_gaps,
+        },
+        "surrogate_above_threshold_without_decoder_hit": {
+            "observed": bool(surrogate_decoder_path_gaps),
+            "occurrences": surrogate_decoder_path_gaps,
+        },
+        "decoder_hit_without_expected_event_match": {
+            "observed": bool(decoder_event_gaps),
+            "occurrences": decoder_event_gaps,
+        },
+        "runtime_zero_speech": {
+            "observed": bool(vad_zero_speech),
+            "occurrences": vad_zero_speech,
+        },
+        "runtime_pending_prefix": {
+            "observed": bool(pending_prefixes),
+            "occurrences": pending_prefixes,
         },
         "sampled_acoustic_sequence_absent": {
             "observed": bool(sampled_acoustic_sequence_absent),
