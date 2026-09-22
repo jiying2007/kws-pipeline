@@ -203,6 +203,7 @@ jobs:
             --config "$KWS_PREFLIGHT_CONFIG" \
             --manifest "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json" \
             --feature-dump build/kws_feature_dump \
+            --runner build/kws_wav \
             --max-per-keyword-split 8 \
             --output "$KWS_PREFLIGHT_WORK/acoustic-alignment.json"
           test -s "$KWS_PREFLIGHT_WORK/acoustic-alignment.json"
