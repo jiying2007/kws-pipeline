@@ -142,6 +142,10 @@ def main() -> int:
                         "surrogate_above_threshold_recordings": 3,
                         "surrogate_above_threshold_runtime_miss_recordings": 2,
                         "greedy_subsequence_runtime_miss_recordings": 2,
+                        "greedy_strict_dominance_path_recordings": 1,
+                        "greedy_strict_dominance_path_runtime_match_recordings": 1,
+                        "greedy_strict_dominance_path_runtime_miss_recordings": 0,
+                        "surrogate_above_threshold_greedy_path_incompatible_recordings": 2,
                         "runtime_decoder_hit_recordings": 2,
                         "runtime_decoder_hit_without_expected_match_recordings": 1,
                         "surrogate_above_threshold_without_decoder_hit_recordings": 1,
@@ -158,6 +162,10 @@ def main() -> int:
                         "surrogate_above_threshold_recordings": 2,
                         "surrogate_above_threshold_runtime_miss_recordings": 1,
                         "greedy_subsequence_runtime_miss_recordings": 1,
+                        "greedy_strict_dominance_path_recordings": 1,
+                        "greedy_strict_dominance_path_runtime_match_recordings": 0,
+                        "greedy_strict_dominance_path_runtime_miss_recordings": 1,
+                        "surrogate_above_threshold_greedy_path_incompatible_recordings": 1,
                         "runtime_decoder_hit_recordings": 1,
                         "runtime_decoder_hit_without_expected_match_recordings": 1,
                         "surrogate_above_threshold_without_decoder_hit_recordings": 0,
@@ -237,6 +245,19 @@ def main() -> int:
             (row["split"], row["same_sample_runtime_misses"])
             for row in surrogate_gaps["occurrences"]
         } == {("calibration", 2), ("test", 1)}
+        greedy_path_gaps = signals[
+            "surrogate_above_threshold_but_greedy_path_incompatible"
+        ]
+        assert greedy_path_gaps["observed"] is True
+        assert {
+            (row["split"], row["same_sample_greedy_path_incompatible"])
+            for row in greedy_path_gaps["occurrences"]
+        } == {("calibration", 2), ("test", 1)}
+        assert all(
+            row["evidence"] == "same-sample-greedy-dominance-v1"
+            for row in greedy_path_gaps["occurrences"]
+        )
+
         path_gaps = signals["surrogate_above_threshold_without_decoder_hit"]
         assert path_gaps["observed"] is True
         assert path_gaps["occurrences"] == [
