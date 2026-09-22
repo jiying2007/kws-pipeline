@@ -13,10 +13,13 @@ sys.path.insert(0, str(ROOT / "tools"))
 from diagnose_acoustic_alignment import (  # noqa: E402
     MODEL_HEADER,
     ctc_log_probability,
+    decoder_surrogate_log_confidence,
     greedy_collapse,
     infer_logits,
     load_model,
     longest_prefix_subsequence,
+    parse_runtime_detections,
+    runtime_match_summary,
     stable_sample,
 )
 
@@ -87,6 +90,59 @@ def main() -> int:
         assert math.isfinite(strong_logp)
         assert math.isfinite(weak_logp)
         assert strong_logp > weak_logp
+
+        surrogate_log = decoder_surrogate_log_confidence(
+            [
+                [0.0, 4.0, -4.0],
+                [4.0, 0.0, -4.0],
+                [0.0, -4.0, 4.0],
+            ],
+            (1, 2),
+        )
+        assert math.isfinite(surrogate_log)
+        assert 0.0 < math.exp(surrogate_log) < 1.0
+
+        detections = parse_runtime_detections(
+            '{"recording":"fixture","keyword_id":1,"time_s":0.42,"confidence":0.73}\n'
+            '{"recording":"fixture","keyword_id":2,"time_s":0.61,"confidence":0.66}\n',
+            "fixture",
+        )
+        assert [row["keyword_id"] for row in detections] == [1, 2]
+        assert detections[0]["confidence"] == 0.73
+        matched = runtime_match_summary(
+            [
+                {"keyword_id": 1, "time_s": 0.85, "confidence": 0.73},
+                {"keyword_id": 1, "time_s": 1.19, "confidence": 0.77},
+                {"keyword_id": 1, "time_s": 1.71, "confidence": 0.81},
+                {"keyword_id": 2, "time_s": 1.00, "confidence": 0.66},
+            ],
+            keyword_id=1,
+            event_start_frame=16000,
+            event_end_frame=19200,
+            recording_frames=32000,
+            sample_rate_hz=16000,
+        )
+        assert matched["runtime_expected_detection_count"] == 3
+        assert matched["runtime_expected_in_window_detection_count"] == 2
+        assert matched["runtime_expected_matched_count"] == 1
+        assert matched["runtime_out_of_window_expected_detection_count"] == 1
+        assert matched["runtime_extra_in_window_expected_detection_count"] == 1
+        assert matched["runtime_false_accept_like_detection_count"] == 3
+        assert matched["runtime_wrong_keyword_in_window_count"] == 1
+        assert matched["runtime_matched_expected"] is True
+        assert matched["runtime_matched_expected_confidence"] == 0.77
+        assert matched["match_pre_tolerance_ms"] == 150.0
+        assert matched["match_post_tolerance_ms"] == 500.0
+
+        try:
+            parse_runtime_detections(
+                '{"recording":"other","keyword_id":1,"time_s":0.1,"confidence":0.7}\n',
+                "fixture",
+            )
+        except ValueError as exc:
+            assert "recording id drifted" in str(exc)
+        else:
+            raise AssertionError("runtime recording identity drift was accepted")
 
         rows = [
             {

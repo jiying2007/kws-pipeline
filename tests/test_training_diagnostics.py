@@ -115,7 +115,7 @@ def main() -> int:
         )
         acoustic = {
             "schema_version": 1,
-            "evidence_class": "kws-acoustic-alignment-diagnostic-v1",
+            "evidence_class": "kws-acoustic-alignment-diagnostic-v2",
             "development_only": True,
             "source_round": 0,
             "source_frontend": "logmel",
@@ -126,8 +126,12 @@ def main() -> int:
             "keywords_sha256": "d" * 64,
             "domain_index_sha256": "e" * 64,
             "feature_dump_sha256": "f" * 64,
+            "runner_sha256": "3" * 64,
+            "keyword_pack_sha256": "4" * 64,
             "parameter_contract_sha256": "1" * 64,
             "root_start_logit_margin": 0.5,
+            "event_match_pre_tolerance_ms": 150.0,
+            "event_match_post_tolerance_ms": 500.0,
             "max_recordings_per_keyword_split": 8,
             "model": {"feature_dim": 32, "hidden_dim": 64, "vocab_size": 5},
             "aggregates": {
@@ -135,6 +139,9 @@ def main() -> int:
                     "1": {
                         "recordings": 8,
                         "greedy_subsequence_recordings": 3,
+                        "surrogate_above_threshold_recordings": 3,
+                        "surrogate_above_threshold_runtime_miss_recordings": 2,
+                        "greedy_subsequence_runtime_miss_recordings": 2,
                         "decoder_root_admissible_recordings": 1,
                     }
                 },
@@ -142,6 +149,9 @@ def main() -> int:
                     "1": {
                         "recordings": 8,
                         "greedy_subsequence_recordings": 2,
+                        "surrogate_above_threshold_recordings": 2,
+                        "surrogate_above_threshold_runtime_miss_recordings": 1,
+                        "greedy_subsequence_runtime_miss_recordings": 1,
                         "decoder_root_admissible_recordings": 2,
                     }
                 },
@@ -157,6 +167,10 @@ def main() -> int:
         compact_acoustic = result["development"]["acoustic_alignment"]
         assert compact_acoustic["source_round"] == 0
         assert compact_acoustic["aggregates"]["calibration"]["1"]["recordings"] == 8
+        assert compact_acoustic["runner_sha256"] == "3" * 64
+        assert compact_acoustic["keyword_pack_sha256"] == "4" * 64
+        assert compact_acoustic["event_match_pre_tolerance_ms"] == 150.0
+        assert compact_acoustic["event_match_post_tolerance_ms"] == 500.0
         assert "records" not in compact_acoustic
         row = result["development"]["rounds"][0]
         operating = row["calibration_operating_point"]
@@ -198,6 +212,19 @@ def main() -> int:
             ("calibration", "1"),
             ("test", "1"),
         }
+        assert {row["same_sample_runtime_misses"] for row in acoustic_gaps} == {1, 2}
+        assert all(
+            row["evidence"] == "same-sample-exact-runtime-v1"
+            for row in acoustic_gaps
+        )
+        surrogate_gaps = signals[
+            "surrogate_above_threshold_but_runtime_missed"
+        ]
+        assert surrogate_gaps["observed"] is True
+        assert {
+            (row["split"], row["same_sample_runtime_misses"])
+            for row in surrogate_gaps["occurrences"]
+        } == {("calibration", 2), ("test", 1)}
         assert signals["sampled_acoustic_sequence_absent"]["observed"] is False
         assert result["diagnostic_errors"] == {}
 
