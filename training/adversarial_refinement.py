@@ -26,6 +26,7 @@ from iterate_domain import (
     run,
     sha256_file,
 )
+from refinement_progress import PhaseProgress
 from qualification_failure_replay import (
     POLICY as QUALIFICATION_REPAIR_POLICY,
     REPAIR_EPOCHS,
@@ -444,8 +445,12 @@ def main() -> int:
     keywords = repo_path(str(cfg["keywords"]))
     final_curriculum = manifest.get("final_curriculum")
     curriculum = final_curriculum if isinstance(final_curriculum, dict) else None
+    progress = PhaseProgress(
+        work / "adversarial-refinement" / "progress.json"
+    )
 
     dataset = work / "datasets" / f"round-{refinement_round:02d}"
+    progress.begin("dataset-render-audit")
     render_domain_dataset(
         config_path,
         dataset,
@@ -453,7 +458,9 @@ def main() -> int:
         splits=("train", "calibration", "test"),
     )
     _audit(dataset, ("train", "calibration", "test"))
+    progress.finish("dataset-render-audit")
 
+    progress.begin("static-replay")
     static = render_hard_negative_replay(
         config_path,
         work / "hard-negative-replay" / f"round-{refinement_round:02d}",
@@ -461,7 +468,9 @@ def main() -> int:
         curriculum_weights=curriculum,
     )
     static_manifest = pathlib.Path(str(static["manifest"]))
+    progress.finish("static-replay")
 
+    progress.begin("adversarial-mining")
     adversarial = mine_adversarial_lexicon(
         config_path,
         source_checkpoint,
@@ -477,7 +486,9 @@ def main() -> int:
     adversarial_data_policy = str(adversarial.get("data_augmentation_policy") or "")
     if not adversarial_selection_policy or not adversarial_data_policy:
         raise ValueError("adversarial evidence is missing data/selection policy provenance")
+    progress.finish("adversarial-mining")
 
+    progress.begin("failure-replay")
     failure = render_development_failure_replay(
         config_path,
         list(manifest.get("records", [])),
@@ -491,6 +502,7 @@ def main() -> int:
     if failure.get("development_source_wav_bytes_copied", True) is not False:
         raise ValueError("development failure replay copied evaluation WAV bytes")
     failure_manifest = failure_manifest_path if int(failure.get("examples", 0)) > 0 else None
+    progress.finish("failure-replay")
 
     focus_rows_by_manifest = build_refinement_focus_rows(
         static=static,
@@ -498,6 +510,7 @@ def main() -> int:
         failure=failure,
     )
     candidate_dir = work / "candidates" / f"r{refinement_round:02d}-{frontend}-adversarial"
+    progress.begin("train-export")
     model, checkpoint, provenance, wake_balance = _train_refinement(
         cfg=cfg,
         frontend=frontend,
@@ -514,6 +527,7 @@ def main() -> int:
         lr_scale=float(policy["lr_scale"]),
         refinement_round=refinement_round,
     )
+    progress.finish("train-export")
 
     thresholds = [float(value) for value in cfg.get("calibration", {}).get("thresholds", [])]
     coordinate_rounds = int(cfg.get("calibration", {}).get("coordinate_rounds", 1))
@@ -523,6 +537,7 @@ def main() -> int:
     if not 1 <= calibration_parallel_trials <= 4:
         raise ValueError("calibration.max_parallel_trials must be 1..4")
     gates = gate_values(cfg.get("domain_gates", {}))
+    progress.begin("calibration")
     calibrated, pack, cal_base, cal_domains = calibrate(
         runner=runner,
         model=model,
@@ -535,6 +550,8 @@ def main() -> int:
         gates=gates,
         parallel_trials=calibration_parallel_trials,
     )
+    progress.finish("calibration")
+    progress.begin("test-evaluation")
     test_base, test_domains = evaluate(
         runner=runner,
         model=model,
@@ -542,6 +559,7 @@ def main() -> int:
         references=dataset / "test.references.jsonl",
         output=candidate_dir / "test",
     )
+    progress.finish("test-evaluation")
     cal_gate = _strict(cal_base, cal_domains, gates)
     test_gate = _strict(test_base, test_domains, gates)
     score = objective(cal_base, cal_domains, gates) + objective(test_base, test_domains, gates)
@@ -616,6 +634,7 @@ def main() -> int:
             "refinement_lr_scale": float(policy["lr_scale"]),
             "strict_dual_pass": bool(cal_gate and test_gate),
             "wake_balance": wake_balance,
+            "phase_progress": progress.snapshot(),
             "record": preflight_record,
         }
         out = work / "adversarial-refinement" / "preflight-summary.json"
