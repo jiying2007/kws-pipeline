@@ -7,6 +7,7 @@ import torch
 import torch.nn.functional as F
 
 from completion_loss import strict_prefix_completion_loss
+from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from train_ctc import (
     normalized_weighted_mean,
@@ -70,6 +71,19 @@ def margin(
     )
 
 
+def path_purity(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
+    targets, input_lengths, target_lengths, _ = true_nll(log_probs, target)
+    return ordered_path_purity_loss(
+        log_probs=log_probs,
+        targets=targets,
+        input_lengths=input_lengths,
+        target_lengths=target_lengths,
+        keyword_sequences=[[1, 2, 3, 4], [3, 4, 3, 4]],
+        blank=0,
+        margin=0.10,
+    )
+
+
 def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
     targets, input_lengths, target_lengths, _ = true_nll(log_probs, target)
     return strict_prefix_completion_loss(
@@ -115,6 +129,53 @@ def main() -> int:
     assert float(weak_loss.item()) > 0.50
     weak_loss.mean().backward()
     assert weak_logits.grad is not None
+
+    # Path-purity targets the #240 failure mode: the target sequence may be
+    # present as a loose subsequence while an unrelated wake token dominates
+    # inside an ordered region. Clean wake evidence should be free of this
+    # penalty, while an inserted out-of-order token must receive gradient.
+    clean_path = make_logits([1, 2, 3, 4])
+    clean_purity = path_purity(clean_path, [1, 2, 3, 4])
+    assert float(clean_purity.item()) < 1.0e-6
+
+    polluted_logits = torch.full((12, 1, 5), -6.0, dtype=torch.float32)
+    polluted_logits[:, :, 0] = 4.0
+    for position, token in zip([1, 3, 6, 9], [1, 2, 3, 4]):
+        polluted_logits[position, 0, 0] = -6.0
+        polluted_logits[position, 0, token] = 8.0
+    # wo1 is unrelated to the allowed {blank, hao3, xiao3} set in region 2.
+    polluted_logits[4, 0, 0] = -6.0
+    polluted_logits[4, 0, 4] = 10.0
+    polluted_log_probs = polluted_logits.requires_grad_().log_softmax(dim=2)
+    polluted_purity = path_purity(polluted_log_probs, [1, 2, 3, 4])
+    assert float(polluted_purity.item()) > 0.05
+    polluted_purity.mean().backward()
+    assert polluted_logits.grad is not None
+    assert abs(float(polluted_logits.grad[4, 0, 4])) > 0.0
+
+    # Tokenized near-misses remain outside this positive-only objective.
+    near_miss = make_logits([1, 4, 2])
+    near_miss_purity = path_purity(near_miss, [1, 4, 2])
+    assert float(near_miss_purity.item()) == 0.0
+
+    repeat_wake = make_logits([3, 4, 3, 4])
+    repeat_purity = path_purity(repeat_wake, [3, 4, 3, 4])
+    assert float(repeat_purity.item()) < 1.0e-6
+
+    try:
+        targets, input_lengths, target_lengths, _ = true_nll(clean_path, [1, 2, 3, 4])
+        ordered_path_purity_loss(
+            log_probs=clean_path,
+            targets=targets,
+            input_lengths=input_lengths,
+            target_lengths=target_lengths,
+            keyword_sequences=[[1, 2, 3, 4], [3, 4, 3, 4]],
+            margin=2.1,
+        )
+    except ValueError as exc:
+        assert "path-purity margin" in str(exc)
+    else:
+        raise AssertionError("out-of-range path-purity margin was accepted")
 
     # The #132/#135 failure mode is a strict "你好小" prefix with a spurious
     # terminal wo1 posterior in the acoustic tail. The completion hinge must
