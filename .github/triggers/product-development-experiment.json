@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "request_id": "development-experiment-disabled",
+  "trigger_policy": "pull-request-marker-change",
+  "purpose": "product-speech-like-development-ab",
+  "source_policy": "exact-pr-head-development-only",
+  "reason": "Disabled by default. Algorithm PRs may opt in to bounded product speech-like development evidence without authorizing governed training or promotion."
+}
