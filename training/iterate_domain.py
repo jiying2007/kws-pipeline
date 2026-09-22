@@ -687,6 +687,7 @@ def build_torch(
         str(seed),
         "--output",
         str(checkpoint),
+        "--ordered-token-exact-wake-only",
     ]
     if (
         hard_negative_manifest is not None
