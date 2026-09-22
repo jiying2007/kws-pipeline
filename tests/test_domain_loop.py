@@ -27,6 +27,7 @@ from synthetic_audio import write_wav  # noqa: E402
 from iterate_domain import (  # noqa: E402
     calibration_behavior_key,
     calibration_operating_curve_summary,
+    calibration_threshold_vector,
     calibration_trial_evidence,
     parse_warm_start_strategy,
     select_calibration_threshold,
@@ -193,6 +194,38 @@ def validate_torch_iteration_policy() -> None:
     assert train_acoustic_seed_offset(round_policy["domain_iteration"], 0) == 0
     assert train_acoustic_seed_offset(round_policy["domain_iteration"], 1) == 104729
     assert train_acoustic_seed_offset(round_policy["domain_iteration"], 3) == 314187
+
+    vector_a = calibration_threshold_vector(
+        [
+            {"id": 2, "threshold": 0.60},
+            {"id": 1, "threshold": 0.58},
+        ]
+    )
+    vector_b = calibration_threshold_vector(
+        [
+            {"id": 1, "threshold": 0.58},
+            {"id": 2, "threshold": 0.60},
+        ]
+    )
+    assert vector_a == ((1, 0.58), (2, 0.60))
+    assert vector_b == vector_a
+    try:
+        calibration_threshold_vector(
+            [
+                {"id": 1, "threshold": 0.58},
+                {"id": 1, "threshold": 0.60},
+            ]
+        )
+    except ValueError as exc:
+        assert "duplicate keyword ids" in str(exc)
+    else:
+        raise AssertionError("duplicate calibration keyword id was accepted")
+    try:
+        calibration_threshold_vector([{"id": 1, "threshold": 1.0}])
+    except ValueError as exc:
+        assert "invalid threshold" in str(exc)
+    else:
+        raise AssertionError("invalid calibration threshold was accepted")
 
     thresholds = [
         0.01,
@@ -393,6 +426,9 @@ def validate_torch_iteration_policy() -> None:
     assert 'round_best["calibration_domains"]' in product_iterator
     assert 'round_best["test_domains"]' in product_iterator
     assert product_iterator.count("suppress_stdout=True") == 2
+    assert "exact-keyword-threshold-vector-v1" in product_iterator
+    assert 'base["calibration_trial_cache_hits"]' in product_iterator
+    assert 'base["calibration_unique_trial_vectors"]' in product_iterator
     score_block = product_iterator.split('str(EVAL / "score_events.py")', 1)[1]
     assert "suppress_stdout=True" in score_block.split('str(EVAL / "domain_metrics.py")', 1)[0]
     domain_block = product_iterator.split('str(EVAL / "domain_metrics.py")', 1)[1]
