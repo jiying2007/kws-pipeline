@@ -54,6 +54,8 @@ jobs:
   product-development-base-preflight:
     needs: resolve
     if: needs.resolve.outputs.request_changed == 'true'
+    outputs:
+      development_qualified: ${{ steps.base_result.outputs.development_qualified }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -135,6 +137,7 @@ jobs:
         run: .venv/bin/python training/test_sequence_margin.py
 
       - name: Run bounded base development rounds
+        id: base_result
         shell: bash
         run: |
           set +e
@@ -151,6 +154,24 @@ jobs:
             *) echo "base development preflight infrastructure failed: $code" >&2; exit "$code" ;;
           esac
           test -s "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json"
+          development_qualified="$(
+            python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          manifest = pathlib.Path(os.environ["KWS_PREFLIGHT_WORK"]) / "domain-loop-manifest.json"
+          value = json.loads(manifest.read_text(encoding="utf-8")).get("development_qualified")
+          if value is True:
+              print("true")
+          elif value is False:
+              print("false")
+          else:
+              raise SystemExit("base development_qualified verdict must be a real boolean")
+          PY
+          )"
+          echo "development_qualified=$development_qualified" >> "$GITHUB_OUTPUT"
+          echo "base development qualified: $development_qualified"
 
       - name: Pack exact base-stage handoff
         env:
@@ -182,6 +203,7 @@ jobs:
     if: >-
       needs.resolve.outputs.request_changed == 'true'
       && needs.product-development-base-preflight.result == 'success'
+      && needs.product-development-base-preflight.outputs.development_qualified == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
