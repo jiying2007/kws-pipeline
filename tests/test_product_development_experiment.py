@@ -29,6 +29,7 @@ def main() -> int:
     assert "--stop-after-development-eval" in workflow
     assert "qualification.references.jsonl" not in workflow
     assert "formal-qualification" not in workflow
+    assert workflow.count("ref: ${{ github.event.pull_request.head.sha }}") == 2
     assert "product-development-experiment-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}" in workflow
     assert "steps.eligibility.outputs.eligible == 'true'" in workflow
 
