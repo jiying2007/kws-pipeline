@@ -86,9 +86,33 @@ def verify(
             raise ValueError("governed product replay may use only train voice slots")
         provider_identity = str(tts.get("provider_identity_sha256") or "")
         if provider_identity != str(product_data.get("replay_provider_identity_sha256") or ""):
-            raise ValueError("governed product replay provider identity drifted")
-        if provider_identity != str(product_data.get("provider_identity_sha256") or ""):
-            raise ValueError("replay provider must match product base provider identity")
+            raise ValueError("governed product replay provider semantic identity drifted")
+        if len(provider_identity) != 64 or any(
+            ch not in "0123456789abcdef" for ch in provider_identity
+        ):
+            raise ValueError("governed product replay provider semantic identity must be SHA256")
+        execution_identity = str(
+            tts.get("provider_execution_identity_sha256") or ""
+        )
+        if execution_identity != str(
+            product_data.get("replay_provider_execution_identity_sha256") or ""
+        ):
+            raise ValueError("governed product replay provider execution identity drifted")
+        if len(execution_identity) != 64 or any(
+            ch not in "0123456789abcdef" for ch in execution_identity
+        ):
+            raise ValueError("governed product replay provider execution identity must be SHA256")
+        if tts.get("provider_semantic_identity_policy") != "product-replay-provider-semantic-v1":
+            raise ValueError("governed product replay provider semantic policy drifted")
+        if product_data.get("replay_provider_semantic_identity_policy") != "product-replay-provider-semantic-v1":
+            raise ValueError("product replay provider semantic policy drifted")
+        semantic_contract = str(
+            product_data.get("replay_provider_semantic_contract_sha256") or ""
+        )
+        if len(semantic_contract) != 64 or any(
+            ch not in "0123456789abcdef" for ch in semantic_contract
+        ):
+            raise ValueError("product replay provider semantic contract SHA is invalid")
         if product_data.get("replay_tone_allowed") is not False:
             raise ValueError("tone replay is forbidden for governed product candidate training")
         external = generator.get("external_base_dataset")
