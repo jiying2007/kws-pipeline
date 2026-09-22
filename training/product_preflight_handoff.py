@@ -64,6 +64,7 @@ def _collect_handoff_files(
     _add_if_file(files, work_dir / "domain-loop-manifest.json", repo_root, required=True)
     _add_if_file(files, work_dir / "domain-loop-progress.jsonl", repo_root)
     _add_if_file(files, work_dir / "base-refinement-eligibility.json", repo_root)
+    _add_if_file(files, work_dir / "acoustic-alignment.json", repo_root)
     _add_if_file(files, work_dir / "compact-base-diagnostics.json", repo_root)
 
     rounds: set[int] = set()

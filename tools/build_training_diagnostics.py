@@ -141,6 +141,34 @@ def round_slice(row: dict) -> dict:
     }
 
 
+def acoustic_slice(summary: dict | None) -> dict | None:
+    if not isinstance(summary, dict):
+        return None
+    return {
+        key: summary[key]
+        for key in (
+            "schema_version",
+            "evidence_class",
+            "development_only",
+            "source_round",
+            "source_frontend",
+            "source_selection_policy",
+            "source_was_strict",
+            "model_sha256",
+            "tokens_sha256",
+            "keywords_sha256",
+            "domain_index_sha256",
+            "feature_dump_sha256",
+            "parameter_contract_sha256",
+            "root_start_logit_margin",
+            "max_recordings_per_keyword_split",
+            "model",
+            "aggregates",
+        )
+        if key in summary
+    }
+
+
 def shadow_slice(summary: dict | None) -> dict | None:
     if not isinstance(summary, dict):
         return None
@@ -221,6 +249,9 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
     refinement_eligibility, refinement_eligibility_error = load_json(
         root / "base-refinement-eligibility.json"
     )
+    acoustic_alignment, acoustic_alignment_error = load_json(
+        root / "acoustic-alignment.json"
+    )
 
     diagnostics_errors = {
         name: error
@@ -236,6 +267,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             ("robustness", robustness_error),
             ("continuous_far", continuous_far_error),
             ("base_refinement_eligibility", refinement_eligibility_error),
+            ("acoustic_alignment", acoustic_alignment_error),
         )
         if error not in (None, "missing")
     }
@@ -266,6 +298,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             "qualification_qualified": manifest.get("qualification_qualified") if isinstance(manifest, dict) else None,
             "candidate_selection": selection if isinstance(selection, dict) else None,
             "refinement_eligibility": refinement_eligibility,
+            "acoustic_alignment": acoustic_slice(acoustic_alignment),
             "rounds": compact_rounds,
         },
         "adversarial_refinement": refinement,
@@ -321,6 +354,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
                 "robustness-summary.json",
                 "hard-negative-stream/summary.json",
                 "base-refinement-eligibility.json",
+                "acoustic-alignment.json",
             )
         ],
         "diagnostic_errors": diagnostics_errors,
