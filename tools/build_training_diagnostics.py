@@ -231,6 +231,7 @@ def evidence_signals(
             collapsed_keyword_ids = [str(value) for value in raw]
 
     acoustic_runtime_gaps: list[dict] = []
+    surrogate_runtime_gaps: list[dict] = []
     sampled_acoustic_sequence_absent: list[dict] = []
     if isinstance(acoustic_alignment, dict):
         source_round = int(acoustic_alignment.get("source_round", -1))
@@ -260,30 +261,73 @@ def evidence_signals(
                     sampled_total += recordings
                     subsequence_total += subsequences
 
-                    metrics = source.get(split)
-                    per_keyword = (
-                        metrics.get("per_keyword") if isinstance(metrics, dict) else None
-                    )
-                    runtime = (
-                        per_keyword.get(keyword_id)
-                        if isinstance(per_keyword, dict)
-                        else None
-                    )
-                    if (
-                        subsequences > 0
-                        and isinstance(runtime, dict)
-                        and int(runtime.get("matched", 0)) == 0
-                    ):
-                        acoustic_runtime_gaps.append(
-                            {
-                                "round": source_round,
-                                "split": split,
-                                "keyword_id": keyword_id,
-                                "sampled_recordings": recordings,
-                                "acoustic_greedy_subsequence_recordings": subsequences,
-                                "runtime_matched": 0,
-                            }
+                    if "greedy_subsequence_runtime_miss_recordings" in aggregate:
+                        runtime_misses = int(
+                            aggregate.get("greedy_subsequence_runtime_miss_recordings", 0)
                         )
+                        if runtime_misses > 0:
+                            acoustic_runtime_gaps.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "acoustic_greedy_subsequence_recordings": subsequences,
+                                    "same_sample_runtime_misses": runtime_misses,
+                                    "evidence": "same-sample-exact-runtime-v1",
+                                }
+                            )
+                        surrogate_misses = int(
+                            aggregate.get(
+                                "surrogate_above_threshold_runtime_miss_recordings",
+                                0,
+                            )
+                        )
+                        if surrogate_misses > 0:
+                            surrogate_runtime_gaps.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "surrogate_above_threshold_recordings": int(
+                                        aggregate.get(
+                                            "surrogate_above_threshold_recordings",
+                                            0,
+                                        )
+                                    ),
+                                    "same_sample_runtime_misses": surrogate_misses,
+                                    "evidence": "same-sample-exact-runtime-v1",
+                                }
+                            )
+                    else:
+                        metrics = source.get(split)
+                        per_keyword = (
+                            metrics.get("per_keyword")
+                            if isinstance(metrics, dict)
+                            else None
+                        )
+                        runtime = (
+                            per_keyword.get(keyword_id)
+                            if isinstance(per_keyword, dict)
+                            else None
+                        )
+                        if (
+                            subsequences > 0
+                            and isinstance(runtime, dict)
+                            and int(runtime.get("matched", 0)) == 0
+                        ):
+                            acoustic_runtime_gaps.append(
+                                {
+                                    "round": source_round,
+                                    "split": split,
+                                    "keyword_id": keyword_id,
+                                    "sampled_recordings": recordings,
+                                    "acoustic_greedy_subsequence_recordings": subsequences,
+                                    "runtime_matched": 0,
+                                    "evidence": "aggregate-fallback-v1",
+                                }
+                            )
                 if sampled_total > 0 and subsequence_total == 0:
                     sampled_acoustic_sequence_absent.append(
                         {
@@ -309,6 +353,10 @@ def evidence_signals(
         "acoustic_sequence_observed_but_runtime_missed": {
             "observed": bool(acoustic_runtime_gaps),
             "occurrences": acoustic_runtime_gaps,
+        },
+        "surrogate_above_threshold_but_runtime_missed": {
+            "observed": bool(surrogate_runtime_gaps),
+            "occurrences": surrogate_runtime_gaps,
         },
         "sampled_acoustic_sequence_absent": {
             "observed": bool(sampled_acoustic_sequence_absent),
