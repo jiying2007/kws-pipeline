@@ -68,6 +68,53 @@ def percentile(values: list[float], p: float) -> float:
     return ordered[lo] * (1.0 - frac) + ordered[hi] * frac
 
 
+def poisson_cdf(count: int, mean: float) -> float:
+    if isinstance(count, bool) or count < 0:
+        raise ValueError("Poisson count must be a non-negative integer")
+    if not math.isfinite(mean) or mean < 0.0:
+        raise ValueError("Poisson mean must be finite and non-negative")
+    if mean == 0.0:
+        return 1.0
+    terms = [
+        index * math.log(mean) - math.lgamma(index + 1.0)
+        for index in range(count + 1)
+    ]
+    maximum = max(terms)
+    log_sum = maximum + math.log(sum(math.exp(value - maximum) for value in terms))
+    return math.exp(-mean + log_sum)
+
+
+def poisson_rate_upper_bound_per_hour(
+    count: int,
+    exposure_hours: float,
+    *,
+    confidence: float = 0.95,
+) -> float | None:
+    if isinstance(count, bool) or count < 0:
+        raise ValueError("Poisson count must be a non-negative integer")
+    if not math.isfinite(exposure_hours) or exposure_hours < 0.0:
+        raise ValueError("Poisson exposure must be finite and non-negative")
+    if exposure_hours == 0.0:
+        return None
+    if not math.isfinite(confidence) or not 0.0 < confidence < 1.0:
+        raise ValueError("Poisson confidence must be in (0,1)")
+
+    alpha = 1.0 - confidence
+    low = 0.0
+    high = max(1.0, float(count + 1))
+    while poisson_cdf(count, high) > alpha:
+        high *= 2.0
+        if high > 1.0e9:
+            raise RuntimeError("Poisson upper-bound search did not converge")
+    for _ in range(80):
+        middle = 0.5 * (low + high)
+        if poisson_cdf(count, middle) > alpha:
+            low = middle
+        else:
+            high = middle
+    return high / exposure_hours
+
+
 def validate_recordings(rows: list[dict]) -> dict[str, dict]:
     recordings: dict[str, dict] = {}
     for row in rows:
@@ -301,6 +348,25 @@ def score(
     total_seconds = sum(item["duration_s"] for item in recordings.values())
     total_hours = total_seconds / 3600.0
     far_per_hour = len(false_accepts) / total_hours
+
+    negative_recordings = {
+        name for name, item in recordings.items() if not item["expected"]
+    }
+    negative_seconds = sum(
+        float(recordings[name]["duration_s"]) for name in negative_recordings
+    )
+    negative_hours = negative_seconds / 3600.0
+    negative_false_accepts = sum(
+        1 for item in false_accepts if item["recording"] in negative_recordings
+    )
+    negative_far_per_hour = (
+        negative_false_accepts / negative_hours if negative_hours > 0.0 else None
+    )
+    negative_far_upper_95 = poisson_rate_upper_bound_per_hour(
+        negative_false_accepts,
+        negative_hours,
+        confidence=0.95,
+    )
     frr = false_reject_count / expected_total if expected_total else 0.0
     per_keyword = {}
     for keyword_id, stats in sorted(by_keyword.items()):
@@ -319,6 +385,12 @@ def score(
         "false_accepts": len(false_accepts),
         "frr": frr,
         "far_per_hour": far_per_hour,
+        "negative_recording_audio_hours": negative_hours,
+        "negative_recording_false_accepts": negative_false_accepts,
+        "negative_recording_far_per_hour": negative_far_per_hour,
+        "negative_recording_far_upper_95_per_hour": negative_far_upper_95,
+        "negative_recording_far_confidence": 0.95,
+        "negative_recording_far_policy": "negative-only-recordings-poisson-upper-v1",
         "p50_post_end_latency_ms": percentile(latency_ms, 0.50),
         "p95_post_end_latency_ms": percentile(latency_ms, 0.95),
         "per_keyword": per_keyword,
