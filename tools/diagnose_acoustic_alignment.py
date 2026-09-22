@@ -334,10 +334,22 @@ def runtime_match_summary(
     match_upper_s = event_end_s + DEFAULT_POST_TOLERANCE_MS / 1000.0
     expected = [item for item in detections if int(item["keyword_id"]) == keyword_id]
     wrong = [item for item in detections if int(item["keyword_id"]) != keyword_id]
-    expected_matched = [
+    expected_in_window = [
         item for item in expected
         if match_lower_s <= float(item["time_s"]) <= match_upper_s
     ]
+    matched_expected = (
+        min(
+            expected_in_window,
+            key=lambda item: (
+                abs(float(item["time_s"]) - event_end_s),
+                float(item["time_s"]),
+            ),
+        )
+        if expected_in_window
+        else None
+    )
+    matched_count = 1 if matched_expected is not None else 0
     wrong_in_window = [
         item for item in wrong
         if match_lower_s <= float(item["time_s"]) <= match_upper_s
@@ -345,14 +357,19 @@ def runtime_match_summary(
     return {
         "runtime_detection_count": len(detections),
         "runtime_expected_detection_count": len(expected),
-        "runtime_expected_matched_count": len(expected_matched),
+        "runtime_expected_in_window_detection_count": len(expected_in_window),
+        "runtime_expected_matched_count": matched_count,
         "runtime_out_of_window_expected_detection_count": (
-            len(expected) - len(expected_matched)
+            len(expected) - len(expected_in_window)
         ),
+        "runtime_extra_in_window_expected_detection_count": (
+            len(expected_in_window) - matched_count
+        ),
+        "runtime_false_accept_like_detection_count": len(detections) - matched_count,
         "runtime_wrong_keyword_detection_count": len(wrong),
         "runtime_wrong_keyword_in_window_count": len(wrong_in_window),
         "runtime_detected_expected": bool(expected),
-        "runtime_matched_expected": bool(expected_matched),
+        "runtime_matched_expected": matched_expected is not None,
         "runtime_detected_keyword_ids": sorted(
             {int(item["keyword_id"]) for item in detections}
         ),
@@ -361,9 +378,9 @@ def runtime_match_summary(
             if expected
             else None
         ),
-        "runtime_max_matched_expected_confidence": (
-            max(float(item["confidence"]) for item in expected_matched)
-            if expected_matched
+        "runtime_matched_expected_confidence": (
+            float(matched_expected["confidence"])
+            if matched_expected is not None
             else None
         ),
         "event_start_s": event_start_s,
