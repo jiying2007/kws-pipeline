@@ -176,6 +176,8 @@ def acoustic_slice(summary: dict | None) -> dict | None:
             "keyword_pack_sha256",
             "parameter_contract_sha256",
             "root_start_logit_margin",
+            "event_match_pre_tolerance_ms",
+            "event_match_post_tolerance_ms",
             "max_recordings_per_keyword_split",
             "model",
             "aggregates",
