@@ -12,11 +12,14 @@ on:
       - "training/require_product_development_preflight.sh"
       - "training/verify_product_development_preflight.py"
       - "tests/test_product_development_preflight.py"
+      - "tests/test_product_development_experiment.py"
       - ".github/workflows/model-training-preflight.yml"
+      - ".github/workflows/product-development-experiment.yml"
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/training_request.py"
+      - "training/product_development_experiment.py"
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
@@ -39,11 +42,14 @@ on:
       - "training/require_product_development_preflight.sh"
       - "training/verify_product_development_preflight.py"
       - "tests/test_product_development_preflight.py"
+      - "tests/test_product_development_experiment.py"
       - ".github/workflows/model-training-preflight.yml"
+      - ".github/workflows/product-development-experiment.yml"
       - "training/synthetic_audio.py"
       - "tools/bootstrap_speech_like_stage_a.py"
       - "training/verify_training_entry_contract.py"
       - "training/training_request.py"
+      - "training/product_development_experiment.py"
       - ".github/triggers/model-training-request.json"
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
@@ -77,10 +83,12 @@ jobs:
           training/materialize_product_training_config.py
           training/verify_product_development_preflight.py
           tests/test_product_development_preflight.py
+          tests/test_product_development_experiment.py
           training/synthetic_audio.py
           tools/bootstrap_speech_like_stage_a.py
           training/verify_training_entry_contract.py
           training/training_request.py
+          training/product_development_experiment.py
           training/adversarial_refinement.py
           training/train_ctc.py
           training/objective_config.py
@@ -96,6 +104,8 @@ jobs:
           bash -n training/require_product_development_preflight.sh
       - name: Product development preflight guard contract
         run: python3 tests/test_product_development_preflight.py
+      - name: PR-head development experiment contract
+        run: python3 tests/test_product_development_experiment.py
       - name: Product development preflight workflow contract
         run: |
           python3 - <<'PY'

@@ -1,0 +1,210 @@
+name: product-development-experiment
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/model-training-experiment.json' # workflow-path-filter: allow-missing (created only on experiment PRs)
+      - '.github/workflows/product-development-experiment.yml'
+      - 'training/product_development_experiment.py'
+
+permissions:
+  contents: read
+
+env:
+  KWS_EXPERIMENT_SPEC: .github/triggers/model-training-experiment.json
+  KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
+  KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-experiment.json
+  KWS_EXPERIMENT_WORK: build/product-development-experiment
+  KWS_EXPERIMENT_RECEIPT: build/product-development-experiment/experiment-receipt.json
+
+concurrency:
+  group: product-development-experiment-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      experiment_changed: ${{ steps.diff.outputs.experiment_changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve exact PR-head experiment
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git cat-file -e "$BASE_SHA^{commit}"
+          git cat-file -e "$HEAD_SHA^{commit}"
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_EXPERIMENT_SPEC"; then
+            echo "experiment_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          test -s "$KWS_EXPERIMENT_SPEC"
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
+            echo "development experiment must not change governed model-training request" >&2
+            exit 2
+          fi
+          for forbidden in             configs/training/xiaowo.torch-domain.json             configs/training/product-speech-like-base-v1.json             .github/workflows/model-training.yml; do
+            if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$forbidden"; then
+              echo "development experiment must not change protected canonical path: $forbidden" >&2
+              exit 2
+            fi
+          done
+          python3 training/product_development_experiment.py verify             --spec "$KWS_EXPERIMENT_SPEC"
+          echo "experiment_changed=true" >> "$GITHUB_OUTPUT"
+
+  experiment:
+    needs: resolve
+    if: needs.resolve.outputs.experiment_changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact PR-head source
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          python3 training/product_development_experiment.py verify             --spec "$KWS_EXPERIMENT_SPEC"
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
+            exit 2
+          fi
+
+      - name: Materialize governed unprotected product base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Materialize bounded PR-head experiment config
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 training/product_development_experiment.py materialize             --spec "$KWS_EXPERIMENT_SPEC"             --effective-config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --output "$KWS_EXPERIMENT_CONFIG"             --receipt "$KWS_EXPERIMENT_RECEIPT"             --base-sha "$BASE_SHA"             --head-sha "$HEAD_SHA"
+          python3 training/verify_training_entry_contract.py             --config "$KWS_EXPERIMENT_CONFIG"             --require-product-speech-like-base
+
+      - name: Build exact C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target             kws_wav kws_feature_dump kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify objective math
+        run: .venv/bin/python training/test_sequence_margin.py
+
+      - name: Run bounded PR-head base development
+        id: base
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --defer-qualification             --compact-log
+          code=$?
+          set -e
+          case "$code" in 0|1) ;; *) exit "$code" ;; esac
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          test -s "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"
+
+      - name: Evaluate refinement eligibility
+        id: eligibility
+        run: |
+          .venv/bin/python training/evaluate_refinement_eligibility.py             --config "$KWS_EXPERIMENT_CONFIG"             --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"             --output "$KWS_EXPERIMENT_WORK/base-refinement-eligibility.json"
+          eligible="$(python3 - <<'PY'
+          import json, os, pathlib
+          path=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])/'base-refinement-eligibility.json'
+          value=json.loads(path.read_text(encoding='utf-8')).get('eligible')
+          if value is True: print('true')
+          elif value is False: print('false')
+          else: raise SystemExit('refinement eligibility must be boolean')
+          PY
+          )"
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
+
+      - name: Diagnose base acoustic/runtime alignment
+        run: |
+          .venv/bin/python tools/diagnose_acoustic_alignment.py             --config "$KWS_EXPERIMENT_CONFIG"             --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"             --feature-dump build/kws_feature_dump             --runner build/kws_wav             --max-per-keyword-split 8             --output "$KWS_EXPERIMENT_WORK/acoustic-alignment.json"
+          python3 tools/build_training_diagnostics.py             --config "$KWS_EXPERIMENT_CONFIG"             --work-dir "$KWS_EXPERIMENT_WORK"             --output "$KWS_EXPERIMENT_WORK/compact-base-diagnostics.json"
+
+      - name: Run bounded refinement experiment
+        if: steps.eligibility.outputs.eligible == 'true'
+        run: |
+          .venv/bin/python training/adversarial_refinement.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --stop-after-development-eval
+          test -s "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json"
+
+      - name: Build experiment summary
+        if: always()
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_EXIT: ${{ steps.base.outputs.exit_code }}
+          REFINEMENT_ELIGIBLE: ${{ steps.eligibility.outputs.eligible }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          receipt=json.loads((root/'experiment-receipt.json').read_text(encoding='utf-8'))
+          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          eligibility=json.loads((root/'base-refinement-eligibility.json').read_text(encoding='utf-8'))
+          refinement_path=root/'adversarial-refinement'/'preflight-summary.json'
+          refinement=json.loads(refinement_path.read_text(encoding='utf-8')) if refinement_path.is_file() else None
+          summary={
+              'schema_version':1,
+              'evidence_class':'product-development-pr-head-experiment-summary-v1',
+              'development_only':True,
+              'protected_evidence_used':False,
+              'source_policy':'exact-pr-head',
+              'pr_base_sha':os.environ['BASE_SHA'],
+              'pr_head_sha':os.environ['HEAD_SHA'],
+              'experiment_receipt':receipt,
+              'base_exit_code':int(os.environ.get('BASE_EXIT') or 0),
+              'refinement_eligible':eligibility.get('eligible'),
+              'base_candidate_selection':manifest.get('candidate_selection'),
+              'base_records':manifest.get('records',[]),
+              'refinement':refinement,
+          }
+          (root/'experiment-summary.json').write_text(
+              json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Retain development-only experiment evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-development-experiment-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            .github/triggers/model-training-experiment.json
+            .generated/xiaowo.product-experiment.json
+            build/product-development-experiment/experiment-receipt.json
+            build/product-development-experiment/experiment-summary.json
+            build/product-development-experiment/domain-loop-manifest.json
+            build/product-development-experiment/base-refinement-eligibility.json
+            build/product-development-experiment/acoustic-alignment.json
+            build/product-development-experiment/compact-base-diagnostics.json
+            build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json
+            build/product-development-experiment/adversarial-refinement/preflight-summary.json
+            build/product-development-experiment/adversarial-refinement/progress.json
+          if-no-files-found: warn
+          retention-days: 14
