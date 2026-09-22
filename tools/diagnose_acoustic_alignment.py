@@ -15,9 +15,14 @@ from typing import Any
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "eval"))
 
 from adversarial_refinement import select_refinement_source  # noqa: E402
 from kws_vocab import load_tokens  # noqa: E402
+from score_events import (  # noqa: E402
+    DEFAULT_POST_TOLERANCE_MS,
+    DEFAULT_PRE_TOLERANCE_MS,
+)
 
 EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v2"
 MODEL_HEADER = struct.Struct("<4sHHHHHHIIIfffQIIIIII")
@@ -519,6 +524,29 @@ def analyze_recording(
     wrong_runtime = [
         item for item in runtime_detections if int(item["keyword_id"]) != keyword_id
     ]
+    event_start_frame = int(row.get("event_start_frame", -1))
+    event_end_frame = int(row.get("event_end_frame", -1))
+    if (
+        event_start_frame < 0
+        or event_end_frame < event_start_frame
+        or event_end_frame > int(row.get("frames", -1))
+    ):
+        raise ValueError("diagnostic positive row has invalid event frame bounds")
+    sample_rate_hz = int(model["sample_rate_hz"])
+    event_start_s = event_start_frame / float(sample_rate_hz)
+    event_end_s = event_end_frame / float(sample_rate_hz)
+    match_lower_s = event_start_s - DEFAULT_PRE_TOLERANCE_MS / 1000.0
+    match_upper_s = event_end_s + DEFAULT_POST_TOLERANCE_MS / 1000.0
+    expected_runtime_matched = [
+        item
+        for item in expected_runtime
+        if match_lower_s <= float(item["time_s"]) <= match_upper_s
+    ]
+    wrong_runtime_in_window = [
+        item
+        for item in wrong_runtime
+        if match_lower_s <= float(item["time_s"]) <= match_upper_s
+    ]
     depth = longest_prefix_subsequence(target, greedy)
     best_ranks = token_best_ranks(logits, target)
     return {
@@ -541,8 +569,14 @@ def analyze_recording(
         "surrogate_above_runtime_threshold": surrogate_confidence >= threshold,
         "runtime_detection_count": len(runtime_detections),
         "runtime_expected_detection_count": len(expected_runtime),
+        "runtime_expected_matched_count": len(expected_runtime_matched),
+        "runtime_out_of_window_expected_detection_count": (
+            len(expected_runtime) - len(expected_runtime_matched)
+        ),
         "runtime_wrong_keyword_detection_count": len(wrong_runtime),
+        "runtime_wrong_keyword_in_window_count": len(wrong_runtime_in_window),
         "runtime_detected_expected": bool(expected_runtime),
+        "runtime_matched_expected": bool(expected_runtime_matched),
         "runtime_detected_keyword_ids": sorted(
             {int(item["keyword_id"]) for item in runtime_detections}
         ),
@@ -551,6 +585,15 @@ def analyze_recording(
             if expected_runtime
             else None
         ),
+        "runtime_max_matched_expected_confidence": (
+            max(float(item["confidence"]) for item in expected_runtime_matched)
+            if expected_runtime_matched
+            else None
+        ),
+        "event_start_s": event_start_s,
+        "event_end_s": event_end_s,
+        "match_pre_tolerance_ms": DEFAULT_PRE_TOLERANCE_MS,
+        "match_post_tolerance_ms": DEFAULT_POST_TOLERANCE_MS,
         "blank_top1_fraction": blank_top1_frames / len(logits),
         "root_top1_frames": root_top1_frames,
         "root_within_margin_frames": root_within_margin_frames,
@@ -582,17 +625,23 @@ def aggregate(records: list[dict]) -> dict:
         "runtime_expected_detected_recordings": sum(
             bool(row["runtime_detected_expected"]) for row in records
         ),
+        "runtime_expected_matched_recordings": sum(
+            bool(row["runtime_matched_expected"]) for row in records
+        ),
         "runtime_wrong_keyword_recordings": sum(
             int(row["runtime_wrong_keyword_detection_count"]) > 0 for row in records
         ),
+        "runtime_wrong_keyword_in_window_recordings": sum(
+            int(row["runtime_wrong_keyword_in_window_count"]) > 0 for row in records
+        ),
         "surrogate_above_threshold_runtime_miss_recordings": sum(
             bool(row["surrogate_above_runtime_threshold"])
-            and not bool(row["runtime_detected_expected"])
+            and not bool(row["runtime_matched_expected"])
             for row in records
         ),
         "greedy_subsequence_runtime_miss_recordings": sum(
             bool(row["greedy_contains_target_as_subsequence"])
-            and not bool(row["runtime_detected_expected"])
+            and not bool(row["runtime_matched_expected"])
             for row in records
         ),
         "mean_longest_target_prefix_ratio": sum(prefix) / len(prefix),
@@ -725,6 +774,8 @@ def build(
         "keyword_pack_sha256": sha256_file(pack_path),
         "parameter_contract_sha256": sha256_file(contract_path),
         "root_start_logit_margin": root_margin,
+        "event_match_pre_tolerance_ms": DEFAULT_PRE_TOLERANCE_MS,
+        "event_match_post_tolerance_ms": DEFAULT_POST_TOLERANCE_MS,
         "max_recordings_per_keyword_split": max_per_keyword_split,
         "model": {
             key: model[key]
