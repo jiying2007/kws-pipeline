@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "experiment_id": "disabled-development-preflight",
+  "trigger_policy": "development-only-preflight",
+  "source_policy": "exact-current-main",
+  "profile": "disabled",
+  "parameters": {},
+  "reason": "Canonical main keeps development-only experiment overrides disabled."
+}
