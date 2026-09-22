@@ -15,6 +15,7 @@ from diagnose_acoustic_alignment import (  # noqa: E402
     ctc_log_probability,
     decoder_surrogate_log_confidence,
     greedy_collapse,
+    greedy_strict_dominance_path,
     infer_logits,
     load_model,
     longest_prefix_subsequence,
@@ -83,6 +84,16 @@ def main() -> int:
         collapsed = greedy_collapse(logits)
         assert collapsed == (1,)
         assert longest_prefix_subsequence((1, 2), (1, 1, 3)) == 1
+        assert greedy_strict_dominance_path((1, 2, 3, 4), (1, 1, 2, 3, 4)) is True
+        assert greedy_strict_dominance_path((1, 2, 3, 4), (9, 1, 2, 3, 4)) is True
+        assert greedy_strict_dominance_path((1, 2, 3, 4), (1, 4, 2, 3, 4)) is False
+        assert greedy_strict_dominance_path((3, 4, 3, 4), (1, 3, 3, 4, 4, 3, 4)) is True
+        try:
+            greedy_strict_dominance_path((), (1, 2))
+        except ValueError as exc:
+            assert "non-empty target" in str(exc)
+        else:
+            raise AssertionError("empty strict dominance target was accepted")
 
         strong = [[0.0, 4.0, -4.0], [0.0, 4.0, -4.0], [4.0, 0.0, -4.0]]
         weak = [[4.0, 0.0, -4.0], [4.0, 0.0, -4.0], [4.0, 0.0, -4.0]]
