@@ -18,6 +18,7 @@ from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend_spec import FRONTEND_IDS
+from objective_contract import PATH_PURITY_MARGIN_MAX, PATH_PURITY_POLICY
 
 MODEL_VERSION = 2
 MODEL_HEADER_BYTES = 72
@@ -232,6 +233,37 @@ def training_metadata(checkpoint: dict) -> dict:
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
 
+    path_purity_fields = (
+        "path_purity_loss_weight",
+        "path_purity_margin",
+        "path_purity_policy",
+    )
+    path_purity_present = [key in checkpoint for key in path_purity_fields]
+    if any(path_purity_present) and not all(path_purity_present):
+        raise ValueError("checkpoint path-purity objective metadata is incomplete")
+    path_purity_recorded = all(path_purity_present)
+    result["path_purity_objective_recorded"] = path_purity_recorded
+    if path_purity_recorded:
+        weight = float(checkpoint["path_purity_loss_weight"])
+        margin = float(checkpoint["path_purity_margin"])
+        policy = checkpoint["path_purity_policy"]
+        if not math.isfinite(weight) or weight < 0.0:
+            raise ValueError("checkpoint path_purity_loss_weight must be finite and >= 0")
+        if (
+            not math.isfinite(margin)
+            or not 0.0 <= margin <= PATH_PURITY_MARGIN_MAX
+        ):
+            raise ValueError(
+                "checkpoint path_purity_margin is outside the supported range"
+            )
+        if policy != PATH_PURITY_POLICY:
+            raise ValueError("checkpoint path_purity_policy is unsupported")
+        result["path_purity_objective"] = {
+            "weight": weight,
+            "margin": margin,
+            "policy": policy,
+        }
+
     raw_history = checkpoint.get("epoch_history")
     result["epoch_history_recorded"] = raw_history is not None
     if raw_history is not None:
@@ -242,7 +274,10 @@ def training_metadata(checkpoint: dict) -> dict:
             if not isinstance(raw, dict) or int(raw.get("epoch", -1)) != index:
                 raise ValueError(f"checkpoint epoch_history[{index - 1}] epoch is invalid")
             row = {"epoch": index}
-            for key in ("loss", "ctc", "ordered", "margin", "completion", "release"):
+            metric_keys = ["loss", "ctc", "ordered", "margin", "completion", "release"]
+            if path_purity_recorded:
+                metric_keys.append("path_purity")
+            for key in metric_keys:
                 value = float(raw.get(key, math.nan))
                 if not math.isfinite(value) or value < 0.0:
                     raise ValueError(
