@@ -59,6 +59,18 @@ static uint16_t dominant_token(const float *logits, uint16_t vocab_size) {
   return top;
 }
 
+static int is_keyword_root_token(const kws_decoder_t *d, uint16_t token) {
+  uint16_t child = d->nodes[0].first_child;
+
+  while (child != UINT16_MAX) {
+    if (d->nodes[child].token == token) {
+      return 1;
+    }
+    child = d->nodes[child].next_sibling;
+  }
+  return 0;
+}
+
 static void max_assign_pair(float *dst_score,
                             float *dst_acoustic,
                             float score,
@@ -323,6 +335,8 @@ int kws_decoder_step(kws_decoder_t *d,
   float decay = speech_active ? d->retention_log : KWS_SILENCE_RETENTION_LOG;
   uint16_t top_token = dominant_token(logits, vocab_size);
   int blank_dominant = top_token == 0u;
+  int top_is_keyword_root =
+      top_token != 0u && is_keyword_root_token(d, top_token) != 0;
   int immediate_kw = -1;
 
   if (d->pending_keyword >= 0) {
@@ -396,17 +410,17 @@ int kws_decoder_step(kws_decoder_t *d,
         base_acoustic = separated_acoustic;
       }
 
-      /* Starting a keyword from the root follows the documented root-start
-       * margin: the candidate root token may trail the global dominant token
-       * by at most KWS_ROOT_START_LOGIT_MARGIN. This matters for CTC models,
-       * where blank commonly remains top-1 while a keyword token is already
-       * acoustically competitive. Once a prefix exists, preserve fuzzy child
-       * competition, but charge a non-top child against the cumulative path
-       * budget so repeated secondary posterior advances cannot synthesize a
-       * full wake sequence. */
+      /* Starting a keyword from the root accepts dominant evidence plus two
+       * bounded ambiguity cases: CTC blank may remain top-1 while a root token
+       * is already acoustically competitive, and two configured keyword roots
+       * may be near-tied. An unrelated non-root top token still blocks the
+       * start so hard-negative shadow paths cannot synthesize a wake. Once a
+       * prefix exists, preserve fuzzy child competition, but charge a non-top
+       * child against the cumulative path budget. */
       if (base > NEG_INF / 2.0f &&
           (i != 0u || top_token == token ||
-           logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN)) {
+           ((blank_dominant != 0 || top_is_keyword_root != 0) &&
+            logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability = logits[token] - norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
