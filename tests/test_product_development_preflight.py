@@ -73,6 +73,7 @@ def validate_split_job_handoff() -> None:
         pack = candidate / "calibration/calibrated-keywords.kwk"
         cal_fp = candidate / "calibration/final-eval/false-positives.jsonl"
         cal_fr = candidate / "calibration/final-eval/false-rejects.jsonl"
+        cal_curve = candidate / "calibration/calibration-operating-curve.json"
         test_fp = candidate / "test/false-positives.jsonl"
         test_fr = candidate / "test/false-rejects.jsonl"
         domain_index = work / "datasets/round-00/domain-index.jsonl"
@@ -90,6 +91,7 @@ def validate_split_job_handoff() -> None:
             (pack, b"pack"),
             (cal_fp, b""),
             (cal_fr, b""),
+            (cal_curve, b'{"schema_version":1,"evidence_class":"coordinate-threshold-trials-v1"}\n'),
             (test_fp, b""),
             (test_fr, b""),
             (domain_index, b'{"split":"calibration"}\n'),
@@ -104,6 +106,8 @@ def validate_split_job_handoff() -> None:
             **metrics(),
             "false_positives_path": str(cal_fp),
             "false_rejects_path": str(cal_fr),
+            "calibration_operating_curve_path": str(cal_curve),
+            "calibration_operating_curve_sha256": sha256_file(cal_curve),
         }
         test_metrics = {
             **metrics(),
@@ -168,6 +172,8 @@ def validate_split_job_handoff() -> None:
         assert restored["development_manifest_sha256"] == metadata["development_manifest_sha256"]
         assert checkpoint.read_bytes() == b"checkpoint"
         assert clean_cache.read_bytes() == b"RIFFfixture"
+        assert cal_curve.is_file()
+        assert sha256_file(cal_curve) == record_metrics["calibration_operating_curve_sha256"]
         metadata_path = root / "build/product-preflight-handoff/manifest.json"
         verify_materialization(
             metadata_path=metadata_path,
