@@ -1,0 +1,620 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import pathlib
+import struct
+import subprocess
+import sys
+from collections import defaultdict
+from typing import Any
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+sys.path.insert(0, str(ROOT / "tools"))
+
+from adversarial_refinement import select_refinement_source  # noqa: E402
+from kws_vocab import load_tokens  # noqa: E402
+
+EVIDENCE_CLASS = "kws-acoustic-alignment-diagnostic-v1"
+MODEL_HEADER = struct.Struct("<4sHHHHHHIIIfffQIIIIII")
+MODEL_MAGIC = b"KWSP"
+MODEL_VERSION = 2
+FRONTENDS = {0: "logmel", 1: "pcen-lite"}
+NEG_INF = float("-inf")
+
+
+def sha256_file(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def load_object(path: pathlib.Path, label: str) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be a JSON object")
+    return value
+
+
+def load_jsonl(path: pathlib.Path) -> list[dict]:
+    rows: list[dict] = []
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise ValueError(f"{path}:{line_no}: expected JSON object")
+        rows.append(value)
+    return rows
+
+
+def resolve_repo_path(raw: str) -> pathlib.Path:
+    path = pathlib.Path(raw)
+    return path if path.is_absolute() else (ROOT / path).resolve()
+
+
+def load_keywords(path: pathlib.Path, token_map: dict[str, int]) -> dict[int, tuple[int, ...]]:
+    result: dict[int, tuple[int, ...]] = {}
+    for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        text = raw.strip()
+        if not text or text.startswith("#"):
+            continue
+        parts = raw.split("\t")
+        if len(parts) != 4:
+            raise ValueError(f"{path}:{line_no}: expected four TSV columns")
+        keyword_id = int(parts[0])
+        token_names = parts[3].strip().split()
+        if not token_names:
+            raise ValueError(f"{path}:{line_no}: keyword token sequence is empty")
+        try:
+            token_ids = tuple(token_map[name] for name in token_names)
+        except KeyError as exc:
+            raise ValueError(f"{path}:{line_no}: unknown token {exc.args[0]}") from exc
+        if keyword_id in result:
+            raise ValueError(f"{path}:{line_no}: duplicate keyword id {keyword_id}")
+        result[keyword_id] = token_ids
+    if not result:
+        raise ValueError("keyword set is empty")
+    return result
+
+
+def load_model(path: pathlib.Path) -> dict[str, Any]:
+    blob = path.read_bytes()
+    if len(blob) < MODEL_HEADER.size:
+        raise ValueError("model is smaller than KWSP header")
+    values = MODEL_HEADER.unpack_from(blob)
+    (
+        magic,
+        version,
+        header_bytes,
+        feature_dim,
+        hidden_dim,
+        vocab_size,
+        frontend_kind,
+        sample_rate_hz,
+        frame_length_samples,
+        frame_hop_samples,
+        wx_scale,
+        wh_scale,
+        wo_scale,
+        vocab_fingerprint,
+        wx_off,
+        wh_off,
+        bh_off,
+        wo_off,
+        bo_off,
+        total_bytes,
+    ) = values
+    if (
+        magic != MODEL_MAGIC
+        or version != MODEL_VERSION
+        or header_bytes != MODEL_HEADER.size
+        or total_bytes != len(blob)
+        or frontend_kind not in FRONTENDS
+        or feature_dim <= 0
+        or hidden_dim <= 0
+        or vocab_size < 2
+    ):
+        raise ValueError("unsupported or malformed KWSP model")
+
+    wx_count = hidden_dim * feature_dim
+    wh_count = hidden_dim * hidden_dim
+    wo_count = vocab_size * hidden_dim
+    wx = struct.unpack_from(f"<{wx_count}b", blob, wx_off)
+    wh = struct.unpack_from(f"<{wh_count}b", blob, wh_off)
+    bh = struct.unpack_from(f"<{hidden_dim}f", blob, bh_off)
+    wo = struct.unpack_from(f"<{wo_count}b", blob, wo_off)
+    bo = struct.unpack_from(f"<{vocab_size}f", blob, bo_off)
+    scalars = (wx_scale, wh_scale, wo_scale, *bh, *bo)
+    if any(not math.isfinite(float(value)) for value in scalars):
+        raise ValueError("model contains non-finite scales or biases")
+    return {
+        "feature_dim": feature_dim,
+        "hidden_dim": hidden_dim,
+        "vocab_size": vocab_size,
+        "frontend_kind": frontend_kind,
+        "frontend_name": FRONTENDS[frontend_kind],
+        "sample_rate_hz": sample_rate_hz,
+        "frame_length_samples": frame_length_samples,
+        "frame_hop_samples": frame_hop_samples,
+        "wx_scale": float(wx_scale),
+        "wh_scale": float(wh_scale),
+        "wo_scale": float(wo_scale),
+        "vocab_fingerprint": int(vocab_fingerprint),
+        "wx": wx,
+        "wh": wh,
+        "bh": bh,
+        "wo": wo,
+        "bo": bo,
+    }
+
+
+def infer_logits(model: dict[str, Any], features: list[list[float]]) -> list[list[float]]:
+    fdim = int(model["feature_dim"])
+    hdim = int(model["hidden_dim"])
+    vocab = int(model["vocab_size"])
+    wx = model["wx"]
+    wh = model["wh"]
+    wo = model["wo"]
+    bh = model["bh"]
+    bo = model["bo"]
+    sx = float(model["wx_scale"])
+    sh = float(model["wh_scale"])
+    so = float(model["wo_scale"])
+    hidden = [0.0] * hdim
+    result: list[list[float]] = []
+
+    for frame_index, frame in enumerate(features):
+        if len(frame) != fdim:
+            raise ValueError(
+                f"feature frame {frame_index} has dim {len(frame)}, expected {fdim}"
+            )
+        next_hidden = [0.0] * hdim
+        for h in range(hdim):
+            wx_base = h * fdim
+            wh_base = h * hdim
+            in_sum = sum(float(wx[wx_base + i]) * float(frame[i]) for i in range(fdim))
+            rec_sum = sum(
+                float(wh[wh_base + i]) * float(hidden[i]) for i in range(hdim)
+            )
+            next_hidden[h] = math.tanh(float(bh[h]) + sx * in_sum + sh * rec_sum)
+        hidden = next_hidden
+        logits: list[float] = []
+        for token in range(vocab):
+            base = token * hdim
+            value = float(bo[token]) + so * sum(
+                float(wo[base + h]) * hidden[h] for h in range(hdim)
+            )
+            logits.append(value)
+        result.append(logits)
+    return result
+
+
+def log_softmax(row: list[float]) -> list[float]:
+    maximum = max(row)
+    norm = maximum + math.log(sum(math.exp(value - maximum) for value in row))
+    return [value - norm for value in row]
+
+
+def logsumexp(values: list[float]) -> float:
+    finite = [value for value in values if value != NEG_INF]
+    if not finite:
+        return NEG_INF
+    maximum = max(finite)
+    return maximum + math.log(sum(math.exp(value - maximum) for value in finite))
+
+
+def ctc_log_probability(logits: list[list[float]], target: tuple[int, ...]) -> float:
+    if not logits or not target:
+        raise ValueError("CTC diagnostic requires non-empty logits and target")
+    log_probs = [log_softmax(row) for row in logits]
+    extended: list[int] = [0]
+    for token in target:
+        if token <= 0 or token >= len(logits[0]):
+            raise ValueError(f"target token id out of range: {token}")
+        extended.extend((token, 0))
+
+    previous = [NEG_INF] * len(extended)
+    previous[0] = log_probs[0][0]
+    if len(extended) > 1:
+        previous[1] = log_probs[0][extended[1]]
+    for frame in log_probs[1:]:
+        current = [NEG_INF] * len(extended)
+        for index, label in enumerate(extended):
+            candidates = [previous[index]]
+            if index > 0:
+                candidates.append(previous[index - 1])
+            if (
+                index > 1
+                and label != 0
+                and label != extended[index - 2]
+            ):
+                candidates.append(previous[index - 2])
+            current[index] = logsumexp(candidates) + frame[label]
+        previous = current
+    return logsumexp(previous[-2:] if len(previous) > 1 else previous)
+
+
+def greedy_collapse(logits: list[list[float]]) -> tuple[int, ...]:
+    output: list[int] = []
+    previous: int | None = None
+    for row in logits:
+        token = max(range(len(row)), key=row.__getitem__)
+        if token != previous and token != 0:
+            output.append(token)
+        previous = token
+    return tuple(output)
+
+
+def longest_prefix_subsequence(target: tuple[int, ...], sequence: tuple[int, ...]) -> int:
+    depth = 0
+    for token in sequence:
+        if depth < len(target) and token == target[depth]:
+            depth += 1
+    return depth
+
+
+def token_best_ranks(logits: list[list[float]], target: tuple[int, ...]) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for token in sorted(set(target)):
+        best = len(logits[0])
+        for row in logits:
+            rank = 1 + sum(1 for value in row if value > row[token])
+            best = min(best, rank)
+        result[str(token)] = best
+    return result
+
+
+def run_feature_dump(
+    executable: pathlib.Path,
+    wav: pathlib.Path,
+    *,
+    feature_dim: int,
+    frontend_name: str,
+) -> list[list[float]]:
+    completed = subprocess.run(
+        [str(executable), str(wav), str(feature_dim), frontend_name],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"feature dump failed for {wav}: {completed.stderr.strip()}"
+        )
+    result: list[list[float]] = []
+    for line_no, raw in enumerate(completed.stdout.splitlines(), 1):
+        if not raw.strip():
+            continue
+        row = json.loads(raw)
+        values = row.get("features")
+        if not isinstance(values, list):
+            raise ValueError(f"feature dump line {line_no} lacks features")
+        result.append([float(value) for value in values])
+    if not result:
+        raise ValueError(f"feature dump produced no frames for {wav}")
+    return result
+
+
+def stable_sample(rows: list[dict], limit: int) -> list[dict]:
+    if limit <= 0:
+        raise ValueError("sample limit must be positive")
+    ordered = sorted(
+        rows,
+        key=lambda row: (
+            str(row.get("source_wav_sha256") or ""),
+            int(row.get("scene_seed", 0)),
+            str(row.get("wav_sha256") or ""),
+            str(row.get("path") or ""),
+        ),
+    )
+    selected: list[dict] = []
+    used_sources: set[str] = set()
+    for row in ordered:
+        source = str(row.get("source_wav_sha256") or row.get("source_path") or "")
+        if source in used_sources:
+            continue
+        used_sources.add(source)
+        selected.append(row)
+        if len(selected) >= limit:
+            return selected
+    for row in ordered:
+        if row in selected:
+            continue
+        selected.append(row)
+        if len(selected) >= limit:
+            break
+    return selected
+
+
+def percentile(values: list[float], q: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    rank = (len(ordered) - 1) * q
+    lo = math.floor(rank)
+    hi = math.ceil(rank)
+    if lo == hi:
+        return ordered[lo]
+    fraction = rank - lo
+    return ordered[lo] * (1.0 - fraction) + ordered[hi] * fraction
+
+
+def analyze_recording(
+    *,
+    row: dict,
+    target: tuple[int, ...],
+    model: dict[str, Any],
+    feature_dump: pathlib.Path,
+    root_tokens: set[int],
+    root_margin: float,
+) -> dict:
+    wav = pathlib.Path(str(row["path"]))
+    if not wav.is_file():
+        raise ValueError(f"diagnostic WAV is missing: {wav}")
+    features = run_feature_dump(
+        feature_dump,
+        wav,
+        feature_dim=int(model["feature_dim"]),
+        frontend_name=str(model["frontend_name"]),
+    )
+    logits = infer_logits(model, features)
+    greedy = greedy_collapse(logits)
+    root = target[0]
+    root_top1_frames = 0
+    root_within_margin_frames = 0
+    blank_root_admissible_frames = 0
+    decoder_root_admissible_frames = 0
+    minimum_root_gap = math.inf
+    blank_top1_frames = 0
+    for frame in logits:
+        top = max(range(len(frame)), key=frame.__getitem__)
+        if top == 0:
+            blank_top1_frames += 1
+        gap = frame[top] - frame[root]
+        minimum_root_gap = min(minimum_root_gap, gap)
+        if top == root:
+            root_top1_frames += 1
+        if gap <= root_margin:
+            root_within_margin_frames += 1
+            if top == 0:
+                blank_root_admissible_frames += 1
+            if top == root or top == 0 or top in root_tokens:
+                decoder_root_admissible_frames += 1
+
+    ctc_logp = ctc_log_probability(logits, target)
+    depth = longest_prefix_subsequence(target, greedy)
+    best_ranks = token_best_ranks(logits, target)
+    return {
+        "split": str(row["split"]),
+        "keyword_id": int(row["keyword_id"]),
+        "wav_sha256": str(row.get("wav_sha256") or sha256_file(wav)),
+        "source_wav_sha256": str(row.get("source_wav_sha256") or ""),
+        "frames": len(logits),
+        "target": list(target),
+        "greedy_collapsed": list(greedy),
+        "greedy_exact": greedy == target,
+        "greedy_contains_target_as_subsequence": depth == len(target),
+        "longest_target_prefix_depth": depth,
+        "longest_target_prefix_ratio": depth / len(target),
+        "ctc_log_probability": ctc_logp,
+        "ctc_nll_per_token": -ctc_logp / len(target),
+        "blank_top1_fraction": blank_top1_frames / len(logits),
+        "root_top1_frames": root_top1_frames,
+        "root_within_margin_frames": root_within_margin_frames,
+        "blank_root_admissible_frames": blank_root_admissible_frames,
+        "decoder_root_admissible_frames": decoder_root_admissible_frames,
+        "minimum_root_logit_gap": minimum_root_gap,
+        "target_token_best_ranks": best_ranks,
+        "all_target_tokens_reach_top3": all(rank <= 3 for rank in best_ranks.values()),
+    }
+
+
+def aggregate(records: list[dict]) -> dict:
+    if not records:
+        return {"recordings": 0}
+    nll = [float(row["ctc_nll_per_token"]) for row in records]
+    prefix = [float(row["longest_target_prefix_ratio"]) for row in records]
+    return {
+        "recordings": len(records),
+        "ctc_nll_per_token_mean": sum(nll) / len(nll),
+        "ctc_nll_per_token_p50": percentile(nll, 0.50),
+        "ctc_nll_per_token_p90": percentile(nll, 0.90),
+        "greedy_exact_recordings": sum(bool(row["greedy_exact"]) for row in records),
+        "greedy_subsequence_recordings": sum(
+            bool(row["greedy_contains_target_as_subsequence"]) for row in records
+        ),
+        "mean_longest_target_prefix_ratio": sum(prefix) / len(prefix),
+        "root_top1_recordings": sum(int(row["root_top1_frames"]) > 0 for row in records),
+        "root_within_margin_recordings": sum(
+            int(row["root_within_margin_frames"]) > 0 for row in records
+        ),
+        "blank_root_admissible_recordings": sum(
+            int(row["blank_root_admissible_frames"]) > 0 for row in records
+        ),
+        "decoder_root_admissible_recordings": sum(
+            int(row["decoder_root_admissible_frames"]) > 0 for row in records
+        ),
+        "all_target_tokens_reach_top3_recordings": sum(
+            bool(row["all_target_tokens_reach_top3"]) for row in records
+        ),
+    }
+
+
+def build(
+    *,
+    config_path: pathlib.Path,
+    manifest_path: pathlib.Path,
+    feature_dump: pathlib.Path,
+    max_per_keyword_split: int,
+) -> dict:
+    config = load_object(config_path, "preflight config")
+    manifest = load_object(manifest_path, "development manifest")
+    source, source_policy = select_refinement_source(manifest)
+    model_path = pathlib.Path(str(source["model"]))
+    keywords_path = pathlib.Path(str(source["keywords"]))
+    tokens_path = resolve_repo_path(str(config["tokens"]))
+    model = load_model(model_path)
+    token_map = load_tokens(tokens_path)
+    if len(token_map) != int(model["vocab_size"]):
+        raise ValueError("token vocabulary size differs from model")
+    keywords = load_keywords(keywords_path, token_map)
+    roots = {tokens[0] for tokens in keywords.values()}
+
+    contract_path = ROOT / "configs/parameter-contract.json"
+    contract = load_object(contract_path, "parameter contract")
+    root_margin = float(
+        contract["algorithm_constants"]["KWS_ROOT_START_LOGIT_MARGIN"]["default"]
+    )
+    if not math.isfinite(root_margin) or root_margin < 0.0:
+        raise ValueError("root-start logit margin is invalid")
+
+    round_index = int(source["round"])
+    index_path = (
+        manifest_path.parent
+        / "datasets"
+        / f"round-{round_index:02d}"
+        / "domain-index.jsonl"
+    )
+    index_rows = load_jsonl(index_path)
+    groups: dict[tuple[str, int], list[dict]] = defaultdict(list)
+    for row in index_rows:
+        split = str(row.get("split") or "")
+        keyword_id = row.get("keyword_id")
+        if split not in {"calibration", "test"} or keyword_id is None:
+            continue
+        keyword_id = int(keyword_id)
+        if keyword_id not in keywords or str(row.get("kind")) != "positive":
+            continue
+        target_ids = tuple(int(value) for value in row.get("target_ids", []))
+        if target_ids != keywords[keyword_id]:
+            raise ValueError(
+                f"{split} keyword {keyword_id} target ids differ from calibrated keyword"
+            )
+        groups[(split, keyword_id)].append(row)
+
+    records: list[dict] = []
+    for split in ("calibration", "test"):
+        for keyword_id in sorted(keywords):
+            group = groups.get((split, keyword_id), [])
+            if not group:
+                raise ValueError(f"{split} keyword {keyword_id} has no positive rows")
+            for row in stable_sample(group, max_per_keyword_split):
+                records.append(
+                    analyze_recording(
+                        row=row,
+                        target=keywords[keyword_id],
+                        model=model,
+                        feature_dump=feature_dump,
+                        root_tokens=roots,
+                        root_margin=root_margin,
+                    )
+                )
+
+    grouped_output: dict[str, dict[str, dict]] = {"calibration": {}, "test": {}}
+    for split in ("calibration", "test"):
+        for keyword_id in sorted(keywords):
+            subset = [
+                row
+                for row in records
+                if row["split"] == split and int(row["keyword_id"]) == keyword_id
+            ]
+            grouped_output[split][str(keyword_id)] = aggregate(subset)
+
+    return {
+        "schema_version": 1,
+        "evidence_class": EVIDENCE_CLASS,
+        "development_only": True,
+        "source_round": round_index,
+        "source_frontend": str(source["frontend"]),
+        "source_selection_policy": source_policy,
+        "source_was_strict": (
+            source.get("calibration_gate") is True and source.get("test_gate") is True
+        ),
+        "model_sha256": sha256_file(model_path),
+        "tokens_sha256": sha256_file(tokens_path),
+        "keywords_sha256": sha256_file(keywords_path),
+        "domain_index_sha256": sha256_file(index_path),
+        "feature_dump_sha256": sha256_file(feature_dump),
+        "parameter_contract_sha256": sha256_file(contract_path),
+        "root_start_logit_margin": root_margin,
+        "max_recordings_per_keyword_split": max_per_keyword_split,
+        "model": {
+            key: model[key]
+            for key in (
+                "feature_dim",
+                "hidden_dim",
+                "vocab_size",
+                "frontend_name",
+                "sample_rate_hz",
+                "frame_length_samples",
+                "frame_hop_samples",
+                "vocab_fingerprint",
+            )
+        },
+        "aggregates": grouped_output,
+        "records": records,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Development-only acoustic alignment diagnostic using the exact C "
+            "frontend and exported quantized KWSP model, without the decoder."
+        )
+    )
+    parser.add_argument("--config", required=True, type=pathlib.Path)
+    parser.add_argument("--manifest", required=True, type=pathlib.Path)
+    parser.add_argument("--feature-dump", required=True, type=pathlib.Path)
+    parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument("--max-per-keyword-split", type=int, default=8)
+    args = parser.parse_args()
+    if not 1 <= args.max_per_keyword_split <= 32:
+        raise ValueError("max-per-keyword-split must be 1..32")
+    result = build(
+        config_path=args.config.resolve(),
+        manifest_path=args.manifest.resolve(),
+        feature_dump=args.feature_dump.resolve(),
+        max_per_keyword_split=args.max_per_keyword_split,
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
+        + "\n",
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {
+                "source_round": result["source_round"],
+                "source_frontend": result["source_frontend"],
+                "recordings": len(result["records"]),
+                "output": str(args.output),
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (
+        KeyError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+        struct.error,
+    ) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2)
