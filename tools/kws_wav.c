@@ -1,9 +1,11 @@
 #include "kws_pipeline/kws.h"
 #include "tool_io.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define BLOCK_SAMPLES 160u
 
@@ -21,11 +23,22 @@ int main(int argc, char **argv) {
   long wav_data_offset = 0L;
   uint32_t remaining;
   int16_t pcm[BLOCK_SAMPLES];
+  const char *stats_path = NULL;
   int exit_code = 1;
 
-  if (argc != 5) {
-    fprintf(stderr, "usage: %s model.kwm keywords.kwk audio.wav recording-id\n", argv[0]);
+  if (argc != 5 && argc != 7) {
+    fprintf(stderr,
+            "usage: %s model.kwm keywords.kwk audio.wav recording-id "
+            "[--stats-json path]\n",
+            argv[0]);
     return 2;
+  }
+  if (argc == 7) {
+    if (strcmp(argv[5], "--stats-json") != 0 || argv[6][0] == '\0') {
+      fprintf(stderr, "expected optional --stats-json path\n");
+      return 2;
+    }
+    stats_path = argv[6];
   }
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
       kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0) {
@@ -90,6 +103,48 @@ int main(int argc, char **argv) {
               hit.keyword_id,
               (double)hit.end_sample / (double)KWS_SAMPLE_RATE_HZ,
               (double)hit.confidence);
+    }
+  }
+  if (stats_path != NULL) {
+    kws_engine_stats_v2_t stats = {0};
+    FILE *stats_file = NULL;
+
+    stats.struct_size = (uint32_t)sizeof(stats);
+    stats.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
+    if (kws_engine_get_stats_v2(engine, &stats) != KWS_OK) {
+      fprintf(stderr, "cannot read KWS runtime stats\n");
+      goto cleanup;
+    }
+    stats_file = fopen(stats_path, "wb");
+    if (stats_file == NULL) {
+      fprintf(stderr, "cannot open stats output: %s\n", stats_path);
+      goto cleanup;
+    }
+    fprintf(stats_file,
+            "{\"schema_version\":1,"
+            "\"processed_samples\":%" PRIu64 ","
+            "\"processed_frames\":%" PRIu64 ","
+            "\"speech_frames\":%" PRIu64 ","
+            "\"blank_top1_frames\":%" PRIu64 ","
+            "\"decoder_hits\":%" PRIu64 ","
+            "\"refractory_suppressed\":%" PRIu64 ","
+            "\"detections\":%" PRIu64 ","
+            "\"pending_keyword_index\":%d,"
+            "\"pending_age_frames\":%u,"
+            "\"max_detection_confidence\":%.9g}\n",
+            stats.processed_samples,
+            stats.processed_frames,
+            stats.speech_frames,
+            stats.blank_top1_frames,
+            stats.decoder_hits,
+            stats.refractory_suppressed,
+            stats.detections,
+            (int)stats.pending_keyword_index,
+            (unsigned)stats.pending_age_frames,
+            (double)stats.max_detection_confidence);
+    if (ferror(stats_file) != 0 || fclose(stats_file) != 0) {
+      fprintf(stderr, "cannot write stats output: %s\n", stats_path);
+      goto cleanup;
     }
   }
   exit_code = ferror(stdout) != 0 ? 1 : 0;
