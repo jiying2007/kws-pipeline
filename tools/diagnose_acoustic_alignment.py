@@ -506,6 +506,37 @@ def longest_prefix_subsequence(target: tuple[int, ...], sequence: tuple[int, ...
     return depth
 
 
+def greedy_strict_dominance_path(
+    target: tuple[int, ...], sequence: tuple[int, ...]
+) -> bool:
+    """Whether greedy top-1 evidence can traverse the keyword without contradiction.
+
+    This is intentionally narrower than the shipping decoder: blanks are already
+    removed by greedy_collapse, repeats of the currently held token are allowed,
+    the exact next target token may advance, and any unrelated nonblank token
+    kills that partial path. A later root occurrence may start a fresh path.
+    Fuzzy child transitions, retention budgets and VAD are left to exact runtime
+    diagnostics.
+    """
+    if not target:
+        raise ValueError("strict dominance path requires a non-empty target")
+    states: set[int] = set()
+    for token in sequence:
+        next_states: set[int] = set()
+        if token == target[0]:
+            next_states.add(1)
+        for depth in states:
+            current = target[depth - 1]
+            if token == current:
+                next_states.add(depth)
+            elif depth < len(target) and token == target[depth]:
+                next_states.add(depth + 1)
+        states = next_states
+        if len(target) in states:
+            return True
+    return False
+
+
 def token_best_ranks(logits: list[list[float]], target: tuple[int, ...]) -> dict[str, int]:
     result: dict[str, int] = {}
     for token in sorted(set(target)):
@@ -663,6 +694,7 @@ def analyze_recording(
         sample_rate_hz=int(model["sample_rate_hz"]),
     )
     depth = longest_prefix_subsequence(target, greedy)
+    strict_dominance_path = greedy_strict_dominance_path(target, greedy)
     best_ranks = token_best_ranks(logits, target)
     return {
         "split": str(row["split"]),
@@ -674,6 +706,7 @@ def analyze_recording(
         "greedy_collapsed": list(greedy),
         "greedy_exact": greedy == target,
         "greedy_contains_target_as_subsequence": depth == len(target),
+        "greedy_strict_dominance_path": strict_dominance_path,
         "longest_target_prefix_depth": depth,
         "longest_target_prefix_ratio": depth / len(target),
         "ctc_log_probability": ctc_logp,
@@ -718,6 +751,24 @@ def aggregate(records: list[dict]) -> dict:
         "greedy_exact_recordings": sum(bool(row["greedy_exact"]) for row in records),
         "greedy_subsequence_recordings": sum(
             bool(row["greedy_contains_target_as_subsequence"]) for row in records
+        ),
+        "greedy_strict_dominance_path_recordings": sum(
+            bool(row["greedy_strict_dominance_path"]) for row in records
+        ),
+        "greedy_strict_dominance_path_runtime_match_recordings": sum(
+            bool(row["greedy_strict_dominance_path"])
+            and bool(row["runtime_matched_expected"])
+            for row in records
+        ),
+        "greedy_strict_dominance_path_runtime_miss_recordings": sum(
+            bool(row["greedy_strict_dominance_path"])
+            and not bool(row["runtime_matched_expected"])
+            for row in records
+        ),
+        "surrogate_above_threshold_greedy_path_incompatible_recordings": sum(
+            bool(row["surrogate_above_runtime_threshold"])
+            and not bool(row["greedy_strict_dominance_path"])
+            for row in records
         ),
         "surrogate_above_threshold_recordings": sum(
             bool(row["surrogate_above_runtime_threshold"]) for row in records
