@@ -132,10 +132,18 @@ def main() -> int:
             "model": {"feature_dim": 32, "hidden_dim": 64, "vocab_size": 5},
             "aggregates": {
                 "calibration": {
-                    "1": {"recordings": 8, "decoder_root_admissible_recordings": 1}
+                    "1": {
+                        "recordings": 8,
+                        "greedy_subsequence_recordings": 3,
+                        "decoder_root_admissible_recordings": 1,
+                    }
                 },
                 "test": {
-                    "1": {"recordings": 8, "decoder_root_admissible_recordings": 2}
+                    "1": {
+                        "recordings": 8,
+                        "greedy_subsequence_recordings": 2,
+                        "decoder_root_admissible_recordings": 2,
+                    }
                 },
             },
             "records": [{"wav_sha256": "2" * 64}],
@@ -166,6 +174,31 @@ def main() -> int:
         file_rows = {item["path"]: item for item in result["files"]}
         assert file_rows["base-refinement-eligibility.json"]["present"] is True
         assert file_rows["acoustic-alignment.json"]["present"] is True
+        signals = result["evidence_signals"]
+        assert signals["cross_split_keyword_collapse"]["observed"] is False
+        assert signals["threshold_grid_saturation"]["observed"] is True
+        assert signals["threshold_grid_saturation"]["occurrences"] == [
+            {
+                "round": 0,
+                "edge_keywords": {"1": "max"},
+                "grid_min": 0.5,
+                "grid_max": 0.6,
+            }
+        ]
+        assert signals["keyword_confusion"]["observed"] is True
+        assert len(signals["keyword_confusion"]["occurrences"]) == 2
+        assert (
+            signals["acoustic_sequence_observed_but_runtime_missed"]["observed"]
+            is True
+        )
+        acoustic_gaps = signals[
+            "acoustic_sequence_observed_but_runtime_missed"
+        ]["occurrences"]
+        assert {(row["split"], row["keyword_id"]) for row in acoustic_gaps} == {
+            ("calibration", "1"),
+            ("test", "1"),
+        }
+        assert signals["sampled_acoustic_sequence_absent"]["observed"] is False
         assert result["diagnostic_errors"] == {}
 
     print("compact training diagnostics: PASS")

@@ -182,6 +182,139 @@ def acoustic_slice(summary: dict | None) -> dict | None:
     }
 
 
+def evidence_signals(
+    rounds: list[dict],
+    refinement_eligibility: dict | None,
+    acoustic_alignment: dict | None,
+) -> dict:
+    threshold_saturation: list[dict] = []
+    keyword_confusion: list[dict] = []
+    round_by_index: dict[int, dict] = {}
+
+    for row in rounds:
+        if not isinstance(row, dict):
+            continue
+        round_index = int(row.get("round", -1))
+        round_by_index[round_index] = row
+        operating = row.get("calibration_operating_point")
+        if isinstance(operating, dict) and operating.get("grid_saturated") is True:
+            threshold_saturation.append(
+                {
+                    "round": round_index,
+                    "edge_keywords": dict(operating.get("edge_keywords", {})),
+                    "grid_min": operating.get("grid_min"),
+                    "grid_max": operating.get("grid_max"),
+                }
+            )
+        for split, key in (
+            ("calibration", "calibration_domain_summary"),
+            ("test", "test_domain_summary"),
+        ):
+            domains = row.get(key)
+            confusion = domains.get("keyword_confusion") if isinstance(domains, dict) else None
+            if isinstance(confusion, dict) and int(confusion.get("wrong_keyword", 0)) > 0:
+                keyword_confusion.append(
+                    {
+                        "round": round_index,
+                        "split": split,
+                        "wrong_keyword": int(confusion["wrong_keyword"]),
+                        "matrix": confusion.get("matrix", {}),
+                    }
+                )
+
+    collapsed_keyword_ids: list[str] = []
+    if isinstance(refinement_eligibility, dict) and refinement_eligibility.get("eligible") is False:
+        raw = refinement_eligibility.get("collapsed_keyword_ids", [])
+        if isinstance(raw, list):
+            collapsed_keyword_ids = [str(value) for value in raw]
+
+    acoustic_runtime_gaps: list[dict] = []
+    sampled_acoustic_sequence_absent: list[dict] = []
+    if isinstance(acoustic_alignment, dict):
+        source_round = int(acoustic_alignment.get("source_round", -1))
+        source = round_by_index.get(source_round)
+        aggregates = acoustic_alignment.get("aggregates")
+        if isinstance(source, dict) and isinstance(aggregates, dict):
+            keyword_ids: set[str] = set()
+            for split in ("calibration", "test"):
+                split_aggregates = aggregates.get(split)
+                if isinstance(split_aggregates, dict):
+                    keyword_ids.update(str(key) for key in split_aggregates)
+
+            for keyword_id in sorted(keyword_ids):
+                subsequence_total = 0
+                sampled_total = 0
+                for split in ("calibration", "test"):
+                    split_aggregates = aggregates.get(split)
+                    aggregate = (
+                        split_aggregates.get(keyword_id)
+                        if isinstance(split_aggregates, dict)
+                        else None
+                    )
+                    if not isinstance(aggregate, dict):
+                        continue
+                    recordings = int(aggregate.get("recordings", 0))
+                    subsequences = int(aggregate.get("greedy_subsequence_recordings", 0))
+                    sampled_total += recordings
+                    subsequence_total += subsequences
+
+                    metrics = source.get(split)
+                    per_keyword = (
+                        metrics.get("per_keyword") if isinstance(metrics, dict) else None
+                    )
+                    runtime = (
+                        per_keyword.get(keyword_id)
+                        if isinstance(per_keyword, dict)
+                        else None
+                    )
+                    if (
+                        subsequences > 0
+                        and isinstance(runtime, dict)
+                        and int(runtime.get("matched", 0)) == 0
+                    ):
+                        acoustic_runtime_gaps.append(
+                            {
+                                "round": source_round,
+                                "split": split,
+                                "keyword_id": keyword_id,
+                                "sampled_recordings": recordings,
+                                "acoustic_greedy_subsequence_recordings": subsequences,
+                                "runtime_matched": 0,
+                            }
+                        )
+                if sampled_total > 0 and subsequence_total == 0:
+                    sampled_acoustic_sequence_absent.append(
+                        {
+                            "round": source_round,
+                            "keyword_id": keyword_id,
+                            "sampled_recordings": sampled_total,
+                        }
+                    )
+
+    return {
+        "cross_split_keyword_collapse": {
+            "observed": bool(collapsed_keyword_ids),
+            "keyword_ids": collapsed_keyword_ids,
+        },
+        "threshold_grid_saturation": {
+            "observed": bool(threshold_saturation),
+            "occurrences": threshold_saturation,
+        },
+        "keyword_confusion": {
+            "observed": bool(keyword_confusion),
+            "occurrences": keyword_confusion,
+        },
+        "acoustic_sequence_observed_but_runtime_missed": {
+            "observed": bool(acoustic_runtime_gaps),
+            "occurrences": acoustic_runtime_gaps,
+        },
+        "sampled_acoustic_sequence_absent": {
+            "observed": bool(sampled_acoustic_sequence_absent),
+            "occurrences": sampled_acoustic_sequence_absent,
+        },
+    }
+
+
 def shadow_slice(summary: dict | None) -> dict | None:
     if not isinstance(summary, dict):
         return None
@@ -314,6 +447,11 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             "acoustic_alignment": acoustic_slice(acoustic_alignment),
             "rounds": compact_rounds,
         },
+        "evidence_signals": evidence_signals(
+            compact_rounds,
+            refinement_eligibility,
+            acoustic_alignment,
+        ),
         "adversarial_refinement": refinement,
         "adversarial_lexicon": ({
             key: adversarial[key]
