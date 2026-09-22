@@ -33,6 +33,7 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
   pull_request:
@@ -64,6 +65,7 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
 
@@ -178,6 +180,10 @@ jobs:
           assert "product-speech-like-base-contract.json" in finalizer
           assert "training-invocation.json" in finalizer
           assert "base_contract_sha256" in materializer
+          assert "replay_provider_semantic_contract_sha256" in materializer
+          assert "replay_provider_execution_identity_sha256" in materializer
+          assert "replay-provider-semantic-contract.json" in finalizer
+          assert "xiaowo-replay-provider-semantic-contract.json" in promoter
           assert "source_template_config_sha256" in materializer
           assert "xiaowo-effective-training-config.json" in promoter
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
