@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import pathlib
 from typing import Any
 
@@ -53,6 +54,62 @@ def metric_slice(value: Any) -> dict | None:
     return result
 
 
+def threshold_slice(value: Any) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    selected = value.get("calibrated_thresholds")
+    grid = value.get("calibration_threshold_grid")
+    if not isinstance(selected, dict) or not selected or not isinstance(grid, list) or not grid:
+        return None
+    thresholds = sorted(float(item) for item in grid)
+    lower = thresholds[0]
+    upper = thresholds[-1]
+    edge_keywords: dict[str, str] = {}
+    normalized: dict[str, float] = {}
+    for raw_key, raw_value in sorted(selected.items(), key=lambda item: str(item[0])):
+        key = str(raw_key)
+        threshold = float(raw_value)
+        normalized[key] = threshold
+        if math.isclose(threshold, lower, rel_tol=0.0, abs_tol=1.0e-12):
+            edge_keywords[key] = "min"
+        elif math.isclose(threshold, upper, rel_tol=0.0, abs_tol=1.0e-12):
+            edge_keywords[key] = "max"
+    return {
+        "selected": normalized,
+        "grid": thresholds,
+        "grid_min": lower,
+        "grid_max": upper,
+        "edge_keywords": edge_keywords,
+        "grid_saturated": bool(edge_keywords),
+        "coordinate_rounds": value.get("calibration_coordinate_rounds"),
+        "parallel_trials": value.get("calibration_parallel_trials"),
+    }
+
+
+def domain_slice(value: Any) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    result: dict[str, Any] = {}
+    for key in ("worst_domain", "worst_domain_score"):
+        if key in value:
+            result[key] = value[key]
+    confusion = value.get("keyword_confusion")
+    if isinstance(confusion, dict):
+        result["keyword_confusion"] = {
+            key: confusion[key]
+            for key in (
+                "assignment",
+                "expected_events",
+                "correct_keyword",
+                "wrong_keyword",
+                "missed",
+                "matrix",
+            )
+            if key in confusion
+        }
+    return result or None
+
+
 def round_slice(row: dict) -> dict:
     return {
         key: row[key]
@@ -78,6 +135,9 @@ def round_slice(row: dict) -> dict:
     } | {
         "calibration": metric_slice(row.get("calibration")),
         "test": metric_slice(row.get("test")),
+        "calibration_operating_point": threshold_slice(row.get("calibration")),
+        "calibration_domain_summary": domain_slice(row.get("calibration_domains")),
+        "test_domain_summary": domain_slice(row.get("test_domains")),
     }
 
 
@@ -158,6 +218,9 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
     training, training_error = load_json(root / "training-run-summary.json")
     robustness, robustness_error = load_json(root / "robustness-summary.json")
     continuous_far, continuous_far_error = load_json(root / "hard-negative-stream/summary.json")
+    refinement_eligibility, refinement_eligibility_error = load_json(
+        root / "base-refinement-eligibility.json"
+    )
 
     diagnostics_errors = {
         name: error
@@ -172,6 +235,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             ("training_summary", training_error),
             ("robustness", robustness_error),
             ("continuous_far", continuous_far_error),
+            ("base_refinement_eligibility", refinement_eligibility_error),
         )
         if error not in (None, "missing")
     }
@@ -201,6 +265,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             "qualified": manifest.get("development_qualified") if isinstance(manifest, dict) else None,
             "qualification_qualified": manifest.get("qualification_qualified") if isinstance(manifest, dict) else None,
             "candidate_selection": selection if isinstance(selection, dict) else None,
+            "refinement_eligibility": refinement_eligibility,
             "rounds": compact_rounds,
         },
         "adversarial_refinement": refinement,
@@ -255,6 +320,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
                 "training-run-summary.json",
                 "robustness-summary.json",
                 "hard-negative-stream/summary.json",
+                "base-refinement-eligibility.json",
             )
         ],
         "diagnostic_errors": diagnostics_errors,
