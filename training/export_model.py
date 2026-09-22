@@ -231,6 +231,33 @@ def training_metadata(checkpoint: dict) -> dict:
             raise ValueError(f"checkpoint {key} must be finite and non-negative")
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
+
+    raw_history = checkpoint.get("epoch_history")
+    result["epoch_history_recorded"] = raw_history is not None
+    if raw_history is not None:
+        if not isinstance(raw_history, list) or len(raw_history) != result["epochs"]:
+            raise ValueError("checkpoint epoch_history must contain one row per epoch")
+        epoch_history: list[dict] = []
+        for index, raw in enumerate(raw_history, 1):
+            if not isinstance(raw, dict) or int(raw.get("epoch", -1)) != index:
+                raise ValueError(f"checkpoint epoch_history[{index - 1}] epoch is invalid")
+            row = {"epoch": index}
+            for key in ("loss", "ctc", "ordered", "margin", "completion", "release"):
+                value = float(raw.get(key, math.nan))
+                if not math.isfinite(value) or value < 0.0:
+                    raise ValueError(
+                        f"checkpoint epoch_history[{index - 1}].{key} must be finite and non-negative"
+                    )
+                row[key] = value
+            accuracy = float(raw.get("ordered_token_accuracy", math.nan))
+            if not math.isfinite(accuracy) or not 0.0 <= accuracy <= 1.0:
+                raise ValueError(
+                    f"checkpoint epoch_history[{index - 1}].ordered_token_accuracy must be in [0,1]"
+                )
+            row["ordered_token_accuracy"] = accuracy
+            epoch_history.append(row)
+        result["epoch_history"] = epoch_history
+
     weighting = {}
     for key in ("positive_example_weight", "wake_example_weight"):
         if key in checkpoint:

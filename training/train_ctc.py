@@ -870,6 +870,7 @@ def main() -> None:
     optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=WEIGHT_DECAY)
     loss_fn = nn.CTCLoss(blank=0, zero_infinity=True, reduction="none")
     model.train()
+    epoch_history: list[dict[str, float | int]] = []
     for epoch in range(args.epochs):
         total = 0.0
         total_ctc = 0.0
@@ -963,11 +964,23 @@ def main() -> None:
             ordered_total += batch_total
         batches = max(1, len(loader))
         ordered_accuracy = ordered_correct / max(1, ordered_total)
+        epoch_metrics = {
+            "epoch": epoch + 1,
+            "loss": total / batches,
+            "ctc": total_ctc / batches,
+            "ordered": total_ordered / batches,
+            "margin": total_margin / batches,
+            "completion": total_completion / batches,
+            "release": total_release / batches,
+            "ordered_token_accuracy": ordered_accuracy,
+        }
+        epoch_history.append(epoch_metrics)
         print(
-            f"epoch={epoch + 1} loss={total / batches:.6f} "
-            f"ctc={total_ctc / batches:.6f} ordered={total_ordered / batches:.6f} "
-            f"margin={total_margin / batches:.6f} completion={total_completion / batches:.6f} "
-            f"release={total_release / batches:.6f} ordered_token_acc={ordered_accuracy:.6f}"
+            f"epoch={epoch + 1} loss={epoch_metrics['loss']:.6f} "
+            f"ctc={epoch_metrics['ctc']:.6f} ordered={epoch_metrics['ordered']:.6f} "
+            f"margin={epoch_metrics['margin']:.6f} completion={epoch_metrics['completion']:.6f} "
+            f"release={epoch_metrics['release']:.6f} "
+            f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}"
         )
 
     manifest_metadata = [
@@ -996,6 +1009,7 @@ def main() -> None:
             "training_corpus_identity": dataset.corpus_identity,
             "seed": args.seed,
             "epochs": args.epochs,
+            "epoch_history": epoch_history,
             "batch_size": args.batch_size,
             "learning_rate": args.lr,
             "optimizer": "AdamW",
