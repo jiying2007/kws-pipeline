@@ -255,6 +255,7 @@ jobs:
         run: |
           python3 tests/test_product_training_entry_contract.py
           python3 tests/test_product_development_experiment.py
+          python3 tests/test_replay_provider_semantic_identity.py
           python3 tests/test_adversarial_refinement_source.py
           python3 tests/test_adversarial_command_tts_parallel.py
           python3 tests/test_base_wake_pressure_balance.py
