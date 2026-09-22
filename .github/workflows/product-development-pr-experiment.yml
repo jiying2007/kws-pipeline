@@ -24,26 +24,26 @@ env:
   KWS_EXPERIMENT_HANDOFF_METADATA: build/product-development-pr-experiment-handoff/manifest.json
 
 concurrency:
-  group: product-development-pr-experiment-\${{ github.event.pull_request.number }}
+  group: product-development-pr-experiment-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   resolve:
     runs-on: ubuntu-24.04
     outputs:
-      experiment_enabled: \${{ steps.resolve.outputs.experiment_enabled }}
+      experiment_enabled: ${{ steps.resolve.outputs.experiment_enabled }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: \${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Bind exact PR head development-only request
         id: resolve
         env:
-          BASE_SHA: \${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$HEAD_SHA"
@@ -95,21 +95,21 @@ jobs:
     needs: resolve
     if: needs.resolve.outputs.experiment_enabled == 'true'
     outputs:
-      development_qualified: \${{ steps.base_result.outputs.development_qualified }}
-      refinement_eligible: \${{ steps.base_result.outputs.refinement_eligible }}
+      development_qualified: ${{ steps.base_result.outputs.development_qualified }}
+      refinement_eligible: ${{ steps.base_result.outputs.refinement_eligible }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: \${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Verify exact PR-head experiment request
         env:
-          BASE_SHA: \${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
-          PR_NUMBER: \${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$HEAD_SHA"
@@ -124,7 +124,7 @@ jobs:
 
       - name: Materialize immutable product speech-like base
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: bash training/materialize_governed_product_base.sh
 
       - name: Create bounded PR-head development config
@@ -265,8 +265,8 @@ jobs:
 
       - name: Pack exact PR-head base-stage handoff
         env:
-          BASE_SHA: \${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 training/product_preflight_handoff.py pack \
             --work-dir "$KWS_EXPERIMENT_WORK" \
@@ -281,7 +281,7 @@ jobs:
       - name: Retain immutable PR-head base-stage handoff
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: xiaowo-pr-experiment-base-handoff-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          name: xiaowo-pr-experiment-base-handoff-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: build/product-development-pr-experiment-handoff/base-stage.tar
           if-no-files-found: error
           retention-days: 14
@@ -289,7 +289,7 @@ jobs:
       - name: Retain compact PR-head diagnostics
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: xiaowo-pr-experiment-diagnostics-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          name: xiaowo-pr-experiment-diagnostics-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: |
             .generated/product-development-experiment-receipt.json
             build/product-development-pr-experiment/compact-base-diagnostics.json
@@ -312,12 +312,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: \${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Verify exact PR-head experiment request
         env:
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$HEAD_SHA"
@@ -327,13 +327,13 @@ jobs:
       - name: Download immutable PR-head base-stage handoff
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: xiaowo-pr-experiment-base-handoff-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          name: xiaowo-pr-experiment-base-handoff-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: build/product-development-pr-experiment-handoff-download
 
       - name: Restore exact PR-head base-stage handoff
         env:
-          BASE_SHA: \${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 training/product_preflight_handoff.py restore \
             --archive build/product-development-pr-experiment-handoff-download/base-stage.tar \
@@ -344,13 +344,13 @@ jobs:
 
       - name: Rematerialize immutable product speech-like provider
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: bash training/materialize_governed_product_base.sh
 
       - name: Verify cross-job experiment materialization identity
         env:
-          BASE_SHA: \${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 training/product_preflight_handoff.py verify-materialization \
             --metadata "$KWS_EXPERIMENT_HANDOFF_METADATA" \
@@ -401,7 +401,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: xiaowo-pr-experiment-preflight-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          name: xiaowo-pr-experiment-preflight-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: |
             .generated/xiaowo.product-pr-experiment.json
             build/product-development-pr-experiment-handoff/manifest.json
