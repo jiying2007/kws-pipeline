@@ -10,6 +10,8 @@ import sys
 from collections import defaultdict
 
 UINT32_MAX = 0xFFFFFFFF
+DEFAULT_PRE_TOLERANCE_MS = 150.0
+DEFAULT_POST_TOLERANCE_MS = 500.0
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -345,8 +347,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--references", required=True, type=pathlib.Path)
     parser.add_argument("--detections", required=True, type=pathlib.Path)
-    parser.add_argument("--pre-tolerance-ms", type=float, default=150.0)
-    parser.add_argument("--post-tolerance-ms", type=float, default=500.0)
+    parser.add_argument("--pre-tolerance-ms", type=float, default=DEFAULT_PRE_TOLERANCE_MS)
+    parser.add_argument("--post-tolerance-ms", type=float, default=DEFAULT_POST_TOLERANCE_MS)
     parser.add_argument("--summary", type=pathlib.Path)
     parser.add_argument("--false-positives", type=pathlib.Path)
     parser.add_argument("--false-rejects", type=pathlib.Path)
