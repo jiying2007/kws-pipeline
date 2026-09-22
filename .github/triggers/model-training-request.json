@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "request_id": "speech-like-base-wake-balanced-preflight-v1-20260921",
+  "request_id": "speech-like-decoder-blank-root-preflight-v1-20260922",
   "trigger_policy": "run-on-protected-main-change",
   "purpose": "governed-product-candidate-training",
   "source_policy": "exact-current-main",
-  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #213 added per-keyword provenance-pressure balancing to base rounds. Preserve 12 base epochs with 6 warm-start epochs, the full bounded adversarial search/replay semantics, and 6 refinement epochs; keep seeds, augmentation, scene rendering, scoring order, thresholds, curriculum, gates and qualification semantics unchanged. Full governed training remains blocked unless the existing per-keyword collapse guard passes."
+  "reason": "Run only the split-stage bounded product speech-like preflight on exact current main after #222 admitted a near-tied keyword root when CTC blank is top-1 while preserving arbitrary non-root shadow-start blocking. Keep train acoustic rotation from #219, 12 base epochs with 6 warm-start epochs and 6 refinement epochs, base utterance identity, evaluation scene seeds, thresholds, gates, loss coefficients, replay policy, curriculum and qualification semantics unchanged. This request is evidence-only; #220 must short-circuit refinement when base development_qualified is false, and full governed training remains blocked unless existing collapse and qualification gates pass."
 }
