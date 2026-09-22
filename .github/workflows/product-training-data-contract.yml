@@ -80,7 +80,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Product training entry contract
-        run: python3 tests/test_product_training_entry_contract.py
+        run: |
+          python3 tests/test_product_training_entry_contract.py
+          python3 tests/test_replay_provider_semantic_identity.py
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -101,6 +103,7 @@ jobs:
           training/export_model.py
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
+          tests/test_replay_provider_semantic_identity.py
           tests/test_adversarial_refinement_source.py
       - name: Governed product training shell syntax
         run: |
