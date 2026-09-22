@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import math
 
-from path_purity import PATH_PURITY_MARGIN_DEFAULT, PATH_PURITY_MARGIN_MAX
-
-
-PATH_PURITY_LOSS_WEIGHT_DEFAULT = 0.0
+from objective_contract import (
+    PATH_PURITY_LOSS_WEIGHT_DEFAULT,
+    PATH_PURITY_MARGIN_DEFAULT,
+    PATH_PURITY_MARGIN_MAX,
+)
 
 
 def path_purity_settings(train: dict) -> tuple[float, float, bool]:
