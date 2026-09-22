@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ staging- experiment/ probe/ research/ staging/"
+  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ staging- experiment/ probe/ research/ staging/ training/"
   RETIRED_BRANCHES: >-
     codex/kws-v2-stage-a-live-bootstrap-v1
     codex/kws-v2-stage-a-live-bootstrap-v2
