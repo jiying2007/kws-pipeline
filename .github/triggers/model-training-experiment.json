@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "path-purity-weight-005-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Single-variable bounded product speech-like A/B against the #240 runtime-path baseline. Enable only the already-merged default-disabled ordered path-purity objective at weight 0.05. Keep the default path-purity margin 0.10 and preserve product data, acoustic rotation, epochs, warm-start policy, wake-pressure balancing, replay, sequence-margin, completion/release losses, decoder, threshold grid, calibration, gates and refinement semantics. Evaluate strict dominance-compatible greedy-path rate, exact engine decoder hits, keyword confusion, FRR/FAR, threshold saturation and refinement tradeoffs. No protected qualification evidence is allowed.",
+  "config_overrides": {
+    "train.path_purity_loss_weight": 0.05
+  }
+}
