@@ -215,6 +215,7 @@ def main() -> int:
         )
 
         positive_only_refs = root / "positive-only-references.jsonl"
+        positive_only_dets = root / "positive-only-detections.jsonl"
         positive_only_summary = root / "positive-only-summary.json"
         positive_only_refs.write_text(
             json.dumps(
@@ -229,10 +230,10 @@ def main() -> int:
             + "\n",
             encoding="utf-8",
         )
-        empty_dets.write_text("", encoding="utf-8")
+        positive_only_dets.write_text("", encoding="utf-8")
         completed = run_score(
             positive_only_refs,
-            empty_dets,
+            positive_only_dets,
             positive_only_summary,
         )
         assert completed.returncode == 0, completed.stderr
