@@ -45,7 +45,7 @@ from train_ctc import (
     sha256_file,
     strict_prefix_completion_loss,
     training_environment,
-    wake_example_mask,
+    wake_example_weights,
     vocab_fingerprint,
     vocab_size,
 )
@@ -118,6 +118,7 @@ def main() -> None:
     keyword_sequences, keyword_operating_points, margin_profile_path = (
         load_keyword_operating_points(args.keywords, token_map)
     )
+    keyword_ids = [int(item["keyword_id"]) for item in keyword_operating_points]
     vocab_size_value = vocab_size(token_map)
     fingerprint = vocab_fingerprint(token_map)
     if not 2 <= vocab_size_value <= MAX_VOCAB_SIZE:
@@ -190,17 +191,19 @@ def main() -> None:
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
                 torch.ones_like(ylen, dtype=torch.float32),
             )
-            wake_mask = wake_example_mask(y, ylen, keyword_sequences)
-            wake_weights = torch.where(
-                wake_mask,
-                torch.full_like(ylen, args.wake_example_weight, dtype=torch.float32),
-                torch.ones_like(ylen, dtype=torch.float32),
+            wake_weights = wake_example_weights(
+                y,
+                ylen,
+                keyword_sequences,
+                keyword_ids,
+                default_weight=args.wake_example_weight,
+                keyword_weights={},
             )
             sample_weights = target_weights * wake_weights
             normalized_ctc = raw_ctc / xlen.to(dtype=raw_ctc.dtype).clamp_min(1.0)
             ctc_loss = (normalized_ctc * sample_weights).sum() / sample_weights.sum()
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
-                log_probs, y, xlen, ylen
+                log_probs, y, xlen, ylen, sample_weights
             )
             margin_per_sample = keyword_sequence_margin_loss(
                 log_probs=log_probs,
@@ -292,6 +295,7 @@ def main() -> None:
             "wake_example_weight": args.wake_example_weight,
             "wake_example_weight_semantics": "exact-configured-keyword-target-v1",
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
+            "ordered_token_sample_weighting": "training-sample-weights-v1",
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
