@@ -118,7 +118,9 @@ jobs:
       - name: Verify tracked worktree after Acoustic scene renderer
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Acoustic scene renderer"'
       - name: Domain metric scorer
-        run: python3 tests/test_domain_metrics.py
+        run: |
+          python3 tests/test_domain_metrics.py
+          python3 tests/test_training_diagnostics.py
       - name: Verify tracked worktree after Domain metric scorer
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
       - name: Adaptive domain curriculum
