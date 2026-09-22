@@ -304,6 +304,96 @@ def select_calibration_threshold(
     return plateau[(len(plateau) - 1) // 2]
 
 
+CALIBRATION_TRIAL_POLICY = "coordinate-threshold-trials-v1"
+
+
+def calibration_trial_evidence(
+    *,
+    coordinate: int,
+    keyword_id: int,
+    threshold: float,
+    trial_keywords: list[dict],
+    base: dict,
+    domains: dict,
+    gates: dict,
+) -> dict:
+    far = domains.get("domains", {}).get("distance:far", {})
+    per_keyword = base.get("per_keyword", {})
+    if not isinstance(per_keyword, dict):
+        raise ValueError("calibration trial per-keyword metrics are missing")
+    return {
+        "coordinate": int(coordinate),
+        "keyword_id": int(keyword_id),
+        "threshold": float(threshold),
+        "keyword_thresholds": {
+            str(item["id"]): float(item["threshold"]) for item in trial_keywords
+        },
+        "strict": base_gate(base, gates) and domain_gate(domains, gates),
+        "behavior_key": list(calibration_behavior_key(base, domains, gates)),
+        "metrics": {
+            "frr": float(base["frr"]),
+            "far_per_hour": float(base["far_per_hour"]),
+            "p95_post_end_latency_ms": float(base["p95_post_end_latency_ms"]),
+            "far_domain_frr": float(far.get("frr", 1.0)),
+            "per_keyword_frr": {
+                str(key): float(value["frr"])
+                for key, value in sorted(per_keyword.items(), key=lambda item: str(item[0]))
+                if isinstance(value, dict) and "frr" in value
+            },
+        },
+    }
+
+
+def calibration_operating_curve_summary(
+    trials: list[dict],
+    *,
+    selected_thresholds: dict[str, float],
+    threshold_grid: list[float],
+    coordinates_executed: int,
+) -> dict:
+    if not trials:
+        raise ValueError("calibration operating curve must contain trials")
+    grid = sorted(float(value) for value in threshold_grid)
+    if not grid:
+        raise ValueError("calibration threshold grid must not be empty")
+    per_keyword: dict[str, dict] = {}
+    keyword_ids = sorted({str(int(row["keyword_id"])) for row in trials}, key=int)
+    for keyword_id in keyword_ids:
+        rows = [row for row in trials if str(int(row["keyword_id"])) == keyword_id]
+        selected = float(selected_thresholds[keyword_id])
+        per_keyword[keyword_id] = {
+            "trials": len(rows),
+            "selected_threshold": selected,
+            "selected_on_grid_min": math.isclose(
+                selected, grid[0], rel_tol=0.0, abs_tol=1.0e-12
+            ),
+            "selected_on_grid_max": math.isclose(
+                selected, grid[-1], rel_tol=0.0, abs_tol=1.0e-12
+            ),
+            "strict_trials": sum(bool(row["strict"]) for row in rows),
+            "min_frr": min(float(row["metrics"]["frr"]) for row in rows),
+            "min_far_per_hour": min(
+                float(row["metrics"]["far_per_hour"]) for row in rows
+            ),
+            "min_far_domain_frr": min(
+                float(row["metrics"]["far_domain_frr"]) for row in rows
+            ),
+        }
+    return {
+        "policy": CALIBRATION_TRIAL_POLICY,
+        "trial_count": len(trials),
+        "coordinates_executed": int(coordinates_executed),
+        "grid_min": grid[0],
+        "grid_max": grid[-1],
+        "strict_trial_count": sum(bool(row["strict"]) for row in trials),
+        "grid_saturated": any(
+            row["selected_on_grid_min"] or row["selected_on_grid_max"]
+            for row in per_keyword.values()
+        ),
+        "per_keyword": per_keyword,
+    }
+
+
 def calibrate(
     *,
     runner: pathlib.Path,
@@ -321,15 +411,18 @@ def calibrate(
     if isinstance(parallel_trials, bool) or not 1 <= int(parallel_trials) <= 4:
         raise ValueError("calibration parallel_trials must be 1..4")
     parallel_trials = int(parallel_trials)
+    trial_evidence: list[dict] = []
+    coordinates_executed = 0
 
     for coordinate in range(rounds):
+        coordinates_executed = coordinate + 1
         changed = False
         for index, row in enumerate(current):
             base_trial = [dict(item) for item in current]
 
             def evaluate_threshold(
                 threshold: float,
-            ) -> tuple[float, tuple[float, ...]]:
+            ) -> tuple[float, tuple[float, ...], dict]:
                 trial = [dict(item) for item in base_trial]
                 trial[index]["threshold"] = threshold
                 trial_dir = output / f"coord{coordinate}-kw{row['id']}-t{threshold:.3f}"
@@ -344,16 +437,28 @@ def calibrate(
                     references=references,
                     output=trial_dir / "eval",
                 )
-                return threshold, calibration_behavior_key(base, domains, gates)
+                key = calibration_behavior_key(base, domains, gates)
+                evidence = calibration_trial_evidence(
+                    coordinate=coordinate,
+                    keyword_id=int(row["id"]),
+                    threshold=threshold,
+                    trial_keywords=trial,
+                    base=base,
+                    domains=domains,
+                    gates=gates,
+                )
+                return threshold, key, evidence
 
             if parallel_trials == 1:
-                candidates = [evaluate_threshold(threshold) for threshold in thresholds]
+                evaluated = [evaluate_threshold(threshold) for threshold in thresholds]
             else:
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=min(parallel_trials, len(thresholds))
                 ) as executor:
-                    candidates = list(executor.map(evaluate_threshold, thresholds))
-            candidates.sort(key=lambda item: item[0])
+                    evaluated = list(executor.map(evaluate_threshold, thresholds))
+            evaluated.sort(key=lambda item: item[0])
+            trial_evidence.extend(item[2] for item in evaluated)
+            candidates = [(item[0], item[1]) for item in evaluated]
             selected = select_calibration_threshold(candidates)
             if not math.isclose(float(current[index]["threshold"]), selected):
                 changed = True
@@ -376,7 +481,33 @@ def calibrate(
     }
     base["calibration_threshold_grid"] = [float(value) for value in thresholds]
     base["calibration_coordinate_rounds"] = int(rounds)
+    base["calibration_coordinate_rounds_executed"] = int(coordinates_executed)
     base["calibration_parallel_trials"] = parallel_trials
+
+    curve_path = output / "calibration-operating-curve.json"
+    curve = {
+        "schema_version": 1,
+        "evidence_class": CALIBRATION_TRIAL_POLICY,
+        "selected_thresholds": dict(base["calibrated_thresholds"]),
+        "threshold_grid": list(base["calibration_threshold_grid"]),
+        "coordinate_rounds_configured": int(rounds),
+        "coordinate_rounds_executed": int(coordinates_executed),
+        "parallel_trials": parallel_trials,
+        "trials": trial_evidence,
+    }
+    curve["summary"] = calibration_operating_curve_summary(
+        trial_evidence,
+        selected_thresholds=base["calibrated_thresholds"],
+        threshold_grid=base["calibration_threshold_grid"],
+        coordinates_executed=coordinates_executed,
+    )
+    curve_path.write_text(
+        json.dumps(curve, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    base["calibration_operating_curve_path"] = str(curve_path)
+    base["calibration_operating_curve_sha256"] = sha256_file(curve_path)
+    base["calibration_operating_curve_summary"] = curve["summary"]
     return tsv, pack, base, domains
 
 
