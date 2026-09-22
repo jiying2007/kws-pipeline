@@ -183,6 +183,10 @@ jobs:
         run: python3 tests/test_training_supply_chain.py
       - name: Verify tracked worktree after Training supply-chain contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
+      - name: GRU development trainer contract
+        run: python3 tests/test_gru_development_curriculum_contract.py
+      - name: Verify tracked worktree after GRU development trainer contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GRU development trainer contract"'
       - name: Model promotion contract
         run: python3 tests/test_model_promotion.py
       - name: Verify tracked worktree after Model promotion contract
