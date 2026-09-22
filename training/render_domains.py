@@ -613,7 +613,12 @@ def render_domain_dataset(
     *,
     curriculum_weights: dict | None = None,
     splits: tuple[str, ...] | None = None,
+    train_seed_offset: int = 0,
 ) -> dict:
+    if isinstance(train_seed_offset, bool) or not isinstance(train_seed_offset, int):
+        raise ValueError("train_seed_offset must be an integer")
+    if train_seed_offset < 0:
+        raise ValueError("train_seed_offset must be non-negative")
     selected_splits = tuple(SPLITS if splits is None else splits)
     if (
         not selected_splits
@@ -708,6 +713,7 @@ def render_domain_dataset(
                 + base_index * 1_000_003
                 + scene_index * 65_537
                 + SPLITS.index(split) * 9_000_001
+                + (train_seed_offset if split == "train" else 0)
             )
             rng = random.Random(scene_seed)
             if split != "train" and evaluation_axes is not None:
@@ -900,6 +906,11 @@ def render_domain_dataset(
             else None
         ),
         "rendered_splits": list(selected_splits),
+        "train_acoustic_rotation": {
+            "policy": "train-only-scene-seed-offset-v1",
+            "seed_offset": train_seed_offset,
+            "evaluation_seed_rotated": False,
+        },
         "splits": {
             split: {
                 "examples": len(rows_by_split[split]),
