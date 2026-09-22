@@ -392,6 +392,13 @@ def main() -> int:
     assert "domain-loop-progress.jsonl" in workflow
     assert "product-development-base-preflight:" in workflow
     assert "product-development-refinement-preflight:" in workflow
+    assert "id: base_result" in workflow
+    assert "development_qualified: ${{ steps.base_result.outputs.development_qualified }}" in workflow
+    assert (
+        "needs.product-development-base-preflight.outputs.development_qualified == 'true'"
+        in workflow
+    )
+    assert "base development_qualified verdict must be a real boolean" in workflow
     assert workflow.count("timeout-minutes: 120") == 2
     assert "product_preflight_handoff.py pack" in workflow
     assert "product_preflight_handoff.py restore" in workflow
