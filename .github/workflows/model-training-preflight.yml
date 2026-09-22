@@ -123,6 +123,9 @@ jobs:
         run: bash training/materialize_governed_product_base.sh
 
       - name: Create bounded development-only preflight config
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 - <<'PY'
           import json, os, pathlib
@@ -164,6 +167,14 @@ jobs:
               "qualification=false"
           )
           PY
+          if [[ -f "$KWS_PREFLIGHT_EXPERIMENT" ]]; then
+            python3 training/preflight_experiment.py apply \
+              --experiment "$KWS_PREFLIGHT_EXPERIMENT" \
+              --config "$KWS_PREFLIGHT_CONFIG" \
+              --receipt "$KWS_PREFLIGHT_EXPERIMENT_RECEIPT" \
+              --base-sha "$BASE_SHA" \
+              --head-sha "$HEAD_SHA"
+          fi
           python3 training/verify_training_entry_contract.py \
             --config "$KWS_PREFLIGHT_CONFIG" \
             --require-product-speech-like-base
@@ -295,6 +306,7 @@ jobs:
             build/model-training-preflight/compact-base-diagnostics.json
             build/model-training-preflight/base-refinement-eligibility.json
             build/model-training-preflight/acoustic-alignment.json
+            build/model-training-preflight/preflight-experiment-receipt.json
             build/model-training-preflight/candidates/*/calibration/calibration-operating-curve.json
           if-no-files-found: error
           retention-days: 14
@@ -304,7 +316,8 @@ jobs:
       - resolve
       - product-development-base-preflight
     if: >-
-      needs.resolve.outputs.request_changed == 'true'
+      (needs.resolve.outputs.request_changed == 'true'
+       || needs.resolve.outputs.experiment_changed == 'true')
       && needs.product-development-base-preflight.result == 'success'
       && needs.product-development-base-preflight.outputs.refinement_eligible == 'true'
     runs-on: ubuntu-24.04
@@ -336,6 +349,21 @@ jobs:
             --base-sha "$BASE_SHA"
           test -s "$KWS_PREFLIGHT_CONFIG"
           test -s "$KWS_PREFLIGHT_WORK/domain-loop-manifest.json"
+
+      - name: Verify development-only experiment handoff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ -f "$KWS_PREFLIGHT_EXPERIMENT_RECEIPT" ]]; then
+            test -f "$KWS_PREFLIGHT_EXPERIMENT"
+            python3 training/preflight_experiment.py verify-receipt \
+              --experiment "$KWS_PREFLIGHT_EXPERIMENT" \
+              --config "$KWS_PREFLIGHT_CONFIG" \
+              --receipt "$KWS_PREFLIGHT_EXPERIMENT_RECEIPT" \
+              --base-sha "$BASE_SHA" \
+              --head-sha "$HEAD_SHA"
+          fi
 
       - name: Rematerialize governed product speech-like provider
         env:
@@ -400,6 +428,7 @@ jobs:
           path: |
             .generated/xiaowo.product-preflight.json
             build/product-preflight-handoff/manifest.json
+            build/model-training-preflight/preflight-experiment-receipt.json
             build/model-training-preflight/domain-loop-manifest.json
             build/model-training-preflight/domain-loop-progress.jsonl
             build/model-training-preflight/adversarial-refinement/preflight-summary.json
