@@ -172,6 +172,8 @@ def acoustic_slice(summary: dict | None) -> dict | None:
             "keywords_sha256",
             "domain_index_sha256",
             "feature_dump_sha256",
+            "runner_sha256",
+            "keyword_pack_sha256",
             "parameter_contract_sha256",
             "root_start_logit_margin",
             "max_recordings_per_keyword_split",
