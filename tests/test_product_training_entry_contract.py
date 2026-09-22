@@ -45,7 +45,10 @@ def main() -> int:
         "release_tag": "speech-like-base-fixture",
         "external_base_bundle_sha256": "1" * 64,
         "provider_identity_sha256": "2" * 64,
-        "replay_provider_identity_sha256": "2" * 64,
+        "replay_provider_identity_sha256": "5" * 64,
+        "replay_provider_execution_identity_sha256": "6" * 64,
+        "replay_provider_semantic_identity_policy": "product-replay-provider-semantic-v1",
+        "replay_provider_semantic_contract_sha256": "7" * 64,
         "replay_backend": "command",
         "replay_train_voice_slots": 2,
         "replay_tone_allowed": False,
@@ -65,7 +68,9 @@ def main() -> int:
             {"speaker_id": 0, "length_scale": 1.0},
             {"speaker_id": 1, "length_scale": 1.1},
         ],
-        "provider_identity_sha256": "2" * 64,
+        "provider_identity_sha256": "5" * 64,
+        "provider_execution_identity_sha256": "6" * 64,
+        "provider_semantic_identity_policy": "product-replay-provider-semantic-v1",
         "replay_voice_scope": "train-only",
     }
     config["generator"]["external_base_dataset"] = {
@@ -116,6 +121,9 @@ def main() -> int:
     assert "Materialize governed product speech-like training base" in workflow
     assert "bash training/materialize_governed_product_base.sh" in workflow
     assert "training/materialize_product_training_config.py" in materializer
+    assert "--replay-provider-summary" in materializer
+    assert "--replay-provider-contract" in materializer
+    assert "product-replay-provider-semantic-v1.json" in materializer
     assert "--require-product-speech-like-base" in materializer
     assert "--require-product-speech-like-base" in workflow
     assert '--config "$KWS_EFFECTIVE_TRAINING_CONFIG"' in workflow
