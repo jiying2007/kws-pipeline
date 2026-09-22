@@ -394,11 +394,18 @@ def main() -> int:
     assert "product-development-refinement-preflight:" in workflow
     assert "id: base_result" in workflow
     assert "development_qualified: ${{ steps.base_result.outputs.development_qualified }}" in workflow
+    assert "refinement_eligible: ${{ steps.base_result.outputs.refinement_eligible }}" in workflow
+    assert "training/evaluate_refinement_eligibility.py" in workflow
     assert (
-        "needs.product-development-base-preflight.outputs.development_qualified == 'true'"
+        "needs.product-development-base-preflight.outputs.refinement_eligible == 'true'"
         in workflow
     )
+    assert (
+        "needs.product-development-base-preflight.outputs.development_qualified == 'true'"
+        not in workflow
+    )
     assert "base development_qualified verdict must be a real boolean" in workflow
+    assert "base refinement eligibility verdict must be a real boolean" in workflow
     assert workflow.count("timeout-minutes: 120") == 2
     assert "product_preflight_handoff.py pack" in workflow
     assert "product_preflight_handoff.py restore" in workflow
