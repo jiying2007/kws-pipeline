@@ -1,0 +1,414 @@
+name: product-development-pr-experiment
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/product-development-experiment.json'
+      - '.github/workflows/product-development-pr-experiment.yml'
+
+permissions:
+  contents: read
+
+env:
+  KWS_PRODUCT_BASE_CONTRACT: configs/training/product-speech-like-base-v1.json
+  KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
+  KWS_PRODUCT_BASE_ROOT: .generated/product-speech-like-base
+  KWS_REPLAY_PROVIDER_ROOT: .generated/product-replay-provider
+  KWS_EXPERIMENT_REQUEST: .github/triggers/product-development-experiment.json
+  KWS_EXPERIMENT_RECEIPT: .generated/product-development-experiment-receipt.json
+  KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-pr-experiment.json
+  KWS_EXPERIMENT_WORK: build/product-development-pr-experiment
+  KWS_EXPERIMENT_HANDOFF: build/product-development-pr-experiment-handoff/base-stage.tar
+  KWS_EXPERIMENT_HANDOFF_METADATA: build/product-development-pr-experiment-handoff/manifest.json
+
+concurrency:
+  group: product-development-pr-experiment-\${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      experiment_enabled: \${{ steps.resolve.outputs.experiment_enabled }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bind exact PR head development-only request
+        id: resolve
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          git cat-file -e "$HEAD_SHA^{commit}"
+          python3 training/development_experiment_request.py verify \
+            --request "$KWS_EXPERIMENT_REQUEST"
+
+          enabled="$(python3 - <<'PY'
+          import json, os, pathlib
+          value=json.loads(pathlib.Path(os.environ["KWS_EXPERIMENT_REQUEST"]).read_text(encoding="utf-8"))
+          print("true" if value.get("enabled") is True else "false")
+          PY
+          )"
+          echo "experiment_enabled=$enabled" >> "$GITHUB_OUTPUT"
+          if [[ "$enabled" != "true" ]]; then
+            echo "PR-head product experiment disabled"
+            exit 0
+          fi
+
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_EXPERIMENT_REQUEST"; then
+            echo "enabled PR-head experiment must change the experiment request marker" >&2
+            exit 1
+          fi
+
+          while IFS= read -r protected; do
+            [[ -z "$protected" ]] && continue
+            if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$protected"; then
+              echo "PR-head development experiment modified protected path: $protected" >&2
+              exit 1
+            fi
+          done <<'EOF'
+          .github/triggers/model-training-request.json
+          configs/training/product-speech-like-base-v1.json
+          training/materialize_governed_product_base.sh
+          training/materialize_product_training_config.py
+          tools/bootstrap_speech_like_stage_a.py
+          .github/workflows/model-training.yml
+          .github/workflows/model-training-preflight.yml
+          .github/workflows/model-promotion.yml
+          .github/workflows/model-registry-contract.yml
+          .github/workflows/shipping-approval.yml
+          .github/workflows/target-cohort-promotion.yml
+          .github/workflows/deployment-release.yml
+          models/registry
+          EOF
+
+  product-development-base-experiment:
+    needs: resolve
+    if: needs.resolve.outputs.experiment_enabled == 'true'
+    outputs:
+      development_qualified: \${{ steps.base_result.outputs.development_qualified }}
+      refinement_eligible: \${{ steps.base_result.outputs.refinement_eligible }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify exact PR-head experiment request
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: \${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          python3 training/development_experiment_request.py verify \
+            --request "$KWS_EXPERIMENT_REQUEST"
+          python3 training/development_experiment_request.py write-receipt \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --pr-number "$PR_NUMBER" \
+            --request "$KWS_EXPERIMENT_REQUEST" \
+            --output "$KWS_EXPERIMENT_RECEIPT"
+
+      - name: Materialize immutable product speech-like base
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Create bounded PR-head development config
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          src=pathlib.Path(os.environ["KWS_EFFECTIVE_TRAINING_CONFIG"])
+          dst=pathlib.Path(os.environ["KWS_EXPERIMENT_CONFIG"])
+          cfg=json.loads(src.read_text(encoding="utf-8"))
+          product=cfg.get("product_candidate_data")
+          assert isinstance(product, dict)
+          assert product.get("policy") == "external-speech-like-product-base-v1"
+          assert product.get("tone_fallback_allowed") is False
+          assert product.get("protected_evidence_used") is False
+
+          train=cfg.setdefault("train", {})
+          train["epochs"]=12
+          train["warm_start_epochs"]=6
+
+          iteration=cfg.setdefault("domain_iteration", {})
+          iteration["max_rounds"]=2
+          iteration["min_rounds"]=2
+          iteration["patience"]=1
+          iteration["stop_on_gate"]=True
+          adversarial=iteration.get("adversarial_lexicon")
+          assert isinstance(adversarial, dict) and adversarial.get("enabled") is True
+          adversarial["refinement_epochs"]=6
+
+          calibration=cfg.get("calibration")
+          assert isinstance(calibration, dict)
+          assert int(calibration.get("coordinate_rounds", 0)) == 2
+          assert int(calibration.get("max_parallel_trials", 0)) == 2
+
+          dst.parent.mkdir(parents=True, exist_ok=True)
+          dst.write_text(
+              json.dumps(cfg, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(
+              "PR-head development experiment: "
+              "rounds=2 base_epochs=12/6 refinement_epochs=6 "
+              "qualification=false promotion=false"
+          )
+          PY
+          python3 training/verify_training_entry_contract.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --require-product-speech-like-base
+
+      - name: Build and verify real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_feature_dump kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify decoder-aligned training objectives
+        run: .venv/bin/python training/test_sequence_margin.py
+
+      - name: Run bounded base development rounds
+        id: base_result
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_EXPERIMENT_WORK" \
+            --defer-qualification \
+            --compact-log
+          code=$?
+          set -e
+          case "$code" in
+            0|1) ;;
+            *) echo "PR-head base experiment infrastructure failed: $code" >&2; exit "$code" ;;
+          esac
+          test -s "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"
+
+          development_qualified="$(
+            python3 - <<'PY'
+          import json, os, pathlib
+          path=pathlib.Path(os.environ["KWS_EXPERIMENT_WORK"]) / "domain-loop-manifest.json"
+          value=json.loads(path.read_text(encoding="utf-8")).get("development_qualified")
+          if value is True:
+              print("true")
+          elif value is False:
+              print("false")
+          else:
+              raise SystemExit("development_qualified verdict must be a real boolean")
+          PY
+          )"
+          echo "development_qualified=$development_qualified" >> "$GITHUB_OUTPUT"
+
+          .venv/bin/python training/evaluate_refinement_eligibility.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json" \
+            --output "$KWS_EXPERIMENT_WORK/base-refinement-eligibility.json"
+
+          refinement_eligible="$(
+            python3 - <<'PY'
+          import json, os, pathlib
+          path=pathlib.Path(os.environ["KWS_EXPERIMENT_WORK"]) / "base-refinement-eligibility.json"
+          value=json.loads(path.read_text(encoding="utf-8")).get("eligible")
+          if value is True:
+              print("true")
+          elif value is False:
+              print("false")
+          else:
+              raise SystemExit("refinement eligibility verdict must be a real boolean")
+          PY
+          )"
+          echo "refinement_eligible=$refinement_eligible" >> "$GITHUB_OUTPUT"
+
+      - name: Diagnose acoustic/runtime alignment
+        run: |
+          .venv/bin/python tools/diagnose_acoustic_alignment.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json" \
+            --feature-dump build/kws_feature_dump \
+            --runner build/kws_wav \
+            --max-per-keyword-split 8 \
+            --output "$KWS_EXPERIMENT_WORK/acoustic-alignment.json"
+          test -s "$KWS_EXPERIMENT_WORK/acoustic-alignment.json"
+
+      - name: Build compact base diagnostics
+        run: |
+          python3 tools/build_training_diagnostics.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --work-dir "$KWS_EXPERIMENT_WORK" \
+            --output "$KWS_EXPERIMENT_WORK/compact-base-diagnostics.json"
+          test -s "$KWS_EXPERIMENT_WORK/compact-base-diagnostics.json"
+
+      - name: Pack exact PR-head base-stage handoff
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 training/product_preflight_handoff.py pack \
+            --work-dir "$KWS_EXPERIMENT_WORK" \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --effective-config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
+            --request "$KWS_EXPERIMENT_REQUEST" \
+            --output "$KWS_EXPERIMENT_HANDOFF" \
+            --head-sha "$HEAD_SHA" \
+            --base-sha "$BASE_SHA"
+          test -s "$KWS_EXPERIMENT_HANDOFF"
+
+      - name: Retain immutable PR-head base-stage handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-pr-experiment-base-handoff-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          path: build/product-development-pr-experiment-handoff/base-stage.tar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Retain compact PR-head diagnostics
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-pr-experiment-diagnostics-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          path: |
+            .generated/product-development-experiment-receipt.json
+            build/product-development-pr-experiment/compact-base-diagnostics.json
+            build/product-development-pr-experiment/base-refinement-eligibility.json
+            build/product-development-pr-experiment/acoustic-alignment.json
+            build/product-development-pr-experiment/candidates/*/calibration/calibration-operating-curve.json
+          if-no-files-found: error
+          retention-days: 14
+
+  product-development-refinement-experiment:
+    needs:
+      - resolve
+      - product-development-base-experiment
+    if: >-
+      needs.resolve.outputs.experiment_enabled == 'true'
+      && needs.product-development-base-experiment.result == 'success'
+      && needs.product-development-base-experiment.outputs.refinement_eligible == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify exact PR-head experiment request
+        env:
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          python3 training/development_experiment_request.py verify \
+            --request "$KWS_EXPERIMENT_REQUEST"
+
+      - name: Download immutable PR-head base-stage handoff
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-pr-experiment-base-handoff-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          path: build/product-development-pr-experiment-handoff-download
+
+      - name: Restore exact PR-head base-stage handoff
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 training/product_preflight_handoff.py restore \
+            --archive build/product-development-pr-experiment-handoff-download/base-stage.tar \
+            --head-sha "$HEAD_SHA" \
+            --base-sha "$BASE_SHA"
+          test -s "$KWS_EXPERIMENT_CONFIG"
+          test -s "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"
+
+      - name: Rematerialize immutable product speech-like provider
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Verify cross-job experiment materialization identity
+        env:
+          BASE_SHA: \${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: \${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 training/product_preflight_handoff.py verify-materialization \
+            --metadata "$KWS_EXPERIMENT_HANDOFF_METADATA" \
+            --effective-config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
+            --request "$KWS_EXPERIMENT_REQUEST" \
+            --head-sha "$HEAD_SHA" \
+            --base-sha "$BASE_SHA"
+          python3 training/verify_training_entry_contract.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --require-product-speech-like-base
+
+      - name: Build and verify real C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify decoder-aligned training objectives
+        run: .venv/bin/python training/test_sequence_margin.py
+
+      - name: Run bounded refinement development evaluation
+        run: |
+          .venv/bin/python training/adversarial_refinement.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_EXPERIMENT_WORK" \
+            --stop-after-development-eval
+          test -s "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json"
+
+      - name: Reject per-keyword collapse
+        run: |
+          python3 training/verify_product_development_preflight.py \
+            --config "$KWS_EXPERIMENT_CONFIG" \
+            --base-manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json" \
+            --refinement-summary "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json" \
+            --work-dir "$KWS_EXPERIMENT_WORK" \
+            --output "$KWS_EXPERIMENT_WORK/product-development-preflight.json"
+
+      - name: Retain PR-head refinement evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: xiaowo-pr-experiment-preflight-\${{ github.event.pull_request.number }}-\${{ github.event.pull_request.head.sha }}
+          path: |
+            .generated/xiaowo.product-pr-experiment.json
+            build/product-development-pr-experiment-handoff/manifest.json
+            build/product-development-pr-experiment/domain-loop-manifest.json
+            build/product-development-pr-experiment/domain-loop-progress.jsonl
+            build/product-development-pr-experiment/adversarial-refinement/preflight-summary.json
+            build/product-development-pr-experiment/adversarial-refinement/progress.json
+            build/product-development-pr-experiment/product-development-preflight.json
+          if-no-files-found: warn
+          retention-days: 14
