@@ -143,6 +143,11 @@ def validate_split_job_handoff() -> None:
         (work / "domain-loop-progress.jsonl").write_text(
             '{"round":0}\n', encoding="utf-8"
         )
+        experiment_receipt = work / "preflight-experiment-receipt.json"
+        experiment_receipt.write_text(
+            '{"schema_version":1,"evidence_class":"development-preflight-experiment-v1"}\n',
+            encoding="utf-8",
+        )
 
         archive = root / "handoff/base-stage.tar"
         metadata = pack_handoff(
@@ -160,6 +165,10 @@ def validate_split_job_handoff() -> None:
             row["path"].endswith(".clean-command-tts-cache/aa/cache.wav")
             for row in metadata["files"]
         )
+        assert any(
+            row["path"].endswith("preflight-experiment-receipt.json")
+            for row in metadata["files"]
+        )
 
         shutil.rmtree(work)
         config.unlink()
@@ -172,6 +181,7 @@ def validate_split_job_handoff() -> None:
         assert restored["development_manifest_sha256"] == metadata["development_manifest_sha256"]
         assert checkpoint.read_bytes() == b"checkpoint"
         assert clean_cache.read_bytes() == b"RIFFfixture"
+        assert experiment_receipt.is_file()
         assert cal_curve.is_file()
         assert sha256_file(cal_curve) == record_metrics["calibration_operating_curve_sha256"]
         metadata_path = root / "build/product-preflight-handoff/manifest.json"
@@ -398,6 +408,13 @@ def main() -> int:
     assert "domain-loop-progress.jsonl" in workflow
     assert "product-development-base-preflight:" in workflow
     assert "product-development-refinement-preflight:" in workflow
+    assert ".github/triggers/model-training-experiment.json" in workflow
+    assert "experiment_changed:" in workflow
+    assert "development experiment PR must be experiment-only" in workflow
+    assert "governed request and development experiment may not change together" in workflow
+    assert "training/preflight_experiment.py apply" in workflow
+    assert "training/preflight_experiment.py verify-receipt" in workflow
+    assert "preflight-experiment-receipt.json" in workflow
     assert "id: base_result" in workflow
     assert "development_qualified: ${{ steps.base_result.outputs.development_qualified }}" in workflow
     assert "refinement_eligible: ${{ steps.base_result.outputs.refinement_eligible }}" in workflow
