@@ -312,6 +312,67 @@ def run_runtime(
     return parse_runtime_detections(completed.stdout, recording_id)
 
 
+def runtime_match_summary(
+    detections: list[dict],
+    *,
+    keyword_id: int,
+    event_start_frame: int,
+    event_end_frame: int,
+    recording_frames: int,
+    sample_rate_hz: int,
+) -> dict:
+    if (
+        event_start_frame < 0
+        or event_end_frame < event_start_frame
+        or event_end_frame > recording_frames
+        or sample_rate_hz <= 0
+    ):
+        raise ValueError("diagnostic positive row has invalid event frame bounds")
+    event_start_s = event_start_frame / float(sample_rate_hz)
+    event_end_s = event_end_frame / float(sample_rate_hz)
+    match_lower_s = event_start_s - DEFAULT_PRE_TOLERANCE_MS / 1000.0
+    match_upper_s = event_end_s + DEFAULT_POST_TOLERANCE_MS / 1000.0
+    expected = [item for item in detections if int(item["keyword_id"]) == keyword_id]
+    wrong = [item for item in detections if int(item["keyword_id"]) != keyword_id]
+    expected_matched = [
+        item for item in expected
+        if match_lower_s <= float(item["time_s"]) <= match_upper_s
+    ]
+    wrong_in_window = [
+        item for item in wrong
+        if match_lower_s <= float(item["time_s"]) <= match_upper_s
+    ]
+    return {
+        "runtime_detection_count": len(detections),
+        "runtime_expected_detection_count": len(expected),
+        "runtime_expected_matched_count": len(expected_matched),
+        "runtime_out_of_window_expected_detection_count": (
+            len(expected) - len(expected_matched)
+        ),
+        "runtime_wrong_keyword_detection_count": len(wrong),
+        "runtime_wrong_keyword_in_window_count": len(wrong_in_window),
+        "runtime_detected_expected": bool(expected),
+        "runtime_matched_expected": bool(expected_matched),
+        "runtime_detected_keyword_ids": sorted(
+            {int(item["keyword_id"]) for item in detections}
+        ),
+        "runtime_max_expected_confidence": (
+            max(float(item["confidence"]) for item in expected)
+            if expected
+            else None
+        ),
+        "runtime_max_matched_expected_confidence": (
+            max(float(item["confidence"]) for item in expected_matched)
+            if expected_matched
+            else None
+        ),
+        "event_start_s": event_start_s,
+        "event_end_s": event_end_s,
+        "match_pre_tolerance_ms": DEFAULT_PRE_TOLERANCE_MS,
+        "match_post_tolerance_ms": DEFAULT_POST_TOLERANCE_MS,
+    }
+
+
 def logsumexp(values: list[float]) -> float:
     finite = [value for value in values if value != NEG_INF]
     if not finite:
@@ -518,35 +579,14 @@ def analyze_recording(
         wav,
         recording_id=recording_id,
     )
-    expected_runtime = [
-        item for item in runtime_detections if int(item["keyword_id"]) == keyword_id
-    ]
-    wrong_runtime = [
-        item for item in runtime_detections if int(item["keyword_id"]) != keyword_id
-    ]
-    event_start_frame = int(row.get("event_start_frame", -1))
-    event_end_frame = int(row.get("event_end_frame", -1))
-    if (
-        event_start_frame < 0
-        or event_end_frame < event_start_frame
-        or event_end_frame > int(row.get("frames", -1))
-    ):
-        raise ValueError("diagnostic positive row has invalid event frame bounds")
-    sample_rate_hz = int(model["sample_rate_hz"])
-    event_start_s = event_start_frame / float(sample_rate_hz)
-    event_end_s = event_end_frame / float(sample_rate_hz)
-    match_lower_s = event_start_s - DEFAULT_PRE_TOLERANCE_MS / 1000.0
-    match_upper_s = event_end_s + DEFAULT_POST_TOLERANCE_MS / 1000.0
-    expected_runtime_matched = [
-        item
-        for item in expected_runtime
-        if match_lower_s <= float(item["time_s"]) <= match_upper_s
-    ]
-    wrong_runtime_in_window = [
-        item
-        for item in wrong_runtime
-        if match_lower_s <= float(item["time_s"]) <= match_upper_s
-    ]
+    runtime_summary = runtime_match_summary(
+        runtime_detections,
+        keyword_id=keyword_id,
+        event_start_frame=int(row.get("event_start_frame", -1)),
+        event_end_frame=int(row.get("event_end_frame", -1)),
+        recording_frames=int(row.get("frames", -1)),
+        sample_rate_hz=int(model["sample_rate_hz"]),
+    )
     depth = longest_prefix_subsequence(target, greedy)
     best_ranks = token_best_ranks(logits, target)
     return {
@@ -567,33 +607,7 @@ def analyze_recording(
         "surrogate_confidence": surrogate_confidence,
         "runtime_threshold": threshold,
         "surrogate_above_runtime_threshold": surrogate_confidence >= threshold,
-        "runtime_detection_count": len(runtime_detections),
-        "runtime_expected_detection_count": len(expected_runtime),
-        "runtime_expected_matched_count": len(expected_runtime_matched),
-        "runtime_out_of_window_expected_detection_count": (
-            len(expected_runtime) - len(expected_runtime_matched)
-        ),
-        "runtime_wrong_keyword_detection_count": len(wrong_runtime),
-        "runtime_wrong_keyword_in_window_count": len(wrong_runtime_in_window),
-        "runtime_detected_expected": bool(expected_runtime),
-        "runtime_matched_expected": bool(expected_runtime_matched),
-        "runtime_detected_keyword_ids": sorted(
-            {int(item["keyword_id"]) for item in runtime_detections}
-        ),
-        "runtime_max_expected_confidence": (
-            max(float(item["confidence"]) for item in expected_runtime)
-            if expected_runtime
-            else None
-        ),
-        "runtime_max_matched_expected_confidence": (
-            max(float(item["confidence"]) for item in expected_runtime_matched)
-            if expected_runtime_matched
-            else None
-        ),
-        "event_start_s": event_start_s,
-        "event_end_s": event_end_s,
-        "match_pre_tolerance_ms": DEFAULT_PRE_TOLERANCE_MS,
-        "match_post_tolerance_ms": DEFAULT_POST_TOLERANCE_MS,
+        **runtime_summary,
         "blank_top1_fraction": blank_top1_frames / len(logits),
         "root_top1_frames": root_top1_frames,
         "root_within_margin_frames": root_within_margin_frames,
