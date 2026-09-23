@@ -90,7 +90,9 @@ def main() -> int:
     assert "formal-qualification" not in workflow
     assert workflow.count("ref: ${{ github.event.pull_request.head.sha }}") == 2
     assert "product-development-experiment-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}" in workflow
-    assert "steps.eligibility.outputs.eligible == 'true'" in workflow
+    assert "steps.eligibility.outputs.eligible == 'true' && steps.decoder_policy.outputs.enabled != 'true'" in workflow
+    assert "and not decoder_policy_enabled" in workflow
+    assert "'refinement_skipped_for_decoder_policy':" in workflow
     assert "'infrastructure_complete':all(required.values())" in workflow
     assert "'required_evidence_present':required" in workflow
     assert "'acoustic_alignment': acoustic is not None" in workflow
