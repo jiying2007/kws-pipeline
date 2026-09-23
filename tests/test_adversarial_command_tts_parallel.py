@@ -208,6 +208,11 @@ def main() -> int:
             '"total_to_manifest"',
         ):
             assert key in source
+        assert '"adversarial-mining-timing-v1"' in source
+        semantic_block = source.split("evidence = {", 1)[1].split(
+            'timing_path = output / "adversarial-lexicon-timing.json"', 1
+        )[0]
+        assert '"timing_seconds"' not in semantic_block
 
     finally:
         adversarial.render_command_tts = original_render
