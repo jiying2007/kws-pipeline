@@ -24,6 +24,7 @@ def main() -> int:
         keywords = root / "keywords.tsv"
         train_manifest = root / "train.tsv"
         replay_manifest = root / "replay.tsv"
+        failure_manifest = root / "failure-replay.tsv"
         tokens.write_text("<blk> 0\na 1\nb 2\nc 3\nd 4\n", encoding="utf-8")
         keywords.write_text(
             "0\twake-zero\t0.55\ta b\n"
@@ -42,6 +43,10 @@ def main() -> int:
             "r1.wav\t1 3\n"
             "rp0.wav\t1 2\n"
             "rp2.wav\t3 4\n",
+            encoding="utf-8",
+        )
+        failure_manifest.write_text(
+            "f0.wav\t1 3\n",
             encoding="utf-8",
         )
         static = {
@@ -108,6 +113,7 @@ def main() -> int:
                 output=root / "candidate",
                 previous=None,
                 hard_negative_manifest=replay_manifest,
+                failure_replay_manifest=failure_manifest,
                 wake_balance=balance,
                 warm_start_strategy="full",
                 round_index=0,
@@ -126,7 +132,13 @@ def main() -> int:
             train_command[train_command.index("--wake-keyword-weights") + 1]
         )
         assert weights == balance["wake_keyword_weights"]
-        assert train_command.count("--manifest") == 2
+        assert train_command.count("--manifest") == 3
+        manifests = [
+            train_command[index + 1]
+            for index, value in enumerate(train_command)
+            if value == "--manifest"
+        ]
+        assert str(failure_manifest) in manifests
 
     trainer_source = (ROOT / "training" / "train_ctc.py").read_text(
         encoding="utf-8"
