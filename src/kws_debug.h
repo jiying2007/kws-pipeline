@@ -23,6 +23,11 @@ int kws_engine_debug_copy_last_frame(const kws_engine_t *engine,
                                      size_t logits_capacity,
                                      uint16_t *out_vocab_size);
 
+kws_status_t kws_engine_debug_set_decoder_search_policy(
+    kws_engine_t *engine,
+    float blank_retention,
+    float fuzzy_child_cost_log);
+
 kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
                                            const float *logits,
                                            uint16_t vocab_size,
