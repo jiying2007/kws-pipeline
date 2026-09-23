@@ -50,6 +50,14 @@ def main() -> int:
     assert "'threshold_wide_sweep':threshold_sweep" in workflow
     assert "threshold-saturation-trigger.json" in workflow
     assert "threshold-wide-sweep.json" in workflow
+    assert "Diagnose recalibrated decoder retention curve" in workflow
+    assert "tools/diagnose_decoder_retention_recalibrated_curve.py" in workflow
+    assert "retentions=['0.85','0.90','0.94','0.97','0.99']" in workflow
+    assert "'shipping_default_retention':0.94" in workflow
+    assert "'selection_feedback_allowed':False" in workflow
+    assert "'decoder_retention_recalibrated_curve': retention_curve is not None" in workflow
+    assert "'decoder_retention_recalibrated_curve':retention_curve" in workflow
+    assert "decoder-retention-recalibrated-curve.json" in workflow
     assert "posterior-cache/**/*.kwtr" in workflow
     assert "posterior-cache/**/*.json" in workflow
     assert "qualification.references.jsonl" not in workflow
