@@ -25,6 +25,18 @@ CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
 
 
 def main() -> int:
+    synthetic_holdout = (
+        ROOT / "training" / "render_qualification_holdout.py"
+    ).read_text(encoding="utf-8")
+    assert '"qualification_evidence_scope": "synthetic-seed-rotated-holdout-v1"' in synthetic_holdout
+    assert '"wav_identity_independent": True' in synthetic_holdout
+    assert '"generator_family_independent": False' in synthetic_holdout
+    assert '"release_authority": False' in synthetic_holdout
+    assert (
+        '"release_authority_policy": "real-human-and-target-dut-required-v1"'
+        in synthetic_holdout
+    )
+
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         tokens = root / "tokens.txt"
