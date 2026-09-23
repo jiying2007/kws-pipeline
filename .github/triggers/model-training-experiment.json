@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-executable-base-failure-replay-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Single-variable follow-up to #289. Hold the validated runtime-executable negative sequence-margin policy fixed and enable inter-round base failure replay so round N may train on resynthesized exact-runtime failures from completed prior round-best development records only. Round 0 remains replay-free. No qualification source, promotion, shipping default or decoder change.",
+  "config_overrides": {
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "domain_iteration.base_failure_replay_enabled": true
+  }
+}
