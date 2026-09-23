@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import subprocess
 import sys
 import tempfile
 
@@ -96,6 +97,11 @@ def main() -> int:
     assert "'infrastructure_complete':all(required.values())" in workflow
     assert "'required_evidence_present':required" in workflow
     assert "'acoustic_alignment': acoustic is not None" in workflow
+    assert "Diagnose sequence-margin runtime gap" in workflow
+    assert "tools/diagnose_sequence_margin_runtime_gap.py" in workflow
+    assert "'sequence_margin_runtime_gap': sequence_margin_gap is not None" in workflow
+    assert "'sequence_margin_runtime_gap':sequence_margin_gap" in workflow
+    assert "sequence-margin-runtime-gap.json" in workflow
     assert "required['refinement_summary']=refinement is not None" in workflow
     assert "KWS_EXPERIMENT_RECEIPT: build/product-development-experiment-receipt.json" in workflow
     assert "load_optional(pathlib.Path(os.environ['KWS_EXPERIMENT_RECEIPT']))" in workflow
@@ -108,6 +114,14 @@ def main() -> int:
     assert "retry_release_download()" in materializer
     assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" in materializer
     assert "--clobber" in materializer
+
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(ROOT / "tools/diagnose_sequence_margin_runtime_gap.py"),
+            "--self-test",
+        ]
+    )
 
     replay_args = posterior_replay_cli_args(
         (pathlib.Path("dump"), pathlib.Path("replay"), pathlib.Path("cache")),

@@ -158,6 +158,43 @@ jobs:
           .venv/bin/python tools/diagnose_acoustic_alignment.py             --config "$KWS_EXPERIMENT_CONFIG"             --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"             --feature-dump build/kws_feature_dump             --runner build/kws_wav             --max-per-keyword-split 8             --output "$KWS_EXPERIMENT_WORK/acoustic-alignment.json"
           python3 tools/build_training_diagnostics.py             --config "$KWS_EXPERIMENT_CONFIG"             --work-dir "$KWS_EXPERIMENT_WORK"             --output "$KWS_EXPERIMENT_WORK/compact-base-diagnostics.json"
 
+      - name: Diagnose sequence-margin runtime gap
+        run: |
+          .venv/bin/python - <<'PY'
+          import json, os, pathlib, subprocess, sys
+
+          repo=pathlib.Path.cwd()
+          sys.path.insert(0,str(repo/'training'))
+          from adversarial_refinement import select_refinement_source
+
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          config_path=pathlib.Path(os.environ['KWS_EXPERIMENT_CONFIG'])
+          config=json.loads(config_path.read_text(encoding='utf-8'))
+          source, policy=select_refinement_source(manifest)
+          tokens=pathlib.Path(str(config['tokens']))
+          if not tokens.is_absolute():
+              tokens=(repo/tokens).resolve()
+          command=[
+              str(repo/'.venv/bin/python'),
+              'tools/diagnose_sequence_margin_runtime_gap.py',
+              '--model',str(source['model']),
+              '--tokens',str(tokens),
+              '--keywords-tsv',str(source['keywords']),
+              '--pack',str(source['pack']),
+              '--decoder-replay','build/kws_decoder_replay',
+              '--posterior-cache',str(root/'posterior-cache'),
+              '--output',str(root/'sequence-margin-runtime-gap.json'),
+          ]
+          subprocess.check_call(command)
+          print(json.dumps({
+              'sequence_margin_runtime_gap_diagnostic':True,
+              'source_round':int(source['round']),
+              'source_selection_policy':policy,
+              'selection_feedback_allowed':False,
+          },sort_keys=True))
+          PY
+
       - name: Diagnose saturated source threshold grid
         run: |
           .venv/bin/python - <<'PY'
@@ -453,11 +490,13 @@ jobs:
           threshold_sweep=load_optional(root/'threshold-wide-sweep.json')
           retention_curve=load_optional(root/'decoder-retention-recalibrated-curve.json')
           decoder_policy=load_optional(root/'decoder-policy-replay-grid.json')
+          sequence_margin_gap=load_optional(root/'sequence-margin-runtime-gap.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
               'refinement_eligibility': eligibility is not None,
               'acoustic_alignment': acoustic is not None,
+              'sequence_margin_runtime_gap': sequence_margin_gap is not None,
               'posterior_cache': posterior_cache is not None,
               'threshold_saturation_trigger': threshold_trigger is not None,
               'decoder_retention_recalibrated_curve': retention_curve is not None,
@@ -507,6 +546,7 @@ jobs:
               'threshold_wide_sweep':threshold_sweep,
               'decoder_retention_recalibrated_curve':retention_curve,
               'decoder_policy_replay_grid':decoder_policy,
+              'sequence_margin_runtime_gap':sequence_margin_gap,
           }
           (root/'experiment-summary.json').write_text(
               json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
@@ -527,6 +567,7 @@ jobs:
             build/product-development-experiment/domain-loop-manifest.json
             build/product-development-experiment/base-refinement-eligibility.json
             build/product-development-experiment/acoustic-alignment.json
+            build/product-development-experiment/sequence-margin-runtime-gap.json
             build/product-development-experiment/compact-base-diagnostics.json
             build/product-development-experiment/posterior-cache-summary.json
             build/product-development-experiment/threshold-saturation-trigger.json
