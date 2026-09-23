@@ -205,6 +205,8 @@ def main() -> int:
     parser.add_argument("--posterior-cache", type=pathlib.Path)
     parser.add_argument("--decoder-state-retention", type=float)
     parser.add_argument("--decoder-refractory-ms", type=int)
+    parser.add_argument("--decoder-blank-retention", type=float)
+    parser.add_argument("--decoder-fuzzy-child-cost-log", type=float)
     args = parser.parse_args()
 
     cache_values = (
@@ -221,6 +223,8 @@ def main() -> int:
     override_requested = (
         args.decoder_state_retention is not None
         or args.decoder_refractory_ms is not None
+        or args.decoder_blank_retention is not None
+        or args.decoder_fuzzy_child_cost_log is not None
     )
     if override_requested and not cache_enabled:
         raise ValueError("decoder replay overrides require posterior replay cache mode")
@@ -231,6 +235,16 @@ def main() -> int:
         raise ValueError("--decoder-state-retention must be finite and in (0,1)")
     if args.decoder_refractory_ms is not None and not 0 <= args.decoder_refractory_ms <= 10000:
         raise ValueError("--decoder-refractory-ms must be in [0,10000]")
+    if args.decoder_blank_retention is not None and (
+        not math.isfinite(args.decoder_blank_retention)
+        or not 0.0 < args.decoder_blank_retention < 1.0
+    ):
+        raise ValueError("--decoder-blank-retention must be finite and in (0,1)")
+    if args.decoder_fuzzy_child_cost_log is not None and (
+        not math.isfinite(args.decoder_fuzzy_child_cost_log)
+        or not -16.0 <= args.decoder_fuzzy_child_cost_log <= 0.0
+    ):
+        raise ValueError("--decoder-fuzzy-child-cost-log must be finite and in [-16,0]")
 
     rows = load_references(args.references)
     output_lines: list[str] = []
@@ -283,6 +297,14 @@ def main() -> int:
             if args.decoder_refractory_ms is not None:
                 command.extend(
                     ["--refractory-ms", str(args.decoder_refractory_ms)]
+                )
+            if args.decoder_blank_retention is not None:
+                command.extend(
+                    ["--blank-retention", str(args.decoder_blank_retention)]
+                )
+            if args.decoder_fuzzy_child_cost_log is not None:
+                command.extend(
+                    ["--fuzzy-child-cost-log", str(args.decoder_fuzzy_child_cost_log)]
                 )
         else:
             command = [
@@ -364,6 +386,8 @@ def main() -> int:
                     "decoder_replay_overrides": {
                         "state_retention": args.decoder_state_retention,
                         "refractory_ms": args.decoder_refractory_ms,
+                        "blank_retention": args.decoder_blank_retention,
+                        "fuzzy_child_cost_log": args.decoder_fuzzy_child_cost_log,
                     },
                     "posterior_traces": posterior_traces,
                 }
