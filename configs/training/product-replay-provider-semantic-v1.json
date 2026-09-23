@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "policy": "product-replay-provider-semantic-v1",
+  "provider_candidate": "icefall-tts-aishell3-vits-low-2024-04-06",
+  "provider_profile": "sherpa-vits-resampled-to-16k-v1",
+  "provider_reference_sha256": "a118c73053b538b513c630e3979e7cce773338b76a7678bcfe95612d8a925751",
+  "corpus_plan_sha256": "ea0d012e6f771e45c620d3f2df441c1d9d01dfed9be87ee397494a33ffbe8189",
+  "command_policy_sha256": "816acec9d2ddfc6041f0a2345434d3caf8a74e59bc78f1b156335ed893e69efc",
+  "adapter_sha256": "b238e7726456ad8cb524efab774983a8a95b1960e9cd48c7a604e49fa41c1c99",
+  "runtime_asset_archive_sha256": "ab468db3a3308cdd861495e0db2f25d79418a0c00639f74944c7cdf5dd8c6ec1",
+  "backend_bundle_archive_sha256": "c0bdb7907d3a74bba1d55d22bf4d9fa75586cf1530614ebe88a27b9118e015c4",
+  "license_evidence_sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74",
+  "source_sample_rate_hz": 8000,
+  "normalized_sample_rate_hz": 16000,
+  "resampler_kind": "builtin-lanczos-2x-v1",
+  "replay_voice_scope": "train-only",
+  "replay_train_voice_slots": 8,
+  "semantic_identity_sha256": "9b0fd7f00914a074ce610d2b2d604848c8053b68c9bc044d9abcd20b2f6bf916"
+}

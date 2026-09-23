@@ -7,6 +7,7 @@ on:
       - "fix/product-training-speech-like-v1"
     paths:
       - "configs/training/product-speech-like-base-v1.json"
+      - "configs/training/product-replay-provider-semantic-v1.json"
       - "training/materialize_product_training_config.py"
       - "training/materialize_governed_product_base.sh"
       - "training/require_product_development_preflight.sh"
@@ -32,11 +33,13 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
   pull_request:
     paths:
       - "configs/training/product-speech-like-base-v1.json"
+      - "configs/training/product-replay-provider-semantic-v1.json"
       - "training/materialize_product_training_config.py"
       - "training/materialize_governed_product_base.sh"
       - "training/require_product_development_preflight.sh"
@@ -62,6 +65,7 @@ on:
       - "tests/test_adversarial_refinement_source.py"
       - "tools/verify_model_promotion_bundle.py"
       - "tests/test_product_training_entry_contract.py"
+      - "tests/test_replay_provider_semantic_identity.py"
       - ".github/workflows/model-training.yml"
       - ".github/workflows/product-training-data-contract.yml"
 
@@ -76,7 +80,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Product training entry contract
-        run: python3 tests/test_product_training_entry_contract.py
+        run: |
+          python3 tests/test_product_training_entry_contract.py
+          python3 tests/test_replay_provider_semantic_identity.py
       - name: Python syntax
         run: >-
           python3 -m py_compile
@@ -97,6 +103,7 @@ jobs:
           training/export_model.py
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
+          tests/test_replay_provider_semantic_identity.py
           tests/test_adversarial_refinement_source.py
       - name: Governed product training shell syntax
         run: |
@@ -155,7 +162,12 @@ jobs:
           assert p["replay_voice_scope"]=="train-only"
           assert p["replay_backend"]=="command"
           assert p["replay_tone_allowed"] is False
-          print("product speech-like base contract: ok")
+          replay=json.loads(pathlib.Path("configs/training/product-replay-provider-semantic-v1.json").read_text())
+          assert replay["policy"]=="product-replay-provider-semantic-v1"
+          assert replay["semantic_identity_sha256"]=="9b0fd7f00914a074ce610d2b2d604848c8053b68c9bc044d9abcd20b2f6bf916"
+          assert replay["replay_train_voice_slots"]==8
+          assert replay["replay_voice_scope"]=="train-only"
+          print("product speech-like base + replay semantic contracts: ok")
           PY
       - name: Verify promoted model keeps product data lineage
         run: |
@@ -168,6 +180,10 @@ jobs:
           assert "product-speech-like-base-contract.json" in finalizer
           assert "training-invocation.json" in finalizer
           assert "base_contract_sha256" in materializer
+          assert "replay_provider_semantic_contract_sha256" in materializer
+          assert "replay_provider_execution_identity_sha256" in materializer
+          assert "replay-provider-semantic-contract.json" in finalizer
+          assert "xiaowo-replay-provider-semantic-contract.json" in promoter
           assert "source_template_config_sha256" in materializer
           assert "xiaowo-effective-training-config.json" in promoter
           assert "xiaowo-product-speech-like-base-contract.json" in promoter
@@ -228,12 +244,13 @@ jobs:
         run: |
           set -euo pipefail
           python3 tools/bootstrap_speech_like_stage_a.py             --provider-only             --cache-dir .generated/replay-provider-cache             --work-dir .generated/replay-provider
-          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract configs/training/product-speech-like-base-v1.json             --bundle-root .generated/product-speech-like-base/corpus             --replay-provider .generated/replay-provider/corpus/provider/provider.json             --voice-inventory .generated/replay-provider/corpus/provider/voice-inventory.jsonl             --output .generated/xiaowo.product-effective.json
+          python3 training/materialize_product_training_config.py             --source-config configs/training/xiaowo.torch-domain.json             --base-contract configs/training/product-speech-like-base-v1.json             --bundle-root .generated/product-speech-like-base/corpus             --replay-provider .generated/replay-provider/corpus/provider/provider.json             --replay-provider-summary .generated/replay-provider/corpus/provider/provider-summary.json             --replay-provider-contract configs/training/product-replay-provider-semantic-v1.json             --voice-inventory .generated/replay-provider/corpus/provider/voice-inventory.jsonl             --output .generated/xiaowo.product-effective.json
           python3 training/verify_training_entry_contract.py             --config .generated/xiaowo.product-effective.json             --require-product-speech-like-base
           python3 training/external_base_dataset.py             --config .generated/xiaowo.product-effective.json             --output .generated/external-base-summary.json
           python3 - <<'PY'
           import json, pathlib
           expected=json.loads(pathlib.Path("configs/training/product-speech-like-base-v1.json").read_text())
+          replay=json.loads(pathlib.Path("configs/training/product-replay-provider-semantic-v1.json").read_text())
           actual=json.loads(pathlib.Path(".generated/external-base-summary.json").read_text())
           assert actual["bundle_sha256"]==expected["external_base_bundle_sha256"]
           assert actual["tone_backend_used"] is False
@@ -242,10 +259,15 @@ jobs:
           tts=effective["generator"]["tts"]
           product=effective["product_candidate_data"]
           assert tts["backend"]=="command"
-          assert tts["provider_identity_sha256"]==expected["provider_identity_sha256"]
-          assert len(tts["speaker_profiles"])==expected["replay_train_voice_slots"]==8
+          assert tts["provider_identity_sha256"]==replay["semantic_identity_sha256"]
+          assert len(tts["provider_execution_identity_sha256"])==64
+          assert tts["provider_semantic_identity_policy"]=="product-replay-provider-semantic-v1"
+          assert len(tts["speaker_profiles"])==replay["replay_train_voice_slots"]==8
           assert tts["replay_voice_scope"]=="train-only"
           assert product["replay_tone_allowed"] is False
-          assert product["replay_provider_identity_sha256"]==expected["provider_identity_sha256"]
-          print("live product speech-like base/replay binding: ok")
+          assert product["provider_identity_sha256"]==expected["provider_identity_sha256"]
+          assert product["replay_provider_identity_sha256"]==replay["semantic_identity_sha256"]
+          assert product["replay_provider_execution_identity_sha256"]==tts["provider_execution_identity_sha256"]
+          assert product["replay_provider_semantic_identity_policy"]=="product-replay-provider-semantic-v1"
+          print("live product speech-like base/replay semantic binding: ok")
           PY
