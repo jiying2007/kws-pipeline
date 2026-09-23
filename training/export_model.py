@@ -348,6 +348,44 @@ def training_metadata(checkpoint: dict) -> dict:
             abs_tol=1.0e-9,
         ):
             raise ValueError("checkpoint nonempty sample-weight mean is inconsistent")
+
+        exact_sum_present = "exact_wake_weight_sum" in raw_normalization
+        exact_mean_present = "exact_wake_mean_weight" in raw_normalization
+        if exact_sum_present != exact_mean_present:
+            raise ValueError("checkpoint exact-wake sample-weight normalization is incomplete")
+        if exact_sum_present:
+            exact_sum = float(raw_normalization["exact_wake_weight_sum"])
+            raw_exact_mean = raw_normalization["exact_wake_mean_weight"]
+            if normalized["exact_wake_rows"] == 0:
+                if (
+                    not math.isfinite(exact_sum)
+                    or not math.isclose(exact_sum, 0.0, rel_tol=0.0, abs_tol=1.0e-12)
+                    or raw_exact_mean is not None
+                ):
+                    raise ValueError(
+                        "checkpoint empty exact-wake sample-weight normalization is invalid"
+                    )
+                normalized["exact_wake_weight_sum"] = 0.0
+                normalized["exact_wake_mean_weight"] = None
+            else:
+                exact_mean = float(raw_exact_mean)
+                if (
+                    not math.isfinite(exact_sum)
+                    or exact_sum <= 0.0
+                    or not math.isfinite(exact_mean)
+                    or exact_mean <= 0.0
+                    or not math.isclose(
+                        exact_sum / normalized["exact_wake_rows"],
+                        exact_mean,
+                        rel_tol=0.0,
+                        abs_tol=1.0e-9,
+                    )
+                ):
+                    raise ValueError(
+                        "checkpoint exact-wake sample-weight mean is inconsistent"
+                    )
+                normalized["exact_wake_weight_sum"] = exact_sum
+                normalized["exact_wake_mean_weight"] = exact_mean
         weighting["normalization"] = normalized
     raw_wake_keyword_weights = checkpoint.get("wake_keyword_weights")
     if raw_wake_keyword_weights is not None:
