@@ -263,6 +263,44 @@ def _jitter_scene(base: dict, domains: dict, rng: random.Random, example_index: 
     }
 
 
+def failure_replay_focus_rows(
+    evidence: dict,
+) -> dict[pathlib.Path, list[tuple[int, ...]]]:
+    """Return row-aligned wake-pressure focus for a rendered failure manifest."""
+    manifest = pathlib.Path(str(evidence.get("manifest") or "")).resolve()
+    examples = int(evidence.get("examples", 0))
+    if examples == 0:
+        return {manifest: []}
+    if evidence.get("enabled") is not True:
+        raise ValueError("non-empty failure replay evidence must be enabled")
+    examples_per_failure = int(evidence.get("examples_per_failure", 0))
+    if examples_per_failure <= 0:
+        raise ValueError("failure replay examples_per_failure must be positive")
+    rows: list[tuple[int, ...]] = []
+    selected = evidence.get("selected", [])
+    if not isinstance(selected, list):
+        raise ValueError("failure replay selected evidence must be a list")
+    for index, item in enumerate(selected):
+        if not isinstance(item, dict):
+            raise ValueError("failure replay selected evidence must contain objects")
+        raw_focus = item.get("focus_keyword_ids", [])
+        if raw_focus is None:
+            focus: tuple[int, ...] = ()
+        elif isinstance(raw_focus, list):
+            values = [int(value) for value in raw_focus]
+            if any(value < 0 or value > 0xFFFFFFFF for value in values):
+                raise ValueError(
+                    f"failure replay selected focus keyword id is invalid at index {index}"
+                )
+            focus = tuple(sorted(set(values)))
+        else:
+            raise ValueError("failure replay focus_keyword_ids must be a list")
+        rows.extend([focus] * examples_per_failure)
+    if len(rows) != examples:
+        raise ValueError("failure replay focus evidence row count drifted")
+    return {manifest: rows}
+
+
 def render_development_failure_replay(
     config_path: pathlib.Path,
     records: list[dict],
