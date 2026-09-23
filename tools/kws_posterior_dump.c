@@ -121,7 +121,21 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
   writer_open = 0;
-  exit_code = 0;
+  {
+    char trace_sha256[65];
+    if (kws_sha256_file_hex(argv[3], trace_sha256) == 0) {
+      fprintf(stderr, "cannot hash finalized trace: %s\n", argv[3]);
+      goto cleanup;
+    }
+    printf(
+        "{\"schema_version\":1,\"evidence_class\":"
+        "\"kws-posterior-trace-v1\",\"model_sha256\":\"%s\","
+        "\"trace_sha256\":\"%s\",\"frames\":%llu,"
+        "\"vocab_size\":%u}\n",
+        model_sha256, trace_sha256, (unsigned long long)last_frame_number,
+        (unsigned)model.vocab_size);
+  }
+  exit_code = ferror(stdout) != 0 ? 1 : 0;
 
 cleanup:
   if (writer_open != 0) {
