@@ -123,6 +123,18 @@ if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(kws_pipeline PRIVATE ${KWS_STRICT_OPTIONS})
 endif()
 
+if(KWS_BUILD_TESTS OR KWS_BUILD_TOOLS)
+  add_library(kws_trace_io STATIC tools/kws_trace_io.c)
+  target_include_directories(kws_trace_io
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tools
+  )
+  target_compile_features(kws_trace_io PUBLIC c_std_11)
+  target_link_libraries(kws_trace_io PUBLIC m)
+  if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(kws_trace_io PRIVATE ${KWS_STRICT_OPTIONS})
+  endif()
+endif()
+
 if(KWS_BUILD_TESTS)
   enable_testing()
 
@@ -141,17 +153,22 @@ if(KWS_BUILD_TESTS)
   target_include_directories(kws_decoder_retention_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(kws_decoder_retention_tests PRIVATE KwsPipeline::core)
 
+  add_executable(kws_trace_io_tests tests/test_trace_io.c)
+  target_link_libraries(kws_trace_io_tests PRIVATE kws_trace_io)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_keyword_pack_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_decoder_tests PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_decoder_retention_tests PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_trace_io_tests PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 
   add_test(NAME kws_tests COMMAND kws_tests)
   add_test(NAME kws_keyword_pack_tests COMMAND kws_keyword_pack_tests)
   add_test(NAME kws_decoder_tests COMMAND kws_decoder_tests)
   add_test(NAME kws_decoder_retention_tests COMMAND kws_decoder_retention_tests)
+  add_test(NAME kws_trace_io_tests COMMAND kws_trace_io_tests)
 endif()
 
 if(KWS_BUILD_BENCH)
@@ -187,6 +204,14 @@ if(KWS_BUILD_TOOLS)
   target_include_directories(kws_feature_dump PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(kws_feature_dump PRIVATE KwsPipeline::core kws_tool_io)
 
+  add_executable(kws_posterior_dump tools/kws_posterior_dump.c)
+  target_include_directories(kws_posterior_dump PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_posterior_dump PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
+
+  add_executable(kws_decoder_replay tools/kws_decoder_replay.c)
+  target_include_directories(kws_decoder_replay PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_link_libraries(kws_decoder_replay PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tool_io PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_wav PRIVATE ${KWS_STRICT_OPTIONS})
@@ -194,6 +219,8 @@ if(KWS_BUILD_TOOLS)
     target_compile_options(kws_raw_stream PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_board_bench PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_feature_dump PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_posterior_dump PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_decoder_replay PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 endif()
 
