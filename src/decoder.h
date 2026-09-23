@@ -39,6 +39,11 @@ typedef struct kws_decoder {
   uint8_t grace_frames[KWS_MAX_KEYWORDS];
   float token_boost;
   float retention_log;
+  /* Repo-internal replay diagnostics may override these two search-only
+   * constants. Production initialization always installs the generated
+   * parameter-contract defaults. */
+  float silence_retention_log;
+  float fuzzy_child_retention_cost_log;
   int16_t pending_keyword;
   float pending_confidence;
   uint16_t pending_depth;
@@ -54,6 +59,9 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
                                       size_t count,
                                       uint16_t vocab_size);
 void kws_decoder_reset(kws_decoder_t *d);
+kws_status_t kws_decoder_debug_set_search_policy(kws_decoder_t *d,
+                                                 float blank_retention,
+                                                 float fuzzy_child_cost_log);
 int kws_decoder_step(kws_decoder_t *d,
                      const float *logits,
                      uint16_t vocab_size,
