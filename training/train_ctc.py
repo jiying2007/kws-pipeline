@@ -35,6 +35,8 @@ from objective_contract import (
     PATH_PURITY_MARGIN_DEFAULT,
     PATH_PURITY_MARGIN_MAX,
     PATH_PURITY_POLICY,
+    SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
 )
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
@@ -815,6 +817,11 @@ def main() -> None:
         default=KEYWORD_SEQUENCE_MARGIN_LOSS_WEIGHT,
     )
     parser.add_argument(
+        "--sequence-margin-negative-policy",
+        choices=sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES),
+        default=SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    )
+    parser.add_argument(
         "--prefix-completion-loss-weight",
         type=float,
         default=PREFIX_COMPLETION_LOSS_WEIGHT,
@@ -1012,6 +1019,7 @@ def main() -> None:
                 blank=0,
                 margin=KEYWORD_SEQUENCE_MARGIN,
                 keyword_operating_points=keyword_operating_points,
+                negative_path_policy=args.sequence_margin_negative_policy,
             )
             margin_loss = normalized_weighted_mean(
                 margin_per_sample,
@@ -1142,6 +1150,10 @@ def main() -> None:
             "ordered_token_scope": args.ordered_token_scope,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
+            "sequence_margin_negative_policy": args.sequence_margin_negative_policy,
+            "sequence_margin_negative_policy_scope": (
+                "decoder-search-only-no-speech-active-gate-v1"
+            ),
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
             "prefix_completion_tail_steps": PREFIX_COMPLETION_TAIL_STEPS,
             "prefix_completion_policy": "strict-prefix-terminal-hinge-v1",

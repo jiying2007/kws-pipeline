@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
+import math
 import pathlib
 
 import torch
@@ -11,9 +13,17 @@ from objective_config import (
     optional_objective_cli_args,
     ordered_token_scope_setting,
     path_purity_settings,
+    sequence_margin_negative_policy_setting,
 )
 from path_purity import ordered_path_purity_loss
-from sequence_margin import keyword_sequence_margin_loss
+from sequence_margin import (
+    RUNTIME_BLANK_RETENTION,
+    RUNTIME_FUZZY_CHILD_COST_LOG,
+    RUNTIME_MIN_PATH_RETENTION_LOG,
+    RUNTIME_ROOT_START_LOGIT_MARGIN,
+    RUNTIME_STATE_RETENTION,
+    keyword_sequence_margin_loss,
+)
 from train_ctc import (
     exact_keyword_sample_mask,
     normalized_weighted_mean,
@@ -61,6 +71,7 @@ def margin(
     target: list[int],
     keyword_sequences: list[list[int]] | None = None,
     keyword_operating_points: list[dict] | None = None,
+    negative_path_policy: str = "sparse-chronological-v1",
 ) -> torch.Tensor:
     targets, input_lengths, target_lengths, raw = true_nll(log_probs, target)
     return keyword_sequence_margin_loss(
@@ -74,6 +85,7 @@ def margin(
         blank=0,
         margin=0.05,
         keyword_operating_points=keyword_operating_points,
+        negative_path_policy=negative_path_policy,
     )
 
 
@@ -104,6 +116,43 @@ def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
 
 
 def main() -> int:
+    contract = json.loads(
+        (pathlib.Path(__file__).resolve().parents[1] / "configs/parameter-contract.json")
+        .read_text(encoding="utf-8")
+    )
+    runtime = contract["runtime"]
+    constants = contract["algorithm_constants"]
+    assert math.isclose(
+        RUNTIME_STATE_RETENTION,
+        float(runtime["state_retention"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        math.log(RUNTIME_BLANK_RETENTION),
+        float(constants["KWS_SILENCE_RETENTION_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-9,
+    )
+    assert math.isclose(
+        RUNTIME_MIN_PATH_RETENTION_LOG,
+        float(constants["KWS_MIN_PATH_RETENTION_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        RUNTIME_ROOT_START_LOGIT_MARGIN,
+        float(constants["KWS_ROOT_START_LOGIT_MARGIN"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        RUNTIME_FUZZY_CHILD_COST_LOG,
+        float(constants["KWS_FUZZY_CHILD_RETENTION_COST_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+
     assert optional_objective_cli_args({}) == []
     scope, scope_configured = ordered_token_scope_setting({})
     assert scope == "all-nonempty-targets-v1"
@@ -137,6 +186,26 @@ def main() -> int:
     else:
         raise AssertionError("negative path-purity objective weight was accepted")
 
+    negative_policy, negative_policy_configured = (
+        sequence_margin_negative_policy_setting({})
+    )
+    assert negative_policy == "sparse-chronological-v1"
+    assert negative_policy_configured is False
+    assert optional_objective_cli_args(
+        {"sequence_margin_negative_policy": "runtime-executable-v1"}
+    ) == [
+        "--sequence-margin-negative-policy",
+        "runtime-executable-v1",
+    ]
+    try:
+        sequence_margin_negative_policy_setting(
+            {"sequence_margin_negative_policy": "unsupported"}
+        )
+    except ValueError as exc:
+        assert "sequence_margin_negative_policy" in str(exc)
+    else:
+        raise AssertionError("unsupported sequence-margin negative policy was accepted")
+
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])
     assert float(unsafe_loss.item()) > 0.05
@@ -168,6 +237,54 @@ def main() -> int:
     assert float(weak_loss.item()) > 0.50
     weak_loss.mean().backward()
     assert weak_logits.grad is not None
+
+    # The current sparse chronological surrogate can assemble a high-confidence
+    # wake from token frames that the runtime cannot execute because multiple
+    # child advances are non-dominant and exhaust the fuzzy path budget.
+    loose_logits = torch.full((12, 1, 6), -6.0, dtype=torch.float32)
+    loose_logits[:, :, 0] = 4.0
+    loose_logits[1, 0, 0] = -6.0
+    loose_logits[1, 0, 1] = 8.0
+    for position, token in zip([3, 5, 7], [2, 3, 4]):
+        loose_logits[position, 0, 0] = -6.0
+        loose_logits[position, 0, token] = 5.0
+        loose_logits[position, 0, 5] = 5.1
+    loose_log_probs = loose_logits.requires_grad_().log_softmax(dim=2)
+    sparse_loose = margin(
+        loose_log_probs,
+        [],
+        keyword_sequences=[[1, 2, 3, 4], [3, 4, 3, 4]],
+    )
+    runtime_loose = margin(
+        loose_log_probs,
+        [],
+        keyword_sequences=[[1, 2, 3, 4], [3, 4, 3, 4]],
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert float(sparse_loose.item()) > 0.01
+    assert float(runtime_loose.item()) < 1.0e-6
+
+    # A genuinely executable negative path must remain penalized; the new policy
+    # narrows negative pressure rather than deleting it.
+    executable_negative = make_logits([3, 4, 3, 4])
+    sparse_executable = margin(executable_negative, [3, 4, 3])
+    runtime_executable = margin(
+        executable_negative,
+        [3, 4, 3],
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert float(sparse_executable.item()) > 0.05
+    assert float(runtime_executable.item()) > 0.05
+
+    # Exact-wake positive pressure remains the historical sparse scorer.
+    weak_runtime_positive = margin(
+        weak_log_probs,
+        [1, 2, 3, 4],
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert abs(
+        float(weak_runtime_positive.item()) - float(weak_loss.item())
+    ) < 1.0e-6
 
     # Path-purity targets the #240 failure mode: the target sequence may be
     # present as a loose subsequence while an unrelated wake token dominates

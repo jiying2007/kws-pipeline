@@ -154,6 +154,27 @@ def validate_model_provenance(
     if normalized_training["learning_rate"] <= 0.0 or normalized_training["grad_clip_norm"] <= 0.0:
         raise ValueError("model provenance training learning-rate/grad-clip must be > 0")
 
+    negative_policy = training.get("sequence_margin_negative_policy")
+    negative_scope = training.get("sequence_margin_negative_policy_scope")
+    if negative_policy is not None or negative_scope is not None:
+        if negative_policy not in {
+            "sparse-chronological-v1",
+            "runtime-executable-v1",
+        }:
+            raise ValueError(
+                "model provenance sequence-margin negative policy is unsupported"
+            )
+        if negative_scope != "decoder-search-only-no-speech-active-gate-v1":
+            raise ValueError(
+                "model provenance sequence-margin negative policy scope is unsupported"
+            )
+        normalized_training["sequence_margin_negative_policy"] = str(
+            negative_policy
+        )
+        normalized_training["sequence_margin_negative_policy_scope"] = str(
+            negative_scope
+        )
+
     if quantization.get("scheme") != "symmetric-int8-per-matrix":
         raise ValueError("model provenance quantization scheme is unsupported")
     normalized_quantization: dict[str, dict | str] = {"scheme": "symmetric-int8-per-matrix"}

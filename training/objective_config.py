@@ -8,6 +8,8 @@ from objective_contract import (
     PATH_PURITY_LOSS_WEIGHT_DEFAULT,
     PATH_PURITY_MARGIN_DEFAULT,
     PATH_PURITY_MARGIN_MAX,
+    SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
 )
 
 
@@ -43,6 +45,24 @@ def ordered_token_scope_setting(train: dict) -> tuple[str, bool]:
     return scope, configured
 
 
+def sequence_margin_negative_policy_setting(train: dict) -> tuple[str, bool]:
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    configured = "sequence_margin_negative_policy" in train
+    policy = str(
+        train.get(
+            "sequence_margin_negative_policy",
+            SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+        )
+    )
+    if policy not in SEQUENCE_MARGIN_NEGATIVE_POLICIES:
+        raise ValueError(
+            "train.sequence_margin_negative_policy must be one of "
+            + ", ".join(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES))
+        )
+    return policy, configured
+
+
 def optional_objective_cli_args(train: dict) -> list[str]:
     args: list[str] = []
 
@@ -60,4 +80,8 @@ def optional_objective_cli_args(train: dict) -> list[str]:
     ordered_scope, ordered_scope_configured = ordered_token_scope_setting(train)
     if ordered_scope_configured:
         args.extend(["--ordered-token-scope", ordered_scope])
+
+    negative_policy, negative_policy_configured = sequence_margin_negative_policy_setting(train)
+    if negative_policy_configured:
+        args.extend(["--sequence-margin-negative-policy", negative_policy])
     return args

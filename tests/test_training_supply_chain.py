@@ -16,6 +16,9 @@ def main() -> int:
     train_source = (ROOT / "training" / "train_ctc.py").read_text(encoding="utf-8")
     iterate_source = (ROOT / "training" / "iterate_domain.py").read_text(encoding="utf-8")
     margin_source = (ROOT / "training" / "sequence_margin.py").read_text(encoding="utf-8")
+    objective_contract_source = (
+        ROOT / "training" / "objective_contract.py"
+    ).read_text(encoding="utf-8")
     margin_test_source = (ROOT / "training" / "test_sequence_margin.py").read_text(
         encoding="utf-8"
     )
@@ -76,6 +79,10 @@ def main() -> int:
     assert '"keywords_sha256"' in train_source
     assert '"keyword_sequence_margin"' in train_source
     assert '"keyword_sequence_margin_loss_weight"' in train_source
+    assert '"sequence_margin_negative_policy"' in train_source
+    assert '"sequence_margin_negative_policy_scope"' in train_source
+    assert "SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE" in margin_source
+    assert '"runtime-executable-v1"' in objective_contract_source
     assert "keywords: pathlib.Path" in iterate_source
     assert '"--keywords"' in iterate_source
     assert "keywords=keywords" in iterate_source
