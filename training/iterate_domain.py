@@ -102,11 +102,16 @@ def resolve_posterior_replay(
 
 def posterior_replay_cli_args(
     posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None,
+    *,
+    decoder_state_retention: float | None = None,
+    decoder_refractory_ms: int | None = None,
 ) -> list[str]:
     if posterior_replay is None:
+        if decoder_state_retention is not None or decoder_refractory_ms is not None:
+            raise ValueError("decoder replay overrides require posterior replay")
         return []
     dump, replay, cache = posterior_replay
-    return [
+    result = [
         "--posterior-dump",
         str(dump),
         "--decoder-replay",
@@ -114,6 +119,18 @@ def posterior_replay_cli_args(
         "--posterior-cache",
         str(cache),
     ]
+    if decoder_state_retention is not None:
+        if (
+            not math.isfinite(decoder_state_retention)
+            or not 0.0 < decoder_state_retention < 1.0
+        ):
+            raise ValueError("decoder_state_retention must be finite and in (0,1)")
+        result.extend(["--decoder-state-retention", str(decoder_state_retention)])
+    if decoder_refractory_ms is not None:
+        if isinstance(decoder_refractory_ms, bool) or not 0 <= int(decoder_refractory_ms) <= 10000:
+            raise ValueError("decoder_refractory_ms must be in [0,10000]")
+        result.extend(["--decoder-refractory-ms", str(int(decoder_refractory_ms))])
+    return result
 
 
 def keyword_rows(path: pathlib.Path) -> list[dict]:
@@ -192,6 +209,8 @@ def evaluate(
     references: pathlib.Path,
     output: pathlib.Path,
     posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None = None,
+    decoder_state_retention: float | None = None,
+    decoder_refractory_ms: int | None = None,
 ) -> tuple[dict, dict]:
     output.mkdir(parents=True, exist_ok=True)
     detections = output / "detections.jsonl"
@@ -216,7 +235,13 @@ def evaluate(
         "--provenance",
         str(provenance),
     ]
-    corpus_command.extend(posterior_replay_cli_args(posterior_replay))
+    corpus_command.extend(
+        posterior_replay_cli_args(
+            posterior_replay,
+            decoder_state_retention=decoder_state_retention,
+            decoder_refractory_ms=decoder_refractory_ms,
+        )
+    )
     run(corpus_command)
     run(
         [
@@ -473,6 +498,8 @@ def calibrate(
     gates: dict,
     parallel_trials: int = 1,
     posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None = None,
+    decoder_state_retention: float | None = None,
+    decoder_refractory_ms: int | None = None,
 ) -> tuple[pathlib.Path, pathlib.Path, dict, dict]:
     current = keyword_rows(source_keywords)
     if isinstance(parallel_trials, bool) or not 1 <= int(parallel_trials) <= 4:
@@ -515,6 +542,8 @@ def calibrate(
                         references=references,
                         output=trial_dir / "eval",
                         posterior_replay=posterior_replay,
+                        decoder_state_retention=decoder_state_retention,
+                        decoder_refractory_ms=decoder_refractory_ms,
                     )
                     with trial_cache_lock:
                         existing = trial_cache.get(vector)
@@ -566,6 +595,8 @@ def calibrate(
         references=references,
         output=output / "final-eval",
         posterior_replay=posterior_replay,
+        decoder_state_retention=decoder_state_retention,
+        decoder_refractory_ms=decoder_refractory_ms,
     )
     base["calibrated_thresholds"] = {
         str(row["id"]): float(row["threshold"]) for row in current
