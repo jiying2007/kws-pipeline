@@ -106,6 +106,8 @@ static void init_structure(kws_decoder_t *d,
   memset(d, 0, sizeof(*d));
   d->token_boost = token_boost;
   d->retention_log = retention_log;
+  d->silence_retention_log = KWS_SILENCE_RETENTION_LOG;
+  d->fuzzy_child_retention_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;
   d->node_count = 1u;
   d->nodes[0].first_child = UINT16_MAX;
   d->nodes[0].next_sibling = UINT16_MAX;
@@ -118,6 +120,21 @@ void kws_decoder_init(kws_decoder_t *d,
                       float token_boost,
                       float state_retention) {
   init_structure(d, token_boost, logf(state_retention));
+}
+
+kws_status_t kws_decoder_debug_set_search_policy(kws_decoder_t *d,
+                                                 float blank_retention,
+                                                 float fuzzy_child_cost_log) {
+  if (d == NULL || !isfinite(blank_retention) ||
+      !(blank_retention > 0.0f && blank_retention < 1.0f) ||
+      !isfinite(fuzzy_child_cost_log) || fuzzy_child_cost_log > 0.0f ||
+      fuzzy_child_cost_log < KWS_MIN_PATH_RETENTION_LOG) {
+    return KWS_EINVAL;
+  }
+  d->silence_retention_log = logf(blank_retention);
+  d->fuzzy_child_retention_cost_log = fuzzy_child_cost_log;
+  kws_decoder_reset(d);
+  return KWS_OK;
 }
 
 static uint16_t find_or_add_child(kws_decoder_t *d,
@@ -332,7 +349,7 @@ int kws_decoder_step(kws_decoder_t *d,
   float norm = approx_logsumexp(logits, vocab_size);
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
-  float decay = speech_active ? d->retention_log : KWS_SILENCE_RETENTION_LOG;
+  float decay = speech_active ? d->retention_log : d->silence_retention_log;
   uint16_t top_token = dominant_token(logits, vocab_size);
   int blank_dominant = top_token == 0u;
   int top_is_keyword_root =
@@ -378,7 +395,7 @@ int kws_decoder_step(kws_decoder_t *d,
            * alive at the slower speech retention rate. */
           max_assign_pair(&d->nodes[i].next_blank_score,
                           &d->nodes[i].next_blank_acoustic_score,
-                          nonblank + KWS_SILENCE_RETENTION_LOG, nonblank_acoustic);
+                          nonblank + d->silence_retention_log, nonblank_acoustic);
         } else if (top_token == d->nodes[i].token) {
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
@@ -388,7 +405,7 @@ int kws_decoder_step(kws_decoder_t *d,
       if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
         max_assign_pair(&d->nodes[i].next_blank_score,
                         &d->nodes[i].next_blank_acoustic_score,
-                        separated + KWS_SILENCE_RETENTION_LOG, separated_acoustic);
+                        separated + d->silence_retention_log, separated_acoustic);
       }
     }
 
@@ -425,7 +442,7 @@ int kws_decoder_step(kws_decoder_t *d,
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
         if (i != 0u && top_token != token) {
-          search_log_probability += KWS_FUZZY_CHILD_RETENTION_COST_LOG;
+          search_log_probability += d->fuzzy_child_retention_cost_log;
         }
         max_assign_pair(&d->nodes[child].next_score,
                         &d->nodes[child].next_acoustic_score,
