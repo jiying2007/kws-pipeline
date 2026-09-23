@@ -554,13 +554,6 @@ def mine_adversarial_lexicon(
         "command_tts_parallel_workers": max(probe_tts_workers, replay_tts_workers),
         "command_tts_probe_pre_rendered": len(probe_tasks) if command_backend else 0,
         "command_tts_replay_pre_rendered": len(replay_tasks) if command_backend else 0,
-        "timing_seconds": {
-            "probe_tts_prerender": probe_tts_seconds,
-            "probe_render_and_score": probe_score_seconds,
-            "replay_tts_prerender": replay_tts_seconds,
-            "replay_render_and_materialize": replay_materialize_seconds,
-            "total_to_manifest": time.monotonic() - mining_started,
-        },
         "round": round_index,
         "frontend": frontend,
         "max_length": max_length,
@@ -580,6 +573,39 @@ def mine_adversarial_lexicon(
         "checkpoint_sha256": sha256_file(checkpoint_path),
         "formal_qualification_used": False,
     }
+    timing_path = output / "adversarial-lexicon-timing.json"
+    timing_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "evidence_class": "adversarial-mining-timing-v1",
+                "nonsemantic_observability": True,
+                "round": round_index,
+                "frontend": frontend,
+                "enumerated_sequences": len(candidates),
+                "top_k": len(selected),
+                "probes_per_sequence": probes_per_sequence,
+                "replay_examples": len(replay_rows),
+                "command_tts_parallel_workers": max(
+                    probe_tts_workers, replay_tts_workers
+                ),
+                "timing_seconds": {
+                    "probe_tts_prerender": probe_tts_seconds,
+                    "probe_render_and_score": probe_score_seconds,
+                    "replay_tts_prerender": replay_tts_seconds,
+                    "replay_render_and_materialize": replay_materialize_seconds,
+                    "total_to_manifest": time.monotonic() - mining_started,
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
     evidence_path = output / "adversarial-lexicon.json"
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False)
