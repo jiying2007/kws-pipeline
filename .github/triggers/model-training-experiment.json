@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "posterior-replay-baseline-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Development-only baseline to validate posterior replay activation from #262/#263/#264/#265. Preserve current training semantics exactly by explicitly pinning the canonical ordered-token scope default. Compare runtime metrics against prior direct-runner baseline and retain posterior cache hit/miss, unique trace count, trace bytes, provenance identity, and wall-clock phase timings. No promotion or qualification authority.",
+  "config_overrides": {
+    "train.ordered_token_scope": "all-nonempty-targets-v1"
+  }
+}
