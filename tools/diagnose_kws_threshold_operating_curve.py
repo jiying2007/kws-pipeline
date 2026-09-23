@@ -203,6 +203,8 @@ def development_round_evidence(
             if manifest_selected_round is not None
             else False
         ),
+        "calibration_references_sha256": str(calibration.get("references_sha256", "")),
+        "test_references_sha256": str(test.get("references_sha256", "")),
         "calibrated_thresholds": {
             str(key): finite(value, f"development threshold {key}")
             for key, value in selected.items()
@@ -293,6 +295,8 @@ def main() -> int:
     )
     model_sha256 = sha256_file(args.model)
     config_sha256 = sha256_file(args.config)
+    actual_calibration = sha256_file(args.calibration_references)
+    actual_test = sha256_file(args.test_references)
     if development_evidence is not None:
         if not development_evidence["development_record_model_sha256"]:
             raise ValueError("development round is missing model SHA256")
@@ -302,12 +306,14 @@ def main() -> int:
             raise ValueError("development manifest is missing config SHA256")
         if development_evidence["development_config_sha256"] != config_sha256:
             raise ValueError("diagnostic config does not match development manifest config")
+        expected_calibration = development_evidence["calibration_references_sha256"]
+        expected_test = development_evidence["test_references_sha256"]
+        if not expected_calibration or expected_calibration != actual_calibration:
+            raise ValueError("calibration references do not match development manifest")
+        if not expected_test or expected_test != actual_test:
+            raise ValueError("test references do not match development manifest")
 
     domain_summary_evidence = None
-    if args.development_manifest is not None and args.development_domain_summary is None:
-        raise ValueError(
-            "--development-domain-summary is required with --development-manifest"
-        )
     if args.development_domain_summary is not None:
         if not args.development_domain_summary.is_file():
             raise ValueError(
@@ -323,8 +329,6 @@ def main() -> int:
             raise ValueError("development domain summary lacks calibration/test splits")
         expected_calibration = str(calibration_split.get("references_sha256", ""))
         expected_test = str(test_split.get("references_sha256", ""))
-        actual_calibration = sha256_file(args.calibration_references)
-        actual_test = sha256_file(args.test_references)
         if not expected_calibration or expected_calibration != actual_calibration:
             raise ValueError("calibration references do not match development domain summary")
         if not expected_test or expected_test != actual_test:

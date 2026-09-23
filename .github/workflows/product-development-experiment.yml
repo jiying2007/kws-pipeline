@@ -208,7 +208,6 @@ jobs:
           model=pathlib.Path(str(source['model']))
           keywords=pathlib.Path(str(source['keywords']))
           candidate_dir=model.parent
-          domain_summary=candidate_dir/'calibration'/'final-eval'/'domains.json'
           round_index=int(source['round'])
           dataset=root/'datasets'/f'round-{round_index:02d}'
           tokens=pathlib.Path(str(config['tokens']))
@@ -228,7 +227,6 @@ jobs:
               '--thresholds',*thresholds,
               '--development-manifest',str(root/'domain-loop-manifest.json'),
               '--development-authority-receipt',os.environ['KWS_EXPERIMENT_RECEIPT'],
-              '--development-domain-summary',str(domain_summary),
               '--round-index',str(round_index),
               '--diagnostic-round-selection-policy','refinement-source-saturation-v1',
               '--work-dir',str(root/'threshold-wide-sweep-work'),

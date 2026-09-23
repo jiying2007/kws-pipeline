@@ -469,12 +469,17 @@ def validate_torch_iteration_policy() -> None:
     assert "exact-pr-head-development-receipt-v1" in threshold_diagnostic
     assert "product-development-pr-head-experiment-v1" in threshold_diagnostic
     assert "development authority receipt config does not match manifest" in threshold_diagnostic
+    assert '"calibration_references_sha256": str(calibration.get("references_sha256", ""))' in threshold_diagnostic
+    assert '"test_references_sha256": str(test.get("references_sha256", ""))' in threshold_diagnostic
+    assert "calibration references do not match development manifest" in threshold_diagnostic
+    assert "test references do not match development manifest" in threshold_diagnostic
     assert (
         '"posterior_replay_enabled": posterior_replay is not None'
         in threshold_diagnostic
     )
     assert "'--development-authority-receipt'" in product_experiment_workflow
     assert "KWS_EXPERIMENT_RECEIPT" in product_experiment_workflow
+    assert "'--development-domain-summary'" not in product_experiment_workflow
     score_block = product_iterator.split('str(EVAL / "score_events.py")', 1)[1]
     assert "suppress_stdout=True" in score_block.split('str(EVAL / "domain_metrics.py")', 1)[0]
     domain_block = product_iterator.split('str(EVAL / "domain_metrics.py")', 1)[1]
