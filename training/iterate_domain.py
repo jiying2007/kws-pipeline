@@ -910,6 +910,7 @@ def main() -> int:
 
     best = None
     records: list[dict] = []
+    completed_round_best_records: list[dict] = []
     curriculum: dict | None = None
     stale = 0
     previous_checkpoints: dict[str, pathlib.Path] = {}
@@ -949,13 +950,13 @@ def main() -> int:
                 curriculum_weights=curriculum,
             )
             if base_failure_replay_enabled and round_index > 0:
-                if not records:
+                if not completed_round_best_records:
                     raise ValueError(
-                        "base failure replay requires completed prior development records"
+                        "base failure replay requires completed prior round-best records"
                     )
                 base_failure_replay = render_development_failure_replay(
                     config_path,
-                    list(records),
+                    list(completed_round_best_records),
                     work,
                     work / "base-failure-replay" / f"round-{round_index:02d}",
                 )
@@ -1168,6 +1169,7 @@ def main() -> int:
                 if checkpoint is not None:
                     previous_checkpoints[frontend] = checkpoint
         assert round_best is not None
+        completed_round_best_records.append(round_best)
         curriculum_feedback = merge_domain_metrics(
             round_best["calibration_domains"],
             round_best["test_domains"],
