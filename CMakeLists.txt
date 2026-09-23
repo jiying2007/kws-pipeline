@@ -209,7 +209,10 @@ if(KWS_BUILD_TOOLS)
   target_link_libraries(kws_posterior_dump PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
 
   add_executable(kws_decoder_replay tools/kws_decoder_replay.c)
-  target_include_directories(kws_decoder_replay PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  target_include_directories(kws_decoder_replay PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
+  )
   target_link_libraries(kws_decoder_replay PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
 
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
