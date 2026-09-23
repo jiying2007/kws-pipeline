@@ -232,5 +232,6 @@ jobs:
             build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json
             build/product-development-experiment/adversarial-refinement/preflight-summary.json
             build/product-development-experiment/adversarial-refinement/progress.json
+            build/product-development-experiment/adversarial-lexicon/*/adversarial-lexicon-timing.json
           if-no-files-found: warn
           retention-days: 14
