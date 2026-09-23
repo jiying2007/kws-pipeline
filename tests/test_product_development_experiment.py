@@ -109,6 +109,28 @@ def main() -> int:
         assert result["source_policy"] == "exact-pr-head"
         assert result["protected_evidence_used"] is False
 
+        exact_scope_spec = json.loads(spec.read_text(encoding="utf-8"))
+        exact_scope_spec["experiment_id"] = "ordered-exact-wake-contract-v1"
+        exact_scope_spec["config_overrides"] = {
+            "train.ordered_token_exact_wake_only": True
+        }
+        spec.write_text(json.dumps(exact_scope_spec), encoding="utf-8")
+        exact_output = root / "ordered-experiment.json"
+        exact_receipt = root / "ordered-receipt.json"
+        exact_result = materialize(
+            spec_path=spec,
+            effective_config_path=effective,
+            output_path=exact_output,
+            receipt_path=exact_receipt,
+            base_sha="3" * 40,
+            head_sha="4" * 40,
+        )
+        exact_cfg = json.loads(exact_output.read_text(encoding="utf-8"))
+        assert exact_cfg["train"]["ordered_token_exact_wake_only"] is True
+        assert exact_result["config_overrides"] == {
+            "train.ordered_token_exact_wake_only": True
+        }
+
         bad = json.loads(spec.read_text(encoding="utf-8"))
         bad["config_overrides"] = {"train.epochs": 99}
         spec.write_text(json.dumps(bad), encoding="utf-8")
