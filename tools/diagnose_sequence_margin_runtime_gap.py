@@ -259,7 +259,13 @@ def self_test() -> None:
     confidence = math.exp(score)
     if not 0.9 < confidence <= 1.0:
         raise AssertionError("chronological surrogate self-test failed")
-    repeated = decoder_sequence_log_confidence(rows, (1, 1))
+    repeated_rows = log_softmax(
+        [
+            [0.0, 4.0, -4.0],
+            [0.0, 4.0, -4.0],
+        ]
+    )
+    repeated = decoder_sequence_log_confidence(repeated_rows, (1, 1))
     if math.isfinite(repeated):
         raise AssertionError("repeated-token separator self-test failed")
 
