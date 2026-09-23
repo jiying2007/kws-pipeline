@@ -20,6 +20,10 @@ sys.path.insert(0, str(TOOLS))
 
 from domain_curriculum import merge_domain_metrics, update_curriculum  # noqa: E402
 from domain_progress import append_round_progress, build_round_progress  # noqa: E402
+from development_failure_replay import (  # noqa: E402
+    failure_replay_focus_rows,
+    render_development_failure_replay,
+)
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
@@ -759,6 +763,7 @@ def build_torch(
     output: pathlib.Path,
     previous: pathlib.Path | None,
     hard_negative_manifest: pathlib.Path | None,
+    failure_replay_manifest: pathlib.Path | None,
     wake_balance: dict | None,
     warm_start_strategy: str,
     round_index: int,
@@ -803,6 +808,12 @@ def build_torch(
         and hard_negative_manifest.stat().st_size > 0
     ):
         command.extend(["--manifest", str(hard_negative_manifest)])
+    if (
+        failure_replay_manifest is not None
+        and failure_replay_manifest.is_file()
+        and failure_replay_manifest.stat().st_size > 0
+    ):
+        command.extend(["--manifest", str(failure_replay_manifest)])
     if wake_balance is not None:
         if wake_balance.get("policy") != WAKE_BALANCE_POLICY:
             raise ValueError("base wake-balance policy identity mismatch")
@@ -872,6 +883,9 @@ def main() -> int:
     if backend not in {"prototype", "torch_ctc"}:
         raise ValueError("domain_iteration.backend must be prototype or torch_ctc")
     warm_start_strategy = parse_warm_start_strategy(iteration)
+    base_failure_replay_enabled = iteration.get("base_failure_replay_enabled", False)
+    if not isinstance(base_failure_replay_enabled, bool):
+        raise ValueError("domain_iteration.base_failure_replay_enabled must be boolean")
     max_rounds = int(iteration.get("max_rounds", 3))
     min_rounds = int(iteration.get("min_rounds", 2))
     patience = int(iteration.get("patience", 2))
@@ -925,6 +939,7 @@ def main() -> int:
             ]
         )
         replay = None
+        base_failure_replay = None
         wake_balance = None
         if backend == "torch_ctc":
             replay = render_hard_negative_replay(
@@ -933,6 +948,31 @@ def main() -> int:
                 round_index=round_index,
                 curriculum_weights=curriculum,
             )
+            if base_failure_replay_enabled and round_index > 0:
+                if not records:
+                    raise ValueError(
+                        "base failure replay requires completed prior development records"
+                    )
+                base_failure_replay = render_development_failure_replay(
+                    config_path,
+                    list(records),
+                    work,
+                    work / "base-failure-replay" / f"round-{round_index:02d}",
+                )
+                if base_failure_replay.get("formal_qualification_used") is not False:
+                    raise ValueError("base failure replay must not use formal qualification")
+                source_rounds = sorted(
+                    {
+                        int(value)
+                        for item in base_failure_replay.get("selected", [])
+                        if isinstance(item, dict)
+                        for value in item.get("source_rounds", [])
+                    }
+                )
+                if source_rounds and max(source_rounds) >= round_index:
+                    raise ValueError(
+                        "base failure replay must use only prior development rounds"
+                    )
             train_cfg = cfg.get("train", {})
             if not isinstance(train_cfg, dict):
                 raise ValueError("train config must be an object")
@@ -948,6 +988,17 @@ def main() -> int:
                     replay_manifest = pathlib.Path(str(replay["manifest"]))
                     training_manifests.append(replay_manifest)
                     focus_rows.update(static_replay_focus_rows(replay))
+                if (
+                    isinstance(base_failure_replay, dict)
+                    and int(base_failure_replay.get("examples", 0)) > 0
+                ):
+                    failure_manifest = pathlib.Path(
+                        str(base_failure_replay["manifest"])
+                    )
+                    training_manifests.append(failure_manifest)
+                    focus_rows.update(
+                        failure_replay_focus_rows(base_failure_replay)
+                    )
                 wake_balance = derive_wake_pressure_balance(
                     manifests=training_manifests,
                     tokens=tokens,
@@ -1003,6 +1054,12 @@ def main() -> int:
                         output=candidate_dir,
                         previous=previous_checkpoint,
                         hard_negative_manifest=replay_manifest,
+                        failure_replay_manifest=(
+                            pathlib.Path(str(base_failure_replay["manifest"]))
+                            if isinstance(base_failure_replay, dict)
+                            and int(base_failure_replay.get("examples", 0)) > 0
+                            else None
+                        ),
                         wake_balance=wake_balance,
                         warm_start_strategy=warm_start_strategy,
                         round_index=round_index,
@@ -1073,6 +1130,31 @@ def main() -> int:
                         str(replay.get("manifest_sha256"))
                         if isinstance(replay, dict)
                         else None
+                    )
+                    record["base_failure_replay_enabled"] = bool(
+                        base_failure_replay_enabled
+                    )
+                    record["base_failure_replay_examples"] = int(
+                        base_failure_replay.get("examples", 0)
+                        if isinstance(base_failure_replay, dict)
+                        else 0
+                    )
+                    record["base_failure_replay_manifest_sha256"] = (
+                        str(base_failure_replay.get("manifest_sha256"))
+                        if isinstance(base_failure_replay, dict)
+                        else None
+                    )
+                    record["base_failure_replay_source_rounds"] = sorted(
+                        {
+                            int(value)
+                            for item in (
+                                base_failure_replay.get("selected", [])
+                                if isinstance(base_failure_replay, dict)
+                                else []
+                            )
+                            if isinstance(item, dict)
+                            for value in item.get("source_rounds", [])
+                        }
                     )
                     record["wake_balance"] = wake_balance
                 records.append(record)
