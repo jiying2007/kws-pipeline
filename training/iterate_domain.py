@@ -763,7 +763,7 @@ def build_torch(
     output: pathlib.Path,
     previous: pathlib.Path | None,
     hard_negative_manifest: pathlib.Path | None,
-    failure_replay_manifest: pathlib.Path | None,
+    failure_replay_manifest: pathlib.Path | None = None,
     wake_balance: dict | None,
     warm_start_strategy: str,
     round_index: int,
