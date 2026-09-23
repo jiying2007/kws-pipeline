@@ -425,6 +425,14 @@ def main() -> int:
         torch.tensor([4.0], dtype=torch.float32),
         normalization_mean_weight=2.5,
     )
+    ordered_first_exact_scope, _, _ = ordered_token_loss(
+        ordered_log_probs[:, :1, :],
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([4], dtype=torch.long),
+        torch.tensor([1], dtype=torch.long),
+        torch.tensor([4.0], dtype=torch.float32),
+        normalization_mean_weight=4.0,
+    )
     ordered_second, _, _ = ordered_token_loss(
         ordered_log_probs[:, 1:, :],
         torch.tensor([1], dtype=torch.long),
@@ -438,7 +446,13 @@ def main() -> int:
     assert abs(float(normalized_ordered.item()) - float(wake_weighted_ordered.item())) < 1.0e-7
     assert wake_only_total == 1
     assert wake_only_correct == 0
-    assert abs(float(wake_only_ordered.item()) - float(ordered_first.item())) < 1.0e-7
+    assert (
+        abs(
+            float(wake_only_ordered.item())
+            - float(ordered_first_exact_scope.item())
+        )
+        < 1.0e-7
+    )
     assert abs(
         float(normalized_ordered.item())
         - float(((ordered_first + ordered_second) / 2.0).item())
