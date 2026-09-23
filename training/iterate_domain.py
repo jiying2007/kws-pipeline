@@ -960,6 +960,10 @@ def main() -> int:
                     work,
                     work / "base-failure-replay" / f"round-{round_index:02d}",
                 )
+                if base_failure_replay.get("enabled") is not True:
+                    raise ValueError(
+                        "base failure replay requires data_augmentation_v3.failure_replay_enabled=true"
+                    )
                 if base_failure_replay.get("formal_qualification_used") is not False:
                     raise ValueError("base failure replay must not use formal qualification")
                 source_rounds = sorted(
