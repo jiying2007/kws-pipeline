@@ -101,17 +101,56 @@ def development_round_evidence(
     manifest_path: pathlib.Path | None,
     round_index: int | None,
     gates: dict,
+    authority_receipt_path: pathlib.Path | None = None,
 ) -> dict | None:
     if manifest_path is None:
         if round_index is not None:
             raise ValueError("--round-index requires --development-manifest")
         return None
     value = load_object(manifest_path)
-    if value.get("evidence_scope") != "development-only":
-        raise ValueError("development manifest must be development-only")
-    for key in ("qualification_used", "shadow_used", "formal_qualification_used"):
-        if value.get(key) is not False:
-            raise ValueError(f"development manifest used protected evidence: {key}")
+    manifest_config_sha256 = str(value.get("config_sha256", ""))
+    authority_policy: str
+    authority_receipt_sha256: str | None = None
+
+    if value.get("evidence_scope") == "development-only":
+        for key in ("qualification_used", "shadow_used", "formal_qualification_used"):
+            if value.get(key) is not False:
+                raise ValueError(f"development manifest used protected evidence: {key}")
+        if authority_receipt_path is not None:
+            raise ValueError(
+                "development authority receipt is only valid for PR-head experiment manifests"
+            )
+        authority_policy = "development-manifest-self-declared-v1"
+    else:
+        if authority_receipt_path is None:
+            raise ValueError(
+                "development manifest must be development-only or bound to "
+                "an exact PR-head development receipt"
+            )
+        receipt = load_object(authority_receipt_path)
+        if receipt.get("evidence_class") != "product-development-pr-head-experiment-v1":
+            raise ValueError("development authority receipt evidence_class mismatch")
+        if receipt.get("development_only") is not True:
+            raise ValueError("development authority receipt is not development-only")
+        if receipt.get("source_policy") != "exact-pr-head":
+            raise ValueError("development authority receipt source_policy mismatch")
+        if receipt.get("protected_evidence_used") is not False:
+            raise ValueError("development authority receipt used protected evidence")
+        receipt_config_sha256 = str(receipt.get("experiment_config_sha256", ""))
+        if not manifest_config_sha256 or receipt_config_sha256 != manifest_config_sha256:
+            raise ValueError(
+                "development authority receipt config does not match manifest"
+            )
+        for key in ("pr_base_sha", "pr_head_sha"):
+            raw = receipt.get(key)
+            if (
+                not isinstance(raw, str)
+                or len(raw) != 40
+                or any(ch not in "0123456789abcdef" for ch in raw)
+            ):
+                raise ValueError(f"development authority receipt {key} is invalid")
+        authority_policy = "exact-pr-head-development-receipt-v1"
+        authority_receipt_sha256 = sha256_file(authority_receipt_path)
     records = value.get("records")
     if not isinstance(records, list) or not records:
         raise ValueError("development manifest has no records")
@@ -147,7 +186,9 @@ def development_round_evidence(
     return {
         "round": round_index,
         "development_manifest_sha256": sha256_file(manifest_path),
-        "development_config_sha256": str(value.get("config_sha256", "")),
+        "development_authority_policy": authority_policy,
+        "development_authority_receipt_sha256": authority_receipt_sha256,
+        "development_config_sha256": manifest_config_sha256,
         "development_record_model_sha256": str(row.get("model_sha256", "")),
         "development_record_provenance_sha256": str(row.get("provenance_sha256", "")),
         "development_record_frontend": str(row.get("frontend", "")),
@@ -199,6 +240,7 @@ def main() -> int:
     parser.add_argument("--test-references", required=True, type=pathlib.Path)
     parser.add_argument("--thresholds", required=True, nargs="+", type=float)
     parser.add_argument("--development-manifest", type=pathlib.Path)
+    parser.add_argument("--development-authority-receipt", type=pathlib.Path)
     parser.add_argument("--development-domain-summary", type=pathlib.Path)
     parser.add_argument("--round-index", type=int)
     parser.add_argument(
@@ -239,8 +281,15 @@ def main() -> int:
 
     cfg = load_object(args.config)
     gates = gate_values(cfg.get("domain_gates", {}))
+    if args.development_authority_receipt is not None and args.development_manifest is None:
+        raise ValueError(
+            "--development-authority-receipt requires --development-manifest"
+        )
     development_evidence = development_round_evidence(
-        args.development_manifest, args.round_index, gates
+        args.development_manifest,
+        args.round_index,
+        gates,
+        args.development_authority_receipt,
     )
     model_sha256 = sha256_file(args.model)
     config_sha256 = sha256_file(args.config)
