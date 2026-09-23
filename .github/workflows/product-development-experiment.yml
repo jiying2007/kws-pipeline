@@ -245,6 +245,56 @@ jobs:
           },sort_keys=True))
           PY
 
+      - name: Diagnose recalibrated decoder retention curve
+        run: |
+          .venv/bin/python - <<'PY'
+          import json, os, pathlib, subprocess, sys
+
+          repo=pathlib.Path.cwd()
+          sys.path.insert(0,str(repo/'training'))
+          from adversarial_refinement import select_refinement_source
+
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          config_path=pathlib.Path(os.environ['KWS_EXPERIMENT_CONFIG'])
+          config=json.loads(config_path.read_text(encoding='utf-8'))
+          source, policy=select_refinement_source(manifest)
+          model=pathlib.Path(str(source['model']))
+          keywords=pathlib.Path(str(source['keywords']))
+          round_index=int(source['round'])
+          dataset=root/'datasets'/f'round-{round_index:02d}'
+          tokens=pathlib.Path(str(config['tokens']))
+          if not tokens.is_absolute():
+              tokens=(repo/tokens).resolve()
+          retentions=['0.85','0.90','0.94','0.97','0.99']
+          command=[
+              str(repo/'.venv/bin/python'),
+              'tools/diagnose_decoder_retention_recalibrated_curve.py',
+              '--runner','build/kws_wav',
+              '--model',str(model),
+              '--tokens',str(tokens),
+              '--keywords',str(keywords),
+              '--config',str(config_path),
+              '--calibration-references',str(dataset/'calibration.references.jsonl'),
+              '--test-references',str(dataset/'test.references.jsonl'),
+              '--posterior-dump','build/kws_posterior_dump',
+              '--decoder-replay','build/kws_decoder_replay',
+              '--posterior-cache',str(root/'posterior-cache'),
+              '--retentions',*retentions,
+              '--work-dir',str(root/'decoder-retention-recalibrated-work'),
+              '--output',str(root/'decoder-retention-recalibrated-curve.json'),
+          ]
+          subprocess.check_call(command)
+          print(json.dumps({
+              'decoder_retention_diagnostic':True,
+              'source_round':round_index,
+              'source_selection_policy':policy,
+              'shipping_default_retention':0.94,
+              'retentions':[float(value) for value in retentions],
+              'selection_feedback_allowed':False,
+          },sort_keys=True))
+          PY
+
       - name: Run bounded refinement experiment
         if: steps.eligibility.outputs.eligible == 'true'
         run: |
@@ -329,6 +379,7 @@ jobs:
           posterior_cache=load_optional(root/'posterior-cache-summary.json')
           threshold_trigger=load_optional(root/'threshold-saturation-trigger.json')
           threshold_sweep=load_optional(root/'threshold-wide-sweep.json')
+          retention_curve=load_optional(root/'decoder-retention-recalibrated-curve.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
@@ -336,6 +387,7 @@ jobs:
               'acoustic_alignment': acoustic is not None,
               'posterior_cache': posterior_cache is not None,
               'threshold_saturation_trigger': threshold_trigger is not None,
+              'decoder_retention_recalibrated_curve': retention_curve is not None,
           }
           if isinstance(threshold_trigger,dict) and threshold_trigger.get('triggered') is True:
               required['threshold_wide_sweep']=threshold_sweep is not None
@@ -368,6 +420,7 @@ jobs:
               'posterior_cache':posterior_cache,
               'threshold_saturation_trigger':threshold_trigger,
               'threshold_wide_sweep':threshold_sweep,
+              'decoder_retention_recalibrated_curve':retention_curve,
           }
           (root/'experiment-summary.json').write_text(
               json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
@@ -392,6 +445,7 @@ jobs:
             build/product-development-experiment/posterior-cache-summary.json
             build/product-development-experiment/threshold-saturation-trigger.json
             build/product-development-experiment/threshold-wide-sweep.json
+            build/product-development-experiment/decoder-retention-recalibrated-curve.json
             build/product-development-experiment/posterior-cache/**/*.kwtr
             build/product-development-experiment/posterior-cache/**/*.json
             build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json
