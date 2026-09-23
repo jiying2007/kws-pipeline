@@ -105,6 +105,8 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     assert "--path-purity-loss-weight" in trainer
     assert "--path-purity-margin" in trainer
+    assert "--ordered-token-exact-wake-only" in trainer
+    assert '"ordered_token_scope"' in trainer
     assert 'path_purity_policy": PATH_PURITY_POLICY' in trainer
     base_iterator = (ROOT / "training/iterate_domain.py").read_text(encoding="utf-8")
     refinement = (ROOT / "training/adversarial_refinement.py").read_text(
@@ -112,6 +114,11 @@ def main() -> int:
     )
     assert "optional_objective_cli_args(train)" in base_iterator
     assert "optional_objective_cli_args(train)" in refinement
+    objective_config = (ROOT / "training/objective_config.py").read_text(
+        encoding="utf-8"
+    )
+    assert "ordered_token_exact_wake_only_setting" in objective_config
+    assert '"--ordered-token-exact-wake-only"' in objective_config
 
     workflow = (ROOT / ".github/workflows/model-training.yml").read_text(encoding="utf-8")
     materializer = (ROOT / "training/materialize_governed_product_base.sh").read_text(encoding="utf-8")
