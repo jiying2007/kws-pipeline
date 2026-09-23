@@ -162,6 +162,10 @@ jobs:
         run: python3 tests/test_run_corpus.py
       - name: Verify tracked worktree after Corpus provenance sidecar
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus provenance sidecar"'
+      - name: Decoder retention replay curve
+        run: python3 tests/test_decoder_retention_curve.py
+      - name: Verify tracked worktree after Decoder retention replay curve
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Decoder retention replay curve"'
       - name: Real-artifact board benchmark contract
         run: python3 tests/test_board_bench.py --runner ./build/kws_board_bench
       - name: Verify tracked worktree after Real-artifact board benchmark contract
