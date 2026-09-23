@@ -25,6 +25,7 @@ FIELDS = {
 ALLOWED_OVERRIDES = {
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
+    "train.ordered_token_exact_wake_only": ("bool", None, None),
 }
 
 
@@ -74,13 +75,18 @@ def verify_spec(path: pathlib.Path) -> dict:
     unknown = sorted(set(overrides) - set(ALLOWED_OVERRIDES))
     if unknown:
         raise ValueError(f"experiment override is not allowed: {unknown}")
-    normalized: dict[str, float] = {}
+    normalized: dict[str, object] = {}
     for key, raw in overrides.items():
         kind, low, high = ALLOWED_OVERRIDES[key]
+        if kind == "bool":
+            if not isinstance(raw, bool):
+                raise ValueError(f"experiment override {key} must be boolean")
+            normalized[key] = raw
+            continue
         if kind != "float" or isinstance(raw, bool):
             raise ValueError(f"unsupported experiment override type for {key}")
         number = float(raw)
-        if not math.isfinite(number) or not low <= number <= high:
+        if not math.isfinite(number) or low is None or high is None or not low <= number <= high:
             raise ValueError(f"experiment override {key} must be in [{low},{high}]")
         normalized[key] = number
     result = dict(value)
@@ -207,6 +213,28 @@ def self_test() -> None:
         verified = verify_spec(spec)
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
 
+        boolean_spec = dict(verified)
+        boolean_spec["config_overrides"] = {
+            "train.ordered_token_exact_wake_only": True
+        }
+        spec.write_text(json.dumps(boolean_spec), encoding="utf-8")
+        boolean_verified = verify_spec(spec)
+        assert boolean_verified["config_overrides"] == {
+            "train.ordered_token_exact_wake_only": True
+        }
+        invalid_boolean = dict(boolean_verified)
+        invalid_boolean["config_overrides"] = {
+            "train.ordered_token_exact_wake_only": 1
+        }
+        spec.write_text(json.dumps(invalid_boolean), encoding="utf-8")
+        try:
+            verify_spec(spec)
+        except ValueError as exc:
+            assert "must be boolean" in str(exc)
+        else:
+            raise AssertionError("non-boolean ordered-token scope override was accepted")
+
+        spec.write_text(json.dumps(verified), encoding="utf-8")
         bad = dict(verified)
         bad["protected_evidence_used"] = True
         spec.write_text(json.dumps(bad), encoding="utf-8")
