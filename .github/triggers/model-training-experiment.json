@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "recalibrated-retention-baseline-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Development-only canonical-default baseline after posterior replay, automatic threshold saturation diagnostics, and recalibrated decoder-retention diagnostics landed. Preserve current acoustic training semantics exactly by explicitly pinning the canonical ordered-token scope default. Collect posterior cache evidence, threshold wide sweep if triggered, and a recalibrated state-retention curve at 0.85/0.90/0.94/0.97/0.99. No selection feedback, qualification, promotion, or shipping parameter change.",
+  "config_overrides": {
+    "train.ordered_token_scope": "all-nonempty-targets-v1"
+  }
+}
