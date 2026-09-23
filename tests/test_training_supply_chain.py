@@ -76,6 +76,9 @@ def main() -> int:
     assert '"keywords_sha256"' in train_source
     assert '"keyword_sequence_margin"' in train_source
     assert '"keyword_sequence_margin_loss_weight"' in train_source
+    assert '"sequence_margin_negative_policy"' in train_source
+    assert '"sequence_margin_negative_policy_scope"' in train_source
+    assert "runtime-executable-v1" in margin_source
     assert "keywords: pathlib.Path" in iterate_source
     assert '"--keywords"' in iterate_source
     assert "keywords=keywords" in iterate_source
