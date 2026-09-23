@@ -22,6 +22,10 @@ from iterate_domain import (  # noqa: E402
     sha256_file,
 )
 
+from diagnose_kws_threshold_operating_curve import (  # noqa: E402
+    development_round_evidence,
+)
+
 EVIDENCE_CLASS = "decoder-retention-recalibrated-curve-development-v1"
 POLICY = "development-only-posterior-replay-recalibrated-retention-v1"
 
@@ -86,6 +90,13 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--calibration-references", required=True, type=pathlib.Path)
     parser.add_argument("--test-references", required=True, type=pathlib.Path)
+    parser.add_argument("--development-manifest", type=pathlib.Path)
+    parser.add_argument("--development-authority-receipt", type=pathlib.Path)
+    parser.add_argument("--round-index", type=int)
+    parser.add_argument(
+        "--diagnostic-round-selection-policy",
+        default="caller-supplied-round-v1",
+    )
     parser.add_argument("--posterior-dump", required=True, type=pathlib.Path)
     parser.add_argument("--decoder-replay", required=True, type=pathlib.Path)
     parser.add_argument("--posterior-cache", required=True, type=pathlib.Path)
@@ -131,6 +142,35 @@ def main() -> int:
     ):
         raise ValueError("config calibration contract is invalid")
     gates = gate_values(cfg.get("domain_gates", {}))
+    if args.development_authority_receipt is not None and args.development_manifest is None:
+        raise ValueError(
+            "--development-authority-receipt requires --development-manifest"
+        )
+    development_evidence = development_round_evidence(
+        args.development_manifest,
+        args.round_index,
+        gates,
+        args.development_authority_receipt,
+    )
+    model_sha256 = sha256_file(args.model)
+    config_sha256 = sha256_file(args.config)
+    actual_calibration = sha256_file(args.calibration_references)
+    actual_test = sha256_file(args.test_references)
+    if development_evidence is not None:
+        if not development_evidence["development_record_model_sha256"]:
+            raise ValueError("development round is missing model SHA256")
+        if development_evidence["development_record_model_sha256"] != model_sha256:
+            raise ValueError("diagnostic model does not match development round model")
+        if not development_evidence["development_config_sha256"]:
+            raise ValueError("development manifest is missing config SHA256")
+        if development_evidence["development_config_sha256"] != config_sha256:
+            raise ValueError("diagnostic config does not match development manifest config")
+        expected_calibration = development_evidence["calibration_references_sha256"]
+        expected_test = development_evidence["test_references_sha256"]
+        if not expected_calibration or expected_calibration != actual_calibration:
+            raise ValueError("calibration references do not match development manifest")
+        if not expected_test or expected_test != actual_test:
+            raise ValueError("test references do not match development manifest")
 
     work = args.work_dir.resolve()
     if work.exists():
@@ -203,11 +243,13 @@ def main() -> int:
         "selection_feedback_allowed": False,
         "protected_evidence_used": False,
         "thresholds_recalibrated_per_retention": True,
-        "model_sha256": sha256_file(args.model),
+        "model_sha256": model_sha256,
         "source_keyword_pack_sha256": sha256_file(args.keywords),
-        "config_sha256": sha256_file(args.config),
-        "calibration_references_sha256": sha256_file(args.calibration_references),
-        "test_references_sha256": sha256_file(args.test_references),
+        "config_sha256": config_sha256,
+        "calibration_references_sha256": actual_calibration,
+        "test_references_sha256": actual_test,
+        "diagnostic_round_selection_policy": str(args.diagnostic_round_selection_policy),
+        "development_round_evidence": development_evidence,
         "formal_threshold_grid": thresholds,
         "coordinate_rounds": coordinate_rounds,
         "parallel_trials": parallel_trials,
