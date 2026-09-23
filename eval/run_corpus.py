@@ -231,7 +231,7 @@ def main() -> int:
         identity = audio_identity(row, audio)
         identities.append(identity)
         if cache_enabled:
-            audio_sha256 = str(identity["sha256"])
+            audio_sha256 = str(identity["file_sha256"])
             trace, trace_summary, cache_hit = ensure_cached_trace(
                 posterior_dump=args.posterior_dump,
                 cache_root=args.posterior_cache,
