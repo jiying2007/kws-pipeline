@@ -10,6 +10,7 @@
 
 #include "decoder.h"
 #include "frontend.h"
+#include "kws_debug.h"
 #include "kws_parameter_limits.h"
 
 struct kws_engine {
@@ -40,6 +41,10 @@ struct kws_engine {
   uint32_t afe_latency_samples;
   uint8_t block_external_vad_valid;
   uint8_t afe_config_sha256[32];
+  uint64_t debug_last_frame_number;
+  uint64_t debug_last_frame_end_sample;
+  uint8_t debug_last_frame_speech_active;
+  uint8_t debug_last_frame_valid;
 };
 
 static int model_contract_valid(const kws_model_t *model) {
@@ -249,6 +254,91 @@ static uint16_t infer_frame(kws_engine_t *e) {
   return top_index;
 }
 
+static uint16_t top_logit_index(const float *logits, uint16_t vocab_size) {
+  uint16_t top_index = 0u;
+
+  for (uint16_t v = 1u; v < vocab_size; ++v) {
+    if (logits[v] > logits[top_index]) {
+      top_index = v;
+    }
+  }
+  return top_index;
+}
+
+static kws_status_t process_decoder_frame(kws_engine_t *engine,
+                                          const float *logits,
+                                          uint16_t vocab_size,
+                                          int speech_active,
+                                          uint64_t end_sample,
+                                          kws_detection_t *out_detection,
+                                          int *out_detected) {
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+  int decoder_hit;
+  uint16_t top_index;
+
+  if (engine == NULL || logits == NULL || out_detected == NULL ||
+      vocab_size != engine->model.vocab_size ||
+      (speech_active != 0 && speech_active != 1) ||
+      end_sample < engine->processed_samples) {
+    return KWS_EINVAL;
+  }
+
+  for (uint16_t v = 0u; v < vocab_size; ++v) {
+    if (!isfinite(logits[v])) {
+      return KWS_EINVAL;
+    }
+  }
+
+  *out_detected = 0;
+  if (logits != engine->logits) {
+    memcpy(engine->logits, logits, (size_t)vocab_size * sizeof(float));
+  }
+
+  engine->processed_samples = end_sample;
+  engine->processed_frames++;
+  if (speech_active != 0) {
+    engine->speech_frames++;
+  }
+  top_index = top_logit_index(engine->logits, vocab_size);
+  if (top_index == 0u) {
+    engine->blank_top1_frames++;
+  }
+
+  engine->debug_last_frame_number = engine->processed_frames;
+  engine->debug_last_frame_end_sample = end_sample;
+  engine->debug_last_frame_speech_active = (uint8_t)speech_active;
+  engine->debug_last_frame_valid = 1u;
+
+  decoder_hit = kws_decoder_step(&engine->decoder, engine->logits, vocab_size,
+                                 speech_active, &keyword_id, &confidence);
+  if (decoder_hit != 0) {
+    engine->decoder_hits++;
+    if (end_sample >= engine->suppress_until_sample) {
+      uint64_t refractory_samples =
+          ((uint64_t)engine->config.refractory_ms *
+           (uint64_t)KWS_SAMPLE_RATE_HZ) /
+          1000u;
+      engine->suppress_until_sample = end_sample + refractory_samples;
+      engine->detections++;
+      if (confidence > engine->max_detection_confidence) {
+        engine->max_detection_confidence = confidence;
+      }
+
+      *out_detected = 1;
+      if (out_detection != NULL) {
+        out_detection->keyword_id = keyword_id;
+        out_detection->confidence = confidence;
+        out_detection->end_sample = end_sample;
+      }
+    } else {
+      engine->refractory_suppressed++;
+    }
+  }
+
+  return KWS_OK;
+}
+
 static kws_status_t validate_frame_metadata(const kws_frame_metadata_t *metadata) {
   const kws_frame_flags_t all_flags =
       KWS_FRAME_DISCONTINUITY | KWS_FRAME_XRUN | KWS_FRAME_CODEC_REOPEN |
@@ -347,13 +437,8 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
     engine->processed_samples++;
     if (kws_frontend_push(&engine->frontend, samples[i],
                           engine->features) != 0) {
-      uint32_t keyword_id = 0u;
-      float confidence = 0.0f;
       int speech_active;
-      int decoder_hit;
-      uint16_t top_index;
 
-      engine->processed_frames++;
       if (engine->block_external_vad_valid != 0u) {
         engine->external_vad_frames++;
         speech_active = engine->block_external_vad_probability >=
@@ -362,40 +447,11 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
         speech_active = kws_frontend_last_dbfs(&engine->frontend) >=
                         engine->config.min_speech_dbfs;
       }
-      if (speech_active != 0) {
-        engine->speech_frames++;
-      }
-      top_index = infer_frame(engine);
-      if (top_index == 0u) {
-        engine->blank_top1_frames++;
-      }
-      decoder_hit = kws_decoder_step(&engine->decoder, engine->logits,
-                                     engine->model.vocab_size, speech_active,
-                                     &keyword_id, &confidence);
-
-      if (decoder_hit != 0) {
-        engine->decoder_hits++;
-        if (engine->processed_samples >= engine->suppress_until_sample) {
-          uint64_t refractory_samples =
-              ((uint64_t)engine->config.refractory_ms *
-               (uint64_t)KWS_SAMPLE_RATE_HZ) /
-              1000u;
-          engine->suppress_until_sample =
-              engine->processed_samples + refractory_samples;
-          engine->detections++;
-          if (confidence > engine->max_detection_confidence) {
-            engine->max_detection_confidence = confidence;
-          }
-
-          *out_detected = 1;
-          if (out_detection != NULL) {
-            out_detection->keyword_id = keyword_id;
-            out_detection->confidence = confidence;
-            out_detection->end_sample = engine->processed_samples;
-          }
-        } else {
-          engine->refractory_suppressed++;
-        }
+      (void)infer_frame(engine);
+      if (process_decoder_frame(engine, engine->logits, engine->model.vocab_size,
+                                speech_active, engine->processed_samples,
+                                out_detection, out_detected) != KWS_OK) {
+        return KWS_EINVAL;
       }
     }
   }
@@ -410,6 +466,51 @@ kws_status_t kws_engine_accept_pcm16(kws_engine_t *engine,
                                      int *out_detected) {
   return kws_engine_accept_pcm16_ex(engine, samples, sample_count, NULL,
                                     out_detection, out_detected);
+}
+
+int kws_engine_debug_copy_last_frame(const kws_engine_t *engine,
+                                     uint64_t *out_frame_number,
+                                     uint64_t *out_end_sample,
+                                     int *out_speech_active,
+                                     float *out_logits,
+                                     size_t logits_capacity,
+                                     uint16_t *out_vocab_size) {
+  if (engine == NULL || out_frame_number == NULL || out_end_sample == NULL ||
+      out_speech_active == NULL || out_logits == NULL ||
+      out_vocab_size == NULL ||
+      logits_capacity < (size_t)engine->model.vocab_size) {
+    return -1;
+  }
+  if (engine->debug_last_frame_valid == 0u) {
+    return 0;
+  }
+
+  *out_frame_number = engine->debug_last_frame_number;
+  *out_end_sample = engine->debug_last_frame_end_sample;
+  *out_speech_active = (int)engine->debug_last_frame_speech_active;
+  *out_vocab_size = engine->model.vocab_size;
+  memcpy(out_logits, engine->logits,
+         (size_t)engine->model.vocab_size * sizeof(float));
+  return 1;
+}
+
+kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
+                                           const float *logits,
+                                           uint16_t vocab_size,
+                                           int speech_active,
+                                           uint64_t end_sample,
+                                           kws_detection_t *out_detection,
+                                           int *out_detected) {
+  if (engine == NULL || logits == NULL || out_detected == NULL ||
+      vocab_size != engine->model.vocab_size ||
+      end_sample <= engine->processed_samples) {
+    if (out_detected != NULL) {
+      *out_detected = 0;
+    }
+    return KWS_EINVAL;
+  }
+  return process_decoder_frame(engine, logits, vocab_size, speech_active,
+                               end_sample, out_detection, out_detected);
 }
 
 uint64_t kws_engine_processed_samples(const kws_engine_t *engine) {
