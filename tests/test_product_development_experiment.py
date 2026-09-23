@@ -27,6 +27,16 @@ def main() -> int:
     assert ".github/workflows/model-training.yml" in workflow
     assert "--defer-qualification" in workflow
     assert "--stop-after-development-eval" in workflow
+    assert "kws_posterior_dump" in workflow
+    assert "kws_decoder_replay" in workflow
+    assert workflow.count("--posterior-dump build/kws_posterior_dump") == 2
+    assert workflow.count("--decoder-replay build/kws_decoder_replay") == 2
+    assert workflow.count('--posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"') == 2
+    assert "posterior-replay-cache-summary-v1" in workflow
+    assert "'posterior_cache': posterior_cache is not None" in workflow
+    assert "'posterior_cache':posterior_cache" in workflow
+    assert "posterior-cache/**/*.kwtr" in workflow
+    assert "posterior-cache/**/*.json" in workflow
     assert "qualification.references.jsonl" not in workflow
     assert "formal-qualification" not in workflow
     assert workflow.count("ref: ${{ github.event.pull_request.head.sha }}") == 2

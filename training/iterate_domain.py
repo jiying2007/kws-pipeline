@@ -76,6 +76,46 @@ def repo_path(value: str) -> pathlib.Path:
     return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
 
 
+def resolve_posterior_replay(
+    posterior_dump: pathlib.Path | None,
+    decoder_replay: pathlib.Path | None,
+    posterior_cache: pathlib.Path | None,
+) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None:
+    values = (posterior_dump, decoder_replay, posterior_cache)
+    if all(value is None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise ValueError(
+            "posterior replay requires --posterior-dump, --decoder-replay, "
+            "and --posterior-cache together"
+        )
+    dump = posterior_dump.resolve()
+    replay = decoder_replay.resolve()
+    cache = posterior_cache.resolve()
+    if not dump.is_file():
+        raise ValueError("posterior dump tool does not exist")
+    if not replay.is_file():
+        raise ValueError("decoder replay tool does not exist")
+    cache.mkdir(parents=True, exist_ok=True)
+    return dump, replay, cache
+
+
+def posterior_replay_cli_args(
+    posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None,
+) -> list[str]:
+    if posterior_replay is None:
+        return []
+    dump, replay, cache = posterior_replay
+    return [
+        "--posterior-dump",
+        str(dump),
+        "--decoder-replay",
+        str(replay),
+        "--posterior-cache",
+        str(cache),
+    ]
+
+
 def keyword_rows(path: pathlib.Path) -> list[dict]:
     rows: list[dict] = []
     for line_no, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -151,6 +191,7 @@ def evaluate(
     pack: pathlib.Path,
     references: pathlib.Path,
     output: pathlib.Path,
+    posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None = None,
 ) -> tuple[dict, dict]:
     output.mkdir(parents=True, exist_ok=True)
     detections = output / "detections.jsonl"
@@ -159,24 +200,24 @@ def evaluate(
     false_positives = output / "false-positives.jsonl"
     false_rejects = output / "false-rejects.jsonl"
     domains = output / "domains.json"
-    run(
-        [
-            sys.executable,
-            str(EVAL / "run_corpus.py"),
-            "--runner",
-            str(runner),
-            "--model",
-            str(model),
-            "--keywords",
-            str(pack),
-            "--references",
-            str(references),
-            "--detections",
-            str(detections),
-            "--provenance",
-            str(provenance),
-        ]
-    )
+    corpus_command = [
+        sys.executable,
+        str(EVAL / "run_corpus.py"),
+        "--runner",
+        str(runner),
+        "--model",
+        str(model),
+        "--keywords",
+        str(pack),
+        "--references",
+        str(references),
+        "--detections",
+        str(detections),
+        "--provenance",
+        str(provenance),
+    ]
+    corpus_command.extend(posterior_replay_cli_args(posterior_replay))
+    run(corpus_command)
     run(
         [
             sys.executable,
@@ -431,6 +472,7 @@ def calibrate(
     rounds: int,
     gates: dict,
     parallel_trials: int = 1,
+    posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None = None,
 ) -> tuple[pathlib.Path, pathlib.Path, dict, dict]:
     current = keyword_rows(source_keywords)
     if isinstance(parallel_trials, bool) or not 1 <= int(parallel_trials) <= 4:
@@ -472,6 +514,7 @@ def calibrate(
                         pack=pack,
                         references=references,
                         output=trial_dir / "eval",
+                        posterior_replay=posterior_replay,
                     )
                     with trial_cache_lock:
                         existing = trial_cache.get(vector)
@@ -522,6 +565,7 @@ def calibrate(
         pack=pack,
         references=references,
         output=output / "final-eval",
+        posterior_replay=posterior_replay,
     )
     base["calibrated_thresholds"] = {
         str(row["id"]): float(row["threshold"]) for row in current
@@ -732,6 +776,9 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", type=pathlib.Path)
+    parser.add_argument("--posterior-dump", type=pathlib.Path)
+    parser.add_argument("--decoder-replay", type=pathlib.Path)
+    parser.add_argument("--posterior-cache", type=pathlib.Path)
     parser.add_argument(
         "--defer-qualification",
         action="store_true",
@@ -749,6 +796,11 @@ def main() -> int:
     if not runner.is_file():
         raise ValueError("runtime runner does not exist")
     work = safe_reset(args.work_dir or pathlib.Path(cfg.get("domain_work_dir", "build/domain-loop")))
+    posterior_replay = resolve_posterior_replay(
+        args.posterior_dump,
+        args.decoder_replay,
+        args.posterior_cache,
+    )
     tokens = repo_path(str(cfg["tokens"]))
     keywords = repo_path(str(cfg["keywords"]))
     iteration = cfg.get("domain_iteration", {})
@@ -903,6 +955,7 @@ def main() -> int:
                     rounds=coordinate_rounds,
                     gates=gates,
                     parallel_trials=calibration_parallel_trials,
+                    posterior_replay=posterior_replay,
                 )
                 test_base, test_domains = evaluate(
                     runner=runner,
@@ -910,6 +963,7 @@ def main() -> int:
                     pack=pack,
                     references=dataset_dir / "test.references.jsonl",
                     output=candidate_dir / "test",
+                    posterior_replay=posterior_replay,
                 )
                 score_value = objective(cal_base, cal_domains, gates) + objective(test_base, test_domains, gates)
                 record = {
@@ -1049,6 +1103,7 @@ def main() -> int:
             pack=best_pack,
             references=qualification_dataset / "qualification.references.jsonl",
             output=best_dir / "qualification",
+            posterior_replay=posterior_replay,
         )
         qualification_qualified = base_gate(qualification_base, gates) and domain_gate(
             qualification_domains, gates

@@ -24,6 +24,7 @@ from iterate_domain import (
     gate_values,
     objective,
     repo_path,
+    resolve_posterior_replay,
     run,
     sha256_file,
     train_acoustic_seed_offset,
@@ -418,6 +419,9 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
+    parser.add_argument("--posterior-dump", type=pathlib.Path)
+    parser.add_argument("--decoder-replay", type=pathlib.Path)
+    parser.add_argument("--posterior-cache", type=pathlib.Path)
     parser.add_argument(
         "--stop-after-development-eval",
         action="store_true",
@@ -428,6 +432,11 @@ def main() -> int:
     config_path = args.config.resolve()
     runner = args.runner.resolve()
     work = args.work_dir.resolve()
+    posterior_replay = resolve_posterior_replay(
+        args.posterior_dump,
+        args.decoder_replay,
+        args.posterior_cache,
+    )
     cfg = load_config(config_path)
     if str(cfg.get("domain_iteration", {}).get("backend")) != "torch_ctc":
         raise ValueError("adversarial refinement requires torch_ctc backend")
@@ -561,6 +570,7 @@ def main() -> int:
         rounds=coordinate_rounds,
         gates=gates,
         parallel_trials=calibration_parallel_trials,
+        posterior_replay=posterior_replay,
     )
     progress.finish("calibration")
     progress.begin("test-evaluation")
@@ -570,6 +580,7 @@ def main() -> int:
         pack=pack,
         references=dataset / "test.references.jsonl",
         output=candidate_dir / "test",
+        posterior_replay=posterior_replay,
     )
     progress.finish("test-evaluation")
     cal_gate = _strict(cal_base, cal_domains, gates)
@@ -697,6 +708,7 @@ def main() -> int:
         pack=pack,
         references=mining_qualification / "qualification.references.jsonl",
         output=mining_eval,
+        posterior_replay=posterior_replay,
     )
     mining_qualification_qualified = _strict(mining_qual_base, mining_qual_domains, gates)
     qualification_repair = None
@@ -747,6 +759,7 @@ def main() -> int:
             rounds=coordinate_rounds,
             gates=gates,
             parallel_trials=calibration_parallel_trials,
+            posterior_replay=posterior_replay,
         )
         repaired_test_base, repaired_test_domains = evaluate(
             runner=runner,
@@ -754,6 +767,7 @@ def main() -> int:
             pack=repaired_pack,
             references=dataset / "test.references.jsonl",
             output=repair_dir / "test",
+            posterior_replay=posterior_replay,
         )
         repaired_cal_gate = _strict(repaired_cal_base, repaired_cal_domains, gates)
         repaired_test_gate = _strict(repaired_test_base, repaired_test_domains, gates)
@@ -780,6 +794,7 @@ def main() -> int:
             pack=repaired_pack,
             references=development_qualification / "qualification.references.jsonl",
             output=repair_dir / "development-qualification-validation",
+            posterior_replay=posterior_replay,
         )
         repaired_qual_gate = _strict(repaired_qual_base, repaired_qual_domains, gates)
         qualification_repair = {
@@ -929,6 +944,7 @@ def main() -> int:
         pack=best / "keywords.kwk",
         references=development_qualification / "qualification.references.jsonl",
         output=best / "qualification",
+        posterior_replay=posterior_replay,
     )
     qualification_qualified = _strict(canonical_qual_base, canonical_qual_domains, gates)
     manifest["qualification"] = canonical_qual_base
