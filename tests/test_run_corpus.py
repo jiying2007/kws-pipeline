@@ -178,6 +178,8 @@ def main() -> int:
                 "--posterior-cache", str(posterior_cache),
                 "--decoder-state-retention", "0.91",
                 "--decoder-refractory-ms", "250",
+                "--decoder-blank-retention", "0.85",
+                "--decoder-fuzzy-child-cost-log", "-4.0",
             ],
             env=env,
         )
@@ -192,6 +194,8 @@ def main() -> int:
         assert cached_second["decoder_replay_overrides"] == {
             "state_retention": 0.91,
             "refractory_ms": 250,
+            "blank_retention": 0.85,
+            "fuzzy_child_cost_log": -4.0,
         }
         assert cached_second["posterior_traces"][0]["trace_sha256"] == first_trace_sha
         assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
