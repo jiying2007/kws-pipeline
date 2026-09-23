@@ -176,6 +176,8 @@ def main() -> int:
                 "--posterior-dump", str(posterior_dump),
                 "--decoder-replay", str(decoder_replay),
                 "--posterior-cache", str(posterior_cache),
+                "--decoder-state-retention", "0.91",
+                "--decoder-refractory-ms", "250",
             ],
             env=env,
         )
@@ -187,8 +189,33 @@ def main() -> int:
         assert cached_rows[0]["keyword_id"] == 2
         assert cached_second["posterior_cache_hits"] == 1
         assert cached_second["posterior_cache_misses"] == 0
+        assert cached_second["decoder_replay_overrides"] == {
+            "state_retention": 0.91,
+            "refractory_ms": 250,
+        }
         assert cached_second["posterior_traces"][0]["trace_sha256"] == first_trace_sha
         assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
+
+        override_without_replay = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "eval" / "run_corpus.py"),
+                "--runner", str(runner),
+                "--model", str(model),
+                "--keywords", str(keywords),
+                "--references", str(references),
+                "--audio-root", str(root),
+                "--detections", str(detections),
+                "--decoder-state-retention", "0.91",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        assert override_without_replay.returncode != 0
+        assert "decoder replay overrides require posterior replay cache mode" in (
+            override_without_replay.stderr + override_without_replay.stdout
+        )
 
         original = audio.read_bytes()
         audio.write_bytes(original[:-2] + b"\x01\x00")
