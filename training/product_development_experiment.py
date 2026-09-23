@@ -35,6 +35,7 @@ ALLOWED_OVERRIDES = {
         "enum",
         tuple(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES)),
     ),
+    "domain_iteration.base_failure_replay_enabled": ("bool",),
 }
 
 
@@ -102,6 +103,10 @@ def verify_spec(path: pathlib.Path) -> dict:
                 raise ValueError(
                     f"experiment override {key} must be one of {', '.join(choices)}"
                 )
+            normalized[key] = raw
+        elif kind == "bool":
+            if not isinstance(raw, bool):
+                raise ValueError(f"experiment override {key} must be boolean")
             normalized[key] = raw
         else:
             raise ValueError(f"unsupported experiment override contract for {key}")
