@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "cancel",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Cancellation sentinel: fail closed in resolve so the previous in-progress experiment is cancelled by PR concurrency before any training stage.",
+  "config_overrides": {
+    "train.ordered_token_scope": "all-nonempty-targets-v1"
+  }
+}
