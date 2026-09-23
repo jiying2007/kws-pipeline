@@ -367,6 +367,7 @@ jobs:
             build/model-training-preflight/domain-loop-progress.jsonl
             build/model-training-preflight/adversarial-refinement/preflight-summary.json
             build/model-training-preflight/adversarial-refinement/progress.json
+            build/model-training-preflight/adversarial-lexicon/*/adversarial-lexicon-timing.json
             build/model-training-preflight/product-development-preflight.json
           if-no-files-found: warn
           retention-days: 14
