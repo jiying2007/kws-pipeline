@@ -7,10 +7,15 @@ import torch
 import torch.nn.functional as F
 
 from completion_loss import strict_prefix_completion_loss
-from objective_config import optional_objective_cli_args, path_purity_settings
+from objective_config import (
+    optional_objective_cli_args,
+    ordered_token_exact_wake_only_setting,
+    path_purity_settings,
+)
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from train_ctc import (
+    exact_keyword_sample_mask,
     normalized_weighted_mean,
     ordered_token_loss,
     sample_weight_statistics,
@@ -116,6 +121,20 @@ def main() -> int:
         assert "path_purity_loss_weight" in str(exc)
     else:
         raise AssertionError("negative path-purity objective weight was accepted")
+
+    exact_only, exact_configured = ordered_token_exact_wake_only_setting({})
+    assert exact_only is False and exact_configured is False
+    assert optional_objective_cli_args(
+        {"ordered_token_exact_wake_only": True}
+    ) == ["--ordered-token-exact-wake-only"]
+    try:
+        ordered_token_exact_wake_only_setting(
+            {"ordered_token_exact_wake_only": 1}
+        )
+    except ValueError as exc:
+        assert "must be boolean" in str(exc)
+    else:
+        raise AssertionError("non-boolean ordered-token scope was accepted")
 
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])
@@ -303,6 +322,16 @@ def main() -> int:
         torch.tensor([4.25, 2.75, 1.0, 1.0], dtype=torch.float32),
     )
 
+    exact_mask = exact_keyword_sample_mask(
+        wake_targets,
+        wake_lengths,
+        [[1, 2, 3, 4], [3, 4, 3, 4]],
+    )
+    assert torch.equal(
+        exact_mask,
+        torch.tensor([True, True, False, False], dtype=torch.bool),
+    )
+
     stats = sample_weight_statistics(
         [
             (pathlib.Path("wake1.wav"), [1, 2, 3, 4]),
@@ -320,6 +349,8 @@ def main() -> int:
     assert stats["rows"] == 4
     assert stats["nonempty_rows"] == 3
     assert stats["exact_wake_rows"] == 2
+    assert abs(float(stats["exact_wake_weight_sum"]) - 12.0) < 1.0e-12
+    assert abs(float(stats["exact_wake_mean_weight"]) - 6.0) < 1.0e-12
     assert abs(float(stats["all_weight_sum"]) - 15.0) < 1.0e-12
     assert abs(float(stats["all_mean_weight"]) - 3.75) < 1.0e-12
     assert abs(float(stats["nonempty_weight_sum"]) - 14.0) < 1.0e-12
@@ -377,6 +408,15 @@ def main() -> int:
         torch.tensor([4.0, 1.0], dtype=torch.float32),
         normalization_mean_weight=2.5,
     )
+    wake_only_ordered, wake_only_correct, wake_only_total = ordered_token_loss(
+        ordered_log_probs,
+        ordered_targets,
+        ordered_input_lengths,
+        ordered_target_lengths,
+        torch.tensor([4.0, 1.0], dtype=torch.float32),
+        normalization_mean_weight=4.0,
+        sample_mask=torch.tensor([True, False], dtype=torch.bool),
+    )
     ordered_first, _, _ = ordered_token_loss(
         ordered_log_probs[:, :1, :],
         torch.tensor([1], dtype=torch.long),
@@ -396,6 +436,11 @@ def main() -> int:
     assert abs(float(equal_weight_ordered.item()) - float(unweighted_ordered.item())) < 1.0e-7
     assert float(wake_weighted_ordered.item()) > float(unweighted_ordered.item())
     assert abs(float(normalized_ordered.item()) - float(wake_weighted_ordered.item())) < 1.0e-7
+    assert wake_only_total == 1
+    assert wake_only_correct == 0
+    assert abs(
+        float(wake_only_ordered.item()) - float(ordered_first.item())
+    ) < 1.0e-7
     assert abs(
         float(normalized_ordered.item())
         - float(((ordered_first + ordered_second) / 2.0).item())
