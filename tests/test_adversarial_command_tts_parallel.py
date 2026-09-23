@@ -197,6 +197,18 @@ def main() -> int:
             )
             assert tone_workers == 0
             assert not (root / "tone.wav").exists()
+        source = (ROOT / "training/adversarial_lexicon.py").read_text(
+            encoding="utf-8"
+        )
+        for key in (
+            '"probe_tts_prerender"',
+            '"probe_render_and_score"',
+            '"replay_tts_prerender"',
+            '"replay_render_and_materialize"',
+            '"total_to_manifest"',
+        ):
+            assert key in source
+
     finally:
         adversarial.render_command_tts = original_render
         adversarial.augment = original_augment
