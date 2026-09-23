@@ -52,6 +52,17 @@ def main() -> int:
     assert "threshold-wide-sweep.json" in workflow
     assert "Diagnose recalibrated decoder retention curve" in workflow
     assert "tools/diagnose_decoder_retention_recalibrated_curve.py" in workflow
+    assert "'--development-manifest',str(root/'domain-loop-manifest.json')" in workflow
+    assert "'--development-authority-receipt',os.environ['KWS_EXPERIMENT_RECEIPT']" in workflow
+    assert "'--round-index',str(round_index)" in workflow
+    assert "'--diagnostic-round-selection-policy','refinement-source-retention-v1'" in workflow
+    retention_diagnostic = (
+        ROOT / "tools/diagnose_decoder_retention_recalibrated_curve.py"
+    ).read_text(encoding="utf-8")
+    assert "development_round_evidence" in retention_diagnostic
+    assert "calibration references do not match development manifest" in retention_diagnostic
+    assert "test references do not match development manifest" in retention_diagnostic
+    assert '"development_round_evidence": development_evidence' in retention_diagnostic
     assert "retentions=['0.85','0.90','0.94','0.97','0.99']" in workflow
     assert "'shipping_default_retention':0.94" in workflow
     assert "'selection_feedback_allowed':False" in workflow
