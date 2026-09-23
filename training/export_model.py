@@ -23,6 +23,8 @@ from objective_contract import (
     ORDERED_TOKEN_SCOPES,
     PATH_PURITY_MARGIN_MAX,
     PATH_PURITY_POLICY,
+    SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
 )
 
 MODEL_VERSION = 2
@@ -247,6 +249,32 @@ def training_metadata(checkpoint: dict) -> dict:
         if ordered_scope not in ORDERED_TOKEN_SCOPES:
             raise ValueError("checkpoint ordered_token_scope is unsupported")
         result["ordered_token_scope"] = ordered_scope
+
+    negative_policy = checkpoint.get("sequence_margin_negative_policy")
+    negative_policy_scope = checkpoint.get("sequence_margin_negative_policy_scope")
+    result["sequence_margin_negative_policy_recorded"] = negative_policy is not None
+    if negative_policy is None:
+        if negative_policy_scope is not None:
+            raise ValueError(
+                "checkpoint sequence-margin negative policy scope exists without policy"
+            )
+        result["sequence_margin_negative_policy"] = (
+            SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT
+        )
+    else:
+        negative_policy = str(negative_policy)
+        if negative_policy not in SEQUENCE_MARGIN_NEGATIVE_POLICIES:
+            raise ValueError(
+                "checkpoint sequence_margin_negative_policy is unsupported"
+            )
+        if negative_policy_scope != "decoder-search-only-no-speech-active-gate-v1":
+            raise ValueError(
+                "checkpoint sequence-margin negative policy scope is unsupported"
+            )
+        result["sequence_margin_negative_policy"] = negative_policy
+        result["sequence_margin_negative_policy_scope"] = str(
+            negative_policy_scope
+        )
 
     path_purity_fields = (
         "path_purity_loss_weight",
