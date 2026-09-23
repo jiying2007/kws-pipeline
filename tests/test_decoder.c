@@ -284,6 +284,72 @@ static void test_grace_policy_holds_then_emits(void) {
   CHECK(keyword_id == 20u);
 }
 
+
+static void test_debug_blank_retention_changes_long_blank_gap_survival(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = keyword(126u, tokens, 2u, 0.10f);
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  kws_decoder_init(&decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+  CHECK(kws_decoder_debug_set_search_policy(&decoder, 0.50f, -8.25f) == KWS_OK);
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  for (int i = 0; i < 24; ++i) {
+    set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
+    CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  }
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+
+  CHECK(kws_decoder_debug_set_search_policy(&decoder, 0.95f, -8.25f) == KWS_OK);
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  for (int i = 0; i < 24; ++i) {
+    set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
+    CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  }
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 126u);
+}
+
+static void test_debug_fuzzy_cost_changes_two_nontop_advances(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u, 3u};
+  kws_keyword_t item = keyword(127u, tokens, 3u, 0.10f);
+  float logits[5];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  kws_decoder_init(&decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 5u) == KWS_OK);
+  CHECK(kws_decoder_debug_set_search_policy(&decoder, 0.70f, -8.25f) == KWS_OK);
+
+  logits[0] = -8.0f; logits[1] = 8.0f; logits[2] = -8.0f;
+  logits[3] = -8.0f; logits[4] = -8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 0);
+  logits[0] = -8.0f; logits[1] = -8.0f; logits[2] = 7.0f;
+  logits[3] = -8.0f; logits[4] = 8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 0);
+  logits[2] = -8.0f; logits[3] = 7.0f; logits[4] = 8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 0);
+
+  CHECK(kws_decoder_debug_set_search_policy(&decoder, 0.70f, -4.0f) == KWS_OK);
+  logits[0] = -8.0f; logits[1] = 8.0f; logits[2] = -8.0f;
+  logits[3] = -8.0f; logits[4] = -8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 0);
+  logits[0] = -8.0f; logits[1] = -8.0f; logits[2] = 7.0f;
+  logits[3] = -8.0f; logits[4] = 8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 0);
+  logits[2] = -8.0f; logits[3] = 7.0f; logits[4] = 8.0f;
+  CHECK(kws_decoder_step(&decoder, logits, 5u, 1, &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 127u);
+}
+
 int main(void) {
   test_non_repeated_path_is_unchanged();
   test_repeated_token_requires_blank_separator();
@@ -293,6 +359,8 @@ int main(void) {
   test_blank_dominant_child_can_compete();
   test_trie_child_competes_with_global_nonblank();
   test_blank_retention_does_not_change_acoustic_confidence();
+  test_debug_blank_retention_changes_long_blank_gap_survival();
+  test_debug_fuzzy_cost_changes_two_nontop_advances();
   test_longest_prefix_waits_for_longer_keyword();
   test_longest_prefix_emits_after_blank();
   test_grace_policy_holds_then_emits();
