@@ -303,6 +303,44 @@ def verify(args: argparse.Namespace) -> dict:
                 raise ValueError(
                     "promoted product candidate ordered-token scope differs from effective config"
                 )
+        configured_negative_policy = train_config.get(
+            "sequence_margin_negative_policy"
+        )
+        provenance_negative_policy = provenance.get("training", {}).get(
+            "sequence_margin_negative_policy"
+        )
+        if configured_negative_policy is None and provenance_negative_policy is None:
+            pass
+        else:
+            expected_negative_policy = (
+                "sparse-chronological-v1"
+                if configured_negative_policy is None
+                else str(configured_negative_policy)
+            )
+            if expected_negative_policy not in {
+                "sparse-chronological-v1",
+                "runtime-executable-v1",
+            }:
+                raise ValueError(
+                    "effective sequence-margin negative policy is unsupported"
+                )
+            if provenance_negative_policy != expected_negative_policy:
+                raise ValueError(
+                    "promoted product candidate sequence-margin negative policy "
+                    "differs from effective config"
+                )
+            provenance_negative_scope = provenance.get("training", {}).get(
+                "sequence_margin_negative_policy_scope"
+            )
+            if (
+                provenance_negative_scope
+                != "decoder-search-only-no-speech-active-gate-v1"
+            ):
+                raise ValueError(
+                    "promoted product candidate sequence-margin negative policy "
+                    "scope is unsupported"
+                )
+
         normalization = weighting.get("normalization")
         if (
             not isinstance(normalization, dict)
