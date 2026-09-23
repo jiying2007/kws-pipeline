@@ -326,8 +326,7 @@ def verify(args: argparse.Namespace) -> dict:
                 )
             if provenance_negative_policy != expected_negative_policy:
                 raise ValueError(
-                    "promoted product candidate sequence-margin negative policy "
-                    "differs from effective config"
+                    "promoted product candidate sequence-margin negative policy differs from effective config"
                 )
             provenance_negative_scope = provenance.get("training", {}).get(
                 "sequence_margin_negative_policy_scope"
@@ -337,8 +336,7 @@ def verify(args: argparse.Namespace) -> dict:
                 != "decoder-search-only-no-speech-active-gate-v1"
             ):
                 raise ValueError(
-                    "promoted product candidate sequence-margin negative policy "
-                    "scope is unsupported"
+                    "promoted product candidate sequence-margin negative policy scope is unsupported"
                 )
 
         normalization = weighting.get("normalization")
