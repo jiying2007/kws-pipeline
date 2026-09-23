@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
+import math
 import pathlib
 
 import torch
@@ -14,7 +16,14 @@ from objective_config import (
     sequence_margin_negative_policy_setting,
 )
 from path_purity import ordered_path_purity_loss
-from sequence_margin import keyword_sequence_margin_loss
+from sequence_margin import (
+    RUNTIME_BLANK_RETENTION,
+    RUNTIME_FUZZY_CHILD_COST_LOG,
+    RUNTIME_MIN_PATH_RETENTION_LOG,
+    RUNTIME_ROOT_START_LOGIT_MARGIN,
+    RUNTIME_STATE_RETENTION,
+    keyword_sequence_margin_loss,
+)
 from train_ctc import (
     exact_keyword_sample_mask,
     normalized_weighted_mean,
@@ -107,6 +116,43 @@ def completion(log_probs: torch.Tensor, target: list[int]) -> torch.Tensor:
 
 
 def main() -> int:
+    contract = json.loads(
+        (pathlib.Path(__file__).resolve().parents[1] / "configs/parameter-contract.json")
+        .read_text(encoding="utf-8")
+    )
+    runtime = contract["runtime"]
+    constants = contract["algorithm_constants"]
+    assert math.isclose(
+        RUNTIME_STATE_RETENTION,
+        float(runtime["state_retention"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        math.log(RUNTIME_BLANK_RETENTION),
+        float(constants["KWS_SILENCE_RETENTION_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-9,
+    )
+    assert math.isclose(
+        RUNTIME_MIN_PATH_RETENTION_LOG,
+        float(constants["KWS_MIN_PATH_RETENTION_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        RUNTIME_ROOT_START_LOGIT_MARGIN,
+        float(constants["KWS_ROOT_START_LOGIT_MARGIN"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+    assert math.isclose(
+        RUNTIME_FUZZY_CHILD_COST_LOG,
+        float(constants["KWS_FUZZY_CHILD_RETENTION_COST_LOG"]["default"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    )
+
     assert optional_objective_cli_args({}) == []
     scope, scope_configured = ordered_token_scope_setting({})
     assert scope == "all-nonempty-targets-v1"
