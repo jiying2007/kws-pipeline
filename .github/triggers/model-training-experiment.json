@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-executable-negative-margin-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Development-only single-variable A/B after #286 showed decoder-policy relaxation cannot recover recall and #288 full-trace validation showed the runtime-executable negative scorer closely matches exact decoder search. Change only train.sequence_margin_negative_policy from the canonical sparse chronological default to runtime-executable-v1. Preserve positive wake pressure, ordered-token scope, all other objectives, data, thresholds, decoder defaults, refinement policy, qualification boundary, and shipping semantics.",
+  "config_overrides": {
+    "train.sequence_margin_negative_policy": "runtime-executable-v1"
+  }
+}
