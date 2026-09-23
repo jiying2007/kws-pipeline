@@ -227,6 +227,7 @@ jobs:
               '--test-references',str(dataset/'test.references.jsonl'),
               '--thresholds',*thresholds,
               '--development-manifest',str(root/'domain-loop-manifest.json'),
+              '--development-authority-receipt',os.environ['KWS_EXPERIMENT_RECEIPT'],
               '--development-domain-summary',str(domain_summary),
               '--round-index',str(round_index),
               '--diagnostic-round-selection-policy','refinement-source-saturation-v1',
