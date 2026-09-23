@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "decoder-policy-replay-v2",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Development-only bounded decoder-policy diagnosis after #281 showed threshold-only tradeoff failure, state-retention invariance, high blank-top1 prevalence, and acoustic target subsequences lost by runtime decoding. Preserve canonical acoustic training math and run only the authority-bound 3x2 blank-retention x fuzzy-child-cost posterior-replay grid with independent threshold recalibration; #285 isolates this mode from adversarial refinement. No selection feedback, qualification, promotion, or shipping parameter change.",
+  "config_overrides": {
+    "train.ordered_token_scope": "all-nonempty-targets-v1"
+  }
+}
