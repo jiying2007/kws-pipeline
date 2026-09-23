@@ -424,6 +424,9 @@ def validate_torch_iteration_policy() -> None:
     product_iterator = (ROOT / "training" / "iterate_domain.py").read_text(
         encoding="utf-8"
     )
+    product_experiment_workflow = (
+        ROOT / ".github" / "workflows" / "product-development-experiment.yml"
+    ).read_text(encoding="utf-8")
     recalibrated_retention = (
         ROOT / "tools" / "diagnose_decoder_retention_recalibrated_curve.py"
     ).read_text(encoding="utf-8")
@@ -460,9 +463,18 @@ def validate_torch_iteration_policy() -> None:
     assert 'parser.add_argument("--decoder-replay"' in threshold_diagnostic
     assert 'parser.add_argument("--posterior-cache"' in threshold_diagnostic
     assert (
+        'parser.add_argument("--development-authority-receipt"'
+        in threshold_diagnostic
+    )
+    assert "exact-pr-head-development-receipt-v1" in threshold_diagnostic
+    assert "product-development-pr-head-experiment-v1" in threshold_diagnostic
+    assert "development authority receipt config does not match manifest" in threshold_diagnostic
+    assert (
         '"posterior_replay_enabled": posterior_replay is not None'
         in threshold_diagnostic
     )
+    assert "'--development-authority-receipt'" in product_experiment_workflow
+    assert "KWS_EXPERIMENT_RECEIPT" in product_experiment_workflow
     score_block = product_iterator.split('str(EVAL / "score_events.py")', 1)[1]
     assert "suppress_stdout=True" in score_block.split('str(EVAL / "domain_metrics.py")', 1)[0]
     domain_block = product_iterator.split('str(EVAL / "domain_metrics.py")', 1)[1]
