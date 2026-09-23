@@ -597,6 +597,22 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             "consumed_by_this_run": formal_cohort_generated,
         },
         "development": {
+            "split_roles": (
+                manifest.get(
+                    "development_split_roles",
+                    {
+                        "train": "development-training",
+                        "calibration": "development-calibration",
+                        "test": "development-feedback",
+                    },
+                )
+                if isinstance(manifest, dict)
+                else {
+                    "train": "development-training",
+                    "calibration": "development-calibration",
+                    "test": "development-feedback",
+                }
+            ),
             "qualified": manifest.get("development_qualified") if isinstance(manifest, dict) else None,
             "qualification_qualified": manifest.get("qualification_qualified") if isinstance(manifest, dict) else None,
             "candidate_selection": selection if isinstance(selection, dict) else None,

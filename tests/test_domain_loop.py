@@ -431,6 +431,15 @@ def validate_torch_iteration_policy() -> None:
         ROOT / "tools" / "diagnose_kws_threshold_operating_curve.py"
     ).read_text(encoding="utf-8")
     assert "merge_domain_metrics(" in product_iterator
+    assert '"development_split_roles": {' in product_iterator
+    assert '"train": "development-training"' in product_iterator
+    assert '"calibration": "development-calibration"' in product_iterator
+    assert '"test": "development-feedback"' in product_iterator
+    compact_diagnostics = (
+        ROOT / "tools" / "build_training_diagnostics.py"
+    ).read_text(encoding="utf-8")
+    assert '"split_roles": (' in compact_diagnostics
+    assert '"test": "development-feedback"' in compact_diagnostics
     assert 'round_best["calibration_domains"]' in product_iterator
     assert 'round_best["test_domains"]' in product_iterator
     assert product_iterator.count("suppress_stdout=True") == 2

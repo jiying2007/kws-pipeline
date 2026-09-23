@@ -1151,6 +1151,11 @@ def main() -> int:
         "development_qualified": development_qualified,
         "qualification_deferred": qualification_deferred,
         "qualification_qualified": qualification_qualified,
+        "development_split_roles": {
+            "train": "development-training",
+            "calibration": "development-calibration",
+            "test": "development-feedback",
+        },
         "candidate_selection": {
             "policy": "latest-strict-gate-passing-round",
             "eligible_rounds": eligible_rounds,
