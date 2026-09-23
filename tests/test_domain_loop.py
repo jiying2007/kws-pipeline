@@ -424,6 +424,9 @@ def validate_torch_iteration_policy() -> None:
     product_iterator = (ROOT / "training" / "iterate_domain.py").read_text(
         encoding="utf-8"
     )
+    recalibrated_retention = (
+        ROOT / "tools" / "diagnose_decoder_retention_recalibrated_curve.py"
+    ).read_text(encoding="utf-8")
     threshold_diagnostic = (
         ROOT / "tools" / "diagnose_kws_threshold_operating_curve.py"
     ).read_text(encoding="utf-8")
@@ -435,6 +438,13 @@ def validate_torch_iteration_policy() -> None:
     assert "exact-keyword-threshold-vector-v1" in product_iterator
     assert 'base["calibration_trial_cache_hits"]' in product_iterator
     assert 'base["calibration_unique_trial_vectors"]' in product_iterator
+    assert "decoder_state_retention=decoder_state_retention" in product_iterator
+    assert "decoder_refractory_ms=decoder_refractory_ms" in product_iterator
+    assert "thresholds_recalibrated_per_retention" in recalibrated_retention
+    assert "selection_feedback_allowed" in recalibrated_retention
+    assert "decoder_state_retention=retention" in recalibrated_retention
+    assert "calibrate(" in recalibrated_retention
+    assert "evaluate(" in recalibrated_retention
     assert "resolve_posterior_replay" in threshold_diagnostic
     assert threshold_diagnostic.count("posterior_replay=posterior_replay") == 2
     assert 'parser.add_argument("--posterior-dump"' in threshold_diagnostic
@@ -726,6 +736,27 @@ def validate_torch_iteration_policy() -> None:
 
 def main() -> int:
     assert posterior_replay_cli_args(None) == []
+    try:
+        posterior_replay_cli_args(None, decoder_state_retention=0.94)
+    except ValueError as exc:
+        assert "require posterior replay" in str(exc)
+    else:
+        raise AssertionError("decoder override without posterior replay was accepted")
+    replay_args = posterior_replay_cli_args(
+        (
+            pathlib.Path("/tmp/posterior-dump"),
+            pathlib.Path("/tmp/decoder-replay"),
+            pathlib.Path("/tmp/posterior-cache"),
+        ),
+        decoder_state_retention=0.94,
+        decoder_refractory_ms=1200,
+    )
+    assert replay_args[-4:] == [
+        "--decoder-state-retention",
+        "0.94",
+        "--decoder-refractory-ms",
+        "1200",
+    ]
     with tempfile.TemporaryDirectory(prefix="posterior-replay-contract-") as td:
         root = pathlib.Path(td)
         dump = root / "dump"
