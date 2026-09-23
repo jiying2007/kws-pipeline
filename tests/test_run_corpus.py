@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import stat
 import subprocess
@@ -95,6 +96,99 @@ def main() -> int:
         assert result["audio_files"] == identity["recordings"]
         assert result["recordings"] == 1
         assert result["detections"] == 1
+
+        posterior_dump = root / "posterior_dump.py"
+        decoder_replay = root / "decoder_replay.py"
+        posterior_cache = root / "posterior-cache"
+        dump_count = root / "dump-count.txt"
+
+        posterior_dump.write_text(
+            "#!/usr/bin/env python3\n"
+            "import hashlib, json, os, pathlib, sys\n"
+            "model=pathlib.Path(sys.argv[1]); audio=pathlib.Path(sys.argv[2]); trace=pathlib.Path(sys.argv[3])\n"
+            "model_sha=hashlib.sha256(model.read_bytes()).hexdigest()\n"
+            "audio_sha=hashlib.sha256(audio.read_bytes()).hexdigest()\n"
+            "trace.write_bytes(('trace-v1:'+model_sha+':'+audio_sha).encode())\n"
+            "trace_sha=hashlib.sha256(trace.read_bytes()).hexdigest()\n"
+            "count=pathlib.Path(os.environ['DUMP_COUNT_FILE'])\n"
+            "count.write_text(count.read_text()+'1\\n' if count.exists() else '1\\n')\n"
+            "print(json.dumps({'schema_version':1,'evidence_class':'kws-posterior-trace-v1',"
+            "'model_sha256':model_sha,'trace_sha256':trace_sha,'frames':3,'vocab_size':4}))\n",
+            encoding="utf-8",
+        )
+        decoder_replay.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, pathlib, sys\n"
+            "pack=pathlib.Path(sys.argv[2]).read_bytes()\n"
+            "keyword=2 if pack.endswith(b'v2') else 1\n"
+            "print(json.dumps({'recording':sys.argv[4],'keyword_id':keyword,"
+            "'time_s':1.0,'confidence':0.8}))\n",
+            encoding="utf-8",
+        )
+        posterior_dump.chmod(posterior_dump.stat().st_mode | stat.S_IXUSR)
+        decoder_replay.chmod(decoder_replay.stat().st_mode | stat.S_IXUSR)
+        env = dict(os.environ)
+        env["DUMP_COUNT_FILE"] = str(dump_count)
+
+        cached_provenance = root / "cached-provenance.json"
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(ROOT / "eval" / "run_corpus.py"),
+                "--runner", str(runner),
+                "--model", str(model),
+                "--keywords", str(keywords),
+                "--references", str(references),
+                "--audio-root", str(root),
+                "--detections", str(detections),
+                "--provenance", str(cached_provenance),
+                "--posterior-dump", str(posterior_dump),
+                "--decoder-replay", str(decoder_replay),
+                "--posterior-cache", str(posterior_cache),
+            ],
+            env=env,
+        )
+        cached_first = json.loads(cached_provenance.read_text(encoding="utf-8"))
+        cached_rows = [
+            json.loads(line)
+            for line in detections.read_text(encoding="utf-8").splitlines()
+        ]
+        assert cached_rows[0]["keyword_id"] == 1
+        assert cached_first["evaluation_mode"] == "posterior-replay-cache-v1"
+        assert cached_first["posterior_cache_hits"] == 0
+        assert cached_first["posterior_cache_misses"] == 1
+        assert len(cached_first["posterior_traces"]) == 1
+        first_trace_sha = cached_first["posterior_traces"][0]["trace_sha256"]
+        assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
+
+        keywords.write_bytes(b"pack-fixture-v2")
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(ROOT / "eval" / "run_corpus.py"),
+                "--runner", str(runner),
+                "--model", str(model),
+                "--keywords", str(keywords),
+                "--references", str(references),
+                "--audio-root", str(root),
+                "--detections", str(detections),
+                "--provenance", str(cached_provenance),
+                "--posterior-dump", str(posterior_dump),
+                "--decoder-replay", str(decoder_replay),
+                "--posterior-cache", str(posterior_cache),
+            ],
+            env=env,
+        )
+        cached_second = json.loads(cached_provenance.read_text(encoding="utf-8"))
+        cached_rows = [
+            json.loads(line)
+            for line in detections.read_text(encoding="utf-8").splitlines()
+        ]
+        assert cached_rows[0]["keyword_id"] == 2
+        assert cached_second["posterior_cache_hits"] == 1
+        assert cached_second["posterior_cache_misses"] == 0
+        assert cached_second["posterior_traces"][0]["trace_sha256"] == first_trace_sha
+        assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
 
         original = audio.read_bytes()
         audio.write_bytes(original[:-2] + b"\x01\x00")
