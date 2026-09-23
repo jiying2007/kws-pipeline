@@ -24,12 +24,14 @@ typedef struct kws_trace_writer {
   FILE *stream;
   kws_trace_header_t header;
   uint64_t frames_written;
+  uint64_t last_end_sample;
 } kws_trace_writer_t;
 
 typedef struct kws_trace_reader {
   FILE *stream;
   kws_trace_header_t header;
   uint64_t frames_read;
+  uint64_t last_end_sample;
 } kws_trace_reader_t;
 
 int kws_trace_writer_open(kws_trace_writer_t *writer,
