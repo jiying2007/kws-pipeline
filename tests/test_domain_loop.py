@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "training"))
 
 import development_resume as development_resume  # noqa: E402
 import hard_negative_replay as hard_negative_replay_module  # noqa: E402
+from development_failure_replay import failure_replay_focus_rows  # noqa: E402
 from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
 from hard_negative_replay import (  # noqa: E402
     _render_command_tts_cached,
@@ -135,8 +136,31 @@ def validate_clean_tts_round_cache() -> None:
         hard_negative_replay_module.render_command_tts = original
 
 
+def validate_failure_replay_focus_contract() -> None:
+    evidence = {
+        "enabled": True,
+        "examples": 4,
+        "examples_per_failure": 2,
+        "manifest": "/tmp/failure-replay.tsv",
+        "selected": [
+            {"focus_keyword_ids": [1]},
+            {"focus_keyword_ids": [1, 2]},
+        ],
+    }
+    focus = failure_replay_focus_rows(evidence)
+    rows = focus[pathlib.Path("/tmp/failure-replay.tsv").resolve()]
+    assert rows == [(1,), (1,), (1, 2), (1, 2)]
+    try:
+        failure_replay_focus_rows({**evidence, "examples": 3})
+    except ValueError as exc:
+        assert "row count drifted" in str(exc)
+    else:
+        raise AssertionError("failure replay focus row drift was accepted")
+
+
 def validate_torch_iteration_policy() -> None:
     validate_clean_tts_round_cache()
+    validate_failure_replay_focus_contract()
     development_resume.self_test()
     for iterator in (
         ROOT / "training" / "iterate_gru_development.py",
@@ -447,6 +471,12 @@ def validate_torch_iteration_policy() -> None:
     assert 'round_best["test_domains"]' in product_iterator
     assert product_iterator.count("suppress_stdout=True") == 2
     assert "optional_objective_cli_args(train)" in product_iterator
+    assert "domain_iteration.base_failure_replay_enabled must be boolean" in product_iterator
+    assert "render_development_failure_replay(" in product_iterator
+    assert "base failure replay must use only prior development rounds" in product_iterator
+    assert "failure_replay_focus_rows(base_failure_replay)" in product_iterator
+    assert '"base_failure_replay_examples"' in product_iterator
+    assert '"base_failure_replay_source_rounds"' in product_iterator
     assert "exact-keyword-threshold-vector-v1" in product_iterator
     assert 'base["calibration_trial_cache_hits"]' in product_iterator
     assert 'base["calibration_unique_trial_vectors"]' in product_iterator
