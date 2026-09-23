@@ -8,7 +8,10 @@ import math
 import pathlib
 import re
 
-from objective_contract import ORDERED_TOKEN_SCOPES
+from objective_contract import (
+    ORDERED_TOKEN_SCOPES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+)
 
 SCHEMA_VERSION = 1
 EVIDENCE_CLASS = "product-development-pr-head-experiment-v1"
@@ -28,6 +31,10 @@ ALLOWED_OVERRIDES = {
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
     "train.ordered_token_scope": ("enum", tuple(sorted(ORDERED_TOKEN_SCOPES))),
+    "train.sequence_margin_negative_policy": (
+        "enum",
+        tuple(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES)),
+    ),
 }
 
 
