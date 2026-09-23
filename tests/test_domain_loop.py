@@ -424,6 +424,9 @@ def validate_torch_iteration_policy() -> None:
     product_iterator = (ROOT / "training" / "iterate_domain.py").read_text(
         encoding="utf-8"
     )
+    threshold_diagnostic = (
+        ROOT / "tools" / "diagnose_kws_threshold_operating_curve.py"
+    ).read_text(encoding="utf-8")
     assert "merge_domain_metrics(" in product_iterator
     assert 'round_best["calibration_domains"]' in product_iterator
     assert 'round_best["test_domains"]' in product_iterator
@@ -432,6 +435,15 @@ def validate_torch_iteration_policy() -> None:
     assert "exact-keyword-threshold-vector-v1" in product_iterator
     assert 'base["calibration_trial_cache_hits"]' in product_iterator
     assert 'base["calibration_unique_trial_vectors"]' in product_iterator
+    assert "resolve_posterior_replay" in threshold_diagnostic
+    assert threshold_diagnostic.count("posterior_replay=posterior_replay") == 2
+    assert 'parser.add_argument("--posterior-dump"' in threshold_diagnostic
+    assert 'parser.add_argument("--decoder-replay"' in threshold_diagnostic
+    assert 'parser.add_argument("--posterior-cache"' in threshold_diagnostic
+    assert (
+        '"posterior_replay_enabled": posterior_replay is not None'
+        in threshold_diagnostic
+    )
     score_block = product_iterator.split('str(EVAL / "score_events.py")', 1)[1]
     assert "suppress_stdout=True" in score_block.split('str(EVAL / "domain_metrics.py")', 1)[0]
     domain_block = product_iterator.split('str(EVAL / "domain_metrics.py")', 1)[1]

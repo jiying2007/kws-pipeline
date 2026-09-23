@@ -21,6 +21,7 @@ from iterate_domain import (  # noqa: E402
     evaluate,
     gate_values,
     keyword_rows,
+    resolve_posterior_replay,
     select_calibration_threshold,
     write_keywords,
 )
@@ -206,7 +207,16 @@ def main() -> int:
     )
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument("--posterior-dump", type=pathlib.Path)
+    parser.add_argument("--decoder-replay", type=pathlib.Path)
+    parser.add_argument("--posterior-cache", type=pathlib.Path)
     args = parser.parse_args()
+
+    posterior_replay = resolve_posterior_replay(
+        args.posterior_dump,
+        args.decoder_replay,
+        args.posterior_cache,
+    )
 
     for path, label in (
         (args.runner, "runner"),
@@ -298,6 +308,7 @@ def main() -> int:
             pack=pack,
             references=args.calibration_references,
             output=trial_root / "calibration",
+            posterior_replay=posterior_replay,
         )
         test_base, test_domains = evaluate(
             runner=args.runner,
@@ -305,6 +316,7 @@ def main() -> int:
             pack=pack,
             references=args.test_references,
             output=trial_root / "test",
+            posterior_replay=posterior_replay,
         )
         rows.append(
             {
@@ -381,6 +393,7 @@ def main() -> int:
         "diagnostic_only": True,
         "selection_feedback_allowed": False,
         "protected_evidence_used": False,
+        "posterior_replay_enabled": posterior_replay is not None,
         "model_sha256": model_sha256,
         "tokens_sha256": sha256_file(args.tokens),
         "keywords_sha256": sha256_file(args.keywords),
