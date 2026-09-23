@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define KWS_TRACE_HEADER_BYTES 112L
+#define KWS_TRACE_HEADER_BYTES 120L
 #define KWS_TRACE_FRAME_COUNT_OFFSET 40L
 
 static const uint8_t KWS_TRACE_MAGIC[8] = {
@@ -188,8 +188,9 @@ int kws_trace_writer_append(kws_trace_writer_t *writer,
   if (writer == NULL || writer->stream == NULL || logits == NULL ||
       vocab_size != writer->header.vocab_size ||
       (speech_active != 0 && speech_active != 1) ||
+      end_sample == 0u ||
       (writer->frames_written != 0u &&
-       end_sample <= writer->header.frame_hop_samples) ) {
+       end_sample <= writer->last_end_sample)) {
     return 0;
   }
   if (writer->frames_written != 0u) {
@@ -212,6 +213,7 @@ int kws_trace_writer_append(kws_trace_writer_t *writer,
     }
   }
   writer->frames_written++;
+  writer->last_end_sample = end_sample;
   return 1;
 }
 
@@ -270,6 +272,8 @@ int kws_trace_reader_next(kws_trace_reader_t *reader,
     return 0;
   }
   if (!read_u64_le(reader->stream, &end_sample) ||
+      end_sample == 0u ||
+      (reader->frames_read != 0u && end_sample <= reader->last_end_sample) ||
       !read_bytes(reader->stream, flags, sizeof(flags)) ||
       (flags[0] != 0u && flags[0] != 1u)) {
     return -1;
@@ -288,6 +292,7 @@ int kws_trace_reader_next(kws_trace_reader_t *reader,
   *out_end_sample = end_sample;
   *out_speech_active = (int)flags[0];
   reader->frames_read++;
+  reader->last_end_sample = end_sample;
   return 1;
 }
 
