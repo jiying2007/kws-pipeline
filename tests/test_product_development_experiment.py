@@ -57,6 +57,7 @@ def main() -> int:
                     "config_overrides": {
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.15,
+                        "train.ordered_token_scope": "exact-configured-wake-targets-v1",
                     },
                 }
             ),
@@ -101,6 +102,10 @@ def main() -> int:
         assert cfg["train"]["warm_start_epochs"] == 6
         assert cfg["train"]["path_purity_loss_weight"] == 0.1
         assert cfg["train"]["path_purity_margin"] == 0.15
+        assert (
+            cfg["train"]["ordered_token_scope"]
+            == "exact-configured-wake-targets-v1"
+        )
         assert cfg["domain_iteration"]["max_rounds"] == 2
         assert cfg["domain_iteration"]["min_rounds"] == 2
         assert cfg["domain_iteration"]["adversarial_lexicon"]["refinement_epochs"] == 6
@@ -108,6 +113,18 @@ def main() -> int:
         assert cfg["development_experiment"]["pr_head_sha"] == "2" * 40
         assert result["source_policy"] == "exact-pr-head"
         assert result["protected_evidence_used"] is False
+
+        bad = json.loads(spec.read_text(encoding="utf-8"))
+        bad["config_overrides"] = {
+            "train.ordered_token_scope": "not-a-supported-scope"
+        }
+        spec.write_text(json.dumps(bad), encoding="utf-8")
+        try:
+            verify_spec(spec)
+        except ValueError as exc:
+            assert "must be one of" in str(exc)
+        else:
+            raise AssertionError("invalid ordered-token scope was accepted")
 
         bad = json.loads(spec.read_text(encoding="utf-8"))
         bad["config_overrides"] = {"train.epochs": 99}

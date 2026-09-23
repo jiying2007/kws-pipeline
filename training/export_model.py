@@ -18,7 +18,12 @@ from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from frontend_spec import FRONTEND_IDS
-from objective_contract import PATH_PURITY_MARGIN_MAX, PATH_PURITY_POLICY
+from objective_contract import (
+    ORDERED_TOKEN_SCOPE_DEFAULT,
+    ORDERED_TOKEN_SCOPES,
+    PATH_PURITY_MARGIN_MAX,
+    PATH_PURITY_POLICY,
+)
 
 MODEL_VERSION = 2
 MODEL_HEADER_BYTES = 72
@@ -232,6 +237,16 @@ def training_metadata(checkpoint: dict) -> dict:
             raise ValueError(f"checkpoint {key} must be finite and non-negative")
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
+
+    ordered_scope = checkpoint.get("ordered_token_scope")
+    result["ordered_token_scope_recorded"] = ordered_scope is not None
+    if ordered_scope is None:
+        result["ordered_token_scope"] = ORDERED_TOKEN_SCOPE_DEFAULT
+    else:
+        ordered_scope = str(ordered_scope)
+        if ordered_scope not in ORDERED_TOKEN_SCOPES:
+            raise ValueError("checkpoint ordered_token_scope is unsupported")
+        result["ordered_token_scope"] = ordered_scope
 
     path_purity_fields = (
         "path_purity_loss_weight",

@@ -28,6 +28,9 @@ from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 from objective_contract import (
+    ORDERED_TOKEN_SCOPE_DEFAULT,
+    ORDERED_TOKEN_SCOPE_EXACT_WAKE,
+    ORDERED_TOKEN_SCOPES,
     PATH_PURITY_LOSS_WEIGHT_DEFAULT,
     PATH_PURITY_MARGIN_DEFAULT,
     PATH_PURITY_MARGIN_MAX,
@@ -550,6 +553,29 @@ def wake_example_weights(
     return torch.tensor(result, dtype=torch.float32, device=target_lengths.device)
 
 
+def exact_keyword_sample_mask(
+    targets: torch.Tensor,
+    target_lengths: torch.Tensor,
+    keyword_sequences: list[list[int]],
+) -> torch.Tensor:
+    sequences = {
+        tuple(int(value) for value in sequence) for sequence in keyword_sequences
+    }
+    if not sequences or any(not sequence for sequence in sequences):
+        raise ValueError("exact-keyword mask requires non-empty keyword sequences")
+    flat = targets.detach().cpu().tolist()
+    result: list[bool] = []
+    offset = 0
+    for raw_length in target_lengths.detach().cpu().tolist():
+        length = int(raw_length)
+        row = tuple(int(value) for value in flat[offset : offset + length])
+        result.append(row in sequences)
+        offset += length
+    if offset != len(flat):
+        raise ValueError("flattened CTC targets do not match target lengths")
+    return torch.tensor(result, dtype=torch.bool, device=target_lengths.device)
+
+
 def sample_weight_statistics(
     rows: list[tuple[pathlib.Path, list[int]]],
     keyword_sequences: list[list[int]],
@@ -578,6 +604,7 @@ def sample_weight_statistics(
     nonempty_weight_sum = 0.0
     nonempty_rows = 0
     exact_wake_rows = 0
+    exact_wake_weight_sum = 0.0
     for _, raw_tokens in rows:
         tokens = tuple(int(value) for value in raw_tokens)
         weight = positive_example_weight if tokens else 1.0
@@ -588,6 +615,7 @@ def sample_weight_statistics(
                 raise ValueError("sample-weight statistics contain invalid wake weight")
             weight *= wake_weight
             exact_wake_rows += 1
+            exact_wake_weight_sum += weight
         all_weight_sum += weight
         if tokens:
             nonempty_rows += 1
@@ -601,6 +629,12 @@ def sample_weight_statistics(
         "rows": row_count,
         "nonempty_rows": nonempty_rows,
         "exact_wake_rows": exact_wake_rows,
+        "exact_wake_weight_sum": exact_wake_weight_sum,
+        "exact_wake_mean_weight": (
+            exact_wake_weight_sum / float(exact_wake_rows)
+            if exact_wake_rows > 0
+            else None
+        ),
         "all_weight_sum": all_weight_sum,
         "nonempty_weight_sum": nonempty_weight_sum,
         "all_mean_weight": all_weight_sum / float(row_count),
@@ -632,6 +666,7 @@ def ordered_token_loss(
     target_lengths: torch.Tensor,
     sample_weights: torch.Tensor | None = None,
     normalization_mean_weight: float | None = None,
+    sample_mask: torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, int, int]:
     """Encourage each target occurrence to own a chronological region."""
     if sample_weights is not None:
@@ -639,6 +674,13 @@ def ordered_token_loss(
             raise ValueError("ordered-token sample weights must match batch size")
         if not torch.isfinite(sample_weights).all() or bool((sample_weights <= 0).any()):
             raise ValueError("ordered-token sample weights must be finite and > 0")
+    if sample_mask is not None:
+        if (
+            sample_mask.ndim != 1
+            or int(sample_mask.numel()) != int(target_lengths.numel())
+            or sample_mask.dtype != torch.bool
+        ):
+            raise ValueError("ordered-token sample mask must be a boolean batch vector")
     if normalization_mean_weight is not None and sample_weights is None:
         raise ValueError("ordered-token normalization requires sample weights")
     if normalization_mean_weight is not None and (
@@ -656,6 +698,8 @@ def ordered_token_loss(
         sample_targets = targets[offset : offset + count]
         offset += count
         if count == 0:
+            continue
+        if sample_mask is not None and not bool(sample_mask[batch_index]):
             continue
         steps = int(input_lengths[batch_index])
         if steps <= 0:
@@ -760,6 +804,11 @@ def main() -> None:
         help="JSON object mapping configured keyword id to exact-wake sample-weight override",
     )
     parser.add_argument("--ordered-token-loss-weight", type=float, default=ORDERED_TOKEN_LOSS_WEIGHT)
+    parser.add_argument(
+        "--ordered-token-scope",
+        choices=sorted(ORDERED_TOKEN_SCOPES),
+        default=ORDERED_TOKEN_SCOPE_DEFAULT,
+    )
     parser.add_argument(
         "--keyword-sequence-margin-loss-weight",
         type=float,
@@ -932,15 +981,26 @@ def main() -> None:
                 sample_weights,
                 float(weight_statistics["all_mean_weight"]),
             )
+            ordered_mask = (
+                exact_keyword_sample_mask(y, ylen, keyword_sequences)
+                if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
+                else None
+            )
+            ordered_mean_weight = (
+                weight_statistics["exact_wake_mean_weight"]
+                if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
+                else weight_statistics["nonempty_mean_weight"]
+            )
+            if ordered_mean_weight is None:
+                raise ValueError("exact-wake ordered-token scope has no exact wake examples")
             ordered_loss, batch_correct, batch_total = ordered_token_loss(
                 log_probs,
                 y,
                 xlen,
                 ylen,
                 sample_weights,
-                normalization_mean_weight=float(
-                    weight_statistics["nonempty_mean_weight"]
-                ),
+                normalization_mean_weight=float(ordered_mean_weight),
+                sample_mask=ordered_mask,
             )
             margin_per_sample = keyword_sequence_margin_loss(
                 log_probs=log_probs,
@@ -1079,6 +1139,7 @@ def main() -> None:
             "sample_weight_normalization": weight_statistics,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
             "ordered_token_sample_weighting": "training-sample-weights-v1",
+            "ordered_token_scope": args.ordered_token_scope,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
