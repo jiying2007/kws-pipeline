@@ -169,6 +169,10 @@ static void reset_algorithm_state(kws_engine_t *engine) {
   engine->suppress_until_sample = 0u;
   engine->block_external_vad_valid = 0u;
   engine->block_external_vad_probability = 0.0f;
+  engine->debug_last_frame_number = 0u;
+  engine->debug_last_frame_end_sample = 0u;
+  engine->debug_last_frame_speech_active = 0u;
+  engine->debug_last_frame_valid = 0u;
 }
 
 void kws_engine_reset(kws_engine_t *engine) {
