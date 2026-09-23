@@ -19,6 +19,10 @@ from adversarial_refinement import (  # noqa: E402
 
 from evaluate_refinement_eligibility import (  # noqa: E402
     POLICY as REFINEMENT_ELIGIBILITY_POLICY,
+    STAGE_COLLAPSE,
+    STAGE_POLICY,
+    STAGE_SIGNAL,
+    STAGE_STRICT,
     evaluate_refinement_eligibility,
 )
 
@@ -172,6 +176,8 @@ def main() -> int:
         expected_keyword_ids=("1", "2"),
     )
     assert eligibility["policy"] == REFINEMENT_ELIGIBILITY_POLICY
+    assert eligibility["development_stage_policy"] == STAGE_POLICY
+    assert eligibility["development_stage"] == STAGE_SIGNAL
     assert eligibility["eligible"] is True
     assert eligibility["source_round"] == 0
     assert eligibility["collapsed_keyword_ids"] == []
@@ -213,6 +219,7 @@ def main() -> int:
         weak_manifest,
         expected_keyword_ids=("1", "2"),
     )
+    assert weak_eligibility["development_stage"] == STAGE_SIGNAL
     assert weak_eligibility["eligible"] is True
     assert weak_eligibility["keyword_signal"]["1"]["calibration"]["matched"] == 0
     assert weak_eligibility["keyword_signal"]["1"]["test"]["matched"] == 1
@@ -238,6 +245,7 @@ def main() -> int:
         collapsed_manifest,
         expected_keyword_ids=("1", "2"),
     )
+    assert collapsed_eligibility["development_stage"] == STAGE_COLLAPSE
     assert collapsed_eligibility["eligible"] is False
     assert collapsed_eligibility["collapsed_keyword_ids"] == ["1"]
 
@@ -272,6 +280,13 @@ def main() -> int:
     selected, policy = select_refinement_source(strict_manifest)
     assert selected["round"] == 4
     assert policy == "strict-development-candidate"
+    strict_eligibility = evaluate_refinement_eligibility(
+        strict_manifest,
+        expected_keyword_ids=("1", "2"),
+    )
+    assert strict_eligibility["development_stage"] == STAGE_STRICT
+    assert strict_eligibility["eligible"] is True
+    assert strict_eligibility["source_was_strict"] is True
 
     with tempfile.TemporaryDirectory(prefix="refinement-wake-balance-") as tmp:
         root = pathlib.Path(tmp)
