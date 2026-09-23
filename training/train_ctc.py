@@ -1151,6 +1151,9 @@ def main() -> None:
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
             "sequence_margin_negative_policy": args.sequence_margin_negative_policy,
+            "sequence_margin_negative_policy_scope": (
+                "decoder-search-only-no-speech-active-gate-v1"
+            ),
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
             "prefix_completion_tail_steps": PREFIX_COMPLETION_TAIL_STEPS,
             "prefix_completion_policy": "strict-prefix-terminal-hinge-v1",
