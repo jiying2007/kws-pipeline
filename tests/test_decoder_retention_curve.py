@@ -157,7 +157,11 @@ def main() -> int:
         assert high["state_retention"] == 0.97
         assert high["calibration"]["far_per_hour"] == 0.0
         assert high["test"]["far_per_hour"] == 0.0
-        assert high["strict"] is True
+        assert high["calibration"]["negative_recording_far_per_hour"] == 0.0
+        assert high["test"]["negative_recording_far_per_hour"] == 0.0
+        # This fixture is intentionally negative-only, so zero FAR does not
+        # constitute strict product qualification without positive recall evidence.
+        assert high["strict"] is False
 
     print("decoder retention curve: PASS")
     return 0
