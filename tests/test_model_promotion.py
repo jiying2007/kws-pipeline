@@ -143,6 +143,8 @@ def main() -> int:
         "adversarial-hard-negatives.tsv",
         "promoted model provenance does not prove adversarial replay training",
         "promoted product candidate lacks ordered-token sample weighting",
+        "promoted product candidate ordered-token scope differs from effective config",
+        "effective ordered-token scope is unsupported",
         "promoted product candidate lacks dataset-mean sample-weight normalization",
         "promoted product candidate lacks deterministic feature-cache evidence",
         "two-character 小窝 is not a shipping wake word",
