@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "ordered-token-exact-wake-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Single-variable bounded product speech-like A/B after #240/#242 and the failed path-purity 0.05 experiment #254. Keep all product data, 12/6 base schedule, optional 6-epoch refinement, CTC, sequence-margin, prefix-completion, recurrent-release, path-purity default weight 0.0, wake-pressure balance, replay, decoder, threshold grid, calibration and gates unchanged. Change only ordered-token auxiliary scope from all non-empty token targets to exact configured wake targets. Measure strict dominance-compatible greedy-path rate, surrogate/runtime gap, decoder hits, keyword confusion, per-keyword FRR/FAR, negative-exposure FAR, threshold saturation and refinement tradeoff. Development-only; no protected qualification or promotion.",
+  "config_overrides": {
+    "train.ordered_token_scope": "exact-configured-wake-targets-v1"
+  }
+}
