@@ -367,7 +367,7 @@ jobs:
           PY
 
       - name: Run bounded refinement experiment
-        if: steps.eligibility.outputs.eligible == 'true'
+        if: steps.eligibility.outputs.eligible == 'true' && steps.decoder_policy.outputs.enabled != 'true'
         run: |
           .venv/bin/python training/adversarial_refinement.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"             --stop-after-development-eval
           test -s "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json"
@@ -464,9 +464,14 @@ jobs:
           }
           if isinstance(threshold_trigger,dict) and threshold_trigger.get('triggered') is True:
               required['threshold_wide_sweep']=threshold_sweep is not None
-          if isinstance(eligibility,dict) and eligibility.get('eligible') is True:
+          decoder_policy_enabled=os.environ.get('DECODER_POLICY_REPLAY_ENABLED') == 'true'
+          if (
+              isinstance(eligibility,dict)
+              and eligibility.get('eligible') is True
+              and not decoder_policy_enabled
+          ):
               required['refinement_summary']=refinement is not None
-          if os.environ.get('DECODER_POLICY_REPLAY_ENABLED') == 'true':
+          if decoder_policy_enabled:
               required['decoder_policy_replay_grid']=decoder_policy is not None
           summary={
               'schema_version':1,
@@ -486,6 +491,11 @@ jobs:
               ),
               'refinement_eligible':(
                   eligibility.get('eligible') if eligibility is not None else None
+              ),
+              'refinement_skipped_for_decoder_policy':(
+                  decoder_policy_enabled
+                  and isinstance(eligibility,dict)
+                  and eligibility.get('eligible') is True
               ),
               'base_candidate_selection':(
                   manifest.get('candidate_selection') if manifest is not None else None
