@@ -473,6 +473,9 @@ def validate_torch_iteration_policy() -> None:
     assert "optional_objective_cli_args(train)" in product_iterator
     assert "domain_iteration.base_failure_replay_enabled must be boolean" in product_iterator
     assert "render_development_failure_replay(" in product_iterator
+    assert "completed_round_best_records: list[dict] = []" in product_iterator
+    assert "list(completed_round_best_records)" in product_iterator
+    assert "completed_round_best_records.append(round_best)" in product_iterator
     assert "base failure replay must use only prior development rounds" in product_iterator
     assert "failure_replay_focus_rows(base_failure_replay)" in product_iterator
     assert '"base_failure_replay_examples"' in product_iterator
