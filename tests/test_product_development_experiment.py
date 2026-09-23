@@ -34,6 +34,12 @@ def main() -> int:
     assert "steps.eligibility.outputs.eligible == 'true'" in workflow
     assert "'infrastructure_complete':all(required.values())" in workflow
     assert "'required_evidence_present':required" in workflow
+    assert "'acoustic_alignment': acoustic is not None" in workflow
+    assert "required['refinement_summary']=refinement is not None" in workflow
+    assert "KWS_EXPERIMENT_RECEIPT: build/product-development-experiment-receipt.json" in workflow
+    assert "load_optional(pathlib.Path(os.environ['KWS_EXPERIMENT_RECEIPT']))" in workflow
+    assert "build/product-development-experiment-receipt.json" in workflow
+    assert "build/product-development-experiment/experiment-receipt.json" not in workflow
     materializer = (
         ROOT / "training/materialize_governed_product_base.sh"
     ).read_text(encoding="utf-8")

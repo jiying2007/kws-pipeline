@@ -17,7 +17,7 @@ env:
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-experiment.json
   KWS_EXPERIMENT_WORK: build/product-development-experiment
-  KWS_EXPERIMENT_RECEIPT: build/product-development-experiment/experiment-receipt.json
+  KWS_EXPERIMENT_RECEIPT: build/product-development-experiment-receipt.json
 
 concurrency:
   group: product-development-experiment-${{ github.event.pull_request.number }}
@@ -171,15 +171,19 @@ jobs:
                   raise SystemExit(f'experiment evidence must be a JSON object: {path}')
               return value
 
-          receipt=load_optional(root/'experiment-receipt.json')
+          receipt=load_optional(pathlib.Path(os.environ['KWS_EXPERIMENT_RECEIPT']))
           manifest=load_optional(root/'domain-loop-manifest.json')
           eligibility=load_optional(root/'base-refinement-eligibility.json')
+          acoustic=load_optional(root/'acoustic-alignment.json')
           refinement=load_optional(root/'adversarial-refinement'/'preflight-summary.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
               'refinement_eligibility': eligibility is not None,
+              'acoustic_alignment': acoustic is not None,
           }
+          if isinstance(eligibility,dict) and eligibility.get('eligible') is True:
+              required['refinement_summary']=refinement is not None
           summary={
               'schema_version':1,
               'evidence_class':'product-development-pr-head-experiment-summary-v1',
@@ -219,7 +223,7 @@ jobs:
           path: |
             .github/triggers/model-training-experiment.json
             .generated/xiaowo.product-experiment.json
-            build/product-development-experiment/experiment-receipt.json
+            build/product-development-experiment-receipt.json
             build/product-development-experiment/experiment-summary.json
             build/product-development-experiment/domain-loop-manifest.json
             build/product-development-experiment/base-refinement-eligibility.json
