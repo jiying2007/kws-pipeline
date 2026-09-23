@@ -30,6 +30,8 @@ from iterate_domain import (  # noqa: E402
     calibration_threshold_vector,
     calibration_trial_evidence,
     parse_warm_start_strategy,
+    posterior_replay_cli_args,
+    resolve_posterior_replay,
     select_calibration_threshold,
     select_strict_candidate,
     strict_gate_candidate,
@@ -711,6 +713,35 @@ def validate_torch_iteration_policy() -> None:
 
 
 def main() -> int:
+    assert posterior_replay_cli_args(None) == []
+    with tempfile.TemporaryDirectory(prefix="posterior-replay-contract-") as td:
+        root = pathlib.Path(td)
+        dump = root / "dump"
+        replay = root / "replay"
+        cache = root / "cache"
+        dump.write_text("", encoding="utf-8")
+        replay.write_text("", encoding="utf-8")
+        resolved = resolve_posterior_replay(dump, replay, cache)
+        assert resolved is not None
+        assert resolved[0] == dump.resolve()
+        assert resolved[1] == replay.resolve()
+        assert resolved[2] == cache.resolve()
+        assert cache.is_dir()
+        assert posterior_replay_cli_args(resolved) == [
+            "--posterior-dump",
+            str(dump.resolve()),
+            "--decoder-replay",
+            str(replay.resolve()),
+            "--posterior-cache",
+            str(cache.resolve()),
+        ]
+        try:
+            resolve_posterior_replay(dump, None, cache)
+        except ValueError as exc:
+            assert "requires --posterior-dump" in str(exc)
+        else:
+            raise AssertionError("partial posterior replay configuration was accepted")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
