@@ -87,6 +87,8 @@ def main() -> int:
     assert "datasets/round-*/test.references.jsonl" in workflow
     assert "posterior-cache/**/*.kwtr" in workflow
     assert "posterior-cache/**/*.json" in workflow
+    assert "base-failure-replay/**/development-failure-replay.json" in workflow
+    assert "base-failure-replay/**/development-failure-replay.tsv" in workflow
     assert "qualification.references.jsonl" not in workflow
     assert "formal-qualification" not in workflow
     assert workflow.count("ref: ${{ github.event.pull_request.head.sha }}") == 2
