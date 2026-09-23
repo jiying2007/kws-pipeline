@@ -127,6 +127,7 @@ if(KWS_BUILD_TESTS)
   enable_testing()
 
   add_executable(kws_tests tests/test_kws.c)
+  target_include_directories(kws_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(kws_tests PRIVATE KwsPipeline::core)
 
   add_executable(kws_keyword_pack_tests tests/test_keyword_pack.c)

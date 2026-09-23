@@ -1,4 +1,5 @@
 #include "kws_pipeline/kws.h"
+#include "kws_debug.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -304,6 +305,98 @@ static void test_model_and_engine(void) {
   CHECK(stats.max_detection_confidence >= first_detection.confidence);
 }
 
+static void test_debug_frame_replay(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t live_arena[65536];
+  _Alignas(max_align_t) uint8_t replay_arena[65536];
+  kws_model_t model;
+  kws_engine_t *live = NULL;
+  kws_engine_t *replay = NULL;
+  kws_config_t config = kws_default_config();
+  const uint16_t sequence[] = {1u};
+  const kws_keyword_t keyword = make_keyword(42u, sequence, 1u, 0.10f);
+  int16_t pcm[KWS_FRAME_LENGTH_SAMPLES];
+  float logits[KWS_MAX_VOCAB_SIZE];
+  uint64_t frame_number = 0u;
+  uint64_t end_sample = 0u;
+  uint16_t vocab_size = 0u;
+  int speech_active = 0;
+  kws_detection_t live_hit = {0u, 0.0f, 0u};
+  kws_detection_t replay_hit = {0u, 0.0f, 0u};
+  int live_detected = 0;
+  int replay_detected = 0;
+  size_t bytes = make_test_model(blob, sizeof(blob));
+
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  config.min_speech_dbfs = -80.0f;
+  config.refractory_ms = 100u;
+  CHECK(kws_engine_init(live_arena, sizeof(live_arena), &model, &config,
+                        &live) == KWS_OK);
+  CHECK(kws_engine_init(replay_arena, sizeof(replay_arena), &model, &config,
+                        &replay) == KWS_OK);
+  CHECK(kws_engine_set_keywords(live, &keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_OK);
+  CHECK(kws_engine_set_keywords(replay, &keyword, 1u,
+                                TEST_VOCAB_FINGERPRINT) == KWS_OK);
+
+  CHECK(kws_engine_debug_copy_last_frame(live, &frame_number, &end_sample,
+                                         &speech_active, logits,
+                                         KWS_MAX_VOCAB_SIZE,
+                                         &vocab_size) == 0);
+  for (size_t i = 0u; i < KWS_FRAME_LENGTH_SAMPLES; ++i) {
+    pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
+  }
+  for (size_t offset = 0u; offset < KWS_FRAME_LENGTH_SAMPLES;
+       offset += TEST_BLOCK_SAMPLES) {
+    size_t count = KWS_FRAME_LENGTH_SAMPLES - offset;
+    int detected = 0;
+    kws_detection_t hit = {0u, 0.0f, 0u};
+    if (count > TEST_BLOCK_SAMPLES) {
+      count = TEST_BLOCK_SAMPLES;
+    }
+    CHECK(kws_engine_accept_pcm16(live, pcm + offset, count, &hit,
+                                  &detected) == KWS_OK);
+    if (detected != 0) {
+      live_detected = 1;
+      live_hit = hit;
+    }
+  }
+
+  CHECK(kws_engine_debug_copy_last_frame(live, &frame_number, &end_sample,
+                                         &speech_active, logits,
+                                         KWS_MAX_VOCAB_SIZE,
+                                         &vocab_size) == 1);
+  CHECK(frame_number == 1u);
+  CHECK(end_sample == KWS_FRAME_LENGTH_SAMPLES);
+  CHECK(speech_active == 1);
+  CHECK(vocab_size == model.vocab_size);
+  CHECK(kws_engine_debug_copy_last_frame(live, &frame_number, &end_sample,
+                                         &speech_active, logits, 1u,
+                                         &vocab_size) == -1);
+
+  CHECK(kws_engine_debug_replay_frame(replay, logits, vocab_size,
+                                      speech_active, end_sample,
+                                      &replay_hit, &replay_detected) == KWS_OK);
+  CHECK(replay_detected == live_detected);
+  if (live_detected != 0) {
+    CHECK(replay_hit.keyword_id == live_hit.keyword_id);
+    CHECK(replay_hit.end_sample == live_hit.end_sample);
+    CHECK(fabsf(replay_hit.confidence - live_hit.confidence) < 1.0e-7f);
+  }
+  replay_detected = 7;
+  CHECK(kws_engine_debug_replay_frame(replay, logits, vocab_size,
+                                      speech_active, end_sample,
+                                      &replay_hit, &replay_detected) == KWS_EINVAL);
+  CHECK(replay_detected == 0);
+
+  kws_engine_reset(live);
+  CHECK(kws_engine_debug_copy_last_frame(live, &frame_number, &end_sample,
+                                         &speech_active, logits,
+                                         KWS_MAX_VOCAB_SIZE,
+                                         &vocab_size) == 0);
+}
+
+
 static void test_validation(void) {
   _Alignas(max_align_t) uint8_t blob[512];
   _Alignas(max_align_t) uint8_t arena[65536];
@@ -572,6 +665,7 @@ static void test_weighted_kernel_inference(void) {
 
 int main(void) {
   test_model_and_engine();
+  test_debug_frame_replay();
   test_validation();
   test_metadata_and_build_identity();
   test_external_vad_threshold();
