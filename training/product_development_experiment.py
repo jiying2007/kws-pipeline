@@ -8,6 +8,8 @@ import math
 import pathlib
 import re
 
+from objective_contract import ORDERED_TOKEN_SCOPES
+
 SCHEMA_VERSION = 1
 EVIDENCE_CLASS = "product-development-pr-head-experiment-v1"
 SOURCE_POLICY = "exact-pr-head"
@@ -25,6 +27,7 @@ FIELDS = {
 ALLOWED_OVERRIDES = {
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
+    "train.ordered_token_scope": ("enum", tuple(sorted(ORDERED_TOKEN_SCOPES))),
 }
 
 
@@ -74,15 +77,27 @@ def verify_spec(path: pathlib.Path) -> dict:
     unknown = sorted(set(overrides) - set(ALLOWED_OVERRIDES))
     if unknown:
         raise ValueError(f"experiment override is not allowed: {unknown}")
-    normalized: dict[str, float] = {}
+    normalized: dict[str, object] = {}
     for key, raw in overrides.items():
-        kind, low, high = ALLOWED_OVERRIDES[key]
-        if kind != "float" or isinstance(raw, bool):
-            raise ValueError(f"unsupported experiment override type for {key}")
-        number = float(raw)
-        if not math.isfinite(number) or not low <= number <= high:
-            raise ValueError(f"experiment override {key} must be in [{low},{high}]")
-        normalized[key] = number
+        contract = ALLOWED_OVERRIDES[key]
+        kind = contract[0]
+        if kind == "float":
+            _, low, high = contract
+            if isinstance(raw, bool):
+                raise ValueError(f"unsupported experiment override type for {key}")
+            number = float(raw)
+            if not math.isfinite(number) or not low <= number <= high:
+                raise ValueError(f"experiment override {key} must be in [{low},{high}]")
+            normalized[key] = number
+        elif kind == "enum":
+            _, choices = contract
+            if not isinstance(raw, str) or raw not in choices:
+                raise ValueError(
+                    f"experiment override {key} must be one of {', '.join(choices)}"
+                )
+            normalized[key] = raw
+        else:
+            raise ValueError(f"unsupported experiment override contract for {key}")
     result = dict(value)
     result["config_overrides"] = normalized
     return result
