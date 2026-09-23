@@ -12,6 +12,10 @@ from verify_product_development_preflight import (
 )
 
 POLICY = "selected-refinement-source-signal-v1"
+STAGE_POLICY = "collapse-signal-strict-v1"
+STAGE_COLLAPSE = "cross-split-collapse"
+STAGE_SIGNAL = "signal-present-unqualified"
+STAGE_STRICT = "strict-qualified"
 
 
 def _keyword_counts(metrics: object, split: str, keyword_id: str) -> dict:
@@ -67,16 +71,27 @@ def evaluate_refinement_eligibility(
             "has_signal": matched > 0,
         }
 
+    source_was_strict = (
+        source.get("calibration_gate") is True and source.get("test_gate") is True
+    )
+    development_stage = (
+        STAGE_COLLAPSE
+        if collapsed
+        else STAGE_STRICT
+        if source_was_strict
+        else STAGE_SIGNAL
+    )
+
     return {
         "schema_version": 1,
         "policy": POLICY,
+        "development_stage_policy": STAGE_POLICY,
+        "development_stage": development_stage,
         "eligible": not collapsed,
         "source_round": int(source["round"]),
         "source_frontend": str(source["frontend"]),
         "source_selection_policy": source_policy,
-        "source_was_strict": (
-            source.get("calibration_gate") is True and source.get("test_gate") is True
-        ),
+        "source_was_strict": source_was_strict,
         "expected_keyword_ids": list(expected_keyword_ids),
         "collapsed_keyword_ids": collapsed,
         "keyword_signal": keyword_signal,
