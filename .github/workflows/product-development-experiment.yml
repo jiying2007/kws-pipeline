@@ -146,6 +146,105 @@ jobs:
           .venv/bin/python tools/diagnose_acoustic_alignment.py             --config "$KWS_EXPERIMENT_CONFIG"             --manifest "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"             --feature-dump build/kws_feature_dump             --runner build/kws_wav             --max-per-keyword-split 8             --output "$KWS_EXPERIMENT_WORK/acoustic-alignment.json"
           python3 tools/build_training_diagnostics.py             --config "$KWS_EXPERIMENT_CONFIG"             --work-dir "$KWS_EXPERIMENT_WORK"             --output "$KWS_EXPERIMENT_WORK/compact-base-diagnostics.json"
 
+      - name: Diagnose saturated source threshold grid
+        run: |
+          .venv/bin/python - <<'PY'
+          import json, os, pathlib, subprocess, sys
+
+          repo=pathlib.Path.cwd()
+          sys.path.insert(0,str(repo/'training'))
+          from adversarial_refinement import select_refinement_source
+
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          config_path=pathlib.Path(os.environ['KWS_EXPERIMENT_CONFIG'])
+          config=json.loads(config_path.read_text(encoding='utf-8'))
+          source, policy=select_refinement_source(manifest)
+          calibration=source.get('calibration')
+          if not isinstance(calibration,dict):
+              raise SystemExit('refinement source lacks calibration evidence')
+          grid=[float(value) for value in calibration.get('calibration_threshold_grid',[])]
+          selected=calibration.get('calibrated_thresholds')
+          if not grid or not isinstance(selected,dict) or not selected:
+              raise SystemExit('refinement source lacks threshold calibration evidence')
+          low=min(grid); high=max(grid)
+          edge_keywords={
+              str(keyword_id):(
+                  'min' if abs(float(value)-low) <= 1.0e-12
+                  else 'max' if abs(float(value)-high) <= 1.0e-12
+                  else None
+              )
+              for keyword_id,value in selected.items()
+          }
+          edge_keywords={key:value for key,value in edge_keywords.items() if value is not None}
+          triggered=bool(edge_keywords)
+          trigger={
+              'schema_version':1,
+              'evidence_class':'development-threshold-saturation-trigger-v1',
+              'development_only':True,
+              'selection_feedback_allowed':False,
+              'source_round':int(source['round']),
+              'source_frontend':str(source['frontend']),
+              'source_selection_policy':policy,
+              'formal_grid_min':low,
+              'formal_grid_max':high,
+              'formal_selected_thresholds':{
+                  str(key):float(value) for key,value in selected.items()
+              },
+              'edge_keywords':edge_keywords,
+              'triggered':triggered,
+              'diagnostic_thresholds':[
+                  round(0.20 + 0.05*index,2) for index in range(15)
+              ] if triggered else [],
+          }
+          (root/'threshold-saturation-trigger.json').write_text(
+              json.dumps(trigger,ensure_ascii=False,indent=2,sort_keys=True)+'\n',
+              encoding='utf-8',
+          )
+          if not triggered:
+              print('threshold saturation diagnostic: not triggered')
+              raise SystemExit(0)
+
+          model=pathlib.Path(str(source['model']))
+          keywords=pathlib.Path(str(source['keywords']))
+          candidate_dir=model.parent
+          domain_summary=candidate_dir/'calibration'/'final-eval'/'domains.json'
+          round_index=int(source['round'])
+          dataset=root/'datasets'/f'round-{round_index:02d}'
+          tokens=pathlib.Path(str(config['tokens']))
+          if not tokens.is_absolute():
+              tokens=(repo/tokens).resolve()
+          thresholds=[f'{0.20 + 0.05*index:.2f}' for index in range(15)]
+          command=[
+              str(repo/'.venv/bin/python'),
+              'tools/diagnose_kws_threshold_operating_curve.py',
+              '--runner','build/kws_wav',
+              '--model',str(model),
+              '--tokens',str(tokens),
+              '--keywords',str(keywords),
+              '--config',str(config_path),
+              '--calibration-references',str(dataset/'calibration.references.jsonl'),
+              '--test-references',str(dataset/'test.references.jsonl'),
+              '--thresholds',*thresholds,
+              '--development-manifest',str(root/'domain-loop-manifest.json'),
+              '--development-domain-summary',str(domain_summary),
+              '--round-index',str(round_index),
+              '--diagnostic-round-selection-policy','refinement-source-saturation-v1',
+              '--work-dir',str(root/'threshold-wide-sweep-work'),
+              '--output',str(root/'threshold-wide-sweep.json'),
+              '--posterior-dump','build/kws_posterior_dump',
+              '--decoder-replay','build/kws_decoder_replay',
+              '--posterior-cache',str(root/'posterior-cache'),
+          ]
+          subprocess.check_call(command)
+          print(json.dumps({
+              'threshold_saturation_triggered':True,
+              'source_round':round_index,
+              'edge_keywords':edge_keywords,
+              'threshold_count':len(thresholds),
+          },sort_keys=True))
+          PY
+
       - name: Run bounded refinement experiment
         if: steps.eligibility.outputs.eligible == 'true'
         run: |
@@ -228,13 +327,18 @@ jobs:
           acoustic=load_optional(root/'acoustic-alignment.json')
           refinement=load_optional(root/'adversarial-refinement'/'preflight-summary.json')
           posterior_cache=load_optional(root/'posterior-cache-summary.json')
+          threshold_trigger=load_optional(root/'threshold-saturation-trigger.json')
+          threshold_sweep=load_optional(root/'threshold-wide-sweep.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
               'refinement_eligibility': eligibility is not None,
               'acoustic_alignment': acoustic is not None,
               'posterior_cache': posterior_cache is not None,
+              'threshold_saturation_trigger': threshold_trigger is not None,
           }
+          if isinstance(threshold_trigger,dict) and threshold_trigger.get('triggered') is True:
+              required['threshold_wide_sweep']=threshold_sweep is not None
           if isinstance(eligibility,dict) and eligibility.get('eligible') is True:
               required['refinement_summary']=refinement is not None
           summary={
@@ -262,6 +366,8 @@ jobs:
               'base_records':manifest.get('records',[]) if manifest is not None else [],
               'refinement':refinement,
               'posterior_cache':posterior_cache,
+              'threshold_saturation_trigger':threshold_trigger,
+              'threshold_wide_sweep':threshold_sweep,
           }
           (root/'experiment-summary.json').write_text(
               json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
@@ -284,6 +390,8 @@ jobs:
             build/product-development-experiment/acoustic-alignment.json
             build/product-development-experiment/compact-base-diagnostics.json
             build/product-development-experiment/posterior-cache-summary.json
+            build/product-development-experiment/threshold-saturation-trigger.json
+            build/product-development-experiment/threshold-wide-sweep.json
             build/product-development-experiment/posterior-cache/**/*.kwtr
             build/product-development-experiment/posterior-cache/**/*.json
             build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json

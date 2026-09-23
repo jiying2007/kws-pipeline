@@ -32,9 +32,24 @@ def main() -> int:
     assert workflow.count("--posterior-dump build/kws_posterior_dump") == 2
     assert workflow.count("--decoder-replay build/kws_decoder_replay") == 2
     assert workflow.count('--posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"') == 2
+    assert "'--posterior-dump','build/kws_posterior_dump'" in workflow
+    assert "'--decoder-replay','build/kws_decoder_replay'" in workflow
+    assert "'--posterior-cache',str(root/'posterior-cache')" in workflow
     assert "posterior-replay-cache-summary-v1" in workflow
     assert "'posterior_cache': posterior_cache is not None" in workflow
     assert "'posterior_cache':posterior_cache" in workflow
+    assert "Diagnose saturated source threshold grid" in workflow
+    assert "select_refinement_source" in workflow
+    assert "development-threshold-saturation-trigger-v1" in workflow
+    assert "refinement-source-saturation-v1" in workflow
+    assert "tools/diagnose_kws_threshold_operating_curve.py" in workflow
+    assert "round(0.20 + 0.05*index,2) for index in range(15)" in workflow
+    assert "'threshold_saturation_trigger': threshold_trigger is not None" in workflow
+    assert "required['threshold_wide_sweep']=threshold_sweep is not None" in workflow
+    assert "'threshold_saturation_trigger':threshold_trigger" in workflow
+    assert "'threshold_wide_sweep':threshold_sweep" in workflow
+    assert "threshold-saturation-trigger.json" in workflow
+    assert "threshold-wide-sweep.json" in workflow
     assert "posterior-cache/**/*.kwtr" in workflow
     assert "posterior-cache/**/*.json" in workflow
     assert "qualification.references.jsonl" not in workflow
