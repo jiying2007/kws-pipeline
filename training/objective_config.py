@@ -28,13 +28,31 @@ def path_purity_settings(train: dict) -> tuple[float, float, bool]:
     return weight, margin, configured
 
 
+def ordered_token_exact_wake_only_setting(train: dict) -> tuple[bool, bool]:
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    configured = "ordered_token_exact_wake_only" in train
+    raw = train.get("ordered_token_exact_wake_only", False)
+    if not isinstance(raw, bool):
+        raise ValueError("train.ordered_token_exact_wake_only must be boolean")
+    return raw, configured
+
+
 def optional_objective_cli_args(train: dict) -> list[str]:
-    weight, margin, configured = path_purity_settings(train)
-    if not configured:
-        return []
-    return [
-        "--path-purity-loss-weight",
-        str(weight),
-        "--path-purity-margin",
-        str(margin),
-    ]
+    weight, margin, path_purity_configured = path_purity_settings(train)
+    exact_wake_only, ordered_scope_configured = ordered_token_exact_wake_only_setting(
+        train
+    )
+    result: list[str] = []
+    if path_purity_configured:
+        result.extend(
+            [
+                "--path-purity-loss-weight",
+                str(weight),
+                "--path-purity-margin",
+                str(margin),
+            ]
+        )
+    if ordered_scope_configured and exact_wake_only:
+        result.append("--ordered-token-exact-wake-only")
+    return result
