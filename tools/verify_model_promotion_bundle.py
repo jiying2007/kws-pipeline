@@ -281,6 +281,27 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError("promoted product candidate lacks sample-weighting provenance")
         if weighting.get("ordered_token_sample_weighting") != "training-sample-weights-v1":
             raise ValueError("promoted product candidate lacks ordered-token sample weighting")
+        train_config = effective.get("train")
+        if not isinstance(train_config, dict):
+            raise ValueError("effective training config lacks train object")
+        configured_exact_wake_only = train_config.get(
+            "ordered_token_exact_wake_only"
+        )
+        provenance_scope = weighting.get("ordered_token_scope")
+        if configured_exact_wake_only is not None or provenance_scope is not None:
+            if not isinstance(configured_exact_wake_only, bool):
+                raise ValueError(
+                    "effective ordered-token exact-wake-only setting must be boolean"
+                )
+            expected_scope = (
+                "exact-configured-wake-targets-v1"
+                if configured_exact_wake_only
+                else "all-nonempty-targets-v1"
+            )
+            if provenance_scope != expected_scope:
+                raise ValueError(
+                    "promoted product candidate ordered-token scope differs from effective config"
+                )
         normalization = weighting.get("normalization")
         if (
             not isinstance(normalization, dict)
