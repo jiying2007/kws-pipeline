@@ -102,7 +102,7 @@ jobs:
       - name: Build exact C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target             kws_wav kws_feature_dump kws_decoder_tests kws_decoder_retention_tests
+          cmake --build build --parallel --target             kws_wav kws_feature_dump kws_posterior_dump kws_decoder_replay kws_decoder_tests kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
 
       - name: Install pinned CPU training runtime
@@ -119,7 +119,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          .venv/bin/python training/iterate_domain.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --defer-qualification             --compact-log
+          .venv/bin/python training/iterate_domain.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"             --defer-qualification             --compact-log
           code=$?
           set -e
           case "$code" in 0|1) ;; *) exit "$code" ;; esac
@@ -149,8 +149,59 @@ jobs:
       - name: Run bounded refinement experiment
         if: steps.eligibility.outputs.eligible == 'true'
         run: |
-          .venv/bin/python training/adversarial_refinement.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --stop-after-development-eval
+          .venv/bin/python training/adversarial_refinement.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"             --stop-after-development-eval
           test -s "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json"
+
+      - name: Summarize posterior replay cache
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          cache=root/'posterior-cache'
+          provenances=[]
+          total_hits=0
+          total_misses=0
+          for path in sorted(root.rglob('detections.provenance.json')):
+              value=json.loads(path.read_text(encoding='utf-8'))
+              if value.get('evaluation_mode') != 'posterior-replay-cache-v1':
+                  continue
+              hits=int(value.get('posterior_cache_hits',0))
+              misses=int(value.get('posterior_cache_misses',0))
+              total_hits += hits
+              total_misses += misses
+              provenances.append({
+                  'path':str(path.relative_to(root)),
+                  'hits':hits,
+                  'misses':misses,
+                  'recordings':int(value.get('recordings',0)),
+              })
+          traces=sorted(cache.rglob('*.kwtr')) if cache.is_dir() else []
+          sidecars=sorted(cache.rglob('*.json')) if cache.is_dir() else []
+          result={
+              'schema_version':1,
+              'evidence_class':'posterior-replay-cache-summary-v1',
+              'evaluation_provenance_files':len(provenances),
+              'total_cache_hits':total_hits,
+              'total_cache_misses':total_misses,
+              'unique_traces':len(traces),
+              'trace_bytes':sum(path.stat().st_size for path in traces),
+              'cache_sidecars':len(sidecars),
+              'evaluations':provenances,
+          }
+          if not provenances or not traces or total_misses <= 0:
+              raise SystemExit('posterior replay cache evidence is incomplete')
+          (root/'posterior-cache-summary.json').write_text(
+              json.dumps(result,ensure_ascii=False,indent=2,sort_keys=True)+'\n',
+              encoding='utf-8',
+          )
+          print(json.dumps({
+              'hits':total_hits,
+              'misses':total_misses,
+              'unique_traces':len(traces),
+              'trace_bytes':result['trace_bytes'],
+          },sort_keys=True))
+          PY
 
       - name: Build experiment summary
         if: always()
@@ -176,11 +227,13 @@ jobs:
           eligibility=load_optional(root/'base-refinement-eligibility.json')
           acoustic=load_optional(root/'acoustic-alignment.json')
           refinement=load_optional(root/'adversarial-refinement'/'preflight-summary.json')
+          posterior_cache=load_optional(root/'posterior-cache-summary.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
               'refinement_eligibility': eligibility is not None,
               'acoustic_alignment': acoustic is not None,
+              'posterior_cache': posterior_cache is not None,
           }
           if isinstance(eligibility,dict) and eligibility.get('eligible') is True:
               required['refinement_summary']=refinement is not None
@@ -208,6 +261,7 @@ jobs:
               ),
               'base_records':manifest.get('records',[]) if manifest is not None else [],
               'refinement':refinement,
+              'posterior_cache':posterior_cache,
           }
           (root/'experiment-summary.json').write_text(
               json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
@@ -229,6 +283,9 @@ jobs:
             build/product-development-experiment/base-refinement-eligibility.json
             build/product-development-experiment/acoustic-alignment.json
             build/product-development-experiment/compact-base-diagnostics.json
+            build/product-development-experiment/posterior-cache-summary.json
+            build/product-development-experiment/posterior-cache/**/*.kwtr
+            build/product-development-experiment/posterior-cache/**/*.json
             build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json
             build/product-development-experiment/adversarial-refinement/preflight-summary.json
             build/product-development-experiment/adversarial-refinement/progress.json
