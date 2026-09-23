@@ -9,6 +9,7 @@ import pathlib
 import random
 import struct
 import sys
+import time
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -400,6 +401,7 @@ def mine_adversarial_lexicon(
     keyword_sequences = [list(keyword["token_ids"]) for keyword in keywords]
     feature_dim = int(checkpoint["feature_dim"])
     output.mkdir(parents=True, exist_ok=True)
+    mining_started = time.monotonic()
 
     ranked: list[dict] = []
     base_seed = int(cfg.get("seed", 1337))
@@ -412,11 +414,14 @@ def mine_adversarial_lexicon(
         for sequence_index, sequence in enumerate(candidates)
         for probe_index in range(probes_per_sequence)
     ]
+    probe_tts_started = time.monotonic()
     probe_tts_workers = _pre_render_command_tts(
         probe_tasks,
         tts,
         command_surface_forms,
     )
+    probe_tts_seconds = time.monotonic() - probe_tts_started
+    probe_score_started = time.monotonic()
 
     for sequence_index, sequence in enumerate(candidates):
         probe_rows: list[dict] = []
@@ -468,6 +473,7 @@ def mine_adversarial_lexicon(
             }
         )
 
+    probe_score_seconds = time.monotonic() - probe_score_started
     ranked.sort(key=lambda item: (-float(item["max_confidence"]), tuple(item["tokens"])))
     selected = select_adversarial_candidates(
         ranked,
@@ -485,11 +491,14 @@ def mine_adversarial_lexicon(
         for selected_index, item in enumerate(selected)
         for example_index in range(replay_examples)
     ]
+    replay_tts_started = time.monotonic()
     replay_tts_workers = _pre_render_command_tts(
         replay_tasks,
         tts,
         command_surface_forms,
     )
+    replay_tts_seconds = time.monotonic() - replay_tts_started
+    replay_materialize_started = time.monotonic()
 
     for selected_index, item in enumerate(selected):
         for example_index in range(replay_examples):
@@ -520,6 +529,7 @@ def mine_adversarial_lexicon(
                 }
             )
 
+    replay_materialize_seconds = time.monotonic() - replay_materialize_started
     manifest = output / "adversarial-hard-negatives.tsv"
     manifest.write_text(
         "".join(
@@ -544,6 +554,13 @@ def mine_adversarial_lexicon(
         "command_tts_parallel_workers": max(probe_tts_workers, replay_tts_workers),
         "command_tts_probe_pre_rendered": len(probe_tasks) if command_backend else 0,
         "command_tts_replay_pre_rendered": len(replay_tasks) if command_backend else 0,
+        "timing_seconds": {
+            "probe_tts_prerender": probe_tts_seconds,
+            "probe_render_and_score": probe_score_seconds,
+            "replay_tts_prerender": replay_tts_seconds,
+            "replay_render_and_materialize": replay_materialize_seconds,
+            "total_to_manifest": time.monotonic() - mining_started,
+        },
         "round": round_index,
         "frontend": frontend,
         "max_length": max_length,
