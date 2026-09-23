@@ -25,6 +25,18 @@ The declared `duration_s` must match the real WAV duration. This prevents FAR ex
 
 Keep speakers, sessions, source recordings and device sessions disjoint across train/calibration/test/qualification. Final human qualification should require speaker/session/source metadata through `training/audit_dataset.py`.
 
+### Development split roles
+
+The historical split names remain stable for artifact and consumer compatibility, but their semantic roles are explicit:
+
+- `train` = **development-training**;
+- `calibration` = **development-calibration**;
+- `test` = **development-feedback**.
+
+The development `test` split is **not** an independent held-out product test: its metrics may feed curriculum, replay, candidate selection and subsequent development decisions. Once evidence from that split influences training or policy, it must continue to be treated as development feedback.
+
+Reserved held-out/protected authority belongs to qualification stages that do not feed the same evidence back into training, including synthetic qualification where applicable and, for shipping authority, the governed real-human and target-DUT/cohort lanes. The file/key name `test` is retained only for compatibility; new diagnostics should expose the canonical role `development-feedback`.
+
 Runtime detections are JSONL:
 
 ```json
