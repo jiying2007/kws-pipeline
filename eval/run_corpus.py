@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import pathlib
 import subprocess
@@ -202,6 +203,8 @@ def main() -> int:
     parser.add_argument("--posterior-dump", type=pathlib.Path)
     parser.add_argument("--decoder-replay", type=pathlib.Path)
     parser.add_argument("--posterior-cache", type=pathlib.Path)
+    parser.add_argument("--decoder-state-retention", type=float)
+    parser.add_argument("--decoder-refractory-ms", type=int)
     args = parser.parse_args()
 
     cache_values = (
@@ -215,6 +218,19 @@ def main() -> int:
             "--posterior-dump, --decoder-replay, and --posterior-cache "
             "must be supplied together"
         )
+    override_requested = (
+        args.decoder_state_retention is not None
+        or args.decoder_refractory_ms is not None
+    )
+    if override_requested and not cache_enabled:
+        raise ValueError("decoder replay overrides require posterior replay cache mode")
+    if args.decoder_state_retention is not None and (
+        not math.isfinite(args.decoder_state_retention)
+        or not 0.0 < args.decoder_state_retention < 1.0
+    ):
+        raise ValueError("--decoder-state-retention must be finite and in (0,1)")
+    if args.decoder_refractory_ms is not None and not 0 <= args.decoder_refractory_ms <= 10000:
+        raise ValueError("--decoder-refractory-ms must be in [0,10000]")
 
     rows = load_references(args.references)
     output_lines: list[str] = []
@@ -260,6 +276,14 @@ def main() -> int:
                 str(trace),
                 recording,
             ]
+            if args.decoder_state_retention is not None:
+                command.extend(
+                    ["--state-retention", str(args.decoder_state_retention)]
+                )
+            if args.decoder_refractory_ms is not None:
+                command.extend(
+                    ["--refractory-ms", str(args.decoder_refractory_ms)]
+                )
         else:
             command = [
                 str(args.runner),
@@ -337,6 +361,10 @@ def main() -> int:
                     "decoder_replay_sha256": sha256_file(args.decoder_replay),
                     "posterior_cache_hits": posterior_cache_hits,
                     "posterior_cache_misses": posterior_cache_misses,
+                    "decoder_replay_overrides": {
+                        "state_retention": args.decoder_state_retention,
+                        "refractory_ms": args.decoder_refractory_ms,
+                    },
                     "posterior_traces": posterior_traces,
                 }
             )
