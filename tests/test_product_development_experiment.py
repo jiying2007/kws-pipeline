@@ -9,6 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from product_development_experiment import materialize, self_test, verify_spec  # noqa: E402
+from iterate_domain import posterior_replay_cli_args  # noqa: E402
 
 
 def main() -> int:
@@ -69,6 +70,20 @@ def main() -> int:
     assert "'decoder_retention_recalibrated_curve': retention_curve is not None" in workflow
     assert "'decoder_retention_recalibrated_curve':retention_curve" in workflow
     assert "decoder-retention-recalibrated-curve.json" in workflow
+    assert "Resolve optional decoder policy diagnostic" in workflow
+    assert "experiment_id.startswith('decoder-policy-replay-')" in workflow
+    assert "Diagnose decoder blank/fuzzy policy grid" in workflow
+    assert "tools/diagnose_decoder_policy_replay.py" in workflow
+    assert "'--blank-retentions','0.70','0.85','0.95'" in workflow
+    assert "'--fuzzy-child-cost-logs','-8.25','-4.0'" in workflow
+    assert "'--coordinate-rounds','1'" in workflow
+    assert "'--diagnostic-round-selection-policy','refinement-source-decoder-policy-v1'" in workflow
+    assert "required['decoder_policy_replay_grid']=decoder_policy is not None" in workflow
+    assert "'decoder_policy_replay_grid':decoder_policy" in workflow
+    assert "decoder-policy-replay-grid.json" in workflow
+    assert "candidates/*/model.kwm" in workflow
+    assert "datasets/round-*/calibration.references.jsonl" in workflow
+    assert "datasets/round-*/test.references.jsonl" in workflow
     assert "posterior-cache/**/*.kwtr" in workflow
     assert "posterior-cache/**/*.json" in workflow
     assert "qualification.references.jsonl" not in workflow
@@ -91,6 +106,38 @@ def main() -> int:
     assert "retry_release_download()" in materializer
     assert "KWS_DOWNLOAD_RETRY_ATTEMPTS" in materializer
     assert "--clobber" in materializer
+
+    replay_args = posterior_replay_cli_args(
+        (pathlib.Path("dump"), pathlib.Path("replay"), pathlib.Path("cache")),
+        decoder_blank_retention=0.85,
+        decoder_fuzzy_child_cost_log=-4.0,
+    )
+    assert replay_args[-4:] == [
+        "--decoder-blank-retention",
+        "0.85",
+        "--decoder-fuzzy-child-cost-log",
+        "-4.0",
+    ]
+    for kwargs, message in (
+        ({"decoder_blank_retention": 1.0}, "decoder_blank_retention"),
+        ({"decoder_fuzzy_child_cost_log": 0.1}, "decoder_fuzzy_child_cost_log"),
+    ):
+        try:
+            posterior_replay_cli_args(
+                (pathlib.Path("dump"), pathlib.Path("replay"), pathlib.Path("cache")),
+                **kwargs,
+            )
+        except ValueError as exc:
+            assert message in str(exc)
+        else:
+            raise AssertionError(f"invalid replay override accepted: {kwargs}")
+
+    decoder_policy_diagnostic = (
+        ROOT / "tools/diagnose_decoder_policy_replay.py"
+    ).read_text(encoding="utf-8")
+    assert "development_round_evidence" in decoder_policy_diagnostic
+    assert '"selection_feedback_allowed": False' in decoder_policy_diagnostic
+    assert "thresholds_recalibrated_per_policy_point" in decoder_policy_diagnostic
 
     with tempfile.TemporaryDirectory(prefix="experiment-contract-") as tmp:
         root = pathlib.Path(tmp)

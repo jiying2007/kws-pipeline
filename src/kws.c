@@ -498,6 +498,17 @@ int kws_engine_debug_copy_last_frame(const kws_engine_t *engine,
   return 1;
 }
 
+kws_status_t kws_engine_debug_set_decoder_search_policy(
+    kws_engine_t *engine,
+    float blank_retention,
+    float fuzzy_child_cost_log) {
+  if (engine == NULL) {
+    return KWS_EINVAL;
+  }
+  return kws_decoder_debug_set_search_policy(
+      &engine->decoder, blank_retention, fuzzy_child_cost_log);
+}
+
 kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
                                            const float *logits,
                                            uint16_t vocab_size,

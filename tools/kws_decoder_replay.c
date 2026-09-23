@@ -1,10 +1,12 @@
 #include "kws_pipeline/kws.h"
 #include "kws_debug.h"
 #include "kws_trace_io.h"
+#include "kws_parameter_limits.h"
 #include "sha256.h"
 #include "tool_io.h"
 
 #include <errno.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +44,9 @@ int main(int argc, char **argv) {
   kws_model_t model;
   kws_keyword_pack_t pack;
   kws_config_t config = kws_default_config();
+  float blank_retention = expf(KWS_SILENCE_RETENTION_LOG);
+  float fuzzy_child_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;
+  int search_policy_override = 0;
   kws_engine_t *engine = NULL;
   void *arena = NULL;
   kws_trace_reader_t reader = {0};
@@ -54,7 +59,8 @@ int main(int argc, char **argv) {
   if (argc < 5 || ((argc - 5) % 2) != 0) {
     fprintf(stderr,
             "usage: %s model.kwm keywords.kwk trace.kwtr recording-id "
-            "[--state-retention value] [--refractory-ms value]\n",
+            "[--state-retention value] [--refractory-ms value] "
+            "[--blank-retention value] [--fuzzy-child-cost-log value]\n",
             argv[0]);
     return 2;
   }
@@ -69,6 +75,18 @@ int main(int argc, char **argv) {
         fprintf(stderr, "invalid --refractory-ms\n");
         return 2;
       }
+    } else if (strcmp(argv[i], "--blank-retention") == 0) {
+      if (!parse_float(argv[i + 1], &blank_retention)) {
+        fprintf(stderr, "invalid --blank-retention\n");
+        return 2;
+      }
+      search_policy_override = 1;
+    } else if (strcmp(argv[i], "--fuzzy-child-cost-log") == 0) {
+      if (!parse_float(argv[i + 1], &fuzzy_child_cost_log)) {
+        fprintf(stderr, "invalid --fuzzy-child-cost-log\n");
+        return 2;
+      }
+      search_policy_override = 1;
     } else {
       fprintf(stderr, "unknown option: %s\n", argv[i]);
       return 2;
@@ -105,6 +123,12 @@ int main(int argc, char **argv) {
                       &engine) != KWS_OK ||
       kws_engine_set_keyword_pack(engine, &pack) != KWS_OK) {
     fprintf(stderr, "cannot initialize replay engine\n");
+    goto cleanup;
+  }
+  if (search_policy_override != 0 &&
+      kws_engine_debug_set_decoder_search_policy(
+          engine, blank_retention, fuzzy_child_cost_log) != KWS_OK) {
+    fprintf(stderr, "invalid decoder search-policy override\n");
     goto cleanup;
   }
 

@@ -99,6 +99,18 @@ jobs:
           python3 training/product_development_experiment.py materialize             --spec "$KWS_EXPERIMENT_SPEC"             --effective-config "$KWS_EFFECTIVE_TRAINING_CONFIG"             --output "$KWS_EXPERIMENT_CONFIG"             --receipt "$KWS_EXPERIMENT_RECEIPT"             --base-sha "$BASE_SHA"             --head-sha "$HEAD_SHA"
           python3 training/verify_training_entry_contract.py             --config "$KWS_EXPERIMENT_CONFIG"             --require-product-speech-like-base
 
+      - name: Resolve optional decoder policy diagnostic
+        id: decoder_policy
+        run: |
+          enabled="$(python3 - <<'PY'
+          import json, os, pathlib
+          spec=json.loads(pathlib.Path(os.environ['KWS_EXPERIMENT_SPEC']).read_text(encoding='utf-8'))
+          experiment_id=str(spec.get('experiment_id',''))
+          print('true' if experiment_id.startswith('decoder-policy-replay-') else 'false')
+          PY
+          )"
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+
       - name: Build exact C runtime
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
@@ -298,6 +310,62 @@ jobs:
           },sort_keys=True))
           PY
 
+      - name: Diagnose decoder blank/fuzzy policy grid
+        if: steps.decoder_policy.outputs.enabled == 'true'
+        run: |
+          .venv/bin/python - <<'PY'
+          import json, os, pathlib, subprocess, sys
+
+          repo=pathlib.Path.cwd()
+          sys.path.insert(0,str(repo/'training'))
+          from adversarial_refinement import select_refinement_source
+
+          root=pathlib.Path(os.environ['KWS_EXPERIMENT_WORK'])
+          manifest=json.loads((root/'domain-loop-manifest.json').read_text(encoding='utf-8'))
+          config_path=pathlib.Path(os.environ['KWS_EXPERIMENT_CONFIG'])
+          config=json.loads(config_path.read_text(encoding='utf-8'))
+          source, policy=select_refinement_source(manifest)
+          model=pathlib.Path(str(source['model']))
+          keywords=pathlib.Path(str(source['keywords']))
+          round_index=int(source['round'])
+          dataset=root/'datasets'/f'round-{round_index:02d}'
+          tokens=pathlib.Path(str(config['tokens']))
+          if not tokens.is_absolute():
+              tokens=(repo/tokens).resolve()
+          command=[
+              str(repo/'.venv/bin/python'),
+              'tools/diagnose_decoder_policy_replay.py',
+              '--runner','build/kws_wav',
+              '--model',str(model),
+              '--tokens',str(tokens),
+              '--keywords',str(keywords),
+              '--config',str(config_path),
+              '--calibration-references',str(dataset/'calibration.references.jsonl'),
+              '--test-references',str(dataset/'test.references.jsonl'),
+              '--development-manifest',str(root/'domain-loop-manifest.json'),
+              '--development-authority-receipt',os.environ['KWS_EXPERIMENT_RECEIPT'],
+              '--round-index',str(round_index),
+              '--diagnostic-round-selection-policy','refinement-source-decoder-policy-v1',
+              '--posterior-dump','build/kws_posterior_dump',
+              '--decoder-replay','build/kws_decoder_replay',
+              '--posterior-cache',str(root/'posterior-cache'),
+              '--blank-retentions','0.70','0.85','0.95',
+              '--fuzzy-child-cost-logs','-8.25','-4.0',
+              '--coordinate-rounds','1',
+              '--work-dir',str(root/'decoder-policy-replay-work'),
+              '--output',str(root/'decoder-policy-replay-grid.json'),
+          ]
+          subprocess.check_call(command)
+          print(json.dumps({
+              'decoder_policy_diagnostic':True,
+              'source_round':round_index,
+              'source_selection_policy':policy,
+              'blank_retentions':[0.70,0.85,0.95],
+              'fuzzy_child_cost_logs':[-8.25,-4.0],
+              'selection_feedback_allowed':False,
+          },sort_keys=True))
+          PY
+
       - name: Run bounded refinement experiment
         if: steps.eligibility.outputs.eligible == 'true'
         run: |
@@ -362,6 +430,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           BASE_EXIT: ${{ steps.base.outputs.exit_code }}
           REFINEMENT_ELIGIBLE: ${{ steps.eligibility.outputs.eligible }}
+          DECODER_POLICY_REPLAY_ENABLED: ${{ steps.decoder_policy.outputs.enabled }}
         run: |
           python3 - <<'PY'
           import json, os, pathlib
@@ -383,6 +452,7 @@ jobs:
           threshold_trigger=load_optional(root/'threshold-saturation-trigger.json')
           threshold_sweep=load_optional(root/'threshold-wide-sweep.json')
           retention_curve=load_optional(root/'decoder-retention-recalibrated-curve.json')
+          decoder_policy=load_optional(root/'decoder-policy-replay-grid.json')
           required={
               'experiment_receipt': receipt is not None,
               'domain_loop_manifest': manifest is not None,
@@ -396,6 +466,8 @@ jobs:
               required['threshold_wide_sweep']=threshold_sweep is not None
           if isinstance(eligibility,dict) and eligibility.get('eligible') is True:
               required['refinement_summary']=refinement is not None
+          if os.environ.get('DECODER_POLICY_REPLAY_ENABLED') == 'true':
+              required['decoder_policy_replay_grid']=decoder_policy is not None
           summary={
               'schema_version':1,
               'evidence_class':'product-development-pr-head-experiment-summary-v1',
@@ -424,6 +496,7 @@ jobs:
               'threshold_saturation_trigger':threshold_trigger,
               'threshold_wide_sweep':threshold_sweep,
               'decoder_retention_recalibrated_curve':retention_curve,
+              'decoder_policy_replay_grid':decoder_policy,
           }
           (root/'experiment-summary.json').write_text(
               json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True,allow_nan=False)+'\n',
@@ -449,6 +522,13 @@ jobs:
             build/product-development-experiment/threshold-saturation-trigger.json
             build/product-development-experiment/threshold-wide-sweep.json
             build/product-development-experiment/decoder-retention-recalibrated-curve.json
+            build/product-development-experiment/decoder-policy-replay-grid.json
+            build/product-development-experiment/candidates/*/model.kwm
+            build/product-development-experiment/candidates/*/calibration/calibrated-keywords.tsv
+            build/product-development-experiment/candidates/*/calibration/calibrated-keywords.kwk
+            build/product-development-experiment/datasets/round-*/calibration.references.jsonl
+            build/product-development-experiment/datasets/round-*/test.references.jsonl
+            keywords/tokens.example.txt
             build/product-development-experiment/posterior-cache/**/*.kwtr
             build/product-development-experiment/posterior-cache/**/*.json
             build/product-development-experiment/candidates/*/calibration/calibration-operating-curve.json
