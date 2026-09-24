@@ -63,8 +63,47 @@ def sequence_margin_negative_policy_setting(train: dict) -> tuple[str, bool]:
     return policy, configured
 
 
+AUXILIARY_LOSS_WEIGHT_NAMES = (
+    "ordered_token_loss_weight",
+    "keyword_sequence_margin_loss_weight",
+    "prefix_completion_loss_weight",
+    "recurrent_release_loss_weight",
+)
+
+
+def auxiliary_loss_weights(train: dict) -> dict[str, float]:
+    """Return only explicitly supplied controls, retaining an explicit zero."""
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    result: dict[str, float] = {}
+    for name in AUXILIARY_LOSS_WEIGHT_NAMES:
+        if name not in train:
+            continue
+        raw = train[name]
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+            raise ValueError(f"train.{name} must be numeric, not boolean/text")
+        value = float(raw)
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError(f"train.{name} must be finite and >= 0")
+        result[name] = value
+    return result
+
+
+def verify_auxiliary_loss_readback(train: dict, recorded: dict) -> dict[str, float]:
+    """Verify resolved trainer controls against the independent effective config."""
+    if not isinstance(recorded, dict) or set(recorded) != set(AUXILIARY_LOSS_WEIGHT_NAMES):
+        raise ValueError("auxiliary loss readback must contain all four resolved weights")
+    actual = auxiliary_loss_weights(recorded)
+    for name, expected in auxiliary_loss_weights(train).items():
+        if actual[name] != expected:
+            raise ValueError(f"auxiliary loss readback mismatch: {name}")
+    return actual
+
+
 def optional_objective_cli_args(train: dict) -> list[str]:
     args: list[str] = []
+    for name, value in auxiliary_loss_weights(train).items():
+        args.extend(["--" + name.replace("_", "-"), str(value)])
 
     weight, margin, path_purity_configured = path_purity_settings(train)
     if path_purity_configured:

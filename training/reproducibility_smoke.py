@@ -13,6 +13,8 @@ import wave
 
 import torch
 
+from training_state import state_identity
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 
@@ -173,6 +175,7 @@ def main() -> int:
         "evidence_class": "cross-runner-training-reproducibility-smoke-v1",
         "model_sha256": sha256_file(model),
         "checkpoint_sha256": sha256_file(checkpoint),
+        "float_state_sha256": state_identity(checkpoint_payload["state_dict"])["sha256"],
         "fixture_manifest_sha256": sha256_file(manifest),
         "torch_num_threads": environment.get("torch_num_threads"),
         "torch_num_interop_threads": environment.get("torch_num_interop_threads"),

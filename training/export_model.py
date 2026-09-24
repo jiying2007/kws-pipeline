@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
+from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
+from training_state import state_identity
 from frontend_spec import FRONTEND_IDS
 from objective_contract import (
     ORDERED_TOKEN_SCOPE_DEFAULT,
@@ -135,6 +137,12 @@ def training_environment(checkpoint: dict) -> dict:
     result["torch_num_threads"] = int(value.get("torch_num_threads", 0))
     result["torch_num_interop_threads"] = int(value.get("torch_num_interop_threads", 0))
     result["container_declared"] = bool(value.get("container_declared", False))
+    for key in ("cpu_runtime", "torch_runtime"):
+        if key in value:
+            item = value[key]
+            if not isinstance(item, dict) or not item:
+                raise ValueError(f"checkpoint training_environment.{key} must be a non-empty object")
+            result[key] = json.loads(json.dumps(item, allow_nan=False))
     for key in ("requirements_lock_sha256", "dockerfile_sha256"):
         item = value.get(key)
         result[key] = None if item is None else checkpoint_sha(item, f"training_environment.{key}")
@@ -448,6 +456,15 @@ def main() -> None:
     frame_length = int(checkpoint["frame_length_samples"])
     frame_hop = int(checkpoint["frame_hop_samples"])
     training = training_metadata(checkpoint)
+    if "auxiliary_loss_weights" in checkpoint:
+        training["auxiliary_loss_weights"] = verify_auxiliary_loss_readback(
+            checkpoint["auxiliary_loss_weights"], auxiliary_loss_weights(checkpoint)
+        )
+    if "float_state_identity" in checkpoint:
+        identity = state_identity(state_dict)
+        if checkpoint["float_state_identity"] != identity:
+            raise ValueError("checkpoint float state identity mismatch")
+        training["float_state_identity"] = identity
 
     if not 1 <= feature_dim <= MAX_FEATURE_DIM:
         raise ValueError(f"feature_dim must be 1..{MAX_FEATURE_DIM}")
@@ -526,7 +543,7 @@ def main() -> None:
             "hidden_dim": hidden_dim,
             "vocab_size": checkpoint_vocab_size,
             "vocab_fingerprint": f"0x{fingerprint:016x}",
-            "frontend_spec_version": frontend_spec_version,
+            "frontend_spec_version": FRONTEND_SPEC_VERSION,
             "frontend_name": frontend_name,
             "frontend_kind": frontend_kind,
         },

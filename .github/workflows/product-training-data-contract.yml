@@ -34,6 +34,7 @@ on:
       - "training/completion_loss.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
+      - "training/training_state.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
       - "training/path_purity.py"
@@ -75,6 +76,7 @@ on:
       - "training/completion_loss.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
+      - "training/training_state.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
       - "training/path_purity.py"
@@ -354,6 +356,9 @@ jobs:
           assert len({row['torch_version'] for row in rows})==1
           assert len({row['fixture_manifest_sha256'] for row in rows})==1
           assert len({json.dumps(row['training_code_sha256'],sort_keys=True) for row in rows})==1
+          float_shas={row['float_state_sha256'] for row in rows}
+          if len(float_shas)!=1 or any(len(value)!=64 for value in float_shas):
+              raise SystemExit('cross-runner float training state mismatch: ' + str(float_shas))
           model_shas={row['model_sha256'] for row in rows}
           if len(model_shas)!=1:
               raise SystemExit(
