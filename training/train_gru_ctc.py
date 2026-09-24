@@ -3,8 +3,21 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 import pathlib
 import random
+
+_DETERMINISTIC_CPU_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OMP_DYNAMIC": "FALSE",
+    "MKL_NUM_THREADS": "1",
+    "MKL_CBWR": "COMPATIBLE",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "ATEN_CPU_CAPABILITY": "default",
+}
+for _name, _value in _DETERMINISTIC_CPU_ENV.items():
+    os.environ[_name] = _value
 
 import torch
 from torch import nn
