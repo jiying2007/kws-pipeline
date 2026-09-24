@@ -13,6 +13,7 @@ permissions:
   contents: read
 
 env:
+  PYTHONHASHSEED: "0"
   KWS_EXPERIMENT_SPEC: .github/triggers/model-training-experiment.json
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-experiment.json
