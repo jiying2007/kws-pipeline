@@ -14,6 +14,7 @@ def main() -> int:
     model_source = (ROOT / "training" / "model.py").read_text(encoding="utf-8")
     site_source = (ROOT / "training" / "sitecustomize.py").read_text(encoding="utf-8")
     train_source = (ROOT / "training" / "train_ctc.py").read_text(encoding="utf-8")
+    gru_train_source = (ROOT / "training" / "train_gru_ctc.py").read_text(encoding="utf-8")
     iterate_source = (ROOT / "training" / "iterate_domain.py").read_text(encoding="utf-8")
     margin_source = (ROOT / "training" / "sequence_margin.py").read_text(encoding="utf-8")
     objective_contract_source = (
@@ -69,6 +70,9 @@ def main() -> int:
         in train_source
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
+    for trainer_source in (train_source, gru_train_source):
+        assert trainer_source.index('"ATEN_CPU_CAPABILITY": "default"') < trainer_source.index("import torch")
+        assert trainer_source.index('"MKL_CBWR": "COMPATIBLE"') < trainer_source.index("import torch")
     assert 'PYTHONHASHSEED: "0"' in product_experiment_workflow
     assert 'OMP_NUM_THREADS: "1"' in product_experiment_workflow
     assert 'MKL_CBWR: COMPATIBLE' in product_experiment_workflow
