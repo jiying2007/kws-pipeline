@@ -13,6 +13,14 @@ permissions:
   contents: read
 
 env:
+  PYTHONHASHSEED: "0"
+  OMP_NUM_THREADS: "1"
+  OMP_DYNAMIC: "FALSE"
+  MKL_NUM_THREADS: "1"
+  MKL_CBWR: COMPATIBLE
+  OPENBLAS_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  ATEN_CPU_CAPABILITY: default
   KWS_EXPERIMENT_SPEC: .github/triggers/model-training-experiment.json
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-experiment.json

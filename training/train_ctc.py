@@ -14,6 +14,18 @@ import subprocess
 import sys
 import wave
 
+_DETERMINISTIC_CPU_ENV = {
+    "OMP_NUM_THREADS": "1",
+    "OMP_DYNAMIC": "FALSE",
+    "MKL_NUM_THREADS": "1",
+    "MKL_CBWR": "COMPATIBLE",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "ATEN_CPU_CAPABILITY": "default",
+}
+for _name, _value in _DETERMINISTIC_CPU_ENV.items():
+    os.environ[_name] = _value
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
@@ -156,7 +168,17 @@ def _torch_runtime_identity() -> dict:
         ),
         "thread_env": {
             key: os.environ.get(key)
-            for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+            for key in (
+                "OMP_NUM_THREADS",
+                "OMP_DYNAMIC",
+                "MKL_NUM_THREADS",
+                "MKL_CBWR",
+                "OPENBLAS_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS",
+                "ATEN_CPU_CAPABILITY",
+                "PYTHONHASHSEED",
+                "KWS_SITECUSTOMIZE_LOADED",
+            )
         },
     }
 

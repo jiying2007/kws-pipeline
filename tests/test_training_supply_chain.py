@@ -14,6 +14,7 @@ def main() -> int:
     model_source = (ROOT / "training" / "model.py").read_text(encoding="utf-8")
     site_source = (ROOT / "training" / "sitecustomize.py").read_text(encoding="utf-8")
     train_source = (ROOT / "training" / "train_ctc.py").read_text(encoding="utf-8")
+    gru_train_source = (ROOT / "training" / "train_gru_ctc.py").read_text(encoding="utf-8")
     iterate_source = (ROOT / "training" / "iterate_domain.py").read_text(encoding="utf-8")
     margin_source = (ROOT / "training" / "sequence_margin.py").read_text(encoding="utf-8")
     objective_contract_source = (
@@ -28,6 +29,9 @@ def main() -> int:
     model_training_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(
         encoding="utf-8"
     )
+    product_experiment_workflow = (
+        ROOT / ".github" / "workflows" / "product-development-experiment.yml"
+    ).read_text(encoding="utf-8")
     curriculum_source = (ROOT / "training" / "domain_curriculum.py").read_text(
         encoding="utf-8"
     )
@@ -44,14 +48,15 @@ def main() -> int:
     assert "torch==2.13.0" in lock
 
     for source in (site_source, model_source):
-        assert '"OMP_NUM_THREADS": "2"' in source
+        assert '"OMP_NUM_THREADS": "1"' in source
         assert '"OMP_DYNAMIC": "FALSE"' in source
-        assert '"MKL_NUM_THREADS": "2"' in source
-        assert '"MKL_CBWR": "AVX2"' in source
-        assert '"OPENBLAS_NUM_THREADS": "2"' in source
-        assert '"NUMEXPR_NUM_THREADS": "2"' in source
-        assert '"ATEN_CPU_CAPABILITY": "avx2"' in source
-    assert "TRAINING_TORCH_NUM_THREADS = 2" in model_source
+        assert '"MKL_NUM_THREADS": "1"' in source
+        assert '"MKL_CBWR": "COMPATIBLE"' in source
+        assert '"OPENBLAS_NUM_THREADS": "1"' in source
+        assert '"NUMEXPR_NUM_THREADS": "1"' in source
+        assert '"ATEN_CPU_CAPABILITY": "default"' in source
+    assert '"KWS_SITECUSTOMIZE_LOADED": "1"' in site_source
+    assert "TRAINING_TORCH_NUM_THREADS = 1" in model_source
     assert "TRAINING_TORCH_NUM_INTEROP_THREADS = 1" in model_source
     assert "torch.set_num_threads(TRAINING_TORCH_NUM_THREADS)" in model_source
     assert (
@@ -65,6 +70,17 @@ def main() -> int:
         in train_source
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
+    for trainer_source in (train_source, gru_train_source):
+        assert trainer_source.index('"ATEN_CPU_CAPABILITY": "default"') < trainer_source.index("import torch")
+        assert trainer_source.index('"MKL_CBWR": "COMPATIBLE"') < trainer_source.index("import torch")
+    assert 'PYTHONHASHSEED: "0"' in product_experiment_workflow
+    assert 'OMP_NUM_THREADS: "1"' in product_experiment_workflow
+    assert 'MKL_CBWR: COMPATIBLE' in product_experiment_workflow
+    assert 'ATEN_CPU_CAPABILITY: default' in product_experiment_workflow
+    assert "PYTHONHASHSEED=0" in dockerfile
+    assert "OMP_NUM_THREADS=1" in dockerfile
+    assert "MKL_CBWR=COMPATIBLE" in dockerfile
+    assert "ATEN_CPU_CAPABILITY=default" in dockerfile
 
     # The decoder-confidence auxiliary objective is runtime-aligned and now owns
     # an explicit operating point for every shipping keyword. This keeps the two
