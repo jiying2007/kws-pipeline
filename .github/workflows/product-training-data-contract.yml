@@ -34,6 +34,8 @@ on:
       - "training/completion_loss.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
+      - "training/reproducibility_trace.py"
+      - "training/compare_reproducibility_trace.py"
       - "training/training_state.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
@@ -76,6 +78,8 @@ on:
       - "training/completion_loss.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
+      - "training/reproducibility_trace.py"
+      - "training/compare_reproducibility_trace.py"
       - "training/training_state.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
@@ -320,30 +324,66 @@ jobs:
           .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
           .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Train unobserved parity reference
+        run: |
+          .venv-repro/bin/python training/reproducibility_smoke.py \
+            --work-dir "build/plain-${{ matrix.replica }}" \
+            --output "build/plain-${{ matrix.replica }}.json"
       - name: Train deterministic fixture
         run: |
           .venv-repro/bin/python training/reproducibility_smoke.py \
             --work-dir "build/training-reproducibility-${{ matrix.replica }}" \
-            --output "build/training-reproducibility-${{ matrix.replica }}.json"
+            --output "build/training-reproducibility-${{ matrix.replica }}.json" --numeric-trace
+      - name: Verify observation leaves actual training unchanged
+        run: |
+          .venv-repro/bin/python training/compare_reproducibility_trace.py --observer-parity \
+            --left "build/plain-${{ matrix.replica }}" \
+            --right "build/training-reproducibility-${{ matrix.replica }}" \
+            --output "build/observer-parity-${{ matrix.replica }}.json"
       - name: Retain reproducibility identity
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: training-reproducibility-${{ matrix.replica }}
-          path: build/training-reproducibility-${{ matrix.replica }}.json
+          path: |
+            build/training-reproducibility-${{ matrix.replica }}.json
+            build/training-reproducibility-${{ matrix.replica }}/**
+            build/plain-${{ matrix.replica }}.json
+            build/observer-parity-${{ matrix.replica }}.json
           if-no-files-found: error
           retention-days: 7
 
   training-reproducibility-compare:
     needs: training-reproducibility-replica
+    if: always()
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Download independent runner identities
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: training-reproducibility-*
           path: .repro
           merge-multiple: false
+      - name: Locate first observed numeric divergence
+        if: always()
+        run: |
+          python3 training/compare_reproducibility_trace.py \
+            --left .repro/training-reproducibility-a/training-reproducibility-a.json \
+            --right .repro/training-reproducibility-b/training-reproducibility-b.json \
+            --output build/numeric-divergence.json
+      - name: Retain numeric divergence even on mismatch
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: training-numeric-divergence
+          path: build/numeric-divergence.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Require bit-identical training model
+        if: always()
         run: |
           python3 - <<'PY'
           import json, pathlib

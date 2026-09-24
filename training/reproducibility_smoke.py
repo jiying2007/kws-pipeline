@@ -101,6 +101,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--output", required=True, type=pathlib.Path)
+    parser.add_argument("--numeric-trace", action="store_true")
     args = parser.parse_args()
 
     if os.environ.get("PYTHONHASHSEED") != "0":
@@ -147,6 +148,9 @@ def main() -> int:
         "--output",
         str(checkpoint),
     ]
+    if args.numeric_trace:
+        train_command = [sys.executable, str(TRAINING / "reproducibility_trace.py"),
+                         "--output", str(work / "numeric-trace"), "--", *train_command[2:]]
     subprocess.check_call(train_command, cwd=ROOT)
     subprocess.check_call(
         [
@@ -172,6 +176,7 @@ def main() -> int:
         raise ValueError("checkpoint training_environment is missing")
     result = {
         "schema_version": 1,
+        "micro_driver_sha256": sha256_file(pathlib.Path(__file__)),
         "evidence_class": "cross-runner-training-reproducibility-smoke-v1",
         "model_sha256": sha256_file(model),
         "checkpoint_sha256": sha256_file(checkpoint),
@@ -190,6 +195,12 @@ def main() -> int:
             .get("KWS_SITECUSTOMIZE_LOADED")
         ),
     }
+    if args.numeric_trace:
+        trace_path = work / "numeric-trace" / "trace.json"
+        trace = json.loads(trace_path.read_text())
+        if trace.get("completed") is not True or trace.get("steps") != 9:
+            raise ValueError("micro numeric trace must complete all nine optimizer steps")
+        result["numeric_trace_sha256"] = sha256_file(trace_path)
     if result["torch_num_threads"] != 1 or result["torch_num_interop_threads"] != 1:
         raise ValueError("reproducibility smoke did not use single-thread torch topology")
     thread_env = result["torch_runtime"].get("thread_env", {})
