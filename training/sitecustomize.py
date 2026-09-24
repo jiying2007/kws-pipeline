@@ -8,13 +8,14 @@ import os
 # GitHub-hosted x64 runners support AVX2; using it as the common baseline avoids
 # AVX2/AVX512 drift without forcing the numerically different generic fallback.
 _DETERMINISTIC_CPU_ENV = {
-    "OMP_NUM_THREADS": "2",
+    "OMP_NUM_THREADS": "1",
     "OMP_DYNAMIC": "FALSE",
-    "MKL_NUM_THREADS": "2",
+    "MKL_NUM_THREADS": "1",
     "MKL_CBWR": "AVX2",
-    "OPENBLAS_NUM_THREADS": "2",
-    "NUMEXPR_NUM_THREADS": "2",
+    "OPENBLAS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
     "ATEN_CPU_CAPABILITY": "avx2",
+    "PYTHONHASHSEED": "0",
 }
 
 for _name, _value in _DETERMINISTIC_CPU_ENV.items():
