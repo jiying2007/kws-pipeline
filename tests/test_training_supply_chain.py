@@ -44,14 +44,15 @@ def main() -> int:
     assert "torch==2.13.0" in lock
 
     for source in (site_source, model_source):
-        assert '"OMP_NUM_THREADS": "2"' in source
+        assert '"OMP_NUM_THREADS": "1"' in source
         assert '"OMP_DYNAMIC": "FALSE"' in source
-        assert '"MKL_NUM_THREADS": "2"' in source
+        assert '"MKL_NUM_THREADS": "1"' in source
         assert '"MKL_CBWR": "AVX2"' in source
-        assert '"OPENBLAS_NUM_THREADS": "2"' in source
-        assert '"NUMEXPR_NUM_THREADS": "2"' in source
+        assert '"OPENBLAS_NUM_THREADS": "1"' in source
+        assert '"NUMEXPR_NUM_THREADS": "1"' in source
         assert '"ATEN_CPU_CAPABILITY": "avx2"' in source
-    assert "TRAINING_TORCH_NUM_THREADS = 2" in model_source
+        assert '"PYTHONHASHSEED": "0"' in source
+    assert "TRAINING_TORCH_NUM_THREADS = 1" in model_source
     assert "TRAINING_TORCH_NUM_INTEROP_THREADS = 1" in model_source
     assert "torch.set_num_threads(TRAINING_TORCH_NUM_THREADS)" in model_source
     assert (
