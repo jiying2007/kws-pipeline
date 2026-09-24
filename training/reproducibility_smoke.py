@@ -11,6 +11,8 @@ import subprocess
 import sys
 import wave
 
+import torch
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 
@@ -158,15 +160,19 @@ def main() -> int:
         cwd=ROOT,
     )
 
-    provenance = json.loads(
-        pathlib.Path(str(model) + ".provenance.json").read_text(encoding="utf-8")
+    checkpoint_payload = torch.load(
+        checkpoint,
+        map_location="cpu",
+        weights_only=True,
     )
-    environment = provenance.get("training", {}).get("environment", {})
+    environment = checkpoint_payload.get("training_environment", {})
+    if not isinstance(environment, dict):
+        raise ValueError("checkpoint training_environment is missing")
     result = {
         "schema_version": 1,
         "evidence_class": "cross-runner-training-reproducibility-smoke-v1",
         "model_sha256": sha256_file(model),
-        "checkpoint_sha256": provenance.get("checkpoint", {}).get("sha256"),
+        "checkpoint_sha256": sha256_file(checkpoint),
         "fixture_manifest_sha256": sha256_file(manifest),
         "torch_num_threads": environment.get("torch_num_threads"),
         "torch_num_interop_threads": environment.get("torch_num_interop_threads"),
