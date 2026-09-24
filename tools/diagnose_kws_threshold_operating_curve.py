@@ -13,6 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 sys.path.insert(0, str(TRAINING))
 
+from development_signal import POLICY as SIGNAL_POLICY, selection_enabled
 from iterate_domain import (  # noqa: E402
     base_gate,
     calibration_behavior_key,
@@ -183,6 +184,12 @@ def development_round_evidence(
     if manifest_selected_round is not None:
         manifest_selected_round = int(manifest_selected_round)
     selection_policy = value.get("selection_policy")
+    signal_policy = value.get("candidate_selection", {}).get("nondegeneracy")
+    keyword_ids = None
+    if signal_policy is not None:
+        if signal_policy.get("policy") != SIGNAL_POLICY:
+            raise ValueError("unsupported development nondegeneracy policy")
+        keyword_ids = tuple(signal_policy["required_keyword_ids"])
     return {
         "round": round_index,
         "development_manifest_sha256": sha256_file(manifest_path),
@@ -218,10 +225,10 @@ def development_round_evidence(
         ),
         "test_metrics": compact_metrics(test, test_domains, gates),
         "calibration_behavior_key": list(
-            calibration_behavior_key(calibration, calibration_domains, gates)
+            calibration_behavior_key(calibration, calibration_domains, gates, keyword_ids)
         ),
         "test_behavior_key": list(
-            calibration_behavior_key(test, test_domains, gates)
+            calibration_behavior_key(test, test_domains, gates, keyword_ids)
         ),
     }
 
@@ -345,6 +352,7 @@ def main() -> int:
     work.mkdir(parents=True)
 
     source_rows = keyword_rows(args.keywords)
+    keyword_ids = tuple(str(row["id"]) for row in source_rows) if selection_enabled(cfg) else None
     rows: list[dict] = []
     for threshold in thresholds:
         trial = [dict(row) for row in source_rows]
@@ -380,7 +388,7 @@ def main() -> int:
                 "calibration": compact_metrics(cal_base, cal_domains, gates),
                 "test": compact_metrics(test_base, test_domains, gates),
                 "official_calibration_behavior_key": list(
-                    calibration_behavior_key(cal_base, cal_domains, gates)
+                    calibration_behavior_key(cal_base, cal_domains, gates, keyword_ids)
                 ),
             }
         )
