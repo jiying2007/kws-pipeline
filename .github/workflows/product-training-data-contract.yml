@@ -25,6 +25,14 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/model.py"
+      - "training/sitecustomize.py"
+      - "training/frontend.py"
+      - "training/feature_cached_trainer.py"
+      - "training/sequence_margin.py"
+      - "training/completion_loss.py"
+      - "training/wake_pressure_balance.py"
+      - "training/reproducibility_smoke.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
       - "training/path_purity.py"
@@ -57,6 +65,14 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/model.py"
+      - "training/sitecustomize.py"
+      - "training/frontend.py"
+      - "training/feature_cached_trainer.py"
+      - "training/sequence_margin.py"
+      - "training/completion_loss.py"
+      - "training/wake_pressure_balance.py"
+      - "training/reproducibility_smoke.py"
       - "training/objective_config.py"
       - "training/objective_contract.py"
       - "training/path_purity.py"
@@ -270,4 +286,69 @@ jobs:
           assert product["replay_provider_execution_identity_sha256"]==tts["provider_execution_identity_sha256"]
           assert product["replay_provider_semantic_identity_policy"]=="product-replay-provider-semantic-v1"
           print("live product speech-like base/replay semantic binding: ok")
+          PY
+
+
+  training-reproducibility-replica:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [a, b]
+    env:
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU reproducibility runtime
+        run: |
+          python3 -m venv .venv-repro
+          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv-repro/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Train deterministic fixture
+        run: |
+          .venv-repro/bin/python training/reproducibility_smoke.py \
+            --work-dir "build/training-reproducibility-${{ matrix.replica }}" \
+            --output "build/training-reproducibility-${{ matrix.replica }}.json"
+      - name: Retain reproducibility identity
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: training-reproducibility-${{ matrix.replica }}
+          path: build/training-reproducibility-${{ matrix.replica }}.json
+          if-no-files-found: error
+          retention-days: 7
+
+  training-reproducibility-compare:
+    needs: training-reproducibility-replica
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download independent runner identities
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: training-reproducibility-*
+          path: .repro
+          merge-multiple: false
+      - name: Require bit-identical training model
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          paths=sorted(pathlib.Path('.repro').glob('**/training-reproducibility-*.json'))
+          assert len(paths)==2, paths
+          rows=[json.loads(path.read_text(encoding='utf-8')) for path in paths]
+          assert {row['pythonhashseed'] for row in rows}=={'0'}
+          assert {row['torch_num_threads'] for row in rows}=={1}
+          assert {row['torch_num_interop_threads'] for row in rows}=={1}
+          assert len({row['torch_version'] for row in rows})==1
+          assert len({row['fixture_manifest_sha256'] for row in rows})==1
+          assert len({row['training_code_sha256'].__repr__() for row in rows})==1
+          model_shas={row['model_sha256'] for row in rows}
+          if len(model_shas)!=1:
+              raise SystemExit(
+                  'cross-runner training model mismatch: '
+                  + ', '.join(f'{path.name}={row["model_sha256"]}' for path,row in zip(paths,rows))
+              )
+          print('cross-runner training reproducibility: PASS', next(iter(model_shas)))
           PY
