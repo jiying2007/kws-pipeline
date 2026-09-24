@@ -171,11 +171,34 @@ def main() -> int:
         "torch_num_threads": environment.get("torch_num_threads"),
         "torch_num_interop_threads": environment.get("torch_num_interop_threads"),
         "torch_version": environment.get("torch_version"),
+        "cpu_runtime": environment.get("cpu_runtime"),
+        "torch_runtime": environment.get("torch_runtime"),
         "training_code_sha256": environment.get("training_code_sha256"),
         "pythonhashseed": os.environ.get("PYTHONHASHSEED"),
+        "sitecustomize_loaded": (
+            environment.get("torch_runtime", {})
+            .get("thread_env", {})
+            .get("KWS_SITECUSTOMIZE_LOADED")
+        ),
     }
     if result["torch_num_threads"] != 1 or result["torch_num_interop_threads"] != 1:
         raise ValueError("reproducibility smoke did not use single-thread torch topology")
+    if result["sitecustomize_loaded"] != "1":
+        raise ValueError("training sitecustomize did not load before trainer startup")
+    thread_env = result["torch_runtime"].get("thread_env", {})
+    expected_env = {
+        "OMP_NUM_THREADS": "1",
+        "OMP_DYNAMIC": "FALSE",
+        "MKL_NUM_THREADS": "1",
+        "MKL_CBWR": "COMPATIBLE",
+        "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "ATEN_CPU_CAPABILITY": "default",
+        "PYTHONHASHSEED": "0",
+        "KWS_SITECUSTOMIZE_LOADED": "1",
+    }
+    if thread_env != expected_env:
+        raise ValueError(f"unexpected deterministic CPU environment: {thread_env}")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n",
@@ -189,6 +212,9 @@ def main() -> int:
                 "fixture_manifest_sha256": result["fixture_manifest_sha256"],
                 "torch_num_threads": result["torch_num_threads"],
                 "torch_num_interop_threads": result["torch_num_interop_threads"],
+                "cpu_model": result["cpu_runtime"].get("model"),
+                "torch_config_sha256": result["torch_runtime"].get("config_sha256"),
+                "torch_parallel_info_sha256": result["torch_runtime"].get("parallel_info_sha256"),
             },
             sort_keys=True,
         )
