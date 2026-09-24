@@ -5,17 +5,19 @@ import os
 # Python imports sitecustomize during interpreter startup, before train_ctc.py
 # imports torch. Pin the CPU math/scheduler environment here so hosted runner
 # CPU capability and BLAS defaults cannot silently change the training path.
-# GitHub-hosted x64 runners support AVX2; using it as the common baseline avoids
-# AVX2/AVX512 drift without forcing the numerically different generic fallback.
+# Hosted runners may use different x86 CPU models/vendors. Force the generic
+# ATen kernel plus MKL COMPATIBLE mode so the same floating-point topology is
+# used across those machines instead of merely selecting a common AVX level.
 _DETERMINISTIC_CPU_ENV = {
     "OMP_NUM_THREADS": "1",
     "OMP_DYNAMIC": "FALSE",
     "MKL_NUM_THREADS": "1",
-    "MKL_CBWR": "AVX2",
+    "MKL_CBWR": "COMPATIBLE",
     "OPENBLAS_NUM_THREADS": "1",
     "NUMEXPR_NUM_THREADS": "1",
-    "ATEN_CPU_CAPABILITY": "avx2",
+    "ATEN_CPU_CAPABILITY": "default",
     "PYTHONHASHSEED": "0",
+    "KWS_SITECUSTOMIZE_LOADED": "1",
 }
 
 for _name, _value in _DETERMINISTIC_CPU_ENV.items():
