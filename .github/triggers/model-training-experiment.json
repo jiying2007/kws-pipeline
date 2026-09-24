@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-executable-deterministic-baseline-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Post-#292 full-pipeline reproducibility validation. Hold the validated runtime-executable negative sequence-margin policy fixed, leave inter-round base failure replay disabled, and rerun the same exact PR-head baseline twice. The immediate authority question is bit-identical round-0 model reproducibility before any replay A/B is resumed. No qualification source, decoder, threshold, promotion or shipping semantic change.",
+  "config_overrides": {
+    "train.sequence_margin_negative_policy": "runtime-executable-v1"
+  }
+}
