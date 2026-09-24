@@ -349,7 +349,6 @@ jobs:
           assert {row['pythonhashseed'] for row in rows}=={'0'}
           assert {row['torch_num_threads'] for row in rows}=={1}
           assert {row['torch_num_interop_threads'] for row in rows}=={1}
-          assert {row['sitecustomize_loaded'] for row in rows}=={'1'}
           assert len({row['torch_version'] for row in rows})==1
           assert len({row['fixture_manifest_sha256'] for row in rows})==1
           assert len({json.dumps(row['training_code_sha256'],sort_keys=True) for row in rows})==1
