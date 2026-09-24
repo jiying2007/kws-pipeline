@@ -6,16 +6,16 @@ import os
 # hashed into exported model provenance. sitecustomize.py applies the same
 # values before torch import; repeating them here makes the contract fail-safe
 # for direct module callers that bypass normal interpreter startup discovery.
-# Use AVX2 as the common hosted-runner baseline so AVX2/AVX512 dispatch cannot
-# change the training trajectory while avoiding the generic-kernel regression.
+# Use the generic ATen capability and MKL COMPATIBLE mode so independent hosted
+# CPU models cannot select numerically different vector kernels.
 _DETERMINISTIC_CPU_ENV = {
     "OMP_NUM_THREADS": "1",
     "OMP_DYNAMIC": "FALSE",
     "MKL_NUM_THREADS": "1",
-    "MKL_CBWR": "AVX2",
+    "MKL_CBWR": "COMPATIBLE",
     "OPENBLAS_NUM_THREADS": "1",
     "NUMEXPR_NUM_THREADS": "1",
-    "ATEN_CPU_CAPABILITY": "avx2",
+    "ATEN_CPU_CAPABILITY": "default",
     "PYTHONHASHSEED": "0",
 }
 for _name, _value in _DETERMINISTIC_CPU_ENV.items():
