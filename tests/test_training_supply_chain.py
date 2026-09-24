@@ -28,6 +28,9 @@ def main() -> int:
     model_training_workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(
         encoding="utf-8"
     )
+    product_experiment_workflow = (
+        ROOT / ".github" / "workflows" / "product-development-experiment.yml"
+    ).read_text(encoding="utf-8")
     curriculum_source = (ROOT / "training" / "domain_curriculum.py").read_text(
         encoding="utf-8"
     )
@@ -66,6 +69,8 @@ def main() -> int:
         in train_source
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
+    assert 'PYTHONHASHSEED: "0"' in product_experiment_workflow
+    assert "PYTHONHASHSEED=0" in dockerfile
 
     # The decoder-confidence auxiliary objective is runtime-aligned and now owns
     # an explicit operating point for every shipping keyword. This keeps the two
