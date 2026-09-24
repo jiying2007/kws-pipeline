@@ -156,7 +156,17 @@ def _torch_runtime_identity() -> dict:
         ),
         "thread_env": {
             key: os.environ.get(key)
-            for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+            for key in (
+                "OMP_NUM_THREADS",
+                "OMP_DYNAMIC",
+                "MKL_NUM_THREADS",
+                "MKL_CBWR",
+                "OPENBLAS_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS",
+                "ATEN_CPU_CAPABILITY",
+                "PYTHONHASHSEED",
+                "KWS_SITECUSTOMIZE_LOADED",
+            )
         },
     }
 
