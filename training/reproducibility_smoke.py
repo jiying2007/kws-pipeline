@@ -85,7 +85,7 @@ def fixture(work: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path, pathlib.Pat
         rows.append((path, sequence))
     manifest.write_text(
         "".join(
-            f"{path.resolve()}\t{' '.join(str(value) for value in target)}\n"
+            f"{path.relative_to(work).as_posix()}\t{' '.join(str(value) for value in target)}\n"
             for path, target in rows
         ),
         encoding="utf-8",
