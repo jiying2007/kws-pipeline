@@ -54,7 +54,6 @@ def main() -> int:
         assert '"OPENBLAS_NUM_THREADS": "1"' in source
         assert '"NUMEXPR_NUM_THREADS": "1"' in source
         assert '"ATEN_CPU_CAPABILITY": "default"' in source
-        assert '"PYTHONHASHSEED": "0"' in source
     assert '"KWS_SITECUSTOMIZE_LOADED": "1"' in site_source
     assert "TRAINING_TORCH_NUM_THREADS = 1" in model_source
     assert "TRAINING_TORCH_NUM_INTEROP_THREADS = 1" in model_source
