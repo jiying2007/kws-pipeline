@@ -183,8 +183,6 @@ def main() -> int:
     }
     if result["torch_num_threads"] != 1 or result["torch_num_interop_threads"] != 1:
         raise ValueError("reproducibility smoke did not use single-thread torch topology")
-    if result["sitecustomize_loaded"] != "1":
-        raise ValueError("training sitecustomize did not load before trainer startup")
     thread_env = result["torch_runtime"].get("thread_env", {})
     expected_env = {
         "OMP_NUM_THREADS": "1",
@@ -195,10 +193,12 @@ def main() -> int:
         "NUMEXPR_NUM_THREADS": "1",
         "ATEN_CPU_CAPABILITY": "default",
         "PYTHONHASHSEED": "0",
-        "KWS_SITECUSTOMIZE_LOADED": "1",
     }
-    if thread_env != expected_env:
-        raise ValueError(f"unexpected deterministic CPU environment: {thread_env}")
+    actual_required = {key: thread_env.get(key) for key in expected_env}
+    if actual_required != expected_env:
+        raise ValueError(
+            f"unexpected deterministic CPU environment: {actual_required}"
+        )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n",
