@@ -13,6 +13,7 @@ import json
 import math
 import pathlib
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -136,7 +137,9 @@ def bind_development_provenance(checkpoint: pathlib.Path, model: pathlib.Path) -
 
 
 def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
-          variant: str, scope: str, epochs: int, seed: int) -> None:
+          variant: str, scope: str, epochs: int, seed: int, *, retain_milestones: bool = False) -> None:
+    if type(retain_milestones) is not bool:
+        raise ValueError('retain_milestones must be boolean')
     if variant not in VARIANTS or type(epochs) is not int or not 1 <= epochs <= 800:
         raise ValueError('invalid bounded recipe')
     if type(seed) is not int or not 0 <= seed <= 2147483647:
@@ -160,6 +163,13 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
         'epochs': epochs, 'seed': seed, 'batch_size': 16, 'learning_rate': 0.001,
         'model': 'shipping-rnn-32x64-logmel', 'selection_uses_development_metrics': False,
         'source_tree': subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=ROOT,text=True).strip()}
+    milestones = {'policy': 'context-milestone-retention-v1', 'completed': False,
+        'release_authority': False, 'requested_epochs': epochs, 'seed': seed, 'pool_sha256': pool_sha,
+        'expected_epochs': list(range(100, epochs + 1, 100)) + ([] if epochs % 100 == 0 else [epochs]),
+        'records': []}
+    if retain_milestones:
+        recipe['checkpoint_retention'] = milestones['policy']
+        write(output / 'milestones.json', milestones)
     for i, r in enumerate(rows):
         pcm = read_pcm(resolve(pool_root, r['path']))
         for prefix in prefixes:
@@ -219,6 +229,20 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
                 write(output / 'schedule.json', {'batches_sha256': batch_digest.hexdigest(),
                     'contexts_sha256': context_digest.hexdigest(), 'completed_epochs': epoch})
             temp = output / 'model.pt.tmp'; torch.save(checkpoint, temp); temp.replace(output / 'model.pt')
+            if retain_milestones:
+                destination = output / 'milestones' / f'epoch-{epoch:04d}'
+                destination.mkdir(parents=True, exist_ok=False)
+                shutil.copyfile(output / 'model.pt', destination / 'model.pt')
+                execute([sys.executable, str(ROOT/'training/export_model.py'),
+                    '--checkpoint', str(destination/'model.pt'), '--tokens', str(tokens),
+                    '--output', str(destination/'model.kwm')], destination/'export.log')
+                bind_development_provenance(destination/'model.pt', destination/'model.kwm')
+                milestones['records'].append({'epoch': epoch,
+                    'directory': str(destination.relative_to(output)),
+                    'files': {name: sha(destination/name) for name in
+                        ('model.pt','model.kwm','model.kwm.provenance.json')},
+                    'float_state_sha256': checkpoint['float_state_identity']['sha256']})
+                write(output / 'milestones.json', milestones)
             write(output / 'progress.json', {'completed_epochs': epoch, 'requested_epochs': epochs,
                 'completed': epoch == epochs, 'seconds': time.monotonic()-started,
                 'float_state_sha256': checkpoint['float_state_identity']['sha256'], 'last': history[-1]})
@@ -230,6 +254,9 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
     if provenance['training'].get('development_recipe') != recipe:
         raise ValueError('export lost development recipe authority')
     verify_pool(pool_root, pool_sha)
+    if retain_milestones:
+        milestones['completed'] = True
+        write(output / 'milestones.json', milestones)
 
 
 def main() -> None:
@@ -238,7 +265,9 @@ def main() -> None:
     p.add_argument('--pool-sha',required=True);p.add_argument('--variant',choices=VARIANTS,required=True)
     p.add_argument('--scope',choices=('positive-only','all'),default='all')
     p.add_argument('--epochs',type=int,default=600);p.add_argument('--seed',type=int,default=1337)
-    a=p.parse_args(); train(a.pool.resolve(),a.pool_sha,a.output.resolve(),a.variant,a.scope,a.epochs,a.seed)
+    p.add_argument('--retain-milestones', action='store_true')
+    a=p.parse_args(); train(a.pool.resolve(),a.pool_sha,a.output.resolve(),a.variant,a.scope,a.epochs,a.seed,
+                           retain_milestones=a.retain_milestones)
 
 if __name__ == '__main__':
     main()

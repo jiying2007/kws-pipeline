@@ -10,6 +10,7 @@ on:
       - 'tests/test_frozen_speech_ablation.py'
       - 'tests/test_reproducibility_trace.py'
       - 'tests/test_startup_context.py'
+      - 'tests/test_context_checkpoint_selection.py'
       - 'tests/test_preceding_context.py'
       - 'tests/test_preceding_context_attribution.py'
       - 'tools/diagnose_kws_threshold_operating_curve.py'
@@ -67,6 +68,7 @@ jobs:
           .venv-audit/bin/python tests/test_frozen_speech_ablation.py
           .venv-audit/bin/python tests/test_reproducibility_trace.py
           .venv-audit/bin/python tests/test_startup_context.py
+          .venv-audit/bin/python tests/test_context_checkpoint_selection.py
           .venv-audit/bin/python tests/test_preceding_context.py
           .venv-audit/bin/python tests/test_preceding_context_attribution.py
           python3 tools/check_workflow_path_filters.py

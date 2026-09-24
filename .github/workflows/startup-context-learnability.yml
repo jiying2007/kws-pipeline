@@ -7,6 +7,8 @@ on:
       - 'training/startup_context_training.py'
       - 'training/startup_context_evaluation.py'
       - 'tests/test_startup_context.py'
+      - 'training/select_context_checkpoint.py'
+      - 'tests/test_context_checkpoint_selection.py'
       - '.github/workflows/startup-context-learnability.yml'
 
 permissions:
@@ -104,7 +106,39 @@ jobs:
             variant="${spec%:*}"
             seed="${spec#*:}"
             name="$variant-$seed"
-            .venv/bin/python training/startup_context_training.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --output "build/startup-context/$name" --variant "$variant"               --scope all --epochs 600 --seed "$seed" > "build/startup-context/$name-train.log" 2>&1
+            retention=()
+            if [ "$variant" = grounded-ctc ]; then retention=(--retain-milestones); fi
+            .venv/bin/python training/startup_context_training.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --output "build/startup-context/$name" --variant "$variant"               --scope all --epochs 600 --seed "$seed" "${retention[@]}" > "build/startup-context/$name-train.log" 2>&1
+            if [ "$variant" = grounded-ctc ]; then
+              .venv/bin/python training/select_context_checkpoint.py \
+                --pool build/frozen-pool --pool-sha "$POOL_SHA" \
+                --trial "build/startup-context/$name" --runner build/kws_wav \
+                --output "build/startup-context/$name-selection" \
+                > "build/startup-context/$name-selection.log" 2>&1
+              export TRIAL="build/startup-context/$name"
+              selected="$(.venv/bin/python - <<'PYSEL'
+          import json, os, pathlib, sys
+          sys.path.insert(0, 'training')
+          from select_context_checkpoint import confined
+          from frozen_speech_ablation import sha
+          root=pathlib.Path(os.environ['TRIAL'])
+          decision=json.loads(pathlib.Path(str(root)+'-selection/selection.json').read_text())
+          assert decision['completed'] is True and decision['test_used_for_selection'] is False
+          row=decision['selected']
+          assert row is not None, 'no eligible development checkpoint'
+          model=confined(root,row['directory']+'/model.kwm')
+          assert sha(model)==row['files']['model.kwm']
+          print(model)
+          PYSEL
+              )"
+              sha256sum "build/startup-context/$name-selection/selection.json" > "build/startup-context/$name-decision.sha256"
+              .venv/bin/python training/startup_context_evaluation.py \
+                --pool build/frozen-pool --pool-sha "$POOL_SHA" --model "$selected" \
+                --output "build/startup-context/$name-selected-evaluation" \
+                --runner build/kws_wav --dump build/kws_posterior_dump --replay build/kws_decoder_replay \
+                > "build/startup-context/$name-selected-evaluation.log" 2>&1
+              sha256sum -c "build/startup-context/$name-decision.sha256"
+            fi
             .venv/bin/python training/startup_context_evaluation.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --model "build/startup-context/$name/model.kwm"               --output "build/startup-context/$name-evaluation"               --runner build/kws_wav --dump build/kws_posterior_dump --replay build/kws_decoder_replay               > "build/startup-context/$name-evaluation.log" 2>&1
           done
       - name: Verify paired evidence and report acoustic verdict separately
@@ -155,6 +189,13 @@ jobs:
           for name in ('grounded-ctc-1337','grounded-ctc-2346'):
               result=json.loads((root/(name+'-evaluation')/'summary.json').read_text())
               assert result['basic_train_learnability_pass'] is True, name
+              decision=json.loads((root/(name+'-selection')/'selection.json').read_text())
+              selected=json.loads((root/(name+'-selected-evaluation')/'summary.json').read_text())
+              assert decision['completed'] is True and decision['selected'] is not None
+              assert decision['test_used_for_selection'] is False
+              assert selected['model_sha256']==decision['selected']['files']['model.kwm']
+              assert selected['basic_train_learnability_pass'] is True, name
+              assert selected['release_authority'] is False
           print('Both declared seeds pass actual C train-fit, continuous context and startup-prefix independence.')
           print('Development generalization and product qualification remain separate; no release authority.')
           PY
