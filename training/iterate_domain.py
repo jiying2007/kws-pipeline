@@ -19,6 +19,9 @@ TRAINING = ROOT / "training"
 sys.path.insert(0, str(TOOLS))
 
 from domain_curriculum import merge_domain_metrics, update_curriculum  # noqa: E402
+from development_signal import (  # noqa: E402
+    POLICY as SIGNAL_POLICY, metric_signal, record_rank, selection_enabled, selection_report,
+)
 from domain_progress import append_round_progress, build_round_progress  # noqa: E402
 from development_failure_replay import (  # noqa: E402
     failure_replay_focus_rows,
@@ -337,8 +340,11 @@ def strict_gate_candidate(record: dict) -> bool:
     return record.get("calibration_gate") is True and record.get("test_gate") is True
 
 
-def select_strict_candidate(records: list[dict]) -> dict | None:
-    eligible = [record for record in records if strict_gate_candidate(record)]
+def select_strict_candidate(
+    records: list[dict], keyword_ids: tuple[str, ...] | None = None,
+) -> dict | None:
+    eligible = [record for record in records if strict_gate_candidate(record)
+                and record_rank(record, keyword_ids)[0] == 0]
     if not eligible:
         return None
     latest_round = max(int(record["round"]) for record in eligible)
@@ -363,7 +369,15 @@ def objective(base: dict, domains: dict, gates: dict) -> float:
     )
 
 
-def calibration_behavior_key(base: dict, domains: dict, gates: dict) -> tuple[float, ...]:
+def calibration_behavior_key(
+    base: dict, domains: dict, gates: dict,
+    keyword_ids: tuple[str, ...] | None = None,
+) -> tuple[float, ...]:
+    if keyword_ids is not None:
+        # Lexicographic floor, not an arbitrary large scalar penalty.
+        signal = metric_signal(base, keyword_ids)
+        return (float(len(signal["collapsed_keyword_ids"])),
+                *calibration_behavior_key(base, domains, gates))
     far = domains.get("domains", {}).get("distance:far", {})
     frr = float(base["frr"])
     far_per_hour = float(base["far_per_hour"])
@@ -438,6 +452,7 @@ def calibration_trial_evidence(
     base: dict,
     domains: dict,
     gates: dict,
+    keyword_ids: tuple[str, ...] | None = None,
 ) -> dict:
     far = domains.get("domains", {}).get("distance:far", {})
     per_keyword = base.get("per_keyword", {})
@@ -451,7 +466,7 @@ def calibration_trial_evidence(
             str(item["id"]): float(item["threshold"]) for item in trial_keywords
         },
         "strict": base_gate(base, gates) and domain_gate(domains, gates),
-        "behavior_key": list(calibration_behavior_key(base, domains, gates)),
+        "behavior_key": list(calibration_behavior_key(base, domains, gates, keyword_ids)),
         "metrics": {
             "frr": float(base["frr"]),
             "far_per_hour": float(base["far_per_hour"]),
@@ -528,6 +543,7 @@ def calibrate(
     rounds: int,
     gates: dict,
     parallel_trials: int = 1,
+    require_keyword_signal: bool = False,
     posterior_replay: tuple[pathlib.Path, pathlib.Path, pathlib.Path] | None = None,
     decoder_state_retention: float | None = None,
     decoder_refractory_ms: int | None = None,
@@ -535,6 +551,9 @@ def calibrate(
     decoder_fuzzy_child_cost_log: float | None = None,
 ) -> tuple[pathlib.Path, pathlib.Path, dict, dict]:
     current = keyword_rows(source_keywords)
+    if not isinstance(require_keyword_signal, bool):
+        raise ValueError("require_keyword_signal must be boolean")
+    keyword_ids = tuple(str(row["id"]) for row in current) if require_keyword_signal else None
     if isinstance(parallel_trials, bool) or not 1 <= int(parallel_trials) <= 4:
         raise ValueError("calibration parallel_trials must be 1..4")
     parallel_trials = int(parallel_trials)
@@ -591,7 +610,7 @@ def calibrate(
                     base, domains = cached
                     with trial_cache_lock:
                         trial_cache_hits += 1
-                key = calibration_behavior_key(base, domains, gates)
+                key = calibration_behavior_key(base, domains, gates, keyword_ids)
                 evidence = calibration_trial_evidence(
                     coordinate=coordinate,
                     keyword_id=int(row["id"]),
@@ -600,6 +619,7 @@ def calibrate(
                     base=base,
                     domains=domains,
                     gates=gates,
+                    keyword_ids=keyword_ids,
                 )
                 return threshold, key, evidence
 
@@ -663,6 +683,11 @@ def calibrate(
         "cache_policy": "exact-keyword-threshold-vector-v1",
         "trials": trial_evidence,
     }
+    if keyword_ids is not None:
+        curve["nondegeneracy_policy"] = SIGNAL_POLICY
+        curve["required_keyword_ids"] = list(keyword_ids)
+        base["calibration_nondegeneracy"] = metric_signal(base, keyword_ids)
+        base["calibration_nondegeneracy_policy"] = SIGNAL_POLICY
     curve["summary"] = calibration_operating_curve_summary(
         trial_evidence,
         selected_thresholds=base["calibrated_thresholds"],
@@ -878,6 +903,8 @@ def main() -> int:
     )
     tokens = repo_path(str(cfg["tokens"]))
     keywords = repo_path(str(cfg["keywords"]))
+    signal_enabled = selection_enabled(cfg)
+    required_keyword_ids = tuple(str(row["id"]) for row in keyword_rows(keywords)) if signal_enabled else None
     iteration = cfg.get("domain_iteration", {})
     backend = str(iteration.get("backend", "prototype"))
     if backend not in {"prototype", "torch_ctc"}:
@@ -1081,6 +1108,7 @@ def main() -> int:
                     rounds=coordinate_rounds,
                     gates=gates,
                     parallel_trials=calibration_parallel_trials,
+                    require_keyword_signal=signal_enabled,
                     posterior_replay=posterior_replay,
                 )
                 test_base, test_domains = evaluate(
@@ -1163,9 +1191,12 @@ def main() -> int:
                     )
                     record["wake_balance"] = wake_balance
                 records.append(record)
-                if round_best is None or score_value < round_best["score"]:
+                rank = record_rank(record, required_keyword_ids)
+                if round_best is None or rank < record_rank(round_best, required_keyword_ids):
                     round_best = record
-                if best is None or score_value < best["score"] - 1.0e-12:
+                if (best is None or rank[0] < record_rank(best, required_keyword_ids)[0]
+                    or (rank[0] == record_rank(best, required_keyword_ids)[0]
+                        and score_value < best["score"] - 1.0e-12)):
                     best = record
                     stale = 0
                 else:
@@ -1205,7 +1236,7 @@ def main() -> int:
         )
         if (
             round_index + 1 >= min_rounds
-            and select_strict_candidate(records) is not None
+            and select_strict_candidate(records, required_keyword_ids) is not None
             and bool(iteration.get("stop_on_gate", True))
         ):
             break
@@ -1214,7 +1245,7 @@ def main() -> int:
 
     if best is None:
         raise RuntimeError("domain iteration produced no candidates")
-    strict_best = select_strict_candidate(records)
+    strict_best = select_strict_candidate(records, required_keyword_ids)
     selected = strict_best or best
     eligible_rounds = sorted(
         {int(record["round"]) for record in records if strict_gate_candidate(record)}
@@ -1311,6 +1342,10 @@ def main() -> int:
             "Physical target-board and independent human held-out evidence remain issue #2 gates.",
         ],
     }
+    if required_keyword_ids is not None:
+        manifest["candidate_selection"]["nondegeneracy"] = selection_report(
+            records, selected, required_keyword_ids,
+        )
     manifest_path = work / "domain-loop-manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     if args.compact_log:

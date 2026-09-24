@@ -12,6 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
 sys.path.insert(0, str(TRAINING))
 
+from development_signal import selection_enabled
 from iterate_domain import (  # noqa: E402
     base_gate,
     calibrate,
@@ -197,6 +198,7 @@ def main() -> int:
             rounds=coordinate_rounds,
             gates=gates,
             parallel_trials=parallel_trials,
+            require_keyword_signal=selection_enabled(cfg),
             posterior_replay=posterior_replay,
             decoder_state_retention=retention,
         )

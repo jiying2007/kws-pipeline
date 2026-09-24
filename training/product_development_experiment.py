@@ -165,6 +165,8 @@ def materialize(
     iteration["min_rounds"] = 2
     iteration["patience"] = 1
     iteration["stop_on_gate"] = True
+    # A non-collapsed development candidate is not a qualified shipping model.
+    iteration["nondegenerate_selection_enabled"] = True
     adversarial = iteration.get("adversarial_lexicon")
     if not isinstance(adversarial, dict) or adversarial.get("enabled") is not True:
         raise ValueError("experiment requires enabled adversarial refinement")

@@ -16,6 +16,7 @@ from development_failure_replay import render_development_failure_replay
 from hard_negative_replay import render_hard_negative_replay
 from feature_cached_trainer import feature_cache_max_items, rewrite_training_command
 from objective_config import optional_objective_cli_args
+from development_signal import POLICY as SIGNAL_POLICY, record_signal, selection_enabled
 from iterate_domain import (
     base_gate,
     calibrate,
@@ -148,6 +149,15 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     ]
     if not candidates:
         raise ValueError("development manifest has no checkpoint eligible for refinement")
+    signal = selection.get("nondegeneracy")
+    if signal is not None:
+        if not isinstance(signal, dict) or signal.get("policy") != SIGNAL_POLICY:
+            raise ValueError("unsupported refinement source nondegeneracy policy")
+        keyword_ids = tuple(signal["required_keyword_ids"])
+        nondegenerate = [row for row in candidates if record_signal(row, keyword_ids)["nondegenerate"]]
+        # A collapsed source may still be examined/repaired when no viable source
+        # exists; it must never displace a source with signal for every keyword.
+        candidates = nondegenerate or candidates
     return min(candidates, key=refinement_source_key), REFINEMENT_SOURCE_POLICY
 
 
@@ -570,6 +580,7 @@ def main() -> int:
         rounds=coordinate_rounds,
         gates=gates,
         parallel_trials=calibration_parallel_trials,
+        require_keyword_signal=selection_enabled(cfg),
         posterior_replay=posterior_replay,
     )
     progress.finish("calibration")
@@ -759,6 +770,7 @@ def main() -> int:
             rounds=coordinate_rounds,
             gates=gates,
             parallel_trials=calibration_parallel_trials,
+            require_keyword_signal=selection_enabled(cfg),
             posterior_replay=posterior_replay,
         )
         repaired_test_base, repaired_test_domains = evaluate(
