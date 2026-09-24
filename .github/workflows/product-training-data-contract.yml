@@ -342,6 +342,7 @@ jobs:
           assert {row['pythonhashseed'] for row in rows}=={'0'}
           assert {row['torch_num_threads'] for row in rows}=={1}
           assert {row['torch_num_interop_threads'] for row in rows}=={1}
+          assert {row['sitecustomize_loaded'] for row in rows}=={'1'}
           assert len({row['torch_version'] for row in rows})==1
           assert len({row['fixture_manifest_sha256'] for row in rows})==1
           assert len({json.dumps(row['training_code_sha256'],sort_keys=True) for row in rows})==1
@@ -349,7 +350,11 @@ jobs:
           if len(model_shas)!=1:
               raise SystemExit(
                   'cross-runner training model mismatch: '
-                  + ', '.join(f'{path.name}={row["model_sha256"]}' for path,row in zip(paths,rows))
+                  + '; '.join(
+                      f'{path.name}: model={row["model_sha256"]} '
+                      f'cpu={row["cpu_runtime"]} torch_runtime={row["torch_runtime"]}'
+                      for path,row in zip(paths,rows)
+                  )
               )
           print('cross-runner training reproducibility: PASS', next(iter(model_shas)))
           PY
