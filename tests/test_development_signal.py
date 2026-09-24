@@ -11,7 +11,10 @@ from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
-from development_signal import POLICY, metric_signal, record_rank, record_signal, selection_enabled, selection_report
+from development_signal import (
+    POLICY, metric_signal, record_rank, record_signal, refresh_selection_report,
+    selection_enabled, selection_keyword_ids, selection_report,
+)
 from iterate_domain import calibration_behavior_key, calibrate, keyword_rows, objective, select_strict_candidate
 from product_development_experiment import materialize
 from adversarial_refinement import select_refinement_source
@@ -214,6 +217,130 @@ class IntegrationTests(unittest.TestCase):
             self.assertTrue(selection_enabled(result))
             self.assertEqual(result["domain_gates"], GATES)
             self.assertEqual(json.loads(cp.read_text()), cfg)
+
+
+class ConsumerIntegrityTests(unittest.TestCase):
+    def guarded_manifest(self, *, strict=False):
+        row = record((4, 4), 0.0) if strict else record()
+        row["checkpoint"] = "fixture.pt"
+        selection = {"qualification_used_for_selection": False,
+            "objective_fallback_used": not strict,
+            "selected_round": 0 if strict else None,
+            "selected_frontend": "logmel" if strict else None,
+            "nondegeneracy": {"policy": POLICY, "required_keyword_ids": list(IDS)}}
+        return {"development_qualified": strict, "records": [row],
+                "candidate_selection": selection}
+
+    def test_only_absent_guard_means_legacy(self):
+        self.assertIsNone(selection_keyword_ids({}))
+        for bad in (None, {}, False, "", []):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                selection_keyword_ids({"nondegeneracy": bad})
+
+    def test_guard_ids_are_not_split_from_a_string(self):
+        for ids in ("12", [], ["1", "1"], [1, 2], [True], None):
+            with self.subTest(ids=ids), self.assertRaises(ValueError):
+                selection_keyword_ids({"nondegeneracy": {"policy": POLICY, "required_keyword_ids": ids}})
+        with self.assertRaises(ValueError):
+            metric_signal(metrics()[0], "12")
+
+    def test_strict_claim_cannot_bypass_collapsed_signal(self):
+        manifest = self.guarded_manifest(strict=True)
+        row = manifest["records"][0]
+        row["calibration"], _ = metrics((0, 0), 0.0)
+        row["test"] = copy.deepcopy(row["calibration"])
+        with self.assertRaisesRegex(ValueError, "strict refinement source contradicts"):
+            select_refinement_source(manifest)
+
+    def test_strict_claim_cannot_bypass_missing_keyword(self):
+        manifest = self.guarded_manifest(strict=True)
+        del manifest["records"][0]["test"]["per_keyword"]["2"]
+        with self.assertRaisesRegex(ValueError, "missing keyword 2"):
+            select_refinement_source(manifest)
+
+    def test_strict_claim_cannot_bypass_malformed_counts(self):
+        manifest = self.guarded_manifest(strict=True)
+        manifest["records"][0]["test"]["per_keyword"]["1"]["matched"] = 4.0
+        with self.assertRaisesRegex(ValueError, "counts must"):
+            select_refinement_source(manifest)
+
+    def test_strict_claim_cannot_bypass_unknown_policy(self):
+        manifest = self.guarded_manifest(strict=True)
+        manifest["candidate_selection"]["nondegeneracy"]["policy"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "unsupported refinement source"):
+            select_refinement_source(manifest)
+
+    def test_valid_guarded_strict_source_is_unchanged(self):
+        manifest = self.guarded_manifest(strict=True)
+        selected, policy = select_refinement_source(manifest)
+        self.assertIs(selected, manifest["records"][0])
+        self.assertEqual(policy, "strict-development-candidate")
+
+    def test_report_rejects_empty_or_malformed_candidate_set(self):
+        for records in ([], None, {}, [None]):
+            with self.subTest(records=records), self.assertRaises(ValueError):
+                selection_report(records, record(), IDS)
+
+    def test_report_rejects_outside_model(self):
+        row = record()
+        outsider = record(round_index=1)
+        with self.assertRaisesRegex(ValueError, "not a retained"):
+            selection_report([row], outsider, IDS)
+
+    def test_matching_identity_cannot_mask_changed_metrics(self):
+        row = record()
+        changed = copy.deepcopy(row)
+        changed["test"], _ = metrics((4, 4), 0.0)
+        with self.assertRaisesRegex(ValueError, "not a retained"):
+            selection_report([row], changed, IDS)
+
+    def test_report_accepts_deserialized_equal_record(self):
+        row = record()
+        report = selection_report([row], json.loads(json.dumps(row)), IDS)
+        self.assertEqual(report["selected_candidate"]["model_sha256"], row["model_sha256"])
+
+    def test_refinement_refreshes_model_and_count(self):
+        manifest = self.guarded_manifest()
+        old = manifest["records"][0]
+        refresh_selection_report(manifest, old)
+        refined = record((4, 4), 0.0, 2)
+        refined["checkpoint"] = "refined.pt"
+        manifest["records"].append(refined)
+        refresh_selection_report(manifest, refined)
+        report = manifest["candidate_selection"]["nondegeneracy"]
+        self.assertEqual(report["selected_candidate"]["round"], 2)
+        self.assertEqual(report["diagnostic_source"]["model_sha256"], refined["model_sha256"])
+        self.assertEqual(report["nondegenerate_candidate_count"], 2)
+
+    def test_legacy_refresh_does_not_add_new_policy(self):
+        manifest = self.guarded_manifest()
+        del manifest["candidate_selection"]["nondegeneracy"]
+        before = copy.deepcopy(manifest)
+        refresh_selection_report(manifest, manifest["records"][0])
+        self.assertEqual(manifest, before)
+
+    def test_eligibility_binds_guard_to_configured_keyword_set(self):
+        from evaluate_refinement_eligibility import evaluate_refinement_eligibility
+        manifest = self.guarded_manifest()
+        manifest["candidate_selection"]["nondegeneracy"]["required_keyword_ids"] = ["1"]
+        with self.assertRaisesRegex(ValueError, "do not match configured keywords"):
+            evaluate_refinement_eligibility(manifest, expected_keyword_ids=IDS)
+
+    def test_threshold_consumer_rejects_string_guard_ids(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        from diagnose_kws_threshold_operating_curve import development_round_evidence
+        manifest = self.guarded_manifest()
+        manifest.update(evidence_scope="development-only", qualification_used=False,
+                        shadow_used=False, formal_qualification_used=False)
+        base = manifest["records"][0]["calibration"]
+        base.update(calibrated_thresholds={"1": 0.55, "2": 0.55},
+                    calibration_threshold_grid=[0.55], calibration_coordinate_rounds=1)
+        manifest["candidate_selection"]["nondegeneracy"]["required_keyword_ids"] = "12"
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "manifest.json"
+            path.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, "JSON list"):
+                development_round_evidence(path, 0, GATES)
 
 
 if __name__ == "__main__":

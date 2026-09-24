@@ -6,6 +6,7 @@ import json
 import pathlib
 
 from adversarial_refinement import select_refinement_source
+from development_signal import selection_keyword_ids
 from verify_product_development_preflight import (
     expected_keyword_ids_from_config,
     load_object,
@@ -55,6 +56,9 @@ def evaluate_refinement_eligibility(
     if not expected_keyword_ids or len(set(expected_keyword_ids)) != len(expected_keyword_ids):
         raise ValueError("expected keyword ids must be non-empty and unique")
 
+    keyword_ids = selection_keyword_ids(manifest.get("candidate_selection"))
+    if keyword_ids is not None and set(keyword_ids) != set(expected_keyword_ids):
+        raise ValueError("manifest nondegeneracy keyword ids do not match configured keywords")
     source, source_policy = select_refinement_source(manifest)
     keyword_signal: dict[str, dict] = {}
     collapsed: list[str] = []

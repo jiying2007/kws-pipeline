@@ -16,10 +16,31 @@ def selection_enabled(config: dict) -> bool:
     return value
 
 
-def metric_signal(metrics: dict, keyword_ids: tuple[str, ...]) -> dict:
-    if (not keyword_ids or any(not isinstance(k, str) or not k for k in keyword_ids)
+def _validate_keyword_ids(keyword_ids: object) -> tuple[str, ...]:
+    if (not isinstance(keyword_ids, (list, tuple)) or not keyword_ids
+            or any(not isinstance(k, str) or not k for k in keyword_ids)
             or len(set(keyword_ids)) != len(keyword_ids)):
-        raise ValueError("required keyword ids must be non-empty and unique strings")
+        raise ValueError("required keyword ids must be a non-empty sequence of unique strings")
+    return tuple(keyword_ids)
+
+
+def selection_keyword_ids(selection: dict, *, label: str = "development") -> tuple[str, ...] | None:
+    """Read the optional guard without turning malformed evidence into legacy mode."""
+    if not isinstance(selection, dict):
+        raise ValueError("candidate selection must be an object")
+    if "nondegeneracy" not in selection:
+        return None
+    signal = selection["nondegeneracy"]
+    if not isinstance(signal, dict) or signal.get("policy") != POLICY:
+        raise ValueError(f"unsupported {label} nondegeneracy policy")
+    raw = signal.get("required_keyword_ids")
+    if not isinstance(raw, list):
+        raise ValueError("nondegeneracy required_keyword_ids must be a JSON list")
+    return _validate_keyword_ids(raw)
+
+
+def metric_signal(metrics: dict, keyword_ids: tuple[str, ...]) -> dict:
+    keyword_ids = _validate_keyword_ids(keyword_ids)
     if not isinstance(metrics, dict) or not isinstance(metrics.get("per_keyword"), dict):
         raise ValueError("development signal requires per-keyword metrics")
     counts = {}
@@ -38,6 +59,8 @@ def metric_signal(metrics: dict, keyword_ids: tuple[str, ...]) -> dict:
 
 
 def record_signal(record: dict, keyword_ids: tuple[str, ...]) -> dict:
+    if not isinstance(record, dict):
+        raise ValueError("development record must be an object")
     splits = {split: metric_signal(record.get(split), keyword_ids) for split in ("calibration", "test")}
     collapsed = [f"{split}:{key}" for split, row in splits.items() for key in row["collapsed_keyword_ids"]]
     return {"policy": POLICY, "nondegenerate": not collapsed,
@@ -53,6 +76,10 @@ def record_rank(record: dict, keyword_ids: tuple[str, ...] | None = None) -> tup
 
 
 def selection_report(records: list[dict], selected: dict, keyword_ids: tuple[str, ...]) -> dict:
+    if not isinstance(records, list) or not records or any(not isinstance(r, dict) for r in records):
+        raise ValueError("selection report requires non-empty development records")
+    if not isinstance(selected, dict) or not any(selected == r for r in records):
+        raise ValueError("selected diagnostic source is not a retained development record")
     signals = [record_signal(row, keyword_ids) for row in records]
     selected_signal = record_signal(selected, keyword_ids)
     count = sum(row["nondegenerate"] is True for row in signals)
@@ -69,3 +96,11 @@ def selection_report(records: list[dict], selected: dict, keyword_ids: tuple[str
         "best_artifact_role": "development-only-candidate" if count else "diagnostic-only-no-nondegenerate-candidate",
         "selected_signal": selected_signal,
     }
+
+
+def refresh_selection_report(manifest: dict, selected: dict) -> None:
+    """Rebind guarded selection evidence after a real candidate replaces the base."""
+    selection = manifest.get("candidate_selection")
+    keyword_ids = selection_keyword_ids(selection)
+    if keyword_ids is not None:
+        selection["nondegeneracy"] = selection_report(manifest.get("records"), selected, keyword_ids)

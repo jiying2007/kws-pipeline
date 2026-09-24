@@ -16,7 +16,9 @@ from development_failure_replay import render_development_failure_replay
 from hard_negative_replay import render_hard_negative_replay
 from feature_cached_trainer import feature_cache_max_items, rewrite_training_command
 from objective_config import optional_objective_cli_args
-from development_signal import POLICY as SIGNAL_POLICY, record_signal, selection_enabled
+from development_signal import (
+    record_signal, refresh_selection_report, selection_enabled, selection_keyword_ids,
+)
 from iterate_domain import (
     base_gate,
     calibrate,
@@ -134,8 +136,12 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     if selection.get("qualification_used_for_selection") is not False:
         raise ValueError("refinement source selection must not use qualification")
 
+    keyword_ids = selection_keyword_ids(selection, label="refinement source")
     if manifest.get("development_qualified") is True:
-        return _selected_record(manifest), "strict-development-candidate"
+        selected = _selected_record(manifest)
+        if keyword_ids is not None and not record_signal(selected, keyword_ids)["nondegenerate"]:
+            raise ValueError("strict refinement source contradicts per-keyword signal evidence")
+        return selected, "strict-development-candidate"
 
     if selection.get("objective_fallback_used") is not True:
         raise ValueError("unqualified development manifest lacks objective fallback evidence")
@@ -149,11 +155,7 @@ def select_refinement_source(manifest: dict) -> tuple[dict, str]:
     ]
     if not candidates:
         raise ValueError("development manifest has no checkpoint eligible for refinement")
-    signal = selection.get("nondegeneracy")
-    if signal is not None:
-        if not isinstance(signal, dict) or signal.get("policy") != SIGNAL_POLICY:
-            raise ValueError("unsupported refinement source nondegeneracy policy")
-        keyword_ids = tuple(signal["required_keyword_ids"])
+    if keyword_ids is not None:
         nondegenerate = [row for row in candidates if record_signal(row, keyword_ids)["nondegenerate"]]
         # A collapsed source may still be examined/repaired when no viable source
         # exists; it must never displace a source with signal for every keyword.
@@ -936,6 +938,7 @@ def main() -> int:
     manifest["best_model_sha256"] = sha256_file(model)
     manifest["best_pack_sha256"] = sha256_file(pack)
     manifest["development_qualified"] = True
+    refresh_selection_report(manifest, record)
 
     best = work / "best"
     best.mkdir(parents=True, exist_ok=True)

@@ -736,9 +736,7 @@ def train_acoustic_seed_offset(iteration: dict, round_index: int) -> int:
         raise ValueError("domain_iteration must be an object")
     raw = iteration.get("training_acoustic_seed_stride", 0)
     if isinstance(raw, bool) or not isinstance(raw, int) or raw < 0:
-        raise ValueError(
-            "domain_iteration.training_acoustic_seed_stride must be a non-negative integer"
-        )
+        raise ValueError("domain_iteration.training_acoustic_seed_stride must be a non-negative integer")
     return round_index * raw
 
 
@@ -1248,7 +1246,8 @@ def main() -> int:
     strict_best = select_strict_candidate(records, required_keyword_ids)
     selected = strict_best or best
     eligible_rounds = sorted(
-        {int(record["round"]) for record in records if strict_gate_candidate(record)}
+        {int(record["round"]) for record in records if strict_gate_candidate(record)
+         and record_rank(record, required_keyword_ids)[0] == 0}
     )
     best_dir = work / "best"
     best_dir.mkdir()
