@@ -19,7 +19,10 @@ concurrency:
 jobs:
   source-and-contract:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: "0"
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,3 +46,14 @@ jobs:
           retention-days: 14
       - name: Validate research entry contract
         run: python3 training/product_development_experiment.py --self-test
+      - name: Install pinned CPU test runtime
+        run: |
+          python3 -m venv .venv-audit
+          .venv-audit/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv-audit/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Execute objective and floating-state regressions
+        run: |
+          .venv-audit/bin/python tests/test_training_audit_closure.py
+          python3 tools/check_workflow_path_filters.py
+      - name: Verify no tracked source changes
+        run: git diff --exit-code -- .

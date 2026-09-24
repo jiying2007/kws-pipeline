@@ -50,6 +50,8 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
 )
+from objective_config import auxiliary_loss_weights
+from training_state import state_identity
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
 from synthetic_audio import UINT32_MAX
@@ -196,6 +198,7 @@ def training_environment() -> dict:
         ROOT / "training" / "objective_config.py",
         ROOT / "training" / "objective_contract.py",
         ROOT / "training" / "path_purity.py",
+        ROOT / "training" / "training_state.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
@@ -1010,58 +1013,72 @@ def main() -> None:
                 sample_weights,
                 float(weight_statistics["all_mean_weight"]),
             )
-            ordered_mask = (
-                exact_keyword_sample_mask(y, ylen, keyword_sequences)
-                if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
-                else None
+            if args.ordered_token_loss_weight > 0.0:
+                ordered_mask = (
+                    exact_keyword_sample_mask(y, ylen, keyword_sequences)
+                    if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
+                    else None
+                )
+                ordered_mean_weight = (
+                    weight_statistics["exact_wake_mean_weight"]
+                    if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
+                    else weight_statistics["nonempty_mean_weight"]
+                )
+                if ordered_mean_weight is None:
+                    raise ValueError("exact-wake ordered-token scope has no exact wake examples")
+                ordered_loss, batch_correct, batch_total = ordered_token_loss(
+                    log_probs,
+                    y,
+                    xlen,
+                    ylen,
+                    sample_weights,
+                    normalization_mean_weight=float(ordered_mean_weight),
+                    sample_mask=ordered_mask,
+                )
+            else:
+                ordered_loss = log_probs.sum() * 0.0
+                batch_correct = batch_total = 0
+            if args.keyword_sequence_margin_loss_weight > 0.0:
+                margin_per_sample = keyword_sequence_margin_loss(
+                    log_probs=log_probs,
+                    targets=y,
+                    input_lengths=xlen,
+                    target_lengths=ylen,
+                    true_ctc_nll=raw_ctc,
+                    keyword_sequences=keyword_sequences,
+                    blank=0,
+                    margin=KEYWORD_SEQUENCE_MARGIN,
+                    keyword_operating_points=keyword_operating_points,
+                    negative_path_policy=args.sequence_margin_negative_policy,
+                )
+                margin_loss = normalized_weighted_mean(
+                    margin_per_sample,
+                    sample_weights,
+                    float(weight_statistics["all_mean_weight"]),
+                )
+            else:
+                margin_loss = log_probs.sum() * 0.0
+            if args.prefix_completion_loss_weight > 0.0:
+                completion_per_sample = strict_prefix_completion_loss(
+                    log_probs=log_probs,
+                    targets=y,
+                    input_lengths=xlen,
+                    target_lengths=ylen,
+                    keyword_sequences=keyword_sequences,
+                    keyword_operating_points=keyword_operating_points,
+                )
+                completion_loss = normalized_weighted_mean(
+                    completion_per_sample,
+                    sample_weights,
+                    float(weight_statistics["all_mean_weight"]),
+                )
+            else:
+                completion_loss = log_probs.sum() * 0.0
+            release_loss = (
+                recurrent_release_loss(log_probs, xlen)
+                if args.recurrent_release_loss_weight > 0.0
+                else log_probs.sum() * 0.0
             )
-            ordered_mean_weight = (
-                weight_statistics["exact_wake_mean_weight"]
-                if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
-                else weight_statistics["nonempty_mean_weight"]
-            )
-            if ordered_mean_weight is None:
-                raise ValueError("exact-wake ordered-token scope has no exact wake examples")
-            ordered_loss, batch_correct, batch_total = ordered_token_loss(
-                log_probs,
-                y,
-                xlen,
-                ylen,
-                sample_weights,
-                normalization_mean_weight=float(ordered_mean_weight),
-                sample_mask=ordered_mask,
-            )
-            margin_per_sample = keyword_sequence_margin_loss(
-                log_probs=log_probs,
-                targets=y,
-                input_lengths=xlen,
-                target_lengths=ylen,
-                true_ctc_nll=raw_ctc,
-                keyword_sequences=keyword_sequences,
-                blank=0,
-                margin=KEYWORD_SEQUENCE_MARGIN,
-                keyword_operating_points=keyword_operating_points,
-                negative_path_policy=args.sequence_margin_negative_policy,
-            )
-            margin_loss = normalized_weighted_mean(
-                margin_per_sample,
-                sample_weights,
-                float(weight_statistics["all_mean_weight"]),
-            )
-            completion_per_sample = strict_prefix_completion_loss(
-                log_probs=log_probs,
-                targets=y,
-                input_lengths=xlen,
-                target_lengths=ylen,
-                keyword_sequences=keyword_sequences,
-                keyword_operating_points=keyword_operating_points,
-            )
-            completion_loss = normalized_weighted_mean(
-                completion_per_sample,
-                sample_weights,
-                float(weight_statistics["all_mean_weight"]),
-            )
-            release_loss = recurrent_release_loss(log_probs, xlen)
             if args.path_purity_loss_weight > 0.0:
                 path_purity_per_sample = ordered_path_purity_loss(
                     log_probs=log_probs,
@@ -1120,7 +1137,8 @@ def main() -> None:
             f"margin={epoch_metrics['margin']:.6f} completion={epoch_metrics['completion']:.6f} "
             f"release={epoch_metrics['release']:.6f} "
             f"path_purity={epoch_metrics['path_purity']:.6f} "
-            f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}"
+            f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}",
+            flush=True,
         )
 
     manifest_metadata = [
@@ -1130,6 +1148,8 @@ def main() -> None:
     torch.save(
         {
             "state_dict": model.state_dict(),
+            "float_state_identity": state_identity(model.state_dict()),
+            "auxiliary_loss_weights": auxiliary_loss_weights(vars(args)),
             "feature_dim": args.feature_dim,
             "hidden_dim": args.hidden_dim,
             "vocab_size": vocab_size_value,

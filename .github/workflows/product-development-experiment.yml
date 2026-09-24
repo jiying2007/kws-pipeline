@@ -14,6 +14,7 @@ permissions:
 
 env:
   PYTHONHASHSEED: "0"
+  PYTHONUNBUFFERED: "1"
   OMP_NUM_THREADS: "1"
   OMP_DYNAMIC: "FALSE"
   MKL_NUM_THREADS: "1"
@@ -145,6 +146,34 @@ jobs:
           case "$code" in 0|1) ;; *) exit "$code" ;; esac
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           test -s "$KWS_EXPERIMENT_WORK/domain-loop-manifest.json"
+
+      - name: Verify base objective and float-state readback
+        run: |
+          .venv/bin/python training/verify_training_readback.py --config "$KWS_EXPERIMENT_CONFIG" --work-dir "$KWS_EXPERIMENT_WORK" --output "$KWS_EXPERIMENT_WORK/training-readback.json"
+
+      - name: Retain completed base before expensive refinement
+        if: always() && steps.base.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-development-base-${{ github.event.pull_request.head.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .github/triggers/model-training-experiment.json
+            .generated/xiaowo.product-experiment.json
+            build/product-development-experiment-receipt.json
+            build/product-development-experiment/domain-loop-manifest.json
+            build/product-development-experiment/training-readback.json
+            build/product-development-experiment/candidates/*/model.pt
+            build/product-development-experiment/candidates/*/model.kwm
+            build/product-development-experiment/candidates/*/model.kwm.provenance.json
+            build/product-development-experiment/candidates/*/calibration/calibrated-keywords.*
+            build/product-development-experiment/datasets/round-*/calibration.references.jsonl
+            build/product-development-experiment/datasets/round-*/test.references.jsonl
+            build/product-development-experiment/posterior-cache/**/*.kwtr
+            build/product-development-experiment/posterior-cache/**/*.json
+            keywords/tokens.example.txt
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Evaluate refinement eligibility
         id: eligibility
@@ -416,6 +445,7 @@ jobs:
         run: |
           .venv/bin/python training/adversarial_refinement.py             --config "$KWS_EXPERIMENT_CONFIG"             --runner build/kws_wav             --work-dir "$KWS_EXPERIMENT_WORK"             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$KWS_EXPERIMENT_WORK/posterior-cache"             --stop-after-development-eval
           test -s "$KWS_EXPERIMENT_WORK/adversarial-refinement/preflight-summary.json"
+          .venv/bin/python training/verify_training_readback.py --config "$KWS_EXPERIMENT_CONFIG" --work-dir "$KWS_EXPERIMENT_WORK" --output "$KWS_EXPERIMENT_WORK/training-readback.json"
 
       - name: Summarize posterior replay cache
         if: always()
@@ -583,6 +613,9 @@ jobs:
             build/product-development-experiment/decoder-retention-recalibrated-curve.json
             build/product-development-experiment/decoder-policy-replay-grid.json
             build/product-development-experiment/candidates/*/model.kwm
+            build/product-development-experiment/candidates/*/model.pt
+            build/product-development-experiment/candidates/*/model.kwm.provenance.json
+            build/product-development-experiment/training-readback.json
             build/product-development-experiment/candidates/*/calibration/calibrated-keywords.tsv
             build/product-development-experiment/candidates/*/calibration/calibrated-keywords.kwk
             build/product-development-experiment/datasets/round-*/calibration.references.jsonl
@@ -596,5 +629,6 @@ jobs:
             build/product-development-experiment/adversarial-refinement/preflight-summary.json
             build/product-development-experiment/adversarial-refinement/progress.json
             build/product-development-experiment/adversarial-lexicon/*/adversarial-lexicon-timing.json
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14

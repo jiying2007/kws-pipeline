@@ -8,6 +8,7 @@ import math
 import pathlib
 import re
 
+from objective_config import AUXILIARY_LOSS_WEIGHT_NAMES, auxiliary_loss_weights
 from objective_contract import (
     ORDERED_TOKEN_SCOPES,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
@@ -28,6 +29,7 @@ FIELDS = {
     "config_overrides",
 }
 ALLOWED_OVERRIDES = {
+    **{f"train.{name}": ("float", 0.0, 1.0) for name in AUXILIARY_LOSS_WEIGHT_NAMES},
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
     "train.ordered_token_scope": ("enum", tuple(sorted(ORDERED_TOKEN_SCOPES))),
@@ -90,6 +92,8 @@ def verify_spec(path: pathlib.Path) -> dict:
         contract = ALLOWED_OVERRIDES[key]
         kind = contract[0]
         if kind == "float":
+            if key.removeprefix("train.") in AUXILIARY_LOSS_WEIGHT_NAMES:
+                auxiliary_loss_weights({key.removeprefix("train."): raw})
             _, low, high = contract
             if isinstance(raw, bool):
                 raise ValueError(f"unsupported experiment override type for {key}")
