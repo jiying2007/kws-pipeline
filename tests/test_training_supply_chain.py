@@ -70,7 +70,9 @@ def main() -> int:
     )
     assert "torch.use_deterministic_algorithms(True)" in train_source
     assert 'PYTHONHASHSEED: "0"' in product_experiment_workflow
+    assert "PYTHONPATH: training" in product_experiment_workflow
     assert "PYTHONHASHSEED=0" in dockerfile
+    assert "PYTHONPATH=/workspace/training" in dockerfile
 
     # The decoder-confidence auxiliary objective is runtime-aligned and now owns
     # an explicit operating point for every shipping keyword. This keeps the two
