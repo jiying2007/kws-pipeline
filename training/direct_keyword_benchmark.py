@@ -21,10 +21,9 @@ from train_ctc import Manifest,training_environment,vocab_fingerprint,load_token
 from training_state import state_identity
 from synthetic_audio import activity_bounds
 
-POLICY='direct-whole-keyword-final-window-v1'
+POLICY='direct-whole-keyword-final-window-v2'
 PREFIX_HOPS=(0,25,50)
 TAIL_SAMPLES=3200
-END_FRAMES=4
 BLANK_WEIGHT=0.30
 
 def direct_class(row:dict)->int:
@@ -41,15 +40,16 @@ def write_vocab(root:pathlib.Path)->tuple[pathlib.Path,pathlib.Path,pathlib.Path
     subprocess.run([sys.executable,str(ROOT/'tools/compile_keywords.py'),'--tokens',str(tokens),'--keywords',str(keywords),'--out-pack',str(pack)],check=True,timeout=30)
     return tokens,keywords,pack
 
-def frame_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[int,int]],classes:list[int])->torch.Tensor:
+def frame_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[int,int]],classes:list[int],end_frames:int=4)->torch.Tensor:
     T,B,V=log_probs.shape
     if V!=3 or not(len(lengths)==len(spans)==len(classes)==B):raise ValueError('invalid direct loss input')
+    if type(end_frames) is not int or not 1<=end_frames<=32:raise ValueError('invalid end supervision window')
     valid=torch.zeros((T,B),dtype=torch.bool);pos=torch.zeros((T,B),dtype=torch.bool);cls=torch.tensor(classes,dtype=torch.long)
     positive=cls>0
     for j,(n,(a,b),c) in enumerate(zip(lengths,spans,classes)):
         if type(n) is not int or not 0<=a<b<=n<=T or c not in (0,1,2):raise ValueError('invalid direct loss geometry')
         valid[:n,j]=True
-        if c:pos[max(a,b-END_FRAMES):b,j]=True
+        if c:pos[max(a,b-end_frames):b,j]=True
     blank_nll=-log_probs[:,:,0]
     chosen=log_probs.permute(1,0,2)[torch.arange(B)[:,None],torch.arange(T)[None,:],cls[:,None]].T
     class_nll=-chosen;neg=valid&~pos
@@ -58,8 +58,9 @@ def frame_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[int,int
     sample=torch.where(positive,pos_loss+BLANK_WEIGHT*neg_loss,neg_loss)
     return sample.mean()
 
-def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epochs:int)->None:
+def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epochs:int,end_frames:int=4)->None:
     if type(seed) is not int or type(epochs) is not int or not 1<=epochs<=400:raise ValueError('invalid bounded direct recipe')
+    if type(end_frames) is not int or not 1<=end_frames<=32:raise ValueError('invalid end supervision window')
     pool=verify_pool(pool_root,pool_sha);rows=[r for r in pool['rows'] if r['split']=='train']
     if len(rows)!=128:raise ValueError('direct benchmark expects frozen 128-row train split')
     output.mkdir(parents=True,exist_ok=False);tokens,_,_=write_vocab(output)
@@ -79,13 +80,13 @@ def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epoch
         for offset in range(0,len(ids),16):
             selected=[(i,context.choice(PREFIX_HOPS)) for i in ids[offset:offset+16]];batch_digest.update(json.dumps([epoch,[i for i,_ in selected]]).encode());context_digest.update(json.dumps([epoch,selected]).encode())
             group=[cache[k] for k in selected];xs=[g[0] for g in group]
-            logits=model(torch.nn.utils.rnn.pad_sequence(xs,batch_first=True));loss=frame_loss(logits.log_softmax(-1),[len(x) for x in xs],[g[1] for g in group],[g[2] for g in group])
+            logits=model(torch.nn.utils.rnn.pad_sequence(xs,batch_first=True));loss=frame_loss(logits.log_softmax(-1),[len(x) for x in xs],[g[1] for g in group],[g[2] for g in group],end_frames)
             optimizer.zero_grad(set_to_none=True);loss.backward();torch.nn.utils.clip_grad_norm_(model.parameters(),5.0);optimizer.step();total+=float(loss.detach());batches+=1
         history.append({'epoch':epoch,'loss':total/batches,'ctc':0.0,'ordered':0.0,'margin':0.0,'completion':0.0,'release':0.0,'ordered_token_accuracy':0.0})
         if epoch%50==0:print(json.dumps({'seed':seed,'epoch':epoch,'loss':history[-1]['loss']}),flush=True)
     env=training_environment();env['training_code_sha256']['training/direct_keyword_benchmark.py']=sha(pathlib.Path(__file__))
     zero={k:0.0 for k in ('ordered_token_loss_weight','keyword_sequence_margin_loss_weight','prefix_completion_loss_weight','recurrent_release_loss_weight')}
-    recipe={'policy':POLICY,'development_only':True,'release_authority':False,'pool_sha256':pool_sha,'seed':seed,'epochs':epochs,'prefix_hops':list(PREFIX_HOPS),'tail_samples':TAIL_SAMPLES,'end_supervision_frames':END_FRAMES,'blank_weight':BLANK_WEIGHT,'threshold':0.55,'model':'shipping-rnn-32x64-logmel-vocab3'}
+    recipe={'policy':POLICY,'development_only':True,'release_authority':False,'pool_sha256':pool_sha,'seed':seed,'epochs':epochs,'prefix_hops':list(PREFIX_HOPS),'tail_samples':TAIL_SAMPLES,'end_supervision_frames':end_frames,'blank_weight':BLANK_WEIGHT,'threshold':0.55,'model':'shipping-rnn-32x64-logmel-vocab3'}
     cp={'state_dict':model.state_dict(),'float_state_identity':state_identity(model.state_dict()),'initial_float_state_identity':initial,'development_recipe':recipe,'batch_order_sha256':batch_digest.hexdigest(),'context_order_sha256':context_digest.hexdigest(),'feature_dim':32,'hidden_dim':64,'vocab_size':3,'vocab_fingerprint':vocab_fingerprint(load_tokens(tokens)),'tokens_sha256':sha(tokens),'frame_length_samples':400,'frame_hop_samples':320,'frontend_spec_version':2,'frontend_name':'logmel','frontend_kind':0,'training_examples':len(rows),'training_manifests':[{'name':manifest.name,'sha256':sha(manifest)}],'training_corpus_identity':corpus,'seed':seed,'epochs':epochs,'epoch_history':history,'batch_size':16,'learning_rate':.001,'optimizer':'AdamW','weight_decay':.0001,'grad_clip_norm':5.0,'training_environment':env,'auxiliary_loss_weights':zero,**zero}
     torch.save(cp,output/'model.pt');subprocess.run([sys.executable,str(ROOT/'training/export_model.py'),'--checkpoint',str(output/'model.pt'),'--tokens',str(tokens),'--output',str(output/'model.kwm')],check=True,timeout=60)
     write(output/'recipe.json',recipe)
@@ -104,15 +105,15 @@ def same_voice_pairs(rows:list[dict])->dict[int,tuple[int,int]]:
             if a is not None and b is not None:out[i]=(a,b)
     return out
 
-def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathlib.Path,runner:pathlib.Path)->dict:
+def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathlib.Path,runner:pathlib.Path,train_only:bool=False)->dict:
     pool=verify_pool(pool_root,pool_sha);output.mkdir(parents=True,exist_ok=False);tokens,_,pack=write_vocab(output);keywords=keyword_target_sequences(pool_root/'tokens.example.txt',pool_root/'zh_cn_example.tsv');result={'policy':POLICY,'development_only':True,'release_authority':False,'model_sha256':sha(model),'pool_sha256':pool_sha,'splits':{},'pause':{}}
-    for split in ('train','calibration','test'):
+    for split in (('train',) if train_only else ('train','calibration','test')):
         rows=[r for r in pool['rows'] if r['split']==split];refs=[];dets=[];prefs=[];pd=[]
         for i,r in enumerate(rows):
             raw=pcm(resolve(pool_root,r['path']));name=f'{split}-{i}';path=output/'scratch.wav';wav(path,b'\0\0'*16000+raw);ref={'recording':name,'duration_s':(16000+len(raw)//2)/16000,'expected':shifted(r['expected'],16000)};found=collect(runner,model,pack,path,name);refs.append(ref);dets+=found
             prior=select_prior(pool['rows'],r,i,keywords);pre=speech_prefix(pcm(resolve(pool_root,prior['path'])));wav(path,pre+raw);ref2={'recording':name+'p','duration_s':(len(pre)//2+len(raw)//2)/16000,'expected':shifted(r['expected'],len(pre)//2)};prefs.append(ref2);pd+=collect(runner,model,pack,path,name+'p')
         result['splits'][split]={'silence1s':measure(refs,dets),'prior':measure(prefs,pd)}
-    for split in ('train','calibration'):
+    for split in (('train',) if train_only else ('train','calibration')):
         rows=[r for r in pool['rows'] if r['split']==split];pairs=same_voice_pairs(rows);result['pause'][split]={}
         for gap in (3200,6400):
             refs=[];dets=[]
@@ -123,7 +124,7 @@ def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathl
 
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='cmd',required=True)
-    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200)
-    b=sub.add_parser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True)
-    q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve())
+    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200);a.add_argument('--end-frames',type=int,default=4)
+    b=sub.add_parser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True);b.add_argument('--train-only',action='store_true')
+    q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs,q.end_frames) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve(),q.train_only)
 if __name__=='__main__':main()
