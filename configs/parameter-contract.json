@@ -76,6 +76,11 @@
       "unit": "ln(0.70)",
       "summary": "Per-frame retention factor applied to a live keyword prefix on a non-speech frame."
     },
+    "KWS_PREFIX_BOUNDARY_RESET_FRAMES": {
+      "layer": "L1", "type": "uint32", "default": 13,
+      "unit": "20-ms frames", "invalidates_thresholds": true,
+      "summary": "After this many consecutive non-speech frames, clear decoder prefix search state and keep it clear until speech resumes."
+    },
     "KWS_MIN_PATH_RETENTION_LOG": {
       "layer": "L1", "type": "float", "default": -16.0,
       "unit": "nat",

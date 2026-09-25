@@ -259,11 +259,16 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
   return KWS_OK;
 }
 
-void kws_decoder_reset(kws_decoder_t *d) {
+static void clear_search_state(kws_decoder_t *d) {
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     init_node_scores(&d->nodes[i], i == 0u);
   }
   clear_pending(d);
+}
+
+void kws_decoder_reset(kws_decoder_t *d) {
+  clear_search_state(d);
+  d->inactive_frames = 0u;
 }
 
 static int immediate_better(const kws_decoder_t *d,
@@ -355,6 +360,12 @@ int kws_decoder_step(kws_decoder_t *d,
   int top_is_keyword_root =
       top_token != 0u && is_keyword_root_token(d, top_token) != 0;
   int immediate_kw = -1;
+
+  if (speech_active != 0) {
+    d->inactive_frames = 0u;
+  } else if (d->inactive_frames != UINT16_MAX) {
+    d->inactive_frames++;
+  }
 
   if (d->pending_keyword >= 0) {
     if (d->pending_age_frames != UINT16_MAX) {
@@ -499,6 +510,15 @@ int kws_decoder_step(kws_decoder_t *d,
         }
       }
     }
+  }
+
+  if (speech_active == 0 &&
+      (uint32_t)d->inactive_frames >= KWS_PREFIX_BOUNDARY_RESET_FRAMES) {
+    /* A sustained non-speech boundary starts a new utterance. Clear every
+     * partial/pending path and keep the search at root for the rest of the
+     * inactive run; the acoustic model state is intentionally untouched. */
+    clear_search_state(d);
+    return 0;
   }
 
   if (immediate_kw >= 0) {

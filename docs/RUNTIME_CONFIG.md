@@ -43,6 +43,21 @@ python3 tools/gen_parameter_limits.py configs/parameter-contract.json --json
 | L2 | product config: `kws_config_t` field | rebuild of the caller plus revalidation of calibrated thresholds |
 | L3 | field policy: per-keyword KWKP v3 record field | recompile the keyword pack and rerun calibration |
 
+## L1 decoder boundary policy
+
+`KWS_PREFIX_BOUNDARY_RESET_FRAMES` is a firmware constant generated from the
+parameter contract. The current development-selected value is `13` 20-ms frames
+(about 260 ms). Once `speech_active` has remained false for that long, the
+decoder clears partial and pending keyword paths on every remaining inactive
+frame. The acoustic RNN state is not reset. Speech resumption therefore starts a
+fresh decoder path without changing model inference.
+
+The value was selected on the frozen synthetic train/calibration boundary-vs-pause
+diagnostic and still requires real-human/final-AFE validation. Artificial 200/400-ms
+concatenations of independently synthesized half phrases exceed this boundary and
+remain an explicit stress-test limitation, not evidence of natural within-word
+pause support at those durations.
+
 ## L2 runtime parameters
 
 These are the fields of `kws_config_t`. `kws_default_config()` returns exactly the

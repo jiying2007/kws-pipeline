@@ -46,6 +46,7 @@ REQUIRED_KEYWORD_PACK = (
 
 REQUIRED_ALGORITHM_CONSTANTS = (
     "KWS_SILENCE_RETENTION_LOG",
+    "KWS_PREFIX_BOUNDARY_RESET_FRAMES",
     "KWS_MIN_PATH_RETENTION_LOG",
     "KWS_ROOT_START_LOGIT_MARGIN",
     "KWS_FUZZY_CHILD_RETENTION_COST_LOG",
@@ -73,6 +74,10 @@ STRUCTURAL_INVARIANTS = {
         "the abandonment budget must exceed a single silent frame",
         lambda v: v["KWS_MIN_PATH_RETENTION_LOG"]
         < v["KWS_SILENCE_RETENTION_LOG"],
+    ),
+    "KWS_PREFIX_BOUNDARY_RESET_FRAMES > 0": (
+        "the boundary reset window must contain at least one frame",
+        lambda v: v["KWS_PREFIX_BOUNDARY_RESET_FRAMES"] > 0,
     ),
     "2 * KWS_FUZZY_CHILD_RETENTION_COST_LOG <= KWS_MIN_PATH_RETENTION_LOG": (
         "two fuzzy child advances must exhaust the abandonment budget",

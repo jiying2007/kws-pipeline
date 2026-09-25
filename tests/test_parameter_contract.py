@@ -184,10 +184,15 @@ def check_shipping_contract(contract: dict, digest: str) -> None:
 
     # The recalibration list must equal the contract's own invalidation flags,
     # plus the L0 model release tag which the contract cannot see.
-    flagged = sorted(
+    flagged = [
         f"runtime.{name}"
         for name in RUNTIME
         if contract["runtime"][name].get("invalidates_thresholds")
+    ]
+    flagged.extend(
+        f"algorithm.{name}"
+        for name, entry in contract["algorithm_constants"].items()
+        if entry.get("invalidates_thresholds")
     )
     assert sorted(calibration["invalidated_by"]) == sorted(flagged + ["model.release_tag"])
 
@@ -234,7 +239,9 @@ def main() -> int:
         for name in generator.REQUIRED_ALGORITHM_CONSTANTS:
             found = re.search(rf"^#define {name} \(([^)]*)\)$", rendered, re.M)
             assert found, name
-            assert c_float(found.group(1)) == contract["algorithm_constants"][name]["default"], name
+            entry = contract["algorithm_constants"][name]
+            cast = c_float if entry["type"] == "float" else c_int
+            assert cast(found.group(1)) == entry["default"], name
 
         stale = scratch / "stale"
         stale.mkdir()
