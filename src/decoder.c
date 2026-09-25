@@ -363,7 +363,7 @@ int kws_decoder_step(kws_decoder_t *d,
 
   if (speech_active != 0) {
     d->inactive_frames = 0u;
-  } else if (d->inactive_frames != UINT16_MAX) {
+  } else if (d->inactive_frames != UINT32_MAX) {
     d->inactive_frames++;
   }
 
