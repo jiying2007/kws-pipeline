@@ -24,6 +24,16 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
             with self.assertRaises(ValueError): frame_loss(lp,[5],[(1,4)],bad)
         with self.assertRaises(ValueError): frame_loss(lp,[5],[(4,4)],[1])
 
+    def test_end_window_is_explicit_and_bounded(self):
+        self.assertEqual(POLICY,'direct-whole-keyword-final-window-v2')
+        logits=torch.randn(16,1,3).log_softmax(-1)
+        short=frame_loss(logits,[16],[(2,14)],[1],4)
+        long=frame_loss(logits,[16],[(2,14)],[1],12)
+        self.assertNotEqual(float(short),float(long))
+        for bad in (0,33,True):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                frame_loss(logits,[16],[(2,14)],[1],bad)
+
     def test_same_voice_pairs_preserve_full_transcript(self):
         def row(tokens,voice): return {'target_ids':tokens,'source_provenance':{'voice_id':voice}}
         rows=[row([1,2],'a'),row([3,4],'a'),row([1,2,3,4],'a'),row([1,2],'b'),row([3,4],'b'),row([1,2,3,4],'b')]
