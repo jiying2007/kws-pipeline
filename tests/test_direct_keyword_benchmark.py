@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib,sys,tempfile,unittest
 import torch
 ROOT=pathlib.Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'training'))
-from direct_keyword_benchmark import POLICY,ctc_sequence_loss,direct_class,frame_loss,same_voice_pairs,write_vocab
+from direct_keyword_benchmark import POLICY,ctc_sequence_loss,direct_class,frame_loss,grounded_ctc_loss,same_voice_pairs,write_vocab
 
 class DirectKeywordBenchmarkTests(unittest.TestCase):
     def test_class_mapping(self):
@@ -25,7 +25,7 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
         with self.assertRaises(ValueError): frame_loss(lp,[5],[(4,4)],[1])
 
     def test_end_window_is_explicit_and_bounded(self):
-        self.assertEqual(POLICY,'direct-whole-keyword-objective-paired-v3')
+        self.assertEqual(POLICY,'direct-whole-keyword-grounded-ctc-paired-v4')
         logits=torch.randn(16,1,3).log_softmax(-1)
         short=frame_loss(logits,[16],[(2,14)],[1],4)
         long=frame_loss(logits,[16],[(2,14)],[1],12)
@@ -53,6 +53,28 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
         for lengths,classes in (([0,5],[0,0]),([7,5],[0,0]),([6,5],[3,0]),([6,5],[True,0])):
             with self.subTest(lengths=lengths,classes=classes), self.assertRaises(ValueError):
                 ctc_sequence_loss(lp.detach(),lengths,classes)
+
+    def test_grounded_ctc_rejects_startup_only_shortcut(self):
+        logits=torch.full((8,1,3),-8.0);logits[:,:,0]=8.0
+        logits[0,0,0]=-8.0;logits[0,0,1]=8.0
+        lp=logits.log_softmax(-1)
+        ungrounded=ctc_sequence_loss(lp,[8],[1])
+        total,ctc,blank=grounded_ctc_loss(lp,[8],[(3,7)],[1])
+        self.assertGreater(float(ctc),float(ungrounded))
+        self.assertGreater(float(blank),0.0);self.assertGreater(float(total),float(ctc))
+
+    def test_grounded_ctc_keeps_negative_full_sequence_blank(self):
+        blank_logits=torch.full((6,1,3),-8.0);blank_logits[:,:,0]=8.0
+        wake_logits=blank_logits.clone();wake_logits[3,0,0]=-8.0;wake_logits[3,0,1]=8.0
+        clean=grounded_ctc_loss(blank_logits.log_softmax(-1),[6],[(1,5)],[0])[0]
+        wrong=grounded_ctc_loss(wake_logits.log_softmax(-1),[6],[(1,5)],[0])[0]
+        self.assertGreater(float(wrong),float(clean))
+
+    def test_grounded_ctc_geometry_fails_closed(self):
+        lp=torch.randn(6,1,3).log_softmax(-1)
+        for lengths,spans,classes in (([6],[(4,4)],[1]),([7],[(1,5)],[1]),([6],[(1,5)],[True]),([6],[(1,7)],[1])):
+            with self.subTest(lengths=lengths,spans=spans,classes=classes), self.assertRaises(ValueError):
+                grounded_ctc_loss(lp,lengths,spans,classes)
 
     def test_same_voice_pairs_preserve_full_transcript(self):
         def row(tokens,voice): return {'target_ids':tokens,'source_provenance':{'voice_id':voice}}
