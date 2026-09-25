@@ -44,7 +44,7 @@ typedef struct kws_decoder {
    * parameter-contract defaults. */
   float silence_retention_log;
   float fuzzy_child_retention_cost_log;
-  uint16_t inactive_frames;
+  uint32_t inactive_frames;
   int16_t pending_keyword;
   float pending_confidence;
   uint16_t pending_depth;
