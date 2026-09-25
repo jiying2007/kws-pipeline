@@ -1,0 +1,132 @@
+name: direct-keyword-benchmark
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'training/direct_keyword_benchmark.py'
+      - 'tests/test_direct_keyword_benchmark.py'
+      - '.github/workflows/direct-keyword-benchmark.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: direct-keyword-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PYTHONHASHSEED: '0'
+  PYTHONUNBUFFERED: '1'
+  OMP_NUM_THREADS: '1'
+  OMP_DYNAMIC: 'FALSE'
+  MKL_NUM_THREADS: '1'
+  MKL_CBWR: COMPATIBLE
+  OPENBLAS_NUM_THREADS: '1'
+  NUMEXPR_NUM_THREADS: '1'
+  ATEN_CPU_CAPABILITY: default
+
+jobs:
+  prepare:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      pool_sha: ${{ steps.pool.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify and download existing immutable speech base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          contract=configs/training/product-speech-like-base-v1.json
+          tag="$(jq -r .release_tag "$contract")"
+          archive="$(jq -r .release_archive "$contract")"
+          mkdir -p build/frozen-download
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" > build/frozen-download/release.json
+          jq -e --argjson id "$(jq .release_id "$contract")" \
+            --arg target "$(jq -r .source_repro_head_sha "$contract")" \
+            '.id == $id and .immutable == true and .draft == false and .prerelease == false and .target_commitish == $target' \
+            build/frozen-download/release.json >/dev/null
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$archive" --dir build/frozen-download
+          echo "$(jq -r .release_archive_sha256 "$contract")  build/frozen-download/$archive" | sha256sum -c -
+      - name: Prepare frozen development pool
+        id: pool
+        run: |
+          archive="$(jq -r .release_archive configs/training/product-speech-like-base-v1.json)"
+          python3 training/frozen_speech_ablation.py prepare --archive "build/frozen-download/$archive" --output build/frozen-pool
+          echo "sha=$(sha256sum build/frozen-pool/pool.json | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: direct-keyword-pool-${{ github.event.pull_request.head.sha }}
+          path: build/frozen-pool/
+          if-no-files-found: error
+          retention-days: 14
+
+  benchmark:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: direct-keyword-pool-${{ github.event.pull_request.head.sha }}
+          path: build/frozen-pool
+      - name: Build unchanged C runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel 2 --target kws_wav
+      - name: Install pinned CPU runtime
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Test direct benchmark contracts
+        run: .venv/bin/python tests/test_direct_keyword_benchmark.py
+      - name: Train and evaluate two fixed seeds
+        env:
+          POOL_SHA: ${{ needs.prepare.outputs.pool_sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/direct-keyword
+          for seed in 1337 2346; do
+            .venv/bin/python training/direct_keyword_benchmark.py train \
+              --pool build/frozen-pool --pool-sha "$POOL_SHA" \
+              --output "build/direct-keyword/$seed" --seed "$seed" --epochs 200 \
+              > "build/direct-keyword/$seed-train.log" 2>&1
+            .venv/bin/python training/direct_keyword_benchmark.py evaluate \
+              --pool build/frozen-pool --pool-sha "$POOL_SHA" \
+              --model "build/direct-keyword/$seed/model.kwm" \
+              --runner build/kws_wav --output "build/direct-keyword/$seed-evaluation" \
+              > "build/direct-keyword/$seed-evaluation.log" 2>&1
+          done
+      - name: Report outcome without release authority
+        run: |
+          .venv/bin/python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('build/direct-keyword');rows=[]
+          for seed in (1337,2346):
+              value=json.loads((root/f'{seed}-evaluation'/'summary.json').read_text())
+              rows.append({'seed':seed,'train':value['splits']['train'],'calibration':value['splits']['calibration'],'test':value['splits']['test'],'pause':value['pause']})
+          report={'schema_version':1,'evidence_class':'direct-whole-keyword-benchmark-v1','development_only':True,'release_authority':False,
+                  'selection_feedback_allowed':False,'epochs':200,'threshold':0.55,'rows':rows,
+                  'limitations':['Frozen synthetic development pool only; no qualification or DUT authority.','No test-driven tuning or candidate selection.','Whole-keyword output changes acoustic target vocabulary but reuses shipping RNN/frontend/KWM/runtime.']}
+          (root/'comparison.json').write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+          print(json.dumps({r['seed']:{'train':r['train']['silence1s'],'cal':r['calibration']['silence1s'],'test':r['test']['silence1s'],'prior':r['test']['prior'],'pause400':r['pause']['calibration']['400']} for r in rows},sort_keys=True))
+          PY
+      - name: Retain benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: direct-keyword-${{ github.event.pull_request.head.sha }}
+          path: build/direct-keyword/
+          if-no-files-found: error
+          retention-days: 14
