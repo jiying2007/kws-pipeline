@@ -283,6 +283,12 @@ static void verify_boundary_reset_preserves_short_pause_and_clears_long_gap(void
   for (int frame = 0; frame < 13; ++frame) {
     CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
   }
+
+  /* Once the boundary is established, even strong root evidence on later
+   * inactive frames must be discarded rather than seeding the next utterance. */
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
+
   set_logits(logits, -8.0f, -8.0f, -8.0f, 8.0f);
   CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
   set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
