@@ -124,6 +124,6 @@ def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathl
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='cmd',required=True)
     a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200)
-    b=sub.add_subparser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True)
+    b=sub.add_parser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True)
     q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve())
 if __name__=='__main__':main()
