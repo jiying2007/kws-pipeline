@@ -109,6 +109,17 @@ def validate_recipe(recipe: dict) -> None:
             or recipe.get('development_only') is not True or recipe.get('release_authority') is not False
             or recipe.get('variant') not in VARIANTS or recipe.get('scope') not in ('all','positive-only')):
         raise ValueError('invalid development recipe authority')
+    if 'negative_wake_margin' in recipe:
+        from context_negative_margin import POLICY as margin_policy, CEILING
+        spec=recipe['negative_wake_margin']
+        if (not isinstance(spec, dict) or set(spec) != {'policy','weight','confidence_ceiling','scope','exact_runtime_loss'}
+                or spec.get('policy') != margin_policy or spec.get('confidence_ceiling') != CEILING
+                or spec.get('scope') != 'activity-only-negative-keywords'
+                or spec.get('exact_runtime_loss') is not False
+                or isinstance(spec.get('weight'), bool) or not isinstance(spec.get('weight'), (int,float))
+                or not math.isfinite(spec['weight']) or not 0 < spec['weight'] <= 1
+                or recipe['variant'] != 'grounded-ctc' or recipe['scope'] != 'all'):
+            raise ValueError('invalid negative-wake margin recipe')
 
 
 def bind_development_provenance(checkpoint: pathlib.Path, model: pathlib.Path) -> None:
@@ -133,11 +144,22 @@ def bind_development_provenance(checkpoint: pathlib.Path, model: pathlib.Path) -
         if not math.isfinite(value) or value<0:
             raise ValueError('invalid experimental blank loss')
         target['non_speech_blank']=value
+        if 'negative_wake_margin' in cp['development_recipe']:
+            margin=source['negative_wake_margin']
+            if not math.isfinite(margin) or margin<0:
+                raise ValueError('invalid negative-wake margin history')
+            target['negative_wake_margin']=margin
     write(provenance_path,provenance)
 
 
 def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
-          variant: str, scope: str, epochs: int, seed: int, *, retain_milestones: bool = False) -> None:
+          variant: str, scope: str, epochs: int, seed: int, *, retain_milestones: bool = False,
+          negative_margin_weight: float = 0.0) -> None:
+    if (isinstance(negative_margin_weight, bool) or not isinstance(negative_margin_weight, (int, float))
+            or not math.isfinite(negative_margin_weight) or not 0.0 <= negative_margin_weight <= 1.0):
+        raise ValueError('negative_margin_weight must be finite numeric in [0,1]')
+    if negative_margin_weight and (variant != 'grounded-ctc' or scope != 'all'):
+        raise ValueError('negative margin requires grounded-ctc/all')
     if type(retain_milestones) is not bool:
         raise ValueError('retain_milestones must be boolean')
     if variant not in VARIANTS or type(epochs) is not int or not 1 <= epochs <= 800:
@@ -170,6 +192,11 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
     if retain_milestones:
         recipe['checkpoint_retention'] = milestones['policy']
         write(output / 'milestones.json', milestones)
+    if negative_margin_weight:
+        from context_negative_margin import POLICY as margin_policy, CEILING, negative_wake_margin
+        recipe['negative_wake_margin'] = {'policy': margin_policy, 'weight': negative_margin_weight,
+            'confidence_ceiling': CEILING, 'scope': 'activity-only-negative-keywords',
+            'exact_runtime_loss': False}
     for i, r in enumerate(rows):
         pcm = read_pcm(resolve(pool_root, r['path']))
         for prefix in prefixes:
@@ -185,6 +212,8 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.0001)
     environment = training_environment()
     environment['training_code_sha256']['training/startup_context_training.py'] = sha(pathlib.Path(__file__))
+    if negative_margin_weight:
+        environment['training_code_sha256']['training/context_negative_margin.py'] = sha(ROOT/'training/context_negative_margin.py')
     recipe['implementation_sha256'] = dict(environment['training_code_sha256'])
     recipe['source_worktree_clean'] = not subprocess.check_output(
         ['git','status','--porcelain','--untracked-files=no'],cwd=ROOT,text=True).strip()
@@ -193,7 +222,7 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
     history = []; started = time.monotonic()
     ids = list(range(len(rows)))
     for epoch in range(1, epochs + 1):
-        shuffle.shuffle(ids); total = ctc_total = blank_total = 0.0; batches = 0
+        shuffle.shuffle(ids); total = ctc_total = blank_total = margin_total = 0.0; batches = 0
         for offset in range(0, len(ids), 16):
             selected = [(i, context.choice(prefixes)) for i in ids[offset:offset + 16]]
             batch_digest.update(json.dumps([epoch, [i for i, _ in selected]]).encode())
@@ -201,14 +230,21 @@ def train(pool_root: pathlib.Path, pool_sha: str, output: pathlib.Path,
             group = [cache[key] for key in selected]
             xs, ys, spans = zip(*group)
             logits = model(torch.nn.utils.rnn.pad_sequence(xs, batch_first=True))
-            ctc, blank = loss_components(logits.log_softmax(-1), list(ys), [len(x) for x in xs], list(spans), variant)
+            log_probs = logits.log_softmax(-1)
+            ctc, blank = loss_components(log_probs, list(ys), [len(x) for x in xs], list(spans), variant)
             loss = ctc + recipe['blank_weight'] * blank
+            if negative_margin_weight:
+                margin = negative_wake_margin(log_probs, list(ys), [len(x) for x in xs], list(spans))
+                loss = loss + negative_margin_weight * margin
+                margin_total += float(margin.detach())
             optimizer.zero_grad(set_to_none=True); loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0); optimizer.step()
             total += float(loss.detach()); ctc_total += float(ctc.detach()); blank_total += float(blank.detach()); batches += 1
         history.append({'epoch': epoch, 'loss': total / batches, 'ctc': ctc_total / batches,
             'non_speech_blank': blank_total / batches, 'ordered': 0.0, 'margin': 0.0,
             'completion': 0.0, 'release': 0.0, 'ordered_token_accuracy': 0.0})
+        if negative_margin_weight:
+            history[-1]['negative_wake_margin'] = margin_total / batches
         if epoch % 100 == 0 or epoch == epochs:
             zero_weights = {k: 0.0 for k in ('ordered_token_loss_weight','keyword_sequence_margin_loss_weight',
                                              'prefix_completion_loss_weight','recurrent_release_loss_weight')}
@@ -266,8 +302,9 @@ def main() -> None:
     p.add_argument('--scope',choices=('positive-only','all'),default='all')
     p.add_argument('--epochs',type=int,default=600);p.add_argument('--seed',type=int,default=1337)
     p.add_argument('--retain-milestones', action='store_true')
+    p.add_argument('--negative-margin-weight',type=float,default=0.0)
     a=p.parse_args(); train(a.pool.resolve(),a.pool_sha,a.output.resolve(),a.variant,a.scope,a.epochs,a.seed,
-                           retain_milestones=a.retain_milestones)
+                           retain_milestones=a.retain_milestones, negative_margin_weight=a.negative_margin_weight)
 
 if __name__ == '__main__':
     main()

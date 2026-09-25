@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'training/startup_context_training.py'
+      - 'training/context_negative_margin.py'
+      - 'tests/test_context_negative_margin.py'
       - 'training/startup_context_evaluation.py'
       - 'tests/test_startup_context.py'
       - 'training/select_context_checkpoint.py'
@@ -102,13 +104,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/startup-context
-          for spec in plain-ctc:1337 context-ctc:1337 grounded-ctc:1337 grounded-ctc:2346; do
+          for spec in plain-ctc:1337 context-ctc:1337 grounded-ctc:1337 grounded-ctc:2346 grounded-margin:1337 grounded-margin:2346; do
             variant="${spec%:*}"
             seed="${spec#*:}"
             name="$variant-$seed"
+            margin_args=()
+            if [ "$variant" = grounded-margin ]; then
+              variant=grounded-ctc
+              margin_args=(--negative-margin-weight 0.1)
+            fi
             retention=()
             if [ "$variant" = grounded-ctc ]; then retention=(--retain-milestones); fi
-            .venv/bin/python training/startup_context_training.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --output "build/startup-context/$name" --variant "$variant"               --scope all --epochs 600 --seed "$seed" "${retention[@]}" > "build/startup-context/$name-train.log" 2>&1
+            .venv/bin/python training/startup_context_training.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --output "build/startup-context/$name" --variant "$variant"               --scope all --epochs 600 --seed "$seed" "${retention[@]}" "${margin_args[@]}" > "build/startup-context/$name-train.log" 2>&1
             if [ "$variant" = grounded-ctc ]; then
               .venv/bin/python training/select_context_checkpoint.py \
                 --pool build/frozen-pool --pool-sha "$POOL_SHA" \
@@ -137,6 +144,10 @@ jobs:
                 --output "build/startup-context/$name-selected-evaluation" \
                 --runner build/kws_wav --dump build/kws_posterior_dump --replay build/kws_decoder_replay \
                 > "build/startup-context/$name-selected-evaluation.log" 2>&1
+              .venv/bin/python training/preceding_context_evaluation.py \
+                --pool build/frozen-pool --pool-sha "$POOL_SHA" --model "$selected" \
+                --output "build/startup-context/$name-preceding" --runner build/kws_wav \
+                > "build/startup-context/$name-preceding.log" 2>&1
               sha256sum -c "build/startup-context/$name-decision.sha256"
             fi
             .venv/bin/python training/startup_context_evaluation.py               --pool build/frozen-pool --pool-sha "$POOL_SHA"               --model "build/startup-context/$name/model.kwm"               --output "build/startup-context/$name-evaluation"               --runner build/kws_wav --dump build/kws_posterior_dump --replay build/kws_decoder_replay               > "build/startup-context/$name-evaluation.log" 2>&1
@@ -146,10 +157,11 @@ jobs:
           .venv/bin/python - <<'PY'
           import json, pathlib, torch
           root=pathlib.Path('build/startup-context')
-          names=['plain-ctc-1337','context-ctc-1337','grounded-ctc-1337','grounded-ctc-2346']
-          rows=[]
+          names=['plain-ctc-1337','context-ctc-1337','grounded-ctc-1337','grounded-ctc-2346','grounded-margin-1337','grounded-margin-2346']
+          rows=[]; checkpoints={}
           for name in names:
               cp=torch.load(root/name/'model.pt',weights_only=True,map_location='cpu')
+              checkpoints[name]=cp
               recipe=json.loads((root/name/'recipe.json').read_text())
               result=json.loads((root/(name+'-evaluation')/'summary.json').read_text())
               assert cp['epochs']==recipe['epochs']==600
@@ -161,7 +173,16 @@ jobs:
           assert len({r['initial']['sha256'] for r in rows[:3]})==1
           assert len({r['batch_order'] for r in rows[:3]})==1
           assert rows[1]['context_order']==rows[2]['context_order']
-          assert len({json.dumps(r['recipe']['implementation_sha256'],sort_keys=True) for r in rows})==1
+          assert len({json.dumps(r['recipe']['implementation_sha256'],sort_keys=True) for r in rows[:4]})==1
+          for seed in (1337,2346):
+              baseline=checkpoints[f'grounded-ctc-{seed}']; candidate=checkpoints[f'grounded-margin-{seed}']
+              for field in ('initial_float_state_identity','batch_order_sha256','context_order_sha256','training_corpus_identity'):
+                  assert baseline[field]==candidate[field],field
+              expected=dict(candidate['development_recipe']);spec=expected.pop('negative_wake_margin')
+              assert spec['weight']==0.1 and spec['confidence_ceiling']==0.5 and spec['exact_runtime_loss'] is False
+              expected['implementation_sha256']=dict(expected['implementation_sha256'])
+              expected['implementation_sha256'].pop('training/context_negative_margin.py')
+              assert expected==baseline['development_recipe'], 'unplanned paired difference'
           assert all(r['recipe']['source_worktree_clean'] is True for r in rows)
           for key in ('runner_sha256','dump_sha256','replay_sha256','pack_sha256'):
               assert len({r['runtime'][key] for r in rows})==1
@@ -169,7 +190,9 @@ jobs:
                   'notes':['Both CTC controls have the same target-length normalization, uniform row weights, initialization and 600 epochs.',
                            'Grounded recipe adds BOTH activity-span CTC and non-speech blank supervision: combined treatment, not individual attribution.',
                            'All recipes execute on one worker; cross-vendor portability is separate and not asserted.',
-                           'Train-fit is a diagnostic gate only; development test and calibration are not release holdouts.']}
+                           'Train-fit is a diagnostic gate only; development test and calibration are not release holdouts.',
+                           'Negative-margin pairs differ only by an explicit activity-only surrogate term of weight0.1; no runtime threshold changes.',
+                           'Completion and train-fit do not imply reduced held-out errors; retain adverse recall/FA tradeoffs. No automatic promotion.']}
           (root/'comparison.json').write_text(json.dumps(result,sort_keys=True,indent=2)+'\n')
           print(json.dumps({r['name']:{'train_fit':r['runtime']['train_fit_gate'],'startup':r['runtime']['startup_independence_gate']} for r in rows}))
           PY
@@ -186,7 +209,7 @@ jobs:
           python3 - <<'PY'
           import json, pathlib
           root=pathlib.Path('build/startup-context')
-          for name in ('grounded-ctc-1337','grounded-ctc-2346'):
+          for name in ('grounded-ctc-1337','grounded-ctc-2346','grounded-margin-1337','grounded-margin-2346'):
               result=json.loads((root/(name+'-evaluation')/'summary.json').read_text())
               assert result['basic_train_learnability_pass'] is True, name
               decision=json.loads((root/(name+'-selection')/'selection.json').read_text())
@@ -196,6 +219,6 @@ jobs:
               assert selected['model_sha256']==decision['selected']['files']['model.kwm']
               assert selected['basic_train_learnability_pass'] is True, name
               assert selected['release_authority'] is False
-          print('Both declared seeds pass actual C train-fit, continuous context and startup-prefix independence.')
+          print('Both declared seeds and both grounded treatments pass actual C train-fit, continuous context and startup-prefix independence.')
           print('Development generalization and product qualification remain separate; no release authority.')
           PY

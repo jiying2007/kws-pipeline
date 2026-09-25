@@ -10,6 +10,7 @@ on:
       - 'tests/test_frozen_speech_ablation.py'
       - 'tests/test_reproducibility_trace.py'
       - 'tests/test_startup_context.py'
+      - 'tests/test_context_negative_margin.py'
       - 'tests/test_context_checkpoint_selection.py'
       - 'tests/test_preceding_context.py'
       - 'tests/test_preceding_context_attribution.py'
@@ -68,6 +69,7 @@ jobs:
           .venv-audit/bin/python tests/test_frozen_speech_ablation.py
           .venv-audit/bin/python tests/test_reproducibility_trace.py
           .venv-audit/bin/python tests/test_startup_context.py
+          .venv-audit/bin/python tests/test_context_negative_margin.py
           .venv-audit/bin/python tests/test_context_checkpoint_selection.py
           .venv-audit/bin/python tests/test_preceding_context.py
           .venv-audit/bin/python tests/test_preceding_context_attribution.py
