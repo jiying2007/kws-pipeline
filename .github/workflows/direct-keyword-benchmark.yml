@@ -91,19 +91,25 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Test direct benchmark contracts
         run: .venv/bin/python tests/test_direct_keyword_benchmark.py
-      - name: Train paired end-window controls and evaluate train only
+      - name: Train paired final-window and one-token CTC controls and evaluate train only
         env:
           POOL_SHA: ${{ needs.prepare.outputs.pool_sha }}
         run: |
           set -euo pipefail
           mkdir -p build/direct-keyword
           for seed in 1337 2346; do
-            for end_frames in 4 12; do
-              name="${seed}-end${end_frames}"
+            for treatment in window4 ctc; do
+              name="${seed}-${treatment}"
+              train_args=()
+              if [ "$treatment" = window4 ]; then
+                train_args=(--objective final-window --end-frames 4)
+              else
+                train_args=(--objective ctc)
+              fi
               .venv/bin/python training/direct_keyword_benchmark.py train \
                 --pool build/frozen-pool --pool-sha "$POOL_SHA" \
                 --output "build/direct-keyword/$name" --seed "$seed" --epochs 200 \
-                --end-frames "$end_frames" \
+                "${train_args[@]}" \
                 > "build/direct-keyword/$name-train.log" 2>&1
               .venv/bin/python training/direct_keyword_benchmark.py evaluate \
                 --pool build/frozen-pool --pool-sha "$POOL_SHA" \
@@ -122,28 +128,30 @@ jobs:
               return metric['matched']==metric['expected']==32 and metric['false_accepts']==0
           for seed in (1337,2346):
               pair={}
-              for end_frames in (4,12):
-                  name=f'{seed}-end{end_frames}'
+              for treatment in ('window4','ctc'):
+                  name=f'{seed}-{treatment}'
                   cp=torch.load(root/name/'model.pt',weights_only=True,map_location='cpu')
                   value=json.loads((root/f'{name}-evaluation'/'summary.json').read_text())
                   assert set(value['splits'])=={'train'} and set(value['pause'])=={'train'}
-                  pair[end_frames]=(cp,value)
-              base,candidate=pair[4],pair[12]
+                  pair[treatment]=(cp,value)
+              base,candidate=pair['window4'],pair['ctc']
               for field in ('initial_float_state_identity','batch_order_sha256','context_order_sha256','training_corpus_identity'):
                   assert base[0][field]==candidate[0][field],field
               a=dict(base[0]['development_recipe']);b=dict(candidate[0]['development_recipe'])
-              assert a['end_supervision_frames']==4 and b['end_supervision_frames']==12
-              a.pop('end_supervision_frames');b.pop('end_supervision_frames')
+              assert a['positive_objective']=={'kind':'final-window','end_supervision_frames':4,'blank_weight':0.3}
+              assert b['positive_objective']=={'kind':'one-token-ctc','normalization':'input-frames','blank_id':0}
+              a.pop('positive_objective');b.pop('positive_objective')
               assert a==b,'unplanned paired recipe difference'
               base_train=base[1]['splits']['train'];cand_train=candidate[1]['splits']['train']
               train_gate=all(clean(cand_train[arm]) for arm in ('silence1s','prior'))
-              rows.append({'seed':seed,'base_end_frames':4,'candidate_end_frames':12,
+              rows.append({'seed':seed,'control_objective':'final-window-4','candidate_objective':'one-token-ctc',
                            'base_train':base_train,'candidate_train':cand_train,
                            'base_pause':base[1]['pause']['train'],'candidate_pause':candidate[1]['pause']['train'],
                            'train_gate_pass':train_gate})
-          report={'schema_version':1,'evidence_class':'direct-whole-keyword-end-window-paired-v2',
+          report={'schema_version':1,'evidence_class':'direct-whole-keyword-objective-paired-v3',
                   'development_only':True,'release_authority':False,'selection_feedback_allowed':False,
-                  'epochs':200,'threshold':0.55,'base_end_frames':4,'candidate_end_frames':12,
+                  'epochs':200,'threshold':0.55,'control_objective':'final-window-4',
+                  'candidate_objective':'one-token-ctc',
                   'train_gate_pass':all(r['train_gate_pass'] for r in rows),'rows':rows,
                   'limitations':['Train split only; calibration/test are intentionally not evaluated in this experiment.',
                                  'Frozen synthetic development pool only; no qualification or DUT authority.',
