@@ -91,6 +91,12 @@
       "unit": "nat",
       "summary": "Cost charged for a fuzzy child advance: 51.6 percent of the abandonment budget, so two such advances can never complete a keyword."
     },
+    "KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES": {
+      "layer": "L1", "type": "uint8", "default": 12,
+      "min": 1, "max": 255, "min_exclusive": false, "max_exclusive": false,
+      "unit": "frames",
+      "summary": "Consecutive speech-inactive decoder frames before stale keyword-prefix history is cleared. At the current 20 ms hop, 12 frames is 240 ms. Acoustic RNN/frontend state is not reset."
+    },
     "KWS_PCEN_SMOOTHING": {
       "layer": "L1", "type": "float", "default": 0.025,
       "unit": "ratio", "summary": "PCEN-lite smoothing coefficient."

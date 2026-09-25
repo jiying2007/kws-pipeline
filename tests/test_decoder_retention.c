@@ -240,6 +240,59 @@ static void verify_two_fuzzy_children_cannot_complete(void) {
   CHECK(confidence > 0.50f);
 }
 
+static void verify_boundary_reset_preserves_short_pause_and_clears_stale(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
+  for (int frame = 0; frame < 11; ++frame) {
+    CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
+  }
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 77u);
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
+  for (int frame = 0; frame < 12; ++frame) {
+    CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
+  }
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  verify_fresh_sequence_recovers(&decoder);
+}
+
+static void verify_boundary_mode_does_not_seed_prefix_during_silence(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u, 2u};
+  kws_keyword_t item = {0};
+  float logits[4];
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+
+  configure_two_token_keyword(&decoder, &item, tokens);
+  set_logits(logits, 8.0f, -8.0f, -8.0f, -8.0f);
+  for (int frame = 0; frame < 12; ++frame) {
+    CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
+  }
+  /* Even strong token-1 posterior noise while the boundary remains inactive is
+   * cleared at the end of the frame and cannot combine with resumed speech. */
+  set_logits(logits, -8.0f, 8.0f, -8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 0, &keyword_id, &confidence) == 0);
+  set_logits(logits, -8.0f, -8.0f, 8.0f, -8.0f);
+  CHECK(kws_decoder_step(&decoder, logits, 4u, 1, &keyword_id, &confidence) == 0);
+  verify_fresh_sequence_recovers(&decoder);
+}
+
 int main(void) {
   /* Blank-dominant posterior evidence is an utterance boundary even when an
    * upstream VAD remains active because of noise. Both VAD states must expire
@@ -252,6 +305,8 @@ int main(void) {
   verify_near_tied_keyword_root_can_start();
   verify_strong_keyword_root_competitor_blocks();
   verify_two_fuzzy_children_cannot_complete();
+  verify_boundary_reset_preserves_short_pause_and_clears_stale();
+  verify_boundary_mode_does_not_seed_prefix_during_silence();
 
   puts("test_decoder_retention: ok");
   return 0;

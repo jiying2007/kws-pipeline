@@ -234,7 +234,12 @@ def main() -> int:
         for name in generator.REQUIRED_ALGORITHM_CONSTANTS:
             found = re.search(rf"^#define {name} \(([^)]*)\)$", rendered, re.M)
             assert found, name
-            assert c_float(found.group(1)) == contract["algorithm_constants"][name]["default"], name
+            entry = contract["algorithm_constants"][name]
+            if entry["type"] in generator.INTEGER_TYPES:
+                actual = int(found.group(1).rstrip("u"))
+            else:
+                actual = c_float(found.group(1))
+            assert actual == entry["default"], name
 
         stale = scratch / "stale"
         stale.mkdir()
