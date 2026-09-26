@@ -1,24 +1,10 @@
-# Synthetic and domain-aware self-training loops
+# Domain-aware synthetic self-training
 
 These workflows close the **software, data and model-control loop before complete real product data is available**. They deliberately separate synthetic evidence from shipping acoustic evidence.
 
 A successful synthetic loop can prove deterministic split isolation, model fitting/export, keyword-pack compilation, C-runtime evaluation, threshold calibration, failure replay, candidate selection and held-out synthetic qualification. It cannot prove Mandarin human-speech quality, real-room 3–5 m performance or physical Cortex-A32 performance.
 
 Repository issue #2 remains the real-evidence gate.
-
-## Generic synthetic loop
-
-```bash
-python3 training/iterate.py \
-  --config configs/training/xiaowo.synthetic.json \
-  --runner build/kws_wav
-```
-
-The four data pools are `train`, `calibration`, `test` and untouched `qualification`. `training/audit_dataset.py` checks decoded PCM SHA256 isolation.
-
-The dependency-free generic prototype is a real deterministic softmax learning path. It extracts train-only token/background frames, trains and int8-quantizes the acoustic head, then requires **99.5% post-quantization held-out token-fit accuracy** before the candidate can enter end-to-end synthetic qualification. Complete candidates still run through the C runtime.
-
-The alternative `torch_ctc` backend uses `train_ctc.py`/`export_model.py` and supports head-only replay in later rounds.
 
 ## Domain-aware multi-frontend loop
 

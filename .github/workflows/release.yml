@@ -56,7 +56,6 @@ jobs:
           python3 tests/test_dataset_audit.py
           python3 tests/test_corpus_identity.py
           python3 tests/test_false_reject_mining.py
-          python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
           python3 tests/test_domain_scene.py
           python3 tests/test_domain_metrics.py
           python3 tests/test_domain_curriculum.py
