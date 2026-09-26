@@ -59,6 +59,12 @@ This is deliberately separate from `state_retention`: retention controls gradual
 path decay; the boundary policy prevents a sufficiently long non-speech interval
 from joining two otherwise valid phrase fragments.
 
+Because this policy changes which decoder event paths can survive, changing the
+boundary value invalidates calibrated keyword thresholds even though it does not
+modify the threshold numbers themselves. Recalibrate on the applicable acoustic
+evidence before promotion; current shipping approval remains blocked on the
+real-human final-AFE gate.
+
 ## L2 runtime parameters
 
 These are the fields of `kws_config_t`. `kws_default_config()` returns exactly the

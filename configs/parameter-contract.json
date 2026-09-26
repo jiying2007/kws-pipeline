@@ -94,7 +94,7 @@
     "KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES": {
       "layer": "L1", "type": "uint8", "default": 12,
       "min": 1, "max": 255, "min_exclusive": false, "max_exclusive": false,
-      "unit": "frames",
+      "unit": "frames", "invalidates_thresholds": true,
       "summary": "Consecutive speech-inactive decoder frames before stale keyword-prefix history is cleared. At the current 20 ms hop, 12 frames is 240 ms. Acoustic RNN/frontend state is not reset."
     },
     "KWS_PCEN_SMOOTHING": {

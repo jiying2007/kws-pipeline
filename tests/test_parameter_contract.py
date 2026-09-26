@@ -184,10 +184,15 @@ def check_shipping_contract(contract: dict, digest: str) -> None:
 
     # The recalibration list must equal the contract's own invalidation flags,
     # plus the L0 model release tag which the contract cannot see.
-    flagged = sorted(
+    flagged = [
         f"runtime.{name}"
         for name in RUNTIME
         if contract["runtime"][name].get("invalidates_thresholds")
+    ]
+    flagged.extend(
+        f"algorithm.{name}"
+        for name, entry in contract["algorithm_constants"].items()
+        if entry.get("invalidates_thresholds")
     )
     assert sorted(calibration["invalidated_by"]) == sorted(flagged + ["model.release_tag"])
 
