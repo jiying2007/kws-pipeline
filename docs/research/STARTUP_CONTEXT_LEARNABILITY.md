@@ -1,5 +1,7 @@
 # Startup-context learnability (development only)
 
+> Historical retained evidence. The executable diagnostic lane and its self-tests were retired during repository cleanup after the result was captured; this document remains as evidence, not as a current runnable entry point.
+
 This lane responds to issue #242's retained #296 counterexample: the current
 model's apparent successes disappear after one second of digital silence.
 Cross-CPU training hashes do not explain a same-model inference intervention.

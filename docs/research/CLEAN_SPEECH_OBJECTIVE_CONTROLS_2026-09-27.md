@@ -1,5 +1,7 @@
 # 冻结语音上的训练预算与损失作用域对照（开发证据）
 
+> Historical retained evidence. The executable diagnostic lane and its self-tests were retired during repository cleanup after the result was captured; this document remains as evidence, not as a current runnable entry point.
+
 ## 结论与范围
 
 本次对照没有得到可提升的两词唤醒模型。在固定的干净合成语音池上，12 epoch 的两组 seed 均全拒；36 epoch 恢复了部分“小窝小窝”命中，同时出现近似词误触发，“你好小窝”仍未形成稳定命中。只收窄 ordered-token 监督范围或只切换序列 margin 的负样本路径策略，都没有跨两个 seed 同时改善召回和误触发。正式训练目标、阈值、模型发布和任何 protected qualification 均未改变。

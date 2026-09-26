@@ -1,5 +1,7 @@
 # Context checkpoint selection (development only)
 
+> Historical retained evidence. The executable diagnostic lane and its self-tests were retired during repository cleanup after the result was captured; this document remains as evidence, not as a current runnable entry point.
+
 The startup-context trainer previously overwrote each rolling 100-epoch snapshot.
 The new opt-in `--retain-milestones` preserves epochs 100, 200, 300, 400, 500 and
 600 for a 600-epoch trajectory (at most eight for the bounded trainer). It keeps
