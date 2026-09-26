@@ -78,7 +78,7 @@ Keep model weights fixed and tune keyword thresholds using development/calibrati
 
 `eval/mine_hard_negatives.py` produces empty-target clips from false accepts. `eval/mine_false_rejects.py` replays missed positives with the configured token target. Neither may consume the final untouched qualification set if that set will remain unbiased release evidence.
 
-The accepted model's qualification seed `271838` is already exposed and frozen. It may not be used for L1 calibration/replay or any future re-qualification. `271839` remains reserved for a genuinely new future formal candidate, not routine maintenance.
+The accepted model's qualification seed `271838` is already exposed and frozen. It may not be used for L1 calibration/replay or any future re-qualification. Use the active seed and retired-seed list in `configs/training/xiaowo.torch-domain.json` for a genuinely new formal candidate; routine maintenance does not consume one.
 
 ## L2: acoustic customization / broader vocabulary
 
@@ -136,7 +136,7 @@ Nightly is not another training/qualification path. It must download the exact i
 - call `train_ctc.py` or `iterate_domain.py`;
 - create or rotate a formal qualification cohort;
 - read `qualification_holdout_seed` from the formal training config;
-- consume seed `271838` or reserve/expose `271839`;
+- consume seed `271838` or reserve/expose the active formal seed for routine maintenance;
 - promote nightly regression results as fresh qualification evidence.
 
 `configs/nightly.xiaowo-frozen-model.json` and `.github/workflows/far-nightly.yml` encode this separation.

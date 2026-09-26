@@ -121,4 +121,4 @@ The approval Release is the shipping authority for that immutable tuple. It does
 - A copied evidence object cannot represent another DUT.
 - A board revision or final-AFE change creates a new cohort.
 - Real-human failures do not automatically authorize model training.
-- Formal seed `271838` remains consumed/frozen; `271839` remains reserved until an intentional new model candidate is justified.
+- Formal seed `271838` remains consumed/frozen. Future model candidates must follow the active seed and retired-seed list in `configs/training/xiaowo.torch-domain.json`.

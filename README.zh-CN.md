@@ -132,7 +132,7 @@ python3 training/iterate_domain.py \
 
 正式链使用真实 C runtime 评估，并固定执行四轮训练、calibration/test gate、hard-negative replay、adaptive domain curriculum、untouched qualification、robustness slice、continuous FAR。synthetic domain 覆盖名义 0.3–5.0 m、azimuth、RT60、SNR、white/fan/motor/media 噪声以及 playback/AEC-residual proxy。
 
-正式 qualification seed `271838` 已在当前 Model Release 中暴露并验收，之后**绝不允许再次重试**。只有未来真正形成新的模型候选时才进入新的 formal seed；当前维护阶段不消费 `271839`。
+正式 qualification seed `271838` 已在当前 Model Release 中暴露并验收，之后**绝不允许再次重试**。未来模型候选的有效 seed 与退役列表以 `configs/training/xiaowo.torch-domain.json` 为准；维护或重新资格验证不得复用退役 seed。
 
 ### Nightly 与 formal qualification 完全分离
 

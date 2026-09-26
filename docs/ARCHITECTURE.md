@@ -164,6 +164,6 @@ The 512-point FFT and its bin mapping are not tunable: they are fixed by the fro
 
 ## Confidence is an approximation
 
-`kws_detection_t.confidence` is a softmax probability computed with `fast_exp_nonpos()` in `src/decoder.c`, not with `expf()`. That helper clamps below `-8` to zero and at or above `0` to one, and approximates the interval in between with `(1 + x/256)^16` by repeated squaring. The result is deterministic, and `tests/test_arm_parity.py` observes it matching bit-for-bit between the hosted and Cortex-A32 builds, but it is not the exact softmax. Treat confidence as a monotone score carrying a small model-dependent bias, not as a calibrated probability: an absolute threshold derived from it has to be re-measured on the build that will ship.
+`kws_detection_t.confidence` is computed with `expf(acoustic_score / keyword_depth)` in `src/decoder.c`. The per-frame log probabilities feeding `acoustic_score` use `approx_logsumexp()`, whose normalization uses the bounded `fast_exp_nonpos()` approximation. Confidence therefore is not an independently calibrated probability. Re-measure an absolute acceptance threshold with the exact runtime and model that will ship.
 
 `docs/RUNTIME_CONFIG.md` is the operator-facing companion: what each L2/L3 field means, how to tune it, and what a change invalidates.

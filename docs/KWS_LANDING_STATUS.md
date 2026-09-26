@@ -9,6 +9,14 @@ Run:
 python3 tools/kws_landing_status.py --verify
 ```
 
+This command verifies the repository's pinned source contract and local model
+registry bytes. It does not query live Actions, Releases, restricted real-human
+evidence or physical DUT receipts. `real_human_final_afe_passed=false` and
+`physical_target_board_passed=false` describe this pinned source candidate's
+pending evidence; they are not a live external qualification lookup. The JSON
+reports `assessment_scope=repository-source-contract-only` and
+`live_qualification_checked=false` for that boundary.
+
 The current status is intentionally:
 
 - trained deployable-format model: **available**;
