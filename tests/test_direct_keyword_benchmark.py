@@ -3,6 +3,8 @@ from __future__ import annotations
 import pathlib,sys,tempfile,unittest
 import torch
 ROOT=pathlib.Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'training'))
+from frontend import features
+from frontend_spec import FRONTEND_LOGMEL,FRONTEND_PCEN_LITE
 from direct_keyword_benchmark import POLICY,RUNTIME_ACCEPTANCE_THRESHOLD,ctc_sequence_loss,direct_class,frame_loss,grounded_ctc_loss,runtime_decision_loss,same_voice_pairs,write_vocab
 
 class DirectKeywordBenchmarkTests(unittest.TestCase):
@@ -25,7 +27,7 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
         with self.assertRaises(ValueError): frame_loss(lp,[5],[(4,4)],[1])
 
     def test_end_window_is_explicit_and_bounded(self):
-        self.assertEqual(POLICY,'direct-whole-keyword-runtime-decision-paired-v6')
+        self.assertEqual(POLICY,'direct-whole-keyword-frontend-paired-v7')
         logits=torch.randn(16,1,3).log_softmax(-1)
         short=frame_loss(logits,[16],[(2,14)],[1],4)
         long=frame_loss(logits,[16],[(2,14)],[1],12)
@@ -94,6 +96,13 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
         for lengths,spans,classes in (([6],[(4,4)],[1]),([7],[(1,5)],[1]),([6],[(1,5)],[True]),([6],[(1,7)],[1])):
             with self.subTest(lengths=lengths,spans=spans,classes=classes), self.assertRaises(ValueError):
                 runtime_decision_loss(lp,lengths,spans,classes)
+
+    def test_frontend_treatment_is_nonvacuous(self):
+        wave=torch.linspace(-0.7,0.7,16000)
+        logmel=features(wave,feature_dim=32,frontend=FRONTEND_LOGMEL)
+        pcen=features(wave,feature_dim=32,frontend=FRONTEND_PCEN_LITE)
+        self.assertEqual(logmel.shape,pcen.shape)
+        self.assertFalse(torch.equal(logmel,pcen))
 
     def test_same_voice_pairs_preserve_full_transcript(self):
         def row(tokens,voice): return {'target_ids':tokens,'source_provenance':{'voice_id':voice}}
