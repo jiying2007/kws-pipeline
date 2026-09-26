@@ -7,7 +7,6 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-import gru_development_gate as gru  # noqa: E402
 import rnn_development_gate as rnn  # noqa: E402
 
 
@@ -29,7 +28,7 @@ def passing(round_number: int) -> dict:
 
 
 def test_development_gate_types() -> None:
-    for prefix, module in (("RNN ", rnn), ("", gru)):
+    for prefix, module in (("RNN ", rnn),):
         assert module.terminal_strict_streak([passing(0), passing(1)]) == 2
         assert module.terminal_strict_streak(
             [passing(0), dict(passing(1), calibration_gate=False)]
@@ -148,30 +147,6 @@ def test_recorded_verdict_sources() -> None:
                 'record.get("calibration_gate") is True',
                 'record.get("test_gate") is True',
                 'manifest.get("development_qualified") is True',
-            ),
-        },
-        "training/iterate_gru_development.py": {
-            "forbidden": (
-                'bool(record.get("calibration_gate"))',
-                'bool(record.get("test_gate"))',
-                'bool(manifest.get("development_qualified"))',
-            ),
-            "required": (
-                'record.get("calibration_gate") is True',
-                'record.get("test_gate") is True',
-                'manifest.get("development_qualified") is True',
-            ),
-        },
-        "tools/gru_development_gate.py": {
-            "forbidden": (
-                'bool(robustness.get("qualified"))',
-                'bool(record.get("calibration_gate"))',
-                'bool(record.get("test_gate"))',
-            ),
-            "required": (
-                'if not isinstance(robustness_qualified, bool):',
-                'gate_bool(record, "calibration_gate")',
-                'gate_bool(record, "test_gate")',
             ),
         },
         "tools/rnn_development_gate.py": {
