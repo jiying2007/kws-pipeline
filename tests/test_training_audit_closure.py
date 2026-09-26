@@ -203,26 +203,44 @@ class RealTrainerReadbackTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
-    def test_repro_gate_rejects_equal_kwm_with_different_float_state(self):
+    def test_repro_gate_keeps_same_class_strict_and_cross_vendor_diagnostic(self):
         source = (ROOT/".github/workflows/product-training-data-contract.yml").read_text()
-        block = source.split("      - name: Require bit-identical training model", 1)[1]
+        block = source.split("      - name: Enforce numerical-class reproducibility policy", 1)[1]
         script = textwrap.dedent(block.split("python3 - <<'PY'\n", 1)[1].rsplit("          PY", 1)[0])
         row = {"pythonhashseed": "0", "torch_num_threads": 1, "torch_num_interop_threads": 1,
                "torch_version": "fixture", "fixture_manifest_sha256": "f"*64,
                "training_code_sha256": {"fixture": "c"*64}, "model_sha256": "a"*64,
                "float_state_sha256": "b"*64}
         with tempfile.TemporaryDirectory() as tmp:
-            root = pathlib.Path(tmp)/".repro"
+            work = pathlib.Path(tmp)
+            root = work/".repro"
             root.mkdir()
             (root/"training-reproducibility-a.json").write_text(json.dumps(row))
             b = root/"training-reproducibility-b.json"
             b.write_text(json.dumps({**row, "float_state_sha256": "d"*64}))
+            (work/"build").mkdir()
+            report = {"infrastructure_complete": True, "release_authority": False,
+                      "cross_vendor_pair_observed": False, "exact_match": True,
+                      "first_observed_divergence": None, "cpu_vendors": ["AMD", "AMD"]}
+            (work/"build/numeric-divergence.json").write_text(json.dumps(report))
             result = subprocess.run([sys.executable, "-c", script], cwd=tmp, capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("float training state mismatch", result.stderr)
+            self.assertIn("training float state mismatch", result.stderr)
+
             b.write_text(json.dumps(row))
             result = subprocess.run([sys.executable, "-c", script], cwd=tmp, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
+
+            # Cross-vendor divergence is retained as diagnostic evidence rather
+            # than runner-shopping until a random same-vendor pair appears.
+            b.write_text(json.dumps({**row, "float_state_sha256": "d"*64, "model_sha256": "e"*64}))
+            report.update(cross_vendor_pair_observed=True, exact_match=False,
+                          first_observed_divergence={"phase": "optimizer-step", "step": 3},
+                          cpu_vendors=["AMD", "Intel"])
+            (work/"build/numeric-divergence.json").write_text(json.dumps(report))
+            result = subprocess.run([sys.executable, "-c", script], cwd=tmp, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("cross-vendor numerical boundary retained", result.stdout)
 
     def test_base_upload_precedes_expensive_work(self):
         source = (ROOT/".github/workflows/product-development-experiment.yml").read_text()
