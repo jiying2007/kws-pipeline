@@ -91,16 +91,16 @@ jobs:
           .venv/bin/python -m pip install --disable-pip-version-check --no-input torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Test direct benchmark contracts
         run: .venv/bin/python tests/test_direct_keyword_benchmark.py
-      - name: Train paired grounded CTC and runtime-root-admission treatment
+      - name: Train paired grounded CTC and runtime-acceptance treatment
         env:
           POOL_SHA: ${{ needs.prepare.outputs.pool_sha }}
         run: |
           set -euo pipefail
           mkdir -p build/direct-keyword
           for seed in 1337 2346; do
-            for treatment in grounded root; do
+            for treatment in grounded accept; do
               name="${seed}-${treatment}"
-              if [ "$treatment" = grounded ]; then objective=grounded-ctc; else objective=grounded-ctc-root; fi
+              if [ "$treatment" = grounded ]; then objective=grounded-ctc; else objective=grounded-ctc-accept; fi
               .venv/bin/python training/direct_keyword_benchmark.py train \
                 --pool build/frozen-pool --pool-sha "$POOL_SHA" \
                 --output "build/direct-keyword/$name" --seed "$seed" --epochs 200 \
@@ -124,17 +124,17 @@ jobs:
           control_spec={'kind':'activity-grounded-one-token-ctc','normalization':'active-input-frames','blank_id':0,
                         'activity_source':'waveform-activity-bounds-v1','blank_boundary_guard_hops':2,
                         'positive_non_speech_blank_weight':0.3,'negative_policy':'full-sequence-blank'}
-          candidate_spec={**control_spec,'kind':'activity-grounded-one-token-ctc-plus-root-admission-v1',
-                          'root_admission_logit_margin':0.5,'root_admission_loss_weight':1.0}
+          candidate_spec={**control_spec,'kind':'activity-grounded-one-token-ctc-plus-runtime-acceptance-v1',
+                          'runtime_acceptance_threshold':0.55,'runtime_acceptance_loss_weight':1.0}
           for seed in (1337,2346):
               pair={}
-              for treatment in ('grounded','root'):
+              for treatment in ('grounded','accept'):
                   name=f'{seed}-{treatment}'
                   cp=torch.load(root/name/'model.pt',weights_only=True,map_location='cpu')
                   value=json.loads((root/f'{name}-evaluation'/'summary.json').read_text())
                   assert set(value['splits'])=={'train'} and set(value['pause'])=={'train'}
                   pair[treatment]=(cp,value)
-              base,candidate=pair['grounded'],pair['root']
+              base,candidate=pair['grounded'],pair['accept']
               for field in ('initial_float_state_identity','batch_order_sha256','context_order_sha256','training_corpus_identity'):
                   assert base[0][field]==candidate[0][field],field
               a=dict(base[0]['development_recipe']);b=dict(candidate[0]['development_recipe'])
@@ -142,20 +142,20 @@ jobs:
               assert b['positive_objective']==candidate_spec
               a.pop('positive_objective');b.pop('positive_objective')
               assert a==b,'unplanned paired recipe difference'
-              assert all(e['non_speech_blank']>0.0 and e['ctc']>0.0 and e['root_admission']==0.0 for e in base[0]['epoch_history'])
+              assert all(e['non_speech_blank']>0.0 and e['ctc']>0.0 and e['runtime_acceptance']==0.0 for e in base[0]['epoch_history'])
               assert all(e['non_speech_blank']>0.0 and e['ctc']>0.0 for e in candidate[0]['epoch_history'])
-              assert any(e['root_admission']>0.0 for e in candidate[0]['epoch_history'])
+              assert any(e['runtime_acceptance']>0.0 for e in candidate[0]['epoch_history'])
               base_train=base[1]['splits']['train'];cand_train=candidate[1]['splits']['train']
               train_gate=all(clean(cand_train[arm]) for arm in ('silence1s','prior'))
               rows.append({'seed':seed,'control_objective':'activity-grounded-one-token-ctc',
-                           'candidate_objective':'activity-grounded-one-token-ctc-plus-root-admission-v1',
+                           'candidate_objective':'activity-grounded-one-token-ctc-plus-runtime-acceptance-v1',
                            'base_train':base_train,'candidate_train':cand_train,
                            'base_pause':base[1]['pause']['train'],'candidate_pause':candidate[1]['pause']['train'],
                            'train_gate_pass':train_gate})
-          report={'schema_version':1,'evidence_class':'direct-whole-keyword-root-admission-paired-v5',
+          report={'schema_version':1,'evidence_class':'direct-whole-keyword-runtime-acceptance-paired-v5',
                   'development_only':True,'release_authority':False,'selection_feedback_allowed':False,
                   'epochs':200,'threshold':0.55,'control_objective':'activity-grounded-one-token-ctc',
-                  'candidate_objective':'activity-grounded-one-token-ctc-plus-root-admission-v1',
+                  'candidate_objective':'activity-grounded-one-token-ctc-plus-runtime-acceptance-v1',
                   'train_gate_pass':all(r['train_gate_pass'] for r in rows),'rows':rows,
                   'limitations':['Train split only; calibration/test are intentionally not evaluated in this experiment.',
                                  'Frozen synthetic development pool only; no qualification or DUT authority.',
