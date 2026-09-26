@@ -1,5 +1,7 @@
 # Preceding-context event attribution (development only)
 
+> Historical retained evidence. The executable diagnostic lane and its self-tests were retired during repository cleanup after the result was captured; this document remains as evidence, not as a current runnable entry point.
+
 ## Scope and source
 
 Base main: `6e434d40514df25740b67554f851d16ad806c707` (#300).
