@@ -91,7 +91,9 @@ def _runtime_executable_sequence_log_confidence(
     This scorer is intentionally used only on the negative side of the optional
     runtime-executable policy. Exact wake positives keep the historical sparse
     chronological scorer so a temporarily non-executable positive never loses
-    all margin gradient.
+    all margin gradient. It receives acoustic posteriors only; speech/VAD gating,
+    the inactivity boundary reset and refractory suppression still require
+    evaluation with the C runtime before any candidate decision.
     """
     if sample_log_probs.ndim != 2:
         raise ValueError("sample_log_probs must be [T,V]")

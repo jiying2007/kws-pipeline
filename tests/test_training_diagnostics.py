@@ -9,10 +9,24 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from build_training_diagnostics import build  # noqa: E402
+from build_training_diagnostics import build, refinement_outcome  # noqa: E402
 
 
 def main() -> int:
+    assert refinement_outcome(None, {"current_phase": "train-export"}) == {
+        "classification": "no-summary",
+        "last_active_phase": "train-export",
+        "cause_verified": False,
+    }
+    assert refinement_outcome(
+        {"qualified": False, "record": {"calibration_gate": False, "test_gate": True}},
+        {"current_phase": None},
+    )["classification"] == "development-strict-gate-failed"
+    assert refinement_outcome(
+        {"qualified": False, "record": {"calibration_gate": True, "test_gate": True}},
+        None,
+    )["classification"] == "qualification-gate-failed"
+    assert refinement_outcome({"qualified": False}, None)["cause_verified"] is False
     with tempfile.TemporaryDirectory(prefix="training-diagnostics-test-") as tmp:
         root = pathlib.Path(tmp)
         work = root / "work"
@@ -103,6 +117,16 @@ def main() -> int:
         (work / "domain-loop-manifest.json").write_text(
             json.dumps(manifest), encoding="utf-8"
         )
+        progress = {
+            "schema_version": 1,
+            "policy": "refinement-phase-progress-v1",
+            "current_phase": "calibration",
+            "phase_seconds": {"train-export": 10.0},
+        }
+        (work / "adversarial-refinement").mkdir()
+        (work / "adversarial-refinement/progress.json").write_text(
+            json.dumps(progress), encoding="utf-8"
+        )
         eligibility = {
             "schema_version": 1,
             "policy": "selected-refinement-source-signal-v1",
@@ -183,6 +207,12 @@ def main() -> int:
         )
 
         result = build(config, work)
+        assert result["adversarial_refinement_progress"] == progress
+        assert result["adversarial_refinement_outcome"] == {
+            "classification": "no-summary",
+            "last_active_phase": "calibration",
+            "cause_verified": False,
+        }
         assert result["development"]["refinement_eligibility"]["eligible"] is True
         compact_acoustic = result["development"]["acoustic_alignment"]
         assert compact_acoustic["source_round"] == 0
@@ -206,6 +236,7 @@ def main() -> int:
         assert confusion["missed"] == 5
         assert confusion["matrix"] == {"1": {"2": 1}}
         file_rows = {item["path"]: item for item in result["files"]}
+        assert file_rows["adversarial-refinement/progress.json"]["present"] is True
         assert file_rows["base-refinement-eligibility.json"]["present"] is True
         assert file_rows["acoustic-alignment.json"]["present"] is True
         signals = result["evidence_signals"]

@@ -59,6 +59,12 @@ def finite(value: object, label: str) -> float:
     return result
 
 
+def nonnegative_count(value: object, label: str) -> int:
+    if type(value) is not int or value < 0:
+        raise ValueError(f"{label} must be a non-negative integer")
+    return value
+
+
 def validate_metrics(
     metrics: object,
     label: str,
@@ -80,9 +86,15 @@ def validate_metrics(
         row = per_keyword.get(keyword_id)
         if not isinstance(row, dict):
             raise ValueError(f"{label} keyword {keyword_id} metrics are missing")
-        expected = int(row.get("expected", -1))
-        matched = int(row.get("matched", -1))
-        false_rejects = int(row.get("false_rejects", -1))
+        expected = nonnegative_count(
+            row.get("expected"), f"{label}.keyword.{keyword_id}.expected"
+        )
+        matched = nonnegative_count(
+            row.get("matched"), f"{label}.keyword.{keyword_id}.matched"
+        )
+        false_rejects = nonnegative_count(
+            row.get("false_rejects"), f"{label}.keyword.{keyword_id}.false_rejects"
+        )
         keyword_frr = finite(row.get("frr"), f"{label}.keyword.{keyword_id}.frr")
         invalid = (
             expected <= 0
@@ -90,6 +102,12 @@ def validate_metrics(
             or false_rejects < 0
             or matched + false_rejects != expected
             or not 0.0 <= keyword_frr <= 1.0
+            or not math.isclose(
+                keyword_frr,
+                false_rejects / expected,
+                rel_tol=0.0,
+                abs_tol=1.0e-12,
+            )
         )
         collapsed = matched == 0 or math.isclose(
             keyword_frr, 1.0, rel_tol=0.0, abs_tol=1.0e-12
@@ -107,6 +125,20 @@ def validate_metrics(
             "false_rejects": false_rejects,
             "frr": keyword_frr,
         }
+    expected_total = nonnegative_count(metrics.get("expected"), f"{label}.expected")
+    matched_total = nonnegative_count(metrics.get("matched"), f"{label}.matched")
+    rejects_total = nonnegative_count(
+        metrics.get("false_rejects"), f"{label}.false_rejects"
+    )
+    if (
+        expected_total != sum(row["expected"] for row in result.values())
+        or matched_total != sum(row["matched"] for row in result.values())
+        or rejects_total != sum(row["false_rejects"] for row in result.values())
+        or not math.isclose(
+            frr, rejects_total / expected_total, rel_tol=0.0, abs_tol=1.0e-12
+        )
+    ):
+        raise ValueError(f"{label} aggregate metrics disagree with per-keyword counts")
     return {
         "frr": frr,
         "far_per_hour": far,
