@@ -5,7 +5,7 @@ The acoustic vocabulary is {blank, wake1, wake2}; keyword packs are one token pe
 wake. This is an architecture-control experiment, never a shipping/default change.
 """
 from __future__ import annotations
-import argparse, hashlib, json, pathlib, random, subprocess, sys, wave
+import argparse, hashlib, json, math, pathlib, random, subprocess, sys, wave
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'training'),str(ROOT/'eval'),str(ROOT/'tools')]
@@ -21,8 +21,8 @@ from train_ctc import Manifest,training_environment,vocab_fingerprint,load_token
 from training_state import state_identity
 from synthetic_audio import activity_bounds
 
-POLICY='direct-whole-keyword-root-admission-paired-v5'
-ROOT_ADMISSION_MARGIN=0.5
+POLICY='direct-whole-keyword-runtime-acceptance-paired-v5'
+RUNTIME_ACCEPTANCE_THRESHOLD=0.55
 PREFIX_HOPS=(0,25,50)
 TAIL_SAMPLES=3200
 BLANK_WEIGHT=0.30
@@ -89,23 +89,21 @@ def grounded_ctc_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[
     blank=torch.stack(blank_parts).mean() if blank_parts else log_probs.sum()*0.0
     return ctc+BLANK_WEIGHT*blank,ctc,blank
 
-def root_admission_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[int,int]],classes:list[int])->torch.Tensor:
+def runtime_acceptance_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tuple[int,int]],classes:list[int])->torch.Tensor:
     T,B,V=log_probs.shape
-    if V!=3 or not(len(lengths)==len(spans)==len(classes)==B):raise ValueError('invalid root-admission input')
+    if V!=3 or not(len(lengths)==len(spans)==len(classes)==B):raise ValueError('invalid runtime-acceptance input')
     losses=[]
     for j,(n,(a,b),c) in enumerate(zip(lengths,spans,classes)):
-        if type(n) is not int or not 0<=a<b<=n<=T or type(c) is not int or c not in (0,1,2):raise ValueError('invalid root-admission geometry')
+        if type(n) is not int or not 0<=a<b<=n<=T or type(c) is not int or c not in (0,1,2):raise ValueError('invalid runtime-acceptance geometry')
         if not c:continue
-        part=log_probs[a:b,j]
-        competitors=part[:,[v for v in range(V) if v!=c]].max(dim=1).values
-        best=(part[:,c]-competitors).max()
-        losses.append(torch.relu(best.new_tensor(-ROOT_ADMISSION_MARGIN)-best))
+        best=log_probs[a:b,j,c].max()
+        losses.append(torch.relu(best.new_tensor(math.log(RUNTIME_ACCEPTANCE_THRESHOLD))-best))
     return torch.stack(losses).mean() if losses else log_probs.sum()*0.0
 
 def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epochs:int,end_frames:int=4,objective:str='final-window')->None:
     if type(seed) is not int or type(epochs) is not int or not 1<=epochs<=400:raise ValueError('invalid bounded direct recipe')
     if type(end_frames) is not int or not 1<=end_frames<=32:raise ValueError('invalid end supervision window')
-    if objective not in ('final-window','ctc','grounded-ctc','grounded-ctc-root'):raise ValueError('invalid direct objective')
+    if objective not in ('final-window','ctc','grounded-ctc','grounded-ctc-accept'):raise ValueError('invalid direct objective')
     pool=verify_pool(pool_root,pool_sha);rows=[r for r in pool['rows'] if r['split']=='train']
     if len(rows)!=128:raise ValueError('direct benchmark expects frozen 128-row train split')
     output.mkdir(parents=True,exist_ok=False);tokens,_,_=write_vocab(output)
@@ -121,18 +119,18 @@ def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epoch
     torch.manual_seed(seed);torch.use_deterministic_algorithms(True);model=TinyStreamingRNN(32,64,3);initial=state_identity(model.state_dict())
     optimizer=torch.optim.AdamW(model.parameters(),lr=.001,weight_decay=.0001);history=[];batch_digest=hashlib.sha256();context_digest=hashlib.sha256()
     for epoch in range(1,epochs+1):
-        shuffle.shuffle(ids);total=ctc_total=blank_total=root_total=0.;batches=0
+        shuffle.shuffle(ids);total=ctc_total=blank_total=accept_total=0.;batches=0
         for offset in range(0,len(ids),16):
             selected=[(i,context.choice(PREFIX_HOPS)) for i in ids[offset:offset+16]];batch_digest.update(json.dumps([epoch,[i for i,_ in selected]]).encode());context_digest.update(json.dumps([epoch,selected]).encode())
             group=[cache[k] for k in selected];xs=[g[0] for g in group]
             logits=model(torch.nn.utils.rnn.pad_sequence(xs,batch_first=True));lp=logits.log_softmax(-1);lengths=[len(x) for x in xs];classes=[g[2] for g in group];spans=[g[1] for g in group]
-            if objective=='final-window':loss=frame_loss(lp,lengths,spans,classes,end_frames);ctc=loss*0.0;blank=loss*0.0;root=loss*0.0
-            elif objective=='ctc':loss=ctc_sequence_loss(lp,lengths,classes);ctc=loss;blank=loss*0.0;root=loss*0.0
-            elif objective=='grounded-ctc':loss,ctc,blank=grounded_ctc_loss(lp,lengths,spans,classes);root=loss*0.0
+            if objective=='final-window':loss=frame_loss(lp,lengths,spans,classes,end_frames);ctc=loss*0.0;blank=loss*0.0;accept=loss*0.0
+            elif objective=='ctc':loss=ctc_sequence_loss(lp,lengths,classes);ctc=loss;blank=loss*0.0;accept=loss*0.0
+            elif objective=='grounded-ctc':loss,ctc,blank=grounded_ctc_loss(lp,lengths,spans,classes);accept=loss*0.0
             else:
-                grounded,ctc,blank=grounded_ctc_loss(lp,lengths,spans,classes);root=root_admission_loss(lp,lengths,spans,classes);loss=grounded+root
-            optimizer.zero_grad(set_to_none=True);loss.backward();torch.nn.utils.clip_grad_norm_(model.parameters(),5.0);optimizer.step();total+=float(loss.detach());ctc_total+=float(ctc.detach());blank_total+=float(blank.detach());root_total+=float(root.detach());batches+=1
-        epoch_loss=total/batches;history.append({'epoch':epoch,'loss':epoch_loss,'ctc':ctc_total/batches,'non_speech_blank':blank_total/batches,'root_admission':root_total/batches,'ordered':0.0,'margin':0.0,'completion':0.0,'release':0.0,'ordered_token_accuracy':0.0})
+                grounded,ctc,blank=grounded_ctc_loss(lp,lengths,spans,classes);accept=runtime_acceptance_loss(lp,lengths,spans,classes);loss=grounded+accept
+            optimizer.zero_grad(set_to_none=True);loss.backward();torch.nn.utils.clip_grad_norm_(model.parameters(),5.0);optimizer.step();total+=float(loss.detach());ctc_total+=float(ctc.detach());blank_total+=float(blank.detach());accept_total+=float(accept.detach());batches+=1
+        epoch_loss=total/batches;history.append({'epoch':epoch,'loss':epoch_loss,'ctc':ctc_total/batches,'non_speech_blank':blank_total/batches,'runtime_acceptance':accept_total/batches,'ordered':0.0,'margin':0.0,'completion':0.0,'release':0.0,'ordered_token_accuracy':0.0})
         if epoch%50==0:print(json.dumps({'seed':seed,'epoch':epoch,'loss':history[-1]['loss']}),flush=True)
     env=training_environment();env['training_code_sha256']['training/direct_keyword_benchmark.py']=sha(pathlib.Path(__file__))
     zero={k:0.0 for k in ('ordered_token_loss_weight','keyword_sequence_margin_loss_weight','prefix_completion_loss_weight','recurrent_release_loss_weight')}
@@ -140,7 +138,7 @@ def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epoch
     elif objective=='ctc':positive_objective={'kind':'one-token-ctc','normalization':'input-frames','blank_id':0}
     else:
         positive_objective={'kind':'activity-grounded-one-token-ctc','normalization':'active-input-frames','blank_id':0,'activity_source':'waveform-activity-bounds-v1','blank_boundary_guard_hops':2,'positive_non_speech_blank_weight':BLANK_WEIGHT,'negative_policy':'full-sequence-blank'}
-        if objective=='grounded-ctc-root':positive_objective={**positive_objective,'kind':'activity-grounded-one-token-ctc-plus-root-admission-v1','root_admission_logit_margin':ROOT_ADMISSION_MARGIN,'root_admission_loss_weight':1.0}
+        if objective=='grounded-ctc-accept':positive_objective={**positive_objective,'kind':'activity-grounded-one-token-ctc-plus-runtime-acceptance-v1','runtime_acceptance_threshold':RUNTIME_ACCEPTANCE_THRESHOLD,'runtime_acceptance_loss_weight':1.0}
     recipe={'policy':POLICY,'development_only':True,'release_authority':False,'pool_sha256':pool_sha,'seed':seed,'epochs':epochs,'prefix_hops':list(PREFIX_HOPS),'tail_samples':TAIL_SAMPLES,'positive_objective':positive_objective,'threshold':0.55,'model':'shipping-rnn-32x64-logmel-vocab3'}
     cp={'state_dict':model.state_dict(),'float_state_identity':state_identity(model.state_dict()),'initial_float_state_identity':initial,'development_recipe':recipe,'batch_order_sha256':batch_digest.hexdigest(),'context_order_sha256':context_digest.hexdigest(),'feature_dim':32,'hidden_dim':64,'vocab_size':3,'vocab_fingerprint':vocab_fingerprint(load_tokens(tokens)),'tokens_sha256':sha(tokens),'frame_length_samples':400,'frame_hop_samples':320,'frontend_spec_version':2,'frontend_name':'logmel','frontend_kind':0,'training_examples':len(rows),'training_manifests':[{'name':manifest.name,'sha256':sha(manifest)}],'training_corpus_identity':corpus,'seed':seed,'epochs':epochs,'epoch_history':history,'batch_size':16,'learning_rate':.001,'optimizer':'AdamW','weight_decay':.0001,'grad_clip_norm':5.0,'training_environment':env,'auxiliary_loss_weights':zero,**zero}
     torch.save(cp,output/'model.pt');subprocess.run([sys.executable,str(ROOT/'training/export_model.py'),'--checkpoint',str(output/'model.pt'),'--tokens',str(tokens),'--output',str(output/'model.kwm')],check=True,timeout=60)
@@ -179,7 +177,7 @@ def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathl
 
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='cmd',required=True)
-    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200);a.add_argument('--end-frames',type=int,default=4);a.add_argument('--objective',choices=('final-window','ctc','grounded-ctc','grounded-ctc-root'),default='final-window')
+    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200);a.add_argument('--end-frames',type=int,default=4);a.add_argument('--objective',choices=('final-window','ctc','grounded-ctc','grounded-ctc-accept'),default='final-window')
     b=sub.add_parser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True);b.add_argument('--train-only',action='store_true')
     q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs,q.end_frames,q.objective) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve(),q.train_only)
 if __name__=='__main__':main()
