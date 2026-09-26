@@ -139,6 +139,15 @@ class NumericTraceTests(unittest.TestCase):
         self.assertFalse(result["cross_vendor_pair_observed"])
         self.assertFalse(result["historical_failure_resolved"])
 
+    def test_cross_vendor_pair_is_machine_classified_without_release_authority(self):
+        intel = copy.deepcopy(self.identity["cpu_runtime"])
+        intel["model"] = "INTEL(R) XEON(R) TEST CPU"
+        other = self.mutated(lambda i, t, r: i.update(cpu_runtime=intel))
+        result = compare(self.root / "observed-a.json", other)
+        self.assertTrue(result["cross_vendor_pair_observed"])
+        self.assertEqual(sorted(result["cpu_vendors"]), ["AMD", "Intel"])
+        self.assertFalse(result["release_authority"])
+
     def test_failing_comparison_still_writes_report(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = pathlib.Path(tmp) / "report.json"
@@ -156,8 +165,11 @@ class NumericTraceTests(unittest.TestCase):
     def test_workflow_retains_failure_and_preserves_float_kwm_checks(self):
         workflow = (ROOT / ".github/workflows/product-training-data-contract.yml").read_text()
         for expected in ("--numeric-trace", "--observer-parity", "training-numeric-divergence",
-                         "float training state mismatch", "cross-runner training model mismatch"):
+                         "continue-on-error: true", "cross_vendor_pair_observed",
+                         "non-cross-vendor training reproducibility mismatch",
+                         "same-class training reproducibility: PASS"):
             self.assertIn(expected, workflow)
+        self.assertNotIn("cross-runner float training state mismatch", workflow)
         self.assertIn("name: Retain reproducibility identity\n        if: always()", workflow)
 
 
