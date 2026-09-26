@@ -29,6 +29,41 @@ def load_json(path: pathlib.Path) -> tuple[dict | None, str | None]:
     return value, None
 
 
+def refinement_outcome(summary: dict | None, progress: dict | None) -> dict:
+    phase = progress.get("current_phase") if isinstance(progress, dict) else None
+    if not isinstance(phase, str) or not phase:
+        phase = None
+    if not isinstance(summary, dict):
+        return {
+            "classification": "no-summary",
+            "last_active_phase": phase,
+            "cause_verified": False,
+        }
+    record = summary.get("record")
+    if not isinstance(record, dict) or any(
+        type(record.get(key)) is not bool
+        for key in ("calibration_gate", "test_gate")
+    ):
+        classification = "summary-without-verdict"
+    elif record["calibration_gate"] is False or record["test_gate"] is False:
+        classification = "development-strict-gate-failed"
+    elif summary.get("qualified") is True:
+        classification = "qualified"
+    elif summary.get("qualified") is False:
+        classification = "qualification-gate-failed"
+    else:
+        classification = "summary-without-verdict"
+    return {
+        "classification": classification,
+        "last_active_phase": phase,
+        "cause_verified": classification in {
+            "development-strict-gate-failed",
+            "qualification-gate-failed",
+            "qualified",
+        },
+    }
+
+
 def metric_slice(value: Any) -> dict | None:
     if not isinstance(value, dict):
         return None
@@ -541,6 +576,9 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     manifest, manifest_error = load_json(root / "domain-loop-manifest.json")
     refinement, refinement_error = load_json(root / "adversarial-refinement/summary.json")
+    refinement_progress, refinement_progress_error = load_json(
+        root / "adversarial-refinement/progress.json"
+    )
     adversarial, adversarial_error = load_json(root / "best/adversarial-lexicon.json")
     failure_replay, failure_error = load_json(root / "development-failure-replay/evidence.json")
     shadow, shadow_error = load_json(root / "shadow-qualification/summary.json")
@@ -561,6 +599,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
         for name, error in (
             ("domain_loop_manifest", manifest_error),
             ("adversarial_refinement", refinement_error),
+            ("adversarial_refinement_progress", refinement_progress_error),
             ("adversarial_lexicon", adversarial_error),
             ("development_failure_replay", failure_error),
             ("shadow_qualification", shadow_error),
@@ -626,6 +665,10 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             acoustic_alignment,
         ),
         "adversarial_refinement": refinement,
+        "adversarial_refinement_progress": refinement_progress,
+        "adversarial_refinement_outcome": refinement_outcome(
+            refinement, refinement_progress
+        ),
         "adversarial_lexicon": ({
             key: adversarial[key]
             for key in (
@@ -669,6 +712,7 @@ def build(config_path: pathlib.Path, root: pathlib.Path) -> dict:
             for path in (
                 "domain-loop-manifest.json",
                 "adversarial-refinement/summary.json",
+                "adversarial-refinement/progress.json",
                 "best/adversarial-lexicon.json",
                 "development-failure-replay/evidence.json",
                 "shadow-qualification/summary.json",
@@ -700,6 +744,7 @@ def main() -> int:
     print(json.dumps({
         "formal_seed": result["formal_seed"],
         "rounds": len(result["development"]["rounds"]),
+        "refinement_outcome": result["adversarial_refinement_outcome"],
         "shadow_present": result["shadow_qualification"] is not None,
         "output": str(args.output),
     }, sort_keys=True))

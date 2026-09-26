@@ -10,6 +10,12 @@ from collections import Counter
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "eval"))
+from score_events import (  # noqa: E402
+    score as recompute_events,
+    validate_detections,
+    validate_recordings,
+)
 from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
 
 
@@ -70,6 +76,52 @@ def main() -> int:
     score = json.loads(args.score_summary.read_text(encoding="utf-8"))
     false_accepts = load_jsonl(args.false_accepts)
     false_rejects = load_jsonl(args.false_rejects)
+
+    if intake.get("manifest_sha256") != sha256_file(args.manifest):
+        raise ValueError("corpus intake manifest hash differs from sealed manifest")
+    if afe.get("references_sha256") != sha256_file(args.references):
+        raise ValueError("final AFE references hash differs from scored references")
+    qualification_id = manifest.get("qualification_id")
+    if (
+        not isinstance(qualification_id, str)
+        or not qualification_id
+        or intake.get("qualification_id") != qualification_id
+        or afe.get("qualification_id") != qualification_id
+    ):
+        raise ValueError("qualification ID differs across corpus intake and final AFE")
+
+    matching = policy.get("event_matching")
+    if not isinstance(matching, dict):
+        raise ValueError("real-human event-matching policy is missing")
+    for field in ("pre_tolerance_ms", "post_tolerance_ms"):
+        expected = matching.get(field)
+        observed = score.get("event_match_" + field)
+        if (
+            type(expected) not in (int, float)
+            or type(observed) not in (int, float)
+            or float(observed) != float(expected)
+        ):
+            raise ValueError(f"real-human event matching differs from policy: {field}")
+    if float(matching["pre_tolerance_ms"]) != 0.0:
+        raise ValueError("real-human qualification must not credit pre-onset detections")
+    normalized_references = validate_recordings(references_rows)
+    canonical_score, canonical_false_accepts, canonical_false_rejects = recompute_events(
+        normalized_references,
+        validate_detections(load_jsonl(args.detections), normalized_references),
+        float(matching["pre_tolerance_ms"]) / 1000.0,
+        float(matching["post_tolerance_ms"]) / 1000.0,
+    )
+    for field, expected in canonical_score.items():
+        if score.get(field) != expected:
+            raise ValueError(f"real-human score summary disagrees with detections: {field}")
+    if score.get("references_sha256") != sha256_file(args.references):
+        raise ValueError("real-human score summary references hash differs")
+    if score.get("detections_sha256") != sha256_file(args.detections):
+        raise ValueError("real-human score summary detections hash differs")
+    if false_accepts != canonical_false_accepts:
+        raise ValueError("real-human false-accept rows disagree with detections")
+    if false_rejects != canonical_false_rejects:
+        raise ValueError("real-human false-reject rows disagree with detections")
 
     deployment_tag = str(policy["deployment_tag"])
     if (

@@ -9,6 +9,7 @@ from adversarial_refinement import select_refinement_source
 from verify_product_development_preflight import (
     expected_keyword_ids_from_config,
     load_object,
+    nonnegative_count,
 )
 
 POLICY = "selected-refinement-source-signal-v1"
@@ -27,9 +28,11 @@ def _keyword_counts(metrics: object, split: str, keyword_id: str) -> dict:
     row = per_keyword.get(keyword_id)
     if not isinstance(row, dict):
         raise ValueError(f"{split} keyword {keyword_id} metrics are missing")
-    expected = int(row.get("expected", -1))
-    matched = int(row.get("matched", -1))
-    false_rejects = int(row.get("false_rejects", -1))
+    expected = nonnegative_count(row.get("expected"), f"{split} keyword {keyword_id}.expected")
+    matched = nonnegative_count(row.get("matched"), f"{split} keyword {keyword_id}.matched")
+    false_rejects = nonnegative_count(
+        row.get("false_rejects"), f"{split} keyword {keyword_id}.false_rejects"
+    )
     if (
         expected <= 0
         or matched < 0

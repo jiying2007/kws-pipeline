@@ -277,6 +277,7 @@ jobs:
             build/model-training/base-stage-receipt.json
             build/model-training/training-invocation.json
             build/model-training/adversarial-refinement/summary.json
+            build/model-training/adversarial-refinement/progress.json
             build/model-training/development-failure-replay/evidence.json
             build/model-training/shadow-qualification/summary.json
             build/model-training/shadow-qualification/failure-summary.json

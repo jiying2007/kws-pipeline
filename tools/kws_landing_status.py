@@ -105,6 +105,8 @@ def build_status(root: pathlib.Path) -> dict:
     status = {
         "schema_version": 1,
         "policy": "kws-product-landing-status-v1",
+        "assessment_scope": "repository-source-contract-only",
+        "live_qualification_checked": False,
         "model": {
             "available": True,
             "release_tag": tag,

@@ -181,6 +181,8 @@ jobs:
           python3 eval/score_events.py \
             --references build/real-human/afe/references.post-afe.jsonl \
             --detections build/real-human/detections.jsonl \
+            --pre-tolerance-ms 0 \
+            --post-tolerance-ms 500 \
             --summary build/real-human/score-summary.json \
             --false-positives build/real-human/false-accepts.jsonl \
             --false-rejects build/real-human/false-rejects.jsonl

@@ -141,7 +141,7 @@ python3 training/iterate_domain.py \
 
 The formal loop uses real C-runtime evaluation, four fixed training rounds, calibration/test gates, hard-negative replay, adaptive domain curriculum, untouched qualification, robustness slices and continuous-FAR evidence. Its synthetic matrix spans nominal 0.3–5.0 m distance, azimuth, RT60, SNR, white/fan/motor/media noise and playback/AEC-residual proxies.
 
-The active formal qualification seed `271838` is already exposed by the accepted release and must never be retried. Future genuinely new model candidates reserve a new formal seed; current maintenance must not consume `271839`.
+The accepted release's formal qualification seed `271838` is exposed and must never be retried. The active seed and retired-seed list for a future model candidate are governed by `configs/training/xiaowo.torch-domain.json`; do not reuse any retired seed for maintenance or requalification.
 
 ### Nightly regression is intentionally separate
 

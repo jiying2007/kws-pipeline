@@ -12,6 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from domain_progress import append_round_progress, build_round_progress  # noqa: E402
+from evaluate_refinement_eligibility import _keyword_counts  # noqa: E402
 from product_preflight_handoff import (  # noqa: E402
     pack_handoff,
     restore_handoff,
@@ -20,6 +21,7 @@ from product_preflight_handoff import (  # noqa: E402
 )
 from verify_product_development_preflight import (  # noqa: E402
     expected_keyword_ids_from_config,
+    validate_metrics,
     verify,
 )
 
@@ -201,6 +203,43 @@ def validate_split_job_handoff() -> None:
 
 
 def main() -> int:
+    try:
+        _keyword_counts(
+            {"per_keyword": {"1": {"expected": 4.9, "matched": 1.9, "false_rejects": 3.9}}},
+            "calibration",
+            "1",
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("fractional refinement-eligibility counts were accepted")
+    for bad_row in (
+        {"expected": 4.9, "matched": 1.9, "false_rejects": 3.9, "frr": 0.75},
+        {"expected": True, "matched": 1, "false_rejects": 0, "frr": 0.0},
+        {"expected": 4, "matched": 1, "false_rejects": 3, "frr": 0.0},
+    ):
+        try:
+            validate_metrics(
+                {"frr": 0.75, "far_per_hour": 0.0, "per_keyword": {"1": bad_row}},
+                "invalid",
+                expected_keywords=("1",),
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid per-keyword preflight metrics were accepted")
+    inconsistent_aggregate = metrics(1, 1)
+    inconsistent_aggregate["frr"] = 0.0
+    try:
+        validate_metrics(
+            inconsistent_aggregate,
+            "invalid",
+            expected_keywords=("1", "2"),
+        )
+    except ValueError as exc:
+        assert "aggregate metrics disagree" in str(exc)
+    else:
+        raise AssertionError("inconsistent aggregate preflight FRR was accepted")
     validate_split_job_handoff()
     with tempfile.TemporaryDirectory(prefix="product-preflight-test-") as tmp:
         root = pathlib.Path(tmp)

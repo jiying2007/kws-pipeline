@@ -377,6 +377,8 @@ def score(
         }
 
     summary = {
+        "event_match_pre_tolerance_ms": pre_tolerance_s * 1000.0,
+        "event_match_post_tolerance_ms": post_tolerance_s * 1000.0,
         "recordings": len(recordings),
         "audio_hours": total_hours,
         "expected": expected_total,
