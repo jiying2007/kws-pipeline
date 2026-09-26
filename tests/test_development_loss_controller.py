@@ -19,26 +19,15 @@ from development_loss_controller import (  # noqa: E402
 class DevelopmentLossControllerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.gru_policy = json.loads(
-            (ROOT / "configs/training/xiaowo.gru-development-stage-a-v1.json").read_text()
-        )
-        cls.rnn_policy = json.loads(
+        cls.stage_policy = json.loads(
             (ROOT / "configs/training/xiaowo.rnn-development-stage-a-v1.json").read_text()
-        )
-        cls.gru_loop_policy = json.loads(
-            (ROOT / "configs/training/xiaowo.gru-development-loop.json").read_text()
         )
         cls.rnn_loop_policy = json.loads(
             (ROOT / "configs/training/xiaowo.rnn-development-loop.json").read_text()
         )
 
     def test_development_policies_use_normalized_rates(self) -> None:
-        for policy in (
-            self.gru_policy,
-            self.rnn_policy,
-            self.gru_loop_policy,
-            self.rnn_loop_policy,
-        ):
+        for policy in (self.stage_policy, self.rnn_loop_policy):
             raw = policy["loss_controller"]
             self.assertEqual(validate_controller_config(raw), "normalized-rates-v1")
             self.assertGreater(float(raw["normalization_frr"]), 0.0)
@@ -47,7 +36,7 @@ class DevelopmentLossControllerTest(unittest.TestCase):
             self.assertGreater(float(raw["wake_example_weight_step"]), 0.0)
 
     def test_rate_pressure_corrects_raw_count_inversion(self) -> None:
-        policy = self.gru_policy
+        policy = self.stage_policy
         current = initial_controller(policy)
         result = next_controller(
             policy,
@@ -72,7 +61,7 @@ class DevelopmentLossControllerTest(unittest.TestCase):
         self.assertEqual(result["failure_replay_repeat"], 2)
 
     def test_recall_pressure_moves_in_opposite_direction(self) -> None:
-        policy = self.gru_policy
+        policy = self.stage_policy
         current = initial_controller(policy)
         result = next_controller(
             policy,
@@ -94,7 +83,7 @@ class DevelopmentLossControllerTest(unittest.TestCase):
         )
 
     def test_severity_uses_normalized_rate_not_dataset_size(self) -> None:
-        policy = self.gru_policy
+        policy = self.stage_policy
         current = initial_controller(policy)
         low_counts = next_controller(
             policy, current, 1, 1, frr=0.20, far_per_hour=120.0
@@ -136,13 +125,13 @@ class DevelopmentLossControllerTest(unittest.TestCase):
         self.assertEqual(clean["failure_replay_repeat"], 1)
 
     def test_normalized_mode_requires_rate_signals(self) -> None:
-        policy = self.gru_policy
+        policy = self.stage_policy
         current = initial_controller(policy)
         with self.assertRaisesRegex(ValueError, "requires FRR and FAR/hour"):
             next_controller(policy, current, 1, 1)
 
     def test_legacy_mode_remains_available_for_old_policies(self) -> None:
-        policy = json.loads(json.dumps(self.gru_policy))
+        policy = json.loads(json.dumps(self.stage_policy))
         raw = policy["loss_controller"]
         for key in (
             "signal_mode",

@@ -44,24 +44,6 @@ jobs:
         run: |
           set -euo pipefail
           case '${{ inputs.variant }}' in
-            gru)
-              echo 'family=gru' >> "$GITHUB_OUTPUT"
-              echo 'wrapper=training/run_gru_development.py' >> "$GITHUB_OUTPUT"
-              echo 'policy=configs/training/xiaowo.gru-development-loop.json' >> "$GITHUB_OUTPUT"
-              echo 'runner_target=kws_wav_gru' >> "$GITHUB_OUTPUT"
-              echo 'runner_path=build/kws_wav_gru' >> "$GITHUB_OUTPUT"
-              echo 'work_name=gru-development-curriculum' >> "$GITHUB_OUTPUT"
-              echo 'artifact_prefix=gru-development-resume' >> "$GITHUB_OUTPUT"
-              ;;
-            gru-multiseed)
-              echo 'family=gru' >> "$GITHUB_OUTPUT"
-              echo 'wrapper=training/run_gru_development_multiseed.py' >> "$GITHUB_OUTPUT"
-              echo 'policy=configs/training/xiaowo.gru-development-multiseed-v1.json' >> "$GITHUB_OUTPUT"
-              echo 'runner_target=kws_wav_gru' >> "$GITHUB_OUTPUT"
-              echo 'runner_path=build/kws_wav_gru' >> "$GITHUB_OUTPUT"
-              echo 'work_name=gru-development-multiseed' >> "$GITHUB_OUTPUT"
-              echo 'artifact_prefix=gru-multiseed-resume' >> "$GITHUB_OUTPUT"
-              ;;
             rnn)
               echo 'family=rnn' >> "$GITHUB_OUTPUT"
               echo 'wrapper=training/run_rnn_development.py' >> "$GITHUB_OUTPUT"

@@ -173,15 +173,12 @@ def validate_torch_iteration_policy() -> None:
     validate_clean_tts_round_cache()
     validate_failure_replay_focus_contract()
     development_resume.self_test()
-    for iterator in (
-        ROOT / "training" / "iterate_gru_development.py",
-        ROOT / "training" / "iterate_rnn_development.py",
-    ):
-        source = iterator.read_text(encoding="utf-8")
-        assert '"--resume-state"' in source
-        assert '"--round-budget"' in source
-        assert "development_resume.write_state(" in source
-        assert "SEGMENT_CONTINUE_EXIT_CODE" in source
+    iterator = ROOT / "training" / "iterate_rnn_development.py"
+    source = iterator.read_text(encoding="utf-8")
+    assert '"--resume-state"' in source
+    assert '"--round-budget"' in source
+    assert "development_resume.write_state(" in source
+    assert "SEGMENT_CONTINUE_EXIT_CODE" in source
     assert parse_warm_start_strategy({}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "full"}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "head-only"}) == "head-only"

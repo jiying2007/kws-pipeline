@@ -7,10 +7,8 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RNN_POLICY = ROOT / "configs/training/xiaowo.rnn-development-loop.json"
-GRU_POLICY = ROOT / "configs/training/xiaowo.gru-development-loop.json"
 CONFIG = ROOT / "configs/training/xiaowo.torch-domain.json"
 RNN_FRESH = ROOT / "experiments/model_family/rnn_fresh_validation_registry.json"
-GRU_FRESH = ROOT / "experiments/model_family/fresh_validation_registry.json"
 SHADOW = ROOT / "experiments/model_family/shadow_arena_registry.json"
 
 
@@ -22,8 +20,8 @@ def load(path: pathlib.Path) -> dict:
 
 
 def main() -> int:
-    rnn = load(RNN_POLICY); gru = load(GRU_POLICY); cfg = load(CONFIG)
-    rnn_fresh = load(RNN_FRESH); gru_fresh = load(GRU_FRESH); shadow = load(SHADOW)
+    rnn = load(RNN_POLICY); cfg = load(CONFIG)
+    rnn_fresh = load(RNN_FRESH); shadow = load(SHADOW)
     if rnn.get("policy") != "rnn-development-curriculum-loop-v1" or rnn.get("model_family") != "rnn":
         raise ValueError("RNN development policy identity mismatch")
     for field in ("qualification_used", "shadow_used", "formal_qualification_used"):
@@ -39,11 +37,6 @@ def main() -> int:
         if freeze.get(field) is not False:
             raise ValueError(f"RNN candidate freeze requires {field}=false")
 
-    for field in ("max_rounds", "min_rounds", "patience", "stable_strict_pass_rounds", "epochs_per_round", "feature_cache_max_items", "lr_decay_per_round", "fixed_replay_repeat", "failure_replay_repeat_max"):
-        if rnn.get(field) != gru.get(field):
-            raise ValueError(f"RNN/GRU development policy drifted at {field}")
-    if rnn.get("loss_controller") != gru.get("loss_controller"):
-        raise ValueError("RNN/GRU loss-controller contract drifted")
     if rnn.get("failure_replay_latch_after_failure") is not True:
         raise ValueError("RNN failure replay latch policy is missing")
 
@@ -81,13 +74,10 @@ def main() -> int:
         raise ValueError("RNN controller did not enable replay after a development failure")
     if int(clean_after_failure["failure_replay_repeat"]) != 1:
         raise ValueError("RNN controller dropped replay before stability confirmation")
-    if freeze.get("selection_policy") != gru.get("candidate_freeze", {}).get("selection_policy"):
-        raise ValueError("RNN/GRU selection policy drifted")
-
     base_seed = int(cfg.get("seed", 1337))
-    gru_formal = int(cfg["qualification_holdout_seed"])
+    product_formal = int(cfg["qualification_holdout_seed"])
     retired_formal = {int(value) for value in cfg.get("retired_qualification_holdout_seeds", [])}
-    formal_evidence = {gru_formal, *retired_formal}
+    formal_evidence = {product_formal, *retired_formal}
     rnn_formal = int(freeze.get("formal_qualification_seed", -1))
     if rnn_formal != 271844 or rnn_formal in formal_evidence:
         raise ValueError("RNN formal seed is not independently reserved")
@@ -97,9 +87,8 @@ def main() -> int:
     rnn_rows = [row for row in rnn_fresh.get("namespaces", []) if int(row.get("namespace", -1)) == rnn_fresh_ns]
     if len(rnn_rows) != 1 or rnn_rows[0].get("model_family") != "rnn" or rnn_rows[0].get("status") != "reserved-untouched":
         raise ValueError("RNN Fresh namespace is not uniquely reserved and untouched")
-    gru_namespaces = {int(row["namespace"]) for row in gru_fresh.get("namespaces", [])}
-    if rnn_fresh_ns in gru_namespaces or rnn_fresh_seed in formal_evidence or rnn_fresh_seed == rnn_formal:
-        raise ValueError("RNN Fresh namespace overlaps GRU/formal evidence")
+    if rnn_fresh_seed in formal_evidence or rnn_fresh_seed == rnn_formal:
+        raise ValueError("RNN Fresh namespace overlaps product/formal evidence")
 
     arenas = {str(row["name"]): row for row in shadow.get("arenas", [])}
     arena_name = str(freeze["shadow_arena"])
@@ -109,18 +98,15 @@ def main() -> int:
     rnn_shadow = {int(value) for value in arena.get("seeds", [])}
     if len(rnn_shadow) != 8 or len(rnn_shadow) != len(arena.get("seeds", [])):
         raise ValueError("RNN shadow arena must contain exactly 8 unique seeds")
-    gru_shadow = {int(value) for row in shadow.get("arenas", []) if row.get("model_family") == "gru" for value in row.get("seeds", [])}
-    if rnn_shadow & gru_shadow or rnn_shadow & formal_evidence or rnn_formal in rnn_shadow or rnn_fresh_seed in rnn_shadow:
-        raise ValueError("RNN protected evidence overlaps GRU/formal/Fresh evidence")
+    other_shadow = {int(value) for row in shadow.get("arenas", []) if row.get("model_family") != "rnn" for value in row.get("seeds", [])}
+    if rnn_shadow & other_shadow or rnn_shadow & formal_evidence or rnn_formal in rnn_shadow or rnn_fresh_seed in rnn_shadow:
+        raise ValueError("RNN protected evidence overlaps other/formal/Fresh evidence")
 
     model_ns = int(rnn["training_seed_namespace"])
     acoustic_ns = int(rnn["training_acoustic_seed_namespace"])
     acoustic_stride = int(rnn["training_acoustic_seed_stride"])
-    gru_policy_ns = {int(gru["training_seed_namespace"]), int(gru["training_acoustic_seed_namespace"]), int(gru["candidate_freeze"]["fresh_validation_seed_namespace"])}
     if min(model_ns, acoustic_ns, acoustic_stride) <= 0 or len({model_ns, acoustic_ns, rnn_fresh_ns}) != 3:
         raise ValueError("RNN development namespaces are invalid")
-    if {model_ns, acoustic_ns, rnn_fresh_ns} & gru_policy_ns:
-        raise ValueError("RNN development namespaces overlap GRU namespaces")
     for round_index in range(int(rnn["max_rounds"])):
         acoustic_seed = base_seed + acoustic_ns + round_index * acoustic_stride
         if acoustic_seed in formal_evidence or acoustic_seed in rnn_shadow or acoustic_seed in {rnn_fresh_seed, rnn_formal}:
@@ -161,7 +147,7 @@ def main() -> int:
     if "if: github.event_name == 'workflow_dispatch'" not in qualification_workflow or "--runner build/kws_wav" not in qualification_workflow or "kws_wav_gru" in qualification_workflow:
         raise ValueError("RNN qualification workflow trigger/runtime boundary is invalid")
 
-    print(json.dumps({"verified": True, "model_family": "rnn", "development_policy": rnn["policy"], "fresh_namespace": rnn_fresh_ns, "shadow_arena": arena_name, "formal_seed": rnn_formal, "gru_formal_seed": gru_formal, "parallel_with_gru": True}, sort_keys=True))
+    print(json.dumps({"verified": True, "model_family": "rnn", "development_policy": rnn["policy"], "fresh_namespace": rnn_fresh_ns, "shadow_arena": arena_name, "formal_seed": rnn_formal, "product_formal_seed": product_formal, "protected_namespace_isolation": True}, sort_keys=True))
     return 0
 
 
