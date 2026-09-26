@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib,sys,tempfile,unittest
 import torch
 ROOT=pathlib.Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'training'))
-from direct_keyword_benchmark import POLICY,ROOT_ADMISSION_MARGIN,ctc_sequence_loss,direct_class,frame_loss,grounded_ctc_loss,root_admission_loss,same_voice_pairs,write_vocab
+from direct_keyword_benchmark import POLICY,RUNTIME_ACCEPTANCE_THRESHOLD,ctc_sequence_loss,direct_class,frame_loss,grounded_ctc_loss,runtime_acceptance_loss,same_voice_pairs,write_vocab
 
 class DirectKeywordBenchmarkTests(unittest.TestCase):
     def test_class_mapping(self):
@@ -25,7 +25,7 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
         with self.assertRaises(ValueError): frame_loss(lp,[5],[(4,4)],[1])
 
     def test_end_window_is_explicit_and_bounded(self):
-        self.assertEqual(POLICY,'direct-whole-keyword-root-admission-paired-v5')
+        self.assertEqual(POLICY,'direct-whole-keyword-runtime-acceptance-paired-v5')
         logits=torch.randn(16,1,3).log_softmax(-1)
         short=frame_loss(logits,[16],[(2,14)],[1],4)
         long=frame_loss(logits,[16],[(2,14)],[1],12)
@@ -76,21 +76,22 @@ class DirectKeywordBenchmarkTests(unittest.TestCase):
             with self.subTest(lengths=lengths,spans=spans,classes=classes), self.assertRaises(ValueError):
                 grounded_ctc_loss(lp,lengths,spans,classes)
 
-    def test_root_admission_loss_matches_runtime_margin_and_ignores_negatives(self):
+    def test_runtime_acceptance_loss_matches_fixed_threshold_and_ignores_negatives(self):
         logits=torch.full((5,2,3),-4.0)
         logits[:,:,0]=0.0
-        logits[2,0,1]=-0.25
+        logits[2,0,0]=-4.0;logits[2,0,1]=4.0
         lp=logits.log_softmax(-1)
-        self.assertEqual(ROOT_ADMISSION_MARGIN,0.5)
-        self.assertAlmostEqual(float(root_admission_loss(lp,[5,5],[(1,4),(1,4)],[1,0])),0.0,places=6)
-        logits[2,0,1]=-1.25;lp=logits.log_softmax(-1)
-        self.assertAlmostEqual(float(root_admission_loss(lp,[5,5],[(1,4),(1,4)],[1,0])),0.75,places=5)
+        self.assertEqual(RUNTIME_ACCEPTANCE_THRESHOLD,0.55)
+        self.assertAlmostEqual(float(runtime_acceptance_loss(lp,[5,5],[(1,4),(1,4)],[1,0])),0.0,places=6)
+        logits[2,0,0]=0.0;logits[2,0,1]=0.0;lp=logits.log_softmax(-1)
+        expected=max(0.0,__import__('math').log(0.55)-float(lp[2,0,1]))
+        self.assertAlmostEqual(float(runtime_acceptance_loss(lp,[5,5],[(1,4),(1,4)],[1,0])),expected,places=5)
 
-    def test_root_admission_geometry_fails_closed(self):
+    def test_runtime_acceptance_geometry_fails_closed(self):
         lp=torch.randn(6,1,3).log_softmax(-1)
         for lengths,spans,classes in (([6],[(4,4)],[1]),([7],[(1,5)],[1]),([6],[(1,5)],[True]),([6],[(1,7)],[1])):
             with self.subTest(lengths=lengths,spans=spans,classes=classes), self.assertRaises(ValueError):
-                root_admission_loss(lp,lengths,spans,classes)
+                runtime_acceptance_loss(lp,lengths,spans,classes)
 
     def test_same_voice_pairs_preserve_full_transcript(self):
         def row(tokens,voice): return {'target_ids':tokens,'source_provenance':{'voice_id':voice}}
