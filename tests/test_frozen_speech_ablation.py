@@ -79,6 +79,18 @@ class FrozenSpeechTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'ordered-token scope'):
             f.scoped_loss_settings('current', 'unsupported')
 
+    def test_negative_policy_trial_changes_only_declared_control(self):
+        baseline = f.scoped_loss_settings('current', 'all-nonempty-targets-v1')
+        sparse = f.scoped_loss_settings(
+            'current', 'all-nonempty-targets-v1', 'sparse-chronological-v1'
+        )
+        self.assertEqual(
+            {key for key in sparse if sparse.get(key) != baseline.get(key)},
+            {'sequence_margin_negative_policy'},
+        )
+        with self.assertRaisesRegex(ValueError, 'negative policy'):
+            f.scoped_loss_settings('current', 'all-nonempty-targets-v1', 'unsupported')
+
     def test_trial_source_identity_rejects_dirty_worktree(self):
         with mock.patch.object(f.subprocess, 'check_output', return_value=' M training/train_ctc.py\n'):
             with self.assertRaisesRegex(ValueError, 'clean source worktree'):
