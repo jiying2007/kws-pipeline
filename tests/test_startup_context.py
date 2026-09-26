@@ -12,7 +12,7 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'training'),str(ROOT/'tools')]
 from model import TinyStreamingRNN
 import torch
-from startup_context_training import active_span, loss_components, select_rows
+from startup_context_training import active_span, loss_components, negative_runtime_margin, respeed_pcm, select_rows
 from startup_context_evaluation import blank_prefix, shifted, measure
 from frontend import features
 from startup_context_training import validate_recipe
@@ -58,13 +58,28 @@ class StartupContextTests(unittest.TestCase):
         shifted_x=features(torch.cat([torch.zeros(16000),voice,torch.zeros(8000)]),32)
         self.assertTrue(torch.equal(bare,shifted_x[50:50+len(bare)]))
 
+    def test_speed_augmentation_is_deterministic_and_preserves_source(self):
+        source=(torch.arange(16000,dtype=torch.int32)%2000-1000).to(torch.int16)
+        original=source.clone()
+        self.assertTrue(torch.equal(respeed_pcm(source,1.0),source))
+        fast=respeed_pcm(source,1.15)
+        slow=respeed_pcm(source,0.85)
+        self.assertLess(len(fast),len(source))
+        self.assertGreater(len(slow),len(source))
+        self.assertTrue(torch.equal(fast,respeed_pcm(source,1.15)))
+        self.assertTrue(torch.equal(source,original))
+        with self.assertRaisesRegex(ValueError,'unsupported speed'):
+            respeed_pcm(source,1.5)
+        with self.assertRaisesRegex(ValueError,'unsupported speed'):
+            respeed_pcm(source,True)
+
     def test_losses_finite_and_differentiable(self):
-        for variant in ('plain-ctc','context-ctc','grounded-ctc'):
+        for variant in ('plain-ctc','context-ctc','span-ctc','blank-ctc','grounded-ctc'):
             z=torch.randn(20,2,5,requires_grad=True)
             c,b=loss_components(z.log_softmax(-1),[torch.tensor([1,2]),torch.tensor([3,4])],[20,18],[(5,15),(4,14)],variant)
             (c+.3*b).backward()
             self.assertTrue(torch.isfinite(z.grad).all())
-            if variant!='grounded-ctc':self.assertEqual(float(b.detach()),0.0)
+            if variant not in ('blank-ctc','grounded-ctc'):self.assertEqual(float(b.detach()),0.0)
 
     def test_ctc_cannot_use_startup_tokens_in_grounded_mode(self):
         # Target 1,2 appears only before the activity span. It must not lower
@@ -74,6 +89,46 @@ class StartupContextTests(unittest.TestCase):
         c_plain,_=loss_components(lp,[torch.tensor([1,2])],[20],[(8,16)],'plain-ctc')
         c_ground,_=loss_components(lp,[torch.tensor([1,2])],[20],[(8,16)],'grounded-ctc')
         self.assertGreater(float(c_ground),float(c_plain)+5)
+
+    def test_factorial_controls_isolate_span_and_blank_supervision(self):
+        lp=torch.randn(20,1,5).log_softmax(-1).detach().requires_grad_()
+        args=([torch.tensor([1,2])],[20],[(5,15)])
+        context_ctc,context_blank=loss_components(lp,*args,'context-ctc')
+        span_ctc,span_blank=loss_components(lp,*args,'span-ctc')
+        blank_ctc,blank_blank=loss_components(lp,*args,'blank-ctc')
+        grounded_ctc,grounded_blank=loss_components(lp,*args,'grounded-ctc')
+        self.assertTrue(torch.equal(context_ctc,blank_ctc))
+        self.assertTrue(torch.equal(span_ctc,grounded_ctc))
+        self.assertTrue(torch.equal(blank_blank,grounded_blank))
+        self.assertEqual(float(context_blank.detach()),0.0)
+        self.assertEqual(float(span_blank.detach()),0.0)
+        self.assertGreater(float(blank_blank.detach()),0.0)
+        span_ctc.backward(retain_graph=True)
+        self.assertEqual(float(lp.grad[:5].abs().sum()),0.0)
+        self.assertGreater(float(lp.grad[5:15].abs().sum()),0.0)
+        lp.grad.zero_()
+        blank_blank.backward()
+        self.assertGreater(float(lp.grad[:3].abs().sum()),0.0)
+        self.assertEqual(float(lp.grad[3:17].abs().sum()),0.0)
+
+    def test_negative_runtime_margin_targets_executable_nonwake_path(self):
+        z=torch.full((12,2,5),-7.0)
+        z[:,:,0]=5.0
+        for frame,token in enumerate((1,2,3,4),1):
+            z[frame,0,token]=9.0
+        z=z.detach().requires_grad_()
+        value=negative_runtime_margin(z.log_softmax(-1),
+            [torch.tensor([1,2,3]),torch.tensor([1,2,3,4])],
+            [12,12],[[1,2,3,4],[3,4,3,4]])
+        self.assertGreater(float(value.detach()),0.0)
+        value.backward()
+        self.assertGreater(float(z.grad[:,0].abs().sum()),0.0)
+        self.assertEqual(float(z.grad[:,1].abs().sum()),0.0)
+        with self.assertRaisesRegex(ValueError,'batch shape mismatch'):
+            negative_runtime_margin(z.log_softmax(-1),[],[],[[1,2,3,4]])
+        with self.assertRaisesRegex(ValueError,'path policy is invalid'):
+            negative_runtime_margin(z[:,:1].log_softmax(-1),[torch.tensor([1,2,3])],
+                                    [12],[[1,2,3,4]],negative_path_policy='unknown')
 
     def test_ctc_gradient_cannot_reach_excluded_prefix(self):
         lp=torch.randn(20,1,5).log_softmax(-1).detach().requires_grad_()
@@ -125,7 +180,6 @@ class StartupContextTests(unittest.TestCase):
         self.assertNotIn('--decoder-fuzzy',source)
         trainer=(ROOT/'training/startup_context_training.py').read_text()
         self.assertNotIn("r['split'] == 'test'",trainer)
-        self.assertNotIn('warm-start',trainer)
 
 
 class ExportIntegrationTests(unittest.TestCase):
@@ -160,6 +214,68 @@ class ExportIntegrationTests(unittest.TestCase):
         self.assertEqual(self.checkpoint['epochs'],2)
         self.assertIn('non_speech_blank',self.provenance['training']['epoch_history'][-1])
         self.assertEqual(len(self.checkpoint['batch_order_sha256']),64)
+
+    def test_factorial_controls_export_distinct_recipes_with_paired_inputs(self):
+        from startup_context_training import train
+        from training_state import state_identity
+        for variant,blank_weight in (('span-ctc',0.0),('blank-ctc',0.3)):
+            with self.subTest(variant=variant):
+                out=self.root/variant
+                train(self.pool,self.pool_sha,out,variant,'all',2,1337)
+                cp=torch.load(out/'model.pt',map_location='cpu',weights_only=True)
+                provenance=json.loads((out/'model.kwm.provenance.json').read_text())
+                recipe=cp['development_recipe']
+                self.assertEqual(recipe['variant'],variant)
+                self.assertEqual(recipe['blank_weight'],blank_weight)
+                self.assertEqual(recipe['prefix_hops'],[0,10,25,50])
+                self.assertEqual(cp['initial_float_state_identity'],self.checkpoint['initial_float_state_identity'])
+                self.assertEqual(cp['batch_order_sha256'],self.checkpoint['batch_order_sha256'])
+                self.assertEqual(cp['context_order_sha256'],self.checkpoint['context_order_sha256'])
+                self.assertEqual(cp['float_state_identity'],state_identity(cp['state_dict']))
+                self.assertEqual(provenance['training']['development_recipe'],recipe)
+
+    def test_speed_training_keeps_batch_and_context_pairing(self):
+        from startup_context_training import train
+        out=self.root/'speed'
+        train(self.pool,self.pool_sha,out,'grounded-speed','all',2,1337)
+        cp=torch.load(out/'model.pt',map_location='cpu',weights_only=True)
+        recipe=cp['development_recipe']
+        self.assertEqual(recipe['speed_factors'],[0.85,1.0,1.15])
+        self.assertEqual(cp['initial_float_state_identity'],self.checkpoint['initial_float_state_identity'])
+        self.assertEqual(cp['batch_order_sha256'],self.checkpoint['batch_order_sha256'])
+        self.assertEqual(cp['context_order_sha256'],self.checkpoint['context_order_sha256'])
+        self.assertEqual(len(json.loads((out/'schedule.json').read_text())['speeds_sha256']),64)
+
+    def test_paired_warm_start_binds_source_and_resets_optimizer(self):
+        from startup_context_training import train
+        source=self.out/'model.pt'
+        rows=[]
+        for variant in ('grounded-ctc','grounded-negative-margin','grounded-sparse-margin'):
+            out=self.root/('warm-'+variant)
+            train(self.pool,self.pool_sha,out,variant,'all',1,2346,
+                  initial_checkpoint=source)
+            cp=torch.load(out/'model.pt',map_location='cpu',weights_only=True)
+            receipt=cp['development_recipe']['warm_start']
+            self.assertEqual(receipt['checkpoint_sha256'],__import__('hashlib').sha256(source.read_bytes()).hexdigest())
+            self.assertEqual(cp['initial_float_state_identity'],self.checkpoint['float_state_identity'])
+            self.assertFalse(receipt['optimizer_state_restored'])
+            rows.append(cp)
+        self.assertEqual(rows[0]['batch_order_sha256'],rows[1]['batch_order_sha256'])
+        self.assertEqual(rows[0]['context_order_sha256'],rows[1]['context_order_sha256'])
+        self.assertEqual(rows[0]['batch_order_sha256'],rows[2]['batch_order_sha256'])
+        self.assertEqual(rows[0]['context_order_sha256'],rows[2]['context_order_sha256'])
+        self.assertEqual(rows[1]['development_recipe']['negative_runtime_margin_weight'],0.1)
+        self.assertEqual(rows[2]['development_recipe']['negative_path_policy'],'sparse-chronological-v1')
+
+    def test_warm_start_rejects_wrong_pool_identity(self):
+        from startup_context_training import train
+        source=self.root/'wrong-source.pt'
+        cp=copy.deepcopy(self.checkpoint)
+        cp['development_recipe']['pool_sha256']='0'*64
+        torch.save(cp,source)
+        with self.assertRaisesRegex(ValueError,'does not match frozen grounded source'):
+            train(self.pool,self.pool_sha,self.root/'wrong-warm','grounded-negative-margin',
+                  'all',1,2346,initial_checkpoint=source)
 
     def test_export_rejects_laundered_experimental_authority(self):
         for field,bad in (('release_authority',True),('development_only','true'),('policy','shipping')):

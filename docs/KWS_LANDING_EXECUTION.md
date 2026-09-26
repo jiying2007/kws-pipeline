@@ -42,6 +42,10 @@
 
 双 seed 的 12/36 epoch、ordered-token 范围和负样本 margin 单变量对照已完成。输入身份、真实 C 事件、每词结果、负结果与环境边界见 [`research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md`](research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md)。三个控制项均未形成跨 seed 的产品级改善，正式训练配置保持原样。下一步应先审词前/词内/词后的多余 token 与活动区监督，再设计单变量开发实验；没有稳定正结果不得消费新的 formal seed。
 
+随后对已有启动上下文 `grounded-ctc` 做了活动区间限制 × 区间外 blank 监督的四组拆分及双 seed 关键复核，结果见 [`research/STARTUP_CONTEXT_FACTORIAL_2026-09-27.md`](research/STARTUP_CONTEXT_FACTORIAL_2026-09-27.md)。活动区间限制是当前最强的可学习性信号，blank 对连续流的补益随 seed 改变；两者仍未解决合成开发集上的近邻误触发，不能据此修改正式训练默认值或提升模型。下一个阶段 B 单变量问题是：在保留活动区间约束和 C 运行时边界的前提下，能否抑制不完整、重复与倒序近邻，同时保持两词命中。
+
+阶段 B 后续用同一冻结池对 C 可执行/稀疏负例路径损失及 train-only 语速扰动做了受控实验，见 [`research/STARTUP_CONTEXT_INTERVENTIONS_2026-09-27.md`](research/STARTUP_CONTEXT_INTERVENTIONS_2026-09-27.md)。负例路径损失在已训练模型上几乎没有梯度；语速扰动在一个 seed 降误触发、另一个 seed 使训练可学习性失效。没有跨 seed 稳定候选。当前缺少受控真人正例、近邻负例、最终 AFE 和目标板入口，阶段 C/D/E 的产品放行仍需这些输入；不能以反复观察的合成开发集代替。
+
 ## 连续性与收口
 
 - 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`tools/kws_landing_status.py --verify` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
