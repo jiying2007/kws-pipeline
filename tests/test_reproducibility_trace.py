@@ -140,10 +140,16 @@ class NumericTraceTests(unittest.TestCase):
         self.assertFalse(result["historical_failure_resolved"])
 
     def test_cross_vendor_pair_is_machine_classified_without_release_authority(self):
+        # Both identities are controlled fixtures. The hosted runner may itself
+        # be Intel or AMD, so changing only the right side to Intel cannot prove
+        # that a cross-vendor pair was supplied.
+        amd = copy.deepcopy(self.identity["cpu_runtime"])
+        amd["model"] = "AMD EPYC TEST CPU"
         intel = copy.deepcopy(self.identity["cpu_runtime"])
         intel["model"] = "INTEL(R) XEON(R) TEST CPU"
-        other = self.mutated(lambda i, t, r: i.update(cpu_runtime=intel))
-        result = compare(self.root / "observed-a.json", other)
+        left = self.mutated(lambda i, t, r: i.update(cpu_runtime=amd))
+        right = self.mutated(lambda i, t, r: i.update(cpu_runtime=intel))
+        result = compare(left, right)
         self.assertTrue(result["cross_vendor_pair_observed"])
         self.assertEqual(sorted(result["cpu_vendors"]), ["AMD", "Intel"])
         self.assertFalse(result["release_authority"])

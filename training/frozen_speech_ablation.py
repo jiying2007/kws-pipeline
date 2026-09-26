@@ -17,6 +17,11 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'training'), str(ROOT / 'tools'), str(ROOT / 'eval')]
 from external_base_dataset import load_external_base_bundle
 from objective_config import auxiliary_loss_weights, optional_objective_cli_args
+from objective_contract import (
+    ORDERED_TOKEN_SCOPE_DEFAULT, ORDERED_TOKEN_SCOPES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+    SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
+)
 from wake_pressure_balance import derive_wake_pressure_balance, keyword_target_sequences
 
 POLICY = 'clean-frozen-speech-ablation-v1'
@@ -193,6 +198,33 @@ def loss_settings(variant: str) -> dict:
             'sequence_margin_negative_policy': 'runtime-executable-v1'}
 
 
+def scoped_loss_settings(
+    variant: str, ordered_scope: str,
+    negative_policy: str = SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
+) -> dict:
+    if ordered_scope not in ORDERED_TOKEN_SCOPES:
+        raise ValueError('unsupported ordered-token scope')
+    if negative_policy not in SEQUENCE_MARGIN_NEGATIVE_POLICIES:
+        raise ValueError('unsupported sequence-margin negative policy')
+    settings = loss_settings(variant)
+    settings['sequence_margin_negative_policy'] = negative_policy
+    if ordered_scope != ORDERED_TOKEN_SCOPE_DEFAULT:
+        settings['ordered_token_scope'] = ordered_scope
+    return settings
+
+
+def clean_source_tree() -> str:
+    status = subprocess.check_output(
+        ['git', 'status', '--porcelain', '--untracked-files=all'],
+        cwd=ROOT, text=True,
+    )
+    if status.strip():
+        raise ValueError('frozen-speech trial requires a clean source worktree')
+    return subprocess.check_output(
+        ['git', 'rev-parse', 'HEAD^{tree}'], cwd=ROOT, text=True,
+    ).strip()
+
+
 def execute(command: list[str], log: pathlib.Path) -> float:
     start = time.monotonic()
     with log.open('w', encoding='utf-8') as f:
@@ -251,13 +283,16 @@ def acoustic_diagnostics(pool: dict, root: pathlib.Path, checkpoint: pathlib.Pat
 
 
 def trial(root: pathlib.Path, pool_sha: str, variant: str, output: pathlib.Path,
-          runner: pathlib.Path, posterior_dump: pathlib.Path, epochs: int, seed: int) -> None:
+          runner: pathlib.Path, posterior_dump: pathlib.Path, epochs: int, seed: int,
+          ordered_scope: str = ORDERED_TOKEN_SCOPE_DEFAULT,
+          negative_policy: str = SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE) -> None:
     if not 1 <= epochs <= 72 or not 0 <= seed <= 2147483647:
         raise ValueError('invalid bounded epochs or seed')
     pool = verify_pool(root, pool_sha)
+    source_tree = clean_source_tree()
     output.mkdir(parents=True, exist_ok=False)
     tokens, keywords = root / 'tokens.example.txt', root / 'zh_cn_example.tsv'
-    weights = loss_settings(variant)
+    weights = scoped_loss_settings(variant, ordered_scope, negative_policy)
     balance = derive_wake_pressure_balance(manifests=[root / 'train.tsv'], tokens=tokens,
                                           keywords=keywords, positive_example_weight=2.0)
     checkpoint = output / 'model.pt'
@@ -269,15 +304,27 @@ def trial(root: pathlib.Path, pool_sha: str, variant: str, output: pathlib.Path,
         '--positive-example-weight', '2.0', '--wake-keyword-weights', json.dumps(balance['wake_keyword_weights']),
         '--output', str(checkpoint), *optional_objective_cli_args(weights)]
     config = {'policy': POLICY, 'variant': variant, 'pool_sha256': pool_sha, 'epochs': epochs,
+              'ordered_token_scope': ordered_scope,
+              'sequence_margin_negative_policy': negative_policy,
               'seed': seed, 'train': weights, 'wake_balance': balance,
               'runner_sha256': sha(runner), 'posterior_dump_sha256': sha(posterior_dump),
-              'source_tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], cwd=ROOT, text=True).strip()}
+              'source_tree': source_tree}
     write(output / 'trial-input.json', config)
     train_seconds = execute(command, output / 'train.log')
     execute([sys.executable, str(ROOT / 'training/export_model.py'), '--checkpoint', str(checkpoint),
              '--tokens', str(tokens), '--output', str(checkpoint.with_suffix('.kwm'))], output / 'export.log')
     from verify_training_readback import verify_candidate
     readback = verify_candidate(weights, checkpoint)
+    import torch
+    checkpoint_payload = torch.load(checkpoint, map_location='cpu', weights_only=True)
+    provenance = read(pathlib.Path(str(checkpoint.with_suffix('.kwm')) + '.provenance.json'))
+    if (checkpoint_payload.get('ordered_token_scope') != ordered_scope or
+            provenance.get('training', {}).get('ordered_token_scope') != ordered_scope or
+            checkpoint_payload.get('sequence_margin_negative_policy') != negative_policy or
+            provenance.get('training', {}).get('sequence_margin_negative_policy') != negative_policy):
+        raise ValueError('objective control differs across trial, checkpoint and model provenance')
+    readback['ordered_token_scope'] = ordered_scope
+    readback['sequence_margin_negative_policy'] = negative_policy
     write(output / 'readback.json', readback)
     execute([sys.executable, str(ROOT / 'tools/compile_keywords.py'), '--tokens', str(tokens),
              '--keywords', str(keywords), '--out-pack', str(output / 'keywords.kwk')], output / 'pack.log')
@@ -311,12 +358,18 @@ def main() -> None:
         p.add_argument('--' + name, type=pathlib.Path, required=True)
     p.add_argument('--pool-sha', required=True); p.add_argument('--variant', choices=VARIANTS, required=True)
     p.add_argument('--epochs', type=int, default=36); p.add_argument('--seed', type=int, default=1337)
+    p.add_argument('--ordered-token-scope', choices=sorted(ORDERED_TOKEN_SCOPES),
+                   default=ORDERED_TOKEN_SCOPE_DEFAULT)
+    p.add_argument('--sequence-margin-negative-policy',
+                   choices=sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES),
+                   default=SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE)
     args = parser.parse_args()
     if args.command == 'prepare':
         prepare(args.archive.resolve(), args.output.resolve())
     else:
         trial(args.pool.resolve(), args.pool_sha, args.variant, args.output.resolve(),
-              args.runner.resolve(), args.posterior_dump.resolve(), args.epochs, args.seed)
+              args.runner.resolve(), args.posterior_dump.resolve(), args.epochs, args.seed,
+              args.ordered_token_scope, args.sequence_margin_negative_policy)
 
 
 if __name__ == '__main__':

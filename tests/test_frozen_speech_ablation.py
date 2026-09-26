@@ -9,6 +9,7 @@ import struct
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -68,6 +69,34 @@ class FrozenSpeechTests(unittest.TestCase):
                 except (ValueError, TypeError): pass
         for name, value in f.auxiliary_loss_weights(f.loss_settings('current')).items():
             self.assertEqual(value, constants[name.upper()])
+
+    def test_ordered_scope_trial_changes_only_declared_control(self):
+        default = f.scoped_loss_settings('current', 'all-nonempty-targets-v1')
+        exact = f.scoped_loss_settings('current', 'exact-configured-wake-targets-v1')
+        self.assertEqual(default, f.loss_settings('current'))
+        self.assertEqual({key for key in exact if exact.get(key) != default.get(key)},
+                         {'ordered_token_scope'})
+        with self.assertRaisesRegex(ValueError, 'ordered-token scope'):
+            f.scoped_loss_settings('current', 'unsupported')
+
+    def test_negative_policy_trial_changes_only_declared_control(self):
+        baseline = f.scoped_loss_settings('current', 'all-nonempty-targets-v1')
+        sparse = f.scoped_loss_settings(
+            'current', 'all-nonempty-targets-v1', 'sparse-chronological-v1'
+        )
+        self.assertEqual(
+            {key for key in sparse if sparse.get(key) != baseline.get(key)},
+            {'sequence_margin_negative_policy'},
+        )
+        with self.assertRaisesRegex(ValueError, 'negative policy'):
+            f.scoped_loss_settings('current', 'all-nonempty-targets-v1', 'unsupported')
+
+    def test_trial_source_identity_rejects_dirty_worktree(self):
+        with mock.patch.object(f.subprocess, 'check_output', return_value=' M training/train_ctc.py\n'):
+            with self.assertRaisesRegex(ValueError, 'clean source worktree'):
+                f.clean_source_tree()
+        with mock.patch.object(f.subprocess, 'check_output', side_effect=['', 'a' * 40 + '\n']):
+            self.assertEqual(f.clean_source_tree(), 'a' * 40)
 
     def test_qualification_never_enters_retained_pool(self):
         kept = f.materialize_pool(self.rows, self.pool, KEYWORDS)
