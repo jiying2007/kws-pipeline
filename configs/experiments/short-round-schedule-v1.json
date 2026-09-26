@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "experiment_id": "short-round-schedule-v1-20260926",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Test one training-schedule hypothesis from governed model-training run 36237188880 without consuming qualification evidence. Keep the same product speech-like base, model family, objective weights, replay policies, threshold grid, decoder/runtime, four development rounds and formal-strength 12-epoch adversarial refinement; change only when curriculum rotation occurs by using 12 cold epochs and 6 warm-start epochs instead of the canonical 36/12 schedule. This is development-only evidence and cannot promote a model.",
+  "config_overrides": {
+    "train.epochs": 12,
+    "train.warm_start_epochs": 6,
+    "domain_iteration.max_rounds": 4,
+    "domain_iteration.min_rounds": 4,
+    "domain_iteration.adversarial_lexicon.refinement_epochs": 12
+  }
+}

@@ -247,9 +247,19 @@ def main() -> int:
         try:
             verify_spec(spec)
         except ValueError as exc:
+            assert "integer in [1,72]" in str(exc)
+        else:
+            raise AssertionError("out-of-range schedule override was accepted")
+
+        bad = json.loads(spec.read_text(encoding="utf-8"))
+        bad["config_overrides"] = {"calibration.thresholds": [0.5, 0.55, 0.6]}
+        spec.write_text(json.dumps(bad), encoding="utf-8")
+        try:
+            verify_spec(spec)
+        except ValueError as exc:
             assert "not allowed" in str(exc)
         else:
-            raise AssertionError("non-whitelisted experiment override was accepted")
+            raise AssertionError("protected calibration override was accepted")
 
     print("product development experiment contract: PASS")
     return 0

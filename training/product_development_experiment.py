@@ -37,6 +37,11 @@ ALLOWED_OVERRIDES = {
         "enum",
         tuple(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES)),
     ),
+    "train.epochs": ("int", 1, 72),
+    "train.warm_start_epochs": ("int", 1, 72),
+    "domain_iteration.max_rounds": ("int", 1, 4),
+    "domain_iteration.min_rounds": ("int", 1, 4),
+    "domain_iteration.adversarial_lexicon.refinement_epochs": ("int", 1, 24),
     "domain_iteration.base_failure_replay_enabled": ("bool",),
 }
 
@@ -101,6 +106,13 @@ def verify_spec(path: pathlib.Path) -> dict:
             if not math.isfinite(number) or not low <= number <= high:
                 raise ValueError(f"experiment override {key} must be in [{low},{high}]")
             normalized[key] = number
+        elif kind == "int":
+            _, low, high = contract
+            if isinstance(raw, bool) or not isinstance(raw, int) or not low <= raw <= high:
+                raise ValueError(
+                    f"experiment override {key} must be an integer in [{low},{high}]"
+                )
+            normalized[key] = raw
         elif kind == "enum":
             _, choices = contract
             if not isinstance(raw, str) or raw not in choices:
@@ -175,6 +187,18 @@ def materialize(
     for key, value in spec["config_overrides"].items():
         set_nested(config, key, value)
 
+    cold_epochs = int(train["epochs"])
+    warm_epochs = int(train["warm_start_epochs"])
+    if not 0 < warm_epochs <= cold_epochs:
+        raise ValueError("experiment warm_start_epochs must be in [1, train.epochs]")
+    min_rounds = int(iteration["min_rounds"])
+    max_rounds = int(iteration["max_rounds"])
+    if not 0 < min_rounds <= max_rounds <= 4:
+        raise ValueError("experiment round bounds must satisfy 1 <= min <= max <= 4")
+    refinement_epochs = int(adversarial["refinement_epochs"])
+    if not 1 <= refinement_epochs <= 24:
+        raise ValueError("experiment refinement_epochs must be in [1,24]")
+
     config["development_experiment"] = {
         "schema_version": SCHEMA_VERSION,
         "evidence_class": EVIDENCE_CLASS,
@@ -232,6 +256,11 @@ def self_test() -> None:
                     "config_overrides": {
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.1,
+                        "train.epochs": 12,
+                        "train.warm_start_epochs": 6,
+                        "domain_iteration.max_rounds": 4,
+                        "domain_iteration.min_rounds": 4,
+                        "domain_iteration.adversarial_lexicon.refinement_epochs": 12,
                         "domain_iteration.base_failure_replay_enabled": True,
                     },
                 }
@@ -240,10 +269,48 @@ def self_test() -> None:
         )
         verified = verify_spec(spec)
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
+        assert verified["config_overrides"]["train.epochs"] == 12
+        assert verified["config_overrides"]["train.warm_start_epochs"] == 6
+        assert verified["config_overrides"]["domain_iteration.max_rounds"] == 4
         assert (
             verified["config_overrides"]["domain_iteration.base_failure_replay_enabled"]
             is True
         )
+
+        effective = root / "effective.json"
+        effective.write_text(
+            json.dumps(
+                {
+                    "product_candidate_data": {
+                        "policy": "external-speech-like-product-base-v1",
+                        "tone_fallback_allowed": False,
+                        "protected_evidence_used": False,
+                    },
+                    "train": {},
+                    "domain_iteration": {
+                        "adversarial_lexicon": {"enabled": True}
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        bad_schedule = dict(verified)
+        bad_schedule["config_overrides"] = dict(verified["config_overrides"])
+        bad_schedule["config_overrides"]["train.warm_start_epochs"] = 13
+        spec.write_text(json.dumps(bad_schedule), encoding="utf-8")
+        try:
+            materialize(
+                spec_path=spec,
+                effective_config_path=effective,
+                output_path=root / "bad-config.json",
+                receipt_path=root / "bad-receipt.json",
+                base_sha="1" * 40,
+                head_sha="2" * 40,
+            )
+        except ValueError as exc:
+            assert "warm_start_epochs" in str(exc)
+        else:
+            raise AssertionError("invalid warm-start schedule was accepted")
 
         bad = dict(verified)
         bad["protected_evidence_used"] = True
