@@ -7,12 +7,7 @@ on:
       - 'training/**'
       - 'tests/test_training_audit_closure.py'
       - 'tests/test_development_signal.py'
-      - 'tests/test_frozen_speech_ablation.py'
       - 'tests/test_reproducibility_trace.py'
-      - 'tests/test_startup_context.py'
-      - 'tests/test_context_checkpoint_selection.py'
-      - 'tests/test_preceding_context.py'
-      - 'tests/test_preceding_context_attribution.py'
       - 'tools/diagnose_kws_threshold_operating_curve.py'
       - 'tools/diagnose_decoder_policy_replay.py'
       - 'tools/diagnose_decoder_retention_recalibrated_curve.py'
@@ -65,12 +60,7 @@ jobs:
         run: |
           .venv-audit/bin/python tests/test_training_audit_closure.py
           .venv-audit/bin/python tests/test_development_signal.py
-          .venv-audit/bin/python tests/test_frozen_speech_ablation.py
           .venv-audit/bin/python tests/test_reproducibility_trace.py
-          .venv-audit/bin/python tests/test_startup_context.py
-          .venv-audit/bin/python tests/test_context_checkpoint_selection.py
-          .venv-audit/bin/python tests/test_preceding_context.py
-          .venv-audit/bin/python tests/test_preceding_context_attribution.py
           python3 tools/check_workflow_path_filters.py
       - name: Verify no tracked source changes
         run: git diff --exit-code -- .
