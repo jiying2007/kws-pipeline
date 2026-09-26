@@ -49,6 +49,7 @@ REQUIRED_ALGORITHM_CONSTANTS = (
     "KWS_MIN_PATH_RETENTION_LOG",
     "KWS_ROOT_START_LOGIT_MARGIN",
     "KWS_FUZZY_CHILD_RETENTION_COST_LOG",
+    "KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES",
     "KWS_PCEN_SMOOTHING",
     "KWS_PCEN_ALPHA",
     "KWS_PCEN_DELTA",
@@ -82,6 +83,10 @@ STRUCTURAL_INVARIANTS = {
     "KWS_ROOT_START_LOGIT_MARGIN > 0": (
         "the root start margin must be positive",
         lambda v: v["KWS_ROOT_START_LOGIT_MARGIN"] > 0.0,
+    ),
+    "KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES > 0": (
+        "decoder boundary reset must require at least one inactive frame",
+        lambda v: v["KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES"] > 0.0,
     ),
     "0 < KWS_PCEN_SMOOTHING < 1": (
         "pcen smoothing must be a ratio",

@@ -43,6 +43,28 @@ python3 tools/gen_parameter_limits.py configs/parameter-contract.json --json
 | L2 | product config: `kws_config_t` field | rebuild of the caller plus revalidation of calibrated thresholds |
 | L3 | field policy: per-keyword KWKP v3 record field | recompile the keyword pack and rerun calibration |
 
+## L1 decoder boundary policy
+
+`KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES` is the compile-time limit for
+consecutive frames whose speech gate is inactive while a keyword prefix may be
+carried across an utterance boundary. The default is `12` frames, or `240 ms` at
+the current 20 ms frame hop. After the twelfth inactive frame the decoder clears
+only trie-prefix and pending-keyword history. It does **not** reset the frontend,
+RNN hidden state, refractory accounting, or calibrated keyword thresholds.
+
+While the stream remains speech-inactive, partial paths are cleared at the end
+of every frame so nonblank posterior noise in the gap cannot seed the next
+utterance. Speech resumption starts decoder matching from an empty trie history.
+This is deliberately separate from `state_retention`: retention controls gradual
+path decay; the boundary policy prevents a sufficiently long non-speech interval
+from joining two otherwise valid phrase fragments.
+
+Because this policy changes which decoder event paths can survive, changing the
+boundary value invalidates calibrated keyword thresholds even though it does not
+modify the threshold numbers themselves. Recalibrate on the applicable acoustic
+evidence before promotion; current shipping approval remains blocked on the
+real-human final-AFE gate.
+
 ## L2 runtime parameters
 
 These are the fields of `kws_config_t`. `kws_default_config()` returns exactly the
@@ -159,9 +181,10 @@ against `小窝小窝`). Use `grace` when the longer variant may arrive late.
 3. Update `parameter_contract.sha256` in `configs/shipping.xiaowo.json`.
 4. Run `python3 tests/test_parameter_contract.py`, then `cmake --build` and
    `ctest` to confirm the C side accepts the new range.
-5. If an L1 constant changed, re-run the frontend parity test
+5. If a frontend L1 constant changed, re-run the frontend parity test
    (`python3 tests/test_frontend_parity.py ./build/kws_feature_dump`) because
-   feature bytes will differ.
+   feature bytes may differ. Decoder-only L1 changes instead require decoder
+   replay/regression evidence against the affected event paths.
 
 ## What is not covered
 

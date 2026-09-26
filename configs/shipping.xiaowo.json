@@ -14,18 +14,19 @@
   "parameter_contract": {
     "contract_id": "kws-parameter-contract-v1",
     "path": "configs/parameter-contract.json",
-    "sha256": "a11849f316d9fc8acc68975583b81897839a36a79fd0849c2f1e6d3b0577b29b"
+    "sha256": "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b"
   },
   "threshold_calibration": {
     "method": "plateau-median",
     "producer": "training/iterate_domain.py:select_calibration_threshold",
     "corpus": "synthetic-qualified-domain-corpus",
     "seed": 271838,
-    "parameter_contract_sha256": "a11849f316d9fc8acc68975583b81897839a36a79fd0849c2f1e6d3b0577b29b",
+    "parameter_contract_sha256": "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b",
     "invalidated_by": [
       "runtime.min_speech_dbfs",
       "runtime.state_retention",
       "runtime.external_vad_threshold",
+      "algorithm.KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES",
       "model.release_tag"
     ],
     "thresholds": [
