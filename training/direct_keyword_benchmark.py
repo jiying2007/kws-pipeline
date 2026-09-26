@@ -12,6 +12,7 @@ sys.path[:0]=[str(ROOT/'training'),str(ROOT/'eval'),str(ROOT/'tools')]
 from model import TinyStreamingRNN
 import torch
 from frontend import features
+from frontend_spec import FRONTEND_LOGMEL,FRONTEND_PCEN_LITE,frontend_id
 from frozen_speech_ablation import verify_pool,resolve,sha,write
 from startup_context_training import active_span,read_pcm
 from startup_context_evaluation import pcm,wav,collect,measure,shifted
@@ -21,7 +22,7 @@ from train_ctc import Manifest,training_environment,vocab_fingerprint,load_token
 from training_state import state_identity
 from synthetic_audio import activity_bounds
 
-POLICY='direct-whole-keyword-runtime-decision-paired-v6'
+POLICY='direct-whole-keyword-frontend-paired-v7'
 RUNTIME_ACCEPTANCE_THRESHOLD=0.55
 PREFIX_HOPS=(0,25,50)
 TAIL_SAMPLES=3200
@@ -105,21 +106,22 @@ def runtime_decision_loss(log_probs:torch.Tensor,lengths:list[int],spans:list[tu
     neg=torch.stack(neg_parts).mean() if neg_parts else zero
     return pos+neg,pos,neg
 
-def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epochs:int,end_frames:int=4,objective:str='final-window')->None:
+def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epochs:int,end_frames:int=4,objective:str='final-window',frontend:str=FRONTEND_LOGMEL)->None:
     if type(seed) is not int or type(epochs) is not int or not 1<=epochs<=400:raise ValueError('invalid bounded direct recipe')
+    frontend_id(frontend)
     if type(end_frames) is not int or not 1<=end_frames<=32:raise ValueError('invalid end supervision window')
     if objective not in ('final-window','ctc','grounded-ctc','grounded-ctc-decision'):raise ValueError('invalid direct objective')
     pool=verify_pool(pool_root,pool_sha);rows=[r for r in pool['rows'] if r['split']=='train']
     if len(rows)!=128:raise ValueError('direct benchmark expects frozen 128-row train split')
     output.mkdir(parents=True,exist_ok=False);tokens,_,_=write_vocab(output)
     manifest=output/'source-train.tsv';manifest.write_text(''.join(f"{resolve(pool_root,r['path'])}\t{' '.join(map(str,r['target_ids']))}\n" for r in rows),encoding='utf-8')
-    corpus=Manifest([manifest],32,5,'logmel').corpus_identity
+    corpus=Manifest([manifest],32,5,frontend).corpus_identity
     cache={}
     for i,r in enumerate(rows):
         raw=read_pcm(resolve(pool_root,r['path']))
         for prefix in PREFIX_HOPS:
             signal=torch.cat((torch.zeros(prefix*320,dtype=torch.int16),raw,torch.zeros(TAIL_SAMPLES,dtype=torch.int16)))
-            x=features(signal.float()/32768,feature_dim=32);cache[i,prefix]=(x,active_span(signal,len(x)),direct_class(r))
+            x=features(signal.float()/32768,feature_dim=32,frontend=frontend);cache[i,prefix]=(x,active_span(signal,len(x)),direct_class(r))
     shuffle=random.Random(seed);context=random.Random(seed+1901);ids=list(range(len(rows)))
     torch.manual_seed(seed);torch.use_deterministic_algorithms(True);model=TinyStreamingRNN(32,64,3);initial=state_identity(model.state_dict())
     optimizer=torch.optim.AdamW(model.parameters(),lr=.001,weight_decay=.0001);history=[];batch_digest=hashlib.sha256();context_digest=hashlib.sha256()
@@ -144,8 +146,8 @@ def train(pool_root:pathlib.Path,pool_sha:str,output:pathlib.Path,seed:int,epoch
     else:
         positive_objective={'kind':'activity-grounded-one-token-ctc','normalization':'active-input-frames','blank_id':0,'activity_source':'waveform-activity-bounds-v1','blank_boundary_guard_hops':2,'positive_non_speech_blank_weight':BLANK_WEIGHT,'negative_policy':'full-sequence-blank'}
         if objective=='grounded-ctc-decision':positive_objective={**positive_objective,'kind':'activity-grounded-one-token-ctc-plus-runtime-decision-consistency-v1','runtime_acceptance_threshold':RUNTIME_ACCEPTANCE_THRESHOLD,'runtime_decision_loss_weight':1.0,'runtime_decision_sample_weighting':'equal-positive-negative-constraints'}
-    recipe={'policy':POLICY,'development_only':True,'release_authority':False,'pool_sha256':pool_sha,'seed':seed,'epochs':epochs,'prefix_hops':list(PREFIX_HOPS),'tail_samples':TAIL_SAMPLES,'positive_objective':positive_objective,'threshold':0.55,'model':'shipping-rnn-32x64-logmel-vocab3'}
-    cp={'state_dict':model.state_dict(),'float_state_identity':state_identity(model.state_dict()),'initial_float_state_identity':initial,'development_recipe':recipe,'batch_order_sha256':batch_digest.hexdigest(),'context_order_sha256':context_digest.hexdigest(),'feature_dim':32,'hidden_dim':64,'vocab_size':3,'vocab_fingerprint':vocab_fingerprint(load_tokens(tokens)),'tokens_sha256':sha(tokens),'frame_length_samples':400,'frame_hop_samples':320,'frontend_spec_version':2,'frontend_name':'logmel','frontend_kind':0,'training_examples':len(rows),'training_manifests':[{'name':manifest.name,'sha256':sha(manifest)}],'training_corpus_identity':corpus,'seed':seed,'epochs':epochs,'epoch_history':history,'batch_size':16,'learning_rate':.001,'optimizer':'AdamW','weight_decay':.0001,'grad_clip_norm':5.0,'training_environment':env,'auxiliary_loss_weights':zero,**zero}
+    recipe={'policy':POLICY,'development_only':True,'release_authority':False,'pool_sha256':pool_sha,'seed':seed,'epochs':epochs,'prefix_hops':list(PREFIX_HOPS),'tail_samples':TAIL_SAMPLES,'positive_objective':positive_objective,'threshold':0.55,'model':f'shipping-rnn-32x64-{frontend}-vocab3','frontend':frontend}
+    cp={'state_dict':model.state_dict(),'float_state_identity':state_identity(model.state_dict()),'initial_float_state_identity':initial,'development_recipe':recipe,'batch_order_sha256':batch_digest.hexdigest(),'context_order_sha256':context_digest.hexdigest(),'feature_dim':32,'hidden_dim':64,'vocab_size':3,'vocab_fingerprint':vocab_fingerprint(load_tokens(tokens)),'tokens_sha256':sha(tokens),'frame_length_samples':400,'frame_hop_samples':320,'frontend_spec_version':2,'frontend_name':frontend,'frontend_kind':frontend_id(frontend),'training_examples':len(rows),'training_manifests':[{'name':manifest.name,'sha256':sha(manifest)}],'training_corpus_identity':corpus,'seed':seed,'epochs':epochs,'epoch_history':history,'batch_size':16,'learning_rate':.001,'optimizer':'AdamW','weight_decay':.0001,'grad_clip_norm':5.0,'training_environment':env,'auxiliary_loss_weights':zero,**zero}
     torch.save(cp,output/'model.pt');subprocess.run([sys.executable,str(ROOT/'training/export_model.py'),'--checkpoint',str(output/'model.pt'),'--tokens',str(tokens),'--output',str(output/'model.kwm')],check=True,timeout=60)
     write(output/'recipe.json',recipe)
 
@@ -182,7 +184,7 @@ def evaluate(pool_root:pathlib.Path,pool_sha:str,model:pathlib.Path,output:pathl
 
 def main():
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='cmd',required=True)
-    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200);a.add_argument('--end-frames',type=int,default=4);a.add_argument('--objective',choices=('final-window','ctc','grounded-ctc','grounded-ctc-decision'),default='final-window')
+    a=sub.add_parser('train');a.add_argument('--pool',type=pathlib.Path,required=True);a.add_argument('--pool-sha',required=True);a.add_argument('--output',type=pathlib.Path,required=True);a.add_argument('--seed',type=int,required=True);a.add_argument('--epochs',type=int,default=200);a.add_argument('--end-frames',type=int,default=4);a.add_argument('--objective',choices=('final-window','ctc','grounded-ctc','grounded-ctc-decision'),default='final-window');a.add_argument('--frontend',choices=(FRONTEND_LOGMEL,FRONTEND_PCEN_LITE),default=FRONTEND_LOGMEL)
     b=sub.add_parser('evaluate');b.add_argument('--pool',type=pathlib.Path,required=True);b.add_argument('--pool-sha',required=True);b.add_argument('--model',type=pathlib.Path,required=True);b.add_argument('--output',type=pathlib.Path,required=True);b.add_argument('--runner',type=pathlib.Path,required=True);b.add_argument('--train-only',action='store_true')
-    q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs,q.end_frames,q.objective) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve(),q.train_only)
+    q=p.parse_args();train(q.pool.resolve(),q.pool_sha,q.output.resolve(),q.seed,q.epochs,q.end_frames,q.objective,q.frontend) if q.cmd=='train' else evaluate(q.pool.resolve(),q.pool_sha,q.model.resolve(),q.output.resolve(),q.runner.resolve(),q.train_only)
 if __name__=='__main__':main()
