@@ -40,9 +40,7 @@
 
 ## 阶段 B 的首个单变量对照
 
-先测试训练预算与实际 C 命中率的关系，不改正式模型、阈值或资格门槛。使用现有 `training/frozen_speech_ablation.py` 的同一不可变开发语音池、`variant=current`、同一源码树与 C runner，分别在预声明 seed `1337`、`2346` 下运行 12 与 36 epoch。每一对只改变 epoch 上限；保留 checkpoint、训练 loss/ordered-token 轨迹、浮点状态 hash、量化模型和 train/calibration/test 的真实 C 事件及声学诊断。该脚本的 `current` treatment 显式使用 `runtime-executable-v1` 负样本 margin，而治理训练默认是 `sparse-chronological-v1`；两者不是同一个损失契约，预算结论不得直接外推到治理训练。
-
-比较时先核对同 seed 两臂的池、初态、前 12 epoch 轨迹、frontend、词包和评估协议一致。报告每词命中、误触发和普通话近似词表现，不以训练损失单独选胜者。若两个 seed 均出现早期 checkpoint 在 C 端明显优于 36 epoch，再设计受控 checkpoint 选择；若两臂均差，转向语音活动区监督、非唤醒词覆盖及 surrogate/解码路径对照。该干净语音实验没有域渲染、播放或连续流，正结果还需在独立开发域与连续 C runtime 中复现，才可改正式训练配置。
+双 seed 的 12/36 epoch、ordered-token 范围和负样本 margin 单变量对照已完成。输入身份、真实 C 事件、每词结果、负结果与环境边界见 [`research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md`](research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md)。三个控制项均未形成跨 seed 的产品级改善，正式训练配置保持原样。下一步应先审词前/词内/词后的多余 token 与活动区监督，再设计单变量开发实验；没有稳定正结果不得消费新的 formal seed。
 
 ## 连续性与收口
 
