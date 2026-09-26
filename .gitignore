@@ -7,6 +7,7 @@ build-*/
 __pycache__/
 *.pyc
 .generated/
+/.venv*/
 # Promoted model-registry tuples are intentionally version-controlled.
 !models/registry/
 !models/registry/**
