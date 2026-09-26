@@ -108,7 +108,37 @@ def main() -> int:
         assert result["false_accepts"] == 1
         assert abs(result["frr"] - 0.5) < 1.0e-9
         assert abs(result["far_per_hour"] - 1.0) < 1.0e-9
+        assert result["event_match_pre_tolerance_ms"] == 150.0
+        assert result["event_match_post_tolerance_ms"] == 500.0
         assert 199.0 <= result["p95_post_end_latency_ms"] <= 201.0
+
+        early_refs = root / "early-references.jsonl"
+        early_dets = root / "early-detections.jsonl"
+        early_summary = root / "early-summary.json"
+        early_refs.write_text(
+            json.dumps({"recording": "early", "duration_s": 3.0,
+                        "expected": [{"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}]}) + "\n",
+            encoding="utf-8",
+        )
+        early_dets.write_text(
+            json.dumps({"recording": "early", "keyword_id": 1,
+                        "time_s": 0.9, "confidence": 0.9}) + "\n",
+            encoding="utf-8",
+        )
+        early_default = run_score(early_refs, early_dets, early_summary)
+        assert early_default.returncode == 0, early_default.stderr
+        assert json.loads(early_summary.read_text(encoding="utf-8"))["matched"] == 1
+        strict = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(early_refs),
+             "--detections", str(early_dets), "--pre-tolerance-ms", "0",
+             "--summary", str(early_summary)],
+            check=False, capture_output=True, text=True,
+        )
+        assert strict.returncode == 0, strict.stderr
+        strict_summary = json.loads(early_summary.read_text(encoding="utf-8"))
+        assert strict_summary["matched"] == 0
+        assert strict_summary["false_rejects"] == 1
+        assert strict_summary["false_accepts"] == 1
 
         fp = [
             json.loads(line)

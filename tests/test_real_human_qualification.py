@@ -60,6 +60,10 @@ def main() -> int:
     assert production_policy["gates"]["max_frr_per_keyword"] == 0.05
     assert production_policy["gates"]["max_frr_upper_bound_per_keyword"] == 0.08
     assert production_policy["gates"]["max_far_per_hour"] == 0.10
+    assert production_policy["event_matching"] == {
+        "pre_tolerance_ms": 0.0,
+        "post_tolerance_ms": 500.0,
+    }
     assert {
         row["name"] for row in production_policy["critical_positive_slices"]
     } >= {"distance_3_5m", "rear", "playback", "double_talk", "robot_motion"}
@@ -101,6 +105,8 @@ def main() -> int:
     assert "build/real-human/afe/post-afe" not in upload_section
     assert "*.wav" not in upload_section
     assert "shipping_approved:false" in workflow
+    assert "--pre-tolerance-ms 0" in workflow
+    assert "--post-tolerance-ms 500" in workflow
 
     with tempfile.TemporaryDirectory(prefix="kws-real-human-contract-") as tmp_raw:
         tmp = pathlib.Path(tmp_raw)
@@ -191,6 +197,10 @@ def main() -> int:
             "schema_version": 1,
             "deployment_tag": "deployment-fixture0000",
             "confidence_level": 0.95,
+            "event_matching": {
+                "pre_tolerance_ms": 0.0,
+                "post_tolerance_ms": 500.0,
+            },
             "minimums": {
                 "speakers": 1,
                 "sessions_per_speaker": 1,
@@ -233,6 +243,19 @@ def main() -> int:
         intake_json = json.loads(intake.read_text(encoding="utf-8"))
         assert intake_json["raw_audio_hashes_verified"] is True
         assert intake_json["expected_by_keyword"] == {"1": 1, "2": 1}
+
+        zero_length = json.loads(manifest_path.read_text(encoding="utf-8"))
+        zero_length["recordings"][0]["expected"][0]["end_s"] = 0.10
+        zero_length_path = tmp / "zero-length-manifest.json"
+        zero_length_path.write_text(json.dumps(zero_length), encoding="utf-8")
+        run(
+            "python3", "tools/validate_real_human_corpus.py",
+            "--manifest", str(zero_length_path),
+            "--audio-root", str(audio_root),
+            "--policy", str(policy_path),
+            "--public-summary", str(tmp / "zero-length-intake.json"),
+            expect=2,
+        )
 
         bad_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         bad_manifest["recordings"][0]["email"] = "forbidden@example.invalid"
@@ -355,6 +378,10 @@ def main() -> int:
             str(references),
             "--detections",
             str(detections),
+            "--pre-tolerance-ms",
+            "0",
+            "--post-tolerance-ms",
+            "500",
             "--summary",
             str(score_summary),
             "--false-positives",
@@ -363,9 +390,7 @@ def main() -> int:
             str(false_rejects),
         )
         final = tmp / "qualification.json"
-        run(
-            "python3",
-            "tools/score_real_human_qualification.py",
+        gate_args = (
             "--manifest",
             str(manifest_path),
             "--policy",
@@ -387,6 +412,7 @@ def main() -> int:
             "--output",
             str(final),
         )
+        run("python3", "tools/score_real_human_qualification.py", *gate_args)
         result = json.loads(final.read_text(encoding="utf-8"))
         assert result["qualified"] is True
         assert result["shipping_approved"] is False
@@ -400,6 +426,59 @@ def main() -> int:
             - 1.0 / 3600.0
         ) < 1e-12
         assert result["next_gate"] == "physical-target-board-performance-and-soak"
+
+        valid_detections = detections.read_text(encoding="utf-8")
+        valid_summary = score_summary.read_text(encoding="utf-8")
+        valid_false_accepts = false_accepts.read_text(encoding="utf-8")
+        valid_false_rejects = false_rejects.read_text(encoding="utf-8")
+        detections.write_text(
+            valid_detections.replace('"time_s": 0.3', '"time_s": 0.05', 1),
+            encoding="utf-8",
+        )
+        run(
+            "python3", "eval/score_events.py",
+            "--references", str(references),
+            "--detections", str(detections),
+            "--pre-tolerance-ms", "0",
+            "--post-tolerance-ms", "500",
+            "--summary", str(score_summary),
+            "--false-positives", str(false_accepts),
+            "--false-rejects", str(false_rejects),
+        )
+        run("python3", "tools/score_real_human_qualification.py", *gate_args, expect=1)
+        early_result = json.loads(final.read_text(encoding="utf-8"))
+        assert early_result["qualified"] is False
+        assert "unexpected-detections-in-positive-recordings" in early_result["failures"]
+        detections.write_text(valid_detections, encoding="utf-8")
+        score_summary.write_text(valid_summary, encoding="utf-8")
+        false_accepts.write_text(valid_false_accepts, encoding="utf-8")
+        false_rejects.write_text(valid_false_rejects, encoding="utf-8")
+
+        wrong_matching = json.loads(valid_summary)
+        wrong_matching["event_match_pre_tolerance_ms"] = 150.0
+        score_summary.write_text(json.dumps(wrong_matching), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "event matching differs from policy" in invalid.stdout
+
+        forged_score = json.loads(valid_summary)
+        forged_score["p95_post_end_latency_ms"] = 1000.0
+        score_summary.write_text(json.dumps(forged_score), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "score summary disagrees with detections" in invalid.stdout
+        score_summary.write_text(valid_summary, encoding="utf-8")
+
+        false_accepts.write_text(
+            json.dumps({"recording": "k1", "keyword_id": 2, "time_s": 0.5}) + "\n",
+            encoding="utf-8",
+        )
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "false-accept rows disagree" in invalid.stdout
 
         # Once the identity has been frozen, changing any AFE config must fail
         # before the consumed holdout is evaluated with a different tuple.

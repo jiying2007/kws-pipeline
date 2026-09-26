@@ -171,8 +171,10 @@ def main() -> int:
                 raise ValueError(f"{recording}: only shipping keyword IDs 1/2 are allowed")
             start_s = require_number(event.get("start_s"), "start_s")
             end_s = require_number(event.get("end_s"), "end_s")
-            if start_s < 0.0 or end_s < start_s or end_s > declared_duration:
-                raise ValueError(f"{recording}: expected event lies outside recording")
+            if start_s < 0.0 or end_s <= start_s or end_s > declared_duration:
+                raise ValueError(
+                    f"{recording}: expected event must have positive duration within recording"
+                )
             expected_by_keyword[keyword_id] += 1
         if expected:
             speaker = str(row["speaker_id"])

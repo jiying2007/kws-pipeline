@@ -13,7 +13,7 @@ Phase A evaluates exactly:
 - wake words: `你好小窝` and `小窝小窝`, threshold `0.55`;
 - final product microphones/enclosure and the frozen command-AFE adapter supplied to the qualification run.
 
-Do not change threshold, decoder, replay, model weights or qualification seed to make a real-human run pass. Formal model seed `271838` is consumed/frozen. Reserved seed `271839` is used only if later evidence justifies an intentional new model candidate.
+Do not change threshold, decoder, replay, model weights or qualification seed to make a real-human run pass. Formal model seed `271838` is consumed/frozen. For any later model candidate, use the active seed and retired-seed list in `configs/training/xiaowo.torch-domain.json`; a retired seed must not be reused.
 
 ## Privacy boundary
 
@@ -60,6 +60,15 @@ Aggregate gates:
 - FAR <= 0.10/hour;
 - one-sided FAR upper bound <= 0.13/hour;
 - p95 post-end wake latency <= 500 ms.
+
+Phase-A event matching uses no tolerance before the annotated keyword onset:
+a detection before `start_s` is an unexpected detection, not a correct wake.
+The post-end matching tolerance is 500 ms. Both values are pinned by
+`commercial/real-human-qualification.policy.json` and checked against the
+scorer summary. Annotators must align onset labels to the retained raw audio
+before sealing the corpus. The Phase-A scorer independently re-matches the
+retained detections against the post-AFE references and rejects summaries or
+false-accept/false-reject rows that disagree with that computation.
 
 The 24-hour/0-FA case is intentionally close to the 95% Poisson upper-bound requirement. One observed false accept may therefore fail the confidence gate even when observed FAR alone remains below 0.10/hour.
 

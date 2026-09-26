@@ -4,6 +4,10 @@
   "deployment_tag": "deployment-c20f3eb88e43",
   "shipping_approved": false,
   "confidence_level": 0.95,
+  "event_matching": {
+    "pre_tolerance_ms": 0.0,
+    "post_tolerance_ms": 500.0
+  },
   "minimums": {
     "speakers": 40,
     "sessions_per_speaker": 2,
