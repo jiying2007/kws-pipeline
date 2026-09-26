@@ -427,6 +427,36 @@ def main() -> int:
         ) < 1e-12
         assert result["next_gate"] == "physical-target-board-performance-and-soak"
 
+        afe_summary_path = afe_root / "afe-corpus-summary.json"
+        valid_afe_summary = afe_summary_path.read_text(encoding="utf-8")
+        drifted_afe = json.loads(valid_afe_summary)
+        drifted_afe["references_sha256"] = "0" * 64
+        afe_summary_path.write_text(json.dumps(drifted_afe), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "final AFE references hash differs" in invalid.stdout
+        afe_summary_path.write_text(valid_afe_summary, encoding="utf-8")
+
+        drifted_afe = json.loads(valid_afe_summary)
+        drifted_afe["qualification_id"] = "different-qualification"
+        afe_summary_path.write_text(json.dumps(drifted_afe), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "qualification ID differs" in invalid.stdout
+        afe_summary_path.write_text(valid_afe_summary, encoding="utf-8")
+
+        valid_intake = intake.read_text(encoding="utf-8")
+        drifted_intake = json.loads(valid_intake)
+        drifted_intake["manifest_sha256"] = "0" * 64
+        intake.write_text(json.dumps(drifted_intake), encoding="utf-8")
+        invalid = run(
+            "python3", "tools/score_real_human_qualification.py", *gate_args, expect=2
+        )
+        assert "corpus intake manifest hash differs" in invalid.stdout
+        intake.write_text(valid_intake, encoding="utf-8")
+
         valid_detections = detections.read_text(encoding="utf-8")
         valid_summary = score_summary.read_text(encoding="utf-8")
         valid_false_accepts = false_accepts.read_text(encoding="utf-8")

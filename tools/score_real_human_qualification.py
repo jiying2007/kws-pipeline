@@ -77,6 +77,19 @@ def main() -> int:
     false_accepts = load_jsonl(args.false_accepts)
     false_rejects = load_jsonl(args.false_rejects)
 
+    if intake.get("manifest_sha256") != sha256_file(args.manifest):
+        raise ValueError("corpus intake manifest hash differs from sealed manifest")
+    if afe.get("references_sha256") != sha256_file(args.references):
+        raise ValueError("final AFE references hash differs from scored references")
+    qualification_id = manifest.get("qualification_id")
+    if (
+        not isinstance(qualification_id, str)
+        or not qualification_id
+        or intake.get("qualification_id") != qualification_id
+        or afe.get("qualification_id") != qualification_id
+    ):
+        raise ValueError("qualification ID differs across corpus intake and final AFE")
+
     matching = policy.get("event_matching")
     if not isinstance(matching, dict):
         raise ValueError("real-human event-matching policy is missing")

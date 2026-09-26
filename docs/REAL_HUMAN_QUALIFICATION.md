@@ -68,7 +68,9 @@ The post-end matching tolerance is 500 ms. Both values are pinned by
 scorer summary. Annotators must align onset labels to the retained raw audio
 before sealing the corpus. The Phase-A scorer independently re-matches the
 retained detections against the post-AFE references and rejects summaries or
-false-accept/false-reject rows that disagree with that computation.
+false-accept/false-reject rows that disagree with that computation. It also
+checks that the sealed manifest equals the corpus-intake manifest hash and that
+the scored post-AFE references equal the final-AFE summary hash.
 
 The 24-hour/0-FA case is intentionally close to the 95% Poisson upper-bound requirement. One observed false accept may therefore fail the confidence gate even when observed FAR alone remains below 0.10/hour.
 
