@@ -33,6 +33,7 @@ from iterate_domain import (  # noqa: E402
     parse_warm_start_strategy,
     posterior_replay_cli_args,
     resolve_posterior_replay,
+    safe_reset,
     select_calibration_threshold,
     select_strict_candidate,
     strict_gate_candidate,
@@ -40,6 +41,16 @@ from iterate_domain import (  # noqa: E402
     train_acoustic_seed_offset,
     warm_start_args,
 )
+
+
+def validate_unsafe_workdir_guard() -> None:
+    for forbidden in (ROOT, ROOT.parent, pathlib.Path.home()):
+        try:
+            safe_reset(forbidden)
+        except ValueError as exc:
+            assert "refusing unsafe domain work directory" in str(exc)
+        else:
+            raise AssertionError(f"unsafe domain work directory accepted: {forbidden}")
 
 
 def validate_clean_tts_round_cache() -> None:
@@ -849,6 +860,7 @@ def main() -> int:
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
     validate_torch_iteration_policy()
+    validate_unsafe_workdir_guard()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         config = json.loads(

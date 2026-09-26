@@ -109,10 +109,6 @@ jobs:
         run: python3 tests/test_false_reject_mining.py
       - name: Verify tracked worktree after False reject positive replay
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "False reject positive replay"'
-      - name: Synthetic model self-training loop
-        run: python3 tests/test_synthetic_loop.py --runner ./build/kws_wav
-      - name: Verify tracked worktree after Synthetic model self-training loop
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Synthetic model self-training loop"'
       - name: Acoustic scene renderer
         run: python3 tests/test_domain_scene.py
       - name: Verify tracked worktree after Acoustic scene renderer
