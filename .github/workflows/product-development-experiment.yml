@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - '.github/triggers/model-training-experiment.json' # workflow-path-filter: allow-missing (created only on experiment PRs)
+      - '.github/triggers/model-training-experiment.json' # workflow-path-filter: allow-missing (legacy experiment PRs)
+      - 'configs/experiments/short-round-schedule-v1.json'
       - '.github/workflows/product-development-experiment.yml'
       - 'training/product_development_experiment.py'
 
@@ -22,7 +23,7 @@ env:
   OPENBLAS_NUM_THREADS: "1"
   NUMEXPR_NUM_THREADS: "1"
   ATEN_CPU_CAPABILITY: default
-  KWS_EXPERIMENT_SPEC: .github/triggers/model-training-experiment.json
+  KWS_EXPERIMENT_SPEC: configs/experiments/short-round-schedule-v1.json
   KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
   KWS_EXPERIMENT_CONFIG: .generated/xiaowo.product-experiment.json
   KWS_EXPERIMENT_WORK: build/product-development-experiment
