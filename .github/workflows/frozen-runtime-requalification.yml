@@ -1,0 +1,220 @@
+name: frozen-runtime-requalification
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/frozen-runtime-requalification.yml'
+      - 'tools/verify_frozen_runtime_requalification.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: frozen-runtime-requalification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+env:
+  MODEL_RELEASE_TAG: model-749187ec1d66
+  QUALIFIED_TRAINED_HEAD: 749187ec1d6662658f06aa9c76d47fde835968db
+  QUALIFIED_TRAINING_RUN: '34134789576'
+  QUALIFIED_ARTIFACT_ID: '10027820425'
+  QUALIFIED_ARTIFACT_DIGEST: sha256:0328afd4353def103213d217b6a0a5f0618334d32c235147e9bffbcdeca54656
+  QUALIFICATION_REFERENCES_SHA256: 76c047fee6fc606072063f45d5b0773400a824d401e1ac67b398e0dfa63c23e3
+  QUALIFICATION_DOMAIN_INDEX_SHA256: 5c22f90cb3c0cfef44b0a4ce1c656539db6aaca106798a4b69f5dcea232d9501
+
+jobs:
+  paired-runtime-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require diagnostic-only PR scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git cat-file -e "$BASE_SHA^{commit}"
+          git cat-file -e "$HEAD_SHA^{commit}"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          allowed=(
+            .github/workflows/frozen-runtime-requalification.yml
+            tools/verify_frozen_runtime_requalification.py
+          )
+          for path in "${changed[@]}"; do
+            printf '%s\n' "${allowed[@]}" | grep -Fxq "$path" || {
+              echo "runtime requalification PR contains unrelated path: $path" >&2
+              exit 2
+            }
+          done
+          test "${#changed[@]}" -eq 2
+          git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- CMakeLists.txt cmake include src \
+            configs/shipping.xiaowo.json configs/parameter-contract.json models/registry
+
+      - name: Verify current frozen model registry
+        run: |
+          set -euo pipefail
+          python3 tools/verify_model_registry.py \
+            --registry-dir "models/registry/$MODEL_RELEASE_TAG" \
+            --config configs/shipping.xiaowo.json
+          python3 tools/verify_frozen_runtime_requalification.py --self-test
+
+      - name: Verify retained qualified artifact is still exact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          row="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${QUALIFIED_TRAINING_RUN}/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.name == "xiaowo-torch-domain-model")')"
+          test "$(jq -r '.id' <<<"$row")" = "$QUALIFIED_ARTIFACT_ID"
+          test "$(jq -r '.digest' <<<"$row")" = "$QUALIFIED_ARTIFACT_DIGEST"
+          test "$(jq -r '.expired' <<<"$row")" = false
+
+      - name: Download exact retained qualified artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: xiaowo-torch-domain-model
+          path: build/qualified-artifact
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.QUALIFIED_TRAINING_RUN }}
+
+      - name: Checkout exact qualified source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.QUALIFIED_TRAINED_HEAD }}
+          path: build/qualified-source
+          persist-credentials: false
+
+      - name: Bind frozen model and cohort identity
+        run: |
+          set -euo pipefail
+          model_sha="$(sha256sum build/qualified-artifact/best/model.kwm | awk '{print $1}')"
+          pack_sha="$(sha256sum build/qualified-artifact/best/keywords.kwk | awk '{print $1}')"
+          test "$model_sha" = "$(jq -r '.model.model_sha256' configs/shipping.xiaowo.json)"
+          test "$pack_sha" = "$(jq -r '.model.keyword_pack_sha256' configs/shipping.xiaowo.json)"
+          test "$(jq -r '.qualification_seed' build/qualified-artifact/qualification-dataset/qualification-cohort.json)" = 271838
+          test "$(jq -r '.active_references_sha256' build/qualified-artifact/qualification-dataset/qualification-cohort.json)" = "$QUALIFICATION_REFERENCES_SHA256"
+          test "$(jq -r '.domain_index_sha256' build/qualified-artifact/qualification-dataset/qualification-cohort.json)" = "$QUALIFICATION_DOMAIN_INDEX_SHA256"
+          test "$(sha256sum build/qualified-artifact/qualification-effective-config.json | awk '{print $1}')" = \
+            "$(jq -r '.effective_config_sha256' build/qualified-artifact/qualification-dataset/qualification-cohort.json)"
+
+      - name: Rebuild exact exposed qualification cohort with qualified renderer
+        run: |
+          set -euo pipefail
+          mkdir -p build/model-training
+          cp build/qualified-artifact/qualification-effective-config.json \
+            build/model-training/qualification-effective-config.json
+          PYTHONPATH="$GITHUB_WORKSPACE/build/qualified-source/training" python3 - <<'PY'
+          import json
+          import pathlib
+          from render_domains import render_domain_dataset
+
+          root = pathlib.Path.cwd()
+          config = root / 'build/model-training/qualification-effective-config.json'
+          output = root / 'build/model-training/qualification-dataset'
+          summary = render_domain_dataset(config, output, curriculum_weights=None)
+          (root / 'build/runtime-requalification').mkdir(parents=True, exist_ok=True)
+          (root / 'build/runtime-requalification/render-summary.json').write_text(
+              json.dumps(summary, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          PY
+          test "$(sha256sum build/model-training/qualification-dataset/qualification.references.jsonl | awk '{print $1}')" = \
+            "$QUALIFICATION_REFERENCES_SHA256"
+          test "$(sha256sum build/model-training/qualification-dataset/domain-index.jsonl | awk '{print $1}')" = \
+            "$QUALIFICATION_DOMAIN_INDEX_SHA256"
+
+      - name: Build original and current C runtimes
+        run: |
+          set -euo pipefail
+          cmake -S build/qualified-source -B build/qualified-runtime \
+            -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build/qualified-runtime --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build/qualified-runtime --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+          cmake -S . -B build/current-runtime -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build/current-runtime --parallel --target kws_wav kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build/current-runtime --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+          test "$(jq -r '.algorithm_constants.KWS_DECODER_BOUNDARY_RESET_INACTIVE_FRAMES.default' configs/parameter-contract.json)" = 12
+
+      - name: Replay exact cohort through original and reset12 runtimes
+        run: |
+          set -euo pipefail
+          refs="$GITHUB_WORKSPACE/build/model-training/qualification-dataset/qualification.references.jsonl"
+          model="$GITHUB_WORKSPACE/build/qualified-artifact/best/model.kwm"
+          keywords="$GITHUB_WORKSPACE/build/qualified-artifact/best/keywords.kwk"
+          mkdir -p build/runtime-requalification/baseline build/runtime-requalification/reset12
+
+          for variant in baseline reset12; do
+            if [ "$variant" = baseline ]; then
+              runner="$GITHUB_WORKSPACE/build/qualified-runtime/kws_wav"
+            else
+              runner="$GITHUB_WORKSPACE/build/current-runtime/kws_wav"
+            fi
+            out="$GITHUB_WORKSPACE/build/runtime-requalification/$variant"
+            python3 build/qualified-source/eval/run_corpus.py \
+              --runner "$runner" --model "$model" --keywords "$keywords" \
+              --references "$refs" \
+              --detections "$out/detections.jsonl" \
+              --provenance "$out/detections.provenance.json"
+            python3 build/qualified-source/eval/score_events.py \
+              --references "$refs" --detections "$out/detections.jsonl" \
+              --summary "$out/summary.json" \
+              --false-positives "$out/false-positives.jsonl" \
+              --false-rejects "$out/false-rejects.jsonl"
+            python3 build/qualified-source/eval/domain_metrics.py \
+              --references "$refs" --detections "$out/detections.jsonl" \
+              --output "$out/domains.json"
+          done
+
+      - name: Verify paired frozen-model runtime result
+        env:
+          RUNTIME_SOURCE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          python3 tools/verify_frozen_runtime_requalification.py \
+            --shipping-config configs/shipping.xiaowo.json \
+            --cohort-receipt build/qualified-artifact/qualification-dataset/qualification-cohort.json \
+            --regenerated-references build/model-training/qualification-dataset/qualification.references.jsonl \
+            --regenerated-domain-index build/model-training/qualification-dataset/domain-index.jsonl \
+            --retained-summary build/qualified-artifact/best/qualification/summary.json \
+            --baseline-summary build/runtime-requalification/baseline/summary.json \
+            --candidate-summary build/runtime-requalification/reset12/summary.json \
+            --model build/qualified-artifact/best/model.kwm \
+            --keyword-pack build/qualified-artifact/best/keywords.kwk \
+            --parameter-contract configs/parameter-contract.json \
+            --runtime-source-sha "$RUNTIME_SOURCE_SHA" \
+            --output build/runtime-requalification/receipt.json
+
+      - name: Retain non-audio paired evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frozen-runtime-requalification
+          path: |
+            build/runtime-requalification/render-summary.json
+            build/runtime-requalification/receipt.json
+            build/runtime-requalification/baseline/summary.json
+            build/runtime-requalification/baseline/domains.json
+            build/runtime-requalification/baseline/detections.jsonl
+            build/runtime-requalification/baseline/detections.provenance.json
+            build/runtime-requalification/baseline/false-positives.jsonl
+            build/runtime-requalification/baseline/false-rejects.jsonl
+            build/runtime-requalification/reset12/summary.json
+            build/runtime-requalification/reset12/domains.json
+            build/runtime-requalification/reset12/detections.jsonl
+            build/runtime-requalification/reset12/detections.provenance.json
+            build/runtime-requalification/reset12/false-positives.jsonl
+            build/runtime-requalification/reset12/false-rejects.jsonl
+            build/qualified-artifact/qualification-dataset/qualification-cohort.json
+          if-no-files-found: warn
+          retention-days: 30
