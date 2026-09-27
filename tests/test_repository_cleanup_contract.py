@@ -88,8 +88,18 @@ REQUIRED_ACTIVE_PATHS = (
 )
 
 
+REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
+    'audit/enforce-claims-and-rnn-contract',
+    'audit/enforce-workflow-references',
+    'training/accelerate-development-loop-v2',
+)
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
+
+    for branch in REQUIRED_EXPLICIT_RETIRED_BRANCHES:
+        assert branch in source, f'explicit retired branch missing: {branch}'
 
     for pattern in RETIRED_PATH_GLOBS:
         matches = sorted(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
