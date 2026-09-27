@@ -54,6 +54,8 @@
 
 已额外冻结并生成计划外 speaker ID 24–31 的离线 TTS 开发 A/B 两组，按 A 组先选、B 组后回读且不改阈值，见 [`research/FRESH_SPEAKER_DEVELOPMENT_READBACK_2026-09-27.md`](research/FRESH_SPEAKER_DEVELOPMENT_READBACK_2026-09-27.md)。VAD 对齐 seed 2346 在 A/B 均为 7/8 命中、0 FA，固定对照在 B 为 8/8、3 FA，三次均来自关键词 2 缺首音节近邻；附加非语音 blank 监督在 B 降至 5/8。新集 speaker 与原 Stage A 的 0–23 号 voice slot 隔离，48 条 PCM 与旧 256 条开发录音无重复；但 8 kHz 带宽、短负例时长和无最终 AFE 使其只能提供软件开发证据。两项漏唤醒与负例 FAR 上界仍不通过产品门槛，正式模型、训练默认值和发布状态保持原样。
 
+进一步把已观察的 A/B 48 条并入原 train 128 条，以同一 seed 2346 和 VAD 对齐目标冷启动训练 600 epoch；全新的 speaker 32–39 C1/C2 各 24 条在训练后一次性回读。详见 [`research/EXPANDED_TRAIN_UNSEEN_VOICE_CONTROL_2026-09-27.md`](research/EXPANDED_TRAIN_UNSEEN_VOICE_CONTROL_2026-09-27.md)。旧模型在 C1/C2 为 8/8、0/1 FA；扩展训练模型为 7/8、0/0 FA：减少一条近邻误触发，同时两个未见声音组各多漏一条，未形成净改善。新模型保持 development-only、本地 checkpoint 未绑定仓库 SHA，不能提升或替代现有产品模型。下一步需新声学来源、长时连续负例和最终 AFE，而非继续在同一 TTS 分布上堆数量。
+
 正式训练器的有序 token 损失还存在批次正样本比例相关的归一化问题：同一正样本在不同空转写比例的 mini-batch 中获得不同的有效权重。已改用训练全集固定的适用样本比例，并把新语义标入 checkpoint 与模型 provenance。冻结的 128 条语音训练池全为非空转写，修正前后模型浮点权重 SHA-256 相同，C 端 calibration/test 都为 0/16 命中、分别 3/2 次误触发；此对照只验证该池兼容，不证明含背景空转写的正式域训练效果。下一步在新鲜的受控混合语料上比较每词 C 事件，并且保留正式资格 seed 未消费。
 
 外部语音基座的音频与索引 hash 原先已绑定，但标签语义仍需在导入时核对。正例必须与声明的唤醒词 token 完全相同且活动区间有效，负例按现有合成数据规则不得包含唤醒 token 子序列，背景目标必须为空；同时核对 token 名称/ID、WAV 帧数和摘要计数。已用本地 SHA-256 与配置相同的 `speech-like-base-5204b798033f` 归档回读完整 384 条记录，四个 split 的语义检查、WAV hash/格式与 bundle 身份均通过，bundle SHA-256 保持 `5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35`。此门禁阻止矛盾监督进入正式训练，不代表已改善模型 FRR/FAR；CI 仍需对提交后的同一源码复验。
