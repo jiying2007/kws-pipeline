@@ -98,6 +98,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/balanced-calibration-fallback-rebase2',
     'training/bounded-warm-start-rounds-rebase3',
     'training/defer-base-qualification-rebase2',
+    'training/parallel-calibration-trials-rebase4',
     'training/accelerate-development-loop-v2',
 )
 
