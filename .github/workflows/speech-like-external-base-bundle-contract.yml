@@ -5,10 +5,12 @@ on:
     branches: [main, "codex/**"]
     paths:
       - "training/external_base_dataset.py"
+      - "tests/test_external_base_label_contract.py"
       - ".github/workflows/speech-like-external-base-bundle-contract.yml"
   pull_request:
     paths:
       - "training/external_base_dataset.py"
+      - "tests/test_external_base_label_contract.py"
       - ".github/workflows/speech-like-external-base-bundle-contract.yml"
   workflow_dispatch:
 
@@ -31,7 +33,12 @@ jobs:
           import hashlib, json, os, pathlib
           root = pathlib.Path(os.environ['ROOT'])
           splits = ['train','calibration','test','qualification']
-          cfg = {'schema_version':1,'generator':{'external_base_dataset':{}}}
+          cfg = {
+              'schema_version':1,
+              'tokens':'keywords/tokens.example.txt',
+              'keywords':'keywords/zh_cn_example.tsv',
+              'generator':{'external_base_dataset':{}},
+          }
           for i, split in enumerate(splits):
               wav = hashlib.sha256(f'wav-{split}'.encode()).hexdigest()
               row = {
@@ -81,6 +88,8 @@ jobs:
           assert set(out['splits']) == {'train','calibration','test','qualification'}
           assert len(out['bundle_sha256']) == 64
           PY
+      - name: Reject contradictory external labels
+        run: python3 tests/test_external_base_label_contract.py
       - name: Missing split and hash mismatch fail closed
         run: |
           set -euo pipefail

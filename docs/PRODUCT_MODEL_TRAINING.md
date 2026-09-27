@@ -40,13 +40,23 @@ Before training begins, the workflow:
 2. downloads the immutable release;
 3. verifies release ID, target SHA, archive digest and release checksum manifest;
 4. regenerates an effective training config with all four external-base splits;
-5. re-hashes every index/summary/WAV through `external_base_dataset.py`;
+5. re-hashes every index/summary/WAV and checks each label against the configured
+   vocabulary and wake paths through `external_base_dataset.py`;
 6. refuses protected evidence and tone fallback;
 7. uses that exact effective config for base training, refinement, synthetic
    qualification, robustness and diagnostics.
 
 The effective config SHA is bound across the two training jobs by the existing
 base-stage receipt.
+
+External positive rows must name exactly their declared wake keyword and carry
+valid activity bounds within the declared and measured PCM frame count. Token
+names and IDs must agree. Speech negatives may not contain a configured wake
+token path, including one spread across intervening
+tokens; background rows must have empty targets. The bundle reader also checks
+the summary's positive and negative counts against its index. Contradictory
+labels are rejected before rendering or training because the C decoder can
+trigger on such a path while the sample is scored as a negative.
 
 ## Split-scoped domain rendering
 
