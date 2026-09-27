@@ -63,6 +63,7 @@ env:
     training/render-required-domain-splits-rebase2
     training/merge-calibration-test-curriculum-v4
     training/merge-calibration-test-curriculum-v3
+    training/merge-calibration-test-curriculum-v2
     training/accelerate-development-loop-v2
     training/product-development-preflight
     training/product-development-preflight-final
