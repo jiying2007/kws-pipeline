@@ -248,6 +248,43 @@ def training_metadata(checkpoint: dict) -> dict:
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
 
+    vad_alignment = checkpoint.get("ctc_vad_alignment")
+    if "ctc_vad_alignment" in checkpoint or "development_recipe" in checkpoint:
+        required = {
+            "policy",
+            "threshold_dbfs",
+            "parameter_contract_sha256",
+            "inactive_log_probability",
+            "development_only",
+        }
+        if not isinstance(vad_alignment, dict) or set(vad_alignment) != required:
+            raise ValueError("checkpoint CTC VAD alignment fields are invalid")
+        if (
+            vad_alignment["policy"] != "development-pcm-dbfs-gated-ctc-v1"
+            or checkpoint.get("development_recipe") != vad_alignment["policy"]
+            or vad_alignment["development_only"] is not True
+        ):
+            raise ValueError("checkpoint CTC VAD alignment policy is invalid")
+        threshold = float(vad_alignment["threshold_dbfs"])
+        inactive = float(vad_alignment["inactive_log_probability"])
+        if (
+            not math.isfinite(threshold)
+            or not -120.0 <= threshold <= 0.0
+            or inactive != -30.0
+        ):
+            raise ValueError("checkpoint CTC VAD alignment values are invalid")
+        result["ctc_vad_alignment"] = {
+            "policy": vad_alignment["policy"],
+            "threshold_dbfs": threshold,
+            "parameter_contract_sha256": checkpoint_sha(
+                vad_alignment["parameter_contract_sha256"],
+                "ctc_vad_alignment.parameter_contract_sha256",
+            ),
+            "inactive_log_probability": inactive,
+            "development_only": True,
+        }
+        result["development_only"] = True
+
     if "warm_start_binding" in checkpoint:
         binding = checkpoint["warm_start_binding"]
         required = {

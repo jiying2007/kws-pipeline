@@ -30,6 +30,15 @@ EXPECTED_PREFIX_ANCHORS = {
 }
 
 
+def require_promotable_training(training_provenance: object) -> dict:
+    if not isinstance(training_provenance, dict) or (
+        "development_only" in training_provenance
+        or "ctc_vad_alignment" in training_provenance
+    ):
+        raise ValueError("development CTC VAD alignment cannot promote as a product model")
+    return training_provenance
+
+
 def sha256(path: pathlib.Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -276,7 +285,8 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError("promoted product candidate unexpectedly allows tone fallback")
         if product_data.get("protected_evidence_used") is not False:
             raise ValueError("promoted product candidate consumed protected evidence")
-        weighting = provenance.get("training", {}).get("sample_weighting")
+        training_provenance = require_promotable_training(provenance.get("training", {}))
+        weighting = training_provenance.get("sample_weighting")
         if not isinstance(weighting, dict):
             raise ValueError("promoted product candidate lacks sample-weighting provenance")
         if weighting.get("ordered_token_sample_weighting") not in {
