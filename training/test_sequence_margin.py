@@ -574,6 +574,41 @@ def main() -> int:
         float(normalized_ordered.item())
         - float(((ordered_first + ordered_second) / 2.0).item())
     ) < 1.0e-7
+    # Empty targets have no ordered-token term. The dataset participation rate
+    # keeps the epoch contribution invariant when the same rows are regrouped.
+    mixed_lengths = torch.tensor([1, 0], dtype=torch.long)
+    mixed_weights = torch.tensor([2.0, 1.0], dtype=torch.float32)
+    mixed, _, _ = ordered_token_loss(
+        ordered_log_probs,
+        torch.tensor([1], dtype=torch.long),
+        ordered_input_lengths,
+        mixed_lengths,
+        mixed_weights,
+        normalization_mean_weight=2.0,
+        normalization_participation_rate=0.5,
+    )
+    positive_only, _, _ = ordered_token_loss(
+        ordered_log_probs[:, :1, :],
+        torch.tensor([1], dtype=torch.long),
+        ordered_input_lengths[:1],
+        mixed_lengths[:1],
+        mixed_weights[:1],
+        normalization_mean_weight=2.0,
+        normalization_participation_rate=0.5,
+    )
+    empty_only, _, _ = ordered_token_loss(
+        ordered_log_probs[:, 1:, :],
+        torch.empty(0, dtype=torch.long),
+        ordered_input_lengths[1:],
+        mixed_lengths[1:],
+        mixed_weights[1:],
+        normalization_mean_weight=2.0,
+        normalization_participation_rate=0.5,
+    )
+    assert (
+        abs(float(mixed.item()) - float(((positive_only + empty_only) / 2).item()))
+        < 1.0e-7
+    )
     try:
         ordered_token_loss(
             ordered_log_probs,
