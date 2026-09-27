@@ -106,6 +106,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/merge-calibration-test-curriculum-v2',
     'training/bounded-warm-start-rounds-rebase2',
     'training/adapt-replay-for-custom-keywords',
+    'training/defer-base-qualification-rebase',
     'training/accelerate-development-loop-v2',
 )
 
