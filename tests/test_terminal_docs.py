@@ -217,7 +217,6 @@ def main() -> int:
         "'keywords/**'",
         "'src/**'",
         "'training/**'",
-        "'tools/build_vocab.py'",
         "'tools/compile_keywords.py'",
         "'tools/kws_vocab.py'",
         "'tools/kws_wav.c'",
