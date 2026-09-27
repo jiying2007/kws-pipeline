@@ -371,8 +371,17 @@ training manifests before the first epoch. CTC, sequence-margin and
 prefix-completion losses divide each batch's weighted sum by
 `batch_size * dataset_mean_weight`. Ordered-token loss uses the equivalent
 mean over all non-empty targets because empty targets do not participate in that
-objective. This preserves the overall loss scale while making a sample's
-multiplier independent of which other samples happened to share its mini-batch.
+objective. The trainer fixes that denominator at
+`batch_size * dataset_nonempty_fraction * dataset_nonempty_mean_weight`
+for every mini-batch. Earlier checkpoints used the number of participating
+rows in each mini-batch, which made the same positive row exert different
+pressure depending on its batch's empty-target count. For exact-wake scope,
+the corresponding fixed fraction and mean are computed over exact-wake rows.
+New checkpoints identify this ordered-token rule as
+`training-sample-weights-v2-population-normalized`; the promotion verifier
+continues to recognize historical v1 checkpoints. This preserves the overall
+loss scale while making a sample's multiplier independent of which other
+samples happened to share its mini-batch.
 
 The policy is `dataset-mean-sample-weight-v1`. Checkpoint/model provenance
 records total rows, non-empty rows, exact-wake rows, total effective weights and

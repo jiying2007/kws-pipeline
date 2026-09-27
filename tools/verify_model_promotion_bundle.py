@@ -279,7 +279,10 @@ def verify(args: argparse.Namespace) -> dict:
         weighting = provenance.get("training", {}).get("sample_weighting")
         if not isinstance(weighting, dict):
             raise ValueError("promoted product candidate lacks sample-weighting provenance")
-        if weighting.get("ordered_token_sample_weighting") != "training-sample-weights-v1":
+        if weighting.get("ordered_token_sample_weighting") not in {
+            "training-sample-weights-v1",
+            "training-sample-weights-v2-population-normalized",
+        }:
             raise ValueError("promoted product candidate lacks ordered-token sample weighting")
         train_config = effective.get("train")
         if not isinstance(train_config, dict):

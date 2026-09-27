@@ -46,6 +46,8 @@
 
 对现存正式训练器又做了按帧与按目标长度 CTC 的单变量检查，见 [`research/ACTIVE_CTC_NORMALIZATION_CONTROL_2026-09-27.md`](research/ACTIVE_CTC_NORMALIZATION_CONTROL_2026-09-27.md)。单独改分母使冻结语音模型完全静默，不进入正式默认值；同时加固了多轮热启动 checkpoint 的文件与浮点权重来源绑定。算法层下一轮应在获得新的受控语音后，联合验证活动区间、上下文与训练预算，不能从这次单变量失败推出任意组合处理无效。
 
+正式训练器的有序 token 损失还存在批次正样本比例相关的归一化问题：同一正样本在不同空转写比例的 mini-batch 中获得不同的有效权重。已改用训练全集固定的适用样本比例，并把新语义标入 checkpoint 与模型 provenance。冻结的 128 条语音训练池全为非空转写，修正前后模型浮点权重 SHA-256 相同，C 端 calibration/test 都为 0/16 命中、分别 3/2 次误触发；此对照只验证该池兼容，不证明含背景空转写的正式域训练效果。下一步在新鲜的受控混合语料上比较每词 C 事件，并且保留正式资格 seed 未消费。
+
 ## 连续性与收口
 
 - 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`tools/kws_landing_status.py --verify` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
