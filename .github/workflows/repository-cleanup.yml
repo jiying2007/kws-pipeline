@@ -133,6 +133,7 @@ jobs:
 
           deleted=0
           candidates=0
+          manual_review=0
           mapfile -t branch_rows < <(
             jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
           )
@@ -194,6 +195,9 @@ jobs:
                   else
                     echo "skip recently closed PR head: ${branch} (closed ${closed_unmerged_at})"
                   fi
+                else
+                  manual_review=$((manual_review + 1))
+                  echo "manual-review: ${branch} (diverged from ${default_branch}; no exact-head closed PR provenance)"
                 fi
               fi
             fi
@@ -222,4 +226,4 @@ jobs:
             echo "deleted: ${branch}"
           done
 
-          echo "summary: candidates=${candidates} deleted=${deleted} dry_run=${dry_run}"
+          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} dry_run=${dry_run}"
