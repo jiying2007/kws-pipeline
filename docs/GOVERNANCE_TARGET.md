@@ -14,7 +14,15 @@ The target ruleset is named `kws-main-terminal`, targets `~DEFAULT_BRANCH`, is `
 - deletion protection;
 - non-fast-forward protection, blocking force pushes.
 
-An administrator with repository-rules administration permission may apply the reviewed target with an equivalent command such as:
+The reviewed target is currently applied to the live repository as the active
+`kws-main-terminal` ruleset. A live audit on 2026-09-27 confirmed the rule
+types, strict required status contexts, no bypass actors, pull-request
+requirements and default-branch targeting match
+`governance/main-ruleset-target.json`; the branch API reports
+`protected=true`.
+
+The command below is therefore a **recovery/migration example**, not an
+instruction to create a second overlapping ruleset:
 
 ```bash
 gh api --method POST \
@@ -22,10 +30,20 @@ gh api --method POST \
   --input governance/main-ruleset-target.json
 ```
 
-Do not run that command with a token broader than necessary, do not commit an administration token, and do not weaken the target merely to make deployment publication succeed. If a ruleset with the same purpose already exists, update/audit the live rule instead of creating overlapping policy blindly.
+If the live ruleset already exists, audit/update that rule instead of creating
+another policy with the same purpose. Use the narrowest repository-rules
+administration credential available and never commit an administration token.
 
 Before creating `deployment/commercial-candidate`, independently re-read live GitHub state and verify the enforcing ruleset targets `main` and contains at least the rules above. The deployment workflow separately requires the source SHA to equal current `main` and `main` to report `protected=true`; publication remains fail-closed otherwise.
 
-The currently connected GitHub App cannot perform this administration operation: its direct branch-protection endpoint access returns `403 Resource not accessible by integration`. That connector limitation is not permission to bypass the platform gate.
+The currently connected GitHub App may still be unable to perform direct
+branch-protection administration; that endpoint can return
+`403 Resource not accessible by integration`. This connector limitation does
+not mean the repository ruleset is absent and is never permission to bypass the
+platform gate.
 
-Until the platform controls are enabled, the repository remains a software/commercial candidate with repository-side policy prepared but platform enforcement incomplete. Once enabled and the immutable deployment candidate is published, the remaining product evidence boundary is only real Mandarin through the final microphone/enclosure/AFE chain and physical target-board qualification.
+Platform governance is currently enforced. Repository governance being complete
+does **not** make the product shipping-qualified: after an immutable deployment
+candidate exists, the remaining product evidence boundary is still real
+Mandarin through the final microphone/enclosure/AFE chain and physical
+target-board qualification.
