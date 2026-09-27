@@ -93,6 +93,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'audit/enforce-workflow-references',
     'fix/replay-provider-semantic-identity-v1',
     'feat/development-preflight-experiment-trigger-v1',
+    'obs/acoustic-runtime-correlation-v1',
     'training/accelerate-development-loop-v2',
 )
 
