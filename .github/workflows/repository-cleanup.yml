@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Report deletable merged branches without deleting them"
+        description: "Report deletable retired/closed branches without deleting them"
         required: false
         default: false
         type: boolean
@@ -24,7 +24,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SAFE_BRANCH_PREFIXES: "feature/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ staging- experiment/ probe/ research/ staging/ training/"
+  SAFE_BRANCH_PREFIXES: "feature/ feat/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ audit/ cleanup/ eval/ exp/ experiment/ infra/ obs/ perf/ probe/ research/ staging- staging/ training/"
+  CLOSED_PR_RETENTION_DAYS: "7"
   RETIRED_BRANCHES: >-
     codex/kws-v2-stage-a-live-bootstrap-v1
     codex/kws-v2-stage-a-live-bootstrap-v2
@@ -64,14 +65,14 @@ env:
 
 jobs:
   sweep-merged-branches:
-    name: sweep merged ephemeral branches
+    name: sweep retired ephemeral branches
     if: >-
       github.event_name != 'pull_request' ||
       (github.event.pull_request.merged == true &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     steps:
-      - name: Delete only provably merged ephemeral branches
+      - name: Delete only provably retired ephemeral branches
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
@@ -163,13 +164,34 @@ jobs:
                  git -C "${graph}" merge-base --is-ancestor "${branch_ref}" "${default_ref}"; then
               reason="branch tip is already contained in ${default_branch}"
             else
-              merged_same_head="$(
+              closed_prs_json="$(
                 gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
-                  -f state=closed -f head="${owner}:${branch}" -f per_page=100 |
-                  jq --arg sha "${sha}" '[.[] | select(.merged_at != null and .head.sha == $sha)] | length'
+                  -f state=closed -f head="${owner}:${branch}" -f per_page=100
+              )"
+              merged_same_head="$(
+                jq --arg sha "${sha}" \
+                  '[.[] | select(.merged_at != null and .head.sha == $sha)] | length' \
+                  <<<"${closed_prs_json}"
               )"
               if (( merged_same_head > 0 )); then
                 reason="current SHA is an already-merged PR head"
+              else
+                closed_unmerged_at="$(
+                  jq -r --arg sha "${sha}" \
+                    '[.[] | select(.merged_at == null and .head.sha == $sha) | .closed_at] | max // empty' \
+                    <<<"${closed_prs_json}"
+                )"
+                if [[ -n "${closed_unmerged_at}" ]]; then
+                  closed_epoch="$(date -d "${closed_unmerged_at}" +%s)"
+                  now_epoch="$(date +%s)"
+                  retention_seconds="$((CLOSED_PR_RETENTION_DAYS * 86400))"
+                  age_seconds="$((now_epoch - closed_epoch))"
+                  if (( age_seconds >= retention_seconds )); then
+                    reason="current SHA is a closed-unmerged PR head older than ${CLOSED_PR_RETENTION_DAYS}d"
+                  else
+                    echo "skip recently closed PR head: ${branch} (closed ${closed_unmerged_at})"
+                  fi
+                fi
               fi
             fi
 
