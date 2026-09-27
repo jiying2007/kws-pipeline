@@ -67,26 +67,28 @@ def main() -> int:
         path = ROOT / relative
         assert "KWS_TRAINING_IMAGE" in path.read_text(encoding="utf-8"), f"{path}: training image variable drift"
 
-    evidence_example = json.loads(
-        (ROOT / "configs" / "qualification.evidence.example.json").read_text(encoding="utf-8")
-    )
-    assert evidence_example["schema_version"] == 2
-    assert evidence_example["evidence_class"] == "product-board"
-    for key in (
-        "sku",
-        "source_sha",
-        "builder_id",
-        "dut_id",
-        "collector_id",
-        "raw_evidence_sha256",
-        "attestation_verification_sha256",
-        "board_runner_sha256",
-        "model_sha256",
-        "keyword_pack_sha256",
-        "board_audio_sha256",
-        "runtime_soak_raw",
+    # Product-board evidence is generated from retained measurements and external
+    # attestation; a hand-authored JSON example must not become an alternate
+    # authority. Keep the terminal docs bound to the canonical collector instead.
+    for relative in (
+        "README.md",
+        "README.zh-CN.md",
+        "docs/TARGET_EVIDENCE.md",
+        "docs/RELEASE_QUALIFICATION.md",
     ):
-        assert key in evidence_example, f"qualification.evidence.example.json: missing {key}"
+        path = ROOT / relative
+        require_all(
+            path.read_text(encoding="utf-8"),
+            path,
+            ("tools/collect_target_evidence.py", "product-board", "--attestation-verification"),
+        )
+
+    target_evidence = ROOT / "docs" / "TARGET_EVIDENCE.md"
+    require_all(
+        target_evidence.read_text(encoding="utf-8"),
+        target_evidence,
+        ("schema v2", "--runtime-soak", "--power-raw", "external attestation"),
+    )
 
     shipping = json.loads((ROOT / "configs" / "shipping.xiaowo.json").read_text(encoding="utf-8"))
     formal_training = json.loads(
