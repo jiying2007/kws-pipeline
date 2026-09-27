@@ -99,6 +99,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/bounded-warm-start-rounds-rebase3',
     'training/defer-base-qualification-rebase2',
     'training/parallel-calibration-trials-rebase4',
+    'training/render-required-domain-splits-v2-rebase',
     'training/accelerate-development-loop-v2',
 )
 
