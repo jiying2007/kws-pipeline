@@ -75,6 +75,8 @@ RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
 RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
+CTC_VAD_ALIGNMENT_POLICY = "development-pcm-dbfs-gated-ctc-v1"
+CTC_INACTIVE_LOG_PROBABILITY = -30.0
 SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
@@ -419,12 +421,14 @@ class Manifest(Dataset):
         feature_dim: int,
         vocab_size_value: int,
         frontend: str,
+        ctc_vad_threshold_dbfs: float | None = None,
     ):
         self.rows: list[tuple[pathlib.Path, list[int]]] = []
         self.identity_rows: list[dict] = []
         self.feature_dim = feature_dim
         self.vocab_size = vocab_size_value
         self.frontend = frontend
+        self.ctc_vad_threshold_dbfs = ctc_vad_threshold_dbfs
         for manifest_index, path in enumerate(paths):
             root = path.parent
             for row_index, row in enumerate(manifest_rows(path), 1):
@@ -485,11 +489,59 @@ class Manifest(Dataset):
                 f"{path}: {acoustic.shape[0]} acoustic step(s) cannot align "
                 f"CTC target requiring at least {minimum_ctc_steps} step(s)"
             )
-        return acoustic, torch.tensor(tokens, dtype=torch.long)
+        target = torch.tensor(tokens, dtype=torch.long)
+        if self.ctc_vad_threshold_dbfs is None:
+            return acoustic, target
+        speech_active = pcm_vad_mask(pcm, self.ctc_vad_threshold_dbfs)
+        if speech_active.shape[0] != acoustic.shape[0]:
+            raise ValueError(f"{path}: training/C VAD frame count mismatch")
+        if tokens and int(speech_active.sum()) < minimum_ctc_steps:
+            raise ValueError(f"{path}: too few speech-active frames for CTC target")
+        return acoustic, target, speech_active
+
+
+def pcm_vad_mask(pcm: torch.Tensor, threshold_dbfs: float) -> torch.Tensor:
+    if pcm.ndim != 1 or pcm.numel() <= 0:
+        raise ValueError("CTC VAD requires a non-empty mono PCM tensor")
+    if not math.isfinite(threshold_dbfs) or not -120.0 <= threshold_dbfs <= 0.0:
+        raise ValueError("CTC VAD dBFS threshold is invalid")
+    vad_pcm = (
+        pcm if pcm.numel() >= FRAME_LENGTH_SAMPLES
+        else torch.nn.functional.pad(pcm, (0, FRAME_LENGTH_SAMPLES - pcm.numel()))
+    )
+    vad_energy = (
+        vad_pcm.unfold(0, FRAME_LENGTH_SAMPLES, FRAME_HOP_SAMPLES)
+        .square()
+        .mean(dim=1)
+    )
+    return 10.0 * torch.log10(vad_energy + 1.0e-12) >= threshold_dbfs
+
+
+def vad_aligned_ctc_log_probs(
+    log_probs: torch.Tensor,
+    vad_mask: torch.Tensor,
+    target_lengths: torch.Tensor,
+) -> torch.Tensor:
+    if log_probs.ndim != 3 or vad_mask.shape != (
+        log_probs.shape[1], log_probs.shape[0]
+    ):
+        raise ValueError("CTC VAD mask must align with [T,B,V] posteriors")
+    if vad_mask.dtype != torch.bool or target_lengths.shape != (log_probs.shape[1],):
+        raise ValueError("CTC VAD mask/target lengths have invalid type or shape")
+    blank_only = log_probs.new_full(log_probs.shape, CTC_INACTIVE_LOG_PROBABILITY)
+    blank_only[:, :, 0] = 0.0
+    valid_token_frame = vad_mask.transpose(0, 1) | (target_lengths == 0).unsqueeze(0)
+    return torch.where(valid_token_frame.unsqueeze(2), log_probs, blank_only)
 
 
 def collate(batch):
-    xs, ys = zip(*batch)
+    aligned = len(batch[0]) == 3
+    if any((len(row) == 3) != aligned for row in batch):
+        raise ValueError("mixed CTC VAD batch rows")
+    if aligned:
+        xs, ys, vad_rows = zip(*batch)
+    else:
+        xs, ys = zip(*batch)
     xlen = torch.tensor([x.shape[0] for x in xs], dtype=torch.long)
     ylen = torch.tensor([y.shape[0] for y in ys], dtype=torch.long)
     max_t = int(xlen.max())
@@ -497,9 +549,15 @@ def collate(batch):
     padded = torch.zeros(
         (len(xs), max_t + RECURRENT_RELEASE_TAIL_STEPS, feature_dim)
     )
+    padded_vad = (
+        torch.zeros((len(xs), max_t + RECURRENT_RELEASE_TAIL_STEPS), dtype=torch.bool)
+        if aligned else None
+    )
     for index, x in enumerate(xs):
         steps = int(x.shape[0])
         padded[index, :steps] = x
+        if padded_vad is not None:
+            padded_vad[index, :steps] = vad_rows[index]
         context_steps = min(RECURRENT_RELEASE_CONTEXT_STEPS, steps)
         context = x[steps - context_steps : steps]
         repeats = (RECURRENT_RELEASE_TAIL_STEPS + context_steps - 1) // context_steps
@@ -510,6 +568,8 @@ def collate(batch):
         if any(y.numel() for y in ys)
         else torch.empty(0, dtype=torch.long)
     )
+    if padded_vad is not None:
+        return padded, targets, xlen, ylen, padded_vad
     return padded, targets, xlen, ylen
 
 
@@ -847,6 +907,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
+    parser.add_argument("--ctc-vad-align", action="store_true")
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
     parser.add_argument("--wake-example-weight", type=float, default=WAKE_EXAMPLE_WEIGHT)
@@ -973,7 +1034,28 @@ def main() -> None:
     shuffle_generator = torch.Generator()
     shuffle_generator.manual_seed(args.seed)
 
-    dataset = Manifest(args.manifest, args.feature_dim, vocab_size_value, args.frontend)
+    vad_contract = None
+    vad_threshold = None
+    if args.ctc_vad_align:
+        contract_path = ROOT / "configs" / "parameter-contract.json"
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        vad_threshold = float(contract["runtime"]["min_speech_dbfs"]["default"])
+        if not math.isfinite(vad_threshold) or not -120.0 <= vad_threshold <= 0.0:
+            parser.error("runtime min_speech_dbfs default is invalid")
+        vad_contract = {
+            "policy": CTC_VAD_ALIGNMENT_POLICY,
+            "threshold_dbfs": vad_threshold,
+            "parameter_contract_sha256": sha256_file(contract_path),
+            "inactive_log_probability": CTC_INACTIVE_LOG_PROBABILITY,
+            "development_only": True,
+        }
+    dataset = Manifest(
+        args.manifest,
+        args.feature_dim,
+        vocab_size_value,
+        args.frontend,
+        ctc_vad_threshold_dbfs=vad_threshold,
+    )
     weight_statistics = sample_weight_statistics(
         dataset.rows,
         keyword_sequences,
@@ -1024,9 +1106,17 @@ def main() -> None:
         total_path_purity = 0.0
         ordered_correct = 0
         ordered_total = 0
-        for x, y, xlen, ylen in loader:
+        for batch in loader:
+            if args.ctc_vad_align:
+                x, y, xlen, ylen, vad_mask = batch
+            else:
+                x, y, xlen, ylen = batch
             log_probs = model(x).log_softmax(dim=2)
-            raw_ctc = loss_fn(log_probs, y, xlen, ylen)
+            if args.ctc_vad_align:
+                ctc_probs = vad_aligned_ctc_log_probs(log_probs, vad_mask, ylen)
+                raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
+            else:
+                raw_ctc = loss_fn(log_probs, y, xlen, ylen)
             target_weights = torch.where(
                 ylen > 0,
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
@@ -1217,6 +1307,14 @@ def main() -> None:
             "weight_decay": WEIGHT_DECAY,
             "grad_clip_norm": GRAD_CLIP_NORM,
             "ctc_reduction": "per-frame-weighted",
+            **(
+                {
+                    "ctc_vad_alignment": vad_contract,
+                    "development_recipe": CTC_VAD_ALIGNMENT_POLICY,
+                }
+                if vad_contract
+                else {}
+            ),
             "positive_example_weight": args.positive_example_weight,
             "positive_example_weight_semantics": "non-empty-target-v1",
             "wake_example_weight": args.wake_example_weight,

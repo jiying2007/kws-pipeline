@@ -48,6 +48,8 @@
 
 在正式训练器上只裁剪准确唤醒正例的 CTC 活动区间，36 轮未改善实际 C 事件，train 误触发还由 4 增至 10；区间标注中位数已覆盖整段音频约 89%。完整控制、双词评分边界和实验源码撤回见 [`research/ACTIVE_CTC_ACTIVITY_WINDOW_CONTROL_2026-09-27.md`](research/ACTIVE_CTC_ACTIVITY_WINDOW_CONTROL_2026-09-27.md)。当前不得据此修改正式默认目标或消费 qualification；下一步需要更细的活动监督和新鲜受控开发语料。
 
+进一步对正式训练目标与 C 端 VAD 做了帧级归因和双 seed 配对检查，见 [`research/ACTIVE_CTC_VAD_ALIGNMENT_2026-09-27.md`](research/ACTIVE_CTC_VAD_ALIGNMENT_2026-09-27.md)。训练侧掩码与 C 的 6095 个开发帧一致；VAD 对齐 CTC 在 600 epoch 的两个 seed 上均显著提高 C 端召回，但关键词 2 的近邻误触发、短语料 FAR 与最终 AFE/目标板门槛仍未通过。新训练入口只作 development-only，模型提升明确拒绝该标记；正式默认目标不变，不能把这次研究当作新产品候选。
+
 正式训练器的有序 token 损失还存在批次正样本比例相关的归一化问题：同一正样本在不同空转写比例的 mini-batch 中获得不同的有效权重。已改用训练全集固定的适用样本比例，并把新语义标入 checkpoint 与模型 provenance。冻结的 128 条语音训练池全为非空转写，修正前后模型浮点权重 SHA-256 相同，C 端 calibration/test 都为 0/16 命中、分别 3/2 次误触发；此对照只验证该池兼容，不证明含背景空转写的正式域训练效果。下一步在新鲜的受控混合语料上比较每词 C 事件，并且保留正式资格 seed 未消费。
 
 外部语音基座的音频与索引 hash 原先已绑定，但标签语义仍需在导入时核对。正例必须与声明的唤醒词 token 完全相同且活动区间有效，负例按现有合成数据规则不得包含唤醒 token 子序列，背景目标必须为空；同时核对 token 名称/ID、WAV 帧数和摘要计数。已用本地 SHA-256 与配置相同的 `speech-like-base-5204b798033f` 归档回读完整 384 条记录，四个 split 的语义检查、WAV hash/格式与 bundle 身份均通过，bundle SHA-256 保持 `5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35`。此门禁阻止矛盾监督进入正式训练，不代表已改善模型 FRR/FAR；CI 仍需对提交后的同一源码复验。
