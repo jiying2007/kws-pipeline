@@ -57,6 +57,9 @@ RETIRED_PATH_GLOBS = (
     'tests/test_decoder_retention_curve.py',
     'tests/test_report_frozen_qualification_gate.py',
     'tests/test_development_loss_controller.py',
+    'experiments/model_family/fresh_validation_registry.json',
+    'experiments/model_family/shadow_arena_registry.json',
+    'docs/KWS_RESEARCH_RESET.md',
 )
 
 REQUIRED_AUTHORITY_PATHS = (
@@ -73,6 +76,11 @@ REQUIRED_AUTHORITY_PATHS = (
 )
 
 
+REQUIRED_RETAINED_PATHS = (
+    'docs/research/KWS_RESEARCH_RESET.md',
+)
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
 
@@ -83,6 +91,10 @@ def main() -> int:
     for relative in REQUIRED_AUTHORITY_PATHS:
         path = ROOT / relative
         assert path.is_file(), f'canonical product authority missing: {relative}'
+
+    for relative in REQUIRED_RETAINED_PATHS:
+        path = ROOT / relative
+        assert path.is_file(), f'retained historical evidence missing: {relative}'
 
     for prefix in (
         'feature/', 'feat/', 'fix/', 'audit/', 'cleanup/', 'eval/',
