@@ -67,6 +67,7 @@ env:
     training/bounded-warm-start-rounds-rebase2
     training/adapt-replay-for-custom-keywords
     training/defer-base-qualification-rebase
+    training/parallel-calibration-trials-rebase3
     training/accelerate-development-loop-v2
     training/product-development-preflight
     training/product-development-preflight-final
