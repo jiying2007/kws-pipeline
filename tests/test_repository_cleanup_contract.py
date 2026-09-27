@@ -82,6 +82,12 @@ REQUIRED_RETAINED_PATHS = (
 )
 
 
+REQUIRED_ACTIVE_PATHS = (
+    'training/adversarial_refinement.py',
+    'training/qualification_failure_replay.py',
+)
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
 
@@ -96,6 +102,14 @@ def main() -> int:
     for relative in REQUIRED_RETAINED_PATHS:
         path = ROOT / relative
         assert path.is_file(), f'retained historical evidence missing: {relative}'
+
+    for relative in REQUIRED_ACTIVE_PATHS:
+        path = ROOT / relative
+        assert path.is_file(), f'active execution path missing: {relative}'
+
+    refinement = (ROOT / 'training' / 'adversarial_refinement.py').read_text(encoding='utf-8')
+    assert 'from qualification_failure_replay import (' in refinement
+    assert 'render_qualification_failure_replay(' in refinement
 
     for prefix in (
         'feature/', 'feat/', 'fix/', 'audit/', 'cleanup/', 'eval/',
