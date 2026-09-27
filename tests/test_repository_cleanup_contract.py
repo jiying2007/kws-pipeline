@@ -92,6 +92,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'audit/enforce-claims-and-rnn-contract',
     'audit/enforce-workflow-references',
     'fix/replay-provider-semantic-identity-v1',
+    'feat/development-preflight-experiment-trigger-v1',
     'training/accelerate-development-loop-v2',
 )
 
