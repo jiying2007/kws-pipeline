@@ -30,6 +30,7 @@ RETIRED_PATH_GLOBS = (
     'training/validate_frozen_rnn_candidate.py',
     'training/development_resume.py',
     'training/development_loss_controller.py',
+    'training/qualification_failure_replay.py',
     'training/frozen_speech_ablation.py',
     'training/startup_context_*.py',
     'training/preceding_context_*.py',
