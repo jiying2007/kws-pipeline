@@ -95,6 +95,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'feat/development-preflight-experiment-trigger-v1',
     'obs/acoustic-runtime-correlation-v1',
     'training/refinement-keyword-balance-v2-rebase',
+    'training/balanced-calibration-fallback-rebase2',
     'training/accelerate-development-loop-v2',
 )
 
