@@ -52,6 +52,8 @@
 
 关键词 2 的剩余近邻误触发已追到非语音帧中的高置信度伪词根，而非单纯阈值、Python/C 特征或量化问题，见 [`research/INACTIVE_ROOT_NEAR_MISS_ATTRIBUTION_2026-09-27.md`](research/INACTIVE_ROOT_NEAR_MISS_ATTRIBUTION_2026-09-27.md)。C 根启动限制可消除部分同类误触发但损失召回；补充非语音 blank 监督在一个 seed 有效、另一 seed 无稳定收益。两项实验代码均撤回，下一轮应先冻结新鲜开发语料和最终 VAD 来源，再比较联合召回/精度，不继续用已观察的 calibration/test 调参。
 
+已额外冻结并生成计划外 speaker ID 24–31 的离线 TTS 开发 A/B 两组，按 A 组先选、B 组后回读且不改阈值，见 [`research/FRESH_SPEAKER_DEVELOPMENT_READBACK_2026-09-27.md`](research/FRESH_SPEAKER_DEVELOPMENT_READBACK_2026-09-27.md)。VAD 对齐 seed 2346 在 A/B 均为 7/8 命中、0 FA，固定对照在 B 为 8/8、3 FA，三次均来自关键词 2 缺首音节近邻；附加非语音 blank 监督在 B 降至 5/8。新集 speaker 与原 Stage A 的 0–23 号 voice slot 隔离，48 条 PCM 与旧 256 条开发录音无重复；但 8 kHz 带宽、短负例时长和无最终 AFE 使其只能提供软件开发证据。两项漏唤醒与负例 FAR 上界仍不通过产品门槛，正式模型、训练默认值和发布状态保持原样。
+
 正式训练器的有序 token 损失还存在批次正样本比例相关的归一化问题：同一正样本在不同空转写比例的 mini-batch 中获得不同的有效权重。已改用训练全集固定的适用样本比例，并把新语义标入 checkpoint 与模型 provenance。冻结的 128 条语音训练池全为非空转写，修正前后模型浮点权重 SHA-256 相同，C 端 calibration/test 都为 0/16 命中、分别 3/2 次误触发；此对照只验证该池兼容，不证明含背景空转写的正式域训练效果。下一步在新鲜的受控混合语料上比较每词 C 事件，并且保留正式资格 seed 未消费。
 
 外部语音基座的音频与索引 hash 原先已绑定，但标签语义仍需在导入时核对。正例必须与声明的唤醒词 token 完全相同且活动区间有效，负例按现有合成数据规则不得包含唤醒 token 子序列，背景目标必须为空；同时核对 token 名称/ID、WAV 帧数和摘要计数。已用本地 SHA-256 与配置相同的 `speech-like-base-5204b798033f` 归档回读完整 384 条记录，四个 split 的语义检查、WAV hash/格式与 bundle 身份均通过，bundle SHA-256 保持 `5204b798033fe46e5381c743accf638ab7f16d4e4367f42cba38a6bb44c97b35`。此门禁阻止矛盾监督进入正式训练，不代表已改善模型 FRR/FAR；CI 仍需对提交后的同一源码复验。
