@@ -27,6 +27,8 @@ env:
   SAFE_BRANCH_PREFIXES: "feature/ feat/ fix/ chore/ refactor/ docs/ test/ ci/ tmp/ codex/ kws/ commercial/ deployment/ governance/ audit/ cleanup/ eval/ exp/ experiment/ infra/ obs/ perf/ probe/ research/ staging- staging/ training/"
   CLOSED_PR_RETENTION_DAYS: "7"
   RETIRED_BRANCHES: >-
+    audit/enforce-claims-and-rnn-contract
+    audit/enforce-workflow-references
     codex/kws-v2-stage-a-live-bootstrap-v1
     codex/kws-v2-stage-a-live-bootstrap-v2
     codex/kws-v2-stage-a-live-search-v1
@@ -49,6 +51,7 @@ env:
     tmp/resumable-development-rnn-v3
     tmp/resumable-development-rnn-v4
     fix/product-training-speech-like-replay-v1
+    training/accelerate-development-loop-v2
     training/product-development-preflight
     training/product-development-preflight-final
     training/product-development-preflight-final2
