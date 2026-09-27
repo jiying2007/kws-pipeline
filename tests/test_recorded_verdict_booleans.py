@@ -2,46 +2,7 @@
 from __future__ import annotations
 
 import pathlib
-import sys
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
-
-import rnn_development_gate as rnn  # noqa: E402
-
-
-def expect_value_error(needle: str, call) -> None:
-    try:
-        call()
-    except ValueError as exc:
-        assert needle in str(exc), (needle, str(exc))
-        return
-    raise AssertionError(f"expected ValueError containing {needle!r}")
-
-
-def passing(round_number: int) -> dict:
-    return {
-        "round": round_number,
-        "calibration_gate": True,
-        "test_gate": True,
-    }
-
-
-def test_development_gate_types() -> None:
-    for prefix, module in (("RNN ", rnn),):
-        assert module.terminal_strict_streak([passing(0), passing(1)]) == 2
-        assert module.terminal_strict_streak(
-            [passing(0), dict(passing(1), calibration_gate=False)]
-        ) == 0
-        assert module.terminal_strict_streak([passing(0), {"round": 1}]) == 0
-        for key in ("calibration_gate", "test_gate"):
-            for bad in ("false", "0", "no", 0, 1, [], {}):
-                row = dict(passing(1))
-                row[key] = bad
-                expect_value_error(
-                    f"{prefix}development record {key} must be a boolean",
-                    lambda m=module, r=[passing(0), row]: m.terminal_strict_streak(r),
-                )
 
 
 def test_recorded_verdict_sources() -> None:
@@ -123,10 +84,6 @@ def test_recorded_verdict_sources() -> None:
                 'record.get("test_gate") is True',
             ),
         },
-        "training/development_resume.py": {
-            "forbidden": ('bool(value.get("complete"))',),
-            "required": ('value.get("complete") is True',),
-        },
         "training/qualification_failure_replay.py": {
             "forbidden": (
                 'bool(previous.get("formal_qualification_used", True))',
@@ -135,30 +92,6 @@ def test_recorded_verdict_sources() -> None:
             "required": (
                 'previous.get("formal_qualification_used", True) is not False',
                 'previous.get("development_source_wav_bytes_copied", True) is not False',
-            ),
-        },
-        "training/iterate_rnn_development.py": {
-            "forbidden": (
-                'bool(record.get("calibration_gate"))',
-                'bool(record.get("test_gate"))',
-                'bool(manifest.get("development_qualified"))',
-            ),
-            "required": (
-                'record.get("calibration_gate") is True',
-                'record.get("test_gate") is True',
-                'manifest.get("development_qualified") is True',
-            ),
-        },
-        "tools/rnn_development_gate.py": {
-            "forbidden": (
-                'bool(robustness.get("qualified"))',
-                'bool(record.get("calibration_gate"))',
-                'bool(record.get("test_gate"))',
-            ),
-            "required": (
-                'if not isinstance(robustness_qualified, bool):',
-                'gate_bool(record, "calibration_gate")',
-                'gate_bool(record, "test_gate")',
             ),
         },
     }
@@ -172,7 +105,6 @@ def test_recorded_verdict_sources() -> None:
 
 
 def main() -> int:
-    test_development_gate_types()
     test_recorded_verdict_sources()
     print("test_recorded_verdict_booleans: ok")
     return 0

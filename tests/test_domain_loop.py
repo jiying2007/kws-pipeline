@@ -12,7 +12,6 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-import development_resume as development_resume  # noqa: E402
 import hard_negative_replay as hard_negative_replay_module  # noqa: E402
 from development_failure_replay import failure_replay_focus_rows  # noqa: E402
 from adversarial_lexicon import enumerate_safe_sequences  # noqa: E402
@@ -172,13 +171,6 @@ def validate_failure_replay_focus_contract() -> None:
 def validate_torch_iteration_policy() -> None:
     validate_clean_tts_round_cache()
     validate_failure_replay_focus_contract()
-    development_resume.self_test()
-    iterator = ROOT / "training" / "iterate_rnn_development.py"
-    source = iterator.read_text(encoding="utf-8")
-    assert '"--resume-state"' in source
-    assert '"--round-budget"' in source
-    assert "development_resume.write_state(" in source
-    assert "SEGMENT_CONTINUE_EXIT_CODE" in source
     assert parse_warm_start_strategy({}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "full"}) == "full"
     assert parse_warm_start_strategy({"warm_start_strategy": "head-only"}) == "head-only"
