@@ -42,6 +42,8 @@
 
 双 seed 的 12/36 epoch、ordered-token 范围和负样本 margin 单变量对照已完成。输入身份、真实 C 事件、每词结果、负结果与环境边界见 [`research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md`](research/CLEAN_SPEECH_OBJECTIVE_CONTROLS_2026-09-27.md)。三个控制项均未形成跨 seed 的产品级改善，正式训练配置保持原样。下一步应先审词前/词内/词后的多余 token 与活动区监督，再设计单变量开发实验；没有稳定正结果不得消费新的 formal seed。
 
+活动区间 CTC、区间外 blank、近邻负例路径损失与 train-only 语速扰动的后续同池对照见 [`research/STARTUP_CONTEXT_ATTRIBUTION_2026-09-27.md`](research/STARTUP_CONTEXT_ATTRIBUTION_2026-09-27.md)。活动区间限制是本设定的主要可学习性信号，但两种负例损失没有改善 test；语速扰动在一个 seed 降误触发、另一个 seed 破坏训练集门槛。相关可执行研究入口已由 PR #324 退役，本仓仅保留历史证据，不恢复该通道。正式配置和发布候选不变。真人双词、近邻负例、最终 AFE 与目标板入口当前暂无，阶段 C/D/E 不能凭反复观察的合成开发集放行。
+
 ## 连续性与收口
 
 - 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`tools/kws_landing_status.py --verify` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
