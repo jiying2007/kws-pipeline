@@ -14,6 +14,7 @@ RETIRED_PATH_GLOBS = (
     '.github/workflows/rnn-frozen-candidate-qualification.yml',
     '.github/workflows/resumable-development-curriculum.yml',
     '.github/workflows/development-round-segment.yml',
+    'configs/qualification.evidence.example.json',
     'configs/training/development-generalization-v1.json',
     'configs/training/xiaowo.gru-development-*.json',
     'configs/training/xiaowo.rnn-development-*.json',
