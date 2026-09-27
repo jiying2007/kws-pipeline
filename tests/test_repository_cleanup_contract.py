@@ -96,6 +96,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'obs/acoustic-runtime-correlation-v1',
     'training/refinement-keyword-balance-v2-rebase',
     'training/balanced-calibration-fallback-rebase2',
+    'training/bounded-warm-start-rounds-rebase3',
     'training/accelerate-development-loop-v2',
 )
 
