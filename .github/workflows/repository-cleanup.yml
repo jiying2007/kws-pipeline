@@ -51,6 +51,7 @@ env:
     tmp/resumable-development-rnn-v3
     tmp/resumable-development-rnn-v4
     fix/product-training-speech-like-replay-v1
+    fix/replay-provider-semantic-identity-v1
     training/accelerate-development-loop-v2
     training/product-development-preflight
     training/product-development-preflight-final
