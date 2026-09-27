@@ -695,6 +695,7 @@ def ordered_token_loss(
     sample_weights: torch.Tensor | None = None,
     normalization_mean_weight: float | None = None,
     sample_mask: torch.Tensor | None = None,
+    normalization_participation_rate: float | None = None,
 ) -> tuple[torch.Tensor, int, int]:
     """Encourage each target occurrence to own a chronological region."""
     if sample_weights is not None:
@@ -715,6 +716,11 @@ def ordered_token_loss(
         not math.isfinite(normalization_mean_weight) or normalization_mean_weight <= 0.0
     ):
         raise ValueError("ordered-token normalization must be finite and > 0")
+    if normalization_participation_rate is not None and (
+        not math.isfinite(normalization_participation_rate)
+        or not 0.0 < normalization_participation_rate <= 1.0
+    ):
+        raise ValueError("ordered-token participation rate must be in (0,1]")
 
     losses: list[torch.Tensor] = []
     weights: list[torch.Tensor] = []
@@ -759,11 +765,15 @@ def ordered_token_loss(
     if normalization_mean_weight is None:
         value = (loss_values * weight_values).sum() / weight_values.sum()
     else:
-        value = normalized_weighted_mean(
-            loss_values,
-            weight_values,
-            normalization_mean_weight,
+        # Keep a fixed dataset-level denominator even when a mini-batch has
+        # fewer applicable targets than the corpus average.
+        participants = (
+            float(len(losses))
+            if normalization_participation_rate is None
+            else float(target_lengths.numel()) * normalization_participation_rate
         )
+        denominator = loss_values.new_tensor(participants * normalization_mean_weight)
+        value = (loss_values * weight_values).sum() / denominator
     return value, correct, total
 
 
@@ -1058,6 +1068,11 @@ def main() -> None:
                     sample_weights,
                     normalization_mean_weight=float(ordered_mean_weight),
                     sample_mask=ordered_mask,
+                    normalization_participation_rate=(
+                        weight_statistics["exact_wake_rows"] / weight_statistics["rows"]
+                        if args.ordered_token_scope == ORDERED_TOKEN_SCOPE_EXACT_WAKE
+                        else weight_statistics["nonempty_rows"] / weight_statistics["rows"]
+                    ),
                 )
             else:
                 ordered_loss = log_probs.sum() * 0.0
@@ -1214,7 +1229,7 @@ def main() -> None:
             ),
             "sample_weight_normalization": weight_statistics,
             "ordered_token_loss_weight": args.ordered_token_loss_weight,
-            "ordered_token_sample_weighting": "training-sample-weights-v1",
+            "ordered_token_sample_weighting": "training-sample-weights-v2-population-normalized",
             "ordered_token_scope": args.ordered_token_scope,
             "keyword_sequence_margin": KEYWORD_SEQUENCE_MARGIN,
             "keyword_sequence_margin_loss_weight": args.keyword_sequence_margin_loss_weight,
