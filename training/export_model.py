@@ -248,6 +248,28 @@ def training_metadata(checkpoint: dict) -> dict:
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
 
+    if "warm_start_binding" in checkpoint:
+        binding = checkpoint["warm_start_binding"]
+        required = {
+            "policy", "source_checkpoint_sha256", "source_float_state_sha256",
+            "optimizer_state_restored",
+        }
+        if not isinstance(binding, dict) or set(binding) != required:
+            raise ValueError("checkpoint warm-start binding fields are invalid")
+        if (binding["policy"] != "checkpoint-file-and-float-state-v1"
+                or binding["optimizer_state_restored"] is not False):
+            raise ValueError("checkpoint warm-start binding policy is invalid")
+        result["warm_start_binding"] = {
+            "policy": binding["policy"],
+            "source_checkpoint_sha256": checkpoint_sha(
+                binding["source_checkpoint_sha256"], "warm_start_binding.source_checkpoint_sha256"
+            ),
+            "source_float_state_sha256": checkpoint_sha(
+                binding["source_float_state_sha256"], "warm_start_binding.source_float_state_sha256"
+            ),
+            "optimizer_state_restored": False,
+        }
+
     ordered_scope = checkpoint.get("ordered_token_scope")
     result["ordered_token_scope_recorded"] = ordered_scope is not None
     if ordered_scope is None:

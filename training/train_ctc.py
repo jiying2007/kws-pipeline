@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import math
 import os
@@ -790,7 +791,10 @@ def validate_warm_start(
     args: argparse.Namespace,
     vocab_size_value: int,
     fingerprint: int,
-) -> None:
+    source_checkpoint_sha256: str,
+) -> dict:
+    if re.fullmatch(r"[0-9a-f]{64}", source_checkpoint_sha256) is None:
+        raise ValueError("warm-start source checkpoint SHA256 is invalid")
     expected = {
         "feature_dim": args.feature_dim,
         "hidden_dim": args.hidden_dim,
@@ -806,6 +810,17 @@ def validate_warm_start(
             raise ValueError(
                 f"warm-start {key}={checkpoint.get(key)!r} does not match {value}"
             )
+    if any(key in checkpoint for key in ("development_recipe", "development_only", "release_authority")):
+        raise ValueError("development-only checkpoint cannot warm-start the formal trainer")
+    actual_state = state_identity(checkpoint["state_dict"])
+    if checkpoint.get("float_state_identity") != actual_state:
+        raise ValueError("warm-start float state identity mismatch")
+    return {
+        "policy": "checkpoint-file-and-float-state-v1",
+        "source_checkpoint_sha256": source_checkpoint_sha256,
+        "source_float_state_sha256": actual_state["sha256"],
+        "optimizer_state_restored": False,
+    }
 
 
 def main() -> None:
@@ -965,9 +980,18 @@ def main() -> None:
         generator=shuffle_generator,
     )
     model = TinyStreamingRNN(args.feature_dim, args.hidden_dim, vocab_size_value)
+    warm_start_binding = None
     if args.warm_start:
-        checkpoint = torch.load(args.warm_start, map_location="cpu", weights_only=True)
-        validate_warm_start(checkpoint, args, vocab_size_value, fingerprint)
+        if args.output.resolve() == args.warm_start.resolve() or (
+            args.output.exists() and args.output.samefile(args.warm_start)
+        ):
+            parser.error("--output must not overwrite --warm-start")
+        source_bytes = args.warm_start.read_bytes()
+        source_sha256 = hashlib.sha256(source_bytes).hexdigest()
+        checkpoint = torch.load(io.BytesIO(source_bytes), map_location="cpu", weights_only=True)
+        warm_start_binding = validate_warm_start(
+            checkpoint, args, vocab_size_value, fingerprint, source_sha256
+        )
         model.load_state_dict(checkpoint["state_dict"], strict=True)
     if args.head_only:
         for parameter in model.in_proj.parameters():
@@ -1144,6 +1168,8 @@ def main() -> None:
     manifest_metadata = [
         {"name": path.name, "sha256": sha256_file(path)} for path in args.manifest
     ]
+    if args.warm_start and sha256_file(args.warm_start) != warm_start_binding["source_checkpoint_sha256"]:
+        raise ValueError("warm-start checkpoint changed during training")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
         {
@@ -1209,6 +1235,7 @@ def main() -> None:
             "path_purity_policy": PATH_PURITY_POLICY,
             "hard_negative_capable": True,
             "training_environment": environment,
+            **({"warm_start_binding": warm_start_binding} if warm_start_binding else {}),
         },
         args.output,
     )
