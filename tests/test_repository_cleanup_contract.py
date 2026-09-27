@@ -102,6 +102,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/render-required-domain-splits-v2-rebase',
     'training/render-required-domain-splits-rebase2',
     'training/merge-calibration-test-curriculum-v4',
+    'training/merge-calibration-test-curriculum-v3',
     'training/accelerate-development-loop-v2',
 )
 
