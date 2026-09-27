@@ -7,8 +7,82 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github' / 'workflows' / 'repository-cleanup.yml'
 
 
+RETIRED_PATH_GLOBS = (
+    '.github/workflows/development-generalization-*.yml',
+    '.github/workflows/gru-*.yml',
+    '.github/workflows/rnn-development-curriculum.yml',
+    '.github/workflows/rnn-frozen-candidate-qualification.yml',
+    '.github/workflows/resumable-development-curriculum.yml',
+    '.github/workflows/development-round-segment.yml',
+    'configs/training/development-generalization-v1.json',
+    'configs/training/xiaowo.gru-development-*.json',
+    'configs/training/xiaowo.rnn-development-*.json',
+    'training/iterate_gru_development.py',
+    'training/run_gru_development*.py',
+    'training/train_gru_ctc.py',
+    'training/export_gru_model.py',
+    'training/gru_model.py',
+    'training/qualify_frozen_gru_formal.py',
+    'training/validate_frozen_gru_candidate.py',
+    'training/iterate_rnn_development.py',
+    'training/run_rnn_development.py',
+    'training/qualify_frozen_rnn_formal.py',
+    'training/validate_frozen_rnn_candidate.py',
+    'training/development_resume.py',
+    'training/development_loss_controller.py',
+    'training/frozen_speech_ablation.py',
+    'training/startup_context_*.py',
+    'training/preceding_context_*.py',
+    'training/select_context_checkpoint.py',
+    'training/iterate.py',
+    'training/prototype_model.py',
+    'training/build_domain_prototype.py',
+    'training/surrogate_score.py',
+    'tools/build_kws_v2_generalization_plan.py',
+    'tools/*development_generalization*.py',
+    'tools/run_development_generalization_*.py',
+    'tools/*gru*development*.py',
+    'tools/*gru*frozen*.py',
+    'tools/kws_wav_gru.c',
+    'tools/*rnn*development*.py',
+    'tools/*rnn*frozen*.py',
+    'tools/diagnose_decoder_retention_curve.py',
+    'tools/report_frozen_qualification_gate.py',
+    'tools/build_vocab.py',
+    'tests/test_gru_*.py',
+    'tests/test_frozen_speech_ablation.py',
+    'tests/test_startup_context.py',
+    'tests/test_preceding_context*.py',
+    'tests/test_context_checkpoint_selection.py',
+    'tests/test_decoder_retention_curve.py',
+    'tests/test_report_frozen_qualification_gate.py',
+    'tests/test_development_loss_controller.py',
+)
+
+REQUIRED_AUTHORITY_PATHS = (
+    'configs/shipping.xiaowo.json',
+    'configs/training/xiaowo.torch-domain.json',
+    'configs/training/kws-v2-efficient-encoder-closure-v1.json',
+    '.github/workflows/model-training.yml',
+    '.github/workflows/model-training-preflight.yml',
+    '.github/workflows/product-development-experiment.yml',
+    '.github/workflows/product-training-data-contract.yml',
+    '.github/workflows/real-human-qualification.yml',
+    '.github/workflows/target-dut-qualification.yml',
+    '.github/workflows/shipping-approval.yml',
+)
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
+
+    for pattern in RETIRED_PATH_GLOBS:
+        matches = sorted(path.relative_to(ROOT).as_posix() for path in ROOT.glob(pattern))
+        assert not matches, f'retired execution path returned: {pattern}: {matches}'
+
+    for relative in REQUIRED_AUTHORITY_PATHS:
+        path = ROOT / relative
+        assert path.is_file(), f'canonical product authority missing: {relative}'
 
     for prefix in (
         'feature/', 'feat/', 'fix/', 'audit/', 'cleanup/', 'eval/',

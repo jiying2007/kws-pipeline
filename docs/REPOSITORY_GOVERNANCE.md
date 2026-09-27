@@ -47,6 +47,22 @@ A single-maintainer repository may omit an approving-review requirement to avoid
 
 These settings are GitHub administration state rather than source files and must be re-audited after ownership transfer, repository migration or policy changes. See `GOVERNANCE_TARGET.md`.
 
+## Retired execution-lane policy
+
+Closed research execution lanes are not compatibility APIs. Once a lane has a retained
+machine-readable closure/evidence record and the live product authority has moved to a
+canonical owner, its old workflows, helpers, mirror tests and compatibility entry points
+must stay absent.
+
+`tests/test_repository_cleanup_contract.py` enforces this for the retired
+generalization, GRU/RNN parallel-development, startup/preceding-context, generic synthetic
+loop and superseded decoder-diagnostic paths. It also verifies that the canonical product
+training, qualification and shipping authorities remain present.
+
+If future product data justifies reopening one of those research questions, introduce an
+explicit new lane with fresh scope and evidence boundaries. Do not silently resurrect the
+retired path names or re-add mirror implementations merely for compatibility.
+
 ## Release policy
 
 A formal release is valid only when the following identity is coherent:
