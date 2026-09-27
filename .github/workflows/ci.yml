@@ -312,6 +312,7 @@ jobs:
           --workflow .github/workflows/ci.yml
           --workflow .github/workflows/training-integration.yml
           --workflow .github/workflows/training-audit-closure.yml
+          --workflow .github/workflows/speech-like-external-base-bundle-contract.yml
       - name: Verify tracked worktree after Python test inventory
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python test inventory"'
       - name: Python syntax

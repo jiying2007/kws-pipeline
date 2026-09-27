@@ -6,6 +6,14 @@ import hashlib
 import json
 import pathlib
 import re
+import sys
+import wave
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from kws_vocab import load_tokens  # noqa: E402
+
+from synthetic_audio import contains_subsequence, parse_keywords  # noqa: E402
 
 SPLITS = ("train", "calibration", "test", "qualification")
 SUMMARY_CLASS = "speech-like-base-dataset-v1"
@@ -75,6 +83,73 @@ def _identity(row: dict, split: str, index: int) -> tuple[str, str, str]:
     return str(wav_sha), str(voice), str(source)
 
 
+def _validate_label(
+    row: dict,
+    split: str,
+    index: int,
+    token_map: dict[str, int],
+    wake_keywords: dict[int, dict],
+) -> None:
+    label = f"external base {split} row {index}"
+    kind = row.get("kind")
+    if not isinstance(kind, str) or kind not in {
+        "positive", "confusable", "negative", "background"
+    }:
+        raise ValueError(f"{label}: unsupported kind")
+    names = row.get("tokens")
+    targets = row.get("target_ids")
+    if not isinstance(names, list) or not all(isinstance(name, str) for name in names):
+        raise ValueError(f"{label}: tokens must be a string list")
+    if not isinstance(targets, list) or not all(
+        isinstance(value, int) and not isinstance(value, bool) for value in targets
+    ):
+        raise ValueError(f"{label}: target_ids must be an integer list")
+    if any(name not in token_map for name in names):
+        raise ValueError(f"{label}: tokens contain an unknown vocabulary item")
+    if targets != [token_map[name] for name in names] or any(value == 0 for value in targets):
+        raise ValueError(f"{label}: token names and target_ids disagree")
+    frames = row.get("frames")
+    if isinstance(frames, bool) or not isinstance(frames, int) or frames <= 0:
+        raise ValueError(f"{label}: frames must be a positive integer")
+    if kind == "positive":
+        keyword_id = row.get("keyword_id")
+        if isinstance(keyword_id, bool) or not isinstance(keyword_id, int):
+            raise ValueError(f"{label}: positive keyword_id must be an integer")
+        keyword = wake_keywords.get(keyword_id)
+        if keyword is None or names != keyword["tokens"]:
+            raise ValueError(f"{label}: positive target differs from configured wake keyword")
+        start = row.get("event_start_frame")
+        end = row.get("event_end_frame")
+        if any(
+            isinstance(value, bool) or not isinstance(value, int)
+            for value in (start, end)
+        ) or not 0 <= start < end <= frames:
+            raise ValueError(f"{label}: positive activity bounds are invalid")
+    elif kind == "background":
+        if names or targets:
+            raise ValueError(f"{label}: background must have an empty target")
+    else:
+        if not names:
+            raise ValueError(f"{label}: speech negative must have a non-empty target")
+        if any(
+            contains_subsequence(names, keyword["tokens"])
+            for keyword in wake_keywords.values()
+        ):
+            raise ValueError(f"{label}: negative target contains a configured wake path")
+
+
+def _validate_audio_format(path: pathlib.Path, frames: int, label: str) -> None:
+    with wave.open(str(path), "rb") as reader:
+        if (
+            reader.getnchannels() != 1
+            or reader.getframerate() != 16000
+            or reader.getsampwidth() != 2
+            or reader.getcomptype() != "NONE"
+            or reader.getnframes() != frames
+        ):
+            raise ValueError(f"{label}: audio format/frames mismatch")
+
+
 def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[list[dict], dict] | None:
     generator = config.get("generator")
     if not isinstance(generator, dict):
@@ -88,6 +163,17 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         missing = sorted(set(SPLITS) - set(spec))
         extra = sorted(set(spec) - set(SPLITS))
         raise ValueError(f"external base dataset must define exactly {SPLITS}; missing={missing} extra={extra}")
+
+    tokens_path = pathlib.Path(str(config["tokens"]))
+    keywords_path = pathlib.Path(str(config["keywords"]))
+    if not tokens_path.is_absolute():
+        tokens_path = ROOT / tokens_path
+    if not keywords_path.is_absolute():
+        keywords_path = ROOT / keywords_path
+    token_map = load_tokens(tokens_path)
+    wake_keywords = {
+        int(item["id"]): item for item in parse_keywords(keywords_path, token_map)
+    }
 
     root = config_path.parent.resolve()
     rows: list[dict] = []
@@ -119,6 +205,19 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         split_rows = load_jsonl(index_path)
         if int(summary.get("recordings", -1)) != len(split_rows):
             raise ValueError(f"external base {split}: recording count mismatch")
+        positive_count = sum(row.get("kind") == "positive" for row in split_rows)
+        negative_count = len(split_rows) - positive_count
+        for field, actual in (
+            ("positive_recordings", positive_count),
+            ("negative_recordings", negative_count),
+        ):
+            value = summary.get(field)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or value != actual
+            ):
+                raise ValueError(f"external base {split}: {field} differs from index")
         path_contract = str(summary.get("audio_path_contract", "legacy-v0"))
         if path_contract not in {"index-relative-v1", "absolute-v1", "legacy-v0"}:
             raise ValueError(f"external base {split}: unsupported audio_path_contract={path_contract}")
@@ -126,6 +225,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         index_root = index_path.parent.resolve()
         for idx, row in enumerate(split_rows):
             wav_sha, voice, source = _identity(row, split, idx)
+            _validate_label(row, split, idx, token_map, wake_keywords)
             raw_audio = row.get("path")
             if not isinstance(raw_audio, str) or not raw_audio.strip():
                 raise ValueError(f"external base {split} row {idx}: audio path is required")
@@ -145,6 +245,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                     raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
                 if sha256_file(audio_path) != wav_sha:
                     raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                _validate_audio_format(audio_path, row["frames"], f"external base {split} row {idx}")
                 normalized["path"] = str(audio_path)
             elif path_contract == "absolute-v1":
                 if not audio_ref.is_absolute():
@@ -154,6 +255,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                     raise ValueError(f"external base {split} row {idx}: audio file missing: {audio_path}")
                 if sha256_file(audio_path) != wav_sha:
                     raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
+                _validate_audio_format(audio_path, row["frames"], f"external base {split} row {idx}")
                 normalized["path"] = str(audio_path)
             else:
                 # Historical bundles predate an explicit audio-path contract. Preserve
