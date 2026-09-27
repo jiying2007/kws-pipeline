@@ -108,6 +108,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/adapt-replay-for-custom-keywords',
     'training/defer-base-qualification-rebase',
     'training/parallel-calibration-trials-rebase3',
+    'training/parallel-calibration-trials-rebase2',
     'training/accelerate-development-loop-v2',
 )
 
