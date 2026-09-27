@@ -13,8 +13,6 @@ on:
       - 'training/export_model.py'
       - 'training/iterate_rnn_development.py'
       - 'training/run_rnn_development.py'
-      - 'training/iterate_gru_development.py'
-      - 'training/run_gru_development.py'
       - 'training/development_failure_replay.py'
       - 'training/domain_curriculum.py'
       - 'training/hard_negative_replay.py'

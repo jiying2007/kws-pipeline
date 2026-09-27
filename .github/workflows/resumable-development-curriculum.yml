@@ -8,15 +8,9 @@ on:
       - '.github/workflows/development-round-segment.yml'
       - '.github/workflows/resumable-development-curriculum.yml'
       - 'training/development_resume.py'
-      - 'training/iterate_gru_development.py'
       - 'training/iterate_rnn_development.py'
-      - 'training/run_gru_development.py'
-      - 'training/run_gru_development_multiseed.py'
       - 'training/run_rnn_development.py'
-      - 'configs/training/xiaowo.gru-development-loop.json'
-      - 'configs/training/xiaowo.gru-development-multiseed-v1.json'
       - 'configs/training/xiaowo.rnn-development-loop.json'
-      - 'tests/test_gru_train_acoustic_rotation.py'
   push:
     branches:
       - 'tmp/resumable-development-*'
@@ -31,8 +25,6 @@ on:
         default: rnn
         options:
           - rnn
-          - gru-multiseed
-          - gru
 
 permissions:
   contents: read
@@ -52,7 +44,6 @@ jobs:
       - name: Resumable development contract
         run: |
           python3 training/development_resume.py --self-test
-          python3 tests/test_gru_train_acoustic_rotation.py
           python3 tools/verify_rnn_parallel_contract.py
           python3 - <<'PY'
           import pathlib
@@ -69,10 +60,7 @@ jobs:
         run: >-
           python3 -m py_compile
           training/development_resume.py
-          training/iterate_gru_development.py
           training/iterate_rnn_development.py
-          training/run_gru_development.py
-          training/run_gru_development_multiseed.py
           training/run_rnn_development.py
 
   resolve:
@@ -115,7 +103,7 @@ jobs:
           assert int(value.get('schema_version', 0)) == 1
           variant=str(value.get('variant', ''))
           product=str(value.get('product_head', ''))
-          assert variant in {'rnn','gru-multiseed','gru'}
+          assert variant == 'rnn'
           assert len(product) == 40 and all(ch in '0123456789abcdef' for ch in product)
           print(variant)
           print(product)
@@ -131,30 +119,12 @@ jobs:
           test "$default_branch" = 'main'
           relation="$(gh api "repos/${GITHUB_REPOSITORY}/compare/${product_head}...main" --jq '.status')"
           case "$relation" in ahead|identical) ;; *) echo "product head is outside main history: $relation" >&2; exit 2 ;; esac
-          case "$variant" in
-            gru)
-              family=gru
-              policy=configs/training/xiaowo.gru-development-loop.json
-              wrapper=training/run_gru_development.py
-              work_name=gru-development-curriculum
-              final_artifact=gru-development-curriculum-segmented
-              ;;
-            gru-multiseed)
-              family=gru
-              policy=configs/training/xiaowo.gru-development-multiseed-v1.json
-              wrapper=training/run_gru_development_multiseed.py
-              work_name=gru-development-multiseed
-              final_artifact=gru-development-multiseed-segmented-v1
-              ;;
-            rnn)
-              family=rnn
-              policy=configs/training/xiaowo.rnn-development-loop.json
-              wrapper=training/run_rnn_development.py
-              work_name=rnn-development-curriculum
-              final_artifact=rnn-development-curriculum-segmented
-              ;;
-            *) exit 2 ;;
-          esac
+          test "$variant" = 'rnn'
+          family=rnn
+          policy=configs/training/xiaowo.rnn-development-loop.json
+          wrapper=training/run_rnn_development.py
+          work_name=rnn-development-curriculum
+          final_artifact=rnn-development-curriculum-segmented
           {
             echo "variant=$variant"
             echo "product_head=$product_head"
@@ -314,17 +284,10 @@ jobs:
           WORK_NAME: ${{ needs.resolve.outputs.work_name }}
         run: |
           set +e
-          if [ "$FAMILY" = 'gru' ]; then
-            python3 tools/reconcile_gru_development_gate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-          else
-            python3 tools/reconcile_rnn_development_gate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-          fi
+          python3 tools/reconcile_rnn_development_gate.py \
+            --work-dir "build/$WORK_NAME" \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy "$POLICY_PATH"
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           exit 0
@@ -336,31 +299,17 @@ jobs:
           POLICY_PATH: ${{ needs.resolve.outputs.policy }}
           WORK_NAME: ${{ needs.resolve.outputs.work_name }}
         run: |
-          if [ "$FAMILY" = 'gru' ]; then
-            python3 tools/verify_gru_development_gate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-            python3 tools/finalize_gru_frozen_candidate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-            python3 tools/verify_gru_frozen_candidate.py --candidate "build/$WORK_NAME/frozen-candidate"
-            python3 tools/verify_gru_stability_evidence.py --candidate "build/$WORK_NAME/frozen-candidate"
-            python3 tools/verify_gru_development_gate.py --candidate "build/$WORK_NAME/frozen-candidate"
-          else
-            python3 tools/verify_rnn_development_gate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-            python3 tools/finalize_rnn_frozen_candidate.py \
-              --work-dir "build/$WORK_NAME" \
-              --config configs/training/xiaowo.torch-domain.json \
-              --policy "$POLICY_PATH"
-            python3 tools/verify_rnn_frozen_candidate.py --candidate "build/$WORK_NAME/frozen-candidate"
-            python3 tools/verify_rnn_stability_evidence.py --candidate "build/$WORK_NAME/frozen-candidate"
-            python3 tools/verify_rnn_development_gate.py --candidate "build/$WORK_NAME/frozen-candidate"
-          fi
+          python3 tools/verify_rnn_development_gate.py \
+            --work-dir "build/$WORK_NAME" \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy "$POLICY_PATH"
+          python3 tools/finalize_rnn_frozen_candidate.py \
+            --work-dir "build/$WORK_NAME" \
+            --config configs/training/xiaowo.torch-domain.json \
+            --policy "$POLICY_PATH"
+          python3 tools/verify_rnn_frozen_candidate.py --candidate "build/$WORK_NAME/frozen-candidate"
+          python3 tools/verify_rnn_stability_evidence.py --candidate "build/$WORK_NAME/frozen-candidate"
+          python3 tools/verify_rnn_development_gate.py --candidate "build/$WORK_NAME/frozen-candidate"
 
       - name: Bind workflow source to exact development product source
         env:
