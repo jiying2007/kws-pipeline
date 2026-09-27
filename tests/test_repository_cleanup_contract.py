@@ -131,6 +131,14 @@ def main() -> int:
     assert 'CLOSED_PR_RETENTION_DAYS: "7"' in source
 
     for needle in (
+        'manual_review=0',
+        'manual_review=$((manual_review + 1))',
+        'manual-review: ${branch} (diverged from ${default_branch}; no exact-head closed PR provenance)',
+        'manual_review=${manual_review}',
+    ):
+        assert needle in source, f'manual-review observability contract missing: {needle}'
+
+    for needle in (
         '[[ "${branch}" == "${default_branch}" ]] && continue',
         'if [[ "${protected}" == "true" ]]',
         '-f state=open -f head="${owner}:${branch}"',
