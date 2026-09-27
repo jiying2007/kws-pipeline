@@ -20,32 +20,47 @@ The repository carries:
 
 ## Current `main` platform policy
 
-The repository is currently in a single-maintainer/product-incubation phase. `main` is intentionally unprotected and no GitHub ruleset is installed. That is an explicit current operating choice, but **it is not called terminal governance**.
+As of 2026-09-27, the live GitHub repository ruleset `kws-main-terminal` is
+**active** on the default branch and the branch API reports `main` as
+`protected=true`. The reviewed machine target is
+`governance/main-ruleset-target.json`, and
+`governance/verify_live_main_ruleset.py` verifies live ruleset JSON against
+that source-controlled target.
 
-While this phase remains active:
+The enforced ruleset currently requires:
 
-1. steady state retains only `main`;
-2. implementation/Dependabot/release-bootstrap branches are removed after use;
-3. source-controlled CI is the authoritative software regression signal;
-4. release creation runs the complete release workflow before publishing;
-5. released `vX.Y.Z` tags are never moved;
-6. direct `main` changes are permitted but cannot create a valid release without the release gates;
-7. repository and release cleanup must not delete retained release/evidence history.
+1. updates to `main` through a pull request;
+2. all review conversations resolved;
+3. squash as the only merge method;
+4. strict required checks `hosted (gcc)`, `hosted (clang)`, `coverage`,
+   `sanitizers`, `fuzz`, and `armv7-cross`;
+5. deletion protection;
+6. non-fast-forward protection, blocking force pushes;
+7. no bypass actors.
 
-## Terminal governance target
+The approving-review count remains zero intentionally while the repository is
+single-maintainer, avoiding self-deadlock without weakening the other PR and
+status-check requirements.
 
-Before the repository is considered fully enforced terminal product governance, GitHub platform settings should additionally require:
+GitHub's classic branch-protection sub-object may still report
+`protection.enabled=false`; enforcement for this repository comes from the
+repository ruleset above. Do not interpret the classic endpoint alone as
+evidence that `main` is unprotected.
 
-- a pull request for `main`;
-- required checks for hosted GCC/Clang, coverage, sanitizers, fuzz and ARM cross-build;
-- review-conversation resolution;
-- no force-push or deletion of `main`;
-- immutable release tags;
-- exceptional and auditable administrator bypass.
+Steady-state branch cleanup, immutable release/tag policy, source-controlled CI
+and retained evidence history remain part of the repository contract.
 
-A single-maintainer repository may omit an approving-review requirement to avoid self-deadlock. If additional maintainers are introduced, add approving/CODEOWNER review according to ownership boundaries.
+## Governance re-audit boundary
 
-These settings are GitHub administration state rather than source files and must be re-audited after ownership transfer, repository migration or policy changes. See `GOVERNANCE_TARGET.md`.
+GitHub rulesets are platform state, not Git tree state. Re-read and verify the
+live ruleset after repository migration, ownership transfer, administrator
+changes or any governance-policy update. If additional maintainers are
+introduced, review the zero-approval single-maintainer choice and add
+approving/CODEOWNER requirements as appropriate rather than weakening the
+existing terminal rules.
+
+The source-controlled target and verifier are recovery/audit inputs; they do not
+grant permission to bypass live platform enforcement.
 
 ## Retired execution-lane policy
 
