@@ -1,5 +1,15 @@
 # KWS Training Reset v1
 
+> **Historical research record — not a current runbook.**  
+> The executable Training Reset / architecture-probe workflows, configs and commands
+> referenced below have been retired from `main`. Current machine authority is
+> `configs/shipping.xiaowo.json`; governed model work enters through
+> `model-training.yml` / `product-development-experiment.yml`, and architecture
+> research remains paused by
+> `configs/training/kws-v2-efficient-encoder-closure-v1.json`. Reopening any retired
+> hypothesis requires a fresh scoped lane and fresh evidence boundaries rather than
+> restoring the historical compatibility surface.
+
 ## Purpose
 
 This lane exists to answer model-learning questions quickly and causally before a candidate enters the governed development, freeze, shadow, formal-qualification, real-human, or target-board paths.

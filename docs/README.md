@@ -18,6 +18,9 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - `REPRODUCIBILITY.md` — traceable/rebuildable/bit-reproducible claims
 - `TESTING_STRATEGY.md` — layered regression and product evidence
 - `KWS_LANDING_EXECUTION.md` — staged training diagnosis, algorithm comparison and product-evidence closure
+- `PRODUCT_MODEL_TRAINING.md` — canonical governed model-training/preflight handoff, provenance and promotion boundaries
+- `DATASET_ITERATION.md` — dataset-driven iteration for the registered deployable model without changing release authority
+- `research/` — retained historical experiment/negative-result evidence; archived files are not current executable runbooks
 - `REPOSITORY_GOVERNANCE.md` — current repository/platform governance state
 - `GOVERNANCE_TARGET.md` — enforced terminal governance target
 - `TERMINAL_HARDENING.md` — final software hardening contract
