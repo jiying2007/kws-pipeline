@@ -110,6 +110,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'training/parallel-calibration-trials-rebase3',
     'training/parallel-calibration-trials-rebase2',
     'training/reuse-product-materialization-v2',
+    'training/rotate-product-train-acoustics-rebase',
     'training/accelerate-development-loop-v2',
 )
 
