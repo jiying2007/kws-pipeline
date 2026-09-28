@@ -920,7 +920,12 @@ def validate_warm_start(
 
         current_aux = auxiliary_loss_weights(vars(args))
         source_aux = checkpoint.get("auxiliary_loss_weights")
-        actual_aux = verify_auxiliary_loss_readback(vars(args), source_aux)
+        try:
+            actual_aux = verify_auxiliary_loss_readback(vars(args), source_aux)
+        except ValueError as exc:
+            raise ValueError(
+                "development warm-start auxiliary objective mismatch"
+            ) from exc
         if actual_aux != current_aux:
             raise ValueError("development warm-start auxiliary objective mismatch")
 
