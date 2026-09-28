@@ -98,7 +98,7 @@ def boundary_reference_contract(
             raise ValueError(
                 f"{path}:{line_no}: within-word pause reference must contain expected wake"
             )
-        if positive:
+        if positive and boundary_role != "natural-full-phrase-pause-v1":
             for event_index, event in enumerate(expected):
                 if not isinstance(event, dict) or "match_not_before_s" not in event:
                     raise ValueError(
