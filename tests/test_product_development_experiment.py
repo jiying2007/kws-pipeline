@@ -109,6 +109,8 @@ def main() -> int:
     assert "'acoustic_alignment': acoustic is not None" in workflow
     assert "Diagnose sequence-margin runtime gap" in workflow
     assert "tools/diagnose_sequence_margin_runtime_gap.py" in workflow
+    assert "model=pathlib.Path(str(source['model']))" in workflow
+    assert "'--model',str(model)" in workflow
     assert "'sequence_margin_runtime_gap': sequence_margin_gap is not None" in workflow
     assert "'sequence_margin_runtime_gap':sequence_margin_gap" in workflow
     assert "sequence-margin-runtime-gap.json" in workflow
