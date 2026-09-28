@@ -75,7 +75,7 @@ def main() -> int:
     adapter, executable, identity = inspect_adapter(args.adapter)
     expected_identity = json.loads(args.expected_identity.read_text(encoding="utf-8"))
     if identity != expected_identity:
-        raise ValueError("final AFE identity drifted after held-out corpus exposure")
+        raise ValueError("final AFE identity drifted after corpus intake")
     template = adapter["command_argv"]
 
     output_dir = args.output_dir.resolve()
