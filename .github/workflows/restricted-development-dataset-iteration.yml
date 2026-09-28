@@ -177,7 +177,7 @@ jobs:
         run: |
           set -euo pipefail
           afe_id="$(jq -r '.identity_sha256' "$WORK_ROOT/final-afe-identity.json")"
-          python3 tools/run_dataset_iteration.py             --runner build/kws_wav             --model "${{ steps.model.outputs.model_path }}"             --keywords "${{ steps.model.outputs.keywords_path }}"             --references "$WORK_ROOT/afe/references.post-afe.jsonl"             --audio-root "$WORK_ROOT/afe/post-afe"             --work-dir "$WORK_ROOT/iteration"             --output "$WORK_ROOT/iteration/scorecard.json"             --variable model             --dataset-label "private-development:$DATASET_ID:afe:$afe_id"             --model-label "${{ steps.model.outputs.model_label }}"             --seed "${{ inputs.seed }}"
+          python3 tools/run_dataset_iteration.py             --runner build/kws_wav             --model "${{ steps.model.outputs.model_path }}"             --keywords "${{ steps.model.outputs.keywords_path }}"             --references "$WORK_ROOT/afe/references.post-afe.jsonl"             --audio-root "$WORK_ROOT/afe/post-afe"             --work-dir "$WORK_ROOT/iteration"             --output "$WORK_ROOT/iteration/scorecard.json"             --variable model             --protocol restricted-development-dataset-iteration-v1             --pre-tolerance-ms 0             --post-tolerance-ms 500             --dataset-label "private-development:$DATASET_ID:afe:$afe_id"             --model-label "${{ steps.model.outputs.model_label }}"             --seed "${{ inputs.seed }}"
 
       - name: Compare against declared model baseline
         if: inputs.baseline_card != ''
