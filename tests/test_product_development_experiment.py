@@ -190,6 +190,8 @@ def main() -> int:
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.15,
                         "train.ordered_token_scope": "exact-configured-wake-targets-v1",
+                        "train.suffix_root_suppression_loss_weight": 0.1,
+                        "train.ctc_vad_align": True,
                     },
                 }
             ),
@@ -234,6 +236,8 @@ def main() -> int:
         assert cfg["train"]["warm_start_epochs"] == 6
         assert cfg["train"]["path_purity_loss_weight"] == 0.1
         assert cfg["train"]["path_purity_margin"] == 0.15
+        assert cfg["train"]["suffix_root_suppression_loss_weight"] == 0.1
+        assert cfg["train"]["ctc_vad_align"] is True
         assert (
             cfg["train"]["ordered_token_scope"]
             == "exact-configured-wake-targets-v1"
