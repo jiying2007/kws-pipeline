@@ -68,7 +68,18 @@ AUXILIARY_LOSS_WEIGHT_NAMES = (
     "keyword_sequence_margin_loss_weight",
     "prefix_completion_loss_weight",
     "recurrent_release_loss_weight",
+    "suffix_root_suppression_loss_weight",
 )
+
+
+def ctc_vad_align_setting(train: dict) -> tuple[bool, bool]:
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    configured = "ctc_vad_align" in train
+    value = train.get("ctc_vad_align", False)
+    if not isinstance(value, bool):
+        raise ValueError("train.ctc_vad_align must be boolean")
+    return value, configured
 
 
 def auxiliary_loss_weights(train: dict) -> dict[str, float]:
@@ -92,7 +103,7 @@ def auxiliary_loss_weights(train: dict) -> dict[str, float]:
 def verify_auxiliary_loss_readback(train: dict, recorded: dict) -> dict[str, float]:
     """Verify resolved trainer controls against the independent effective config."""
     if not isinstance(recorded, dict) or set(recorded) != set(AUXILIARY_LOSS_WEIGHT_NAMES):
-        raise ValueError("auxiliary loss readback must contain all four resolved weights")
+        raise ValueError("auxiliary loss readback must contain all resolved weights")
     actual = auxiliary_loss_weights(recorded)
     for name, expected in auxiliary_loss_weights(train).items():
         if actual[name] != expected:
@@ -123,4 +134,8 @@ def optional_objective_cli_args(train: dict) -> list[str]:
     negative_policy, negative_policy_configured = sequence_margin_negative_policy_setting(train)
     if negative_policy_configured:
         args.extend(["--sequence-margin-negative-policy", negative_policy])
+
+    ctc_vad_align, ctc_vad_configured = ctc_vad_align_setting(train)
+    if ctc_vad_configured and ctc_vad_align:
+        args.append("--ctc-vad-align")
     return args
