@@ -20,6 +20,7 @@ from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
 from training_state import state_identity
 from frontend_spec import FRONTEND_IDS
+from suffix_root_loss import SUFFIX_ROOT_BLANK_MARGIN, SUFFIX_ROOT_POLICY
 from objective_contract import (
     ORDERED_TOKEN_SCOPE_DEFAULT,
     ORDERED_TOKEN_SCOPES,
@@ -374,6 +375,38 @@ def training_metadata(checkpoint: dict) -> dict:
             "policy": policy,
         }
 
+    suffix_root_fields = (
+        "suffix_root_suppression_loss_weight",
+        "suffix_root_blank_margin",
+        "suffix_root_policy",
+    )
+    suffix_root_present = [key in checkpoint for key in suffix_root_fields]
+    if any(suffix_root_present) and not all(suffix_root_present):
+        raise ValueError("checkpoint suffix-root objective metadata is incomplete")
+    suffix_root_recorded = all(suffix_root_present)
+    result["suffix_root_objective_recorded"] = suffix_root_recorded
+    if suffix_root_recorded:
+        weight = float(checkpoint["suffix_root_suppression_loss_weight"])
+        margin = float(checkpoint["suffix_root_blank_margin"])
+        policy = checkpoint["suffix_root_policy"]
+        if not math.isfinite(weight) or weight < 0.0:
+            raise ValueError(
+                "checkpoint suffix_root_suppression_loss_weight must be finite and >= 0"
+            )
+        if margin != SUFFIX_ROOT_BLANK_MARGIN:
+            raise ValueError("checkpoint suffix_root_blank_margin is unsupported")
+        if policy != SUFFIX_ROOT_POLICY:
+            raise ValueError("checkpoint suffix_root_policy is unsupported")
+        if weight > 0.0 and "ctc_vad_alignment" not in result:
+            raise ValueError(
+                "active suffix-root objective requires development CTC VAD alignment"
+            )
+        result["suffix_root_objective"] = {
+            "weight": weight,
+            "margin": margin,
+            "policy": policy,
+        }
+
     raw_history = checkpoint.get("epoch_history")
     result["epoch_history_recorded"] = raw_history is not None
     if raw_history is not None:
@@ -385,6 +418,8 @@ def training_metadata(checkpoint: dict) -> dict:
                 raise ValueError(f"checkpoint epoch_history[{index - 1}] epoch is invalid")
             row = {"epoch": index}
             metric_keys = ["loss", "ctc", "ordered", "margin", "completion", "release"]
+            if suffix_root_recorded:
+                metric_keys.append("suffix_root")
             if path_purity_recorded:
                 metric_keys.append("path_purity")
             for key in metric_keys:
