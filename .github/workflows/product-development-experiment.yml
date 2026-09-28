@@ -212,6 +212,26 @@ jobs:
           tokens=pathlib.Path(str(config['tokens']))
           if not tokens.is_absolute():
               tokens=(repo/tokens).resolve()
+
+          external=config.get('generator',{}).get('external_base_dataset',{})
+          calibration_external=external.get('calibration') if isinstance(external,dict) else None
+          if not isinstance(calibration_external,dict):
+              raise SystemExit('decoder boundary diagnostic requires calibration external-base index')
+          boundary_index=pathlib.Path(str(calibration_external.get('index','')))
+          if not boundary_index.is_absolute():
+              boundary_index=(config_path.parent/boundary_index).resolve()
+          if not boundary_index.is_file():
+              raise SystemExit(f'calibration external-base index is missing: {boundary_index}')
+          boundary_root=root/'decoder-boundary-references'
+          subprocess.check_call([
+              str(repo/'.venv/bin/python'),
+              'tools/build_decoder_boundary_references.py',
+              '--dataset-index',str(boundary_index),
+              '--model',str(model),
+              '--posterior-dump','build/kws_posterior_dump',
+              '--posterior-cache',str(root/'posterior-cache'),
+              '--output-dir',str(boundary_root),
+          ])
           command=[
               str(repo/'.venv/bin/python'),
               'tools/diagnose_sequence_margin_runtime_gap.py',
@@ -362,6 +382,8 @@ jobs:
               '--config',str(config_path),
               '--calibration-references',str(dataset/'calibration.references.jsonl'),
               '--test-references',str(dataset/'test.references.jsonl'),
+              '--within-word-pause-references',str(boundary_root/'within-word-pause.references.jsonl'),
+              '--cross-boundary-negative-references',str(boundary_root/'cross-boundary-negative.references.jsonl'),
               '--development-manifest',str(root/'domain-loop-manifest.json'),
               '--development-authority-receipt',os.environ['KWS_EXPERIMENT_RECEIPT'],
               '--round-index',str(round_index),
@@ -436,6 +458,7 @@ jobs:
               'source_selection_policy':policy,
               'blank_retentions':[0.70,0.85,0.95],
               'fuzzy_child_cost_logs':[-8.25,-4.0],
+              'boundary_reference_builder':str(boundary_root/'boundary-reference-summary.json'),
               'selection_feedback_allowed':False,
           },sort_keys=True))
           PY
@@ -528,6 +551,7 @@ jobs:
           threshold_sweep=load_optional(root/'threshold-wide-sweep.json')
           retention_curve=load_optional(root/'decoder-retention-recalibrated-curve.json')
           decoder_policy=load_optional(root/'decoder-policy-replay-grid.json')
+          boundary_references=load_optional(root/'decoder-boundary-references'/'boundary-reference-summary.json')
           sequence_margin_gap=load_optional(root/'sequence-margin-runtime-gap.json')
           required={
               'experiment_receipt': receipt is not None,
@@ -550,6 +574,7 @@ jobs:
               required['refinement_summary']=refinement is not None
           if decoder_policy_enabled:
               required['decoder_policy_replay_grid']=decoder_policy is not None
+              required['decoder_boundary_references']=boundary_references is not None
           summary={
               'schema_version':1,
               'evidence_class':'product-development-pr-head-experiment-summary-v1',
@@ -584,6 +609,7 @@ jobs:
               'threshold_wide_sweep':threshold_sweep,
               'decoder_retention_recalibrated_curve':retention_curve,
               'decoder_policy_replay_grid':decoder_policy,
+              'decoder_boundary_references':boundary_references,
               'sequence_margin_runtime_gap':sequence_margin_gap,
           }
           (root/'experiment-summary.json').write_text(
@@ -612,6 +638,7 @@ jobs:
             build/product-development-experiment/threshold-wide-sweep.json
             build/product-development-experiment/decoder-retention-recalibrated-curve.json
             build/product-development-experiment/decoder-policy-replay-grid.json
+            build/product-development-experiment/decoder-boundary-references/**
             build/product-development-experiment/candidates/*/model.kwm
             build/product-development-experiment/candidates/*/model.pt
             build/product-development-experiment/candidates/*/model.kwm.provenance.json
