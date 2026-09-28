@@ -8,7 +8,11 @@ import torch
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-from objective_config import auxiliary_loss_weights, optional_objective_cli_args  # noqa: E402
+from objective_config import (  # noqa: E402
+    auxiliary_loss_weights,
+    optional_objective_cli_args,
+    verify_auxiliary_loss_readback,
+)
 from suffix_root_loss import (  # noqa: E402
     SUFFIX_ROOT_BLANK_MARGIN,
     SUFFIX_ROOT_POLICY,
@@ -68,6 +72,14 @@ def main() -> int:
 
     weights = auxiliary_loss_weights({"suffix_root_suppression_loss_weight": 0.1})
     assert weights == {"suffix_root_suppression_loss_weight": 0.1}
+    legacy = {
+        "ordered_token_loss_weight": 0.35,
+        "keyword_sequence_margin_loss_weight": 0.10,
+        "prefix_completion_loss_weight": 0.10,
+        "recurrent_release_loss_weight": 0.05,
+    }
+    normalized = verify_auxiliary_loss_readback({}, legacy)
+    assert normalized["suffix_root_suppression_loss_weight"] == 0.0
     args = optional_objective_cli_args(
         {
             "suffix_root_suppression_loss_weight": 0.1,
