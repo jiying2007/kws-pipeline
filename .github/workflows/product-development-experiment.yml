@@ -209,6 +209,7 @@ jobs:
           config_path=pathlib.Path(os.environ['KWS_EXPERIMENT_CONFIG'])
           config=json.loads(config_path.read_text(encoding='utf-8'))
           source, policy=select_refinement_source(manifest)
+          model=pathlib.Path(str(source['model']))
           tokens=pathlib.Path(str(config['tokens']))
           if not tokens.is_absolute():
               tokens=(repo/tokens).resolve()
