@@ -83,8 +83,12 @@ REQUIRED_RETAINED_PATHS = (
 
 
 REQUIRED_ACTIVE_PATHS = (
+    'configs/nightly.xiaowo-frozen-model.json',
     'training/adversarial_refinement.py',
+    'training/fit_domain_prototype.py',
+    'training/fit_prototype.py',
     'training/qualification_failure_replay.py',
+    'training/render_qualification_holdout.py',
 )
 
 
@@ -168,6 +172,18 @@ def main() -> int:
     refinement = (ROOT / 'training' / 'adversarial_refinement.py').read_text(encoding='utf-8')
     assert 'from qualification_failure_replay import (' in refinement
     assert 'render_qualification_failure_replay(' in refinement
+
+    domain_loop = (ROOT / 'training' / 'iterate_domain.py').read_text(encoding='utf-8')
+    assert 'fit_domain_prototype(' in domain_loop
+
+    domain_prototype = (ROOT / 'training' / 'fit_domain_prototype.py').read_text(encoding='utf-8')
+    assert 'from fit_prototype import (' in domain_prototype
+
+    nightly = (ROOT / '.github' / 'workflows' / 'far-nightly.yml').read_text(encoding='utf-8')
+    assert 'NIGHTLY_CONFIG: configs/nightly.xiaowo-frozen-model.json' in nightly
+
+    release_qualification = (ROOT / 'tests' / 'test_release_qualification.py').read_text(encoding='utf-8')
+    assert 'ROOT / "training" / "render_qualification_holdout.py"' in release_qualification
 
     for prefix in (
         'feature/', 'feat/', 'fix/', 'audit/', 'cleanup/', 'eval/',
