@@ -93,7 +93,7 @@ def main() -> int:
     event = positive_event(rows[0], keyword_id=1, sample_count=1600)
     assert event["start_s"] == 100 / 16000
     assert event["end_s"] == 1000 / 16000
-    assert event["match_not_before_s"] == event["end_s"]
+    assert "match_not_before_s" not in event
 
     no_pause = [item for item in rows if "-pause" not in item["speech_like_provenance"]["source_id"]]
     try:
