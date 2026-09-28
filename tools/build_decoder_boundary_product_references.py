@@ -114,12 +114,10 @@ def positive_event(row: dict, *, keyword_id: int, sample_count: int) -> dict:
         or not 0 <= start < end <= sample_count
     ):
         raise ValueError("natural pause positive has invalid activity bounds")
-    end_s = end / SAMPLE_RATE_HZ
     return {
         "keyword_id": keyword_id,
         "start_s": start / SAMPLE_RATE_HZ,
-        "end_s": end_s,
-        "match_not_before_s": end_s,
+        "end_s": end / SAMPLE_RATE_HZ,
     }
 
 
