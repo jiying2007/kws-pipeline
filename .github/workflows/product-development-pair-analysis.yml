@@ -1,0 +1,72 @@
+name: Product development paired causal analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      control_run_id:
+        description: Product-development control workflow run ID
+        required: true
+        type: string
+      treatment_run_id:
+        description: Product-development treatment workflow run ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download control base evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: product-development-base-*
+          path: .pair/control
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.control_run_id }}
+
+      - name: Download treatment base evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: product-development-base-*
+          path: .pair/treatment
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.treatment_run_id }}
+
+      - name: Compare paired causal evidence
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          python3 training/compare_product_development_pair.py \
+            --control .pair/control \
+            --treatment .pair/treatment \
+            --output build/product-development-pair-report.json
+          code=$?
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Retain paired comparison
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-development-pair-${{ inputs.control_run_id }}-${{ inputs.treatment_run_id }}
+          path: build/product-development-pair-report.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Require valid causal pair
+        if: always()
+        run: test "${{ steps.compare.outputs.exit_code }}" = "0"
