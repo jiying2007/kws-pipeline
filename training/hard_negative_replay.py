@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import random
 import shutil
@@ -89,6 +90,14 @@ def _command_tts_cache_key(
         allow_nan=False,
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def command_tts_cache_root(default: pathlib.Path) -> pathlib.Path:
+    raw = os.environ.get("KWS_COMMAND_TTS_CACHE_ROOT")
+    if raw is None or not raw.strip():
+        return default.resolve()
+    value = pathlib.Path(raw)
+    return value.resolve() if value.is_absolute() else (ROOT / value).resolve()
 
 
 def _render_command_tts_cached(
@@ -662,7 +671,9 @@ def render_hard_negative_replay(
                 kind,
                 clean_path,
                 tts,
-                cache_root=output.parent / ".clean-command-tts-cache",
+                cache_root=command_tts_cache_root(
+                    output.parent / ".clean-command-tts-cache"
+                ),
             )
         augmented = augment(clean, rng, augment_config)
         scene_seed = example_seed + 31_337

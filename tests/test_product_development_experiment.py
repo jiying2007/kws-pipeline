@@ -157,21 +157,30 @@ def main() -> int:
         ]
     )
 
-    auto_pair_workflow = (
-        ROOT / ".github/workflows/product-development-auto-pair.yml"
+    paired_workflow = (
+        ROOT / ".github/workflows/product-development-paired-experiment.yml"
     ).read_text(encoding="utf-8")
-    assert "workflow_run:" in auto_pair_workflow
-    assert "product-development-experiment" in auto_pair_workflow
-    assert "training/resolve_product_development_pair.py" in auto_pair_workflow
-    assert "needs.resolve.outputs.ready == 'true'" in auto_pair_workflow
-    assert "uses: ./.github/workflows/product-development-pair-analysis.yml" in auto_pair_workflow
+    assert "Run control base development" in paired_workflow
+    assert "Run treatment base development" in paired_workflow
+    assert paired_workflow.index("Run control base development") < paired_workflow.index(
+        "Run treatment base development"
+    )
+    assert "KWS_COMMAND_TTS_CACHE_ROOT:" in paired_workflow
+    assert "Require treatment did not mutate common clean-TTS cache" in paired_workflow
+    assert "training/compare_product_development_pair.py" in paired_workflow
+    assert "Require valid causal pair" in paired_workflow
     subprocess.check_call(
         [
             sys.executable,
-            str(ROOT / "training/resolve_product_development_pair.py"),
+            str(ROOT / "training/product_development_pair_spec.py"),
             "--self-test",
         ]
     )
+    hard_negative_replay = (
+        ROOT / "training/hard_negative_replay.py"
+    ).read_text(encoding="utf-8")
+    assert "KWS_COMMAND_TTS_CACHE_ROOT" in hard_negative_replay
+    assert "command_tts_cache_root(" in hard_negative_replay
 
     replay_args = posterior_replay_cli_args(
         (pathlib.Path("dump"), pathlib.Path("replay"), pathlib.Path("cache")),

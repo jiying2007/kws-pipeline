@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import pathlib
@@ -68,7 +69,9 @@ def semantic_metrics(value):
         return {
             key: semantic_metrics(item)
             for key, item in value.items()
-            if key not in METRIC_PATH_FIELDS and not key.endswith("_path")
+            if key not in METRIC_PATH_FIELDS
+            and not key.endswith("_path")
+            and key != "references_sha256"
         }
     if isinstance(value, list):
         return [semantic_metrics(item) for item in value]
@@ -112,6 +115,77 @@ def round_best(manifest: dict, round_index: int) -> dict:
     rows = records_by_round(manifest, round_index)
     keyword_ids = required_keyword_ids(manifest, rows)
     return min(rows, key=lambda row: record_rank(row, keyword_ids))
+
+
+def semantic_wake_balance(value: object) -> object:
+    result = copy.deepcopy(value)
+    if not isinstance(result, dict):
+        return result
+    manifests = result.get("manifests")
+    if isinstance(manifests, list):
+        for item in manifests:
+            if isinstance(item, dict):
+                item.pop("path", None)
+                item.pop("sha256", None)
+    return result
+
+
+def candidate_provenance(root: pathlib.Path, record: dict) -> dict:
+    name = candidate_name(record)
+    path = (
+        root.resolve()
+        / "build/product-development-experiment/candidates"
+        / name
+        / "model.kwm.provenance.json"
+    )
+    return load_json(path)
+
+
+def semantic_corpus_rows(root: pathlib.Path, record: dict) -> list[dict]:
+    provenance = candidate_provenance(root, record)
+    training = provenance.get("training")
+    corpus = training.get("corpus_identity") if isinstance(training, dict) else None
+    rows = corpus.get("recordings") if isinstance(corpus, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("training provenance corpus identity is missing recordings")
+    identity_fields = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
+    result = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError("training provenance corpus recording must be an object")
+        normalized = {
+            "recording": row.get("recording"),
+            "manifest": row.get("manifest"),
+            "file_sha256": row.get("file_sha256"),
+            "pcm_sha256": row.get("pcm_sha256"),
+            "frames": row.get("frames"),
+        }
+        for key in identity_fields:
+            if key in row:
+                normalized[key] = row[key]
+        if (
+            not isinstance(normalized["recording"], str)
+            or not isinstance(normalized["manifest"], str)
+            or not isinstance(normalized["file_sha256"], str)
+            or not isinstance(normalized["pcm_sha256"], str)
+            or isinstance(normalized["frames"], bool)
+            or not isinstance(normalized["frames"], int)
+            or normalized["frames"] <= 0
+        ):
+            raise ValueError(f"training provenance corpus recording is invalid at index {index}")
+        result.append(normalized)
+    return result
+
+
+def semantic_corpus_sha256(rows: list[dict]) -> str:
+    encoded = json.dumps(
+        rows,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def readback_map(readback: dict) -> dict[str, dict]:
@@ -251,14 +325,16 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
                 "training_learning_rate",
                 "training_seed",
                 "hard_negative_replay_examples",
-                "hard_negative_replay_manifest_sha256",
                 "warm_started",
                 "warm_start_strategy",
-                "wake_balance",
             ),
             prefix,
             round0_failures,
         )
+        if semantic_wake_balance(left.get("wake_balance")) != semantic_wake_balance(
+            right.get("wake_balance")
+        ):
+            round0_failures.append(f"{prefix}.wake_balance semantic content differs")
         for split in ("calibration", "calibration_domains", "test", "test_domains"):
             if semantic_metrics(left.get(split)) != semantic_metrics(right.get(split)):
                 round0_failures.append(f"{prefix}.{split} C-runtime metrics differ")
@@ -271,10 +347,26 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
             exact_fields(
                 lread,
                 rread,
-                ("float_state_sha256", "model_sha256", "training_corpus_sha256"),
+                ("float_state_sha256", "model_sha256"),
                 f"{prefix}.readback",
                 round0_failures,
             )
+            left_corpus = semantic_corpus_rows(control_root, left)
+            right_corpus = semantic_corpus_rows(treatment_root, right)
+            if left_corpus != right_corpus:
+                round0_failures.append(f"{prefix}.readback training corpus content differs")
+
+    round0_corpus_sha256 = {}
+    if common_keys:
+        sample_key = common_keys[0]
+        round0_corpus_sha256 = {
+            "control": semantic_corpus_sha256(
+                semantic_corpus_rows(control_root, c0[sample_key])
+            ),
+            "treatment": semantic_corpus_sha256(
+                semantic_corpus_rows(treatment_root, t0[sample_key])
+            ),
+        }
 
     c1 = round_best(cm, 1)
     t1 = round_best(tm, 1)
@@ -378,6 +470,8 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
             "bit_identical": not round0_failures,
             "failures": round0_failures,
             "candidate_count": len(common_keys),
+            "semantic_corpus_sha256": round0_corpus_sha256,
+            "relocation_sensitive_raw_identity_ignored": True,
         },
         "round1_replay_provenance": {
             "valid": not provenance_failures,
@@ -447,7 +541,7 @@ def write_fixture(root: pathlib.Path, *, treatment: bool, round0_model: str = "a
             "false_accepts": false_accepts,
             "frr": (expected - matched) / expected,
             "far_per_hour": float(false_accepts * 10),
-            "references_sha256": "r" * 64,
+            "references_sha256": ("t" if treatment else "c") * 64,
             "detections_sha256": ("d" if not treatment else "t") * 64,
             "per_keyword": {
                 "1": {"expected": 2, "matched": 2, "false_rejects": 0, "false_accepts": false_accepts, "frr": 0.0},
@@ -473,14 +567,24 @@ def write_fixture(root: pathlib.Path, *, treatment: bool, round0_model: str = "a
         "training_learning_rate": 0.001,
         "training_seed": 1337,
         "hard_negative_replay_examples": 8,
-        "hard_negative_replay_manifest_sha256": "h" * 64,
+        "hard_negative_replay_manifest_sha256": ("h" if treatment else "g") * 64,
         "base_failure_replay_enabled": treatment,
         "base_failure_replay_examples": 0,
         "base_failure_replay_manifest_sha256": None,
         "base_failure_replay_source_rounds": [],
         "warm_started": False,
         "warm_start_strategy": "cold-start",
-        "wake_balance": {"policy": "fixture"},
+        "wake_balance": {
+            "policy": "fixture",
+            "wake_keyword_weights": {"1": 2.0, "2": 2.0},
+            "manifests": [
+                {
+                    "path": str(root / ("treatment" if treatment else "control") / "train.tsv"),
+                    "sha256": ("t" if treatment else "c") * 64,
+                    "rows": 4,
+                }
+            ],
+        },
     }
     # Round-0 runtime output must be exactly equal even though the experiment metadata differs.
     common0["calibration"]["detections_sha256"] = "0" * 64
@@ -515,7 +619,7 @@ def write_fixture(root: pathlib.Path, *, treatment: bool, round0_model: str = "a
                 "candidate": "round-00-logmel-00",
                 "float_state_sha256": "s" * 64 if round0_model == "a" * 64 else "x" * 64,
                 "model_sha256": round0_model,
-                "training_corpus_sha256": "q" * 64,
+                "training_corpus_sha256": ("t" if treatment else "c") * 64,
             },
             {
                 "candidate": "round-01-logmel-00",
@@ -535,6 +639,40 @@ def write_fixture(root: pathlib.Path, *, treatment: bool, round0_model: str = "a
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(value), encoding="utf-8")
+    for round_index, record in ((0, common0), (1, round1)):
+        candidate = candidate_name(record)
+        provenance_path = (
+            root
+            / "build/product-development-experiment/candidates"
+            / candidate
+            / "model.kwm.provenance.json"
+        )
+        provenance_path.parent.mkdir(parents=True, exist_ok=True)
+        provenance_path.write_text(
+            json.dumps(
+                {
+                    "training": {
+                        "corpus_identity": {
+                            "recordings": [
+                                {
+                                    "recording": "manifest-0:1",
+                                    "manifest": "train.tsv",
+                                    "path": str(
+                                        root
+                                        / ("treatment" if treatment else "control")
+                                        / f"round-{round_index:02d}.wav"
+                                    ),
+                                    "file_sha256": "1" * 64,
+                                    "pcm_sha256": "2" * 64,
+                                    "frames": 16000,
+                                }
+                            ]
+                        }
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
     if treatment:
         replay_path = root / "build/product-development-experiment/base-failure-replay/round-01/development-failure-replay.json"
         replay_path.parent.mkdir(parents=True, exist_ok=True)
@@ -563,6 +701,10 @@ def self_test() -> None:
         report = compare_pair(control, treatment)
         assert report["causal_valid"] is True
         assert report["round0_counterfactual"]["bit_identical"] is True
+        assert (
+            report["round0_counterfactual"]["semantic_corpus_sha256"]["control"]
+            == report["round0_counterfactual"]["semantic_corpus_sha256"]["treatment"]
+        )
         assert report["result_class"] == "positive-under-strict-nonloss"
         write_fixture(treatment, treatment=True, round0_model="9" * 64)
         report = compare_pair(control, treatment)
