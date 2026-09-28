@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "evidence_class": "external-afe-vad-source-pin-v1",
+  "repository": "jiying2007/audio-pipeline",
+  "head_sha": "aae3affeca0c5e2e4b00dc7350128d29284775ac",
+  "frame_ms": 10,
+  "sample_rate_hz": 16000,
+  "profiles": [
+    "vad-isolated",
+    "ns-isolated"
+  ],
+  "metrics_fields": [
+    "vad_probability",
+    "vad_active"
+  ],
+  "development_only": true,
+  "selection_feedback_allowed": true,
+  "protected_evidence_used": false,
+  "release_authority": false
+}
