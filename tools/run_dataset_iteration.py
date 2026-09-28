@@ -34,6 +34,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 EVAL = ROOT / "eval"
 PROTOCOL = "dataset-iteration-v1"
 VARIABLES = ("dataset", "model")
+DEFAULT_PRE_TOLERANCE_MS = 150.0
+DEFAULT_POST_TOLERANCE_MS = 500.0
 
 # chi-square with 2 degrees of freedom at 95% is 5.991, and the Poisson upper
 # bound for zero observed events over exposure T is chi2/(2T) ~= 3/T.
@@ -186,7 +188,20 @@ def main() -> int:
     parser.add_argument("--seed", default="")
     parser.add_argument("--code-sha", default="", help="defaults to git HEAD")
     parser.add_argument("--protocol", default=PROTOCOL)
+    parser.add_argument(
+        "--pre-tolerance-ms", type=float, default=DEFAULT_PRE_TOLERANCE_MS
+    )
+    parser.add_argument(
+        "--post-tolerance-ms", type=float, default=DEFAULT_POST_TOLERANCE_MS
+    )
     args = parser.parse_args()
+    if (
+        not math.isfinite(args.pre_tolerance_ms)
+        or not math.isfinite(args.post_tolerance_ms)
+        or args.pre_tolerance_ms < 0.0
+        or args.post_tolerance_ms < 0.0
+    ):
+        raise ValueError("event matching tolerances must be finite and >= 0")
 
     for label, path in (("runner", args.runner), ("model", args.model),
                         ("keywords", args.keywords), ("references", args.references)):
@@ -234,6 +249,8 @@ def main() -> int:
     run([sys.executable, str(EVAL / "score_events.py"),
          "--references", str(effective_references),
          "--detections", str(detections),
+         "--pre-tolerance-ms", str(args.pre_tolerance_ms),
+         "--post-tolerance-ms", str(args.post_tolerance_ms),
          "--summary", str(summary),
          "--false-positives", str(false_positives),
          "--false-rejects", str(false_rejects)])
@@ -257,6 +274,10 @@ def main() -> int:
         "code_sha": args.code_sha or git_head(),
         "seed": args.seed,
         "variable": args.variable,
+        "event_matching": {
+            "pre_tolerance_ms": args.pre_tolerance_ms,
+            "post_tolerance_ms": args.post_tolerance_ms,
+        },
     }
     scorecard = {
         "schema_version": 1,
