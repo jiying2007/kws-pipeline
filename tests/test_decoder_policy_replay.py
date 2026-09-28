@@ -96,7 +96,9 @@ def main() -> int:
                     "audio_path": "natural-pause.wav",
                     "duration_s": 1.2,
                     "boundary_role": "natural-full-phrase-pause-v1",
-                    "expected": [event()],
+                    "expected": [
+                        {"keyword_id": 1, "start_s": 0.2, "end_s": 0.8}
+                    ],
                 }
             ],
         )
