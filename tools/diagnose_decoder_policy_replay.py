@@ -63,7 +63,12 @@ def compact_metrics(base: dict, domains: dict) -> dict:
     }
 
 
-def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
+def boundary_reference_contract(
+    path: pathlib.Path,
+    *,
+    positive: bool,
+    required_boundary_role: str | None = None,
+) -> dict:
     rows = load_jsonl(path)
     if not rows:
         raise ValueError(f"boundary reference corpus is empty: {path}")
@@ -75,6 +80,11 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
         if not recording or recording in seen:
             raise ValueError(f"{path}:{line_no}: recording must be non-empty and unique")
         seen.add(recording)
+        boundary_role = row.get("boundary_role")
+        if required_boundary_role is not None and boundary_role != required_boundary_role:
+            raise ValueError(
+                f"{path}:{line_no}: boundary_role must be {required_boundary_role!r}"
+            )
         audio_path = row.get("audio_path") or row.get("path")
         if not isinstance(audio_path, str) or not audio_path.strip():
             raise ValueError(f"{path}:{line_no}: audio path is required")
@@ -110,6 +120,7 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
         "references_sha256": sha256_file(path),
         "recordings": len(rows),
         "expected_events": expected_events,
+        "required_boundary_role": required_boundary_role,
     }
 
 
