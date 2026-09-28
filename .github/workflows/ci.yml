@@ -122,6 +122,7 @@ jobs:
           python3 tests/test_domain_metrics.py
           python3 tests/test_training_diagnostics.py
           python3 tests/test_acoustic_alignment_diagnostic.py
+          python3 tests/test_suffix_root_objective.py
           python3 tests/test_decoder_policy_replay.py
           python3 tests/test_decoder_boundary_references.py
           python3 tests/test_decoder_boundary_product_references.py
