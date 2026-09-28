@@ -1,0 +1,289 @@
+name: product-development-paired-experiment
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/model-training-paired-experiment.json'
+      - '.github/workflows/product-development-paired-experiment.yml'
+      - 'training/product_development_pair_spec.py'
+      - 'training/compare_product_development_pair.py'
+      - 'training/hard_negative_replay.py'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHONHASHSEED: "0"
+  PYTHONUNBUFFERED: "1"
+  OMP_NUM_THREADS: "1"
+  OMP_DYNAMIC: "FALSE"
+  MKL_NUM_THREADS: "1"
+  MKL_CBWR: COMPATIBLE
+  OPENBLAS_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  ATEN_CPU_CAPABILITY: default
+  KWS_PAIR_SPEC: .github/triggers/model-training-paired-experiment.json
+  KWS_EFFECTIVE_TRAINING_CONFIG: .generated/xiaowo.product-effective.json
+  KWS_PAIR_ROOT: build/product-development-pair
+  KWS_COMMAND_TTS_CACHE_ROOT: build/product-development-pair/shared-clean-command-tts-cache
+
+concurrency:
+  group: product-development-paired-experiment-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      pair_changed: ${{ steps.diff.outputs.pair_changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve exact paired experiment
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_PAIR_SPEC"; then
+            echo "pair_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          test -s "$KWS_PAIR_SPEC"
+          if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- .github/triggers/model-training-request.json; then
+            echo "paired development experiment must not change governed model-training request" >&2
+            exit 2
+          fi
+          for forbidden in configs/training/xiaowo.torch-domain.json configs/training/product-speech-like-base-v1.json .github/workflows/model-training.yml; do
+            if ! git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$forbidden"; then
+              echo "paired development experiment must not change protected canonical path: $forbidden" >&2
+              exit 2
+            fi
+          done
+          python3 training/product_development_pair_spec.py verify --pair-spec "$KWS_PAIR_SPEC"
+          echo "pair_changed=true" >> "$GITHUB_OUTPUT"
+
+  experiment:
+    needs: resolve
+    if: needs.resolve.outputs.pair_changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 220
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact PR-head source
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+
+      - name: Materialize governed unprotected product base once
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Materialize paired arm configs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 training/product_development_pair_spec.py materialize \
+            --pair-spec "$KWS_PAIR_SPEC" \
+            --effective-config "$KWS_EFFECTIVE_TRAINING_CONFIG" \
+            --output-root "$KWS_PAIR_ROOT" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA"
+          python3 training/verify_training_entry_contract.py \
+            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --require-product-speech-like-base
+          python3 training/verify_training_entry_contract.py \
+            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --require-product-speech-like-base
+
+      - name: Build exact C runtime once
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target \
+            kws_wav kws_posterior_dump kws_decoder_replay kws_decoder_tests kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Install pinned CPU training runtime once
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input numpy==2.3.2
+          .venv/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify objective math
+        run: .venv/bin/python training/test_sequence_margin.py
+
+      - name: Run control base development
+        id: control
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_PAIR_ROOT/control/build/product-development-experiment" \
+            --posterior-dump build/kws_posterior_dump \
+            --decoder-replay build/kws_decoder_replay \
+            --posterior-cache "$KWS_PAIR_ROOT/control/build/product-development-experiment/posterior-cache" \
+            --defer-qualification \
+            --compact-log
+          code=$?
+          set -e
+          case "$code" in 0|1) ;; *) exit "$code" ;; esac
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          test -s "$KWS_PAIR_ROOT/control/build/product-development-experiment/domain-loop-manifest.json"
+
+      - name: Verify control objective and float-state readback
+        run: |
+          .venv/bin/python training/verify_training_readback.py \
+            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --work-dir "$KWS_PAIR_ROOT/control/build/product-development-experiment" \
+            --output "$KWS_PAIR_ROOT/control/build/product-development-experiment/training-readback.json"
+
+      - name: Freeze shared clean-TTS cache authority
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ['KWS_COMMAND_TTS_CACHE_ROOT']).resolve()
+          rows=[]
+          for path in sorted(root.rglob('*.wav')):
+              rows.append({
+                  'path':path.relative_to(root).as_posix(),
+                  'bytes':path.stat().st_size,
+                  'sha256':hashlib.file_digest(path.open('rb'),'sha256').hexdigest(),
+              })
+          if not rows:
+              raise SystemExit('shared command-TTS cache is empty after control')
+          result={
+              'schema_version':1,
+              'evidence_class':'paired-common-clean-tts-cache-v1',
+              'files':rows,
+              'file_count':len(rows),
+              'total_bytes':sum(row['bytes'] for row in rows),
+          }
+          path=pathlib.Path(os.environ['KWS_PAIR_ROOT'])/'shared-clean-cache-control.json'
+          path.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps({'file_count':len(rows),'total_bytes':result['total_bytes']},sort_keys=True))
+          PY
+
+      - name: Run treatment base development
+        id: treatment
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python training/iterate_domain.py \
+            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --runner build/kws_wav \
+            --work-dir "$KWS_PAIR_ROOT/treatment/build/product-development-experiment" \
+            --posterior-dump build/kws_posterior_dump \
+            --decoder-replay build/kws_decoder_replay \
+            --posterior-cache "$KWS_PAIR_ROOT/treatment/build/product-development-experiment/posterior-cache" \
+            --defer-qualification \
+            --compact-log
+          code=$?
+          set -e
+          case "$code" in 0|1) ;; *) exit "$code" ;; esac
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          test -s "$KWS_PAIR_ROOT/treatment/build/product-development-experiment/domain-loop-manifest.json"
+
+      - name: Verify treatment objective and float-state readback
+        run: |
+          .venv/bin/python training/verify_training_readback.py \
+            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --work-dir "$KWS_PAIR_ROOT/treatment/build/product-development-experiment" \
+            --output "$KWS_PAIR_ROOT/treatment/build/product-development-experiment/training-readback.json"
+
+      - name: Require treatment did not mutate common clean-TTS cache
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          pair=pathlib.Path(os.environ['KWS_PAIR_ROOT'])
+          before=json.loads((pair/'shared-clean-cache-control.json').read_text(encoding='utf-8'))
+          root=pathlib.Path(os.environ['KWS_COMMAND_TTS_CACHE_ROOT']).resolve()
+          rows=[]
+          for path in sorted(root.rglob('*.wav')):
+              rows.append({
+                  'path':path.relative_to(root).as_posix(),
+                  'bytes':path.stat().st_size,
+                  'sha256':hashlib.file_digest(path.open('rb'),'sha256').hexdigest(),
+              })
+          after={
+              'schema_version':1,
+              'evidence_class':'paired-common-clean-tts-cache-v1',
+              'files':rows,
+              'file_count':len(rows),
+              'total_bytes':sum(row['bytes'] for row in rows),
+          }
+          (pair/'shared-clean-cache-treatment.json').write_text(
+              json.dumps(after,indent=2,sort_keys=True)+'\n',encoding='utf-8'
+          )
+          if before != after:
+              raise SystemExit('treatment mutated or extended the common clean-TTS cache')
+          print(f"shared clean-TTS cache unchanged: {len(rows)} files")
+          PY
+
+      - name: Compare paired causal evidence
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          python3 training/compare_product_development_pair.py \
+            --control "$KWS_PAIR_ROOT/control" \
+            --treatment "$KWS_PAIR_ROOT/treatment" \
+            --output "$KWS_PAIR_ROOT/paired-comparison.json"
+          code=$?
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Retain same-runner paired evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-development-paired-${{ github.event.pull_request.head.sha }}
+          path: |
+            .github/triggers/model-training-paired-experiment.json
+            build/product-development-pair/pair-receipt.json
+            build/product-development-pair/paired-comparison.json
+            build/product-development-pair/shared-clean-cache-control.json
+            build/product-development-pair/shared-clean-cache-treatment.json
+            build/product-development-pair/shared-clean-command-tts-cache/**/*.wav
+            build/product-development-pair/control/.github/triggers/model-training-experiment.json
+            build/product-development-pair/control/.generated/xiaowo.product-experiment.json
+            build/product-development-pair/control/build/product-development-experiment-receipt.json
+            build/product-development-pair/control/build/product-development-experiment/domain-loop-manifest.json
+            build/product-development-pair/control/build/product-development-experiment/training-readback.json
+            build/product-development-pair/control/build/product-development-experiment/candidates/*/model.kwm
+            build/product-development-pair/control/build/product-development-experiment/candidates/*/model.pt
+            build/product-development-pair/control/build/product-development-experiment/candidates/*/model.kwm.provenance.json
+            build/product-development-pair/treatment/.github/triggers/model-training-experiment.json
+            build/product-development-pair/treatment/.generated/xiaowo.product-experiment.json
+            build/product-development-pair/treatment/build/product-development-experiment-receipt.json
+            build/product-development-pair/treatment/build/product-development-experiment/domain-loop-manifest.json
+            build/product-development-pair/treatment/build/product-development-experiment/training-readback.json
+            build/product-development-pair/treatment/build/product-development-experiment/candidates/*/model.kwm
+            build/product-development-pair/treatment/build/product-development-experiment/candidates/*/model.pt
+            build/product-development-pair/treatment/build/product-development-experiment/candidates/*/model.kwm.provenance.json
+            build/product-development-pair/treatment/build/product-development-experiment/base-failure-replay/**/development-failure-replay.json
+            build/product-development-pair/treatment/build/product-development-experiment/base-failure-replay/**/development-failure-replay.tsv
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Require valid causal pair
+        if: always()
+        run: test "${{ steps.compare.outputs.exit_code }}" = "0"
