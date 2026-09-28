@@ -25,20 +25,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download control base evidence
+      - name: Download control retained experiment evidence
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: product-development-base-*
+          pattern: product-development-experiment-*
           path: .pair/control
           merge-multiple: true
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ inputs.control_run_id }}
 
-      - name: Download treatment base evidence
+      - name: Download treatment retained experiment evidence
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: product-development-base-*
+          pattern: product-development-experiment-*
           path: .pair/treatment
           merge-multiple: true
           github-token: ${{ github.token }}
