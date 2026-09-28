@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-exec-replay-treatment-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Single-variable treatment against runtime-exec-replay-control-v1. Hold VAD-aligned CTC and runtime-executable negative scoring fixed and enable only inter-round base failure replay. Round 0 must be identical; round 1 may consume only prior completed development failures via train-only resynthesis.",
+  "config_overrides": {
+    "train.ctc_vad_align": true,
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "domain_iteration.base_failure_replay_enabled": true
+  }
+}
