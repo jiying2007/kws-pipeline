@@ -372,6 +372,14 @@ jobs:
           tokens=pathlib.Path(str(config['tokens']))
           if not tokens.is_absolute():
               tokens=(repo/tokens).resolve()
+          boundary_root=root/'decoder-boundary-references'
+          for name in (
+              'within-word-pause.references.jsonl',
+              'cross-boundary-negative.references.jsonl',
+              'boundary-reference-summary.json',
+          ):
+              if not (boundary_root/name).is_file():
+                  raise SystemExit(f'decoder boundary reference evidence is missing: {boundary_root/name}')
           retentions=['0.85','0.90','0.94','0.97','0.99']
           command=[
               str(repo/'.venv/bin/python'),
@@ -429,6 +437,14 @@ jobs:
           tokens=pathlib.Path(str(config['tokens']))
           if not tokens.is_absolute():
               tokens=(repo/tokens).resolve()
+          boundary_root=root/'decoder-boundary-references'
+          for name in (
+              'within-word-pause.references.jsonl',
+              'cross-boundary-negative.references.jsonl',
+              'boundary-reference-summary.json',
+          ):
+              if not (boundary_root/name).is_file():
+                  raise SystemExit(f'decoder boundary reference evidence is missing: {boundary_root/name}')
           command=[
               str(repo/'.venv/bin/python'),
               'tools/diagnose_decoder_policy_replay.py',
