@@ -497,6 +497,7 @@ def build(args: argparse.Namespace) -> dict:
                 "recording": f"{stem}-within-word-pause",
                 "path": repo_relative_path(positive_out),
                 "duration_s": len(positive_samples) / SAMPLE_RATE_HZ,
+                "boundary_role": "inserted-silence-ambiguity-positive-v1",
                 "expected": [positive_event],
             }
         )
@@ -515,6 +516,7 @@ def build(args: argparse.Namespace) -> dict:
                 "recording": f"{stem}-cross-boundary",
                 "path": repo_relative_path(negative_out),
                 "duration_s": len(negative_samples) / SAMPLE_RATE_HZ,
+                "boundary_role": "stitched-half-ambiguity-negative-v1",
                 "expected": [],
             }
         )
