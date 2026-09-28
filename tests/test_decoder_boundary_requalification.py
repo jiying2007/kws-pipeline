@@ -73,6 +73,19 @@ def negative_metrics(*, false_accepts: int = 0) -> dict:
 
 
 def main() -> int:
+    workflow = (ROOT / ".github" / "workflows" / "decoder-boundary-requalification.yml").read_text(
+        encoding="utf-8"
+    )
+    for needle in (
+        '.conclusion == "success"',
+        '.event == "pull_request"',
+        '.path == ".github/workflows/product-development-experiment.yml"',
+        'startswith("product-development-experiment-")',
+        'SOURCE_RUN_HEAD_SHA',
+        'source_run must be a successful product-development-experiment pull_request run',
+    ):
+        assert needle in workflow, f"decoder boundary requalification workflow missing: {needle}"
+
     pack_sha = "p" * 64
     grid = source_grid(pack_sha)
     rows = validate_source_grid(
