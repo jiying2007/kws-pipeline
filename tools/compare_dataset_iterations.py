@@ -33,6 +33,10 @@ import sys
 
 IDENTITY_FIELDS = ("protocol", "dataset_id", "model_id", "code_sha", "seed")
 METRIC_FIELDS = ("frr", "far_per_hour", "p95_post_end_latency_ms")
+DEFAULT_EVENT_MATCHING = {
+    "pre_tolerance_ms": 150.0,
+    "post_tolerance_ms": 500.0,
+}
 
 
 def load(path: pathlib.Path) -> dict:
@@ -76,6 +80,23 @@ def far_bound(row: dict, label: str) -> float:
     return number(row["far_rate"].get("upper_bound_95_per_hour"), f"{label}.far_rate.upper_bound_95_per_hour")
 
 
+def event_matching(identity: dict) -> dict[str, float]:
+    raw = identity.get("event_matching", DEFAULT_EVENT_MATCHING)
+    if not isinstance(raw, dict):
+        raise ValueError("identity.event_matching must be an object")
+    result = {
+        "pre_tolerance_ms": number(
+            raw.get("pre_tolerance_ms"), "identity.event_matching.pre_tolerance_ms"
+        ),
+        "post_tolerance_ms": number(
+            raw.get("post_tolerance_ms"), "identity.event_matching.post_tolerance_ms"
+        ),
+    }
+    if result["pre_tolerance_ms"] < 0.0 or result["post_tolerance_ms"] < 0.0:
+        raise ValueError("event matching tolerances must be >= 0")
+    return result
+
+
 def framing(before: dict, after: dict) -> dict:
     """Check that the two scorecards form a valid paired comparison."""
     left, right = before["identity"], after["identity"]
@@ -83,6 +104,10 @@ def framing(before: dict, after: dict) -> dict:
         raise ValueError(
             f"protocol mismatch: {left['protocol']} vs {right['protocol']} -- "
             "results measured under different protocols are not comparable"
+        )
+    if event_matching(left) != event_matching(right):
+        raise ValueError(
+            "event matching differs: scorecards use different pre/post tolerances"
         )
     moved = [field for field in ("dataset_id", "model_id") if left[field] != right[field]]
     variable = str(right["variable"])
@@ -107,7 +132,11 @@ def framing(before: dict, after: dict) -> dict:
             "code_sha differs: a code change confounds the comparison. Re-run the "
             "baseline on the current code, or declare the code change as the variable."
         )
-    return {"variable": variable, "moved": moved[0]}
+    return {
+        "variable": variable,
+        "moved": moved[0],
+        "event_matching": event_matching(right),
+    }
 
 
 def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
@@ -151,6 +180,7 @@ def compare(before: dict, after: dict, far_budget: float, frr_tolerance: float,
         "protocol": after["identity"]["protocol"],
         "variable": frame["variable"],
         "moved": frame["moved"],
+        "event_matching": frame["event_matching"],
         "baseline_run": before.get("run_id"),
         "candidate_run": after.get("run_id"),
         "exposure_hours": {
