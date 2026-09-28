@@ -1,0 +1,317 @@
+name: restricted-development-dataset-iteration
+
+# Reusable product-development measurement on private real-human audio.
+# Unlike Phase A qualification, this corpus is explicitly feedback-allowed and
+# repeatable. It can never create qualification or shipping authority.
+on:
+  workflow_dispatch:
+    inputs:
+      dataset_id:
+        description: Restricted development dataset ID under KWS_REAL_HUMAN_DEVELOPMENT_ROOT
+        required: true
+      afe_profile:
+        description: Final-AFE adapter profile under KWS_FINAL_AFE_ROOT
+        required: true
+      candidate_id:
+        description: Optional private deployable candidate ID; empty uses the pinned Git-registry model
+        required: false
+        default: ""
+      baseline_card:
+        description: Optional committed scorecard path for a model-only comparison
+        required: false
+        default: ""
+      far_budget:
+        description: Development comparison ceiling on 95% FAR upper bound per hour
+        required: false
+        default: "1.0"
+      seed:
+        description: Measurement label retained in the scorecard identity
+        required: false
+        default: "restricted-development"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: restricted-development-dataset-iteration-${{ inputs.dataset_id }}-${{ inputs.candidate_id }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: [self-hosted, kws-real-audio]
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DATASET_ID: ${{ inputs.dataset_id }}
+      AFE_PROFILE: ${{ inputs.afe_profile }}
+      CANDIDATE_ID: ${{ inputs.candidate_id }}
+      WORK_ROOT: build/restricted-development
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require exact current protected main
+        run: bash governance/require_current_main.sh
+
+      - name: Resolve restricted development inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DATASET_ID" =~ ^[a-z0-9][a-z0-9._-]{7,63}$ ]] || {
+            echo 'dataset_id contains invalid characters' >&2
+            exit 2
+          }
+          [[ "$AFE_PROFILE" =~ ^[a-z0-9][a-z0-9._-]{2,63}$ ]] || {
+            echo 'afe_profile contains invalid characters' >&2
+            exit 2
+          }
+          test -n "${KWS_REAL_HUMAN_DEVELOPMENT_ROOT:-}" || {
+            echo 'self-hosted runner must define KWS_REAL_HUMAN_DEVELOPMENT_ROOT' >&2
+            exit 2
+          }
+          test -n "${KWS_FINAL_AFE_ROOT:-}" || {
+            echo 'self-hosted runner must define KWS_FINAL_AFE_ROOT' >&2
+            exit 2
+          }
+          manifest="${KWS_REAL_HUMAN_DEVELOPMENT_ROOT}/${DATASET_ID}/sealed.json"
+          audio_root="${KWS_REAL_HUMAN_DEVELOPMENT_ROOT}/${DATASET_ID}/wav"
+          afe_adapter="${KWS_FINAL_AFE_ROOT}/${AFE_PROFILE}.json"
+          test -f "$manifest"
+          test -d "$audio_root"
+          test -f "$afe_adapter"
+          test "$(jq -r '.corpus_role' "$manifest")" = development-feedback
+          test "$(jq -r '.dataset_id' "$manifest")" = "$DATASET_ID"
+          printf 'DEVELOPMENT_MANIFEST=%s\nDEVELOPMENT_AUDIO_ROOT=%s\nAFE_ADAPTER=%s\n'             "$manifest" "$audio_root" "$afe_adapter" >> "$GITHUB_ENV"
+
+      - name: Resolve deployable model tuple
+        id: model
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$CANDIDATE_ID" ]]; then
+            tag="$(jq -r '.model.release_tag' configs/shipping.xiaowo.json)"
+            model="models/registry/$tag/xiaowo-model.kwm"
+            keywords="models/registry/$tag/xiaowo-keywords.kwk"
+            python3 tools/verify_model_registry.py               --registry-dir "models/registry/$tag"               --config configs/shipping.xiaowo.json
+            label="git-registry:$tag"
+            source_sha="$(jq -r '.model.trained_head_sha' configs/shipping.xiaowo.json)"
+          else
+            [[ "$CANDIDATE_ID" =~ ^[a-z0-9][a-z0-9._-]{2,63}$ ]] || {
+              echo 'candidate_id contains invalid characters' >&2
+              exit 2
+            }
+            test -n "${KWS_MODEL_CANDIDATE_ROOT:-}" || {
+              echo 'candidate_id requires KWS_MODEL_CANDIDATE_ROOT' >&2
+              exit 2
+            }
+            root="${KWS_MODEL_CANDIDATE_ROOT}/${CANDIDATE_ID}"
+            model="$root/model.kwm"
+            keywords="$root/keywords.kwk"
+            receipt="$root/candidate.json"
+            test -f "$model"
+            test -f "$keywords"
+            test -f "$receipt"
+            python3 - "$receipt" "$model" "$keywords" "$CANDIDATE_ID" <<'PY'
+          import hashlib, json, pathlib, sys
+
+          receipt=pathlib.Path(sys.argv[1])
+          model=pathlib.Path(sys.argv[2])
+          keywords=pathlib.Path(sys.argv[3])
+          candidate_id=sys.argv[4]
+          value=json.loads(receipt.read_text(encoding='utf-8'))
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda:stream.read(1024*1024),b''):
+                      h.update(block)
+              return h.hexdigest()
+          required={
+              'schema_version':1,
+              'candidate_id':candidate_id,
+              'development_only':True,
+              'release_authority':False,
+              'model_sha256':sha(model),
+              'keyword_pack_sha256':sha(keywords),
+          }
+          for key, expected in required.items():
+              if value.get(key) != expected:
+                  raise SystemExit(f'candidate receipt mismatch: {key}')
+          source_sha=str(value.get('source_sha',''))
+          if len(source_sha)!=40 or any(ch not in '0123456789abcdef' for ch in source_sha):
+              raise SystemExit('candidate source_sha must be 40 lowercase hex characters')
+          PY
+            source_sha="$(jq -r '.source_sha' "$receipt")"
+            label="private-candidate:$CANDIDATE_ID"
+          fi
+          test -f "$model"
+          test -f "$keywords"
+          {
+            echo "model_path=$model"
+            echo "keywords_path=$keywords"
+            echo "model_label=$label"
+            echo "model_source_sha=$source_sha"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build current C evaluation runtime
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav
+
+      - name: Validate feedback-allowed restricted corpus
+        run: |
+          python3 tools/validate_real_human_development_corpus.py             --manifest "$DEVELOPMENT_MANIFEST"             --audio-root "$DEVELOPMENT_AUDIO_ROOT"             --public-summary "$WORK_ROOT/development-intake-summary.json"
+
+      - name: Freeze final AFE identity for this measurement
+        run: |
+          python3 tools/final_afe_identity.py             --adapter "$AFE_ADAPTER"             --output "$WORK_ROOT/final-afe-identity.json"
+
+      - name: Run frozen final AFE over restricted development corpus
+        run: |
+          python3 tools/run_final_afe_corpus.py             --manifest "$DEVELOPMENT_MANIFEST"             --audio-root "$DEVELOPMENT_AUDIO_ROOT"             --adapter "$AFE_ADAPTER"             --expected-identity "$WORK_ROOT/final-afe-identity.json"             --output-dir "$WORK_ROOT/afe"
+
+      - name: Measure deployable model on private post-AFE corpus
+        run: |
+          set -euo pipefail
+          afe_id="$(jq -r '.identity_sha256' "$WORK_ROOT/final-afe-identity.json")"
+          python3 tools/run_dataset_iteration.py             --runner build/kws_wav             --model "${{ steps.model.outputs.model_path }}"             --keywords "${{ steps.model.outputs.keywords_path }}"             --references "$WORK_ROOT/afe/references.post-afe.jsonl"             --audio-root "$WORK_ROOT/afe/post-afe"             --work-dir "$WORK_ROOT/iteration"             --output "$WORK_ROOT/iteration/scorecard.json"             --variable model             --dataset-label "private-development:$DATASET_ID:afe:$afe_id"             --model-label "${{ steps.model.outputs.model_label }}"             --seed "${{ inputs.seed }}"
+
+      - name: Compare against declared model baseline
+        if: inputs.baseline_card != ''
+        run: |
+          set -euo pipefail
+          baseline="${{ inputs.baseline_card }}"
+          [[ "$baseline" != /* && "$baseline" != *".."* ]] || {
+            echo 'baseline_card must be a repository-relative path' >&2
+            exit 2
+          }
+          test -f "$baseline"
+          python3 tools/compare_dataset_iterations.py             --baseline "$baseline"             --candidate "$WORK_ROOT/iteration/scorecard.json"             --far-budget "${{ inputs.far_budget }}"             --output "$WORK_ROOT/iteration/comparison.json"
+
+      - name: Retain non-authoritative development receipt
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+
+          root=pathlib.Path(os.environ['WORK_ROOT'])
+          intake=json.loads((root/'development-intake-summary.json').read_text(encoding='utf-8'))
+          afe=json.loads((root/'final-afe-identity.json').read_text(encoding='utf-8'))
+          afe_summary=json.loads((root/'afe'/'afe-corpus-summary.json').read_text(encoding='utf-8'))
+          card=json.loads((root/'iteration'/'scorecard.json').read_text(encoding='utf-8'))
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda:stream.read(1024*1024),b''):
+                      h.update(block)
+              return h.hexdigest()
+          if intake.get('feedback_allowed') is not True:
+              raise SystemExit('development corpus is not feedback-allowed')
+          if intake.get('qualification_authority') is not False or intake.get('shipping_authority') is not False:
+              raise SystemExit('development corpus authority drifted')
+          if afe_summary.get('corpus_role') != 'development-feedback':
+              raise SystemExit('AFE summary corpus role drifted')
+          receipt={
+              'schema_version':1,
+              'evidence_class':'restricted-development-dataset-iteration-receipt-v1',
+              'dataset_id':intake['dataset_id'],
+              'corpus_sha256':intake['corpus_sha256'],
+              'manifest_sha256':intake['manifest_sha256'],
+              'final_afe_identity_sha256':afe['identity_sha256'],
+              'post_afe_corpus_sha256':afe_summary['post_afe_corpus_sha256'],
+              'model_id':card['identity']['model_id'],
+              'model_label':card['labels']['model'],
+              'model_source_sha':'${{ steps.model.outputs.model_source_sha }}',
+              'scorecard_run_id':card['run_id'],
+              'scorecard_sha256':sha(root/'iteration'/'scorecard.json'),
+              'runtime_source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+              'feedback_allowed':True,
+              'repeatable':True,
+              'qualification_authority':False,
+              'shipping_authority':False,
+              'raw_audio_public_upload_allowed':False,
+              'post_afe_audio_public_upload_allowed':False,
+          }
+          (root/'development-iteration-receipt.json').write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+'\n',encoding='utf-8'
+          )
+          PY
+
+      - name: Purge restricted audio before evidence retention
+        if: always()
+        run: |
+          rm -rf "$WORK_ROOT/afe/post-afe" "$WORK_ROOT/afe/result-sidecars"
+          test ! -d "$WORK_ROOT/afe/post-afe"
+          test ! -d "$WORK_ROOT/afe/result-sidecars"
+
+      - name: Record public-safe development scorecard through PR
+        if: success()
+        run: |
+          set -euo pipefail
+          card="$WORK_ROOT/iteration/scorecard.json"
+          run_id="$(jq -r '.run_id' "$card")"
+          target="evidence/dataset-iterations/private-development/$DATASET_ID/$run_id.json"
+          receipt_target="evidence/dataset-iterations/private-development/$DATASET_ID/$run_id.receipt.json"
+          intake_target="evidence/dataset-iterations/private-development/$DATASET_ID/$run_id.intake.json"
+          afe_target="evidence/dataset-iterations/private-development/$DATASET_ID/$run_id.afe.json"
+          comparison_target="evidence/dataset-iterations/private-development/$DATASET_ID/$run_id.comparison.json"
+
+          if [[ -f "$target" ]]; then
+            cmp --silent "$card" "$target" || {
+              echo "scorecard identity collision with different bytes: $target" >&2
+              exit 2
+            }
+            echo "scorecard $run_id already exists" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          mkdir -p "$(dirname "$target")"
+          cp "$card" "$target"
+          cp "$WORK_ROOT/development-iteration-receipt.json" "$receipt_target"
+          cp "$WORK_ROOT/development-intake-summary.json" "$intake_target"
+          cp "$WORK_ROOT/final-afe-identity.json" "$afe_target"
+          if [[ -f "$WORK_ROOT/iteration/comparison.json" ]]; then
+            cp "$WORK_ROOT/iteration/comparison.json" "$comparison_target"
+          fi
+
+          branch="dataset-iteration/private-$run_id"
+          git switch --create "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add evidence/dataset-iterations/private-development
+          git commit -m "evidence(dataset): record private development $run_id"
+          gh auth setup-git
+          git push origin "$branch"
+
+          cat > /tmp/private-development-pr.md <<EOF
+          Restricted real-human development measurement.
+
+          - dataset id: `$DATASET_ID`
+          - run id: `$run_id`
+          - model: `${{ steps.model.outputs.model_label }}`
+          - feedback allowed: `true`
+          - qualification authority: `false`
+          - shipping authority: `false`
+
+          Raw and post-AFE audio remain on the restricted self-hosted runner and are not published.
+          EOF
+          gh pr create             --repo "$GITHUB_REPOSITORY"             --base main             --head "$branch"             --title "evidence(dataset): record private development $run_id"             --body-file /tmp/private-development-pr.md
+
+      - name: Upload public-safe development evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: restricted-development-dataset-iteration
+          path: |
+            build/restricted-development/development-intake-summary.json
+            build/restricted-development/final-afe-identity.json
+            build/restricted-development/development-iteration-receipt.json
+            build/restricted-development/afe/afe-corpus-summary.json
+            build/restricted-development/afe/afe-evidence.jsonl
+            build/restricted-development/afe/references.post-afe.jsonl
+            build/restricted-development/iteration/*.json
+            build/restricted-development/iteration/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
