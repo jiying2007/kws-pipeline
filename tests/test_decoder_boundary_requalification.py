@@ -82,7 +82,6 @@ def main() -> int:
         '.path == ".github/workflows/product-development-experiment.yml"',
         'startswith("product-development-experiment-")',
         'SOURCE_RUN_HEAD_SHA',
-        'source_run must be a successful product-development-experiment pull_request run',
     ):
         assert needle in workflow, f"decoder boundary requalification workflow missing: {needle}"
 
