@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiment_id": "vad-align-suffix-root-v2",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Fresh single-variable candidate after #387 repaired recipe-bound development warm-start. Compare only against vad-align-current-control-v2; keep suffix-root suppression weight frozen at 0.10 and do not sweep.",
+  "config_overrides": {
+    "train.ctc_vad_align": true,
+    "train.suffix_root_suppression_loss_weight": 0.1
+  }
+}
