@@ -99,6 +99,14 @@ def write_wav(path: pathlib.Path, samples: list[int]) -> None:
         writer.writeframes(b"".join(struct.pack("<h", int(sample)) for sample in samples))
 
 
+def repo_relative_path(path: pathlib.Path) -> str:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(ROOT.resolve()).as_posix()
+    except ValueError as exc:
+        raise ValueError("boundary reference output must stay inside repository root") from exc
+
+
 def source_utterance_id(row: dict) -> str:
     provenance = row.get("speech_like_provenance")
     if not isinstance(provenance, dict):
@@ -439,7 +447,7 @@ def build(args: argparse.Namespace) -> dict:
         positive_refs.append(
             {
                 "recording": f"{stem}-within-word-pause",
-                "path": positive_out.relative_to(output).as_posix(),
+                "path": repo_relative_path(positive_out),
                 "duration_s": len(positive_samples) / SAMPLE_RATE_HZ,
                 "expected": [positive_event],
             }
@@ -457,7 +465,7 @@ def build(args: argparse.Namespace) -> dict:
         negative_refs.append(
             {
                 "recording": f"{stem}-cross-boundary",
-                "path": negative_out.relative_to(output).as_posix(),
+                "path": repo_relative_path(negative_out),
                 "duration_s": len(negative_samples) / SAMPLE_RATE_HZ,
                 "expected": [],
             }
