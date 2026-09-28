@@ -45,6 +45,41 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ inputs.treatment_run_id }}
 
+      - name: Resolve paired source heads
+        id: source
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib, re
+          roots={"control":pathlib.Path(".pair/control"),"treatment":pathlib.Path(".pair/treatment")}
+          rows={}
+          for label,root in roots.items():
+              path=root/"build/product-development-experiment-receipt.json"
+              value=json.loads(path.read_text(encoding="utf-8"))
+              head=str(value.get("pr_head_sha",""))
+              base=str(value.get("pr_base_sha",""))
+              if re.fullmatch(r"[0-9a-f]{40}",head) is None or re.fullmatch(r"[0-9a-f]{40}",base) is None:
+                  raise SystemExit(f"{label}: invalid source SHA evidence")
+              rows[label]=(head,base)
+              print(f"{label}_head={head}")
+          if rows["control"][1] != rows["treatment"][1]:
+              raise SystemExit("paired source base SHA differs")
+          print(f"base_sha={rows['control'][1]}")
+          PY
+
+      - name: Require source trees differ only in experiment spec
+        env:
+          CONTROL_HEAD: ${{ steps.source.outputs.control_head }}
+          TREATMENT_HEAD: ${{ steps.source.outputs.treatment_head }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$CONTROL_HEAD" "$TREATMENT_HEAD"
+          mapfile -t changed < <(git diff --name-only "$CONTROL_HEAD" "$TREATMENT_HEAD")
+          printf 'paired source diff: %s\n' "${changed[*]}"
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = ".github/triggers/model-training-experiment.json"
+
       - name: Compare paired causal evidence
         id: compare
         shell: bash
