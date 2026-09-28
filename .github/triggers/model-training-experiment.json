@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "vad-align-current-control-v2",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Fresh paired control after #387 repaired recipe-bound development warm-start. Keep VAD-aligned CTC enabled and suffix-root suppression at default zero. Do not reuse incomplete #385 as final evidence or consume qualification.",
+  "config_overrides": {
+    "train.ctc_vad_align": true
+  }
+}
