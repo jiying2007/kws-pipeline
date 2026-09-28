@@ -43,17 +43,50 @@ jobs:
           case "$SOURCE_RUN_ID" in
             ''|*[!0-9]*) echo "source_run_id must be numeric" >&2; exit 2 ;;
           esac
+
+          run_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")"
+          jq -e '
+            .conclusion == "success" and
+            .event == "pull_request" and
+            .path == ".github/workflows/product-development-experiment.yml"
+          ' <<<"$run_json" >/dev/null || {
+            echo "source run must be a successful product-development-experiment pull_request run" >&2
+            exit 2
+          }
+          source_head_sha="$(jq -r '.head_sha // empty' <<<"$run_json")"
+          test "${#source_head_sha}" -eq 40 || {
+            echo "source run head SHA is missing or invalid" >&2
+            exit 2
+          }
+
           mkdir -p "$SOURCE_ROOT"
+          artifacts_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100")"
           artifact="$SOURCE_ARTIFACT_NAME_INPUT"
           if [ -z "$artifact" ]; then
-            artifact="$(gh api               "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100"               --jq '[.artifacts[] | select(.expired == false)] |
-                    if length == 1 then .[0].name
-                    else error("source run must have exactly one non-expired artifact or source_artifact_name must be supplied")
-                    end')"
+            artifact="$(jq -r '
+              [.artifacts[] |
+                select(.expired == false) |
+                select(.name | startswith("product-development-experiment-"))] |
+              if length == 1 then .[0].name
+              else error("source run must have exactly one non-expired product-development-experiment artifact")
+              end
+            ' <<<"$artifacts_json")"
+          else
+            jq -e --arg name "$artifact" '
+              [.artifacts[] |
+                select(.expired == false) |
+                select(.name == $name) |
+                select(.name | startswith("product-development-experiment-"))] |
+              length == 1
+            ' <<<"$artifacts_json" >/dev/null || {
+              echo "source_artifact_name must name one non-expired product-development-experiment artifact" >&2
+              exit 2
+            }
           fi
-          test -n "$artifact"
+
           gh run download "$SOURCE_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name "$artifact"             --dir "$SOURCE_ROOT"
           echo "SOURCE_ARTIFACT_NAME=$artifact" >> "$GITHUB_ENV"
+          echo "SOURCE_RUN_HEAD_SHA=$source_head_sha" >> "$GITHUB_ENV"
 
       - name: Bind retained source model and calibrated pack
         run: |
@@ -101,6 +134,7 @@ jobs:
               'schema_version':1,
               'evidence_class':'decoder-boundary-requalification-source-v1',
               'source_run_id':int(os.environ['SOURCE_RUN_ID']),
+              'source_run_head_sha':os.environ['SOURCE_RUN_HEAD_SHA'],
               'source_artifact_name':os.environ['SOURCE_ARTIFACT_NAME'],
               'source_grid_sha256':sha(target_grid),
               'source_model_sha256':sha(target_model),
@@ -156,6 +190,7 @@ jobs:
               'development_only':True,
               'selection_feedback_allowed':False,
               'source_run_id':int(os.environ['SOURCE_RUN_ID']),
+              'source_run_head_sha':os.environ['SOURCE_RUN_HEAD_SHA'],
               'source_artifact_name':os.environ['SOURCE_ARTIFACT_NAME'],
               'runtime_repository_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
               'runtime_repository_tree_sha':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
