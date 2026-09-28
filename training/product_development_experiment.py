@@ -37,6 +37,7 @@ ALLOWED_OVERRIDES = {
         "enum",
         tuple(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES)),
     ),
+    "train.ctc_vad_align": ("bool",),
     "domain_iteration.base_failure_replay_enabled": ("bool",),
 }
 

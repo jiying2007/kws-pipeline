@@ -10,6 +10,7 @@ on:
       - 'tests/test_reproducibility_trace.py'
       - 'tests/test_warm_start_lineage.py'
       - 'tests/test_ctc_vad_alignment.py'
+      - 'tests/test_suffix_root_objective.py'
       - 'tools/diagnose_kws_threshold_operating_curve.py'
       - 'tools/diagnose_decoder_policy_replay.py'
       - 'tools/diagnose_decoder_retention_recalibrated_curve.py'
@@ -65,6 +66,7 @@ jobs:
           .venv-audit/bin/python tests/test_reproducibility_trace.py
           .venv-audit/bin/python tests/test_warm_start_lineage.py
           .venv-audit/bin/python tests/test_ctc_vad_alignment.py
+          .venv-audit/bin/python tests/test_suffix_root_objective.py
           python3 tools/check_workflow_path_filters.py
       - name: Verify no tracked source changes
         run: git diff --exit-code -- .

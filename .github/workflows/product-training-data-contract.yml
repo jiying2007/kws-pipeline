@@ -31,6 +31,8 @@ on:
       - "training/feature_cached_trainer.py"
       - "training/sequence_margin.py"
       - "training/completion_loss.py"
+      - "training/suffix_root_loss.py"
+      - "tests/test_suffix_root_objective.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
       - "training/reproducibility_trace.py"
@@ -74,6 +76,8 @@ on:
       - "training/feature_cached_trainer.py"
       - "training/sequence_margin.py"
       - "training/completion_loss.py"
+      - "training/suffix_root_loss.py"
+      - "tests/test_suffix_root_objective.py"
       - "training/wake_pressure_balance.py"
       - "training/reproducibility_smoke.py"
       - "training/reproducibility_trace.py"
@@ -122,6 +126,8 @@ jobs:
           training/train_ctc.py
           training/objective_config.py
           training/objective_contract.py
+          training/suffix_root_loss.py
+          tests/test_suffix_root_objective.py
           training/path_purity.py
           training/export_model.py
           training/test_sequence_margin.py
@@ -232,7 +238,9 @@ jobs:
           .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Decoder-aligned objective math contract
-        run: .venv-objective/bin/python training/test_sequence_margin.py
+        run: |
+          .venv-objective/bin/python training/test_sequence_margin.py
+          .venv-objective/bin/python tests/test_suffix_root_objective.py
 
   live-base-binding:
     runs-on: ubuntu-24.04

@@ -55,6 +55,11 @@ from objective_config import auxiliary_loss_weights
 from training_state import state_identity
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
+from suffix_root_loss import (
+    SUFFIX_ROOT_BLANK_MARGIN,
+    SUFFIX_ROOT_POLICY,
+    suffix_root_suppression_loss,
+)
 from synthetic_audio import UINT32_MAX
 
 MAX_FEATURE_DIM = 40
@@ -75,6 +80,7 @@ RECURRENT_RELEASE_TAIL_STEPS = 25
 RECURRENT_RELEASE_WARMUP_STEPS = 8
 RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
+SUFFIX_ROOT_SUPPRESSION_LOSS_WEIGHT = 0.0
 CTC_VAD_ALIGNMENT_POLICY = "development-pcm-dbfs-gated-ctc-v1"
 CTC_INACTIVE_LOG_PROBABILITY = -30.0
 SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"
@@ -943,6 +949,11 @@ def main() -> None:
         default=RECURRENT_RELEASE_LOSS_WEIGHT,
     )
     parser.add_argument(
+        "--suffix-root-suppression-loss-weight",
+        type=float,
+        default=SUFFIX_ROOT_SUPPRESSION_LOSS_WEIGHT,
+    )
+    parser.add_argument(
         "--path-purity-loss-weight",
         type=float,
         default=PATH_PURITY_LOSS_WEIGHT_DEFAULT,
@@ -992,6 +1003,7 @@ def main() -> None:
         "keyword_sequence_margin_loss_weight",
         "prefix_completion_loss_weight",
         "recurrent_release_loss_weight",
+        "suffix_root_suppression_loss_weight",
         "path_purity_loss_weight",
     ):
         value = float(getattr(args, name))
@@ -1019,6 +1031,10 @@ def main() -> None:
         parser.error("recurrent release context must fit inside the release tail")
     if not math.isfinite(RECURRENT_RELEASE_LOSS_WEIGHT) or RECURRENT_RELEASE_LOSS_WEIGHT <= 0.0:
         parser.error("recurrent release loss weight must be finite and > 0")
+    if args.suffix_root_suppression_loss_weight > 0.0 and not args.ctc_vad_align:
+        parser.error(
+            "--suffix-root-suppression-loss-weight requires --ctc-vad-align"
+        )
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
 
@@ -1103,6 +1119,7 @@ def main() -> None:
         total_margin = 0.0
         total_completion = 0.0
         total_release = 0.0
+        total_suffix_root = 0.0
         total_path_purity = 0.0
         ordered_correct = 0
         ordered_total = 0
@@ -1208,6 +1225,23 @@ def main() -> None:
                 if args.recurrent_release_loss_weight > 0.0
                 else log_probs.sum() * 0.0
             )
+            if args.suffix_root_suppression_loss_weight > 0.0:
+                suffix_root_per_sample = suffix_root_suppression_loss(
+                    log_probs=log_probs,
+                    targets=y,
+                    input_lengths=xlen,
+                    target_lengths=ylen,
+                    vad_mask=vad_mask,
+                    keyword_sequences=keyword_sequences,
+                    blank=0,
+                )
+                suffix_root_loss = normalized_weighted_mean(
+                    suffix_root_per_sample,
+                    sample_weights,
+                    float(weight_statistics["all_mean_weight"]),
+                )
+            else:
+                suffix_root_loss = log_probs.sum() * 0.0
             if args.path_purity_loss_weight > 0.0:
                 path_purity_per_sample = ordered_path_purity_loss(
                     log_probs=log_probs,
@@ -1231,6 +1265,7 @@ def main() -> None:
                 + args.keyword_sequence_margin_loss_weight * margin_loss
                 + args.prefix_completion_loss_weight * completion_loss
                 + args.recurrent_release_loss_weight * release_loss
+                + args.suffix_root_suppression_loss_weight * suffix_root_loss
                 + args.path_purity_loss_weight * path_purity_loss
             )
             optimizer.zero_grad(set_to_none=True)
@@ -1243,6 +1278,7 @@ def main() -> None:
             total_margin += float(margin_loss.detach())
             total_completion += float(completion_loss.detach())
             total_release += float(release_loss.detach())
+            total_suffix_root += float(suffix_root_loss.detach())
             total_path_purity += float(path_purity_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
@@ -1256,6 +1292,7 @@ def main() -> None:
             "margin": total_margin / batches,
             "completion": total_completion / batches,
             "release": total_release / batches,
+            "suffix_root": total_suffix_root / batches,
             "path_purity": total_path_purity / batches,
             "ordered_token_accuracy": ordered_accuracy,
         }
@@ -1265,6 +1302,7 @@ def main() -> None:
             f"ctc={epoch_metrics['ctc']:.6f} ordered={epoch_metrics['ordered']:.6f} "
             f"margin={epoch_metrics['margin']:.6f} completion={epoch_metrics['completion']:.6f} "
             f"release={epoch_metrics['release']:.6f} "
+            f"suffix_root={epoch_metrics['suffix_root']:.6f} "
             f"path_purity={epoch_metrics['path_purity']:.6f} "
             f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}",
             flush=True,
@@ -1343,6 +1381,9 @@ def main() -> None:
             "recurrent_release_context_steps": RECURRENT_RELEASE_CONTEXT_STEPS,
             "recurrent_release_tail_mode": "terminal-context-repeat",
             "recurrent_release_loss_weight": args.recurrent_release_loss_weight,
+            "suffix_root_suppression_loss_weight": args.suffix_root_suppression_loss_weight,
+            "suffix_root_blank_margin": SUFFIX_ROOT_BLANK_MARGIN,
+            "suffix_root_policy": SUFFIX_ROOT_POLICY,
             "path_purity_loss_weight": args.path_purity_loss_weight,
             "path_purity_margin": args.path_purity_margin,
             "path_purity_policy": PATH_PURITY_POLICY,
