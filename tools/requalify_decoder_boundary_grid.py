@@ -30,7 +30,7 @@ from diagnose_decoder_policy_replay import (  # noqa: E402
 )
 from iterate_domain import evaluate, safe_reset  # noqa: E402
 
-POLICY = "retained-decoder-grid-boundary-requalification-v1"
+POLICY = "retained-decoder-grid-boundary-requalification-v2"
 SOURCE_GRID_CLASS = "decoder-policy-posterior-replay-grid-development-v1"
 
 
@@ -188,7 +188,7 @@ def build(args: argparse.Namespace) -> dict:
         pack_sha256=pack_sha,
     )
     boundary_contract = {
-        "policy": "corrected-boundary-labels-v1",
+        "policy": "corrected-boundary-labels-v2",
         "development_only": True,
         "selection_feedback_allowed": False,
         "within_word_pause": boundary_reference_contract(within_refs, positive=True),
@@ -234,7 +234,7 @@ def build(args: argparse.Namespace) -> dict:
 
     summary = {
         "schema_version": 1,
-        "evidence_class": "decoder-boundary-retained-grid-requalification-v1",
+        "evidence_class": "decoder-boundary-retained-grid-requalification-v2",
         "policy": POLICY,
         "development_only": True,
         "protected_evidence_used": False,

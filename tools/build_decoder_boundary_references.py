@@ -29,7 +29,7 @@ sys.path[:0] = [str(EVAL), str(TOOLS)]
 from diagnose_sequence_margin_runtime_gap import log_softmax, read_trace_logits  # noqa: E402
 from run_corpus import ensure_cached_trace  # noqa: E402
 
-POLICY = "boundary-reference-builder-v1"
+POLICY = "boundary-reference-builder-v2"
 ALIGNMENT_POLICY = "ctc-viterbi-event-window-token-midpoint-v1"
 SAMPLE_RATE_HZ = 16000
 FRAME_LENGTH_SAMPLES = 400
@@ -318,6 +318,45 @@ def internal_split_from_alignment(
     }
 
 
+def within_word_expected_event(
+    *,
+    keyword_id: int,
+    event_start_sample: int,
+    event_end_sample: int,
+    split_sample: int,
+    gap_samples: int,
+    lead_samples: int,
+) -> dict:
+    values = (
+        keyword_id,
+        event_start_sample,
+        event_end_sample,
+        split_sample,
+        gap_samples,
+        lead_samples,
+    )
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in values):
+        raise ValueError("within-word event geometry must use integers")
+    if (
+        keyword_id <= 0
+        or not 0 <= event_start_sample < split_sample < event_end_sample
+        or gap_samples <= 0
+        or lead_samples < 0
+    ):
+        raise ValueError("invalid within-word event geometry")
+    start_s = (lead_samples + event_start_sample) / SAMPLE_RATE_HZ
+    end_s = (lead_samples + event_end_sample + gap_samples) / SAMPLE_RATE_HZ
+    match_not_before_s = (lead_samples + split_sample + gap_samples) / SAMPLE_RATE_HZ
+    if not start_s <= match_not_before_s <= end_s:
+        raise ValueError("post-gap match boundary lies outside expected event window")
+    return {
+        "keyword_id": keyword_id,
+        "start_s": start_s,
+        "end_s": end_s,
+        "match_not_before_s": match_not_before_s,
+    }
+
+
 def paused_samples(
     raw: list[int], split_samples: int, gap_samples: int, lead_samples: int, tail_samples: int
 ) -> list[int]:
@@ -439,11 +478,14 @@ def build(args: argparse.Namespace) -> dict:
         )
         positive_out = audio_dir / f"{stem}-within-word-pause.wav"
         write_wav(positive_out, positive_samples)
-        positive_event = {
-            "keyword_id": keyword_id,
-            "start_s": (lead_samples + start) / SAMPLE_RATE_HZ,
-            "end_s": (lead_samples + end + gap_samples) / SAMPLE_RATE_HZ,
-        }
+        positive_event = within_word_expected_event(
+            keyword_id=keyword_id,
+            event_start_sample=start,
+            event_end_sample=end,
+            split_sample=split,
+            gap_samples=gap_samples,
+            lead_samples=lead_samples,
+        )
         positive_refs.append(
             {
                 "recording": f"{stem}-within-word-pause",
@@ -501,7 +543,7 @@ def build(args: argparse.Namespace) -> dict:
 
     summary = {
         "schema_version": 1,
-        "evidence_class": "decoder-boundary-reference-builder-v1",
+        "evidence_class": "decoder-boundary-reference-builder-v2",
         "policy": POLICY,
         "development_only": True,
         "selection_feedback_allowed": False,
