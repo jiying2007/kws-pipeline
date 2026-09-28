@@ -11,10 +11,24 @@ on:
         description: Product-development treatment workflow run ID
         required: true
         type: string
+  workflow_call:
+    inputs:
+      control_run_id:
+        description: Product-development control workflow run ID
+        required: true
+        type: string
+      treatment_run_id:
+        description: Product-development treatment workflow run ID
+        required: true
+        type: string
 
 permissions:
   contents: read
   actions: read
+
+concurrency:
+  group: product-development-pair-${{ inputs.control_run_id }}-${{ inputs.treatment_run_id }}
+  cancel-in-progress: true
 
 jobs:
   compare:
