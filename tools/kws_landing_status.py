@@ -77,7 +77,9 @@ def build_status(root: pathlib.Path) -> dict:
 
     required_paths = [
         root / ".github" / "workflows" / "dataset-driven-iteration.yml",
+        root / ".github" / "workflows" / "restricted-development-dataset-iteration.yml",
         root / ".github" / "workflows" / "real-human-qualification.yml",
+        root / "commercial" / "real-human-development-corpus.schema.json",
         root / "commercial" / "real-human-qualification.policy.json",
         root / "commercial" / "target-qualification.policy.json",
     ]
@@ -136,6 +138,7 @@ def build_status(root: pathlib.Path) -> dict:
         },
         "control_plane": {
             "dataset_iteration_ready": True,
+            "private_development_iteration_ready": True,
             "real_human_phase_a_ready": True,
             "physical_target_phase_b_policy_ready": True,
             "private_real_audio_required": True,
@@ -158,6 +161,8 @@ def verify(status: dict) -> None:
         raise ValueError("unexpected next product gate")
     if status["research"]["architecture_search_paused"] is not True:
         raise ValueError("synthetic architecture search should be paused")
+    if status["control_plane"]["private_development_iteration_ready"] is not True:
+        raise ValueError("restricted private development iteration is not ready")
 
 
 def main() -> int:
