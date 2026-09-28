@@ -240,6 +240,13 @@ def build(args: argparse.Namespace) -> dict:
             )
         )
 
+    source_strict_points = sum(1 for point in points if point["source_strict"])
+    boundary_qualified_points = sum(
+        1 for point in points if point["boundary"]["acceptance"]["qualified"] is True
+    )
+    joint_strict_points = sum(1 for point in points if point["joint_strict"])
+    source_baseline_eligible = source_strict_points > 0
+
     summary = {
         "schema_version": 1,
         "evidence_class": "decoder-boundary-retained-grid-requalification-v3",
@@ -253,11 +260,11 @@ def build(args: argparse.Namespace) -> dict:
         "source_model_sha256": model_sha,
         "source_calibrated_pack_sha256": pack_sha,
         "boundary_reference_contract": boundary_contract,
-        "source_strict_points": sum(1 for point in points if point["source_strict"]),
-        "boundary_qualified_points": sum(
-            1 for point in points if point["boundary"]["acceptance"]["qualified"] is True
-        ),
-        "joint_strict_points": sum(1 for point in points if point["joint_strict"]),
+        "source_strict_points": source_strict_points,
+        "source_baseline_eligible": source_baseline_eligible,
+        "boundary_verdict_authoritative": source_baseline_eligible,
+        "boundary_qualified_points": boundary_qualified_points,
+        "joint_strict_points": joint_strict_points,
         "operating_grid": points,
     }
     output.parent.mkdir(parents=True, exist_ok=True)

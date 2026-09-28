@@ -198,6 +198,8 @@ jobs:
               'boundary_reference_summary_sha256':sha(root/'references'/'boundary-reference-summary.json'),
               'requalification_sha256':sha(root/'requalification.json'),
               'source_strict_points':int(result['source_strict_points']),
+              'source_baseline_eligible':bool(result['source_baseline_eligible']),
+              'boundary_verdict_authoritative':bool(result['boundary_verdict_authoritative']),
               'boundary_qualified_points':int(result['boundary_qualified_points']),
               'joint_strict_points':int(result['joint_strict_points']),
               'product_base_contract_sha256':sha(pathlib.Path('configs/training/product-speech-like-base-v1.json')),
@@ -209,6 +211,23 @@ jobs:
               json.dumps(receipt,indent=2,sort_keys=True)+'\n',
               encoding='utf-8',
           )
+          PY
+
+      - name: Enforce source baseline authority
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+
+          root=pathlib.Path(os.environ['OUTPUT_ROOT'])
+          result=json.loads((root/'requalification.json').read_text(encoding='utf-8'))
+          if result.get('source_baseline_eligible') is not True:
+              raise SystemExit(
+                  'source decoder grid has zero strict operating points; '
+                  'boundary requalification is diagnostic-only and cannot be authoritative'
+              )
+          if result.get('boundary_verdict_authoritative') is not True:
+              raise SystemExit('boundary verdict authority is not established')
           PY
 
       - name: Upload retained boundary requalification evidence
