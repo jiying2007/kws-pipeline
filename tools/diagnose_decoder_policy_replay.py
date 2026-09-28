@@ -85,13 +85,25 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
             raise ValueError(
                 f"{path}:{line_no}: within-word pause reference must contain expected wake"
             )
+        if positive:
+            for event_index, event in enumerate(expected):
+                if not isinstance(event, dict) or "match_not_before_s" not in event:
+                    raise ValueError(
+                        f"{path}:{line_no}: expected[{event_index}] must bind post-gap match_not_before_s"
+                    )
+                marker = float(event["match_not_before_s"])
+                end_s = float(event["end_s"])
+                if not math.isclose(marker, end_s, rel_tol=0.0, abs_tol=1.0e-12):
+                    raise ValueError(
+                        f"{path}:{line_no}: expected[{event_index}] continuity match must begin at event end"
+                    )
         if not positive and expected:
             raise ValueError(
                 f"{path}:{line_no}: cross-boundary negative must not contain expected wake"
             )
     return {
         "role": (
-            "within-word-pause-positive-v1"
+            "within-word-pause-positive-v2"
             if positive
             else "cross-boundary-negative-v1"
         ),
@@ -238,7 +250,7 @@ def main() -> int:
             if not path.is_file():
                 raise ValueError(f"{label} is missing: {path}")
         boundary_contract = {
-            "policy": "corrected-boundary-labels-v1",
+            "policy": "corrected-boundary-labels-v2",
             "development_only": True,
             "selection_feedback_allowed": False,
             "within_word_pause": boundary_reference_contract(

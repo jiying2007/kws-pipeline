@@ -161,7 +161,7 @@ def main() -> int:
     boundary_builder = (
         ROOT / "tools/build_decoder_boundary_references.py"
     ).read_text(encoding="utf-8")
-    assert 'POLICY = "boundary-reference-builder-v1"' in boundary_builder
+    assert 'POLICY = "boundary-reference-builder-v2"' in boundary_builder
     assert "ensure_cached_trace" in boundary_builder
     assert "source_utterance_id" in boundary_builder
     assert "internal_split_from_alignment" in boundary_builder

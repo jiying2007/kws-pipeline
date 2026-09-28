@@ -186,7 +186,7 @@ jobs:
           result=json.loads((root/'requalification.json').read_text(encoding='utf-8'))
           receipt={
               'schema_version':1,
-              'evidence_class':'decoder-boundary-requalification-receipt-v1',
+              'evidence_class':'decoder-boundary-requalification-receipt-v2',
               'development_only':True,
               'selection_feedback_allowed':False,
               'source_run_id':int(os.environ['SOURCE_RUN_ID']),

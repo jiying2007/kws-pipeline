@@ -7,6 +7,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from requalify_decoder_boundary_grid import (  # noqa: E402
+    POLICY,
     compose_point,
     validate_source_grid,
 )
@@ -76,12 +77,14 @@ def main() -> int:
     workflow = (ROOT / ".github" / "workflows" / "decoder-boundary-requalification.yml").read_text(
         encoding="utf-8"
     )
+    assert POLICY == "retained-decoder-grid-boundary-requalification-v2"
     for needle in (
         '.conclusion == "success"',
         '.event == "pull_request"',
         '.path == ".github/workflows/product-development-experiment.yml"',
         'startswith("product-development-experiment-")',
         'SOURCE_RUN_HEAD_SHA',
+        "decoder-boundary-requalification-receipt-v2",
     ):
         assert needle in workflow, f"decoder boundary requalification workflow missing: {needle}"
 

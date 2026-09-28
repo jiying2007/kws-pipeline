@@ -11,6 +11,7 @@ from build_decoder_boundary_references import (  # noqa: E402
     ctc_viterbi_alignment,
     internal_split_from_alignment,
     paused_samples,
+    within_word_expected_event,
     select_boundary_sources,
     stitched_samples,
 )
@@ -127,6 +128,18 @@ def main() -> int:
     )
     assert alignment["split_samples"] == 1280
     assert alignment["split_samples"] % FRAME_HOP_SAMPLES == 0
+
+    continuity_event = within_word_expected_event(
+        keyword_id=1,
+        event_start_sample=320,
+        event_end_sample=3200,
+        split_sample=alignment["split_samples"],
+        gap_samples=6400,
+        lead_samples=320,
+    )
+    assert continuity_event["start_s"] == 0.04
+    assert continuity_event["end_s"] == 0.62
+    assert continuity_event["match_not_before_s"] == continuity_event["end_s"]
 
     raw = list(range(4000))
     paused = paused_samples(

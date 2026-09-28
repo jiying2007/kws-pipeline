@@ -140,9 +140,23 @@ def validate_recordings(rows: list[dict]) -> dict[str, dict]:
             end = finite_float(event["end_s"], f"{name}: expected[{index}].end_s")
             if start < 0.0 or end < start or end > duration:
                 raise ValueError(f"{name}: invalid expected window {start}..{end}")
-            normalized.append(
-                {"keyword_id": keyword_id, "start_s": start, "end_s": end}
-            )
+            match_not_before = event.get("match_not_before_s")
+            normalized_event = {
+                "keyword_id": keyword_id,
+                "start_s": start,
+                "end_s": end,
+            }
+            if match_not_before is not None:
+                match_not_before = finite_float(
+                    match_not_before,
+                    f"{name}: expected[{index}].match_not_before_s",
+                )
+                if not start <= match_not_before <= end:
+                    raise ValueError(
+                        f"{name}: match_not_before_s must lie inside expected window"
+                    )
+                normalized_event["match_not_before_s"] = match_not_before
+            normalized.append(normalized_event)
         recordings[name] = {
             "recording": name,
             "duration_s": duration,
@@ -230,6 +244,8 @@ def match_keyword_events(
                 choice = "detection"
 
             lower = event["start_s"] - pre_tolerance_s
+            if "match_not_before_s" in event:
+                lower = max(lower, event["match_not_before_s"])
             upper = event["end_s"] + post_tolerance_s
             if lower <= detection["time_s"] <= upper:
                 previous_matches, previous_cost = scores[i - 1][j - 1]
