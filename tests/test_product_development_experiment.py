@@ -84,6 +84,8 @@ def main() -> int:
     assert "'--dataset-index',str(boundary_index)" in workflow
     assert "'--within-word-pause-references',str(boundary_root/'within-word-pause.references.jsonl')" in workflow
     assert "'--cross-boundary-negative-references',str(boundary_root/'cross-boundary-negative.references.jsonl')" in workflow
+    assert workflow.count("boundary_root=root/'decoder-boundary-references'") == 3
+    assert workflow.count("decoder boundary reference evidence is missing") == 2
     assert "required['decoder_policy_replay_grid']=decoder_policy is not None" in workflow
     assert "required['decoder_boundary_references']=boundary_references is not None" in workflow
     assert "'decoder_policy_replay_grid':decoder_policy" in workflow
