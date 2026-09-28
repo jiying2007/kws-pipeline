@@ -135,6 +135,22 @@ def main() -> int:
         ]
     )
 
+    pair_workflow = (
+        ROOT / ".github/workflows/product-development-pair-analysis.yml"
+    ).read_text(encoding="utf-8")
+    assert "control_run_id:" in pair_workflow
+    assert "treatment_run_id:" in pair_workflow
+    assert pair_workflow.count("pattern: product-development-base-*") == 2
+    assert "training/compare_product_development_pair.py" in pair_workflow
+    assert "Require valid causal pair" in pair_workflow
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(ROOT / "training/compare_product_development_pair.py"),
+            "--self-test",
+        ]
+    )
+
     replay_args = posterior_replay_cli_args(
         (pathlib.Path("dump"), pathlib.Path("replay"), pathlib.Path("cache")),
         decoder_blank_retention=0.85,
