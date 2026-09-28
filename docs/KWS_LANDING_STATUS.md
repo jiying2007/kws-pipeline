@@ -29,6 +29,14 @@ The current status is intentionally:
 The next product gate is **real-human final-AFE acoustic qualification**, followed
 by **physical target-board performance and soak**.
 
+Before consuming the fresh held-out Phase-A corpus, model iteration may use the
+separate `restricted-development-dataset-iteration` lane on a self-hosted
+`kws-real-audio` runner. That lane reads a `development-feedback` corpus from
+`KWS_REAL_HUMAN_DEVELOPMENT_ROOT`, freezes the final-AFE identity, permits
+repeated feedback, and publishes only hashes/aggregate scorecards. It never
+creates held-out exposure, qualification, promotion, or shipping authority, and
+it never uploads raw or post-AFE audio.
+
 ## Why architecture search is paused
 
 The research line has already tested margin tuning, PCEN64, GRU128 capacity,
