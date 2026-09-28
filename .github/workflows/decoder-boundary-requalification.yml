@@ -159,15 +159,15 @@ jobs:
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
           cmake --build build --parallel --target kws_wav kws_posterior_dump kws_decoder_replay
 
-      - name: Build corrected boundary references
+      - name: Build product-realistic boundary references
         run: |
           set -euo pipefail
-          python3 tools/build_decoder_boundary_references.py             --dataset-index .generated/product-speech-like-base/corpus/bundle/calibration/dataset-index.jsonl             --model "$OUTPUT_ROOT/source/source-model.kwm"             --posterior-dump build/kws_posterior_dump             --posterior-cache "$OUTPUT_ROOT/posterior-cache"             --output-dir "$OUTPUT_ROOT/references"
+          python3 tools/build_decoder_boundary_product_references.py             --dataset-index .generated/product-speech-like-base/corpus/bundle/calibration/dataset-index.jsonl             --output-dir "$OUTPUT_ROOT/references"             --gap-ms 400
 
       - name: Requalify retained decoder grid
         run: |
           set -euo pipefail
-          python3 tools/requalify_decoder_boundary_grid.py             --source-grid "$OUTPUT_ROOT/source/source-decoder-policy-grid.json"             --model "$OUTPUT_ROOT/source/source-model.kwm"             --pack "$OUTPUT_ROOT/source/source-calibrated-keywords.kwk"             --within-word-pause-references "$OUTPUT_ROOT/references/within-word-pause.references.jsonl"             --cross-boundary-negative-references "$OUTPUT_ROOT/references/cross-boundary-negative.references.jsonl"             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$OUTPUT_ROOT/posterior-cache"             --work-dir "$OUTPUT_ROOT/replay-work"             --output "$OUTPUT_ROOT/requalification.json"
+          python3 tools/requalify_decoder_boundary_grid.py             --source-grid "$OUTPUT_ROOT/source/source-decoder-policy-grid.json"             --model "$OUTPUT_ROOT/source/source-model.kwm"             --pack "$OUTPUT_ROOT/source/source-calibrated-keywords.kwk"             --within-word-pause-references "$OUTPUT_ROOT/references/within-word-natural-pause.references.jsonl"             --cross-boundary-negative-references "$OUTPUT_ROOT/references/cross-utterance-long-gap.references.jsonl"             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$OUTPUT_ROOT/posterior-cache"             --work-dir "$OUTPUT_ROOT/replay-work"             --output "$OUTPUT_ROOT/requalification.json"
 
       - name: Retain requalification receipt
         run: |
@@ -186,7 +186,7 @@ jobs:
           result=json.loads((root/'requalification.json').read_text(encoding='utf-8'))
           receipt={
               'schema_version':1,
-              'evidence_class':'decoder-boundary-requalification-receipt-v2',
+              'evidence_class':'decoder-boundary-requalification-receipt-v3',
               'development_only':True,
               'selection_feedback_allowed':False,
               'source_run_id':int(os.environ['SOURCE_RUN_ID']),
