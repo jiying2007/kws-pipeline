@@ -124,7 +124,7 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
 
 
 def folded_env_items(source: str, key: str) -> tuple[str, ...]:
-    marker = f'  {key}: >-\\n'
+    marker = f'  {key}: >-\n'
     assert marker in source, f'workflow env block missing: {key}'
     tail = source.split(marker, 1)[1]
     values: list[str] = []
