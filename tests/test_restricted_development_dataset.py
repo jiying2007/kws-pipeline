@@ -61,6 +61,9 @@ def main() -> int:
     assert "KWS_MODEL_CANDIDATE_ROOT" in workflow
     assert "candidate.json" in workflow
     assert "--variable model" in workflow
+    assert "--protocol restricted-development-dataset-iteration-v1" in workflow
+    assert "--pre-tolerance-ms 0" in workflow
+    assert "--post-tolerance-ms 500" in workflow
     assert "feedback_allowed':True" in workflow
     assert "qualification_authority':False" in workflow
     assert "shipping_authority':False" in workflow
