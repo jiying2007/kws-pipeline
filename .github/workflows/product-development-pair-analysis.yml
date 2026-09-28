@@ -1,0 +1,107 @@
+name: Product development paired causal analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      control_run_id:
+        description: Product-development control workflow run ID
+        required: true
+        type: string
+      treatment_run_id:
+        description: Product-development treatment workflow run ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Download control retained experiment evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: product-development-experiment-*
+          path: .pair/control
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.control_run_id }}
+
+      - name: Download treatment retained experiment evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: product-development-experiment-*
+          path: .pair/treatment
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.treatment_run_id }}
+
+      - name: Resolve paired source heads
+        id: source
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, pathlib, re
+          roots={"control":pathlib.Path(".pair/control"),"treatment":pathlib.Path(".pair/treatment")}
+          rows={}
+          for label,root in roots.items():
+              path=root/"build/product-development-experiment-receipt.json"
+              value=json.loads(path.read_text(encoding="utf-8"))
+              head=str(value.get("pr_head_sha",""))
+              base=str(value.get("pr_base_sha",""))
+              if re.fullmatch(r"[0-9a-f]{40}",head) is None or re.fullmatch(r"[0-9a-f]{40}",base) is None:
+                  raise SystemExit(f"{label}: invalid source SHA evidence")
+              rows[label]=(head,base)
+              print(f"{label}_head={head}")
+          if rows["control"][1] != rows["treatment"][1]:
+              raise SystemExit("paired source base SHA differs")
+          print(f"base_sha={rows['control'][1]}")
+          PY
+
+      - name: Require source trees differ only in experiment spec
+        env:
+          CONTROL_HEAD: ${{ steps.source.outputs.control_head }}
+          TREATMENT_HEAD: ${{ steps.source.outputs.treatment_head }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$CONTROL_HEAD" "$TREATMENT_HEAD"
+          mapfile -t changed < <(git diff --name-only "$CONTROL_HEAD" "$TREATMENT_HEAD")
+          printf 'paired source diff: %s\n' "${changed[*]}"
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = ".github/triggers/model-training-experiment.json"
+
+      - name: Compare paired causal evidence
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          python3 training/compare_product_development_pair.py \
+            --control .pair/control \
+            --treatment .pair/treatment \
+            --output build/product-development-pair-report.json
+          code=$?
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Retain paired comparison
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-development-pair-${{ inputs.control_run_id }}-${{ inputs.treatment_run_id }}
+          path: build/product-development-pair-report.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Require valid causal pair
+        if: always()
+        run: test "${{ steps.compare.outputs.exit_code }}" = "0"
