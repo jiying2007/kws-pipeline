@@ -105,10 +105,10 @@ jobs:
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA"
           python3 training/verify_training_entry_contract.py \
-            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-control.json" \
             --require-product-speech-like-base
           python3 training/verify_training_entry_contract.py \
-            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-treatment.json" \
             --require-product-speech-like-base
 
       - name: Build exact C runtime once
@@ -134,7 +134,7 @@ jobs:
         run: |
           set +e
           .venv/bin/python training/iterate_domain.py \
-            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-control.json" \
             --runner build/kws_wav \
             --work-dir "$KWS_PAIR_ROOT/control/build/product-development-experiment" \
             --posterior-dump build/kws_posterior_dump \
@@ -151,7 +151,7 @@ jobs:
       - name: Verify control objective and float-state readback
         run: |
           .venv/bin/python training/verify_training_readback.py \
-            --config "$KWS_PAIR_ROOT/control/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-control.json" \
             --work-dir "$KWS_PAIR_ROOT/control/build/product-development-experiment" \
             --output "$KWS_PAIR_ROOT/control/build/product-development-experiment/training-readback.json"
 
@@ -187,7 +187,7 @@ jobs:
         run: |
           set +e
           .venv/bin/python training/iterate_domain.py \
-            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-treatment.json" \
             --runner build/kws_wav \
             --work-dir "$KWS_PAIR_ROOT/treatment/build/product-development-experiment" \
             --posterior-dump build/kws_posterior_dump \
@@ -204,7 +204,7 @@ jobs:
       - name: Verify treatment objective and float-state readback
         run: |
           .venv/bin/python training/verify_training_readback.py \
-            --config "$KWS_PAIR_ROOT/treatment/.generated/xiaowo.product-experiment.json" \
+            --config ".generated/xiaowo.product-paired-treatment.json" \
             --work-dir "$KWS_PAIR_ROOT/treatment/build/product-development-experiment" \
             --output "$KWS_PAIR_ROOT/treatment/build/product-development-experiment/training-readback.json"
 
