@@ -143,7 +143,7 @@ def materialize_pair(
         # rebase those paths and make the same config invalid at runtime.
         config_path = (
             effective_config_path.parent
-            / f"xiaowo.product-paired-{pair['experiment_id']}-{arm}.json"
+            / f"xiaowo.product-paired-{arm}.json"
         )
         evidence_config_path = root / ".generated/xiaowo.product-experiment.json"
         receipt_path = root / "build/product-development-experiment-receipt.json"
