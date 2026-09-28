@@ -46,8 +46,11 @@ def main() -> int:
     draft = json.loads(args.draft.read_text(encoding="utf-8"))
     if draft.get("schema_version") != 1:
         raise ValueError("draft schema_version must be 1")
-    if draft.get("corpus_role") != "fresh-held-out-qualification":
-        raise ValueError("draft corpus_role must be fresh-held-out-qualification")
+    corpus_role = draft.get("corpus_role")
+    if corpus_role not in {"fresh-held-out-qualification", "development-feedback"}:
+        raise ValueError(
+            "draft corpus_role must be fresh-held-out-qualification or development-feedback"
+        )
     recordings = draft.get("recordings")
     if not isinstance(recordings, list) or not recordings:
         raise ValueError("draft recordings must be a non-empty list")
