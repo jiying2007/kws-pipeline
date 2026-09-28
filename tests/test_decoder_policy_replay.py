@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from diagnose_decoder_policy_replay import (  # noqa: E402
     boundary_acceptance,
     boundary_reference_contract,
+    joint_strict_verdict,
 )
 from score_events import score, validate_detections, validate_recordings  # noqa: E402
 
@@ -84,6 +85,71 @@ def main() -> int:
         assert neg["role"] == "cross-boundary-negative-v1"
         assert neg["recordings"] == 1
         assert neg["expected_events"] == 0
+
+        product_positive = root / "product-positive.jsonl"
+        product_negative = root / "product-negative.jsonl"
+        write_jsonl(
+            product_positive,
+            [
+                {
+                    "recording": "natural-pause",
+                    "audio_path": "natural-pause.wav",
+                    "duration_s": 1.2,
+                    "boundary_role": "natural-full-phrase-pause-v1",
+                    "expected": [event()],
+                }
+            ],
+        )
+        write_jsonl(
+            product_negative,
+            [
+                {
+                    "recording": "cross-utterance",
+                    "audio_path": "cross-utterance.wav",
+                    "duration_s": 1.4,
+                    "boundary_role": "cross-utterance-long-gap-v1",
+                    "expected": [],
+                }
+            ],
+        )
+        product_pos = boundary_reference_contract(
+            product_positive,
+            positive=True,
+            required_boundary_role="natural-full-phrase-pause-v1",
+        )
+        product_neg = boundary_reference_contract(
+            product_negative,
+            positive=False,
+            required_boundary_role="cross-utterance-long-gap-v1",
+        )
+        assert product_pos["observed_boundary_roles"] == [
+            "natural-full-phrase-pause-v1"
+        ]
+        assert product_neg["observed_boundary_roles"] == [
+            "cross-utterance-long-gap-v1"
+        ]
+        expect_failure(
+            lambda: boundary_reference_contract(
+                product_positive,
+                positive=True,
+                required_boundary_role="inserted-silence-ambiguity-positive-v1",
+            ),
+            "boundary_role must be",
+        )
+
+        boundary_failed = {
+            "acceptance": {"qualified": False},
+        }
+        assert joint_strict_verdict(
+            True,
+            {"acceptance_authority": False},
+            boundary_failed,
+        ) is True
+        assert joint_strict_verdict(
+            True,
+            {"acceptance_authority": True},
+            boundary_failed,
+        ) is False
 
         scored_refs = validate_recordings(
             [
