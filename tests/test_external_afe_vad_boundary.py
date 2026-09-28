@@ -23,7 +23,7 @@ def main() -> int:
     assert POLICY == "external-afe-vad-boundary-feasibility-v1"
     assert EVIDENCE_CLASS == "external-afe-vad-boundary-development-v1"
     assert "gap_speech_active_ratio" not in PROBABILITY_FEATURES
-    assert "gap_speech_active_ratio" in ACTIVE_FEATURES
+    assert "gap_active_ratio" in ACTIVE_FEATURES
     assert set(FEATURE_SETS) == {"probability_only", "probability_plus_active"}
 
     rows = []
