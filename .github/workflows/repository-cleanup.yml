@@ -86,6 +86,10 @@ env:
     training/request-product-preflight-v2
     training/request-split-product-preflight-v1
     training/request-parallel-refinement-preflight-v1
+  RETAINED_DESIGN_BRANCHES: >-
+    feat/decoder-boundary-requalification-v1
+    training/keyword-set-contract-v1
+    training/keyword-set-identity-v1
 
 jobs:
   sweep-merged-branches:
@@ -118,6 +122,15 @@ jobs:
             local retired
             for retired in ${RETIRED_BRANCHES}; do
               [[ "${candidate}" == "${retired}" ]] && return 0
+            done
+            return 1
+          }
+
+          is_retained_design() {
+            local candidate="$1"
+            local retained
+            for retained in ${RETAINED_DESIGN_BRANCHES}; do
+              [[ "${candidate}" == "${retained}" ]] && return 0
             done
             return 1
           }
@@ -155,6 +168,7 @@ jobs:
           deleted=0
           candidates=0
           manual_review=0
+          retained_design=0
           mapfile -t branch_rows < <(
             jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
           )
@@ -172,6 +186,12 @@ jobs:
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
             if (( open_prs != 0 )); then
               echo "skip open PR: ${branch}"
+              continue
+            fi
+
+            if is_retained_design "${branch}"; then
+              retained_design=$((retained_design + 1))
+              echo "skip retained design: ${branch}"
               continue
             fi
 
@@ -247,4 +267,4 @@ jobs:
             echo "deleted: ${branch}"
           done
 
-          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} dry_run=${dry_run}"
+          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} retained_design=${retained_design} dry_run=${dry_run}"
