@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Build corrected decoder-boundary reference corpora from speech-like base audio.
+"""Build decoder-boundary *ambiguity stress* corpora from speech-like base audio.
+
+This is not product acceptance authority. The positive corpus inserts silence
+inside one original full-keyword recording; the negative corpus joins standalone
+halves. At long equal gaps these labels can be acoustically ambiguous. Canonical
+product boundary acceptance is owned by build_decoder_boundary_product_references.py.
 
 The positive corpus inserts silence inside one original full-keyword recording at
 an internal CTC-aligned token boundary. The negative corpus joins standalone
@@ -492,6 +497,7 @@ def build(args: argparse.Namespace) -> dict:
                 "recording": f"{stem}-within-word-pause",
                 "path": repo_relative_path(positive_out),
                 "duration_s": len(positive_samples) / SAMPLE_RATE_HZ,
+                "boundary_role": "inserted-silence-ambiguity-positive-v1",
                 "expected": [positive_event],
             }
         )
@@ -510,6 +516,7 @@ def build(args: argparse.Namespace) -> dict:
                 "recording": f"{stem}-cross-boundary",
                 "path": repo_relative_path(negative_out),
                 "duration_s": len(negative_samples) / SAMPLE_RATE_HZ,
+                "boundary_role": "stitched-half-ambiguity-negative-v1",
                 "expected": [],
             }
         )
@@ -548,6 +555,9 @@ def build(args: argparse.Namespace) -> dict:
         "policy": POLICY,
         "development_only": True,
         "selection_feedback_allowed": False,
+        "release_authority": False,
+        "acceptance_authority": False,
+        "ambiguity_stress": True,
         "dataset_index": str(index),
         "dataset_index_sha256": sha256_file(index),
         "model_sha256": model_sha,

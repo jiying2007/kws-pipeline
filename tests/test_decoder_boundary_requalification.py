@@ -77,16 +77,20 @@ def main() -> int:
     workflow = (ROOT / ".github" / "workflows" / "decoder-boundary-requalification.yml").read_text(
         encoding="utf-8"
     )
-    assert POLICY == "retained-decoder-grid-boundary-requalification-v2"
+    assert POLICY == "retained-decoder-grid-product-boundary-requalification-v3"
     for needle in (
         '.conclusion == "success"',
         '.event == "pull_request"',
         '.path == ".github/workflows/product-development-experiment.yml"',
         'startswith("product-development-experiment-")',
         'SOURCE_RUN_HEAD_SHA',
-        "decoder-boundary-requalification-receipt-v2",
+        "decoder-boundary-requalification-receipt-v3",
+        "build_decoder_boundary_product_references.py",
+        "within-word-natural-pause.references.jsonl",
+        "cross-utterance-long-gap.references.jsonl",
     ):
         assert needle in workflow, f"decoder boundary requalification workflow missing: {needle}"
+    assert "python3 tools/build_decoder_boundary_references.py " not in workflow
 
     pack_sha = "p" * 64
     grid = source_grid(pack_sha)

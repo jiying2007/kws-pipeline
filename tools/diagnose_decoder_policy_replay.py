@@ -63,18 +63,31 @@ def compact_metrics(base: dict, domains: dict) -> dict:
     }
 
 
-def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
+def boundary_reference_contract(
+    path: pathlib.Path,
+    *,
+    positive: bool,
+    required_boundary_role: str | None = None,
+) -> dict:
     rows = load_jsonl(path)
     if not rows:
         raise ValueError(f"boundary reference corpus is empty: {path}")
     validate_recordings(rows)
     expected_events = 0
     seen: set[str] = set()
+    observed_roles: set[str] = set()
     for line_no, row in enumerate(rows, 1):
         recording = str(row.get("recording", "")).strip()
         if not recording or recording in seen:
             raise ValueError(f"{path}:{line_no}: recording must be non-empty and unique")
         seen.add(recording)
+        boundary_role = row.get("boundary_role")
+        if isinstance(boundary_role, str) and boundary_role:
+            observed_roles.add(boundary_role)
+        if required_boundary_role is not None and boundary_role != required_boundary_role:
+            raise ValueError(
+                f"{path}:{line_no}: boundary_role must be {required_boundary_role!r}"
+            )
         audio_path = row.get("audio_path") or row.get("path")
         if not isinstance(audio_path, str) or not audio_path.strip():
             raise ValueError(f"{path}:{line_no}: audio path is required")
@@ -85,7 +98,7 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
             raise ValueError(
                 f"{path}:{line_no}: within-word pause reference must contain expected wake"
             )
-        if positive:
+        if positive and boundary_role != "natural-full-phrase-pause-v1":
             for event_index, event in enumerate(expected):
                 if not isinstance(event, dict) or "match_not_before_s" not in event:
                     raise ValueError(
@@ -110,6 +123,8 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
         "references_sha256": sha256_file(path),
         "recordings": len(rows),
         "expected_events": expected_events,
+        "required_boundary_role": required_boundary_role,
+        "observed_boundary_roles": sorted(observed_roles),
     }
 
 
@@ -156,6 +171,18 @@ def boundary_acceptance(within_word: dict, cross_boundary: dict) -> dict:
             and cross_zero_false_accepts
         ),
     }
+
+
+def joint_strict_verdict(
+    strict: bool,
+    boundary_contract: dict | None,
+    boundary: dict | None,
+) -> bool:
+    if boundary is None:
+        return strict
+    if boundary_contract is not None and boundary_contract.get("acceptance_authority") is False:
+        return strict
+    return strict and bool(boundary["acceptance"]["qualified"])
 
 
 def posterior_counts(root: pathlib.Path) -> tuple[int, int, int]:
@@ -249,18 +276,31 @@ def main() -> int:
         ):
             if not path.is_file():
                 raise ValueError(f"{label} is missing: {path}")
+        within_contract = boundary_reference_contract(
+            args.within_word_pause_references,
+            positive=True,
+        )
+        cross_contract = boundary_reference_contract(
+            args.cross_boundary_negative_references,
+            positive=False,
+        )
+        ambiguity_only = (
+            within_contract["observed_boundary_roles"]
+            == ["inserted-silence-ambiguity-positive-v1"]
+            and cross_contract["observed_boundary_roles"]
+            == ["stitched-half-ambiguity-negative-v1"]
+        )
         boundary_contract = {
-            "policy": "corrected-boundary-labels-v2",
+            "policy": (
+                "inserted-gap-ambiguity-stress-v1"
+                if ambiguity_only
+                else "corrected-boundary-labels-v2"
+            ),
             "development_only": True,
             "selection_feedback_allowed": False,
-            "within_word_pause": boundary_reference_contract(
-                args.within_word_pause_references,
-                positive=True,
-            ),
-            "cross_boundary_negative": boundary_reference_contract(
-                args.cross_boundary_negative_references,
-                positive=False,
-            ),
+            "acceptance_authority": not ambiguity_only,
+            "within_word_pause": within_contract,
+            "cross_boundary_negative": cross_contract,
         }
 
     blank_retentions = sorted(set(float(v) for v in args.blank_retentions))
@@ -408,10 +448,10 @@ def main() -> int:
                     "test": compact_metrics(test_base, test_domains),
                     "strict": strict,
                     "boundary": boundary,
-                    "joint_strict": (
-                        strict
-                        if boundary is None
-                        else strict and bool(boundary["acceptance"]["qualified"])
+                    "joint_strict": joint_strict_verdict(
+                        strict,
+                        boundary_contract,
+                        boundary,
                     ),
                     "posterior_cache": {
                         "hits": hits,
