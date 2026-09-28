@@ -142,6 +142,8 @@ def main() -> int:
     assert "treatment_run_id:" in pair_workflow
     assert pair_workflow.count("pattern: product-development-experiment-*") == 2
     assert "training/compare_product_development_pair.py" in pair_workflow
+    assert "git diff --name-only" in pair_workflow
+    assert ".github/triggers/model-training-experiment.json" in pair_workflow
     assert "Require valid causal pair" in pair_workflow
     subprocess.check_call(
         [
