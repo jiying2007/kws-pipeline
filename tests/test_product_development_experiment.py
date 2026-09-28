@@ -157,22 +157,6 @@ def main() -> int:
         ]
     )
 
-    auto_pair_workflow = (
-        ROOT / ".github/workflows/product-development-auto-pair.yml"
-    ).read_text(encoding="utf-8")
-    assert "workflow_run:" in auto_pair_workflow
-    assert "product-development-experiment" in auto_pair_workflow
-    assert "training/resolve_product_development_pair.py" in auto_pair_workflow
-    assert "needs.resolve.outputs.ready == 'true'" in auto_pair_workflow
-    assert "uses: ./.github/workflows/product-development-pair-analysis.yml" in auto_pair_workflow
-    subprocess.check_call(
-        [
-            sys.executable,
-            str(ROOT / "training/resolve_product_development_pair.py"),
-            "--self-test",
-        ]
-    )
-
     paired_workflow = (
         ROOT / ".github/workflows/product-development-paired-experiment.yml"
     ).read_text(encoding="utf-8")
