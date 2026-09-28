@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-exec-replay-control-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Paired deterministic control for inter-round development failure replay. Hold VAD-aligned CTC and runtime-executable sequence-margin negative scoring fixed; explicitly keep base_failure_replay_enabled=false. Round 0 must match the treatment arm exactly because replay is not yet eligible.",
+  "config_overrides": {
+    "train.ctc_vad_align": true,
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "domain_iteration.base_failure_replay_enabled": false
+  }
+}
