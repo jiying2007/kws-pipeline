@@ -79,9 +79,17 @@ def main() -> int:
     assert "'--fuzzy-child-cost-logs','-8.25','-4.0'" in workflow
     assert "'--coordinate-rounds','1'" in workflow
     assert "'--diagnostic-round-selection-policy','refinement-source-decoder-policy-v1'" in workflow
+    assert "tools/build_decoder_boundary_references.py" in workflow
+    assert "calibration_external=external.get('calibration')" in workflow
+    assert "'--dataset-index',str(boundary_index)" in workflow
+    assert "'--within-word-pause-references',str(boundary_root/'within-word-pause.references.jsonl')" in workflow
+    assert "'--cross-boundary-negative-references',str(boundary_root/'cross-boundary-negative.references.jsonl')" in workflow
     assert "required['decoder_policy_replay_grid']=decoder_policy is not None" in workflow
+    assert "required['decoder_boundary_references']=boundary_references is not None" in workflow
     assert "'decoder_policy_replay_grid':decoder_policy" in workflow
+    assert "'decoder_boundary_references':boundary_references" in workflow
     assert "decoder-policy-replay-grid.json" in workflow
+    assert "decoder-boundary-references/**" in workflow
     assert "candidates/*/model.kwm" in workflow
     assert "datasets/round-*/calibration.references.jsonl" in workflow
     assert "datasets/round-*/test.references.jsonl" in workflow
@@ -149,6 +157,15 @@ def main() -> int:
             assert message in str(exc)
         else:
             raise AssertionError(f"invalid replay override accepted: {kwargs}")
+
+    boundary_builder = (
+        ROOT / "tools/build_decoder_boundary_references.py"
+    ).read_text(encoding="utf-8")
+    assert 'POLICY = "boundary-reference-builder-v1"' in boundary_builder
+    assert "ensure_cached_trace" in boundary_builder
+    assert "source_utterance_id" in boundary_builder
+    assert "internal_split_from_alignment" in boundary_builder
+    assert "right_source_reused" in boundary_builder
 
     decoder_policy_diagnostic = (
         ROOT / "tools/diagnose_decoder_policy_replay.py"
