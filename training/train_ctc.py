@@ -51,7 +51,7 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
 )
-from objective_config import auxiliary_loss_weights
+from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
 from training_state import state_identity
 from path_purity import ordered_path_purity_loss
 from sequence_margin import keyword_sequence_margin_loss
@@ -204,6 +204,7 @@ def training_environment() -> dict:
         ROOT / "training" / "synthetic_audio.py",
         ROOT / "training" / "wake_pressure_balance.py",
         ROOT / "training" / "completion_loss.py",
+        ROOT / "training" / "suffix_root_loss.py",
         ROOT / "training" / "objective_config.py",
         ROOT / "training" / "objective_contract.py",
         ROOT / "training" / "path_purity.py",
@@ -862,6 +863,21 @@ def recurrent_release_loss(
     return torch.stack(losses).mean()
 
 
+def ctc_vad_alignment_contract() -> dict:
+    contract_path = ROOT / "configs" / "parameter-contract.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    threshold = float(contract["runtime"]["min_speech_dbfs"]["default"])
+    if not math.isfinite(threshold) or not -120.0 <= threshold <= 0.0:
+        raise ValueError("runtime min_speech_dbfs default is invalid")
+    return {
+        "policy": CTC_VAD_ALIGNMENT_POLICY,
+        "threshold_dbfs": threshold,
+        "parameter_contract_sha256": sha256_file(contract_path),
+        "inactive_log_probability": CTC_INACTIVE_LOG_PROBABILITY,
+        "development_only": True,
+    }
+
+
 def validate_warm_start(
     checkpoint: dict,
     args: argparse.Namespace,
@@ -886,8 +902,48 @@ def validate_warm_start(
             raise ValueError(
                 f"warm-start {key}={checkpoint.get(key)!r} does not match {value}"
             )
-    if any(key in checkpoint for key in ("development_recipe", "development_only", "release_authority")):
-        raise ValueError("development-only checkpoint cannot warm-start the formal trainer")
+    development_marked = any(
+        key in checkpoint
+        for key in ("development_recipe", "development_only", "release_authority")
+    )
+    if development_marked:
+        if not bool(getattr(args, "ctc_vad_align", False)):
+            raise ValueError(
+                "development-only checkpoint cannot warm-start the formal trainer"
+            )
+        if checkpoint.get("development_recipe") != CTC_VAD_ALIGNMENT_POLICY:
+            raise ValueError("development warm-start recipe is unsupported")
+        if any(key in checkpoint for key in ("development_only", "release_authority")):
+            raise ValueError("development warm-start source authority is unsupported")
+        if checkpoint.get("ctc_vad_alignment") != ctc_vad_alignment_contract():
+            raise ValueError("development warm-start VAD contract mismatch")
+
+        current_aux = auxiliary_loss_weights(vars(args))
+        source_aux = checkpoint.get("auxiliary_loss_weights")
+        try:
+            actual_aux = verify_auxiliary_loss_readback(vars(args), source_aux)
+        except ValueError as exc:
+            raise ValueError(
+                "development warm-start auxiliary objective mismatch"
+            ) from exc
+        if actual_aux != current_aux:
+            raise ValueError("development warm-start auxiliary objective mismatch")
+
+        if checkpoint.get("ordered_token_scope") != args.ordered_token_scope:
+            raise ValueError("development warm-start ordered-token scope mismatch")
+        if (
+            checkpoint.get("sequence_margin_negative_policy")
+            != args.sequence_margin_negative_policy
+        ):
+            raise ValueError("development warm-start sequence-margin policy mismatch")
+        if float(checkpoint.get("path_purity_loss_weight", math.nan)) != float(
+            args.path_purity_loss_weight
+        ):
+            raise ValueError("development warm-start path-purity weight mismatch")
+        if float(checkpoint.get("path_purity_margin", math.nan)) != float(
+            args.path_purity_margin
+        ):
+            raise ValueError("development warm-start path-purity margin mismatch")
     actual_state = state_identity(checkpoint["state_dict"])
     if checkpoint.get("float_state_identity") != actual_state:
         raise ValueError("warm-start float state identity mismatch")
@@ -1053,18 +1109,11 @@ def main() -> None:
     vad_contract = None
     vad_threshold = None
     if args.ctc_vad_align:
-        contract_path = ROOT / "configs" / "parameter-contract.json"
-        contract = json.loads(contract_path.read_text(encoding="utf-8"))
-        vad_threshold = float(contract["runtime"]["min_speech_dbfs"]["default"])
-        if not math.isfinite(vad_threshold) or not -120.0 <= vad_threshold <= 0.0:
-            parser.error("runtime min_speech_dbfs default is invalid")
-        vad_contract = {
-            "policy": CTC_VAD_ALIGNMENT_POLICY,
-            "threshold_dbfs": vad_threshold,
-            "parameter_contract_sha256": sha256_file(contract_path),
-            "inactive_log_probability": CTC_INACTIVE_LOG_PROBABILITY,
-            "development_only": True,
-        }
+        try:
+            vad_contract = ctc_vad_alignment_contract()
+        except ValueError as exc:
+            parser.error(str(exc))
+        vad_threshold = float(vad_contract["threshold_dbfs"])
     dataset = Manifest(
         args.manifest,
         args.feature_dim,

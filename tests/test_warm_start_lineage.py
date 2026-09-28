@@ -30,7 +30,14 @@ def write_tone(path: pathlib.Path, hz: float) -> None:
         out.writeframes(struct.pack("<" + "h" * len(samples), *samples))
 
 
-def train(manifest: pathlib.Path, output: pathlib.Path, warm: pathlib.Path | None = None) -> None:
+def train(
+    manifest: pathlib.Path,
+    output: pathlib.Path,
+    warm: pathlib.Path | None = None,
+    *,
+    ctc_vad_align: bool = False,
+    suffix_root_weight: float = 0.0,
+) -> None:
     command = [
         sys.executable, str(ROOT / "training/train_ctc.py"),
         "--manifest", str(manifest),
@@ -40,10 +47,23 @@ def train(manifest: pathlib.Path, output: pathlib.Path, warm: pathlib.Path | Non
         "--feature-dim", "32", "--hidden-dim", "64",
         "--epochs", "1", "--batch-size", "3", "--seed", "1337",
     ]
+    if ctc_vad_align:
+        command.append("--ctc-vad-align")
+    if suffix_root_weight != 0.0:
+        command.extend(
+            ["--suffix-root-suppression-loss-weight", str(suffix_root_weight)]
+        )
     if warm is not None:
         command.extend(["--warm-start", str(warm)])
-    subprocess.run(command, check=True, cwd=ROOT, stdout=subprocess.DEVNULL,
-                   stderr=subprocess.PIPE, text=True, timeout=60)
+    subprocess.run(
+        command,
+        check=True,
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=60,
+    )
 
 
 def main() -> None:
@@ -68,6 +88,51 @@ def main() -> None:
         assert binding["optimizer_state_restored"] is False
         assert training_metadata(second)["warm_start_binding"] == binding
 
+        dev_source = root / "development-source.pt"
+        dev_result = root / "development-result.pt"
+        train(manifest, dev_source, ctc_vad_align=True)
+        train(manifest, dev_result, dev_source, ctc_vad_align=True)
+        dev_first = torch.load(dev_source, map_location="cpu", weights_only=True)
+        dev_second = torch.load(dev_result, map_location="cpu", weights_only=True)
+        assert dev_first["development_recipe"] == "development-pcm-dbfs-gated-ctc-v1"
+        assert dev_second["warm_start_binding"]["source_checkpoint_sha256"] == hashlib.sha256(
+            dev_source.read_bytes()
+        ).hexdigest()
+
+        try:
+            train(manifest, root / "formal-from-development.pt", dev_source)
+        except subprocess.CalledProcessError as exc:
+            assert "development-only checkpoint cannot warm-start the formal trainer" in exc.stderr
+        else:
+            raise AssertionError("development checkpoint reached formal warm start")
+
+        dev_suffix = root / "development-suffix.pt"
+        train(
+            manifest,
+            dev_suffix,
+            ctc_vad_align=True,
+            suffix_root_weight=0.1,
+        )
+        try:
+            train(
+                manifest,
+                root / "development-mismatch.pt",
+                dev_suffix,
+                ctc_vad_align=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            assert "development warm-start auxiliary objective mismatch" in exc.stderr
+        else:
+            raise AssertionError("development warm start accepted objective drift")
+
+        train(
+            manifest,
+            root / "development-suffix-result.pt",
+            dev_suffix,
+            ctc_vad_align=True,
+            suffix_root_weight=0.1,
+        )
+
         before = hashlib.sha256(source.read_bytes()).hexdigest()
         try:
             train(manifest, source, source)
@@ -81,7 +146,13 @@ def main() -> None:
         dev["development_recipe"] = {"development_only": True}
         dev_path = root / "development.pt"
         torch.save(dev, dev_path)
-        args = argparse.Namespace(warm_start=dev_path, feature_dim=32, hidden_dim=64, frontend="logmel")
+        args = argparse.Namespace(
+            warm_start=dev_path,
+            feature_dim=32,
+            hidden_dim=64,
+            frontend="logmel",
+            ctc_vad_align=False,
+        )
         try:
             validate_warm_start(dev, args, 5, first["vocab_fingerprint"], "0" * 64)
         except ValueError as exc:
