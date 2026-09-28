@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiment_id": "vad-align-suffix-root-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Single-variable candidate against vad-align-current-control-v1. Enable the development-only suffix-root objective at weight 0.10 to suppress the observed one-token-short kw2 suffix false-accept mechanism on VAD-inactive frames. Do not sweep weight or consume qualification evidence.",
+  "config_overrides": {
+    "train.ctc_vad_align": true,
+    "train.suffix_root_suppression_loss_weight": 0.1
+  }
+}
