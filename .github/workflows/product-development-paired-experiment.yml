@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/triggers/model-training-paired-experiment.json'
+      - '.github/triggers/model-training-paired-experiment.json' # workflow-path-filter: allow-missing (created only on paired experiment PRs)
       - '.github/workflows/product-development-paired-experiment.yml'
       - 'training/product_development_pair_spec.py'
       - 'training/compare_product_development_pair.py'
