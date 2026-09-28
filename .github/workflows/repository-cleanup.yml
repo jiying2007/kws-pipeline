@@ -69,6 +69,7 @@ env:
     training/defer-base-qualification-rebase
     training/parallel-calibration-trials-rebase3
     training/parallel-calibration-trials-rebase2
+    training/reuse-product-materialization-v2
     training/accelerate-development-loop-v2
     training/product-development-preflight
     training/product-development-preflight-final
