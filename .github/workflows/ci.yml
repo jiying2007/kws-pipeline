@@ -124,6 +124,7 @@ jobs:
           python3 tests/test_acoustic_alignment_diagnostic.py
           python3 tests/test_decoder_policy_replay.py
           python3 tests/test_decoder_boundary_references.py
+          python3 tests/test_decoder_boundary_product_references.py
           python3 tests/test_decoder_boundary_requalification.py
           python3 tests/test_decoder_boundary_separability.py
           python3 tests/test_acoustic_boundary_segmentation.py
