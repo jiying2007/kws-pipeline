@@ -1,0 +1,194 @@
+name: decoder-boundary-requalification
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful product-development-experiment run containing a retained decoder-policy grid
+        required: true
+        type: string
+      source_artifact_name:
+        description: Optional exact artifact name; leave empty when the source run has exactly one non-expired artifact
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: decoder-boundary-requalification-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_ARTIFACT_NAME_INPUT: ${{ inputs.source_artifact_name }}
+      SOURCE_ROOT: build/decoder-boundary-requalification/source-artifact
+      OUTPUT_ROOT: build/decoder-boundary-requalification
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download retained decoder-policy evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          case "$SOURCE_RUN_ID" in
+            ''|*[!0-9]*) echo "source_run_id must be numeric" >&2; exit 2 ;;
+          esac
+          mkdir -p "$SOURCE_ROOT"
+          artifact="$SOURCE_ARTIFACT_NAME_INPUT"
+          if [ -z "$artifact" ]; then
+            artifact="$(gh api               "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100"               --jq '[.artifacts[] | select(.expired == false)] |
+                    if length == 1 then .[0].name
+                    else error("source run must have exactly one non-expired artifact or source_artifact_name must be supplied")
+                    end')"
+          fi
+          test -n "$artifact"
+          gh run download "$SOURCE_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name "$artifact"             --dir "$SOURCE_ROOT"
+          echo "SOURCE_ARTIFACT_NAME=$artifact" >> "$GITHUB_ENV"
+
+      - name: Bind retained source model and calibrated pack
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil
+
+          root=pathlib.Path(os.environ['SOURCE_ROOT'])
+          out=pathlib.Path(os.environ['OUTPUT_ROOT'])/'source'
+          grid=root/'build/product-development-experiment/decoder-policy-replay-grid.json'
+          if not grid.is_file():
+              raise SystemExit(f'retained source grid missing: {grid}')
+          value=json.loads(grid.read_text(encoding='utf-8'))
+          if value.get('evidence_class') != 'decoder-policy-posterior-replay-grid-development-v1':
+              raise SystemExit('retained source grid evidence class mismatch')
+          model_sha=str(value.get('model_sha256') or '')
+          rows=value.get('operating_grid')
+          if len(model_sha) != 64 or not isinstance(rows,list) or not rows:
+              raise SystemExit('retained source grid identity is incomplete')
+          pack_shas={str(row.get('calibrated_pack_sha256') or '') for row in rows if isinstance(row,dict)}
+          if len(pack_shas) != 1 or len(next(iter(pack_shas))) != 64:
+              raise SystemExit('retained source grid must use one calibrated pack')
+          pack_sha=next(iter(pack_shas))
+
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda:stream.read(1024*1024),b''):
+                      h.update(block)
+              return h.hexdigest()
+
+          models=[path for path in root.glob('build/product-development-experiment/candidates/*/model.kwm') if sha(path)==model_sha]
+          packs=[path for path in root.glob('build/product-development-experiment/candidates/*/calibration/calibrated-keywords.kwk') if sha(path)==pack_sha]
+          if len(models) != 1 or len(packs) != 1:
+              raise SystemExit(f'expected one retained model/pack match, got models={len(models)} packs={len(packs)}')
+
+          out.mkdir(parents=True,exist_ok=True)
+          target_grid=out/'source-decoder-policy-grid.json'
+          target_model=out/'source-model.kwm'
+          target_pack=out/'source-calibrated-keywords.kwk'
+          shutil.copy2(grid,target_grid)
+          shutil.copy2(models[0],target_model)
+          shutil.copy2(packs[0],target_pack)
+          selection={
+              'schema_version':1,
+              'evidence_class':'decoder-boundary-requalification-source-v1',
+              'source_run_id':int(os.environ['SOURCE_RUN_ID']),
+              'source_artifact_name':os.environ['SOURCE_ARTIFACT_NAME'],
+              'source_grid_sha256':sha(target_grid),
+              'source_model_sha256':sha(target_model),
+              'source_pack_sha256':sha(target_pack),
+              'source_model_original_path':models[0].as_posix(),
+              'source_pack_original_path':packs[0].as_posix(),
+          }
+          (out/'source-selection.json').write_text(
+              json.dumps(selection,indent=2,sort_keys=True)+'\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Materialize governed speech-like base
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash training/materialize_governed_product_base.sh
+
+      - name: Build current decoder replay runtime
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target kws_wav kws_posterior_dump kws_decoder_replay
+
+      - name: Build corrected boundary references
+        run: |
+          set -euo pipefail
+          python3 tools/build_decoder_boundary_references.py             --dataset-index .generated/product-speech-like-base/corpus/bundle/calibration/dataset-index.jsonl             --model "$OUTPUT_ROOT/source/source-model.kwm"             --posterior-dump build/kws_posterior_dump             --posterior-cache "$OUTPUT_ROOT/posterior-cache"             --output-dir "$OUTPUT_ROOT/references"
+
+      - name: Requalify retained decoder grid
+        run: |
+          set -euo pipefail
+          python3 tools/requalify_decoder_boundary_grid.py             --source-grid "$OUTPUT_ROOT/source/source-decoder-policy-grid.json"             --model "$OUTPUT_ROOT/source/source-model.kwm"             --pack "$OUTPUT_ROOT/source/source-calibrated-keywords.kwk"             --within-word-pause-references "$OUTPUT_ROOT/references/within-word-pause.references.jsonl"             --cross-boundary-negative-references "$OUTPUT_ROOT/references/cross-boundary-negative.references.jsonl"             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --posterior-cache "$OUTPUT_ROOT/posterior-cache"             --work-dir "$OUTPUT_ROOT/replay-work"             --output "$OUTPUT_ROOT/requalification.json"
+
+      - name: Retain requalification receipt
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+
+          root=pathlib.Path(os.environ['OUTPUT_ROOT'])
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda:stream.read(1024*1024),b''):
+                      h.update(block)
+              return h.hexdigest()
+
+          result=json.loads((root/'requalification.json').read_text(encoding='utf-8'))
+          receipt={
+              'schema_version':1,
+              'evidence_class':'decoder-boundary-requalification-receipt-v1',
+              'development_only':True,
+              'selection_feedback_allowed':False,
+              'source_run_id':int(os.environ['SOURCE_RUN_ID']),
+              'source_artifact_name':os.environ['SOURCE_ARTIFACT_NAME'],
+              'runtime_repository_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+              'runtime_repository_tree_sha':subprocess.check_output(['git','rev-parse','HEAD^{tree}'],text=True).strip(),
+              'source_selection_sha256':sha(root/'source'/'source-selection.json'),
+              'boundary_reference_summary_sha256':sha(root/'references'/'boundary-reference-summary.json'),
+              'requalification_sha256':sha(root/'requalification.json'),
+              'source_strict_points':int(result['source_strict_points']),
+              'boundary_qualified_points':int(result['boundary_qualified_points']),
+              'joint_strict_points':int(result['joint_strict_points']),
+              'product_base_contract_sha256':sha(pathlib.Path('configs/training/product-speech-like-base-v1.json')),
+              'effective_training_config_sha256':sha(pathlib.Path('.generated/xiaowo.product-effective.json')),
+              'posterior_dump_sha256':sha(pathlib.Path('build/kws_posterior_dump')),
+              'decoder_replay_sha256':sha(pathlib.Path('build/kws_decoder_replay')),
+          }
+          (root/'receipt.json').write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+'\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Upload retained boundary requalification evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: decoder-boundary-requalification-${{ inputs.source_run_id }}-${{ github.sha }}
+          path: |
+            build/decoder-boundary-requalification/source/**
+            build/decoder-boundary-requalification/references/**
+            build/decoder-boundary-requalification/requalification.json
+            build/decoder-boundary-requalification/receipt.json
+            build/decoder-boundary-requalification/replay-work/**
+            build/decoder-boundary-requalification/posterior-cache/**/*.json
+            build/decoder-boundary-requalification/posterior-cache/**/*.kwtr
+            .generated/xiaowo.product-effective.json
+          if-no-files-found: error
+          retention-days: 30
