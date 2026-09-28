@@ -346,9 +346,10 @@ def within_word_expected_event(
         raise ValueError("invalid within-word event geometry")
     start_s = (lead_samples + event_start_sample) / SAMPLE_RATE_HZ
     end_s = (lead_samples + event_end_sample + gap_samples) / SAMPLE_RATE_HZ
-    match_not_before_s = (lead_samples + split_sample + gap_samples) / SAMPLE_RATE_HZ
-    if not start_s <= match_not_before_s <= end_s:
-        raise ValueError("post-gap match boundary lies outside expected event window")
+    # This boundary corpus proves continuity only when the detector completes
+    # after the entire resumed right half has been heard. Merely firing at gap
+    # exit can still be a delayed emission of a terminal path completed early.
+    match_not_before_s = end_s
     return {
         "keyword_id": keyword_id,
         "start_s": start_s,

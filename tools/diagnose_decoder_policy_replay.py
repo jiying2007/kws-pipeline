@@ -91,6 +91,12 @@ def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
                     raise ValueError(
                         f"{path}:{line_no}: expected[{event_index}] must bind post-gap match_not_before_s"
                     )
+                marker = float(event["match_not_before_s"])
+                end_s = float(event["end_s"])
+                if not math.isclose(marker, end_s, rel_tol=0.0, abs_tol=1.0e-12):
+                    raise ValueError(
+                        f"{path}:{line_no}: expected[{event_index}] continuity match must begin at event end"
+                    )
         if not positive and expected:
             raise ValueError(
                 f"{path}:{line_no}: cross-boundary negative must not contain expected wake"

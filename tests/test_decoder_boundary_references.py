@@ -138,8 +138,8 @@ def main() -> int:
         lead_samples=320,
     )
     assert continuity_event["start_s"] == 0.04
-    assert continuity_event["match_not_before_s"] == 0.5
     assert continuity_event["end_s"] == 0.62
+    assert continuity_event["match_not_before_s"] == continuity_event["end_s"]
 
     raw = list(range(4000))
     paused = paused_samples(

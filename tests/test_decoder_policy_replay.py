@@ -28,7 +28,7 @@ def event() -> dict:
         "keyword_id": 1,
         "start_s": 0.2,
         "end_s": 0.8,
-        "match_not_before_s": 0.5,
+        "match_not_before_s": 0.8,
     }
 
 
@@ -90,7 +90,14 @@ def main() -> int:
                 {
                     "recording": "continuity",
                     "duration_s": 1.2,
-                    "expected": [event()],
+                    "expected": [
+                        {
+                            "keyword_id": 1,
+                            "start_s": 0.2,
+                            "end_s": 0.8,
+                            "match_not_before_s": 0.5,
+                        }
+                    ],
                 }
             ]
         )
