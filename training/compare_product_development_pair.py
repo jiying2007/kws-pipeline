@@ -142,6 +142,16 @@ def exact_fields(left: dict, right: dict, fields: tuple[str, ...], label: str, f
             failures.append(f"{label}.{field} differs")
 
 
+def finite_number(value: object, label: str) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        raise ValueError(f"{label} must be numeric") from None
+    if not math.isfinite(result):
+        raise ValueError(f"{label} must be finite")
+    return result
+
+
 def metric_summary(record: dict) -> dict:
     metrics = record.get("test")
     if not isinstance(metrics, dict):
@@ -166,8 +176,8 @@ def metric_summary(record: dict) -> dict:
         "matched": int(metrics.get("matched", 0)),
         "expected": int(metrics.get("expected", 0)),
         "false_accepts": int(metrics.get("false_accepts", 0)),
-        "far_per_hour": float(metrics.get("far_per_hour", math.nan)),
-        "frr": float(metrics.get("frr", math.nan)),
+        "far_per_hour": finite_number(metrics.get("far_per_hour"), "test.far_per_hour"),
+        "frr": finite_number(metrics.get("frr"), "test.frr"),
         "per_keyword": keywords,
     }
 
