@@ -125,6 +125,7 @@ jobs:
           python3 tests/test_decoder_policy_replay.py
           python3 tests/test_decoder_boundary_references.py
           python3 tests/test_decoder_boundary_requalification.py
+          python3 tests/test_decoder_boundary_separability.py
       - name: Verify tracked worktree after Domain metric scorer
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
       - name: Adaptive domain curriculum
