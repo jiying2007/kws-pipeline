@@ -61,6 +61,17 @@ def main() -> int:
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     if manifest.get("schema_version") != 1:
         raise ValueError("manifest schema_version must be 1")
+    corpus_role = str(manifest.get("corpus_role", ""))
+    if corpus_role == "fresh-held-out-qualification":
+        corpus_id = str(manifest.get("qualification_id", "")).strip()
+        if not corpus_id or not str(manifest.get("deployment_tag", "")).strip():
+            raise ValueError("qualification corpus requires qualification_id and deployment_tag")
+    elif corpus_role == "development-feedback":
+        corpus_id = str(manifest.get("dataset_id", "")).strip()
+        if not corpus_id:
+            raise ValueError("development corpus requires dataset_id")
+    else:
+        raise ValueError("unsupported corpus_role")
     adapter, executable, identity = inspect_adapter(args.adapter)
     expected_identity = json.loads(args.expected_identity.read_text(encoding="utf-8"))
     if identity != expected_identity:
@@ -202,8 +213,16 @@ def main() -> int:
     write_jsonl(output_dir / "afe-evidence.jsonl", evidence_rows)
     summary = {
         "schema_version": 1,
-        "qualification_id": manifest["qualification_id"],
-        "deployment_tag": manifest["deployment_tag"],
+        "corpus_role": corpus_role,
+        "corpus_id": corpus_id,
+        **(
+            {
+                "qualification_id": manifest["qualification_id"],
+                "deployment_tag": manifest["deployment_tag"],
+            }
+            if corpus_role == "fresh-held-out-qualification"
+            else {"dataset_id": manifest["dataset_id"]}
+        ),
         "recordings": len(references),
         "afe": identity,
         "latency_samples": {
