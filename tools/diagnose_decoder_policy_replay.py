@@ -10,8 +10,10 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TRAINING = ROOT / "training"
-sys.path.insert(0, str(TRAINING))
+EVAL = ROOT / "eval"
+sys.path[:0] = [str(TRAINING), str(EVAL)]
 
+from score_events import load_jsonl, validate_recordings  # noqa: E402
 from development_signal import selection_enabled
 from iterate_domain import (  # noqa: E402
     base_gate,
@@ -61,6 +63,89 @@ def compact_metrics(base: dict, domains: dict) -> dict:
     }
 
 
+def boundary_reference_contract(path: pathlib.Path, *, positive: bool) -> dict:
+    rows = load_jsonl(path)
+    if not rows:
+        raise ValueError(f"boundary reference corpus is empty: {path}")
+    validate_recordings(rows)
+    expected_events = 0
+    seen: set[str] = set()
+    for line_no, row in enumerate(rows, 1):
+        recording = str(row.get("recording", "")).strip()
+        if not recording or recording in seen:
+            raise ValueError(f"{path}:{line_no}: recording must be non-empty and unique")
+        seen.add(recording)
+        audio_path = row.get("audio_path") or row.get("path")
+        if not isinstance(audio_path, str) or not audio_path.strip():
+            raise ValueError(f"{path}:{line_no}: audio path is required")
+        expected = row.get("expected")
+        assert isinstance(expected, list)
+        expected_events += len(expected)
+        if positive and not expected:
+            raise ValueError(
+                f"{path}:{line_no}: within-word pause reference must contain expected wake"
+            )
+        if not positive and expected:
+            raise ValueError(
+                f"{path}:{line_no}: cross-boundary negative must not contain expected wake"
+            )
+    return {
+        "role": (
+            "within-word-pause-positive-v1"
+            if positive
+            else "cross-boundary-negative-v1"
+        ),
+        "references_sha256": sha256_file(path),
+        "recordings": len(rows),
+        "expected_events": expected_events,
+    }
+
+
+def compact_boundary_metrics(base: dict) -> dict:
+    return {
+        key: base[key]
+        for key in (
+            "recordings",
+            "audio_hours",
+            "expected",
+            "matched",
+            "false_rejects",
+            "false_accepts",
+            "frr",
+            "far_per_hour",
+            "negative_recording_audio_hours",
+            "negative_recording_false_accepts",
+            "negative_recording_far_per_hour",
+            "p95_post_end_latency_ms",
+            "per_keyword",
+        )
+        if key in base
+    }
+
+
+def boundary_acceptance(within_word: dict, cross_boundary: dict) -> dict:
+    within_supported = int(within_word.get("expected", 0)) > 0
+    within_zero_false_rejects = int(within_word.get("false_rejects", -1)) == 0
+    cross_supported = (
+        int(cross_boundary.get("recordings", 0)) > 0
+        and int(cross_boundary.get("expected", -1)) == 0
+        and float(cross_boundary.get("negative_recording_audio_hours", 0.0)) > 0.0
+    )
+    cross_zero_false_accepts = int(cross_boundary.get("false_accepts", -1)) == 0
+    return {
+        "within_word_supported": within_supported,
+        "within_word_zero_false_rejects": within_zero_false_rejects,
+        "cross_boundary_supported": cross_supported,
+        "cross_boundary_zero_false_accepts": cross_zero_false_accepts,
+        "qualified": (
+            within_supported
+            and within_zero_false_rejects
+            and cross_supported
+            and cross_zero_false_accepts
+        ),
+    }
+
+
 def posterior_counts(root: pathlib.Path) -> tuple[int, int, int]:
     hits = 0
     misses = 0
@@ -90,6 +175,8 @@ def main() -> int:
     parser.add_argument("--config", required=True, type=pathlib.Path)
     parser.add_argument("--calibration-references", required=True, type=pathlib.Path)
     parser.add_argument("--test-references", required=True, type=pathlib.Path)
+    parser.add_argument("--within-word-pause-references", type=pathlib.Path)
+    parser.add_argument("--cross-boundary-negative-references", type=pathlib.Path)
     parser.add_argument("--development-manifest", type=pathlib.Path)
     parser.add_argument("--development-authority-receipt", type=pathlib.Path)
     parser.add_argument("--round-index", type=int)
@@ -129,6 +216,40 @@ def main() -> int:
     ):
         if not path.is_file():
             raise ValueError(f"{label} is missing: {path}")
+
+    boundary_values = (
+        args.within_word_pause_references,
+        args.cross_boundary_negative_references,
+    )
+    if any(value is not None for value in boundary_values) and not all(
+        value is not None for value in boundary_values
+    ):
+        raise ValueError(
+            "within-word pause and cross-boundary negative references must be supplied together"
+        )
+    boundary_contract = None
+    if all(value is not None for value in boundary_values):
+        assert args.within_word_pause_references is not None
+        assert args.cross_boundary_negative_references is not None
+        for path, label in (
+            (args.within_word_pause_references, "within-word pause references"),
+            (args.cross_boundary_negative_references, "cross-boundary negative references"),
+        ):
+            if not path.is_file():
+                raise ValueError(f"{label} is missing: {path}")
+        boundary_contract = {
+            "policy": "corrected-boundary-labels-v1",
+            "development_only": True,
+            "selection_feedback_allowed": False,
+            "within_word_pause": boundary_reference_contract(
+                args.within_word_pause_references,
+                positive=True,
+            ),
+            "cross_boundary_negative": boundary_reference_contract(
+                args.cross_boundary_negative_references,
+                positive=False,
+            ),
+        }
 
     blank_retentions = sorted(set(float(v) for v in args.blank_retentions))
     fuzzy_costs = sorted(set(float(v) for v in args.fuzzy_child_cost_logs))
@@ -227,6 +348,42 @@ def main() -> int:
                 decoder_blank_retention=blank_retention,
                 decoder_fuzzy_child_cost_log=fuzzy_cost,
             )
+            strict = (
+                base_gate(cal_base, gates)
+                and domain_gate(cal_domains, gates)
+                and base_gate(test_base, gates)
+                and domain_gate(test_domains, gates)
+            )
+            boundary = None
+            if boundary_contract is not None:
+                assert args.within_word_pause_references is not None
+                assert args.cross_boundary_negative_references is not None
+                within_base, _ = evaluate(
+                    runner=args.runner.resolve(),
+                    model=args.model.resolve(),
+                    pack=calibrated_pack,
+                    references=args.within_word_pause_references.resolve(),
+                    output=trial / "boundary-within-word-pause",
+                    posterior_replay=posterior_replay,
+                    decoder_blank_retention=blank_retention,
+                    decoder_fuzzy_child_cost_log=fuzzy_cost,
+                )
+                cross_base, _ = evaluate(
+                    runner=args.runner.resolve(),
+                    model=args.model.resolve(),
+                    pack=calibrated_pack,
+                    references=args.cross_boundary_negative_references.resolve(),
+                    output=trial / "boundary-cross-negative",
+                    posterior_replay=posterior_replay,
+                    decoder_blank_retention=blank_retention,
+                    decoder_fuzzy_child_cost_log=fuzzy_cost,
+                )
+                acceptance = boundary_acceptance(within_base, cross_base)
+                boundary = {
+                    "within_word_pause": compact_boundary_metrics(within_base),
+                    "cross_boundary_negative": compact_boundary_metrics(cross_base),
+                    "acceptance": acceptance,
+                }
             hits, misses, provenance_files = posterior_counts(trial)
             rows.append(
                 {
@@ -237,11 +394,12 @@ def main() -> int:
                     "calibrated_pack_sha256": sha256_file(calibrated_pack),
                     "calibration": compact_metrics(cal_base, cal_domains),
                     "test": compact_metrics(test_base, test_domains),
-                    "strict": (
-                        base_gate(cal_base, gates)
-                        and domain_gate(cal_domains, gates)
-                        and base_gate(test_base, gates)
-                        and domain_gate(test_domains, gates)
+                    "strict": strict,
+                    "boundary": boundary,
+                    "joint_strict": (
+                        strict
+                        if boundary is None
+                        else strict and bool(boundary["acceptance"]["qualified"])
                     ),
                     "posterior_cache": {
                         "hits": hits,
@@ -273,6 +431,7 @@ def main() -> int:
         "parallel_trials": parallel_trials,
         "blank_retentions": blank_retentions,
         "fuzzy_child_cost_logs": fuzzy_costs,
+        "boundary_reference_contract": boundary_contract,
         "operating_grid": rows,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
