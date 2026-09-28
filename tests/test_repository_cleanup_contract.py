@@ -88,6 +88,13 @@ REQUIRED_ACTIVE_PATHS = (
 )
 
 
+REQUIRED_RETAINED_DESIGN_BRANCHES = (
+    'feat/decoder-boundary-requalification-v1',
+    'training/keyword-set-contract-v1',
+    'training/keyword-set-identity-v1',
+)
+
+
 REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
     'audit/enforce-claims-and-rnn-contract',
     'audit/enforce-workflow-references',
@@ -116,8 +123,28 @@ REQUIRED_EXPLICIT_RETIRED_BRANCHES = (
 )
 
 
+def folded_env_items(source: str, key: str) -> tuple[str, ...]:
+    marker = f'  {key}: >-\\n'
+    assert marker in source, f'workflow env block missing: {key}'
+    tail = source.split(marker, 1)[1]
+    values: list[str] = []
+    for line in tail.splitlines():
+        if not line.startswith('    '):
+            break
+        value = line.strip()
+        if value:
+            values.append(value)
+    return tuple(values)
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
+
+    retired_branches = set(folded_env_items(source, 'RETIRED_BRANCHES'))
+    retained_design_branches = set(folded_env_items(source, 'RETAINED_DESIGN_BRANCHES'))
+    for branch in REQUIRED_RETAINED_DESIGN_BRANCHES:
+        assert branch in retained_design_branches, f'retained design branch missing: {branch}'
+        assert branch not in retired_branches, f'retained design branch also retired: {branch}'
 
     for branch in REQUIRED_EXPLICIT_RETIRED_BRANCHES:
         assert branch in source, f'explicit retired branch missing: {branch}'
@@ -156,6 +183,10 @@ def main() -> int:
         'manual_review=$((manual_review + 1))',
         'manual-review: ${branch} (diverged from ${default_branch}; no exact-head closed PR provenance)',
         'manual_review=${manual_review}',
+        'retained_design=0',
+        'retained_design=$((retained_design + 1))',
+        'skip retained design: ${branch}',
+        'retained_design=${retained_design}',
     ):
         assert needle in source, f'manual-review observability contract missing: {needle}'
 
@@ -164,6 +195,7 @@ def main() -> int:
         'if [[ "${protected}" == "true" ]]',
         '-f state=open -f head="${owner}:${branch}"',
         'skip open PR: ${branch}',
+        'is_retained_design "${branch}"',
         'latest_sha=',
         'latest_open_prs=',
         'latest_active_runs=',
