@@ -10,6 +10,7 @@ from diagnose_boundary_separability import (  # noqa: E402
     EVIDENCE_CLASS,
     FEATURES,
     POLICY,
+    assert_train_split,
     fit_scalar_threshold,
     longest_true_run,
     summarize_feature,
@@ -30,6 +31,30 @@ def main() -> int:
     assert POLICY == "decoder-boundary-train-separability-v1"
     assert EVIDENCE_CLASS == "decoder-boundary-separability-development-v1"
     assert longest_true_run([False, True, True, False, True]) == 2
+
+    assert_train_split(
+        [
+            {
+                "speech_like_provenance": {
+                    "source_id": "speech-like:train:slot:kw1-exact"
+                }
+            }
+        ]
+    )
+    try:
+        assert_train_split(
+            [
+                {
+                    "speech_like_provenance": {
+                        "source_id": "speech-like:calibration:slot:kw1-exact"
+                    }
+                }
+            ]
+        )
+    except ValueError as exc:
+        assert "only speech-like:train" in str(exc)
+    else:
+        raise AssertionError("calibration evidence entered feedback-allowed diagnostic")
 
     fitted = fit_scalar_threshold(
         [(0.9, True), (0.8, True), (0.2, False), (0.1, False)]
