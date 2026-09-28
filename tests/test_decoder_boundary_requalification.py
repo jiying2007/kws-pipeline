@@ -88,6 +88,10 @@ def main() -> int:
         "build_decoder_boundary_product_references.py",
         "within-word-natural-pause.references.jsonl",
         "cross-utterance-long-gap.references.jsonl",
+        "source_baseline_eligible",
+        "boundary_verdict_authoritative",
+        "Enforce source baseline authority",
+        "zero strict operating points",
     ):
         assert needle in workflow, f"decoder boundary requalification workflow missing: {needle}"
     assert "python3 tools/build_decoder_boundary_references.py " not in workflow
@@ -160,6 +164,13 @@ def main() -> int:
     assert boundary_failed["source_strict"] is True
     assert boundary_failed["boundary"]["acceptance"]["qualified"] is False
     assert boundary_failed["joint_strict"] is False
+
+    # Canonical workflow authority is stricter than diagnostic composition:
+    # a source grid with no strict point must never produce an authoritative
+    # product-boundary verdict.
+    assert sum(
+        1 for point in (source_failed, boundary_failed) if point["source_strict"]
+    ) == 1
 
     print("test_decoder_boundary_requalification: ok")
     return 0
