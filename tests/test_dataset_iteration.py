@@ -15,7 +15,8 @@ PROTOCOL = "dataset-iteration-v1"
 
 def scorecard(*, run_id="r1", protocol=PROTOCOL, dataset="d1", model="m1",
               code="c1", seed="s1", variable="model", frr=0.1, far=0.0,
-              latency=100.0, exposure_hours=0.25, bound=11.98, domains=None):
+              latency=100.0, exposure_hours=0.25, bound=11.98, domains=None,
+              pre_tolerance_ms=150.0, post_tolerance_ms=500.0):
     return {
         "schema_version": 1,
         "protocol": protocol,
@@ -27,6 +28,10 @@ def scorecard(*, run_id="r1", protocol=PROTOCOL, dataset="d1", model="m1",
             "code_sha": code,
             "seed": seed,
             "variable": variable,
+            "event_matching": {
+                "pre_tolerance_ms": pre_tolerance_ms,
+                "post_tolerance_ms": post_tolerance_ms,
+            },
         },
         "exposure": {"negative_recordings": 3, "exposure_hours": exposure_hours},
         "metrics": {
@@ -124,6 +129,15 @@ def main() -> int:
                    scorecard(run_id="cand", model="m2", protocol="other-v1"))
         assert done.returncode == 2, done.stdout
         assert "protocol mismatch" in done.stderr, done.stderr
+
+        # Product event-matching semantics are part of the measurement.
+        done = run(
+            root,
+            scorecard(run_id="base", pre_tolerance_ms=150.0),
+            scorecard(run_id="cand", model="m2", pre_tolerance_ms=0.0),
+        )
+        assert done.returncode == 2, done.stdout
+        assert "event matching differs" in done.stderr, done.stderr
 
         # A code change confounds the result unless re-baselined.
         done = run(root,
