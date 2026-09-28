@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "experiment_id": "vad-align-current-control-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head",
+  "protected_evidence_used": false,
+  "reason": "Paired control for suffix-root suppression. Use the exact current main trainer and bounded PR-head schedule with VAD-aligned CTC enabled, but keep suffix-root suppression at its default zero. No qualification or shipping authority.",
+  "config_overrides": {
+    "train.ctc_vad_align": true
+  }
+}
