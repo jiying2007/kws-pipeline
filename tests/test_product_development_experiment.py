@@ -145,10 +145,28 @@ def main() -> int:
     assert "git diff --name-only" in pair_workflow
     assert ".github/triggers/model-training-experiment.json" in pair_workflow
     assert "Require valid causal pair" in pair_workflow
+    assert "workflow_call:" in pair_workflow
+    assert "product-development-pair-${{ inputs.control_run_id }}-${{ inputs.treatment_run_id }}" in pair_workflow
     subprocess.check_call(
         [
             sys.executable,
             str(ROOT / "training/compare_product_development_pair.py"),
+            "--self-test",
+        ]
+    )
+
+    auto_pair_workflow = (
+        ROOT / ".github/workflows/product-development-auto-pair.yml"
+    ).read_text(encoding="utf-8")
+    assert "workflow_run:" in auto_pair_workflow
+    assert "product-development-experiment" in auto_pair_workflow
+    assert "training/resolve_product_development_pair.py" in auto_pair_workflow
+    assert "needs.resolve.outputs.ready == 'true'" in auto_pair_workflow
+    assert "uses: ./.github/workflows/product-development-pair-analysis.yml" in auto_pair_workflow
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(ROOT / "training/resolve_product_development_pair.py"),
             "--self-test",
         ]
     )
