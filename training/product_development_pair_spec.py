@@ -136,7 +136,16 @@ def materialize_pair(
     for arm in ("control", "treatment"):
         root = output_root / arm
         spec_path = root / ".github/triggers/model-training-experiment.json"
-        config_path = root / ".generated/xiaowo.product-experiment.json"
+        # Keep the executable config beside the governed effective config.
+        # materialize_product_training_config.py intentionally writes external-base
+        # paths relative to effective_config_path.parent (normally ROOT/.generated).
+        # Nesting the executable config under the evidence root would silently
+        # rebase those paths and make the same config invalid at runtime.
+        config_path = (
+            effective_config_path.parent
+            / f"xiaowo.product-paired-{pair['experiment_id']}-{arm}.json"
+        )
+        evidence_config_path = root / ".generated/xiaowo.product-experiment.json"
         receipt_path = root / "build/product-development-experiment-receipt.json"
         spec_path.parent.mkdir(parents=True, exist_ok=True)
         spec_path.write_text(
@@ -151,6 +160,12 @@ def materialize_pair(
             base_sha=base_sha,
             head_sha=head_sha,
         )
+        evidence_config_path.parent.mkdir(parents=True, exist_ok=True)
+        evidence_config_path.write_bytes(config_path.read_bytes())
+        if sha256_file(evidence_config_path) != receipt["experiment_config_sha256"]:
+            raise ValueError("paired evidence config copy drifted from executable config")
+        receipt["executable_config"] = str(config_path)
+        receipt["evidence_config"] = str(evidence_config_path)
         arm_receipts[arm] = receipt
 
     if (
