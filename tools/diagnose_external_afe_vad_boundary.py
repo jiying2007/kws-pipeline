@@ -23,9 +23,9 @@ from diagnose_acoustic_boundary_segmentation import (  # noqa: E402
 )
 from diagnose_boundary_separability import (  # noqa: E402
     build as build_gap_separability,
-    safe_name,
     write_json,
 )
+from build_decoder_boundary_references import safe_name  # noqa: E402
 
 POLICY = "external-afe-vad-boundary-feasibility-v1"
 EVIDENCE_CLASS = "external-afe-vad-boundary-development-v1"
