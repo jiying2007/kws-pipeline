@@ -140,7 +140,7 @@ def main() -> int:
     ).read_text(encoding="utf-8")
     assert "control_run_id:" in pair_workflow
     assert "treatment_run_id:" in pair_workflow
-    assert pair_workflow.count("pattern: product-development-base-*") == 2
+    assert pair_workflow.count("pattern: product-development-experiment-*") == 2
     assert "training/compare_product_development_pair.py" in pair_workflow
     assert "Require valid causal pair" in pair_workflow
     subprocess.check_call(
