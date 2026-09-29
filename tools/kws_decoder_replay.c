@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
   float blank_retention = expf(KWS_SILENCE_RETENTION_LOG);
   float fuzzy_child_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;
   int search_policy_override = 0;
+  int require_exact_nonroot = 0;
   kws_engine_t *engine = NULL;
   void *arena = NULL;
   kws_trace_reader_t reader = {0};
@@ -60,7 +61,8 @@ int main(int argc, char **argv) {
     fprintf(stderr,
             "usage: %s model.kwm keywords.kwk trace.kwtr recording-id "
             "[--state-retention value] [--refractory-ms value] "
-            "[--blank-retention value] [--fuzzy-child-cost-log value]\n",
+            "[--blank-retention value] [--fuzzy-child-cost-log value] "
+            "[--require-exact-nonroot 0|1]\n",
             argv[0]);
     return 2;
   }
@@ -87,6 +89,13 @@ int main(int argc, char **argv) {
         return 2;
       }
       search_policy_override = 1;
+    } else if (strcmp(argv[i], "--require-exact-nonroot") == 0) {
+      uint32_t enabled = 0u;
+      if (!parse_u32(argv[i + 1], &enabled) || enabled > 1u) {
+        fprintf(stderr, "invalid --require-exact-nonroot\n");
+        return 2;
+      }
+      require_exact_nonroot = (int)enabled;
     } else {
       fprintf(stderr, "unknown option: %s\n", argv[i]);
       return 2;
@@ -129,6 +138,11 @@ int main(int argc, char **argv) {
       kws_engine_debug_set_decoder_search_policy(
           engine, blank_retention, fuzzy_child_cost_log) != KWS_OK) {
     fprintf(stderr, "invalid decoder search-policy override\n");
+    goto cleanup;
+  }
+  if (require_exact_nonroot != 0 &&
+      kws_engine_debug_require_exact_nonroot(engine, 1) != KWS_OK) {
+    fprintf(stderr, "invalid exact-nonroot override\n");
     goto cleanup;
   }
 
