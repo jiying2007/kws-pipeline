@@ -9,6 +9,7 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
     SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION,
     SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
 )
@@ -269,6 +270,63 @@ def _runtime_executable_sequence_log_confidence(
     return best_acoustic / float(depth_count)
 
 
+def _ctc_keyword_competition_loss(
+    sample_ctc_log_probs: torch.Tensor,
+    normalized_keywords: list[tuple[int, ...]],
+    *,
+    wake_index: int,
+    true_ctc_nll: torch.Tensor,
+    blank: int,
+) -> torch.Tensor:
+    """Cross-entropy over configured keyword CTC sequence probabilities.
+
+    Scores are negative CTC NLL normalized by keyword token count.  The true
+    keyword reuses the trainer's already-computed CTC NLL so the auxiliary
+    objective cannot silently diverge from the primary CTC path.  Competing
+    configured keywords are evaluated on the same CTC log-probabilities,
+    including VAD alignment when enabled by the trainer.
+    """
+    if sample_ctc_log_probs.ndim != 2:
+        raise ValueError("sample_ctc_log_probs must be [T,V]")
+    if not 0 <= wake_index < len(normalized_keywords):
+        raise ValueError("wake_index is outside configured keywords")
+    steps = int(sample_ctc_log_probs.shape[0])
+    if steps <= 0:
+        raise ValueError("CTC keyword competition requires positive input length")
+
+    scores: list[torch.Tensor] = []
+    for index, sequence in enumerate(normalized_keywords):
+        if index == wake_index:
+            nll = true_ctc_nll
+        else:
+            target = torch.tensor(
+                sequence,
+                dtype=torch.long,
+                device=sample_ctc_log_probs.device,
+            )
+            nll = torch.nn.functional.ctc_loss(
+                sample_ctc_log_probs.unsqueeze(1),
+                target,
+                torch.tensor(
+                    [steps],
+                    dtype=torch.long,
+                    device=sample_ctc_log_probs.device,
+                ),
+                torch.tensor(
+                    [len(sequence)],
+                    dtype=torch.long,
+                    device=sample_ctc_log_probs.device,
+                ),
+                blank=blank,
+                reduction="sum",
+                zero_infinity=False,
+            )
+        scores.append(-nll / float(len(sequence)))
+
+    values = torch.stack(scores)
+    return torch.logsumexp(values, dim=0) - values[wake_index]
+
+
 def _operating_points(
     count: int,
     *,
@@ -324,6 +382,7 @@ def keyword_sequence_margin_loss(
     target_lengths: torch.Tensor,
     true_ctc_nll: torch.Tensor,
     keyword_sequences: list[list[int]],
+    ctc_log_probs: torch.Tensor | None = None,
     blank: int = 0,
     margin: float = 0.05,
     confidence_threshold: float = DECODER_CONFIDENCE_THRESHOLD,
@@ -350,6 +409,10 @@ def keyword_sequence_margin_loss(
     """
     if log_probs.ndim != 3:
         raise ValueError("log_probs must be [T,B,V]")
+    if ctc_log_probs is None:
+        ctc_log_probs = log_probs
+    if ctc_log_probs.shape != log_probs.shape:
+        raise ValueError("ctc_log_probs must match log_probs shape")
     batch = int(log_probs.shape[1])
     if true_ctc_nll.ndim != 1 or int(true_ctc_nll.numel()) != batch:
         raise ValueError("true_ctc_nll must contain one value per batch sample")
@@ -401,6 +464,7 @@ def keyword_sequence_margin_loss(
         if steps <= 0 or steps > int(log_probs.shape[0]):
             raise ValueError("input length is outside model output")
         sample = log_probs[:steps, batch_index, :]
+        ctc_sample = ctc_log_probs[:steps, batch_index, :]
         sparse_scores = [
             _decoder_sequence_log_confidence(sample, sequence)
             for sequence in normalized_keywords
@@ -439,23 +503,37 @@ def keyword_sequence_margin_loss(
         )
         hinges: list[torch.Tensor] = []
         if wake_index is not None:
-            positive_score = sparse_scores[wake_index]
             if (
                 positive_path_policy
-                == SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED
+                == SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION
             ):
-                runtime_positive = _runtime_executable_sequence_log_confidence(
-                    sample,
-                    normalized_keywords[wake_index],
-                    keyword_root_tokens=root_tokens,
-                    blank=blank,
-                    require_retention_pass=False,
+                hinges.append(
+                    _ctc_keyword_competition_loss(
+                        ctc_sample,
+                        normalized_keywords,
+                        wake_index=wake_index,
+                        true_ctc_nll=true_ctc_nll[batch_index],
+                        blank=blank,
+                    )
                 )
-                if math.isfinite(float(runtime_positive.detach())):
-                    positive_score = runtime_positive
-            hinges.append(
-                torch.relu(positive_floors[wake_index] - positive_score)
-            )
+            else:
+                positive_score = sparse_scores[wake_index]
+                if (
+                    positive_path_policy
+                    == SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED
+                ):
+                    runtime_positive = _runtime_executable_sequence_log_confidence(
+                        sample,
+                        normalized_keywords[wake_index],
+                        keyword_root_tokens=root_tokens,
+                        blank=blank,
+                        require_retention_pass=False,
+                    )
+                    if math.isfinite(float(runtime_positive.detach())):
+                        positive_score = runtime_positive
+                hinges.append(
+                    torch.relu(positive_floors[wake_index] - positive_score)
+                )
         for index, score in enumerate(negative_scores):
             if index == wake_index:
                 continue
