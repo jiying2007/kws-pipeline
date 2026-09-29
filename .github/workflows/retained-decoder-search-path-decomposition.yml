@@ -12,6 +12,7 @@ on:
       - 'src/decoder.c'
       - 'tools/kws_decoder_path_replay.c'
       - 'tools/diagnose_decoder_search_path_decomposition.py'
+      - 'tools/diagnose_decoder_selected_path_provenance.py'
       - 'tools/diagnose_sequence_margin_runtime_gap.py'
       - 'CMakeLists.txt'
 
@@ -200,10 +201,41 @@ jobs:
           },sort_keys=True))
           PY
 
-      - name: Retain decoder search-path decomposition
+      - name: Summarize selected-path backpointer provenance
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_decoder_selected_path_provenance.py --self-test
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          output=pathlib.Path("build/retained-decoder-selected-path-provenance.json")
+          subprocess.check_call([
+              "python3",
+              "tools/diagnose_decoder_selected_path_provenance.py",
+              "--model",str(root/spec["model"]),
+              "--tokens",str(root/spec["tokens"]),
+              "--keywords-tsv",str(root/spec["keywords_tsv"]),
+              "--pack",str(root/spec["keyword_pack"]),
+              "--decoder-path-replay","build-observe/kws_decoder_path_replay",
+              "--posterior-cache",str(root/spec["posterior_cache"]),
+              "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
+              "--output",str(output),
+          ])
+          value=json.loads(output.read_text(encoding="utf-8"))
+          print(json.dumps({
+              "cohorts":value["positive_sample"]["cohorts"],
+              "by_keyword":value["positive_sample"]["by_keyword"],
+              "selection_feedback_allowed":value["selection_feedback_allowed"],
+          },sort_keys=True))
+          PY
+
+      - name: Retain decoder search-path evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: retained-decoder-search-path-decomposition-${{ github.event.pull_request.head.sha }}
-          path: build/retained-decoder-search-path-decomposition.json
+          path: |
+            build/retained-decoder-search-path-decomposition.json
+            build/retained-decoder-selected-path-provenance.json
           if-no-files-found: error
           retention-days: 30
