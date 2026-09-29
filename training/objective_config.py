@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 
 from objective_contract import (
+    CTC_OBJECTIVE_POLICIES,
+    CTC_OBJECTIVE_POLICY_DEFAULT,
     ORDERED_TOKEN_SCOPE_DEFAULT,
     ORDERED_TOKEN_SCOPES,
     PATH_PURITY_LOSS_WEIGHT_DEFAULT,
@@ -13,6 +15,19 @@ from objective_contract import (
     SEQUENCE_MARGIN_POSITIVE_POLICIES,
     SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 )
+
+
+def ctc_objective_policy_setting(train: dict) -> tuple[str, bool]:
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    configured = "ctc_objective_policy" in train
+    policy = str(train.get("ctc_objective_policy", CTC_OBJECTIVE_POLICY_DEFAULT))
+    if policy not in CTC_OBJECTIVE_POLICIES:
+        raise ValueError(
+            "train.ctc_objective_policy must be one of "
+            + ", ".join(sorted(CTC_OBJECTIVE_POLICIES))
+        )
+    return policy, configured
 
 
 def path_purity_settings(train: dict) -> tuple[float, float, bool]:
@@ -150,6 +165,10 @@ def verify_auxiliary_loss_readback(train: dict, recorded: dict) -> dict[str, flo
 
 def optional_objective_cli_args(train: dict) -> list[str]:
     args: list[str] = []
+
+    ctc_policy, ctc_policy_configured = ctc_objective_policy_setting(train)
+    if ctc_policy_configured:
+        args.extend(["--ctc-objective-policy", ctc_policy])
     for name, value in auxiliary_loss_weights(train).items():
         args.extend(["--" + name.replace("_", "-"), str(value)])
 
