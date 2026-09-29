@@ -21,6 +21,7 @@ typedef struct path_provenance {
   float fuzzy_logit_gap_max;
   uint32_t fuzzy_target_rank_sum;
   uint16_t fuzzy_target_rank_max;
+  uint64_t fuzzy_event_frame_index[KWS_MAX_TOKENS_PER_KEYWORD];
   uint16_t fuzzy_event_depth[KWS_MAX_TOKENS_PER_KEYWORD];
   uint16_t fuzzy_event_target_token[KWS_MAX_TOKENS_PER_KEYWORD];
   uint16_t fuzzy_event_top_token[KWS_MAX_TOKENS_PER_KEYWORD];
@@ -231,7 +232,8 @@ static void shadow_step(
     keyword_summary_t *summary,
     const float *logits,
     uint16_t vocab_size,
-    int speech_active) {
+    int speech_active,
+    uint64_t frame_index) {
   float norm = shadow_logsumexp(logits, vocab_size);
   float decay = speech_active != 0 ? decoder->retention_log
                                    : decoder->silence_retention_log;
@@ -327,6 +329,7 @@ static void shadow_step(
             shadow_target_rank(logits, vocab_size, token);
         uint16_t event_index = provenance.fuzzy_advances;
         if (event_index < KWS_MAX_TOKENS_PER_KEYWORD) {
+          provenance.fuzzy_event_frame_index[event_index] = frame_index;
           provenance.fuzzy_event_depth[event_index] = node_meta[child].depth;
           provenance.fuzzy_event_target_token[event_index] = token;
           provenance.fuzzy_event_top_token[event_index] = top_token;
@@ -409,8 +412,10 @@ static void print_provenance(const path_provenance_t *value) {
       fputc(',', stdout);
     }
     fprintf(stdout,
-            "{\"depth\":%u,\"target_token\":%u,\"top_token\":%u,"
+            "{\"frame_index\":%llu,\"depth\":%u,"
+            "\"target_token\":%u,\"top_token\":%u,"
             "\"logit_gap\":%.9g,\"target_rank\":%u}",
+            (unsigned long long)value->fuzzy_event_frame_index[i],
             value->fuzzy_event_depth[i], value->fuzzy_event_target_token[i],
             value->fuzzy_event_top_token[i],
             (double)value->fuzzy_event_logit_gap[i],
@@ -589,7 +594,7 @@ int main(int argc, char **argv) {
       shadow_inactive_frames++;
     }
     shadow_step(shadow, nodes, &decoder_state, &pack, terminal_nodes, summary,
-                logits, trace.vocab_size, speech_active);
+                logits, trace.vocab_size, speech_active, frame_count);
 
     if (kws_engine_debug_replay_frame(engine, logits, trace.vocab_size,
                                       speech_active, end_sample, &hit,
