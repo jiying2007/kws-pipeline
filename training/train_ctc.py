@@ -1196,7 +1196,8 @@ def main() -> None:
                 ctc_probs = vad_aligned_ctc_log_probs(log_probs, vad_mask, ylen)
                 raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
             else:
-                raw_ctc = loss_fn(log_probs, y, xlen, ylen)
+                ctc_probs = log_probs
+                raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
             target_weights = torch.where(
                 ylen > 0,
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
@@ -1255,6 +1256,7 @@ def main() -> None:
                     target_lengths=ylen,
                     true_ctc_nll=raw_ctc,
                     keyword_sequences=keyword_sequences,
+                    ctc_log_probs=ctc_probs,
                     blank=0,
                     margin=KEYWORD_SEQUENCE_MARGIN,
                     keyword_operating_points=keyword_operating_points,
