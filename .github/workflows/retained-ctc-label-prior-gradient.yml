@@ -1,0 +1,196 @@
+name: retained-ctc-label-prior-gradient-audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/retained-ctc-label-prior-gradient.json' # workflow-path-filter: allow-missing (created only on retained audit PRs)
+      - '.github/workflows/retained-ctc-label-prior-gradient.yml'
+      - 'tools/diagnose_ctc_label_prior_gradient.py'
+      - 'tools/diagnose_keyword_ctc_competition_gradient.py'
+      - 'tools/diagnose_keyword_ctc_sequence_competition.py'
+      - 'tools/diagnose_decoder_search_path_decomposition.py'
+      - 'tools/diagnose_sequence_margin_runtime_gap.py'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  KWS_AUDIT_SPEC: .github/triggers/retained-ctc-label-prior-gradient.json
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      audit_changed: ${{ steps.resolve.outputs.audit_changed }}
+      source_run_id: ${{ steps.resolve.outputs.source_run_id }}
+      source_artifact_name: ${{ steps.resolve.outputs.source_artifact_name }}
+      source_head_sha: ${{ steps.resolve.outputs.source_head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve retained label-prior CTC audit
+        id: resolve
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_AUDIT_SPEC"; then
+            echo "audit_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ ! -e "$KWS_AUDIT_SPEC" ]]; then
+            echo "audit_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, pathlib, re
+          path=pathlib.Path(os.environ["KWS_AUDIT_SPEC"])
+          value=json.loads(path.read_text(encoding="utf-8"))
+          required={
+              "schema_version","audit_id","development_only",
+              "selection_feedback_allowed","protected_evidence_used",
+              "source_run_id","source_artifact_name","source_head_sha",
+              "model","tokens","keywords_tsv","posterior_cache",
+              "acoustic_alignment",
+          }
+          if set(value) != required:
+              raise SystemExit("retained label-prior CTC audit fields mismatch")
+          if value["schema_version"] != 1:
+              raise SystemExit("schema_version must be 1")
+          if value["development_only"] is not True:
+              raise SystemExit("audit must be development-only")
+          if value["selection_feedback_allowed"] is not False:
+              raise SystemExit("audit must not feed selection")
+          if value["protected_evidence_used"] is not False:
+              raise SystemExit("audit must not use protected evidence")
+          if not isinstance(value["source_run_id"], int) or value["source_run_id"] <= 0:
+              raise SystemExit("source_run_id must be positive")
+          if re.fullmatch(r"[0-9a-f]{40}", str(value["source_head_sha"])) is None:
+              raise SystemExit("source_head_sha is invalid")
+          for key in (
+              "source_artifact_name","model","tokens","keywords_tsv",
+              "posterior_cache","acoustic_alignment",
+          ):
+              raw=value[key]
+              if (
+                  not isinstance(raw,str)
+                  or not raw.strip()
+                  or raw.startswith("/")
+                  or ".." in pathlib.PurePosixPath(raw).parts
+              ):
+                  raise SystemExit(f"{key} must be a safe relative path/name")
+          print("audit_changed=true")
+          for key in ("source_run_id","source_artifact_name","source_head_sha"):
+              print(f"{key}={value[key]}")
+          PY
+
+  audit:
+    needs: resolve
+    if: needs.resolve.outputs.audit_changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download retained product-development evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ needs.resolve.outputs.source_artifact_name }}
+          path: .retained
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.resolve.outputs.source_run_id }}
+
+      - name: Verify retained authority
+        env:
+          SOURCE_HEAD: ${{ needs.resolve.outputs.source_head_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          spec=json.loads(pathlib.Path(os.environ["KWS_AUDIT_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          receipt=json.loads((root/"build/product-development-experiment-receipt.json").read_text(encoding="utf-8"))
+          alignment=json.loads((root/spec["acoustic_alignment"]).read_text(encoding="utf-8"))
+          model=root/spec["model"]
+          if receipt.get("source_policy") != "exact-pr-head":
+              raise SystemExit("retained source is not exact-pr-head")
+          if receipt.get("development_only") is not True:
+              raise SystemExit("retained source is not development-only")
+          if receipt.get("protected_evidence_used") is not False:
+              raise SystemExit("retained source used protected evidence")
+          if receipt.get("pr_head_sha") != os.environ["SOURCE_HEAD"]:
+              raise SystemExit("retained source head mismatch")
+          model_sha=hashlib.file_digest(model.open("rb"),"sha256").hexdigest()
+          if alignment.get("model_sha256") != model_sha:
+              raise SystemExit("retained alignment/model SHA mismatch")
+          pathlib.Path("build").mkdir(exist_ok=True)
+          pathlib.Path("build/retained-model-sha.txt").write_text(model_sha+"\n",encoding="utf-8")
+          print(f"retained exact source verified: model={model_sha}")
+          PY
+
+      - name: Install pinned CPU objective runtime
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv-audit
+          .venv-audit/bin/python -m pip install --disable-pip-version-check --no-input \
+            torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Verify label-prior CTC audit unit contract
+        run: |
+          set -euo pipefail
+          .venv-audit/bin/python tools/diagnose_ctc_label_prior_gradient.py --self-test
+          .venv-audit/bin/python -m py_compile tools/diagnose_ctc_label_prior_gradient.py
+
+      - name: Audit label-prior CTC gradients
+        run: |
+          set -euo pipefail
+          .venv-audit/bin/python - <<'PY'
+          import json, os, pathlib, subprocess
+          spec=json.loads(pathlib.Path(os.environ["KWS_AUDIT_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          model_sha=pathlib.Path("build/retained-model-sha.txt").read_text(encoding="utf-8").strip()
+          output=pathlib.Path("build/retained-ctc-label-prior-gradient.json")
+          subprocess.check_call([
+              ".venv-audit/bin/python",
+              "tools/diagnose_ctc_label_prior_gradient.py",
+              "--tokens",str(root/spec["tokens"]),
+              "--keywords-tsv",str(root/spec["keywords_tsv"]),
+              "--posterior-cache",str(root/spec["posterior_cache"]),
+              "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
+              "--model-sha256",model_sha,
+              "--output",str(output),
+          ])
+          value=json.loads(output.read_text(encoding="utf-8"))
+          print(json.dumps({
+              "alpha":value["label_prior_alpha"],
+              "label_priors":value["label_priors"],
+              "trace_count":value["label_prior_trace_count"],
+              "frame_count":value["label_prior_frame_count"],
+              "kw1_runtime_gap":value["cohorts"].get("kw1_runtime_gap",{}),
+              "kw1_runtime_hit":value["cohorts"].get("kw1_runtime_hit",{}),
+              "kw2_runtime_gap":value["cohorts"].get("kw2_runtime_gap",{}),
+              "kw2_runtime_hit":value["cohorts"].get("kw2_runtime_hit",{}),
+          },sort_keys=True))
+          PY
+
+      - name: Retain label-prior CTC gradient audit
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: retained-ctc-label-prior-gradient-${{ github.event.pull_request.head.sha }}
+          path: build/retained-ctc-label-prior-gradient.json
+          if-no-files-found: error
+          retention-days: 30
