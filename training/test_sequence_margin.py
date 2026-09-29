@@ -14,6 +14,7 @@ from objective_config import (
     ordered_token_scope_setting,
     path_purity_settings,
     sequence_margin_negative_policy_setting,
+    sequence_margin_positive_policy_setting,
 )
 from path_purity import ordered_path_purity_loss
 from sequence_margin import (
@@ -72,6 +73,7 @@ def margin(
     keyword_sequences: list[list[int]] | None = None,
     keyword_operating_points: list[dict] | None = None,
     negative_path_policy: str = "sparse-chronological-v1",
+    positive_path_policy: str = "sparse-chronological-v1",
 ) -> torch.Tensor:
     targets, input_lengths, target_lengths, raw = true_nll(log_probs, target)
     return keyword_sequence_margin_loss(
@@ -86,6 +88,7 @@ def margin(
         margin=0.05,
         keyword_operating_points=keyword_operating_points,
         negative_path_policy=negative_path_policy,
+        positive_path_policy=positive_path_policy,
     )
 
 
@@ -206,6 +209,26 @@ def main() -> int:
     else:
         raise AssertionError("unsupported sequence-margin negative policy was accepted")
 
+    positive_policy, positive_policy_configured = (
+        sequence_margin_positive_policy_setting({})
+    )
+    assert positive_policy == "sparse-chronological-v1"
+    assert positive_policy_configured is False
+    assert optional_objective_cli_args(
+        {"sequence_margin_positive_policy": "runtime-search-aligned-v1"}
+    ) == [
+        "--sequence-margin-positive-policy",
+        "runtime-search-aligned-v1",
+    ]
+    try:
+        sequence_margin_positive_policy_setting(
+            {"sequence_margin_positive_policy": "unsupported"}
+        )
+    except ValueError as exc:
+        assert "sequence_margin_positive_policy" in str(exc)
+    else:
+        raise AssertionError("unsupported sequence-margin positive policy was accepted")
+
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])
     assert float(unsafe_loss.item()) > 0.05
@@ -276,7 +299,7 @@ def main() -> int:
     assert float(sparse_executable.item()) > 0.05
     assert float(runtime_executable.item()) > 0.05
 
-    # Exact-wake positive pressure remains the historical sparse scorer.
+    # Negative runtime alignment remains independent from positive policy.
     weak_runtime_positive = margin(
         weak_log_probs,
         [1, 2, 3, 4],
@@ -285,6 +308,36 @@ def main() -> int:
     assert abs(
         float(weak_runtime_positive.item()) - float(weak_loss.item())
     ) < 1.0e-6
+
+    # The optional positive runtime-search policy must remain finite and
+    # differentiable even when the selected terminal path is below the runtime
+    # retention gate. This is the retained #400 failure mode: fuzzy target
+    # advances reach the terminal but are not executable as a detection.
+    fuzzy_positive_logits = torch.full((12, 1, 6), -6.0, dtype=torch.float32)
+    fuzzy_positive_logits[:, :, 0] = 4.0
+    fuzzy_positive_logits[1, 0, 0] = -6.0
+    fuzzy_positive_logits[1, 0, 1] = 8.0
+    for position, token in zip([3, 5, 7], [2, 3, 4]):
+        fuzzy_positive_logits[position, 0, 0] = -6.0
+        fuzzy_positive_logits[position, 0, token] = 5.0
+        fuzzy_positive_logits[position, 0, 5] = 5.1
+    fuzzy_positive = fuzzy_positive_logits.requires_grad_().log_softmax(dim=2)
+    aligned_positive = margin(
+        fuzzy_positive,
+        [1, 2, 3, 4],
+        positive_path_policy="runtime-search-aligned-v1",
+    )
+    assert torch.isfinite(aligned_positive).all()
+    assert float(aligned_positive.item()) > 0.0
+    aligned_positive.mean().backward()
+    assert fuzzy_positive_logits.grad is not None
+
+    clean_runtime_positive = margin(
+        make_logits([1, 2, 3, 4]),
+        [1, 2, 3, 4],
+        positive_path_policy="runtime-search-aligned-v1",
+    )
+    assert float(clean_runtime_positive.item()) < 1.0e-6
 
     # Path-purity targets the #240 failure mode: the target sequence may be
     # present as a loose subsequence while an unrelated wake token dominates
