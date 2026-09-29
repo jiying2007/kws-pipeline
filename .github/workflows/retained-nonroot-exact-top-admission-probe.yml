@@ -1,0 +1,196 @@
+name: retained-nonroot-exact-top-admission-probe
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/retained-nonroot-exact-top-admission-probe.json'
+      - '.github/workflows/retained-nonroot-exact-top-admission-probe.yml'
+      - 'src/decoder.c'
+      - 'src/decoder.h'
+      - 'src/kws.c'
+      - 'src/kws_debug.h'
+      - 'tools/kws_decoder_replay.c'
+      - 'tools/diagnose_nonroot_fuzzy_admission_probe.py'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  KWS_DIAGNOSTIC_SPEC: .github/triggers/retained-nonroot-exact-top-admission-probe.json
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      diagnostic_changed: ${{ steps.resolve.outputs.diagnostic_changed }}
+      source_run_id: ${{ steps.resolve.outputs.source_run_id }}
+      source_artifact_name: ${{ steps.resolve.outputs.source_artifact_name }}
+      source_pr_number: ${{ steps.resolve.outputs.source_pr_number }}
+      source_head_sha: ${{ steps.resolve.outputs.source_head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve retained strict-admission request
+        id: resolve
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_DIAGNOSTIC_SPEC"; then
+            echo "diagnostic_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, pathlib, re
+          path=pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"])
+          value=json.loads(path.read_text(encoding="utf-8"))
+          required={
+              "schema_version","experiment_id","development_only",
+              "selection_feedback_allowed","protected_evidence_used",
+              "source_run_id","source_artifact_name","source_pr_number",
+              "source_head_sha","model","keyword_pack","posterior_cache",
+              "acoustic_alignment",
+          }
+          if set(value) != required:
+              raise SystemExit("strict-admission spec fields mismatch")
+          if value["schema_version"] != 1:
+              raise SystemExit("schema_version must be 1")
+          if value["development_only"] is not True:
+              raise SystemExit("probe must be development_only")
+          if value["selection_feedback_allowed"] is not False:
+              raise SystemExit("probe must not feed selection")
+          if value["protected_evidence_used"] is not False:
+              raise SystemExit("probe must not use protected evidence")
+          if not isinstance(value["source_run_id"], int) or value["source_run_id"] <= 0:
+              raise SystemExit("source_run_id must be positive")
+          if not isinstance(value["source_pr_number"], int) or value["source_pr_number"] <= 0:
+              raise SystemExit("source_pr_number must be positive")
+          if re.fullmatch(r"[0-9a-f]{40}", str(value["source_head_sha"])) is None:
+              raise SystemExit("source_head_sha must be lowercase SHA")
+          for key in ("source_artifact_name","model","keyword_pack","posterior_cache","acoustic_alignment"):
+              raw=value[key]
+              if (
+                  not isinstance(raw,str)
+                  or not raw.strip()
+                  or raw.startswith("/")
+                  or ".." in pathlib.PurePosixPath(raw).parts
+              ):
+                  raise SystemExit(f"{key} must be a safe relative path/name")
+          print("diagnostic_changed=true")
+          for key in ("source_run_id","source_artifact_name","source_pr_number","source_head_sha"):
+              print(f"{key}={value[key]}")
+          PY
+
+  analyze:
+    needs: resolve
+    if: needs.resolve.outputs.diagnostic_changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download retained product-development evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ needs.resolve.outputs.source_artifact_name }}
+          path: .retained
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.resolve.outputs.source_run_id }}
+
+      - name: Verify retained authority
+        env:
+          SOURCE_HEAD: ${{ needs.resolve.outputs.source_head_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(".retained")
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          receipt=json.loads((root/"build/product-development-experiment-receipt.json").read_text(encoding="utf-8"))
+          model=root/spec["model"]
+          alignment=json.loads((root/spec["acoustic_alignment"]).read_text(encoding="utf-8"))
+          if receipt.get("source_policy") != "exact-pr-head":
+              raise SystemExit("retained source is not exact-pr-head")
+          if receipt.get("development_only") is not True or receipt.get("protected_evidence_used") is not False:
+              raise SystemExit("retained source authority mismatch")
+          if receipt.get("pr_head_sha") != os.environ["SOURCE_HEAD"]:
+              raise SystemExit("retained source head mismatch")
+          model_sha=hashlib.file_digest(model.open("rb"),"sha256").hexdigest()
+          if alignment.get("model_sha256") != model_sha:
+              raise SystemExit("acoustic alignment/model mismatch")
+          print(f"retained authority verified: model={model_sha}")
+          PY
+
+      - name: Build exact source baseline decoder
+        env:
+          SOURCE_HEAD: ${{ needs.resolve.outputs.source_head_sha }}
+          SOURCE_PR: ${{ needs.resolve.outputs.source_pr_number }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "pull/$SOURCE_PR/head"
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_HEAD"
+          SOURCE_ROOT="$RUNNER_TEMP/retained-source"
+          git worktree add --detach "$SOURCE_ROOT" "$SOURCE_HEAD"
+          cmake -S "$SOURCE_ROOT" -B "$SOURCE_ROOT/build" -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build "$SOURCE_ROOT/build" --parallel --target kws_decoder_replay
+          test -x "$SOURCE_ROOT/build/kws_decoder_replay"
+          echo "SOURCE_DECODER=$SOURCE_ROOT/build/kws_decoder_replay" >> "$GITHUB_ENV"
+
+      - name: Build current counterfactual decoder
+        run: |
+          set -euo pipefail
+          cmake -S . -B build-probe -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build-probe --parallel --target kws_decoder_replay
+          test -x build-probe/kws_decoder_replay
+
+      - name: Screen strict non-root exact-top admission
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_nonroot_fuzzy_admission_probe.py --self-test
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          output=pathlib.Path("build/nonroot-exact-top-admission-screen.json")
+          subprocess.check_call([
+              "python3",
+              "tools/diagnose_nonroot_fuzzy_admission_probe.py",
+              "--model",str(root/spec["model"]),
+              "--pack",str(root/spec["keyword_pack"]),
+              "--baseline-decoder",os.environ["SOURCE_DECODER"],
+              "--probe-decoder","build-probe/kws_decoder_replay",
+              "--posterior-cache",str(root/spec["posterior_cache"]),
+              "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
+              "--output",str(output),
+          ])
+          value=json.loads(output.read_text(encoding="utf-8"))
+          print(json.dumps({
+              "screen_result":value["screen_result"],
+              "default_equivalence":value["default_equivalence"],
+              "all_traces":value["all_traces"],
+              "positive_sample":value["positive_sample"],
+              "full_reference_score_required":value["full_reference_score_required"],
+          },sort_keys=True))
+          PY
+
+      - name: Retain strict-admission screen
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: retained-nonroot-exact-top-admission-${{ github.event.pull_request.head.sha }}
+          path: build/nonroot-exact-top-admission-screen.json
+          if-no-files-found: error
+          retention-days: 30
