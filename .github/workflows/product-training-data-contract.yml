@@ -116,6 +116,7 @@ jobs:
         run: |
           python3 tests/test_product_training_entry_contract.py
           python3 tests/test_replay_provider_semantic_identity.py
+          python3 training/compare_product_objective_pair.py --self-test
       - name: Python syntax
         run: >-
           python3 -m py_compile
