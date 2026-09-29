@@ -8,7 +8,7 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
-    SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS,
     SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION,
     SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
@@ -425,8 +425,8 @@ def keyword_sequence_margin_loss(
     if negative_path_policy not in SEQUENCE_MARGIN_NEGATIVE_POLICIES:
         raise ValueError("sequence-margin negative path policy is invalid")
 
-    if positive_path_policy not in SEQUENCE_MARGIN_POSITIVE_POLICIES:
-        raise ValueError("sequence-margin positive path policy is invalid")
+    if positive_path_policy not in SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS:
+        raise ValueError("sequence-margin positive path implementation is invalid")
 
     vocab = int(log_probs.shape[2])
     normalized_keywords: list[tuple[int, ...]] = []

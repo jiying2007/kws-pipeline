@@ -219,26 +219,22 @@ def main() -> int:
     )
     assert positive_policy == "sparse-chronological-v1"
     assert positive_policy_configured is False
-    assert optional_objective_cli_args(
-        {"sequence_margin_positive_policy": "runtime-search-aligned-v1"}
-    ) == [
-        "--sequence-margin-positive-policy",
+    for retired_or_invalid in (
         "runtime-search-aligned-v1",
-    ]
-    assert optional_objective_cli_args(
-        {"sequence_margin_positive_policy": "ctc-keyword-competition-v1"}
-    ) == [
-        "--sequence-margin-positive-policy",
         "ctc-keyword-competition-v1",
-    ]
-    try:
-        sequence_margin_positive_policy_setting(
-            {"sequence_margin_positive_policy": "unsupported"}
-        )
-    except ValueError as exc:
-        assert "sequence_margin_positive_policy" in str(exc)
-    else:
-        raise AssertionError("unsupported sequence-margin positive policy was accepted")
+        "unsupported",
+    ):
+        try:
+            optional_objective_cli_args(
+                {"sequence_margin_positive_policy": retired_or_invalid}
+            )
+        except ValueError as exc:
+            assert "sequence_margin_positive_policy" in str(exc)
+        else:
+            raise AssertionError(
+                "retired/unsupported positive policy was accepted: "
+                + retired_or_invalid
+            )
 
     unsafe = make_logits([3, 4, 3, 4])
     unsafe_loss = margin(unsafe, [3, 4, 3])

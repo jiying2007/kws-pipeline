@@ -22,7 +22,15 @@ SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION = (
     "ctc-keyword-competition-v1"
 )
 SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT = SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE
+# Retained rejected policies remain named so historical evidence can be
+# recomputed, but new training must fail closed after negative same-runner
+# experiments #403 and #415.
 SEQUENCE_MARGIN_POSITIVE_POLICIES = frozenset(
+    {
+        SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
+    }
+)
+SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS = frozenset(
     {
         SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
         SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
