@@ -23,8 +23,8 @@ from diagnose_sequence_margin_runtime_gap import (
     trace_paths,
 )
 
-EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v1"
-POLICY = "exact-shadow-backpointer-positive-cohort-v1"
+EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v2"
+POLICY = "exact-shadow-backpointer-fuzzy-gap-v2"
 
 
 def empty_bucket() -> dict:
@@ -37,6 +37,10 @@ def empty_bucket() -> dict:
         "non_top_advances": [],
         "blank_retentions": [],
         "same_token_retentions": [],
+        "fuzzy_logit_gap_mean": [],
+        "fuzzy_logit_gap_max": [],
+        "fuzzy_target_rank_mean": [],
+        "fuzzy_target_rank_max": [],
         "retention_log": [],
         "confidence": [],
     }
@@ -53,9 +57,35 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
     token_advances = int(provenance.get("token_advances", -1))
     exact_top = int(provenance.get("exact_top_advances", -1))
     root_exact = int(provenance.get("root_exact_starts", -1))
+    fuzzy_gap_sum = float(provenance.get("fuzzy_logit_gap_sum", float("nan")))
+    fuzzy_gap_max = float(provenance.get("fuzzy_logit_gap_max", float("nan")))
+    fuzzy_rank_sum = int(provenance.get("fuzzy_target_rank_sum", -1))
+    fuzzy_rank_max = int(provenance.get("fuzzy_target_rank_max", -1))
     values = (fuzzy, root_ambiguous, blank, same, token_advances, exact_top, root_exact)
     if any(value < 0 for value in values):
         raise ValueError("selected path provenance contains invalid counters")
+    if (
+        not math.isfinite(fuzzy_gap_sum)
+        or not math.isfinite(fuzzy_gap_max)
+        or fuzzy_rank_sum < 0
+        or fuzzy_rank_max < 0
+    ):
+        raise ValueError("selected path fuzzy provenance is invalid")
+    if fuzzy == 0:
+        if (
+            abs(fuzzy_gap_sum) > 1.0e-9
+            or abs(fuzzy_gap_max) > 1.0e-9
+            or fuzzy_rank_sum != 0
+            or fuzzy_rank_max != 0
+        ):
+            raise ValueError("zero-fuzzy path carries fuzzy provenance")
+    elif (
+        fuzzy_gap_sum < 0.0
+        or fuzzy_gap_max < 0.0
+        or fuzzy_rank_sum < fuzzy
+        or fuzzy_rank_max < 1
+    ):
+        raise ValueError("fuzzy path carries inconsistent gap/rank provenance")
     if root_exact + root_ambiguous != 1:
         raise ValueError("selected path must have exactly one root start")
     if token_advances <= 0:
@@ -74,6 +104,11 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
     bucket["non_top_advances"].append(non_top)
     bucket["blank_retentions"].append(blank)
     bucket["same_token_retentions"].append(same)
+    if fuzzy > 0:
+        bucket["fuzzy_logit_gap_mean"].append(fuzzy_gap_sum / float(fuzzy))
+        bucket["fuzzy_logit_gap_max"].append(fuzzy_gap_max)
+        bucket["fuzzy_target_rank_mean"].append(fuzzy_rank_sum / float(fuzzy))
+        bucket["fuzzy_target_rank_max"].append(fuzzy_rank_max)
     bucket["retention_log"].append(retention)
     bucket["confidence"].append(confidence)
 
@@ -117,7 +152,14 @@ def finish_bucket(bucket: dict) -> dict:
             bucket["same_token_retentions"]
         ),
     }
-    for key in ("retention_log", "confidence"):
+    for key in (
+        "retention_log",
+        "confidence",
+        "fuzzy_logit_gap_mean",
+        "fuzzy_logit_gap_max",
+        "fuzzy_target_rank_mean",
+        "fuzzy_target_rank_max",
+    ):
         values = [float(value) for value in bucket[key]]
         result[key] = {
             "mean": statistics.fmean(values) if values else None,
@@ -320,16 +362,29 @@ def summarize(
                     "retention_log": float(snapshot["retention_log"]),
                     "confidence": float(snapshot["confidence"]),
                     "provenance": {
-                        key: int(provenance[key])
-                        for key in (
-                            "token_advances",
-                            "exact_top_advances",
-                            "fuzzy_advances",
-                            "root_exact_starts",
-                            "root_ambiguous_starts",
-                            "same_token_retentions",
-                            "blank_retentions",
-                        )
+                        "token_advances": int(provenance["token_advances"]),
+                        "exact_top_advances": int(provenance["exact_top_advances"]),
+                        "fuzzy_advances": int(provenance["fuzzy_advances"]),
+                        "fuzzy_logit_gap_sum": float(
+                            provenance["fuzzy_logit_gap_sum"]
+                        ),
+                        "fuzzy_logit_gap_max": float(
+                            provenance["fuzzy_logit_gap_max"]
+                        ),
+                        "fuzzy_target_rank_sum": int(
+                            provenance["fuzzy_target_rank_sum"]
+                        ),
+                        "fuzzy_target_rank_max": int(
+                            provenance["fuzzy_target_rank_max"]
+                        ),
+                        "root_exact_starts": int(provenance["root_exact_starts"]),
+                        "root_ambiguous_starts": int(
+                            provenance["root_ambiguous_starts"]
+                        ),
+                        "same_token_retentions": int(
+                            provenance["same_token_retentions"]
+                        ),
+                        "blank_retentions": int(provenance["blank_retentions"]),
                     },
                 },
             }
@@ -365,6 +420,10 @@ def self_test() -> None:
                     "token_advances": 4,
                     "exact_top_advances": 3,
                     "fuzzy_advances": 0,
+                    "fuzzy_logit_gap_sum": 0.0,
+                    "fuzzy_logit_gap_max": 0.0,
+                    "fuzzy_target_rank_sum": 0,
+                    "fuzzy_target_rank_max": 0,
                     "root_exact_starts": 1,
                     "root_ambiguous_starts": 0,
                     "same_token_retentions": 2,
@@ -391,6 +450,10 @@ def self_test() -> None:
                     "token_advances": 4,
                     "exact_top_advances": 2,
                     "fuzzy_advances": 1,
+                    "fuzzy_logit_gap_sum": 0.4,
+                    "fuzzy_logit_gap_max": 0.4,
+                    "fuzzy_target_rank_sum": 2,
+                    "fuzzy_target_rank_max": 2,
                     "root_exact_starts": 1,
                     "root_ambiguous_starts": 0,
                     "same_token_retentions": 0,
@@ -412,6 +475,8 @@ def self_test() -> None:
     finished = finish_bucket(bucket)
     assert finished["any_fuzzy"] == 1
     assert finished["fuzzy_advances_histogram"] == {"1": 1}
+    assert finished["fuzzy_logit_gap_mean"]["mean"] == 0.4
+    assert finished["fuzzy_target_rank_mean"]["mean"] == 2.0
 
 
 def main() -> int:
@@ -486,7 +551,7 @@ def main() -> int:
     )
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "development_only": True,
