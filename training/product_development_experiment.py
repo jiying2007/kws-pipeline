@@ -238,6 +238,7 @@ def self_test() -> None:
                     "config_overrides": {
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.1,
+                        "train.sequence_margin_positive_policy": "runtime-search-aligned-v1",
                         "domain_iteration.base_failure_replay_enabled": True,
                     },
                 }
@@ -246,6 +247,10 @@ def self_test() -> None:
         )
         verified = verify_spec(spec)
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
+        assert (
+            verified["config_overrides"]["train.sequence_margin_positive_policy"]
+            == "runtime-search-aligned-v1"
+        )
         assert (
             verified["config_overrides"]["domain_iteration.base_failure_replay_enabled"]
             is True
