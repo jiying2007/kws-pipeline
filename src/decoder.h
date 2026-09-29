@@ -44,6 +44,9 @@ typedef struct kws_decoder {
    * parameter-contract defaults. */
   float silence_retention_log;
   float fuzzy_child_retention_cost_log;
+  /* Repo-internal counterfactual only. Production initialization leaves this
+   * zero, preserving shipping fuzzy-child admission exactly. */
+  uint8_t debug_require_exact_nonroot;
   uint16_t inactive_frames;
   int16_t pending_keyword;
   float pending_confidence;
@@ -63,6 +66,8 @@ void kws_decoder_reset(kws_decoder_t *d);
 kws_status_t kws_decoder_debug_set_search_policy(kws_decoder_t *d,
                                                  float blank_retention,
                                                  float fuzzy_child_cost_log);
+kws_status_t kws_decoder_debug_require_exact_nonroot(kws_decoder_t *d,
+                                                     int enabled);
 int kws_decoder_step(kws_decoder_t *d,
                      const float *logits,
                      uint16_t vocab_size,
