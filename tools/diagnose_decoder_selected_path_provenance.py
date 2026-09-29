@@ -23,8 +23,8 @@ from diagnose_sequence_margin_runtime_gap import (
     trace_paths,
 )
 
-EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v3"
-POLICY = "exact-shadow-backpointer-fuzzy-competitor-v3"
+EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v4"
+POLICY = "exact-shadow-backpointer-temporal-neighborhood-v4"
 
 
 def empty_bucket() -> dict:
@@ -68,16 +68,19 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
     normalized_events: list[dict] = []
     for event in fuzzy_events:
         if not isinstance(event, dict) or set(event) != {
-            "depth", "target_token", "top_token", "logit_gap", "target_rank"
+            "frame_index", "depth", "target_token", "top_token",
+            "logit_gap", "target_rank"
         }:
             raise ValueError("selected path fuzzy event schema is invalid")
+        frame_index = int(event["frame_index"])
         depth = int(event["depth"])
         target_token = int(event["target_token"])
         top_token = int(event["top_token"])
         gap = float(event["logit_gap"])
         rank = int(event["target_rank"])
         if (
-            depth <= 1
+            frame_index < 0
+            or depth <= 1
             or target_token <= 0
             or top_token == target_token
             or top_token < 0
@@ -87,6 +90,7 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
         ):
             raise ValueError("selected path fuzzy event value is invalid")
         normalized_events.append({
+            "frame_index": frame_index,
             "depth": depth,
             "target_token": target_token,
             "top_token": top_token,
@@ -199,6 +203,166 @@ def summarize_fuzzy_events(events: list[dict]) -> dict:
             grouped[group].setdefault(key, []).append(event)
 
     result = {"events": len(events)}
+    for group, rows in grouped.items():
+        result[group] = {
+            key: stats(value)
+            for key, value in sorted(rows.items())
+        }
+    return result
+
+
+
+TEMPORAL_RADII_FRAMES = (1, 2, 3, 5)
+
+
+def dominant_token(row: list[float]) -> int:
+    if not row:
+        raise ValueError("posterior row may not be empty")
+    return max(range(len(row)), key=row.__getitem__)
+
+
+def target_margin(row: list[float], target: int) -> float:
+    if target < 0 or target >= len(row):
+        raise ValueError("target token is outside posterior vocabulary")
+    competitor = max(
+        value for index, value in enumerate(row)
+        if index != target
+    )
+    return float(row[target] - competitor)
+
+
+def temporal_neighborhood_event(
+    logits: list[list[float]],
+    event: dict,
+) -> dict:
+    frame = int(event["frame_index"])
+    target = int(event["target_token"])
+    if frame < 0 or frame >= len(logits):
+        raise ValueError("fuzzy event frame is outside retained posterior trace")
+    result = {
+        "frame_index": frame,
+        "depth": int(event["depth"]),
+        "target_token": target,
+        "top_token": int(event["top_token"]),
+        "logit_gap": float(event["logit_gap"]),
+        "target_rank": int(event["target_rank"]),
+        "top1_within": {},
+        "best_target_margin": {},
+    }
+    for radius in TEMPORAL_RADII_FRAMES:
+        start = max(0, frame - radius)
+        stop = min(len(logits), frame + radius + 1)
+        rows = logits[start:stop]
+        result["top1_within"][str(radius)] = any(
+            dominant_token(row) == target for row in rows
+        )
+        result["best_target_margin"][str(radius)] = max(
+            target_margin(row, target) for row in rows
+        )
+    recovered = [
+        radius
+        for radius in TEMPORAL_RADII_FRAMES
+        if result["top1_within"][str(radius)]
+    ]
+    result["nearest_top1_radius_frames"] = min(recovered) if recovered else None
+    top1_frames = [
+        index
+        for index, row in enumerate(logits)
+        if dominant_token(row) == target
+    ]
+    result["top1_frames_total"] = len(top1_frames)
+    result["nearest_top1_distance_any_frames"] = (
+        min(abs(index - frame) for index in top1_frames)
+        if top1_frames else None
+    )
+    result["best_target_margin_anywhere"] = max(
+        target_margin(row, target) for row in logits
+    )
+    return result
+
+
+def summarize_temporal_events(events: list[dict]) -> dict:
+    def stats(rows: list[dict]) -> dict:
+        count = len(rows)
+        recovered = {}
+        margins = {}
+        for radius in TEMPORAL_RADII_FRAMES:
+            key = str(radius)
+            hits = sum(bool(row["top1_within"][key]) for row in rows)
+            recovered[key] = {
+                "events": hits,
+                "fraction": float(hits) / count if count else None,
+            }
+            values = [float(row["best_target_margin"][key]) for row in rows]
+            margins[key] = {
+                "mean": statistics.fmean(values) if values else None,
+                "p50": percentile(values, 0.50),
+                "p90": percentile(values, 0.90),
+            }
+        nearest = [
+            int(row["nearest_top1_radius_frames"])
+            for row in rows
+            if row["nearest_top1_radius_frames"] is not None
+        ]
+        nearest_any = [
+            int(row["nearest_top1_distance_any_frames"])
+            for row in rows
+            if row["nearest_top1_distance_any_frames"] is not None
+        ]
+        best_any = [
+            float(row["best_target_margin_anywhere"])
+            for row in rows
+        ]
+        top1_total = [
+            int(row["top1_frames_total"])
+            for row in rows
+        ]
+        return {
+            "events": count,
+            "top1_recovered_within_frames": recovered,
+            "best_target_margin_by_radius": margins,
+            "nearest_top1_radius_histogram": histogram(nearest),
+            "top1_anywhere": {
+                "events": len(nearest_any),
+                "fraction": float(len(nearest_any)) / count if count else None,
+            },
+            "nearest_top1_distance_any_frames": {
+                "mean": statistics.fmean(nearest_any) if nearest_any else None,
+                "p50": percentile(nearest_any, 0.50),
+                "p90": percentile(nearest_any, 0.90),
+                "max": max(nearest_any) if nearest_any else None,
+            },
+            "top1_frames_total": {
+                "mean": statistics.fmean(top1_total) if top1_total else None,
+                "p50": percentile(top1_total, 0.50),
+                "p90": percentile(top1_total, 0.90),
+            },
+            "best_target_margin_anywhere": {
+                "mean": statistics.fmean(best_any) if best_any else None,
+                "p50": percentile(best_any, 0.50),
+                "p90": percentile(best_any, 0.90),
+            },
+        }
+
+    grouped: dict[str, dict[str, list[dict]]] = {
+        "by_keyword": {},
+        "by_depth": {},
+        "by_pair": {},
+        "by_category": {},
+    }
+    for event in events:
+        keys = {
+            "by_keyword": str(int(event["keyword_id"])),
+            "by_depth": str(int(event["depth"])),
+            "by_pair": (
+                f'{int(event["target_token"])}->{int(event["top_token"])}'
+            ),
+            "by_category": str(event["miss_category"]),
+        }
+        for group, key in keys.items():
+            grouped[group].setdefault(key, []).append(event)
+
+    result = {"overall": stats(events)}
     for group, rows in grouped.items():
         result[group] = {
             key: stats(value)
@@ -331,6 +495,7 @@ def summarize(
         for keyword_id in sorted(keywords)
     }
     records: list[dict] = []
+    temporal_events: list[dict] = []
     excluded_non_surrogate_runtime_miss = 0
 
     for audio_sha, sample in sorted(positive_sample.items()):
@@ -426,6 +591,15 @@ def summarize(
                 add_snapshot(by_keyword[str(keyword_id)][category], snapshot)
 
         provenance = snapshot["provenance"]
+        for event in provenance["fuzzy_events"]:
+            temporal_events.append(
+                {
+                    "split": sample["split"],
+                    "keyword_id": keyword_id,
+                    "miss_category": category,
+                    **temporal_neighborhood_event(logits, event),
+                }
+            )
         records.append(
             {
                 "audio_sha256": audio_sha,
@@ -458,6 +632,7 @@ def summarize(
                         ),
                         "fuzzy_events": [
                             {
+                                "frame_index": int(event["frame_index"]),
                                 "depth": int(event["depth"]),
                                 "target_token": int(event["target_token"]),
                                 "top_token": int(event["top_token"]),
@@ -496,6 +671,9 @@ def summarize(
             for keyword_id, groups in by_keyword.items()
         },
         "records": records,
+        "fuzzy_temporal_neighborhood": summarize_temporal_events(
+            temporal_events
+        ),
     }
 
 
@@ -546,6 +724,7 @@ def self_test() -> None:
                     "fuzzy_target_rank_max": 2,
                     "fuzzy_events": [
                         {
+                            "frame_index": 1,
                             "depth": 3,
                             "target_token": 3,
                             "top_token": 0,
@@ -578,6 +757,26 @@ def self_test() -> None:
     assert finished["fuzzy_target_rank_mean"]["mean"] == 2.0
     assert finished["fuzzy_competition"]["events"] == 1
     assert finished["fuzzy_competition"]["by_pair"]["3->0"]["events"] == 1
+    temporal = temporal_neighborhood_event(
+        [
+            [3.0, 0.0, 0.0, 0.0],
+            [2.0, 0.0, 0.0, 1.0],
+            [0.0, 0.0, 0.0, 4.0],
+        ],
+        {
+            "frame_index": 1,
+            "depth": 3,
+            "target_token": 3,
+            "top_token": 0,
+            "logit_gap": 1.0,
+            "target_rank": 2,
+        },
+    )
+    assert temporal["top1_within"]["1"] is True
+    assert temporal["nearest_top1_radius_frames"] == 1
+    assert temporal["top1_frames_total"] == 1
+    assert temporal["nearest_top1_distance_any_frames"] == 1
+    assert temporal["best_target_margin_anywhere"] > 0.0
 
 
 def main() -> int:
@@ -652,7 +851,7 @@ def main() -> int:
     )
 
     result = {
-        "schema_version": 3,
+        "schema_version": 4,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "development_only": True,
