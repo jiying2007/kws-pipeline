@@ -53,6 +53,29 @@ def scalar_stats(values: list[float]) -> dict:
     }
 
 
+def competition_cross_entropy(row: dict, true_keyword_id: int) -> float:
+    hypotheses = row.get("hypotheses")
+    if not isinstance(hypotheses, list) or len(hypotheses) < 2:
+        raise ValueError("sequence competition hypotheses are missing")
+    scores: list[tuple[int, float]] = []
+    for item in hypotheses:
+        if not isinstance(item, dict):
+            raise ValueError("sequence competition hypothesis is invalid")
+        keyword_id = int(item["keyword_id"])
+        nll = float(item["ctc_nll_per_token"])
+        if not math.isfinite(nll):
+            raise ValueError("sequence competition NLL must be finite")
+        scores.append((keyword_id, -nll))
+    matches = [score for keyword_id, score in scores if keyword_id == true_keyword_id]
+    if len(matches) != 1:
+        raise ValueError("true keyword is not uniquely present in hypotheses")
+    maximum = max(score for _, score in scores)
+    logsum = maximum + math.log(
+        sum(math.exp(score - maximum) for _, score in scores)
+    )
+    return logsum - matches[0]
+
+
 def read_margin_weight(path: pathlib.Path, *, model_sha256: str) -> float:
     value = json.loads(path.read_text(encoding="utf-8"))
     candidates = value.get("candidates")
@@ -173,6 +196,18 @@ def summarize(records: list[dict]) -> dict:
         "recordings": len(records),
         "old_loss": scalar_stats([float(row["old_loss"]) for row in records]),
         "new_loss": scalar_stats([float(row["new_loss"]) for row in records]),
+        "candidate_positive_term": scalar_stats(
+            [float(row["candidate_positive_term"]) for row in records]
+        ),
+        "candidate_positive_term_dominates": sum(
+            bool(row["candidate_positive_term_dominates"]) for row in records
+        ),
+        "new_minus_candidate_positive_term": scalar_stats(
+            [
+                float(row["new_minus_candidate_positive_term"])
+                for row in records
+            ]
+        ),
         "old_weighted_grad_l2": scalar_stats(
             [float(row["old_weighted_grad_l2"]) for row in records]
         ),
@@ -328,6 +363,13 @@ def main() -> int:
         row = competition_rows[audio_sha]
         correct_prefix = int(row["correct_discriminative_prefix_length"])
         competitor_prefix = int(row["competitor_discriminative_prefix_length"])
+        candidate_positive_term = competition_cross_entropy(row, keyword_id)
+        new_minus_candidate = new_loss - candidate_positive_term
+        if new_minus_candidate < -1.0e-5:
+            raise ValueError(
+                "actual margin loss fell below candidate positive term"
+            )
+        candidate_dominates = abs(new_minus_candidate) <= 1.0e-5
 
         records.append(
             {
@@ -341,6 +383,9 @@ def main() -> int:
                 ),
                 "old_loss": old_loss,
                 "new_loss": new_loss,
+                "candidate_positive_term": candidate_positive_term,
+                "candidate_positive_term_dominates": candidate_dominates,
+                "new_minus_candidate_positive_term": new_minus_candidate,
                 "old_weighted_grad_l2": weight * float(old_grad.norm()),
                 "new_weighted_grad_l2": weighted_new_grad_l2,
                 "primary_ctc_grad_l2": primary_ctc_grad_l2,
