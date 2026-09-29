@@ -260,7 +260,8 @@ def self_test() -> None:
             "runtime-search-aligned-v1",
             "ctc-keyword-competition-v1",
         ):
-            retired_spec = json.loads(json.dumps(spec))
+            retired_spec = dict(spec)
+            retired_spec["config_overrides"] = dict(spec["config_overrides"])
             retired_spec["config_overrides"][
                 "train.sequence_margin_positive_policy"
             ] = retired_policy
