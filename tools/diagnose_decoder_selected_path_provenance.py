@@ -23,8 +23,8 @@ from diagnose_sequence_margin_runtime_gap import (
     trace_paths,
 )
 
-EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v2"
-POLICY = "exact-shadow-backpointer-fuzzy-gap-v2"
+EVIDENCE_CLASS = "decoder-selected-path-provenance-development-v3"
+POLICY = "exact-shadow-backpointer-fuzzy-competitor-v3"
 
 
 def empty_bucket() -> dict:
@@ -41,6 +41,7 @@ def empty_bucket() -> dict:
         "fuzzy_logit_gap_max": [],
         "fuzzy_target_rank_mean": [],
         "fuzzy_target_rank_max": [],
+        "fuzzy_events": [],
         "retention_log": [],
         "confidence": [],
     }
@@ -61,6 +62,37 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
     fuzzy_gap_max = float(provenance.get("fuzzy_logit_gap_max", float("nan")))
     fuzzy_rank_sum = int(provenance.get("fuzzy_target_rank_sum", -1))
     fuzzy_rank_max = int(provenance.get("fuzzy_target_rank_max", -1))
+    fuzzy_events = provenance.get("fuzzy_events")
+    if not isinstance(fuzzy_events, list) or len(fuzzy_events) != fuzzy:
+        raise ValueError("selected path fuzzy event list does not match count")
+    normalized_events: list[dict] = []
+    for event in fuzzy_events:
+        if not isinstance(event, dict) or set(event) != {
+            "depth", "target_token", "top_token", "logit_gap", "target_rank"
+        }:
+            raise ValueError("selected path fuzzy event schema is invalid")
+        depth = int(event["depth"])
+        target_token = int(event["target_token"])
+        top_token = int(event["top_token"])
+        gap = float(event["logit_gap"])
+        rank = int(event["target_rank"])
+        if (
+            depth <= 1
+            or target_token <= 0
+            or top_token == target_token
+            or top_token < 0
+            or not math.isfinite(gap)
+            or gap < 0.0
+            or rank < 2
+        ):
+            raise ValueError("selected path fuzzy event value is invalid")
+        normalized_events.append({
+            "depth": depth,
+            "target_token": target_token,
+            "top_token": top_token,
+            "logit_gap": gap,
+            "target_rank": rank,
+        })
     values = (fuzzy, root_ambiguous, blank, same, token_advances, exact_top, root_exact)
     if any(value < 0 for value in values):
         raise ValueError("selected path provenance contains invalid counters")
@@ -109,6 +141,7 @@ def add_snapshot(bucket: dict, snapshot: dict) -> None:
         bucket["fuzzy_logit_gap_max"].append(fuzzy_gap_max)
         bucket["fuzzy_target_rank_mean"].append(fuzzy_rank_sum / float(fuzzy))
         bucket["fuzzy_target_rank_max"].append(fuzzy_rank_max)
+        bucket["fuzzy_events"].extend(normalized_events)
     bucket["retention_log"].append(retention)
     bucket["confidence"].append(confidence)
 
@@ -127,6 +160,51 @@ def histogram(values: list[int]) -> dict[str, int]:
         key = str(int(value))
         result[key] = result.get(key, 0) + 1
     return dict(sorted(result.items(), key=lambda item: int(item[0])))
+
+
+def summarize_fuzzy_events(events: list[dict]) -> dict:
+    def stats(rows: list[dict]) -> dict:
+        gaps = [float(row["logit_gap"]) for row in rows]
+        ranks = [float(row["target_rank"]) for row in rows]
+        return {
+            "events": len(rows),
+            "logit_gap": {
+                "mean": statistics.fmean(gaps) if gaps else None,
+                "p50": percentile(gaps, 0.50),
+                "p90": percentile(gaps, 0.90),
+            },
+            "target_rank": {
+                "mean": statistics.fmean(ranks) if ranks else None,
+                "p50": percentile(ranks, 0.50),
+                "p90": percentile(ranks, 0.90),
+            },
+        }
+
+    grouped: dict[str, dict[str, list[dict]]] = {
+        "by_depth": {},
+        "by_target_token": {},
+        "by_top_token": {},
+        "by_pair": {},
+    }
+    for event in events:
+        keys = {
+            "by_depth": str(int(event["depth"])),
+            "by_target_token": str(int(event["target_token"])),
+            "by_top_token": str(int(event["top_token"])),
+            "by_pair": (
+                f'{int(event["target_token"])}->{int(event["top_token"])}'
+            ),
+        }
+        for group, key in keys.items():
+            grouped[group].setdefault(key, []).append(event)
+
+    result = {"events": len(events)}
+    for group, rows in grouped.items():
+        result[group] = {
+            key: stats(value)
+            for key, value in sorted(rows.items())
+        }
+    return result
 
 
 def finish_bucket(bucket: dict) -> dict:
@@ -151,6 +229,7 @@ def finish_bucket(bucket: dict) -> dict:
         "same_token_retentions_histogram": histogram(
             bucket["same_token_retentions"]
         ),
+        "fuzzy_competition": summarize_fuzzy_events(bucket["fuzzy_events"]),
     }
     for key in (
         "retention_log",
@@ -377,6 +456,16 @@ def summarize(
                         "fuzzy_target_rank_max": int(
                             provenance["fuzzy_target_rank_max"]
                         ),
+                        "fuzzy_events": [
+                            {
+                                "depth": int(event["depth"]),
+                                "target_token": int(event["target_token"]),
+                                "top_token": int(event["top_token"]),
+                                "logit_gap": float(event["logit_gap"]),
+                                "target_rank": int(event["target_rank"]),
+                            }
+                            for event in provenance["fuzzy_events"]
+                        ],
                         "root_exact_starts": int(provenance["root_exact_starts"]),
                         "root_ambiguous_starts": int(
                             provenance["root_ambiguous_starts"]
@@ -424,6 +513,7 @@ def self_test() -> None:
                     "fuzzy_logit_gap_max": 0.0,
                     "fuzzy_target_rank_sum": 0,
                     "fuzzy_target_rank_max": 0,
+                    "fuzzy_events": [],
                     "root_exact_starts": 1,
                     "root_ambiguous_starts": 0,
                     "same_token_retentions": 2,
@@ -454,6 +544,15 @@ def self_test() -> None:
                     "fuzzy_logit_gap_max": 0.4,
                     "fuzzy_target_rank_sum": 2,
                     "fuzzy_target_rank_max": 2,
+                    "fuzzy_events": [
+                        {
+                            "depth": 3,
+                            "target_token": 3,
+                            "top_token": 0,
+                            "logit_gap": 0.4,
+                            "target_rank": 2,
+                        }
+                    ],
                     "root_exact_starts": 1,
                     "root_ambiguous_starts": 0,
                     "same_token_retentions": 0,
@@ -477,6 +576,8 @@ def self_test() -> None:
     assert finished["fuzzy_advances_histogram"] == {"1": 1}
     assert finished["fuzzy_logit_gap_mean"]["mean"] == 0.4
     assert finished["fuzzy_target_rank_mean"]["mean"] == 2.0
+    assert finished["fuzzy_competition"]["events"] == 1
+    assert finished["fuzzy_competition"]["by_pair"]["3->0"]["events"] == 1
 
 
 def main() -> int:
@@ -551,7 +652,7 @@ def main() -> int:
     )
 
     result = {
-        "schema_version": 2,
+        "schema_version": 3,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "development_only": True,
