@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
   float blank_retention = expf(KWS_SILENCE_RETENTION_LOG);
   float fuzzy_child_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;
   int search_policy_override = 0;
+  int defer_nonroot_mismatch = 0;
   kws_engine_t *engine = NULL;
   void *arena = NULL;
   kws_trace_reader_t reader = {0};
@@ -60,7 +61,8 @@ int main(int argc, char **argv) {
     fprintf(stderr,
             "usage: %s model.kwm keywords.kwk trace.kwtr recording-id "
             "[--state-retention value] [--refractory-ms value] "
-            "[--blank-retention value] [--fuzzy-child-cost-log value]\n",
+            "[--blank-retention value] [--fuzzy-child-cost-log value] "
+            "[--defer-nonroot-mismatch 0|1]\n",
             argv[0]);
     return 2;
   }
@@ -87,6 +89,13 @@ int main(int argc, char **argv) {
         return 2;
       }
       search_policy_override = 1;
+    } else if (strcmp(argv[i], "--defer-nonroot-mismatch") == 0) {
+      uint32_t enabled = 0u;
+      if (!parse_u32(argv[i + 1], &enabled) || enabled > 1u) {
+        fprintf(stderr, "invalid --defer-nonroot-mismatch\n");
+        return 2;
+      }
+      defer_nonroot_mismatch = (int)enabled;
     } else {
       fprintf(stderr, "unknown option: %s\n", argv[i]);
       return 2;
@@ -129,6 +138,11 @@ int main(int argc, char **argv) {
       kws_engine_debug_set_decoder_search_policy(
           engine, blank_retention, fuzzy_child_cost_log) != KWS_OK) {
     fprintf(stderr, "invalid decoder search-policy override\n");
+    goto cleanup;
+  }
+  if (defer_nonroot_mismatch != 0 &&
+      kws_engine_debug_defer_nonroot_mismatch(engine, 1) != KWS_OK) {
+    fprintf(stderr, "invalid defer-nonroot-mismatch override\n");
     goto cleanup;
   }
 
