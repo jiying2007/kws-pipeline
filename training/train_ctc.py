@@ -37,10 +37,19 @@ from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completion_loss
+from ctc_primary import (
+    build_label_prior_contract,
+    estimate_training_label_priors,
+    normalize_label_prior_contract,
+    primary_ctc_per_sample,
+)
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 from objective_contract import (
+    CTC_PRIMARY_POLICIES,
+    CTC_PRIMARY_POLICY_DEFAULT,
+    CTC_PRIMARY_POLICY_LABEL_PRIOR,
     ORDERED_TOKEN_SCOPE_DEFAULT,
     ORDERED_TOKEN_SCOPE_EXACT_WAKE,
     ORDERED_TOKEN_SCOPES,
@@ -209,6 +218,7 @@ def training_environment() -> dict:
         ROOT / "training" / "suffix_root_loss.py",
         ROOT / "training" / "objective_config.py",
         ROOT / "training" / "objective_contract.py",
+        ROOT / "training" / "ctc_primary.py",
         ROOT / "training" / "path_purity.py",
         ROOT / "training" / "training_state.py",
         ROOT / "tools" / "corpus_identity.py",
@@ -953,6 +963,17 @@ def validate_warm_start(
             args.path_purity_margin
         ):
             raise ValueError("development warm-start path-purity margin mismatch")
+    source_primary_policy = str(
+        checkpoint.get("ctc_primary_policy", CTC_PRIMARY_POLICY_DEFAULT)
+    )
+    if source_primary_policy != args.ctc_primary_policy:
+        raise ValueError("development warm-start primary CTC policy mismatch")
+    source_label_prior = checkpoint.get("ctc_label_prior")
+    if source_primary_policy == CTC_PRIMARY_POLICY_LABEL_PRIOR:
+        normalize_label_prior_contract(source_label_prior)
+    elif source_label_prior is not None:
+        raise ValueError("standard CTC warm-start carries label-prior metadata")
+
     actual_state = state_identity(checkpoint["state_dict"])
     if checkpoint.get("float_state_identity") != actual_state:
         raise ValueError("warm-start float state identity mismatch")
@@ -978,6 +999,11 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
+    parser.add_argument(
+        "--ctc-primary-policy",
+        choices=sorted(CTC_PRIMARY_POLICIES),
+        default=CTC_PRIMARY_POLICY_DEFAULT,
+    )
     parser.add_argument("--ctc-vad-align", action="store_true")
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
@@ -1170,6 +1196,23 @@ def main() -> None:
         for parameter in model.rec_proj.parameters():
             parameter.requires_grad = False
 
+    ctc_label_prior_contract = None
+    if args.ctc_primary_policy == CTC_PRIMARY_POLICY_LABEL_PRIOR:
+        prior_source_state = state_identity(model.state_dict())
+        label_priors, label_prior_frames = estimate_training_label_priors(
+            model,
+            dataset,
+            batch_size=args.batch_size,
+            collate_fn=collate,
+            vocab_size=vocab_size_value,
+        )
+        ctc_label_prior_contract = build_label_prior_contract(
+            label_priors,
+            frame_count=label_prior_frames,
+            training_corpus_sha256=dataset.corpus_identity["corpus_sha256"],
+            source_float_state_sha256=prior_source_state["sha256"],
+        )
+
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     optimizer = torch.optim.AdamW(trainable, lr=args.lr, weight_decay=WEIGHT_DECAY)
     loss_fn = nn.CTCLoss(blank=0, zero_infinity=True, reduction="none")
@@ -1194,10 +1237,18 @@ def main() -> None:
             log_probs = model(x).log_softmax(dim=2)
             if args.ctc_vad_align:
                 ctc_probs = vad_aligned_ctc_log_probs(log_probs, vad_mask, ylen)
-                raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
             else:
                 ctc_probs = log_probs
-                raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
+            raw_ctc = primary_ctc_per_sample(
+                ctc_probs,
+                y,
+                xlen,
+                ylen,
+                policy=args.ctc_primary_policy,
+                standard_loss=loss_fn,
+                label_prior_contract=ctc_label_prior_contract,
+                blank=0,
+            )
             target_weights = torch.where(
                 ylen > 0,
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
@@ -1411,6 +1462,13 @@ def main() -> None:
             "weight_decay": WEIGHT_DECAY,
             "grad_clip_norm": GRAD_CLIP_NORM,
             "ctc_reduction": "per-frame-weighted",
+            "ctc_primary_policy": args.ctc_primary_policy,
+            "ctc_primary_policy_scope": "primary-loss-path-v1",
+            **(
+                {"ctc_label_prior": ctc_label_prior_contract}
+                if ctc_label_prior_contract is not None
+                else {}
+            ),
             **(
                 {
                     "ctc_vad_alignment": vad_contract,
@@ -1467,6 +1525,7 @@ def main() -> None:
         f"saved {args.output}: examples={len(dataset)} vocab={vocab_size_value} "
         f"frontend={args.frontend} fingerprint=0x{fingerprint:016x} "
         f"corpus={dataset.corpus_identity['corpus_sha256']} "
+        f"ctc_primary={args.ctc_primary_policy} "
         f"repo_sha={environment['repository_sha']} image={environment['training_image_digest']}"
     )
 
