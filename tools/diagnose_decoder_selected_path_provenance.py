@@ -210,6 +210,7 @@ def summarize(
         for keyword_id in sorted(keywords)
     }
     records: list[dict] = []
+    excluded_non_surrogate_runtime_miss = 0
 
     for audio_sha, sample in sorted(positive_sample.items()):
         trace = by_sha[audio_sha]
@@ -255,6 +256,25 @@ def summarize(
                 target_path,
                 other_detected=bool(detected_ids - {keyword_id}),
             )
+
+        if not runtime and not surrogate:
+            excluded_non_surrogate_runtime_miss += 1
+            records.append(
+                {
+                    "audio_sha256": audio_sha,
+                    "split": sample["split"],
+                    "keyword_id": keyword_id,
+                    "surrogate_above_threshold": False,
+                    "runtime_hit": False,
+                    "miss_category": None,
+                    "representative_policy": None,
+                    "representative": None,
+                    "selected_path_cohort": False,
+                    "exclusion_reason": "surrogate_below_threshold_runtime_miss",
+                }
+            )
+            continue
+
         label, snapshot = representative_snapshot(
             target_path,
             runtime=runtime,
@@ -294,6 +314,8 @@ def summarize(
                 "runtime_hit": runtime,
                 "miss_category": category,
                 "representative_policy": label,
+                "selected_path_cohort": True,
+                "exclusion_reason": None,
                 "representative": {
                     "retention_log": float(snapshot["retention_log"]),
                     "confidence": float(snapshot["confidence"]),
@@ -315,6 +337,12 @@ def summarize(
 
     return {
         "recordings": len(records),
+        "selected_path_cohort_recordings": (
+            len(records) - excluded_non_surrogate_runtime_miss
+        ),
+        "excluded_non_surrogate_runtime_miss": (
+            excluded_non_surrogate_runtime_miss
+        ),
         "cohorts": {name: finish_bucket(value) for name, value in buckets.items()},
         "by_keyword": {
             keyword_id: {
@@ -486,6 +514,12 @@ def main() -> int:
         json.dumps(
             {
                 "recordings": positive["recordings"],
+                "selected_path_cohort_recordings": positive[
+                    "selected_path_cohort_recordings"
+                ],
+                "excluded_non_surrogate_runtime_miss": positive[
+                    "excluded_non_surrogate_runtime_miss"
+                ],
                 "cohorts": {
                     name: {
                         "recordings": row["recordings"],
