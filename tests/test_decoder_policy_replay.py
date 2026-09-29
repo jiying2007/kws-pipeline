@@ -14,6 +14,9 @@ from diagnose_decoder_policy_replay import (  # noqa: E402
     boundary_reference_contract,
     joint_strict_verdict,
 )
+from diagnose_decoder_selected_path_provenance import (  # noqa: E402
+    self_test as selected_path_provenance_self_test,
+)
 from score_events import score, validate_detections, validate_recordings  # noqa: E402
 
 
@@ -43,6 +46,7 @@ def expect_failure(call, needle: str) -> None:
 
 
 def main() -> int:
+    selected_path_provenance_self_test()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         positive = root / "within-word.jsonl"
