@@ -238,7 +238,7 @@ def self_test() -> None:
                     "config_overrides": {
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.1,
-                        "train.sequence_margin_positive_policy": "runtime-search-aligned-v1",
+                        "train.sequence_margin_positive_policy": "sparse-chronological-v1",
                         "domain_iteration.base_failure_replay_enabled": True,
                     },
                 }
@@ -249,12 +249,29 @@ def self_test() -> None:
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
         assert (
             verified["config_overrides"]["train.sequence_margin_positive_policy"]
-            == "runtime-search-aligned-v1"
+            == "sparse-chronological-v1"
         )
         assert (
             verified["config_overrides"]["domain_iteration.base_failure_replay_enabled"]
             is True
         )
+
+        for retired_policy in (
+            "runtime-search-aligned-v1",
+            "ctc-keyword-competition-v1",
+        ):
+            retired_spec = json.loads(json.dumps(spec))
+            retired_spec["config_overrides"][
+                "train.sequence_margin_positive_policy"
+            ] = retired_policy
+            try:
+                verify_spec(retired_spec)
+            except ValueError as exc:
+                assert "train.sequence_margin_positive_policy" in str(exc)
+            else:
+                raise AssertionError(
+                    "retired positive policy was accepted: " + retired_policy
+                )
 
         bad = dict(verified)
         bad["protected_evidence_used"] = True
