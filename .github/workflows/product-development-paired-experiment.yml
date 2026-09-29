@@ -280,26 +280,8 @@ jobs:
               ;;
             train.sequence_margin_positive_policy)
               comparator=training/compare_product_objective_pair.py
-              readarray -t objective_values < <(python3 - <<'PY'
-          import json, os, pathlib
-          value=json.loads(
-              (pathlib.Path(os.environ['KWS_PAIR_ROOT'])/'pair-receipt.json')
-              .read_text(encoding='utf-8')
-          )
-          variable=value.get('variable')
-          if not isinstance(variable,dict):
-              raise SystemExit('paired receipt variable is missing')
-          for key in ('control','treatment'):
-              raw=variable.get(key)
-              if not isinstance(raw,str) or not raw:
-                  raise SystemExit(f'paired receipt {key} objective value is invalid')
-              print(raw)
-          PY
-              )
-              test "${#objective_values[@]}" = "2"
               comparator_args=(
-                --control-value "${objective_values[0]}"
-                --treatment-value "${objective_values[1]}"
+                --pair-receipt "$KWS_PAIR_ROOT/pair-receipt.json"
               )
               ;;
             *)
