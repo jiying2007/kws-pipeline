@@ -21,6 +21,11 @@ typedef struct path_provenance {
   float fuzzy_logit_gap_max;
   uint32_t fuzzy_target_rank_sum;
   uint16_t fuzzy_target_rank_max;
+  uint16_t fuzzy_event_depth[KWS_MAX_TOKENS_PER_KEYWORD];
+  uint16_t fuzzy_event_target_token[KWS_MAX_TOKENS_PER_KEYWORD];
+  uint16_t fuzzy_event_top_token[KWS_MAX_TOKENS_PER_KEYWORD];
+  float fuzzy_event_logit_gap[KWS_MAX_TOKENS_PER_KEYWORD];
+  uint16_t fuzzy_event_target_rank[KWS_MAX_TOKENS_PER_KEYWORD];
   uint16_t root_exact_starts;
   uint16_t root_ambiguous_starts;
   uint16_t same_token_retentions;
@@ -320,6 +325,14 @@ static void shadow_step(
         float fuzzy_gap = logits[top_token] - logits[token];
         uint16_t target_rank =
             shadow_target_rank(logits, vocab_size, token);
+        uint16_t event_index = provenance.fuzzy_advances;
+        if (event_index < KWS_MAX_TOKENS_PER_KEYWORD) {
+          provenance.fuzzy_event_depth[event_index] = node_meta[child].depth;
+          provenance.fuzzy_event_target_token[event_index] = token;
+          provenance.fuzzy_event_top_token[event_index] = top_token;
+          provenance.fuzzy_event_logit_gap[event_index] = fuzzy_gap;
+          provenance.fuzzy_event_target_rank[event_index] = target_rank;
+        }
         provenance.fuzzy_advances = saturating_inc(provenance.fuzzy_advances);
         provenance.fuzzy_logit_gap_sum += fuzzy_gap;
         if (fuzzy_gap > provenance.fuzzy_logit_gap_max) {
@@ -384,15 +397,30 @@ static void print_provenance(const path_provenance_t *value) {
           "\"fuzzy_advances\":%u,"
           "\"fuzzy_logit_gap_sum\":%.9g,\"fuzzy_logit_gap_max\":%.9g,"
           "\"fuzzy_target_rank_sum\":%u,\"fuzzy_target_rank_max\":%u,"
-          "\"root_exact_starts\":%u,\"root_ambiguous_starts\":%u,"
-          "\"same_token_retentions\":%u,\"blank_retentions\":%u}",
+          "\"fuzzy_events\":[",
           value->token_advances, value->exact_top_advances,
           value->fuzzy_advances, (double)value->fuzzy_logit_gap_sum,
           (double)value->fuzzy_logit_gap_max,
           (unsigned int)value->fuzzy_target_rank_sum,
-          value->fuzzy_target_rank_max, value->root_exact_starts,
-          value->root_ambiguous_starts, value->same_token_retentions,
-          value->blank_retentions);
+          value->fuzzy_target_rank_max);
+  for (uint16_t i = 0u;
+       i < value->fuzzy_advances && i < KWS_MAX_TOKENS_PER_KEYWORD; ++i) {
+    if (i != 0u) {
+      fputc(',', stdout);
+    }
+    fprintf(stdout,
+            "{\"depth\":%u,\"target_token\":%u,\"top_token\":%u,"
+            "\"logit_gap\":%.9g,\"target_rank\":%u}",
+            value->fuzzy_event_depth[i], value->fuzzy_event_target_token[i],
+            value->fuzzy_event_top_token[i],
+            (double)value->fuzzy_event_logit_gap[i],
+            value->fuzzy_event_target_rank[i]);
+  }
+  fprintf(stdout,
+          "],\"root_exact_starts\":%u,\"root_ambiguous_starts\":%u,"
+          "\"same_token_retentions\":%u,\"blank_retentions\":%u}",
+          value->root_exact_starts, value->root_ambiguous_starts,
+          value->same_token_retentions, value->blank_retentions);
 }
 
 static void print_snapshot(const path_snapshot_t *value) {
