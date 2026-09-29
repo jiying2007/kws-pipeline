@@ -273,12 +273,16 @@ jobs:
           print(variable['name'])
           PY
           )"
+          comparator_args=()
           case "$variable" in
             domain_iteration.base_failure_replay_enabled)
               comparator=training/compare_product_development_pair.py
               ;;
             train.sequence_margin_positive_policy)
               comparator=training/compare_product_objective_pair.py
+              comparator_args=(
+                --pair-receipt "$KWS_PAIR_ROOT/pair-receipt.json"
+              )
               ;;
             *)
               echo "unsupported paired causal comparator variable: $variable" >&2
@@ -289,7 +293,8 @@ jobs:
           python3 "$comparator" \
             --control "$KWS_PAIR_ROOT/control" \
             --treatment "$KWS_PAIR_ROOT/treatment" \
-            --output "$KWS_PAIR_ROOT/paired-comparison.json"
+            --output "$KWS_PAIR_ROOT/paired-comparison.json" \
+            "${comparator_args[@]}"
           code=$?
           set -e
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"

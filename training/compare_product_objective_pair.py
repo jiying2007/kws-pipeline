@@ -23,9 +23,29 @@ from compare_product_development_pair import (
 )
 
 VARIABLE = "train.sequence_margin_positive_policy"
-CONTROL = "sparse-chronological-v1"
-TREATMENT = "runtime-search-aligned-v1"
+DEFAULT_CONTROL = "sparse-chronological-v1"
+DEFAULT_TREATMENT = "runtime-search-aligned-v1"
 NEGATIVE = "runtime-executable-v1"
+
+
+def expected_values_from_pair_receipt(path: pathlib.Path) -> tuple[str, str]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if value.get("evidence_class") != "product-development-same-runner-pair-receipt-v1":
+        raise ValueError("pair receipt evidence_class mismatch")
+    variable = value.get("variable")
+    if not isinstance(variable, dict) or variable.get("name") != VARIABLE:
+        raise ValueError("pair receipt objective variable mismatch")
+    control = variable.get("control")
+    treatment = variable.get("treatment")
+    if (
+        not isinstance(control, str)
+        or not control
+        or not isinstance(treatment, str)
+        or not treatment
+        or control == treatment
+    ):
+        raise ValueError("pair receipt objective values must be distinct strings")
+    return control, treatment
 
 
 def delete_dotted(value: dict, dotted: str) -> None:
@@ -76,6 +96,9 @@ def round0_inputs(
     treatment_root: pathlib.Path,
     control: dict,
     treatment: dict,
+    *,
+    expected_control: str,
+    expected_treatment: str,
 ) -> dict:
     c0 = {record_key(row): row for row in records_by_round(control["manifest"], 0)}
     t0 = {record_key(row): row for row in records_by_round(treatment["manifest"], 0)}
@@ -121,9 +144,9 @@ def round0_inputs(
             failures.append(f"{tag}.control negative policy drifted")
         if rread.get("sequence_margin_negative_policy") != NEGATIVE:
             failures.append(f"{tag}.treatment negative policy drifted")
-        if lread.get("sequence_margin_positive_policy") != CONTROL:
+        if lread.get("sequence_margin_positive_policy") != expected_control:
             failures.append(f"{tag}.control positive policy drifted")
-        if rread.get("sequence_margin_positive_policy") != TREATMENT:
+        if rread.get("sequence_margin_positive_policy") != expected_treatment:
             failures.append(f"{tag}.treatment positive policy drifted")
     return {
         "valid": not failures,
@@ -173,7 +196,23 @@ def metric_delta(control: dict, treatment: dict) -> dict:
     }
 
 
-def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> dict:
+def compare_pair(
+    control_root: pathlib.Path,
+    treatment_root: pathlib.Path,
+    *,
+    expected_control: str,
+    expected_treatment: str,
+) -> dict:
+    if (
+        not isinstance(expected_control, str)
+        or not expected_control
+        or not isinstance(expected_treatment, str)
+        or not expected_treatment
+        or expected_control == expected_treatment
+    ):
+        raise ValueError(
+            "expected objective pair values must be distinct non-empty strings"
+        )
     control = load_artifact(control_root)
     treatment = load_artifact(treatment_root)
     framing: list[str] = []
@@ -191,9 +230,9 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
         framing.append("effective product base differs")
     if normalized_overrides(cr) != normalized_overrides(tr):
         framing.append("overrides differ outside positive policy")
-    if cr.get("config_overrides", {}).get(VARIABLE) != CONTROL:
+    if cr.get("config_overrides", {}).get(VARIABLE) != expected_control:
         framing.append("control positive policy mismatch")
-    if tr.get("config_overrides", {}).get(VARIABLE) != TREATMENT:
+    if tr.get("config_overrides", {}).get(VARIABLE) != expected_treatment:
         framing.append("treatment positive policy mismatch")
     if normalized_config(control["config"]) != normalized_config(treatment["config"]):
         framing.append("materialized configs differ outside positive policy")
@@ -205,7 +244,14 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
     replay: list[str] = []
     no_replay(control["manifest"], "control", replay)
     no_replay(treatment["manifest"], "treatment", replay)
-    inputs = round0_inputs(control_root, treatment_root, control, treatment)
+    inputs = round0_inputs(
+        control_root,
+        treatment_root,
+        control,
+        treatment,
+        expected_control=expected_control,
+        expected_treatment=expected_treatment,
+    )
 
     c0 = metric_summary(round_best(control["manifest"], 0))
     t0 = metric_summary(round_best(treatment["manifest"], 0))
@@ -237,8 +283,8 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
         "development_only": True,
         "release_authority": False,
         "variable": VARIABLE,
-        "control_value": CONTROL,
-        "treatment_value": TREATMENT,
+        "control_value": expected_control,
+        "treatment_value": expected_treatment,
         "common_base_sha": cr.get("pr_base_sha"),
         "framing": {"valid": not framing, "failures": framing},
         "replay_isolation": {"valid": not replay, "failures": replay},
@@ -265,8 +311,15 @@ def compare_pair(control_root: pathlib.Path, treatment_root: pathlib.Path) -> di
     }
 
 
-def write_fixture(root: pathlib.Path, treatment: bool, positive: bool) -> None:
-    policy = TREATMENT if treatment else CONTROL
+def write_fixture(
+    root: pathlib.Path,
+    treatment: bool,
+    positive: bool,
+    *,
+    control_value: str = DEFAULT_CONTROL,
+    treatment_value: str = DEFAULT_TREATMENT,
+) -> None:
+    policy = treatment_value if treatment else control_value
     config = {
         "train": {
             "ctc_vad_align": True,
@@ -376,15 +429,61 @@ def self_test() -> None:
         control, treatment = root/"control", root/"treatment"
         write_fixture(control, False, True)
         write_fixture(treatment, True, True)
-        report = compare_pair(control, treatment)
+        report = compare_pair(
+            control,
+            treatment,
+            expected_control=DEFAULT_CONTROL,
+            expected_treatment=DEFAULT_TREATMENT,
+        )
         assert report["causal_valid"] is True
         assert report["round0_input_counterfactual"]["valid"] is True
         assert report["result_class"] == "positive-under-strict-precision-preserving-recall-gain"
         write_fixture(treatment, True, False)
-        report = compare_pair(control, treatment)
+        report = compare_pair(
+            control,
+            treatment,
+            expected_control=DEFAULT_CONTROL,
+            expected_treatment=DEFAULT_TREATMENT,
+        )
         assert report["causal_valid"] is True
         assert report["result_class"] == "negative"
         assert report["next_action"] == "close-no-sweep"
+
+        alternate = "ctc-keyword-competition-v1"
+        pair_receipt = root / "pair-receipt.json"
+        pair_receipt.write_text(
+            json.dumps(
+                {
+                    "evidence_class": "product-development-same-runner-pair-receipt-v1",
+                    "variable": {
+                        "name": VARIABLE,
+                        "control": DEFAULT_CONTROL,
+                        "treatment": alternate,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        expected_control, expected_treatment = expected_values_from_pair_receipt(
+            pair_receipt
+        )
+        assert expected_control == DEFAULT_CONTROL
+        assert expected_treatment == alternate
+        write_fixture(
+            treatment,
+            True,
+            True,
+            treatment_value=alternate,
+        )
+        report = compare_pair(
+            control,
+            treatment,
+            expected_control=expected_control,
+            expected_treatment=expected_treatment,
+        )
+        assert report["causal_valid"] is True
+        assert report["treatment_value"] == alternate
+        assert report["result_class"] == "positive-under-strict-precision-preserving-recall-gain"
 
 
 def main() -> int:
@@ -392,16 +491,33 @@ def main() -> int:
     parser.add_argument("--control", type=pathlib.Path)
     parser.add_argument("--treatment", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
+    parser.add_argument("--pair-receipt", type=pathlib.Path)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         self_test()
         print("product objective paired causal comparison self-test: PASS")
         return 0
-    if args.control is None or args.treatment is None or args.output is None:
-        parser.error("--control, --treatment and --output are required unless --self-test is used")
+    if (
+        args.control is None
+        or args.treatment is None
+        or args.output is None
+        or args.pair_receipt is None
+    ):
+        parser.error(
+            "--control, --treatment, --output and --pair-receipt are required "
+            "unless --self-test is used"
+        )
     try:
-        report = compare_pair(args.control, args.treatment)
+        expected_control, expected_treatment = expected_values_from_pair_receipt(
+            args.pair_receipt
+        )
+        report = compare_pair(
+            args.control,
+            args.treatment,
+            expected_control=expected_control,
+            expected_treatment=expected_treatment,
+        )
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         report = {
             "schema_version": 1,
