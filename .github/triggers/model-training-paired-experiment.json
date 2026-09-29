@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "experiment_id": "ctc-keyword-competition-positive-pair-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head-paired-same-runner-v1",
+  "protected_evidence_used": false,
+  "reason": "Retained #412/#413 evidence isolates configured-keyword exact CTC sequence ranking as the missing kw1 relation. Compare sparse positive policy against ctc-keyword-competition with the existing governed loss weight unchanged. Accept only precision-preserving round-1 recall gain; otherwise close with no weight, margin, policy, decoder or threshold sweep.",
+  "common_overrides": {
+    "train.ctc_vad_align": true,
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "domain_iteration.base_failure_replay_enabled": false
+  },
+  "variable": {
+    "name": "train.sequence_margin_positive_policy",
+    "control": "sparse-chronological-v1",
+    "treatment": "ctc-keyword-competition-v1"
+  }
+}
