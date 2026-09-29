@@ -137,6 +137,16 @@ kws_status_t kws_decoder_debug_set_search_policy(kws_decoder_t *d,
   return KWS_OK;
 }
 
+kws_status_t kws_decoder_debug_blank_evidence_nonroot_defer(kws_decoder_t *d,
+                                                      int enabled) {
+  if (d == NULL || (enabled != 0 && enabled != 1)) {
+    return KWS_EINVAL;
+  }
+  d->debug_blank_evidence_nonroot_defer = (uint8_t)enabled;
+  kws_decoder_reset(d);
+  return KWS_OK;
+}
+
 static uint16_t find_or_add_child(kws_decoder_t *d,
                                   uint16_t parent,
                                   uint16_t token,
@@ -352,6 +362,7 @@ int kws_decoder_step(kws_decoder_t *d,
                      uint32_t *keyword_id,
                      float *confidence) {
   float norm = approx_logsumexp(logits, vocab_size);
+  float blank_log_probability = logits[0] - norm;
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : d->silence_retention_log;
@@ -411,12 +422,25 @@ int kws_decoder_step(kws_decoder_t *d,
           max_assign_pair(&d->nodes[i].next_score,
                           &d->nodes[i].next_acoustic_score,
                           nonblank + decay, nonblank_acoustic);
+        } else if (d->debug_blank_evidence_nonroot_defer != 0u) {
+          max_assign_pair(&d->nodes[i].next_score,
+                          &d->nodes[i].next_acoustic_score,
+                          nonblank + blank_log_probability,
+                          nonblank_acoustic);
         }
       }
-      if (separated > NEG_INF / 2.0f && blank_dominant != 0) {
-        max_assign_pair(&d->nodes[i].next_blank_score,
-                        &d->nodes[i].next_blank_acoustic_score,
-                        separated + d->silence_retention_log, separated_acoustic);
+      if (separated > NEG_INF / 2.0f) {
+        if (blank_dominant != 0) {
+          max_assign_pair(&d->nodes[i].next_blank_score,
+                          &d->nodes[i].next_blank_acoustic_score,
+                          separated + d->silence_retention_log,
+                          separated_acoustic);
+        } else if (d->debug_blank_evidence_nonroot_defer != 0u) {
+          max_assign_pair(&d->nodes[i].next_blank_score,
+                          &d->nodes[i].next_blank_acoustic_score,
+                          separated + blank_log_probability,
+                          separated_acoustic);
+        }
       }
     }
 
@@ -446,6 +470,8 @@ int kws_decoder_step(kws_decoder_t *d,
        * prefix exists, preserve fuzzy child competition, but charge a non-top
        * child against the cumulative path budget. */
       if (base > NEG_INF / 2.0f &&
+          !(d->debug_blank_evidence_nonroot_defer != 0u &&
+            i != 0u && top_token != token) &&
           (i != 0u || top_token == token ||
            ((blank_dominant != 0 || top_is_keyword_root != 0) &&
             logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
