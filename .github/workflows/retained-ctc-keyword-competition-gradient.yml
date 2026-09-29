@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/triggers/retained-ctc-keyword-competition-gradient.json'
+      - '.github/triggers/retained-ctc-keyword-competition-gradient.json' # workflow-path-filter: allow-missing (created only on retained audit PRs)
       - '.github/workflows/retained-ctc-keyword-competition-gradient.yml'
       - 'training/objective_contract.py'
       - 'training/sequence_margin.py'
