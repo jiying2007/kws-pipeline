@@ -179,6 +179,12 @@ def summarize(records: list[dict]) -> dict:
         "new_weighted_grad_l2": scalar_stats(
             [float(row["new_weighted_grad_l2"]) for row in records]
         ),
+        "primary_ctc_grad_l2": scalar_stats(
+            [float(row["primary_ctc_grad_l2"]) for row in records]
+        ),
+        "new_to_primary_ctc_grad_l2_ratio": scalar_stats(
+            [float(row["new_to_primary_ctc_grad_l2_ratio"]) for row in records]
+        ),
         "correct_prefix_update": scalar_stats(
             [float(row["correct_prefix_update"]) for row in records]
         ),
@@ -291,6 +297,17 @@ def main() -> int:
                 f"{recomputed_nll} != {retained_nll}"
             )
 
+        ctc_logits = raw.detach().clone().requires_grad_(True)
+        ctc_log_probs = ctc_logits.log_softmax(dim=1)
+        primary_ctc_loss = ctc_true_nll(
+            ctc_log_probs,
+            sequence,
+        ) / float(ctc_log_probs.shape[0])
+        primary_ctc_grad = torch.autograd.grad(
+            primary_ctc_loss,
+            ctc_logits,
+        )[0]
+
         old_loss, old_grad = gradient(
             raw,
             sequence=sequence,
@@ -304,6 +321,10 @@ def main() -> int:
             positive_policy=SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION,
         )
         update = -new_grad
+        weighted_new_grad_l2 = weight * float(new_grad.norm())
+        primary_ctc_grad_l2 = float(primary_ctc_grad.norm())
+        if primary_ctc_grad_l2 <= 0.0:
+            raise ValueError("primary CTC gradient norm must be positive")
         row = competition_rows[audio_sha]
         correct_prefix = int(row["correct_discriminative_prefix_length"])
         competitor_prefix = int(row["competitor_discriminative_prefix_length"])
@@ -321,7 +342,11 @@ def main() -> int:
                 "old_loss": old_loss,
                 "new_loss": new_loss,
                 "old_weighted_grad_l2": weight * float(old_grad.norm()),
-                "new_weighted_grad_l2": weight * float(new_grad.norm()),
+                "new_weighted_grad_l2": weighted_new_grad_l2,
+                "primary_ctc_grad_l2": primary_ctc_grad_l2,
+                "new_to_primary_ctc_grad_l2_ratio": (
+                    weighted_new_grad_l2 / primary_ctc_grad_l2
+                ),
                 "correct_prefix_update": prefix_update(
                     update,
                     row["correct_positions"],
