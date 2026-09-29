@@ -260,13 +260,14 @@ def self_test() -> None:
             "runtime-search-aligned-v1",
             "ctc-keyword-competition-v1",
         ):
-            retired_spec = dict(spec)
-            retired_spec["config_overrides"] = dict(spec["config_overrides"])
+            retired_spec = dict(verified)
+            retired_spec["config_overrides"] = dict(verified["config_overrides"])
             retired_spec["config_overrides"][
                 "train.sequence_margin_positive_policy"
             ] = retired_policy
+            spec.write_text(json.dumps(retired_spec), encoding="utf-8")
             try:
-                verify_spec(retired_spec)
+                verify_spec(spec)
             except ValueError as exc:
                 assert "train.sequence_margin_positive_policy" in str(exc)
             else:
