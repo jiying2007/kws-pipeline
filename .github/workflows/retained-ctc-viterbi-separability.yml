@@ -1,0 +1,229 @@
+name: retained-ctc-viterbi-separability
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/retained-ctc-viterbi-separability.json'
+      - '.github/workflows/retained-ctc-viterbi-separability.yml'
+      - 'tools/diagnose_ctc_viterbi_keyword_separability.py'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  KWS_DIAGNOSTIC_SPEC: .github/triggers/retained-ctc-viterbi-separability.json
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      changed: ${{ steps.resolve.outputs.changed }}
+      source_run_id: ${{ steps.resolve.outputs.source_run_id }}
+      source_artifact_name: ${{ steps.resolve.outputs.source_artifact_name }}
+      source_pr_number: ${{ steps.resolve.outputs.source_pr_number }}
+      source_head_sha: ${{ steps.resolve.outputs.source_head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve retained CTC Viterbi request
+        id: resolve
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_DIAGNOSTIC_SPEC"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, pathlib, re
+          path=pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"])
+          value=json.loads(path.read_text(encoding="utf-8"))
+          required={
+              "schema_version","experiment_id","development_only",
+              "selection_feedback_allowed","protected_evidence_used",
+              "source_run_id","source_artifact_name","source_pr_number",
+              "source_head_sha","model","tokens","keywords_tsv",
+              "posterior_cache","acoustic_alignment","boundary_summary",
+              "boundary_audio_dir",
+          }
+          if set(value) != required:
+              raise SystemExit("retained CTC Viterbi spec fields mismatch")
+          if value["schema_version"] != 1:
+              raise SystemExit("schema_version must be 1")
+          if value["development_only"] is not True:
+              raise SystemExit("diagnostic must be development_only")
+          if value["selection_feedback_allowed"] is not False:
+              raise SystemExit("diagnostic must not feed selection")
+          if value["protected_evidence_used"] is not False:
+              raise SystemExit("diagnostic must not use protected evidence")
+          if not isinstance(value["source_run_id"], int) or value["source_run_id"] <= 0:
+              raise SystemExit("source_run_id must be positive")
+          if not isinstance(value["source_pr_number"], int) or value["source_pr_number"] <= 0:
+              raise SystemExit("source_pr_number must be positive")
+          if re.fullmatch(r"[0-9a-f]{40}", str(value["source_head_sha"])) is None:
+              raise SystemExit("source_head_sha is invalid")
+          for key in (
+              "source_artifact_name","model","tokens","keywords_tsv",
+              "posterior_cache","acoustic_alignment","boundary_summary",
+              "boundary_audio_dir",
+          ):
+              raw=value[key]
+              if (
+                  not isinstance(raw,str)
+                  or not raw.strip()
+                  or raw.startswith("/")
+                  or ".." in pathlib.PurePosixPath(raw).parts
+              ):
+                  raise SystemExit(f"{key} must be a safe relative path/name")
+          print("changed=true")
+          for key in (
+              "source_run_id","source_artifact_name",
+              "source_pr_number","source_head_sha",
+          ):
+              print(f"{key}={value[key]}")
+          PY
+
+  analyze:
+    needs: resolve
+    if: needs.resolve.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download retained product-development evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ needs.resolve.outputs.source_artifact_name }}
+          path: .retained
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ needs.resolve.outputs.source_run_id }}
+
+      - name: Verify retained authority
+        env:
+          SOURCE_HEAD: ${{ needs.resolve.outputs.source_head_sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(".retained")
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          receipt=json.loads((root/"build/product-development-experiment-receipt.json").read_text(encoding="utf-8"))
+          boundary=json.loads((root/spec["boundary_summary"]).read_text(encoding="utf-8"))
+          model=root/spec["model"]
+          if receipt.get("source_policy") != "exact-pr-head":
+              raise SystemExit("retained source is not exact-pr-head")
+          if receipt.get("development_only") is not True:
+              raise SystemExit("retained source is not development-only")
+          if receipt.get("protected_evidence_used") is not False:
+              raise SystemExit("retained source used protected evidence")
+          if receipt.get("pr_head_sha") != os.environ["SOURCE_HEAD"]:
+              raise SystemExit("retained source head mismatch")
+          model_sha=hashlib.file_digest(model.open("rb"),"sha256").hexdigest()
+          if boundary.get("model_sha256") != model_sha:
+              raise SystemExit("boundary/model authority mismatch")
+          print("retained exact source verified: model="+model_sha)
+          PY
+
+      - name: Build exact-source posterior dumper
+        env:
+          SOURCE_HEAD: ${{ needs.resolve.outputs.source_head_sha }}
+          SOURCE_PR: ${{ needs.resolve.outputs.source_pr_number }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "pull/$SOURCE_PR/head"
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_HEAD"
+          SOURCE_ROOT="$RUNNER_TEMP/ctc-viterbi-source"
+          git worktree add --detach "$SOURCE_ROOT" "$SOURCE_HEAD"
+          cmake -S "$SOURCE_ROOT" -B "$SOURCE_ROOT/build" -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build "$SOURCE_ROOT/build" --parallel --target kws_posterior_dump
+          test -x "$SOURCE_ROOT/build/kws_posterior_dump"
+          echo "POSTERIOR_DUMP=$SOURCE_ROOT/build/kws_posterior_dump" >> "$GITHUB_ENV"
+
+      - name: Generate boundary posterior traces
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          model=root/spec["model"]
+          audio_dir=root/spec["boundary_audio_dir"]
+          boundary=json.loads((root/spec["boundary_summary"]).read_text(encoding="utf-8"))
+          expected=set()
+          for row in boundary["records"]:
+              expected.add(str(row["within_word_wav_sha256"]))
+              expected.add(str(row["cross_boundary_wav_sha256"]))
+          output=pathlib.Path("build/ctc-viterbi-boundary-traces")
+          output.mkdir(parents=True,exist_ok=True)
+          seen=set()
+          for wav in sorted(audio_dir.glob("*.wav")):
+              sha=hashlib.file_digest(wav.open("rb"),"sha256").hexdigest()
+              if sha not in expected:
+                  continue
+              trace=output/f"{sha}.kwtr"
+              subprocess.check_call([
+                  os.environ["POSTERIOR_DUMP"],
+                  str(model),str(wav),str(trace),
+              ])
+              seen.add(sha)
+          if seen != expected:
+              raise SystemExit(
+                  f"boundary WAV coverage mismatch missing={sorted(expected-seen)} "
+                  f"extra={sorted(seen-expected)}"
+              )
+          print(f"generated {len(seen)} boundary posterior traces")
+          PY
+
+      - name: Evaluate token-synchronous CTC Viterbi separability
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_ctc_viterbi_keyword_separability.py --self-test
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          spec=json.loads(pathlib.Path(os.environ["KWS_DIAGNOSTIC_SPEC"]).read_text(encoding="utf-8"))
+          root=pathlib.Path(".retained")
+          output=pathlib.Path("build/ctc-viterbi-keyword-separability.json")
+          subprocess.check_call([
+              "python3",
+              "tools/diagnose_ctc_viterbi_keyword_separability.py",
+              "--model",str(root/spec["model"]),
+              "--tokens",str(root/spec["tokens"]),
+              "--keywords-tsv",str(root/spec["keywords_tsv"]),
+              "--posterior-cache",str(root/spec["posterior_cache"]),
+              "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
+              "--boundary-summary",str(root/spec["boundary_summary"]),
+              "--boundary-trace-dir","build/ctc-viterbi-boundary-traces",
+              "--output",str(output),
+          ])
+          value=json.loads(output.read_text(encoding="utf-8"))
+          print(json.dumps({
+              "exact_positive":value["exact_positive"]["summary"],
+              "exact_by_split_keyword":value["exact_positive"]["by_split_keyword"],
+              "boundary":value["boundary"]["summary"],
+              "boundary_by_keyword":value["boundary"]["by_keyword"],
+          },sort_keys=True))
+          PY
+
+      - name: Retain CTC Viterbi evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: retained-ctc-viterbi-separability-${{ github.event.pull_request.head.sha }}
+          path: build/ctc-viterbi-keyword-separability.json
+          if-no-files-found: error
+          retention-days: 30
