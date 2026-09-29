@@ -60,7 +60,7 @@ jobs:
               "selection_feedback_allowed","protected_evidence_used",
               "source_run_id","source_artifact_name","source_pr_number",
               "source_head_sha","model","tokens","keywords_tsv","keyword_pack",
-              "posterior_cache","baseline_summary",
+              "posterior_cache","baseline_summary","acoustic_alignment",
           }
           if set(value) != required:
               raise SystemExit("retained decoder-path spec fields mismatch")
@@ -80,7 +80,7 @@ jobs:
               raise SystemExit("source_head_sha must be lowercase git SHA")
           for key in (
               "source_artifact_name","model","tokens","keywords_tsv","keyword_pack",
-              "posterior_cache","baseline_summary",
+              "posterior_cache","baseline_summary","acoustic_alignment",
           ):
               raw=value[key]
               if (
@@ -179,11 +179,13 @@ jobs:
               "--decoder-path-replay","build-observe/kws_decoder_path_replay",
               "--posterior-cache",str(root/spec["posterior_cache"]),
               "--baseline-summary",str(root/spec["baseline_summary"]),
+              "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
               "--output",str(output),
           ])
           value=json.loads(output.read_text(encoding="utf-8"))
           print(json.dumps({
               "totals":value["totals"],
+              "positive_sample":value["positive_sample"],
               "per_keyword":{
                   key:{
                       "misses":row["surrogate_above_threshold_runtime_miss"],
