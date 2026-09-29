@@ -30,8 +30,8 @@ from diagnose_sequence_margin_runtime_gap import (  # noqa: E402
     trace_paths,
 )
 
-EVIDENCE_CLASS = "keyword-ctc-competition-gradient-audit-development-v1"
-POLICY = "fixed-logit-actual-training-objective-gradient-v1"
+EVIDENCE_CLASS = "keyword-ctc-competition-gradient-audit-development-v2"
+POLICY = "fixed-logit-local-target-blank-gradient-v2"
 
 
 def percentile(values: list[float], fraction: float) -> float | None:
@@ -468,7 +468,7 @@ def main() -> int:
         ]
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "development_only": True,
