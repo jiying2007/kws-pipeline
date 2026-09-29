@@ -25,12 +25,12 @@ SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK = (
     "ctc-token-state-target-blank-v1"
 )
 SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT = SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE
-# Rejected policies remain implemented so retained evidence can be recomputed,
-# but only fixed-logit-qualified candidates may be selected by new training.
+# Rejected policies remain implemented so retained evidence can be recomputed.
+# New training accepts only policies that survive the full token-region
+# objective audit; #419 token-state failed #422 and is retained-only.
 SEQUENCE_MARGIN_POSITIVE_POLICIES = frozenset(
     {
         SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
-        SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK,
     }
 )
 SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS = frozenset(
