@@ -6,6 +6,7 @@ path scores divide frame posteriors by unigram label priors raised to alpha.
 This audit fixes alpha=0.3 (the paper's reported setting), estimates priors
 from the retained development posterior cache, and compares the resulting
 primary-loss gradient to standard CTC without changing trainer behavior.
+The workflow is fixed-evidence only and never changes training configuration.
 """
 from __future__ import annotations
 
