@@ -273,12 +273,34 @@ jobs:
           print(variable['name'])
           PY
           )"
+          comparator_args=()
           case "$variable" in
             domain_iteration.base_failure_replay_enabled)
               comparator=training/compare_product_development_pair.py
               ;;
             train.sequence_margin_positive_policy)
               comparator=training/compare_product_objective_pair.py
+              readarray -t objective_values < <(python3 - <<'PY'
+          import json, os, pathlib
+          value=json.loads(
+              (pathlib.Path(os.environ['KWS_PAIR_ROOT'])/'pair-receipt.json')
+              .read_text(encoding='utf-8')
+          )
+          variable=value.get('variable')
+          if not isinstance(variable,dict):
+              raise SystemExit('paired receipt variable is missing')
+          for key in ('control','treatment'):
+              raw=variable.get(key)
+              if not isinstance(raw,str) or not raw:
+                  raise SystemExit(f'paired receipt {key} objective value is invalid')
+              print(raw)
+          PY
+              )
+              test "${#objective_values[@]}" = "2"
+              comparator_args=(
+                --control-value "${objective_values[0]}"
+                --treatment-value "${objective_values[1]}"
+              )
               ;;
             *)
               echo "unsupported paired causal comparator variable: $variable" >&2
@@ -289,7 +311,8 @@ jobs:
           python3 "$comparator" \
             --control "$KWS_PAIR_ROOT/control" \
             --treatment "$KWS_PAIR_ROOT/treatment" \
-            --output "$KWS_PAIR_ROOT/paired-comparison.json"
+            --output "$KWS_PAIR_ROOT/paired-comparison.json" \
+            "${comparator_args[@]}"
           code=$?
           set -e
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
