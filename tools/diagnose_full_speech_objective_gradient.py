@@ -265,8 +265,17 @@ def local_summary(
         sequence=sequence,
         temporal=temporal,
     )
-    prefix = aggregate_occurrences(occurrences[:prefix_length])
-    suffix = aggregate_occurrences(occurrences[prefix_length:])
+    def normalize(rows: list[dict]) -> dict:
+        value = aggregate_occurrences(rows)
+        return {
+            "target": float(value["target_update"]),
+            "blank": float(value["blank_update"]),
+            "target_minus_blank": float(
+                value["target_minus_blank_update"]
+            ),
+        }
+    prefix = normalize(occurrences[:prefix_length])
+    suffix = normalize(occurrences[prefix_length:])
     return prefix, suffix, float(update[:, 0].sum())
 
 
