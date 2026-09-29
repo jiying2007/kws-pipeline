@@ -512,7 +512,10 @@ def main() -> int:
             raise ValueError("positive sample references unknown keyword") from exc
         sequence = keywords[wake_index]
         raw = torch.tensor(read_trace_logits(trace), dtype=torch.float32)
-        temporal = token_state_temporal_weights(raw, sequence)
+        temporal = token_state_temporal_weights(
+            raw.log_softmax(dim=1).detach().tolist(),
+            sequence,
+        )
         prefix_length = discriminative_prefix_length(sequence, keywords)
         shared_suffix = len(sequence) - prefix_length
 
