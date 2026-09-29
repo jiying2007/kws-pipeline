@@ -17,6 +17,10 @@ typedef struct path_provenance {
   uint16_t token_advances;
   uint16_t exact_top_advances;
   uint16_t fuzzy_advances;
+  float fuzzy_logit_gap_sum;
+  float fuzzy_logit_gap_max;
+  uint32_t fuzzy_target_rank_sum;
+  uint16_t fuzzy_target_rank_max;
   uint16_t root_exact_starts;
   uint16_t root_ambiguous_starts;
   uint16_t same_token_retentions;
@@ -107,6 +111,19 @@ static uint16_t shadow_dominant_token(const float *logits,
     }
   }
   return top;
+}
+
+static uint16_t shadow_target_rank(const float *logits,
+                                   uint16_t vocab_size,
+                                   uint16_t token) {
+  uint16_t rank = 1u;
+  float target = logits[token];
+  for (uint16_t i = 0u; i < vocab_size; ++i) {
+    if (i != token && logits[i] > target) {
+      rank = saturating_inc(rank);
+    }
+  }
+  return rank;
 }
 
 static int shadow_is_root_token(const kws_decoder_debug_node_state_t *nodes,
@@ -300,7 +317,18 @@ static void shadow_step(
         provenance.exact_top_advances =
             saturating_inc(provenance.exact_top_advances);
       } else {
+        float fuzzy_gap = logits[top_token] - logits[token];
+        uint16_t target_rank =
+            shadow_target_rank(logits, vocab_size, token);
         provenance.fuzzy_advances = saturating_inc(provenance.fuzzy_advances);
+        provenance.fuzzy_logit_gap_sum += fuzzy_gap;
+        if (fuzzy_gap > provenance.fuzzy_logit_gap_max) {
+          provenance.fuzzy_logit_gap_max = fuzzy_gap;
+        }
+        provenance.fuzzy_target_rank_sum += (uint32_t)target_rank;
+        if (target_rank > provenance.fuzzy_target_rank_max) {
+          provenance.fuzzy_target_rank_max = target_rank;
+        }
         search_log_probability += decoder->fuzzy_child_retention_cost_log;
       }
       shadow_assign(&shadow[child].next_nonblank,
@@ -353,11 +381,16 @@ static void shadow_step(
 static void print_provenance(const path_provenance_t *value) {
   fprintf(stdout,
           "{\"token_advances\":%u,\"exact_top_advances\":%u,"
-          "\"fuzzy_advances\":%u,\"root_exact_starts\":%u,"
-          "\"root_ambiguous_starts\":%u,"
+          "\"fuzzy_advances\":%u,"
+          "\"fuzzy_logit_gap_sum\":%.9g,\"fuzzy_logit_gap_max\":%.9g,"
+          "\"fuzzy_target_rank_sum\":%u,\"fuzzy_target_rank_max\":%u,"
+          "\"root_exact_starts\":%u,\"root_ambiguous_starts\":%u,"
           "\"same_token_retentions\":%u,\"blank_retentions\":%u}",
           value->token_advances, value->exact_top_advances,
-          value->fuzzy_advances, value->root_exact_starts,
+          value->fuzzy_advances, (double)value->fuzzy_logit_gap_sum,
+          (double)value->fuzzy_logit_gap_max,
+          (unsigned int)value->fuzzy_target_rank_sum,
+          value->fuzzy_target_rank_max, value->root_exact_starts,
           value->root_ambiguous_starts, value->same_token_retentions,
           value->blank_retentions);
 }
