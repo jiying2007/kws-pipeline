@@ -9,6 +9,7 @@ on:
       - '.github/workflows/product-development-paired-experiment.yml'
       - 'training/product_development_pair_spec.py'
       - 'training/compare_product_development_pair.py'
+      - 'training/compare_product_objective_pair.py'
       - 'training/hard_negative_replay.py'
 
 permissions:
@@ -260,8 +261,32 @@ jobs:
               json.dumps(value,indent=2,sort_keys=True)+'\n',encoding='utf-8'
           )
           PY
+          variable="$(python3 - <<'PY'
+          import json, os, pathlib
+          value=json.loads(
+              (pathlib.Path(os.environ['KWS_PAIR_ROOT'])/'pair-receipt.json')
+              .read_text(encoding='utf-8')
+          )
+          variable=value.get('variable')
+          if not isinstance(variable,dict) or not isinstance(variable.get('name'),str):
+              raise SystemExit('paired receipt variable is missing')
+          print(variable['name'])
+          PY
+          )"
+          case "$variable" in
+            domain_iteration.base_failure_replay_enabled)
+              comparator=training/compare_product_development_pair.py
+              ;;
+            train.sequence_margin_positive_policy)
+              comparator=training/compare_product_objective_pair.py
+              ;;
+            *)
+              echo "unsupported paired causal comparator variable: $variable" >&2
+              exit 2
+              ;;
+          esac
           set +e
-          python3 training/compare_product_development_pair.py \
+          python3 "$comparator" \
             --control "$KWS_PAIR_ROOT/control" \
             --treatment "$KWS_PAIR_ROOT/treatment" \
             --output "$KWS_PAIR_ROOT/paired-comparison.json"
