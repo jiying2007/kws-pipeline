@@ -12,6 +12,7 @@ from objective_config import AUXILIARY_LOSS_WEIGHT_NAMES, auxiliary_loss_weights
 from objective_contract import (
     ORDERED_TOKEN_SCOPES,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICIES,
 )
 
 SCHEMA_VERSION = 1
@@ -36,6 +37,10 @@ ALLOWED_OVERRIDES = {
     "train.sequence_margin_negative_policy": (
         "enum",
         tuple(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES)),
+    ),
+    "train.sequence_margin_positive_policy": (
+        "enum",
+        tuple(sorted(SEQUENCE_MARGIN_POSITIVE_POLICIES)),
     ),
     "train.ctc_vad_align": ("bool",),
     "domain_iteration.base_failure_replay_enabled": ("bool",),
