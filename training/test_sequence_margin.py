@@ -219,15 +219,10 @@ def main() -> int:
     )
     assert positive_policy == "sparse-chronological-v1"
     assert positive_policy_configured is False
-    assert optional_objective_cli_args(
-        {"sequence_margin_positive_policy": "ctc-token-state-target-blank-v1"}
-    ) == [
-        "--sequence-margin-positive-policy",
-        "ctc-token-state-target-blank-v1",
-    ]
     for retired_or_invalid in (
         "runtime-search-aligned-v1",
         "ctc-keyword-competition-v1",
+        "ctc-token-state-target-blank-v1",
         "unsupported",
     ):
         try:
