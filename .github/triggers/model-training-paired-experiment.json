@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "experiment_id": "runtime-search-aligned-positive-pair-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head-paired-same-runner-v1",
+  "protected_evidence_used": false,
+  "reason": "Causal same-runner A/B for the retained #400 exact-wake selected-path failure mode. Hold VAD-aligned CTC, runtime-executable negative margin policy and replay-disabled development curriculum fixed; vary only the exact-wake positive sequence-margin path policy. Accept only precision-preserving recall gain on round-1 test, otherwise close with no policy/weight sweep.",
+  "common_overrides": {
+    "train.ctc_vad_align": true,
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "domain_iteration.base_failure_replay_enabled": false
+  },
+  "variable": {
+    "name": "train.sequence_margin_positive_policy",
+    "control": "sparse-chronological-v1",
+    "treatment": "runtime-search-aligned-v1"
+  }
+}
