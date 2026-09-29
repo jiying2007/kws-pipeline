@@ -85,12 +85,8 @@ def ctc_forward_backward(
     vocab = len(log_probs[0])
     if blank < 0 or blank >= vocab:
         raise ValueError("blank token is outside vocabulary")
-    if any(
-        len(row) != vocab or token <= blank or token >= vocab
-        for row in log_probs
-        for token in ()
-    ):
-        raise ValueError("invalid posterior dimensions")
+    if any(len(row) != vocab for row in log_probs):
+        raise ValueError("posterior rows must share one vocabulary")
     if any(token <= blank or token >= vocab for token in sequence):
         raise ValueError("keyword token is outside vocabulary")
 
