@@ -21,18 +21,22 @@ SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED = "runtime-search-aligned
 SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION = (
     "ctc-keyword-competition-v1"
 )
+SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK = (
+    "ctc-token-state-target-blank-v1"
+)
 SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT = SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE
-# Retained rejected policies remain named so historical evidence can be
-# recomputed, but new training must fail closed after negative same-runner
-# experiments #403 and #415.
+# Rejected policies remain implemented so retained evidence can be recomputed,
+# but only fixed-logit-qualified candidates may be selected by new training.
 SEQUENCE_MARGIN_POSITIVE_POLICIES = frozenset(
     {
         SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
+        SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK,
     }
 )
 SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS = frozenset(
     {
         SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
+        SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK,
         SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
         SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION,
     }

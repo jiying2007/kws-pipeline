@@ -21,6 +21,11 @@ from diagnose_keyword_ctc_competition_gradient import (  # noqa: E402
     read_margin_weight,
     scalar_stats,
 )
+from objective_contract import (  # noqa: E402
+    SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK,
+)
+from sequence_margin import keyword_sequence_margin_loss  # noqa: E402
 from diagnose_sequence_margin_runtime_gap import (  # noqa: E402
     load_keywords,
     load_tokens,
@@ -29,8 +34,8 @@ from diagnose_sequence_margin_runtime_gap import (  # noqa: E402
     trace_paths,
 )
 
-EVIDENCE_CLASS = "ctc-token-state-blank-gradient-audit-development-v1"
-POLICY = "detached-ctc-token-state-target-vs-blank-v1"
+EVIDENCE_CLASS = "ctc-token-state-blank-gradient-audit-development-v2"
+POLICY = "detached-ctc-token-state-target-vs-blank-actual-trainer-v2"
 CANDIDATE = "ctc-token-state-target-blank-v1"
 PRIMARY_GRADIENT_RATIO_MAX = 1.0
 
@@ -204,6 +209,49 @@ def candidate_gradient(
     return float(loss.detach()), grad
 
 
+def actual_policy_gradient(
+    raw_logits: torch.Tensor,
+    *,
+    sequence: tuple[int, ...],
+    keywords: list[tuple[int, ...]],
+) -> tuple[float, torch.Tensor]:
+    """Differentiate the actual trainer max(positive, negative-hinges) loss."""
+    logits = raw_logits.detach().clone().requires_grad_(True)
+    log_probs = logits.log_softmax(dim=1)
+    steps = int(log_probs.shape[0])
+    target = torch.tensor(sequence, dtype=torch.long, device=log_probs.device)
+    input_lengths = torch.tensor([steps], dtype=torch.long, device=log_probs.device)
+    target_lengths = torch.tensor(
+        [len(sequence)], dtype=torch.long, device=log_probs.device
+    )
+    true_nll = ctc_true_nll(log_probs, sequence).reshape(1)
+    loss = keyword_sequence_margin_loss(
+        log_probs=log_probs.unsqueeze(1),
+        ctc_log_probs=log_probs.unsqueeze(1),
+        targets=target,
+        input_lengths=input_lengths,
+        target_lengths=target_lengths,
+        true_ctc_nll=true_nll,
+        keyword_sequences=[list(item) for item in keywords],
+        blank=0,
+        margin=0.05,
+        keyword_operating_points=[
+            {
+                "threshold": 0.60,
+                "positive_margin": 0.05,
+                "negative_margin": 0.05,
+            }
+            for _ in keywords
+        ],
+        negative_path_policy=SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
+        positive_path_policy=(
+            SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK
+        ),
+    )[0]
+    grad = torch.autograd.grad(loss, logits)[0]
+    return float(loss.detach()), grad
+
+
 def occurrence_updates(
     weighted_update: torch.Tensor,
     *,
@@ -254,6 +302,16 @@ def summarize(records: list[dict]) -> dict:
         "suffix_target_update",
         "suffix_blank_update",
         "suffix_target_minus_blank_update",
+        "actual_policy_loss",
+        "weighted_actual_grad_l2",
+        "actual_to_primary_ctc_grad_l2_ratio",
+        "actual_global_blank_update",
+        "actual_prefix_target_update",
+        "actual_prefix_blank_update",
+        "actual_prefix_target_minus_blank_update",
+        "actual_suffix_target_update",
+        "actual_suffix_blank_update",
+        "actual_suffix_target_minus_blank_update",
     )
     result = {
         "recordings": len(records),
@@ -280,6 +338,28 @@ def summarize(records: list[dict]) -> dict:
             <= PRIMARY_GRADIENT_RATIO_MAX + 1.0e-9
             for row in records
         ),
+        "candidate_positive_term_dominates": sum(
+            bool(row["candidate_positive_term_dominates"]) for row in records
+        ),
+        "actual_prefix_target_minus_blank_increased": sum(
+            float(row["actual_prefix_target_minus_blank_update"]) > 0.0
+            for row in records
+        ),
+        "actual_suffix_target_minus_blank_increased": sum(
+            int(row["shared_suffix_length"]) == 0
+            or float(row["actual_suffix_target_minus_blank_update"]) > 0.0
+            for row in records
+        ),
+        "actual_suffix_blank_nonincreasing": sum(
+            int(row["shared_suffix_length"]) == 0
+            or float(row["actual_suffix_blank_update"]) <= 0.0
+            for row in records
+        ),
+        "actual_not_stronger_than_primary_ctc": sum(
+            float(row["actual_to_primary_ctc_grad_l2_ratio"])
+            <= PRIMARY_GRADIENT_RATIO_MAX + 1.0e-9
+            for row in records
+        ),
     }
     return result
 
@@ -288,24 +368,30 @@ def build_gate(records: list[dict]) -> dict:
     failures: list[str] = []
     for row in records:
         audio_sha = str(row["audio_sha256"])
-        if float(row["prefix_target_minus_blank_update"]) <= 0.0:
-            failures.append(f"{audio_sha}: prefix target-vs-blank did not improve")
+        if not bool(row["candidate_positive_term_dominates"]):
+            failures.append(f"{audio_sha}: actual trainer loss is not candidate-driven")
+        if float(row["actual_prefix_target_minus_blank_update"]) <= 0.0:
+            failures.append(
+                f"{audio_sha}: actual prefix target-vs-blank did not improve"
+            )
         if int(row["shared_suffix_length"]) > 0:
-            if float(row["suffix_target_minus_blank_update"]) <= 0.0:
+            if float(row["actual_suffix_target_minus_blank_update"]) <= 0.0:
                 failures.append(
-                    f"{audio_sha}: shared suffix target-vs-blank did not improve"
+                    f"{audio_sha}: actual shared suffix target-vs-blank did not improve"
                 )
-            if float(row["suffix_blank_update"]) > 0.0:
-                failures.append(f"{audio_sha}: shared suffix blank increased")
+            if float(row["actual_suffix_blank_update"]) > 0.0:
+                failures.append(
+                    f"{audio_sha}: actual shared suffix blank increased"
+                )
         if (
-            float(row["candidate_to_primary_ctc_grad_l2_ratio"])
+            float(row["actual_to_primary_ctc_grad_l2_ratio"])
             > PRIMARY_GRADIENT_RATIO_MAX + 1.0e-9
         ):
             failures.append(
-                f"{audio_sha}: candidate gradient exceeds primary CTC"
+                f"{audio_sha}: actual trainer gradient exceeds primary CTC"
             )
     return {
-        "policy": "complete-path-local-gradient-safety-v1",
+        "policy": "actual-trainer-complete-path-local-gradient-safety-v2",
         "primary_ctc_gradient_ratio_max": PRIMARY_GRADIENT_RATIO_MAX,
         "pass": not failures,
         "failures": failures,
@@ -334,6 +420,13 @@ def self_test() -> None:
     assert all(float(row["target_update"]) > 0.0 for row in rows)
     assert all(float(row["blank_update"]) < 0.0 for row in rows)
     assert all(float(row["target_minus_blank_update"]) > 0.0 for row in rows)
+    actual_loss, actual_grad = actual_policy_gradient(
+        raw,
+        sequence=sequence,
+        keywords=[sequence, (2, 1)],
+    )
+    assert math.isfinite(actual_loss) and actual_loss > 0.0
+    assert torch.isfinite(actual_grad).all()
     print("CTC token-state blank gradient self-test: PASS")
 
 
@@ -416,6 +509,14 @@ def main() -> int:
             sequence=sequence,
             temporal=temporal,
         )
+        actual_policy_loss, actual_grad = actual_policy_gradient(
+            raw,
+            sequence=sequence,
+            keywords=keywords,
+        )
+        candidate_positive_term_dominates = (
+            abs(actual_policy_loss - candidate_loss) <= 1.0e-5
+        )
 
         primary_logits = raw.detach().clone().requires_grad_(True)
         primary_log_probs = primary_logits.log_softmax(dim=1)
@@ -434,9 +535,17 @@ def main() -> int:
             sequence=sequence,
             temporal=temporal,
         )
+        weighted_actual_update = -float(weight) * actual_grad
+        actual_occurrence = occurrence_updates(
+            weighted_actual_update,
+            sequence=sequence,
+            temporal=temporal,
+        )
         prefix_length = discriminative_prefix_length(sequence, keywords)
         prefix = aggregate_occurrences(occurrence[:prefix_length])
         suffix = aggregate_occurrences(occurrence[prefix_length:])
+        actual_prefix = aggregate_occurrences(actual_occurrence[:prefix_length])
+        actual_suffix = aggregate_occurrences(actual_occurrence[prefix_length:])
         shared_suffix_length = len(sequence) - prefix_length
 
         records.append(
@@ -450,6 +559,10 @@ def main() -> int:
                     and not sample["runtime_detected_expected"]
                 ),
                 "candidate_loss": candidate_loss,
+                "actual_policy_loss": actual_policy_loss,
+                "candidate_positive_term_dominates": (
+                    candidate_positive_term_dominates
+                ),
                 "candidate_weight": weight,
                 "weighted_candidate_grad_l2": (
                     float(weight) * float(candidate_grad.norm())
@@ -459,7 +572,17 @@ def main() -> int:
                     float(weight) * float(candidate_grad.norm())
                     / primary_grad_l2
                 ),
+                "weighted_actual_grad_l2": (
+                    float(weight) * float(actual_grad.norm())
+                ),
+                "actual_to_primary_ctc_grad_l2_ratio": (
+                    float(weight) * float(actual_grad.norm())
+                    / primary_grad_l2
+                ),
                 "global_blank_update": float(weighted_update[:, 0].sum()),
+                "actual_global_blank_update": float(
+                    weighted_actual_update[:, 0].sum()
+                ),
                 "discriminative_prefix_length": prefix_length,
                 "shared_suffix_length": shared_suffix_length,
                 "prefix_target_update": prefix["target_update"],
@@ -472,7 +595,18 @@ def main() -> int:
                 "suffix_target_minus_blank_update": (
                     suffix["target_minus_blank_update"]
                 ),
+                "actual_prefix_target_update": actual_prefix["target_update"],
+                "actual_prefix_blank_update": actual_prefix["blank_update"],
+                "actual_prefix_target_minus_blank_update": (
+                    actual_prefix["target_minus_blank_update"]
+                ),
+                "actual_suffix_target_update": actual_suffix["target_update"],
+                "actual_suffix_blank_update": actual_suffix["blank_update"],
+                "actual_suffix_target_minus_blank_update": (
+                    actual_suffix["target_minus_blank_update"]
+                ),
                 "occurrences": occurrence,
+                "actual_occurrences": actual_occurrence,
             }
         )
 
@@ -489,7 +623,7 @@ def main() -> int:
 
     gate = build_gate(records)
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "candidate": CANDIDATE,

@@ -219,6 +219,12 @@ def main() -> int:
     )
     assert positive_policy == "sparse-chronological-v1"
     assert positive_policy_configured is False
+    assert optional_objective_cli_args(
+        {"sequence_margin_positive_policy": "ctc-token-state-target-blank-v1"}
+    ) == [
+        "--sequence-margin-positive-policy",
+        "ctc-token-state-target-blank-v1",
+    ]
     for retired_or_invalid in (
         "runtime-search-aligned-v1",
         "ctc-keyword-competition-v1",
@@ -411,6 +417,56 @@ def main() -> int:
     assert abs(
         float(masked_competition.item()) - float(raw_competition.item())
     ) > 1.0e-4
+
+    # The fixed-logit-qualified token-state policy must strengthen every
+    # true wake token against blank on detached exact CTC token-state support.
+    token_state_logits = torch.full((14, 1, 5), -8.0, dtype=torch.float32)
+    token_state_logits[:, :, 0] = 3.0
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
+        token_state_logits[position, 0, token] = 4.0
+    token_state_logits.requires_grad_()
+    token_state_log_probs = token_state_logits.log_softmax(dim=2)
+    token_state_loss = margin(
+        token_state_log_probs,
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-token-state-target-blank-v1",
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert torch.isfinite(token_state_loss).all()
+    assert float(token_state_loss.item()) > 0.0
+    token_state_loss.mean().backward()
+    assert token_state_logits.grad is not None
+    assert float(token_state_logits.grad[:, 0, 0].sum()) > 0.0
+    assert (
+        sum(
+            float(token_state_logits.grad[:, 0, token].sum())
+            for token in (1, 2, 3, 4)
+        )
+        < 0.0
+    )
+
+    # The policy must consume the same CTC/VAD-aligned probabilities as the
+    # primary CTC objective rather than silently using decoder probabilities.
+    detached_token_state = token_state_log_probs.detach()
+    aligned_token_state = detached_token_state.clone()
+    aligned_token_state[:3, 0, :] = -30.0
+    aligned_token_state[:3, 0, 0] = 0.0
+    aligned_token_state_loss = margin(
+        detached_token_state,
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-token-state-target-blank-v1",
+        negative_path_policy="runtime-executable-v1",
+        ctc_log_probs=aligned_token_state,
+    )
+    raw_token_state_loss = margin(
+        detached_token_state,
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-token-state-target-blank-v1",
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert abs(
+        float(aligned_token_state_loss.item()) - float(raw_token_state_loss.item())
+    ) > 1.0e-6
 
     # Path-purity targets the #240 failure mode: the target sequence may be
     # present as a loose subsequence while an unrelated wake token dominates
