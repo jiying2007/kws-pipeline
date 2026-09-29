@@ -227,6 +227,52 @@ def common_suffix_length(left: tuple[int, ...], right: tuple[int, ...]) -> int:
     return count
 
 
+def ordered_token_region_coverage(
+    log_probs: list[list[float]],
+    sequence: tuple[int, ...],
+) -> dict:
+    """Replay the trainer's ordered_token_loss region semantics exactly."""
+    steps = len(log_probs)
+    positions: list[dict] = []
+    correct = 0
+    losses: list[float] = []
+    for occurrence, token in enumerate(sequence):
+        start = (occurrence * steps) // len(sequence)
+        stop = max(start + 1, ((occurrence + 1) * steps) // len(sequence))
+        stop = min(stop, steps)
+        best_frame = max(
+            range(start, stop),
+            key=lambda frame: log_probs[frame][token],
+        )
+        predicted = max(
+            range(len(log_probs[best_frame])),
+            key=log_probs[best_frame].__getitem__,
+        )
+        token_log_probability = float(log_probs[best_frame][token])
+        is_correct = predicted == token
+        correct += int(is_correct)
+        losses.append(-token_log_probability)
+        positions.append(
+            {
+                "occurrence": occurrence + 1,
+                "token": int(token),
+                "region_start_frame": start,
+                "region_stop_frame_exclusive": stop,
+                "best_frame": best_frame,
+                "predicted_token": int(predicted),
+                "top1_correct": bool(is_correct),
+                "best_token_log_probability": token_log_probability,
+            }
+        )
+    return {
+        "positions": positions,
+        "top1_correct_positions": correct,
+        "positions_total": len(sequence),
+        "all_positions_top1_correct": correct == len(sequence),
+        "mean_negative_log_probability": statistics.fmean(losses),
+    }
+
+
 def top1_token_summary(
     logits: list[list[float]],
     sequence: tuple[int, ...],
@@ -290,8 +336,26 @@ def cohort_summary(records: list[dict]) -> dict:
         for row in records
     ]
     correct_ranks = [float(row["correct_keyword_rank"]) for row in records]
+    ordered_counts = [
+        int(row["ordered_token_region_coverage"]["top1_correct_positions"])
+        for row in records
+    ]
+    ordered_losses = [
+        float(row["ordered_token_region_coverage"]["mean_negative_log_probability"])
+        for row in records
+    ]
     result = {
         "recordings": len(records),
+        "ordered_token_all_positions_top1_correct": sum(
+            bool(row["ordered_token_region_coverage"]["all_positions_top1_correct"])
+            for row in records
+        ),
+        "ordered_token_top1_correct_positions": scalar_stats(
+            [float(value) for value in ordered_counts]
+        ),
+        "ordered_token_mean_negative_log_probability": scalar_stats(
+            ordered_losses
+        ),
         "correct_keyword_wins": sum(
             float(row["closest_competitor_minus_correct_nll_per_token"]) > 0.0
             for row in records
@@ -337,6 +401,10 @@ def self_test() -> None:
     assert viterbi[0]["first_frame"] < viterbi[1]["first_frame"]
     assert common_suffix_length((1, 2, 3, 4), (3, 4, 3, 4)) == 2
     assert common_suffix_length((1, 2), (1, 2)) == 2
+    ordered = ordered_token_region_coverage(rows, (1, 2))
+    assert ordered["positions_total"] == 2
+    assert ordered["top1_correct_positions"] == 2
+    assert ordered["all_positions_top1_correct"] is True
     print("keyword CTC sequence competition self-test: PASS")
 
 
@@ -509,6 +577,10 @@ def main() -> int:
                 "correct_positions": correct["positions"],
                 "correct_viterbi_positions": correct["viterbi_positions"],
                 "correct_top1_token_summary": correct["top1_token_summary"],
+                "ordered_token_region_coverage": ordered_token_region_coverage(
+                    log_probs,
+                    correct_sequence,
+                ),
                 "closest_competitor_positions": closest["positions"],
                 "closest_competitor_viterbi_positions": closest[
                     "viterbi_positions"
