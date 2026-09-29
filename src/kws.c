@@ -549,6 +549,16 @@ kws_status_t kws_engine_debug_set_decoder_search_policy(
       &engine->decoder, blank_retention, fuzzy_child_cost_log);
 }
 
+kws_status_t kws_engine_debug_set_decoder_nonroot_exact_top_only(
+    kws_engine_t *engine,
+    int enabled) {
+  if (engine == NULL) {
+    return KWS_EINVAL;
+  }
+  return kws_decoder_debug_set_nonroot_exact_top_only(
+      &engine->decoder, enabled);
+}
+
 kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
                                            const float *logits,
                                            uint16_t vocab_size,
