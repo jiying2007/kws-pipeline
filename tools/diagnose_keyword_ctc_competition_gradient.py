@@ -191,6 +191,21 @@ def prefix_update(
     return total
 
 
+def prefix_blank_update(
+    update: torch.Tensor,
+    positions: list[dict],
+    count: int,
+) -> float:
+    total = 0.0
+    for item in positions[:count]:
+        start = int(item["q10_frame"])
+        stop = int(item["q90_frame"]) + 1
+        if start < 0 or stop > int(update.shape[0]) or start >= stop:
+            raise ValueError("sequence competition position window is invalid")
+        total += float(update[start:stop, 0].sum())
+    return total
+
+
 def summarize(records: list[dict]) -> dict:
     return {
         "recordings": len(records),
@@ -223,11 +238,27 @@ def summarize(records: list[dict]) -> dict:
         "correct_prefix_update": scalar_stats(
             [float(row["correct_prefix_update"]) for row in records]
         ),
+        "correct_prefix_blank_update": scalar_stats(
+            [float(row["correct_prefix_blank_update"]) for row in records]
+        ),
+        "correct_prefix_target_minus_blank_update": scalar_stats(
+            [
+                float(row["correct_prefix_target_minus_blank_update"])
+                for row in records
+            ]
+        ),
         "competitor_prefix_update": scalar_stats(
             [float(row["competitor_prefix_update"]) for row in records]
         ),
         "correct_prefix_increased": sum(
             float(row["correct_prefix_update"]) > 0.0 for row in records
+        ),
+        "correct_prefix_blank_increased": sum(
+            float(row["correct_prefix_blank_update"]) > 0.0 for row in records
+        ),
+        "correct_prefix_target_minus_blank_increased": sum(
+            float(row["correct_prefix_target_minus_blank_update"]) > 0.0
+            for row in records
         ),
         "competitor_prefix_decreased": sum(
             float(row["competitor_prefix_update"]) < 0.0 for row in records
@@ -396,6 +427,23 @@ def main() -> int:
                     update,
                     row["correct_positions"],
                     correct_prefix,
+                ),
+                "correct_prefix_blank_update": prefix_blank_update(
+                    update,
+                    row["correct_positions"],
+                    correct_prefix,
+                ),
+                "correct_prefix_target_minus_blank_update": (
+                    prefix_update(
+                        update,
+                        row["correct_positions"],
+                        correct_prefix,
+                    )
+                    - prefix_blank_update(
+                        update,
+                        row["correct_positions"],
+                        correct_prefix,
+                    )
                 ),
                 "competitor_prefix_update": prefix_update(
                     update,
