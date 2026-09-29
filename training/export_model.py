@@ -17,11 +17,15 @@ sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
+from ctc_primary import normalize_label_prior_contract
 from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
 from training_state import state_identity
 from frontend_spec import FRONTEND_IDS
 from suffix_root_loss import SUFFIX_ROOT_BLANK_MARGIN, SUFFIX_ROOT_POLICY
 from objective_contract import (
+    CTC_PRIMARY_POLICIES,
+    CTC_PRIMARY_POLICY_DEFAULT,
+    CTC_PRIMARY_POLICY_LABEL_PRIOR,
     ORDERED_TOKEN_SCOPE_DEFAULT,
     ORDERED_TOKEN_SCOPES,
     PATH_PURITY_MARGIN_MAX,
@@ -250,6 +254,36 @@ def training_metadata(checkpoint: dict) -> dict:
             raise ValueError(f"checkpoint {key} must be finite and non-negative")
     if not result["optimizer"]:
         raise ValueError("checkpoint optimizer must be non-empty")
+
+    primary_policy_raw = checkpoint.get("ctc_primary_policy")
+    primary_scope = checkpoint.get("ctc_primary_policy_scope")
+    result["ctc_primary_policy_recorded"] = primary_policy_raw is not None
+    if primary_policy_raw is None:
+        if primary_scope is not None or "ctc_label_prior" in checkpoint:
+            raise ValueError(
+                "checkpoint primary CTC metadata exists without recorded policy"
+            )
+        primary_policy = CTC_PRIMARY_POLICY_DEFAULT
+    else:
+        primary_policy = str(primary_policy_raw)
+        if primary_policy not in CTC_PRIMARY_POLICIES:
+            raise ValueError("checkpoint ctc_primary_policy is unsupported")
+        if primary_scope != "primary-loss-path-v1":
+            raise ValueError("checkpoint primary CTC policy scope is unsupported")
+    result["ctc_primary_policy"] = primary_policy
+    if primary_policy == CTC_PRIMARY_POLICY_LABEL_PRIOR:
+        contract = normalize_label_prior_contract(checkpoint.get("ctc_label_prior"))
+        if (
+            contract["training_corpus_sha256"]
+            != result["corpus_identity"]["corpus_sha256"]
+        ):
+            raise ValueError("checkpoint label-prior corpus identity mismatch")
+        result["ctc_primary_policy_scope"] = "primary-loss-path-v1"
+        result["ctc_label_prior"] = contract
+    elif "ctc_label_prior" in checkpoint:
+        raise ValueError("standard primary CTC carries label-prior metadata")
+    elif primary_policy_raw is not None:
+        result["ctc_primary_policy_scope"] = "primary-loss-path-v1"
 
     vad_alignment = checkpoint.get("ctc_vad_alignment")
     if "ctc_vad_alignment" in checkpoint or "development_recipe" in checkpoint:
