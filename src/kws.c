@@ -498,6 +498,46 @@ int kws_engine_debug_copy_last_frame(const kws_engine_t *engine,
   return 1;
 }
 
+kws_status_t kws_engine_debug_copy_decoder_state(
+    const kws_engine_t *engine,
+    kws_decoder_debug_state_t *out_state,
+    kws_decoder_debug_node_state_t *out_nodes,
+    size_t node_capacity) {
+  if (engine == NULL || out_state == NULL || out_nodes == NULL ||
+      node_capacity < (size_t)engine->decoder.node_count) {
+    return KWS_EINVAL;
+  }
+
+  out_state->node_count = engine->decoder.node_count;
+  out_state->keyword_count = engine->decoder.keyword_count;
+  out_state->inactive_frames = engine->decoder.inactive_frames;
+  out_state->pending_keyword_index = engine->decoder.pending_keyword;
+  out_state->pending_confidence = engine->decoder.pending_confidence;
+  out_state->pending_depth = engine->decoder.pending_depth;
+  out_state->pending_age_frames = engine->decoder.pending_age_frames;
+  out_state->pending_blank_frames = engine->decoder.pending_blank_frames;
+  out_state->token_boost = engine->decoder.token_boost;
+  out_state->retention_log = engine->decoder.retention_log;
+  out_state->silence_retention_log = engine->decoder.silence_retention_log;
+  out_state->fuzzy_child_retention_cost_log =
+      engine->decoder.fuzzy_child_retention_cost_log;
+
+  for (uint16_t i = 0u; i < engine->decoder.node_count; ++i) {
+    const kws_trie_node_t *src = &engine->decoder.nodes[i];
+    kws_decoder_debug_node_state_t *dst = &out_nodes[i];
+    dst->token = src->token;
+    dst->parent = src->parent;
+    dst->depth = src->depth;
+    dst->terminal_keyword_index = src->terminal_keyword;
+    dst->score = src->score;
+    dst->blank_score = src->blank_score;
+    dst->acoustic_score = src->acoustic_score;
+    dst->blank_acoustic_score = src->blank_acoustic_score;
+  }
+
+  return KWS_OK;
+}
+
 kws_status_t kws_engine_debug_set_decoder_search_policy(
     kws_engine_t *engine,
     float blank_retention,
