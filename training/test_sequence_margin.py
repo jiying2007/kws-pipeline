@@ -74,8 +74,12 @@ def margin(
     keyword_operating_points: list[dict] | None = None,
     negative_path_policy: str = "sparse-chronological-v1",
     positive_path_policy: str = "sparse-chronological-v1",
+    ctc_log_probs: torch.Tensor | None = None,
 ) -> torch.Tensor:
-    targets, input_lengths, target_lengths, raw = true_nll(log_probs, target)
+    effective_ctc = log_probs if ctc_log_probs is None else ctc_log_probs
+    targets, input_lengths, target_lengths, raw = true_nll(
+        effective_ctc, target
+    )
     return keyword_sequence_margin_loss(
         log_probs=log_probs,
         targets=targets,
@@ -84,6 +88,7 @@ def margin(
         true_ctc_nll=raw,
         keyword_sequences=keyword_sequences
         or [[1, 2, 3, 4], [3, 4, 3, 4]],
+        ctc_log_probs=effective_ctc,
         blank=0,
         margin=0.05,
         keyword_operating_points=keyword_operating_points,
@@ -220,6 +225,12 @@ def main() -> int:
         "--sequence-margin-positive-policy",
         "runtime-search-aligned-v1",
     ]
+    assert optional_objective_cli_args(
+        {"sequence_margin_positive_policy": "ctc-keyword-competition-v1"}
+    ) == [
+        "--sequence-margin-positive-policy",
+        "ctc-keyword-competition-v1",
+    ]
     try:
         sequence_margin_positive_policy_setting(
             {"sequence_margin_positive_policy": "unsupported"}
@@ -338,6 +349,72 @@ def main() -> int:
         positive_path_policy="runtime-search-aligned-v1",
     )
     assert float(clean_runtime_positive.item()) < 1.0e-6
+
+    # The CTC keyword-competition policy directly ranks configured wake
+    # sequences.  Unlike the threshold hinge it remains differentiable when the
+    # true wake already clears its runtime confidence floor.
+    clean_competition_logits = torch.full(
+        (14, 1, 5), -6.0, dtype=torch.float32
+    )
+    clean_competition_logits[:, :, 0] = 5.0
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
+        clean_competition_logits[position, 0, 0] = -6.0
+        clean_competition_logits[position, 0, token] = 8.0
+    clean_competition = clean_competition_logits.requires_grad_().log_softmax(
+        dim=2
+    )
+    clean_competition_loss = margin(
+        clean_competition,
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-keyword-competition-v1",
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert torch.isfinite(clean_competition_loss).all()
+    assert float(clean_competition_loss.item()) > 0.0
+    clean_competition_loss.mean().backward()
+    assert clean_competition_logits.grad is not None
+
+    ambiguous_logits = torch.full((14, 1, 5), -6.0, dtype=torch.float32)
+    ambiguous_logits[:, :, 0] = 5.0
+    for position, token in zip([1, 4, 7, 10], [1, 2, 3, 4]):
+        ambiguous_logits[position, 0, 0] = -6.0
+        ambiguous_logits[position, 0, token] = 8.0
+    for position, token in zip([2, 5, 8, 11], [3, 4, 3, 4]):
+        ambiguous_logits[position, 0, 0] = -6.0
+        ambiguous_logits[position, 0, token] = 8.0
+    ambiguous = ambiguous_logits.requires_grad_().log_softmax(dim=2)
+    ambiguous_competition = margin(
+        ambiguous,
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-keyword-competition-v1",
+        negative_path_policy="runtime-executable-v1",
+    )
+    assert float(ambiguous_competition.item()) > float(
+        clean_competition_loss.item()
+    )
+    ambiguous_competition.mean().backward()
+    assert ambiguous_logits.grad is not None
+
+    # CTC competition must consume the same VAD-aligned probabilities as the
+    # trainer's primary CTC objective, rather than silently falling back to raw
+    # decoder log-probabilities.
+    masked_logits = ambiguous.detach().clone()
+    masked_logits[:6, 0, :] = -20.0
+    masked_logits[:6, 0, 0] = 0.0
+    masked_competition = margin(
+        ambiguous.detach(),
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-keyword-competition-v1",
+        ctc_log_probs=masked_logits,
+    )
+    raw_competition = margin(
+        ambiguous.detach(),
+        [1, 2, 3, 4],
+        positive_path_policy="ctc-keyword-competition-v1",
+    )
+    assert abs(
+        float(masked_competition.item()) - float(raw_competition.item())
+    ) > 1.0e-4
 
     # Path-purity targets the #240 failure mode: the target sequence may be
     # present as a loose subsequence while an unrelated wake token dominates
