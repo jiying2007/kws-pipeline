@@ -66,7 +66,7 @@ jobs:
               "selection_feedback_allowed","protected_evidence_used",
               "source_run_id","source_artifact_name","source_head_sha",
               "model","checkpoint","provenance","tokens","keywords_tsv",
-              "posterior_cache","acoustic_alignment",
+              "posterior_cache","acoustic_alignment","trace_vad_align",
           }
           if set(value) != required:
               raise SystemExit("retained full speech-objective audit fields mismatch")
@@ -78,6 +78,8 @@ jobs:
               raise SystemExit("audit must not feed selection")
           if value["protected_evidence_used"] is not False:
               raise SystemExit("audit must not use protected evidence")
+          if not isinstance(value["trace_vad_align"], bool):
+              raise SystemExit("trace_vad_align must be boolean")
           if not isinstance(value["source_run_id"], int) or value["source_run_id"] <= 0:
               raise SystemExit("source_run_id must be positive")
           if re.fullmatch(r"[0-9a-f]{40}", str(value["source_head_sha"])) is None:
@@ -177,7 +179,7 @@ jobs:
           root=pathlib.Path(".retained")
           model_sha=pathlib.Path("build/retained-model-sha.txt").read_text(encoding="utf-8").strip()
           output=pathlib.Path("build/retained-full-speech-objective-gradient.json")
-          subprocess.check_call([
+          command=[
               ".venv-audit/bin/python",
               "tools/diagnose_full_speech_objective_gradient.py",
               "--checkpoint",str(root/spec["checkpoint"]),
@@ -188,10 +190,14 @@ jobs:
               "--acoustic-alignment",str(root/spec["acoustic_alignment"]),
               "--model-sha256",model_sha,
               "--output",str(output),
-          ])
+          ]
+          if spec["trace_vad_align"]:
+              command.append("--trace-vad-align")
+          subprocess.check_call(command)
           value=json.loads(output.read_text(encoding="utf-8"))
           print(json.dumps({
               "gates":value["gates"],
+              "ctc_alignment_mode":value["ctc_alignment_mode"],
               "label_prior":value["label_prior"],
               "kw1_runtime_gap":value["cohorts"].get("kw1_runtime_gap",{}),
               "kw1_runtime_hit":value["cohorts"].get("kw1_runtime_hit",{}),

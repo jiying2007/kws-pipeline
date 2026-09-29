@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import pathlib
+import struct
 import sys
 
 import torch
@@ -33,6 +34,8 @@ from diagnose_keyword_ctc_competition_gradient import (  # noqa: E402
     scalar_stats,
 )
 from diagnose_sequence_margin_runtime_gap import (  # noqa: E402
+    TRACE_HEADER_BYTES,
+    TRACE_MAGIC,
     load_keywords,
     load_tokens,
     read_trace_logits,
@@ -45,10 +48,10 @@ from objective_contract import (  # noqa: E402
     SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE,
 )
 from sequence_margin import keyword_sequence_margin_loss  # noqa: E402
-from train_ctc import ordered_token_loss  # noqa: E402
+from train_ctc import ordered_token_loss, vad_aligned_ctc_log_probs  # noqa: E402
 
-EVIDENCE_CLASS = "full-speech-objective-gradient-audit-development-v1"
-POLICY = "exact-wake-token-region-training-objective-v1"
+EVIDENCE_CLASS = "full-speech-objective-gradient-audit-development-v2"
+POLICY = "exact-wake-token-region-training-objective-v2"
 VARIANT_BASELINE = "standard-ctc+sparse-positive"
 VARIANT_TOKEN_STATE = "standard-ctc+token-state-positive"
 VARIANT_LABEL_PRIOR = "label-prior-ctc+sparse-positive"
@@ -70,6 +73,106 @@ def load_checkpoint(path: pathlib.Path) -> dict:
     if not isinstance(value, dict):
         raise ValueError("checkpoint must be a dict")
     return value
+
+
+def read_trace_speech_active(path: pathlib.Path) -> list[bool]:
+    data = path.read_bytes()
+    if len(data) < TRACE_HEADER_BYTES or data[:8] != TRACE_MAGIC:
+        raise ValueError(f"invalid posterior trace header: {path}")
+    vocab_size = struct.unpack_from("<H", data, 12)[0]
+    frame_count = struct.unpack_from("<Q", data, 40)[0]
+    if vocab_size < 2 or frame_count <= 0:
+        raise ValueError(f"invalid posterior trace dimensions: {path}")
+    record_bytes = 16 + 4 * vocab_size
+    expected = TRACE_HEADER_BYTES + frame_count * record_bytes
+    if len(data) != expected:
+        raise ValueError(f"posterior trace size mismatch: {path}")
+    result: list[bool] = []
+    offset = TRACE_HEADER_BYTES
+    for _ in range(frame_count):
+        flags = data[offset + 8 : offset + 16]
+        if flags[0] not in (0, 1) or any(flags[1:]):
+            raise ValueError(f"posterior trace flags are invalid: {path}")
+        result.append(bool(flags[0]))
+        offset += record_bytes
+    return result
+
+
+def effective_ctc_log_probs(
+    log_probs: torch.Tensor,
+    *,
+    sequence: tuple[int, ...],
+    speech_active: list[bool] | None,
+) -> torch.Tensor:
+    if speech_active is None:
+        return log_probs
+    if len(speech_active) != int(log_probs.shape[0]):
+        raise ValueError("trace speech-active flags do not match posterior frames")
+    mask = torch.tensor(
+        speech_active,
+        dtype=torch.bool,
+        device=log_probs.device,
+    ).unsqueeze(0)
+    target_lengths = torch.tensor(
+        [len(sequence)],
+        dtype=torch.long,
+        device=log_probs.device,
+    )
+    return vad_aligned_ctc_log_probs(
+        log_probs.unsqueeze(1),
+        mask,
+        target_lengths,
+    ).squeeze(1)
+
+
+def label_prior_ctc_log_probs_loss(
+    ctc_log_probs: torch.Tensor,
+    sequence: tuple[int, ...],
+    priors: torch.Tensor,
+    *,
+    alpha: float,
+) -> torch.Tensor:
+    if ctc_log_probs.ndim != 2:
+        raise ValueError("CTC log probabilities must be [T,V]")
+    if priors.ndim != 1 or int(priors.numel()) != int(ctc_log_probs.shape[1]):
+        raise ValueError("label priors must match vocabulary")
+    if not torch.isfinite(priors).all() or bool((priors <= 0).any()):
+        raise ValueError("label priors must be finite and positive")
+    if not math.isfinite(alpha) or alpha < 0.0:
+        raise ValueError("label-prior alpha must be finite and >= 0")
+
+    from diagnose_keyword_ctc_sequence_competition import (
+        allowed_predecessors,
+        extended_target,
+    )
+
+    adjusted = (
+        ctc_log_probs
+        - alpha * priors.to(ctc_log_probs.device).log().unsqueeze(0)
+    )
+    states = extended_target(sequence, 0)
+    count = len(states)
+    steps = int(adjusted.shape[0])
+    sentinel = adjusted.new_tensor(-1.0e4)
+    previous = [sentinel for _ in range(count)]
+    previous[0] = adjusted[0, 0]
+    if count > 1:
+        previous[1] = adjusted[0, states[1]]
+    for frame in range(1, steps):
+        current: list[torch.Tensor] = []
+        for state, token in enumerate(states):
+            values = torch.stack(
+                [
+                    previous[prior]
+                    for prior in allowed_predecessors(states, state, 0)
+                ]
+            )
+            current.append(
+                torch.logsumexp(values, dim=0) + adjusted[frame, token]
+            )
+        previous = current
+    log_probability = torch.logsumexp(torch.stack(previous[-2:]), dim=0)
+    return -log_probability / float(steps)
 
 
 def checkpoint_contract(checkpoint: dict) -> dict:
@@ -104,6 +207,15 @@ def checkpoint_contract(checkpoint: dict) -> dict:
         raise ValueError("checkpoint positive sequence-margin policy is not sparse baseline")
     if float(checkpoint.get("path_purity_loss_weight", 0.0)) != EXPECTED_PATH_PURITY_WEIGHT:
         raise ValueError("checkpoint path-purity weight drifted")
+
+    ctc_alignment = checkpoint.get("ctc_vad_alignment")
+    if not isinstance(ctc_alignment, dict):
+        raise ValueError("checkpoint CTC VAD alignment contract is missing")
+    if checkpoint.get("development_recipe") != "development-pcm-dbfs-gated-ctc-v1":
+        raise ValueError("checkpoint development CTC recipe drifted")
+    threshold = float(ctc_alignment.get("threshold_dbfs", float("nan")))
+    if not math.isfinite(threshold) or abs(threshold - (-55.0)) > 1.0e-12:
+        raise ValueError("checkpoint CTC VAD threshold drifted")
 
     stats = checkpoint.get("sample_weight_normalization")
     if not isinstance(stats, dict):
@@ -147,23 +259,23 @@ def checkpoint_contract(checkpoint: dict) -> dict:
         "recurrent_release_scope": "post-input-tail-only-disjoint-from-token-occurrence-metrics",
         "prefix_completion_exact_wake": "zero-by-definition",
         "suffix_root_weight": EXPECTED_SUFFIX_ROOT_WEIGHT,
+        "ctc_vad_alignment": ctc_alignment,
     }
 
 
 def primary_loss(
-    logits: torch.Tensor,
+    ctc_log_probs: torch.Tensor,
     sequence: tuple[int, ...],
     *,
     variant: str,
     priors: torch.Tensor,
 ) -> torch.Tensor:
-    log_probs = logits.log_softmax(dim=1)
-    steps = int(log_probs.shape[0])
+    steps = int(ctc_log_probs.shape[0])
     if variant in (VARIANT_BASELINE, VARIANT_TOKEN_STATE):
-        return ctc_true_nll(log_probs, sequence) / float(steps)
+        return ctc_true_nll(ctc_log_probs, sequence) / float(steps)
     if variant == VARIANT_LABEL_PRIOR:
-        return label_prior_ctc_loss(
-            logits,
+        return label_prior_ctc_log_probs_loss(
+            ctc_log_probs,
             sequence,
             priors,
             alpha=LABEL_PRIOR_ALPHA,
@@ -179,6 +291,7 @@ def speech_objective_gradient(
     operating_points: list[dict],
     variant: str,
     priors: torch.Tensor,
+    speech_active: list[bool] | None = None,
 ) -> tuple[dict, torch.Tensor]:
     logits = raw_logits.detach().clone().requires_grad_(True)
     log_probs = logits.log_softmax(dim=1)
@@ -190,9 +303,14 @@ def speech_objective_gradient(
         dtype=torch.long,
         device=log_probs.device,
     )
+    ctc_probs = effective_ctc_log_probs(
+        log_probs,
+        sequence=sequence,
+        speech_active=speech_active,
+    )
 
     primary = primary_loss(
-        logits,
+        ctc_probs,
         sequence,
         variant=variant,
         priors=priors,
@@ -209,10 +327,10 @@ def speech_objective_gradient(
         if variant == VARIANT_TOKEN_STATE
         else SEQUENCE_MARGIN_POSITIVE_POLICY_SPARSE
     )
-    standard_sum = ctc_true_nll(log_probs, sequence).reshape(1)
+    standard_sum = ctc_true_nll(ctc_probs, sequence).reshape(1)
     margin = keyword_sequence_margin_loss(
         log_probs=log_probs.unsqueeze(1),
-        ctc_log_probs=log_probs.unsqueeze(1),
+        ctc_log_probs=ctc_probs.unsqueeze(1),
         targets=target,
         input_lengths=input_lengths,
         target_lengths=target_lengths,
@@ -434,6 +552,7 @@ def main() -> int:
     parser.add_argument("--acoustic-alignment", type=pathlib.Path)
     parser.add_argument("--model-sha256")
     parser.add_argument("--output", type=pathlib.Path)
+    parser.add_argument("--trace-vad-align", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         self_test()
@@ -521,8 +640,18 @@ def main() -> int:
             raise ValueError("positive sample references unknown keyword") from exc
         sequence = keywords[wake_index]
         raw = torch.tensor(read_trace_logits(trace), dtype=torch.float32)
+        speech_active = (
+            read_trace_speech_active(trace)
+            if args.trace_vad_align
+            else None
+        )
+        metric_ctc_probs = effective_ctc_log_probs(
+            raw.log_softmax(dim=1),
+            sequence=sequence,
+            speech_active=speech_active,
+        )
         temporal = token_state_temporal_weights(
-            raw.log_softmax(dim=1).detach().tolist(),
+            metric_ctc_probs.detach().tolist(),
             sequence,
         )
         prefix_length = discriminative_prefix_length(sequence, keywords)
@@ -542,6 +671,7 @@ def main() -> int:
                 operating_points=operating_points,
                 variant=variant,
                 priors=priors,
+                speech_active=speech_active,
             )
             update = -grad
             prefix, suffix, global_blank = local_summary(
@@ -615,7 +745,7 @@ def main() -> int:
     token_gate = build_gate(records, "token_state")
     label_prior_gate = build_gate(records, "label_prior")
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "evidence_class": EVIDENCE_CLASS,
         "policy": POLICY,
         "development_only": True,
@@ -623,6 +753,11 @@ def main() -> int:
         "protected_evidence_used": False,
         "posterior_fixed": True,
         "training_changed": False,
+        "ctc_alignment_mode": (
+            "trace-runtime-speech-active-v1"
+            if args.trace_vad_align
+            else "raw-posterior-v1"
+        ),
         "model_sha256": model_sha256,
         "checkpoint_sha256": sha256_file(checkpoint_path),
         "provenance_sha256": sha256_file(provenance_path),
