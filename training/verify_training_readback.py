@@ -8,7 +8,12 @@ import pathlib
 
 import torch
 
-from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
+from objective_config import (
+    auxiliary_loss_weights,
+    sequence_margin_negative_policy_setting,
+    sequence_margin_positive_policy_setting,
+    verify_auxiliary_loss_readback,
+)
 from training_state import state_identity
 
 
@@ -38,6 +43,16 @@ def verify_candidate(train: dict, checkpoint: pathlib.Path) -> dict:
     weights = verify_auxiliary_loss_readback(train, payload.get("auxiliary_loss_weights"))
     verify_auxiliary_loss_readback(weights, training.get("auxiliary_loss_weights"))
     verify_auxiliary_loss_readback(weights, auxiliary_loss_weights(payload))
+    negative_policy, _ = sequence_margin_negative_policy_setting(train)
+    positive_policy, _ = sequence_margin_positive_policy_setting(train)
+    if payload.get("sequence_margin_negative_policy", negative_policy) != negative_policy:
+        raise ValueError("checkpoint negative sequence-margin policy mismatch")
+    if training.get("sequence_margin_negative_policy", negative_policy) != negative_policy:
+        raise ValueError("provenance negative sequence-margin policy mismatch")
+    if payload.get("sequence_margin_positive_policy", positive_policy) != positive_policy:
+        raise ValueError("checkpoint positive sequence-margin policy mismatch")
+    if training.get("sequence_margin_positive_policy", positive_policy) != positive_policy:
+        raise ValueError("provenance positive sequence-margin policy mismatch")
     for key in ("cpu_runtime", "torch_runtime"):
         expected = payload["training_environment"].get(key)
         if not isinstance(expected, dict) or not expected or training["environment"].get(key) != expected:
@@ -51,6 +66,8 @@ def verify_candidate(train: dict, checkpoint: pathlib.Path) -> dict:
         "model_sha256": sha256_file(model),
         "provenance_sha256": sha256_file(provenance_path),
         "auxiliary_loss_weights": weights,
+        "sequence_margin_negative_policy": negative_policy,
+        "sequence_margin_positive_policy": positive_policy,
         "training_corpus_sha256": payload["training_corpus_identity"]["corpus_sha256"],
         "resume_authority": "weights-only-not-optimizer-continuous",
     }

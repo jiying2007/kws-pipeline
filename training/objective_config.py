@@ -10,6 +10,8 @@ from objective_contract import (
     PATH_PURITY_MARGIN_MAX,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 )
 
 
@@ -59,6 +61,24 @@ def sequence_margin_negative_policy_setting(train: dict) -> tuple[str, bool]:
         raise ValueError(
             "train.sequence_margin_negative_policy must be one of "
             + ", ".join(sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES))
+        )
+    return policy, configured
+
+
+def sequence_margin_positive_policy_setting(train: dict) -> tuple[str, bool]:
+    if not isinstance(train, dict):
+        raise ValueError("train config must be an object")
+    configured = "sequence_margin_positive_policy" in train
+    policy = str(
+        train.get(
+            "sequence_margin_positive_policy",
+            SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
+        )
+    )
+    if policy not in SEQUENCE_MARGIN_POSITIVE_POLICIES:
+        raise ValueError(
+            "train.sequence_margin_positive_policy must be one of "
+            + ", ".join(sorted(SEQUENCE_MARGIN_POSITIVE_POLICIES))
         )
     return policy, configured
 
@@ -151,6 +171,10 @@ def optional_objective_cli_args(train: dict) -> list[str]:
     negative_policy, negative_policy_configured = sequence_margin_negative_policy_setting(train)
     if negative_policy_configured:
         args.extend(["--sequence-margin-negative-policy", negative_policy])
+
+    positive_policy, positive_policy_configured = sequence_margin_positive_policy_setting(train)
+    if positive_policy_configured:
+        args.extend(["--sequence-margin-positive-policy", positive_policy])
 
     ctc_vad_align, ctc_vad_configured = ctc_vad_align_setting(train)
     if ctc_vad_configured and ctc_vad_align:

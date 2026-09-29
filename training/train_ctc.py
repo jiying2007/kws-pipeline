@@ -50,6 +50,8 @@ from objective_contract import (
     PATH_PURITY_POLICY,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 )
 from objective_config import auxiliary_loss_weights, verify_auxiliary_loss_readback
 from training_state import state_identity
@@ -936,6 +938,13 @@ def validate_warm_start(
             != args.sequence_margin_negative_policy
         ):
             raise ValueError("development warm-start sequence-margin policy mismatch")
+        if (
+            checkpoint.get("sequence_margin_positive_policy")
+            != args.sequence_margin_positive_policy
+        ):
+            raise ValueError(
+                "development warm-start positive sequence-margin policy mismatch"
+            )
         if float(checkpoint.get("path_purity_loss_weight", math.nan)) != float(
             args.path_purity_loss_weight
         ):
@@ -993,6 +1002,11 @@ def main() -> None:
         "--sequence-margin-negative-policy",
         choices=sorted(SEQUENCE_MARGIN_NEGATIVE_POLICIES),
         default=SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    )
+    parser.add_argument(
+        "--sequence-margin-positive-policy",
+        choices=sorted(SEQUENCE_MARGIN_POSITIVE_POLICIES),
+        default=SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
     )
     parser.add_argument(
         "--prefix-completion-loss-weight",
@@ -1245,6 +1259,7 @@ def main() -> None:
                     margin=KEYWORD_SEQUENCE_MARGIN,
                     keyword_operating_points=keyword_operating_points,
                     negative_path_policy=args.sequence_margin_negative_policy,
+                    positive_path_policy=args.sequence_margin_positive_policy,
                 )
                 margin_loss = normalized_weighted_mean(
                     margin_per_sample,
@@ -1421,6 +1436,10 @@ def main() -> None:
             "sequence_margin_negative_policy": args.sequence_margin_negative_policy,
             "sequence_margin_negative_policy_scope": (
                 "decoder-search-only-no-speech-active-gate-v1"
+            ),
+            "sequence_margin_positive_policy": args.sequence_margin_positive_policy,
+            "sequence_margin_positive_policy_scope": (
+                "runtime-search-selected-terminal-with-sparse-fallback-v1"
             ),
             "prefix_completion_loss_weight": args.prefix_completion_loss_weight,
             "prefix_completion_tail_steps": PREFIX_COMPLETION_TAIL_STEPS,

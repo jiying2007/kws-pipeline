@@ -8,6 +8,9 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
+    SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
 )
 
 
@@ -79,8 +82,9 @@ def _runtime_executable_sequence_log_confidence(
     *,
     keyword_root_tokens: frozenset[int],
     blank: int,
+    require_retention_pass: bool = True,
 ) -> torch.Tensor:
-    """Viterbi-style acoustic confidence for a runtime-executable keyword path.
+    """Viterbi-style acoustic confidence for a runtime-selected keyword path.
 
     Path selection follows the shipping decoder's discrete search semantics on
     detached log-probabilities: root admissibility, blank/state retention,
@@ -88,12 +92,18 @@ def _runtime_executable_sequence_log_confidence(
     budget. The selected path's acoustic score remains attached so negative
     margin gradients flow only through paths the current runtime can execute.
 
-    This scorer is intentionally used only on the negative side of the optional
-    runtime-executable policy. Exact wake positives keep the historical sparse
-    chronological scorer so a temporarily non-executable positive never loses
-    all margin gradient. It receives acoustic posteriors only; speech/VAD gating,
-    the inactivity boundary reset and refractory suppression still require
-    evaluation with the C runtime before any candidate decision.
+    With require_retention_pass=True this preserves the historical
+    runtime-executable negative scorer: terminal paths that have exhausted the
+    runtime retention budget are ignored. With it disabled, the same discrete
+    search selects a terminal path even below the final retention gate. That
+    mode is used only by the optional positive runtime-search alignment policy
+    so observed fuzzy positive paths retain finite gradient instead of becoming
+    -inf. If no terminal is reached at all, the positive caller falls back to
+    the historical sparse scorer.
+
+    It receives acoustic posteriors only; speech/VAD gating, the inactivity
+    boundary reset and refractory suppression still require evaluation with the
+    C runtime before any candidate decision.
     """
     if sample_log_probs.ndim != 2:
         raise ValueError("sample_log_probs must be [T,V]")
@@ -119,7 +129,7 @@ def _runtime_executable_sequence_log_confidence(
     nonblank_search[0] = 0.0
     nonblank_acoustic[0] = sample_log_probs.new_tensor(0.0)
 
-    best_search = neg_inf
+    best_acoustic_value = neg_inf
     best_acoustic: torch.Tensor | None = None
 
     def assign(
@@ -247,11 +257,11 @@ def _runtime_executable_sequence_log_confidence(
         if terminal_acoustic is None or not math.isfinite(terminal_search):
             continue
         retention_log = terminal_search - float(terminal_acoustic.detach())
-        if retention_log < RUNTIME_MIN_PATH_RETENTION_LOG:
+        if require_retention_pass and retention_log < RUNTIME_MIN_PATH_RETENTION_LOG:
             continue
         acoustic_value = float(terminal_acoustic.detach())
-        if best_acoustic is None or acoustic_value > best_search:
-            best_search = acoustic_value
+        if best_acoustic is None or acoustic_value > best_acoustic_value:
+            best_acoustic_value = acoustic_value
             best_acoustic = terminal_acoustic
 
     if best_acoustic is None:
@@ -319,6 +329,7 @@ def keyword_sequence_margin_loss(
     confidence_threshold: float = DECODER_CONFIDENCE_THRESHOLD,
     keyword_operating_points: list[dict] | None = None,
     negative_path_policy: str = SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    positive_path_policy: str = SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 ) -> torch.Tensor:
     """Return a per-sample decoder-confidence operating-band hinge.
 
@@ -350,6 +361,9 @@ def keyword_sequence_margin_loss(
         return torch.zeros_like(true_ctc_nll)
     if negative_path_policy not in SEQUENCE_MARGIN_NEGATIVE_POLICIES:
         raise ValueError("sequence-margin negative path policy is invalid")
+
+    if positive_path_policy not in SEQUENCE_MARGIN_POSITIVE_POLICIES:
+        raise ValueError("sequence-margin positive path policy is invalid")
 
     vocab = int(log_probs.shape[2])
     normalized_keywords: list[tuple[int, ...]] = []
@@ -391,14 +405,25 @@ def keyword_sequence_margin_loss(
             _decoder_sequence_log_confidence(sample, sequence)
             for sequence in normalized_keywords
         ]
+        runtime_policy_needed = (
+            negative_path_policy
+            == SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE
+            or positive_path_policy
+            == SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED
+        )
+        root_tokens = (
+            frozenset(sequence[0] for sequence in normalized_keywords)
+            if runtime_policy_needed
+            else frozenset()
+        )
         if negative_path_policy == SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE:
-            root_tokens = frozenset(sequence[0] for sequence in normalized_keywords)
             negative_scores = [
                 _runtime_executable_sequence_log_confidence(
                     sample,
                     sequence,
                     keyword_root_tokens=root_tokens,
                     blank=blank,
+                    require_retention_pass=True,
                 )
                 for sequence in normalized_keywords
             ]
@@ -414,8 +439,22 @@ def keyword_sequence_margin_loss(
         )
         hinges: list[torch.Tensor] = []
         if wake_index is not None:
+            positive_score = sparse_scores[wake_index]
+            if (
+                positive_path_policy
+                == SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED
+            ):
+                runtime_positive = _runtime_executable_sequence_log_confidence(
+                    sample,
+                    normalized_keywords[wake_index],
+                    keyword_root_tokens=root_tokens,
+                    blank=blank,
+                    require_retention_pass=False,
+                )
+                if math.isfinite(float(runtime_positive.detach())):
+                    positive_score = runtime_positive
             hinges.append(
-                torch.relu(positive_floors[wake_index] - sparse_scores[wake_index])
+                torch.relu(positive_floors[wake_index] - positive_score)
             )
         for index, score in enumerate(negative_scores):
             if index == wake_index:
