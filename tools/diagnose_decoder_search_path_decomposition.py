@@ -135,6 +135,62 @@ def verify_baseline(
             raise ValueError(f"baseline summary mismatch for totals.{key}")
 
 
+def load_positive_sample(
+    path: pathlib.Path,
+    *,
+    model_sha256: str,
+) -> dict[str, dict]:
+    value = load_object(path, "acoustic alignment")
+    if value.get("evidence_class") != "kws-acoustic-alignment-diagnostic-v3":
+        raise ValueError("acoustic alignment evidence_class mismatch")
+    if value.get("development_only") is not True:
+        raise ValueError("acoustic alignment must be development-only")
+    if value.get("model_sha256") != model_sha256:
+        raise ValueError("acoustic alignment model SHA mismatch")
+    records = value.get("records")
+    if not isinstance(records, list) or not records:
+        raise ValueError("acoustic alignment records are missing")
+    result: dict[str, dict] = {}
+    for index, row in enumerate(records):
+        if not isinstance(row, dict):
+            raise ValueError("acoustic alignment record must be an object")
+        audio_sha = row.get("wav_sha256")
+        keyword_id = row.get("keyword_id")
+        split = row.get("split")
+        if (
+            not isinstance(audio_sha, str)
+            or len(audio_sha) != 64
+            or any(char not in "0123456789abcdef" for char in audio_sha)
+            or isinstance(keyword_id, bool)
+            or not isinstance(keyword_id, int)
+            or split not in {"calibration", "test"}
+        ):
+            raise ValueError(f"invalid acoustic alignment record at index {index}")
+        if audio_sha in result:
+            raise ValueError("acoustic alignment WAV identity is duplicated")
+        surrogate = row.get("surrogate_above_runtime_threshold")
+        runtime = row.get("runtime_detected_expected")
+        if not isinstance(surrogate, bool) or not isinstance(runtime, bool):
+            raise ValueError("acoustic alignment surrogate/runtime flags must be booleans")
+        result[audio_sha] = {
+            "keyword_id": keyword_id,
+            "split": split,
+            "surrogate_above_runtime_threshold": surrogate,
+            "runtime_detected_expected": runtime,
+        }
+    return result
+
+
+def empty_positive_bucket() -> dict:
+    return {
+        "recordings": 0,
+        "surrogate_above_threshold": 0,
+        "runtime_hit": 0,
+        "surrogate_above_threshold_runtime_miss": 0,
+        "categories": {name: 0 for name in CATEGORIES},
+    }
+
+
 def summarize(
     *,
     traces: list[pathlib.Path],
@@ -142,7 +198,16 @@ def summarize(
     pack: pathlib.Path,
     keywords: dict[int, dict],
     path_replay: pathlib.Path,
-) -> tuple[dict[str, dict], dict]:
+    positive_sample: dict[str, dict],
+) -> tuple[dict[str, dict], dict, dict]:
+    positive_summary = empty_positive_bucket()
+    positive_summary["by_split_keyword"] = {
+        f"{split}:kw{keyword_id}": empty_positive_bucket()
+        for split in ("calibration", "test")
+        for keyword_id in sorted(keywords)
+    }
+    positive_seen: set[str] = set()
+
     rows = {
         keyword_id: {
             "traces": 0,
@@ -181,6 +246,48 @@ def summarize(
             for keyword_id, item in by_id.items()
             if int(item.get("detections", 0)) > 0
         }
+
+        sample = positive_sample.get(trace.stem)
+        if sample is not None:
+            keyword_id = int(sample["keyword_id"])
+            if keyword_id not in keywords:
+                raise ValueError("positive sample references unknown keyword")
+            item = keywords[keyword_id]
+            target = tuple(item["tokens"])
+            score = decoder_sequence_log_confidence(log_probs, target)
+            confidence = (
+                0.0 if not math.isfinite(score) else min(1.0, math.exp(score))
+            )
+            surrogate = confidence >= float(item["threshold"])
+            runtime = keyword_id in detected_ids
+            if surrogate != sample["surrogate_above_runtime_threshold"]:
+                raise ValueError(
+                    f"positive sample surrogate flag drifted for {trace.stem}"
+                )
+            if runtime != sample["runtime_detected_expected"]:
+                raise ValueError(
+                    f"positive sample runtime flag drifted for {trace.stem}"
+                )
+            positive_seen.add(trace.stem)
+            buckets = [
+                positive_summary,
+                positive_summary["by_split_keyword"][
+                    f"{sample['split']}:kw{keyword_id}"
+                ],
+            ]
+            for bucket in buckets:
+                bucket["recordings"] += 1
+                bucket["surrogate_above_threshold"] += int(surrogate)
+                bucket["runtime_hit"] += int(runtime)
+                bucket["surrogate_above_threshold_runtime_miss"] += int(
+                    surrogate and not runtime
+                )
+                if surrogate and not runtime:
+                    category = classify(
+                        by_id[keyword_id],
+                        other_detected=bool(detected_ids - {keyword_id}),
+                    )
+                    bucket["categories"][category] += 1
 
         for keyword_id, item in keywords.items():
             target = tuple(item["tokens"])
@@ -254,7 +361,21 @@ def summarize(
 
     if sum(totals["categories"].values()) != totals["surrogate_above_threshold_runtime_miss"]:
         raise ValueError("total miss categories do not form an exact partition")
-    return aggregate, totals
+    missing_positive = sorted(set(positive_sample) - positive_seen)
+    if missing_positive:
+        raise ValueError(
+            "positive acoustic-alignment sample is missing retained posterior trace(s): "
+            + ",".join(missing_positive[:8])
+        )
+    if positive_summary["recordings"] != len(positive_sample):
+        raise ValueError("positive sample recording count drifted")
+    for bucket in [
+        positive_summary,
+        *positive_summary["by_split_keyword"].values(),
+    ]:
+        if sum(bucket["categories"].values()) != bucket["surrogate_above_threshold_runtime_miss"]:
+            raise ValueError("positive-sample miss categories do not form an exact partition")
+    return aggregate, totals, positive_summary
 
 
 def self_test() -> None:
@@ -312,6 +433,7 @@ def main() -> int:
     parser.add_argument("--decoder-path-replay", type=pathlib.Path)
     parser.add_argument("--posterior-cache", type=pathlib.Path)
     parser.add_argument("--baseline-summary", type=pathlib.Path)
+    parser.add_argument("--acoustic-alignment", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
 
@@ -328,6 +450,7 @@ def main() -> int:
         "decoder-path-replay": args.decoder_path_replay,
         "posterior-cache": args.posterior_cache,
         "baseline-summary": args.baseline_summary,
+        "acoustic-alignment": args.acoustic_alignment,
         "output": args.output,
     }
     missing = [name for name, value in required.items() if value is None]
@@ -341,6 +464,7 @@ def main() -> int:
     path_replay = args.decoder_path_replay.resolve()
     posterior_cache = args.posterior_cache.resolve()
     baseline_summary = args.baseline_summary.resolve()
+    acoustic_alignment = args.acoustic_alignment.resolve()
     output = args.output.resolve()
 
     for path, label in (
@@ -350,6 +474,7 @@ def main() -> int:
         (pack, "keyword pack"),
         (path_replay, "decoder path replay"),
         (baseline_summary, "baseline summary"),
+        (acoustic_alignment, "acoustic alignment"),
     ):
         if not path.is_file():
             raise ValueError(f"{label} is missing: {path}")
@@ -360,12 +485,17 @@ def main() -> int:
     token_map = load_tokens(tokens)
     keywords = load_keywords(keywords_tsv, token_map)
     traces = trace_paths(posterior_cache, model_sha256)
-    per_keyword, totals = summarize(
+    positive_sample = load_positive_sample(
+        acoustic_alignment,
+        model_sha256=model_sha256,
+    )
+    per_keyword, totals, positive_summary = summarize(
         traces=traces,
         model=model,
         pack=pack,
         keywords=keywords,
         path_replay=path_replay,
+        positive_sample=positive_sample,
     )
     baseline = load_object(baseline_summary, "baseline summary")
     verify_baseline(
@@ -388,12 +518,14 @@ def main() -> int:
         "keyword_pack_sha256": sha256_file(pack),
         "decoder_path_replay_sha256": sha256_file(path_replay),
         "baseline_summary_sha256": sha256_file(baseline_summary),
+        "acoustic_alignment_sha256": sha256_file(acoustic_alignment),
         "posterior_fixed": True,
         "training_changed": False,
         "decoder_math_changed": False,
         "categories_are_exclusive": True,
         "per_keyword": per_keyword,
         "totals": totals,
+        "positive_sample": positive_summary,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
@@ -407,6 +539,7 @@ def main() -> int:
                 "traces": totals["traces"],
                 "misses": totals["surrogate_above_threshold_runtime_miss"],
                 "categories": totals["categories"],
+                "positive_sample": positive_summary,
                 "selection_feedback_allowed": False,
             },
             sort_keys=True,
