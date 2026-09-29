@@ -28,6 +28,8 @@ from objective_contract import (
     PATH_PURITY_POLICY,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_NEGATIVE_POLICY_DEFAULT,
+    SEQUENCE_MARGIN_POSITIVE_POLICIES,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
 )
 
 MODEL_VERSION = 2
@@ -342,6 +344,35 @@ def training_metadata(checkpoint: dict) -> dict:
         result["sequence_margin_negative_policy"] = negative_policy
         result["sequence_margin_negative_policy_scope"] = str(
             negative_policy_scope
+        )
+
+    positive_policy = checkpoint.get("sequence_margin_positive_policy")
+    positive_policy_scope = checkpoint.get("sequence_margin_positive_policy_scope")
+    result["sequence_margin_positive_policy_recorded"] = positive_policy is not None
+    if positive_policy is None:
+        if positive_policy_scope is not None:
+            raise ValueError(
+                "checkpoint sequence-margin positive policy scope exists without policy"
+            )
+        result["sequence_margin_positive_policy"] = (
+            SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT
+        )
+    else:
+        positive_policy = str(positive_policy)
+        if positive_policy not in SEQUENCE_MARGIN_POSITIVE_POLICIES:
+            raise ValueError(
+                "checkpoint sequence_margin_positive_policy is unsupported"
+            )
+        if (
+            positive_policy_scope
+            != "runtime-search-selected-terminal-with-sparse-fallback-v1"
+        ):
+            raise ValueError(
+                "checkpoint sequence-margin positive policy scope is unsupported"
+            )
+        result["sequence_margin_positive_policy"] = positive_policy
+        result["sequence_margin_positive_policy_scope"] = str(
+            positive_policy_scope
         )
 
     path_purity_fields = (
