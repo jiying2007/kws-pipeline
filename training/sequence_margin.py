@@ -10,6 +10,7 @@ from objective_contract import (
     SEQUENCE_MARGIN_NEGATIVE_POLICY_RUNTIME_EXECUTABLE,
     SEQUENCE_MARGIN_POSITIVE_IMPLEMENTATIONS,
     SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_KEYWORD_COMPETITION,
+    SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK,
     SEQUENCE_MARGIN_POSITIVE_POLICY_DEFAULT,
     SEQUENCE_MARGIN_POSITIVE_POLICY_RUNTIME_SEARCH_ALIGNED,
 )
@@ -327,6 +328,119 @@ def _ctc_keyword_competition_loss(
     return torch.logsumexp(values, dim=0) - values[wake_index]
 
 
+def _ctc_token_state_temporal_weights(
+    sample_ctc_log_probs: torch.Tensor,
+    sequence: tuple[int, ...],
+    *,
+    blank: int,
+) -> torch.Tensor:
+    """Return detached normalized frame posterior for each target-token state."""
+    if sample_ctc_log_probs.ndim != 2:
+        raise ValueError("sample_ctc_log_probs must be [T,V]")
+    steps, vocab = (
+        int(sample_ctc_log_probs.shape[0]),
+        int(sample_ctc_log_probs.shape[1]),
+    )
+    if steps <= 0 or not sequence:
+        raise ValueError("CTC token-state alignment requires non-empty inputs")
+    if blank < 0 or blank >= vocab:
+        raise ValueError("CTC token-state blank id is outside vocabulary")
+    if any(token <= blank or token >= vocab for token in sequence):
+        raise ValueError("CTC token-state target token is outside vocabulary")
+
+    with torch.no_grad():
+        detached = sample_ctc_log_probs.detach()
+        states: list[int] = [blank]
+        for token in sequence:
+            states.extend((int(token), blank))
+        count = len(states)
+        alpha = detached.new_full((steps, count), float("-inf"))
+        alpha[0, 0] = detached[0, blank]
+        if count > 1:
+            alpha[0, 1] = detached[0, states[1]]
+        for frame in range(1, steps):
+            for state, token in enumerate(states):
+                predecessors = [state]
+                if state > 0:
+                    predecessors.append(state - 1)
+                if (
+                    state > 1
+                    and states[state] != blank
+                    and states[state] != states[state - 2]
+                ):
+                    predecessors.append(state - 2)
+                alpha[frame, state] = (
+                    torch.logsumexp(alpha[frame - 1, predecessors], dim=0)
+                    + detached[frame, token]
+                )
+
+        log_probability = torch.logsumexp(alpha[-1, -2:], dim=0)
+        if not bool(torch.isfinite(log_probability)):
+            raise ValueError("CTC token-state sequence probability is non-finite")
+
+        beta = detached.new_full((steps, count), float("-inf"))
+        beta[-1, -1] = 0.0
+        if count > 1:
+            beta[-1, -2] = 0.0
+        for frame in range(steps - 2, -1, -1):
+            for state in range(count):
+                successors = [state]
+                if state + 1 < count:
+                    successors.append(state + 1)
+                if (
+                    state + 2 < count
+                    and states[state + 2] != blank
+                    and states[state + 2] != states[state]
+                ):
+                    successors.append(state + 2)
+                values = torch.stack(
+                    [
+                        beta[frame + 1, successor]
+                        + detached[frame + 1, states[successor]]
+                        for successor in successors
+                    ]
+                )
+                beta[frame, state] = torch.logsumexp(values, dim=0)
+
+        rows: list[torch.Tensor] = []
+        for occurrence in range(len(sequence)):
+            state = occurrence * 2 + 1
+            posterior = torch.exp(
+                alpha[:, state] + beta[:, state] - log_probability
+            )
+            occupancy = posterior.sum()
+            if not bool(torch.isfinite(occupancy)) or float(occupancy) <= 0.0:
+                raise ValueError("CTC token-state occupancy is invalid")
+            rows.append(posterior / occupancy)
+        return torch.stack(rows)
+
+
+def _ctc_token_state_target_blank_loss(
+    sample_ctc_log_probs: torch.Tensor,
+    sequence: tuple[int, ...],
+    *,
+    blank: int,
+) -> torch.Tensor:
+    """Strengthen each exact-wake token against blank on its CTC state support."""
+    temporal = _ctc_token_state_temporal_weights(
+        sample_ctc_log_probs,
+        sequence,
+        blank=blank,
+    )
+    losses: list[torch.Tensor] = []
+    for occurrence, token in enumerate(sequence):
+        losses.append(
+            (
+                temporal[occurrence]
+                * torch.nn.functional.softplus(
+                    sample_ctc_log_probs[:, blank]
+                    - sample_ctc_log_probs[:, int(token)]
+                )
+            ).sum()
+        )
+    return torch.stack(losses).mean()
+
+
 def _operating_points(
     count: int,
     *,
@@ -513,6 +627,17 @@ def keyword_sequence_margin_loss(
                         normalized_keywords,
                         wake_index=wake_index,
                         true_ctc_nll=true_ctc_nll[batch_index],
+                        blank=blank,
+                    )
+                )
+            elif (
+                positive_path_policy
+                == SEQUENCE_MARGIN_POSITIVE_POLICY_CTC_TOKEN_STATE_TARGET_BLANK
+            ):
+                hinges.append(
+                    _ctc_token_state_target_blank_loss(
+                        ctc_sample,
+                        normalized_keywords[wake_index],
                         blank=blank,
                     )
                 )
