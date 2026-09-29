@@ -10,6 +10,7 @@ import re
 
 from objective_config import AUXILIARY_LOSS_WEIGHT_NAMES, auxiliary_loss_weights
 from objective_contract import (
+    CTC_PRIMARY_POLICIES,
     ORDERED_TOKEN_SCOPES,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_POSITIVE_POLICIES,
@@ -31,6 +32,10 @@ FIELDS = {
 }
 ALLOWED_OVERRIDES = {
     **{f"train.{name}": ("float", 0.0, 1.0) for name in AUXILIARY_LOSS_WEIGHT_NAMES},
+    "train.ctc_primary_policy": (
+        "enum",
+        tuple(sorted(CTC_PRIMARY_POLICIES)),
+    ),
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
     "train.ordered_token_scope": ("enum", tuple(sorted(ORDERED_TOKEN_SCOPES))),
