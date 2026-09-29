@@ -48,6 +48,10 @@ jobs:
             echo "audit_changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          if [[ ! -e "$KWS_AUDIT_SPEC" ]]; then
+            echo "audit_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           test -s "$KWS_AUDIT_SPEC"
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os, pathlib, re
