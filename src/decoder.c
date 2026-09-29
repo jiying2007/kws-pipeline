@@ -137,6 +137,16 @@ kws_status_t kws_decoder_debug_set_search_policy(kws_decoder_t *d,
   return KWS_OK;
 }
 
+kws_status_t kws_decoder_debug_require_exact_nonroot(kws_decoder_t *d,
+                                                     int enabled) {
+  if (d == NULL || (enabled != 0 && enabled != 1)) {
+    return KWS_EINVAL;
+  }
+  d->debug_require_exact_nonroot = (uint8_t)enabled;
+  kws_decoder_reset(d);
+  return KWS_OK;
+}
+
 static uint16_t find_or_add_child(kws_decoder_t *d,
                                   uint16_t parent,
                                   uint16_t token,
@@ -446,6 +456,8 @@ int kws_decoder_step(kws_decoder_t *d,
        * prefix exists, preserve fuzzy child competition, but charge a non-top
        * child against the cumulative path budget. */
       if (base > NEG_INF / 2.0f &&
+          !(d->debug_require_exact_nonroot != 0u &&
+            i != 0u && top_token != token) &&
           (i != 0u || top_token == token ||
            ((blank_dominant != 0 || top_is_keyword_root != 0) &&
             logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
