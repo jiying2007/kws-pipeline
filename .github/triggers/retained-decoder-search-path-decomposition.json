@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "experiment_id": "retained-decoder-fuzzy-temporal-neighborhood-v1",
+  "development_only": true,
+  "selection_feedback_allowed": false,
+  "protected_evidence_used": false,
+  "source_run_id": 36441011129,
+  "source_artifact_name": "product-development-experiment-ae1055b4e652b7e57f1b140ac356041c0cd3bb62-54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+  "source_pr_number": 391,
+  "source_head_sha": "54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+  "model": "build/product-development-experiment/candidates/r00-logmel-00/model.kwm",
+  "tokens": "keywords/tokens.example.txt",
+  "keywords_tsv": "build/product-development-experiment/candidates/r00-logmel-00/calibration/calibrated-keywords.tsv",
+  "keyword_pack": "build/product-development-experiment/candidates/r00-logmel-00/calibration/calibrated-keywords.kwk",
+  "posterior_cache": "build/product-development-experiment/posterior-cache",
+  "baseline_summary": "build/product-development-experiment/sequence-margin-runtime-gap.json",
+  "acoustic_alignment": "build/product-development-experiment/acoustic-alignment.json"
+}
