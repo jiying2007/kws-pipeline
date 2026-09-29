@@ -206,6 +206,37 @@ def prefix_blank_update(
     return total
 
 
+def suffix_update(
+    update: torch.Tensor,
+    positions: list[dict],
+    start_index: int,
+) -> float:
+    total = 0.0
+    for item in positions[start_index:]:
+        token = int(item["token"])
+        start = int(item["q10_frame"])
+        stop = int(item["q90_frame"]) + 1
+        if start < 0 or stop > int(update.shape[0]) or start >= stop:
+            raise ValueError("sequence competition position window is invalid")
+        total += float(update[start:stop, token].sum())
+    return total
+
+
+def suffix_blank_update(
+    update: torch.Tensor,
+    positions: list[dict],
+    start_index: int,
+) -> float:
+    total = 0.0
+    for item in positions[start_index:]:
+        start = int(item["q10_frame"])
+        stop = int(item["q90_frame"]) + 1
+        if start < 0 or stop > int(update.shape[0]) or start >= stop:
+            raise ValueError("sequence competition position window is invalid")
+        total += float(update[start:stop, 0].sum())
+    return total
+
+
 def summarize(records: list[dict]) -> dict:
     return {
         "recordings": len(records),
@@ -247,6 +278,21 @@ def summarize(records: list[dict]) -> dict:
                 for row in records
             ]
         ),
+        "correct_suffix_update": scalar_stats(
+            [float(row["correct_suffix_update"]) for row in records]
+        ),
+        "correct_suffix_blank_update": scalar_stats(
+            [float(row["correct_suffix_blank_update"]) for row in records]
+        ),
+        "correct_suffix_target_minus_blank_update": scalar_stats(
+            [
+                float(row["correct_suffix_target_minus_blank_update"])
+                for row in records
+            ]
+        ),
+        "outside_prefix_blank_update": scalar_stats(
+            [float(row["outside_prefix_blank_update"]) for row in records]
+        ),
         "competitor_prefix_update": scalar_stats(
             [float(row["competitor_prefix_update"]) for row in records]
         ),
@@ -258,6 +304,16 @@ def summarize(records: list[dict]) -> dict:
         ),
         "correct_prefix_target_minus_blank_increased": sum(
             float(row["correct_prefix_target_minus_blank_update"]) > 0.0
+            for row in records
+        ),
+        "correct_suffix_increased": sum(
+            float(row["correct_suffix_update"]) > 0.0 for row in records
+        ),
+        "correct_suffix_blank_increased": sum(
+            float(row["correct_suffix_blank_update"]) > 0.0 for row in records
+        ),
+        "correct_suffix_target_minus_blank_increased": sum(
+            float(row["correct_suffix_target_minus_blank_update"]) > 0.0
             for row in records
         ),
         "competitor_prefix_decreased": sum(
@@ -439,6 +495,36 @@ def main() -> int:
                         row["correct_positions"],
                         correct_prefix,
                     )
+                    - prefix_blank_update(
+                        update,
+                        row["correct_positions"],
+                        correct_prefix,
+                    )
+                ),
+                "correct_suffix_update": suffix_update(
+                    update,
+                    row["correct_positions"],
+                    correct_prefix,
+                ),
+                "correct_suffix_blank_update": suffix_blank_update(
+                    update,
+                    row["correct_positions"],
+                    correct_prefix,
+                ),
+                "correct_suffix_target_minus_blank_update": (
+                    suffix_update(
+                        update,
+                        row["correct_positions"],
+                        correct_prefix,
+                    )
+                    - suffix_blank_update(
+                        update,
+                        row["correct_positions"],
+                        correct_prefix,
+                    )
+                ),
+                "outside_prefix_blank_update": (
+                    float(update[:, 0].sum())
                     - prefix_blank_update(
                         update,
                         row["correct_positions"],
