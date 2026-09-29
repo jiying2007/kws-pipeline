@@ -168,11 +168,21 @@ def main() -> int:
     assert "KWS_COMMAND_TTS_CACHE_ROOT:" in paired_workflow
     assert "Require treatment did not mutate common clean-TTS cache" in paired_workflow
     assert "training/compare_product_development_pair.py" in paired_workflow
+    assert "training/compare_product_objective_pair.py" in paired_workflow
+    assert "train.sequence_margin_positive_policy" in paired_workflow
+    assert "unsupported paired causal comparator variable" in paired_workflow
     assert "Require valid causal pair" in paired_workflow
     subprocess.check_call(
         [
             sys.executable,
             str(ROOT / "training/product_development_pair_spec.py"),
+            "--self-test",
+        ]
+    )
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(ROOT / "training/compare_product_objective_pair.py"),
             "--self-test",
         ]
     )
