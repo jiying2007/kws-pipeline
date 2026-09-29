@@ -33,7 +33,7 @@ def replay_events(
 ) -> list[dict]:
     command = [str(tool), str(model), str(pack), str(trace), recording]
     if defer:
-        command += ["--require-nonroot-defer", "1"]
+        command += ["--defer-nonroot-mismatch", "1"]
     completed = subprocess.run(
         command,
         check=True,
