@@ -37,10 +37,24 @@ from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completion_loss
+from ctc_objective import (
+    LABEL_PRIOR_ALPHA,
+    accumulate_label_prior_statistics,
+    empty_label_prior_accumulator,
+    label_prior_ctc_loss,
+    label_prior_state,
+    priors_from_accumulator,
+    uniform_label_priors,
+    validate_label_prior_state,
+)
 from frontend import features
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL, frontend_id
 from model import TinyStreamingRNN
 from objective_contract import (
+    CTC_OBJECTIVE_POLICIES,
+    CTC_OBJECTIVE_POLICY_DEFAULT,
+    CTC_OBJECTIVE_POLICY_LABEL_PRIOR,
+    CTC_OBJECTIVE_POLICY_STANDARD,
     ORDERED_TOKEN_SCOPE_DEFAULT,
     ORDERED_TOKEN_SCOPE_EXACT_WAKE,
     ORDERED_TOKEN_SCOPES,
@@ -202,6 +216,7 @@ def training_environment() -> dict:
         ROOT / "training" / "frontend.py",
         ROOT / "training" / "frontend_spec.py",
         ROOT / "training" / "model.py",
+        ROOT / "training" / "ctc_objective.py",
         ROOT / "training" / "sequence_margin.py",
         ROOT / "training" / "synthetic_audio.py",
         ROOT / "training" / "wake_pressure_balance.py",
@@ -978,6 +993,11 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
+    parser.add_argument(
+        "--ctc-objective-policy",
+        choices=sorted(CTC_OBJECTIVE_POLICIES),
+        default=CTC_OBJECTIVE_POLICY_DEFAULT,
+    )
     parser.add_argument("--ctc-vad-align", action="store_true")
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
