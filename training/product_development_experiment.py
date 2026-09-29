@@ -241,6 +241,7 @@ def self_test() -> None:
                     "protected_evidence_used": False,
                     "reason": "exercise experiment contract",
                     "config_overrides": {
+                        "train.ctc_primary_policy": "label-prior-v1",
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.1,
                         "train.sequence_margin_positive_policy": "sparse-chronological-v1",
@@ -251,6 +252,10 @@ def self_test() -> None:
             encoding="utf-8",
         )
         verified = verify_spec(spec)
+        assert (
+            verified["config_overrides"]["train.ctc_primary_policy"]
+            == "label-prior-v1"
+        )
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
         assert (
             verified["config_overrides"]["train.sequence_margin_positive_policy"]
