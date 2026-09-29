@@ -28,6 +28,26 @@ DEFAULT_TREATMENT = "runtime-search-aligned-v1"
 NEGATIVE = "runtime-executable-v1"
 
 
+def expected_values_from_pair_receipt(path: pathlib.Path) -> tuple[str, str]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if value.get("evidence_class") != "product-development-same-runner-pair-receipt-v1":
+        raise ValueError("pair receipt evidence_class mismatch")
+    variable = value.get("variable")
+    if not isinstance(variable, dict) or variable.get("name") != VARIABLE:
+        raise ValueError("pair receipt objective variable mismatch")
+    control = variable.get("control")
+    treatment = variable.get("treatment")
+    if (
+        not isinstance(control, str)
+        or not control
+        or not isinstance(treatment, str)
+        or not treatment
+        or control == treatment
+    ):
+        raise ValueError("pair receipt objective values must be distinct strings")
+    return control, treatment
+
+
 def delete_dotted(value: dict, dotted: str) -> None:
     parts = dotted.split(".")
     cursor = value
@@ -430,6 +450,25 @@ def self_test() -> None:
         assert report["next_action"] == "close-no-sweep"
 
         alternate = "ctc-keyword-competition-v1"
+        pair_receipt = root / "pair-receipt.json"
+        pair_receipt.write_text(
+            json.dumps(
+                {
+                    "evidence_class": "product-development-same-runner-pair-receipt-v1",
+                    "variable": {
+                        "name": VARIABLE,
+                        "control": DEFAULT_CONTROL,
+                        "treatment": alternate,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        expected_control, expected_treatment = expected_values_from_pair_receipt(
+            pair_receipt
+        )
+        assert expected_control == DEFAULT_CONTROL
+        assert expected_treatment == alternate
         write_fixture(
             treatment,
             True,
@@ -439,8 +478,8 @@ def self_test() -> None:
         report = compare_pair(
             control,
             treatment,
-            expected_control=DEFAULT_CONTROL,
-            expected_treatment=alternate,
+            expected_control=expected_control,
+            expected_treatment=expected_treatment,
         )
         assert report["causal_valid"] is True
         assert report["treatment_value"] == alternate
@@ -452,8 +491,7 @@ def main() -> int:
     parser.add_argument("--control", type=pathlib.Path)
     parser.add_argument("--treatment", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
-    parser.add_argument("--control-value")
-    parser.add_argument("--treatment-value")
+    parser.add_argument("--pair-receipt", type=pathlib.Path)
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -464,19 +502,21 @@ def main() -> int:
         args.control is None
         or args.treatment is None
         or args.output is None
-        or args.control_value is None
-        or args.treatment_value is None
+        or args.pair_receipt is None
     ):
         parser.error(
-            "--control, --treatment, --output, --control-value and "
-            "--treatment-value are required unless --self-test is used"
+            "--control, --treatment, --output and --pair-receipt are required "
+            "unless --self-test is used"
         )
     try:
+        expected_control, expected_treatment = expected_values_from_pair_receipt(
+            args.pair_receipt
+        )
         report = compare_pair(
             args.control,
             args.treatment,
-            expected_control=args.control_value,
-            expected_treatment=args.treatment_value,
+            expected_control=expected_control,
+            expected_treatment=expected_treatment,
         )
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         report = {
