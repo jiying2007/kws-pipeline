@@ -28,6 +28,8 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/ctc_primary.py"
+      - "training/test_ctc_primary.py"
       - "training/model.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
@@ -76,6 +78,8 @@ on:
       - "training/finalize_domain_candidate.py"
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
+      - "training/ctc_primary.py"
+      - "training/test_ctc_primary.py"
       - "training/model.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
@@ -133,6 +137,8 @@ jobs:
           training/product_development_experiment.py
           training/adversarial_refinement.py
           training/train_ctc.py
+          training/ctc_primary.py
+          training/test_ctc_primary.py
           training/objective_config.py
           training/objective_contract.py
           training/suffix_root_loss.py
@@ -249,6 +255,7 @@ jobs:
       - name: Decoder-aligned objective math contract
         run: |
           .venv-objective/bin/python training/test_sequence_margin.py
+          .venv-objective/bin/python training/test_ctc_primary.py
           .venv-objective/bin/python tests/test_suffix_root_objective.py
 
   live-base-binding:
