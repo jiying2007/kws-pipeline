@@ -5,13 +5,18 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import shutil
 import sys
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from attach_speech_like_labels import attach as attach_labels  # noqa: E402
+from attach_speech_like_labels import attach as attach_labels, normalize_label  # noqa: E402
+from corpus_identity import inspect_pcm16_wav  # noqa: E402
+
+SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 POLICY = "speech-like-corpus-plan-v1"
 VOICE_CLASS = "speech-like-provider-voice-slot-v1"
@@ -299,7 +304,47 @@ def intent_key(group: str, row: dict) -> tuple[str, str, str, str, tuple[str, ..
     )
 
 
-def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path, output_root: pathlib.Path) -> dict:
+def validate_audio_review(path: pathlib.Path, intent_map: dict, generated: dict) -> dict:
+    """Bind a human audio verdict to every planned recording and its WAV hash."""
+    reviews: dict[tuple[str, str], dict] = {}
+    reviewers: set[str] = set()
+    for index, row in enumerate(load_jsonl(path), 1):
+        if type(row.get("schema_version")) is not int or row["schema_version"] != 1 or row.get("evidence_class") != "speech-like-audio-review-v1":
+            raise ValueError(f"{path}:{index}: audio review identity mismatch")
+        if "keyword_id" not in row:
+            raise ValueError(f"{path}:{index}: audio review keyword_id is missing")
+        normalize_label({**row, "evidence_class": LABEL_CLASS}, f"{path}:{index}.review label")
+        source_id = require_text(row.get("source_id"), f"{path}:{index}.source_id")
+        file_sha = row.get("file_sha256")
+        if not isinstance(file_sha, str) or SHA256_RE.fullmatch(file_sha) is None:
+            raise ValueError(f"{path}:{index}: file_sha256 must be lowercase SHA-256")
+        key = (source_id, file_sha)
+        if key in reviews:
+            raise ValueError(f"{path}:{index}: duplicate audio review identity")
+        reviewers.add(require_text(row.get("reviewer_id"), f"{path}:{index}.reviewer_id"))
+        reviews[key] = row
+
+    expected: set[tuple[str, str]] = set()
+    for key, intent in intent_map.items():
+        source = generated[key]
+        identity = (str(source["source_id"]), str(source["file_sha256"]))
+        expected.add(identity)
+        review = reviews.get(identity)
+        if review is None:
+            raise ValueError(f"audio review is missing for source_id={identity[0]}")
+        if (review.get("intended_text") != intent["text"]
+                or review.get("kind") != intent["kind"]
+                or review.get("keyword_id") != intent["keyword_id"]):
+            raise ValueError(f"audio review label differs from plan: source_id={identity[0]}")
+        if review.get("verdict") != "accepted":
+            raise ValueError(f"audio review is not accepted: source_id={identity[0]}")
+    if set(reviews) != expected:
+        raise ValueError("audio review contains unplanned or stale recordings")
+    return {"review_sha256": sha256_file(path), "recordings": len(reviews),
+            "reviewer_count": len(reviewers)}
+
+
+def load_planned_recordings(intents_path: pathlib.Path, generated_root: pathlib.Path, *, planned_groups_only: bool = False) -> tuple[dict, dict, dict]:
     intents = load_jsonl(intents_path)
     intent_map: dict[tuple[str, str, str, str, tuple[str, ...]], dict] = {}
     for index, row in enumerate(intents, 1):
@@ -317,7 +362,8 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
 
     generated: dict[tuple[str, str, str, str, tuple[str, ...]], dict] = {}
     source_manifest_sha: dict[str, str] = {}
-    for group in sorted(ALLOWED_PROVIDER_GROUPS):
+    groups = {key[0] for key in intent_map} if planned_groups_only else ALLOWED_PROVIDER_GROUPS
+    for group in sorted(groups):
         manifest = generated_root / group / "manifest.jsonl"
         if not manifest.is_file():
             raise ValueError(f"generated provider manifest is missing: {manifest}")
@@ -342,6 +388,61 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
         extra = sorted(set(generated) - set(intent_map))
         raise ValueError(f"generated corpus does not match planned requests; missing={len(missing)} extra={len(extra)}")
 
+    return intent_map, generated, source_manifest_sha
+
+
+def admit_reviewed_recordings(intents_path: pathlib.Path, generated_root: pathlib.Path,
+                              audio_review: pathlib.Path, *, expected_count: int | None = None) -> dict:
+    """Read-only integrity gate; supplied human receipts are never created or expanded."""
+    intent_map, generated, manifests = load_planned_recordings(
+        intents_path, generated_root, planned_groups_only=True)
+    if expected_count is not None and (expected_count < 1 or len(generated) != expected_count):
+        raise ValueError("recording count differs from expected count")
+    review = validate_audio_review(audio_review, intent_map, generated)
+    seen_sources: set[str] = set()
+    seen_pcm: set[str] = set()
+    voice_splits: dict[str, str] = {}
+    split_counts: dict[str, int] = {}
+    for key, intent in intent_map.items():
+        row = generated[key]
+        if row.get("synthetic") is not True:
+            raise ValueError("reviewed admission requires synthetic=true")
+        normalize_label({**intent, "evidence_class": LABEL_CLASS}, "planned label")
+        source_id = require_text(row.get("source_id"), "source_id")
+        voice_id = require_text(row.get("voice_id"), "voice_id")
+        split = intent["split"]
+        if source_id in seen_sources:
+            raise ValueError("duplicate source_id in admitted batch")
+        seen_sources.add(source_id)
+        if voice_id in voice_splits and voice_splits[voice_id] != split:
+            raise ValueError("voice_id crosses splits")
+        voice_splits[voice_id] = split
+        inspected = inspect_pcm16_wav(pathlib.Path(row["audio"]))
+        if inspected["frames"] <= 0:
+            raise ValueError("admitted WAV must contain frames")
+        for field in ("file_sha256", "pcm_sha256"):
+            if row.get(field) != inspected[field]:
+                raise ValueError(f"admitted WAV {field} mismatch")
+        if inspected["pcm_sha256"] in seen_pcm:
+            raise ValueError("duplicate decoded PCM in admitted batch")
+        seen_pcm.add(inspected["pcm_sha256"])
+        split_counts[split] = split_counts.get(split, 0) + 1
+    return {"schema_version": 1, "evidence_class": "speech-like-reviewed-admission-v1",
+            "scope": "internal-development-only", "qualification_allowed": False,
+            "intents_sha256": sha256_file(intents_path), "source_manifests": manifests,
+            "audio_review": review, "recordings": len(generated), "split_counts": split_counts,
+            "generator_family_independence_verified": False,
+            "limits": ["Receipt binding does not independently prove listening or reviewer identity.",
+                       "Provider IDs do not prove distinct model families or rights to source audio.",
+                       "No product qualification or new holdout claim, including legacy qualification split names."]}
+
+
+def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
+                       output_root: pathlib.Path, *, audio_review: pathlib.Path | None = None) -> dict:
+    admission = None
+    if audio_review is not None:
+        admission = admit_reviewed_recordings(intents_path, generated_root, audio_review)
+    intent_map, generated, source_manifest_sha = load_planned_recordings(intents_path, generated_root)
     split_rows: dict[str, list[dict]] = {split: [] for split in SPLITS}
     split_labels: dict[str, list[dict]] = {split: [] for split in SPLITS}
     for key, intent in intent_map.items():
@@ -403,6 +504,7 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
         "splits": split_summary,
         "recordings": sum(item["recordings"] for item in split_summary.values()),
         "protected_evidence_used": False,
+        **({"reviewed_admission": admission} if admission is not None else {}),
     }
 
 
@@ -423,7 +525,20 @@ def main() -> int:
     materialize.add_argument("--output-root", required=True, type=pathlib.Path)
     materialize.add_argument("--summary", required=True, type=pathlib.Path)
 
+    materialize.add_argument("--audio-review", type=pathlib.Path)
+
+    admission = sub.add_parser("admit-reviewed", help="Read-only hash-bound admission of already-reviewed WAVs")
+    admission.add_argument("--intents", required=True, type=pathlib.Path)
+    admission.add_argument("--generated-root", required=True, type=pathlib.Path)
+    admission.add_argument("--audio-review", required=True, type=pathlib.Path)
+    admission.add_argument("--expected-count", required=True, type=int)
+
     args = parser.parse_args()
+    if args.command == "admit-reviewed":
+        summary = admit_reviewed_recordings(args.intents.resolve(), args.generated_root.resolve(),
+                                            args.audio_review.resolve(), expected_count=args.expected_count)
+        print(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2))
+        return 0
     if args.command == "build":
         requests, intents, summary = build_requests(args.plan.resolve(), args.voice_inventory.resolve())
         write_jsonl(args.requests.resolve(), requests)
@@ -436,7 +551,8 @@ def main() -> int:
         )
         return 0
 
-    summary = materialize_labels(args.intents.resolve(), args.generated_root.resolve(), args.output_root.resolve())
+    summary = materialize_labels(args.intents.resolve(), args.generated_root.resolve(), args.output_root.resolve(),
+                                 audio_review=args.audio_review.resolve() if args.audio_review else None)
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"speech-like corpus materialized: recordings={summary['recordings']}")
@@ -446,6 +562,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (KeyError, OSError, TypeError, ValueError) as exc:
+    except (KeyError, OSError, TypeError, ValueError, EOFError, wave.Error) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

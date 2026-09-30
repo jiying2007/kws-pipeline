@@ -106,7 +106,9 @@ jobs:
       - name: Verify tracked worktree after Dataset split leakage audit
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset split leakage audit"'
       - name: Corpus byte identity
-        run: python3 tests/test_corpus_identity.py
+        run: |
+          python3 tests/test_corpus_identity.py
+          python3 tests/test_reviewed_corpus_admission.py
       - name: Verify tracked worktree after Corpus byte identity
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus byte identity"'
       - name: False reject positive replay
