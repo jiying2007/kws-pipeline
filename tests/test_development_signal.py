@@ -26,7 +26,7 @@ def metrics(matches=(2, 2), far=600.0):
     base = {"expected": 8, "matched": sum(matches), "false_rejects": 8 - sum(matches),
             "frr": frr, "far_per_hour": far, "p95_post_end_latency_ms": 0.0,
             "per_keyword": per_keyword}
-    domains = {"domains": {"distance:far": {"frr": frr}}, "worst_domain_score": 1000 * frr + far}
+    domains = {"domains": {"distance:far": {"expected": 8, "frr": frr}}, "worst_domain_score": 1000 * frr + far}
     return base, domains
 
 
@@ -135,6 +135,17 @@ class SignalTests(unittest.TestCase):
         useful, ud = metrics()
         mute, md = metrics((0, 0), 0.0)
         self.assertEqual(calibration_behavior_key(good, gd, GATES, IDS), (0.0,) * 9)
+        for absent_count in (None, 0):
+            unqualified_domains = copy.deepcopy(gd)
+            far_slice = unqualified_domains["domains"]["distance:far"]
+            if absent_count is None:
+                del far_slice["expected"]
+            else:
+                far_slice["expected"] = absent_count
+            self.assertNotEqual(
+                calibration_behavior_key(good, unqualified_domains, GATES, IDS),
+                (0.0,) * 9,
+            )
         self.assertLess(calibration_behavior_key(useful, ud, GATES, IDS),
                         calibration_behavior_key(mute, md, GATES, IDS))
 
