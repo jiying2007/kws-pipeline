@@ -223,6 +223,10 @@ jobs:
       - name: Verify tracked worktree after Target and shipping promotion contract
         if: always()
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target and shipping promotion contract"'
+      - name: Frozen replay build contract
+        run: python3 tests/test_frozen_replay_build_contract.py
+      - name: Verify tracked worktree after Frozen replay build contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen replay build contract"'
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
       - name: Verify tracked worktree after Test inventory tool contract
