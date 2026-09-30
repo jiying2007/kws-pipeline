@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "evidence_class": "frozen-far-source-replay-request-v1",
+  "experiment_id": "frozen-far-source-replay-20260930-v1",
+  "development_only": true,
+  "selection_feedback_allowed": false,
+  "protected_evidence_used": false,
+  "historical_run_id": 36640828135,
+  "historical_artifact_id": 11068181171,
+  "historical_head_sha": "d96ee60f35ca9dd42c625f53ab466226d83da989",
+  "expected_model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "expected_keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+  "cases": [
+    {
+      "case_id": "seed-1103-random-negative-family3",
+      "seed": 1103,
+      "detection_time_s": 7191.345,
+      "historical_confidence": 0.603046,
+      "detected_keyword_id": 2,
+      "rendered_wav_sha256": "40a5ab93a7fad21dd3c234e659a092e890e8269eeeb0d69f04415124a53d6966",
+      "historical_gain": 0.9,
+      "expected_family_id": 3,
+      "expected_tokens": [
+        "xiao3",
+        "xiao3",
+        "xiao3",
+        "wo1"
+      ]
+    },
+    {
+      "case_id": "seed-3301-kw2-confusable-family5",
+      "seed": 3301,
+      "detection_time_s": 2372.645,
+      "historical_confidence": 0.962665,
+      "detected_keyword_id": 2,
+      "rendered_wav_sha256": "ca75c2442d163e01fcedef656853116fd571a001241c7a6260bf38beb051f78c",
+      "historical_gain": 0.7188236356174534,
+      "expected_family_id": 5,
+      "expected_tokens": [
+        "xiao3",
+        "wo1",
+        "xiao3",
+        "ni3"
+      ]
+    }
+  ]
+}
