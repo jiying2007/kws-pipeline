@@ -8,6 +8,12 @@ import math
 import pathlib
 import shutil
 import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from ctc_primary import normalize_label_prior_contract  # noqa: E402
 
 HEX = set("0123456789abcdef")
 PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"
@@ -297,6 +303,42 @@ def verify(args: argparse.Namespace) -> dict:
         train_config = effective.get("train")
         if not isinstance(train_config, dict):
             raise ValueError("effective training config lacks train object")
+        configured_primary_policy = train_config.get("ctc_primary_policy")
+        provenance_primary_policy = training_provenance.get("ctc_primary_policy")
+        expected_primary_policy = (
+            "standard-v1"
+            if configured_primary_policy is None
+            else str(configured_primary_policy)
+        )
+        if expected_primary_policy not in {"standard-v1", "label-prior-v1"}:
+            raise ValueError("effective primary CTC policy is unsupported")
+        if provenance_primary_policy is None:
+            if configured_primary_policy is not None:
+                raise ValueError(
+                    "promoted product candidate lacks configured primary CTC provenance"
+                )
+            provenance_primary_policy = "standard-v1"
+        if provenance_primary_policy != expected_primary_policy:
+            raise ValueError(
+                "promoted product candidate primary CTC policy differs from effective config"
+            )
+        prior = training_provenance.get("ctc_label_prior")
+        if expected_primary_policy == "label-prior-v1":
+            normalized_prior = normalize_label_prior_contract(prior)
+            corpus = training_provenance.get("corpus_identity")
+            if (
+                not isinstance(corpus, dict)
+                or normalized_prior["training_corpus_sha256"]
+                != corpus.get("corpus_sha256")
+            ):
+                raise ValueError(
+                    "promoted label-prior candidate corpus identity mismatch"
+                )
+        elif prior is not None:
+            raise ValueError(
+                "promoted standard-CTC candidate carries label-prior provenance"
+            )
+
         configured_scope = train_config.get("ordered_token_scope")
         provenance_scope = provenance.get("training", {}).get("ordered_token_scope")
         if configured_scope is None and provenance_scope is None:
