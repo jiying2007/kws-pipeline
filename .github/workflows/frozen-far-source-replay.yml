@@ -333,6 +333,7 @@ jobs:
           python3 tools/diagnose_frozen_far_source_replay.py run             --spec "$KWS_FROZEN_FAR_REPLAY_SPEC"             --model build/frozen-model/xiaowo-model.kwm             --pack build/frozen-model/xiaowo-keywords.kwk             --domain-index build/nightly-domain/domain-index.jsonl             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --decoder-path-replay build/kws_decoder_path_replay             --output-dir build/frozen-far-source-replay
 
       - name: Retain fixed-source replay evidence
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frozen-far-source-replay-${{ github.event.pull_request.head.sha }}
@@ -341,6 +342,7 @@ jobs:
             build/model-release.json
             build/historical-artifact-metadata.json
             build/historical-source-binding.json
+            build/nightly-render-summary.log
             build/nightly-domain/domain-index.jsonl
             build/frozen-far-source-replay/
           include-hidden-files: true
