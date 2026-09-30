@@ -24,6 +24,6 @@ The executed source-bound reference/comparison/profiling drivers retain their hi
 
 ## Authoritative evidence destination
 
-Scalar/per-record experiment evidence and failure chronology are staged for `jiying2007/kws-data`, `research/2026-09-30-full-fsmn-numeric-alignment`. Code remains here; large local arrays and provider tensors are excluded from both archives. Real immutable cross-repository links will be bound during coordinated publication, not guessed beforehand.
+Scalar/per-record experiment evidence and failure chronology are retained in the [immutable kws-data evidence snapshot](https://github.com/jiying2007/kws-data/tree/d9ed60533332246292ff0f71fc4669f83656ccc1/research/2026-09-30-full-fsmn-numeric-alignment). This is the reviewed research commit from draft PR8, not a claimed merge commit. Code remains here; large local arrays and provider tensors are excluded from both archives.
 
 Evidence includes the initial/reference-generator failures, old B failures, the analytically consistent but uninformatively huge propagation envelope, real-PCM fbank/logit failures, retained observed behavior and the fixed x86 Python/Torch/ctypes profile. No result silently replaces an earlier failure. The measured process is not all-C end-to-end, and host cost cannot be extrapolated to SSC305.
