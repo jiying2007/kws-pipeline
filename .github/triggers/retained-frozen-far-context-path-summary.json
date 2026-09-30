@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "evidence_class": "retained-frozen-far-context-path-summary-request-v1",
+  "development_only": true,
+  "selection_feedback_allowed": false,
+  "source_run_id": 36680025689,
+  "source_artifact_id": 11081072800,
+  "source_head_sha": "73ff31a39090eff9d1e696c964c60cc31a218a2c",
+  "case_id": "seed-3301-kw2-confusable-source",
+  "expected_keyword_id": 2,
+  "expected_classification": "mixed-stream-context-sufficient",
+  "expected_model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "expected_keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723"
+}
