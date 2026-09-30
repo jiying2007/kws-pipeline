@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import pathlib
 import sys
+import tempfile
 
 import torch
 from torch import nn
@@ -27,6 +29,8 @@ from objective_contract import (  # noqa: E402
     CTC_PRIMARY_POLICY_LABEL_PRIOR,
     CTC_PRIMARY_POLICY_STANDARD,
 )
+from training_state import state_identity  # noqa: E402
+from verify_training_readback import sha256_file, verify_candidate  # noqa: E402
 
 
 def simple_batch() -> tuple[
@@ -231,6 +235,105 @@ def main() -> int:
         assert "standard CTC" in str(exc)
     else:
         raise AssertionError("standard CTC accepted label-prior metadata")
+
+    # Readback must bind config -> checkpoint -> provenance -> prior contract.
+    with tempfile.TemporaryDirectory(prefix="ctc-primary-readback-") as tmp:
+        candidate = pathlib.Path(tmp) / "candidate"
+        candidate.mkdir()
+        checkpoint_path = candidate / "model.pt"
+        model_path = candidate / "model.kwm"
+        provenance_path = candidate / "model.kwm.provenance.json"
+
+        state = {"weight": torch.tensor([1.0, -2.0], dtype=torch.float32)}
+        identity = state_identity(state)
+        corpus_identity = {
+            "schema_version": 1,
+            "corpus_sha256": "c" * 64,
+        }
+        readback_prior = build_label_prior_contract(
+            torch.tensor([0.8, 0.1, 0.1], dtype=torch.float32),
+            frame_count=123,
+            training_corpus_sha256=corpus_identity["corpus_sha256"],
+            source_float_state_sha256=identity["sha256"],
+        )
+        auxiliary = {
+            "ordered_token_loss_weight": 0.35,
+            "keyword_sequence_margin_loss_weight": 0.10,
+            "prefix_completion_loss_weight": 0.10,
+            "recurrent_release_loss_weight": 0.05,
+            "suffix_root_suppression_loss_weight": 0.0,
+        }
+        runtime = {
+            "cpu_runtime": {"identity": "test-cpu"},
+            "torch_runtime": {"identity": "test-torch"},
+        }
+        payload = {
+            "state_dict": state,
+            "float_state_identity": identity,
+            "auxiliary_loss_weights": auxiliary,
+            "ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR,
+            "ctc_primary_policy_scope": "primary-loss-path-v1",
+            "ctc_label_prior": readback_prior,
+            "training_environment": runtime,
+            "training_corpus_identity": corpus_identity,
+        }
+        torch.save(payload, checkpoint_path)
+        model_path.write_bytes(b"KWM-test-model")
+        provenance = {
+            "checkpoint": {"sha256": sha256_file(checkpoint_path)},
+            "model": {"sha256": sha256_file(model_path)},
+            "training": {
+                "float_state_identity": identity,
+                "auxiliary_loss_weights": auxiliary,
+                "ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR,
+                "ctc_label_prior": readback_prior,
+                "environment": runtime,
+                "corpus_identity": corpus_identity,
+            },
+        }
+        provenance_path.write_text(
+            json.dumps(provenance, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        verified = verify_candidate(
+            {"ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR},
+            checkpoint_path,
+        )
+        assert verified["ctc_primary_policy"] == CTC_PRIMARY_POLICY_LABEL_PRIOR
+        assert verified["ctc_label_prior"] == readback_prior
+        assert verified["training_corpus_sha256"] == "c" * 64
+
+        bad = json.loads(json.dumps(provenance))
+        bad["training"]["ctc_label_prior"]["values_sha256"] = "0" * 64
+        provenance_path.write_text(
+            json.dumps(bad, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        try:
+            verify_candidate(
+                {"ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR},
+                checkpoint_path,
+            )
+        except ValueError as exc:
+            assert "label-prior" in str(exc) or "values SHA" in str(exc)
+        else:
+            raise AssertionError("tampered label-prior readback was accepted")
+
+        bad = json.loads(json.dumps(provenance))
+        bad["training"]["corpus_identity"]["corpus_sha256"] = "d" * 64
+        provenance_path.write_text(
+            json.dumps(bad, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        try:
+            verify_candidate(
+                {"ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR},
+                checkpoint_path,
+            )
+        except ValueError as exc:
+            assert "training corpus identity" in str(exc)
+        else:
+            raise AssertionError("mismatched label-prior corpus was accepted")
 
     print("test_ctc_primary: ok")
     return 0
