@@ -1,0 +1,46 @@
+{
+  "asset": {
+    "name": "onnxruntime-linux-arm-1.28.2.zip",
+    "size": 8616811,
+    "digest": "sha256:a8b4a3f1c338798c52d15c6b10b5eed0174cc3f485059948ac3ef456e824d342",
+    "id": 544592094,
+    "browser_download_url": "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.28.2/onnxruntime-linux-arm-1.28.2.zip"
+  },
+  "archive_sha256": "a8b4a3f1c338798c52d15c6b10b5eed0174cc3f485059948ac3ef456e824d342",
+  "commit": "33ca9628233dc8f002435e868d4c2e9f82766ca1",
+  "version": "1.28.2",
+  "metadata": [
+    {
+      "filename": "LICENSE",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    {
+      "filename": "ThirdPartyNotices.txt",
+      "bytes": 325054,
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
+    },
+    {
+      "filename": "GIT_COMMIT_ID",
+      "bytes": 41,
+      "sha256": "ef2aff9f0f5296a8ccb99cb86285a3ce258f5c2eda83da5f63ba69f98ee724f3"
+    },
+    {
+      "filename": "VERSION_NUMBER",
+      "bytes": 7,
+      "sha256": "2bde8d4531ecc681097f1e355cdfa8790c0dabb3c62d2ab54083d94f8629f2c1"
+    },
+    {
+      "filename": "Privacy.md",
+      "bytes": 2469,
+      "sha256": "9a15f9fd9d4c7b6dfc35f237f461863f84f8f73cf6189e330818a674d3828871"
+    },
+    {
+      "filename": "README.md",
+      "bytes": 3112,
+      "sha256": "8ba52c692082f38b30549875486986f9d8cc00875dd689468fb61db2cd84961d"
+    }
+  ],
+  "library_identical_to_sherpa_asset": true,
+  "license_summary": "ORT zip includes Microsoft MIT LICENSE and bundled ThirdPartyNotices.txt. Presence is verified, legal completeness of the complete sherpa runtime package is not."
+}

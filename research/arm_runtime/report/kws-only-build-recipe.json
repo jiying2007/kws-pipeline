@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "status": "UNEXECUTED: requires actual SSC305 SDK/sysroot and BSP-compatible reviewed ORT",
+  "source_commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+  "onnxruntime_version": "1.28.2",
+  "requirements": [
+    "User supplies actual SSC305 BSP/compiler/sysroot; validate architecture/float/libc/C++ runtime before choosing flags.",
+    "CMake >=3.15 and C++17 support; reviewed compiler and every transitive dependency are installed/prefetched explicitly, not fetched by this JSON.",
+    "Use a BSP-compatible ORT. Do not silently fall back to the generic GLIBC2.34 binary for an older or non-glibc sysroot.",
+    "Verify exact source commit and clean tree; collect CMakeCache, full compile/link commands, linker map, dependency hashes and licenses.",
+    "No deployment claim from a successful compile; model-free ABI/lifecycle, runtime load and later frozen PCM parity are separate gates."
+  ],
+  "environment": {
+    "SHERPA_ONNXRUNTIME_INCLUDE_DIR": "/REVIEWED_BSP_ORT/include",
+    "SHERPA_ONNXRUNTIME_LIB_DIR": "/REVIEWED_BSP_ORT/lib"
+  },
+  "toolchain_requirements": {
+    "CMAKE_SYSTEM_NAME": "Linux",
+    "CMAKE_SYSTEM_PROCESSOR": "arm",
+    "CMAKE_C_COMPILER": "/ACTUAL_SSC_SDK/bin/target-gcc",
+    "CMAKE_CXX_COMPILER": "/ACTUAL_SSC_SDK/bin/target-g++",
+    "CMAKE_SYSROOT": "/ACTUAL_SSC_SDK/sysroot",
+    "CMAKE_FIND_ROOT_PATH_MODE_PROGRAM": "NEVER",
+    "CMAKE_FIND_ROOT_PATH_MODE_LIBRARY": "ONLY",
+    "CMAKE_FIND_ROOT_PATH_MODE_INCLUDE": "ONLY",
+    "CMAKE_FIND_ROOT_PATH_MODE_PACKAGE": "ONLY",
+    "arch_flags_after_hard_float_neon_verification_only": "-march=armv7-a -mfpu=neon -mfloat-abi=hard"
+  },
+  "configure_argv_template": [
+    "cmake", "-S", "/PINNED_SHERPA_SOURCE", "-B", "/NEW_BUILD_DIR",
+    "-DCMAKE_TOOLCHAIN_FILE=/REVIEWED_SSC_TOOLCHAIN.cmake",
+    "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_STANDARD=17",
+    "-DCMAKE_INSTALL_PREFIX=/NEW_STAGING_DIR",
+    "-DBUILD_SHARED_LIBS=ON",
+    "-DSHERPA_ONNX_ENABLE_C_API=ON",
+    "-DSHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE=ON",
+    "-DSHERPA_ONNX_ENABLE_TTS=OFF",
+    "-DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=OFF",
+    "-DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF",
+    "-DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF",
+    "-DSHERPA_ONNX_ENABLE_PYTHON=OFF",
+    "-DSHERPA_ONNX_ENABLE_JNI=OFF",
+    "-DSHERPA_ONNX_ENABLE_BINARY=OFF",
+    "-DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF",
+    "-DSHERPA_ONNX_ENABLE_TESTS=OFF",
+    "-DSHERPA_ONNX_ENABLE_GPU=OFF",
+    "-DSHERPA_ONNX_ENABLE_RKNN=OFF",
+    "-DSHERPA_ONNX_ENABLE_AXERA=OFF",
+    "-DSHERPA_ONNX_ENABLE_AXCL=OFF",
+    "-DSHERPA_ONNX_ENABLE_ASCEND_NPU=OFF",
+    "-DSHERPA_ONNX_ENABLE_QNN=OFF",
+    "-DSHERPA_ONNX_ENABLE_SPACEMIT=OFF"
+  ],
+  "build_argv_template": ["cmake", "--build", "/NEW_BUILD_DIR", "--target", "sherpa-onnx-c-api", "--parallel", "2"],
+  "static_gate_template": [
+    "python3", "scripts/check_native_gates.py", "--library", "/NEW_UNSTRIPPED_C_API.so",
+    "--max-glibc", "ACTUAL_GLIBC_VERSION", "--max-glibcxx", "ACTUAL_LIBSTDCXX_MAX_VERSION",
+    "--max-cxxabi", "ACTUAL_CXXABI_MAX_VERSION"
+  ],
+  "acceptance_cautions": [
+    "This is a KWS-oriented pruning recipe, not proof that all non-KWS code is absent. Inspect the actual graph/link map.",
+    "Readelf version-label ceilings are necessary checks, not verification of every required provider symbol.",
+    "No-eSpeak gate requires an unstripped .symtab; stripped symbol absence is inconclusive. Full legal/build-input review remains required.",
+    "GPL does not prohibit commercial use. If retained, applicable license obligations must be reviewed; TTS=OFF is an engineering scope choice.",
+    "Root kws-pipeline ARM CI does not compile research/sherpa_pcm. Build it separately with this actual C++ toolchain and a new reviewed target-runtime lock; never disable the existing x86 hash guards."
+  ]
+}
