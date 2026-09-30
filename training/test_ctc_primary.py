@@ -197,14 +197,24 @@ def main() -> int:
         target_lengths,
         policy=CTC_PRIMARY_POLICY_LABEL_PRIOR,
         standard_loss=standard_loss,
-        label_prior_contract={
-            **contract,
-            "values": [float(value) for value in priors_a.tolist()],
-            "values_sha256": contract["values_sha256"],
-        },
+        label_prior_contract=contract,
+    )
+    reference_label_loss = label_prior_ctc_loss(
+        log_probs,
+        targets,
+        input_lengths,
+        target_lengths,
+        priors_a,
+        alpha=LABEL_PRIOR_ALPHA,
     )
     assert label_loss.shape == expected.shape
     assert torch.isfinite(label_loss).all()
+    assert torch.allclose(
+        label_loss,
+        reference_label_loss,
+        atol=1.0e-5,
+        rtol=1.0e-5,
+    )
     assert not torch.allclose(label_loss, expected)
 
     try:
