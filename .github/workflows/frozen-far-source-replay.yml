@@ -8,6 +8,8 @@ on:
       - '.github/triggers/frozen-far-source-replay.json' # workflow-path-filter: allow-missing
       - '.github/workflows/frozen-far-source-replay.yml'
       - 'tools/diagnose_frozen_far_source_replay.py'
+      - 'tools/verify_frozen_replay_build_contract.py'
+      - 'tests/test_frozen_replay_build_contract.py'
       - 'tools/kws_wav.c'
       - 'tools/kws_raw_stream.c'
       - 'tools/kws_posterior_dump.c'
@@ -47,7 +49,9 @@ jobs:
           persist-credentials: false
 
       - name: Self-test frozen FAR source replay contract
-        run: python3 tools/diagnose_frozen_far_source_replay.py --self-test
+        run: |
+          python3 tools/diagnose_frozen_far_source_replay.py --self-test
+          python3 tests/test_frozen_replay_build_contract.py
 
       - name: Resolve exact fixed-source replay request
         id: resolve
@@ -107,7 +111,7 @@ jobs:
             git diff "$HISTORICAL_HEAD" HEAD -- src >&2
             exit 2
           }
-          for path in             tools/kws_wav.c             tools/kws_raw_stream.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
+          for path in             tools/kws_wav.c             tools/kws_raw_stream.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json
           do
             git diff --quiet "$HISTORICAL_HEAD" HEAD -- "$path" || {
               echo "historical replay runtime drifted: $path" >&2
@@ -115,6 +119,8 @@ jobs:
               exit 2
             }
           done
+          python3 tools/verify_frozen_replay_build_contract.py \
+            --historical-head "$HISTORICAL_HEAD"
           echo "historical inference/replay/render/config paths unchanged"
 
       - name: Download and verify retained historical FAR artifact
