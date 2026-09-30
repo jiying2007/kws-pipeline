@@ -364,4 +364,20 @@ def primary_ctc_per_sample(
         raise ValueError("unsupported CTC primary policy")
     contract = normalize_label_prior_contract(label_prior_contract)
     adjusted = label_prior_adjusted_log_scores(log_probs, contract)
-    return standard_loss(adjusted, targets, input_lengths, target_lengths)
+    log_norm = torch.logsumexp(adjusted, dim=2)
+    normalized = adjusted - log_norm.unsqueeze(2)
+    normalized_nll = standard_loss(
+        normalized,
+        targets,
+        input_lengths,
+        target_lengths,
+    )
+    frame_index = torch.arange(
+        int(adjusted.shape[0]),
+        device=adjusted.device,
+    ).unsqueeze(1)
+    valid = frame_index < input_lengths.to(device=adjusted.device).unsqueeze(0)
+    log_norm_correction = (
+        log_norm * valid.to(dtype=log_norm.dtype)
+    ).sum(dim=0)
+    return normalized_nll - log_norm_correction
