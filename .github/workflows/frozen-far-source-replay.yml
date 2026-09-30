@@ -1,0 +1,343 @@
+name: frozen-far-source-replay
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/triggers/frozen-far-source-replay.json' # workflow-path-filter: allow-missing
+      - '.github/workflows/frozen-far-source-replay.yml'
+      - 'tools/diagnose_frozen_far_source_replay.py'
+      - 'tools/kws_wav.c'
+      - 'tools/kws_posterior_dump.c'
+      - 'tools/kws_decoder_replay.c'
+      - 'tools/kws_decoder_path_replay.c'
+      - 'src/kws.c'
+      - 'src/decoder.c'
+      - 'training/render_domains.py'
+      - 'training/synthetic_audio.py'
+      - 'configs/nightly.xiaowo-frozen-model.json'
+      - 'CMakeLists.txt'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  KWS_FROZEN_FAR_REPLAY_SPEC: .github/triggers/frozen-far-source-replay.json
+  MODEL_RELEASE_TAG: model-749187ec1d66
+  EXPECTED_TRAINED_HEAD_SHA: 749187ec1d6662658f06aa9c76d47fde835968db
+  NIGHTLY_CONFIG: configs/nightly.xiaowo-frozen-model.json
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      diagnostic_changed: ${{ steps.resolve.outputs.diagnostic_changed }}
+      historical_run_id: ${{ steps.resolve.outputs.historical_run_id }}
+      historical_artifact_id: ${{ steps.resolve.outputs.historical_artifact_id }}
+      historical_head_sha: ${{ steps.resolve.outputs.historical_head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Self-test frozen FAR source replay contract
+        run: python3 tools/diagnose_frozen_far_source_replay.py --self-test
+
+      - name: Resolve exact fixed-source replay request
+        id: resolve
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- "$KWS_FROZEN_FAR_REPLAY_SPEC"; then
+            echo "diagnostic_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          test -s "$KWS_FROZEN_FAR_REPLAY_SPEC"
+          python3 tools/diagnose_frozen_far_source_replay.py verify             --spec "$KWS_FROZEN_FAR_REPLAY_SPEC"             > build-frozen-far-source-replay-spec.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+          import pathlib
+
+          value=json.loads(
+              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
+              .read_text(encoding="utf-8")
+          )
+          print("diagnostic_changed=true")
+          for key in (
+              "historical_run_id",
+              "historical_artifact_id",
+              "historical_head_sha",
+          ):
+              print(f"{key}={value[key]}")
+          PY
+
+  analyze:
+    needs: resolve
+    if: needs.resolve.outputs.diagnostic_changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify historical runtime math is unchanged
+        env:
+          HISTORICAL_HEAD: ${{ needs.resolve.outputs.historical_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$HISTORICAL_HEAD^{commit}"
+          git merge-base --is-ancestor "$HISTORICAL_HEAD" HEAD
+          for path in             src/kws.c             src/decoder.c             tools/kws_wav.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             eval/long_far_stream.py             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
+          do
+            git diff --quiet "$HISTORICAL_HEAD" HEAD -- "$path" || {
+              echo "historical replay runtime drifted: $path" >&2
+              git diff "$HISTORICAL_HEAD" HEAD -- "$path" >&2
+              exit 2
+            }
+          done
+          echo "historical runtime/render/config paths unchanged"
+
+      - name: Download and verify retained historical FAR artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HISTORICAL_RUN_ID: ${{ needs.resolve.outputs.historical_run_id }}
+          HISTORICAL_ARTIFACT_ID: ${{ needs.resolve.outputs.historical_artifact_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build .historical
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$HISTORICAL_ARTIFACT_ID"             > build/historical-artifact-metadata.json
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          value=json.loads(
+              pathlib.Path("build/historical-artifact-metadata.json")
+              .read_text(encoding="utf-8")
+          )
+          if int(value.get("id",-1)) != int(os.environ["HISTORICAL_ARTIFACT_ID"]):
+              raise SystemExit("historical artifact ID mismatch")
+          if value.get("name") != "far-frozen-model-regression":
+              raise SystemExit("historical artifact name mismatch")
+          if bool(value.get("expired")):
+              raise SystemExit("historical artifact is expired")
+          workflow_run=value.get("workflow_run") or {}
+          if int(workflow_run.get("id",-1)) != int(os.environ["HISTORICAL_RUN_ID"]):
+              raise SystemExit("historical artifact run mismatch")
+          PY
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$HISTORICAL_ARTIFACT_ID/zip"             > build/historical-far.zip
+          unzip -q build/historical-far.zip -d .historical
+          python3 - <<'PY'
+          import json
+          import math
+          import os
+          import pathlib
+
+          spec=json.loads(
+              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
+              .read_text(encoding="utf-8")
+          )
+          root=pathlib.Path(".historical")
+          receipt={
+              "schema_version":1,
+              "evidence_class":"frozen-far-historical-source-binding-v1",
+              "historical_run_id":spec["historical_run_id"],
+              "historical_artifact_id":spec["historical_artifact_id"],
+              "cases":[],
+          }
+          for case in spec["cases"]:
+              seed=int(case["seed"])
+              summary=json.loads(
+                  (root/f"far-run-{seed}/summary.json").read_text(encoding="utf-8")
+              )
+              if summary.get("model_sha256") != spec["expected_model_sha256"]:
+                  raise SystemExit(f"{case['case_id']}: historical model SHA drifted")
+              if summary.get("keyword_pack_sha256") != spec["expected_keyword_pack_sha256"]:
+                  raise SystemExit(f"{case['case_id']}: historical keyword-pack SHA drifted")
+              detections=[
+                  json.loads(line)
+                  for line in (root/f"far-run-{seed}/detections.jsonl")
+                  .read_text(encoding="utf-8").splitlines()
+                  if line.strip()
+              ]
+              matches=[
+                  row for row in detections
+                  if int(row.get("keyword_id",-1)) == int(case["detected_keyword_id"])
+                  and math.isclose(
+                      float(row.get("time_s",-1.0)),
+                      float(case["detection_time_s"]),
+                      rel_tol=0.0,
+                      abs_tol=1.0e-6,
+                  )
+                  and math.isclose(
+                      float(row.get("confidence",-1.0)),
+                      float(case["historical_confidence"]),
+                      rel_tol=0.0,
+                      abs_tol=1.0e-6,
+                  )
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"{case['case_id']}: historical detection missing/duplicated"
+                  )
+              injections=[
+                  json.loads(line)
+                  for line in (root/f"far-run-{seed}/hard-negative-injections.jsonl")
+                  .read_text(encoding="utf-8").splitlines()
+                  if line.strip()
+              ]
+              time_s=float(case["detection_time_s"])
+              active=[
+                  row for row in injections
+                  if float(row["start_second"]) <= time_s
+                  < float(row["start_second"])+float(row["source_seconds"])
+              ]
+              if len(active) != 1:
+                  raise SystemExit(
+                      f"{case['case_id']}: historical active injection is not unique"
+                  )
+              injection=active[0]
+              if injection.get("source_sha256") != case["rendered_wav_sha256"]:
+                  raise SystemExit(
+                      f"{case['case_id']}: historical injected source SHA drifted"
+                  )
+              if not math.isclose(
+                  float(injection.get("gain",-1.0)),
+                  float(case["historical_gain"]),
+                  rel_tol=0.0,
+                  abs_tol=1.0e-12,
+              ):
+                  raise SystemExit(
+                      f"{case['case_id']}: historical injected gain drifted"
+                  )
+              receipt["cases"].append({
+                  "case_id":case["case_id"],
+                  "detection":matches[0],
+                  "active_injection":injection,
+              })
+          pathlib.Path("build/historical-source-binding.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(receipt,indent=2,sort_keys=True))
+          PY
+
+      - name: Build exact frozen replay runtime
+        run: |
+          set -euo pipefail
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
+          cmake --build build --parallel --target             kws_wav             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_decoder_tests             kws_decoder_retention_tests
+          ctest --test-dir build --output-on-failure             -R '^kws_decoder_(tests|retention_tests)$'
+
+      - name: Download exact immutable promoted model
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$MODEL_RELEASE_TAG"             --repo "$GITHUB_REPOSITORY"             --json tagName,targetCommitish,isDraft,isPrerelease             > build/model-release.json
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          spec=json.loads(
+              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
+              .read_text(encoding="utf-8")
+          )
+          release=json.loads(
+              pathlib.Path("build/model-release.json").read_text(encoding="utf-8")
+          )
+          if release.get("tagName") != os.environ["MODEL_RELEASE_TAG"]:
+              raise SystemExit("model release tag mismatch")
+          if release.get("targetCommitish") != os.environ["EXPECTED_TRAINED_HEAD_SHA"]:
+              raise SystemExit("model release target mismatch")
+          if bool(release.get("isDraft")) or bool(release.get("isPrerelease")):
+              raise SystemExit("model release must be final")
+          PY
+          mkdir -p build/frozen-model
+          gh release download "$MODEL_RELEASE_TAG"             --repo "$GITHUB_REPOSITORY"             --dir build/frozen-model
+          (
+            cd build/frozen-model
+            sha256sum -c MODEL_SHA256SUMS
+          )
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+
+          def sha(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          spec=json.loads(
+              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
+              .read_text(encoding="utf-8")
+          )
+          root=pathlib.Path("build/frozen-model")
+          if sha(root/"xiaowo-model.kwm") != spec["expected_model_sha256"]:
+              raise SystemExit("frozen model SHA differs from replay request")
+          if sha(root/"xiaowo-keywords.kwk") != spec["expected_keyword_pack_sha256"]:
+              raise SystemExit("frozen keyword pack SHA differs from replay request")
+          PY
+
+      - name: Render exact nightly source corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          config=json.loads(
+              pathlib.Path(os.environ["NIGHTLY_CONFIG"]).read_text(encoding="utf-8")
+          )
+          if config.get("regression_namespace") != "nightly-frozen-model-v1":
+              raise SystemExit("nightly regression namespace drifted")
+          forbidden={
+              "qualification_holdout_seed",
+              "retired_qualification_holdout_seeds",
+              "far_holdout_round_namespace",
+              "retired_far_holdout_round_namespaces",
+          }
+          leaked=sorted(forbidden.intersection(config))
+          if leaked:
+              raise SystemExit(f"nightly config leaked formal namespaces: {leaked}")
+          PY
+          python3 training/render_domains.py             --config "$NIGHTLY_CONFIG"             --output build/nightly-domain             > build/nightly-render-summary.log
+          test -s build/nightly-domain/domain-index.jsonl
+
+      - name: Replay fixed historical FAR sources with default decoder
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_frozen_far_source_replay.py run             --spec "$KWS_FROZEN_FAR_REPLAY_SPEC"             --model build/frozen-model/xiaowo-model.kwm             --pack build/frozen-model/xiaowo-keywords.kwk             --domain-index build/nightly-domain/domain-index.jsonl             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --decoder-path-replay build/kws_decoder_path_replay             --output-dir build/frozen-far-source-replay
+
+      - name: Retain fixed-source replay evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frozen-far-source-replay-${{ github.event.pull_request.head.sha }}
+          path: |
+            .github/triggers/frozen-far-source-replay.json
+            build/model-release.json
+            build/historical-artifact-metadata.json
+            build/historical-source-binding.json
+            build/nightly-domain/domain-index.jsonl
+            build/frozen-far-source-replay/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
