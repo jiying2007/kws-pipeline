@@ -29,6 +29,7 @@ from objective_contract import (  # noqa: E402
     CTC_PRIMARY_POLICY_LABEL_PRIOR,
     CTC_PRIMARY_POLICY_STANDARD,
 )
+from export_model import training_metadata  # noqa: E402
 from training_state import state_identity  # noqa: E402
 from verify_training_readback import sha256_file, verify_candidate  # noqa: E402
 
@@ -220,6 +221,92 @@ def main() -> int:
         rtol=1.0e-5,
     )
     assert not torch.allclose(label_loss, expected)
+
+    # Label-prior scoring is intentionally an unnormalized sequence objective.
+    # It may be finite and negative; exporter metadata must preserve that signed
+    # primary metric while keeping auxiliary loss components non-negative.
+    export_checkpoint = {
+        "training_manifests": [{"name": "fixture", "sha256": "a" * 64}],
+        "training_corpus_identity": {
+            "schema_version": 1,
+            "corpus_sha256": "f" * 64,
+            "recordings": [
+                {
+                    "recording": "fixture:0",
+                    "manifest": "fixture.tsv",
+                    "path": "fixture.wav",
+                    "file_sha256": "b" * 64,
+                    "pcm_sha256": "c" * 64,
+                    "frames": 16000,
+                    "duration_s": 1.0,
+                }
+            ],
+        },
+        "training_examples": 1,
+        "seed": 1,
+        "epochs": 1,
+        "batch_size": 1,
+        "learning_rate": 1.0e-3,
+        "optimizer": "AdamW",
+        "weight_decay": 0.0,
+        "grad_clip_norm": 1.0,
+        "ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR,
+        "ctc_primary_policy_scope": "primary-loss-path-v1",
+        "ctc_label_prior": build_label_prior_contract(
+            torch.tensor([0.8, 0.1, 0.1], dtype=torch.float32),
+            frame_count=1,
+            training_corpus_sha256="f" * 64,
+            source_float_state_sha256="d" * 64,
+        ),
+        "epoch_history": [
+            {
+                "epoch": 1,
+                "loss": -0.05,
+                "ctc": -0.30,
+                "ordered": 0.60,
+                "margin": 0.10,
+                "completion": 0.02,
+                "release": 0.50,
+                "ordered_token_accuracy": 0.75,
+            }
+        ],
+    }
+    # Replace the fixture digest with the canonical digest expected by exporter.
+    from corpus_identity import corpus_digest
+    export_checkpoint["training_corpus_identity"]["corpus_sha256"] = corpus_digest(
+        export_checkpoint["training_corpus_identity"]["recordings"]
+    )
+    export_checkpoint["ctc_label_prior"] = build_label_prior_contract(
+        torch.tensor([0.8, 0.1, 0.1], dtype=torch.float32),
+        frame_count=1,
+        training_corpus_sha256=export_checkpoint["training_corpus_identity"][
+            "corpus_sha256"
+        ],
+        source_float_state_sha256="d" * 64,
+    )
+    exported = training_metadata(export_checkpoint)
+    assert exported["epoch_history"][0]["loss"] == -0.05
+    assert exported["epoch_history"][0]["ctc"] == -0.30
+
+    bad_export = dict(export_checkpoint)
+    bad_export["ctc_primary_policy"] = CTC_PRIMARY_POLICY_STANDARD
+    bad_export.pop("ctc_label_prior")
+    try:
+        training_metadata(bad_export)
+    except ValueError as exc:
+        assert "finite and non-negative" in str(exc)
+    else:
+        raise AssertionError("standard CTC accepted a negative primary metric")
+
+    bad_aux = dict(export_checkpoint)
+    bad_aux["epoch_history"] = [dict(export_checkpoint["epoch_history"][0])]
+    bad_aux["epoch_history"][0]["ordered"] = -0.01
+    try:
+        training_metadata(bad_aux)
+    except ValueError as exc:
+        assert "finite and non-negative" in str(exc)
+    else:
+        raise AssertionError("label-prior export accepted a negative auxiliary metric")
 
     # Native fast path must also preserve the independent reference gradient.
     gradient_source = log_probs.detach().clone().requires_grad_(True)
