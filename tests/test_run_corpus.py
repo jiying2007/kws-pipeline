@@ -239,6 +239,36 @@ def main() -> int:
         changed = json.loads(provenance.read_text(encoding="utf-8"))
         assert changed["audio_corpus_sha256"] != result["audio_corpus_sha256"]
 
+        references.write_text(
+            json.dumps({"recording": "room-1", "path": "audio.wav",
+                        "duration_s": 3.0, "expected": []}) + "\n",
+            encoding="utf-8",
+        )
+        invalid_duration = subprocess.run(
+            [sys.executable, str(ROOT / "eval" / "run_corpus.py"),
+             "--runner", str(runner), "--model", str(model),
+             "--keywords", str(keywords), "--references", str(references),
+             "--audio-root", str(root), "--detections", str(detections)],
+            check=False, text=True, capture_output=True,
+        )
+        assert invalid_duration.returncode == 2
+        assert "reference duration_s does not match WAV duration" in invalid_duration.stderr
+
+        # Identity admission validates numeric type, missing values and one-sample tolerance.
+        sys.path.insert(0, str(ROOT / "eval"))
+        from run_corpus import audio_identity
+        row = {"recording": "room-1", "_execution_path": "audio.wav"}
+        for duration in (2.0, 2.0 + 1.0 / 32000.0):
+            assert audio_identity({**row, "duration_s": duration}, audio)["duration_s"] == 2.0
+        for duration in (None, True, "2", float("nan"), float("inf"), -2,
+                         2.0 + 2.0 / 16000.0):
+            try:
+                audio_identity({**row, "duration_s": duration}, audio)
+            except ValueError as exc:
+                assert "reference duration_s" in str(exc)
+            else:
+                raise AssertionError(duration)
+
     print("test_run_corpus: ok")
     return 0
 

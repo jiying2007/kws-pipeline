@@ -25,6 +25,9 @@ from hard_negative_replay import (  # noqa: E402
 )
 from synthetic_audio import write_wav  # noqa: E402
 from iterate_domain import (  # noqa: E402
+    base_gate,
+    domain_gate,
+    gate_values,
     calibration_behavior_key,
     calibration_operating_curve_summary,
     calibration_threshold_vector,
@@ -40,6 +43,78 @@ from iterate_domain import (  # noqa: E402
     train_acoustic_seed_offset,
     warm_start_args,
 )
+
+
+def validate_evidence_policy() -> None:
+    raw = {"max_frr": 1.0, "max_far_per_hour": 1.0,
+           "max_p95_latency_ms": 500.0, "max_far_frr": 1.0}
+    metrics = {"expected": 3, "matched": 3, "frr": 0.0, "far_per_hour": 0.0,
+               "p95_post_end_latency_ms": 0.0}
+    assert base_gate(metrics, gate_values(raw))
+    for key in ("expected", "matched"):
+        for value in (0, None, True, float("nan")):
+            assert not base_gate({**metrics, key: value}, gate_values(raw))
+        missing = {k: v for k, v in metrics.items() if k != key}
+        assert not base_gate(missing, gate_values(raw))
+    policy = {"min_negative_hours": 1.0, "min_continuous_negative_seconds": 60.0,
+              "max_negative_far_upper_95_per_hour": 3.0,
+              "min_expected_per_keyword": {"1": 2, "2": 1}}
+    gates = gate_values({**raw, **policy})
+    assert not base_gate(metrics, gates)
+    evidence = {**metrics, "expected": 3, "matched": 3,
+                "negative_recording_audio_hours": 1.0,
+                "longest_negative_recording_seconds": 60.0,
+                "negative_recording_far_upper_95_per_hour": 2.996,
+                "per_keyword": {"1": {"expected": 2}, "2": {"expected": 1}}}
+    assert base_gate(evidence, gates)
+    for key in ("expected", "matched"):
+        for count in (0, None, True, float("nan")):
+            assert not base_gate({**evidence, key: count}, gates)
+    for key in ("negative_recording_audio_hours", "longest_negative_recording_seconds",
+                "negative_recording_far_upper_95_per_hour"):
+        for value in (None, float("nan"), float("inf"), -1, True, "1"):
+            assert not base_gate({**evidence, key: value}, gates), (key, value)
+    assert not base_gate({**evidence, "negative_recording_audio_hours": 0.0}, gates)
+    assert not base_gate({**evidence, "longest_negative_recording_seconds": 59.0}, gates)
+    assert not base_gate({**evidence, "per_keyword": {"1": {"expected": 2}}}, gates)
+    # Mixed-corpus FAR cannot conceal insufficient negative-only evidence.
+    assert not base_gate({**evidence, "far_per_hour": 0.0,
+                          "negative_recording_far_upper_95_per_hour": 4.0}, gates)
+    for key in ("min_negative_hours", "min_continuous_negative_seconds",
+                "max_negative_far_upper_95_per_hour"):
+        for value in (None, float("nan"), float("inf"), -1, True, "1"):
+            try:
+                gate_values({**raw, key: value})
+            except ValueError:
+                pass
+            else:
+                raise AssertionError((key, value))
+    for counts in ({}, {"1": 0}, {"1": True}, {"01": 1}, {"4294967296": 1}, []):
+        try:
+            gate_values({**raw, "min_expected_per_keyword": counts})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(counts)
+
+
+def validate_far_slice_coverage() -> None:
+    gates = {"max_far_frr": 0.5}
+    far = {"expected": 2, "frr": 0.5}
+    def check(row):
+        return domain_gate({"domains": {"distance:far": row}}, gates)
+    assert check(far)
+    assert check({"expected": 1, "frr": 0.0})
+    assert not check({"expected": 2, "frr": 1.0})
+    for key in ("expected", "frr"):
+        assert not check({k: v for k, v in far.items() if k != key})
+    for expected in (0, -1, True, None, 2.0, float("nan"), "2"):
+        assert not check({**far, "expected": expected})
+    for frr in (True, None, float("nan"), float("inf"), -0.1, 1.1, "0"):
+        assert not check({**far, "frr": frr})
+    for metrics in ({}, {"domains": None}, {"domains": []},
+                    {"domains": {}}, {"domains": {"distance:far": None}}):
+        assert not domain_gate(metrics, gates)
 
 
 def validate_unsafe_workdir_guard() -> None:
@@ -299,12 +374,13 @@ def validate_torch_iteration_policy() -> None:
 
     def calibration_metrics(frr: float, far_per_hour: float) -> tuple[dict, dict]:
         base = {
+            "expected": 100, "matched": round(100 * (1.0 - frr)),
             "frr": frr,
             "far_per_hour": far_per_hour,
             "p95_post_end_latency_ms": 100.0,
         }
         domains = {
-            "domains": {"distance:far": {"frr": frr}},
+            "domains": {"distance:far": {"expected": 100, "frr": frr}},
             "worst_domain_score": max(frr, far_per_hour / 1000.0),
         }
         return base, domains
@@ -334,6 +410,7 @@ def validate_torch_iteration_policy() -> None:
             {"id": 2, "threshold": 0.55},
         ],
         base={
+            "expected": 100, "matched": 25,
             "frr": 0.75,
             "far_per_hour": 12.0,
             "p95_post_end_latency_ms": 120.0,
@@ -343,7 +420,7 @@ def validate_torch_iteration_policy() -> None:
             },
         },
         domains={
-            "domains": {"distance:far": {"frr": 0.8}},
+            "domains": {"distance:far": {"expected": 100, "frr": 0.8}},
             "worst_domain_score": 12.0,
         },
         gates=strict_gates,
@@ -848,6 +925,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
     args = parser.parse_args()
+    validate_far_slice_coverage()
+    validate_evidence_policy()
     validate_torch_iteration_policy()
     validate_unsafe_workdir_guard()
     with tempfile.TemporaryDirectory() as td:

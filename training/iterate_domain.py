@@ -313,27 +313,96 @@ def evaluate(
     return base, json.loads(domains.read_text(encoding="utf-8"))
 
 
-def gate_values(raw: dict) -> dict[str, float]:
+def gate_values(raw: dict) -> dict:
     keys = ("max_frr", "max_far_per_hour", "max_p95_latency_ms", "max_far_frr")
     result = {key: float(raw[key]) for key in keys}
     if any(not math.isfinite(value) or value < 0.0 for value in result.values()):
         raise ValueError("domain gates must be finite and non-negative")
     if result["max_frr"] > 1.0 or result["max_far_frr"] > 1.0:
         raise ValueError("domain FRR gates must be <= 1")
+    for key in ("min_negative_hours", "min_continuous_negative_seconds",
+                "max_negative_far_upper_95_per_hour"):
+        if key in raw:
+            value = raw[key]
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value < 0.0):
+                raise ValueError(f"domain gate {key} must be finite and non-negative")
+            result[key] = float(value)
+    if "min_expected_per_keyword" in raw:
+        counts = raw["min_expected_per_keyword"]
+        if not isinstance(counts, dict) or not counts:
+            raise ValueError("min_expected_per_keyword must be a non-empty object")
+        normalized = {}
+        for keyword_id, count in counts.items():
+            if (not isinstance(keyword_id, str) or not keyword_id.isascii()
+                    or not keyword_id.isdecimal() or str(int(keyword_id)) != keyword_id
+                    or int(keyword_id) > 0xFFFFFFFF or isinstance(count, bool)
+                    or not isinstance(count, int) or count <= 0):
+                raise ValueError("min_expected_per_keyword requires uint32 IDs and positive integer counts")
+            normalized[keyword_id] = count
+        result["min_expected_per_keyword"] = normalized
     return result
 
 
+def evidence_gate(metrics: dict, gates: dict) -> bool:
+    """Optional exposure policy; absent/non-finite evidence never satisfies it."""
+    for policy, metric, minimum in (
+        ("min_negative_hours", "negative_recording_audio_hours", True),
+        ("min_continuous_negative_seconds", "longest_negative_recording_seconds", True),
+        ("max_negative_far_upper_95_per_hour", "negative_recording_far_upper_95_per_hour", False),
+    ):
+        if policy not in gates:
+            continue
+        value = metrics.get(metric)
+        if (isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value < 0.0):
+            return False
+        if ((minimum and value < gates[policy])
+                or (not minimum and value > gates[policy])):
+            return False
+    required = gates.get("min_expected_per_keyword", {})
+    per_keyword = metrics.get("per_keyword", {})
+    if not isinstance(per_keyword, dict):
+        return not required
+    for keyword_id, count in required.items():
+        observed = per_keyword.get(keyword_id, {})
+        if not isinstance(observed, dict):
+            return False
+        observed = observed.get("expected")
+        if isinstance(observed, bool) or not isinstance(observed, int) or observed < count:
+            return False
+    return True
+
+
 def base_gate(metrics: dict, gates: dict) -> bool:
+    # FRR and latency thresholds cannot qualify an empty or never-detected corpus.
+    for key in ("expected", "matched"):
+        count = metrics.get(key)
+        if isinstance(count, bool) or not isinstance(count, int) or count <= 0:
+            return False
     return (
-        float(metrics["frr"]) <= gates["max_frr"]
+        evidence_gate(metrics, gates)
+        and float(metrics["frr"]) <= gates["max_frr"]
         and float(metrics["far_per_hour"]) <= gates["max_far_per_hour"]
         and float(metrics["p95_post_end_latency_ms"]) <= gates["max_p95_latency_ms"]
     )
 
 
 def domain_gate(metrics: dict, gates: dict) -> bool:
-    far = metrics.get("domains", {}).get("distance:far")
-    return isinstance(far, dict) and float(far["frr"]) <= gates["max_far_frr"]
+    domains = metrics.get("domains")
+    if not isinstance(domains, dict):
+        return False
+    far = domains.get("distance:far")
+    if not isinstance(far, dict):
+        return False
+    expected = far.get("expected")
+    frr = far.get("frr")
+    return (
+        not isinstance(expected, bool) and isinstance(expected, int) and expected > 0
+        and not isinstance(frr, bool) and isinstance(frr, (int, float))
+        and math.isfinite(frr) and 0.0 <= frr <= 1.0
+        and frr <= gates["max_far_frr"]
+    )
 
 
 def strict_gate_candidate(record: dict) -> bool:
