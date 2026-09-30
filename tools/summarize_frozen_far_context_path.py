@@ -313,6 +313,7 @@ def self_test() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--verify-request", action="store_true")
     parser.add_argument("--request", type=pathlib.Path)
     parser.add_argument("--retained-root", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
@@ -320,6 +321,12 @@ def main() -> int:
     if args.self_test:
         self_test()
         print("retained frozen FAR context path summary self-test: PASS")
+        return 0
+    if args.verify_request:
+        if args.request is None:
+            parser.error("--verify-request requires --request")
+        value = normalize_request(args.request.resolve())
+        print(json.dumps(value, sort_keys=True, allow_nan=False))
         return 0
     if args.request is None or args.retained_root is None or args.output is None:
         parser.error("--request, --retained-root and --output are required")
