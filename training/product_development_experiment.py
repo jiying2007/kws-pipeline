@@ -10,6 +10,7 @@ import re
 
 from objective_config import AUXILIARY_LOSS_WEIGHT_NAMES, auxiliary_loss_weights
 from objective_contract import (
+    CTC_PRIMARY_POLICIES,
     ORDERED_TOKEN_SCOPES,
     SEQUENCE_MARGIN_NEGATIVE_POLICIES,
     SEQUENCE_MARGIN_POSITIVE_POLICIES,
@@ -31,6 +32,10 @@ FIELDS = {
 }
 ALLOWED_OVERRIDES = {
     **{f"train.{name}": ("float", 0.0, 1.0) for name in AUXILIARY_LOSS_WEIGHT_NAMES},
+    "train.ctc_primary_policy": (
+        "enum",
+        tuple(sorted(CTC_PRIMARY_POLICIES)),
+    ),
     "train.path_purity_loss_weight": ("float", 0.0, 1.0),
     "train.path_purity_margin": ("float", 0.0, 2.0),
     "train.ordered_token_scope": ("enum", tuple(sorted(ORDERED_TOKEN_SCOPES))),
@@ -236,6 +241,7 @@ def self_test() -> None:
                     "protected_evidence_used": False,
                     "reason": "exercise experiment contract",
                     "config_overrides": {
+                        "train.ctc_primary_policy": "label-prior-v1",
                         "train.path_purity_loss_weight": 0.1,
                         "train.path_purity_margin": 0.1,
                         "train.sequence_margin_positive_policy": "sparse-chronological-v1",
@@ -246,6 +252,10 @@ def self_test() -> None:
             encoding="utf-8",
         )
         verified = verify_spec(spec)
+        assert (
+            verified["config_overrides"]["train.ctc_primary_policy"]
+            == "label-prior-v1"
+        )
         assert verified["config_overrides"]["train.path_purity_loss_weight"] == 0.1
         assert (
             verified["config_overrides"]["train.sequence_margin_positive_policy"]

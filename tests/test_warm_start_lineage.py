@@ -152,6 +152,7 @@ def main() -> None:
             hidden_dim=64,
             frontend="logmel",
             ctc_vad_align=False,
+            ctc_primary_policy="standard-v1",
         )
         try:
             validate_warm_start(dev, args, 5, first["vocab_fingerprint"], "0" * 64)

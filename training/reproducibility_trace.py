@@ -95,7 +95,8 @@ def run_observed(output: pathlib.Path, trainer_args: list[str]) -> None:
         "manifest_init": base.Manifest.__init__, "getitem": base.Manifest.__getitem__,
         "model_init": base.TinyStreamingRNN.__init__, "forward": base.TinyStreamingRNN.forward,
         "step": base.TinyStreamingRNN.step, "collate": base.collate,
-        "ctc": base.nn.CTCLoss.forward, "backward": torch.Tensor.backward,
+        "primary_ctc": base.primary_ctc_per_sample,
+        "backward": torch.Tensor.backward,
         "clip": base.nn.utils.clip_grad_norm_, "optimizer": torch.optim.AdamW.step,
         "environment": base.training_environment,
         "weighted": base.normalized_weighted_mean,
@@ -154,9 +155,16 @@ def run_observed(output: pathlib.Path, trainer_args: list[str]) -> None:
         rec.capture("forward-logits", {"logits": result})
         return result
 
-    def ctc(self, log_probs, targets, xlen, ylen):
+    def primary_ctc(log_probs, targets, xlen, ylen, *args, **kwargs):
         rec.capture("log-probabilities", {"log_probs": log_probs})
-        result = originals["ctc"](self, log_probs, targets, xlen, ylen)
+        result = originals["primary_ctc"](
+            log_probs,
+            targets,
+            xlen,
+            ylen,
+            *args,
+            **kwargs,
+        )
         rec.capture("raw-ctc", {"ctc": result})
         return result
 
@@ -205,7 +213,8 @@ def run_observed(output: pathlib.Path, trainer_args: list[str]) -> None:
             (base, "training_environment", environment), (base.Manifest, "__init__", manifest_init),
             (base.Manifest, "__getitem__", getitem), (base.TinyStreamingRNN, "__init__", model_init),
             (base.TinyStreamingRNN, "forward", forward), (base.TinyStreamingRNN, "step", step),
-            (base, "collate", collate), (base.nn.CTCLoss, "forward", ctc),
+            (base, "collate", collate),
+            (base, "primary_ctc_per_sample", primary_ctc),
             (base, "normalized_weighted_mean", weighted), (torch.Tensor, "backward", backward),
             (base.nn.utils, "clip_grad_norm_", clip), (torch.optim.AdamW, "step", optimizer),
         ):

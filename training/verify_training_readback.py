@@ -8,12 +8,15 @@ import pathlib
 
 import torch
 
+from ctc_primary import normalize_label_prior_contract
 from objective_config import (
     auxiliary_loss_weights,
+    ctc_primary_policy_setting,
     sequence_margin_negative_policy_setting,
     sequence_margin_positive_policy_setting,
     verify_auxiliary_loss_readback,
 )
+from objective_contract import CTC_PRIMARY_POLICY_LABEL_PRIOR
 from training_state import state_identity
 
 
@@ -43,6 +46,27 @@ def verify_candidate(train: dict, checkpoint: pathlib.Path) -> dict:
     weights = verify_auxiliary_loss_readback(train, payload.get("auxiliary_loss_weights"))
     verify_auxiliary_loss_readback(weights, training.get("auxiliary_loss_weights"))
     verify_auxiliary_loss_readback(weights, auxiliary_loss_weights(payload))
+    primary_policy, _ = ctc_primary_policy_setting(train)
+    if payload.get("ctc_primary_policy", primary_policy) != primary_policy:
+        raise ValueError("checkpoint primary CTC policy mismatch")
+    if training.get("ctc_primary_policy", primary_policy) != primary_policy:
+        raise ValueError("provenance primary CTC policy mismatch")
+    payload_prior = payload.get("ctc_label_prior")
+    training_prior = training.get("ctc_label_prior")
+    if primary_policy == CTC_PRIMARY_POLICY_LABEL_PRIOR:
+        normalized_prior = normalize_label_prior_contract(payload_prior)
+        if normalize_label_prior_contract(training_prior) != normalized_prior:
+            raise ValueError("checkpoint/provenance label-prior mismatch")
+        if (
+            normalized_prior["training_corpus_sha256"]
+            != payload["training_corpus_identity"]["corpus_sha256"]
+        ):
+            raise ValueError("label-prior training corpus identity mismatch")
+    else:
+        normalized_prior = None
+        if payload_prior is not None or training_prior is not None:
+            raise ValueError("standard primary CTC carries label-prior metadata")
+
     negative_policy, _ = sequence_margin_negative_policy_setting(train)
     positive_policy, _ = sequence_margin_positive_policy_setting(train)
     if payload.get("sequence_margin_negative_policy", negative_policy) != negative_policy:
@@ -66,6 +90,12 @@ def verify_candidate(train: dict, checkpoint: pathlib.Path) -> dict:
         "model_sha256": sha256_file(model),
         "provenance_sha256": sha256_file(provenance_path),
         "auxiliary_loss_weights": weights,
+        "ctc_primary_policy": primary_policy,
+        **(
+            {"ctc_label_prior": normalized_prior}
+            if normalized_prior is not None
+            else {}
+        ),
         "sequence_margin_negative_policy": negative_policy,
         "sequence_margin_positive_policy": positive_policy,
         "training_corpus_sha256": payload["training_corpus_identity"]["corpus_sha256"],

@@ -15,10 +15,19 @@ import json
 import math
 import pathlib
 import statistics
+import sys
 
 import torch
 import torch.nn.functional as F
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from ctc_primary import (  # noqa: E402
+    LABEL_PRIOR_ALPHA as IMPLEMENTATION_LABEL_PRIOR_ALPHA,
+    build_label_prior_contract,
+    primary_ctc_per_sample,
+)
 from diagnose_decoder_search_path_decomposition import load_positive_sample
 from diagnose_keyword_ctc_competition_gradient import scalar_stats
 from diagnose_keyword_ctc_sequence_competition import (
@@ -292,6 +301,18 @@ def summarize(records: list[dict]) -> dict:
             < float(row["standard_global_blank_update"])
             for row in records
         ),
+        "implementation_value_abs_error": scalar_stats(
+            [float(row["implementation_value_abs_error"]) for row in records]
+        ),
+        "implementation_gradient_max_abs_error": scalar_stats(
+            [
+                float(row["implementation_gradient_max_abs_error"])
+                for row in records
+            ]
+        ),
+        "implementation_matches_reference": sum(
+            bool(row["implementation_matches_reference"]) for row in records
+        ),
     }
 
 
@@ -384,6 +405,17 @@ def main() -> int:
     )
     traces = trace_paths(posterior_cache, model_sha256)
     priors, prior_frames = estimate_label_priors(traces)
+    if IMPLEMENTATION_LABEL_PRIOR_ALPHA != LABEL_PRIOR_ALPHA:
+        raise ValueError("implementation label-prior alpha drifted from retained audit")
+    # Identity fields below are diagnostic-only placeholders: this retained cache
+    # is development evidence, not training authority. Training-source identity is
+    # verified separately by checkpoint/provenance/readback contracts.
+    diagnostic_contract = build_label_prior_contract(
+        priors,
+        frame_count=prior_frames,
+        training_corpus_sha256=sha256_file(acoustic_alignment),
+        source_float_state_sha256=model_sha256,
+    )
     by_sha = {path.stem: path for path in traces}
 
     records: list[dict] = []
@@ -427,6 +459,56 @@ def main() -> int:
         if not torch.isfinite(prior_grad).all():
             raise ValueError("label-prior CTC gradient is non-finite")
 
+        implementation_logits = raw.detach().clone().requires_grad_(True)
+        implementation_log_probs = implementation_logits.log_softmax(dim=1)
+        steps = int(implementation_log_probs.shape[0])
+        target = torch.tensor(
+            sequence,
+            dtype=torch.long,
+            device=implementation_log_probs.device,
+        )
+        input_lengths = torch.tensor(
+            [steps],
+            dtype=torch.long,
+            device=implementation_log_probs.device,
+        )
+        target_lengths = torch.tensor(
+            [len(sequence)],
+            dtype=torch.long,
+            device=implementation_log_probs.device,
+        )
+        standard_loss_fn = torch.nn.CTCLoss(
+            blank=0,
+            zero_infinity=True,
+            reduction="none",
+        )
+        implementation_loss = primary_ctc_per_sample(
+            implementation_log_probs.unsqueeze(1),
+            target,
+            input_lengths,
+            target_lengths,
+            policy="label-prior-v1",
+            standard_loss=standard_loss_fn,
+            label_prior_contract=diagnostic_contract,
+            blank=0,
+        )[0] / float(steps)
+        implementation_grad = torch.autograd.grad(
+            implementation_loss,
+            implementation_logits,
+        )[0]
+        value_error = abs(float(implementation_loss.detach() - prior_loss.detach()))
+        gradient_error = float(
+            (implementation_grad - prior_grad).abs().max()
+        )
+        implementation_matches_reference = (
+            value_error <= 1.0e-5 and gradient_error <= 1.0e-5
+        )
+        if not implementation_matches_reference:
+            raise ValueError(
+                "native label-prior implementation differs from retained reference: "
+                f"value_error={value_error} gradient_error={gradient_error}"
+            )
+
         standard_norm = float(standard_grad.norm())
         prior_norm = float(prior_grad.norm())
         if standard_norm <= 0.0 or prior_norm <= 0.0:
@@ -453,6 +535,10 @@ def main() -> int:
                 "discriminative_prefix_length": prefix_count,
                 "standard_ctc_loss": float(standard_loss.detach()),
                 "prior_ctc_loss": float(prior_loss.detach()),
+                "implementation_ctc_loss": float(implementation_loss.detach()),
+                "implementation_value_abs_error": value_error,
+                "implementation_gradient_max_abs_error": gradient_error,
+                "implementation_matches_reference": implementation_matches_reference,
                 "prior_to_standard_grad_l2_ratio": prior_norm / standard_norm,
                 "prior_standard_gradient_cosine": float(
                     F.cosine_similarity(
@@ -520,6 +606,17 @@ def main() -> int:
         "training_changed": False,
         "label_prior_alpha": LABEL_PRIOR_ALPHA,
         "label_prior_source": "retained-posterior-marginal-v1",
+        "implementation_audit": {
+            "policy": "native-ctcloss-vs-independent-reference-v1",
+            "value_abs_tolerance": 1.0e-5,
+            "gradient_max_abs_tolerance": 1.0e-5,
+            "training_authority_used": False,
+            "diagnostic_contract_identity_placeholders": True,
+            "all_records_match": all(
+                bool(row["implementation_matches_reference"])
+                for row in records
+            ),
+        },
         "label_prior_trace_count": len(traces),
         "label_prior_frame_count": prior_frames,
         "label_priors": [float(value) for value in priors],
@@ -542,6 +639,7 @@ def main() -> int:
         json.dumps(
             {
                 "alpha": LABEL_PRIOR_ALPHA,
+                "implementation_audit": result["implementation_audit"],
                 "label_priors": result["label_priors"],
                 "kw1_runtime_gap": result["cohorts"].get("kw1_runtime_gap", {}),
                 "kw1_runtime_hit": result["cohorts"].get("kw1_runtime_hit", {}),
