@@ -87,8 +87,12 @@ def normalize_snapshot(value: object, label: str) -> dict | None:
     token_advances = int(provenance.get("token_advances", -1))
     exact = int(provenance.get("exact_top_advances", -1))
     fuzzy = int(provenance.get("fuzzy_advances", -1))
-    if min(token_advances, exact, fuzzy) < 0 or exact + fuzzy != token_advances:
-        raise ValueError(f"{label} token provenance is inconsistent")
+    root_exact = int(provenance.get("root_exact_starts", -1))
+    root_ambiguous = int(provenance.get("root_ambiguous_starts", -1))
+    if min(token_advances, exact, fuzzy, root_exact, root_ambiguous) < 0:
+        raise ValueError(f"{label} token provenance contains negative counters")
+    if root_exact + root_ambiguous + exact + fuzzy != token_advances:
+        raise ValueError(f"{label} token provenance accounting is inconsistent")
     events = provenance.get("fuzzy_events")
     if not isinstance(events, list) or len(events) != fuzzy:
         raise ValueError(f"{label} fuzzy-event count mismatch")
@@ -106,13 +110,14 @@ def normalize_snapshot(value: object, label: str) -> dict | None:
                 "target_rank": int(event["target_rank"]),
             }
         )
-    mode = (
-        "exact-top-only"
-        if fuzzy == 0 and exact == token_advances
-        else "contains-fuzzy-advance"
-        if fuzzy > 0
-        else "mixed-or-incomplete"
-    )
+    if fuzzy > 0 and root_ambiguous > 0:
+        mode = "contains-ambiguous-root-and-fuzzy-advance"
+    elif fuzzy > 0:
+        mode = "contains-fuzzy-advance"
+    elif root_ambiguous > 0:
+        mode = "contains-ambiguous-root-start"
+    else:
+        mode = "exact-top-only"
     return {
         "retention_log": finite(value["retention_log"], f"{label}.retention_log"),
         "confidence": finite(value["confidence"], f"{label}.confidence"),
@@ -132,8 +137,8 @@ def normalize_snapshot(value: object, label: str) -> dict | None:
             "fuzzy_target_rank_sum": int(provenance.get("fuzzy_target_rank_sum", 0)),
             "fuzzy_target_rank_max": int(provenance.get("fuzzy_target_rank_max", 0)),
             "fuzzy_events": normalized_events,
-            "root_exact_starts": int(provenance.get("root_exact_starts", 0)),
-            "root_ambiguous_starts": int(provenance.get("root_ambiguous_starts", 0)),
+            "root_exact_starts": root_exact,
+            "root_ambiguous_starts": root_ambiguous,
             "same_token_retentions": int(provenance.get("same_token_retentions", 0)),
             "blank_retentions": int(provenance.get("blank_retentions", 0)),
         },
@@ -261,7 +266,7 @@ def self_test() -> None:
             "confidence": 0.9,
             "provenance": {
                 "token_advances": 4,
-                "exact_top_advances": 4,
+                "exact_top_advances": 3,
                 "fuzzy_advances": 0,
                 "fuzzy_logit_gap_sum": 0.0,
                 "fuzzy_logit_gap_max": 0.0,
@@ -283,7 +288,7 @@ def self_test() -> None:
             "confidence": 0.8,
             "provenance": {
                 "token_advances": 4,
-                "exact_top_advances": 3,
+                "exact_top_advances": 2,
                 "fuzzy_advances": 1,
                 "fuzzy_logit_gap_sum": 0.2,
                 "fuzzy_logit_gap_max": 0.2,
