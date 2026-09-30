@@ -273,6 +273,281 @@ def target_path_summary(rows: list[dict], keyword_id: int) -> dict:
     return matches[0]
 
 
+def analyze_wav(
+    *,
+    wav: pathlib.Path,
+    recording: str,
+    keyword_id: int,
+    model: pathlib.Path,
+    pack: pathlib.Path,
+    runner: pathlib.Path,
+    posterior_dump: pathlib.Path,
+    decoder_replay: pathlib.Path,
+    decoder_path_replay: pathlib.Path,
+    output_dir: pathlib.Path,
+    trace_stem: str,
+) -> dict:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    direct_rows = run_json_lines(
+        [str(runner), str(model), str(pack), str(wav), recording]
+    )
+    trace = output_dir / f"{trace_stem}.kwtr"
+    posterior_rows = run_json_lines(
+        [str(posterior_dump), str(model), str(wav), str(trace)]
+    )
+    replay_rows = run_json_lines(
+        [
+            str(decoder_replay),
+            str(model),
+            str(pack),
+            str(trace),
+            recording,
+        ]
+    )
+    path_rows = run_json_lines(
+        [
+            str(decoder_path_replay),
+            str(model),
+            str(pack),
+            str(trace),
+            recording,
+        ]
+    )
+    direct = canonical_detections(direct_rows)
+    replay = canonical_detections(replay_rows)
+    if direct != replay:
+        raise ValueError(
+            f"{recording}: direct runtime and fixed-posterior replay differ: "
+            f"{direct} != {replay}"
+        )
+    target_hits = [row for row in direct if row[0] == keyword_id]
+    return {
+        "audio_path": str(wav),
+        "audio_sha256": sha256_file(wav),
+        "direct_detections": direct_rows,
+        "posterior_dump_receipts": posterior_rows,
+        "replay_detections": replay_rows,
+        "direct_replay_exact_parity": True,
+        "target_keyword_hits": len(target_hits),
+        "target_keyword_path": target_path_summary(path_rows, keyword_id),
+    }
+
+
+def historical_detection(rows: list[dict], case: dict) -> dict:
+    matches = [
+        row
+        for row in rows
+        if int(row.get("keyword_id", -1)) == int(case["detected_keyword_id"])
+        and math.isclose(
+            float(row.get("time_s", -1.0)),
+            float(case["detection_time_s"]),
+            rel_tol=0.0,
+            abs_tol=1.0e-6,
+        )
+        and math.isclose(
+            float(row.get("confidence", -1.0)),
+            float(case["historical_confidence"]),
+            rel_tol=0.0,
+            abs_tol=1.0e-6,
+        )
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            f"{case['case_id']}: historical detection missing/duplicated"
+        )
+    return matches[0]
+
+
+def historical_active_injection(rows: list[dict], case: dict) -> dict:
+    time_s = float(case["detection_time_s"])
+    active = [
+        row
+        for row in rows
+        if float(row["start_second"]) <= time_s
+        < float(row["start_second"]) + float(row["source_seconds"])
+    ]
+    if len(active) != 1:
+        raise ValueError(
+            f"{case['case_id']}: historical active injection is not unique"
+        )
+    row = active[0]
+    if row.get("source_sha256") != case["rendered_wav_sha256"]:
+        raise ValueError(
+            f"{case['case_id']}: historical injected source SHA drifted"
+        )
+    if not math.isclose(
+        float(row.get("gain", -1.0)),
+        float(case["historical_gain"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise ValueError(
+            f"{case['case_id']}: historical injected gain drifted"
+        )
+    return row
+
+
+def extract_pcm_capture(
+    *,
+    spool: pathlib.Path,
+    output: pathlib.Path,
+    center_time_s: float,
+    before_seconds: float,
+    after_seconds: float,
+) -> dict:
+    if before_seconds < 0.0 or after_seconds < 0.0:
+        raise ValueError("capture context must be non-negative")
+    raw_bytes = spool.stat().st_size
+    if raw_bytes <= 0 or raw_bytes % 2:
+        raise ValueError("stream PCM spool must contain non-empty PCM16LE")
+    total_samples = raw_bytes // 2
+    center = int(round(center_time_s * 16000.0))
+    before = int(round(before_seconds * 16000.0))
+    after = int(round(after_seconds * 16000.0))
+    start = max(0, center - before)
+    end = min(total_samples, center + after)
+    if end <= start:
+        raise ValueError("stream-context capture interval is empty")
+    with spool.open("rb") as stream:
+        stream.seek(start * 2)
+        pcm = stream.read((end - start) * 2)
+    if len(pcm) != (end - start) * 2:
+        raise ValueError("stream-context PCM spool is truncated")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(output), "wb") as writer:
+        writer.setnchannels(1)
+        writer.setsampwidth(2)
+        writer.setframerate(16000)
+        writer.writeframes(pcm)
+    return {
+        "policy": "historical-mixed-stream-window-v1",
+        "spool_bytes": raw_bytes,
+        "total_samples": total_samples,
+        "center_time_s": center_time_s,
+        "before_seconds": before_seconds,
+        "after_seconds": after_seconds,
+        "start_sample": start,
+        "end_sample": end,
+        "frames": end - start,
+        "wav_sha256": sha256_file(output),
+    }
+
+
+def run_stream_context(
+    *,
+    spec: dict,
+    model: pathlib.Path,
+    pack: pathlib.Path,
+    stream_root: pathlib.Path,
+    spool_root: pathlib.Path,
+    runner: pathlib.Path,
+    posterior_dump: pathlib.Path,
+    decoder_replay: pathlib.Path,
+    decoder_path_replay: pathlib.Path,
+    output_dir: pathlib.Path,
+) -> dict:
+    if sha256_file(model) != spec["expected_model_sha256"]:
+        raise ValueError("frozen stream-context model SHA mismatch")
+    if sha256_file(pack) != spec["expected_keyword_pack_sha256"]:
+        raise ValueError("frozen stream-context keyword-pack SHA mismatch")
+    results: list[dict] = []
+    for case in spec["cases"]:
+        far_root = stream_root / case["case_id"] / "far"
+        summary_path = far_root / "summary.json"
+        if not summary_path.is_file():
+            raise ValueError(
+                f"{case['case_id']}: regenerated FAR summary is missing"
+            )
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if int(summary.get("seed", -1)) != int(case["seed"]):
+            raise ValueError(f"{case['case_id']}: regenerated seed drifted")
+        if int(summary.get("seconds", -1)) != 7200:
+            raise ValueError(
+                f"{case['case_id']}: regenerated stream duration drifted"
+            )
+        if summary.get("model_sha256") != spec["expected_model_sha256"]:
+            raise ValueError(
+                f"{case['case_id']}: regenerated model SHA drifted"
+            )
+        if summary.get("keyword_pack_sha256") != spec["expected_keyword_pack_sha256"]:
+            raise ValueError(
+                f"{case['case_id']}: regenerated keyword-pack SHA drifted"
+            )
+        detections = load_jsonl(far_root / "detections.jsonl")
+        detection = historical_detection(detections, case)
+        injections = load_jsonl(far_root / "hard-negative-injections.jsonl")
+        injection = historical_active_injection(injections, case)
+        spool = spool_root / f"{case['case_id']}.pcm16le"
+        expected_spool_bytes = 7200 * 16000 * 2
+        if not spool.is_file() or spool.stat().st_size != expected_spool_bytes:
+            raise ValueError(
+                f"{case['case_id']}: exact stream spool size mismatch"
+            )
+        case_root = output_dir / case["case_id"]
+        capture_wav = case_root / "mixed-stream-context.wav"
+        capture = extract_pcm_capture(
+            spool=spool,
+            output=capture_wav,
+            center_time_s=float(case["detection_time_s"]),
+            before_seconds=10.0,
+            after_seconds=2.0,
+        )
+        analysis = analyze_wav(
+            wav=capture_wav,
+            recording=f"{case['case_id']}-mixed-context",
+            keyword_id=int(case["detected_keyword_id"]),
+            model=model,
+            pack=pack,
+            runner=runner,
+            posterior_dump=posterior_dump,
+            decoder_replay=decoder_replay,
+            decoder_path_replay=decoder_path_replay,
+            output_dir=case_root,
+            trace_stem="mixed-stream-context",
+        )
+        classification = (
+            "mixed-stream-context-sufficient"
+            if int(analysis["target_keyword_hits"]) > 0
+            else "longer-stream-state-or-history-required"
+        )
+        result = {
+            "case": case,
+            "historical_stream_detection": detection,
+            "historical_active_injection": injection,
+            "capture": capture,
+            "analysis": analysis,
+            "classification": classification,
+        }
+        case_root.mkdir(parents=True, exist_ok=True)
+        (case_root / "stream-context-result.json").write_text(
+            json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        results.append(result)
+    output = {
+        "schema_version": 1,
+        "evidence_class": "frozen-far-stream-context-replay-evidence-v1",
+        "development_only": True,
+        "selection_feedback_allowed": False,
+        "protected_evidence_used": False,
+        "training_changed": False,
+        "decoder_math_changed": False,
+        "thresholds_changed": False,
+        "historical_stream_generator_used": True,
+        "capture_context_before_seconds": 10.0,
+        "capture_context_after_seconds": 2.0,
+        "model_sha256": sha256_file(model),
+        "keyword_pack_sha256": sha256_file(pack),
+        "cases": results,
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "stream-context-summary.json").write_text(
+        json.dumps(output, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return output
+
+
 def run_replay(
     *,
     spec: dict,
@@ -300,45 +575,22 @@ def run_replay(
             case["historical_gain"],
             scaled_wav,
         )
-        recording = case["case_id"]
-        direct_rows = run_json_lines(
-            [str(runner), str(model), str(pack), str(scaled_wav), recording]
+        analysis = analyze_wav(
+            wav=scaled_wav,
+            recording=case["case_id"],
+            keyword_id=int(case["detected_keyword_id"]),
+            model=model,
+            pack=pack,
+            runner=runner,
+            posterior_dump=posterior_dump,
+            decoder_replay=decoder_replay,
+            decoder_path_replay=decoder_path_replay,
+            output_dir=case_root,
+            trace_stem="historical-gain-source",
         )
-        trace = case_root / "historical-gain-source.kwtr"
-        posterior_rows = run_json_lines(
-            [str(posterior_dump), str(model), str(scaled_wav), str(trace)]
-        )
-        replay_rows = run_json_lines(
-            [
-                str(decoder_replay),
-                str(model),
-                str(pack),
-                str(trace),
-                recording,
-            ]
-        )
-        path_rows = run_json_lines(
-            [
-                str(decoder_path_replay),
-                str(model),
-                str(pack),
-                str(trace),
-                recording,
-            ]
-        )
-        direct = canonical_detections(direct_rows)
-        replay = canonical_detections(replay_rows)
-        parity = direct == replay
-        if not parity:
-            raise ValueError(
-                f"{case['case_id']}: direct runtime and fixed-posterior replay differ: "
-                f"{direct} != {replay}"
-            )
-        keyword_id = case["detected_keyword_id"]
-        target_hits = [row for row in direct if row[0] == keyword_id]
         classification = (
             "standalone-source-sufficient-under-historical-gain"
-            if target_hits
+            if int(analysis["target_keyword_hits"]) > 0
             else "standalone-source-not-sufficient-mixture-or-stream-context-required"
         )
         result = {
@@ -361,12 +613,12 @@ def run_replay(
                 if key in domain
             },
             "scale": scale,
-            "direct_detections": direct_rows,
-            "posterior_dump_receipts": posterior_rows,
-            "replay_detections": replay_rows,
-            "direct_replay_exact_parity": True,
-            "target_keyword_standalone_hits": len(target_hits),
-            "target_keyword_path": target_path_summary(path_rows, keyword_id),
+            "direct_detections": analysis["direct_detections"],
+            "posterior_dump_receipts": analysis["posterior_dump_receipts"],
+            "replay_detections": analysis["replay_detections"],
+            "direct_replay_exact_parity": analysis["direct_replay_exact_parity"],
+            "target_keyword_standalone_hits": analysis["target_keyword_hits"],
+            "target_keyword_path": analysis["target_keyword_path"],
             "classification": classification,
         }
         case_root.mkdir(parents=True, exist_ok=True)
@@ -469,6 +721,42 @@ def self_test() -> None:
             [{"keyword_id": 2, "time_s": 1.2345678, "confidence": 0.8765432}]
         ) == [(2, 1.234568, 0.876543)]
 
+        fixture_case = dict(normalized["cases"][0])
+        fixture_case["detection_time_s"] = 1.25
+        fixture_case["historical_confidence"] = 0.5
+        fixture_case["rendered_wav_sha256"] = "e" * 64
+        assert historical_detection(
+            [{"keyword_id": 2, "time_s": 1.25, "confidence": 0.5}],
+            fixture_case,
+        )["keyword_id"] == 2
+        assert historical_active_injection(
+            [
+                {
+                    "start_second": 1,
+                    "source_seconds": 1.0,
+                    "source_sha256": "e" * 64,
+                    "gain": 0.9,
+                }
+            ],
+            fixture_case,
+        )["source_sha256"] == "e" * 64
+
+        spool = root / "stream.pcm16le"
+        spool.write_bytes(
+            struct.pack("<" + "h" * 32000, *([123] * 32000))
+        )
+        capture = root / "capture.wav"
+        capture_receipt = extract_pcm_capture(
+            spool=spool,
+            output=capture,
+            center_time_s=1.0,
+            before_seconds=0.5,
+            after_seconds=0.25,
+        )
+        assert capture_receipt["frames"] == 12000
+        with wave.open(str(capture), "rb") as reader:
+            assert reader.getnframes() == 12000
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -488,6 +776,18 @@ def main() -> int:
     run.add_argument("--decoder-replay", required=True, type=pathlib.Path)
     run.add_argument("--decoder-path-replay", required=True, type=pathlib.Path)
     run.add_argument("--output-dir", required=True, type=pathlib.Path)
+
+    context = sub.add_parser("context")
+    context.add_argument("--spec", required=True, type=pathlib.Path)
+    context.add_argument("--model", required=True, type=pathlib.Path)
+    context.add_argument("--pack", required=True, type=pathlib.Path)
+    context.add_argument("--stream-root", required=True, type=pathlib.Path)
+    context.add_argument("--spool-root", required=True, type=pathlib.Path)
+    context.add_argument("--runner", required=True, type=pathlib.Path)
+    context.add_argument("--posterior-dump", required=True, type=pathlib.Path)
+    context.add_argument("--decoder-replay", required=True, type=pathlib.Path)
+    context.add_argument("--decoder-path-replay", required=True, type=pathlib.Path)
+    context.add_argument("--output-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
     if args.self_test:
@@ -520,6 +820,38 @@ def main() -> int:
                             "classification": row["classification"],
                             "target_keyword_standalone_hits": row[
                                 "target_keyword_standalone_hits"
+                            ],
+                        }
+                        for row in value["cases"]
+                    ]
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+    if args.command == "context":
+        spec = normalize_spec(args.spec.resolve())
+        value = run_stream_context(
+            spec=spec,
+            model=args.model.resolve(),
+            pack=args.pack.resolve(),
+            stream_root=args.stream_root.resolve(),
+            spool_root=args.spool_root.resolve(),
+            runner=args.runner.resolve(),
+            posterior_dump=args.posterior_dump.resolve(),
+            decoder_replay=args.decoder_replay.resolve(),
+            decoder_path_replay=args.decoder_path_replay.resolve(),
+            output_dir=args.output_dir.resolve(),
+        )
+        print(
+            json.dumps(
+                {
+                    "cases": [
+                        {
+                            "case_id": row["case"]["case_id"],
+                            "classification": row["classification"],
+                            "target_keyword_context_hits": row["analysis"][
+                                "target_keyword_hits"
                             ],
                         }
                         for row in value["cases"]
