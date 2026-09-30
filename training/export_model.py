@@ -489,9 +489,16 @@ def training_metadata(checkpoint: dict) -> dict:
                 metric_keys.append("path_purity")
             for key in metric_keys:
                 value = float(raw.get(key, math.nan))
-                if not math.isfinite(value) or value < 0.0:
+                signed_allowed = (
+                    primary_policy == CTC_PRIMARY_POLICY_LABEL_PRIOR
+                    and key in {"loss", "ctc"}
+                )
+                if not math.isfinite(value) or (value < 0.0 and not signed_allowed):
+                    requirement = (
+                        "finite" if signed_allowed else "finite and non-negative"
+                    )
                     raise ValueError(
-                        f"checkpoint epoch_history[{index - 1}].{key} must be finite and non-negative"
+                        f"checkpoint epoch_history[{index - 1}].{key} must be {requirement}"
                     )
                 row[key] = value
             accuracy = float(raw.get("ordered_token_accuracy", math.nan))
