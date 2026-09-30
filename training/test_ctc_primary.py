@@ -271,6 +271,7 @@ def main() -> int:
             "state_dict": state,
             "float_state_identity": identity,
             "auxiliary_loss_weights": auxiliary,
+            **auxiliary,
             "ctc_primary_policy": CTC_PRIMARY_POLICY_LABEL_PRIOR,
             "ctc_primary_policy_scope": "primary-loss-path-v1",
             "ctc_label_prior": readback_prior,
