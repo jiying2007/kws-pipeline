@@ -176,3 +176,54 @@ At minimum include:
 - long negative recordings to make FAR/hour statistically meaningful.
 
 All qualification audio must pass through the same BF/AEC/RES/NS/AGC composition and gain policy used by the shipping SKU.
+
+## Observed native-clip readback (no event alignment)
+
+`readback_native_clips.py` consumes a pinned, clean-checkout export from the
+`kws-data` repository. That repository owns catalog, source, rights, review and
+split validation; this consumer checks receipt identity and actual consumed audio
+bytes. It does not parse or normalize the source archive, assign tokens, generate
+review receipts, or reinterpret native development roles as fresh test data.
+
+First use the data repository's canonical `python3 -m tools.codex_assets export`
+command with exact commit/catalog pins and explicit dataset selections. Save its
+JSON receipt outside the clean data checkout and hash it. Then run:
+
+```sh
+python3 eval/readback_native_clips.py \
+  --receipt "$RECEIPT" --data-root "$DATA_ROOT" \
+  --expected-receipt-sha256 "$RECEIPT_SHA" \
+  --expected-data-commit "$DATA_COMMIT" \
+  --expected-catalog-sha256 "$CATALOG_SHA" \
+  --dataset qwen3-xiaowo-reviewed-development-20260928 \
+  --dataset qwen3-train-asr-development-20260928 \
+  --dataset qwen3-holdout-asr-development-20260928 \
+  --runner "$RUNNER" --expected-runner-sha256 "$RUNNER_SHA" \
+  --runner-build-receipt "$BUILD_RECEIPT" \
+  --model "$MODEL" --expected-model-sha256 "$MODEL_SHA" \
+  --keywords "$KEYWORDS" --expected-keywords-sha256 "$KEYWORDS_SHA" \
+  --output-root "$NEW_OUTPUT_DIRECTORY"
+```
+
+The execution inputs preserve dataset/content identities, native `train`,
+`development_a`, `development_b` roles and human/ASR evidence separately.
+`execution-inputs.jsonl` deliberately has no `expected` event list, tokens, or word
+endpoints. Do not feed it to an event-level scorer. It invokes `run_corpus.py` in
+direct C-runner mode, resetting the engine for each unmodified WAV, with no added
+silence or decoder overrides. Source WAV identity is checked before execution and
+against the runner provenance afterward. Existing output directories are refused.
+
+`clip-readback.json` retains every raw detection, positive target-hit/miss,
+wrong-keyword event count, additional same-target events, and confusable event
+counts. No detection on a successfully processed positive is a clip miss; a
+wrong-keyword event does not count as a target hit. Unknown recording detections
+or malformed/out-of-clip events fail closed. An empty detections file is valid
+only after all runner invocations completed successfully.
+
+These are observed short-clip development counts, not event-aligned recall,
+endpoint latency, continuous FAR/FA-per-hour, fresh holdout results, cross-generator
+generalization or product qualification. In particular, target presence anywhere
+in a positive clip does not prove a correctly aligned wake event. Frozen model and
+keyword-pack hashes, runner identity, build-receipt hash, exporter receipt and
+consumer-code hashes remain attached to the report. A manual compiler build must
+be identified as such in its build receipt, never as a CMake or full-CI result.
