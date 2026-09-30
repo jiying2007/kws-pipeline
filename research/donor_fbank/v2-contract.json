@@ -1,0 +1,216 @@
+{
+  "name": "donor-fbank80-independent-cmvn400-final-feature-conformance-v2",
+  "status": "approved-for-v2-acceptance",
+  "supersedes_v1": false,
+  "v1_status": "preserved FAIL; per-bin power/mel diagnostics retained unchanged",
+  "implemented_scope": [
+    "phase0 streaming logfbank80",
+    "independent fixed400 affine CMVN"
+  ],
+  "not_implemented": [
+    "C splice/context",
+    "C skip3",
+    "FSMN",
+    "decoder",
+    "model export",
+    "target performance"
+  ],
+  "hard_feature_rules": {
+    "logfbank_absolute": 0.001,
+    "test_only_splice_then_C_cmvn400_absolute": 0.0002,
+    "isolated_cmvn400_atol": 1e-06,
+    "isolated_cmvn400_rtol": 2e-07,
+    "silence_dc_cmvn_absolute": 1e-06,
+    "silence_dc_log_absolute": 2e-06,
+    "frame_grid_coefficients_finiteness": "original v1 exact checks unchanged",
+    "dc_preemphasis_window": "original v1 layer gates unchanged",
+    "silence_and_constant_dc": "all prelog layers exactly0"
+  },
+  "power_mel_policy": "Original v1 elementwise bounds remain diagnostic and are never reported passing when they fail. FFT independently gated by scaling, energy, known spectral bins and double directDFT.",
+  "fft_invariants_proposed": {
+    "N": 512,
+    "u": "2^-24",
+    "gamma": "n*u/(1-n*u)",
+    "bin_amplitude_error_budget": "B=gamma(8*log2(N)+4)*sum(abs(input_float32))",
+    "power_error_bound": "2*abs(DFT)*B+B\u00b2+gamma4*(abs(DFT)+B)\u00b2; B includes float64 reference allowance",
+    "parseval_relative": "gamma148+1e-12, both sides host-double faithful summation",
+    "impulse_power_relative": "gamma(16*log2(N)+4)",
+    "zero_dc_nyquist": "exact zero; powers-of-two constant/DC or alternating/Nyquist exact power and empty other bins",
+    "binary_scaling": "bounded normal dyadic input x and2x; output power must scale4 exactly",
+    "known_sinusoids": "float32 rounded sin/cos at bins1,7,53,123,211,255, expected dominant bin; all257 bins checked vs direct doubleDFT"
+  },
+  "bound_basis": "Engineering conservative operation-count budgets before executing v2 tests. Radix2 nine stages, complex multiply/add and coefficient rounding along paths; separate norm/squared-power and conservative reduction budget. Not a universal formal proof. No multiplier fitted to observed C error or quality output.",
+  "timing_disclosure": "v1 C results are already known. v2 changes the contract scope explicitly; new FFT invariant tests have not been executed. Requires independent review before formal acceptance.",
+  "fft": {
+    "N": 512,
+    "amplitude_operation_budget": 76,
+    "power_rounding_operations": 4,
+    "parseval_operation_budget": 148,
+    "impulse_operation_budget": 148,
+    "double_bookkeeping_allowance": 1e-12,
+    "reference": "80-digit Decimal independently generated roots/Taylor60/modulo512,float64math.fsum; gamma8,u64*L1 allowance plus reference-power bookkeeping"
+  },
+  "fft_input_manifest": {
+    "roots_f64le_sha256": "8d39a7ffb9ea3f77001f1475099a9754e32d525831adf15c88b73136a24422fa",
+    "root_precision_decimal_digits": 80,
+    "taylor_terms": 60,
+    "root_index_policy": "modulo512; independent Decimal roots rounded tofloat64; cardinal roots exact",
+    "cases": [
+      {
+        "name": "zero",
+        "f32le_sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad",
+        "expected_peak": null
+      },
+      {
+        "name": "dc_1.0",
+        "f32le_sha256": "fef951e6c76ad6a01b208af650ca6d95769bec840e009981c5ae1316a42c90b1",
+        "expected_peak": 0
+      },
+      {
+        "name": "nyquist_1.0",
+        "f32le_sha256": "a335c1fcef34a5387622eab2434cf794990a55df8b5b80f278b621b895afb090",
+        "expected_peak": 256
+      },
+      {
+        "name": "dc_-2.0",
+        "f32le_sha256": "3fb66459adb2aadde6706e87d607baa8903baf62f91d10e307faa45d6bc307c4",
+        "expected_peak": 0
+      },
+      {
+        "name": "nyquist_-2.0",
+        "f32le_sha256": "ad6a91eab1d2f2bc732cbd1f01db47cb1d21bb2df8fe969a96c2df9ae884cbf8",
+        "expected_peak": 256
+      },
+      {
+        "name": "dc_16.0",
+        "f32le_sha256": "d4a0fa790eaeb6b9c9ec2caf615f9f7e1cc36feb2229663cac1691adfe217fc8",
+        "expected_peak": 0
+      },
+      {
+        "name": "nyquist_16.0",
+        "f32le_sha256": "2c680c19f59d118987896c6b87e442d4b9783933a37deb26d4a735a115ac39a5",
+        "expected_peak": 256
+      },
+      {
+        "name": "impulse_0_1.0",
+        "f32le_sha256": "c71873f6f3105b15ca6cd4b1db85011b4339558a0e0d912527da8a7011988b40",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_0_32767.0",
+        "f32le_sha256": "9016525e02d6ca32e7160467c58c396e45487e23086b94325081ba38d62f1a77",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_1_1.0",
+        "f32le_sha256": "c433c3bd80fad99da4dcdca781a4d76e7dfff1191f834c4479288dc91f05de41",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_1_32767.0",
+        "f32le_sha256": "d4132a82ae61b017b1c7efcd7cebd76861bfe1764eae7478f58198e1786be70f",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_127_1.0",
+        "f32le_sha256": "7807bcb618cc2b5c33da62be2b12f648033464294b5df7b4fff04ba81ac80f36",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_127_32767.0",
+        "f32le_sha256": "fef4409512e16bceff6dda16c6b86d08f4891f4440e16ba715a322b9928c2aab",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_255_1.0",
+        "f32le_sha256": "3a1b4274b0507b10f86789bf79629723df19d2d48d5b0bd8e3206d860ec2a8ac",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_255_32767.0",
+        "f32le_sha256": "12fdad42b29e2415e75cae8b5ffa3b6ed03b97537ebda8e32bd586cfd5d82944",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_511_1.0",
+        "f32le_sha256": "60188effcb54c9f3b02713d55dcd38df44e4d0a2b374710de093fb067b073476",
+        "expected_peak": null
+      },
+      {
+        "name": "impulse_511_32767.0",
+        "f32le_sha256": "1e58b944823bab57fef6afd3cd0d47901c78f5aae4b87c5ccc648740ad7d4b94",
+        "expected_peak": null
+      },
+      {
+        "name": "sin_1",
+        "f32le_sha256": "f5bdbaa19265d3c04a79b48bee413dec61165c32b0d70eee3e393ff4a4f79606",
+        "expected_peak": 1
+      },
+      {
+        "name": "cos_1",
+        "f32le_sha256": "b64e4d9d6c968d620b439cd8c3620f94416f877fe1a9230c9d78aacc6a79c7b5",
+        "expected_peak": 1
+      },
+      {
+        "name": "sin_7",
+        "f32le_sha256": "2539f847d5a04294d4d39aa131e5155816d9a5e1b9fd4c959d58fad036b1924a",
+        "expected_peak": 7
+      },
+      {
+        "name": "cos_7",
+        "f32le_sha256": "f8ee4b299dc4202ecef93367ac8449a7210462159bf337bff58a8c7739f1c4d2",
+        "expected_peak": 7
+      },
+      {
+        "name": "sin_53",
+        "f32le_sha256": "04f377c8fc69feb84fa9c1f5c8d3a208497828cf0c5cc52652abf6601e778e3c",
+        "expected_peak": 53
+      },
+      {
+        "name": "cos_53",
+        "f32le_sha256": "eeddda35bc21ee554d379e9022876b2c1f5cb9c98d7825b817bd49c8b6ff7558",
+        "expected_peak": 53
+      },
+      {
+        "name": "sin_123",
+        "f32le_sha256": "48e669d276a311ec08a9caf7e52ad65def47cfc007cb8648fe0aa01411d07158",
+        "expected_peak": 123
+      },
+      {
+        "name": "cos_123",
+        "f32le_sha256": "90ef0cf7bf5efde9bc545e41b3c31c6b3b99fee6dcdb43b259e3ebd93009cd69",
+        "expected_peak": 123
+      },
+      {
+        "name": "sin_211",
+        "f32le_sha256": "f2df0e14daa08243377f45677f7b18991a60baba67aeb97404d9b77115772330",
+        "expected_peak": 211
+      },
+      {
+        "name": "cos_211",
+        "f32le_sha256": "75b4db0b7f580acc40835c8938614415af9baf16b414b4a87f6112cf64965511",
+        "expected_peak": 211
+      },
+      {
+        "name": "sin_255",
+        "f32le_sha256": "89bdea6b5088a13aba00078aae4b72aea1e42812e9829596853ee95342513dbc",
+        "expected_peak": 255
+      },
+      {
+        "name": "cos_255",
+        "f32le_sha256": "c0793636994b1955eb0c2950d5da21b4b6eb3ad5c4a3e72185b08dabf0ef024d",
+        "expected_peak": 255
+      },
+      {
+        "name": "dyadic_noise",
+        "f32le_sha256": "824f6fc86921f2840aafd767f1a60885a6a2431ea376b048d6b4af58c02b70fe",
+        "expected_peak": null
+      }
+    ]
+  },
+  "independent_derivation_sha256": "234f6f0e3b7cc1c27333a8ae76e6a73bb4273c244852dadf96d0631cae5d9e37",
+  "test_script_sha256": "7c51c9a34255e13e01022bf6c3f67dda419b8593ac5068e2f88cac01f928b44d",
+  "reference_script_sha256": "86b07f7fcc0e6ed47af5ed082ad4bcda05696a395f88dee28ca1fb33597ca970",
+  "golden_manifest_sha256": "e425f65950412e2f3004ad20948d09992771742ee87c51af6168ffc01dd76110",
+  "old_input_invariants": "All159 golden FFTwindow inputs checked with same DFT/Parseval bounds, in addition to30 newlyfixed independent inputs and2binaryscale tests"
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "chunk_limit_bytes": 49152,
+  "archive_bytes": 555581,
+  "archive_sha256": "ef729d8a4e0170bddeeec67d2095f38f53e67b363fc9d5a56ce8af2fea8e6f54",
+  "parts": [
+    {
+      "index": 0,
+      "path": "parts/000.bin",
+      "bytes": 49152,
+      "sha256": "3660c9a9b55bd85a4c04d995808d7301702f623afabd69d0b6cf966e13fc60c5"
+    },
+    {
+      "index": 1,
+      "path": "parts/001.bin",
+      "bytes": 49152,
+      "sha256": "427ab0cb2c34f5eff6050ddceb1560f9efbe4df7f106d4e6897b6b9d25898c12"
+    },
+    {
+      "index": 2,
+      "path": "parts/002.bin",
+      "bytes": 49152,
+      "sha256": "fa2395fb496c75d38dd483c95c12b4d7d32f51e8db7290c7323f48a6aecb455c"
+    },
+    {
+      "index": 3,
+      "path": "parts/003.bin",
+      "bytes": 49152,
+      "sha256": "ab46fd35c2d29da2f27db3b73db14aa22a3f1b8cb719d1da9cc162f0bf235818"
+    },
+    {
+      "index": 4,
+      "path": "parts/004.bin",
+      "bytes": 49152,
+      "sha256": "fdee28403b209b337796d638d71fc2fa48bb98295b15960580ad048967f5901e"
+    },
+    {
+      "index": 5,
+      "path": "parts/005.bin",
+      "bytes": 49152,
+      "sha256": "88ba01d23588b0344f56550afb180bbe30e29988efc0135a10b25db316d21398"
+    },
+    {
+      "index": 6,
+      "path": "parts/006.bin",
+      "bytes": 49152,
+      "sha256": "ea81b37eb5db3063b96e619a79365769fbb9727a63cec100cbdff7039c8fdc87"
+    },
+    {
+      "index": 7,
+      "path": "parts/007.bin",
+      "bytes": 49152,
+      "sha256": "cadb4bc98ea75e2460faee4bbf7bde2879e8ccd66655942ae64014b6e88f53a2"
+    },
+    {
+      "index": 8,
+      "path": "parts/008.bin",
+      "bytes": 49152,
+      "sha256": "775e13efdac1dc22ca89fa3b270763e417b6541323780f8ed26d2b86323e8346"
+    },
+    {
+      "index": 9,
+      "path": "parts/009.bin",
+      "bytes": 49152,
+      "sha256": "122244ad6c9b5f70cae1d95b30723a4e25fd27a3bf69b0bb6f9ab3ab886b123d"
+    },
+    {
+      "index": 10,
+      "path": "parts/010.bin",
+      "bytes": 49152,
+      "sha256": "24a7b1ea1d4244077014652b6fa87c4806a8ea919e451fa0f54d16412484f9fd"
+    },
+    {
+      "index": 11,
+      "path": "parts/011.bin",
+      "bytes": 14909,
+      "sha256": "7243f6b3f4b4f336e28326d85b206fae3e63eb09122b69c92af33deabfabf193"
+    }
+  ]
+}
