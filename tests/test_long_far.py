@@ -72,6 +72,30 @@ def run_far(
     return json.loads((output / "summary.json").read_text(encoding="utf-8"))
 
 
+def annotate_far(
+    *,
+    domain_index: pathlib.Path,
+    detections: pathlib.Path,
+    injections: pathlib.Path,
+    output: pathlib.Path,
+) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "eval" / "annotate_far_detections.py"),
+            "--domain-index",
+            str(domain_index),
+            "--detections",
+            str(detections),
+            "--injections",
+            str(injections),
+            "--output",
+            str(output),
+        ],
+        check=False,
+    )
+
+
 def aggregate_far(
     *,
     outputs: list[pathlib.Path],
@@ -109,7 +133,15 @@ def main() -> int:
 
     workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
     far_gate = (ROOT / "eval" / "run_continuous_far_gate.py").read_text(encoding="utf-8")
+    nightly = (ROOT / ".github" / "workflows" / "far-nightly.yml").read_text(encoding="utf-8")
     assert "eval/run_continuous_far_gate.py" in workflow
+    for needle in (
+        "eval/annotate_far_detections.py",
+        "build/nightly-domain/domain-index.jsonl",
+        'build/far-run-$seed/detection-source-map.jsonl',
+        "Attribute every FAR detection to injected source metadata",
+    ):
+        assert needle in nightly, f"nightly FAR evidence workflow missing {needle!r}"
     for needle in (
         "tools/plan_far_stream.py",
         'stream_root / "plan.json"',
@@ -252,6 +284,121 @@ def main() -> int:
             sha256_file(coverage_wav_a),
             sha256_file(coverage_wav_b),
         }
+
+        attribution_domain = root / "domain-index.jsonl"
+        attribution_domain.write_text(
+            json.dumps(
+                {
+                    "kind": "confusable",
+                    "family_id": 5,
+                    "keyword_id": 2,
+                    "tokens": ["xiao3", "wo1", "xiao3", "ni3"],
+                    "target_ids": [],
+                    "path": str(negative_wav.resolve()),
+                    "wav_sha256": sha256_file(negative_wav),
+                    "source_path": str(negative_wav.resolve()),
+                    "source_wav_sha256": sha256_file(negative_wav),
+                    "scene_seed": 123,
+                    "scene": {"distance_band": "near"},
+                    "domain_id": "fixture-domain",
+                    "split": "qualification",
+                },
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        attribution_detections = root / "detections.jsonl"
+        attribution_detections.write_text(
+            "\n".join(
+                [
+                    json.dumps(
+                        {"time_s": 1.25, "keyword_id": 2, "confidence": 0.95},
+                        sort_keys=True,
+                    ),
+                    json.dumps(
+                        {"time_s": 2.25, "keyword_id": 2, "confidence": 0.60},
+                        sort_keys=True,
+                    ),
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        attribution_injections = root / "injections.jsonl"
+        attribution_injections.write_text(
+            json.dumps(
+                {
+                    "start_second": 1,
+                    "source_path": str(negative_wav.resolve()),
+                    "source_sha256": sha256_file(negative_wav),
+                    "source_seconds": 1.0,
+                    "gain": 0.9,
+                    "coverage_required": True,
+                },
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        attribution_output = root / "detection-source-map.jsonl"
+        completed = annotate_far(
+            domain_index=attribution_domain,
+            detections=attribution_detections,
+            injections=attribution_injections,
+            output=attribution_output,
+        )
+        assert completed.returncode == 0
+        attributed = [
+            json.loads(line)
+            for line in attribution_output.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(attributed) == 2
+        assert attributed[0]["active_injection"]["source_sha256"] == sha256_file(
+            negative_wav
+        )
+        assert attributed[0]["active_injection"]["domain"]["family_id"] == 5
+        assert attributed[0]["active_injection"]["domain"]["tokens"] == [
+            "xiao3",
+            "wo1",
+            "xiao3",
+            "ni3",
+        ]
+        assert attributed[1]["active_injection"] is None
+        assert attributed[1]["previous_injection"]["source_sha256"] == sha256_file(
+            negative_wav
+        )
+        assert attributed[1]["seconds_since_previous_end"] == 0.25
+        attribution_summary = json.loads(
+            (root / "detection-source-map.summary.json").read_text(encoding="utf-8")
+        )
+        assert attribution_summary["detections"] == 2
+        assert attribution_summary["active_source_attributions"] == 1
+        assert attribution_summary["unattributed_detections"] == 1
+
+        bad_injections = root / "bad-injections.jsonl"
+        bad_injections.write_text(
+            json.dumps(
+                {
+                    "start_second": 1,
+                    "source_path": str(negative_wav.resolve()),
+                    "source_sha256": "0" * 64,
+                    "source_seconds": 1.0,
+                    "gain": 0.9,
+                    "coverage_required": True,
+                },
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        bad_completed = annotate_far(
+            domain_index=attribution_domain,
+            detections=attribution_detections,
+            injections=bad_injections,
+            output=root / "bad-detection-source-map.jsonl",
+        )
+        assert bad_completed.returncode == 2
 
         aggregate = root / "far-aggregate.json"
         code, aggregate_summary = aggregate_far(

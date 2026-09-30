@@ -252,6 +252,18 @@ jobs:
               --max-far-per-hour 1000000
           done
 
+      - name: Attribute every FAR detection to injected source metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          for seed in 1103 2207 3301 4409; do
+            python3 eval/annotate_far_detections.py \
+              --domain-index build/nightly-domain/domain-index.jsonl \
+              --detections "build/far-run-$seed/detections.jsonl" \
+              --injections "build/far-run-$seed/hard-negative-injections.jsonl" \
+              --output "build/far-run-$seed/detection-source-map.jsonl"
+          done
+
       - name: Aggregate eight hours for the frozen released model only
         run: >-
           python3 eval/aggregate_far.py
@@ -279,6 +291,7 @@ jobs:
             build/frozen-model/robustness-summary.json
             build/frozen-model/continuous-far-summary.json
             build/nightly-domain/domain-summary.json
+            build/nightly-domain/domain-index.jsonl
             build/nightly-regression-contract.json
             build/nightly-negative.tsv
             build/far-run-*/
