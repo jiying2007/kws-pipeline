@@ -548,6 +548,234 @@ def run_stream_context(
     return output
 
 
+def pcm16le_to_wav(source: pathlib.Path, output: pathlib.Path) -> dict:
+    size = source.stat().st_size
+    if size <= 0 or size % 2:
+        raise ValueError("PCM16LE spool must be non-empty and sample-aligned")
+    frames = size // 2
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with source.open("rb") as stream, wave.open(str(output), "wb") as writer:
+        writer.setnchannels(1)
+        writer.setsampwidth(2)
+        writer.setframerate(16000)
+        while True:
+            chunk = stream.read(1024 * 1024)
+            if not chunk:
+                break
+            writer.writeframesraw(chunk)
+    return {
+        "frames": frames,
+        "seconds": frames / 16000.0,
+        "pcm_sha256": sha256_file(source),
+        "wav_sha256": sha256_file(output),
+    }
+
+
+def target_detection_matches(rows: list[dict], case: dict, tolerance_s: float = 0.10) -> list[dict]:
+    target_time = float(case["detection_time_s"])
+    keyword_id = int(case["detected_keyword_id"])
+    return [
+        row
+        for row in detection_rows(rows)
+        if int(row["keyword_id"]) == keyword_id
+        and abs(float(row["time_s"]) - target_time) <= tolerance_s
+    ]
+
+
+def classify_history_windows(
+    *,
+    fresh_context_hits: int,
+    windows: list[dict],
+) -> dict:
+    reproduced = [row for row in windows if int(row["target_window_hits"]) > 0]
+    if not reproduced:
+        raise ValueError("full acoustic-history replay never reproduced target detection")
+    first = reproduced[0]
+    if first["label"] == "pre-10s" and fresh_context_hits == 0:
+        classification = "acoustic-history-required-decoder-10s-sufficient"
+        bracket = {"lower_no_hit_seconds": None, "upper_hit_seconds": 10}
+    elif first["label"] == "full":
+        previous = windows[-2] if len(windows) >= 2 else None
+        classification = "decoder-history-required-with-full-acoustic-state"
+        bracket = {
+            "lower_no_hit_seconds": (
+                None if previous is None else previous["pre_roll_seconds"]
+            ),
+            "upper_hit_seconds": "full",
+        }
+    else:
+        index = windows.index(first)
+        previous = windows[index - 1] if index > 0 else None
+        classification = "decoder-history-required-with-full-acoustic-state"
+        bracket = {
+            "lower_no_hit_seconds": (
+                None if previous is None else previous["pre_roll_seconds"]
+            ),
+            "upper_hit_seconds": first["pre_roll_seconds"],
+        }
+    return {
+        "classification": classification,
+        "first_reproducing_window": first["label"],
+        "history_bracket": bracket,
+    }
+
+
+def run_history_decomposition(
+    *,
+    spec: dict,
+    model: pathlib.Path,
+    pack: pathlib.Path,
+    context_root: pathlib.Path,
+    spool_root: pathlib.Path,
+    posterior_dump: pathlib.Path,
+    trace_slice: pathlib.Path,
+    decoder_replay: pathlib.Path,
+    output_dir: pathlib.Path,
+) -> dict:
+    if sha256_file(model) != spec["expected_model_sha256"]:
+        raise ValueError("history decomposition model SHA mismatch")
+    if sha256_file(pack) != spec["expected_keyword_pack_sha256"]:
+        raise ValueError("history decomposition keyword-pack SHA mismatch")
+    pre_rolls = [10, 60, 600, 1800, 3600]
+    results: list[dict] = []
+    for case in spec["cases"]:
+        case_context = context_root / case["case_id"] / "stream-context-result.json"
+        if not case_context.is_file():
+            raise ValueError(f"{case['case_id']}: stream-context result is missing")
+        context = json.loads(case_context.read_text(encoding="utf-8"))
+        if context.get("classification") != "longer-stream-state-or-history-required":
+            results.append(
+                {
+                    "case_id": case["case_id"],
+                    "status": "not-needed",
+                    "reason": context.get("classification"),
+                }
+            )
+            continue
+        fresh_hits = int(
+            ((context.get("analysis") or {}).get("target_keyword_hits", -1))
+        )
+        if fresh_hits != 0:
+            raise ValueError(
+                f"{case['case_id']}: longer-history case unexpectedly has fresh-context target hit"
+            )
+        spool = spool_root / f"{case['case_id']}.pcm16le"
+        expected_bytes = 7200 * 16000 * 2
+        if not spool.is_file() or spool.stat().st_size != expected_bytes:
+            raise ValueError(f"{case['case_id']}: exact 2h PCM spool is missing or wrong size")
+
+        case_root = output_dir / case["case_id"]
+        full_wav = case_root / "full-stream.wav"
+        wav_receipt = pcm16le_to_wav(spool, full_wav)
+        full_trace = case_root / "full-stream.kwtr"
+        posterior_receipts = run_json_lines(
+            [str(posterior_dump), str(model), str(full_wav), str(full_trace)]
+        )
+        if len(posterior_receipts) != 1:
+            raise ValueError(f"{case['case_id']}: posterior dump receipt count mismatch")
+        full_wav.unlink()
+
+        total_samples = 7200 * 16000
+        end_sample = min(
+            total_samples,
+            int(round((float(case["detection_time_s"]) + 2.0) * 16000.0)),
+        )
+        windows: list[dict] = []
+        window_specs = [(f"pre-{seconds}s", seconds) for seconds in pre_rolls]
+        window_specs.append(("full", None))
+        for label, pre_roll in window_specs:
+            start_sample = (
+                0
+                if pre_roll is None
+                else max(
+                    0,
+                    int(
+                        round(
+                            (float(case["detection_time_s"]) - float(pre_roll))
+                            * 16000.0
+                        )
+                    ),
+                )
+            )
+            sliced = case_root / f"{label}.kwtr"
+            slice_receipts = run_json_lines(
+                [
+                    str(trace_slice),
+                    str(full_trace),
+                    str(sliced),
+                    str(start_sample),
+                    str(end_sample),
+                ]
+            )
+            if len(slice_receipts) != 1:
+                raise ValueError(f"{case['case_id']}:{label}: trace-slice receipt mismatch")
+            replay_rows = run_json_lines(
+                [
+                    str(decoder_replay),
+                    str(model),
+                    str(pack),
+                    str(sliced),
+                    f"{case['case_id']}-{label}",
+                ]
+            )
+            target_hits = target_detection_matches(replay_rows, case)
+            window = {
+                "label": label,
+                "pre_roll_seconds": pre_roll,
+                "start_sample_exclusive": start_sample,
+                "end_sample_inclusive": end_sample,
+                "trace_sha256": sha256_file(sliced),
+                "trace_frames": int(slice_receipts[0]["frames"]),
+                "decoder_detections": replay_rows,
+                "target_window_hits": len(target_hits),
+            }
+            windows.append(window)
+
+        full_rows = windows[-1]["decoder_detections"]
+        historical_detection(full_rows, case)
+        verdict = classify_history_windows(
+            fresh_context_hits=fresh_hits,
+            windows=windows,
+        )
+        result = {
+            "case": case,
+            "fresh_context_target_hits": fresh_hits,
+            "full_stream_pcm": wav_receipt,
+            "full_posterior_receipts": posterior_receipts,
+            "full_trace_sha256": sha256_file(full_trace),
+            "windows": windows,
+            **verdict,
+        }
+        (case_root / "history-decomposition-result.json").write_text(
+            json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        results.append(result)
+
+    output = {
+        "schema_version": 1,
+        "evidence_class": "frozen-far-history-decomposition-v1",
+        "development_only": True,
+        "selection_feedback_allowed": False,
+        "protected_evidence_used": False,
+        "training_changed": False,
+        "decoder_math_changed": False,
+        "thresholds_changed": False,
+        "acoustic_posterior_history": "full-stream-from-zero-v1",
+        "decoder_history_windows_seconds": pre_rolls + ["full"],
+        "target_time_tolerance_seconds": 0.10,
+        "model_sha256": sha256_file(model),
+        "keyword_pack_sha256": sha256_file(pack),
+        "cases": results,
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "history-decomposition-summary.json").write_text(
+        json.dumps(output, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    return output
+
+
 def run_replay(
     *,
     spec: dict,
@@ -757,6 +985,27 @@ def self_test() -> None:
         with wave.open(str(capture), "rb") as reader:
             assert reader.getnframes() == 12000
 
+        assert classify_history_windows(
+            fresh_context_hits=0,
+            windows=[
+                {"label": "pre-10s", "pre_roll_seconds": 10, "target_window_hits": 1},
+                {"label": "full", "pre_roll_seconds": None, "target_window_hits": 1},
+            ],
+        )["classification"] == "acoustic-history-required-decoder-10s-sufficient"
+        history = classify_history_windows(
+            fresh_context_hits=0,
+            windows=[
+                {"label": "pre-10s", "pre_roll_seconds": 10, "target_window_hits": 0},
+                {"label": "pre-60s", "pre_roll_seconds": 60, "target_window_hits": 1},
+                {"label": "full", "pre_roll_seconds": None, "target_window_hits": 1},
+            ],
+        )
+        assert history["classification"] == "decoder-history-required-with-full-acoustic-state"
+        assert history["history_bracket"] == {
+            "lower_no_hit_seconds": 10,
+            "upper_hit_seconds": 60,
+        }
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -788,6 +1037,17 @@ def main() -> int:
     context.add_argument("--decoder-replay", required=True, type=pathlib.Path)
     context.add_argument("--decoder-path-replay", required=True, type=pathlib.Path)
     context.add_argument("--output-dir", required=True, type=pathlib.Path)
+
+    history = sub.add_parser("history")
+    history.add_argument("--spec", required=True, type=pathlib.Path)
+    history.add_argument("--model", required=True, type=pathlib.Path)
+    history.add_argument("--pack", required=True, type=pathlib.Path)
+    history.add_argument("--context-root", required=True, type=pathlib.Path)
+    history.add_argument("--spool-root", required=True, type=pathlib.Path)
+    history.add_argument("--posterior-dump", required=True, type=pathlib.Path)
+    history.add_argument("--trace-slice", required=True, type=pathlib.Path)
+    history.add_argument("--decoder-replay", required=True, type=pathlib.Path)
+    history.add_argument("--output-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
     if args.self_test:
@@ -853,6 +1113,43 @@ def main() -> int:
                             "target_keyword_context_hits": row["analysis"][
                                 "target_keyword_hits"
                             ],
+                        }
+                        for row in value["cases"]
+                    ]
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+    if args.command == "history":
+        spec = normalize_spec(args.spec.resolve())
+        value = run_history_decomposition(
+            spec=spec,
+            model=args.model.resolve(),
+            pack=args.pack.resolve(),
+            context_root=args.context_root.resolve(),
+            spool_root=args.spool_root.resolve(),
+            posterior_dump=args.posterior_dump.resolve(),
+            trace_slice=args.trace_slice.resolve(),
+            decoder_replay=args.decoder_replay.resolve(),
+            output_dir=args.output_dir.resolve(),
+        )
+        print(
+            json.dumps(
+                {
+                    "cases": [
+                        {
+                            "case_id": (
+                                row["case"]["case_id"]
+                                if "case" in row
+                                else row["case_id"]
+                            ),
+                            "status": row.get("status", "analyzed"),
+                            "classification": row.get("classification"),
+                            "first_reproducing_window": row.get(
+                                "first_reproducing_window"
+                            ),
+                            "history_bracket": row.get("history_bracket"),
                         }
                         for row in value["cases"]
                     ]

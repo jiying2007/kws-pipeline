@@ -13,6 +13,7 @@ on:
       - 'tools/kws_posterior_dump.c'
       - 'tools/kws_decoder_replay.c'
       - 'tools/kws_decoder_path_replay.c'
+      - 'tools/kws_trace_slice.c'
       - 'src/kws.c'
       - 'src/decoder.c'
       - 'training/render_domains.py'
@@ -246,7 +247,7 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target             kws_wav             kws_raw_stream             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_decoder_tests             kws_decoder_retention_tests
+          cmake --build build --parallel --target             kws_wav             kws_raw_stream             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_trace_slice             kws_decoder_tests             kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure             -R '^kws_decoder_(tests|retention_tests)$'
 
       - name: Download exact immutable promoted model
@@ -420,6 +421,20 @@ jobs:
             --decoder-replay build/kws_decoder_replay \
             --decoder-path-replay build/kws_decoder_path_replay \
             --output-dir build/frozen-far-mixed-context-analysis
+      - name: Decompose acoustic versus decoder history
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_frozen_far_source_replay.py history \
+            --spec "$KWS_FROZEN_FAR_REPLAY_SPEC" \
+            --model build/frozen-model/xiaowo-model.kwm \
+            --pack build/frozen-model/xiaowo-keywords.kwk \
+            --context-root build/frozen-far-mixed-context-analysis \
+            --spool-root build/frozen-far-stream-spool \
+            --posterior-dump build/kws_posterior_dump \
+            --trace-slice build/kws_trace_slice \
+            --decoder-replay build/kws_decoder_replay \
+            --output-dir build/frozen-far-history-decomposition
           rm -rf build/frozen-far-stream-spool
 
       - name: Retain fixed-source replay evidence
@@ -440,6 +455,7 @@ jobs:
             build/frozen-far-source-replay/
             build/frozen-far-stream-context/
             build/frozen-far-mixed-context-analysis/
+            build/frozen-far-history-decomposition/
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30

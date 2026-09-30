@@ -218,6 +218,9 @@ if(KWS_BUILD_TOOLS)
   )
   target_link_libraries(kws_decoder_path_replay PRIVATE KwsPipeline::core kws_tool_io kws_trace_io)
 
+  add_executable(kws_trace_slice tools/kws_trace_slice.c)
+  target_link_libraries(kws_trace_slice PRIVATE kws_trace_io)
+
   if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kws_tool_io PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_wav PRIVATE ${KWS_STRICT_OPTIONS})
@@ -227,6 +230,11 @@ if(KWS_BUILD_TOOLS)
     target_compile_options(kws_posterior_dump PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_decoder_replay PRIVATE ${KWS_STRICT_OPTIONS})
     target_compile_options(kws_decoder_path_replay PRIVATE ${KWS_STRICT_OPTIONS})
+    target_compile_options(kws_trace_slice PRIVATE ${KWS_STRICT_OPTIONS})
+  endif()
+
+  if(KWS_BUILD_TESTS)
+    add_test(NAME kws_trace_slice_self_test COMMAND kws_trace_slice --self-test)
   endif()
 endif()
 
