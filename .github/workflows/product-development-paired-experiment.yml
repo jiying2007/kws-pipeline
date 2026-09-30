@@ -127,7 +127,9 @@ jobs:
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
 
       - name: Verify objective math
-        run: .venv/bin/python training/test_sequence_margin.py
+        run: |
+          .venv/bin/python training/test_sequence_margin.py
+          .venv/bin/python training/test_ctc_primary.py
 
       - name: Run control base development
         id: control
