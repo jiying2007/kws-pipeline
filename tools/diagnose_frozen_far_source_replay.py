@@ -56,6 +56,7 @@ def normalize_spec(path: pathlib.Path) -> dict:
         "protected_evidence_used",
         "historical_run_id",
         "historical_artifact_id",
+        "historical_head_sha",
         "expected_model_sha256",
         "expected_keyword_pack_sha256",
         "cases",
@@ -81,6 +82,12 @@ def normalize_spec(path: pathlib.Path) -> dict:
     for key in ("historical_run_id", "historical_artifact_id"):
         if isinstance(value[key], bool) or not isinstance(value[key], int) or value[key] <= 0:
             raise ValueError(f"{key} must be a positive integer")
+    historical_head = value["historical_head_sha"]
+    if (
+        not isinstance(historical_head, str)
+        or re.fullmatch(r"[0-9a-f]{40}", historical_head) is None
+    ):
+        raise ValueError("historical_head_sha must be a lowercase git SHA")
     for key in ("expected_model_sha256", "expected_keyword_pack_sha256"):
         if not isinstance(value[key], str) or SHA256_RE.fullmatch(value[key]) is None:
             raise ValueError(f"{key} must be lowercase SHA256")
@@ -423,6 +430,7 @@ def self_test() -> None:
                     "protected_evidence_used": False,
                     "historical_run_id": 1,
                     "historical_artifact_id": 2,
+                    "historical_head_sha": "d" * 40,
                     "expected_model_sha256": "a" * 64,
                     "expected_keyword_pack_sha256": "b" * 64,
                     "cases": [
