@@ -10,3 +10,12 @@ The runtime in this repository is a clean-room implementation. The following pro
 - `jiying2007/audio-pipeline` — sibling low-compute DSP SDK whose memory ownership, build and target-board validation principles are mirrored here.
 
 No pretrained weights from those projects are redistributed by `kws-pipeline`.
+
+## Optional research adapter source
+
+`research/sherpa_pcm/vendor/sherpa-onnx/c-api/c-api.h` is copied unchanged from
+sherpa-onnx1.13.8 commit `11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf` under Apache-2.0.
+The upstream license is retained at `research/sherpa_pcm/vendor/LICENSE.sherpa-onnx`;
+source URL and SHA256 are recorded in that research directory's dependency lock.
+This optional research entry does not add sherpa/ONNX Runtime to the default
+product library. No third-party model, runtime binary or wheel is redistributed.
