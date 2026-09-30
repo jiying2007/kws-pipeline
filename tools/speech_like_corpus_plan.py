@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import array
 import hashlib
 import json
+import math
 import pathlib
+import re
 import shutil
+import subprocess
 import sys
+import unicodedata
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -18,9 +24,13 @@ VOICE_CLASS = "speech-like-provider-voice-slot-v1"
 INTENT_CLASS = "speech-like-request-label-intent-v1"
 MANIFEST_CLASS = "speech-like-synthetic-recording-v1"
 LABEL_CLASS = "speech-like-training-label-v1"
+ASR_REVIEW_CLASS = "speech-like-asr-review-v1"
+ASR_STANDARD = "exact-normalized-text-v1"
+CONTIGUOUS_MAX_SILENCE_MS = 120
 SPLITS = ("train", "calibration", "test", "qualification")
 ALLOWED_KINDS = {"positive", "confusable", "negative"}
 ALLOWED_PROVIDER_GROUPS = {"train", "generalization-search", "generalization-freeze"}
+SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -299,7 +309,349 @@ def intent_key(group: str, row: dict) -> tuple[str, str, str, str, tuple[str, ..
     )
 
 
-def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path, output_root: pathlib.Path) -> dict:
+def validate_cross_provider_holdout(rows_by_split: dict[str, list[dict]]) -> dict[str, dict]:
+    """Require independent TTS identities for train, search, and freeze cohorts."""
+    identities: dict[str, dict] = {}
+    for split in SPLITS:
+        rows = rows_by_split.get(split, [])
+        if not rows:
+            raise ValueError(f"cross-provider holdout requires recordings in {split}")
+        providers: dict[str, str] = {}
+        for index, row in enumerate(rows, 1):
+            name = require_text(row.get("provider_name"), f"{split} row {index}.provider_name")
+            digest = row.get("provider_identity_sha256")
+            if not isinstance(digest, str) or SHA256_RE.fullmatch(digest) is None:
+                raise ValueError(f"{split} row {index}: provider_identity_sha256 is required")
+            previous = providers.get(name)
+            if previous is not None and previous != digest:
+                raise ValueError(f"{split}: provider_name has multiple asset identities: {name}")
+            providers[name] = digest
+        if len(set(providers.values())) != len(providers):
+            raise ValueError(f"{split}: multiple provider names reuse one asset identity")
+        if split != "train" and len(providers) != 1:
+            raise ValueError(f"{split}: one pinned TTS provider is required")
+        identities[split] = {"providers": [
+            {"provider_name": name, "provider_identity_sha256": providers[name]}
+            for name in sorted(providers)
+        ]}
+
+    for left, right in (("train", "calibration"), ("train", "test"),
+                        ("train", "qualification"), ("calibration", "qualification"),
+                        ("test", "qualification")):
+        left_names = {item["provider_name"] for item in identities[left]["providers"]}
+        right_names = {item["provider_name"] for item in identities[right]["providers"]}
+        left_digests = {item["provider_identity_sha256"] for item in identities[left]["providers"]}
+        right_digests = {item["provider_identity_sha256"] for item in identities[right]["providers"]}
+        if left_names & right_names or left_digests & right_digests:
+            raise ValueError(f"cross-provider holdout reuses a TTS provider in {left}/{right}")
+    if identities["calibration"] != identities["test"]:
+        raise ValueError("calibration/test must share the pinned search provider")
+    return identities
+
+
+def validate_audio_review(path: pathlib.Path, intent_map: dict, generated: dict) -> dict:
+    """Bind a human audio verdict to every planned recording and its WAV hash."""
+    reviews: dict[tuple[str, str], dict] = {}
+    reviewers: set[str] = set()
+    for index, row in enumerate(load_jsonl(path), 1):
+        if row.get("schema_version") != 1 or row.get("evidence_class") != "speech-like-audio-review-v1":
+            raise ValueError(f"{path}:{index}: audio review identity mismatch")
+        source_id = require_text(row.get("source_id"), f"{path}:{index}.source_id")
+        file_sha = row.get("file_sha256")
+        if not isinstance(file_sha, str) or SHA256_RE.fullmatch(file_sha) is None:
+            raise ValueError(f"{path}:{index}: file_sha256 must be lowercase SHA-256")
+        key = (source_id, file_sha)
+        if key in reviews:
+            raise ValueError(f"{path}:{index}: duplicate audio review identity")
+        reviewers.add(require_text(row.get("reviewer_id"), f"{path}:{index}.reviewer_id"))
+        reviews[key] = row
+
+    expected: set[tuple[str, str]] = set()
+    for key, intent in intent_map.items():
+        source = generated[key]
+        identity = (str(source["source_id"]), str(source["file_sha256"]))
+        expected.add(identity)
+        review = reviews.get(identity)
+        if review is None:
+            raise ValueError(f"audio review is missing for source_id={identity[0]}")
+        if (review.get("intended_text") != intent["text"]
+                or review.get("kind") != intent["kind"]
+                or review.get("keyword_id") != intent["keyword_id"]):
+            raise ValueError(f"audio review label differs from plan: source_id={identity[0]}")
+        if review.get("verdict") != "accepted":
+            raise ValueError(f"audio review is not accepted: source_id={identity[0]}")
+    if set(reviews) != expected:
+        raise ValueError("audio review contains unplanned or stale recordings")
+    return {"review_sha256": sha256_file(path), "recordings": len(reviews),
+            "reviewer_count": len(reviewers)}
+
+
+def normalize_asr_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value)
+    return "".join(char for char in normalized
+                   if not char.isspace() and not unicodedata.category(char).startswith("P"))
+
+
+def internal_silence_ms(audio: pathlib.Path) -> int:
+    """Measure the longest low-energy run between the first/last active 10 ms frames."""
+    with wave.open(str(audio), "rb") as stream:
+        if (stream.getframerate(), stream.getnchannels(), stream.getsampwidth(), stream.getcomptype()) != (
+                16000, 1, 2, "NONE"):
+            raise ValueError(f"{audio}: continuity input must be 16 kHz mono PCM16")
+        samples = array.array("h")
+        samples.frombytes(stream.readframes(stream.getnframes()))
+    if sys.byteorder != "little":
+        samples.byteswap()
+    frame_samples = 160
+    levels = [math.sqrt(sum(float(sample * sample) for sample in samples[i:i + frame_samples])
+                        / frame_samples)
+              for i in range(0, len(samples) - frame_samples + 1, frame_samples)]
+    if not levels or max(levels) < 100:
+        return len(levels) * 10
+    threshold = max(levels) * 0.01
+    active = [i for i, level in enumerate(levels) if level >= threshold]
+    longest = current = 0
+    for index in range(active[0], active[-1] + 1):
+        if levels[index] < threshold:
+            current += 1
+            longest = max(longest, current)
+        else:
+            current = 0
+    return longest * 10
+
+
+def generate_asr_review(manifests: list[pathlib.Path], audio_root: pathlib.Path | None,
+                        asr_binary: pathlib.Path, asr_model: pathlib.Path,
+                        asr_tokens: pathlib.Path, output: pathlib.Path,
+                        intents: pathlib.Path | None = None) -> dict:
+    """Use a fixed ASR binary/model to conservatively screen synthetic WAVs."""
+    if output.exists():
+        raise ValueError(f"ASR review output already exists: {output}")
+    binary_sha = sha256_file(asr_binary)
+    model_sha = sha256_file(asr_model)
+    tokens_sha = sha256_file(asr_tokens)
+    intent_by_source: dict[str, dict] = {}
+    if intents is not None:
+        for index, intent in enumerate(load_jsonl(intents), 1):
+            if intent.get("schema_version") != 1 or intent.get("evidence_class") != INTENT_CLASS:
+                raise ValueError(f"{intents}:{index}: label intent identity mismatch")
+            source_id = require_text(intent.get("source_id"), f"{intents}:{index}.source_id")
+            if source_id in intent_by_source:
+                raise ValueError(f"{intents}:{index}: duplicate source_id")
+            intent_by_source[source_id] = intent
+    reviewed: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    seen_sources: set[str] = set()
+    for manifest, index, row in (
+        (manifest, index, row)
+        for manifest in manifests
+        for index, row in enumerate(load_jsonl(manifest), 1)
+    ):
+        source_id = require_text(row.get("source_id"), f"{manifest}:{index}.source_id")
+        if source_id in seen_sources:
+            raise ValueError(f"{manifest}:{index}: duplicate source_id")
+        seen_sources.add(source_id)
+        file_sha = require_text(row.get("file_sha256"), f"{manifest}:{index}.file_sha256")
+        if SHA256_RE.fullmatch(file_sha) is None:
+            raise ValueError(f"{manifest}:{index}: invalid WAV SHA-256")
+        identity = (source_id, file_sha)
+        if identity in seen:
+            raise ValueError(f"{manifest}:{index}: duplicate WAV identity")
+        seen.add(identity)
+        intended = require_text(row.get("text"), f"{manifest}:{index}.text")
+        intent = intent_by_source.get(source_id) if intents is not None else None
+        if intents is not None and intent is None:
+            raise ValueError(f"{manifest}:{index}: no matching label intent")
+        if intent is not None and intent.get("text") != intended:
+            raise ValueError(f"{manifest}:{index}: generated text differs from intent")
+        kind = require_text(row.get("kind") if row.get("kind") is not None else
+                            intent.get("kind") if intent is not None else None,
+                            f"{manifest}:{index}.kind")
+        if kind not in ALLOWED_KINDS:
+            raise ValueError(f"{manifest}:{index}: invalid kind")
+        keyword_id = row.get("keyword_id") if "keyword_id" in row else (
+            intent.get("keyword_id") if intent is not None else None)
+        if intent is not None and (kind != intent.get("kind") or keyword_id != intent.get("keyword_id")):
+            raise ValueError(f"{manifest}:{index}: generated label differs from intent")
+        if (kind == "positive" and keyword_id not in (1, 2)) or (kind != "positive" and keyword_id is not None):
+            raise ValueError(f"{manifest}:{index}: invalid keyword_id for kind")
+        audio_name = require_text(row.get("audio_path") or row.get("audio"),
+                                  f"{manifest}:{index}.audio")
+        audio = pathlib.Path(audio_name)
+        if not audio.is_absolute():
+            audio = (audio_root if audio_root is not None else manifest.parent) / audio
+        audio = audio.resolve(strict=True)
+        if sha256_file(audio) != file_sha:
+            raise ValueError(f"{manifest}:{index}: WAV SHA-256 mismatch")
+        with wave.open(str(audio), "rb") as stream:
+            if (stream.getframerate(), stream.getnchannels(), stream.getsampwidth(), stream.getcomptype()) != (
+                    16000, 1, 2, "NONE"):
+                raise ValueError(f"{manifest}:{index}: ASR input must be 16 kHz mono PCM16")
+        result = subprocess.run(
+            [str(asr_binary), f"--zipformer-ctc-model={asr_model}",
+             f"--tokens={asr_tokens}", "--num-threads=2", str(audio)],
+            check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            timeout=60,
+        )
+        transcripts = [json.loads(line)["text"] for line in result.stdout.splitlines()
+                       if line.startswith("{") and '"text"' in line]
+        if len(transcripts) != 1 or not isinstance(transcripts[0], str):
+            raise ValueError(f"{manifest}:{index}: ASR output must contain one transcript")
+        asr_text = transcripts[0]
+        accepted = bool(normalize_asr_text(intended)) and normalize_asr_text(asr_text) == normalize_asr_text(intended)
+        reviewed.append({
+            "schema_version": 1, "evidence_class": ASR_REVIEW_CLASS,
+            "asr_standard": ASR_STANDARD, "source_id": source_id,
+            "file_sha256": file_sha, "intended_text": intended,
+            "kind": kind, "keyword_id": keyword_id, "asr_text": asr_text,
+            "verdict": "accepted" if accepted else "rejected",
+            "asr_binary_sha256": binary_sha, "asr_model_sha256": model_sha,
+            "asr_tokens_sha256": tokens_sha,
+            "usage_class": row.get("usage_class"),
+        })
+    if intents is not None and {row["source_id"] for row in reviewed} != set(intent_by_source):
+        raise ValueError("ASR review manifests do not cover all planned source IDs")
+    write_jsonl(output, reviewed)
+    return {"recordings": len(reviewed),
+            "accepted": sum(row["verdict"] == "accepted" for row in reviewed),
+            "rejected": sum(row["verdict"] == "rejected" for row in reviewed),
+            "review_sha256": sha256_file(output),
+            "asr_binary_sha256": binary_sha, "asr_model_sha256": model_sha,
+            "asr_tokens_sha256": tokens_sha}
+
+
+def validate_asr_review(path: pathlib.Path, intent_map: dict, generated: dict) -> dict:
+    """Keep ASR evidence distinct from human listening receipts."""
+    reviews: dict[tuple[str, str], dict] = {}
+    engines: set[tuple[str, str, str]] = set()
+    for index, row in enumerate(load_jsonl(path), 1):
+        if row.get("schema_version") != 1 or row.get("evidence_class") != ASR_REVIEW_CLASS or row.get("asr_standard") != ASR_STANDARD:
+            raise ValueError(f"{path}:{index}: ASR review identity mismatch")
+        identity = (require_text(row.get("source_id"), f"{path}:{index}.source_id"),
+                    require_text(row.get("file_sha256"), f"{path}:{index}.file_sha256"))
+        if SHA256_RE.fullmatch(identity[1]) is None or identity in reviews:
+            raise ValueError(f"{path}:{index}: invalid or duplicate WAV identity")
+        engine = tuple(require_text(row.get(field), f"{path}:{index}.{field}")
+                       for field in ("asr_binary_sha256", "asr_model_sha256", "asr_tokens_sha256"))
+        if any(SHA256_RE.fullmatch(value) is None for value in engine):
+            raise ValueError(f"{path}:{index}: invalid ASR engine SHA-256")
+        engines.add(engine)
+        intended = require_text(row.get("intended_text"), f"{path}:{index}.intended_text")
+        asr_text = row.get("asr_text")
+        if not isinstance(asr_text, str):
+            raise ValueError(f"{path}:{index}: invalid ASR transcript")
+        expected_verdict = ("accepted" if normalize_asr_text(asr_text) == normalize_asr_text(intended)
+                            and bool(normalize_asr_text(intended)) else "rejected")
+        if row.get("verdict") != expected_verdict:
+            raise ValueError(f"{path}:{index}: ASR verdict differs from transcript")
+        reviews[identity] = row
+    if len(engines) != 1:
+        raise ValueError("ASR review contains multiple engine identities")
+    expected: set[tuple[str, str]] = set()
+    for key, intent in intent_map.items():
+        source = generated[key]
+        identity = (str(source["source_id"]), str(source["file_sha256"]))
+        expected.add(identity)
+        review = reviews.get(identity)
+        if review is None:
+            raise ValueError(f"ASR review is missing for source_id={identity[0]}")
+        if (review.get("intended_text") != intent["text"] or review.get("kind") != intent["kind"]
+                or review.get("keyword_id") != intent["keyword_id"]):
+            raise ValueError(f"ASR review label differs from plan: source_id={identity[0]}")
+        if review.get("verdict") != "accepted":
+            raise ValueError(f"ASR review is not accepted: source_id={identity[0]}")
+        # ASR verifies lexical content; a continuous target also needs a bounded
+        # internal gap. Explicitly punctuated plan variants keep their own label.
+        if (intent["kind"] == "positive" and not any(
+                unicodedata.category(char).startswith("P") for char in intent["text"])):
+            audio = source.get("audio")
+            if audio is None:
+                raise ValueError(f"ASR continuity check is missing audio: source_id={identity[0]}")
+            if internal_silence_ms(pathlib.Path(str(audio))) >= CONTIGUOUS_MAX_SILENCE_MS:
+                raise ValueError(f"ASR accepted text but positive has long internal silence: source_id={identity[0]}")
+    if set(reviews) != expected:
+        raise ValueError("ASR review contains unplanned or stale recordings")
+    engine = next(iter(engines))
+    return {"review_sha256": sha256_file(path), "recordings": len(reviews),
+            "asr_standard": ASR_STANDARD, "asr_binary_sha256": engine[0],
+            "asr_model_sha256": engine[1], "asr_tokens_sha256": engine[2],
+            "contiguous_max_internal_silence_ms": CONTIGUOUS_MAX_SILENCE_MS}
+
+
+def validate_mixed_reviews(audio_review: pathlib.Path, asr_review: pathlib.Path,
+                           intent_map: dict, generated: dict) -> tuple[dict, dict]:
+    """Require disjoint, complete human/ASR coverage for a mixed research corpus."""
+    expected = {(str(generated[key]["source_id"]), str(generated[key]["file_sha256"])): key
+                for key in intent_map}
+    if len(expected) != len(intent_map):
+        raise ValueError("planned review WAV identities are not unique")
+
+    def identities(path: pathlib.Path) -> set[tuple[str, str]]:
+        values = [(require_text(row.get("source_id"), f"{path}.source_id"),
+                   require_text(row.get("file_sha256"), f"{path}.file_sha256"))
+                  for row in load_jsonl(path)]
+        if len(set(values)) != len(values):
+            raise ValueError(f"{path}: duplicate review WAV identity")
+        return set(values)
+
+    human = identities(audio_review)
+    machine = identities(asr_review)
+    if human & machine:
+        raise ValueError("human and ASR reviews overlap on a WAV identity")
+    if human | machine != set(expected):
+        raise ValueError("mixed reviews do not cover exactly the planned WAV identities")
+    human_intents = {expected[identity]: intent_map[expected[identity]] for identity in human}
+    machine_intents = {expected[identity]: intent_map[expected[identity]] for identity in machine}
+    return (validate_audio_review(audio_review, human_intents, generated),
+            validate_asr_review(asr_review, machine_intents, generated))
+
+
+def merge_generated_manifests(inputs: list[pathlib.Path], output: pathlib.Path) -> dict:
+    """Combine independently generated providers without losing their audio roots."""
+    if len(inputs) < 2:
+        raise ValueError("provider merge requires at least two manifests")
+    if output.exists():
+        raise ValueError(f"provider merge output already exists: {output}")
+    merged: list[dict] = []
+    sources: set[str] = set()
+    file_hashes: set[str] = set()
+    providers: set[tuple[str, str]] = set()
+    for manifest in inputs:
+        for index, row in enumerate(load_jsonl(manifest), 1):
+            if row.get("schema_version") != 1 or row.get("evidence_class") != MANIFEST_CLASS:
+                raise ValueError(f"{manifest}:{index}: generated manifest identity mismatch")
+            source_id = require_text(row.get("source_id"), f"{manifest}:{index}.source_id")
+            provider_name = require_text(row.get("provider_name"), f"{manifest}:{index}.provider_name")
+            provider_sha = row.get("provider_identity_sha256")
+            file_sha = row.get("file_sha256")
+            if (not isinstance(provider_sha, str) or SHA256_RE.fullmatch(provider_sha) is None
+                    or not isinstance(file_sha, str) or SHA256_RE.fullmatch(file_sha) is None):
+                raise ValueError(f"{manifest}:{index}: provider/audio SHA-256 is required")
+            if source_id in sources or file_sha in file_hashes:
+                raise ValueError(f"{manifest}:{index}: duplicate source or audio identity")
+            raw_audio = require_text(row.get("audio"), f"{manifest}:{index}.audio")
+            audio = pathlib.Path(raw_audio)
+            audio = audio.resolve() if audio.is_absolute() else (manifest.parent / audio).resolve()
+            if not audio.is_file() or sha256_file(audio) != file_sha:
+                raise ValueError(f"{manifest}:{index}: WAV missing or SHA-256 mismatch")
+            normalized = dict(row)
+            normalized["audio"] = str(audio)
+            merged.append(normalized)
+            sources.add(source_id)
+            file_hashes.add(file_sha)
+            providers.add((provider_name, provider_sha))
+    if len(providers) < 2:
+        raise ValueError("provider merge did not contain two distinct TTS providers")
+    merged.sort(key=lambda row: (str(row["provider_name"]), str(row["source_id"])))
+    write_jsonl(output, merged)
+    return {"recordings": len(merged), "providers": len(providers),
+            "manifest_sha256": sha256_file(output)}
+
+
+def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
+                       output_root: pathlib.Path, *, require_cross_provider_holdout: bool = False,
+                       audio_review: pathlib.Path | None = None,
+                       asr_review: pathlib.Path | None = None) -> dict:
     intents = load_jsonl(intents_path)
     intent_map: dict[tuple[str, str, str, str, tuple[str, ...]], dict] = {}
     for index, row in enumerate(intents, 1):
@@ -342,6 +694,19 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
         extra = sorted(set(generated) - set(intent_map))
         raise ValueError(f"generated corpus does not match planned requests; missing={len(missing)} extra={len(extra)}")
 
+    if audio_review is not None and asr_review is not None:
+        review_summary, asr_summary = validate_mixed_reviews(
+            audio_review, asr_review, intent_map, generated)
+    else:
+        review_summary = (
+            validate_audio_review(audio_review, intent_map, generated)
+            if audio_review is not None else None
+        )
+        asr_summary = (
+            validate_asr_review(asr_review, intent_map, generated)
+            if asr_review is not None else None
+        )
+
     split_rows: dict[str, list[dict]] = {split: [] for split in SPLITS}
     split_labels: dict[str, list[dict]] = {split: [] for split in SPLITS}
     for key, intent in intent_map.items():
@@ -360,6 +725,11 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
                 "label_source": POLICY,
             }
         )
+
+    provider_holdout = (
+        validate_cross_provider_holdout(split_rows)
+        if require_cross_provider_holdout else None
+    )
 
     split_summary: dict[str, dict] = {}
     for split in SPLITS:
@@ -394,7 +764,7 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
             "labeled_manifest": str(labeled_manifest),
             "labeled_manifest_sha256": sha256_file(labeled_manifest),
         }
-    return {
+    summary = {
         "schema_version": 1,
         "evidence_class": "speech-like-corpus-materialization-v1",
         "policy": POLICY,
@@ -404,6 +774,13 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
         "recordings": sum(item["recordings"] for item in split_summary.values()),
         "protected_evidence_used": False,
     }
+    if provider_holdout is not None:
+        summary["cross_provider_holdout"] = provider_holdout
+    if review_summary is not None:
+        summary["audio_review"] = review_summary
+    if asr_summary is not None:
+        summary["asr_review"] = asr_summary
+    return summary
 
 
 def main() -> int:
@@ -422,6 +799,22 @@ def main() -> int:
     materialize.add_argument("--generated-root", required=True, type=pathlib.Path)
     materialize.add_argument("--output-root", required=True, type=pathlib.Path)
     materialize.add_argument("--summary", required=True, type=pathlib.Path)
+    materialize.add_argument("--require-cross-provider-holdout", action="store_true")
+    materialize.add_argument("--audio-review", type=pathlib.Path)
+    materialize.add_argument("--asr-review", type=pathlib.Path)
+
+    asr = sub.add_parser("asr-review", help="Hash-bound exact-ASR screening of synthetic WAVs")
+    asr.add_argument("--manifest", required=True, action="append", type=pathlib.Path)
+    asr.add_argument("--audio-root", type=pathlib.Path)
+    asr.add_argument("--intents", type=pathlib.Path)
+    asr.add_argument("--asr-binary", required=True, type=pathlib.Path)
+    asr.add_argument("--asr-model", required=True, type=pathlib.Path)
+    asr.add_argument("--asr-tokens", required=True, type=pathlib.Path)
+    asr.add_argument("--output", required=True, type=pathlib.Path)
+
+    merge = sub.add_parser("merge", help="Merge disjoint provider manifests into one group")
+    merge.add_argument("--input-manifest", required=True, action="append", type=pathlib.Path)
+    merge.add_argument("--output-manifest", required=True, type=pathlib.Path)
 
     args = parser.parse_args()
     if args.command == "build":
@@ -436,7 +829,30 @@ def main() -> int:
         )
         return 0
 
-    summary = materialize_labels(args.intents.resolve(), args.generated_root.resolve(), args.output_root.resolve())
+    if args.command == "merge":
+        summary = merge_generated_manifests(
+            [path.resolve() for path in args.input_manifest], args.output_manifest.resolve()
+        )
+        print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+        return 0
+
+    if args.command == "asr-review":
+        summary = generate_asr_review(
+            [path.resolve() for path in args.manifest],
+            args.audio_root.resolve() if args.audio_root is not None else None,
+            args.asr_binary.resolve(strict=True), args.asr_model.resolve(strict=True),
+            args.asr_tokens.resolve(strict=True), args.output.resolve(),
+            intents=args.intents.resolve(strict=True) if args.intents is not None else None,
+        )
+        print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+        return 0
+
+    summary = materialize_labels(
+        args.intents.resolve(), args.generated_root.resolve(), args.output_root.resolve(),
+        require_cross_provider_holdout=args.require_cross_provider_holdout,
+        audio_review=args.audio_review.resolve() if args.audio_review is not None else None,
+        asr_review=args.asr_review.resolve() if args.asr_review is not None else None,
+    )
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"speech-like corpus materialized: recordings={summary['recordings']}")
@@ -446,6 +862,7 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (KeyError, OSError, TypeError, ValueError) as exc:
+    except (KeyError, OSError, subprocess.CalledProcessError,
+            subprocess.TimeoutExpired, TypeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

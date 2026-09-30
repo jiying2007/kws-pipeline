@@ -285,6 +285,35 @@ def training_metadata(checkpoint: dict) -> dict:
         }
         result["development_only"] = True
 
+    inactive_blank = checkpoint.get("inactive_blank_objective")
+    if inactive_blank is not None:
+        if (not isinstance(inactive_blank, dict)
+                or set(inactive_blank) != {"policy", "weight", "development_only"}
+                or inactive_blank.get("policy") != "development-real-inactive-blank-ce-v1"
+                or inactive_blank.get("development_only") is not True
+                or "ctc_vad_alignment" not in result):
+            raise ValueError("checkpoint inactive blank objective contract is invalid")
+        weight = float(inactive_blank["weight"])
+        if not math.isfinite(weight) or weight <= 0.0:
+            raise ValueError("checkpoint inactive blank objective weight is invalid")
+        result["inactive_blank_objective"] = {
+            "policy": inactive_blank["policy"],
+            "weight": weight,
+            "development_only": True,
+        }
+        result["development_only"] = True
+
+    auxiliary_vad = checkpoint.get("auxiliary_vad_alignment")
+    if auxiliary_vad is not None:
+        if (not isinstance(auxiliary_vad, dict)
+                or set(auxiliary_vad) != {"policy", "development_only"}
+                or auxiliary_vad.get("policy") != "development-auxiliary-active-frame-compress-v1"
+                or auxiliary_vad.get("development_only") is not True
+                or "ctc_vad_alignment" not in result):
+            raise ValueError("checkpoint auxiliary VAD alignment contract is invalid")
+        result["auxiliary_vad_alignment"] = dict(auxiliary_vad)
+        result["development_only"] = True
+
     if "warm_start_binding" in checkpoint:
         binding = checkpoint["warm_start_binding"]
         required = {

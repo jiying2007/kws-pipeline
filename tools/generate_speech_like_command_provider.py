@@ -254,6 +254,7 @@ def generate(
     requests: list[dict],
     output_root: pathlib.Path,
     workers: int = 1,
+    emit_provider_identity: bool = False,
 ) -> dict:
     if workers <= 0 or workers > 4:
         raise ValueError("generation workers must be in [1,4]")
@@ -317,6 +318,8 @@ def generate(
             "file_sha256": inspected["file_sha256"],
             "pcm_sha256": inspected["pcm_sha256"],
         }
+        if emit_provider_identity:
+            manifest["provider_identity_sha256"] = canonical_sha256(provider["identity"])
         return ordinal, group, index, manifest
 
     rendered: list[tuple[int, str, int, dict]] = []
@@ -381,6 +384,7 @@ def main() -> int:
     parser.add_argument("--output-root", required=True, type=pathlib.Path)
     parser.add_argument("--summary", required=True, type=pathlib.Path)
     parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--emit-provider-identity", action="store_true")
     args = parser.parse_args()
     policy = load_policy(args.policy.resolve())
     provider_path = args.provider.resolve()
@@ -392,6 +396,7 @@ def main() -> int:
         requests=requests,
         output_root=args.output_root.resolve(),
         workers=args.workers,
+        emit_provider_identity=args.emit_provider_identity,
     )
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -355,6 +355,10 @@ def score(
     negative_seconds = sum(
         float(recordings[name]["duration_s"]) for name in negative_recordings
     )
+    longest_negative_recording_seconds = max(
+        (float(recordings[name]["duration_s"]) for name in negative_recordings),
+        default=0.0,
+    )
     negative_hours = negative_seconds / 3600.0
     negative_false_accepts = sum(
         1 for item in false_accepts if item["recording"] in negative_recordings
@@ -388,6 +392,7 @@ def score(
         "frr": frr,
         "far_per_hour": far_per_hour,
         "negative_recording_audio_hours": negative_hours,
+        "longest_negative_recording_seconds": longest_negative_recording_seconds,
         "negative_recording_false_accepts": negative_false_accepts,
         "negative_recording_far_per_hour": negative_far_per_hour,
         "negative_recording_far_upper_95_per_hour": negative_far_upper_95,
@@ -429,6 +434,11 @@ def main() -> int:
     parser.add_argument("--max-far-per-hour", type=float)
     parser.add_argument("--max-frr", type=float)
     parser.add_argument("--max-p95-latency-ms", type=float)
+    parser.add_argument("--min-expected-per-keyword", action="append", nargs=2,
+                        metavar=("KEYWORD_ID", "COUNT"), default=[])
+    parser.add_argument("--min-negative-hours", type=float)
+    parser.add_argument("--min-continuous-negative-seconds", type=float)
+    parser.add_argument("--max-negative-far-upper-95-per-hour", type=float)
     args = parser.parse_args()
 
     validate_gate(args.pre_tolerance_ms, "pre tolerance")
@@ -436,6 +446,18 @@ def main() -> int:
     validate_gate(args.max_far_per_hour, "max FAR/hour")
     validate_gate(args.max_frr, "max FRR", 1.0)
     validate_gate(args.max_p95_latency_ms, "max p95 latency")
+    validate_gate(args.min_negative_hours, "min negative hours")
+    validate_gate(args.min_continuous_negative_seconds,
+                  "min continuous negative seconds")
+    validate_gate(args.max_negative_far_upper_95_per_hour,
+                  "max negative FAR upper 95/hour")
+    required_keywords: dict[str, int] = {}
+    for raw_id, raw_count in args.min_expected_per_keyword:
+        keyword_id = str(uint32_value(raw_id, "required keyword ID"))
+        count = uint32_value(raw_count, "required keyword count")
+        if count == 0 or keyword_id in required_keywords:
+            raise ValueError("required keyword counts must be positive and IDs unique")
+        required_keywords[keyword_id] = count
 
     recordings = validate_recordings(load_jsonl(args.references))
     detections = validate_detections(load_jsonl(args.detections), recordings)
@@ -459,6 +481,31 @@ def main() -> int:
         write_jsonl(args.false_rejects, false_rejects)
 
     failed = False
+    if args.max_frr is not None and summary["expected"] == 0:
+        print("gate failed: FRR has no positive events", file=sys.stderr)
+        failed = True
+    if args.max_p95_latency_ms is not None and summary["matched"] == 0:
+        print("gate failed: latency has no matched events", file=sys.stderr)
+        failed = True
+    for keyword_id, count in required_keywords.items():
+        observed = summary["per_keyword"].get(keyword_id, {}).get("expected", 0)
+        if observed < count:
+            print(f"gate failed: keyword {keyword_id} expected coverage", file=sys.stderr)
+            failed = True
+    if (args.min_negative_hours is not None
+            and summary["negative_recording_audio_hours"] < args.min_negative_hours):
+        print("gate failed: negative recording hours", file=sys.stderr)
+        failed = True
+    if (args.min_continuous_negative_seconds is not None
+            and summary["longest_negative_recording_seconds"]
+            < args.min_continuous_negative_seconds):
+        print("gate failed: continuous negative recording duration", file=sys.stderr)
+        failed = True
+    if args.max_negative_far_upper_95_per_hour is not None:
+        upper = summary["negative_recording_far_upper_95_per_hour"]
+        if upper is None or upper > args.max_negative_far_upper_95_per_hour:
+            print("gate failed: negative FAR upper 95/hour", file=sys.stderr)
+            failed = True
     if (
         args.max_far_per_hour is not None
         and summary["far_per_hour"] > args.max_far_per_hour

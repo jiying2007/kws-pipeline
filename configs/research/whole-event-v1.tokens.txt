@@ -1,0 +1,4 @@
+<blk> 0
+kw1 1
+kw2 2
+reject 3

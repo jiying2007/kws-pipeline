@@ -77,6 +77,8 @@ RECURRENT_RELEASE_CONTEXT_STEPS = 4
 RECURRENT_RELEASE_LOSS_WEIGHT = 0.05
 CTC_VAD_ALIGNMENT_POLICY = "development-pcm-dbfs-gated-ctc-v1"
 CTC_INACTIVE_LOG_PROBABILITY = -30.0
+INACTIVE_BLANK_POLICY = "development-real-inactive-blank-ce-v1"
+AUX_VAD_ALIGNMENT_POLICY = "development-auxiliary-active-frame-compress-v1"
 SAMPLE_WEIGHT_NORMALIZATION_POLICY = "dataset-mean-sample-weight-v1"
 IMAGE_DIGEST_RE = re.compile(r"sha256:[0-9a-f]{64}")
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
@@ -534,6 +536,62 @@ def vad_aligned_ctc_log_probs(
     return torch.where(valid_token_frame.unsqueeze(2), log_probs, blank_only)
 
 
+def inactive_frame_blank_loss(
+    log_probs: torch.Tensor,
+    vad_mask: torch.Tensor,
+    input_lengths: torch.Tensor,
+    target_lengths: torch.Tensor,
+) -> torch.Tensor:
+    """Penalize nonblank output on real VAD-inactive frames of nonempty clips."""
+    if log_probs.ndim != 3 or vad_mask.shape != (log_probs.shape[1], log_probs.shape[0]):
+        raise ValueError("inactive blank loss requires aligned [T,B,V] posteriors/VAD")
+    if (vad_mask.dtype != torch.bool or input_lengths.shape != (log_probs.shape[1],)
+            or target_lengths.shape != input_lengths.shape):
+        raise ValueError("inactive blank loss lengths or VAD mask are invalid")
+    steps = torch.arange(log_probs.shape[0], device=log_probs.device).unsqueeze(0)
+    real_inactive = (
+        (steps < input_lengths.unsqueeze(1))
+        & ~vad_mask
+        & (target_lengths > 0).unsqueeze(1)
+    )
+    blank_nll = -log_probs[:, :, 0].transpose(0, 1)
+    counts = real_inactive.sum(dim=1).clamp_min(1)
+    return (blank_nll * real_inactive.to(blank_nll.dtype)).sum(dim=1) / counts
+
+
+def auxiliary_vad_log_probs(
+    log_probs: torch.Tensor,
+    vad_mask: torch.Tensor | None,
+    input_lengths: torch.Tensor,
+    target_lengths: torch.Tensor,
+    *,
+    enabled: bool,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    if not enabled:
+        return log_probs, input_lengths
+    if vad_mask is None:
+        raise ValueError("auxiliary VAD alignment requires a VAD mask")
+    if (log_probs.ndim != 3 or vad_mask.shape != (log_probs.shape[1], log_probs.shape[0])
+            or vad_mask.dtype != torch.bool
+            or input_lengths.shape != (log_probs.shape[1],)
+            or target_lengths.shape != input_lengths.shape):
+        raise ValueError("auxiliary VAD alignment shapes are invalid")
+    selected: list[torch.Tensor] = []
+    lengths: list[int] = []
+    for batch_index in range(log_probs.shape[1]):
+        steps = int(input_lengths[batch_index])
+        if steps <= 0 or steps > log_probs.shape[0]:
+            raise ValueError("auxiliary VAD input length is invalid")
+        real = log_probs[:steps, batch_index, :]
+        active = real[vad_mask[batch_index, :steps]] if int(target_lengths[batch_index]) > 0 else real
+        if active.shape[0] < int(target_lengths[batch_index]):
+            raise ValueError("auxiliary VAD has too few active frames for target")
+        selected.append(active)
+        lengths.append(int(active.shape[0]))
+    padded = torch.nn.utils.rnn.pad_sequence(selected, batch_first=False, padding_value=-30.0)
+    return padded, input_lengths.new_tensor(lengths)
+
+
 def collate(batch):
     aligned = len(batch[0]) == 3
     if any((len(row) == 3) != aligned for row in batch):
@@ -908,6 +966,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
     parser.add_argument("--ctc-vad-align", action="store_true")
+    parser.add_argument("--aux-vad-align", action="store_true")
+    parser.add_argument("--inactive-blank-loss-weight", type=float, default=0.0)
     parser.add_argument("--head-only", action="store_true")
     parser.add_argument("--positive-example-weight", type=float, default=POSITIVE_EXAMPLE_WEIGHT)
     parser.add_argument("--wake-example-weight", type=float, default=WAKE_EXAMPLE_WEIGHT)
@@ -993,6 +1053,7 @@ def main() -> None:
         "prefix_completion_loss_weight",
         "recurrent_release_loss_weight",
         "path_purity_loss_weight",
+        "inactive_blank_loss_weight",
     ):
         value = float(getattr(args, name))
         if not math.isfinite(value) or value < 0.0:
@@ -1021,6 +1082,10 @@ def main() -> None:
         parser.error("recurrent release loss weight must be finite and > 0")
     if args.head_only and not args.warm_start:
         parser.error("--head-only requires --warm-start")
+    if args.inactive_blank_loss_weight > 0.0 and not args.ctc_vad_align:
+        parser.error("--inactive-blank-loss-weight requires --ctc-vad-align")
+    if args.aux_vad_align and not args.ctc_vad_align:
+        parser.error("--aux-vad-align requires --ctc-vad-align")
 
     environment = training_environment()
     if args.require_container_digest and environment["training_image_digest"] is None:
@@ -1104,6 +1169,7 @@ def main() -> None:
         total_completion = 0.0
         total_release = 0.0
         total_path_purity = 0.0
+        total_inactive_blank = 0.0
         ordered_correct = 0
         ordered_total = 0
         for batch in loader:
@@ -1117,6 +1183,10 @@ def main() -> None:
                 raw_ctc = loss_fn(ctc_probs, y, xlen, ylen)
             else:
                 raw_ctc = loss_fn(log_probs, y, xlen, ylen)
+            aux_probs, aux_lengths = auxiliary_vad_log_probs(
+                log_probs, vad_mask if args.ctc_vad_align else None,
+                xlen, ylen, enabled=args.aux_vad_align,
+            )
             target_weights = torch.where(
                 ylen > 0,
                 torch.full_like(ylen, args.positive_example_weight, dtype=torch.float32),
@@ -1151,9 +1221,9 @@ def main() -> None:
                 if ordered_mean_weight is None:
                     raise ValueError("exact-wake ordered-token scope has no exact wake examples")
                 ordered_loss, batch_correct, batch_total = ordered_token_loss(
-                    log_probs,
+                    aux_probs,
                     y,
-                    xlen,
+                    aux_lengths,
                     ylen,
                     sample_weights,
                     normalization_mean_weight=float(ordered_mean_weight),
@@ -1169,9 +1239,9 @@ def main() -> None:
                 batch_correct = batch_total = 0
             if args.keyword_sequence_margin_loss_weight > 0.0:
                 margin_per_sample = keyword_sequence_margin_loss(
-                    log_probs=log_probs,
+                    log_probs=aux_probs,
                     targets=y,
-                    input_lengths=xlen,
+                    input_lengths=aux_lengths,
                     target_lengths=ylen,
                     true_ctc_nll=raw_ctc,
                     keyword_sequences=keyword_sequences,
@@ -1189,9 +1259,9 @@ def main() -> None:
                 margin_loss = log_probs.sum() * 0.0
             if args.prefix_completion_loss_weight > 0.0:
                 completion_per_sample = strict_prefix_completion_loss(
-                    log_probs=log_probs,
+                    log_probs=aux_probs,
                     targets=y,
-                    input_lengths=xlen,
+                    input_lengths=aux_lengths,
                     target_lengths=ylen,
                     keyword_sequences=keyword_sequences,
                     keyword_operating_points=keyword_operating_points,
@@ -1210,9 +1280,9 @@ def main() -> None:
             )
             if args.path_purity_loss_weight > 0.0:
                 path_purity_per_sample = ordered_path_purity_loss(
-                    log_probs=log_probs,
+                    log_probs=aux_probs,
                     targets=y,
-                    input_lengths=xlen,
+                    input_lengths=aux_lengths,
                     target_lengths=ylen,
                     keyword_sequences=keyword_sequences,
                     blank=0,
@@ -1225,6 +1295,17 @@ def main() -> None:
                 )
             else:
                 path_purity_loss = log_probs.sum() * 0.0
+            if args.inactive_blank_loss_weight > 0.0:
+                inactive_blank_per_sample = inactive_frame_blank_loss(
+                    log_probs, vad_mask, xlen, ylen,
+                )
+                inactive_blank_loss = normalized_weighted_mean(
+                    inactive_blank_per_sample,
+                    sample_weights,
+                    float(weight_statistics["all_mean_weight"]),
+                )
+            else:
+                inactive_blank_loss = log_probs.sum() * 0.0
             loss = (
                 ctc_loss
                 + args.ordered_token_loss_weight * ordered_loss
@@ -1232,6 +1313,7 @@ def main() -> None:
                 + args.prefix_completion_loss_weight * completion_loss
                 + args.recurrent_release_loss_weight * release_loss
                 + args.path_purity_loss_weight * path_purity_loss
+                + args.inactive_blank_loss_weight * inactive_blank_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -1244,6 +1326,7 @@ def main() -> None:
             total_completion += float(completion_loss.detach())
             total_release += float(release_loss.detach())
             total_path_purity += float(path_purity_loss.detach())
+            total_inactive_blank += float(inactive_blank_loss.detach())
             ordered_correct += batch_correct
             ordered_total += batch_total
         batches = max(1, len(loader))
@@ -1259,6 +1342,8 @@ def main() -> None:
             "path_purity": total_path_purity / batches,
             "ordered_token_accuracy": ordered_accuracy,
         }
+        if args.inactive_blank_loss_weight > 0.0:
+            epoch_metrics["inactive_blank"] = total_inactive_blank / batches
         epoch_history.append(epoch_metrics)
         print(
             f"epoch={epoch + 1} loss={epoch_metrics['loss']:.6f} "
@@ -1266,7 +1351,9 @@ def main() -> None:
             f"margin={epoch_metrics['margin']:.6f} completion={epoch_metrics['completion']:.6f} "
             f"release={epoch_metrics['release']:.6f} "
             f"path_purity={epoch_metrics['path_purity']:.6f} "
-            f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}",
+            + (f"inactive_blank={epoch_metrics['inactive_blank']:.6f} "
+               if args.inactive_blank_loss_weight > 0.0 else "")
+            + f"ordered_token_acc={epoch_metrics['ordered_token_accuracy']:.6f}",
             flush=True,
         )
 
@@ -1313,6 +1400,27 @@ def main() -> None:
                     "development_recipe": CTC_VAD_ALIGNMENT_POLICY,
                 }
                 if vad_contract
+                else {}
+            ),
+            **(
+                {
+                    "inactive_blank_objective": {
+                        "policy": INACTIVE_BLANK_POLICY,
+                        "weight": args.inactive_blank_loss_weight,
+                        "development_only": True,
+                    },
+                }
+                if args.inactive_blank_loss_weight > 0.0
+                else {}
+            ),
+            **(
+                {
+                    "auxiliary_vad_alignment": {
+                        "policy": AUX_VAD_ALIGNMENT_POLICY,
+                        "development_only": True,
+                    },
+                }
+                if args.aux_vad_align
                 else {}
             ),
             "positive_example_weight": args.positive_example_weight,

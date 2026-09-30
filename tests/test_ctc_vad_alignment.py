@@ -15,7 +15,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from train_ctc import (  # noqa: E402
     Manifest,
+    auxiliary_vad_log_probs,
     collate,
+    ordered_token_loss,
     pcm_vad_mask,
     validate_warm_start,
     vad_aligned_ctc_log_probs,
@@ -36,6 +38,36 @@ def main() -> int:
     )
     vad = torch.tensor([[False, True], [False, False]])
     aligned = vad_aligned_ctc_log_probs(logits, vad, torch.tensor([1, 0]))
+    lengths = torch.tensor([2, 2])
+    unmodified, unmodified_lengths = auxiliary_vad_log_probs(
+        logits, vad, lengths, torch.tensor([1, 0]), enabled=False)
+    assert unmodified is logits and unmodified_lengths is lengths
+    compressed, compressed_lengths = auxiliary_vad_log_probs(
+        logits, vad, lengths, torch.tensor([1, 0]), enabled=True)
+    assert torch.equal(compressed_lengths, torch.tensor([1, 2]))
+    assert torch.equal(compressed[0, 0], logits[1, 0])
+    assert torch.equal(compressed[:, 1], logits[:, 1])
+    try:
+        auxiliary_vad_log_probs(logits, None, lengths, torch.tensor([1, 0]), enabled=True)
+    except ValueError as exc:
+        assert "requires a VAD mask" in str(exc)
+    else:
+        raise AssertionError("auxiliary VAD alignment accepted no mask")
+
+    # A target whose first chronological quarter is silent must still have
+    # learnable active frames after time compression.
+    silence_first = torch.zeros((8, 1, 3), requires_grad=True)
+    active_only, active_lengths = auxiliary_vad_log_probs(
+        silence_first.log_softmax(dim=2),
+        torch.tensor([[False, False, False, False, True, True, True, True]]),
+        torch.tensor([8]), torch.tensor([2]), enabled=True,
+    )
+    ordered, _, _ = ordered_token_loss(
+        active_only, torch.tensor([1, 2]), active_lengths, torch.tensor([2]),
+    )
+    ordered.backward()
+    assert silence_first.grad[:4].abs().sum() == 0
+    assert silence_first.grad[4:].abs().sum() > 0
     assert torch.equal(aligned[0, 0], torch.tensor([0.0, -30.0, -30.0]))
     assert torch.equal(aligned[1, 0], logits[1, 0])
     assert torch.equal(aligned[:, 1], logits[:, 1])

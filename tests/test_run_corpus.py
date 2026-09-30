@@ -239,6 +239,21 @@ def main() -> int:
         changed = json.loads(provenance.read_text(encoding="utf-8"))
         assert changed["audio_corpus_sha256"] != result["audio_corpus_sha256"]
 
+        references.write_text(
+            json.dumps({"recording": "room-1", "path": "audio.wav",
+                        "duration_s": 3.0, "expected": []}) + "\n",
+            encoding="utf-8",
+        )
+        invalid_duration = subprocess.run(
+            [sys.executable, str(ROOT / "eval" / "run_corpus.py"),
+             "--runner", str(runner), "--model", str(model),
+             "--keywords", str(keywords), "--references", str(references),
+             "--audio-root", str(root), "--detections", str(detections)],
+            check=False, text=True, capture_output=True,
+        )
+        assert invalid_duration.returncode == 2
+        assert "reference duration_s does not match WAV duration" in invalid_duration.stderr
+
     print("test_run_corpus: ok")
     return 0
 

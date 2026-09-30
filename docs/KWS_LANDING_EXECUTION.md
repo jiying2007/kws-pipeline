@@ -2,9 +2,14 @@
 
 ## 冻结基线与目标
 
-- 审查基线：`15b97d89b88835d722371e03a4bba3a7a2a6a65a`。修改工作树后应重新记录源码身份。
+- 本节以下的 `15b97d89b88835d722371e03a4bba3a7a2a6a65a` 是 2026-09-26 训练失败诊断的历史冻结基线，不是当前源码 HEAD。2026-09-27 的方案重规划及全量真人负例对照见 [`research/REAL_SPEECH_SCHEME_RESET_2026-09-27.md`](research/REAL_SPEECH_SCHEME_RESET_2026-09-27.md)，多生成器合成数据实验契约见 [`research/MULTI_GENERATOR_SYNTHETIC_CORPUS_2026-09-27.md`](research/MULTI_GENERATOR_SYNTHETIC_CORPUS_2026-09-27.md)。2026-09-28 的 Kokoro/Melo/Qwen3 实际生成、试听反馈和审听门禁见 [`research/KOKORO_CROSS_GENERATOR_PILOT_2026-09-28.md`](research/KOKORO_CROSS_GENERATOR_PILOT_2026-09-28.md)、[`research/MELO_CROSS_GENERATOR_PILOT_2026-09-28.md`](research/MELO_CROSS_GENERATOR_PILOT_2026-09-28.md)、[`research/QWEN3_TTS_PILOT_2026-09-28.md`](research/QWEN3_TTS_PILOT_2026-09-28.md)；CosyVoice SFT 和场景压力结果见 [`research/COSYVOICE_SFT_AND_SCENE_PROBE_2026-09-28.md`](research/COSYVOICE_SFT_AND_SCENE_PROBE_2026-09-28.md)。用户明确当前非商业研究后新增的 Spark-TTS 18 条探针、权重许可与待审状态见 [`research/SPARK_TTS_RESEARCH_PILOT_2026-09-28.md`](research/SPARK_TTS_RESEARCH_PILOT_2026-09-28.md)，VoxCPM2 六条无参考音频文字声音设计及机器疑点见 [`research/VOXCPM2_RESEARCH_PILOT_2026-09-28.md`](research/VOXCPM2_RESEARCH_PILOT_2026-09-28.md)；其余候选见 [`research/HIGH_QUALITY_CHINESE_TTS_CANDIDATES_2026-09-28.md`](research/HIGH_QUALITY_CHINESE_TTS_CANDIDATES_2026-09-28.md)。用户授权后续机器筛选的[固定 ASR 准入标准](research/SYNTHETIC_ASR_ACCEPTANCE_2026-09-28.md)已与人工收据分证据路径；Qwen3 已有人审的 20 条中 ASR 会错剔 6 条。已审 Qwen3 混合训练负结果见 [`research/REVIEWED_QWEN_MIX_TRAIN_NEGATIVE_2026-09-28.md`](research/REVIEWED_QWEN_MIX_TRAIN_NEGATIVE_2026-09-28.md)，数据归档路线见 [`research/KWS_DATASET_ARCHIVE_ROUTE_2026-09-28.md`](research/KWS_DATASET_ARCHIVE_ROUTE_2026-09-28.md)。当前工作树文档待审，正式模型配置与产品 deployment 未提升。
 - 目标：形成同一源码、模型、关键词包、最终 AFE 和目标板身份绑定的两词唤醒产品候选，并按 Phase A、Phase B、Phase C 获得放行证据。
 - 当前公开产品基线仍为 `model-749187ec1d66` / `deployment-c20f3eb88e43`，`shipping_approved=false`。合成资格不能替代最终 AFE 真人和实体板资格。
+- 2026-09-28 新增的[真人近邻 exact wake 权重配对](research/HI_MIA_WAKE_MASS_REBALANCE_2026-09-28.md)同时通过已审 Qwen3 未见声线 4/4、0 近邻事件，以及未训练 HI-MIA-CW 15 人 7,006 条中 3 次事件的**开发门槛**；但 Spark-TTS 18 条中有 2 次缺首近邻误触发，Qwen3 模拟场景远场/播放召回仍很低。因此它只是一枚 `development_only` 研究候选，未替代上述产品基线；下一轮必须换用新的发音可靠正例、独立连续负例，并与最终 AFE/目标板身份绑定。
+- 后续[软件侧闭环](research/SOFTWARE_ONLY_CLOSURE_2026-09-28.md)已实际执行：Qwen3 新增 18 条合格训练音频的 277 条配方、移除 AISHELL3 的 149 条配方、加入 32 条受限音节负例的 vocab7/291 条配方，均完成冷启动训练、C 导出及分组回读，三者均未通过双词/近邻/场景/连续流共同门槛。新增[负例音节策略与七类实验](research/FOUR_TOKEN_VOCAB_LIMIT_2026-09-28.md)保留了严格正例准入和哈希/说话人隔离；[重复词首音节阻断](research/LEADING_SUFFIX_VETO_NEGATIVE_2026-09-28.md)在新扰动损失正确正例，实验 C 代码已撤回。现有 259 条重加权模型仍是最均衡的**研究基线**，软件验收尚未闭合，不得把其中任何模型或后验规则提升为产品模型。
+- 当前交接候选为[本地软件证据包 v4](../build/software-closure-evidence-20260928-v4.tar.gz)与[源码/制品锁 v4](../build/software-closure-20260928/source-lock-v4.json)。六条代理场景词1虽然在两套 ASR 下均为 0/6 文本精确接受，用户逐条反馈明确隔离两条 Uncle_Fu 错读“沃”，其余四条研究可用；与18条严格 ASR 接受音频混合后的281条配方仍在已审未训练声线词2上 0/2，软件晋级失败。包未发布至独立数据仓，训练 checkpoint 的 `repository_sha` 仍为空，本地源树 dirty；它是可审查研究证据，不是正式可复现产品候选。
+- [整词单 token CTC + reject 研究原型](research/WHOLE_EVENT_CTC_PILOT_2026-09-28.md)又在固定171条数据上完成600 epoch与实际 C 回读：已审未训练声线0/4、原代理近场2/10，虽在真人近邻留出7,006条和固定900秒流中均0次事件，仍属严重过度拒绝；一条独立 Spark 词2还在约0.105秒过早触发。不能以“显式 reject + 极低训练 loss”宣称整词算法已落地；下一版须有可靠词结束帧和更广的发音合格正例监督。新增模型与回读已纳入上述 v4 本地锁和证据包。
+- [VAD尾帧时间约束](research/WHOLE_EVENT_TAIL_PAIR_2026-09-28.md)使整词事件原型在固定900秒连续流出现292/324次事件；[100条空转写背景配对](research/WHOLE_EVENT_BACKGROUND_PAIR_2026-09-28.md)把两个seed降到67/69次，但未训练声线仍0/4且出现词1→词2串词。两次均未通过共同软件门槛，停止同一小合成池的单 token目标/阈值迭代。v4包尚未包含此后的两次模型和流式回读，将更新本地证据锁后再交接。
 - 2026-09-26 的 `model-training` run `36237188880` 绑定源码 `15b97d89b88835d722371e03a4bba3a7a2a6a65a`。其诊断制品 `10907587838` 已回读：基础训练四轮均无 calibration/test 严格双通过；精修摘要明确是开发集门槛失败，calibration 命中 `3/64` 且有 12 次误触发，test 命中 `6/64` 且有 24 次误触发。正式资格 cohort 未生成，seed `271843` 未消费。这确认失败类别，不证明具体声学或优化机制。
 - 缩减预算的 PR 预检 run `36228310178` 在第二轮达到 calibration `38/64`、test `49/64`；精修后为 `22/64`、`36/64`，同时误触发分别为 53、54 次。该预检仅要求每词保留非零命中，成功状态不是模型质量或完整预算可迁移性的证据。两次运行的预算和源码身份不同，不能直接把差异归因于某个损失或 epoch 数。
 - 2026-09-24 的独立干净语音消融 run `35981037816` 在 36 epoch/seed 1337 下，全部关闭辅助损失的 CTC-only 模型 train/calibration/test 命中为 `0/32`、`0/16`、`0/16`；现有组合损失为 `14/32`、`7/16`、`6/16`，但 test 仍有 5 次误触发。该负结果只能否定“同时删除全部辅助项即可恢复”这一方向，不能分辨单项损失的贡献，也不能替代域渲染训练结论。
@@ -64,14 +69,14 @@
 
 - 本地检查（2026-09-26）：独立 `/tmp` CMake Release/strict 构建成功，5/5 CTest 通过；Python 3.12 下诊断、阶段进度、训练预检、事件评分、真人资格 fixture 和终态文档测试通过；`tools/kws_landing_status.py --verify` 与 `git diff --check` 通过。这些是源码/工具层证据，不包含本轮 PyTorch 精修复现或板端结果。
 - `goal_statement`：获得可复核的两词产品放行，而非仅使一次合成训练运行变绿。
-- `completion_claim`：当前完成源码级诊断增强、产品评分边界和训练预检输入加固，并确认本轮精修的开发集门槛失败；具体算法机制、模型候选和产品放行均未完成。
+- `completion_claim`：已完成源码级诊断增强、产品评分边界、训练预检输入加固，以及同源扩充训练和独立真人近邻负例的 C 事件对照。现有证据显示扩大同源 TTS 训练使真人近邻误唤醒由 157 增至 661 次（相同 6.6448 小时来源）；方案已重规划，但直接事件目标、可部署新模型和产品放行均未完成。
 - `required_evidence`：阶段 A 的认证诊断、阶段 B 的配对开发集结果、阶段 C 的不可变模型与资格链、阶段 D/E 的受控现场收据。
 - `claimant`：本地实现者；`verifier`：新鲜代码复审及对应算法、声学、硬件 owner。当前只有本地自审，不能代替 owner 验收。
-- `open_items`：对训练预算与声学/解码失配开展单变量实验，并完成后续候选及产品资格。
+- `open_items`：原 AISHELL3 训练池第一词 16 条在两套 ASR 下均无精确转写，需按人工/ASR 分证据路线补可信第一词来源并校准词间停顿；获取受控目标双词真人正例及最终 AFE/板身份；审核多来源语料许可与说话人切分；用同一 C 事件门禁配对比较当前 CTC 与直接事件/显式拒绝候选，再完成封存资格。
 - `plan_completeness`：A→E 阶段、责任、完成标准和停止条件齐全；当前 `logical_task_open=true`，`milestone_close=source-safety-hardening-only`。
 - `attestation_readback`：本地源码检查、测试及运行 `36237188880` 的诊断制品可回读；新模型发布和现场资格收据仍待取得。
 - `heartbeat`：每次推进记录最新 run/HEAD/验证日期；`staleness_threshold` 为外部 Actions 状态 24 小时。
-- `stop_condition`：当前为 `replan`，阶段 A 失败类别已确认；阶段 B 先冻结数据、预算和比较变量，未有配对结果不得修改正式训练目标。
+- `stop_condition`：当前为 `replan`。阶段 A 和同源训练配对及真人近邻负例诊断已完成；未取得目标双词真人正例和独立开发/封存切分前，不修改正式训练目标、不宣称产品候选。
 - 本逻辑任务的重试预算为同一失败类别最多两次定向验证；两次仍无增量时更新假设并重规划，不继续盲目全量训练。
 - 外部 Actions 状态超过 24 小时未核对视为过期；每次引用运行结论需绑定 run ID、HEAD、状态和查询时间。
 - 当前里程碑是训练失败分类与软件资格门禁加固。产品完成声明必须同时具备 C 端候选证据、Phase A、Phase B、Phase C 和最终同一 tuple 的证据回读。

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "policy": "phonetic-negative-equivalence-v1",
+  "scope": "development-only-negative-competitors",
+  "positive_acceptance": "exact-normalized-text-v1-only",
+  "asr_model_revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0",
+  "asr_model_sha256": "79d6cbd4c98c7bbffe9db2edac07f56cd6637d0d5944b27f6c2b8353840323ea",
+  "cases": [
+    {"official_text": "你好亚", "accepted_asr_text": ["你好呀"], "tokens": ["ni3", "hao3", "ya"], "minimum_rows": 6},
+    {"official_text": "你好米", "accepted_asr_text": ["你好米"], "tokens": ["ni3", "hao3", "mi"], "minimum_rows": 6},
+    {"official_text": "你好咪", "accepted_asr_text": ["你好咪"], "tokens": ["ni3", "hao3", "mi"], "minimum_rows": 6},
+    {"official_text": "你好", "accepted_asr_text": ["你好"], "tokens": ["ni3", "hao3"], "minimum_rows": 6}
+  ]
+}

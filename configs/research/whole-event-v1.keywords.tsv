@@ -1,0 +1,3 @@
+# id	text	threshold	explicit-token	min-trailing-blanks
+1	你好小窝	0.55	kw1	2
+2	小窝小窝	0.55	kw2	2
