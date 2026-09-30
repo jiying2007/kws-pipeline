@@ -133,7 +133,15 @@ def main() -> int:
 
     workflow = (ROOT / ".github" / "workflows" / "model-training.yml").read_text(encoding="utf-8")
     far_gate = (ROOT / "eval" / "run_continuous_far_gate.py").read_text(encoding="utf-8")
+    nightly = (ROOT / ".github" / "workflows" / "far-nightly.yml").read_text(encoding="utf-8")
     assert "eval/run_continuous_far_gate.py" in workflow
+    for needle in (
+        "eval/annotate_far_detections.py",
+        "build/nightly-domain/domain-index.jsonl",
+        'build/far-run-$seed/detection-source-map.jsonl',
+        "Attribute every FAR detection to injected source metadata",
+    ):
+        assert needle in nightly, f"nightly FAR evidence workflow missing {needle!r}"
     for needle in (
         "tools/plan_far_stream.py",
         'stream_root / "plan.json"',
