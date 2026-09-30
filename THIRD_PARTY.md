@@ -19,3 +19,13 @@ The upstream license is retained at `research/sherpa_pcm/vendor/LICENSE.sherpa-o
 source URL and SHA256 are recorded in that research directory's dependency lock.
 This optional research entry does not add sherpa/ONNX Runtime to the default
 product library. No third-party model, runtime binary or wheel is redistributed.
+
+`research/donor_fbank` is a separate C11 research implementation of a fixed
+Kaldi/Hamming logfbank recipe. Its FFT skeleton is adapted from this repository's
+Apache-2.0 frontend without modifying or linking the product frontend. Mathematical
+Hamming/mel tables and synthetic reference vectors were generated through the
+pinned torchaudio Kaldi source; its BSD2 license is retained locally and in the
+fixture. The donor model-specific Apache2 declaration and CMVN provenance are in
+`research/donor_fbank/fixtures/`; no complete acoustic-model weight file is included.
+NumPy is a hash-pinned test dependency only. The native library uses libm, and this
+research path does not enter the default product build or qualification gates.

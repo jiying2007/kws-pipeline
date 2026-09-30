@@ -1,0 +1,62 @@
+name: research-donor-fbank
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "research/donor_fbank/**"
+      - ".github/workflows/research-donor-fbank.yml"
+  pull_request:
+    paths:
+      - "research/donor_fbank/**"
+      - ".github/workflows/research-donor-fbank.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  final-feature-v2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install only hash-pinned NumPy test wheel
+        run: python -m pip install --no-deps --require-hashes --only-binary=:all: -r research/donor_fbank/test-requirements.txt
+      - name: Record test interpreter and separate test dependency
+        run: python -c 'import sys,numpy; print(sys.version); print(numpy.__version__); assert numpy.__version__ == "2.2.6"'
+      - name: Verify multipart fixture integrity and rejection cases
+        run: python research/donor_fbank/tests/test_fixture_parts.py
+      - name: Build isolated C11 frontend and extract pinned synthetic fixture
+        run: |
+          python research/donor_fbank/build.py --output "$RUNNER_TEMP/donor-native"
+          python research/donor_fbank/tests/unpack_goldens.py --output "$RUNNER_TEMP/donor-fixture"
+      - name: Regenerated constant tables must match tracked source
+        run: |
+          python research/donor_fbank/tests/generate_tables.py --golden-constants "$RUNNER_TEMP/donor-fixture/donor-frontend-goldens/constants/frontend_constants.json" --output "$RUNNER_TEMP/frontend_tables.h"
+          cmp "$RUNNER_TEMP/frontend_tables.h" research/donor_fbank/frontend_tables.h
+          python research/donor_fbank/tests/generate_twiddles.py --output "$RUNNER_TEMP/fft_twiddles.h"
+          cmp "$RUNNER_TEMP/fft_twiddles.h" research/donor_fbank/fft_twiddles.h
+          python research/donor_fbank/tests/verify_roots.py
+      - name: Accept final-feature v2 while retaining v1 intermediate failures
+        run: |
+          python research/donor_fbank/tests/accept_final_features.py --library "$RUNNER_TEMP/donor-native/libdonor_fbank.so" --goldens "$RUNNER_TEMP/donor-fixture/donor-frontend-goldens" --contract research/donor_fbank/v2-contract.json --output-dir "$RUNNER_TEMP/donor-v2-evidence"
+      - name: Isolated C frontend ASan and UBSan smoke
+        run: |
+          gcc -O1 -g -std=c11 -Wall -Wextra -Werror -ffp-contract=off -fsanitize=address,undefined -fno-omit-frame-pointer research/donor_fbank/donor_fbank.c research/donor_fbank/tests/sanitize_smoke.c -Iresearch/donor_fbank -lm -o "$RUNNER_TEMP/donor-sanitizer-smoke"
+          "$RUNNER_TEMP/donor-sanitizer-smoke"
+      - name: Wide sample and frame timelines across2^31 and2^32
+        run: |
+          gcc -O2 -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wcast-qual -Werror -ffp-contract=off research/donor_fbank/donor_fbank.c research/donor_fbank/tests/test_long_counters.c -Iresearch/donor_fbank -lm -o "$RUNNER_TEMP/donor-long-counters"
+          "$RUNNER_TEMP/donor-long-counters"
+      - name: Python syntax
+        run: python -m py_compile research/donor_fbank/*.py research/donor_fbank/tests/*.py
+      - name: Upload synthetic numerical evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: donor-fbank-v2-numerical-evidence
+          path: ${{ runner.temp }}/donor-v2-evidence
+          if-no-files-found: warn
+          retention-days: 14

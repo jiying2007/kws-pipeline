@@ -1,0 +1,45 @@
+{
+  "sources": [
+    {
+      "Name": "base.pt",
+      "Path": "train/base.pt",
+      "Revision": "68e1625545621d1dfb921866c4bc6b6a811b2685",
+      "Sha256": "d02b09c34f4a8bbb06f0dd1bf5eb58db3395eb7f1fd15c3625fe09d3a2492233",
+      "Size": 3038219,
+      "url": "https://modelscope.cn/api/v1/models/iic/speech_charctc_kws_phone-xiaoyun/repo?Revision=68e1625545621d1dfb921866c4bc6b6a811b2685&FilePath=train%2Fbase.pt"
+    },
+    {
+      "Name": "feature_transform.txt.80dim-l2r2",
+      "Path": "train/feature_transform.txt.80dim-l2r2",
+      "Revision": "68e1625545621d1dfb921866c4bc6b6a811b2685",
+      "Sha256": "278d109a9e4e70189e2d657ed52ea846446d5abdd58bcc9cb6b8800a52dac91c",
+      "Size": 1711,
+      "url": "https://modelscope.cn/api/v1/models/iic/speech_charctc_kws_phone-xiaoyun/repo?Revision=68e1625545621d1dfb921866c4bc6b6a811b2685&FilePath=train%2Ffeature_transform.txt.80dim-l2r2"
+    },
+    {
+      "Name": "README.md",
+      "Path": "README.md",
+      "Revision": "7b61475f2b7d6b0348f624f0853303a3a374f7bc",
+      "Sha256": "8488305cd82bfa76faa1af65770b314a549b4b6afbe82b41582e7c2cb228ee6c",
+      "Size": 13636,
+      "url": "https://modelscope.cn/api/v1/models/iic/speech_charctc_kws_phone-xiaoyun/repo?Revision=7b61475f2b7d6b0348f624f0853303a3a374f7bc&FilePath=README.md"
+    },
+    {
+      "Name": "inference_fsmn_4e_l10r2_250_128_fdim80_t2599.yaml",
+      "Path": "funasr/inference_fsmn_4e_l10r2_250_128_fdim80_t2599.yaml",
+      "Revision": "a6cc3ead9312a81d48b7bfa5734be967b93b3d6c",
+      "Sha256": "d0e59ccf122b4679496679b2954b227a57625c859e850397ee878eb9f2c55eae",
+      "Size": 744,
+      "url": "https://modelscope.cn/api/v1/models/iic/speech_charctc_kws_phone-xiaoyun/repo?Revision=a6cc3ead9312a81d48b7bfa5734be967b93b3d6c&FilePath=funasr/inference_fsmn_4e_l10r2_250_128_fdim80_t2599.yaml"
+    }
+  ],
+  "license_declaration": "Model-specific README declares Apache License2.0; exact source identity and extracted field retained, full original remains upstream",
+  "only_cmvn_statistics_and_derived_synthetic_arrays_in_fixture": true,
+  "license_evidence": {
+    "source_url": "https://modelscope.cn/api/v1/models/iic/speech_charctc_kws_phone-xiaoyun/repo?Revision=7b61475f2b7d6b0348f624f0853303a3a374f7bc&FilePath=README.md",
+    "source_sha256": "8488305cd82bfa76faa1af65770b314a549b4b6afbe82b41582e7c2cb228ee6c",
+    "metadata_field": "license",
+    "value": "Apache License 2.0",
+    "extraction": "YAML frontmatter from verified original README; no new rights assertion"
+  }
+}

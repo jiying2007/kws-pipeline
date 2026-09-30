@@ -1,0 +1,13 @@
+{
+ "name":"donor-fbank80-independent-cmvn400-final-feature-conformance-v2",
+ "status":"proposal-awaiting-independent-review; do not run as accepted contract",
+ "supersedes_v1":false,
+ "v1_status":"preserved FAIL; per-bin power/mel diagnostics retained unchanged",
+ "implemented_scope":["phase0 streaming logfbank80","independent fixed400 affine CMVN"],
+ "not_implemented":["C splice/context","C skip3","FSMN","decoder","model export","target performance"],
+ "hard_feature_rules":{"logfbank_absolute":0.001,"test_only_splice_then_C_cmvn400_absolute":0.0002,"isolated_cmvn400_atol":0.000001,"isolated_cmvn400_rtol":0.0000002,"silence_dc_cmvn_absolute":0.000001,"silence_dc_log_absolute":0.000002,"frame_grid_coefficients_finiteness":"original v1 exact checks unchanged","dc_preemphasis_window":"original v1 layer gates unchanged","silence_and_constant_dc":"all prelog layers exactly0"},
+ "power_mel_policy":"Original v1 elementwise bounds remain diagnostic and are never reported passing when they fail. FFT independently gated by scaling, energy, known spectral bins and double directDFT.",
+ "fft_invariants_proposed":{"N":512,"u":"2^-24","gamma":"n*u/(1-n*u)","bin_amplitude_error_budget":"B=gamma(8*log2(N)+4)*sum(abs(input_float32))","power_error_bound":"2*abs(double_DFT_bin)*B+B*B","parseval_relative":"gamma(16*log2(N)+N+4)","impulse_power_relative":"gamma(16*log2(N)+4)","zero_dc_nyquist":"exact zero; powers-of-two constant/DC or alternating/Nyquist exact power and empty other bins","binary_scaling":"bounded normal dyadic input x and2x; output power must scale4 exactly","known_sinusoids":"float32 rounded sin/cos at bins1,7,53,123,211,255, expected dominant bin; all257 bins checked vs direct doubleDFT"},
+ "bound_basis":"Engineering conservative operation-count budgets before executing v2 tests. Radix2 nine stages, complex multiply/add and coefficient rounding along paths; separate norm/squared-power and conservative reduction budget. Not a universal formal proof. No multiplier fitted to observed C error or quality output.",
+ "timing_disclosure":"v1 C results are already known. v2 changes the contract scope explicitly; new FFT invariant tests have not been executed. Requires independent review before formal acceptance."
+}
