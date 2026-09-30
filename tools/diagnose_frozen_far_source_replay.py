@@ -8,6 +8,7 @@ import math
 import pathlib
 import re
 import subprocess
+import struct
 import sys
 import tempfile
 import wave
@@ -582,6 +583,128 @@ def target_detection_matches(rows: list[dict], case: dict, tolerance_s: float = 
     ]
 
 
+def read_phase_trace(path: pathlib.Path) -> tuple[dict, bytes, list[tuple]]:
+    """Read the fixed KWTRACE1 contract without changing logits or VAD bits."""
+    data = path.read_bytes()
+    if len(data) < 120 or data[:8] != b"KWTRACE1":
+        raise ValueError("phase control requires a KWTRACE1 header")
+    version, vocab, frontend, rate, frame, hop, reserved = struct.unpack_from("<IHHIIII", data, 8)
+    count = struct.unpack_from("<Q", data, 40)[0]
+    model_sha = data[48:112].decode("ascii")
+    stride = 16 + 4 * vocab
+    if (version != 1 or not 2 <= vocab <= 256 or rate != 16000
+            or frame <= 0 or hop <= 0 or frame < hop or reserved != 0
+            or struct.unpack_from("<Q", data, 32)[0] == 0
+            or data[112:120] != bytes(8) or count <= 0
+            or len(data) != 120 + count * stride or not SHA256_RE.fullmatch(model_sha)):
+        raise ValueError("invalid phase-control trace contract")
+    rows = []
+    for index in range(count):
+        offset = 120 + index * stride
+        end = struct.unpack_from("<Q", data, offset)[0]
+        flags = data[offset + 8:offset + 16]
+        logits = struct.unpack_from("<" + "f" * vocab, data, offset + 16)
+        if (end <= 0 or (rows and end - rows[-1][0] != hop)
+                or flags[0] not in (0, 1) or flags[1:] != bytes(7)
+                or any(not math.isfinite(value) for value in logits)):
+            raise ValueError("invalid phase-control trace frames")
+        rows.append((end, flags[0], logits))
+    return {"sample_rate_hz": rate, "frame_length_samples": frame,
+            "frame_hop_samples": hop, "vocab_size": vocab,
+            "frontend_kind": frontend, "model_sha256": model_sha,
+            "vocab_fingerprint": struct.unpack_from("<Q", data, 32)[0],
+            "frames": count}, data, rows
+
+
+def phase_aligned_interval(trace: pathlib.Path, end_sample: int) -> dict:
+    header, _, rows = read_phase_trace(trace)
+    # Cold frontend emits its first frame after frame_length input samples.
+    # Use the actual first frozen endpoint; aligning crop start alone is insufficient.
+    start = rows[0][0] - header["frame_length_samples"]
+    hop = header["frame_hop_samples"]
+    if (start < 0 or end_sample < rows[-1][0] or end_sample >= rows[-1][0] + hop):
+        raise ValueError("phase-control exposure does not match frozen trace")
+    return {**header, "start_sample": start, "end_sample": end_sample,
+            "first_absolute_frame_end": rows[0][0],
+            "last_absolute_frame_end": rows[-1][0]}
+
+
+def extract_phase_capture(spool: pathlib.Path, output: pathlib.Path, interval: dict) -> dict:
+    start, end = interval["start_sample"], interval["end_sample"]
+    size = spool.stat().st_size
+    if (size <= 0 or size % 2 or start < 0 or not start < end <= size // 2):
+        raise ValueError("phase-control PCM exposure outside exact spool")
+    with spool.open("rb") as source:
+        source.seek(2 * start)
+        pcm = source.read(2 * (end - start))
+    if len(pcm) != 2 * (end - start):
+        raise ValueError("phase-control PCM spool truncated")
+    with wave.open(str(output), "wb") as writer:
+        writer.setnchannels(1)
+        writer.setsampwidth(2)
+        writer.setframerate(interval["sample_rate_hz"])
+        writer.writeframes(pcm)
+    return {**interval, "pcm_samples": end - start, "spool_bytes": size,
+            "pcm_sha256": hashlib.sha256(pcm).hexdigest(),
+            "wav_sha256": sha256_file(output)}
+
+
+def align_cold_trace(cold: pathlib.Path, frozen: pathlib.Path,
+                     output: pathlib.Path, offset_samples: int) -> dict:
+    cold_header, cold_bytes, cold_rows = read_phase_trace(cold)
+    frozen_header, _, frozen_rows = read_phase_trace(frozen)
+    if cold_header != frozen_header or offset_samples < 0:
+        raise ValueError("phase-control acoustic trace identity or frame-count mismatch")
+    if [row[0] + offset_samples for row in cold_rows] != [row[0] for row in frozen_rows]:
+        raise ValueError("phase-control absolute frame grid mismatch")
+    data = bytearray(cold_bytes)
+    stride = 16 + 4 * cold_header["vocab_size"]
+    for index, row in enumerate(cold_rows):
+        struct.pack_into("<Q", data, 120 + index * stride, row[0] + offset_samples)
+    output.write_bytes(data)
+    return {"absolute_frame_grid_equal": True, "frames": len(cold_rows),
+            "timestamp_offset_samples": offset_samples,
+            "cold_relative_trace_sha256": sha256_file(cold),
+            "cold_absolute_trace_sha256": sha256_file(output),
+            "frozen_trace_sha256": sha256_file(frozen),
+            "speech_active_mismatch_frames": sum(a[1] != b[1] for a, b in zip(cold_rows, frozen_rows)),
+            "max_abs_logit_difference": max(abs(x - y) for a, b in zip(cold_rows, frozen_rows)
+                                            for x, y in zip(a[2], b[2]))}
+
+
+def run_phase_aligned_control(*, case: dict, spool: pathlib.Path, frozen: pathlib.Path,
+                              end_sample: int, model: pathlib.Path, pack: pathlib.Path,
+                              posterior_dump: pathlib.Path, decoder_replay: pathlib.Path,
+                              output_dir: pathlib.Path) -> dict:
+    interval = phase_aligned_interval(frozen, end_sample)
+    if interval["model_sha256"] != sha256_file(model):
+        raise ValueError("phase-control model SHA mismatch")
+    wav = output_dir / "phase-aligned-cold-context.wav"
+    receipt = extract_phase_capture(spool, wav, interval)
+    cold = output_dir / "phase-aligned-cold-relative.kwtr"
+    dump = run_json_lines([str(posterior_dump), str(model), str(wav), str(cold)])
+    if (len(dump) != 1 or dump[0].get("trace_sha256") != sha256_file(cold)
+            or dump[0].get("model_sha256") != interval["model_sha256"]):
+        raise ValueError("phase-control posterior receipt mismatch")
+    absolute = output_dir / "phase-aligned-cold-absolute.kwtr"
+    comparison = align_cold_trace(cold, frozen, absolute, interval["start_sample"])
+    detections = run_json_lines([str(decoder_replay), str(model), str(pack), str(absolute),
+                                case["case_id"] + "-phase-aligned-cold"])
+    hits = target_detection_matches(detections, case)
+    return {"policy": "frozen-frame-grid-aligned-cold-acoustic-control-v1",
+            "model_sha256": sha256_file(model), "keyword_pack_sha256": sha256_file(pack),
+            "capture": receipt, "trace_comparison": comparison,
+            "posterior_dump_receipts": dump, "decoder_detections": detections,
+            "target_window_hits": len(hits), "target_time_tolerance_seconds": 0.10,
+            "historical_event_exactly_reproduced": any(
+                abs(float(row["time_s"]) - float(case["detection_time_s"])) <= 1e-6
+                and abs(float(row["confidence"]) - float(case["historical_confidence"])) <= 1e-6
+                for row in hits),
+            "classification": ("phase-aligned-cold-context-sufficient" if hits else
+                               "phase-aligned-cold-context-insufficient-retained-acoustic-state-required"),
+            "interpretation_limit": "One fixed event; sufficiency is not a general history bound or shipping qualification."}
+
+
 def classify_history_windows(
     *,
     fresh_context_hits: int,
@@ -592,7 +715,7 @@ def classify_history_windows(
         raise ValueError("full acoustic-history replay never reproduced target detection")
     first = reproduced[0]
     if first["label"] == "pre-10s" and fresh_context_hits == 0:
-        classification = "acoustic-history-required-decoder-10s-sufficient"
+        classification = "acoustic-history-or-frame-phase-decoder-10s-sufficient"
         bracket = {"lower_no_hit_seconds": None, "upper_hit_seconds": 10}
     elif first["label"] == "full":
         previous = windows[-2] if len(windows) >= 2 else None
@@ -737,9 +860,21 @@ def run_history_decomposition(
             fresh_context_hits=fresh_hits,
             windows=windows,
         )
+        phase_control = (
+            run_phase_aligned_control(
+                case=case, spool=spool, frozen=case_root / "pre-10s.kwtr",
+                end_sample=end_sample, model=model, pack=pack,
+                posterior_dump=posterior_dump, decoder_replay=decoder_replay,
+                output_dir=case_root,
+            )
+            if windows[0]["target_window_hits"] > 0 else
+            {"status": "not-applicable", "reason": "frozen-10s-decoder-baseline-does-not-reproduce"}
+        )
         result = {
             "case": case,
             "fresh_context_target_hits": fresh_hits,
+            "phase_aligned_control": phase_control,
+            "legacy_context_comparison_limit": "Cold unaligned PCM resets both acoustic state and frame phase; its miss alone cannot isolate recurrent history.",
             "full_stream_pcm": wav_receipt,
             "full_posterior_receipts": posterior_receipts,
             "full_trace_sha256": sha256_file(full_trace),
@@ -985,13 +1120,135 @@ def self_test() -> None:
         with wave.open(str(capture), "rb") as reader:
             assert reader.getnframes() == 12000
 
+        # Explicit KWTRACE1 fixtures verify sample-grid derivation, not trim guesses.
+        def phase_fixture(path, endpoints, *, model_sha="a" * 64, logit_delta=0.0):
+            header = bytearray(120)
+            header[:8] = b"KWTRACE1"
+            struct.pack_into("<IHHIIIIQQ", header, 8, 1, 2, 0, 16000, 400, 320, 0, 7, len(endpoints))
+            header[48:112] = model_sha.encode("ascii")
+            frames = b"".join(struct.pack("<QB7xff", end, 1, 0.5 + logit_delta, -0.5)
+                              for end in endpoints)
+            path.write_bytes(header + frames)
+
+        frozen_phase = root / "frozen-phase.kwtr"
+        cold_phase = root / "cold-phase.kwtr"
+        absolute_phase = root / "absolute-phase.kwtr"
+        phase_fixture(frozen_phase, [720, 1040, 1360])
+        phase_fixture(cold_phase, [400, 720, 1040])
+        interval = phase_aligned_interval(frozen_phase, 1400)
+        assert interval["start_sample"] == 320
+        assert interval["end_sample"] == 1400
+        assert interval["frames"] == 3
+        phase_capture = extract_phase_capture(spool, root / "phase.wav", interval)
+        assert phase_capture["pcm_samples"] == 1080
+        assert phase_capture["pcm_sha256"] == hashlib.sha256(spool.read_bytes()[640:2800]).hexdigest()
+        comparison = align_cold_trace(cold_phase, frozen_phase, absolute_phase, 320)
+        assert comparison["absolute_frame_grid_equal"]
+        assert comparison["max_abs_logit_difference"] == 0.0
+        assert absolute_phase.read_bytes() == frozen_phase.read_bytes()
+        original_frozen_hash = sha256_file(frozen_phase)
+        phase_fixture(cold_phase, [400, 720, 1040], logit_delta=0.25)
+        comparison = align_cold_trace(cold_phase, frozen_phase, absolute_phase, 320)
+        assert comparison["max_abs_logit_difference"] == 0.25
+        assert sha256_file(frozen_phase) == original_frozen_hash
+        for bad_offset in (0, 240, 400):
+            try:
+                align_cold_trace(cold_phase, frozen_phase, absolute_phase, bad_offset)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("misaligned cold grid accepted")
+        for bad_end in (1359, 1680):
+            try:
+                phase_aligned_interval(frozen_phase, bad_end)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("different frozen exposure accepted")
+        phase_fixture(cold_phase, [400, 720])
+        try:
+            align_cold_trace(cold_phase, frozen_phase, absolute_phase, 320)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("different frame count accepted")
+
+        # Malformed external trace bytes must fail before creating replay evidence.
+        phase_fixture(cold_phase, [400, 720, 1040])
+        valid_trace = cold_phase.read_bytes()
+        malformed = [valid_trace[:-1], valid_trace + b"x"]
+        for offset, fmt, value in ((28, "<I", 1), (112, "<B", 1),
+                                   (136, "<f", float("nan")), (128, "<B", 2),
+                                   (144, "<Q", 721)):
+            damaged = bytearray(valid_trace)
+            struct.pack_into(fmt, damaged, offset, value)
+            malformed.append(damaged)
+        for damaged in malformed:
+            cold_phase.write_bytes(damaged)
+            try:
+                read_phase_trace(cold_phase)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("malformed phase trace accepted")
+        phase_fixture(cold_phase, [400, 720, 1040], model_sha="b" * 64)
+        try:
+            align_cold_trace(cold_phase, frozen_phase, absolute_phase, 320)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("different model identity accepted")
+
+        # Mock only tool execution; the control still checks real trace/WAV bytes,
+        # hashes, exposure and converts local timestamps before event matching.
+        from unittest import mock
+        model_fixture = root / "phase-model.kwm"
+        model_fixture.write_bytes(b"phase-model")
+        (root / "pack-fixture").write_bytes(b"phase-pack")
+        phase_fixture(frozen_phase, [720, 1040, 1360], model_sha=sha256_file(model_fixture))
+        phase_case = {"case_id": "phase-unit-case", "detected_keyword_id": 2,
+                      "detection_time_s": 0.065, "historical_confidence": 0.6}
+        calls = []
+        fake_detections = [{"keyword_id": 2, "time_s": 0.065, "confidence": 0.6}]
+        def fake_phase_run(argv):
+            calls.append(argv)
+            if argv[0] == "posterior-fixture":
+                destination = pathlib.Path(argv[3])
+                phase_fixture(destination, [400, 720, 1040], model_sha=sha256_file(model_fixture))
+                return [{"model_sha256": sha256_file(model_fixture), "trace_sha256": sha256_file(destination)}]
+            assert argv[0] == "decoder-fixture"
+            _, _, actual_rows = read_phase_trace(pathlib.Path(argv[3]))
+            assert [row[0] for row in actual_rows] == [720, 1040, 1360]
+            return fake_detections
+        with mock.patch.dict(run_phase_aligned_control.__globals__, {"run_json_lines": fake_phase_run}):
+            result = run_phase_aligned_control(
+                case=phase_case, spool=spool, frozen=frozen_phase, end_sample=1400,
+                model=model_fixture, pack=root / "pack-fixture", posterior_dump=pathlib.Path("posterior-fixture"),
+                decoder_replay=pathlib.Path("decoder-fixture"), output_dir=root,
+            )
+        assert len(calls) == 2
+        assert result["target_window_hits"] == 1
+        assert result["historical_event_exactly_reproduced"]
+        assert result["classification"] == "phase-aligned-cold-context-sufficient"
+        # Events outside the original target window cannot satisfy the control.
+        fake_detections[:] = [{"keyword_id": 2, "time_s": 1.065, "confidence": 0.6}]
+        with mock.patch.dict(run_phase_aligned_control.__globals__, {"run_json_lines": fake_phase_run}):
+            missed = run_phase_aligned_control(
+                case=phase_case, spool=spool, frozen=frozen_phase, end_sample=1400,
+                model=model_fixture, pack=root / "pack-fixture", posterior_dump=pathlib.Path("posterior-fixture"),
+                decoder_replay=pathlib.Path("decoder-fixture"), output_dir=root,
+            )
+        assert missed["target_window_hits"] == 0
+        assert not missed["historical_event_exactly_reproduced"]
+        assert missed["classification"] == "phase-aligned-cold-context-insufficient-retained-acoustic-state-required"
+
         assert classify_history_windows(
             fresh_context_hits=0,
             windows=[
                 {"label": "pre-10s", "pre_roll_seconds": 10, "target_window_hits": 1},
                 {"label": "full", "pre_roll_seconds": None, "target_window_hits": 1},
             ],
-        )["classification"] == "acoustic-history-required-decoder-10s-sufficient"
+        )["classification"] == "acoustic-history-or-frame-phase-decoder-10s-sufficient"
         history = classify_history_windows(
             fresh_context_hits=0,
             windows=[
