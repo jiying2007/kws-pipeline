@@ -105,7 +105,6 @@ def normalize_spec(path: pathlib.Path) -> dict:
             "detected_keyword_id",
             "rendered_wav_sha256",
             "historical_gain",
-            "expected_family_id",
             "expected_tokens",
         }
         if not isinstance(row, dict) or set(row) != required_case:
@@ -118,8 +117,10 @@ def normalize_spec(path: pathlib.Path) -> dict:
         seen.add(case_id)
         seed = row["seed"]
         keyword_id = row["detected_keyword_id"]
-        family_id = row["expected_family_id"]
-        if any(isinstance(item, bool) or not isinstance(item, int) or item <= 0 for item in (seed, keyword_id, family_id)):
+        if any(
+            isinstance(item, bool) or not isinstance(item, int) or item <= 0
+            for item in (seed, keyword_id)
+        ):
             raise ValueError(f"case[{index}] integer identity is invalid")
         detection_time = float(row["detection_time_s"])
         confidence = float(row["historical_confidence"])
@@ -149,7 +150,6 @@ def normalize_spec(path: pathlib.Path) -> dict:
                 "detected_keyword_id": keyword_id,
                 "rendered_wav_sha256": rendered_sha,
                 "historical_gain": gain,
-                "expected_family_id": family_id,
                 "expected_tokens": list(tokens),
             }
         )
@@ -245,8 +245,6 @@ def find_domain_row(rows: list[dict], case: dict) -> dict:
             f"{case['case_id']}: expected exactly one rendered domain row, got {len(matches)}"
         )
     row = matches[0]
-    if int(row.get("family_id", -1)) != case["expected_family_id"]:
-        raise ValueError(f"{case['case_id']}: domain family_id drifted")
     if row.get("tokens") != case["expected_tokens"]:
         raise ValueError(f"{case['case_id']}: domain tokens drifted")
     path = pathlib.Path(str(row.get("path", ""))).resolve()
@@ -442,7 +440,6 @@ def self_test() -> None:
                             "detected_keyword_id": 2,
                             "rendered_wav_sha256": "c" * 64,
                             "historical_gain": 0.9,
-                            "expected_family_id": 3,
                             "expected_tokens": ["xiao3", "wo1"],
                         }
                     ],
@@ -452,6 +449,22 @@ def self_test() -> None:
         )
         normalized = normalize_spec(spec_path)
         assert normalized["cases"][0]["historical_gain"] == 0.9
+
+        domain_wav = root / "domain.wav"
+        domain_wav.write_bytes(b"domain")
+        domain_rows = [
+            {
+                "path": str(domain_wav),
+                "wav_sha256": sha256_file(domain_wav),
+                "family_id": "qualification-negative-0-3",
+                "tokens": ["xiao3", "wo1"],
+            }
+        ]
+        domain_case = dict(normalized["cases"][0])
+        domain_case["rendered_wav_sha256"] = sha256_file(domain_wav)
+        matched = find_domain_row(domain_rows, domain_case)
+        assert matched["family_id"] == "qualification-negative-0-3"
+
         assert canonical_detections(
             [{"keyword_id": 2, "time_s": 1.2345678, "confidence": 0.8765432}]
         ) == [(2, 1.234568, 0.876543)]
