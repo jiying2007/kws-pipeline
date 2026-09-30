@@ -29,3 +29,10 @@ fixture. The donor model-specific Apache2 declaration and CMVN provenance are in
 `research/donor_fbank/fixtures/`; no complete acoustic-model weight file is included.
 NumPy is a hash-pinned test dependency only. The native library uses libm, and this
 research path does not enter the default product build or qualification gates.
+
+`research/donor_fsmn` implements the fixed WeKws FSMN/splice contracts from
+`wenet-e2e/wekws` commit `6a45aeb994dd81c0969ff877a5a7c46d60ed0c86`.
+Its upstream Apache-2.0 license and attribution are retained in that directory.
+The official2599-output donor weights are external local research inputs, not
+included assets or self-authored parameters. This optional C11 research path
+retains failed numerical gates and does not enter the default product build.
