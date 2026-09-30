@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "experiment_id": "label-prior-primary-ctc-pair-v1",
+  "development_only": true,
+  "source_policy": "exact-pr-head-paired-same-runner-v1",
+  "protected_evidence_used": false,
+  "reason": "Retained #421/#422/#425 evidence and #426 native implementation audit support exactly one causal primary-CTC comparison. Compare standard CTC against label-prior CTC with alpha fixed at 0.3 and all auxiliary objectives, replay, data, decoder and thresholds unchanged. Accept only precision-preserving round-1 recall gain; otherwise close with no alpha, weight, policy, decoder or threshold sweep.",
+  "common_overrides": {
+    "train.ctc_vad_align": true,
+    "train.sequence_margin_negative_policy": "runtime-executable-v1",
+    "train.sequence_margin_positive_policy": "sparse-chronological-v1",
+    "domain_iteration.base_failure_replay_enabled": false
+  },
+  "variable": {
+    "name": "train.ctc_primary_policy",
+    "control": "standard-v1",
+    "treatment": "label-prior-v1"
+  }
+}
