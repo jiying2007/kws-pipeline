@@ -9,6 +9,7 @@ on:
       - '.github/workflows/frozen-far-source-replay.yml'
       - 'tools/diagnose_frozen_far_source_replay.py'
       - 'tools/kws_wav.c'
+      - 'tools/kws_raw_stream.c'
       - 'tools/kws_posterior_dump.c'
       - 'tools/kws_decoder_replay.c'
       - 'tools/kws_decoder_path_replay.c'
@@ -84,7 +85,7 @@ jobs:
     needs: resolve
     if: needs.resolve.outputs.diagnostic_changed == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -105,7 +106,7 @@ jobs:
             git diff "$HISTORICAL_HEAD" HEAD -- src >&2
             exit 2
           }
-          for path in             tools/kws_wav.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
+          for path in             tools/kws_wav.c             tools/kws_raw_stream.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
           do
             git diff --quiet "$HISTORICAL_HEAD" HEAD -- "$path" || {
               echo "historical replay runtime drifted: $path" >&2
@@ -245,7 +246,7 @@ jobs:
         run: |
           set -euo pipefail
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DKWS_STRICT=ON
-          cmake --build build --parallel --target             kws_wav             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_decoder_tests             kws_decoder_retention_tests
+          cmake --build build --parallel --target             kws_wav             kws_raw_stream             kws_posterior_dump             kws_decoder_replay             kws_decoder_path_replay             kws_decoder_tests             kws_decoder_retention_tests
           ctest --test-dir build --output-on-failure             -R '^kws_decoder_(tests|retention_tests)$'
 
       - name: Download exact immutable promoted model
@@ -331,6 +332,91 @@ jobs:
         run: |
           set -euo pipefail
           python3 tools/diagnose_frozen_far_source_replay.py run             --spec "$KWS_FROZEN_FAR_REPLAY_SPEC"             --model build/frozen-model/xiaowo-model.kwm             --pack build/frozen-model/xiaowo-keywords.kwk             --domain-index build/nightly-domain/domain-index.jsonl             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --decoder-path-replay build/kws_decoder_path_replay             --output-dir build/frozen-far-source-replay
+
+      - name: Regenerate exact historical FAR stream contexts
+        env:
+          HISTORICAL_HEAD: ${{ needs.resolve.outputs.historical_head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          rows=[
+              json.loads(line)
+              for line in pathlib.Path("build/nightly-domain/domain-index.jsonl")
+              .read_text(encoding="utf-8").splitlines()
+              if line.strip()
+          ]
+          negative=[row for row in rows if row.get("kind") != "positive"]
+          if len(negative) < 200:
+              raise SystemExit("nightly negative corpus unexpectedly small")
+          pathlib.Path("build/nightly-negative.tsv").write_text(
+              "".join(f"{row['path']}\n" for row in negative),
+              encoding="utf-8",
+          )
+          PY
+
+          git show "$HISTORICAL_HEAD:eval/long_far_stream.py"             > build/historical-long_far_stream.py
+          sha256sum build/historical-long_far_stream.py             > build/historical-long_far_stream.sha256
+
+          cat > build/kws_raw_stream_spool.sh <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          : "${KWS_CAPTURE_SPOOL:?KWS_CAPTURE_SPOOL is required}"
+          : "${KWS_REAL_RAW_STREAM:?KWS_REAL_RAW_STREAM is required}"
+          mkdir -p "$(dirname "$KWS_CAPTURE_SPOOL")"
+          tee "$KWS_CAPTURE_SPOOL" | "$KWS_REAL_RAW_STREAM" "$@"
+          SH
+          chmod +x build/kws_raw_stream_spool.sh
+
+          python3 - <<'PY' > build/frozen-far-stream-cases.tsv
+          import json
+          import os
+          import pathlib
+
+          spec=json.loads(
+              pathlib.Path(os.environ["KWS_FROZEN_FAR_REPLAY_SPEC"])
+              .read_text(encoding="utf-8")
+          )
+          for case in spec["cases"]:
+              print(f"{case['case_id']}\t{case['seed']}")
+          PY
+
+          while IFS=
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frozen-far-source-replay-${{ github.event.pull_request.head.sha }}
+          path: |
+            .github/triggers/frozen-far-source-replay.json
+            build/model-release.json
+            build/historical-artifact-metadata.json
+            build/historical-source-binding.json
+            build/nightly-render-summary.log
+            build/nightly-domain/domain-index.jsonl
+            build/nightly-negative.tsv
+            build/historical-long_far_stream.py
+            build/historical-long_far_stream.sha256
+            build/frozen-far-source-replay/
+            build/frozen-far-stream-context/
+            build/frozen-far-mixed-context-analysis/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+\t' read -r case_id seed; do
+            test -n "$case_id"
+            test -n "$seed"
+            mkdir -p               "build/frozen-far-stream-context/$case_id/far"               build/frozen-far-stream-spool
+            KWS_CAPTURE_SPOOL="$PWD/build/frozen-far-stream-spool/$case_id.pcm16le"             KWS_REAL_RAW_STREAM="$PWD/build/kws_raw_stream"             python3 build/historical-long_far_stream.py               --runner "$PWD/build/kws_raw_stream_spool.sh"               --model build/frozen-model/xiaowo-model.kwm               --keywords build/frozen-model/xiaowo-keywords.kwk               --negative-manifest build/nightly-negative.tsv               --hard-negative-rate-per-minute 2.0               --min-hard-negative-injections-per-clip 1               --coverage-hard-negative-gain 0.90               --seconds 7200               --seed "$seed"               --output-dir "build/frozen-far-stream-context/$case_id/far"               --max-far-per-hour 1000000
+          done < build/frozen-far-stream-cases.tsv
+
+      - name: Analyze exact mixed stream captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/diagnose_frozen_far_source_replay.py context             --spec "$KWS_FROZEN_FAR_REPLAY_SPEC"             --model build/frozen-model/xiaowo-model.kwm             --pack build/frozen-model/xiaowo-keywords.kwk             --stream-root build/frozen-far-stream-context             --spool-root build/frozen-far-stream-spool             --runner build/kws_wav             --posterior-dump build/kws_posterior_dump             --decoder-replay build/kws_decoder_replay             --decoder-path-replay build/kws_decoder_path_replay             --output-dir build/frozen-far-mixed-context-analysis
+          rm -rf build/frozen-far-stream-spool
 
       - name: Retain fixed-source replay evidence
         if: always()
