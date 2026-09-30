@@ -330,6 +330,20 @@ def normalize_label_prior_contract(value: object) -> dict:
     }
 
 
+def label_prior_adjusted_log_scores(
+    log_probs: torch.Tensor,
+    contract: dict,
+) -> torch.Tensor:
+    normalized = normalize_label_prior_contract(contract)
+    priors = log_probs.new_tensor(normalized["values"])
+    if int(log_probs.shape[-1]) != int(priors.numel()):
+        raise ValueError("label-prior vocabulary differs from CTC scores")
+    return (
+        log_probs
+        - float(normalized["alpha"]) * priors.log().view(1, 1, -1)
+    )
+
+
 def primary_ctc_per_sample(
     log_probs: torch.Tensor,
     targets: torch.Tensor,
@@ -349,13 +363,5 @@ def primary_ctc_per_sample(
     if policy != CTC_PRIMARY_POLICY_LABEL_PRIOR:
         raise ValueError("unsupported CTC primary policy")
     contract = normalize_label_prior_contract(label_prior_contract)
-    priors = log_probs.new_tensor(contract["values"])
-    return label_prior_ctc_loss(
-        log_probs,
-        targets,
-        input_lengths,
-        target_lengths,
-        priors,
-        blank=blank,
-        alpha=float(contract["alpha"]),
-    )
+    adjusted = label_prior_adjusted_log_scores(log_probs, contract)
+    return standard_loss(adjusted, targets, input_lengths, target_lengths)
