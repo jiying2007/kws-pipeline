@@ -221,6 +221,43 @@ def main() -> int:
     )
     assert not torch.allclose(label_loss, expected)
 
+    # Native fast path must also preserve the independent reference gradient.
+    gradient_source = log_probs.detach().clone().requires_grad_(True)
+    gradient_log_probs = gradient_source.log_softmax(dim=2)
+    fast_gradient_loss = primary_ctc_per_sample(
+        gradient_log_probs,
+        targets,
+        input_lengths,
+        target_lengths,
+        policy=CTC_PRIMARY_POLICY_LABEL_PRIOR,
+        standard_loss=standard_loss,
+        label_prior_contract=contract,
+    ).sum()
+    fast_gradient = torch.autograd.grad(
+        fast_gradient_loss,
+        gradient_source,
+    )[0]
+    reference_source = log_probs.detach().clone().requires_grad_(True)
+    reference_log_probs = reference_source.log_softmax(dim=2)
+    reference_gradient_loss = label_prior_ctc_loss(
+        reference_log_probs,
+        targets,
+        input_lengths,
+        target_lengths,
+        priors_a,
+        alpha=LABEL_PRIOR_ALPHA,
+    ).sum()
+    reference_gradient = torch.autograd.grad(
+        reference_gradient_loss,
+        reference_source,
+    )[0]
+    assert torch.allclose(
+        fast_gradient,
+        reference_gradient,
+        atol=1.0e-5,
+        rtol=1.0e-5,
+    )
+
     try:
         primary_ctc_per_sample(
             log_probs,
