@@ -176,6 +176,17 @@ def load_references(path: pathlib.Path) -> list[dict]:
 
 def audio_identity(row: dict, audio: pathlib.Path) -> dict:
     measured = inspect_pcm16_wav(audio.resolve(strict=True))
+    declared_duration = row.get("duration_s")
+    if (isinstance(declared_duration, bool)
+            or not isinstance(declared_duration, (int, float))
+            or not math.isfinite(float(declared_duration))
+            or not math.isclose(
+                float(declared_duration), measured["duration_s"],
+                rel_tol=0.0, abs_tol=1.0 / 16000.0,
+            )):
+        raise ValueError(
+            f"{row['recording']}: reference duration_s does not match WAV duration"
+        )
     item = {
         "recording": str(row["recording"]),
         "path": str(row["_execution_path"]),

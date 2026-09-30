@@ -207,6 +207,7 @@ def main() -> int:
         assert abs(negative_result["far_per_hour"] - (2.0 / 3.0)) < 1.0e-12
         assert negative_result["negative_recording_false_accepts"] == 0
         assert abs(negative_result["negative_recording_audio_hours"] - 1.0) < 1.0e-12
+        assert negative_result["longest_negative_recording_seconds"] == 3600.0
         assert negative_result["negative_recording_far_per_hour"] == 0.0
         assert (
             2.9957
@@ -276,6 +277,73 @@ def main() -> int:
             positive_only_result["negative_recording_far_upper_95_per_hour"]
             is None
         )
+        evidence_gate = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(positive_only_refs),
+             "--detections", str(positive_only_dets), "--max-frr", "1",
+             "--max-p95-latency-ms", "500",
+             "--min-expected-per-keyword", "1", "1",
+             "--min-expected-per-keyword", "2", "1",
+             "--min-negative-hours", "1",
+             "--min-continuous-negative-seconds", "60",
+             "--max-negative-far-upper-95-per-hour", "3"],
+            check=False, capture_output=True, text=True,
+        )
+        assert evidence_gate.returncode == 1
+        assert "latency has no matched events" in evidence_gate.stderr
+        assert "keyword 2 expected coverage" in evidence_gate.stderr
+        assert "negative recording hours" in evidence_gate.stderr
+        assert "continuous negative recording duration" in evidence_gate.stderr
+        assert "negative FAR upper 95/hour" in evidence_gate.stderr
+
+        no_positive_refs = root / "no-positive-references.jsonl"
+        no_positive_refs.write_text(
+            json.dumps({"recording": "negative", "duration_s": 3600.0,
+                        "expected": []}) + "\n", encoding="utf-8",
+        )
+        no_positive_gate = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(no_positive_refs),
+             "--detections", str(positive_only_dets), "--max-frr", "1"],
+            check=False, capture_output=True, text=True,
+        )
+        assert no_positive_gate.returncode == 1
+        assert "FRR has no positive events" in no_positive_gate.stderr
+
+        sufficient_negative_gate = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(negative_refs),
+             "--detections", str(positive_only_dets),
+             "--min-expected-per-keyword", "1", "1",
+             "--min-negative-hours", "1",
+             "--max-negative-far-upper-95-per-hour", "3"],
+            check=False, capture_output=True, text=True,
+        )
+        assert sufficient_negative_gate.returncode == 0, sufficient_negative_gate.stderr
+
+        unlabeled_refs = root / "unlabeled.jsonl"
+        unlabeled_refs.write_text(json.dumps({"recording": "unlabeled", "duration_s": 3600.0}) + "\n")
+        unlabeled = run_score(unlabeled_refs, positive_only_dets, summary)
+        assert unlabeled.returncode == 2
+        assert "expected annotation is required" in unlabeled.stderr
+        for invalid_args in (
+            ["--min-negative-hours", "nan"],
+            ["--max-negative-far-upper-95-per-hour", "inf"],
+            ["--min-continuous-negative-seconds", "-1"],
+            ["--min-expected-per-keyword", "1", "0"],
+            ["--min-expected-per-keyword", "1", "1", "--min-expected-per-keyword", "1", "1"],
+        ):
+            invalid = subprocess.run(
+                [sys.executable, str(SCORER), "--references", str(negative_refs),
+                 "--detections", str(positive_only_dets), *invalid_args],
+                check=False, capture_output=True, text=True,
+            )
+            assert invalid.returncode == 2, (invalid_args, invalid.stderr)
+        insufficient = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(negative_refs),
+             "--detections", str(positive_only_dets), "--max-far-per-hour", "0",
+             "--max-negative-far-upper-95-per-hour", "2"],
+            check=False, capture_output=True, text=True,
+        )
+        assert insufficient.returncode == 1
+        assert "negative FAR upper 95/hour" in insufficient.stderr
 
         overlap_refs = root / "overlap-references.jsonl"
         overlap_dets = root / "overlap-detections.jsonl"

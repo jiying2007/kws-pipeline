@@ -84,6 +84,45 @@ python3 eval/score_events.py \
 
 The numeric gates above are examples, not universal product requirements. Define them from the actual use case and acoustic test plan.
 
+### Evidence coverage gates
+
+`run_corpus.py` rejects reference `duration_s` values that differ from decoded
+PCM duration by more than one 16-kHz sample. The scorer requires every reference to explicitly
+supply `expected` (an empty list means annotated negative audio); omitted
+annotations must not silently become negative exposure.
+
+The scorer additionally supports repeatable `--min-expected-per-keyword ID COUNT`,
+`--min-negative-hours`, `--min-continuous-negative-seconds`, and
+`--max-negative-far-upper-95-per-hour`. FRR gates fail without positive events;
+latency gates fail without matched events. Ungated diagnostic summaries retain
+legacy zero-valued empty FRR/latency fields, so those values alone are not proof
+of quality.
+
+The negative-only upper bound is a one-sided 95% Poisson rate bound using only
+recordings explicitly annotated with no expected events. It fails when negative
+exposure is absent. Positive audio cannot dilute that denominator. Zero observed
+false accepts still gives a positive upper bound (about 2.996/hour for one hour),
+so do not substitute a zero observed-FAR target for this confidence-bound target.
+This statistical bound assumes representative exposure consistent with a Poisson
+count model; repeated identical audio or correlated channels do not create
+independent evidence. Run the split/decoded-PCM audit and retain unique source
+identities before making an acoustic claim.
+A continuous-duration gate requires one sufficiently long negative recording;
+many short clips cannot satisfy it by aggregation.
+
+`training/iterate_domain.py` accepts corresponding optional `domain_gates` keys:
+`min_expected_per_keyword` (an object mapping canonical uint32 keyword ID strings
+to positive integer counts), `min_negative_hours`,
+`min_continuous_negative_seconds`, and `max_negative_far_upper_95_per_hour`.
+Configured gates apply through `base_gate` to calibration, test candidate
+selection and final qualification; missing or non-finite required evidence fails
+closed. Existing configurations remain unchanged until a policy is explicitly
+set. All domain qualification paths now also require positive `expected` and
+`matched` counts to evaluate FRR and latency meaningfully. The far-distance
+slice additionally requires a positive integer expected-event count and a finite
+FRR in [0, 1]; an absent or empty far slice cannot qualify. Mixed-corpus `far_per_hour` remains a diagnostic and existing gate; neither
+it nor synthetic negative-only evidence establishes real-world shipping quality.
+
 The scorer reports:
 
 - total audio hours;
