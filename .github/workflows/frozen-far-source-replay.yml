@@ -100,7 +100,12 @@ jobs:
           set -euo pipefail
           git cat-file -e "$HISTORICAL_HEAD^{commit}"
           git merge-base --is-ancestor "$HISTORICAL_HEAD" HEAD
-          for path in             src/kws.c             src/decoder.c             tools/kws_wav.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             eval/long_far_stream.py             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
+          git diff --quiet "$HISTORICAL_HEAD" HEAD -- src || {
+            echo "historical inference runtime under src/ drifted" >&2
+            git diff "$HISTORICAL_HEAD" HEAD -- src >&2
+            exit 2
+          }
+          for path in             tools/kws_wav.c             tools/kws_posterior_dump.c             tools/kws_decoder_replay.c             tools/kws_decoder_path_replay.c             training/render_domains.py             training/synthetic_audio.py             configs/nightly.xiaowo-frozen-model.json             CMakeLists.txt
           do
             git diff --quiet "$HISTORICAL_HEAD" HEAD -- "$path" || {
               echo "historical replay runtime drifted: $path" >&2
@@ -108,7 +113,7 @@ jobs:
               exit 2
             }
           done
-          echo "historical runtime/render/config paths unchanged"
+          echo "historical inference/replay/render/config paths unchanged"
 
       - name: Download and verify retained historical FAR artifact
         env:
