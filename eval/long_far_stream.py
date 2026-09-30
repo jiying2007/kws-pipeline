@@ -112,7 +112,7 @@ def generate_second(rng: random.Random, index: int) -> tuple[list[int], dict]:
     return result, {"profile": profile, "amplitude": amplitude, "mixed": mixed}
 
 
-def drain_events(events: queue.Queue, pending: list[dict], detections: list[dict]) -> None:
+def drain_events(events: queue.Queue, detections: list[dict]) -> None:
     while True:
         try:
             kind, payload = events.get_nowait()
@@ -126,7 +126,73 @@ def drain_events(events: queue.Queue, pending: list[dict], detections: list[dict
         if not isinstance(row, dict):
             raise ValueError("raw stream runner emitted non-object JSON")
         detections.append(row)
-        pending.append(row)
+
+
+def materialize_captures(
+    *,
+    detections: list[dict],
+    spool_path: pathlib.Path,
+    output: pathlib.Path,
+    context_samples: int,
+    total_samples: int,
+) -> list[dict]:
+    expected_bytes = total_samples * 2
+    if spool_path.stat().st_size != expected_bytes:
+        raise ValueError(
+            "stream capture spool byte count mismatch: "
+            f"{spool_path.stat().st_size} != {expected_bytes}"
+        )
+    captures: list[dict] = []
+    with spool_path.open("rb") as stream:
+        for index, row in enumerate(detections):
+            time_s = float(row.get("time_s", math.nan))
+            if not math.isfinite(time_s) or time_s < 0.0:
+                raise ValueError(f"detection[{index}].time_s must be finite and >= 0")
+            center = int(round(time_s * SAMPLE_RATE_HZ))
+            if center > total_samples:
+                raise ValueError(
+                    f"detection[{index}] occurs beyond generated stream: "
+                    f"{center} > {total_samples}"
+                )
+            requested_start = center - context_samples
+            requested_end = center + context_samples
+            start = max(0, requested_start)
+            end = min(total_samples, requested_end)
+            if end < start:
+                raise ValueError(f"detection[{index}] capture interval is invalid")
+            byte_count = (end - start) * 2
+            stream.seek(start * 2)
+            pcm = stream.read(byte_count)
+            if len(pcm) != byte_count:
+                raise ValueError(
+                    f"detection[{index}] capture spool is truncated: "
+                    f"{len(pcm)} != {byte_count}"
+                )
+            path = (
+                output
+                / "captures"
+                / f"fa-{index:04d}-kw{int(row['keyword_id'])}.wav"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with wave.open(str(path), "wb") as writer:
+                writer.setnchannels(1)
+                writer.setsampwidth(2)
+                writer.setframerate(SAMPLE_RATE_HZ)
+                writer.writeframes(pcm)
+            captures.append(
+                {
+                    **row,
+                    "path": str(path),
+                    "sha256": sha256_file(path),
+                    "start_sample": start,
+                    "end_sample": end,
+                    "requested_start_sample": requested_start,
+                    "requested_end_sample": requested_end,
+                    "context_truncated_before": start != requested_start,
+                    "context_truncated_after": end != requested_end,
+                }
+            )
+    return captures
 
 
 def main() -> int:
@@ -229,12 +295,8 @@ def main() -> int:
     thread.start()
 
     context = int(round(args.capture_context_seconds * SAMPLE_RATE_HZ))
-    history_limit = max(SAMPLE_RATE_HZ, context * 2 + 2 * SAMPLE_RATE_HZ)
-    history: list[int] = []
-    history_start = 0
     generated = 0
     detections: list[dict] = []
-    pending: list[dict] = []
     captures: list[dict] = []
     profile_seconds: dict[str, int] = {}
     injections: list[dict] = []
@@ -246,6 +308,10 @@ def main() -> int:
     active_gain = 1.0
     injected_samples = 0
     injection_probability = args.hard_negative_rate_per_minute / 60.0
+    spool_path = output.parent / f".{output.name}-capture-spool.pcm16le"
+    if spool_path.exists():
+        spool_path.unlink()
+    spool = spool_path.open("wb")
 
     try:
         for second in range(args.seconds):
@@ -308,46 +374,39 @@ def main() -> int:
                     active_offset = 0
                     active_gain = 1.0
 
-            process.stdin.write(struct.pack("<" + "h" * len(samples), *samples))
+            raw_samples = struct.pack("<" + "h" * len(samples), *samples)
+            process.stdin.write(raw_samples)
             process.stdin.flush()
-            history.extend(samples)
+            spool.write(raw_samples)
             generated += len(samples)
-            if len(history) > history_limit:
-                trim = len(history) - history_limit
-                del history[:trim]
-                history_start += trim
-            drain_events(events, pending, detections)
-
-            ready: list[dict] = []
-            for row in pending:
-                center = int(round(float(row["time_s"]) * SAMPLE_RATE_HZ))
-                if generated >= center + context:
-                    start = max(0, center - context)
-                    end = center + context
-                    if start >= history_start and end <= history_start + len(history):
-                        clip = history[start - history_start : end - history_start]
-                        path = output / "captures" / f"fa-{len(captures):04d}-kw{int(row['keyword_id'])}.wav"
-                        write_wav(path, clip)
-                        captures.append(
-                            {
-                                **row,
-                                "path": str(path),
-                                "sha256": sha256_file(path),
-                                "start_sample": start,
-                                "end_sample": end,
-                            }
-                        )
-                    ready.append(row)
-            for row in ready:
-                pending.remove(row)
+            drain_events(events, detections)
     finally:
+        spool.close()
         process.stdin.close()
     return_code = process.wait(timeout=30)
     thread.join(timeout=5)
-    drain_events(events, pending, detections)
+    drain_events(events, detections)
     if return_code != 0:
+        try:
+            spool_path.unlink()
+        except FileNotFoundError:
+            pass
         stderr = process.stderr.read().decode("utf-8", errors="replace") if process.stderr else ""
         raise RuntimeError(f"raw stream runner failed ({return_code}): {stderr}")
+
+    try:
+        captures = materialize_captures(
+            detections=detections,
+            spool_path=spool_path,
+            output=output,
+            context_samples=context,
+            total_samples=generated,
+        )
+    finally:
+        try:
+            spool_path.unlink()
+        except FileNotFoundError:
+            pass
 
     audio_hours = args.seconds / 3600.0
     far = len(detections) / audio_hours

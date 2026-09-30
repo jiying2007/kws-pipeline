@@ -72,6 +72,61 @@ def run_far(
     return json.loads((output / "summary.json").read_text(encoding="utf-8"))
 
 
+def run_eof_detection_capture(
+    *,
+    root: pathlib.Path,
+    model: pathlib.Path,
+    pack: pathlib.Path,
+    output: pathlib.Path,
+) -> dict:
+    runner = root / "eof-detection-runner.py"
+    runner.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+
+sys.stdin.buffer.read()
+print(
+    json.dumps(
+        {
+            "recording": "eof-delayed-detection",
+            "keyword_id": 2,
+            "time_s": 1.5,
+            "confidence": 0.875,
+        },
+        sort_keys=True,
+    ),
+    flush=True,
+)
+""",
+        encoding="utf-8",
+    )
+    runner.chmod(0o755)
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(ROOT / "eval" / "long_far_stream.py"),
+            "--runner",
+            str(runner.resolve()),
+            "--model",
+            str(model),
+            "--keywords",
+            str(pack),
+            "--seconds",
+            "4",
+            "--seed",
+            "408",
+            "--output-dir",
+            str(output),
+            "--capture-context-seconds",
+            "1",
+            "--max-far-per-hour",
+            "1000000",
+        ]
+    )
+    return json.loads((output / "summary.json").read_text(encoding="utf-8"))
+
+
 def annotate_far(
     *,
     domain_index: pathlib.Path,
@@ -203,6 +258,52 @@ def main() -> int:
         assert summary["coverage_hard_negative_gain"] is None
         assert sum(summary["profile_seconds"].values()) == 3
         assert (output / "detections.jsonl").read_text(encoding="utf-8") == ""
+
+        # A runner may deliver its final detection only after stdin closes. The
+        # capture contract must not depend on reader-thread timing or the live
+        # in-memory history window: post-hoc spool materialization must still
+        # retain the exact requested context around that detection.
+        late_output = root / "far-eof-detection"
+        late_summary = run_eof_detection_capture(
+            root=root,
+            model=model,
+            pack=pack,
+            output=late_output,
+        )
+        assert late_summary["qualified"] is True
+        assert late_summary["false_accepts"] == 1
+        late_detections = [
+            json.loads(line)
+            for line in (late_output / "detections.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ]
+        assert len(late_detections) == 1
+        late_captures = [
+            json.loads(line)
+            for line in (late_output / "captures.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ]
+        assert len(late_captures) == 1
+        late_capture = late_captures[0]
+        assert late_capture["keyword_id"] == 2
+        assert late_capture["time_s"] == 1.5
+        assert late_capture["start_sample"] == SAMPLE_RATE_HZ // 2
+        assert late_capture["end_sample"] == 5 * SAMPLE_RATE_HZ // 2
+        assert late_capture["requested_start_sample"] == SAMPLE_RATE_HZ // 2
+        assert late_capture["requested_end_sample"] == 5 * SAMPLE_RATE_HZ // 2
+        assert late_capture["context_truncated_before"] is False
+        assert late_capture["context_truncated_after"] is False
+        capture_path = pathlib.Path(late_capture["path"])
+        assert capture_path.is_file()
+        assert late_capture["sha256"] == sha256_file(capture_path)
+        with wave.open(str(capture_path), "rb") as reader:
+            assert reader.getnchannels() == 1
+            assert reader.getframerate() == SAMPLE_RATE_HZ
+            assert reader.getsampwidth() == 2
+            assert reader.getnframes() == 2 * SAMPLE_RATE_HZ
+        assert not (root / ".far-eof-detection-capture-spool.pcm16le").exists()
 
         negative_wav = root / "hard-negative.wav"
         write_negative_wav(negative_wav)
