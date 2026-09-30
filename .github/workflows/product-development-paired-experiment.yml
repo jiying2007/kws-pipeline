@@ -278,7 +278,7 @@ jobs:
             domain_iteration.base_failure_replay_enabled)
               comparator=training/compare_product_development_pair.py
               ;;
-            train.sequence_margin_positive_policy)
+            train.sequence_margin_positive_policy|train.ctc_primary_policy)
               comparator=training/compare_product_objective_pair.py
               comparator_args=(
                 --pair-receipt "$KWS_PAIR_ROOT/pair-receipt.json"

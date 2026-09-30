@@ -22,19 +22,34 @@ from compare_product_development_pair import (
     semantic_wake_balance,
 )
 
-VARIABLE = "train.sequence_margin_positive_policy"
+VARIABLE_SEQUENCE_MARGIN = "train.sequence_margin_positive_policy"
+VARIABLE_CTC_PRIMARY = "train.ctc_primary_policy"
+OBJECTIVE_VARIABLES = {
+    VARIABLE_SEQUENCE_MARGIN: "sequence_margin_positive_policy",
+    VARIABLE_CTC_PRIMARY: "ctc_primary_policy",
+}
 DEFAULT_CONTROL = "sparse-chronological-v1"
 DEFAULT_TREATMENT = "runtime-search-aligned-v1"
+DEFAULT_CTC_CONTROL = "standard-v1"
+DEFAULT_CTC_TREATMENT = "label-prior-v1"
 NEGATIVE = "runtime-executable-v1"
 
 
-def expected_values_from_pair_receipt(path: pathlib.Path) -> tuple[str, str]:
+def expected_values_from_pair_receipt(
+    path: pathlib.Path,
+) -> tuple[str, str, str]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if value.get("evidence_class") != "product-development-same-runner-pair-receipt-v1":
         raise ValueError("pair receipt evidence_class mismatch")
     variable = value.get("variable")
-    if not isinstance(variable, dict) or variable.get("name") != VARIABLE:
-        raise ValueError("pair receipt objective variable mismatch")
+    if not isinstance(variable, dict):
+        raise ValueError("pair receipt objective variable is missing")
+    variable_name = variable.get("name")
+    if variable_name not in OBJECTIVE_VARIABLES:
+        raise ValueError(
+            "pair receipt objective variable must be one of "
+            + ", ".join(sorted(OBJECTIVE_VARIABLES))
+        )
     control = variable.get("control")
     treatment = variable.get("treatment")
     if (
@@ -45,7 +60,7 @@ def expected_values_from_pair_receipt(path: pathlib.Path) -> tuple[str, str]:
         or control == treatment
     ):
         raise ValueError("pair receipt objective values must be distinct strings")
-    return control, treatment
+    return variable_name, control, treatment
 
 
 def delete_dotted(value: dict, dotted: str) -> None:
@@ -59,19 +74,19 @@ def delete_dotted(value: dict, dotted: str) -> None:
     cursor.pop(parts[-1], None)
 
 
-def normalized_config(config: dict) -> dict:
+def normalized_config(config: dict, variable_name: str) -> dict:
     value = copy.deepcopy(config)
     value.pop("development_experiment", None)
-    delete_dotted(value, VARIABLE)
+    delete_dotted(value, variable_name)
     return value
 
 
-def normalized_overrides(receipt: dict) -> dict:
+def normalized_overrides(receipt: dict, variable_name: str) -> dict:
     raw = receipt.get("config_overrides")
     if not isinstance(raw, dict):
         raise ValueError("config_overrides must be an object")
     value = copy.deepcopy(raw)
-    value.pop(VARIABLE, None)
+    value.pop(variable_name, None)
     return value
 
 
@@ -97,12 +112,16 @@ def round0_inputs(
     control: dict,
     treatment: dict,
     *,
+    variable_name: str,
     expected_control: str,
     expected_treatment: str,
 ) -> dict:
     c0 = {record_key(row): row for row in records_by_round(control["manifest"], 0)}
     t0 = {record_key(row): row for row in records_by_round(treatment["manifest"], 0)}
     failures: list[str] = []
+    readback_field = OBJECTIVE_VARIABLES.get(variable_name)
+    if readback_field is None:
+        raise ValueError("unsupported objective variable")
     if set(c0) != set(t0):
         failures.append("round0 candidate set differs")
     crb = readback_map(control["readback"])
@@ -144,10 +163,14 @@ def round0_inputs(
             failures.append(f"{tag}.control negative policy drifted")
         if rread.get("sequence_margin_negative_policy") != NEGATIVE:
             failures.append(f"{tag}.treatment negative policy drifted")
-        if lread.get("sequence_margin_positive_policy") != expected_control:
-            failures.append(f"{tag}.control positive policy drifted")
-        if rread.get("sequence_margin_positive_policy") != expected_treatment:
-            failures.append(f"{tag}.treatment positive policy drifted")
+        if lread.get(readback_field) != expected_control:
+            failures.append(
+                f"{tag}.control {readback_field} drifted"
+            )
+        if rread.get(readback_field) != expected_treatment:
+            failures.append(
+                f"{tag}.treatment {readback_field} drifted"
+            )
     return {
         "valid": not failures,
         "failures": failures,
@@ -200,9 +223,12 @@ def compare_pair(
     control_root: pathlib.Path,
     treatment_root: pathlib.Path,
     *,
+    variable_name: str,
     expected_control: str,
     expected_treatment: str,
 ) -> dict:
+    if variable_name not in OBJECTIVE_VARIABLES:
+        raise ValueError("unsupported objective variable")
     if (
         not isinstance(expected_control, str)
         or not expected_control
@@ -228,14 +254,18 @@ def compare_pair(
         framing.append("PR base SHA differs")
     if cr.get("effective_config_sha256") != tr.get("effective_config_sha256"):
         framing.append("effective product base differs")
-    if normalized_overrides(cr) != normalized_overrides(tr):
-        framing.append("overrides differ outside positive policy")
-    if cr.get("config_overrides", {}).get(VARIABLE) != expected_control:
-        framing.append("control positive policy mismatch")
-    if tr.get("config_overrides", {}).get(VARIABLE) != expected_treatment:
-        framing.append("treatment positive policy mismatch")
-    if normalized_config(control["config"]) != normalized_config(treatment["config"]):
-        framing.append("materialized configs differ outside positive policy")
+    if normalized_overrides(cr, variable_name) != normalized_overrides(
+        tr, variable_name
+    ):
+        framing.append("overrides differ outside paired objective variable")
+    if cr.get("config_overrides", {}).get(variable_name) != expected_control:
+        framing.append("control objective value mismatch")
+    if tr.get("config_overrides", {}).get(variable_name) != expected_treatment:
+        framing.append("treatment objective value mismatch")
+    if normalized_config(
+        control["config"], variable_name
+    ) != normalized_config(treatment["config"], variable_name):
+        framing.append("materialized configs differ outside paired objective variable")
     for label, item in (("control", control), ("treatment", treatment)):
         train = item["config"].get("train")
         if not isinstance(train, dict) or train.get("sequence_margin_negative_policy") != NEGATIVE:
@@ -249,6 +279,7 @@ def compare_pair(
         treatment_root,
         control,
         treatment,
+        variable_name=variable_name,
         expected_control=expected_control,
         expected_treatment=expected_treatment,
     )
@@ -282,7 +313,7 @@ def compare_pair(
         "evidence_class": "product-development-objective-paired-causal-comparison-v1",
         "development_only": True,
         "release_authority": False,
-        "variable": VARIABLE,
+        "variable": variable_name,
         "control_value": expected_control,
         "treatment_value": expected_treatment,
         "common_base_sha": cr.get("pr_base_sha"),
@@ -316,15 +347,29 @@ def write_fixture(
     treatment: bool,
     positive: bool,
     *,
+    variable_name: str = VARIABLE_SEQUENCE_MARGIN,
     control_value: str = DEFAULT_CONTROL,
     treatment_value: str = DEFAULT_TREATMENT,
 ) -> None:
+    if variable_name not in OBJECTIVE_VARIABLES:
+        raise ValueError("unsupported fixture objective variable")
     policy = treatment_value if treatment else control_value
+    positive_policy = (
+        policy
+        if variable_name == VARIABLE_SEQUENCE_MARGIN
+        else DEFAULT_CONTROL
+    )
+    primary_policy = (
+        policy
+        if variable_name == VARIABLE_CTC_PRIMARY
+        else DEFAULT_CTC_CONTROL
+    )
     config = {
         "train": {
             "ctc_vad_align": True,
+            "ctc_primary_policy": primary_policy,
             "sequence_margin_negative_policy": NEGATIVE,
-            "sequence_margin_positive_policy": policy,
+            "sequence_margin_positive_policy": positive_policy,
         },
         "domain_iteration": {"base_failure_replay_enabled": False},
         "development_experiment": {"arm": "t" if treatment else "c"},
@@ -340,7 +385,7 @@ def write_fixture(
             "train.ctc_vad_align": True,
             "train.sequence_margin_negative_policy": NEGATIVE,
             "domain_iteration.base_failure_replay_enabled": False,
-            VARIABLE: policy,
+            variable_name: policy,
         },
     }
 
@@ -401,8 +446,9 @@ def write_fixture(
             "float_state_sha256": ("t" if treatment else "c")*64,
             "model_sha256": record["model_sha256"],
             "training_corpus_sha256": ("t" if treatment else "c")*64,
+            "ctc_primary_policy": primary_policy,
             "sequence_margin_negative_policy": NEGATIVE,
-            "sequence_margin_positive_policy": policy,
+            "sequence_margin_positive_policy": positive_policy,
         })
         prov = root/"build/product-development-experiment/candidates"/name/"model.kwm.provenance.json"
         prov.parent.mkdir(parents=True, exist_ok=True)
@@ -432,6 +478,7 @@ def self_test() -> None:
         report = compare_pair(
             control,
             treatment,
+            variable_name=VARIABLE_SEQUENCE_MARGIN,
             expected_control=DEFAULT_CONTROL,
             expected_treatment=DEFAULT_TREATMENT,
         )
@@ -442,6 +489,7 @@ def self_test() -> None:
         report = compare_pair(
             control,
             treatment,
+            variable_name=VARIABLE_SEQUENCE_MARGIN,
             expected_control=DEFAULT_CONTROL,
             expected_treatment=DEFAULT_TREATMENT,
         )
@@ -456,7 +504,7 @@ def self_test() -> None:
                 {
                     "evidence_class": "product-development-same-runner-pair-receipt-v1",
                     "variable": {
-                        "name": VARIABLE,
+                        "name": VARIABLE_SEQUENCE_MARGIN,
                         "control": DEFAULT_CONTROL,
                         "treatment": alternate,
                     },
@@ -464,9 +512,10 @@ def self_test() -> None:
             ),
             encoding="utf-8",
         )
-        expected_control, expected_treatment = expected_values_from_pair_receipt(
-            pair_receipt
+        variable_name, expected_control, expected_treatment = (
+            expected_values_from_pair_receipt(pair_receipt)
         )
+        assert variable_name == VARIABLE_SEQUENCE_MARGIN
         assert expected_control == DEFAULT_CONTROL
         assert expected_treatment == alternate
         write_fixture(
@@ -478,12 +527,58 @@ def self_test() -> None:
         report = compare_pair(
             control,
             treatment,
+            variable_name=variable_name,
             expected_control=expected_control,
             expected_treatment=expected_treatment,
         )
         assert report["causal_valid"] is True
         assert report["treatment_value"] == alternate
         assert report["result_class"] == "positive-under-strict-precision-preserving-recall-gain"
+
+        pair_receipt.write_text(
+            json.dumps(
+                {
+                    "evidence_class": "product-development-same-runner-pair-receipt-v1",
+                    "variable": {
+                        "name": VARIABLE_CTC_PRIMARY,
+                        "control": DEFAULT_CTC_CONTROL,
+                        "treatment": DEFAULT_CTC_TREATMENT,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        variable_name, expected_control, expected_treatment = (
+            expected_values_from_pair_receipt(pair_receipt)
+        )
+        assert variable_name == VARIABLE_CTC_PRIMARY
+        write_fixture(
+            control,
+            False,
+            True,
+            variable_name=VARIABLE_CTC_PRIMARY,
+            control_value=DEFAULT_CTC_CONTROL,
+            treatment_value=DEFAULT_CTC_TREATMENT,
+        )
+        write_fixture(
+            treatment,
+            True,
+            True,
+            variable_name=VARIABLE_CTC_PRIMARY,
+            control_value=DEFAULT_CTC_CONTROL,
+            treatment_value=DEFAULT_CTC_TREATMENT,
+        )
+        report = compare_pair(
+            control,
+            treatment,
+            variable_name=variable_name,
+            expected_control=expected_control,
+            expected_treatment=expected_treatment,
+        )
+        assert report["causal_valid"] is True
+        assert report["variable"] == VARIABLE_CTC_PRIMARY
+        assert report["control_value"] == DEFAULT_CTC_CONTROL
+        assert report["treatment_value"] == DEFAULT_CTC_TREATMENT
 
 
 def main() -> int:
@@ -509,12 +604,13 @@ def main() -> int:
             "unless --self-test is used"
         )
     try:
-        expected_control, expected_treatment = expected_values_from_pair_receipt(
-            args.pair_receipt
+        variable_name, expected_control, expected_treatment = (
+            expected_values_from_pair_receipt(args.pair_receipt)
         )
         report = compare_pair(
             args.control,
             args.treatment,
+            variable_name=variable_name,
             expected_control=expected_control,
             expected_treatment=expected_treatment,
         )
