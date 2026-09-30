@@ -170,6 +170,7 @@ def main() -> int:
     assert "training/compare_product_development_pair.py" in paired_workflow
     assert "training/compare_product_objective_pair.py" in paired_workflow
     assert "train.sequence_margin_positive_policy" in paired_workflow
+    assert "train.ctc_primary_policy" in paired_workflow
     assert "unsupported paired causal comparator variable" in paired_workflow
     assert "Require valid causal pair" in paired_workflow
     subprocess.check_call(
