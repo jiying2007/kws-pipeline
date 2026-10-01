@@ -142,6 +142,91 @@ class Contracts(unittest.TestCase):
         self.assertFalse(any('docker.sock' in x and x.startswith('--mount=') for x in command))
         self.assertEqual(q.clean_env()['HOME'], '/nonexistent')
         self.assertNotIn('GITHUB_TOKEN', q.clean_env())
+        for value in ('USER=kws-asr-runtime', 'LOGNAME=kws-asr-runtime', 'HOME=/work/home',
+                      'XDG_CACHE_HOME=/work/cache', 'TORCHINDUCTOR_CACHE_DIR=/work/cache/torchinductor'):
+            self.assertIn(value, command)
+
+    def identity_environment(self, work):
+        return {'USER': 'kws-asr-runtime', 'LOGNAME': 'kws-asr-runtime', 'HOME': str(work / 'home'),
+                'XDG_CACHE_HOME': str(work / 'cache'),
+                'TORCHINDUCTOR_CACHE_DIR': str(work / 'cache/torchinductor')}
+
+    def test_container_identity_does_not_inherit_host_environment(self):
+        with mock.patch.dict(os.environ, {'USER': 'host-user', 'LOGNAME': 'host-login',
+                                         'HOME': '/host/home', 'TORCHINDUCTOR_CACHE_DIR': '/host/cache'}):
+            command = q.create_command('/usr/bin/docker', 'docker.io/library/python@sha256:' + 'a'*64,
+                                       'kws-asr-fixture', '/inputs-fixture', '/output-fixture', '/work-fixture', self.limits, 'runtime')
+        assignments = command[command.index('-i') + 1:command.index('/usr/local/bin/python')]
+        env = dict(item.split('=', 1) for item in assignments)
+        self.assertEqual(len(env), len(assignments), 'duplicate environment assignment')
+        for key, value in self.identity_environment(Path('/work')).items():
+            self.assertEqual(env[key], value)
+        self.assertFalse(any('/host/' in item or 'host-user' in item or 'host-login' in item for item in assignments))
+
+    def test_runtime_identity_supports_numeric_uid_without_passwd_entry(self):
+        import container_stage
+        import pwd
+        work = self.path / 'work'
+        work.mkdir()
+        with mock.patch.dict(os.environ, self.identity_environment(work), clear=True), \
+                mock.patch.object(os, 'getuid', return_value=1000), \
+                mock.patch.object(os, 'getgid', return_value=1000), \
+                mock.patch.object(os, 'geteuid', return_value=1000), \
+                mock.patch.object(os, 'getegid', return_value=1000), \
+                mock.patch.object(pwd, 'getpwuid', side_effect=KeyError('uid not found: 1000')) as passwd:
+            result = container_stage.runtime_identity(work)
+            passwd.assert_not_called()
+        self.assertEqual({key: result[key] for key in ('uid', 'gid', 'euid', 'egid')},
+                         dict(uid=1000, gid=1000, euid=1000, egid=1000))
+        self.assertEqual(result['process_username_source'], 'fixed_environment_not_passwd')
+        for name in ('home', 'cache', 'cache/torchinductor'):
+            self.assertTrue((work / name).is_dir())
+            self.assertEqual(list((work / name).glob('.kws-write-probe')), [])
+
+    def test_runtime_identity_rejects_wrong_effective_identity(self):
+        import container_stage
+        for identity in ('getuid', 'getgid', 'geteuid', 'getegid'):
+            with self.subTest(identity=identity), \
+                    mock.patch.object(os, 'getuid', return_value=1000), \
+                    mock.patch.object(os, 'getgid', return_value=1000), \
+                    mock.patch.object(os, 'geteuid', return_value=1000), \
+                    mock.patch.object(os, 'getegid', return_value=1000), \
+                    mock.patch.object(os, identity, return_value=0):
+                with self.assertRaisesRegex(RuntimeError, 'real/effective UID/GID'):
+                    container_stage.runtime_identity(self.path)
+
+    def test_runtime_identity_rejects_missing_or_redirected_environment(self):
+        import container_stage
+        expected = self.identity_environment(self.path)
+        for name in expected:
+            for value in (None, '/outside' if 'HOME' in name or name.endswith('_DIR') else 'root'):
+                env = dict(expected)
+                env.pop(name) if value is None else env.update({name: value})
+                with self.subTest(name=name, value=value), mock.patch.dict(os.environ, env, clear=True), \
+                        mock.patch.object(os, 'getuid', return_value=1000), \
+                        mock.patch.object(os, 'getgid', return_value=1000), \
+                        mock.patch.object(os, 'geteuid', return_value=1000), \
+                        mock.patch.object(os, 'getegid', return_value=1000):
+                    with self.assertRaisesRegex(RuntimeError, 'environment mismatch'):
+                        container_stage.runtime_identity(self.path)
+
+    def test_runtime_identity_rejects_linked_home_or_cache(self):
+        import container_stage
+        for name in ('home', 'cache', 'cache/torchinductor'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                work = Path(tmp) / 'work'
+                work.mkdir()
+                target = work / name
+                target.parent.mkdir(exist_ok=True)
+                target.symlink_to(self.path)
+                with mock.patch.dict(os.environ, self.identity_environment(work), clear=True), \
+                        mock.patch.object(os, 'getuid', return_value=1000), \
+                        mock.patch.object(os, 'getgid', return_value=1000), \
+                        mock.patch.object(os, 'geteuid', return_value=1000), \
+                        mock.patch.object(os, 'getegid', return_value=1000):
+                    with self.assertRaisesRegex(RuntimeError, 'linked runtime'):
+                        container_stage.runtime_identity(work)
+
     def test_exit137_does_not_imply_oom(self):
         r = q.summarize_state({'State': {'ExitCode': 137, 'OOMKilled': False, 'Running': False, 'Dead': False}})
         self.assertEqual(r['status'], 'failed')

@@ -8,11 +8,26 @@ or statistical data; receipts explicitly distinguish those side effects.
 
 ## Current status and exact input identities
 
-Static review has passed and source admission is enabled. Real execution remains
-dormant until exact owner PR-body and label authorization. The actual runtime is
-unverified: no real Docker, source build, install or ASR dependency import has run.
-Ordinary PRs run only dependency-free fixtures. The owner-armed label job is the
-**only** real-execution trigger.
+The first owner-approved [runtime run](https://github.com/jiying2007/kws-pipeline/actions/runs/36934590226)
+at head `aa5cfeddb6aa5bea44e2520e8081cf49ad1d9ad6` failed during the
+`qwen_asr` import. Docker/image preflight, two independent builds of all five
+sources with byte-identical wheel comparison, the complete 140-package offline
+installation and `pip check` passed. PyTorch's cache setup called
+`getpass.getuser()` for numeric UID 1000, which has no passwd entry in the official
+image; the sanitized environment did not provide a process username. The CPU
+FP32/BF16 probes were not reached. All four containers were removed without OOM
+or cleanup errors. This is partial dependency evidence, not successful runtime
+qualification or model-performance evidence.
+
+The source fix supplies fixed `USER`/`LOGNAME` values and explicit Torch/XDG cache
+paths under the already bounded `/work`. Preflight checks real/effective numeric
+UID/GID, child process inheritance and writable unlinked home/cache directories.
+The name is an environment label, not a new passwd account; no host username is
+inherited. The fix has dependency-free regression coverage but has **not** been
+requalified with real dependencies. Source admission remains label-gated and a
+new exact-head/source owner approval is required for another real run. Ordinary
+PRs run only dependency-free fixtures. The owner-armed label job is the **only**
+real-execution trigger.
 
 The complete v2 PyPI metadata inventory is newly resolved, not represented as a
 byte-identical recovery of an older inventory:
@@ -33,8 +48,9 @@ The Docker Official Image metadata is independently hash-checkable:
 - Config/image ID: `sha256:bb31e660647633ecd0a394013306057121b4fd091e2bf214010558249c5e1eb9`
 - Seven compressed layers plus config: **380,580,320 bytes**
 - Exact bulk package + image descriptor budget: **3,440,877,429 bytes**
-- Metadata/HTTP/checkout overhead is separate. Actual expanded image size is
-  unmeasured, with a 2 GiB admission cap checked after the approved pull
+- Metadata/HTTP/checkout overhead is separate. The first run passed the expanded
+  image's 2 GiB admission cap; its exact measured size was not retained in the
+  emitted failure receipts
 
 Only the ten small build/source inputs have been downloaded for static review:
 21,050,826 bytes. Their verified scientific audit is separate from the unchanged

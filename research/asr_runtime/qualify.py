@@ -293,6 +293,8 @@ def create_command(docker, image, name, inputs, outputs, work, limits, stage):
             "--mount=type=bind,src=" + str(work) + ",dst=/work,bind-propagation=rprivate",
             "--workdir=/work", "--entrypoint=/usr/bin/env", image, "-i",
             "PATH=/usr/local/bin:/usr/bin:/bin", "LANG=C.UTF-8", "HOME=/work/home", "TMPDIR=/tmp",
+            "USER=kws-asr-runtime", "LOGNAME=kws-asr-runtime", "XDG_CACHE_HOME=/work/cache",
+            "TORCHINDUCTOR_CACHE_DIR=/work/cache/torchinductor",
             "PYTHONDONTWRITEBYTECODE=1", "PYTHONHASHSEED=0", "SOURCE_DATE_EPOCH=1704067200",
             "PIP_CONFIG_FILE=/dev/null", "PIP_NO_INDEX=1", "PIP_DISABLE_PIP_VERSION_CHECK=1", "PIP_NO_CACHE_DIR=1",
             "HF_HUB_OFFLINE=1", "TRANSFORMERS_OFFLINE=1", "HF_DATASETS_OFFLINE=1", "HF_HUB_DISABLE_TELEMETRY=1",

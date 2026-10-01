@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Container-only stages. No model loading, user audio, decoding or inference."""
 import errno
+import getpass
 import hashlib
 import importlib
 import importlib.metadata
@@ -52,12 +53,38 @@ def fail_write(path):
     raise RuntimeError('forbidden filesystem write succeeded')
 
 
+def runtime_identity(work=WORK):
+    """Validate numeric identity and private writable paths without passwd edits."""
+    ids = {'uid': os.getuid(), 'gid': os.getgid(), 'euid': os.geteuid(), 'egid': os.getegid()}
+    need(all(value == 1000 for value in ids.values()), 'nonroot real/effective UID/GID mismatch')
+    username = 'kws-asr-runtime'
+    expected = {'USER': username, 'LOGNAME': username, 'HOME': str(work / 'home'),
+                'XDG_CACHE_HOME': str(work / 'cache'),
+                'TORCHINDUCTOR_CACHE_DIR': str(work / 'cache/torchinductor')}
+    need(all(os.environ.get(key) == value for key, value in expected.items()),
+         'fixed runtime identity/home/cache environment mismatch')
+    # The official image need not have a passwd entry for numeric UID 1000.
+    # getpass honors LOGNAME/USER; this is a process label, not an OS account.
+    need(getpass.getuser() == username, 'runtime process username mismatch')
+    need(work.is_dir() and not work.is_symlink(), 'invalid runtime work directory')
+    for directory in (work / 'home', work / 'cache', work / 'cache/torchinductor'):
+        need(not directory.is_symlink(), 'linked runtime home/cache directory')
+        directory.mkdir(exist_ok=True)
+        probe = directory / '.kws-write-probe'
+        with probe.open('xb') as out:
+            out.write(b'probe')
+        probe.unlink()
+    return dict(ids, process_username=username, process_username_source='fixed_environment_not_passwd',
+                home=expected['HOME'], xdg_cache_home=expected['XDG_CACHE_HOME'],
+                torchinductor_cache_dir=expected['TORCHINDUCTOR_CACHE_DIR'])
+
+
 def preflight():
     admission = json.loads((INPUT / 'admission.json').read_text())
     limits = admission['limits']
     need(sys.version.split()[0] == admission['image']['python_version'], 'Python patch version mismatch')
     need(platform.libc_ver() == ('glibc', admission['runtime_root_policy']['target_glibc_maximum']), 'container glibc target mismatch')
-    need(os.getuid() == 1000 and os.getgid() == 1000, 'nonroot UID/GID mismatch')
+    identity = runtime_identity()
     status = dict(line.split(':', 1) for line in Path('/proc/self/status').read_text().splitlines() if ':' in line)
     need(int(status['CapEff'].strip(), 16) == 0, 'effective capabilities present')
     need(status['NoNewPrivs'].strip() == '1' and status['Seccomp'].strip() == '2', 'NNP/seccomp not effective')
@@ -81,17 +108,19 @@ def preflight():
     need(network_errno in (errno.ENETUNREACH, errno.EHOSTUNREACH), 'network probe did not prove unreachable route')
     result = {'root_write_errno': fail_write(Path('/.kws-forbidden')),
               'input_write_errno': fail_write(INPUT / '.kws-forbidden'), 'external_connect_errno': network_errno,
-              'uid': os.getuid(), 'memory_max': memory, 'swap_max': swap, 'cpu_quota': quota, 'cpu_period': period,
+              **identity, 'memory_max': memory, 'swap_max': swap, 'cpu_quota': quota, 'cpu_period': period,
               'pids_max': pids, 'python_version': sys.version.split()[0]}
     result['image_tools'] = {name: shutil.which(name) for name in ('cc', 'gcc', 'make', 'ld', 'ffmpeg', 'sox')}
     need(result['image_tools']['cc'] and result['image_tools']['make'], 'image lacks required build tools')
     result['media_tool_interpretation'] = 'Presence only; no audio or model capability claim'
-    (WORK / 'home').mkdir(exist_ok=True)
     Path('/tmp/kws-write-probe').write_bytes(b'probe')
     (OUTPUT / 'write-probe').write_bytes(b'probe')
     # A fixed stdlib child must observe the same inherited isolation.
     run([sys.executable, '-I', '-S', '-c',
-         "import os,pathlib; assert os.getuid()==1000; assert 'NoNewPrivs:\\t1' in pathlib.Path('/proc/self/status').read_text()"], 5)
+         "import getpass,os,pathlib; assert os.getuid()==os.geteuid()==os.getgid()==os.getegid()==1000; "
+         "assert getpass.getuser()=='kws-asr-runtime'; assert os.environ['HOME']=='/work/home'; "
+         "assert os.environ['TORCHINDUCTOR_CACHE_DIR']=='/work/cache/torchinductor'; "
+         "assert 'NoNewPrivs:\\t1' in pathlib.Path('/proc/self/status').read_text()"], 5)
     return result
 
 
