@@ -1,0 +1,4 @@
+# Unified patch context includes a leading space on otherwise empty lines.
+patches/bounded-viterbi.patch whitespace=-blank-at-eol
+# Preserve the byte-exact upstream extraction, including its terminal blank line.
+source/sherpa-onnx/c-api/kws-c-api.cc whitespace=-blank-at-eof

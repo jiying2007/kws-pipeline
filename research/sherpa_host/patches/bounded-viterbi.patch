@@ -1,0 +1,239 @@
+--- a/sherpa-onnx/csrc/transducer-keyword-decoder.cc
++++ b/sherpa-onnx/csrc/transducer-keyword-decoder.cc
+@@ -8,6 +8,9 @@
+ #include <algorithm>
+ #include <cmath>
+ #include <cstring>
++#include <limits>
++#include <string>
++#include <unordered_map>
+ #include <utility>
+ #include <vector>
+ 
+@@ -15,6 +18,176 @@
+ #include "sherpa-onnx/csrc/onnx-utils.h"
+ 
+ namespace sherpa_onnx {
++
++namespace {
++// BEGIN bounded keyword history helpers
++
++// Preserve the initialization prefix and each unmerged path's predictor tail.
++// Canonicalizing ys can introduce new Hypotheses::Add collisions; it is not a
++// semantics-preserving merge of complete decoder states.
++static bool NormalizeKeywordHistory(
++    int32_t context_size, int32_t state_level, std::vector<int64_t> *ys,
++    std::vector<int32_t> *timestamps, std::vector<float> *ys_probs) {
++  if (context_size <= 0 || state_level <= 0 || ys == nullptr ||
++      timestamps == nullptr || ys_probs == nullptr) {
++    return false;
++  }
++  const size_t c = static_cast<size_t>(context_size);
++  const size_t l = static_cast<size_t>(state_level);
++  if (ys->size() < c || ys->size() - c < l || timestamps->size() < l ||
++      ys_probs->size() < l || timestamps->size() != ys_probs->size() ||
++      timestamps->size() > ys->size() - c) {
++    return false;
++  }
++  const size_t real_count = ys->size() - c;
++  const size_t keep = std::min(real_count, std::max(c, l));
++  ys->erase(ys->begin() + c, ys->end() - keep);
++  timestamps->erase(timestamps->begin(), timestamps->end() - l);
++  ys_probs->erase(ys_probs->begin(), ys_probs->end() - l);
++  return true;
++}
++
++// A shorter output-link match must use its final M probabilities, even when
++// the current graph state retains a longer L-token prefix for continuation.
++static bool GetKeywordSuffixScore(const std::vector<float> &ys_probs,
++                                  int32_t matched_level, float *score) {
++  if (matched_level <= 0 || score == nullptr ||
++      ys_probs.size() < static_cast<size_t>(matched_level)) {
++    return false;
++  }
++  const size_t start = ys_probs.size() - matched_level;
++  float sum = 0.0;
++  for (int32_t i = 0; i < matched_level; ++i) {
++    sum += ys_probs[start + i];
++  }
++  *score = sum / matched_level;
++  return true;
++}
++
++// END bounded keyword history helpers
++
++// BEGIN bounded Viterbi keyword helpers
++
++// The string itself, not its hash, identifies a compact normalized KWS key.
++// Probabilities, timestamps and trailing blanks remain on the selected path;
++// they do not participate in this deliberately lossy trigger-state grouping.
++// Encode fixed-width unsigned values most-significant byte first. Signed token
++// values use the defined modulo conversion to uint64_t (including initial -1).
++static void AppendKeywordUint32(uint32_t value, std::string *key) {
++  for (int32_t shift = 24; shift >= 0; shift -= 8) {
++    key->push_back(static_cast<char>((value >> shift) & 0xff));
++  }
++}
++
++static void AppendKeywordUint64(uint64_t value, std::string *key) {
++  for (int32_t shift = 56; shift >= 0; shift -= 8) {
++    key->push_back(static_cast<char>((value >> shift) & 0xff));
++  }
++}
++
++static bool GetKeywordStateKey(const Hypothesis &hyp, int32_t context_size,
++                               std::string *key) {
++  static_assert(sizeof(double) == sizeof(uint64_t) &&
++                    std::numeric_limits<double>::is_iec559,
++                "Keyword LM default requires IEEE float64");
++  static_assert(sizeof(size_t) <= sizeof(uint64_t),
++                "Keyword lengths must fit uint64_t");
++  uint64_t lm_bits;
++  std::memcpy(&lm_bits, &hyp.lm_log_prob, sizeof(lm_bits));
++  // Unsupported shared ASR/LM state must fail, not silently become another KWS
++  // state. In particular TotalLogProb() also observes lm_log_prob.
++  if (key == nullptr || context_size <= 0 || hyp.context_state == nullptr ||
++      !std::isfinite(hyp.log_prob) || !hyp.lm_probs.empty() ||
++      !hyp.context_scores.empty() || lm_bits != 0 ||
++      static_cast<const OrtValue *>(hyp.nn_lm_scores.value) != nullptr ||
++      !hyp.nn_lm_states.empty() || hyp.lodr_state || hyp.cur_scored_pos != 0 ||
++      hyp.lm_rescore_min_chunk != 2 || hyp.num_trailing_blanks < 0) {
++    return false;
++  }
++  const size_t c = static_cast<size_t>(context_size);
++  const int32_t level = hyp.context_state->level;
++  if (level < 0 || hyp.ys.size() < c) {
++    return false;
++  }
++  // This is exactly GetEmptyResult's C-token initialization prefix.
++  for (size_t i = 0; i < c; ++i) {
++    if (hyp.ys[i] != (i + 1 == c ? 0 : -1)) {
++      return false;
++    }
++  }
++  const size_t l = static_cast<size_t>(level);
++  const size_t real_count = hyp.ys.size() - c;
++  if (hyp.timestamps.size() != l || hyp.ys_probs.size() != l) {
++    return false;
++  }
++  if (level == 0) {
++    if (hyp.context_state->token != -1 || real_count != 0) {
++      return false;
++    }
++  } else {
++    // Normalize keeps min(real_count, max(C, L)) real tokens. Check by
++    // subtraction, avoiding an overflowing C + max(C, L) bound calculation.
++    if (hyp.context_state->token <= 0 || real_count < l ||
++        real_count > std::max(c, l) ||
++        hyp.ys.back() != hyp.context_state->token) {
++      return false;
++    }
++    for (size_t i = c; i < hyp.ys.size(); ++i) {
++      if (hyp.ys[i] <= 0 || hyp.ys[i] > std::numeric_limits<int32_t>::max()) {
++        return false;
++      }
++    }
++    for (int32_t timestamp : hyp.timestamps) {
++      if (timestamp < 0) {
++        return false;
++      }
++    }
++  }
++
++  std::string encoded("KWV\1", 4);
++  AppendKeywordUint64(static_cast<uint64_t>(hyp.ys.size()), &encoded);
++  for (int64_t token : hyp.ys) {
++    AppendKeywordUint64(static_cast<uint64_t>(token), &encoded);
++  }
++  AppendKeywordUint32(static_cast<uint32_t>(level), &encoded);
++  AppendKeywordUint64(static_cast<uint64_t>(l), &encoded);
++  // Within this stream's immutable graph, the complete prefix names a node.
++  for (size_t i = hyp.ys.size() - l; i < hyp.ys.size(); ++i) {
++    AppendKeywordUint64(static_cast<uint64_t>(hyp.ys[i]), &encoded);
++  }
++  *key = std::move(encoded);
++  return true;
++}
++
++static bool AddKeywordHypothesis(
++    Hypothesis hyp, int32_t context_size,
++    std::unordered_map<std::string, Hypothesis> *hyps) {
++  std::string key;
++  if (hyps == nullptr || !GetKeywordStateKey(hyp, context_size, &key)) {
++    return false;
++  }
++  auto it = hyps->find(key);
++  if (it == hyps->end()) {
++    hyps->emplace(std::move(key), std::move(hyp));
++  } else {
++    // Validate both sides before comparing; NaN and either infinity fail closed.
++    // A map belongs to one stream/frame and one immutable ContextGraph.
++    std::string stored_key;
++    if (!GetKeywordStateKey(it->second, context_size, &stored_key) ||
++        stored_key != key || it->second.context_state != hyp.context_state) {
++      return false;
++    }
++    // Keep score and every payload field from the same retained path. Exact
++    // numerical ties keep the first candidate, including +0 versus -0.
++    if (hyp.log_prob > it->second.log_prob) {
++      it->second = std::move(hyp);
++    }
++  }
++  return true;
++}
++
++// END bounded Viterbi keyword helpers
++}  // namespace
+ 
+ TransducerKeywordResult TransducerKeywordDecoder::GetEmptyResult() const {
+   int32_t context_size = model_->ContextSize();
+@@ -109,7 +282,7 @@
+       auto topk =
+           TopkIndex(p_logprob, vocab_size * (end - start), max_active_paths_);
+ 
+-      Hypotheses hyps;
++      std::unordered_map<std::string, Hypothesis> keyword_hyps;
+       for (auto k : topk) {
+         int32_t hyp_index = k / vocab_size + start;
+         int32_t new_token = k % vocab_size;
+@@ -136,14 +309,24 @@
+             new_hyp.ys = blanks;
+             new_hyp.timestamps.clear();
+             new_hyp.ys_probs.clear();
++          } else if (!NormalizeKeywordHistory(
++                         context_size, new_hyp.context_state->level,
++                         &new_hyp.ys, &new_hyp.timestamps, &new_hyp.ys_probs)) {
++            SHERPA_ONNX_LOGE("Invalid keyword history alignment\n");
++            SHERPA_ONNX_EXIT(-1);
+           }
+         } else {
+           ++new_hyp.num_trailing_blanks;
+         }
+         new_hyp.log_prob = p_logprob[k] + context_score;
+-        hyps.Add(std::move(new_hyp));
++        if (!AddKeywordHypothesis(std::move(new_hyp), context_size,
++                                  &keyword_hyps)) {
++          SHERPA_ONNX_LOGE("Invalid bounded Viterbi keyword state\n");
++          SHERPA_ONNX_EXIT(-1);
++        }
+       }  // for (auto k : topk)
+ 
++      Hypotheses hyps(std::move(keyword_hyps));
+       auto best_hyp = hyps.GetMostProbable(false);
+ 
+       auto status = ss[b]->GetContextGraph()->IsMatched(best_hyp.context_state);
+@@ -152,10 +335,11 @@
+ 
+       if (matched) {
+         float ys_prob = 0.0;
+-        for (int32_t i = 0; i < matched_state->level; ++i) {
+-          ys_prob += best_hyp.ys_probs[i];
++        if (!GetKeywordSuffixScore(best_hyp.ys_probs, matched_state->level,
++                                   &ys_prob)) {
++          SHERPA_ONNX_LOGE("Invalid keyword match probability window\n");
++          SHERPA_ONNX_EXIT(-1);
+         }
+-        ys_prob /= matched_state->level;
+         if (best_hyp.num_trailing_blanks > num_trailing_blanks_ &&
+             ys_prob >= matched_state->ac_threshold) {
+           auto &r = (*result)[b];

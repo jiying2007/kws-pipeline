@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "sherpa_source_commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+  "components": {
+    "kaldi-native-fbank": {
+      "version": "1.22.3",
+      "url": "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.22.3.tar.gz",
+      "archive_sha256": "9176cc66fc7ce1edf85cf355b06e320c57db6297df74277f575183468893cf61",
+      "archive_bytes": 71144
+    },
+    "kissfft": {
+      "version": "febd4caeed32e33ad8b2e0bb5ea77542c40f18ec",
+      "url": "https://github.com/mborgerding/kissfft/archive/febd4caeed32e33ad8b2e0bb5ea77542c40f18ec.zip",
+      "archive_sha256": "497103e664168ebe39580b757adbe616f6cf85a16572af581ca7bc42d0ab13fd",
+      "archive_bytes": 74252
+    },
+    "kaldi-decoder": {
+      "version": "0.3.0",
+      "url": "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.3.0.tar.gz",
+      "archive_sha256": "b9f34cfb4fd3b1344100eead79ef4d37aa15962274b9e3056de345021f76a1b0",
+      "archive_bytes": 51199
+    },
+    "kaldifst": {
+      "version": "1.8.0",
+      "url": "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.8.0.tar.gz",
+      "archive_sha256": "3f247b7e5a2409071202f5e2bc6200060f66728c0a3443c03923ad2723e040b3",
+      "archive_bytes": 172147
+    },
+    "simple-sentencepiece": {
+      "version": "v0.7 (CMake internal version field 0.2; retain discrepancy)",
+      "url": "https://github.com/pkufool/simple-sentencepiece/archive/refs/tags/v0.7.tar.gz",
+      "archive_sha256": "1748a822060a35baa9f6609f84efc8eb54dc0e74b9ece3d82367b7119fdc75af",
+      "archive_bytes": 355335
+    },
+    "nlohmann-json": {
+      "version": "3.12.0",
+      "url": "https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz",
+      "archive_sha256": "4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187",
+      "archive_bytes": 9678593
+    },
+    "openfst-top-level": {
+      "version": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+      "url": "https://github.com/csukuangfj/openfst/archive/refs/tags/v1.8.5-2026-07-09.tar.gz",
+      "archive_sha256": "2ff712a32952fcb01d351121a6bc8ccf4fdc6b2aa06ce8df2b3095dedd518c0e",
+      "archive_bytes": 1501685
+    },
+    "eigen-top-level": {
+      "version": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+      "url": "https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz",
+      "archive_sha256": "e9c326dc8c05cd1e044c71f30f1b2e34a6161a3b6ecf445d56b53ff1669e3dec",
+      "archive_bytes": 2967272
+    },
+    "sherpa-onnx": {
+      "version": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/archive/11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf.tar.gz",
+      "archive_sha256": "0a8db6c55dd318f4a688faba85f7760b99a6c92e8ef8864479d418531bee1ac2",
+      "archive_bytes": 11645413
+    },
+    "onnxruntime-headers": {
+      "version": "1.28.2",
+      "upstream_commit": "33ca9628233dc8f002435e868d4c2e9f82766ca1",
+      "url": "https://github.com/microsoft/onnxruntime/tree/33ca9628233dc8f002435e868d4c2e9f82766ca1/include",
+      "provenance": "Matching-version maintainer ARM archive headers only; no ARM binary. License and ThirdPartyNotices independently match the pinned official source; selected header hashes are authoritative."
+    }
+  },
+  "shared_header": {
+    "path": "research/sherpa_pcm/vendor/sherpa-onnx/c-api/c-api.h",
+    "sha256": "2a1b95084be8fd1deb3228fcad2fd3f7f0258b64582f7402281ec174c7b7f4ce"
+  },
+  "ort_runtime": {
+    "version": "1.28.2",
+    "sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e",
+    "bytes": 27026609,
+    "origin": "Pinned sherpa-onnx wheel binary; not independently reproduced from source"
+  },
+  "historical_tool_versions": {
+    "gcc": "14.2.0",
+    "g++": "14.2.0",
+    "cmake": "3.31.10",
+    "make": "4.4",
+    "ld": "2.44"
+  },
+  "toolchain_limit": "Versions and executable hashes do not pin every system header, sysroot or toolchain input. Cross-machine bit reproduction is not claimed.",
+  "verified_runtime": {
+    "bin/kws": {
+      "sha256": "fbb7683a4c9df9355d3f840967b39475abfda1133f1b5a9131b433ce56760c1d",
+      "bytes": 51896
+    },
+    "lib/libsherpa-onnx-kws-c-api.so": {
+      "sha256": "167e160da440ea4ac2e834b43b2021fe2bfbaa9333b7fc0e95d96f60a31e379d",
+      "bytes": 1348240
+    },
+    "lib/libonnxruntime.so": {
+      "sha256": "4b3607aebd1784b26b6f9b20e4bd974c7ab8287043e4d095cb7d2cb40b5e566e",
+      "bytes": 27026609
+    },
+    "models/encoder.int8.onnx": {
+      "sha256": "017af32f2c0138f931d05fbc009ee864295e910aff304f77d2f563815fc834fb",
+      "bytes": 4807159
+    },
+    "models/decoder.onnx": {
+      "sha256": "bb3d8640cc6a495088707173bc1707a8a4ffe014594fc9adcba8389e27d0339f",
+      "bytes": 675349
+    },
+    "models/joiner.onnx": {
+      "sha256": "d990f5b67ae9d740048709f5d5f3e777af442061896a8322d5c3ab3ec480f3cb",
+      "bytes": 253410
+    },
+    "models/tokens.txt": {
+      "sha256": "72316508d9119696145abc6f1f8cdc46287535c34e5ce7e595f845cb1499cf2e",
+      "bytes": 1627
+    }
+  },
+  "model": {
+    "repository": "pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01",
+    "revision": "3787015f084cb241dfa0e4ba237703a2d4322d50",
+    "url": "https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git",
+    "license": "Upstream README declares Apache-2.0; no standalone upstream LICENSE.",
+    "assets": [
+      {
+        "url": "https://modelscope.cn/api/v1/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/repo?Revision=3787015f084cb241dfa0e4ba237703a2d4322d50&FilePath=decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "path": "models/decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "expected_sha256": "bb3d8640cc6a495088707173bc1707a8a4ffe014594fc9adcba8389e27d0339f"
+      },
+      {
+        "url": "https://modelscope.cn/api/v1/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/repo?Revision=3787015f084cb241dfa0e4ba237703a2d4322d50&FilePath=joiner-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "path": "models/joiner-epoch-12-avg-2-chunk-16-left-64.onnx",
+        "expected_sha256": "d990f5b67ae9d740048709f5d5f3e777af442061896a8322d5c3ab3ec480f3cb"
+      },
+      {
+        "url": "https://modelscope.cn/api/v1/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/repo?Revision=3787015f084cb241dfa0e4ba237703a2d4322d50&FilePath=tokens.txt",
+        "path": "models/tokens.txt",
+        "expected_sha256": "72316508d9119696145abc6f1f8cdc46287535c34e5ce7e595f845cb1499cf2e"
+      },
+      {
+        "url": "https://modelscope.cn/api/v1/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/repo?Revision=3787015f084cb241dfa0e4ba237703a2d4322d50&FilePath=encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+        "path": "models/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+        "expected_sha256": "017af32f2c0138f931d05fbc009ee864295e910aff304f77d2f563815fc834fb",
+        "bytes": 4807159,
+        "published_metadata": "pinned-files.json"
+      }
+    ]
+  },
+  "model_notices": {
+    "ORIGIN.json": {
+      "sha256": "ffd49eeea5f436c3347d628d88ba0011cf394636ff28543de629f351ded02cb3",
+      "bytes": 2323
+    },
+    "Apache-2.0.txt": {
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    "README.upstream.md": {
+      "sha256": "dd0ec68b5d9ee736f016fc982078bd3cdbccc69057e9910bdd45580992d13367",
+      "bytes": 767
+    }
+  }
+}

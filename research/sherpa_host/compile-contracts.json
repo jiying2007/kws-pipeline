@@ -1,0 +1,3111 @@
+{
+  "status": "Frozen compile contracts of the tested B host candidate; not a build receipt",
+  "source_root": "${CMAKE_CURRENT_SOURCE_DIR}",
+  "units": [
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-decoder/kaldi-decoder/csrc/faster-decoder.cc",
+      "sha256": "110a14b8f65f875ad45d89fed01440f92c882f9ddbd87d327c1c97af215effaa",
+      "target": "kws-private-kaldi-decoder",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/feature-fbank.cc",
+      "sha256": "6c9edabf3b2479f31392aec9490688f59262e6f86c85cc648cfa8987387814c1",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/feature-functions.cc",
+      "sha256": "a95d7563981e4b416597a00758d9da1d51c5351e254c35bb58578acf4ead923f",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/feature-mfcc.cc",
+      "sha256": "0dc0c7594723efa880c9d707dd66515893e58f0badc0132b25b0f971732706a4",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/feature-raw-audio-samples.cc",
+      "sha256": "3631bf7eb29dbefd6653321d5b69c9ad31cd541ef2761d8e587dbcc03cbd4b95",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/feature-window.cc",
+      "sha256": "cac43e0def16acb3032491ea65d4cdfc9e2523ef18d8202524a58b43b7fe67d2",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/kaldi-math.cc",
+      "sha256": "11b57da15d691a94e61b8a3471c7dbad5318125412b00456aa10e4f6af30d47d",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/mel-computations.cc",
+      "sha256": "8d02d0edc209295bfa76d1a1a08def51f634a1458fac4408fefd4bdbb7b57e43",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/online-feature.cc",
+      "sha256": "d74de946a0ccdeec7b5d44bf31d7038d72d5c36b7aa328f842ac89ebfa86ccd1",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/rfft.cc",
+      "sha256": "7b4497124cad27d1f1324a3c944c9cbe98b022aa27ef6b0ef011987a07d025cb",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/kaldi-native-fbank/kaldi-native-fbank/csrc/whisper-feature.cc",
+      "sha256": "191a0ffb1fbeaf8da31094bdc3a7dc1de9ae72b33ac711b224612f4981e27cb7",
+      "target": "kws-private-fbank",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-ffast-math",
+        "-fomit-frame-pointer",
+        "-W",
+        "-Wall",
+        "-Wcast-align",
+        "-Wcast-qual",
+        "-Wshadow",
+        "-Wwrite-strings",
+        "-Wstrict-prototypes",
+        "-Wmissing-prototypes",
+        "-Wnested-externs",
+        "-Wbad-function-cast"
+      ],
+      "language": "C",
+      "source": "vendor/kissfft/kiss_fft.c",
+      "sha256": "3e8af99313c7e94f952ac12db46d3d5c5dd4a9bf93e0c32d43efa5fe39724051",
+      "target": "kws-private-kissfft",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-ffast-math",
+        "-fomit-frame-pointer",
+        "-W",
+        "-Wall",
+        "-Wcast-align",
+        "-Wcast-qual",
+        "-Wshadow",
+        "-Wwrite-strings",
+        "-Wstrict-prototypes",
+        "-Wmissing-prototypes",
+        "-Wnested-externs",
+        "-Wbad-function-cast"
+      ],
+      "language": "C",
+      "source": "vendor/kissfft/kiss_fftr.c",
+      "sha256": "128b651120725e8d55f6b9edf5d44b06dc022b260894eac078c6ff8aa7159561",
+      "target": "kws-private-kissfft",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/base64-decode.cc",
+      "sha256": "126c2db968901e22c1d3a649be603fc26767781f1e8baa80ccf623b6482296c2",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/bbpe.cc",
+      "sha256": "86641f18e42255c233cc96f031f1a0bdf7d8f44f15b6a47cb88b656fca2c8711",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/cat.cc",
+      "sha256": "7c42fc27cecdd2a3c89e42b1c279ccda873d4aa9577d5450f935fbdeb5fd5dd1",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/context-graph.cc",
+      "sha256": "6ef729180e26e6ff3eb3a4cc9235346aabd70fff02fe39366e6b88c4bcd9d2f3",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/features.cc",
+      "sha256": "1d2f19982d5e9c410a7101027a0251ef63ca7d50413d91edab029d546c9cf2e8",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/file-utils.cc",
+      "sha256": "56b11d6054188d46c531cb7ef6d71d18466f0abb2d4b53ff1448ac3000c0998b",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/hypothesis.cc",
+      "sha256": "242b55001157d2a4b3910e3144cd73594076346c8930bf6aafa4759ddca659f5",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/keyword-spotter-impl.cc",
+      "sha256": "0e9789148ca3f6a8a6fa86dc39b51943c4ea36221cda8b1040ecc9c913997e8f",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/keyword-spotter.cc",
+      "sha256": "4be63b6cd4387f19b94262933406347ac3c6afb120f077c99697b47030ae6388",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-conformer-transducer-model.cc",
+      "sha256": "9e5e4268b51568eb3a9fd84948c70cd0eaab03c08d6c2c5130225043a9bf7fbb",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-ebranchformer-transducer-model.cc",
+      "sha256": "7d32b46ddd08009659522b6a7992ef1060976ed8a343e74412709e31a55955c6",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-lstm-transducer-model.cc",
+      "sha256": "33cbaeb4505cbe933a2b51fbb5f286e7c373148c26d1dd592c87986c4ee47444",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-model-config.cc",
+      "sha256": "0aac8ef602849bc2be6d9a5f4005ac005be177f85cb412af6f4a882519057206",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-nemo-ctc-model-config.cc",
+      "sha256": "bde52fea7c2c4345e5da6a227a7f85c511e361d2fb60e03e834bc51b077d384b",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-paraformer-model-config.cc",
+      "sha256": "75845ef2ab9c1b5666e36f431230b823c02280aa10870ca7d4d837de6c3d4ffd",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-stream.cc",
+      "sha256": "c2b7d33398d1a1125a97fd2d62ea2eaf137dfa7b492ff0b3d9ac38f6322f0dee",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-t-one-ctc-model-config.cc",
+      "sha256": "1fea08acd3b49c30bff31a807c3b0fe63c41ddc1d42d9d8123ddfc171636e8cc",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-transducer-decoder.cc",
+      "sha256": "30c14c56af1ff76b94ef6c91cb58bff0ed8c57277995f2e9871589b6b4219132",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-transducer-model-config.cc",
+      "sha256": "3ff01d04851663b1d4df9f470b80618050453c3ed8bc9596318697cb27b15bb8",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-transducer-model.cc",
+      "sha256": "29ce22a34bae15a810b7e924b277304ab8aa83bcd3ba61409bf38883d7c38a55",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-wenet-ctc-model-config.cc",
+      "sha256": "53c1b7ea268b5ebb9ef172f0b2a4a4fbce4803f89d3e2a47d13bb83e0305c367",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-zipformer-transducer-model.cc",
+      "sha256": "834477e5d5186afce4634fd9ec6229e7559e4d81654bf5d17bcc3e21eca3e235",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-zipformer2-ctc-model-config.cc",
+      "sha256": "f10637447b48d726c15ce185daf6287ec38fd3524cf841918f44d0329017bf2a",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/online-zipformer2-transducer-model.cc",
+      "sha256": "4833717fcb70141e7773f409ee495a9428d181d63ef2a8e4e6b30cef3ccf1301",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/onnx-utils.cc",
+      "sha256": "cac7b86b4c6931ede4fc5e9dbc15fc3117d04d857c3077ae4485cb611de627be",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/parse-options.cc",
+      "sha256": "04db0dd8e68548ad4e3483dd1a64f3918a4658d1944553e5f5e8b5be23f807b9",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/provider-config.cc",
+      "sha256": "7bff91f2778df680cd42e844f9e00037d0bb4e0a79a3f823b3deb9fb85314899",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/provider.cc",
+      "sha256": "4920ddb6975464e0d42a3224e17f230f4a474fb0ee8d8547b7372fd51062557a",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/qnn-config.cc",
+      "sha256": "24afbda248aedcfc460498d77b39b289a9989b017525b73ed38e70ab005b0700",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/resample.cc",
+      "sha256": "b48f22f3571b5c0bc8d152d6e60a1828bcf5b9b739f22bb8907bfca8137af669",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/session.cc",
+      "sha256": "2ace7fcbc910ab41804ab93869c0eeceac8b0d416d6dbe76a4417c2b007a9e52",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/symbol-table.cc",
+      "sha256": "9f96006eafc8633e4b8b80024eac01b2a7de24cf1aaf5c66474876ded3c7029d",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/text-utils.cc",
+      "sha256": "571270ef76bed7bd74eb87a13ba3871c61ddd3591c40f8b990cc0756a3660d2f",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/transducer-keyword-decoder.cc",
+      "sha256": "195484ef46410bc44626b85d303ae2f0c5cb22668313e8ed171b3ebc0a55d8d0",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/unbind.cc",
+      "sha256": "8249c08e32fc2a4833fc7085e8424540b297da0753062a0653d67931fa8028e6",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/utils.cc",
+      "sha256": "f7fd8c6876f7974e651242d940a49085f75fc2a130eceb2610193002caefd4b9",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/csrc/version.cc",
+      "sha256": "517be25095c542540cacba8ca6a5f9f888b4f6a82fa4686cbacee19e34d576e6",
+      "target": "sherpa-onnx-kws-core",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "vendor/simple-sentencepiece/ssentencepiece/csrc/ssentencepiece.cc",
+      "sha256": "57a65cc7620f7fc8973e5c57d59459a1a6c1ad3b4c8321d931e9afaf3421e9b7",
+      "target": "kws-private-sentencepiece",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/onnxruntime-headers/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "definitions": [
+        "SHERPA_ONNX_BUILD_MAIN_LIB=1",
+        "SHERPA_ONNX_BUILD_SHARED_LIBS=1",
+        "SHERPA_ONNX_ENABLE_DIRECTML=0",
+        "SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=0",
+        "SHERPA_ONNX_ENABLE_TTS=0",
+        "kiss_fft_scalar=float",
+        "sherpa_onnx_c_api_EXPORTS",
+        "NDEBUG"
+      ],
+      "options": [
+        "-O3",
+        "-std=c++17",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden"
+      ],
+      "language": "CXX",
+      "source": "source/sherpa-onnx/c-api/kws-c-api.cc",
+      "sha256": "59fe93bd01a144fe516658adcff219d3efa372c03dd197808a056ec57783bafd",
+      "target": "sherpa-onnx-kws-c-api",
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-decoder"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/nlohmann-json/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldi-native-fbank"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kissfft"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/kaldifst"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/openfst/src/include"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/eigen"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "vendor/simple-sentencepiece"
+        },
+        {
+          "kind": "SYSTEM",
+          "path": "vendor/onnxruntime-headers/include"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    },
+    {
+      "source": "cli/src/kws.cc",
+      "target": "kws",
+      "language": "CXX",
+      "sha256": "f39d9a6c5700f12e4093eb870d9610cc04e9db1359c4fe9140f6f25bcf85bbbf",
+      "definitions": [],
+      "options": [
+        "-O2",
+        "-std=c++17"
+      ],
+      "includes": [
+        {
+          "kind": "NORMAL",
+          "path": "cli/src"
+        },
+        {
+          "kind": "NORMAL",
+          "path": "source"
+        }
+      ],
+      "added_options": [
+        "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+      ]
+    }
+  ],
+  "existing_library_options": "Original per-TU optimization, definitions, include order and system treatment retained. Only the declared macro path option is appended.",
+  "shared_link_options": [
+    "-O3",
+    "-DNDEBUG",
+    "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/cmake/kws-exports.lds",
+    "-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/libsherpa-onnx-kws-c-api.so.map"
+  ],
+  "shared_library_link_order": [
+    "sherpa-onnx-kws-core",
+    "kws-private-fbank",
+    "kws-private-kissfft",
+    "kws-private-kaldi-decoder",
+    "kws-private-sentencepiece",
+    "pthread",
+    "kws-ort",
+    "m",
+    "dl",
+    "-pthread"
+  ],
+  "cli_link_targets": [
+    "sherpa-onnx-kws-c-api"
+  ],
+  "cli_private_link_options": [],
+  "shared_rpath": "$ORIGIN",
+  "cli_rpath": "$ORIGIN/../lib",
+  "INSTALL_RPATH_USE_LINK_PATH": false,
+  "BUILD_WITH_INSTALL_RPATH": true,
+  "no_configure_or_compiler_has_confirmed_effective_commands": true
+}
