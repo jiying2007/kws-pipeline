@@ -1,0 +1,29 @@
+name: research-asr-evidence
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "research/asr_evidence/**"
+      - ".github/workflows/research-asr-evidence.yml"
+  pull_request:
+    paths:
+      - "research/asr_evidence/**"
+      - ".github/workflows/research-asr-evidence.yml"
+permissions:
+  contents: read
+jobs:
+  offline-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate ASR evidence CLI with synthetic offline fixtures
+        run: python3 research/asr_evidence/tests/test_calibrate.py
+      - name: Compile and check workflow test inventory
+        run: |
+          python3 -m py_compile research/asr_evidence/calibrate.py research/asr_evidence/tests/test_calibrate.py
+          python3 tools/test_inventory.py --root research/asr_evidence/tests --workflow .github/workflows/research-asr-evidence.yml
