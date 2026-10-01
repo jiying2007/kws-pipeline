@@ -1,0 +1,32 @@
+{
+  "schema_version": "kws-asr-evidence-rules-v1",
+  "rule_version": "conservative-text-evidence-v1",
+  "target_order": [
+    "星河开灯",
+    "月光关灯"
+  ],
+  "lexicons": {
+    "characters": {
+      "sha256": "c2ac6717e84bcaf3b89a72255e49ccc93d4b9842422be664b87e6b11e13f4f38",
+      "entries": 15
+    },
+    "phrases": {
+      "sha256": "2587caf5f672843e8fab24fba7eb215645f510094c42a5ddc7240a7deba53fc1",
+      "entries": 2
+    }
+  },
+  "uncertainty_markers": [
+    "[unk]",
+    "<unk>",
+    "[inaudible]",
+    "[不清]",
+    "[缺字]",
+    "[不全]",
+    "听不清",
+    "不确定",
+    "�",
+    "□",
+    "…",
+    "..."
+  ]
+}

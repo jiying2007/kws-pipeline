@@ -1,0 +1,77 @@
+{
+  "schema_version": "kws-asr-evidence-input-v1",
+  "execution_kind": "synthetic_fixture",
+  "manifest_sha256": "5b02185af92acd1ff2597c477da6560c27448f594dff9810efb1951115d93da3",
+  "rules_sha256": "a16a6218e7102179ecf41d8095eca3d96227965dd44c0e4429e42a664e05d1ac",
+  "model": {
+    "model_id": "fixture-only-b",
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "run_id": "synthetic-b"
+  },
+  "records": [
+    {
+      "recording_id": "synthetic-01",
+      "wav_sha256": "c82bdcebe238242f6970544248af30d3dd72b6f79546ea924971d8a0bc0713ab",
+      "status": "success",
+      "raw_text": "星河开灯",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-02",
+      "wav_sha256": "1b079e914670c7c8c518780d857eca8e4ff9ded1b34828e524c67b283fac08fb",
+      "status": "success",
+      "raw_text": "月光关灯",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-03",
+      "wav_sha256": "63461843c79f641772f9a32688bb19d641a6714138fc9377b5d0c45a489e1573",
+      "status": "success",
+      "raw_text": "星河开灯月光关灯",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-04",
+      "wav_sha256": "91d831b13d0538cb98351478b347082628459a4a607fd9b7722b692db11056b3",
+      "status": "success",
+      "raw_text": "今天晴朗",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-05",
+      "wav_sha256": "beb1e8849e2698dd910b59ab6686368e653cc3932fbf31cf9df59bf87ec7800c",
+      "status": "success",
+      "raw_text": "星河开灯",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-06",
+      "wav_sha256": "7660535982ba6a9689b5912d24e36b0170582dbc8a61f0887642d1022c6f5ad0",
+      "status": "success",
+      "raw_text": "星河开灯",
+      "completeness": "incomplete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-07",
+      "wav_sha256": "d10fc4f683d1d6559c433f5960e4c1e8088af769aa0db7cb58514a33021b75a0",
+      "status": "success",
+      "raw_text": "今天晴朗",
+      "completeness": "complete",
+      "quality_flags": []
+    },
+    {
+      "recording_id": "synthetic-08",
+      "wav_sha256": "5cd9f737234b1c930b5c38663459fa2c4b453601f195948ced619c4e1cec70bc",
+      "status": "success",
+      "raw_text": "星河开等",
+      "completeness": "complete",
+      "quality_flags": []
+    }
+  ]
+}
