@@ -1,0 +1,29 @@
+name: research-sherpa-host
+on:
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "research/sherpa_host/**"
+      - "research/sherpa_pcm/vendor/sherpa-onnx/c-api/c-api.h"
+      - "research/sherpa_pcm/vendor/LICENSE.sherpa-onnx"
+      - ".github/workflows/research-sherpa-host.yml"
+  pull_request:
+    paths:
+      - "research/sherpa_host/**"
+      - "research/sherpa_pcm/vendor/sherpa-onnx/c-api/c-api.h"
+      - "research/sherpa_pcm/vendor/LICENSE.sherpa-onnx"
+      - ".github/workflows/research-sherpa-host.yml"
+permissions:
+  contents: read
+jobs:
+  offline-helpers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate manifests, wrapper spans, launcher and sanitized CLI helpers
+        run: python3 research/sherpa_host/tests/run_tests.py --sanitize

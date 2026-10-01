@@ -11,6 +11,14 @@ The runtime in this repository is a clean-room implementation. The following pro
 
 No pretrained weights from those projects are redistributed by `kws-pipeline`.
 
+`research/sherpa_host` retains an extracted Sherpa KWS C API wrapper and one
+bounded-Viterbi decoder patch from commit
+`11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf` under Apache-2.0, with the original
+copyright notice and the existing license in `research/sherpa_pcm/vendor/`.
+Its offline recipe pins selected external sources and their complete retained
+licenses/notices; see `research/sherpa_host/PROVENANCE.md`. It reuses the identical
+public header and adds no model, runtime binary or default product dependency.
+
 ## Optional research adapter source
 
 `research/sherpa_pcm/vendor/sherpa-onnx/c-api/c-api.h` is copied unchanged from
