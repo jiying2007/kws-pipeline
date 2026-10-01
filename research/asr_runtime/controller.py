@@ -295,10 +295,24 @@ def validate_recipe(inventory, source_bytes):
     q.require(inventory.get('runtime_extras', {}).get('funasr') == ['knf'], 'locked FunASR frontend changed')
 
 
+def validate_timing_policy(limits):
+    keys = ('wall_seconds', 'qualification_wall_seconds', 'github_job_timeout_minutes',
+            'job_cleanup_reserve_seconds')
+    q.require(all(type(limits.get(key)) is int and limits[key] > 0 for key in keys),
+              'timing limits must be positive integer bounds')
+    q.require(limits['github_job_timeout_minutes'] <= 360, 'GitHub hosted job exceeds six-hour platform limit')
+    q.require(limits['job_cleanup_reserve_seconds'] >= 600, 'job cleanup reserve is insufficient')
+    q.require(limits['qualification_wall_seconds'] + limits['job_cleanup_reserve_seconds'] ==
+              limits['github_job_timeout_minutes'] * 60, 'qualification and job time budgets disagree')
+    q.require(limits['wall_seconds'] <= limits['qualification_wall_seconds'],
+              'container deadline exceeds whole qualification deadline')
+
+
 def validate_admission(root):
     root = Path(root)
     admission = q.load_json(root / 'locks/admission.json')
     q.require(admission['execution_enabled'] is True, 'execution admission is disabled')
+    validate_timing_policy(admission['limits'])
     invpath = root / 'locks/inventory.json'
     q.require(q.sha256_file(invpath) == admission['required_inventory_sha256'], 'inventory was not restored byte-identically')
     inventory = q.load_json(invpath)

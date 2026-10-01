@@ -137,8 +137,17 @@ entries. Frozen outputs/inputs reject links and special files. Actual cumulative
 archive expansion plus 2 GiB install headroom must fit scratch before install.
 No home, credentials, user audio, models, host devices or Docker socket is mounted.
 
-The controller has a 50-minute whole-qualification deadline inside a 60-minute
-Actions job. Each container also has a bounded wall limit; SIGTERM is handled so
+The controller has a 350-minute whole-qualification deadline inside a 360-minute
+Actions job, replacing the former 50-minute total cap after explicit owner
+approval. GitHub-hosted jobs have a [six-hour platform limit](https://docs.github.com/en/actions/reference/limits);
+the ten-minute difference is a nominal allowance for cleanup, receipt emission
+and job overhead, not a guarantee of ten minutes of cleanup: the job clock starts
+before the controller. This is not unlimited execution. Existing per-command and 30-minute
+per-container hang guards remain; each container is also capped by the remaining
+whole-qualification budget. These timing relationships are validated before
+image/package downloads or container execution and covered by dependency-free
+workflow/contract tests. The preceding fixed public base-tree fetch remains a
+small source read. SIGTERM is handled so
 known containers reach cleanup. CLI process groups have an absolute deadline and
 bounded pipe drain. The previously verified immutable container ID is separately
 stopped/killed/inspected even when later diagnostics fail, with early and final

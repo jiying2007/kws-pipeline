@@ -422,6 +422,25 @@ class Contracts(unittest.TestCase):
         self.assertIn('research/asr_runtime/admit_run.py', active)
         self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", active)
         self.assertIn('python3 -I -S research/asr_runtime/tests/test_qualify.py', active)
+
+    def test_extended_deadline_matches_hosted_job_and_cleanup_reserve(self):
+        c.validate_timing_policy(self.limits)
+        self.assertEqual(self.limits['qualification_wall_seconds'], 350 * 60)
+        self.assertEqual(self.limits['job_cleanup_reserve_seconds'], 10 * 60)
+        workflow = (ROOT.parents[1] / '.github/workflows/research-asr-runtime.yml').read_text()
+        runtime_job = workflow.split('  one-time-runtime:\n', 1)[1]
+        timeouts = [line.strip() for line in runtime_job.splitlines()
+                    if line.strip().startswith('timeout-minutes:')]
+        self.assertEqual(timeouts, ['timeout-minutes: ' + str(self.limits['github_job_timeout_minutes'])])
+
+    def test_incoherent_or_unbounded_timing_policy_fails_closed(self):
+        for key, value in [('qualification_wall_seconds', 3000), ('qualification_wall_seconds', 21600),
+                           ('github_job_timeout_minutes', 361), ('job_cleanup_reserve_seconds', 0),
+                           ('job_cleanup_reserve_seconds', 599), ('wall_seconds', 21001),
+                           ('qualification_wall_seconds', True), ('qualification_wall_seconds', 21000.0)]:
+            with self.subTest(key=key, value=value), self.assertRaises(q.GateError):
+                c.validate_timing_policy(dict(self.limits, **{key: value}))
+
     def synthetic_built_wheel(self, with_native):
         import base64
         payloads = {'fixture/__init__.py': b'# fixture only\n', 'fixture/LICENSE': b'synthetic license',

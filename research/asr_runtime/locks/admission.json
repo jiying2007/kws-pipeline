@@ -40,7 +40,9 @@
     "log_bytes": 1048576,
     "work_disk_bytes": 17179869184,
     "runtime_install_headroom_bytes": 2147483648,
-    "qualification_wall_seconds": 3000
+    "qualification_wall_seconds": 21000,
+    "github_job_timeout_minutes": 360,
+    "job_cleanup_reserve_seconds": 600
   },
   "runtime_root_policy": {
     "exact_versions": {
