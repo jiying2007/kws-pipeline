@@ -1,0 +1,98 @@
+name: research-firered-cpu-preflight
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'research/firered_cpu_preflight/**'
+      - '.github/workflows/research-firered-cpu-preflight.yml'
+permissions:
+  contents: read
+concurrency:
+  group: firered-cpu-dependency-preflight
+  cancel-in-progress: false
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - run: python3 -I research/firered_cpu_preflight/test_preflight.py
+
+  dependency-only:
+    needs: offline-contract
+    if: >-
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'firered-cpu-dependency-once-v1' &&
+      github.run_attempt == 1 &&
+      github.repository == 'jiying2007/kws-pipeline' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'research/firered-cpu-preflight-20261002' &&
+      github.event.pull_request.user.login == 'jiying2007' &&
+      github.actor == 'jiying2007'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify exact-head scope and record free runner
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 -I - <<'PY'
+          import hashlib,json,os,pathlib,platform,re,shutil,subprocess
+          event=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          head=os.environ['EXPECTED_HEAD']
+          markers=re.findall(r'^FIRERED_CPU_PREFLIGHT_HEAD=([0-9a-f]{40})$',event['pull_request'].get('body',''),re.M)
+          if markers!=[head] or subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()!=head:
+              raise SystemExit('Missing or mismatched exact-head preflight marker')
+          if event['repository']['private']:raise SystemExit('Only free public standard runner scope is allowed')
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'firered-cpu-preflight';out.mkdir(exist_ok=False)
+          sources={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('research/firered_cpu_preflight').glob('*')) if p.is_file()}
+          data={'head_sha':head,'repository':event['repository']['full_name'],'public':True,'runner_label':'ubuntu-24.04','runner_image':os.environ.get('ImageVersion'),'cpu_affinity':len(os.sched_getaffinity(0)),'memory':pathlib.Path('/proc/meminfo').read_text().splitlines()[:3],'free_disk_bytes':shutil.disk_usage(out).free,'platform':platform.platform(),'source_sha256':sources,'model_or_audio_loading':False,'asr_qualified':False}
+          (out/'scope-receipt.json').write_text(json.dumps(data,indent=2)+'\n')
+          PY
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.11'
+          check-latest: false
+      - name: Verify official wheels and tiny CPU checks in new venv
+        env:
+          PYTHONNOUSERSITE: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+          OMP_NUM_THREADS: '4'
+          MKL_NUM_THREADS: '4'
+          CUDA_VISIBLE_DEVICES: ''
+        run: |
+          python -I research/firered_cpu_preflight/resource_guard.py \
+            --receipt "$RUNNER_TEMP/firered-cpu-preflight/supervisor.json" \
+            --max-seconds 900 --max-rss-gib 3 --minimum-initial-available-gib 2 -- \
+            python -I research/firered_cpu_preflight/dependency_preflight.py \
+            --output "$RUNNER_TEMP/firered-cpu-preflight/dependencies" --allow-network-and-install
+      - name: Collect bounded evidence only
+        if: always()
+        run: |
+          python3 -I - <<'PY'
+          import json,os,pathlib,shutil
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'firered-cpu-preflight'
+          target=pathlib.Path(os.environ['RUNNER_TEMP'])/'firered-cpu-receipts';target.mkdir(exist_ok=True)
+          paths=list(root.glob('*.json'))+list((root/'dependencies').glob('*.json'))+list((root/'dependencies').glob('*.METADATA'))
+          total=0
+          for p in paths:
+              if p.is_symlink() or not p.is_file() or p.stat().st_size>1000000:raise SystemExit('Unsafe receipt')
+              total+=p.stat().st_size
+              if total>4000000:raise SystemExit('Receipt size budget')
+              shutil.copyfile(p,target/p.name)
+              if p.suffix=='.json':print(p.name,p.read_text())
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: firered-cpu-preflight-${{ github.run_id }}
+          path: ${{ runner.temp }}/firered-cpu-receipts/
+          retention-days: 7
+          if-no-files-found: warn
