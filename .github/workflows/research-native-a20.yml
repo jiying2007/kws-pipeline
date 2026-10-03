@@ -1,0 +1,30 @@
+name: research-native-a20
+on:
+  pull_request:
+    paths:
+      - "research/native_a20/**"
+      - ".github/workflows/research-native-a20.yml"
+  push:
+    branches: [main, "codex/**"]
+    paths:
+      - "research/native_a20/**"
+      - ".github/workflows/research-native-a20.yml"
+permissions:
+  contents: read
+jobs:
+  offline-invented-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        cc: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile research runtime and test invented inputs only
+        run: python3 -B research/native_a20/build.py --cc ${{ matrix.cc }} --output "$RUNNER_TEMP/native-a20"
+      - name: Address and undefined behavior sanitizer invented contracts
+        run: python3 -B research/native_a20/build.py --cc ${{ matrix.cc }} --sanitize --output "$RUNNER_TEMP/native-a20-sanitized"
+      - name: Confirm tracked source unchanged
+        run: git diff --exit-code
