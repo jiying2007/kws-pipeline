@@ -25,7 +25,7 @@ def main():
             dist=installed[n];assert dist.version==x['version'],(n,dist.version,x['version']);report['versions'][n]=dist.version
             rp=dist.metadata.get('Requires-Python');assert not rp or SpecifierSet(rp).contains('3.12.14'),(n,rp)
             if x.get('metadata_sha256'):
-                metadata_files=[f for f in dist.files or [] if str(f).endswith('.dist-info/METADATA')];assert len(metadata_files)==1;actual=dist.locate_file(metadata_files[0]).read_bytes();assert hashlib.sha256(actual).hexdigest()==x['metadata_sha256'],f'{n}: installed METADATA differs from locked receipt'
+                metadata_files=[f for f in dist.files or [] if str(f).endswith('.dist-info/METADATA') and len(pathlib.PurePosixPath(str(f)).parts)==2];assert len(metadata_files)==1,f'{n}: expected exactly one top-level installed METADATA';actual=dist.locate_file(metadata_files[0]).read_bytes();assert hashlib.sha256(actual).hexdigest()==x['metadata_sha256'],f'{n}: installed METADATA differs from locked receipt'
             for raw_req in dist.requires or []:
                 req=Requirement(raw_req);contexts=['']+x['selected_extras']
                 enabled=not req.marker or any(req.marker.evaluate({**lock['environment'],'extra':e}) for e in contexts)

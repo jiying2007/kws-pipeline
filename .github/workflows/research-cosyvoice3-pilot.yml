@@ -26,7 +26,7 @@ jobs:
   one-time-pilot:
     if: >-
       github.event.action == 'labeled' &&
-      github.event.label.name == 'cosyvoice3-six-pair-once-v1' &&
+      github.event.label.name == 'cosyvoice3-six-pair-infra-recovery-1' &&
       github.run_attempt == 1 &&
       github.repository == 'jiying2007/kws-pipeline' &&
       github.event.repository.private == false &&

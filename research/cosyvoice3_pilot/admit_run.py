@@ -8,9 +8,13 @@ REPOSITORY = 'jiying2007/kws-pipeline'
 BRANCH = 'research/cosyvoice3-six-pair-pilot-20261002'
 WORKFLOW = '.github/workflows/research-cosyvoice3-pilot.yml'
 PREFIX = 'KWS_COSYVOICE3_APPROVAL='
-LABEL = 'cosyvoice3-six-pair-once-v1'
+LABEL = 'cosyvoice3-six-pair-infra-recovery-1'
 BASE = '55a4e23379ad7072db507dbe419b38d8898e17fa'
-NONCE = 'cosyvoice3-20261002-six-pairs-v1'
+NONCE = 'cosyvoice3-20261002-six-pairs-infra-recovery-1'
+RECOVERY_RUN = 37083858274
+RECOVERY_HEAD = '4e6bad76c1d4db6062e59ea30e584cb540936dc7'
+RECOVERY_ARTIFACT = 11259881038
+RECOVERY_ARTIFACT_DIGEST = 'sha256:df5b34caf1b82f8593dd53545a12998726952357e44626ff71efcef15c4609be'
 
 def require(value, message):
     if not value: raise RuntimeError(message)
@@ -46,7 +50,7 @@ def validate(event, env, head, source, paths, lock):
         'scope':'one_cpu_qualification_then_six_plain_inpaint_pairs','maximum_clips':12,
         'dependency_compressed_bytes':lock['compressed_total_bytes'],'model_bytes':5427029103,
         'post_runtime_free_bytes':6635020288,'new_job_bytes_max':14000000000,'output_bytes_max':134217728,
-        'artifact_retention_days':1,'zero_cost_artifact_verified':True}
+        'artifact_retention_days':1,'zero_cost_artifact_verified':True,'infrastructure_recovery_of_run':RECOVERY_RUN,'previous_generated_clips':0,'previous_artifact_digest':RECOVERY_ARTIFACT_DIGEST}
     require(json.loads(lines[0])==expected, 'exact source/resource/publication approval differs')
     return expected
 
@@ -59,10 +63,17 @@ def api(path, token):
 
 def reject_prior_runs(fetch, current):
     """The serialized job consumes its sole admission even if it later fails."""
+    previous=fetch('/repos/'+REPOSITORY+'/actions/runs/'+str(RECOVERY_RUN))
+    require(previous.get('head_sha')==RECOVERY_HEAD and previous.get('conclusion')=='failure' and previous.get('run_attempt')==1,'Original infrastructure failure changed')
+    artifacts=fetch('/repos/'+REPOSITORY+'/actions/runs/'+str(RECOVERY_RUN)+'/artifacts')['artifacts']
+    require(any(x.get('id')==RECOVERY_ARTIFACT and x.get('digest')==RECOVERY_ARTIFACT_DIGEST and x.get('size_in_bytes')==25954 for x in artifacts),'Original failure artifact identity differs')
     for page in range(1,21):
         runs=fetch('/repos/'+REPOSITORY+'/actions/workflows/research-cosyvoice3-pilot.yml/runs?branch='+BRANCH+'&event=pull_request&per_page=100&page='+str(page))['workflow_runs']
         for run in runs:
             if int(run['id'])==current: continue
+            if int(run['id'])==RECOVERY_RUN:
+                require(run.get('head_sha')==RECOVERY_HEAD and run.get('conclusion')=='failure' and run.get('run_attempt')==1,'Original run cannot be reused or rerun')
+                continue
             require(run.get('head_branch')==BRANCH, 'run branch scope mismatch')
             for jp in range(1,21):
                 jobs=fetch('/repos/'+REPOSITORY+'/actions/runs/'+str(run['id'])+'/jobs?filter=all&per_page=100&page='+str(jp))['jobs']

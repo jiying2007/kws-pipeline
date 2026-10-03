@@ -30,7 +30,7 @@ def inspect_wheel(path,expected):
         entries=z.infolist();assert len(entries)<100000
         for e in entries:
             safe_member(e.filename);assert not stat.S_ISLNK(e.external_attr>>16),'Archive symlink'
-        metas=[e for e in entries if e.filename.endswith('.dist-info/METADATA')];assert len(metas)==1
+        metas=[e for e in entries if e.filename.endswith('.dist-info/METADATA') and len(pathlib.PurePosixPath(e.filename).parts)==2];assert len(metas)==1,f"{expected['name']}: expected exactly one top-level wheel METADATA, found {len(metas)}"
         b=z.read(metas[0]);mh=hashlib.sha256(b).hexdigest()
         if expected.get('metadata_sha256'):assert mh==expected['metadata_sha256'],f"{expected['name']} METADATA hash"
         from email import message_from_bytes

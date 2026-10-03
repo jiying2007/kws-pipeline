@@ -4,7 +4,7 @@ spec=importlib.util.spec_from_file_location('admit_run', HERE/'admit_run.py'); a
 class Admission(unittest.TestCase):
  def setUp(self):
   self.head='a'*40; self.source='b'*64; self.lock={'compressed_total_bytes':123}
-  self.approval={'armed':True,'pr_number':999,'base_sha':a.BASE,'head_sha':self.head,'source_sha256':self.source,'nonce':a.NONCE,'scope':'one_cpu_qualification_then_six_plain_inpaint_pairs','maximum_clips':12,'dependency_compressed_bytes':123,'model_bytes':5427029103,'post_runtime_free_bytes':6635020288,'new_job_bytes_max':14000000000,'output_bytes_max':134217728,'artifact_retention_days':1,'zero_cost_artifact_verified':True}
+  self.approval={'armed':True,'pr_number':999,'base_sha':a.BASE,'head_sha':self.head,'source_sha256':self.source,'nonce':a.NONCE,'scope':'one_cpu_qualification_then_six_plain_inpaint_pairs','maximum_clips':12,'dependency_compressed_bytes':123,'model_bytes':5427029103,'post_runtime_free_bytes':6635020288,'new_job_bytes_max':14000000000,'output_bytes_max':134217728,'artifact_retention_days':1,'zero_cost_artifact_verified':True,'infrastructure_recovery_of_run':a.RECOVERY_RUN,'previous_generated_clips':0,'previous_artifact_digest':a.RECOVERY_ARTIFACT_DIGEST}
   self.event={'action':'labeled','label':{'name':a.LABEL},'number':999,'repository':{'full_name':a.REPOSITORY,'private':False},'pull_request':{'number':999,'head':{'repo':{'full_name':a.REPOSITORY},'ref':a.BRANCH,'sha':self.head},'base':{'sha':a.BASE},'user':{'login':'jiying2007'},'body':a.PREFIX+json.dumps(self.approval)}}
   self.env={'GITHUB_EVENT_NAME':'pull_request','GITHUB_RUN_ATTEMPT':'1','GITHUB_ACTOR':'jiying2007'}
  def validate(self,event=None,env=None,paths=None):
@@ -30,6 +30,8 @@ class Admission(unittest.TestCase):
    with self.assertRaises(RuntimeError):self.validate(x)
  def history(self,state):
   def f(path):
+   if path.endswith('/artifacts'):return {'artifacts':[{'id':a.RECOVERY_ARTIFACT,'digest':a.RECOVERY_ARTIFACT_DIGEST,'size_in_bytes':25954}]}
+   if path.endswith('/runs/'+str(a.RECOVERY_RUN)):return {'head_sha':a.RECOVERY_HEAD,'conclusion':'failure','run_attempt':1}
    if '/workflows/' in path:return {'workflow_runs':[{'id':1,'head_branch':a.BRANCH},{'id':2,'head_branch':a.BRANCH}]}
    return {'jobs':[{'name':'one-time-pilot','conclusion':state}]}
   return f
@@ -37,6 +39,16 @@ class Admission(unittest.TestCase):
  def test_any_previous_admitted_run_blocks(self):
   for state in [None,'success','failure','cancelled','timed_out']:
    with self.assertRaises(RuntimeError):a.reject_prior_runs(self.history(state),2)
+ def test_original_failure_identity_blocks_change(self):
+  original=self.history('skipped')
+  with self.assertRaises(RuntimeError):a.reject_prior_runs(lambda p:({'head_sha':a.RECOVERY_HEAD,'conclusion':'failure','run_attempt':2} if p.endswith('/runs/'+str(a.RECOVERY_RUN)) else original(p)),2)
+ def test_only_exact_zero_generation_predecessor_allowed(self):
+  original=self.history('skipped')
+  def f(p):
+   if '/workflows/' in p:return {'workflow_runs':[{'id':a.RECOVERY_RUN,'head_branch':a.BRANCH,'head_sha':a.RECOVERY_HEAD,'conclusion':'failure','run_attempt':1}]}
+   return original(p)
+  a.reject_prior_runs(f,2)
  def test_history_saturation_blocks(self):
-  with self.assertRaises(RuntimeError):a.reject_prior_runs(lambda p:{'workflow_runs':[{'id':2,'head_branch':a.BRANCH}]*100},2)
+  original=self.history('skipped')
+  with self.assertRaises(RuntimeError):a.reject_prior_runs(lambda p:({'workflow_runs':[{'id':2,'head_branch':a.BRANCH}]*100} if '/workflows/' in p else original(p)),2)
 if __name__=='__main__':unittest.main(verbosity=2)

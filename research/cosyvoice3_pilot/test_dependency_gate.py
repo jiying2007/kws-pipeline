@@ -14,6 +14,16 @@ class GateTests(unittest.TestCase):
  def test_wheel_manifest_and_hash(self):
   with tempfile.TemporaryDirectory() as d:
    p=self.wheel(d);x={'name':'demo','version':'1.0','metadata_sha256':hashlib.sha256(b'Metadata-Version: 2.1\nName: demo\nVersion: 1.0\n').hexdigest()};r=m.inspect_wheel(p,x);self.assertEqual(r['bytes'],p.stat().st_size);self.assertGreater(r['expanded_allocation_bytes'],0)
+ def test_nested_vendor_metadata_is_not_distribution_metadata(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=self.wheel(d,('demo/_vendor/other-9.dist-info/METADATA',b'Metadata-Version: 2.1\nName: other\nVersion: 9\n'))
+   actual=m.inspect_wheel(p,{'name':'demo','version':'1.0'})
+   self.assertEqual(actual['metadata_sha256'],hashlib.sha256(b'Metadata-Version: 2.1\nName: demo\nVersion: 1.0\n').hexdigest())
+   with self.assertRaises(AssertionError):m.inspect_wheel(p,{'name':'other','version':'9'})
+ def test_duplicate_top_level_metadata_rejected(self):
+  with tempfile.TemporaryDirectory() as d:
+   p=self.wheel(d,('other-9.dist-info/METADATA',b'Metadata-Version: 2.1\nName: other\nVersion: 9\n'))
+   with self.assertRaises(AssertionError):m.inspect_wheel(p,{'name':'demo','version':'1.0'})
  def test_traversal_rejected(self):
   with tempfile.TemporaryDirectory() as d:
    p=self.wheel(d,('../evil','bad'))
