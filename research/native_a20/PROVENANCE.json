@@ -11,7 +11,7 @@
       }
     ],
     "path": "README.md",
-    "public_sha256": "c3996087a25752a31087f0645afd41f68b76eacadcf5ba2aa7fb57933c421701",
+    "public_sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5",
     "transformation": "new public technical summary from reviewed aggregate records; private control/delivery information omitted"
   },
   "base_repository": "jiying2007/kws-pipeline",

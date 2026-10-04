@@ -91,9 +91,18 @@ def check_elf(path, expected, allowed_types):
         raise ValueError(f'{path}: unexpected ELF type {header["type"]}')
     # Native mode supplies the running process ABI; compile-only records these
     # fields without pretending to know a vendor's ABI or loader contract.
+    # Linux tools mark GNU ELF extensions (e.g. SHF_GNU_RETAIN) as GNU=3,
+    # while otherwise compatible products may be SYSV=0. glibc's
+    # sysdeps/gnu/ldsodefs.h VALID_ELF_OSABI accepts both for linked products.
+    # Apply only that known Linux pair, never arbitrary OSABI equivalence.
+    linux_gnu_abi = (sys.platform == 'linux' and header['type'] in (1, 2, 3) and
+                     expected.get('osabi') in (0, 3) and header['osabi'] in (0, 3))
     for key in ('osabi', 'abi_version'):
         if key in expected and header[key] != expected[key]:
-            raise ValueError(f'{path}: incompatible native ELF {key}')
+            if key == 'osabi' and linux_gnu_abi:
+                continue
+            raise ValueError(f'{path}: incompatible native ELF {key}={header[key]}, '
+                             f'expected {expected[key]} (type={header["type"]})')
     if header['machine'] == MACHINES['arm'] and 'flags' in expected:
         mask = 0xff000000 | (0x600 if header['type'] in (2, 3) else 0)
         if header['flags'] & mask != expected['flags'] & mask:

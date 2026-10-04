@@ -46,9 +46,13 @@ and ARM EABI/float flags are checked conservatively too. A cross compiler passed
 through `--cc` or `CC` fails closed on a mismatched ELF, even if its reported
 triple looks native or an emulator is registered on the host. These checks require
 an ELF host for native-test mode; they do not prove CPU instruction, dynamic
-loader or libc compatibility. Exact native OSABI equality may conservatively
-reject otherwise compatible Linux SYSV/GNU-marked outputs; such combinations
-need separate evidence, not an automatic bypass.
+loader or libc compatibility. On Linux, relocatable objects, executables and
+shared libraries may use SYSV (0) or GNU (3) OSABI when the running process uses
+either. GNU ELF extensions can cause this marking distinction; the GNU loader
+explicitly accepts both. ABI version, ELF class/machine/endianness and ARM flags
+remain checked, and other OSABI differences or non-Linux hosts get no such
+exception. See [LLVM's GNU marking](https://github.com/llvm/llvm-project/blob/llvmorg-18.1.3/llvm/lib/MC/ELFObjectWriter.cpp#L421-L425)
+and [glibc's OSABI validation](https://github.com/bminor/glibc/blob/glibc-2.39/sysdeps/gnu/ldsodefs.h#L27-L32).
 
 Use compile-only mode for a target toolchain. All three expected ELF fields are
 required, and are checked against the actual outputs, independently of compiler

@@ -18,11 +18,11 @@
     },
     "PROVENANCE.json": {
       "bytes": 12536,
-      "sha256": "d3f47da75e9b557e5c293d491c3ad1a90b708a45ddfc3f38c6d108abe1f0f0e3"
+      "sha256": "f389f31edae9139f718e85bbbd39929b4e5c5768e318e7259ee0bb0b80f7e389"
     },
     "README.md": {
-      "bytes": 10187,
-      "sha256": "c3996087a25752a31087f0645afd41f68b76eacadcf5ba2aa7fb57933c421701"
+      "bytes": 10624,
+      "sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5"
     },
     "baseline/LICENSE": {
       "bytes": 9108,
@@ -133,8 +133,8 @@
       "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
     },
     "build.py": {
-      "bytes": 13768,
-      "sha256": "7cf31c9991c3b3880361b8d23add4183f917f923dc14b37e9a3cc76c5188c2a4"
+      "bytes": 14397,
+      "sha256": "fe6f92977a0a77cb2b5f82895afac3581faa0ee3320b0919b9b8443dbe8afa0f"
     },
     "ctypes_api.py": {
       "bytes": 3915,
@@ -193,8 +193,8 @@
       "sha256": "87e7346a44c251a2c94ca4ea475b95ee528cf9635063edf7c989dc1e56b05f05"
     },
     "tests/test_build_driver.py": {
-      "bytes": 16373,
-      "sha256": "07f8bb05bb6986a5904e28b4e5323b142a405a0968d8a83795173ffebe5138b7"
+      "bytes": 24185,
+      "sha256": "64863b5f3483f69a71da41fa5d93675d013ac09846c047ee4dbd009a58c960d2"
     },
     "tests/test_decoder.c": {
       "bytes": 3796,

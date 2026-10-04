@@ -3,6 +3,7 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import re
 import struct
 import subprocess
 import sys
@@ -271,6 +272,53 @@ class DriverTests(unittest.TestCase):
             self.invoke(self.args())
         self.assert_not_run()
 
+    def test_linux_gnu_object_keeps_native_sanitizer_execution_contract(self):
+        if self.host['osabi'] not in (0, 3):
+            self.skipTest('requires a SYSV/GNU-marked native Python process')
+        self.target = self.host
+        object_osabi = 3 if self.host['osabi'] == 0 else 0
+        self.replace_name = '00.o'
+        self.replacement = elf_bytes(self.host['class'], self.host['machine'],
+                                     self.host['endian'], 1, osabi=object_osabi,
+                                     abi_version=self.host['abi_version'],
+                                     flags=self.host['flags'])
+        with mock.patch.object(build.sys, 'platform', 'linux'):
+            self.invoke(self.args(['--sanitize']))
+        self.assertEqual(len(self.executions), 6)
+        self.assertEqual(self.load_calls, [])
+        self.direct_dlopen.assert_not_called()
+        self.assertEqual(self.receipt()['artifacts']['00.o']['elf']['osabi'], object_osabi)
+
+    def test_linux_late_foreign_linked_osabi_prevents_all_execution(self):
+        self.target = self.host
+        self.replace_name = 'test_identity'
+        self.replacement = elf_bytes(self.host['class'], self.host['machine'],
+                                     self.host['endian'], 2,
+                                     osabi=9,
+                                     flags=self.host['flags'])
+        with mock.patch.object(build.sys, 'platform', 'linux'):
+            with self.assertRaisesRegex(ValueError, 'incompatible native ELF osabi'):
+                self.invoke(self.args())
+        self.assert_not_run()
+        self.assertFalse((self.out/'receipt.json').exists())
+
+    def test_linux_gnu_linked_product_keeps_all_checks_before_execution(self):
+        if self.host['osabi'] not in (0, 3):
+            self.skipTest('requires a SYSV/GNU-marked native Python process')
+        self.target = self.host
+        linked_osabi = 3 if self.host['osabi'] == 0 else 0
+        self.replace_name = 'test_identity'
+        self.replacement = elf_bytes(self.host['class'], self.host['machine'],
+                                     self.host['endian'], 2, osabi=linked_osabi,
+                                     abi_version=self.host['abi_version'],
+                                     flags=self.host['flags'])
+        with mock.patch.object(build.sys, 'platform', 'linux'):
+            self.invoke(self.args())
+        self.assertEqual(len(self.executions), 6)
+        self.assertEqual(len(self.load_calls), 1)
+        self.assertEqual(self.receipt()['artifacts']['test_identity']['elf']['osabi'],
+                         linked_osabi)
+
     def test_header_only_native_shared_prevents_execution(self):
         self.target = self.host
         self.replace_name = 'liba20_fft64.so'
@@ -282,6 +330,83 @@ class DriverTests(unittest.TestCase):
 
 
 class ELFTests(unittest.TestCase):
+    def test_linux_sysv_gnu_pairs_for_all_product_types(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'object'
+            for host_osabi in (0, 3):
+                for object_osabi in (0, 3):
+                    expected = {'class': 64, 'machine': 62, 'endian': 'little',
+                                'osabi': host_osabi, 'abi_version': 0}
+                    for kind in (1, 2, 3):
+                        path.write_bytes(elf_bytes(64, 62, kind=kind, osabi=object_osabi))
+                        with self.subTest(host=host_osabi, target=object_osabi, kind=kind):
+                            with mock.patch.object(build.sys, 'platform', 'linux'):
+                                self.assertEqual(build.check_elf(path, expected, (kind,))['osabi'],
+                                                 object_osabi)
+
+    def test_non_linux_sysv_gnu_mismatch_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'object'
+            expected = {'class': 64, 'machine': 62, 'endian': 'little',
+                        'osabi': 0, 'abi_version': 0}
+            path.write_bytes(elf_bytes(64, 62, osabi=3))
+            for platform in ('freebsd14', 'darwin', 'unknown'):
+                with self.subTest(platform=platform):
+                    with mock.patch.object(build.sys, 'platform', platform):
+                        with self.assertRaisesRegex(ValueError, 'native ELF osabi'):
+                            build.check_elf(path, expected, (1,))
+
+    def test_linked_sysv_gnu_abi_version_stays_exact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'linked'
+            for host_osabi, target_osabi in ((0, 3), (3, 0)):
+                expected = {'class': 64, 'machine': 62, 'endian': 'little',
+                            'osabi': host_osabi, 'abi_version': 0}
+                for kind in (2, 3):
+                    path.write_bytes(elf_bytes(64, 62, kind=kind, osabi=target_osabi,
+                                               abi_version=1))
+                    with self.subTest(kind=kind, host=host_osabi):
+                        with mock.patch.object(build.sys, 'platform', 'linux'):
+                            with self.assertRaisesRegex(ValueError, 'native ELF abi_version'):
+                                build.check_elf(path, expected, (kind,))
+
+    def test_linux_other_osabi_pairs_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'object'
+            for host_osabi, target_osabi in ((0, 9), (3, 9), (9, 0), (9, 3)):
+                expected = {'class': 64, 'machine': 62, 'endian': 'little',
+                            'osabi': host_osabi, 'abi_version': 0}
+                path.write_bytes(elf_bytes(64, 62, osabi=target_osabi))
+                with self.subTest(host=host_osabi, target=target_osabi):
+                    with mock.patch.object(build.sys, 'platform', 'linux'):
+                        with self.assertRaisesRegex(ValueError, 'native ELF osabi'):
+                            build.check_elf(path, expected, (1,))
+
+    def test_linux_gnu_object_abi_version_stays_exact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'object'
+            expected = {'class': 64, 'machine': 62, 'endian': 'little',
+                        'osabi': 0, 'abi_version': 0}
+            path.write_bytes(elf_bytes(64, 62, osabi=3, abi_version=1))
+            with mock.patch.object(build.sys, 'platform', 'linux'):
+                with self.assertRaisesRegex(ValueError, 'native ELF abi_version'):
+                    build.check_elf(path, expected, (1,))
+
+    def test_linux_gnu_object_does_not_relax_architecture_or_arm_eabi(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'object'
+            expected = {'class': 32, 'machine': 40, 'endian': 'little',
+                        'osabi': 0, 'abi_version': 0, 'flags': 0x05000400}
+            for bits, machine, endian, flags in ((64, 40, 'little', 0x05000000),
+                                               (32, 62, 'little', 0x05000000),
+                                               (32, 40, 'big', 0x05000000),
+                                               (32, 40, 'little', 0x04000000)):
+                path.write_bytes(elf_bytes(bits, machine, endian, osabi=3, flags=flags))
+                with self.subTest(bits=bits, machine=machine, endian=endian, flags=flags):
+                    with mock.patch.object(build.sys, 'platform', 'linux'):
+                        with self.assertRaises(ValueError):
+                            build.check_elf(path, expected, (1,))
+
     def test_invented_32_64_little_big_headers(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'header'
@@ -333,6 +458,16 @@ class ELFTests(unittest.TestCase):
                     path.write_bytes(raw)
                     with self.assertRaises(ValueError):
                         build.read_elf(path)
+
+
+class WorkflowTests(unittest.TestCase):
+    def test_action_pins_are_full_commit_hashes(self):
+        workflow = build.ROOT.parents[1]/'.github/workflows/research-native-a20.yml'
+        pins = re.findall(r'uses:\s+[^\s@]+@([^\s]+)', workflow.read_text())
+        self.assertTrue(pins)
+        for pin in pins:
+            with self.subTest(pin=pin):
+                self.assertRegex(pin, r'^[0-9a-f]{40}$')
 
 
 if __name__ == '__main__':
