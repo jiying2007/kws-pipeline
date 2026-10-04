@@ -1,0 +1,316 @@
+{
+  "attempt": "one new Cosy49 candidate from original A20/seed610104/fixed300; old candidate terminated; no retries, resume, extension or alternate endpoints",
+  "calls": {
+    "decoder_calls": 0,
+    "development_calls": 0,
+    "feature_extractions": 0,
+    "new_initial_control_forwards": 0,
+    "optimizer_updates": 300,
+    "terminal_diagnostic_forwards": 1,
+    "total_model_forwards": 301,
+    "training_backwards": 300,
+    "training_forwards": 300
+  },
+  "control_reuse": {
+    "first_training_forward": "Required step1 pre-update49 forward doubles as original49 control. Save its detached logits and already computed per-row CTC before backward. Reuse the same loss graph for update1.",
+    "old32_control_not_used": true,
+    "separate_control_forwards": 0
+  },
+  "evaluation": {
+    "Cosy22_baseline": "four complete wake recordings, three correct hits; C miss; H/N false K1",
+    "all_following_stages": "DISARMED_SEPARATE_EXACT_AUTHORIZATION_REQUIRED",
+    "old76_protection": true,
+    "planned_audio_pairs": 98,
+    "primary_endpoint": "C correct or all false events removed for H or N, at least one improvement and no new regressions; no heldout/generalization claim",
+    "sealed6_access": false,
+    "training_job_acoustic_eval_calls": 0,
+    "training_job_native_calls": 0
+  },
+  "exact_loss": {
+    "blank_id": 0,
+    "formula": "(mean_D20(CTC_NLL/target_length)+mean_Q12(CTC_NLL/target_length)+mean_C17(CTC_NLL/target_length))/3",
+    "infeasible_or_nonfinite": "abort single attempt, retain partial evidence; no row omission, target truncation or zeroing",
+    "production_gate": "finite only; mathematical nonnegativity is not an FP32 runtime stop",
+    "reduction": "none then explicit cohort weights",
+    "source_weights_before_length_normalization": {
+      "C17": "1/51",
+      "D20": "1/60",
+      "Q12": "1/36"
+    },
+    "zero_infinity": false
+  },
+  "fresh_optimizer": {
+    "amsgrad": false,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "capturable": false,
+    "differentiable": false,
+    "encoder_lr": 1e-05,
+    "encoder_parameters": 389674,
+    "epsilon": 1e-08,
+    "foreach": false,
+    "fused": false,
+    "gradient_norm_cap": 1,
+    "head_lr": 0.0001,
+    "head_parameters": 846,
+    "historical_optimizer_and_rng": "never restored",
+    "maximize": false,
+    "type": "AdamW",
+    "weight_decay": 0
+  },
+  "initial_checkpoint": {
+    "bytes": 4732286,
+    "canonical_state_sha256": "c05623683b4616badda5535eefb0bfaecde63efbf3bfbceec6e7440a5fc19eb2",
+    "optimizer": "fresh AdamW; historical optimizer state not resumed",
+    "sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39"
+  },
+  "input_contract": {
+    "cosy17_audit_receipt_sha256": "021d4ae070ce28c5b7f25b85ca59af6cde947c86d5049c3deae982481082aeae",
+    "cosy17_download_bytes": 602351,
+    "cosy17_feature_hashes": [
+      {
+        "recording": "cv30-44f42bfe7e6c8cff",
+        "sha256": "9fdccd4ebea1e3b58f3e07eb884227f5d3a00f8734bfbd9969e087d1a15cf6d5"
+      },
+      {
+        "recording": "cv30-63e439ef22c44da3",
+        "sha256": "a6d7b150d91bdffb1093883866f938acd001d2856c50385a43889a0d2819f495"
+      },
+      {
+        "recording": "cv30-963e8a82e801f800",
+        "sha256": "a5cbe40a0191a17911389139f5e9958c4d0505938f645d807106ccb3766782a6"
+      },
+      {
+        "recording": "cv30-a27d486bf3011cce",
+        "sha256": "a8ccdeaa9eea1a87ae4790a9783051ed6c1c6885ebfcdca3acf571a96e96fc58"
+      },
+      {
+        "recording": "cv30-e40742c3b7807808",
+        "sha256": "028f89da12f72ff10bdb05197d5055d24a832a94dc3e5ab9f783cef6e607544f"
+      },
+      {
+        "recording": "cv30-f0fb4689ef999ad7",
+        "sha256": "c520fdd55b63ea88cdbb7d05540b6c2846b9cee5b720995d987c74f7cc88d9d8"
+      },
+      {
+        "recording": "cv30-9bf0442a59aa1ed9",
+        "sha256": "161d11452bfb05393af100f443951372b73dcb9d8e5b6e3747907e43fb3f14fa"
+      },
+      {
+        "recording": "cv30-6d96f1531378529f",
+        "sha256": "15ebf4a8568adc839462bbe7f381360d27a8e78c9cc6a0bff0e60b75c8f22f6b"
+      },
+      {
+        "recording": "cv30-ea9ec4f1914de7a1",
+        "sha256": "defb60b5e2ff843f7e509a1ae2543a52aac03bc1fcb43e9ae46453e9a16b5424"
+      },
+      {
+        "recording": "cv30-d47372ae6c8d55a3",
+        "sha256": "3070a37a52b8d0193783123567bc41ce8c0e4003551ccec9d5edb9154634433c"
+      },
+      {
+        "recording": "cv30-e147dcf374fa660c",
+        "sha256": "a0e5a5b689933c13e2f43099fbd8403b065135b5a173089303afa7a32011417c"
+      },
+      {
+        "recording": "cv30-bf5567786efe5d37",
+        "sha256": "a901b5f9430feef5fbd24e78fd8c9d10f65c6cdf747b1b29e754c6cb25617e11"
+      },
+      {
+        "recording": "cv30-dbe5f5f6b95818c3",
+        "sha256": "d94d19d19c29c3d551fee6967e6ffcf463699e5e6771ce0c756e387853161780"
+      },
+      {
+        "recording": "cv30-9bc4956f2e87322e",
+        "sha256": "6bae27ae62bd9d8fc686029a35695fa36449176fee4fc022a86efd7d4de4f12c"
+      },
+      {
+        "recording": "cv30-63941b3d09d895e7",
+        "sha256": "d987981da2c5aa3cb9314587cce1bb9833f245e90e2a7321a3e609a11d2a113a"
+      },
+      {
+        "recording": "cv30-0f8e3a0e467d9149",
+        "sha256": "fcf520344f5a12f0df6802f650574a25f782cff9a02e3508b6040ac6e5aa866c"
+      },
+      {
+        "recording": "cv30-702fdac8f0cd2a55",
+        "sha256": "3c0f00e9408aaa740100d8d03e8b30304ac8a41d7b4d8f4c9c5adbd5f0be0770"
+      }
+    ],
+    "cosy17_feature_manifest_sha256": "da6406fd5f2b6c10bf09369a876e92e060acaeb88ce807ea8305d87be89038ed",
+    "cosy17_manifest_schema": "cosy17-public-precmvn-features-v1",
+    "cosy17_public_pin": {
+      "archive_sha256": "d43806895671140a22119021d409a7e1dbfb7facfde3392907573dc5e91d3ea3",
+      "commit": "a3f38afed7c2fc9bc214bce8c22928c1a2cb675b",
+      "independent_remote_review_sha256": "c4290b61a765135e9d091a635efd92aa82a18d163b1edcd358ed0cefd79e3442",
+      "pull_request": "https://github.com/jiying2007/kws-data/pull/15",
+      "repository": "jiying2007/kws-data",
+      "status": "VERIFIED_PUBLIC_PIN",
+      "tree": "f260797e020ec8ba40aae1a823e2459ad88e093e"
+    },
+    "cosy17_public_pin_review_sha256": "c4290b61a765135e9d091a635efd92aa82a18d163b1edcd358ed0cefd79e3442",
+    "cosy17_request_count": 1,
+    "cosy17_status": "VERIFIED_PUBLIC_PIN",
+    "cosy17_transport": "single ZIP; exact19 inert allowlisted members, no ZIP execution",
+    "cosy17_unpacked_bytes": 1131737,
+    "frontend_runs": 0,
+    "model_objects": 3,
+    "model_redownload": "only exact original published checkpoint, no model discovery",
+    "model_transport_bytes": 4399736,
+    "model_transport_requests": 79,
+    "prepared_archive_bytes": 2472892,
+    "prepared_archive_unpacked_file_bytes": 4868023,
+    "prepared_member_count": 68,
+    "prepared_requests": 3,
+    "public_prepared_pin": {
+      "archive_sha256": "4a35cde90a5b268a19082a63c26a6ad798c537dda092e486686fef01744b9708",
+      "commit": "d0d54cf635189bdc522c9d0f6135082e81250fd8",
+      "download_bytes": 2472892,
+      "publication_ref_PR_CI_closure_required_before_training_GO": true,
+      "repository": "jiying2007/kws-data",
+      "requests": 3,
+      "status": "VERIFIED_PUBLIC_PIN",
+      "transport_manifest_sha256": "21687bd7d918c6aab02a513234b78f816d11dbeec4111b28052440f281bfc229"
+    },
+    "total_input_download_bytes": 7474979,
+    "waveform_downloads": 0
+  },
+  "model": {
+    "architecture": "pinned WeKws FSMN(400,140,4,250,128,10,2,1,1,140,6)",
+    "cache": "reset/None each full-batch update; no source-to-source cache",
+    "device": "CPU",
+    "dtype": "float32",
+    "exact_state_tensors": 30,
+    "fixed_cmvn_buffers": 800,
+    "input": "zero-padded PRE-CMVN features49x95x400, authenticated per-source lengths",
+    "normalization": "original GlobalCMVN once inside forward; padding is identical pre-CMVN-zero convention to old train.py",
+    "parameters": 390520
+  },
+  "output_contract": {
+    "archive_cap_bytes": 20971520,
+    "checkpoint_cap_bytes": 6291456,
+    "counters": "fsynced started/completed journal around each forward/backward/update; interrupted calls explicitly uncertain",
+    "failure": "Preserve complete validated finite numerical outputs and safe schema journals even on overall failure. Private stdout/stderr and damaged files remain local; publish their hash/size/UNKNOWN receipts only. Saved-only always-run finalizer packages other safe evidence. No retry/resume.",
+    "initial_logits_bytes": 111720,
+    "initial_logits_shape": [
+      49,
+      95,
+      6
+    ],
+    "interrupted_publication": "Validate READY plus archive/sidecar before treating complete. Preserve invalid receipt and partial publication directory once, then saved-only rebuild safe artifacts; never overwrite a verified completed result.",
+    "logs_cap_bytes": 524288,
+    "optimizer": "After EACH update inspect all28 states: scalar step equals update index; exp_avg and exp_avg_sq exact FP32 CPU parameter shapes; all finite. Terminal canonical hashes and weights_only readback remain.",
+    "payload": "terminal-state-payload.f32le is a canonical state payload, NOT a declared native deployable model",
+    "payload_bytes": 1565280,
+    "raw_cap_bytes": 33554432,
+    "raw_process_logs": "not included in public artifact; bounded private run-local stdout/stderr only, with public hash/size receipts",
+    "single_endpoint": "terminal-step300.pt, weights_only readback, exact key/shape/dtype/finite model and28 optimizer parameter states",
+    "state": "30 ordered FP32 tensors/390520 trainable parameters+800 immutable CMVN; canonical SHA(name UTF8 then little-endian bytes) and individual hashes",
+    "terminal_logits_bytes": 111720,
+    "terminal_logits_shape": [
+      49,
+      95,
+      6
+    ]
+  },
+  "release_gates": [
+    "Verified immutable public Cosy17 ZIP pin, clean manifest, exact19 members and source identities; already closed data admission does not authorize training",
+    "Exact source/protocol/input identity and independent technical review",
+    "Verified durable readback of the complete frozen execution plan",
+    "New explicit authorization for the exact one-attempt training and bounded publication scope",
+    "Exact one-push base/event/source conditions and supported environment; drift fails closed",
+    "Every subsequent export, numerical, and acoustic stage requires its own independent authorization"
+  ],
+  "resource": {
+    "device_claims": "no SSC305, board, RT/IO/power/word-tail latency or accepted5/10percent board allowance",
+    "geometry": {
+      "activation_autograd_workspace": "not measured here; exact tensor ledger is only lower bound,2GiB is fail-closed operational cap",
+      "adam_moment_bytes": 3124160,
+      "forward_MACs_300": 543216156000,
+      "forward_MACs_301": 545026876520,
+      "forward_MACs_per_update": 1810720520,
+      "gradient_bytes": 1562080,
+      "optimizer_step_scalars_bytes": 112,
+      "padded_feature_bytes": 7448000,
+      "padded_rows": 4655,
+      "unpadded_rows": 2505
+    },
+    "glibc": "2.39",
+    "guard": {
+      "aggregate_CPU_seconds": 300,
+      "aggregate_wall_seconds": 600,
+      "final_evidence_packaging": "outside 300CPU/600wall; controller2GiBAS and15min job still apply; do not claim included",
+      "free_disk_floor_bytes": 4294967296,
+      "interop_threads": 1,
+      "intraop_threads": 1,
+      "job_timeout_minutes": 15,
+      "per_process_AS_bytes": 2147483648,
+      "sampled_owned_group_RSS_bytes": 2147483648,
+      "saved_only_emergency_finalizer": {
+        "CPU_seconds": 30,
+        "address_space_bytes": 2147483648,
+        "file_bytes": 20971520,
+        "scope": "separate always-run read-only saved-evidence packaging process, no training/inference/retry; original phase aggregate excluded",
+        "wall_seconds": 60
+      },
+      "training_processes": 1
+    },
+    "image": "20260927.320.1",
+    "numpy": "1.26.4",
+    "python": "3.12.3",
+    "runner": "free public standard ubuntu-24.04 only",
+    "successful_install_observation": {
+      "installed_bytes": 846598027,
+      "interpretation": "same software proof only; not a training bound or cross-host regression",
+      "peak_sampled_control_RSS_bytes": 358141952,
+      "source_run": 37198298586
+    },
+    "timing_estimate": {
+      "basis": "No timing claim. Per-update Adam state finite scans, model/CTC/backward, optimizer, setup and serialization consume the unchanged guard. No benchmark run during preparation.",
+      "status": "UNMEASURED_FOR_COSY49"
+    },
+    "torch": "2.12.1+cpu",
+    "wheel_body_bytes": 220935082,
+    "wheel_count": 11,
+    "wheel_lock_sha256": "90a28180a51fae445941bd3c0c9fefb6fa569e2c622255d32c17d1021d6939fc",
+    "wheel_source": "unchanged official pinned URLs; offline --require-hashes --no-deps; no installer/network fallback"
+  },
+  "schema": "a20-cosy49-execution-protocol-v1",
+  "status": "PUBLIC_PROJECTION_DISARMED",
+  "training": {
+    "architecture_vocabulary_decoder_changes": false,
+    "augmentation": null,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "candidate_count": 1,
+    "dropout_change": false,
+    "encoder_lr": 1e-05,
+    "endpoint": "fixed step300 only; no dev-based stopping or intermediate checkpoint selection",
+    "epsilon": 1e-08,
+    "feature_protocol": "Reuse exact immutable old32 PRE-CMVN and separately audited/pinned Cosy17 PRE-CMVN. No frontend execution during training; original CMVN exactly once per necessary forward.",
+    "fixed_CMVN_elements": 800,
+    "full_batch": 49,
+    "gradient_norm_cap": 1,
+    "head_lr": 0.0001,
+    "initial_and_terminal_train_diagnostics_only": true,
+    "learning_schedule": "constant",
+    "loss": "(mean_D20(CTC_NLL/target_length)+mean_Q12(CTC_NLL/target_length)+mean_C17(CTC_NLL/target_length))/3",
+    "optimizer": "AdamW",
+    "per_update_optimizer_state_finite": true,
+    "seed": 610104,
+    "steps": 300,
+    "target_lengths": [
+      2,
+      3,
+      4
+    ],
+    "trainable_parameters": 390520,
+    "training_authorized": false,
+    "weight_decay": 0,
+    "zero_infinity": false
+  }
+}
