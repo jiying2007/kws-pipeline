@@ -1,0 +1,423 @@
+{
+  "batch_shape": [
+    20,
+    87,
+    400
+  ],
+  "frontend_audio_reads": 20,
+  "full_batch_sources": 20,
+  "rows": [
+    {
+      "feature_sha256": "cba168e1d8db817ef43a9b3cd044e97b40f0e3122c9b50ec0eb16e512a4772d8",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        3
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 42,
+      "samples": 20480,
+      "source_id": "tts-candidate-011",
+      "target": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "09f48df6bac29cdb5441d756e490003d6935221676e6b36bf1eaaf356d1e6b90",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        7
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 36,
+      "samples": 17920,
+      "source_id": "tts-candidate-016",
+      "target": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "cc6de6923a90bb10bc9d3552668d72cacaa10ab97abc40457b8b6b8e48e4414d",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        5
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 74,
+      "samples": 35840,
+      "source_id": "tts-candidate-017",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "1c274015f97ff350ff5db2629a0127aa41d36645e4a8632d049ed979bd6af1d2",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        3
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 52,
+      "samples": 25600,
+      "source_id": "tts-candidate-018",
+      "target": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "a88eaaf54fda892aa238e5740f5a20ae1f1b2ebadaf025ce91835e367b0dce91",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        5
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 74,
+      "samples": 35840,
+      "source_id": "tts-candidate-020",
+      "target": [
+        3,
+        5,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "5955d6abbb2fd2500f02aae9f30fc3035576b46adaa1058d801a99891b94ddce",
+      "frame_chunks": [
+        9,
+        10,
+        9
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 28,
+      "samples": 14080,
+      "source_id": "tts36-v1-001",
+      "target": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "cca0a82b0bd8136f7be9875e5fcb11b555313ee039784057b681888be725c1e1",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 49,
+      "samples": 24320,
+      "source_id": "tts36-v1-002",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "29115da551e315f7c3a308eea66874ba1354fd6a49b25bd6150cddee7aecf4cc",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        8
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 87,
+      "samples": 42240,
+      "source_id": "tts36-v1-004",
+      "target": [
+        3,
+        4,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "0f243de9a7130525bfc6357dd552512dc798d02d9030b4b1217c8c5b30e66032",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        5
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 34,
+      "samples": 16640,
+      "source_id": "tts36-v1-006",
+      "target": [
+        3,
+        5,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "4ee5f7518b112f3fbb458e963c2e770c2306dba3f4801c27e209ff41ee200894",
+      "frame_chunks": [
+        9,
+        10,
+        7
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 26,
+      "samples": 12800,
+      "source_id": "tts36-v1-007",
+      "target": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "2bdea12b52be57978a10acf0b2298355ec2f679aeb73244824c7b6588fc365fc",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 39,
+      "samples": 19200,
+      "source_id": "tts36-v1-008",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "098a45004a043860db4c23705a422ba5c394194d0345a249f41570f6f2fe11e8",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        9
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 58,
+      "samples": 28160,
+      "source_id": "tts36-v1-011",
+      "target": [
+        3,
+        5,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "b42b8693b8846c2a8cb2a9a3c22c5ffbf94d2e122dae849485b8903ec1151fb8",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        2
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 31,
+      "samples": 15360,
+      "source_id": "tts36-v1-012",
+      "target": [
+        3,
+        5,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "c8558f507a8c1b25eeef709d03bb9ae120b65094ea5cc7dc2fbb33829f08b21e",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        3
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 82,
+      "samples": 39680,
+      "source_id": "voice54-v1-002",
+      "target": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "4cbdf56e2547b7e94075dc8b460718b31e2391ac3eaf347b86da5a9c9409be84",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 39,
+      "samples": 19200,
+      "source_id": "voice54-v1-027",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "06156e4293b26fe867fd752906b0649ed523425f78163af385449b80530fdf4c",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        6
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 55,
+      "samples": 26880,
+      "source_id": "voice54-v1-016",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "f94488b10fcf2bf3afea2d136cfcea7db9d2af65989d7f75f224dfac50e1bd5f",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        6
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 55,
+      "samples": 26880,
+      "source_id": "voice54-v1-003",
+      "target": [
+        3,
+        4,
+        3,
+        4
+      ]
+    },
+    {
+      "feature_sha256": "2b030ce320bcc3be76fb3df5ba46ae2915608c445022280fef50613b0cd301ba",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        7
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 36,
+      "samples": 17920,
+      "source_id": "voice54-v1-006",
+      "target": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "84c601dc871dd24bcca22c062109bde2a7a4143280864aa59d907c5f41438d70",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        5
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 84,
+      "samples": 40960,
+      "source_id": "voice54-v1-031",
+      "target": [
+        3,
+        4,
+        3,
+        5
+      ]
+    },
+    {
+      "feature_sha256": "768bd5c6136fa0b8044bb53f89e726fe100cb64dd1acbdae6cd9b34f2ac2c726",
+      "frame_chunks": [
+        9,
+        10,
+        10,
+        7
+      ],
+      "minimum_ctc_frames": 4,
+      "model_frames": 36,
+      "samples": 17920,
+      "source_id": "voice54-v1-035",
+      "target": [
+        3,
+        5,
+        3,
+        5
+      ]
+    }
+  ],
+  "weak_label_only": true
+}

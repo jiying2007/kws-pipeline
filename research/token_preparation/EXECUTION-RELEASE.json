@@ -1,0 +1,24 @@
+{
+  "approved": true,
+  "approved_parent_head": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+  "artifact_max_bytes": 8388608,
+  "artifact_retention_days": 1,
+  "attempt_key": "a20-token-preparation-setup-recovery-20261004-v1",
+  "independent_review": {
+    "protocol_sha256": "ab1655d93cec7a839bdf1f95f9a09c9940900bbddc9a7a5763b02d44f6e28b6e",
+    "receipt_sha256": "92480644d1ed7b2454647c6ac5ad5bc91688ca362d9352cee25dd6104fab90f3",
+    "source_freeze_sha256": "7ac5c192a1a28938a80ce792b93def06bf3378b10adb624035e3fafad3828ed2",
+    "status": "PASS"
+  },
+  "private_freeze_readback": {
+    "protocol_sha256": "ab1655d93cec7a839bdf1f95f9a09c9940900bbddc9a7a5763b02d44f6e28b6e",
+    "receipt_sha256": "273c349264fd9c7f0906802088f7f724978676587e5b4c36817e108db1aec438",
+    "source_freeze_sha256": "7ac5c192a1a28938a80ce792b93def06bf3378b10adb624035e3fafad3828ed2",
+    "status": "PASS"
+  },
+  "protocol_sha256": "ab1655d93cec7a839bdf1f95f9a09c9940900bbddc9a7a5763b02d44f6e28b6e",
+  "public_artifact_rights_privacy_approved": true,
+  "schema": "a20-integrated-preparation-release-v1",
+  "source_freeze_sha256": "7ac5c192a1a28938a80ce792b93def06bf3378b10adb624035e3fafad3828ed2",
+  "training_authorized": false
+}
