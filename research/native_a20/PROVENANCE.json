@@ -11,12 +11,21 @@
       }
     ],
     "path": "README.md",
-    "public_sha256": "24f68649edc0b98348952b8786498b36cfa7772755b90b0b999516153bf9e7f3",
+    "public_sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5",
     "transformation": "new public technical summary from reviewed aggregate records; private control/delivery information omitted"
   },
   "base_repository": "jiying2007/kws-pipeline",
   "base_sha": "55a4e23379ad7072db507dbe419b38d8898e17fa",
   "binary_reproducibility_claim": false,
+  "build_driver_adaptation": {
+    "based_on_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+    "new_files": [
+      "tests/test_build_driver.py"
+    ],
+    "scope": "Explicit compile-only mode, conservative native ELF guard, offline invented driver tests and isolated generic ARM compilation CI; no native C/math/decoder/weights or shipping changes",
+    "target_execution_in_compile_only": false,
+    "vendor_abi_qualification": false
+  },
   "native_math_or_decoder_changed": false,
   "newly_authored_files_without_one_to_one_original": [
     ".gitignore",

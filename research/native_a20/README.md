@@ -27,8 +27,8 @@ rounding ties and subnormals, invalid environment rejection, unchanged
 preprocessing, actual short tails, canonical grouping, finite-memory tap/cache
 order, model identity rejection, SHA256 vectors, CTC decoder state and exact
 whole/ragged stream geometry. ASan/UBSan are exercised separately; leak detection
-is disabled and no leak-check pass is claimed. The dedicated workflow runs only
-this offline synthetic suite. Production C source is preserved byte-for-byte.
+is disabled and no leak-check pass is claimed. The host workflow runs this offline synthetic suite; a separate job
+installs the generic Ubuntu ARM cross compiler and checks compilation/linking only. Production C source is preserved byte-for-byte.
 
 The build emits a research library, a raw PCM CLI, resource-size record and test
 receipt. It compiles but never runs the CLI on an archived model or audio asset.
@@ -36,6 +36,74 @@ The CLI requires the exact externally materialized payload SHA256
 `a80b233d3c958d25f49085f487ef5cde839bd69f803ed057b59bbd20adc6e43d`.
 It accepts mono 16-kHz signed PCM16 little-endian raw audio. Its deliberately
 minimal JSON output is a research debugging interface, not the shipping API.
+
+### Explicit cross compilation (no target execution)
+
+`--mode native-test` remains the default. Before any generated executable runs or
+shared library loads, the driver validates every compiler product against the
+running Python process's ELF class, machine and byte order. Native OSABI/version
+and ARM EABI/float flags are checked conservatively too. A cross compiler passed
+through `--cc` or `CC` fails closed on a mismatched ELF, even if its reported
+triple looks native or an emulator is registered on the host. These checks require
+an ELF host for native-test mode; they do not prove CPU instruction, dynamic
+loader or libc compatibility. On Linux, relocatable objects, executables and
+shared libraries may use SYSV (0) or GNU (3) OSABI when the running process uses
+either. GNU ELF extensions can cause this marking distinction; the GNU loader
+explicitly accepts both. ABI version, ELF class/machine/endianness and ARM flags
+remain checked, and other OSABI differences or non-Linux hosts get no such
+exception. See [LLVM's GNU marking](https://github.com/llvm/llvm-project/blob/llvmorg-18.1.3/llvm/lib/MC/ELFObjectWriter.cpp#L421-L425)
+and [glibc's OSABI validation](https://github.com/bminor/glibc/blob/glibc-2.39/sysdeps/gnu/ldsodefs.h#L27-L32).
+
+Use compile-only mode for a target toolchain. All three expected ELF fields are
+required, and are checked against the actual outputs, independently of compiler
+naming or its descriptive `-dumpmachine` output:
+
+```sh
+python3 -B research/native_a20/build.py \
+  --mode compile-only --cc arm-linux-gnueabihf-gcc \
+  --target-elf-class 32 --target-machine arm --target-endian little \
+  --target-flag=-mcpu=cortex-a32 --target-flag=-mfpu=neon-vfpv4 \
+  --target-flag=-mfloat-abi=hard --output /tmp/native-a20-arm-compile
+```
+
+This builds the same nine objects, shared library, CLI, resource query and five
+invented-input test programs. It never executes any of them or uses ctypes to
+load the target library, even if the target equals the host. Host-only source
+manifest and twiddle-certificate checks still run. Linked ELF files must also
+have bounded program headers and valid file-backed executable load segments.
+No emulator or target runner is invoked. An existing compiler/sysroot is needed;
+the build driver does not install or download anything.
+
+Optional `--sysroot /existing/toolchain/sysroot` applies to every compile/link
+command. Repeated `--target-flag=...` accepts only architecture/ABI selection
+options (`-mcpu`, `-march`, `-mtune`, `-mfpu`, `-mfloat-abi`, `-mabi`, ARM/thumb and
+endianness selectors). Arbitrary compiler/linker flags, response files and
+floating-point overrides are rejected. The strict numerical flags stay fixed.
+The provided compiler and sysroot must be trusted; this is not a tool sandbox.
+
+The v2 receipt distinguishes compile/link and ELF checks from target execution.
+For compile-only, resource-size queries, invented tests and ctypes ABI checks
+are `NOT_RUN`; target execution and dlopen counts are zero. There is no
+`resource-sizes.json`: host sizes must not be substituted for target measurements.
+`--sanitize` can instrument target binaries, but a compile-only receipt never
+claims the sanitizers ran. Commands, compiler version/triple, expected ELF fields,
+per-file ELF identity/flags, byte sizes and SHA256s are retained. No success
+receipt is written on a failed build, and existing output directories are refused.
+
+Run the offline driver guard tests without a cross compiler:
+
+```sh
+python3 -B research/native_a20/tests/test_build_driver.py
+```
+
+They use invented ELF fixtures and mocked execution/loading to cover cross-CC
+rejection, malformed or mismatched ELF, unsafe flags, late artifact failures,
+compiler failure/timeout, stale output, unchanged native-test behavior and zero
+compile-only execution. The dedicated generic ARM CI job builds only this
+research directory, saves static readelf evidence and does not run ARM code.
+Generic Ubuntu ARM compilation is not SSC305 SDK/vendor ABI qualification,
+target numerical validation, physical Cortex-A32 performance or product release
+approval. Those remain separate pending evidence gates.
 
 `export_a20.py --checkpoint INPUT --output NEW_DIRECTORY` exports only the
 pinned checkpoint identity, using an already installed PyTorch runtime with
