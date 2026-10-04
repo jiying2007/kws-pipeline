@@ -1,0 +1,307 @@
+{
+  "download_bytes": 6097691,
+  "manifest_sha256": "d2eb3c8127373939b89e29e8e866309ac3239bc20e03c79be7b69e9dc1f02105",
+  "outputs": [
+    {
+      "bytes": 41004,
+      "path": "audio/tts-candidate-011.wav",
+      "sha256": "8ce4da865755224aadd9e90f63ff8f470e42c34ea627a0cb05382c5964a454fa"
+    },
+    {
+      "bytes": 35884,
+      "path": "audio/tts-candidate-016.wav",
+      "sha256": "a994aabf9a0619389377fab22bbfe9414b23b89f78a21ea64693e1d3e7eaa9ff"
+    },
+    {
+      "bytes": 71724,
+      "path": "audio/tts-candidate-017.wav",
+      "sha256": "e2f68c0dad27b65aa4630a2382d94bdfaf84cc64191c1ac2a15ff8aca6b6dee3"
+    },
+    {
+      "bytes": 51244,
+      "path": "audio/tts-candidate-018.wav",
+      "sha256": "60106b7965485d2e14369fb04b69b7b0a1c317237eed395f9c852b89f2e05146"
+    },
+    {
+      "bytes": 71724,
+      "path": "audio/tts-candidate-020.wav",
+      "sha256": "07b64abbfff16d6c484c1311fcb350dd16ae8619d60c6e0f614193323941015f"
+    },
+    {
+      "bytes": 28204,
+      "path": "audio/tts36-v1-001.wav",
+      "sha256": "b0f700e633d82083bfc7e3d297ffa0894a9c073b604b707b1d3c15ab41f5ca14"
+    },
+    {
+      "bytes": 48684,
+      "path": "audio/tts36-v1-002.wav",
+      "sha256": "e0fabd4f7f138a87768074c37673b3d93df9de9ff90c941604c2499f11b21864"
+    },
+    {
+      "bytes": 84524,
+      "path": "audio/tts36-v1-004.wav",
+      "sha256": "a916fbcc3443f6396775bdb44cbce8ed89c404db206ae130b4746e14389e4ea8"
+    },
+    {
+      "bytes": 33324,
+      "path": "audio/tts36-v1-006.wav",
+      "sha256": "b82b414e6580f4b0829004924cc3697b084eaad64ed8e7d0e79c960ad9931b3a"
+    },
+    {
+      "bytes": 25644,
+      "path": "audio/tts36-v1-007.wav",
+      "sha256": "11a913fb170fdff1a1bdb9595851a7e61f6fe1d94649d2f34d932ea2ca146b2c"
+    },
+    {
+      "bytes": 38444,
+      "path": "audio/tts36-v1-008.wav",
+      "sha256": "c811d1a91f8bac5fcfac3f1d05082c4e54d771b26ae33e56f65e84d1eba735d1"
+    },
+    {
+      "bytes": 56364,
+      "path": "audio/tts36-v1-011.wav",
+      "sha256": "6bf47fc63f977092f71435216ddca58348a94386c2e1bcbaa48056f49abec060"
+    },
+    {
+      "bytes": 30764,
+      "path": "audio/tts36-v1-012.wav",
+      "sha256": "f17f4b53be5320d1259999a18eb9f1e3cd57bfbdbeeb09fee035773b0625163e"
+    },
+    {
+      "bytes": 79404,
+      "path": "audio/voice54-v1-002.wav",
+      "sha256": "017bec098e616ed1a141f68fcad90795c06e46c6afe7c6449fb2839e48e8a39c"
+    },
+    {
+      "bytes": 38444,
+      "path": "audio/voice54-v1-027.wav",
+      "sha256": "e654a049e804410f510de91aaf64db5cb4a48450bf05be10f567cad78eddd816"
+    },
+    {
+      "bytes": 53804,
+      "path": "audio/voice54-v1-016.wav",
+      "sha256": "374f57ee905ee6bf7b7cccb6163e19f286da2422690472c082ac334b24818573"
+    },
+    {
+      "bytes": 53804,
+      "path": "audio/voice54-v1-003.wav",
+      "sha256": "168b675d6bfe12358acc88269a96d73a91b54d70fa9f183bb736d7d71db5a5df"
+    },
+    {
+      "bytes": 35884,
+      "path": "audio/voice54-v1-006.wav",
+      "sha256": "41032c0926be4aac3db9ad48b0d5bcb2a70d8716090ff3a1551baca52e64bc04"
+    },
+    {
+      "bytes": 81964,
+      "path": "audio/voice54-v1-031.wav",
+      "sha256": "f013abb277130f9f72feeb3e6043c8e163b4e49e714906a05656cda41ca8b2f2"
+    },
+    {
+      "bytes": 35884,
+      "path": "audio/voice54-v1-035.wav",
+      "sha256": "304b9db10250ecece206456538df40052dc0fc48464baa2db311333a49a4326f"
+    },
+    {
+      "bytes": 61484,
+      "path": "audio/qwen3-kw1-dylan.wav",
+      "sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5"
+    },
+    {
+      "bytes": 58924,
+      "path": "audio/qwen3-kw1-uncle_fu.wav",
+      "sha256": "b6902e14b699ca504f34d7b4bdba66a4c9805a0fd3403f5633cbb891872d9d51"
+    },
+    {
+      "bytes": 58924,
+      "path": "audio/qwen3-kw1-vivian.wav",
+      "sha256": "db85999b9d7a36f2a8633a58e5279c2ed5dda8f61f8bf7cf45c72beef6871261"
+    },
+    {
+      "bytes": 61484,
+      "path": "audio/qwen3-kw2-dylan.wav",
+      "sha256": "f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db"
+    },
+    {
+      "bytes": 71724,
+      "path": "audio/qwen3-kw2-uncle_fu.wav",
+      "sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915"
+    },
+    {
+      "bytes": 66604,
+      "path": "audio/qwen3-kw2-vivian.wav",
+      "sha256": "3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25"
+    },
+    {
+      "bytes": 56364,
+      "path": "audio/qwen3-repeat-nihao-dylan.wav",
+      "sha256": "7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4"
+    },
+    {
+      "bytes": 81964,
+      "path": "audio/qwen3-repeat-nihao-uncle_fu.wav",
+      "sha256": "a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229"
+    },
+    {
+      "bytes": 51244,
+      "path": "audio/qwen3-repeat-nihao-vivian.wav",
+      "sha256": "06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980"
+    },
+    {
+      "bytes": 51244,
+      "path": "audio/qwen3-suffix-kw2-dylan.wav",
+      "sha256": "ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20"
+    },
+    {
+      "bytes": 92204,
+      "path": "audio/qwen3-suffix-kw2-uncle_fu.wav",
+      "sha256": "7100eaf6994960cee1d5da192020ffcdfae367d17b401c9b9efbacf7172a5ddd"
+    },
+    {
+      "bytes": 64044,
+      "path": "audio/qwen3-suffix-kw2-vivian.wav",
+      "sha256": "b01a04cc168f8c9de314c9ddb22f3f191e6c0a7138ac78c3cf63831d2bbbf26e"
+    },
+    {
+      "bytes": 4732286,
+      "path": "model/A-terminal.reference.pt",
+      "sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39"
+    },
+    {
+      "bytes": 19625,
+      "path": "reference/upstream/wekws/model/fsmn.py",
+      "sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3"
+    },
+    {
+      "bytes": 1498,
+      "path": "reference/upstream/wekws/model/cmvn.py",
+      "sha256": "6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c"
+    },
+    {
+      "bytes": 36666,
+      "path": "reference/upstream/torchaudio/kaldi.py",
+      "sha256": "5cbea1a584ddea748f6f68a621d794e13334e88d9faa1d40986f7af32f196d29"
+    },
+    {
+      "bytes": 24939,
+      "path": "reference/upstream/wekws/bin/stream_kws_ctc.py",
+      "sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53"
+    },
+    {
+      "bytes": 6505,
+      "path": "runtime/src/donor_fft64.c",
+      "sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f"
+    },
+    {
+      "bytes": 2509,
+      "path": "runtime/src/donor_fft64.h",
+      "sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471"
+    },
+    {
+      "bytes": 11923,
+      "path": "runtime/src/fft64_twiddles.h",
+      "sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074"
+    },
+    {
+      "bytes": 8001,
+      "path": "runtime/src/pcm_fft64.c",
+      "sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60"
+    },
+    {
+      "bytes": 3987,
+      "path": "runtime/src/pcm_fft64.h",
+      "sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9"
+    },
+    {
+      "bytes": 6153,
+      "path": "runtime/baseline/native/stream/splice.c",
+      "sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0"
+    },
+    {
+      "bytes": 3948,
+      "path": "runtime/baseline/native/stream/splice.h",
+      "sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861"
+    },
+    {
+      "bytes": 24176,
+      "path": "runtime/baseline/native/donor_fbank/frontend_tables.h",
+      "sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b"
+    },
+    {
+      "bytes": 2281,
+      "path": "runtime/baseline/native/donor_fbank/donor_fbank.h",
+      "sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc"
+    },
+    {
+      "bytes": 7926,
+      "path": "reference/historical-features20.json",
+      "sha256": "a5b99454fa75a7db120375a75626b62f8f21d1f2443f40ee7ea8bca4231dfa87"
+    },
+    {
+      "bytes": 7744,
+      "path": "reference/A20-TENSOR-SCHEMA.json",
+      "sha256": "fa10e0a11750e2b3e215c44f340e80bfdec1b374c68cd03eacd23b07b119dcea"
+    },
+    {
+      "bytes": 2478,
+      "path": "metadata/D20-SOURCE-NOTICE.md",
+      "sha256": "1b954aa3f04ead27db0eba291f2c6e9a13c40edff2c09eb90fbf9303f346e3c2"
+    },
+    {
+      "bytes": 40509,
+      "path": "metadata/D20-audio-mapping.public.json",
+      "sha256": "96a01b77dd73d75d5798fec831746e7fbacffe661ad3ca3c7ca521743d076b4c"
+    },
+    {
+      "bytes": 2984,
+      "path": "metadata/notices/00.txt",
+      "sha256": "72c9dc360cc08705a32e640346a4975c9569916a437f022fc850ae6df1707e7b"
+    },
+    {
+      "bytes": 11357,
+      "path": "metadata/notices/01.txt",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "bytes": 1338,
+      "path": "metadata/notices/02.txt",
+      "sha256": "93a58861a858cc108e6b6b833e08e76e8b2a66339e4a8007c8a5a8c1ff9c40d6"
+    },
+    {
+      "bytes": 1861,
+      "path": "metadata/notices/03.txt",
+      "sha256": "acf0359353f1b3d6bcfdacd3ed15eb3b9c1264bdf4ee7f84552272464e3375ff"
+    },
+    {
+      "bytes": 9108,
+      "path": "metadata/notices/04.txt",
+      "sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab"
+    },
+    {
+      "bytes": 11357,
+      "path": "metadata/notices/05.txt",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "bytes": 1337,
+      "path": "metadata/notices/06.txt",
+      "sha256": "c23327aa7dc5240acce57117302ed02c38886f10fa2e41fb33af86812fd3f88a"
+    }
+  ],
+  "repositories": [
+    {
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "repository": "jiying2007/kws-data",
+      "tree_sha1": "aaaecd0c2191eb34a09fecbf11200660698af32f",
+      "visibility": "public"
+    },
+    {
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "repository": "jiying2007/kws-pipeline",
+      "tree_sha1": "08ff7c8e5be2872f7f45461c9a8c862d3b3d5703",
+      "visibility": "public"
+    }
+  ],
+  "request_count": 155,
+  "schema": "a20-public-input-output-schema-v1"
+}
