@@ -1,0 +1,752 @@
+{
+  "schema": "cosyvoice3.pypi-advisory-snapshot.v1",
+  "exact_input_count": 123,
+  "all_artifact_identities_verified": true,
+  "flagged_distribution_count": 10,
+  "limit": "PyPI advisory snapshot only, not exhaustive security certification. Aliases may duplicate the same issue.",
+  "packages": [
+    {
+      "name": "diffusers",
+      "version": "0.29.0",
+      "metadata_url": "https://pypi.org/pypi/diffusers/0.29.0/json",
+      "metadata_sha256": "d79fdef59287a25681620f8f030aa91f063c5e5519bc108735af1fe3a9d2ce03",
+      "advisories": [
+        {
+          "id": "GHSA-7wx4-6vff-v64p",
+          "aliases": [
+            "CVE-2026-45804",
+            "PYSEC-2026-2446"
+          ],
+          "fixed_in": [
+            "0.38.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-7wx4-6vff-v64p"
+        },
+        {
+          "id": "GHSA-98h9-4798-4q5v",
+          "aliases": [
+            "CVE-2026-44513",
+            "PYSEC-2026-40"
+          ],
+          "fixed_in": [
+            "0.38.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-98h9-4798-4q5v"
+        },
+        {
+          "id": "PYSEC-2026-40",
+          "aliases": [
+            "CVE-2026-44513",
+            "GHSA-98h9-4798-4q5v"
+          ],
+          "fixed_in": [
+            "0.38.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-40"
+        },
+        {
+          "id": "PYSEC-2026-41",
+          "aliases": [
+            "CVE-2026-44827",
+            "GHSA-j7w6-vpvq-j3gm"
+          ],
+          "fixed_in": [
+            "0.38.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-41"
+        },
+        {
+          "id": "PYSEC-2026-2446",
+          "aliases": [
+            "CVE-2026-45804",
+            "GHSA-7wx4-6vff-v64p"
+          ],
+          "fixed_in": [
+            "0.38.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2446"
+        }
+      ]
+    },
+    {
+      "name": "gdown",
+      "version": "5.1.0",
+      "metadata_url": "https://pypi.org/pypi/gdown/5.1.0/json",
+      "metadata_sha256": "89ed18f1bfb53a0dcde9a033008ced2721fd733b2ab26fee611f4f4fc3066930",
+      "advisories": [
+        {
+          "id": "GHSA-76hw-p97h-883f",
+          "aliases": [
+            "CVE-2026-40491",
+            "PYSEC-2026-2158"
+          ],
+          "fixed_in": [
+            "5.2.2"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-76hw-p97h-883f"
+        },
+        {
+          "id": "PYSEC-2026-2158",
+          "aliases": [
+            "CVE-2026-40491",
+            "GHSA-76hw-p97h-883f"
+          ],
+          "fixed_in": [
+            "5.2.2"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2158"
+        }
+      ]
+    },
+    {
+      "name": "hydra-core",
+      "version": "1.3.2",
+      "metadata_url": "https://pypi.org/pypi/hydra-core/1.3.2/json",
+      "metadata_sha256": "b5c99668154fadb7e4d5c9e4978155759dd1ca7d17be95f7d0f27855632d9374",
+      "advisories": [
+        {
+          "id": "GHSA-2cp2-2r3c-7p7r",
+          "aliases": [
+            "CVE-2026-68508"
+          ],
+          "fixed_in": [
+            "1.3.4"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-2cp2-2r3c-7p7r"
+        },
+        {
+          "id": "PYSEC-2026-3850",
+          "aliases": [
+            "CVE-2026-68508",
+            "GHSA-2cp2-2r3c-7p7r"
+          ],
+          "fixed_in": [
+            "1.3.4"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3850"
+        }
+      ]
+    },
+    {
+      "name": "lightning",
+      "version": "2.2.4",
+      "metadata_url": "https://pypi.org/pypi/lightning/2.2.4/json",
+      "metadata_sha256": "dc9e90e658ac9e464e59e5324daff4ca1b3ad67907a831847353bdf614a28dcb",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-3970",
+          "aliases": [
+            "CVE-2024-8019",
+            "GHSA-4cv3-v7pv-rfhf"
+          ],
+          "fixed_in": [
+            "2.4.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3970"
+        },
+        {
+          "id": "PYSEC-2026-3972",
+          "aliases": [
+            "CVE-2026-31221",
+            "GHSA-75m9-98v2-hjpm"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3972"
+        },
+        {
+          "id": "PYSEC-2026-3971",
+          "aliases": [
+            "CVE-2024-8020",
+            "GHSA-98fp-7v67-4v3q"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3971"
+        },
+        {
+          "id": "GHSA-mr7h-w2qc-ffc2",
+          "aliases": [
+            "CVE-2024-5980",
+            "PYSEC-2026-386"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-mr7h-w2qc-ffc2"
+        },
+        {
+          "id": "GHSA-cgwc-qvrx-rf7f",
+          "aliases": [
+            "CVE-2024-5452",
+            "PYSEC-2026-385"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-cgwc-qvrx-rf7f"
+        },
+        {
+          "id": "PYSEC-2026-385",
+          "aliases": [
+            "CVE-2024-5452",
+            "GHSA-cgwc-qvrx-rf7f"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-385"
+        },
+        {
+          "id": "PYSEC-2026-386",
+          "aliases": [
+            "CVE-2024-5980",
+            "GHSA-mr7h-w2qc-ffc2"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-386"
+        },
+        {
+          "id": "PYSEC-2026-3624",
+          "aliases": [
+            "CVE-2026-58659",
+            "GHSA-qqmf-gpg7-g8gw"
+          ],
+          "fixed_in": [
+            "2.6.6"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3624"
+        },
+        {
+          "id": "GHSA-qqmf-gpg7-g8gw",
+          "aliases": [
+            "CVE-2026-58659",
+            "PYSEC-2026-3624",
+            "PYSEC-2026-3967"
+          ],
+          "fixed_in": [
+            "2.6.6"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-qqmf-gpg7-g8gw"
+        }
+      ]
+    },
+    {
+      "name": "modelscope",
+      "version": "1.20.0",
+      "metadata_url": "https://pypi.org/pypi/modelscope/1.20.0/json",
+      "metadata_sha256": "3aa8d6c257afea041549a0ef64b86e2b57e74766d8b0da9aba9464896c9022c7",
+      "advisories": [
+        {
+          "id": "GHSA-fhhq-h4hg-549x",
+          "aliases": [
+            "CVE-2025-51427",
+            "PYSEC-2026-2663"
+          ],
+          "fixed_in": [
+            "1.27.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-fhhq-h4hg-549x"
+        },
+        {
+          "id": "PYSEC-2026-2663",
+          "aliases": [
+            "CVE-2025-51427",
+            "GHSA-fhhq-h4hg-549x"
+          ],
+          "fixed_in": [
+            "1.27.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2663"
+        }
+      ]
+    },
+    {
+      "name": "pyarrow",
+      "version": "18.1.0",
+      "metadata_url": "https://pypi.org/pypi/pyarrow/18.1.0/json",
+      "metadata_sha256": "17d9a99f859a316a0c043232fbfa7385328fe2554596133d43ea8eada553da4b",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-113",
+          "aliases": [
+            "CVE-2026-25087",
+            "GHSA-rgxp-2hwp-jwgg"
+          ],
+          "fixed_in": [
+            "23.0.1"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-113"
+        },
+        {
+          "id": "GHSA-rgxp-2hwp-jwgg",
+          "aliases": [
+            "CVE-2026-25087",
+            "PYSEC-2026-113"
+          ],
+          "fixed_in": [
+            "23.0.1"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-rgxp-2hwp-jwgg"
+        }
+      ]
+    },
+    {
+      "name": "pytorch-lightning",
+      "version": "2.2.4",
+      "metadata_url": "https://pypi.org/pypi/pytorch-lightning/2.2.4/json",
+      "metadata_sha256": "eb0c50ce35763966647dddf7c585411694a81963196fdf64bfb078eea0198656",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-3974",
+          "aliases": [
+            "CVE-2024-5452",
+            "GHSA-cgwc-qvrx-rf7f"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3974"
+        },
+        {
+          "id": "PYSEC-2026-3975",
+          "aliases": [
+            "CVE-2024-5980",
+            "GHSA-mr7h-w2qc-ffc2"
+          ],
+          "fixed_in": [
+            "2.3.3"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3975"
+        },
+        {
+          "id": "GHSA-4cv3-v7pv-rfhf",
+          "aliases": [
+            "CVE-2024-8019",
+            "PYSEC-2026-507"
+          ],
+          "fixed_in": [
+            "2.4.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-4cv3-v7pv-rfhf"
+        },
+        {
+          "id": "GHSA-98fp-7v67-4v3q",
+          "aliases": [
+            "CVE-2024-8020",
+            "PYSEC-2026-1857"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/GHSA-98fp-7v67-4v3q"
+        },
+        {
+          "id": "GHSA-75m9-98v2-hjpm",
+          "aliases": [
+            "CVE-2026-31221",
+            "PYSEC-2026-3043"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/GHSA-75m9-98v2-hjpm"
+        },
+        {
+          "id": "PYSEC-2026-507",
+          "aliases": [
+            "CVE-2024-8019",
+            "GHSA-4cv3-v7pv-rfhf"
+          ],
+          "fixed_in": [
+            "2.4.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-507"
+        },
+        {
+          "id": "PYSEC-2026-1857",
+          "aliases": [
+            "CVE-2024-8020",
+            "GHSA-98fp-7v67-4v3q"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1857"
+        },
+        {
+          "id": "PYSEC-2026-3043",
+          "aliases": [
+            "CVE-2026-31221",
+            "GHSA-75m9-98v2-hjpm"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3043"
+        },
+        {
+          "id": "PYSEC-2026-3967",
+          "aliases": [
+            "CVE-2026-58659",
+            "GHSA-qqmf-gpg7-g8gw",
+            "PYSEC-2026-3624"
+          ],
+          "fixed_in": [
+            "2.6.6"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3967"
+        }
+      ]
+    },
+    {
+      "name": "setuptools",
+      "version": "81.0.0",
+      "metadata_url": "https://pypi.org/pypi/setuptools/81.0.0/json",
+      "metadata_sha256": "ce3206ae684f850db3114d4730434837b5b8c7acda4c1e109cd1d1d6feae837c",
+      "advisories": [
+        {
+          "id": "PYSEC-2026-3447",
+          "aliases": [
+            "CVE-2026-59890",
+            "GHSA-h35f-9h28-mq5c"
+          ],
+          "fixed_in": [
+            "83.0.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3447"
+        },
+        {
+          "id": "GHSA-h35f-9h28-mq5c",
+          "aliases": [
+            "BIT-setuptools-2026-59890",
+            "CVE-2026-59890",
+            "PYSEC-2026-3447"
+          ],
+          "fixed_in": [
+            "83.0.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-h35f-9h28-mq5c"
+        }
+      ]
+    },
+    {
+      "name": "torch",
+      "version": "2.12.1",
+      "metadata_url": "https://pypi.org/pypi/torch/2.12.1/json",
+      "metadata_sha256": "23ce8d668860381bb0a8bf736dc7c3e0fc81e88a09282569599d4b74239e4865",
+      "advisories": [
+        {
+          "id": "GHSA-rrmf-rvhw-rf47",
+          "aliases": [
+            "BIT-pytorch-2025-3000",
+            "CVE-2025-3000",
+            "PYSEC-2025-194"
+          ],
+          "fixed_in": [
+            "2.13.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-rrmf-rvhw-rf47"
+        }
+      ]
+    },
+    {
+      "name": "transformers",
+      "version": "4.51.3",
+      "metadata_url": "https://pypi.org/pypi/transformers/4.51.3/json",
+      "metadata_sha256": "5f1fa87f1897e073f50eb5c1141ba52a41a780fe52d11814282eb3fcfe5f3da2",
+      "advisories": [
+        {
+          "id": "PYSEC-2025-217",
+          "aliases": [
+            "CVE-2025-14929"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-217"
+        },
+        {
+          "id": "GHSA-phhr-52qp-3mj4",
+          "aliases": [
+            "CVE-2025-3777",
+            "PYSEC-2026-1986"
+          ],
+          "fixed_in": [
+            "4.52.1"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-phhr-52qp-3mj4"
+        },
+        {
+          "id": "GHSA-37mw-44qp-f5jm",
+          "aliases": [
+            "CVE-2025-3933",
+            "PYSEC-2026-1977"
+          ],
+          "fixed_in": [
+            "4.52.1"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-37mw-44qp-f5jm"
+        },
+        {
+          "id": "GHSA-9356-575x-2w9m",
+          "aliases": [
+            "CVE-2025-5197",
+            "PYSEC-2026-1983"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-9356-575x-2w9m"
+        },
+        {
+          "id": "GHSA-59p9-h35m-wg4g",
+          "aliases": [
+            "CVE-2025-6638",
+            "PYSEC-2026-1981"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-59p9-h35m-wg4g"
+        },
+        {
+          "id": "GHSA-rcv9-qm8p-9p6j",
+          "aliases": [
+            "CVE-2025-6051",
+            "PYSEC-2026-1988"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-rcv9-qm8p-9p6j"
+        },
+        {
+          "id": "GHSA-4w7r-h757-3r74",
+          "aliases": [
+            "CVE-2025-6921",
+            "PYSEC-2026-1980"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-4w7r-h757-3r74"
+        },
+        {
+          "id": "GHSA-69w3-r845-3855",
+          "aliases": [
+            "CVE-2026-1839",
+            "PYSEC-2026-2288"
+          ],
+          "fixed_in": [
+            "5.0.0rc3"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-69w3-r845-3855"
+        },
+        {
+          "id": "PYSEC-2025-214",
+          "aliases": [
+            "CVE-2025-14926"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-214"
+        },
+        {
+          "id": "PYSEC-2025-218",
+          "aliases": [
+            "CVE-2025-14930"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-218"
+        },
+        {
+          "id": "PYSEC-2025-211",
+          "aliases": [
+            "CVE-2025-14920"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-211"
+        },
+        {
+          "id": "PYSEC-2025-212",
+          "aliases": [
+            "CVE-2025-14921"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-212"
+        },
+        {
+          "id": "PYSEC-2025-213",
+          "aliases": [
+            "CVE-2025-14924"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-213"
+        },
+        {
+          "id": "PYSEC-2025-215",
+          "aliases": [
+            "CVE-2025-14927"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-215"
+        },
+        {
+          "id": "PYSEC-2025-216",
+          "aliases": [
+            "CVE-2025-14928"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2025-216"
+        },
+        {
+          "id": "GHSA-29pf-2h5f-8g72",
+          "aliases": [
+            "CVE-2026-4372",
+            "PYSEC-2026-2289"
+          ],
+          "fixed_in": [
+            "5.3.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-29pf-2h5f-8g72"
+        },
+        {
+          "id": "PYSEC-2026-1977",
+          "aliases": [
+            "CVE-2025-3933",
+            "GHSA-37mw-44qp-f5jm"
+          ],
+          "fixed_in": [
+            "4.52.1"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1977"
+        },
+        {
+          "id": "PYSEC-2026-1981",
+          "aliases": [
+            "CVE-2025-6638",
+            "GHSA-59p9-h35m-wg4g"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1981"
+        },
+        {
+          "id": "PYSEC-2026-1986",
+          "aliases": [
+            "CVE-2025-3777",
+            "GHSA-phhr-52qp-3mj4"
+          ],
+          "fixed_in": [
+            "4.52.1"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1986"
+        },
+        {
+          "id": "PYSEC-2026-1988",
+          "aliases": [
+            "CVE-2025-6051",
+            "GHSA-rcv9-qm8p-9p6j"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1988"
+        },
+        {
+          "id": "PYSEC-2026-1980",
+          "aliases": [
+            "CVE-2025-6921",
+            "GHSA-4w7r-h757-3r74"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1980"
+        },
+        {
+          "id": "PYSEC-2026-1983",
+          "aliases": [
+            "CVE-2025-5197",
+            "GHSA-9356-575x-2w9m"
+          ],
+          "fixed_in": [
+            "4.53.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-1983"
+        },
+        {
+          "id": "PYSEC-2026-2290",
+          "aliases": [
+            "CVE-2026-5241",
+            "GHSA-fgcw-684q-jj6r"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2290"
+        },
+        {
+          "id": "PYSEC-2026-2288",
+          "aliases": [
+            "CVE-2026-1839",
+            "GHSA-69w3-r845-3855"
+          ],
+          "fixed_in": [
+            "5.0.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2288"
+        },
+        {
+          "id": "PYSEC-2026-2289",
+          "aliases": [
+            "CVE-2026-4372",
+            "GHSA-29pf-2h5f-8g72"
+          ],
+          "fixed_in": [
+            "5.3.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-2289"
+        },
+        {
+          "id": "GHSA-fgcw-684q-jj6r",
+          "aliases": [
+            "CVE-2026-5241",
+            "PYSEC-2026-2290"
+          ],
+          "fixed_in": [
+            "5.5.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-fgcw-684q-jj6r"
+        },
+        {
+          "id": "GHSA-x9r9-c232-4q39",
+          "aliases": [
+            "CVE-2026-80047"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/GHSA-x9r9-c232-4q39"
+        },
+        {
+          "id": "GHSA-xrqw-3rrv-vx5w",
+          "aliases": [
+            "CVE-2026-9856"
+          ],
+          "fixed_in": [
+            "5.10.0"
+          ],
+          "link": "https://osv.dev/vulnerability/GHSA-xrqw-3rrv-vx5w"
+        },
+        {
+          "id": "PYSEC-2026-3929",
+          "aliases": [
+            "CVE-2026-9856",
+            "GHSA-xrqw-3rrv-vx5w"
+          ],
+          "fixed_in": [
+            "5.10.0"
+          ],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-3929"
+        },
+        {
+          "id": "PYSEC-2026-4174",
+          "aliases": [
+            "CVE-2026-80047",
+            "GHSA-x9r9-c232-4q39"
+          ],
+          "fixed_in": [],
+          "link": "https://osv.dev/vulnerability/PYSEC-2026-4174"
+        }
+      ]
+    }
+  ]
+}

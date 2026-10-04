@@ -1,0 +1,626 @@
+{
+  "schema": "cosyvoice3-cross-voice-fixed30-v1",
+  "source": {
+    "repository": "https://github.com/QwenAudio/CosyVoice",
+    "commit": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+    "matcha_submodule_commit": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+    "code_license": "Apache-2.0",
+    "model_license": "Apache-2.0"
+  },
+  "weights": {
+    "repo_id": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+    "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+    "files": [
+      {
+        "rfilename": "CosyVoice-BlankEN/config.json",
+        "blobId": "463b055262b6c66c4629a74a4b300bfe2ed31d3c",
+        "size": 659,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/config.json"
+      },
+      {
+        "rfilename": "CosyVoice-BlankEN/generation_config.json",
+        "blobId": "dfc11073787daf1b0f9c0f1499487ab5f4c93738",
+        "size": 242,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/generation_config.json"
+      },
+      {
+        "rfilename": "CosyVoice-BlankEN/merges.txt",
+        "blobId": "90d3d82d027eadcc6a5e77c38eb82d43fc51b53b",
+        "size": 1402109,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/merges.txt"
+      },
+      {
+        "rfilename": "CosyVoice-BlankEN/model.safetensors",
+        "blobId": "3dff8ababe3dbf3bd7a556f5f143503ab2ef3c98",
+        "size": 988097824,
+        "lfs": {
+          "sha256": "130282af0dfa9fe5840737cc49a0d339d06075f83c5a315c3372c9a0740d0b96",
+          "size": 988097824,
+          "pointerSize": 134
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/model.safetensors"
+      },
+      {
+        "rfilename": "CosyVoice-BlankEN/tokenizer_config.json",
+        "blobId": "ff55d7b9eb1384e5d4d7e75dc0f564c1a8833d6e",
+        "size": 1287,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/tokenizer_config.json"
+      },
+      {
+        "rfilename": "CosyVoice-BlankEN/vocab.json",
+        "blobId": "4783fe10ac3adce15ac8f358ef5462739852c569",
+        "size": 2776833,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/CosyVoice-BlankEN/vocab.json"
+      },
+      {
+        "rfilename": "campplus.onnx",
+        "blobId": "7b08523b2e28e437cfb1a0312723a5ab0bac287e",
+        "size": 28303423,
+        "lfs": {
+          "sha256": "a6ac6a63997761ae2997373e2ee1c47040854b4b759ea41ec48e4e42df0f4d73",
+          "size": 28303423,
+          "pointerSize": 133
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/campplus.onnx"
+      },
+      {
+        "rfilename": "cosyvoice3.yaml",
+        "blobId": "2eda7e5007d99f6b17fbe7bd751cf54e3cde29ea",
+        "size": 6934,
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/cosyvoice3.yaml"
+      },
+      {
+        "rfilename": "flow.pt",
+        "blobId": "074b96e9cfbf3e511067528bde8e76a308f94904",
+        "size": 1329116148,
+        "lfs": {
+          "sha256": "a6fab32a7825e5b0bc855ddd948f8db9370b0a786fbc249caa4595e95b608e4b",
+          "size": 1329116148,
+          "pointerSize": 135
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/flow.pt"
+      },
+      {
+        "rfilename": "hift.pt",
+        "blobId": "c5088ac4f7db1314a4efe06ca60e9f47ea2a1900",
+        "size": 83202622,
+        "lfs": {
+          "sha256": "b279d7641eb97ae55b3b540cfba4f953c26492a2df758328a89a4d007ab87a65",
+          "size": 83202622,
+          "pointerSize": 133
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/hift.pt"
+      },
+      {
+        "rfilename": "llm.pt",
+        "blobId": "d9813d1f616910e9117d612e6e725b0350f98115",
+        "size": 2024669519,
+        "lfs": {
+          "sha256": "69f43bd545131c30e98947fb360ea8b4dc9916d8e83dded7757c7ea4f5a24970",
+          "size": 2024669519,
+          "pointerSize": 135
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/llm.pt"
+      },
+      {
+        "rfilename": "speech_tokenizer_v3.onnx",
+        "blobId": "91daac1b6f0bbcb54b8885dc7a1cbf054de22f94",
+        "size": 969451503,
+        "lfs": {
+          "sha256": "23236a74175dbdda47afc66dbadd5bcb41303c467a57c261cb8539ad9db9208d",
+          "size": 969451503,
+          "pointerSize": 134
+        },
+        "source_url": "https://huggingface.co/FunAudioLLM/Fun-CosyVoice3-0.5B-2512/resolve/29e01c4e8d000f4bcd70751be16fa94bf3d85a18/speech_tokenizer_v3.onnx"
+      }
+    ],
+    "total_bytes": 5427029103
+  },
+  "references": [
+    {
+      "stock_voice": "Eric",
+      "public_repository": "jiying2007/kws-data",
+      "commit": "d9a1f3171bceae45908bc8ac84045d3bca23f43f",
+      "repository_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-eric.wav",
+      "blob_sha1": "482c5ca63a4d9380bcac2eca141837eca16d0170",
+      "sha256": "eb80e8a3461b14ee4cb9990651e3e55df2509fffce2675f4b464330035de0e60",
+      "pcm_sha256": "614df5de255d0609ef1894f1ed085d4a5c32100ce3919dee6320e4ba5d7f20e8",
+      "bytes": 38444,
+      "frames": 19200,
+      "sample_rate_hz": 16000,
+      "duration_seconds": 1.2,
+      "text": "你好小窝",
+      "prompt_text": "You are a helpful assistant.<|endofprompt|>你好小窝",
+      "reference_file": "eric.wav",
+      "provenance": "Existing public Qwen3 0.6B stock-synthetic human-reviewed reference; historically exposed; short conditioning unqualified"
+    },
+    {
+      "stock_voice": "Serena",
+      "public_repository": "jiying2007/kws-data",
+      "commit": "d9a1f3171bceae45908bc8ac84045d3bca23f43f",
+      "repository_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-serena.wav",
+      "blob_sha1": "6c65a4e3342b876e9a6ff402dc29a4744ae72741",
+      "sha256": "d667bc5f7652732bb7ade995d5b8977233d16a34eb89ec69b644ac9251dff3e7",
+      "pcm_sha256": "d3c7fa79aaeb273a93379637cdf1d93b8ce4f5af7d7983bdf974dfd966b94fa4",
+      "bytes": 56364,
+      "frames": 28160,
+      "sample_rate_hz": 16000,
+      "duration_seconds": 1.76,
+      "text": "你好小窝",
+      "prompt_text": "You are a helpful assistant.<|endofprompt|>你好小窝",
+      "reference_file": "serena.wav",
+      "provenance": "Existing public Qwen3 0.6B stock-synthetic human-reviewed reference; historically exposed; short conditioning unqualified"
+    },
+    {
+      "stock_voice": "Vivian",
+      "public_repository": "jiying2007/kws-data",
+      "commit": "d9a1f3171bceae45908bc8ac84045d3bca23f43f",
+      "repository_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-vivian.wav",
+      "blob_sha1": "20d001de2f0ba091c987dd4469306545c1cd0024",
+      "sha256": "db85999b9d7a36f2a8633a58e5279c2ed5dda8f61f8bf7cf45c72beef6871261",
+      "pcm_sha256": "4d5db9285d3bd10fae13345b4ccd3ad081b748257eff03d1c01e211865b7926d",
+      "bytes": 58924,
+      "frames": 29440,
+      "sample_rate_hz": 16000,
+      "duration_seconds": 1.84,
+      "text": "你好小窝",
+      "prompt_text": "You are a helpful assistant.<|endofprompt|>你好小窝",
+      "reference_file": "vivian.wav",
+      "provenance": "Existing public Qwen3 0.6B stock-synthetic human-reviewed reference; historically exposed; short conditioning unqualified"
+    },
+    {
+      "stock_voice": "Uncle_Fu",
+      "public_repository": "jiying2007/kws-data",
+      "commit": "d9a1f3171bceae45908bc8ac84045d3bca23f43f",
+      "repository_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-uncle_fu.wav",
+      "blob_sha1": "12f0919ee229d656c63ffe6530865df42bb20f19",
+      "sha256": "b6902e14b699ca504f34d7b4bdba66a4c9805a0fd3403f5633cbb891872d9d51",
+      "pcm_sha256": "61dcec8fc60753686a363a3ace40109a26df37cf556733c046b8c6cbc757ce02",
+      "bytes": 58924,
+      "frames": 29440,
+      "sample_rate_hz": 16000,
+      "duration_seconds": 1.84,
+      "text": "你好小窝",
+      "prompt_text": "You are a helpful assistant.<|endofprompt|>你好小窝",
+      "reference_file": "uncle_fu.wav",
+      "provenance": "Existing public Qwen3 0.6B stock-synthetic human-reviewed reference; historically exposed; short conditioning unqualified"
+    },
+    {
+      "stock_voice": "Dylan",
+      "public_repository": "jiying2007/kws-data",
+      "commit": "d9a1f3171bceae45908bc8ac84045d3bca23f43f",
+      "repository_path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-dylan.wav",
+      "blob_sha1": "1e805f3dac7e734d90380dbba3d4ecc9bf829166",
+      "sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "pcm_sha256": "f2c212d2a54f124535a6ac7ce6e2fc272a99dd878030c8765064dca8f30ec037",
+      "bytes": 61484,
+      "frames": 30720,
+      "sample_rate_hz": 16000,
+      "duration_seconds": 1.92,
+      "text": "你好小窝",
+      "prompt_text": "You are a helpful assistant.<|endofprompt|>你好小窝",
+      "reference_file": "dylan.wav",
+      "provenance": "Existing public Qwen3 0.6B stock-synthetic human-reviewed reference; historically exposed; short conditioning unqualified"
+    }
+  ],
+  "rows": [
+    {
+      "clip_id": "cv30-963e8a82e801f800",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "k1",
+      "intended_text": "你好小窝",
+      "intended_keyword_id": 1,
+      "seed": 610401,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-a27d486bf3011cce",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "k2",
+      "intended_text": "小窝小窝",
+      "intended_keyword_id": 2,
+      "seed": 610402,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-9bf0442a59aa1ed9",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "repeat_nihao",
+      "intended_text": "你好你好",
+      "intended_keyword_id": 0,
+      "seed": 610403,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-bf5567786efe5d37",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "single_xiaowo",
+      "intended_text": "小窝",
+      "intended_keyword_id": 0,
+      "seed": 610404,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-e40742c3b7807808",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "k1_wu_foil",
+      "intended_text": "你好小屋",
+      "intended_keyword_id": 0,
+      "seed": 610405,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-ea9ec4f1914de7a1",
+      "stock_reference_voice": "Eric",
+      "split": "train",
+      "phrase_id": "k2_wu_foil",
+      "intended_text": "小屋小屋",
+      "intended_keyword_id": 0,
+      "seed": 610406,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-44f42bfe7e6c8cff",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "k1",
+      "intended_text": "你好小窝",
+      "intended_keyword_id": 1,
+      "seed": 610407,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-63e439ef22c44da3",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "k2",
+      "intended_text": "小窝小窝",
+      "intended_keyword_id": 2,
+      "seed": 610408,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-d47372ae6c8d55a3",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "repeat_nihao",
+      "intended_text": "你好你好",
+      "intended_keyword_id": 0,
+      "seed": 610409,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-702fdac8f0cd2a55",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "single_xiaowo",
+      "intended_text": "小窝",
+      "intended_keyword_id": 0,
+      "seed": 610410,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-6d96f1531378529f",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "k1_wu_foil",
+      "intended_text": "你好小屋",
+      "intended_keyword_id": 0,
+      "seed": 610411,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-f0fb4689ef999ad7",
+      "stock_reference_voice": "Serena",
+      "split": "train",
+      "phrase_id": "k2_wu_foil",
+      "intended_text": "小屋小屋",
+      "intended_keyword_id": 0,
+      "seed": 610412,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-5afb9ad97dbd1fd6",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "k1",
+      "intended_text": "你好小窝",
+      "intended_keyword_id": 1,
+      "seed": 610413,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-63941b3d09d895e7",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "k2",
+      "intended_text": "小窝小窝",
+      "intended_keyword_id": 2,
+      "seed": 610414,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-dbe5f5f6b95818c3",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "repeat_nihao",
+      "intended_text": "你好你好",
+      "intended_keyword_id": 0,
+      "seed": 610415,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-0f8e3a0e467d9149",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "single_xiaowo",
+      "intended_text": "小窝",
+      "intended_keyword_id": 0,
+      "seed": 610416,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-9bc4956f2e87322e",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "k1_wu_foil",
+      "intended_text": "你好小屋",
+      "intended_keyword_id": 0,
+      "seed": 610417,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-e147dcf374fa660c",
+      "stock_reference_voice": "Vivian",
+      "split": "train",
+      "phrase_id": "k2_wu_foil",
+      "intended_text": "小屋小屋",
+      "intended_keyword_id": 0,
+      "seed": 610418,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-a408689e8c523e2e",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "k1",
+      "intended_text": "你好小窝",
+      "intended_keyword_id": 1,
+      "seed": 610419,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-90cd72fd652f9bef",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "k2",
+      "intended_text": "小窝小窝",
+      "intended_keyword_id": 2,
+      "seed": 610420,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-94765e1dc9767a97",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "repeat_nihao",
+      "intended_text": "你好你好",
+      "intended_keyword_id": 0,
+      "seed": 610421,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-399f2a742c267a74",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "single_xiaowo",
+      "intended_text": "小窝",
+      "intended_keyword_id": 0,
+      "seed": 610422,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-dbcdf9beb8cf511c",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "k1_wu_foil",
+      "intended_text": "你好小屋",
+      "intended_keyword_id": 0,
+      "seed": 610423,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-bf92bed164ccb28f",
+      "stock_reference_voice": "Uncle_Fu",
+      "split": "development",
+      "phrase_id": "k2_wu_foil",
+      "intended_text": "小屋小屋",
+      "intended_keyword_id": 0,
+      "seed": 610424,
+      "attempt_limit": 1,
+      "artifact_group": "train-dev-24"
+    },
+    {
+      "clip_id": "cv30-6d9d7324ce7f7079",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "k1",
+      "intended_text": "你好小窝",
+      "intended_keyword_id": 1,
+      "seed": 610425,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    },
+    {
+      "clip_id": "cv30-adb94d5f7fb77b29",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "k2",
+      "intended_text": "小窝小窝",
+      "intended_keyword_id": 2,
+      "seed": 610426,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    },
+    {
+      "clip_id": "cv30-33ffdcc4db24cf90",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "repeat_nihao",
+      "intended_text": "你好你好",
+      "intended_keyword_id": 0,
+      "seed": 610427,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    },
+    {
+      "clip_id": "cv30-d73c2339b5d9546d",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "single_xiaowo",
+      "intended_text": "小窝",
+      "intended_keyword_id": 0,
+      "seed": 610428,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    },
+    {
+      "clip_id": "cv30-1ffd2254512e9ff6",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "k1_wu_foil",
+      "intended_text": "你好小屋",
+      "intended_keyword_id": 0,
+      "seed": 610429,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    },
+    {
+      "clip_id": "cv30-b08c9850b1d5757f",
+      "stock_reference_voice": "Dylan",
+      "split": "sealed_recording_holdout",
+      "phrase_id": "k2_wu_foil",
+      "intended_text": "小屋小屋",
+      "intended_keyword_id": 0,
+      "seed": 610430,
+      "attempt_limit": 1,
+      "artifact_group": "sealed-six"
+    }
+  ],
+  "design": {
+    "maximum_generated_clips": 30,
+    "seeds_per_row": 1,
+    "fixed_reference_count": 5,
+    "conditions": [
+      "plain"
+    ],
+    "new_recording_holdout_count": 6,
+    "all_source_voice_identities_historically_exposed": true,
+    "no_training_admission": true,
+    "no_asr_or_kws": true,
+    "no_retry_for_better_sound": true
+  },
+  "inference": {
+    "api": "AutoModel(...).inference_zero_shot",
+    "device": "cpu",
+    "constructor_kwargs": {
+      "load_trt": false,
+      "load_vllm": false,
+      "fp16": false
+    },
+    "fp16": false,
+    "jit": "not used; load_jit is not an accepted CosyVoice3 constructor keyword",
+    "load_trt": false,
+    "load_vllm": false,
+    "stream": false,
+    "speed": 1.0,
+    "text_frontend": false,
+    "allowed_special": "all",
+    "sampling": {
+      "implementation": "ras_sampling",
+      "top_p": 0.8,
+      "top_k": 25,
+      "win_size": 10,
+      "tau_r": 0.1
+    },
+    "seed_policy": "Reset random, NumPy and Torch immediately before each fixed plain row after model/reference initialization; unique seeds610401 through610430, no variants or retries",
+    "torch_threads": 4,
+    "ort_threads": 1,
+    "prompt_features": "One stock synthetic reference cache active at a time; plain zero-shot only; no warmup synthesis",
+    "offline_after_acquisition": true,
+    "trust_remote_code": false,
+    "asr_models_loaded_during_generation": false
+  },
+  "resource_gates": {
+    "model_payload_bytes": 5427029103,
+    "model_allocated_bytes_at_4096_block": 5427060736,
+    "output_and_receipt_budget_bytes": 134217728,
+    "untouched_free_disk_reserve_bytes": 1073741824,
+    "minimum_free_after_runtime_and_source_before_model_bytes": 6635020288,
+    "install_staging": "Install fully pinned runtime before model acquisition; no persistent pip or Actions cache; sequential verified direct-to-final-filesystem model .part + atomic rename; no full snapshot duplicates",
+    "total_new_job_peak_formula": "max(runtime_install_peak, installed_runtime_plus_source_and_reference_bytes + 6,635,020,288). Resolve/measurably enforce runtime_install_peak before model admission; no asserted all-in package closure yet.",
+    "conservative_total_ceiling_if_14GB_decimal": 14000000000,
+    "runtime_and_source_max_under_that_ceiling_bytes": 7364979712,
+    "memory_process_tree_rss_limit_bytes": 12884901888,
+    "minimum_host_available_memory_bytes": 2147483648,
+    "memory_status": "Historical12call sampled RSS8331935744 bytes; proposed30 not measured",
+    "job_wall_limit_minutes": 60,
+    "per_clip_wall_limit_seconds": 300,
+    "model_startup_limit_seconds": 900,
+    "accepted_max_output_duration_seconds": 20,
+    "tmpfs_not_extra_disk": true,
+    "controller_work_limit_seconds": 3300,
+    "cpu_budget_scope": "At most4vCPU*60min theoretical14400CPU-seconds capacity; no aggregate process CPU hardcap"
+  },
+  "publication": {
+    "repository": "jiying2007/kws-pipeline",
+    "visibility": "public",
+    "artifact_retention_days": 1,
+    "combined_artifact_max_bytes": 134217728,
+    "audio_public_audience": "Signed-in GitHub users with read access to public repository",
+    "sealed_means": "procedurally unviewed by model-selection operators; not private or encrypted",
+    "no_private_audio_or_real_person_reference": true
+  },
+  "initial_listening_clip_ids": [
+    "cv30-963e8a82e801f800",
+    "cv30-a27d486bf3011cce",
+    "cv30-44f42bfe7e6c8cff",
+    "cv30-63e439ef22c44da3"
+  ],
+  "rights": {
+    "qwen_model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "qwen_revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+    "model_code_license": "Apache-2.0",
+    "specific_cross_generator_output_grant": "not-explicit-in-inspected-official-sources",
+    "explicit_cross_generator_prohibition_found": false,
+    "commercial_output_rights": "not-established"
+  }
+}
