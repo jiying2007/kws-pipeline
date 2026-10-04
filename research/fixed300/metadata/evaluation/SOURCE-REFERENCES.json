@@ -1,0 +1,61 @@
+{
+  "contracts": [
+    {
+      "bytes": 278353,
+      "contract_id": "endpoint-call-authority",
+      "sha256": "a364ad82c6b6b61ea8b53485fbb21123f6592cc0db4a1862a2fe766aa40e6347"
+    },
+    {
+      "bytes": 24462,
+      "contract_id": "endpoint-acceptance-authority",
+      "sha256": "2f58a4a1a26c64a69c7a92f37d6bd7f528ad1cbb8523723acbde915fa3a8d5c1"
+    },
+    {
+      "bytes": 53784,
+      "contract_id": "historical-event-authority",
+      "sha256": "59702fd6dc6d2746a3c9798eecf0a23c56bc57b2059306715ae55f712336c4c3"
+    },
+    {
+      "bytes": 45721,
+      "contract_id": "source-identity-authority",
+      "sha256": "6b09a7d42f82a8d9dc7a5a2f34802ad33ebde84abb7a88d8e3f45810cf588c7d"
+    },
+    {
+      "bytes": 1039,
+      "contract_id": "endpoint-output-bound",
+      "sha256": "752b14e75d57ea4772e08976f8ee6f883b65b62ec3236c372fd3d4e238875571"
+    },
+    {
+      "bytes": 9272,
+      "contract_id": "endpoint-method-authority",
+      "sha256": "a9f3404e9f094e6c011654022425ce858534ce2b35b5139f5637cc3f9cb2377d"
+    },
+    {
+      "bytes": 513,
+      "contract_id": "endpoint-static-evidence",
+      "sha256": "5f8341ce896e44b571020cf0ac4a528d361e3446f47e5e111164b6548242be29"
+    },
+    {
+      "bytes": 15889,
+      "contract_id": "numeric-source-authority",
+      "sha256": "657148538b41795f20944f0a2067b37dbe7890e37d387b5104f6db22cbacb8d6"
+    },
+    {
+      "bytes": 5505,
+      "contract_id": "numeric-execution-authority",
+      "sha256": "85615d5269e8a920a172ba37adef8563c763ca434c007032a77f11c249c8e2db"
+    },
+    {
+      "bytes": 11394,
+      "contract_id": "paired-runtime-source-authority",
+      "sha256": "910775dfa3df1fcb36c5975ed892b7bb57c4a15e1d0df58574b12ef6eb4e106a"
+    },
+    {
+      "bytes": 2124,
+      "contract_id": "paired-runtime-execution-authority",
+      "sha256": "cf577ec0559fc5c1ee3ae5db8cf09ed2109873395ac9654eff88633dfefdb91d"
+    }
+  ],
+  "schema": "a20-public-contract-digests-v1",
+  "scope": "Digest commitments only. Complete execution and historical trace contracts remain separately held; this summary is not an endpoint execution input."
+}

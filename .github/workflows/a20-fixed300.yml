@@ -1,0 +1,50 @@
+name: a20-fixed300-single-candidate
+run-name: a20-fixed300-single-candidate-v1
+on:
+  push:
+    branches: [research/a20-fixed300-single-candidate-v1]
+    paths:
+      - '.github/workflows/a20-fixed300.yml'
+      - 'research/fixed300/**'
+permissions:
+  contents: read
+concurrency:
+  group: a20-fixed300-single-candidate-v1
+  cancel-in-progress: false
+jobs:
+  fixed300:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+          sparse-checkout: |
+            research/fixed300
+            .github/workflows
+      - name: Pure fixtures only
+        run: python3 -B -m unittest discover -s research/fixed300/tests -v
+      - name: One exact approved fixed300 attempt
+        run: python3 -B research/fixed300/src/launch_once.py --execute-release research/fixed300/EXECUTION-RELEASE.json
+      - name: Preserve saved-only failure evidence
+        if: always()
+        run: python3 -B research/fixed300/src/finish_saved_only.py
+      - name: Verify exact publication pair
+        id: publication_check
+        if: always() && hashFiles('research/fixed300/work/PUBLICATION-READY.json') != ''
+        run: python3 -B research/fixed300/src/verify_publication.py
+      - name: Retain complete raw evidence and the terminal candidate
+        if: always() && steps.publication_check.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a20-fixed300-single-candidate-v1
+          path: |
+            research/fixed300/publication/a20-fixed300-artifact.tar.gz
+            research/fixed300/publication/a20-fixed300-artifact.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+          overwrite: false
+          include-hidden-files: false
