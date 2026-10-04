@@ -1,6 +1,6 @@
 {
-  "mode": "disabled",
-  "reviewed_parent_sha": null,
-  "payload_sha256": null,
+  "mode": "run-fixed30-once",
+  "reviewed_parent_sha": "525ed66457e40db66cca2ab778f58b54604a4797",
+  "payload_sha256": "59945c5c68929992b76db825ae47757a46ebdfe705a243efbef050744ed408d9",
   "batch_id": "cosy30-cross-voice-20261004-v1"
 }
