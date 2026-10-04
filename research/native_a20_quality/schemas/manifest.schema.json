@@ -1,0 +1,598 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native A20 research manifest",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "manifest_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "protocol": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "input_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "state_policy": {
+          "type": "string",
+          "const": "reset_per_asset_preserve_state_within_asset"
+        },
+        "model_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decoder_config_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "split_frozen_before_predictions": {
+          "type": "boolean"
+        },
+        "heldout_open_authorized": {
+          "type": "boolean"
+        },
+        "matching": {
+          "type": "string",
+          "const": "disjoint_half_open_event_windows_first_correct"
+        },
+        "confidence": {
+          "type": "number",
+          "exclusiveMinimum": 0.5,
+          "exclusiveMaximum": 1
+        },
+        "iid_binomial_assumption": {
+          "type": "boolean"
+        },
+        "stationary_poisson_assumption": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "sha256",
+        "input_order",
+        "state_policy",
+        "model_sha256",
+        "source_sha256",
+        "decoder_config_sha256",
+        "split_frozen_before_predictions",
+        "heldout_open_authorized",
+        "matching",
+        "confidence",
+        "iid_binomial_assumption",
+        "stationary_poisson_assumption"
+      ],
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "logical_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wav_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pcm_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sample_rate_hz": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "frames": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "duration_s": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string",
+                "minLength": 1
+              },
+              "family": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tier": {
+                "type": "string",
+                "enum": [
+                  "synthetic",
+                  "open_human",
+                  "open_environment",
+                  "numeric_fixture",
+                  "unknown"
+                ]
+              },
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "speaker": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "generator": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "revision": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "voice": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "evidence_ref": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "evidence_sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "seed": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "prompt_family": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "model",
+                      "revision",
+                      "voice",
+                      "evidence_ref",
+                      "evidence_sha256",
+                      "seed",
+                      "prompt_family"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "session": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "room": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "device": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "afe": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "dataset",
+              "family",
+              "tier",
+              "evidence_ref",
+              "evidence_sha256",
+              "speaker",
+              "generator",
+              "session",
+              "room",
+              "device",
+              "afe"
+            ],
+            "additionalProperties": false
+          },
+          "license": {
+            "type": "object",
+            "properties": {
+              "identifier": {
+                "type": "string",
+                "minLength": 1
+              },
+              "evidence_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "review_status": {
+                "type": "string",
+                "enum": [
+                  "reviewed_research_scope",
+                  "unreviewed",
+                  "unknown"
+                ]
+              },
+              "approved_roles": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "inventory",
+                    "train",
+                    "dev",
+                    "heldout"
+                  ]
+                },
+                "uniqueItems": true
+              },
+              "commercial_output_license": {
+                "type": "string",
+                "enum": [
+                  "not_established",
+                  "reviewed_allowed",
+                  "reviewed_restricted",
+                  "not_applicable"
+                ]
+              }
+            },
+            "required": [
+              "identifier",
+              "evidence_ref",
+              "review_status",
+              "approved_roles",
+              "commercial_output_license"
+            ],
+            "additionalProperties": false
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "inventory",
+              "train",
+              "dev",
+              "heldout"
+            ]
+          },
+          "label_strength": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "human_confirmed",
+              "weak",
+              "unknown"
+            ]
+          },
+          "label_binding": {
+            "type": "string",
+            "enum": [
+              "source_bound",
+              "source_unknown",
+              "not_publicly_bound"
+            ]
+          },
+          "label_authority": {
+            "type": "string",
+            "minLength": 1
+          },
+          "declared_keywords": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "exposures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "historical_training",
+                "model_selection",
+                "threshold_selection",
+                "endpoint_selection",
+                "results_observed"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "exposure_review_complete": {
+            "type": "boolean"
+          },
+          "leakage_group": {
+            "type": "string",
+            "minLength": 1
+          },
+          "derivation_family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "strata": {
+            "type": "object",
+            "properties": {
+              "noise": {
+                "type": "string",
+                "minLength": 1
+              },
+              "far_field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hard_negative": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "noise",
+              "far_field",
+              "hard_negative"
+            ],
+            "additionalProperties": false
+          },
+          "continuous": {
+            "type": "boolean"
+          },
+          "replayed_or_looped": {
+            "type": "boolean"
+          },
+          "positive_events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "keyword": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start_s": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "end_s": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "truth_evidence_ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "word_tail_s": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "word_tail_evidence_ref": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "keyword",
+                "start_s",
+                "end_s",
+                "truth_evidence_ref",
+                "word_tail_s",
+                "word_tail_evidence_ref"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "negative_intervals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "start_s": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "end_s": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "truth_evidence_ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "verified_absent_keywords": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "start_s",
+                "end_s",
+                "truth_evidence_ref",
+                "verified_absent_keywords"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "logical_path",
+          "wav_sha256",
+          "pcm_sha256",
+          "sample_rate_hz",
+          "frames",
+          "duration_s",
+          "source",
+          "license",
+          "role",
+          "label_strength",
+          "label_binding",
+          "label_authority",
+          "declared_keywords",
+          "exposures",
+          "exposure_review_complete",
+          "leakage_group",
+          "derivation_family",
+          "strata",
+          "continuous",
+          "replayed_or_looped",
+          "positive_events",
+          "negative_intervals"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "keywords",
+    "protocol",
+    "assets"
+  ],
+  "additionalProperties": false
+}
