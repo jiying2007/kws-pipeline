@@ -1,0 +1,117 @@
+{
+  "authority_extension": "Same canonical PCM and mathematical FSMN/softmax/decoder authorities and gates; new exact FP32 weights. Weight-dependent Decimal80 interval propagation and local gamma/mixed bounds recomputed by unchanged functions. No old weight-dependent bound copied.",
+  "budget_basis": "Reuse prior fixed8 geometry/operator count and conservative existing output allocations; no compression savings assumed. Numerical stage separate from training300CPU/600wall; no runtime regression or device budget claim.",
+  "build": {
+    "candidate_loader": "unchanged hash-checking loader; generated distinct identity header",
+    "limits": {
+      "AS_per_process_bytes": 2147483648,
+      "aggregate_CPU_seconds": 60,
+      "enforcement": "single supervised build worker, same owned process group for all compiler descendants; live aggregateCPU/wall/RSS/thread/child limits and cleanup, inherited remaining hard CPU, no26 independent budgets",
+      "file_bytes": 20971520,
+      "output_bytes": 33554432,
+      "owned_processes_max": 4,
+      "wall_seconds": 120
+    },
+    "model_initializations": 0,
+    "model_steps": 0,
+    "numerical_PARITY_claim": false,
+    "original_and_candidate": "same9 runtime C sources/compiler flags/toolchain/ABI; only identity_header/weights differ",
+    "resources": "same compiled sizeof/offsetof-only resource probe, exact JSON equality",
+    "source": "vendor/runtime from verified selected fft64 reconstruction"
+  },
+  "calls": {
+    "actual_audio_calls": 0,
+    "diagnostic_cmvn_helpers": 230,
+    "extra_softmax_helpers": 230,
+    "fixture_regeneration": 0,
+    "internal_decoder_rows": "record actual0..230, separate",
+    "local_affine_rows": 2760,
+    "local_candidate_calls": 0,
+    "local_memory_rows": 920,
+    "local_weighted_products": 89466320,
+    "native_application_feeds": 55,
+    "native_canonical_calls": 34,
+    "native_fbank_rows": 702,
+    "native_finishes": 16,
+    "native_model_steps": 230,
+    "native_resets": 16,
+    "native_streams": 16,
+    "reference_canonical_calls": 17,
+    "reference_fbank_rows": 351,
+    "reference_model_rows": 115,
+    "reference_nonempty_sequences": 7,
+    "reference_streams": 8,
+    "torch_model_calls": 0
+  },
+  "candidate": "exact independently audited fixed-step300 terminal state only",
+  "export": {
+    "checkpoint": "approved exact hash then bounded ZIP_STORED6MiB/160members, restricted inert pickle storage descriptors only; no Torch or arbitrary globals",
+    "cmvn": "original800 floats exactly fixed",
+    "limits": {
+      "AS_bytes": 2147483648,
+      "cpu_seconds": 30,
+      "file_bytes": 20971520,
+      "total_output_bytes": 2097152,
+      "wall_seconds": 60
+    },
+    "model_calls": 0,
+    "payload_bytes": 1565280,
+    "proof": "independent checkpoint storage reconstruction equals training saved payload byte for byte",
+    "state_hash": "nameUTF8 then little endian tensor bytes in exact order",
+    "tensors": 30
+  },
+  "failure": "stop current single attempt; preserve partial evidence/count uncertainty; never resume/retry or widen gate",
+  "gates": {
+    "cmvn_atol": "2e-4",
+    "event_discrete_fields": "exact versus same-weight canonical decoder",
+    "event_score_atol": "1e-5",
+    "fbank_atol": "1e-3",
+    "local": "existing same-input outward gamma and mixed accumulation checks, independently recomputed for candidate weights",
+    "partition": "all whole/ragged native tensors/cache/decoder state bitexact",
+    "probability_atol": "1e-5",
+    "raw_atol": "1e-4",
+    "raw_rtol": "1e-5",
+    "rowsum_atol": "1e-5",
+    "splice_atol": "1e-3",
+    "uncertainty_cap": "1e-20; unresolved rounding STOP"
+  },
+  "gating_chain": [
+    "training terminal saved-output audit and private readback PASS",
+    "separate export approval: zero-model independent checkpoint/payload validation",
+    "separate reviewed build approval: original/candidate matched compile, zero-model size probes",
+    "separate reference phase GO:115 mathematical rows; persist/audit complete reference before candidate library load",
+    "separate native phase GO:230 rows and unchanged hard gates; persist/audit report and resources",
+    "only then separate paired acoustic/resource GO; no stage launches another"
+  ],
+  "old_original_A20_contract_sha256": "98af0084343e0844a382b089d148f576502e1ebbbf65f7c36a57eefa4b513ac9",
+  "original_verdicts_inherited": false,
+  "output": "all per-case reference/native arrays, interval certificates, local bounds and complete event/cache/partition evidence; bounded private logs, no automatic public upload",
+  "phase_budgets": {
+    "native": {
+      "AS_and_RSS_bytes": 2147483648,
+      "cpu_seconds": 600,
+      "max_file_bytes": 20971520,
+      "output_bytes": 59856640,
+      "wall_seconds": 900
+    },
+    "reference": {
+      "AS_and_RSS_bytes": 2147483648,
+      "cpu_seconds": 600,
+      "max_file_bytes": 20971520,
+      "output_bytes": 44032024,
+      "wall_seconds": 900
+    }
+  },
+  "qualification": "reused/exposed non-acoustic fixtures only; no fresh real heldout/generalization/SSC305/FAR/FRR/word-tail claim",
+  "runtime": {
+    "all_hashes_required_before_each_phase": true,
+    "historical_inventory_sha256": "b2bfdbbb25b1265346037487e349ca8b4f3975002864bf8bd79fdef31b8b424f",
+    "numpy": "2.3.5",
+    "python": "3.12.14",
+    "runtime_files": 192,
+    "torch_required": false,
+    "training_Actions_environment_compatibility_claim": false
+  },
+  "schema": "a20-candidate-numerical-protocol-v1",
+  "status": "STATIC_PREPARATION_ONLY"
+}
