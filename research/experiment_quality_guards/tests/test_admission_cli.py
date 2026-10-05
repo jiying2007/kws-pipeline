@@ -107,3 +107,50 @@ class AdmissionCliTests(unittest.TestCase):
                 else:
                     payload[location][0]["split"] = "training"
                 self.assertEqual(self.run_cli(payload, 2)["status"], "INVALID_INPUT")
+
+    def test_opt_in_original_label_check_rejects_while_human_coverage_survives(self):
+        payload = example()
+        payload["requested_label_basis"] = "original_intended"
+        for row in payload["rows"]:
+            row["intended_text"] = row["actual_text"]
+            row["asr_results"] = [dict(status="complete", raw_text=row["actual_text"])] * 2
+        result = self.run_cli(payload, 0)
+        self.assertTrue(all(r["original_complete_label_eligible"] for r in result["label_preparation"]))
+        payload["rows"][2]["asr_results"] = [dict(status="complete", raw_text="你好小五")] * 2
+        result = self.run_cli(payload, 1)
+        self.assertTrue(result["coverage"]["balanced_admission"])
+        self.assertIn("ORIGINAL_COMPLETE_LABEL_NOT_SUPPORTED", result["reasons"])
+        self.assertEqual(result["label_preparation"][2]["actual_text"], "你好小屋")
+        payload["requested_label_basis"] = "human_actual"
+        self.assertTrue(self.run_cli(payload, 0)["coverage_eligible"])
+
+    def test_original_plan_cannot_fall_back_to_actual_or_skip_machine_observation(self):
+        payload = example()
+        payload["requested_label_basis"] = "original_intended"
+        result = self.run_cli(payload, 1)
+        self.assertTrue(all(r["planned_lexical_support"] == "UNKNOWN" for r in result["label_preparation"]))
+        payload["rows"][0]["asr_results"] = []
+        self.assertEqual(self.run_cli(payload, 2)["status"], "INVALID_INPUT")
+        payload["requested_label_basis"] = "machine_consensus"
+        self.assertEqual(self.run_cli(payload, 2)["status"], "INVALID_INPUT")
+
+    def test_observed_saved_decisions_reach_existing_preparation_entry(self):
+        observed = json.loads((HERE / "fixtures/observed_asr_decisions.json").read_text())
+        payload = example()
+        payload.update(requested_qualification="exposed_regression", require_unseen_voice=False,
+                       requested_label_basis="human_actual")
+        # Group and content identities are invented test wrappers, not source records.
+        payload["rows"] = [dict(r, source_group="fixture", split="regression",
+            pcm_sha256=hashlib.sha256(("invented-wrapper:" + r["id"]).encode()).hexdigest())
+            for r in observed["rows"]]
+        payload["declarations"] = [dict(source_group="fixture", split="regression", role="balanced")]
+        result = self.run_cli(payload, 0)
+        self.assertFalse(result["coverage_eligible"])
+        self.assertFalse(result["training_authorized"])
+        self.assertFalse(result["fresh_validation_qualified"])
+        self.assertEqual({r["id"]: r["actual_text"] for r in result["label_preparation"]},
+                         {r["id"]: r["actual_text"] for r in observed["rows"]})
+        payload["requested_label_basis"] = "original_intended"
+        rejected = self.run_cli(payload, 1)
+        self.assertIn("ORIGINAL_COMPLETE_LABEL_NOT_SUPPORTED", rejected["reasons"])
+        self.assertIn("complete human review", rejected["qualification_scope"])

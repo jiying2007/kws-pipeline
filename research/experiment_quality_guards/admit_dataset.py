@@ -1,13 +1,13 @@
 """Builder gate: exit 0=stated qualification allowed, 1=rejected, 2=invalid input.
 
-Only coverage and declared identity evidence are checked. No training, model,
-fresh-validation, rights or product authorization is granted.
+Coverage and declared identity are checked, with optional original-plan consistency.
+No training, model, fresh-validation, rights or product authorization is granted.
 """
 import argparse
 import json
 from pathlib import Path
 import sys
-from quality_gates import coverage_admission, identity_audit, require
+from quality_gates import coverage_admission, identity_audit, label_preparation, require
 
 
 def assess_admission(payload):
@@ -34,6 +34,17 @@ def assess_admission(payload):
                                       payload["frozen_policy_sha256"])
         identity = identity_audit(rows, history)
         reasons = []
+        labels = {}
+        if "requested_label_basis" in payload:
+            basis = payload["requested_label_basis"]
+            require(basis in ("human_actual", "original_intended"), "unknown requested label basis")
+            checks = [dict(id=row["id"], **label_preparation(row)) for row in rows]
+            labels = {"requested_label_basis": basis, "label_preparation": checks,
+                      "label_check_scope": "extra original-plan consistency; complete human actual review required"
+                      if basis == "original_intended" else "human actual authority; machine evidence diagnostic only"}
+            if basis == "original_intended" and any(
+                    not check["original_complete_label_eligible"] for check in checks):
+                reasons.append("ORIGINAL_COMPLETE_LABEL_NOT_SUPPORTED")
         if identity["status"] == "FAIL":
             reasons.append("IDENTITY_OR_EXPOSURE_CONFLICT")
         if payload.get("require_unseen_voice") and any(
@@ -47,12 +58,15 @@ def assess_admission(payload):
                  for row in rows):
             reasons.append("EXPLICIT_EXPOSED_REGRESSION_USE_REQUIRED")
         allowed = not reasons
+        qualification_scope = ("coverage and declared identity only" if qualification == "balanced_source_groups"
+                               else "exposed historical report/code regression only; no balanced-data claim")
+        if payload.get("requested_label_basis") == "original_intended":
+            qualification_scope += "; extra original-plan consistency with complete human review"
         return {"status": "QUALIFICATION_ALLOWED" if allowed else "QUALIFICATION_REJECTED",
                 "requested_qualification": qualification, "eligible": allowed,
                 "coverage_eligible": qualification == "balanced_source_groups" and coverage["balanced_admission"],
-                "qualification_scope": "coverage and declared identity only" if qualification == "balanced_source_groups"
-                else "exposed historical report/code regression only; no balanced-data claim",
-                "reasons": reasons, "coverage": coverage, "identity": identity, **scope}, 0 if allowed else 1
+                "qualification_scope": qualification_scope,
+                "reasons": reasons, "coverage": coverage, "identity": identity, **labels, **scope}, 0 if allowed else 1
     except (ValueError, KeyError, TypeError, AttributeError, IndexError) as error:
         return {"status": "INVALID_INPUT", "eligible": False,
                 "error": str(error), **scope}, 2

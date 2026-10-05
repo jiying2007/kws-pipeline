@@ -1,0 +1,496 @@
+{
+  "schema": "observed-asr-decision-regressions-v1",
+  "evidence_basis": "Sanitized text-only selection from completed SenseVoiceSmall and Qwen3-ASR-0.6B fixed30 comparison; previously exposed calibration/code regression only",
+  "interpretation": "Common ASR errors are not automatic original-plan admissions. Intended and human actual texts are separate. Original Z1-Z6 plans were independently bound to generation config and recording identity in a separate derived audit; original comparison null plans remain unchanged. No population accuracy or independence claim.",
+  "rows": [
+    {
+      "id": "E",
+      "actual_text": "你好小屋",
+      "intended_text": "你好小屋",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好小五",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "你好，小五。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "X",
+      "actual_text": "你好小屋",
+      "intended_text": "你好小屋",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好小吴",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "你好，小吴。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "L",
+      "actual_text": "小窝",
+      "intended_text": "小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小五",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小五。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "I",
+      "actual_text": "小屋",
+      "intended_text": "小屋小屋",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小五",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小五。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "P",
+      "actual_text": "小窝",
+      "intended_text": "小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小屋",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小屋。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "D",
+      "actual_text": "小窝",
+      "intended_text": "小窝小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小五",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小五。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z1",
+      "actual_text": "你好",
+      "intended_text": "你好你好",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "你好。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z2",
+      "actual_text": "小屋小屋",
+      "intended_text": "小屋小屋",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小屋小屋",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小屋，小屋。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z3",
+      "actual_text": "小挖",
+      "intended_text": "小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小ia啊",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小窝。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z4",
+      "actual_text": "小窝小窝",
+      "intended_text": "小窝小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小窝小窝",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小窝，小窝。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z5",
+      "actual_text": "你好小窝",
+      "intended_text": "你好小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好小窝",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "你好，小吴。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Z6",
+      "actual_text": "你好小屋",
+      "intended_text": "你好小屋",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好小屋",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "您好，小屋。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "W",
+      "actual_text": "小窝小窝",
+      "intended_text": "小窝小窝",
+      "review": {
+        "complete": false,
+        "independent_human": true,
+        "status": "ambiguous"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小窝小窝",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小窝。小窝。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "Q",
+      "actual_text": null,
+      "intended_text": "你好小窝",
+      "review": {
+        "complete": false,
+        "independent_human": true,
+        "status": "inaudible"
+      },
+      "asr_results": [
+        {
+          "raw_text": "",
+          "status": "complete",
+          "quality_flags": [
+            "empty_transcript"
+          ]
+        },
+        {
+          "raw_text": "",
+          "status": "complete",
+          "quality_flags": [
+            "non_speech"
+          ]
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "T",
+      "actual_text": null,
+      "intended_text": "你好小窝",
+      "review": {
+        "complete": false,
+        "independent_human": true,
+        "status": "inaudible"
+      },
+      "asr_results": [
+        {
+          "raw_text": "그",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "",
+          "status": "complete",
+          "quality_flags": [
+            "non_speech"
+          ]
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "A",
+      "actual_text": "你好小窝",
+      "intended_text": "你好小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "你好小窝",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "你好，小窝。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    },
+    {
+      "id": "B",
+      "actual_text": "小窝小窝",
+      "intended_text": "小窝小窝",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "asr_results": [
+        {
+          "raw_text": "小窝小窝",
+          "status": "complete",
+          "quality_flags": []
+        },
+        {
+          "raw_text": "小窝，小窝。",
+          "status": "complete",
+          "quality_flags": []
+        }
+      ],
+      "exposure": "EXPOSED",
+      "use": "regression",
+      "restriction": "regression_only",
+      "allowed_purposes": [
+        "asr_review_tool_validation"
+      ]
+    }
+  ],
+  "original_generation_config_sha256": "25f55f9c65e813655fea06bc1d4d10b35844be9c45485884fb53b344d629aaef"
+}

@@ -2,8 +2,9 @@
 
 Small standard-library gates for actual-label coverage, cross-generator identity,
 exposure, independent event changes, timing availability and saved-observation
-interpretation. The reusable core and dataset-admission CLI retain their reviewed
-bytes. The public adapter supplies portable examples and public historical outcomes.
+interpretation. The public adapter supplies portable examples and public historical
+outcomes. This candidate adds an opt-in original-plan consistency check and observed
+ASR decision regressions to the existing core and dataset-admission CLI.
 
 This is an isolated research addition. It does not integrate a production builder,
 run an acoustic model, grant training authority or qualify a product. No default,
@@ -19,15 +20,16 @@ python3 -B research/experiment_quality_guards/review_saved.py
 python3 -B research/experiment_quality_guards/admit_dataset.py research/experiment_quality_guards/examples/balanced-input.json
 ```
 
-The proposed `experiment-quality-guards` workflow runs these 59 tests using system
+The `experiment-quality-guards` workflow runs these 77 tests using system
 Python and checks every test file against the workflow inventory. It triggers only
 on this research directory or its own workflow file, has read-only repository
 permissions and a three-minute timeout, and installs no dependencies. Existing
 general CI does not discover this directory; a green unrelated job is not evidence
-that these tests ran. The new workflow has been checked locally, not run on GitHub.
+that these tests ran. This candidate's workflow commands have been checked locally; the candidate has not
+been run on GitHub.
 
 The tests and CLIs need only the files in this directory and Python's standard
-library. The nine admission CLI tests start only the pure Python JSON gate. The
+library. The twelve admission CLI tests start only the pure Python JSON gate. The
 supervision tests use fake process objects and fake text readers; they do not
 launch a collector or read live process telemetry. The example data is invented.
 
@@ -64,6 +66,53 @@ coverage; `coverage_eligible` stays false even if nested counts meet the minima.
 Neither mode grants training, product or fresh-validation authorization. Lineage
 attestations are conflict-checked, not acoustically authenticated. Input manifests
 still need independent source, rights and completeness review.
+
+## Optional original-plan consistency check
+
+Set `requested_label_basis` to `original_intended` to require the extra label check
+before the existing requested qualification can pass. Each row supplies separate
+`actual_text`, `intended_text`, `review` and exactly two saved `asr_results` objects
+with `status` and `raw_text` (a missing observation may be null). No ASR is run.
+
+`label_preparation` reports two distinct results:
+
+- `planned_lexical_support` is SUPPORTED only when both completed, nonempty
+  normalized transcripts equal the intended text. Disagreement or consensus on
+  another string is REJECTED. A missing plan or unresolved observation is UNKNOWN.
+  Missing intent is never filled from a human or machine transcript
+- `original_complete_label_eligible` is the extra plan-consistency check only. It
+  also requires the existing clean, independent, complete human actual-word review,
+  human actual text equal to the plan and no saved ASR quality flags. It does not
+  certify CTC encodability, independent evaluation, dataset admission or training.
+  `human_actual_review_complete` reports the inherited actual-word review gate;
+  `acoustic_completeness` stays UNKNOWN because this text-only helper does not
+  independently adjudicate acoustic endpoints
+
+The gate returns exit 1 when an `original_intended` request has any failed label
+check, even if the human actual labels satisfy the coverage minima. Explicit
+`human_actual` reports the same diagnostics but preserves human actual-word
+coverage: ASR errors cannot veto or rewrite that truth. Omitting
+`requested_label_basis` preserves the earlier API behavior. The existing
+actual-label helper remains responsible for CTC vocabulary eligibility; this
+package never emits CTC targets. The existing identity/exposure gate and scope
+restrictions still apply to both modes. This is not unattended gold labeling.
+
+`fixtures/observed_asr_decisions.json` retains a small text-only selection from the
+completed, previously exposed fixed30 comparison. E/X/L/I/P/D are observed common
+ASR errors, but all six fail the original-plan lexical rule. They are not six
+observed automatic false admissions. D/I both produced 小五, while human actual
+labels remain 小窝/小屋 and original repeated plans remain separate. W has matching
+text but UNKNOWN acoustic completeness; Q/T retain inaudible/null actual labels;
+Z1 retains actual 你好 separately from its verified original plan 你好你好. Z3
+retains actual 小挖 separately from intended 小窝 and keeps its OOV CTC exclusion.
+A/B/Z2/Z4 protect genuine lexical support. All six Z original plans are a new
+sanitized projection of the independently verified generation/recording join;
+the frozen comparison's absent plans are unchanged. The original public generation
+config hash is retained in the fixture and bound by `SOURCE_PINS.json`.
+Counterfactual plan-completion tests are explicitly marked as invented cases.
+All selected recordings remain calibration/code-regression evidence, never
+independent accuracy evidence. No probabilities, thresholds, text normalization,
+historical outputs, model calls or production builder are changed by this candidate.
 
 The broader metadata/rights and continuous-evaluation contract in [PR465's quality
 tools](https://github.com/jiying2007/kws-pipeline/tree/d8453ae8b2b2c620716b32c96d9647834ce96746/research/native_a20_quality)

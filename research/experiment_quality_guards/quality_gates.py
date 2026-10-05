@@ -34,6 +34,69 @@ def human_truth(row):
     return {key for key, text in KEYWORDS.items() if text in normalized_actual(row["actual_text"])}
 
 
+def label_preparation(row):
+    """Check original-label evidence without replacing human actual words.
+
+    Machine states follow the saved dual-ASR review: complete, nonempty
+    agreement is weak evidence. A missing plan is never filled from actual text.
+    Eligibility here is for the label check only, never dataset/training admission.
+    """
+    review = row.get("review", {})
+    require(type(review) is dict, "review must be an object")
+    actual, intended = row.get("actual_text"), row.get("intended_text")
+    for value in (actual, intended):
+        require(value is None or type(value) is str, "label text must be string or null")
+    observations = row.get("asr_results", [None, None])
+    require(type(observations) is list and len(observations) == 2,
+            "asr_results must contain exactly two saved observations")
+    texts, complete, flags = [], [], []
+    for observation in observations:
+        require(observation is None or type(observation) is dict,
+                "ASR observation must be an object or null")
+        observation = observation or {}
+        raw = observation.get("raw_text")
+        require(raw is None or type(raw) is str, "ASR raw_text must be string or null")
+        text = None if raw is None else normalized_actual(raw)
+        quality_flags = observation.get("quality_flags", [])
+        require(type(quality_flags) is list and all(type(f) is str for f in quality_flags),
+                "ASR quality_flags must be a list of strings")
+        flags.extend(quality_flags)
+        texts.append(text)
+        complete.append(observation.get("status") == "complete" and bool(text))
+    machine = ("unresolved" if not all(complete) else
+               "disagree" if texts[0] != texts[1] else "machinesAgreeWeak")
+    plan = normalized_actual(intended or "")
+    actual_normalized = normalized_actual(actual or "")
+    support = ("UNKNOWN" if not plan or machine == "unresolved" else
+               "SUPPORTED" if all(t == plan for t in texts) else "REJECTED")
+    human_match = (actual_normalized == plan if plan and actual_normalized
+                   and review.get("independent_human") is True else None)
+    truth = human_truth(row)
+    reasons = []
+    if not plan:
+        reasons.append("INTENDED_TEXT_MISSING")
+    if support != "SUPPORTED":
+        reasons.append("DUAL_ASR_PLAN_SUPPORT_" + support)
+    if human_match is False:
+        reasons.append("HUMAN_ACTUAL_DIFFERS_FROM_PLAN")
+    if truth is None:
+        reasons.append("CLEAN_COMPLETE_HUMAN_ACTUAL_REQUIRED")
+    if flags:
+        reasons.append("ASR_QUALITY_FLAGS_RETAINED")
+    eligible = not reasons
+    return {"actual_text": actual, "intended_text": intended,
+            "label_source": "human_actual_only", "machine_state": machine,
+            "machine_normalized_texts": texts, "planned_lexical_support": support,
+            "plan_matches_human_actual": human_match,
+            "original_complete_label_eligible": eligible, "reasons": reasons,
+            "actual_expected_keywords": None if truth is None else sorted(truth),
+            "human_actual_review_complete": truth is not None,
+            "acoustic_completeness": "UNKNOWN",
+            "automatic_relabel": False, "ctc_target": None,
+            "silence_or_blank_target_inferred": False, "training_admitted": False,
+            "independent_accuracy_qualified": False}
+
+
 def _unique_rows(rows):
     ids = [row["id"] for row in rows]
     require(len(set(ids)) == len(ids), "duplicate row ID")
