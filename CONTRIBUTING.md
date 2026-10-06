@@ -17,6 +17,7 @@ python3 tests/test_dataset_audit.py
 python3 tests/test_corpus_identity.py
 python3 tests/test_false_reject_mining.py
 python3 tests/test_keyword_compile.py
+python3 tools/prepare_eval_context_fixtures.py
 python3 tests/test_eval.py
 python3 tests/test_statistical_bounds.py
 python3 tests/test_run_corpus.py

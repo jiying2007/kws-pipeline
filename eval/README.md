@@ -135,6 +135,97 @@ The scorer reports:
 
 A detection is matched only to an expected event with the same keyword ID and within the configured pre/post tolerance window. Matching is monotonic and maximizes match count before minimizing total phrase-end timing error, so overlapping windows cannot reuse one detection or cause a simple greedy misassignment.
 
+## Match positive and negative context declarations
+
+`score_events.py --context-manifest context.json --require-matched-context`
+rejects incomplete or different positive/negative context declarations before
+writing a new score. The check is in the scoring entrypoint, with no dependency
+on the research validators. It compares every recording, including recordings
+with zero detections, and requires both positive and negative references.
+
+The `eval-context-v1` JSON manifest binds `references_sha256` and
+`detections_sha256` to the exact input files. Its `recordings` object must have
+exactly the reference recording IDs. Each entry contains `role` (`positive` or
+`negative`, checked against the annotations), `audio_sha256` (checked against the
+same field in the reference row), and this complete `policy` object:
+
+```json
+{
+  "sample_rate_hz": 16000,
+  "feed_chunk_samples": 4800,
+  "appended_context_samples": 4800,
+  "appended_context_kind": "digital-zero",
+  "reset_frontend": "per-recording",
+  "reset_model": "per-recording",
+  "reset_decoder": "per-recording",
+  "reset_clocks": "per-recording",
+  "eof_partial_chunk": "process-retained",
+  "eof_flush": false,
+  "eof_padding": "none"
+}
+```
+
+This example declares 300 ms of appended digital zeros; the original short-EOF
+condition uses `appended_context_samples: 0` and `appended_context_kind: "none"`.
+Appended input and EOF padding/flush are separate fields. Reset fields may also
+declare `continuous`; partial-chunk handling may declare `drop`; EOF padding may
+declare `zero` or `replicate-right`. Equal complete declarations are required,
+not a particular favored policy. Missing/null/`"unknown"` fields never prove
+equality. Unsupported fields or values, duplicate JSON keys, input hash changes,
+audio identity mismatches and false role declarations are errors.
+
+Without `--require-matched-context`, an explicitly supplied different-condition
+manifest remains reportable as `CONTEXT_MISMATCH`; absent or incomplete context
+is `CONTEXT_UNVERIFIED`. Existing event scoring and numeric gate behavior remain
+available for historical reproduction. The nested `context` result always states
+the limited scope; these historical diagnostics must not be described as matched
+context evidence. A complete comparison reports `MATCHED_DECLARED_CONTEXT`.
+
+This verifies declarations and file bindings, not the truth of an execution
+claim. A self-consistent forged manifest is not attested evidence. Model,
+decoder, dataset lineage, representative exposure and source provenance still
+need their existing independent checks. `run_corpus.py` does not automatically
+emit this manifest or certify unknown external-runner EOF behavior. Neither a
+matched context result nor a successful numeric gate grants qualification.
+
+### Saved clips without keyword time alignment
+
+`score_events.py --clip-presence` accepts reference rows with
+`expected_keywords: [1]` or `expected_keywords: []` in place of `expected`.
+Every row must explicitly declare `annotation_status: "complete"`; missing,
+unknown or partial annotations are rejected, never counted as negatives.
+It reports positive target presence, negative clips/events, missing keywords,
+wrong keywords and repeated events. It does not emit FRR, FAR/hour or latency,
+and rejects event metric gates and hard-negative mining output flags. No event
+windows are created. Detection `time_s` still must lie in the supplied recording
+duration; an input-availability coordinate is not an acoustic word endpoint.
+The same context manifest and strict flag apply to this mode.
+
+Prepare the pinned data explicitly before running the offline tests:
+
+```sh
+python3 tools/prepare_eval_context_fixtures.py
+python3 tests/test_eval.py
+```
+
+Preparation downloads only three immutable public numeric logs into ignored
+`build/eval-context-fixtures` and verifies exact byte counts and SHA-256 hashes.
+To work offline, first use `prepare_eval_context_fixtures.py --source-dir DIR`
+with already downloaded, correctly named logs. An optional `--output-dir DIR`
+on preparation pairs with `tests/test_eval.py --context-fixtures DIR`.
+CI has an explicit preparation step before the scorer tests. Missing, corrupt
+or unavailable data fails; tests never fetch data or silently skip regressions.
+The source repository retains only the pins, not the raw scientific logs.
+
+`tests/test_eval.py` exercises the actual CLI using the prepared public M1–M5
+logs. The original short-EOF condition remains 0/2 positive clips with a
+target and 0/3 negative clips with an event; the separately matched 300 ms
+condition is 1/2 and 1/3. Combining the 300 ms positives with original negatives
+is rejected as a matched claim. These five exposed clips from one Melo voice,
+with human words heard on native audio and unreviewed derived representations,
+remain diagnostic only. See the fixture provenance in
+[`tests/fixtures/eval_context/README.md`](../tests/fixtures/eval_context/README.md).
+
 ## Mine hard negatives
 
 ```bash
