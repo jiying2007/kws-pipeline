@@ -1,0 +1,80 @@
+{
+  "baseline_only": "original_A20",
+  "counts": {
+    "callbacks": 16,
+    "clips": 5,
+    "cold_resets": 5,
+    "decoder_input_rows": 128,
+    "decoder_process_calls": 16,
+    "fbank_rows": 390,
+    "feed_calls": 16,
+    "finish_calls": 5,
+    "frames": 64090,
+    "model_rows": 128,
+    "native_model_steps": 128
+  },
+  "excluded": [
+    "M6"
+  ],
+  "frontend": {
+    "dither": 0,
+    "energy_floor": 0,
+    "feature_gate_samples": 800,
+    "feed_bytes": 9600,
+    "hop_samples": 160,
+    "mel_bins": 80,
+    "pcm": "16000 Hz mono little-endian PCM16, unscaled",
+    "preemphasis": 0.97,
+    "reset": "frontend, model cache, decoder beams and clocks before every clip",
+    "short_tail": "actual retained samples, no padding or EOF flush",
+    "skip_frames": 3,
+    "snip_edges": true,
+    "splice_context": [
+      -2,
+      -1,
+      0,
+      1,
+      2
+    ],
+    "window": "Hamming 400 samples"
+  },
+  "limits": {
+    "address_space_and_rss_bytes": 134217728,
+    "collector_processes": 1,
+    "collector_threads": 1,
+    "cpu_seconds": 10,
+    "raw_output_bytes": 1048576,
+    "stderr_bytes": 65536,
+    "wall_seconds": 30
+  },
+  "model_execution_performed": false,
+  "native_timing_scope": "Post-GO after dynamic loading through before final record; includes payload initialization and earlier trace output. Feed/finish times include callbacks. Unpaced audio.",
+  "new_asr_calls": 0,
+  "new_tts_calls": 0,
+  "order": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5"
+  ],
+  "qualification_claims": false,
+  "repeats": 0,
+  "resource_estimate": {
+    "caller_arena_plus_weights_bytes": 1898984,
+    "collector_bytes": 25888,
+    "estimate_scope": "Rough compute comparison only, excludes fixed startup and is not measured on these clips; historical peak RSS was 13,848 KiB",
+    "historical_98_clip_model_steps": 51829,
+    "historical_98_clip_process_cpu_s": 19.113835629,
+    "library_bytes": 52200,
+    "simple_row_ratio_cpu_seconds": 0.047204672297594015
+  },
+  "resource_scope": "Local one-process CPU/RSS observations; no embedded-board qualification or continuous-lifetime/child-absence proof",
+  "schema": "melo5-a20-replay-plan-v1",
+  "source_scope": "Five exposed clips from one Melo source; native human word labels; derived audio not independently heard; acoustic tails unqualified",
+  "status": "PREPARED_NO_MODEL_EXECUTION",
+  "threshold_sweeps": 0,
+  "total_audio_seconds": 4.005625,
+  "training_steps": 0,
+  "warmups": 0
+}
