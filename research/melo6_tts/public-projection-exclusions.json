@@ -1,0 +1,7 @@
+{
+  "schema": "melo-public-projection-exclusions-v1",
+  "mandatory_runtime_exclusions": ["private-raw-cause.json"],
+  "exclude_unless_independently_checked_and_redacted": ["child.log"],
+  "private_raw_cause_must_not_enter_any_public_source_audio_result_archive": true,
+  "safe_private_cause_receipt_projection_only": true
+}

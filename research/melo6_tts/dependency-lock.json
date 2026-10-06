@@ -1,0 +1,43 @@
+{
+  "schema": "melo-local-runtime-inputs-v1",
+  "approved": false,
+  "total_bytes": 23783002,
+  "hashes_are_publisher_expectations_until_download": true,
+  "reused_host": {
+    "numpy": "2.3.5",
+    "packaging": "26.3",
+    "scipy": "1.17.0"
+  },
+  "files": [
+    {
+      "name": "onnxruntime",
+      "version": "1.30.0",
+      "filename": "onnxruntime-1.30.0-cp312-cp312-manylinux_2_28_x86_64.whl",
+      "bytes": 23585654,
+      "sha256": "fa688e7891a6aa206636fe7372e27ee75fd17713289f6b4fc7b190e0a7de9328",
+      "url": "https://files.pythonhosted.org/packages/34/35/e7f862dbacbc99fadd9b14a614e49c99bf0f35fd9927a82f096e3de33531/onnxruntime-1.30.0-cp312-cp312-manylinux_2_28_x86_64.whl",
+      "metadata_bytes": 5651,
+      "metadata_sha256": "d765dd8bb488de145bedf618dd8d81e04fd7e35343778c9f58a652d5c28ad0ec"
+    },
+    {
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "filename": "flatbuffers-25.12.19-py2.py3-none-any.whl",
+      "bytes": 26661,
+      "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+      "url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl",
+      "metadata_bytes": 1004,
+      "metadata_sha256": "9f38239f96faa21522a6aadab6912e1e560708bbe9c9f696a0679c9403fa089e"
+    },
+    {
+      "name": "protobuf",
+      "version": "6.33.5",
+      "filename": "protobuf-6.33.5-py3-none-any.whl",
+      "bytes": 170687,
+      "sha256": "69915a973dd0f60f31a08b8318b73eab2bd6a392c79184b3612226b0a3f8ec02",
+      "url": "https://files.pythonhosted.org/packages/57/bf/2086963c69bdac3d7cff1cc7ff79b8ce5ea0bec6797a017e1be338a46248/protobuf-6.33.5-py3-none-any.whl",
+      "metadata_bytes": 593,
+      "metadata_sha256": "bc8eb3187ac09f903cae9bd8ee4104a85c6dac8dbd1c8790069a7b6496b8e5a5"
+    }
+  ]
+}

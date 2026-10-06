@@ -1,0 +1,420 @@
+{
+  "path": "model.onnx",
+  "bytes": 170429550,
+  "sha256": "bf30582eb1b012250a35b1a4a80e7dfbcf8485e7bb9de0d95efbbeef0e4ad86d",
+  "ir_version": 8,
+  "producer_name": "pytorch",
+  "producer_version": "2.3.1",
+  "domain": null,
+  "model_version": null,
+  "doc_string": null,
+  "metadata": {
+    "model_type": "melo-vits",
+    "comment": "melo",
+    "version": "2",
+    "language": "Chinese + English",
+    "add_blank": "1",
+    "n_speakers": "1",
+    "jieba": "1",
+    "sample_rate": "44100",
+    "bert_dim": "1024",
+    "ja_bert_dim": "768",
+    "speaker_id": "1",
+    "lang_id": "3",
+    "tone_start": "0",
+    "url": "https://github.com/myshell-ai/MeloTTS",
+    "license": "MIT license",
+    "description": "MeloTTS is a high-quality multi-lingual text-to-speech library by MyShell.ai"
+  },
+  "opsets": [
+    {
+      "domain": "",
+      "version": 18
+    }
+  ],
+  "graph": {
+    "name": "main_graph",
+    "inputs": [
+      {
+        "name": "x",
+        "kind": "tensor",
+        "element_type_id": 7,
+        "element_type": "INT64",
+        "shape": [
+          {
+            "symbol": "N"
+          },
+          {
+            "symbol": "L"
+          }
+        ]
+      },
+      {
+        "name": "x_lengths",
+        "kind": "tensor",
+        "element_type_id": 7,
+        "element_type": "INT64",
+        "shape": [
+          {
+            "symbol": "N"
+          }
+        ]
+      },
+      {
+        "name": "tones",
+        "kind": "tensor",
+        "element_type_id": 7,
+        "element_type": "INT64",
+        "shape": [
+          {
+            "symbol": "N"
+          },
+          {
+            "symbol": "L"
+          }
+        ]
+      },
+      {
+        "name": "sid",
+        "kind": "tensor",
+        "element_type_id": 7,
+        "element_type": "INT64",
+        "shape": [
+          {
+            "value": 1
+          }
+        ]
+      },
+      {
+        "name": "noise_scale",
+        "kind": "tensor",
+        "element_type_id": 1,
+        "element_type": "FLOAT",
+        "shape": [
+          {
+            "value": 1
+          }
+        ]
+      },
+      {
+        "name": "length_scale",
+        "kind": "tensor",
+        "element_type_id": 1,
+        "element_type": "FLOAT",
+        "shape": [
+          {
+            "value": 1
+          }
+        ]
+      },
+      {
+        "name": "noise_scale_w",
+        "kind": "tensor",
+        "element_type_id": 1,
+        "element_type": "FLOAT",
+        "shape": [
+          {
+            "value": 1
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "y",
+        "kind": "tensor",
+        "element_type_id": 1,
+        "element_type": "FLOAT",
+        "shape": [
+          {
+            "symbol": "N"
+          },
+          {
+            "symbol": "S"
+          },
+          {
+            "symbol": "T"
+          }
+        ]
+      }
+    ],
+    "initializer_count": 683,
+    "sparse_initializer_count": 0,
+    "node_count": 10680
+  },
+  "external_data_references": [],
+  "static_scan_counts": {
+    "protobuf_fields": 108798,
+    "graphs": 1,
+    "nodes": 10680,
+    "tensors": 5426,
+    "sparse_tensors": 0
+  },
+  "operators": [
+    {
+      "domain": "",
+      "op_type": "Add",
+      "count": 285
+    },
+    {
+      "domain": "",
+      "op_type": "And",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "Cast",
+      "count": 314
+    },
+    {
+      "domain": "",
+      "op_type": "Ceil",
+      "count": 1
+    },
+    {
+      "domain": "",
+      "op_type": "Clip",
+      "count": 1
+    },
+    {
+      "domain": "",
+      "op_type": "Concat",
+      "count": 543
+    },
+    {
+      "domain": "",
+      "op_type": "Constant",
+      "count": 4497
+    },
+    {
+      "domain": "",
+      "op_type": "ConstantOfShape",
+      "count": 246
+    },
+    {
+      "domain": "",
+      "op_type": "Conv",
+      "count": 249
+    },
+    {
+      "domain": "",
+      "op_type": "ConvTranspose",
+      "count": 5
+    },
+    {
+      "domain": "",
+      "op_type": "CumSum",
+      "count": 7
+    },
+    {
+      "domain": "",
+      "op_type": "Div",
+      "count": 59
+    },
+    {
+      "domain": "",
+      "op_type": "Equal",
+      "count": 64
+    },
+    {
+      "domain": "",
+      "op_type": "Erf",
+      "count": 24
+    },
+    {
+      "domain": "",
+      "op_type": "Exp",
+      "count": 7
+    },
+    {
+      "domain": "",
+      "op_type": "Expand",
+      "count": 93
+    },
+    {
+      "domain": "",
+      "op_type": "Gather",
+      "count": 383
+    },
+    {
+      "domain": "",
+      "op_type": "GatherElements",
+      "count": 21
+    },
+    {
+      "domain": "",
+      "op_type": "GatherND",
+      "count": 15
+    },
+    {
+      "domain": "",
+      "op_type": "GreaterOrEqual",
+      "count": 6
+    },
+    {
+      "domain": "",
+      "op_type": "LayerNormalization",
+      "count": 62
+    },
+    {
+      "domain": "",
+      "op_type": "LeakyRelu",
+      "count": 86
+    },
+    {
+      "domain": "",
+      "op_type": "Less",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "LessOrEqual",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "MatMul",
+      "count": 79
+    },
+    {
+      "domain": "",
+      "op_type": "Mul",
+      "count": 371
+    },
+    {
+      "domain": "",
+      "op_type": "Neg",
+      "count": 10
+    },
+    {
+      "domain": "",
+      "op_type": "NonZero",
+      "count": 21
+    },
+    {
+      "domain": "",
+      "op_type": "Not",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "Pad",
+      "count": 154
+    },
+    {
+      "domain": "",
+      "op_type": "Pow",
+      "count": 21
+    },
+    {
+      "domain": "",
+      "op_type": "RandomNormalLike",
+      "count": 2
+    },
+    {
+      "domain": "",
+      "op_type": "Range",
+      "count": 41
+    },
+    {
+      "domain": "",
+      "op_type": "ReduceMax",
+      "count": 1
+    },
+    {
+      "domain": "",
+      "op_type": "ReduceSum",
+      "count": 4
+    },
+    {
+      "domain": "",
+      "op_type": "Relu",
+      "count": 20
+    },
+    {
+      "domain": "",
+      "op_type": "Reshape",
+      "count": 525
+    },
+    {
+      "domain": "",
+      "op_type": "ScatterND",
+      "count": 31
+    },
+    {
+      "domain": "",
+      "op_type": "Shape",
+      "count": 504
+    },
+    {
+      "domain": "",
+      "op_type": "Slice",
+      "count": 310
+    },
+    {
+      "domain": "",
+      "op_type": "Softmax",
+      "count": 24
+    },
+    {
+      "domain": "",
+      "op_type": "Softplus",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "Split",
+      "count": 9
+    },
+    {
+      "domain": "",
+      "op_type": "Sqrt",
+      "count": 3
+    },
+    {
+      "domain": "",
+      "op_type": "Squeeze",
+      "count": 1
+    },
+    {
+      "domain": "",
+      "op_type": "Sub",
+      "count": 216
+    },
+    {
+      "domain": "",
+      "op_type": "Tanh",
+      "count": 1
+    },
+    {
+      "domain": "",
+      "op_type": "Transpose",
+      "count": 388
+    },
+    {
+      "domain": "",
+      "op_type": "Unsqueeze",
+      "count": 881
+    },
+    {
+      "domain": "",
+      "op_type": "Where",
+      "count": 80
+    }
+  ],
+  "training_info_count": 0,
+  "local_function_count": 0,
+  "graph_evaluated": false,
+  "weight_values_decoded": false,
+  "small_constant_values_decoded": true,
+  "dependencies_installed": false,
+  "parser": "Bounded stdlib protobuf wire reader with read-only mmap; not an ONNX semantic checker",
+  "model_top_level_field_numbers": [
+    1,
+    2,
+    3,
+    7,
+    8,
+    14
+  ]
+}
