@@ -15449,15 +15449,15 @@
     {
       "path": ".github/workflows/research-donor-fbank.yml",
       "mode": "100644",
-      "git_blob_sha1": "c627ad1ec12e5f5dc8381335d6c4e11467b7de3a",
-      "sha256": "db2527f2bbe7a6f78939c6afdc20918c31a8afcc5d3a841d238c3a8a5526fa2f",
-      "bytes": 3692
+      "git_blob_sha1": "9f2af9e4be5be5372eaee05e7fe0d5e823eb8cdb",
+      "sha256": "716a508683498ea0a75082c299ac7613f18d2c35f0893897dcb4b3960eeffaef",
+      "bytes": 3696
     },
     {
       "path": ".github/workflows/research-donor-fsmn.yml",
       "mode": "100644",
-      "git_blob_sha1": "9c613a69eb2df08071535e991b0572ed747ba568",
-      "sha256": "4008ede09af79a8f817f718c4ca103ddb46b92748aa192a75cd3b0f806b7b069",
+      "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb",
+      "sha256": "79ebc9c2f9935fbb06bf59d80e72d1bccd49edbc3ac0a4fcdd55fe3e0b2dbf80",
       "bytes": 1705
     },
     {
@@ -15632,5 +15632,71 @@
   "allowed_new_active_workflows": [
     ".github/workflows/research-source-consolidation.yml"
   ],
-  "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82"
+  "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
+  "active_workflow_maintenance": [
+    {
+      "date": "2026-10-07",
+      "from_commit": "b1535021204f74d71d325fa0494d43542b4bf179",
+      "from_tree": "2b9fb406f1256636c7a29c790bd4f24c032d4228",
+      "scope": "Current active workflows only: official actions/setup-python v6.3.0 to v7.0.0 SHA pin; no command, input, trigger, permission or historical source changes.",
+      "action": "actions/setup-python",
+      "previous_action_commit": "ece7cb06caefa5fff74198d8649806c4678c61a1",
+      "action_commit": "5fda3b95a4ea91299a34e894583c3862153e4b97",
+      "release": "https://github.com/actions/setup-python/releases/tag/v7.0.0",
+      "rationale": "Keep the 54-entry current baseline byte checks exact after intentional dependency maintenance. The original consolidation base_commit/base_tree and all retained files, provenance and archived workflows remain unchanged. The separate allowed new source-consolidation workflow receives the same pin update.",
+      "files": [
+        {
+          "path": ".github/workflows/research-donor-fbank.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c627ad1ec12e5f5dc8381335d6c4e11467b7de3a",
+            "sha256": "db2527f2bbe7a6f78939c6afdc20918c31a8afcc5d3a841d238c3a8a5526fa2f",
+            "bytes": 3692
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fbank.yml",
+            "mode": "100644",
+            "git_blob_sha1": "9f2af9e4be5be5372eaee05e7fe0d5e823eb8cdb",
+            "sha256": "716a508683498ea0a75082c299ac7613f18d2c35f0893897dcb4b3960eeffaef",
+            "bytes": 3696
+          }
+        },
+        {
+          "path": ".github/workflows/research-donor-fsmn.yml",
+          "before": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "git_blob_sha1": "9c613a69eb2df08071535e991b0572ed747ba568",
+            "sha256": "4008ede09af79a8f817f718c4ca103ddb46b92748aa192a75cd3b0f806b7b069",
+            "bytes": 1705
+          },
+          "after": {
+            "path": ".github/workflows/research-donor-fsmn.yml",
+            "mode": "100644",
+            "git_blob_sha1": "cc54faaf2c12b6b9d2570abc1e9ae2b357fa94eb",
+            "sha256": "79ebc9c2f9935fbb06bf59d80e72d1bccd49edbc3ac0a4fcdd55fe3e0b2dbf80",
+            "bytes": 1705
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "50dd61cd775eb3391a9f68bea59666894ec27cd5",
+            "sha256": "0619fab41573f4064726e89f527c07aba7bee3524f0183b87e80538428775758",
+            "bytes": 1368
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "b1650c3b3b3ca25929887e5136934f61a3163a07",
+            "sha256": "f6b4b2dfb1e98e7a1be47a7f3602ffb1336c73373de393341cd10c87a2ea1197",
+            "bytes": 1368
+          }
+        }
+      ]
+    }
+  ]
 }
