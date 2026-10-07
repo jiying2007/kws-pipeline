@@ -72,4 +72,10 @@ They are historical observations, not instructions to rerun an experiment.
 - Historical acquisition/training branches remain separate until their sources
   and disabled execution projections have been reviewed. Their old one-shot
   release files and branch names grant no new execution permission
-
+- The existing automatic repository cleanup now explicitly retains all 61
+  non-main branch names in the [2026-10-07 inventory](consolidation/branch-retention-2026-10-07.json).
+  The guard runs before merged-tip, retired-branch or old closed-unmerged-PR
+  deletion eligibility, and remains in effect if a retained branch head changes.
+  Removing a guard requires a separate reviewed retention decision; this batch
+  does not authorize deletion. Unrelated cleanup and branch protections remain
+  governed by their existing rules

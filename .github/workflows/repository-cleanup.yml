@@ -86,6 +86,70 @@ env:
     training/request-product-preflight-v2
     training/request-split-product-preflight-v1
     training/request-parallel-refinement-preflight-v1
+  # Preserve the 2026-10-07 consolidation inventory, including closed/unmerged
+  # research heads. Remove entries only after an explicit reviewed retention decision.
+  RETAINED_CONSOLIDATION_BRANCHES: >-
+    codex/github-asr-runtime-once-20261001
+    codex/kws-expanded-train-readback-20260927
+    dependabot/github_actions/github-actions-151ba0d261
+    diag/ctc-occurrence-target-blank-gradient
+    diag/ctc-viterbi-separability-v1
+    diag/frozen-far-history-decomposition-rerun-v1
+    diag/frozen-far-source-replay-cases-v1-rerun1
+    diag/frozen-far-source-replay-cases-v1
+    diag/frozen-far-stream-context-replay-v1
+    diag/fuzzy-competitor-token-provenance
+    diag/fuzzy-temporal-neighborhood-stack
+    diag/nonroot-exact-top-admission-probe
+    diag/retained-frozen-far-path-summary-seed3301-rerun1
+    diag/retained-frozen-far-path-summary-seed3301
+    diag/strict-fuzzy-child-cost-probe
+    exp/ctc-keyword-competition-positive-pair-v1
+    exp/decoder-exact-nonroot-probe-v1
+    exp/decoder-nonroot-blank-evidence-probe-v1
+    exp/decoder-nonroot-defer-probe-v1
+    exp/label-prior-primary-ctc-pair-v1-rerun1
+    exp/label-prior-primary-ctc-pair-v1
+    exp/runtime-exec-replay-control-v1
+    exp/runtime-exec-replay-treatment-v1
+    exp/runtime-search-aligned-positive-pair-v1
+    exp/vad-align-control-current-v1
+    exp/vad-align-control-current-v2
+    exp/vad-align-suffix-root-v1
+    exp/vad-align-suffix-root-v2
+    feat/label-prior-ctc-objective
+    feat/restricted-development-dataset-iteration-v1
+    research/a20-cosy30-cross-voice-v1
+    research/a20-cosy49-single-candidate-v1
+    research/a20-cpu-metadata-probe-20261004
+    research/a20-fixed300-single-candidate-v1
+    research/a20-token-preparation-20261004
+    research/a20-token-preparation-metadata-recovery-20261004
+    research/asr-label-decision-regressions-v1
+    research/cosy49-results-archive-v1
+    research/cosyvoice3-six-pair-pilot-20261002
+    research/experiment-quality-guards-v1
+    research/firered-cpu-preflight-20261002
+    research/fixed30-asr-regression-v1
+    research/fixed30-asr-setup-recovery-v2
+    research/frozen-far-phase-aligned-control-20260930
+    research/k1-fixed-slot-ctc-v1
+    research/k1-prefix-marginal-v1
+    research/matched-context-evaluation-v1
+    research/melo6-saved-result-checks-v1
+    research/melo6-source-screen-v1
+    research/native-a20-arm-compile-only-20261004
+    research/native-a20-domain-tools-20261004
+    research/native-a20-n0-tools-20261004
+    research/native-a20-quality-tools-20261004
+    research/native-a20-qwen20-saved-20261004
+    research/native-a20-recovery-20261003
+    research/qwen6-source-screen-native-recovery-v3
+    research/qwen6-source-screen-recovery-v2
+    research/qwen6-source-screen-v1
+    research/single-k1-followed-wu-v1
+    training/keyword-set-contract-v1
+    training/keyword-set-identity-v1
   RETAINED_DESIGN_BRANCHES: >-
     feat/decoder-boundary-requalification-v1
     training/keyword-set-contract-v1
@@ -122,6 +186,15 @@ jobs:
             local retired
             for retired in ${RETIRED_BRANCHES}; do
               [[ "${candidate}" == "${retired}" ]] && return 0
+            done
+            return 1
+          }
+
+          is_retained_consolidation() {
+            local candidate="$1"
+            local retained
+            for retained in ${RETAINED_CONSOLIDATION_BRANCHES}; do
+              [[ "${candidate}" == "${retained}" ]] && return 0
             done
             return 1
           }
@@ -169,6 +242,7 @@ jobs:
           candidates=0
           manual_review=0
           retained_design=0
+          retained_consolidation=0
           mapfile -t branch_rows < <(
             jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
           )
@@ -176,6 +250,11 @@ jobs:
           for row in "${branch_rows[@]}"; do
             IFS=$'\t' read -r branch sha protected <<<"${row}"
             [[ "${branch}" == "${default_branch}" ]] && continue
+            if is_retained_consolidation "${branch}"; then
+              retained_consolidation=$((retained_consolidation + 1))
+              echo "skip consolidation retention: ${branch}"
+              continue
+            fi
             is_safe_prefix "${branch}" || continue
             if [[ "${protected}" == "true" ]]; then
               echo "skip protected: ${branch}"
@@ -267,4 +346,4 @@ jobs:
             echo "deleted: ${branch}"
           done
 
-          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} retained_design=${retained_design} dry_run=${dry_run}"
+          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} retained_design=${retained_design} retained_consolidation=${retained_consolidation} dry_run=${dry_run}"
