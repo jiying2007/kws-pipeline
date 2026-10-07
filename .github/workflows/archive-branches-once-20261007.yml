@@ -1,0 +1,117 @@
+name: One-shot reviewed branch archive 20261007
+'on':
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Fixed archive or prune phase
+        required: true
+        type: choice
+        options: [archive, prune]
+      reviewed_source_sha:
+        description: Exact reviewed current main commit (40 hex characters)
+        required: true
+        type: string
+      reviewed_cas_signature_sha256:
+        description: Prune only; SHA-256 of the reviewed normalized archive-mode CAS mismatch signature
+        required: false
+        default: ''
+        type: string
+permissions: {}
+concurrency:
+  group: archive-branches-once-20261007
+  cancel-in-progress: false
+jobs:
+  archive:
+    if: >-
+      github.repository == 'jiying2007/kws-pipeline' &&
+      github.repository_id == '1349639240' &&
+      github.repository_owner_id == '33591504' &&
+      github.actor_id == '33591504' &&
+      github.actor == 'jiying2007' &&
+      github.triggering_actor == 'jiying2007' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      ARCHIVE_SCRIPT_SHA256: 37d2b61faa87d692776f0017be03102e467f357dba2e9bdb94be6f65c7aef398
+      ARCHIVE_TEST_SHA256: 1a46b5901b85a08615dd34fc47ad2681c8854d0187697b2cbf910f9e1279ea11
+      ARCHIVE_PLAN_SHA256: 8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09
+    steps:
+      - name: Load exact reviewed source and run offline tests
+        shell: python
+        env:
+          SOURCE_SHA: ${{ inputs.reviewed_source_sha }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          EVENT_SHA: ${{ github.sha }}
+          RUNNER_TEMP_PATH: ${{ runner.temp }}
+        run: |
+          import base64, hashlib, json, os, pathlib, re, subprocess, urllib.request
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs):
+                  raise RuntimeError('redirect refused')
+          source = os.environ['SOURCE_SHA']
+          if not re.fullmatch('[0-9a-f]{40}', source):
+              raise RuntimeError('reviewed source SHA missing or malformed')
+          if source != os.environ['WORKFLOW_SHA'] or source != os.environ['EVENT_SHA']:
+              raise RuntimeError('workflow source is not reviewed commit')
+          root = pathlib.Path(os.environ['RUNNER_TEMP_PATH']) / 'kws-archive-reviewed'
+          root.mkdir(mode=0o700)
+          opener = urllib.request.build_opener(NoRedirect())
+          files = [
+              ('tools/archive_branches_once_20261007.py', 'archive_branches_once_20261007.py', 'ARCHIVE_SCRIPT_SHA256'),
+              ('tests/test_archive_branches_once_20261007.py', 'test_archive_branches_once_20261007.py', 'ARCHIVE_TEST_SHA256'),
+              ('docs/archive-branches-once-20261007.json', 'archive-plan.json', 'ARCHIVE_PLAN_SHA256'),
+          ]
+          for path, name, pin in files:
+              url = 'https://api.github.com/repos/jiying2007/kws-pipeline/contents/' + path + '?ref=' + source
+              request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json'})
+              with opener.open(request, timeout=30) as response:
+                  payload = response.read(262145)
+              if len(payload) > 262144:
+                  raise RuntimeError('source response limit')
+              item = json.loads(payload)
+              if item.get('encoding') != 'base64':
+                  raise RuntimeError('source response encoding')
+              raw = base64.b64decode(item['content'].replace('\n', ''), validate=True)
+              if hashlib.sha256(raw).hexdigest() != os.environ[pin]:
+                  raise RuntimeError('reviewed source hash mismatch')
+              (root / name).write_bytes(raw)
+          clean = {'PATH': os.environ['PATH'], 'HOME': str(root), 'LANG': 'C', 'LC_ALL': 'C'}
+          subprocess.run(['python3', '-B', str(root / 'test_archive_branches_once_20261007.py')],
+                         check=True, timeout=120, env=clean, cwd=root)
+      - name: Verify archives and perform only the frozen phase
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCHIVE_PLAN_FILE: ${{ runner.temp }}/kws-archive-reviewed/archive-plan.json
+          ARCHIVE_CTX_REPOSITORY: ${{ github.repository }}
+          ARCHIVE_CTX_REPOSITORY_ID: ${{ github.repository_id }}
+          ARCHIVE_CTX_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+          ARCHIVE_CTX_ACTOR_ID: ${{ github.actor_id }}
+          ARCHIVE_CTX_ACTOR: ${{ github.actor }}
+          ARCHIVE_CTX_TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+          ARCHIVE_CTX_EVENT_NAME: ${{ github.event_name }}
+          ARCHIVE_CTX_REF: ${{ github.ref }}
+          ARCHIVE_CTX_RUN_ATTEMPT: ${{ github.run_attempt }}
+          ARCHIVE_CTX_OPERATION: ${{ inputs.operation }}
+          ARCHIVE_CTX_REVIEWED_SOURCE_SHA: ${{ inputs.reviewed_source_sha }}
+          ARCHIVE_CTX_REVIEWED_CAS_SIGNATURE_SHA256: ${{ inputs.reviewed_cas_signature_sha256 }}
+          ARCHIVE_CTX_SHA: ${{ github.sha }}
+          ARCHIVE_CTX_WORKFLOW_SHA: ${{ github.workflow_sha }}
+          ARCHIVE_CTX_WORKFLOW_REF: ${{ github.workflow_ref }}
+          ARCHIVE_CTX_RUN_ID: ${{ github.run_id }}
+        run: python3 -B "${RUNNER_TEMP}/kws-archive-reviewed/archive_branches_once_20261007.py"
+      - name: Remove local reviewed source files
+        if: always()
+        shell: python
+        env:
+          RUNNER_TEMP_PATH: ${{ runner.temp }}
+        run: |
+          import os, pathlib, shutil
+          root = pathlib.Path(os.environ['RUNNER_TEMP_PATH']) / 'kws-archive-reviewed'
+          if root.is_dir():
+              shutil.rmtree(root)

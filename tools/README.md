@@ -111,6 +111,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Repository verification and maintenance
 
+- [`archive_branches_once_20261007.py`](archive_branches_once_20261007.py): temporary reviewed manual archive/prune coordinator; this index grants no execution authority
 - [`check_bench_signal.py`](check_bench_signal.py)
 - [`check_deferred_verdicts.py`](check_deferred_verdicts.py)
 - [`check_gcov.py`](check_gcov.py)
