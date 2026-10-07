@@ -1,9 +1,10 @@
 # Public research source retention, 2026-10-07
 
-This source-only follow-up retains reusable tools and historical conclusions on
-main `c44dcf6fadb60b4a084200f4565b8e5c2503eac4`. It changes no shipping model,
-runtime, configuration, threshold, training implementation, qualification rule,
-or existing workflow. The existing 61-branch cleanup-retention guard is intact.
+The original source-only integration (#490) retained reusable tools and historical
+conclusions on base main `c44dcf6fadb60b4a084200f4565b8e5c2503eac4`. It changed
+no shipping model, runtime, configuration, threshold, training implementation,
+qualification rule or existing workflow. Later dependency maintenance is recorded
+explicitly below. The existing 61-branch cleanup-retention guard remains intact.
 
 ## Safety and identity contract
 
@@ -110,3 +111,38 @@ counterfactual failures remain negative conclusions, not product improvements.
 The restricted-development design and both keyword-set alternatives remain
 retained pointers requiring a fresh current-contract review; no stale product
 code is restored. No old branch or PR is deleted or closed by this batch.
+
+## Active workflow dependency maintenance, 2026-10-07
+
+After source consolidation #490 merged as
+`b1535021204f74d71d325fa0494d43542b4bf179` (tree
+`2b9fb406f1256636c7a29c790bd4f24c032d4228`), all three current uses of
+`actions/setup-python` move from the official v6.3.0 commit
+`ece7cb06caefa5fff74198d8649806c4678c61a1` to the official v7.0.0 commit
+`5fda3b95a4ea91299a34e894583c3862153e4b97`:
+
+- `.github/workflows/research-donor-fbank.yml`
+- `.github/workflows/research-donor-fsmn.yml`
+- `.github/workflows/research-source-consolidation.yml`
+
+The [official release](https://github.com/actions/setup-python/releases/tag/v7.0.0)
+migrates action internals to ESM and removes the `pip-install` input. These
+workflows use only `python-version: '3.12'`; package-install commands remain
+separate and unchanged. Both action revisions use Node 24. The existing
+[runner minimum of v2.327.1](https://github.com/actions/setup-python/blob/5fda3b95a4ea91299a34e894583c3862153e4b97/README.md#breaking-changes-in-v6)
+continues to apply to these GitHub-hosted Ubuntu jobs. No Python-version,
+trigger, permission, test command or execution-authority change is introduced.
+
+The retention manifest's `baseline_active_workflows` is the currently enforced
+54-file inventory, with exactly the two donor workflow identities intentionally
+updated. The source-consolidation workflow remains the single separately allowed
+addition. `active_workflow_maintenance` records the exact before/after byte count,
+mode, Git blob and SHA-256 for all three files. It preserves the original donor
+baseline hashes rather than silently rewriting their history. The manifest's
+original consolidation `base_commit` and `base_tree` still describe that original
+source-import base; they are not a claim that maintained workflow bytes match it.
+All other baseline rows, 718 retained source/archive paths, 834 provenance
+records, source-freeze identities, 102 core imports and the 61-branch retention
+guard remain unchanged. No historical archived workflow is upgraded or activated.
+The existing verifier continues to enforce exact current baseline bytes; no
+verification rule or allowlist is relaxed.
