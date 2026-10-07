@@ -27,7 +27,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install numeric test dependencies only
-        run: python3 -m pip install --only-binary=:all: --disable-pip-version-check numpy==2.3.5 scipy==1.17.0
+        run: |
+          python3 -m pip install --only-binary=:all: --disable-pip-version-check numpy==2.3.5 scipy==1.17.0
       - name: Verify retention and inactive historical workflows
         run: |
           python3 -B tools/verify_research_sources.py
