@@ -36,6 +36,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 - [`compile_keywords.py`](compile_keywords.py)
 - [`corpus_identity.py`](corpus_identity.py)
+- [`keyword_set_identity.py`](keyword_set_identity.py)
 - [`kws_vocab.py`](kws_vocab.py)
 - [`validate_shipping_keywords.py`](validate_shipping_keywords.py)
 - [`verify_corpus_identity.py`](verify_corpus_identity.py)

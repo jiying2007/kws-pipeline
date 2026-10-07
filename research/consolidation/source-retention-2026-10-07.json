@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "1a9d3eaa494922fe2481749741f94b7639ab277a",
-      "sha256": "81fa55fe96fbc5b8008129a5442b95b219a4940dc4925b20eac13295d4f8fa0d",
-      "bytes": 23870
+      "git_blob_sha1": "7d02db422f20c68f2ffdc25b7ea0e98df3b6ad20",
+      "sha256": "457a7a4179f3bd2807d5d6e556669bbf21c111d770285ed1351b819b453c1bbf",
+      "bytes": 23935
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15694,6 +15694,32 @@
             "git_blob_sha1": "b1650c3b3b3ca25929887e5136934f61a3163a07",
             "sha256": "f6b4b2dfb1e98e7a1be47a7f3602ffb1336c73373de393341cd10c87a2ea1197",
             "bytes": 1368
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "from_commit": "221dedd21d0892965aacda15e676fc97d29bd32b",
+      "from_tree": "256648cbc8313ff44b31e74ae6ab92f20480663c",
+      "scope": "Add only tests/test_keyword_set_identity.py to the existing Keyword compiler CI step; retain the tracked-worktree guard.",
+      "rationale": "Fresh offline keyword identity v2 tests require official CI coverage. Keep the active workflow baseline exact; no historical source, preserved freeze, permission, trigger, workflow inventory, or shipping authority change.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1a9d3eaa494922fe2481749741f94b7639ab277a",
+            "sha256": "81fa55fe96fbc5b8008129a5442b95b219a4940dc4925b20eac13295d4f8fa0d",
+            "bytes": 23870
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "7d02db422f20c68f2ffdc25b7ea0e98df3b6ad20",
+            "sha256": "457a7a4179f3bd2807d5d6e556669bbf21c111d770285ed1351b819b453c1bbf",
+            "bytes": 23935
           }
         }
       ]

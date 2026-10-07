@@ -7,6 +7,7 @@
 - [Reusable research modules and outcomes](../research/README.md)
 - [Public research evidence in kws-data](https://github.com/jiying2007/kws-data/blob/main/docs/RESEARCH_INDEX.md)
 - [Engineering tool index](../tools/README.md)
+- [Complete offline keyword-set identity](KEYWORD_SET_IDENTITY.md): parsed vocabulary/policy identity; no deployment or training approval
 - [Historical branch outcomes](../research/consolidation/history/BRANCH_OUTCOMES.md) and [reading older notes](../research/consolidation/history/READING_NOTES.md)
 
 ## Product contracts
