@@ -9,6 +9,11 @@ import pathlib
 import sys
 from collections import defaultdict
 
+if __package__:
+    from .context_policy import assess_context
+else:
+    from context_policy import assess_context
+
 UINT32_MAX = 0xFFFFFFFF
 DEFAULT_PRE_TOLERANCE_MS = 150.0
 DEFAULT_POST_TOLERANCE_MS = 500.0
@@ -170,6 +175,57 @@ def validate_recordings(rows: list[dict]) -> dict[str, dict]:
     if not recordings:
         raise ValueError("reference file contains no recordings")
     return recordings
+
+
+def validate_clip_references(rows: list[dict]) -> dict[str, dict]:
+    """Presence labels have no event windows; never fabricate an alignment."""
+    normalized = []
+    for row in rows:
+        if row.get("annotation_status") != "complete":
+            raise ValueError("clip presence requires complete annotations; partial/unknown is unscored")
+        if "expected" in row:
+            raise ValueError("clip presence requires expected_keywords, not event windows")
+        keywords = row.get("expected_keywords")
+        if not isinstance(keywords, list):
+            raise ValueError("clip presence requires explicit expected_keywords ([] for negatives)")
+        ids = [uint32_value(value, "expected keyword") for value in keywords]
+        if len(ids) != len(set(ids)):
+            raise ValueError("clip presence keyword IDs must be unique")
+        normalized.append(dict(row, expected=[]))
+    recordings = validate_recordings(normalized)
+    for row in rows:
+        recordings[row["recording"]]["expected_keywords"] = row["expected_keywords"]
+    return recordings
+
+
+def score_clip_presence(recordings: dict, detections: dict) -> dict:
+    counts = dict(positive_clips=0, positive_clips_with_target=0, negative_clips=0,
+                  negative_clips_with_events=0, negative_events=0,
+                  missing_keywords=0, wrong_keyword_events=0, repeat_events=0)
+    details = []
+    for name, row in recordings.items():
+        targets = {uint32_value(value, "expected keyword") for value in row["expected_keywords"]}
+        events = detections.get(name, [])
+        seen = defaultdict(int)
+        for event in events:
+            seen[event["keyword_id"]] += 1
+        missing = sorted(targets - seen.keys())
+        wrong = sum(n for key, n in seen.items() if key not in targets) if targets else 0
+        repeats = sum(max(0, n - 1) for n in seen.values())
+        counts["positive_clips" if targets else "negative_clips"] += 1
+        counts["positive_clips_with_target"] += bool(targets & seen.keys())
+        counts["negative_clips_with_events"] += bool(events) and not targets
+        counts["negative_events"] += len(events) if not targets else 0
+        counts["missing_keywords"] += len(missing)
+        counts["wrong_keyword_events"] += wrong
+        counts["repeat_events"] += repeats
+        details.append(dict(recording=name, expected_keywords=sorted(targets),
+                            missing_keywords=missing, wrong_keyword_events=wrong,
+                            repeat_events=repeats, detections=events))
+    return dict(evidence_class="saved-clip-presence-diagnostic-v1", **counts,
+                event_annotations_available=False, qualification_allowed=False,
+                timing_scope="saved detection coordinates only; acoustic word end unknown",
+                recordings=details)
 
 
 def validate_detections(
@@ -444,6 +500,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--references", required=True, type=pathlib.Path)
     parser.add_argument("--detections", required=True, type=pathlib.Path)
+    parser.add_argument("--clip-presence", action="store_true",
+                        help="report whole-clip counts without FRR/FAR/latency")
+    parser.add_argument("--context-manifest", type=pathlib.Path,
+                        help="eval-context-v1 declarations bound to reference/detection bytes")
+    parser.add_argument("--require-matched-context", action="store_true",
+                        help="fail unless positive and negative context declarations match")
     parser.add_argument("--pre-tolerance-ms", type=float, default=DEFAULT_PRE_TOLERANCE_MS)
     parser.add_argument("--post-tolerance-ms", type=float, default=DEFAULT_POST_TOLERANCE_MS)
     parser.add_argument("--summary", type=pathlib.Path)
@@ -477,8 +539,31 @@ def main() -> int:
             raise ValueError("required keyword counts must be positive and IDs unique")
         required_keywords[keyword_id] = count
 
-    recordings = validate_recordings(load_jsonl(args.references))
+    rows = load_jsonl(args.references)
+    recordings = (validate_clip_references(rows) if args.clip_presence
+                  else validate_recordings(rows))
     detections = validate_detections(load_jsonl(args.detections), recordings)
+    context = assess_context(args.context_manifest, args.references, args.detections,
+                             rows, clip_presence=args.clip_presence)
+    if args.require_matched_context and not context["matched_context"]:
+        raise ValueError("matched context required: " + context["status"] + "; " +
+                         ", ".join(context["unknown"] + context["differences"]))
+    if args.clip_presence:
+        metric_options = (args.max_far_per_hour, args.max_frr, args.max_p95_latency_ms,
+                          args.min_negative_hours, args.min_continuous_negative_seconds,
+                          args.max_negative_far_upper_95_per_hour)
+        if (any(value is not None for value in metric_options) or required_keywords
+                or args.false_positives or args.false_rejects):
+            raise ValueError("clip presence cannot satisfy event metric gates or mining outputs")
+        summary = score_clip_presence(recordings, detections)
+        summary.update(context=context, references_sha256=sha256_file(args.references),
+                       detections_sha256=sha256_file(args.detections))
+        rendered = json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False)
+        print(rendered)
+        if args.summary:
+            args.summary.parent.mkdir(parents=True, exist_ok=True)
+            args.summary.write_text(rendered + "\n", encoding="utf-8")
+        return 0
     summary, false_accepts, false_rejects = score(
         recordings,
         detections,
@@ -487,6 +572,7 @@ def main() -> int:
     )
     summary["references_sha256"] = sha256_file(args.references)
     summary["detections_sha256"] = sha256_file(args.detections)
+    summary["context"] = context
     rendered = json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False)
     print(rendered)
 
@@ -545,6 +631,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (KeyError, RuntimeError, TypeError, ValueError) as exc:
+    except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

@@ -1,0 +1,253 @@
+{
+  "schema": "consolidation-branch-retention-v1",
+  "snapshot_utc": "2026-10-07T08:23:30Z",
+  "repository": "jiying2007/kws-pipeline",
+  "base_commit": "55a4e23379ad7072db507dbe419b38d8898e17fa",
+  "policy": "Retain these inventoried branch names regardless of merge status, PR closure age or later head changes. Release a guard only by a separately reviewed explicit retention decision; consolidation does not authorize deletion.",
+  "branches": [
+    {
+      "name": "codex/github-asr-runtime-once-20261001",
+      "commit": "1535031d186ee32190f40cd5263459c21b63b753"
+    },
+    {
+      "name": "codex/kws-expanded-train-readback-20260927",
+      "commit": "c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8"
+    },
+    {
+      "name": "dependabot/github_actions/github-actions-151ba0d261",
+      "commit": "56234243256ee0cc1a96fcc874fa2dc8883b1c56"
+    },
+    {
+      "name": "diag/ctc-occurrence-target-blank-gradient",
+      "commit": "2468af38e1f2a797e4c1e15b7387fb524fe62e19"
+    },
+    {
+      "name": "diag/ctc-viterbi-separability-v1",
+      "commit": "0b45ab32c65c36a3613404dce8ec755d00fb0c50"
+    },
+    {
+      "name": "diag/frozen-far-history-decomposition-rerun-v1",
+      "commit": "22610f6f2012d5d7c3a86118c70b3ed187d4d951"
+    },
+    {
+      "name": "diag/frozen-far-source-replay-cases-v1-rerun1",
+      "commit": "d0828c3e2c35dffb8406cd1c504463951c3f8076"
+    },
+    {
+      "name": "diag/frozen-far-source-replay-cases-v1",
+      "commit": "a9b29dccea1e4b03fd94a2f3745987bf88a363cb"
+    },
+    {
+      "name": "diag/frozen-far-stream-context-replay-v1",
+      "commit": "73ff31a39090eff9d1e696c964c60cc31a218a2c"
+    },
+    {
+      "name": "diag/fuzzy-competitor-token-provenance",
+      "commit": "924bc52c2bcc35fc69bd25e077f8dfed15e48811"
+    },
+    {
+      "name": "diag/fuzzy-temporal-neighborhood-stack",
+      "commit": "a0e06819e679fdbcedce05499bb494dae0567f37"
+    },
+    {
+      "name": "diag/nonroot-exact-top-admission-probe",
+      "commit": "fb735bc609b7bc3be5418c36e9a91c5547d60cf2"
+    },
+    {
+      "name": "diag/retained-frozen-far-path-summary-seed3301-rerun1",
+      "commit": "3a30f2878323b313d7361541faf451b78f643ecd"
+    },
+    {
+      "name": "diag/retained-frozen-far-path-summary-seed3301",
+      "commit": "1e84b3c2b58fab504befa1c0a71b061f0347f7f5"
+    },
+    {
+      "name": "diag/strict-fuzzy-child-cost-probe",
+      "commit": "f79f9540aa9b0811e34592f5b77cc9b1b70d7826"
+    },
+    {
+      "name": "exp/ctc-keyword-competition-positive-pair-v1",
+      "commit": "d08abbf3b5c43155f9bcb3986aef687e7bcb1ec3"
+    },
+    {
+      "name": "exp/decoder-exact-nonroot-probe-v1",
+      "commit": "03453a6c408cb038ad80f38b0afd0911ab7dd88a"
+    },
+    {
+      "name": "exp/decoder-nonroot-blank-evidence-probe-v1",
+      "commit": "9f7947a07d7a00b7ebf5b7c427e423837a5d2618"
+    },
+    {
+      "name": "exp/decoder-nonroot-defer-probe-v1",
+      "commit": "8589e99d85f01f4a4dd3499548329c2357a5aa8b"
+    },
+    {
+      "name": "exp/label-prior-primary-ctc-pair-v1-rerun1",
+      "commit": "d74ff5589568d6a3b81f38e04f6e86688b51aebf"
+    },
+    {
+      "name": "exp/label-prior-primary-ctc-pair-v1",
+      "commit": "a06f36bdeab9a00c5b7581255ea3d8fd4c5a0f51"
+    },
+    {
+      "name": "exp/runtime-exec-replay-control-v1",
+      "commit": "54de5a632090bdb4c7645919a78a8ac47e8bebf5"
+    },
+    {
+      "name": "exp/runtime-exec-replay-treatment-v1",
+      "commit": "1edc7bc09a8739b4d49d1be9b03d5532898efb75"
+    },
+    {
+      "name": "exp/runtime-search-aligned-positive-pair-v1",
+      "commit": "1455685aa050c3508ca755b480f80dca0ac9ff9e"
+    },
+    {
+      "name": "exp/vad-align-control-current-v1",
+      "commit": "fd44748f18728621df20b65b15ad14639350d5f6"
+    },
+    {
+      "name": "exp/vad-align-control-current-v2",
+      "commit": "8ffc1200a900728fde3d392479a863f42132be5c"
+    },
+    {
+      "name": "exp/vad-align-suffix-root-v1",
+      "commit": "2b38131cf20966ac0bc24b92b617ae308ba19cd1"
+    },
+    {
+      "name": "exp/vad-align-suffix-root-v2",
+      "commit": "e45902a23696a95018ac80b9445c36d05c7203bb"
+    },
+    {
+      "name": "feat/label-prior-ctc-objective",
+      "commit": "8381df126a1f8c9decca2579dff612833bfcc5b1"
+    },
+    {
+      "name": "feat/restricted-development-dataset-iteration-v1",
+      "commit": "064493c5bd71c4de40aa9d6569254724ee1ada46"
+    },
+    {
+      "name": "research/a20-cosy30-cross-voice-v1",
+      "commit": "d5c64d273f680f274d673439f9525cc634089d4a"
+    },
+    {
+      "name": "research/a20-cosy49-single-candidate-v1",
+      "commit": "28e90204e40b8da07f5d887fee43f3e19a3e865d"
+    },
+    {
+      "name": "research/a20-cpu-metadata-probe-20261004",
+      "commit": "ff0a1bbd1815655aeec448ed43da728e2cf2c955"
+    },
+    {
+      "name": "research/a20-fixed300-single-candidate-v1",
+      "commit": "a44a8d785bacfc2daf3f94951547e74063e30d26"
+    },
+    {
+      "name": "research/a20-token-preparation-20261004",
+      "commit": "f63ace695467e310129fb51f5e09c031ed834d34"
+    },
+    {
+      "name": "research/a20-token-preparation-metadata-recovery-20261004",
+      "commit": "4a62fc91f7140c6e875692c88235152da4c68e4d"
+    },
+    {
+      "name": "research/asr-label-decision-regressions-v1",
+      "commit": "7d565b40d171b95167b85444bf2bfd1428dc7f1d"
+    },
+    {
+      "name": "research/cosy49-results-archive-v1",
+      "commit": "5abf8de13f0ed097c223c82a98428bec3aab7e7f"
+    },
+    {
+      "name": "research/cosyvoice3-six-pair-pilot-20261002",
+      "commit": "a352b52946ebde8e7a790fd2abd4b4f98dc39d98"
+    },
+    {
+      "name": "research/experiment-quality-guards-v1",
+      "commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
+    },
+    {
+      "name": "research/firered-cpu-preflight-20261002",
+      "commit": "d68ebc1a45b5ec6e2c5d64a91bc54c0fb3be4662"
+    },
+    {
+      "name": "research/fixed30-asr-regression-v1",
+      "commit": "3385bf2a7f6838b743546f2ee9f481e2fa7ee975"
+    },
+    {
+      "name": "research/fixed30-asr-setup-recovery-v2",
+      "commit": "94b9fbf562aca9487beb8096bc3f50924369a3ce"
+    },
+    {
+      "name": "research/frozen-far-phase-aligned-control-20260930",
+      "commit": "0595b248b19b856df80902a6656bbea94ddd5a94"
+    },
+    {
+      "name": "research/k1-fixed-slot-ctc-v1",
+      "commit": "71313a67ab6ef4bc6dede51e4897b305eb5577b3"
+    },
+    {
+      "name": "research/k1-prefix-marginal-v1",
+      "commit": "5058065799edfa223b9cd6b06c3aea48fecf795e"
+    },
+    {
+      "name": "research/matched-context-evaluation-v1",
+      "commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+    },
+    {
+      "name": "research/melo6-saved-result-checks-v1",
+      "commit": "3be91857f80ba63f80a5caac82744cb141f39987"
+    },
+    {
+      "name": "research/melo6-source-screen-v1",
+      "commit": "dd859c5b9feeaeedcff937cf94ac0858a9793ad1"
+    },
+    {
+      "name": "research/native-a20-arm-compile-only-20261004",
+      "commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+    },
+    {
+      "name": "research/native-a20-domain-tools-20261004",
+      "commit": "fe53ae5a11e676560d18d5ef94fb696b6013ce9f"
+    },
+    {
+      "name": "research/native-a20-n0-tools-20261004",
+      "commit": "6d06a04403a93c5b7138870deb900baf5a8fefc4"
+    },
+    {
+      "name": "research/native-a20-quality-tools-20261004",
+      "commit": "d8453ae8b2b2c620716b32c96d9647834ce96746"
+    },
+    {
+      "name": "research/native-a20-qwen20-saved-20261004",
+      "commit": "09ec823d16fc149463bb898f6408221b05471e64"
+    },
+    {
+      "name": "research/native-a20-recovery-20261003",
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
+    },
+    {
+      "name": "research/qwen6-source-screen-native-recovery-v3",
+      "commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51"
+    },
+    {
+      "name": "research/qwen6-source-screen-recovery-v2",
+      "commit": "480e4f013349917b0cea514633d3f7ae2d98c0b4"
+    },
+    {
+      "name": "research/qwen6-source-screen-v1",
+      "commit": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93"
+    },
+    {
+      "name": "research/single-k1-followed-wu-v1",
+      "commit": "c81396934ad4c83876086d35ffb79478435d19d0"
+    },
+    {
+      "name": "training/keyword-set-contract-v1",
+      "commit": "986d44c9e0efe15ce0656413a2f2112aeccaea96"
+    },
+    {
+      "name": "training/keyword-set-identity-v1",
+      "commit": "2d52b58f36163fb93b9ba1b1356fa184c187fa2f"
+    }
+  ]
+}

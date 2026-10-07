@@ -1,0 +1,778 @@
+{
+  "coverage_policy": {
+    "frozen": true,
+    "minima": {
+      "K1": 1,
+      "K2": 1
+    },
+    "nonwake_minima": {
+      "out_of_vocabulary": 1,
+      "你好你好": 1,
+      "你好小屋": 1,
+      "小屋小屋": 1,
+      "小窝": 1
+    },
+    "policy_id": "pure-regression-example-minima-v1",
+    "purpose": "example fixture only, not an approved future experiment threshold",
+    "vocabulary": "你好小窝屋"
+  },
+  "coverage_policy_sha256": "1f736c990b10119a9b00390e9a48408bf9e43d41042a4c694b32b02150cece0c",
+  "coverage_rows": [
+    {
+      "actual_text": "你好小窝",
+      "exposure": "EXPOSED",
+      "fixture_origin": "invented",
+      "id": "illustrative-train-a-positive",
+      "pcm_sha256": "6732109f80c7f89dfc48aeabd6eb6a0324e72f8dea5a699bbffc8cbcbb2271c6",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "illustrative:train-a",
+      "split": "train",
+      "use": "regression"
+    },
+    {
+      "actual_text": "小窝小窝",
+      "exposure": "EXPOSED",
+      "fixture_origin": "invented",
+      "id": "illustrative-train-b-positive",
+      "pcm_sha256": "1ea0235309fbb088daa35ac4d1592273e5c227efe2113ab33e39f4cd0a80f572",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "illustrative:train-b",
+      "split": "train",
+      "use": "regression"
+    },
+    {
+      "actual_text": "你好小屋",
+      "exposure": "EXPOSED",
+      "fixture_origin": "invented",
+      "id": "illustrative-dev-nonwake",
+      "pcm_sha256": "da50af151eaca905f7358b35e68fd8499e02c3b7a51e088c51ba35ee2978c035",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "illustrative:dev",
+      "split": "dev",
+      "use": "regression"
+    },
+    {
+      "actual_text": "你好小窝",
+      "exposure": "EXPOSED",
+      "fixture_origin": "invented",
+      "id": "illustrative-dev-incomplete",
+      "pcm_sha256": "8d17852eb500e6d7c6cf9624d7af018d3e7e8dd505c90728cb3dac5897928384",
+      "review": {
+        "complete": false,
+        "independent_human": true,
+        "status": "ambiguous"
+      },
+      "source_group": "illustrative:dev",
+      "split": "dev",
+      "use": "regression"
+    }
+  ],
+  "declarations": [
+    {
+      "role": "balanced",
+      "source_group": "illustrative:train-a",
+      "split": "train"
+    },
+    {
+      "role": "balanced",
+      "source_group": "illustrative:train-b",
+      "split": "train"
+    },
+    {
+      "role": "balanced",
+      "source_group": "illustrative:dev",
+      "split": "dev"
+    }
+  ],
+  "evidence_basis": {
+    "coverage_rows": "Invented failure-pattern examples, not historical per-recording labels",
+    "identity_history": "Public Qwen training and Cosy reference SHA256 equality",
+    "old6_events": "keyword and available_samples selected from immutable public results",
+    "old6_rows": "Exact technical projection of immutable public labels; publicly exposed synthetic speech",
+    "supervision_rows": "Invented telemetry examples; not restored saved resource records",
+    "timing_rows": "Invented coordinates and identifiers illustrating the published aggregate only; not restored saved events"
+  },
+  "historical_coverage_summary": {
+    "dev_Uncle_Fu_complete_K1": 0,
+    "dev_Uncle_Fu_complete_K2": 0,
+    "qualification": false,
+    "scope": "Aggregate of reviewed exposed synthetic source labels; illustrative rows are not their restoration",
+    "train_Eric_complete_K1": 1,
+    "train_Eric_complete_K2": 0,
+    "train_Vivian_complete_K1": 0,
+    "train_Vivian_complete_K2": 1
+  },
+  "historical_old98_aggregate": {
+    "availability_delays_ms": [
+      300,
+      180,
+      120
+    ],
+    "earlier": 0,
+    "later": 3,
+    "lifetime_rss_kib": {
+      "candidate": 58892,
+      "original": 13848
+    },
+    "model_memory_regression": "NOT_ESTABLISHED",
+    "n_per_arm": 1,
+    "retained_matches": 28,
+    "sampled_rss_bytes": {
+      "candidate": 4079616,
+      "original": 4079616
+    },
+    "unchanged": 25,
+    "wall_service_latency_status": "NOT_MEASURED",
+    "word_end_latency_status": "NOT_MEASURED"
+  },
+  "identity_history": [
+    {
+      "exposure": "EXPOSED",
+      "id": "qwen3-kw1-dylan",
+      "lineage_status": "verified",
+      "pcm_sha256": "f2c212d2a54f124535a6ac7ce6e2fc272a99dd878030c8765064dca8f30ec037",
+      "split": "train",
+      "use": "training",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5"
+    }
+  ],
+  "old6_candidate": {
+    "Z1": [],
+    "Z2": [
+      {
+        "available_samples": 29440,
+        "keyword": 2
+      }
+    ],
+    "Z3": [],
+    "Z4": [],
+    "Z5": [],
+    "Z6": [
+      {
+        "available_samples": 24000,
+        "keyword": 1
+      }
+    ]
+  },
+  "old6_original": {
+    "Z1": [],
+    "Z2": [
+      {
+        "available_samples": 29440,
+        "keyword": 2
+      }
+    ],
+    "Z3": [],
+    "Z4": [],
+    "Z5": [
+      {
+        "available_samples": 23680,
+        "keyword": 1
+      }
+    ],
+    "Z6": []
+  },
+  "old6_rows": [
+    {
+      "actual_text": "你好",
+      "exposure": "EXPOSED",
+      "id": "Z1",
+      "lineage_status": "verified",
+      "pcm_sha256": "e0ccf1258034bf8e95aeaf15dd24647e00a27977e8f8dc70767565dd83a8884e",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "781010d41cea41a9ee643d337f6b1f6fd386a718bd0fda600a5549aa6230e3e6"
+    },
+    {
+      "actual_text": "小屋小屋",
+      "exposure": "EXPOSED",
+      "id": "Z2",
+      "lineage_status": "verified",
+      "pcm_sha256": "b08361a7b055cb751ac42e67ba0b3d569640087ea8b0e726c3f1828d8397842f",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "71bdf993e8841e6539d26776837de62edef5c7f7378691a2015a04dd831c9dee"
+    },
+    {
+      "actual_text": "小挖",
+      "exposure": "EXPOSED",
+      "id": "Z3",
+      "lineage_status": "verified",
+      "pcm_sha256": "9a763119fa0be7e78b602be1b603a685c9a19ee50553a7e9170a968ee3a0206a",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "c211d9b90a145cfdf04dfd5594d7ee30115f232834660886abd6d98406f901c2"
+    },
+    {
+      "actual_text": "小窝小窝",
+      "exposure": "EXPOSED",
+      "id": "Z4",
+      "lineage_status": "verified",
+      "pcm_sha256": "09ccfc29019022f9a48d57931ca455709c2c81dbc9e12ae307173c4cbe0e0c6c",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "a0d0a3b7b38e9c5b7444afc5a762aeed4ac0215bdbebedb1bfd85ea65c6ab462"
+    },
+    {
+      "actual_text": "你好小窝",
+      "exposure": "EXPOSED",
+      "id": "Z5",
+      "lineage_status": "verified",
+      "pcm_sha256": "0096341a8413a25fca962dcc6229f957f618e0b571f5bf665cd2e5a051b6d9ea",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "18016119e6693cb208f15bf4dfa5f59275e9ee03952c51193aff9497fcab1735"
+    },
+    {
+      "actual_text": "你好小屋",
+      "exposure": "EXPOSED",
+      "id": "Z6",
+      "lineage_status": "verified",
+      "pcm_sha256": "a9e69c199e7f1af0f0fe05299852933f998290919a7c80bd88facd35963408a2",
+      "reference_sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "restriction": "regression_only",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "reviewed_before_predictions": true,
+        "status": "clean"
+      },
+      "split": "regression",
+      "use": "regression",
+      "voice_identity": "Qwen3-stock:Dylan",
+      "wav_sha256": "50a106407d4bb1cc8f3dbf8209361b29aac54a60380398ecf2e8c58300c573f5"
+    }
+  ],
+  "purpose": "pure code/report regression; no fresh acoustic validation",
+  "schema": "public-research-quality-regression-fixture-v1",
+  "supervision_illustration": {
+    "candidate_cosy49_step300": {
+      "critical_post_go_samples": 1,
+      "fixture_origin": "invented",
+      "guard_stop_reason": null,
+      "pre_go_observation": {
+        "Threads": 1,
+        "VmRSS": 100,
+        "children": null,
+        "children_count": null,
+        "children_observation": "NOT_AVAILABLE",
+        "critical_errors": {},
+        "critical_monitoring": "OBSERVED_RSS_THREADS_ONLY",
+        "observation": "LIVE"
+      },
+      "proc_samples_compact": [
+        [
+          0,
+          null,
+          100,
+          100,
+          200,
+          1,
+          null,
+          "LIVE",
+          "OBSERVED_RSS_THREADS_ONLY",
+          "NOT_AVAILABLE",
+          null,
+          null,
+          null
+        ],
+        [
+          1,
+          0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "EXITED_BEFORE_READ",
+          "UNKNOWN_NOT_SAMPLED_AFTER_EXIT",
+          "UNKNOWN_NOT_SAMPLED_AFTER_EXIT",
+          null,
+          null,
+          null
+        ]
+      ],
+      "returncode": 0,
+      "schema": "a20-endpoint-arm-resource-v1",
+      "status": "COMPLETE_ACQUISITION_PENDING_TRACE_AUDIT"
+    },
+    "original_A20": {
+      "critical_post_go_samples": 1,
+      "fixture_origin": "invented",
+      "guard_stop_reason": null,
+      "pre_go_observation": {
+        "Threads": 1,
+        "VmRSS": 100,
+        "children": null,
+        "children_count": null,
+        "children_observation": "NOT_AVAILABLE",
+        "critical_errors": {},
+        "critical_monitoring": "OBSERVED_RSS_THREADS_ONLY",
+        "observation": "LIVE"
+      },
+      "proc_samples_compact": [
+        [
+          0,
+          null,
+          100,
+          100,
+          200,
+          1,
+          null,
+          "LIVE",
+          "OBSERVED_RSS_THREADS_ONLY",
+          "NOT_AVAILABLE",
+          null,
+          null,
+          null
+        ],
+        [
+          1,
+          0,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "EXITED_BEFORE_READ",
+          "UNKNOWN_NOT_SAMPLED_AFTER_EXIT",
+          "UNKNOWN_NOT_SAMPLED_AFTER_EXIT",
+          null,
+          null,
+          null
+        ]
+      ],
+      "returncode": 0,
+      "schema": "a20-endpoint-arm-resource-v1",
+      "status": "COMPLETE_ACQUISITION_PENDING_TRACE_AUDIT"
+    }
+  },
+  "timing_illustration_candidate": {
+    "illustrative-timing-01": [
+      {
+        "available_samples": 1300,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-02": [
+      {
+        "available_samples": 1180,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-03": [
+      {
+        "available_samples": 1120,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-04": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-05": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-06": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-07": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-08": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-09": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-10": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-11": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-12": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-13": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-14": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-15": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-16": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-17": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-18": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-19": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-20": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-21": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-22": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-23": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-24": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-25": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-26": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-27": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-28": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ]
+  },
+  "timing_illustration_original": {
+    "illustrative-timing-01": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-02": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-03": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-04": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-05": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-06": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-07": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-08": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-09": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-10": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-11": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-12": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-13": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-14": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-15": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-16": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-17": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-18": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-19": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-20": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-21": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-22": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-23": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-24": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-25": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-26": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-27": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ],
+    "illustrative-timing-28": [
+      {
+        "available_samples": 1000,
+        "keyword": 1
+      }
+    ]
+  },
+  "timing_illustration_sample_rates": {
+    "illustrative-timing-01": 1000,
+    "illustrative-timing-02": 1000,
+    "illustrative-timing-03": 1000,
+    "illustrative-timing-04": 1000,
+    "illustrative-timing-05": 1000,
+    "illustrative-timing-06": 1000,
+    "illustrative-timing-07": 1000,
+    "illustrative-timing-08": 1000,
+    "illustrative-timing-09": 1000,
+    "illustrative-timing-10": 1000,
+    "illustrative-timing-11": 1000,
+    "illustrative-timing-12": 1000,
+    "illustrative-timing-13": 1000,
+    "illustrative-timing-14": 1000,
+    "illustrative-timing-15": 1000,
+    "illustrative-timing-16": 1000,
+    "illustrative-timing-17": 1000,
+    "illustrative-timing-18": 1000,
+    "illustrative-timing-19": 1000,
+    "illustrative-timing-20": 1000,
+    "illustrative-timing-21": 1000,
+    "illustrative-timing-22": 1000,
+    "illustrative-timing-23": 1000,
+    "illustrative-timing-24": 1000,
+    "illustrative-timing-25": 1000,
+    "illustrative-timing-26": 1000,
+    "illustrative-timing-27": 1000,
+    "illustrative-timing-28": 1000
+  }
+}

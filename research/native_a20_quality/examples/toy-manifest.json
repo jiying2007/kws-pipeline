@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "manifest_id": "FICTIONAL-TOY-METADATA-NOT-REAL-AUDIO",
+  "keywords": [
+    "你好小窝",
+    "小窝小窝"
+  ],
+  "protocol": {
+    "id": "fictional-protocol",
+    "input_order": [
+      "positive",
+      "continuous-negative",
+      "unknown",
+      "exposed",
+      "heldout"
+    ],
+    "state_policy": "reset_per_asset_preserve_state_within_asset",
+    "sha256": "15502433b38a23c53b267c0680c00f6cc54bfd033269121bd61d5f986c62b133",
+    "model_sha256": "fceb546259a5f9fc8eec278c40f7edff38320d5301618cfd88f21b2e10ad2867",
+    "source_sha256": "e8f9967f4cb7b1b19f35312aeec5923cd37b6250af5fc148a2e110ddc3314be3",
+    "decoder_config_sha256": "699281e35247836beb4728b30e3629f8abc59405363177b19a6628d858659bfe",
+    "split_frozen_before_predictions": true,
+    "heldout_open_authorized": true,
+    "matching": "disjoint_half_open_event_windows_first_correct",
+    "confidence": 0.95,
+    "iid_binomial_assumption": true,
+    "stationary_poisson_assumption": true
+  },
+  "assets": [
+    {
+      "id": "positive",
+      "logical_path": "fictional/positive.wav",
+      "wav_sha256": "065205b7cd0bf5e0f7752206f12671070074351491f5839de55c1352a90be9c7",
+      "pcm_sha256": "1f52e8cb34fafebf544cd9d4c89ab3f1b153958700e79ee713ed02579e09654a",
+      "sample_rate_hz": 16000,
+      "frames": 160000,
+      "duration_s": 10,
+      "source": {
+        "dataset": "toy-positive",
+        "family": "family-positive",
+        "tier": "open_human",
+        "evidence_ref": "fictional evidence positive",
+        "evidence_sha256": "cd0e34eedaf4fabd02625b07f13eb1727bb6c4a8a4c4bc9d7aca508e69afd5ae",
+        "speaker": "speaker-positive",
+        "generator": null,
+        "session": "session-positive",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "FICTIONAL-NO-AUDIO",
+        "evidence_ref": "fictional permission fixture",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "dev"
+        ],
+        "commercial_output_license": "not_applicable"
+      },
+      "role": "dev",
+      "label_strength": "verified",
+      "label_binding": "source_bound",
+      "label_authority": "Fictional metadata fixture, not acoustic evidence",
+      "declared_keywords": [],
+      "exposures": [],
+      "exposure_review_complete": true,
+      "leakage_group": "group-positive",
+      "derivation_family": "origin-positive",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [
+        {
+          "id": "p1",
+          "keyword": "你好小窝",
+          "start_s": 1,
+          "end_s": 2,
+          "truth_evidence_ref": "fictional verified event",
+          "word_tail_s": 1.6,
+          "word_tail_evidence_ref": "fictional true word-tail annotation"
+        },
+        {
+          "id": "p2",
+          "keyword": "你好小窝",
+          "start_s": 3,
+          "end_s": 4,
+          "truth_evidence_ref": "fictional verified event",
+          "word_tail_s": 3.6,
+          "word_tail_evidence_ref": "fictional true word-tail annotation"
+        },
+        {
+          "id": "p3",
+          "keyword": "你好小窝",
+          "start_s": 5,
+          "end_s": 6,
+          "truth_evidence_ref": "fictional verified event",
+          "word_tail_s": null,
+          "word_tail_evidence_ref": null
+        }
+      ],
+      "negative_intervals": []
+    },
+    {
+      "id": "continuous-negative",
+      "logical_path": "fictional/continuous-negative.wav",
+      "wav_sha256": "057cf630b77a8003be2d519e6f69679b3855d8683c5e6e647b736d22abfebe42",
+      "pcm_sha256": "dd6ed22127582c4fcb99e18bc1b24ca026ecc53f7684cb3e47498a0c4a042445",
+      "sample_rate_hz": 16000,
+      "frames": 115200000,
+      "duration_s": 7200,
+      "source": {
+        "dataset": "toy-continuous-negative",
+        "family": "family-continuous-negative",
+        "tier": "open_human",
+        "evidence_ref": "fictional evidence continuous-negative",
+        "evidence_sha256": "979b847dd79e98937bf50f8109e1ba05c43e512e7593ce17243e19b307d237d9",
+        "speaker": "speaker-continuous-negative",
+        "generator": null,
+        "session": "session-continuous-negative",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "FICTIONAL-NO-AUDIO",
+        "evidence_ref": "fictional permission fixture",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "dev"
+        ],
+        "commercial_output_license": "not_applicable"
+      },
+      "role": "dev",
+      "label_strength": "verified",
+      "label_binding": "source_bound",
+      "label_authority": "Fictional metadata fixture, not acoustic evidence",
+      "declared_keywords": [],
+      "exposures": [],
+      "exposure_review_complete": true,
+      "leakage_group": "group-continuous-negative",
+      "derivation_family": "origin-continuous-negative",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": true,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": [
+        {
+          "start_s": 0,
+          "end_s": 7200,
+          "truth_evidence_ref": "fictional full keyword-absence audit",
+          "verified_absent_keywords": [
+            "你好小窝",
+            "小窝小窝"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unknown",
+      "logical_path": "fictional/unknown.wav",
+      "wav_sha256": "303e8bfb55a9ee6b133a8cccb4ce393a7723d86fe36795baaaa6af2a94e11675",
+      "pcm_sha256": "1341ed2b306627cb088899f5c742b3b4623040e2cc4c3e25bc5e437c4abb0f1f",
+      "sample_rate_hz": 16000,
+      "frames": 16000,
+      "duration_s": 1,
+      "source": {
+        "dataset": "toy-unknown",
+        "family": "family-unknown",
+        "tier": "open_human",
+        "evidence_ref": "fictional evidence unknown",
+        "evidence_sha256": "058766d60ef69617e99e58ad0a7361c7bab5be7938b4b48fd1a63a1b7cb856f0",
+        "speaker": "speaker-unknown",
+        "generator": null,
+        "session": "session-unknown",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "FICTIONAL-NO-AUDIO",
+        "evidence_ref": "fictional permission fixture",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "dev"
+        ],
+        "commercial_output_license": "not_applicable"
+      },
+      "role": "dev",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Fictional metadata fixture, not acoustic evidence",
+      "declared_keywords": [],
+      "exposures": [],
+      "exposure_review_complete": true,
+      "leakage_group": "group-unknown",
+      "derivation_family": "origin-unknown",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "exposed",
+      "logical_path": "fictional/exposed.wav",
+      "wav_sha256": "15df7c0b557517828ed9f55f0dc71d300e236c821d8f4169cf8930d4df444d17",
+      "pcm_sha256": "ffdb77ab768e6722dea2a2cace64e4bddefe7b9acaefe9e04e4205006b16f056",
+      "sample_rate_hz": 16000,
+      "frames": 48000,
+      "duration_s": 3,
+      "source": {
+        "dataset": "toy-exposed",
+        "family": "family-exposed",
+        "tier": "open_human",
+        "evidence_ref": "fictional evidence exposed",
+        "evidence_sha256": "419cd4a60cebf5295eefe0c6af3a31642fed01e2c2a15fecdf225b5bc97cb655",
+        "speaker": "speaker-exposed",
+        "generator": null,
+        "session": "session-exposed",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "FICTIONAL-NO-AUDIO",
+        "evidence_ref": "fictional permission fixture",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "dev"
+        ],
+        "commercial_output_license": "not_applicable"
+      },
+      "role": "dev",
+      "label_strength": "verified",
+      "label_binding": "source_bound",
+      "label_authority": "Fictional metadata fixture, not acoustic evidence",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "group-exposed",
+      "derivation_family": "origin-exposed",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [
+        {
+          "id": "e1",
+          "keyword": "你好小窝",
+          "start_s": 1,
+          "end_s": 2,
+          "truth_evidence_ref": "fictional verified event",
+          "word_tail_s": 1.6,
+          "word_tail_evidence_ref": "fictional true word-tail annotation"
+        }
+      ],
+      "negative_intervals": []
+    },
+    {
+      "id": "heldout",
+      "logical_path": "fictional/heldout.wav",
+      "wav_sha256": "76e3621c53ddeb686a419ccfb99129af11ffd3c466c0cf24c5fe58c83229139f",
+      "pcm_sha256": "d0d4ceb0e513cc9b367bd0d015086b37835bee13040e641fdb4931ac09f71427",
+      "sample_rate_hz": 16000,
+      "frames": 48000,
+      "duration_s": 3,
+      "source": {
+        "dataset": "toy-heldout",
+        "family": "family-heldout",
+        "tier": "open_human",
+        "evidence_ref": "fictional evidence heldout",
+        "evidence_sha256": "f58ab4d1706a1abfc6ce3e395b3cdd0ff65aecaaa1ad855709d2cb820511f56b",
+        "speaker": "speaker-heldout",
+        "generator": null,
+        "session": "session-heldout",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "FICTIONAL-NO-AUDIO",
+        "evidence_ref": "fictional permission fixture",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "heldout"
+        ],
+        "commercial_output_license": "not_applicable"
+      },
+      "role": "heldout",
+      "label_strength": "verified",
+      "label_binding": "source_bound",
+      "label_authority": "Fictional metadata fixture, not acoustic evidence",
+      "declared_keywords": [],
+      "exposures": [],
+      "exposure_review_complete": true,
+      "leakage_group": "group-heldout",
+      "derivation_family": "origin-heldout",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [
+        {
+          "id": "h1",
+          "keyword": "小窝小窝",
+          "start_s": 1,
+          "end_s": 2,
+          "truth_evidence_ref": "fictional verified event",
+          "word_tail_s": 1.5,
+          "word_tail_evidence_ref": "fictional true word-tail annotation"
+        }
+      ],
+      "negative_intervals": []
+    }
+  ]
+}
