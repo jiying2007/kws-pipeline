@@ -217,6 +217,10 @@ jobs:
         run: python3 tests/test_live_ruleset_contract.py
       - name: Verify tracked worktree after Live main ruleset verifier contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Live main ruleset verifier contract"'
+      - name: Restricted development corpus contract
+        run: python3 tests/test_restricted_development_dataset.py
+      - name: Verify tracked worktree after Restricted development corpus contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Restricted development corpus contract"'
       - name: Real-human qualification contract
         run: python3 tests/test_real_human_qualification.py
       - name: Verify tracked worktree after Real-human qualification contract

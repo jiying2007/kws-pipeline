@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "7d02db422f20c68f2ffdc25b7ea0e98df3b6ad20",
-      "sha256": "457a7a4179f3bd2807d5d6e556669bbf21c111d770285ed1351b819b453c1bbf",
-      "bytes": 23935
+      "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+      "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+      "bytes": 24234
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15720,6 +15720,31 @@
             "git_blob_sha1": "7d02db422f20c68f2ffdc25b7ea0e98df3b6ad20",
             "sha256": "457a7a4179f3bd2807d5d6e556669bbf21c111d770285ed1351b819b453c1bbf",
             "bytes": 23935
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "from_tree": "ffbc2010530ab456f3bc3a7fe8c2b37828e4f5f0",
+      "scope": "Add the standalone restricted development-corpus synthetic test and tracked-worktree guard to ordinary CI.",
+      "rationale": "Strict model-free software tests only; no restricted-data execution workflow, private corpus admission, qualification or training activation. Original core CI bytes remain retained in the maintained-sources archive.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "7d02db422f20c68f2ffdc25b7ea0e98df3b6ad20",
+            "sha256": "457a7a4179f3bd2807d5d6e556669bbf21c111d770285ed1351b819b453c1bbf",
+            "bytes": 23935
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+            "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+            "bytes": 24234
           }
         }
       ]
