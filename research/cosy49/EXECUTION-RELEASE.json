@@ -1,0 +1,27 @@
+{
+  "approved": true,
+  "approved_parent_head": "55a4e23379ad7072db507dbe419b38d8898e17fa",
+  "artifact_max_bytes": 20971520,
+  "artifact_retention_days": 1,
+  "attempt_key": "a20-cosy49-single-candidate-v1",
+  "candidate_control_sha256": "33ac29d8f668fbede4409eb5bdb0990f8c5ed3714664e38aff426b9ec6606336",
+  "cosy17_input_manifest_sha256": "bd074ed5618bfe0dc69d0a5d027ff5a977f9960c8dcf2f5f0bda41fbd9dea94b",
+  "independent_review": {
+    "protocol_sha256": "7a4208a1bf7d72827fad4d72e9184fa7ba9099bc904ae0c105c3d198ae9aa0db",
+    "receipt_sha256": "f14cf62e32d5bd6f9cea8c6f2f1c5372c7cba0cd82526c3a905a78c735666cba",
+    "source_freeze_sha256": "15744ad5fef7d653c6319e1b1b833d361dbb53bde316a45ba988b962417fe8ec",
+    "status": "PASS"
+  },
+  "private_freeze_readback": {
+    "protocol_sha256": "7a4208a1bf7d72827fad4d72e9184fa7ba9099bc904ae0c105c3d198ae9aa0db",
+    "receipt_sha256": "c678f995c9a507e5e2dd492b61e777b913982522f3492853642b59e641d8bb23",
+    "source_freeze_sha256": "15744ad5fef7d653c6319e1b1b833d361dbb53bde316a45ba988b962417fe8ec",
+    "status": "PASS"
+  },
+  "protocol_sha256": "7a4208a1bf7d72827fad4d72e9184fa7ba9099bc904ae0c105c3d198ae9aa0db",
+  "public_artifact_rights_privacy_approved": true,
+  "schema": "a20-cosy49-release-v1",
+  "source_freeze_sha256": "15744ad5fef7d653c6319e1b1b833d361dbb53bde316a45ba988b962417fe8ec",
+  "train49_sha256": "a3bcc0bd20d64210a5717af10a847ef7a77c07dde91be47be40a9a64b4277888",
+  "training_authorized": true
+}

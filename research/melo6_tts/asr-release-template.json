@@ -1,0 +1,12 @@
+{
+  "approved": false,
+  "asr_candidate_sha256": "b1d283b635cc00a0ad41ea4d0f8e9e8106224f230b540c9b1f5e4327c4b53e41",
+  "blind_archive_sha256": null,
+  "blind_freeze_sha256": null,
+  "experiment_id": "melo-six-phrase-source-screen-v1",
+  "max_asr_calls": 12,
+  "max_tts_calls": 6,
+  "plan_sha256": "a7a78e618152167c05dd8c65eeda546100db66634e08ce1c5cae63fd9467a5db",
+  "schema": "melo6-source-screen-release-v1",
+  "tts_candidate_sha256": "12bccfeb0620e3476de0eb440251da5570377b4dd800393e1e7163d2018a09c0"
+}

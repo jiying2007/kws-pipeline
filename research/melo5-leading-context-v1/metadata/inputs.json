@@ -1,0 +1,134 @@
+{
+  "data_commit_status": "IMMUTABLE_DATA_COMMIT_BOUND",
+  "files": [
+    {
+      "bytes": 30347,
+      "commit": "ea1c554a82c89797023365243a827883b94e0254",
+      "name": "dependencies/core/score_endpoint.py",
+      "path": "research/melo5-a20-diagnostic-v1/src/score_endpoint.py",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "6d3ee242f432aba0cbe3eebc792e411334c52508840efe27e7d3d87b20c04c2e"
+    },
+    {
+      "bytes": 9606,
+      "commit": "ea1c554a82c89797023365243a827883b94e0254",
+      "name": "dependencies/core/collector.c",
+      "path": "research/melo5-a20-diagnostic-v1/src/collector.c",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "d941b9db947fb6674b124ea49ac2292e230db236859b7db95afa1cbfa65c070b"
+    },
+    {
+      "bytes": 26740,
+      "commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "name": "dependencies/scorer/score_events.py",
+      "path": "eval/score_events.py",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "04f2f03590259a1bd716c942e7945e3f33526efeace1991d0a04e2faaa947f8c"
+    },
+    {
+      "bytes": 5269,
+      "commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "name": "dependencies/scorer/context_policy.py",
+      "path": "eval/context_policy.py",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "134e16d2312bf0488099556d6e95e6972a02f8daf6a3d3e680ec0d5b0380748e"
+    },
+    {
+      "bytes": 25607,
+      "commit": "9307956e16ed93dc6c858611f3c35ae17768a011",
+      "name": "dependencies/controls/original.raw.jsonl",
+      "path": "research/2026-10-06-melo5-a20-diagnostic/original_A20.raw.jsonl",
+      "repository": "jiying2007/kws-data",
+      "sha256": "b93d9068eba66a8a744d9e706b0d16a763240df566942714029fa3f053b6f4ff"
+    },
+    {
+      "bytes": 13408,
+      "commit": "9307956e16ed93dc6c858611f3c35ae17768a011",
+      "name": "dependencies/controls/positive300.raw.jsonl",
+      "path": "research/2026-10-06-melo2-tail-context/original_A20.raw.jsonl",
+      "repository": "jiying2007/kws-data",
+      "sha256": "90196e0730db17fbae25d604d7e57d51dec4bb1b6ef1192b3c36d7f2fae29cf2"
+    },
+    {
+      "bytes": 20559,
+      "commit": "9307956e16ed93dc6c858611f3c35ae17768a011",
+      "name": "dependencies/controls/negative300.raw.jsonl",
+      "path": "research/2026-10-06-melo3-negative-context/original_A20.raw.jsonl",
+      "repository": "jiying2007/kws-data",
+      "sha256": "743e97c86540a1917c938170fc21b511fc6a4b75e61f5877a13bce8cd226b98d"
+    },
+    {
+      "bytes": 170505,
+      "commit": "fdf579cc43622cb5a752e7f5f3c191a149b7956c",
+      "name": "dependencies/blind-inputs.zip",
+      "path": "research/2026-10-05-melo6-source-screen/recovery/blind/blind-inputs.zip",
+      "repository": "jiying2007/kws-data",
+      "sha256": "382db1d3e795d7a1b4cd16ba6f4f4467252082f5c04069c3de6b7b70f138c9b2"
+    },
+    {
+      "bytes": 8827,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/M2-token-support.json",
+      "path": "research/2026-10-06-melo5-leading-context/M2-token-support.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "587702204c7c8ba8143ed0cefcf4cee718c6dfc54b5c5657c699b8bce08070b1"
+    },
+    {
+      "bytes": 3449,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/README.md",
+      "path": "research/2026-10-06-melo5-leading-context/README.md",
+      "repository": "jiying2007/kws-data",
+      "sha256": "42052a224d2007769a12325a99c847b6975a534c8159d7a9e21038887ed8bf6f"
+    },
+    {
+      "bytes": 30472,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/geometry.json",
+      "path": "research/2026-10-06-melo5-leading-context/geometry.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "23644d69d499f4514bf21fb562e3ed5f8b019025942e2b2c65d24556c5756256"
+    },
+    {
+      "bytes": 7615,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/manifest.json",
+      "path": "research/2026-10-06-melo5-leading-context/manifest.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9b7f9cf5cf4a0056f75c3fc167baba3c442b52cfb6cb6e83b2c128677cf8e818"
+    },
+    {
+      "bytes": 31824,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/observations.json",
+      "path": "research/2026-10-06-melo5-leading-context/observations.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "42835c0db1e03b0e999669296330e7a8abe6edf30175cebe2fb46f8975d7ef78"
+    },
+    {
+      "bytes": 69596,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/original_A20.raw.jsonl",
+      "path": "research/2026-10-06-melo5-leading-context/original_A20.raw.jsonl",
+      "repository": "jiying2007/kws-data",
+      "sha256": "53fe05237bdc3544462243b36566cf784a380f373aa7da1572f00ed69da8b043"
+    },
+    {
+      "bytes": 34842,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/report.json",
+      "path": "research/2026-10-06-melo5-leading-context/report.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9f89c1b12a4dbb86d3530135f3b5cd1ec473b4497d7ffa8e259277069999a3f8"
+    },
+    {
+      "bytes": 3434,
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "name": "data/resources.json",
+      "path": "research/2026-10-06-melo5-leading-context/resources.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "07abbc33a65cf0803bbac549a0b3e37490330de437b206ee8d7ead85950daf05"
+    }
+  ],
+  "schema": "melo5-leading-saved-inputs-v1"
+}

@@ -1,0 +1,314 @@
+{
+  "attempt": "one candidate/seed610104/fixed300; no retries, resume, extension or alternate endpoints",
+  "calls": {
+    "decoder_calls": 0,
+    "development_calls": 0,
+    "feature_extractions": 0,
+    "new_initial_control_forwards": 0,
+    "optimizer_updates": 300,
+    "terminal_diagnostic_forwards": 1,
+    "total_model_forwards": 301,
+    "training_backwards": 300,
+    "training_forwards": 300
+  },
+  "control_reuse": {
+    "audit_sha256": "a138ee78bfda232a3c422b809fd48f1deef6ac6b9fcd7518bc7a93460915fbf3",
+    "first_training_forward": "bind all original tensors/buffers, PRE-CMVN32 source order/features and single CMVN; save host-dependent logit/CTC deltas diagnostic-only, no bitwise logit gate",
+    "initial_diagnostic": "reuse existing full padded raw logits/CTC; no new model pass",
+    "preparation_commit": "4a62fc91f7140c6e875692c88235152da4c68e4d",
+    "preparation_run": 37198298586,
+    "prior_failure": {
+      "PR": 469,
+      "preserved": true,
+      "run": 37196408078
+    },
+    "saved_logits_sha256": "91568a8c774c0811f7c3262cad009d6a5d6e62333f02fe8137757f2062c94c99"
+  },
+  "evaluation": {
+    "original_complete_contracts": [
+      {
+        "bytes": 278353,
+        "contract_id": "endpoint-call-authority",
+        "sha256": "a364ad82c6b6b61ea8b53485fbb21123f6592cc0db4a1862a2fe766aa40e6347"
+      },
+      {
+        "bytes": 24462,
+        "contract_id": "endpoint-acceptance-authority",
+        "sha256": "2f58a4a1a26c64a69c7a92f37d6bd7f528ad1cbb8523723acbde915fa3a8d5c1"
+      },
+      {
+        "bytes": 53784,
+        "contract_id": "historical-event-authority",
+        "sha256": "59702fd6dc6d2746a3c9798eecf0a23c56bc57b2059306715ae55f712336c4c3"
+      },
+      {
+        "bytes": 45721,
+        "contract_id": "source-identity-authority",
+        "sha256": "6b09a7d42f82a8d9dc7a5a2f34802ad33ebde84abb7a88d8e3f45810cf588c7d"
+      },
+      {
+        "bytes": 1039,
+        "contract_id": "endpoint-output-bound",
+        "sha256": "752b14e75d57ea4772e08976f8ee6f883b65b62ec3236c372fd3d4e238875571"
+      },
+      {
+        "bytes": 9272,
+        "contract_id": "endpoint-method-authority",
+        "sha256": "a9f3404e9f094e6c011654022425ce858534ce2b35b5139f5637cc3f9cb2377d"
+      },
+      {
+        "bytes": 513,
+        "contract_id": "endpoint-static-evidence",
+        "sha256": "5f8341ce896e44b571020cf0ac4a528d361e3446f47e5e111164b6548242be29"
+      },
+      {
+        "bytes": 15889,
+        "contract_id": "numeric-source-authority",
+        "sha256": "657148538b41795f20944f0a2067b37dbe7890e37d387b5104f6db22cbacb8d6"
+      },
+      {
+        "bytes": 5505,
+        "contract_id": "numeric-execution-authority",
+        "sha256": "85615d5269e8a920a172ba37adef8563c763ca434c007032a77f11c249c8e2db"
+      },
+      {
+        "bytes": 11394,
+        "contract_id": "paired-runtime-source-authority",
+        "sha256": "910775dfa3df1fcb36c5975ed892b7bb57c4a15e1d0df58574b12ef6eb4e106a"
+      },
+      {
+        "bytes": 2124,
+        "contract_id": "paired-runtime-execution-authority",
+        "sha256": "cf577ec0559fc5c1ee3ae5db8cf09ed2109873395ac9654eff88633dfefdb91d"
+      }
+    ],
+    "public_summaries": [
+      {
+        "bytes": 3638,
+        "path": "metadata/evaluation/ENDPOINT-CALL-LIST.json",
+        "sha256": "c88cc9cf5051a8b34a402a8ad380f00256f6488d775b87710fc7e4b1315f0a0d"
+      },
+      {
+        "bytes": 13234,
+        "path": "metadata/evaluation/ENDPOINT-EVALUATION-PROTOCOL.json",
+        "sha256": "6ff85c4327105e959a1a2e6a6117f2a2ea522902986690f74bc8de3cf31d4a00"
+      },
+      {
+        "bytes": 2169,
+        "path": "metadata/evaluation/FROZEN-HISTORICAL-EVIDENCE.json",
+        "sha256": "5d8f360f28fe72b8aafc277cc981767d350927ae9d690dda7e04b4db2e7e59a2"
+      },
+      {
+        "bytes": 913,
+        "path": "metadata/evaluation/OUTPUT-BOUND.json",
+        "sha256": "210f6583c64878df3b7fb067b12a4eb8f50dcae9aeebea6128cda212fc4fa72d"
+      },
+      {
+        "bytes": 1628,
+        "path": "metadata/evaluation/PROTOCOL.md",
+        "sha256": "865b2595bbd1c286c3e5aa8dcbdf316c01d19de633c220da3bf03f72f3e91bcc"
+      },
+      {
+        "bytes": 2089,
+        "path": "metadata/evaluation/SOURCE-REFERENCES.json",
+        "sha256": "d14013efed6712a53790380088a229b38de06cc131e62b642ef2612ff851f418"
+      },
+      {
+        "bytes": 540,
+        "path": "metadata/evaluation/STATIC-CHECKS.json",
+        "sha256": "85ac0b1ed5a59c58d4be70cabe0b5cce1983ccacdb5aca071b3bbef30b8acb74"
+      }
+    ],
+    "summary_role": "Public technical description only; original complete contracts and evaluation gates remain authoritative and unchanged.",
+    "training_job_acoustic_eval_calls": 0,
+    "training_job_native_calls": 0
+  },
+  "exact_loss": {
+    "blank_id": 0,
+    "formula": "0.5 * sum_D20(CTC_NLL_i / target_length_i) / 20 + 0.5 * sum_Q12(CTC_NLL_i / target_length_i) / 12",
+    "infeasible_or_nonfinite": "abort single attempt, retain partial evidence; no row omission, target truncation or zeroing",
+    "reduction": "none then explicit cohort weights",
+    "source_weights_before_length_normalization": {
+      "D20": 0.025,
+      "Q12": 0.041666666666666664
+    },
+    "zero_infinity": false
+  },
+  "fresh_optimizer": {
+    "amsgrad": false,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "capturable": false,
+    "differentiable": false,
+    "encoder_lr": 1e-05,
+    "encoder_parameters": 389674,
+    "epsilon": 1e-08,
+    "foreach": false,
+    "fused": false,
+    "gradient_norm_cap": 1,
+    "head_lr": 0.0001,
+    "head_parameters": 846,
+    "historical_optimizer_and_rng": "never restored",
+    "maximize": false,
+    "type": "AdamW",
+    "weight_decay": 0
+  },
+  "initial_checkpoint": {
+    "bytes": 4732286,
+    "canonical_state_sha256": "c05623683b4616badda5535eefb0bfaecde63efbf3bfbceec6e7440a5fc19eb2",
+    "optimizer": "fresh AdamW; historical optimizer state not resumed",
+    "sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39"
+  },
+  "input_contract": {
+    "frontend_runs": 0,
+    "model_objects": 3,
+    "model_redownload": "only exact original published checkpoint, no model discovery",
+    "model_transport_bytes": 4399736,
+    "model_transport_requests": 79,
+    "prepared_archive_bytes": 2472892,
+    "prepared_archive_unpacked_file_bytes": 4868023,
+    "prepared_member_count": 68,
+    "prepared_requests": 3,
+    "public_prepared_pin": {
+      "archive_sha256": "4a35cde90a5b268a19082a63c26a6ad798c537dda092e486686fef01744b9708",
+      "commit": "d0d54cf635189bdc522c9d0f6135082e81250fd8",
+      "download_bytes": 2472892,
+      "publication_ref_PR_CI_closure_required_before_training_GO": true,
+      "repository": "jiying2007/kws-data",
+      "requests": 3,
+      "status": "VERIFIED_PUBLIC_PIN",
+      "transport_manifest_sha256": "21687bd7d918c6aab02a513234b78f816d11dbeec4111b28052440f281bfc229"
+    },
+    "total_input_download_bytes": 6872628,
+    "waveform_downloads": 0
+  },
+  "model": {
+    "architecture": "pinned WeKws FSMN(400,140,4,250,128,10,2,1,1,140,6)",
+    "cache": "reset/None each full-batch update; no source-to-source cache",
+    "device": "CPU",
+    "dtype": "float32",
+    "exact_state_tensors": 30,
+    "fixed_cmvn_buffers": 800,
+    "input": "zero-padded PRE-CMVN features32x95x400, authenticated per-source lengths",
+    "normalization": "original GlobalCMVN once inside forward; padding is identical pre-CMVN-zero convention to old train.py",
+    "parameters": 390520
+  },
+  "output_contract": {
+    "archive_cap_bytes": 20971520,
+    "checkpoint_cap_bytes": 6291456,
+    "counters": "fsynced started/completed journal around each forward/backward/update; interrupted calls explicitly uncertain",
+    "failure": "Preserve complete validated finite numerical outputs and safe schema journals even on overall failure. Private stdout/stderr and damaged files remain local; publish their hash/size/UNKNOWN receipts only. Saved-only always-run finalizer packages other safe evidence. No retry/resume.",
+    "interrupted_publication": "Validate READY plus archive/sidecar before treating complete. Preserve invalid receipt and partial publication directory once, then saved-only rebuild safe artifacts; never overwrite a verified completed result.",
+    "logs_cap_bytes": 524288,
+    "optimizer": "fresh AdamW only; every step scalar300, two FP32 moment arrays exact parameter shape, all finite, every named parameter once",
+    "payload": "terminal-state-payload.f32le is a canonical state payload, NOT a declared native deployable model",
+    "payload_bytes": 1565280,
+    "raw_cap_bytes": 33554432,
+    "raw_process_logs": "not included in public artifact; bounded private run-local stdout/stderr only, with public hash/size receipts",
+    "single_endpoint": "terminal-step300.pt, weights_only readback, exact key/shape/dtype/finite model and28 optimizer parameter states",
+    "state": "30 ordered FP32 tensors/390520 trainable parameters+800 immutable CMVN; canonical SHA(name UTF8 then little-endian bytes) and individual hashes",
+    "terminal_logits_bytes": 72960,
+    "terminal_logits_shape": [
+      32,
+      95,
+      6
+    ]
+  },
+  "release_gates": [
+    "Exact source/protocol/input identity and independent technical review",
+    "Verified durable readback of the complete frozen execution plan",
+    "New explicit authorization for the exact one-attempt training and bounded publication scope",
+    "Exact one-push base/event/source conditions and supported environment; drift fails closed",
+    "Every subsequent export, numerical, and acoustic stage requires its own independent authorization"
+  ],
+  "resource": {
+    "device_claims": "no SSC305, board, RT/IO/power/word-tail latency or accepted5/10percent board allowance",
+    "geometry": {
+      "activation_autograd_workspace": "not measured here; exact tensor ledger is only lower bound,2GiB is fail-closed operational cap",
+      "adam_moment_bytes": 3124160,
+      "forward_MACs_300": 354753408000,
+      "forward_MACs_301": 355935919360,
+      "forward_MACs_per_update": 1182511360,
+      "gradient_bytes": 1562080,
+      "optimizer_step_scalars_bytes": 112,
+      "padded_feature_bytes": 4864000,
+      "padded_rows": 3040,
+      "unpadded_rows": 1812
+    },
+    "glibc": "2.39",
+    "guard": {
+      "aggregate_CPU_seconds": 300,
+      "aggregate_wall_seconds": 600,
+      "final_evidence_packaging": "outside 300CPU/600wall; controller2GiBAS and15min job still apply; do not claim included",
+      "free_disk_floor_bytes": 4294967296,
+      "interop_threads": 1,
+      "intraop_threads": 1,
+      "job_timeout_minutes": 15,
+      "per_process_AS_bytes": 2147483648,
+      "sampled_owned_group_RSS_bytes": 2147483648,
+      "saved_only_emergency_finalizer": {
+        "CPU_seconds": 30,
+        "address_space_bytes": 2147483648,
+        "file_bytes": 20971520,
+        "scope": "separate always-run read-only saved-evidence packaging process, no training/inference/retry; original phase aggregate excluded",
+        "wall_seconds": 60
+      },
+      "training_processes": 1
+    },
+    "image": "20260927.320.1",
+    "numpy": "1.26.4",
+    "python": "3.12.3",
+    "runner": "free public standard ubuntu-24.04 only",
+    "successful_install_observation": {
+      "installed_bytes": 846598027,
+      "interpretation": "same software proof only; not a training bound or cross-host regression",
+      "peak_sampled_control_RSS_bytes": 358141952,
+      "source_run": 37198298586
+    },
+    "timing_estimate": {
+      "basis": "83.0276CPU/1200 old updates scaled32x95/20x87 x300; unmeasured new runner; optimizer, setup and serialization excluded; not runtime regression or promise",
+      "historical_dimension_extrapolation_CPU_seconds": 36.26493839505744
+    },
+    "torch": "2.12.1+cpu",
+    "wheel_body_bytes": 220935082,
+    "wheel_count": 11,
+    "wheel_lock_sha256": "90a28180a51fae445941bd3c0c9fefb6fa569e2c622255d32c17d1021d6939fc",
+    "wheel_source": "unchanged official pinned URLs; offline --require-hashes --no-deps; no installer/network fallback"
+  },
+  "schema": "a20-fixed300-execution-protocol-v1",
+  "status": "PUBLIC_PROJECTION_DISARMED",
+  "training": {
+    "architecture_vocabulary_decoder_changes": false,
+    "augmentation": null,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "candidate_count": 1,
+    "dropout_change": false,
+    "encoder_lr": 1e-05,
+    "endpoint": "fixed step300 only; no dev-based stopping or intermediate checkpoint selection",
+    "epsilon": 1e-08,
+    "feature_protocol": "Reuse already audited32 native PRE-CMVN splice400 blobs; no extraction. Original model CMVN exactly once per necessary forward.",
+    "fixed_CMVN_elements": 800,
+    "full_batch": 32,
+    "gradient_norm_cap": 1,
+    "head_lr": 0.0001,
+    "initial_and_terminal_train_diagnostics_only": true,
+    "learning_schedule": "constant",
+    "loss": "0.5*mean(D20 sourcewise CTC_NLL/target_length)+0.5*mean(Qwen12 sourcewise CTC_NLL/target_length)",
+    "optimizer": "AdamW",
+    "seed": 610104,
+    "steps": 300,
+    "target_lengths": [
+      3,
+      4
+    ],
+    "trainable_parameters": 390520,
+    "training_authorized": false,
+    "weight_decay": 0,
+    "zero_infinity": false
+  }
+}

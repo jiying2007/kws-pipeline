@@ -59,8 +59,8 @@ They are historical observations, not instructions to rerun an experiment.
 - Integration order is #463 → #464, #465, #476 → #479, #485, #486. The #464
   manifest/build fixes and #479 label-decision fixes supersede their earlier
   file versions; the original versions remain addressable at the pinned commits
-- This batch changes no `src/`, `include/`, `models/`, `configs/`, training or
-  shipping source. The five pre-existing modified files belong only to the
+- The core batch changed no `src/`, `include/`, `models/`, `configs/`, training
+  or shipping source. Its five pre-existing modified files belonged only to the
   offline scorer, its tests, documentation and fixture-preparation CI step
 - The retention verifier checks current bytes, not external approval or scientific
   truth. An intentional later edit needs an explicit new provenance record;
@@ -69,9 +69,14 @@ They are historical observations, not instructions to rerun an experiment.
   [repository governance](../docs/REPOSITORY_GOVERNANCE.md#retired-execution-lane-policy)
 - No private natural recordings, derived features, learned private heads or
   identifying raw logs are included by this public-source consolidation
-- Historical acquisition/training branches remain separate until their sources
-  and disabled execution projections have been reviewed. Their old one-shot
-  release files and branch names grant no new execution permission
+- [Public source integration](consolidation/SOURCE_INTEGRATION.md) retains the
+  remaining isolated source modules, disabled workflow archives, sibling recovery
+  variants and historical conclusions. Its original-path static checks run only
+  in temporary offline projections. Old one-shot release files and branch names
+  grant no new execution permission
+- [Historical outcome index](consolidation/history/BRANCH_OUTCOMES.md) records
+  dormant-branch decisions and corrected interpretations. Older narrative notes
+  are retained verbatim as historical evidence, not current guidance
 - The existing automatic repository cleanup now explicitly retains all 61
   non-main branch names in the [2026-10-07 inventory](consolidation/branch-retention-2026-10-07.json).
   The guard runs before merged-tip, retired-branch or old closed-unmerged-PR

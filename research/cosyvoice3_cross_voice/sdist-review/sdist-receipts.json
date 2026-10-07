@@ -1,0 +1,38 @@
+[
+  {
+    "name": "pyworld",
+    "version": "0.3.4",
+    "filename": "pyworld-0.3.4.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/1f/a0/94bef26b6e270cf8a0c795c906fcb6dddf6095b48f390b4729185d7c1eeb/pyworld-0.3.4.tar.gz",
+    "bytes": 251990,
+    "sha256": "106c70ee7a7d8c9ba488d8022f2033706929a40f0264256b8e87da5aab98303a",
+    "verified": true
+  },
+  {
+    "name": "openai-whisper",
+    "version": "20250625",
+    "filename": "openai_whisper-20250625.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/35/8e/d36f8880bcf18ec026a55807d02fe4c7357da9f25aebd92f85178000c0dc/openai_whisper-20250625.tar.gz",
+    "bytes": 803191,
+    "sha256": "37a91a3921809d9f44748ffc73c0a55c9f366c85a3ef5c2ae0cc09540432eb96",
+    "verified": true
+  },
+  {
+    "name": "wget",
+    "version": "3.2",
+    "filename": "wget-3.2.zip",
+    "url": "https://files.pythonhosted.org/packages/47/6a/62e288da7bcda82b935ff0c6cfe542970f04e29c756b0e147251b2fb251f/wget-3.2.zip",
+    "bytes": 10857,
+    "sha256": "35e630eca2aa50ce998b9b1a127bb26b30dfee573702782aa982f875e3f16061",
+    "verified": true
+  },
+  {
+    "name": "antlr4-python3-runtime",
+    "version": "4.9.3",
+    "filename": "antlr4-python3-runtime-4.9.3.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d19459005ca000b6e7012f2f1ca597746cbcd1fbfe5e/antlr4-python3-runtime-4.9.3.tar.gz",
+    "bytes": 117034,
+    "sha256": "f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b",
+    "verified": true
+  }
+]

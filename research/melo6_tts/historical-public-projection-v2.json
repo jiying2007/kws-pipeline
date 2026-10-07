@@ -1,0 +1,84 @@
+{
+  "absent": [
+    "deployed workflow or external source branch",
+    "blind input archive/freeze",
+    "generated speech and ASR results",
+    "model/wheel bodies",
+    "private provenance registry",
+    "private bundle"
+  ],
+  "added_files": [
+    "research/melo6_tts/README.md",
+    "research/melo6_tts/Sherpa-onnx-LICENSE",
+    "research/melo6_tts/test_public_source.py",
+    "research/melo6_tts/public-projection.json"
+  ],
+  "change_scope": "Only one provenance value and its dependent identity bindings differ; all original Python, fixtures, model/dependency metadata, licenses, ASR source/freeze and workflow template are byte-identical.",
+  "execution_binding_status": "proposed_only_pending_final_review_and_permission; no_execution",
+  "included_deployment_workflow_bytes": 3220,
+  "mandatory_public_exclusion": {
+    "file": "runtime/private-raw-cause.json",
+    "permitted_public_projection": "safe retention status, byte count, SHA256, truncation and public_artifact_allowed=false flags only",
+    "reason": "Private chained exception messages and paths; no locals; serialized size <=65536 bytes; mode 0600. Never include raw file in public source, data or artifacts."
+  },
+  "mapping": [
+    {
+      "changed_json_pointers": [
+        "/supervision_origin"
+      ],
+      "original_sha256": "bc5d1075e08cc41fca500388cbe682be8829110ca0af618856b87e700b51444f",
+      "path": "research/melo6_tts/adapter-freeze.json",
+      "public_sha256": "838b72601e9edb763b85a9a1b7f2d64feb9bbf9906a80988802f090b2b270d65"
+    },
+    {
+      "changed_json_pointers": [
+        "/bindings/0/bytes",
+        "/bindings/0/sha256"
+      ],
+      "original_sha256": "e2bafa18888149fcb5ef7f6a8758df8ab7ee321d26e2a3623f4ab922856da35c",
+      "path": "research/melo6_tts/execution-plan.json",
+      "public_sha256": "d3cd5e4a1c5c816e02c42b915b7930868ebe686ce4b8d57d9c721225af37cc21"
+    },
+    {
+      "changed_json_pointers": [
+        "/plan_sha256",
+        "/tts_candidate_sha256"
+      ],
+      "original_sha256": "e76af9bfef2993a925e41ad6a733d0294de674723d99cfa35eb594127778b0a5",
+      "path": "research/melo6-source-screen-release.json",
+      "public_sha256": "88c8a0efbf5ac0d544ff016fc4d2d388c30952d2199017fb140b576c781eadf5"
+    }
+  ],
+  "minimum_file_set": "Complete frozen research/melo6_asr tree and matching .github workflow; research/melo6_tts adapter, collector, conversion, comparison, fixtures, exact locks, static metadata, licenses and pure tests; paired disabled release; this manifest and README. No other source or evidence bundle is included.",
+  "original_execution_plan_sha256": "e2bafa18888149fcb5ef7f6a8758df8ab7ee321d26e2a3623f4ab922856da35c",
+  "original_public_file_count": 54,
+  "original_v1_v2_plans_remain_unexecuted_preparation_evidence": true,
+  "proposed_execution_plan_sha256": "d3cd5e4a1c5c816e02c42b915b7930868ebe686ce4b8d57d9c721225af37cc21",
+  "public_asr_origin": {
+    "commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+    "previously_adapted_contract": {
+      "melo_sha256": "25d4938ee9d9f1e69f4291ea7dcf02cdf29a8b5a4d46f62711d3700f22cf61fb",
+      "original_sha256": "d1c3368133e06a3de9758b23f136c3a37a74a63057f317ece863470ad0304b10",
+      "path": "core/asr6_contract.py",
+      "scope": "experiment identity, 10-second input cap, 2-MiB archive cap; unchanged by this projection"
+    },
+    "pull_request": "https://github.com/jiying2007/kws-pipeline/pull/482",
+    "repository": "jiying2007/kws-pipeline",
+    "source_base_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/",
+    "supervision_sha256": "dde8527fc562b43a3ca5bed034c43f66400780d6c36bf3d74046082dd7e19abb",
+    "unchanged_file_hashes": "research/melo6_asr/candidate-freeze.json; all shared scientific code and locks retain original source hashes"
+  },
+  "public_execution_plan_sha256": "d3cd5e4a1c5c816e02c42b915b7930868ebe686ce4b8d57d9c721225af37cc21",
+  "remaining_generated_evidence": "Only after permission and complete valid TTS: actual six write-ahead claims, generation receipt/freeze and file hashes; actual blind job/member hashes and export receipt; independently checked blind two-file handoff. After ASR: actual raw-result freezes, comparison bindings/results, safe diagnostic records.",
+  "remaining_release_fields": {
+    "approved": false,
+    "asr_candidate_sha256": "unchanged ASR candidate-freeze hash",
+    "blind_archive_sha256": null,
+    "blind_freeze_sha256": null,
+    "plan_sha256": "proposed public-plan identity; final binding review and explicit approval still required; future receipts must match consistently",
+    "tts_candidate_sha256": "public projected adapter-freeze hash"
+  },
+  "schema": "melo6-public-source-projection-v2",
+  "source_cap_bytes": 2097152,
+  "status": "local_source_preparation_only; unapproved; no generated inputs"
+}

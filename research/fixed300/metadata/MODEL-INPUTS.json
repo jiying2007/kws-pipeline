@@ -1,0 +1,1642 @@
+{
+  "audio_downloads": 0,
+  "download_bytes": 4399736,
+  "notices": [
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "bytes": 2984,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "b36f05087bfd865b777b0cc8a8b9344bb5b9c9a7",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "repository": "jiying2007/kws-data",
+      "sha256": "72c9dc360cc08705a32e640346a4975c9569916a437f022fc850ae6df1707e7b"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "bytes": 11357,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "repository": "jiying2007/kws-data",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "bytes": 1338,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "1bec23eaf1dd562ae3d3216420b1b1bbfbd39cbc",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "repository": "jiying2007/kws-data",
+      "sha256": "93a58861a858cc108e6b6b833e08e76e8b2a66339e4a8007c8a5a8c1ff9c40d6"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/NOTICE.md",
+      "bytes": 1861,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "ed4659426bdde22a58b0d843fa3d04706728cc5b",
+      "path": "research/native_a20/NOTICE.md",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/NOTICE.md",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "acf0359353f1b3d6bcfdacd3ed15eb3b9c1264bdf4ee7f84552272464e3375ff"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/LICENSE",
+      "bytes": 9108,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "3e14d4b16918fcff8fa45dd71148ffbe468388fa",
+      "path": "research/native_a20/LICENSE",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/LICENSE",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "bytes": 11357,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "path": "research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "bytes": 1337,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "a1335294ac9c6a2aee1313e81c33615e336b57cb",
+      "path": "research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "c23327aa7dc5240acce57117302ed02c38886f10fa2e41fb33af86812fd3f88a"
+    }
+  ],
+  "objects": [
+    {
+      "bytes": 4732286,
+      "compressed_bytes": 4342132,
+      "compressed_sha256": "2602f001b96caeafadf5fc7597594d31fa9b411eb4b7a711c77dabbec9e35e47",
+      "destination": "work/inputs/model/A-terminal.reference.pt",
+      "license": "See LICENSES/SCOPE.md; source/model and audio rights are separate",
+      "logical_path": "models/a20/A-terminal.reference.pt",
+      "object_descriptor": {
+        "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+        "bytes": 13047,
+        "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+        "git_blob_sha1": "7a828df7303fa13bd64db2784f15d2ba0541585b",
+        "path": "research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+        "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+        "repository": "jiying2007/kws-data",
+        "sha256": "66cb32ec33d77c6ebd30757bb5e9b28f68774894cd15c8b30a350324275e4702"
+      },
+      "provenance": {
+        "original_sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39",
+        "public_sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39",
+        "publication_mode": "byte-identical"
+      },
+      "sha256": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39",
+      "shards": [
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "879087b3cdda932e8e2d1437ae01bdbd68d0916d",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "aee3fad23a4fb7b7d39cb5c2687fe642c28ecf87",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "639fe464084a07ebfce0169a476f0d175f014d53",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "3aae321da09af3e0bd738129ccbb8acf37e9d7d5",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "a4289628390157865c53c454cbf7dad486c708af",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "a1fbdc798d444f108d0fbe8c3d1f166945ee3684",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "636a43f6daf93fcdc4ea77ff4d3a3ec4c1055d54",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "0b2b27c8aadc119a37e59d015ad72feadd8b4f25",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "9c074a9df7cc95072f3b5addfa80b0866a43498c",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "ef1f9dcda6d4f2591e019315b037c1590f451ded",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "62124e373b7463db081e092d70eb798f15136f1f",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "788a5159d5e407f15cbcd8bc91099b34564dcfd8",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "b870483d0c34b70b1bfe4139d38b78ee94d2e6db",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "841ebde5a27c26852fd9f8799830e0b88f171bcf",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "626986ad3300105aacf14a094b896a4e0e0ff135",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "729381eaa1ad7ec28ccb9dee82915ac654aaaa9e",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "db6d04ea2691a6a3386fd3e321a0d8f690aed956",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "13c5fad84116accb3fe9b3243c6d066268105185",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "77d5970a12aaad641592487e6fa6bfc6d582445c",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "db1d702c49f5ab6933fb6de8a65200e2c5e237be",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "6be9152b6d619ffce5a41867fff8efbab6dcd194",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "a590128fba0e3536442abe9232f25200472e27ce",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "546e26e579ce96b34cd37bd981da61a3a1bd43a4",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "c19a021892bbe45585b298c014ac1ca81794d8c0",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "29e40293659645173a8621946024dd34c82a11ca",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "943b64a95114349e4edfc84ea2f74d759f9bb8a8",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "6e7b04129779dc36a485bcc27acdf706fc9e03ee",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "8b16dc43c18fad53754832b562b8203194defad1",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "3c68ec961a63a0f8fd07b2a162e75cce8ba42eda",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "e3dc614585a83b725eeb22be5a81f7c712edcc05",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "090429c7a61c83e48abc75a858b0156e900af64b",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "2c31ba86e54ffc70d7e53003da1a7b34ce18c9eb",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "ec894308e2b88b093dbd3b9868ac552584209c49",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "f87bfea4dc1dd817e849c72929f322a1dd2c3e5d",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "fcf42116ffa4982f6569e3268f8556cd9a36b666",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "3079ed9bfc3bd6957d116e7e1b23985f145f8c99",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "8bac66a2a76010f33aa8991435b82e37a76eea59",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "cbc9fc876e704e8dca7cd8ce6311ae0e2053a478",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "b951ff11675e8ad91bb0ad82269d0757c222e15b",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "f0c5e8f1e1056f5f6a1d87690c32655274a4bda5",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "0df869179a028294ac474f146ac551b2c18bc0f8",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "e63ce04545ffbf1f744ccde818d5df81c9d1da98",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "f0ad5a2af1179c8a06294d1f0fc5c8ef71203ba3",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "40be1fdfcfe47c3c4b0ecd48410cf9eb6674dd27",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "af56ba8a3bc1d99e3a508a27ca473420fac520f2",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "04c1f89e6413e7e0dc27958d958004bfdda00c86",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "43e67dec07e1ab6c1678cbbd6f24288f79b853a2",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "3ed72dbd0747eeb0efd57f8c153a22e2a6fdb721",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "6dcf25fdfe388b27d99b802d812c0df9d8d55354",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "252baba909a3aef6bbf97e146a82ec9047d5ec4e",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "9c514fcfeaa1954cfda8806bf646c7260a234c11",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "7f508ed518b8b4e366c7ab3318fabb1ef7f2745c",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "9f22ffeabd6c9e858f3f335184c0a43dca7c7f7e",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "a338b54197c6b410efff829c4c981504288c35e5",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "7c4ff77d8bac7aa385a0cadd135da2cee1f51c96",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "5cabee59d7ab1ac4e0db92ae2ada2f52e20c543c",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "8506f0ee243082490c83844eab9f6b6ee9e4a229",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "cd0414e2935884678f39c3dea4ef6adcf6bc9857",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "bfcba6895cf475b5ad0d71aaf6a353b062cf980d",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "ec51f93448ad062abbe7a9b3eff40d825601715e",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "97a94ffa4b89198a3ca0f0a12941d8da3fe5f427",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "5f1b74ecb4404cc5a9d320a7a7929dcc976524d7",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "e44ce70bca9d22fc885778e40130595bd6973586",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "7b375267de52adf36cf8858c6212b9d0592e2826",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "0dcf02348b70f42539f11856be283158c214e76a",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+          "bytes": 65536,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "afe757754b881bc6f7f568dfdbed4db301b7cbbe",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a"
+        },
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+          "bytes": 16756,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "0fed9547b0e935f9ba51a80b4d272df48df15e52",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198"
+        }
+      ],
+      "transport": "ordered-gzip-shards"
+    },
+    {
+      "bytes": 19625,
+      "compressed_bytes": 3612,
+      "compressed_sha256": "f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da",
+      "destination": "work/inputs/reference/upstream/wekws/model/fsmn.py",
+      "license": "See LICENSES/SCOPE.md; source/model and audio rights are separate",
+      "logical_path": "historical-source/upstream/wekws/model/fsmn.py",
+      "object_descriptor": {
+        "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+        "bytes": 435,
+        "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+        "git_blob_sha1": "cf53cf475dc077666fc31f9f86f5c63df6b15ffb",
+        "path": "research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+        "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+        "repository": "jiying2007/kws-data",
+        "sha256": "21c91951169499b3296cfd78723bc86c0fb5f8757041454cee8fa2761c242d3e"
+      },
+      "provenance": {
+        "original_sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3",
+        "public_sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3",
+        "publication_mode": "byte-identical"
+      },
+      "sha256": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3",
+      "shards": [
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+          "bytes": 3612,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "c8993c7c62e5067e628ac2b7c280f5424fe7cf8b",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da"
+        }
+      ],
+      "transport": "ordered-gzip-shards"
+    },
+    {
+      "bytes": 1498,
+      "compressed_bytes": 736,
+      "compressed_sha256": "5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463",
+      "destination": "work/inputs/reference/upstream/wekws/model/cmvn.py",
+      "license": "See LICENSES/SCOPE.md; source/model and audio rights are separate",
+      "logical_path": "historical-source/upstream/wekws/model/cmvn.py",
+      "object_descriptor": {
+        "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+        "bytes": 432,
+        "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+        "git_blob_sha1": "4d9d32b7b9063783049ae773805c0e48b1460e37",
+        "path": "research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+        "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+        "repository": "jiying2007/kws-data",
+        "sha256": "de0a61f61c535cab47eb04f3b5746c4b2c5bdc1daac16285902e105d3775fbd7"
+      },
+      "provenance": {
+        "original_sha256": "6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c",
+        "public_sha256": "6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c",
+        "publication_mode": "byte-identical"
+      },
+      "sha256": "6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c",
+      "shards": [
+        {
+          "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+          "bytes": 736,
+          "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "git_blob_sha1": "224850583a4af5d24d718725e0605fda869841df",
+          "path": "research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+          "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+          "repository": "jiying2007/kws-data",
+          "sha256": "5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463"
+        }
+      ],
+      "transport": "ordered-gzip-shards"
+    }
+  ],
+  "requests": [
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+      "bytes": 13047,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "7a828df7303fa13bd64db2784f15d2ba0541585b",
+      "path": "research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "66cb32ec33d77c6ebd30757bb5e9b28f68774894cd15c8b30a350324275e4702"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "879087b3cdda932e8e2d1437ae01bdbd68d0916d",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "d90f3fbe26ba7420fc136747aef398f2130c99d7c44457623ecd05f316353687"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "aee3fad23a4fb7b7d39cb5c2687fe642c28ecf87",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "8f114d008570fbfcf4ebc1811af1133a2f99983d725c09334ed340c2c0994e27"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "639fe464084a07ebfce0169a476f0d175f014d53",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "62a92c7431ee7932a27b9a712b38206da993dad1c466c76221f2d9233e9ac5f3"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "3aae321da09af3e0bd738129ccbb8acf37e9d7d5",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "29a804540aee26ff9c7dfd3d055de6629853ceefec8f65607520269f950dc69e"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "a4289628390157865c53c454cbf7dad486c708af",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "3561c164d62327a682bcad14ef6d15f5b9e5a0f57f54cca33030651ebdcc1b0a"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "a1fbdc798d444f108d0fbe8c3d1f166945ee3684",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "140c55762b5462b9e459589664133759413c61cf58de658a8f53ebd9697c5e0f"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "636a43f6daf93fcdc4ea77ff4d3a3ec4c1055d54",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "2edffccaf28becd2c4b6b1364dc7e01767525938e33eea729197e87143ef536c"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "0b2b27c8aadc119a37e59d015ad72feadd8b4f25",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "eb1227c31a810119dc9d270385d0a2908e0edb23c4ad3302296f980fd0ceb4b4"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "9c074a9df7cc95072f3b5addfa80b0866a43498c",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "50fadd4d569ffab74efb0be0d520b93ebfd74364c2af4bc381d365818e245c79"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "ef1f9dcda6d4f2591e019315b037c1590f451ded",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "2fc5c14b158a6dd379ceba25ae87d0eb176e1c2e8542f01519a5fc19e0e20fe2"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "62124e373b7463db081e092d70eb798f15136f1f",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9269193e590a364695b31b63d3b8fc304577b026a796cc0c58721cc041a415ca"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "788a5159d5e407f15cbcd8bc91099b34564dcfd8",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "b25a2b8700489ff51a31afc66e2eeb45fa5378b081e8a0f23cede6910e02a61e"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "b870483d0c34b70b1bfe4139d38b78ee94d2e6db",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "f2929859e2da58c388e5942e276096747deb762dde71de52c9052dac6efeac22"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "841ebde5a27c26852fd9f8799830e0b88f171bcf",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "2433e6e03427a31051e6f98f4790048cada3268f10ef27183cee35e70f85a1e5"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "626986ad3300105aacf14a094b896a4e0e0ff135",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "00b9b4b7cf8fc678feceeb357c597dc47e34eb540fa2d5f793bea40e342bd69b"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "729381eaa1ad7ec28ccb9dee82915ac654aaaa9e",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "b3d55043dc9cdce512e14d2ac7d48bb41c276bb0c9ab4f3b0029148b5a0695d8"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "db6d04ea2691a6a3386fd3e321a0d8f690aed956",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "5f2e5d0502261d864c6e534ceefe37c4900781c8d49a0638c42cf9fb0906e3b9"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "13c5fad84116accb3fe9b3243c6d066268105185",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "736cf70ef6d0b94b0f69b4a347e27d0c8698a170600766c207d98c69d3ee5258"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "77d5970a12aaad641592487e6fa6bfc6d582445c",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "08c4853e5146e46f1396c23a186ddfd8885c8f2e1e9ede9e7d7d39483fc6bad1"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "db1d702c49f5ab6933fb6de8a65200e2c5e237be",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "a37d743759652109c17acb9f7092af2b5ddd99aeeaffe0c5b7d0cc307a2eee62"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "6be9152b6d619ffce5a41867fff8efbab6dcd194",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "74da20796b50792a604c8d31116386e9dc0a572daeccdf10aba18cd863005f6a"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "a590128fba0e3536442abe9232f25200472e27ce",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "caf7f8094aa735a33778b0d46ae2f9a88faa94c5b5997db2383d242dcd367361"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "546e26e579ce96b34cd37bd981da61a3a1bd43a4",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "0e03f1b8a2211d9048618c3b1286130ea1a58f120f6edd313615785d225d5020"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "c19a021892bbe45585b298c014ac1ca81794d8c0",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "f952ba74c52568223c30e7005ca52452009c4035fc94b8771c97ac9c76b9d692"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "29e40293659645173a8621946024dd34c82a11ca",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "e8e52d0a0ad3c21ec3fbf8ba68068f7b9f28c69ae0abdc94010ae174a9dce2d3"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "943b64a95114349e4edfc84ea2f74d759f9bb8a8",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "e96d34331b929ae975d148fe3c500683861aa1521a97d8cc3a0d1b855c4b8fde"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "6e7b04129779dc36a485bcc27acdf706fc9e03ee",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "4881c805adc45185d79b50b17247b9279331be41d338eb44814ae1e0d1819573"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "8b16dc43c18fad53754832b562b8203194defad1",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9781429283fe17c1ac9952a98501f5588d87aabc17a92d2c5558c1b6c4272bc9"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "3c68ec961a63a0f8fd07b2a162e75cce8ba42eda",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "ba79c55cfdc35c27c1b12c967dc993c60d6f1e75943496d21d92d69c6dd0a119"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "e3dc614585a83b725eeb22be5a81f7c712edcc05",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "5054da869c5ebe5eff425382a2941f714c68257616be3e15f6aa39baa20fc639"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "090429c7a61c83e48abc75a858b0156e900af64b",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "2e36fb294a09cdf5c9ecd9481b6de2a816463c79523b4598a3cef1aae2c8d85a"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "2c31ba86e54ffc70d7e53003da1a7b34ce18c9eb",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "fd380545ccae3fee1d19b9477230b61d71fd96cf0439565c75d34e3a76aa0a22"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "ec894308e2b88b093dbd3b9868ac552584209c49",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "b3a6a80f3b77d7a52751420922fb9894013a4c45deca02058f50801b15fd24cd"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "f87bfea4dc1dd817e849c72929f322a1dd2c3e5d",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "0f5aa7c59bcd145e80d2301b50b0cc4b7baf25ce23d4b0da2771ddbe58db9025"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "fcf42116ffa4982f6569e3268f8556cd9a36b666",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "98ac54478cc91831caf10c1594b3607a5cfceda9b2a0b93fa23cea64fbce2c79"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "3079ed9bfc3bd6957d116e7e1b23985f145f8c99",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "8e25bc022344bc89a4f927bbece29f7438d0ef7a1ed5ec79d5b1bbce75207722"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "8bac66a2a76010f33aa8991435b82e37a76eea59",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "6946d25d37c11a3daa7bbdba1aad4f517878a0f1819e9ad5168ea03b9d819232"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "cbc9fc876e704e8dca7cd8ce6311ae0e2053a478",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "6ec8c702b77165f0db95cd8209ef9d58eeb5f8b2b115c4b64960b1d7d51da73d"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "b951ff11675e8ad91bb0ad82269d0757c222e15b",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "8a7263416ee4631dc4dec8fb3dfc47caa6e2400c91d382c62ffda6f491767178"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "f0c5e8f1e1056f5f6a1d87690c32655274a4bda5",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "c4d9440a452a3466248545a387b568b34b06b90e2fcd15102123c89be55e803c"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "0df869179a028294ac474f146ac551b2c18bc0f8",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "0743a0180c8ae4aae63b15b3253c967140be3e769718917f1d88271b26c47850"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "e63ce04545ffbf1f744ccde818d5df81c9d1da98",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "75cb6eee7ea1fd53013bf68b6238aedea1c1408817a5123f2450c5cf448591ec"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "f0ad5a2af1179c8a06294d1f0fc5c8ef71203ba3",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9615a5956031bb529eab752584b4b47a0c8ed983d14ba46cc5ab7de62f384080"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "40be1fdfcfe47c3c4b0ecd48410cf9eb6674dd27",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "820378acfa217e180187ba78abe9aa0ed2705ebac1f3a63511376e10402f1ef9"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "af56ba8a3bc1d99e3a508a27ca473420fac520f2",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "b4edf55da45cde86c49933e75fcb85fc3d9c0e3139f8ace15be5720fb0f71a89"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "04c1f89e6413e7e0dc27958d958004bfdda00c86",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "d98a7da1240bef47850895d3c9a04469fec2d69e9808671442a7eaa73161ecbe"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "43e67dec07e1ab6c1678cbbd6f24288f79b853a2",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "6c05d315a6486b6eb43abb2fbd767e02c59bbb8841267968c0f24f39a9cbc163"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "3ed72dbd0747eeb0efd57f8c153a22e2a6fdb721",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "5f4cf6db316512413da7f3f3bb05d720dee398517ea25194088a6cd06cd8739b"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "6dcf25fdfe388b27d99b802d812c0df9d8d55354",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "366a470b008052a5cb85abfff448a81674781fbfe27f1e1ec3ad110a78931b44"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "252baba909a3aef6bbf97e146a82ec9047d5ec4e",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "ae4b2bffd60981d8b008f8cf1493c9e8b2721f714e174a78bb2e09abedd6b154"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "9c514fcfeaa1954cfda8806bf646c7260a234c11",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "63d33cf8d75432b759fd6199fc570303816a83a901a5c7ee1b98b745e8ee7a85"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "7f508ed518b8b4e366c7ab3318fabb1ef7f2745c",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "e66a398c5ba84eab32f94103fc3b9b6886ac5f63337904f54bfef0e9450a8700"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "9f22ffeabd6c9e858f3f335184c0a43dca7c7f7e",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "31e3422c2d368a9a6b4ca9f487bf92ccd7fb3863e26851410fc9e23183488588"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "a338b54197c6b410efff829c4c981504288c35e5",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "0a04696b390e7e9ad58b4ac2a1939b3259be9a285264f96adfe961ff544e614e"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "7c4ff77d8bac7aa385a0cadd135da2cee1f51c96",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "f2f0875dae309b8b45013cdade9b08faf12512f3bc76b9fb59529a6dd008098f"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "5cabee59d7ab1ac4e0db92ae2ada2f52e20c543c",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "c3ecd32a93ef15c3ed74e982a4083adf133188163b5cf4694f57737969fd8973"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "8506f0ee243082490c83844eab9f6b6ee9e4a229",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "3c1633600bc99b903a0b7968c68a79e54b7aa68e70f8bddb28469193df6d70dc"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "cd0414e2935884678f39c3dea4ef6adcf6bc9857",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "6dd559af9e3b11bdb2e33774dbe20688106b0a3464197ddb90a0f577f0bca9ae"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "bfcba6895cf475b5ad0d71aaf6a353b062cf980d",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "4667f05c69ddc72b8e5e99e0b902488c3c2fb6642a0e33ac14cc11a74c9fd545"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "ec51f93448ad062abbe7a9b3eff40d825601715e",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "56a8c9adb5c1ac60fc118177daff29f19c9186e81a2d1f207d6743aa97c4cc12"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "97a94ffa4b89198a3ca0f0a12941d8da3fe5f427",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "d84e16278be3240a9c98364d5e780f86ce1c7b3de26c53045666dd54e3def822"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "5f1b74ecb4404cc5a9d320a7a7929dcc976524d7",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "e33320f3daa6b66e50eaebf600bdd54e62fde13ea94e5f16eabe6e7d9f298532"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "e44ce70bca9d22fc885778e40130595bd6973586",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "4b8c73f2c416c4a418d614e893b29f46331086d209b0c23368c93bad677fa152"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "7b375267de52adf36cf8858c6212b9d0592e2826",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "a50e42b6ccfe783ea5a4526ea7003890d2bf9af0891128cb233a5cc9f15a26fd"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "0dcf02348b70f42539f11856be283158c214e76a",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "9942954dfa4529f95680bbb3c891bf1ef2535ed9ffd5a47b32cb0670bbcff773"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+      "bytes": 65536,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "afe757754b881bc6f7f568dfdbed4db301b7cbbe",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "d0532c12d31d6c4851e1dc3d2638bf0463f3e120a2a61ab2f962136f857cc01a"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+      "bytes": 16756,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "0fed9547b0e935f9ba51a80b4d272df48df15e52",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "f292032cb2ca66c6e66c07aacdb8a9b12cf114d854c1accd64a81446003b1198"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+      "bytes": 435,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "cf53cf475dc077666fc31f9f86f5c63df6b15ffb",
+      "path": "research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "21c91951169499b3296cfd78723bc86c0fb5f8757041454cee8fa2761c242d3e"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+      "bytes": 3612,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "c8993c7c62e5067e628ac2b7c280f5424fe7cf8b",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "f639f8b8e172fc92e943d0c9e80f65d6d4a297bdc6710e9cf12789e5911664da"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+      "bytes": 432,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "4d9d32b7b9063783049ae773805c0e48b1460e37",
+      "path": "research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/objects/6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c.json",
+      "repository": "jiying2007/kws-data",
+      "sha256": "de0a61f61c535cab47eb04f3b5746c4b2c5bdc1daac16285902e105d3775fbd7"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+      "bytes": 736,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "224850583a4af5d24d718725e0605fda869841df",
+      "path": "research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/archive/shards/5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463.part",
+      "repository": "jiying2007/kws-data",
+      "sha256": "5e4f89114ae6110a2dd6496d19fd2a5d4f01993b75dc122b11eeee8a46a17463"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "bytes": 2984,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "b36f05087bfd865b777b0cc8a8b9344bb5b9c9a7",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/SCOPE.md",
+      "repository": "jiying2007/kws-data",
+      "sha256": "72c9dc360cc08705a32e640346a4975c9569916a437f022fc850ae6df1707e7b"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "bytes": 11357,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/Apache-2.0.txt",
+      "repository": "jiying2007/kws-data",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-data/blob/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "bytes": 1338,
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "git_blob_sha1": "1bec23eaf1dd562ae3d3216420b1b1bbfbd39cbc",
+      "path": "research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/research/2026-10-03-native-a20-core/LICENSES/BSD-2-Clause-torchaudio.txt",
+      "repository": "jiying2007/kws-data",
+      "sha256": "93a58861a858cc108e6b6b833e08e76e8b2a66339e4a8007c8a5a8c1ff9c40d6"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/NOTICE.md",
+      "bytes": 1861,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "ed4659426bdde22a58b0d843fa3d04706728cc5b",
+      "path": "research/native_a20/NOTICE.md",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/NOTICE.md",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "acf0359353f1b3d6bcfdacd3ed15eb3b9c1264bdf4ee7f84552272464e3375ff"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/LICENSE",
+      "bytes": 9108,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "3e14d4b16918fcff8fa45dd71148ffbe468388fa",
+      "path": "research/native_a20/LICENSE",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/LICENSE",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "bytes": 11357,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "path": "research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/stream/LICENSE.wekws",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "browser_url": "https://github.com/jiying2007/kws-pipeline/blob/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "bytes": 1337,
+      "commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "git_blob_sha1": "a1335294ac9c6a2aee1313e81c33615e336b57cb",
+      "path": "research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/804553286fd9caa294769cc4d44cc0c43dc66e88/research/native_a20/baseline/native/donor_fbank/LICENSE.torchaudio",
+      "repository": "jiying2007/kws-pipeline",
+      "sha256": "c23327aa7dc5240acce57117302ed02c38886f10fa2e41fb33af86812fd3f88a"
+    }
+  ],
+  "schema": "a20-fixed300-model-inputs-v1"
+}

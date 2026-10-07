@@ -1,0 +1,25 @@
+{
+  "exhaustive_menu_matrices": 585,
+  "cases": 612,
+  "raw_paths_visited": 5523157,
+  "nonzero_paths": 619348,
+  "failures": [
+    {
+      "case": "alignment_tie_48",
+      "error": "{'decision': 'ACCEPT_K1', 'expected': 'REJECT_K1', 'masses': (0.5000000000000001, 0.0, 0.49999999999999994), 'logs': (-0.6931471805599452, -inf, -0.6931471805599454)}",
+      "type": "AssertionError"
+    }
+  ],
+  "tie_cases": [
+    "menu_3_244",
+    "menu_3_412",
+    "exact_tie",
+    "split_negative_tie",
+    "alignment_tie_23",
+    "alignment_tie_48",
+    "alignment_tie_456",
+    "prefix_product_tie"
+  ],
+  "oracle_sha256": "7a96a87a38b0086d7610fb80ef974415649d802d0c2c53026166d1004e0683c3",
+  "module_sha256": "a568d82efb673cff757d228d6bf85698896b194e873989d9cb26838f87463c6e"
+}
