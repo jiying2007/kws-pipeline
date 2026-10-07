@@ -1,0 +1,699 @@
+{
+  "schema": "kws-one-shot-archive-execution-v1",
+  "remote_execution_authorized": true,
+  "owner": "jiying2007",
+  "owner_id": "33591504",
+  "expected_dispatch_actor": "jiying2007",
+  "expected_dispatch_actor_id": "33591504",
+  "tag": "refs/tags/archive/branches-2026-10-07",
+  "global_gate": "both archive tags and all 82 real restored heads verified before any deletion",
+  "repositories": {
+    "kws-pipeline": {
+      "full_name": "jiying2007/kws-pipeline",
+      "repository_id": "1349639240",
+      "default_branch": "main",
+      "visibility_readback": "public",
+      "snapshot_baseline_main": "221dedd21d0892965aacda15e676fc97d29bd32b",
+      "archive_commit_oid": "795ffd731a78bf2794774c9bc97f519536025781",
+      "archive_tree_oid": "c37f8d745e9e49236975ed804279e44c193be0f5",
+      "archive_docs": [
+        {
+          "path": "BRANCHES.json",
+          "mode": "100644",
+          "type": "blob",
+          "bytes": 29418,
+          "sha256": "6934cfa668b26fe4e1680a94b49dc46eaed41c7053e918c2b024a57155ac26ea",
+          "git_blob_oid": "f3fad1c1800441ca6355ea17631b6eaf41f0e883"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "type": "blob",
+          "bytes": 846,
+          "sha256": "1df9e260968c7f5c6bab474d302c09d8ba44ee8010a629614f7ac31e1fce7989",
+          "git_blob_oid": "1f43982248286e03f89a5a2c901aad9f8c57f700"
+        }
+      ],
+      "ordered_archive_parents": [
+        "221dedd21d0892965aacda15e676fc97d29bd32b",
+        "1535031d186ee32190f40cd5263459c21b63b753",
+        "c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8",
+        "2468af38e1f2a797e4c1e15b7387fb524fe62e19",
+        "0b45ab32c65c36a3613404dce8ec755d00fb0c50",
+        "22610f6f2012d5d7c3a86118c70b3ed187d4d951",
+        "d0828c3e2c35dffb8406cd1c504463951c3f8076",
+        "a9b29dccea1e4b03fd94a2f3745987bf88a363cb",
+        "73ff31a39090eff9d1e696c964c60cc31a218a2c",
+        "924bc52c2bcc35fc69bd25e077f8dfed15e48811",
+        "a0e06819e679fdbcedce05499bb494dae0567f37",
+        "fb735bc609b7bc3be5418c36e9a91c5547d60cf2",
+        "3a30f2878323b313d7361541faf451b78f643ecd",
+        "1e84b3c2b58fab504befa1c0a71b061f0347f7f5",
+        "f79f9540aa9b0811e34592f5b77cc9b1b70d7826",
+        "d08abbf3b5c43155f9bcb3986aef687e7bcb1ec3",
+        "03453a6c408cb038ad80f38b0afd0911ab7dd88a",
+        "9f7947a07d7a00b7ebf5b7c427e423837a5d2618",
+        "8589e99d85f01f4a4dd3499548329c2357a5aa8b",
+        "d74ff5589568d6a3b81f38e04f6e86688b51aebf",
+        "a06f36bdeab9a00c5b7581255ea3d8fd4c5a0f51",
+        "54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+        "1edc7bc09a8739b4d49d1be9b03d5532898efb75",
+        "1455685aa050c3508ca755b480f80dca0ac9ff9e",
+        "fd44748f18728621df20b65b15ad14639350d5f6",
+        "8ffc1200a900728fde3d392479a863f42132be5c",
+        "2b38131cf20966ac0bc24b92b617ae308ba19cd1",
+        "e45902a23696a95018ac80b9445c36d05c7203bb",
+        "8381df126a1f8c9decca2579dff612833bfcc5b1",
+        "064493c5bd71c4de40aa9d6569254724ee1ada46",
+        "d5c64d273f680f274d673439f9525cc634089d4a",
+        "28e90204e40b8da07f5d887fee43f3e19a3e865d",
+        "ff0a1bbd1815655aeec448ed43da728e2cf2c955",
+        "a44a8d785bacfc2daf3f94951547e74063e30d26",
+        "f63ace695467e310129fb51f5e09c031ed834d34",
+        "4a62fc91f7140c6e875692c88235152da4c68e4d",
+        "7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+        "5abf8de13f0ed097c223c82a98428bec3aab7e7f",
+        "a352b52946ebde8e7a790fd2abd4b4f98dc39d98",
+        "f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+        "d68ebc1a45b5ec6e2c5d64a91bc54c0fb3be4662",
+        "3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+        "94b9fbf562aca9487beb8096bc3f50924369a3ce",
+        "0595b248b19b856df80902a6656bbea94ddd5a94",
+        "71313a67ab6ef4bc6dede51e4897b305eb5577b3",
+        "5058065799edfa223b9cd6b06c3aea48fecf795e",
+        "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+        "3be91857f80ba63f80a5caac82744cb141f39987",
+        "dd859c5b9feeaeedcff937cf94ac0858a9793ad1",
+        "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+        "fe53ae5a11e676560d18d5ef94fb696b6013ce9f",
+        "6d06a04403a93c5b7138870deb900baf5a8fefc4",
+        "d8453ae8b2b2c620716b32c96d9647834ce96746",
+        "09ec823d16fc149463bb898f6408221b05471e64",
+        "804553286fd9caa294769cc4d44cc0c43dc66e88",
+        "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+        "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+        "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+        "c81396934ad4c83876086d35ffb79478435d19d0",
+        "986d44c9e0efe15ce0656413a2f2112aeccaea96",
+        "2d52b58f36163fb93b9ba1b1356fa184c187fa2f"
+      ],
+      "original_count": 60,
+      "delete_count": 57,
+      "delete_refs": [
+        {
+          "name": "refs/heads/codex/github-asr-runtime-once-20261001",
+          "before_oid": "1535031d186ee32190f40cd5263459c21b63b753",
+          "tree_oid": "55b02db6a437a67341a4aa2f79955f4f2a9f511e"
+        },
+        {
+          "name": "refs/heads/codex/kws-expanded-train-readback-20260927",
+          "before_oid": "c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8",
+          "tree_oid": "b655373e6007e1ab4fbb907930857e0382497151"
+        },
+        {
+          "name": "refs/heads/diag/ctc-occurrence-target-blank-gradient",
+          "before_oid": "2468af38e1f2a797e4c1e15b7387fb524fe62e19",
+          "tree_oid": "1715f71e2a4a54ea8ad3e96ccbabd5511310285b"
+        },
+        {
+          "name": "refs/heads/diag/ctc-viterbi-separability-v1",
+          "before_oid": "0b45ab32c65c36a3613404dce8ec755d00fb0c50",
+          "tree_oid": "53ce2ff22cf224b8a6cfcae9d5ea5a9d8c6ea21b"
+        },
+        {
+          "name": "refs/heads/diag/frozen-far-history-decomposition-rerun-v1",
+          "before_oid": "22610f6f2012d5d7c3a86118c70b3ed187d4d951",
+          "tree_oid": "c4cc6b86995acfd351a4408c241f4ebf6ab8d32c"
+        },
+        {
+          "name": "refs/heads/diag/frozen-far-source-replay-cases-v1-rerun1",
+          "before_oid": "d0828c3e2c35dffb8406cd1c504463951c3f8076",
+          "tree_oid": "5e93ac22696a34d6fc716a27a70088793954acdb"
+        },
+        {
+          "name": "refs/heads/diag/frozen-far-source-replay-cases-v1",
+          "before_oid": "a9b29dccea1e4b03fd94a2f3745987bf88a363cb",
+          "tree_oid": "9a74a454a69f22083e4a6198dda01abcc8214889"
+        },
+        {
+          "name": "refs/heads/diag/frozen-far-stream-context-replay-v1",
+          "before_oid": "73ff31a39090eff9d1e696c964c60cc31a218a2c",
+          "tree_oid": "ad8fc536b0b14d68593917e98edb6932cb4a1bf4"
+        },
+        {
+          "name": "refs/heads/diag/fuzzy-competitor-token-provenance",
+          "before_oid": "924bc52c2bcc35fc69bd25e077f8dfed15e48811",
+          "tree_oid": "4c9842be548d7ad46d675e3a8741283744739a27"
+        },
+        {
+          "name": "refs/heads/diag/fuzzy-temporal-neighborhood-stack",
+          "before_oid": "a0e06819e679fdbcedce05499bb494dae0567f37",
+          "tree_oid": "e0a1406c404ccb334fc316cf9e8f19a7a9645a5b"
+        },
+        {
+          "name": "refs/heads/diag/nonroot-exact-top-admission-probe",
+          "before_oid": "fb735bc609b7bc3be5418c36e9a91c5547d60cf2",
+          "tree_oid": "d274fded2b15369f52fa37d691faaf386a65503c"
+        },
+        {
+          "name": "refs/heads/diag/retained-frozen-far-path-summary-seed3301-rerun1",
+          "before_oid": "3a30f2878323b313d7361541faf451b78f643ecd",
+          "tree_oid": "33bcbff053a7ee66b715cb4f563976280f933fad"
+        },
+        {
+          "name": "refs/heads/diag/retained-frozen-far-path-summary-seed3301",
+          "before_oid": "1e84b3c2b58fab504befa1c0a71b061f0347f7f5",
+          "tree_oid": "967f0fdf8980e97ee065ce9c23d7c5e7e9a59a84"
+        },
+        {
+          "name": "refs/heads/diag/strict-fuzzy-child-cost-probe",
+          "before_oid": "f79f9540aa9b0811e34592f5b77cc9b1b70d7826",
+          "tree_oid": "7d9b5721114ac7194cd2fb6feadb52770f862fab"
+        },
+        {
+          "name": "refs/heads/exp/ctc-keyword-competition-positive-pair-v1",
+          "before_oid": "d08abbf3b5c43155f9bcb3986aef687e7bcb1ec3",
+          "tree_oid": "d9c8007a2ac88aa82a9898873a4da5f092d521e2"
+        },
+        {
+          "name": "refs/heads/exp/decoder-exact-nonroot-probe-v1",
+          "before_oid": "03453a6c408cb038ad80f38b0afd0911ab7dd88a",
+          "tree_oid": "804267ecb69b03301e314589ebf373372ec217c9"
+        },
+        {
+          "name": "refs/heads/exp/decoder-nonroot-blank-evidence-probe-v1",
+          "before_oid": "9f7947a07d7a00b7ebf5b7c427e423837a5d2618",
+          "tree_oid": "4219cc88976fa21d79cd7f1c604c1d43caacd1ae"
+        },
+        {
+          "name": "refs/heads/exp/decoder-nonroot-defer-probe-v1",
+          "before_oid": "8589e99d85f01f4a4dd3499548329c2357a5aa8b",
+          "tree_oid": "1e34730580ee455759e517b7c44a2b07c1cb330c"
+        },
+        {
+          "name": "refs/heads/exp/label-prior-primary-ctc-pair-v1-rerun1",
+          "before_oid": "d74ff5589568d6a3b81f38e04f6e86688b51aebf",
+          "tree_oid": "ca7d2a25e99e172f72ff4c8a7c2a0d959605328e"
+        },
+        {
+          "name": "refs/heads/exp/label-prior-primary-ctc-pair-v1",
+          "before_oid": "a06f36bdeab9a00c5b7581255ea3d8fd4c5a0f51",
+          "tree_oid": "aa7c725b4c347f7bd464f396dbda69bfd8f1ac06"
+        },
+        {
+          "name": "refs/heads/exp/runtime-exec-replay-control-v1",
+          "before_oid": "54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+          "tree_oid": "f1d818a21fdcddbcf91468ece1749266dd6bffc5"
+        },
+        {
+          "name": "refs/heads/exp/runtime-exec-replay-treatment-v1",
+          "before_oid": "1edc7bc09a8739b4d49d1be9b03d5532898efb75",
+          "tree_oid": "21b9ba5837a9679d8faf25c915f03379eb2e21ce"
+        },
+        {
+          "name": "refs/heads/exp/runtime-search-aligned-positive-pair-v1",
+          "before_oid": "1455685aa050c3508ca755b480f80dca0ac9ff9e",
+          "tree_oid": "9a347962090df59059949f128cc4b35c5cae924b"
+        },
+        {
+          "name": "refs/heads/exp/vad-align-control-current-v1",
+          "before_oid": "fd44748f18728621df20b65b15ad14639350d5f6",
+          "tree_oid": "97c24c973740d2ae670b3fe403019d23deb75de0"
+        },
+        {
+          "name": "refs/heads/exp/vad-align-control-current-v2",
+          "before_oid": "8ffc1200a900728fde3d392479a863f42132be5c",
+          "tree_oid": "f4be2660b3bf571049807e9c0009cacf2a6f0489"
+        },
+        {
+          "name": "refs/heads/exp/vad-align-suffix-root-v1",
+          "before_oid": "2b38131cf20966ac0bc24b92b617ae308ba19cd1",
+          "tree_oid": "ec35bae4b52839b3c8531e421d2e02b785e29d95"
+        },
+        {
+          "name": "refs/heads/exp/vad-align-suffix-root-v2",
+          "before_oid": "e45902a23696a95018ac80b9445c36d05c7203bb",
+          "tree_oid": "c47d8f359b55f0736419694ea698bb5b51abe371"
+        },
+        {
+          "name": "refs/heads/feat/label-prior-ctc-objective",
+          "before_oid": "8381df126a1f8c9decca2579dff612833bfcc5b1",
+          "tree_oid": "80bc2a93bcacfc87782be6448668ce329aa5ee26"
+        },
+        {
+          "name": "refs/heads/research/a20-cosy30-cross-voice-v1",
+          "before_oid": "d5c64d273f680f274d673439f9525cc634089d4a",
+          "tree_oid": "5f128bf38ec77191511a897d2232109e1a9e48d3"
+        },
+        {
+          "name": "refs/heads/research/a20-cosy49-single-candidate-v1",
+          "before_oid": "28e90204e40b8da07f5d887fee43f3e19a3e865d",
+          "tree_oid": "2e673942a005dd689c2de10b8537aa93a087136f"
+        },
+        {
+          "name": "refs/heads/research/a20-cpu-metadata-probe-20261004",
+          "before_oid": "ff0a1bbd1815655aeec448ed43da728e2cf2c955",
+          "tree_oid": "d9dbb17aa23c8c5a7884a1782e05d217b2f5fca7"
+        },
+        {
+          "name": "refs/heads/research/a20-fixed300-single-candidate-v1",
+          "before_oid": "a44a8d785bacfc2daf3f94951547e74063e30d26",
+          "tree_oid": "6166d2fdf366da94e741766d23cdcd065f80876d"
+        },
+        {
+          "name": "refs/heads/research/a20-token-preparation-20261004",
+          "before_oid": "f63ace695467e310129fb51f5e09c031ed834d34",
+          "tree_oid": "51abb06d32f4e268dcdabdbdcece54fc534f5cef"
+        },
+        {
+          "name": "refs/heads/research/a20-token-preparation-metadata-recovery-20261004",
+          "before_oid": "4a62fc91f7140c6e875692c88235152da4c68e4d",
+          "tree_oid": "90fd9641b93e09d59e53c810414c1e50bfc9ced2"
+        },
+        {
+          "name": "refs/heads/research/asr-label-decision-regressions-v1",
+          "before_oid": "7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+          "tree_oid": "f5a17e8a09659ecf30ef451c27e4218b7e52e5e3"
+        },
+        {
+          "name": "refs/heads/research/cosy49-results-archive-v1",
+          "before_oid": "5abf8de13f0ed097c223c82a98428bec3aab7e7f",
+          "tree_oid": "69ce9bea34e0e3a336e51755a1e2c91286d32662"
+        },
+        {
+          "name": "refs/heads/research/cosyvoice3-six-pair-pilot-20261002",
+          "before_oid": "a352b52946ebde8e7a790fd2abd4b4f98dc39d98",
+          "tree_oid": "123e71beaafe7699b1a9f0d35074fb12b072e6dd"
+        },
+        {
+          "name": "refs/heads/research/experiment-quality-guards-v1",
+          "before_oid": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+          "tree_oid": "3cd313dca717a1dbea2e4247a7992e991dfd0c40"
+        },
+        {
+          "name": "refs/heads/research/firered-cpu-preflight-20261002",
+          "before_oid": "d68ebc1a45b5ec6e2c5d64a91bc54c0fb3be4662",
+          "tree_oid": "1920bd71056c7cd6ee607af6d84624e9d79cb90f"
+        },
+        {
+          "name": "refs/heads/research/fixed30-asr-regression-v1",
+          "before_oid": "3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+          "tree_oid": "792f97a81beca65697fc04c45d3360e48de39b85"
+        },
+        {
+          "name": "refs/heads/research/fixed30-asr-setup-recovery-v2",
+          "before_oid": "94b9fbf562aca9487beb8096bc3f50924369a3ce",
+          "tree_oid": "f80284d5cd7c4e8230b454cce5bf0c8d2c7d9d3a"
+        },
+        {
+          "name": "refs/heads/research/frozen-far-phase-aligned-control-20260930",
+          "before_oid": "0595b248b19b856df80902a6656bbea94ddd5a94",
+          "tree_oid": "682de6d24487f556f61f1f9b025c592a71f21fea"
+        },
+        {
+          "name": "refs/heads/research/k1-fixed-slot-ctc-v1",
+          "before_oid": "71313a67ab6ef4bc6dede51e4897b305eb5577b3",
+          "tree_oid": "c9bd90ff7b5aab0fd9c7c9c9428da54f927a623d"
+        },
+        {
+          "name": "refs/heads/research/k1-prefix-marginal-v1",
+          "before_oid": "5058065799edfa223b9cd6b06c3aea48fecf795e",
+          "tree_oid": "99bbac5dc4dccb94754a737cacdac3973e23b848"
+        },
+        {
+          "name": "refs/heads/research/matched-context-evaluation-v1",
+          "before_oid": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+          "tree_oid": "797ffa55621130c192358053c6998d471b7e141e"
+        },
+        {
+          "name": "refs/heads/research/melo6-saved-result-checks-v1",
+          "before_oid": "3be91857f80ba63f80a5caac82744cb141f39987",
+          "tree_oid": "bf1738f70d672f80ddb842f3c2f216768d8b5ccd"
+        },
+        {
+          "name": "refs/heads/research/melo6-source-screen-v1",
+          "before_oid": "dd859c5b9feeaeedcff937cf94ac0858a9793ad1",
+          "tree_oid": "16f5bf851a0e34837e309b295d83c4e0a8d334e6"
+        },
+        {
+          "name": "refs/heads/research/native-a20-arm-compile-only-20261004",
+          "before_oid": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+          "tree_oid": "c80e995187fc714c03af8f7cef03621832659313"
+        },
+        {
+          "name": "refs/heads/research/native-a20-domain-tools-20261004",
+          "before_oid": "fe53ae5a11e676560d18d5ef94fb696b6013ce9f",
+          "tree_oid": "2af0c4ed1b887c8f1d89d4f4c4ded54e75a938ef"
+        },
+        {
+          "name": "refs/heads/research/native-a20-n0-tools-20261004",
+          "before_oid": "6d06a04403a93c5b7138870deb900baf5a8fefc4",
+          "tree_oid": "196470a7d50efaa199e092bcd9bd7e0d1d689261"
+        },
+        {
+          "name": "refs/heads/research/native-a20-quality-tools-20261004",
+          "before_oid": "d8453ae8b2b2c620716b32c96d9647834ce96746",
+          "tree_oid": "6dcb23976cd3152eb3c80cf4569d4c15462b8516"
+        },
+        {
+          "name": "refs/heads/research/native-a20-qwen20-saved-20261004",
+          "before_oid": "09ec823d16fc149463bb898f6408221b05471e64",
+          "tree_oid": "d9f475734bd5951c5e98ec203f91ed1336222aa2"
+        },
+        {
+          "name": "refs/heads/research/native-a20-recovery-20261003",
+          "before_oid": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+          "tree_oid": "08ff7c8e5be2872f7f45461c9a8c862d3b3d5703"
+        },
+        {
+          "name": "refs/heads/research/qwen6-source-screen-native-recovery-v3",
+          "before_oid": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+          "tree_oid": "3dc33763d2206f7bc643d9388cf2b96bd25c8103"
+        },
+        {
+          "name": "refs/heads/research/qwen6-source-screen-recovery-v2",
+          "before_oid": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+          "tree_oid": "219a74aa4ee44bc78d8f662d5e115b922afc943a"
+        },
+        {
+          "name": "refs/heads/research/qwen6-source-screen-v1",
+          "before_oid": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+          "tree_oid": "8cf78ca3a32055d94e337af4dcd93009d86f1904"
+        },
+        {
+          "name": "refs/heads/research/single-k1-followed-wu-v1",
+          "before_oid": "c81396934ad4c83876086d35ffb79478435d19d0",
+          "tree_oid": "cc039534d861769429bd908faaeb2d1249784341"
+        }
+      ],
+      "keep_refs": [
+        {
+          "name": "refs/heads/feat/restricted-development-dataset-iteration-v1",
+          "before_oid": "064493c5bd71c4de40aa9d6569254724ee1ada46",
+          "tree_oid": "63bb77e16213c531d3521200b3a600b86aef0054"
+        },
+        {
+          "name": "refs/heads/training/keyword-set-contract-v1",
+          "before_oid": "986d44c9e0efe15ce0656413a2f2112aeccaea96",
+          "tree_oid": "120c0366458093ad20416c87fe100a45fe37740b"
+        },
+        {
+          "name": "refs/heads/training/keyword-set-identity-v1",
+          "before_oid": "2d52b58f36163fb93b9ba1b1356fa184c187fa2f",
+          "tree_oid": "c49f0d37376524cf7cbdbbd81fc502f485cfa062"
+        }
+      ],
+      "protection_snapshot": {
+        "rulesets": [
+          {
+            "id": 22507875,
+            "name": "kws-main-terminal",
+            "target": "branch",
+            "source_type": "Repository",
+            "source": "jiying2007/kws-pipeline",
+            "enforcement": "active",
+            "conditions": {
+              "ref_name": {
+                "exclude": [],
+                "include": [
+                  "~DEFAULT_BRANCH"
+                ]
+              }
+            },
+            "rules": [
+              {
+                "type": "deletion"
+              },
+              {
+                "type": "non_fast_forward"
+              },
+              {
+                "type": "pull_request",
+                "parameters": {
+                  "required_approving_review_count": 0,
+                  "dismiss_stale_reviews_on_push": false,
+                  "required_reviewers": [],
+                  "require_code_owner_review": false,
+                  "require_last_push_approval": false,
+                  "required_review_thread_resolution": true,
+                  "require_extra_approval_for_unattributed_changes": true,
+                  "allowed_merge_methods": [
+                    "squash"
+                  ]
+                }
+              },
+              {
+                "type": "required_status_checks",
+                "parameters": {
+                  "strict_required_status_checks_policy": true,
+                  "do_not_enforce_on_create": false,
+                  "required_status_checks": [
+                    {
+                      "context": "hosted (gcc)"
+                    },
+                    {
+                      "context": "hosted (clang)"
+                    },
+                    {
+                      "context": "coverage"
+                    },
+                    {
+                      "context": "sanitizers"
+                    },
+                    {
+                      "context": "fuzz"
+                    },
+                    {
+                      "context": "armv7-cross"
+                    }
+                  ]
+                }
+              }
+            ],
+            "bypass_actors": []
+          }
+        ],
+        "branch_protected": true,
+        "legacy_protection_summary": {
+          "enabled": false,
+          "required_status_checks": {
+            "enforcement_level": "off",
+            "contexts": [],
+            "checks": []
+          }
+        }
+      },
+      "main_protected_expected": true,
+      "required_success_workflows": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/research-consolidation.yml",
+        ".github/workflows/research-source-consolidation.yml"
+      ]
+    },
+    "kws-data": {
+      "full_name": "jiying2007/kws-data",
+      "repository_id": "1397319075",
+      "default_branch": "main",
+      "visibility_readback": "public",
+      "snapshot_baseline_main": "6c8bdf10945fd29e3349acbde4b13a9055d87f55",
+      "archive_commit_oid": "b0da8abbe96d2d9c2377255fdf24a8efbedaedbf",
+      "archive_tree_oid": "f550c2b178ffa24940d07f60d0db2bc9067fc103",
+      "archive_docs": [
+        {
+          "path": "BRANCHES.json",
+          "mode": "100644",
+          "type": "blob",
+          "bytes": 12381,
+          "sha256": "6e0c6eb77c4d666b2e6e7e2f310f66d0d8c89ccd694694d6641fbd4ff5dfc1a5",
+          "git_blob_oid": "6e413ccc5e6d5fef5b1fc6cc572674192e6f5ce7"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "type": "blob",
+          "bytes": 846,
+          "sha256": "1df9e260968c7f5c6bab474d302c09d8ba44ee8010a629614f7ac31e1fce7989",
+          "git_blob_oid": "1f43982248286e03f89a5a2c901aad9f8c57f700"
+        }
+      ],
+      "ordered_archive_parents": [
+        "6c8bdf10945fd29e3349acbde4b13a9055d87f55",
+        "17e48d293ba9262875117b8da618d41699ae4eee",
+        "d9ed60533332246292ff0f71fc4669f83656ccc1",
+        "b772b6c801f4abfeda93c2408502cf6088e4eac5",
+        "940972be0d27d68e383e60bf07017ed695cb23d8",
+        "1914c5c3ac1c60a6e311be03aa5007a40b9f515f",
+        "c8c1a92f428bf515737bcaa5c4933de0fba50f7b",
+        "a3f38afed7c2fc9bc214bce8c22928c1a2cb675b",
+        "c81a217e4dff8eee8858cdb0772b37932a55bcd4",
+        "13e458ce4fc88718ffddcd2e7bc9b8a0792eda94",
+        "e4cf245cdeb585195787768fa8b2521c5e6949ab",
+        "fa067c4c5b331289b7581543b42733359d2a16ca",
+        "7398230f9958f42427da35ffdec8e77fccfb9527",
+        "dc90c3aa325700fdf17da449452437c90373818e",
+        "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+        "41e90197c28c9853fc376d342ceb114104cd37fa",
+        "06cb1dffda0da624a16bce707d7729393d9bf2a8",
+        "d0d54cf635189bdc522c9d0f6135082e81250fd8",
+        "617b66bb30148a675805be2f17c61703d31e6e79",
+        "35ab76b5f483195dcea8bb6a58bfcca456ce33c8",
+        "ca3d605b0c31c93d434a969ea212be6761d9599a",
+        "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+        "577f27383985b15ed2223467f471ff33d51ccf1e"
+      ],
+      "original_count": 22,
+      "delete_count": 22,
+      "delete_refs": [
+        {
+          "name": "refs/heads/codex/compact-distillation-failure-20260930",
+          "before_oid": "17e48d293ba9262875117b8da618d41699ae4eee",
+          "tree_oid": "cf14714c15b9b97d50c98067b126becc0643f200"
+        },
+        {
+          "name": "refs/heads/codex/full-fsmn-numeric-evidence-20260930",
+          "before_oid": "d9ed60533332246292ff0f71fc4669f83656ccc1",
+          "tree_oid": "dcfd4b3bcc5ea5cb309f1ad35029e9ad988acf27"
+        },
+        {
+          "name": "refs/heads/codex/host-resource-evidence-20260930",
+          "before_oid": "b772b6c801f4abfeda93c2408502cf6088e4eac5",
+          "tree_oid": "aadb3c4f77a2bc553645f66854bb817579895a65"
+        },
+        {
+          "name": "refs/heads/docs/research-evidence-navigation-20260930",
+          "before_oid": "940972be0d27d68e383e60bf07017ed695cb23d8",
+          "tree_oid": "847955a7fbceaa33b7913cd8c9fa37b79caed96d"
+        },
+        {
+          "name": "refs/heads/feat/canonical-data-assets-20260930",
+          "before_oid": "1914c5c3ac1c60a6e311be03aa5007a40b9f515f",
+          "tree_oid": "7860c413a19a364e03f035137a562e15de0d345d"
+        },
+        {
+          "name": "refs/heads/research/asr-calibration-audio-20261001",
+          "before_oid": "c8c1a92f428bf515737bcaa5c4933de0fba50f7b",
+          "tree_oid": "9e737e65955161eb3be14376c87d87c502778709"
+        },
+        {
+          "name": "refs/heads/research/cosy17-native-precmvn-v1",
+          "before_oid": "a3f38afed7c2fc9bc214bce8c22928c1a2cb675b",
+          "tree_oid": "f260797e020ec8ba40aae1a823e2459ad88e093e"
+        },
+        {
+          "name": "refs/heads/research/cosy49-candidate-archive-v1",
+          "before_oid": "c81a217e4dff8eee8858cdb0772b37932a55bcd4",
+          "tree_oid": "22c35c24351f6036d0c7590b169a4da7b19ed7e0"
+        },
+        {
+          "name": "refs/heads/research/fixed30-exposed-asr-results-v1",
+          "before_oid": "13e458ce4fc88718ffddcd2e7bc9b8a0792eda94",
+          "tree_oid": "45fce66845bdd56ae7aafdc0b432abb753adf4b4"
+        },
+        {
+          "name": "refs/heads/research/frontend-and-frozen-head-evidence",
+          "before_oid": "e4cf245cdeb585195787768fa8b2521c5e6949ab",
+          "tree_oid": "007c0a37ca5a99edfce92d09eaca1bfdab513a1e"
+        },
+        {
+          "name": "refs/heads/research/himia-source-neighbor-evidence-20260930",
+          "before_oid": "fa067c4c5b331289b7581543b42733359d2a16ca",
+          "tree_oid": "71836c25b4d7b7841189f448f811079502a19fb2"
+        },
+        {
+          "name": "refs/heads/research/lightweight-clip-learnability-20260930",
+          "before_oid": "7398230f9958f42427da35ffdec8e77fccfb9527",
+          "tree_oid": "aa32e948cc655300f890382e7af99134657a68db"
+        },
+        {
+          "name": "refs/heads/research/melo6-results-archive-v1",
+          "before_oid": "dc90c3aa325700fdf17da449452437c90373818e",
+          "tree_oid": "d744c691cad8dedd7fd134121678846d40d9cc6b"
+        },
+        {
+          "name": "refs/heads/research/native-a20-complete-archive-20261003",
+          "before_oid": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+          "tree_oid": "aaaecd0c2191eb34a09fecbf11200660698af32f"
+        },
+        {
+          "name": "refs/heads/research/native-a20-domain-diagnostics-20261004",
+          "before_oid": "41e90197c28c9853fc376d342ceb114104cd37fa",
+          "tree_oid": "57068bf87f8459b493712b2cab161419f595f308"
+        },
+        {
+          "name": "refs/heads/research/native-a20-n0-saved-20261004",
+          "before_oid": "06cb1dffda0da624a16bce707d7729393d9bf2a8",
+          "tree_oid": "bdb1c7f02da656085856c6038ca4dfb1c9f4d144"
+        },
+        {
+          "name": "refs/heads/research/native-a20-prepared-inputs-20261004",
+          "before_oid": "d0d54cf635189bdc522c9d0f6135082e81250fd8",
+          "tree_oid": "53922a6b3ff41092567fef17c47595afc5bdd14e"
+        },
+        {
+          "name": "refs/heads/research/native-a20-qwen20-saved-20261004",
+          "before_oid": "617b66bb30148a675805be2f17c61703d31e6e79",
+          "tree_oid": "f70dd0d55c7c271394fd44cf3edd0977611fbc52"
+        },
+        {
+          "name": "refs/heads/research/qwen6-source-screen-results-v1",
+          "before_oid": "35ab76b5f483195dcea8bb6a58bfcca456ce33c8",
+          "tree_oid": "83f5a09c82058d17cc32daa479634ca0e7b47c90"
+        },
+        {
+          "name": "refs/heads/research/qwen42-baseline-evidence",
+          "before_oid": "ca3d605b0c31c93d434a969ea212be6761d9599a",
+          "tree_oid": "21c0e5fc8c8739581aefb73573549555d1e11896"
+        },
+        {
+          "name": "refs/heads/research/single-k1-followed-wu-v1",
+          "before_oid": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+          "tree_oid": "91e9f42879f12c21d293b6adef89292e991217b2"
+        },
+        {
+          "name": "refs/heads/research/2026-10-02-dual-asr-evidence",
+          "before_oid": "577f27383985b15ed2223467f471ff33d51ccf1e",
+          "tree_oid": "3ac206a322cd2a18b2766a9835578f38b483c692"
+        }
+      ],
+      "keep_refs": [],
+      "protection_snapshot": {
+        "rulesets": [],
+        "branch_protected": false,
+        "legacy_protection_summary": {
+          "enabled": false,
+          "required_status_checks": {
+            "enforcement_level": "off",
+            "contexts": [],
+            "checks": []
+          }
+        }
+      },
+      "main_protected_expected": false,
+      "required_success_workflows": [
+        ".github/workflows/assets.yml",
+        ".github/workflows/research-retention.yml"
+      ]
+    }
+  },
+  "publication_ready": true,
+  "source_identity": {
+    "workflow_path": ".github/workflows/archive-branches-once-20261007.yml",
+    "script_path": "tools/archive_branches_once_20261007.py",
+    "test_path": "tests/test_archive_branches_once_20261007.py",
+    "plan_path": "docs/archive-branches-once-20261007.json",
+    "reviewed_source_sha_source": "required dispatch input; equals workflow_sha, event sha and current main"
+  },
+  "resource_limits": {
+    "timeout_seconds": 1200,
+    "max_object_bytes": 5368709120,
+    "max_objects": 500000,
+    "max_disk_bytes": 6442450944
+  },
+  "pointer_zip": {
+    "repository": "jiying2007/kws-pipeline",
+    "blob_oid": "f72723835df35121419a3c5698cebf5368f21a60",
+    "bytes": 827058,
+    "sha256": "c5b466d8091f06fcdf6579770d9962b8fc44449287b9608ceb59de8f7c688e02",
+    "must_be_reachable_from_archive": true
+  }
+}

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
-      "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
-      "bytes": 24234
+      "git_blob_sha1": "93212eaad6b9db032d6cf4df87aa9ece78fbc927",
+      "sha256": "6feff9a7fe0ed931240d9ccef21383f7c3fb9876e121d0b10294123f5631db21",
+      "bytes": 24557
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15630,7 +15630,8 @@
     }
   ],
   "allowed_new_active_workflows": [
-    ".github/workflows/research-source-consolidation.yml"
+    ".github/workflows/research-source-consolidation.yml",
+    ".github/workflows/archive-branches-once-20261007.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -15745,6 +15746,33 @@
             "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
             "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
             "bytes": 24234
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "from_commit": "c895f801ef3e9a0f8a06da9dee8fef9154a6db58",
+      "from_tree": "aa470d2452e103171c554cb7873a6d4439d79c0d",
+      "operation_id": "archive-branches-once-20261007",
+      "scope": "Temporary installation only: add offline archive-coordinator unit test and its existing tracked-worktree verification step to ordinary CI; preserve both functional port test blocks, all other commands, triggers, permissions and historical bytes.",
+      "rationale": "Keep current baseline CI byte checks exact while the reviewed temporary workflow is installed. Removal reverses these exact additions and restores the prior CI pin.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+            "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+            "bytes": 24234
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "93212eaad6b9db032d6cf4df87aa9ece78fbc927",
+            "sha256": "6feff9a7fe0ed931240d9ccef21383f7c3fb9876e121d0b10294123f5631db21",
+            "bytes": 24557
           }
         }
       ]

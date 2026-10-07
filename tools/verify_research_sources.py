@@ -106,7 +106,10 @@ def verify(root, manifest):
         check_file(root, row)
         paths.add(row['path'])
     additions = manifest.get('allowed_new_active_workflows')
-    if additions != ['.github/workflows/research-source-consolidation.yml']:
+    # Temporary reviewed archive installation; removal restores singleton-only.
+    approved = ['.github/workflows/research-source-consolidation.yml',
+                '.github/workflows/archive-branches-once-20261007.yml']
+    if additions != approved:
         raise ValueError('unexpected active workflow addition')
     actual = {str(p.relative_to(root)) for p in (root / '.github/workflows').glob('*') if p.is_file()}
     if actual != paths | set(additions):

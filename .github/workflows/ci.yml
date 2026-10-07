@@ -242,6 +242,10 @@ jobs:
         run: python3 tests/test_frozen_replay_build_contract.py
       - name: Verify tracked worktree after Frozen replay build contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frozen replay build contract"'
+      - name: One-shot archive coordinator offline contract
+        run: python3 -B tests/test_archive_branches_once_20261007.py
+      - name: Verify tracked worktree after One-shot archive coordinator offline contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "One-shot archive coordinator offline contract"'
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
       - name: Verify tracked worktree after Test inventory tool contract

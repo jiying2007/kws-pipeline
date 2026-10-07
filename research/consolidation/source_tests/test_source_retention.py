@@ -27,6 +27,7 @@ class RetentionTests(unittest.TestCase):
         archived = file('research/consolidation/archive/workflows/example.yml', b'name: historical\n')
         baseline = file('.github/workflows/base.yml', b'name: unchanged\n')
         file('.github/workflows/research-source-consolidation.yml', b'name: offline\n')
+        file('.github/workflows/archive-branches-once-20261007.yml', b'name: reviewed maintenance\n')
         file(ARM, json.dumps(DISABLED_ARM).encode())
         provenance = dict(archived, source_commit='a'*40, original_path='.github/workflows/old.yml')
         provenance['source_url'] = 'https://github.com/jiying2007/kws-pipeline/blob/'+'a'*40+'/.github/workflows/old.yml'
@@ -35,7 +36,8 @@ class RetentionTests(unittest.TestCase):
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
             baseline_active_workflows=[baseline], pointer_only=[],
-            allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml'])
+            allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml',
+                '.github/workflows/archive-branches-once-20261007.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -74,6 +76,19 @@ class RetentionTests(unittest.TestCase):
     def test_unexpected_active_workflow(self):
         self.file('.github/workflows/new-live.yml', b'new')
         with self.assertRaises(ValueError):verify(self.root,self.manifest)
+    def test_missing_temporary_workflow_rejected(self):
+        (self.root / '.github/workflows/archive-branches-once-20261007.yml').unlink()
+        with self.assertRaises(ValueError): verify(self.root, self.manifest)
+    def test_temporary_addition_order_or_duplicates_rejected(self):
+        original = self.manifest['allowed_new_active_workflows']
+        for bad in (original[:1], list(reversed(original)), original + original[-1:],
+                    original + ['.github/workflows/arbitrary.yml']):
+            self.manifest['allowed_new_active_workflows'] = bad
+            with self.assertRaises(ValueError): verify(self.root, self.manifest)
+        self.manifest['allowed_new_active_workflows'] = original
+    def test_temporary_allowance_does_not_allow_another_workflow(self):
+        self.file('.github/workflows/arbitrary.yml', b'name: unexpected\n')
+        with self.assertRaises(ValueError): verify(self.root, self.manifest)
     def test_changed_baseline_workflow(self):
         (self.root/'.github/workflows/base.yml').write_text('changed')
         with self.assertRaises(ValueError):verify(self.root,self.manifest)
