@@ -34,13 +34,15 @@
   ],
   "files": [
     {
-      "path": ".github/workflows/ci.yml",
+      "path": "research/consolidation/maintained-sources/pr-485/ci.yml",
       "mode": "100644",
       "git_blob_sha1": "1a9d3eaa494922fe2481749741f94b7639ab277a",
       "sha256": "81fa55fe96fbc5b8008129a5442b95b219a4940dc4925b20eac13295d4f8fa0d",
       "bytes": 23870,
       "source_pr": 485,
-      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "source_path": ".github/workflows/ci.yml",
+      "relocation_reason": "Preserve the original PR 485 CI bytes after adding keyword identity v2 tests to active CI. This archived workflow is inactive. Active CI remains exactly pinned by source-retention-2026-10-07.json with before/after maintenance identities."
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",

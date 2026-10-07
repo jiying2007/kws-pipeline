@@ -154,9 +154,7 @@ jobs:
       - name: Verify tracked worktree after Streaming long-FAR smoke
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Streaming long-FAR smoke"'
       - name: Keyword compiler
-        run: |
-          python3 tests/test_keyword_compile.py
-          python3 tests/test_keyword_set_identity.py
+        run: python3 tests/test_keyword_compile.py
       - name: Verify tracked worktree after Keyword compiler
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Keyword compiler"'
       - name: Parameter contract and generated header
