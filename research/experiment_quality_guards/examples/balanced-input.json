@@ -1,0 +1,75 @@
+{
+  "declarations": [
+    {
+      "role": "balanced",
+      "source_group": "voice-A",
+      "split": "dev"
+    }
+  ],
+  "fixture_kind": "invented_pure_test_not_real_data",
+  "frozen_policy_sha256": "a4ee10884d56ff775676adaf25ea3dc3d65996ea9eeb8039f68549c3c02db311",
+  "history": [],
+  "policy": {
+    "frozen": true,
+    "minima": {
+      "K1": 1,
+      "K2": 1
+    },
+    "nonwake_minima": {
+      "你好小屋": 1
+    },
+    "policy_id": "invented-builder-test-v1"
+  },
+  "requested_qualification": "balanced_source_groups",
+  "require_unseen_voice": true,
+  "rows": [
+    {
+      "actual_text": "你好小窝",
+      "exposure": "EXPOSED",
+      "id": "0",
+      "lineage_status": "verified",
+      "pcm_sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "voice-A",
+      "split": "dev",
+      "use": "development",
+      "voice_identity": "voice-A"
+    },
+    {
+      "actual_text": "小窝小窝",
+      "exposure": "EXPOSED",
+      "id": "1",
+      "lineage_status": "verified",
+      "pcm_sha256": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "voice-A",
+      "split": "dev",
+      "use": "development",
+      "voice_identity": "voice-A"
+    },
+    {
+      "actual_text": "你好小屋",
+      "exposure": "EXPOSED",
+      "id": "2",
+      "lineage_status": "verified",
+      "pcm_sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+      "review": {
+        "complete": true,
+        "independent_human": true,
+        "status": "clean"
+      },
+      "source_group": "voice-A",
+      "split": "dev",
+      "use": "development",
+      "voice_identity": "voice-A"
+    }
+  ]
+}

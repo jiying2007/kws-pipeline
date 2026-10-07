@@ -1,0 +1,35 @@
+K1 fixed-slot CTC research v1: implementation build receipt
+Date: 2026-10-06 UTC
+Host: x86_64; compiler: cc (Debian 14.2.0-19) 14.2.0
+Scope: pure math and deterministic synthetic tests only; no model/data imports,
+no decoder replay, no external writes/publication, no deployment/performance claim.
+
+Strict build: PASS
+cc -std=c11 -O2 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror \
+  k1_fixed_slot_ctc.c test_k1_fixed_slot_ctc.c -lm -o /tmp/k1-test-strict
+/tmp/k1-test-strict
+
+ASan/UBSan build and run: PASS (leak checking disabled)
+cc -std=c11 -O1 -g -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  k1_fixed_slot_ctc.c test_k1_fixed_slot_ctc.c -lm -o /tmp/k1-test-sanitize
+ASAN_OPTIONS=detect_leaks=0 /tmp/k1-test-sanitize
+
+Both successful runs reported:
+PASS: 6 named semantic test groups; 2801 terminal matrices; 3187591 exhaustive terminal raw paths; 55986 exhaustive prefix/entry paths
+Enumeration counts are mathematical toy cases, not accuracy, acoustic coverage,
+or incidental assertion counts.
+
+LeakSanitizer: BLOCKED, not passed. A separate detect_leaks=1 run exited 1:
+LeakSanitizer has encountered a fatal error.
+LeakSanitizer does not work under ptrace (strace, gdb, etc).
+No claim of leak checking is made. The scorer itself contains no allocation.
+
+Status: implementation freeze for independent review. This receipt does not
+claim that review has completed; the independent reviewer reports separately.
+
+SHA-256 (frozen source/tests/documentation):
+70dfaf5702236a7fbe35195f0ac970aea8f29e1113d2ce2a918bfc9bff2c37e3  k1_fixed_slot_ctc.h
+fcb7d3cac5054a7594e30c6542f1b6786fe8b8e987e61d06954604ec6dff116d  k1_fixed_slot_ctc.c
+477c08ada361d420cc1c093597360fbe6f1ea45da741f6e0872be2262e40eabf  test_k1_fixed_slot_ctc.c
+8f8cbc65540576cc8592498899fd8592c1583d8c9ffadd53863f66acf4cf857f  README.md

@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+Research: [reusable modules, retained results and qualification boundaries](research/README.md)
+
 > **Evidence boundary — read this before quoting any number below.**
 > The qualification recorded in this repository was produced on a **synthetic
 > corpus**. It is engineering evidence, not a commercial acoustic claim. Two

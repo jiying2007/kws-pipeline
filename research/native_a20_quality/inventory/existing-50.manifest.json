@@ -1,0 +1,3072 @@
+{
+  "schema_version": 1,
+  "manifest_id": "existing-50-inventory-only",
+  "keywords": [
+    "你好小窝",
+    "小窝小窝"
+  ],
+  "protocol": {
+    "id": "inventory-only-no-evaluation-protocol-approved",
+    "input_order": [
+      "D20-tts-candidate-011",
+      "D20-tts-candidate-016",
+      "D20-tts-candidate-017",
+      "D20-tts-candidate-018",
+      "D20-tts-candidate-020",
+      "D20-tts36-v1-001",
+      "D20-tts36-v1-002",
+      "D20-tts36-v1-004",
+      "D20-tts36-v1-006",
+      "D20-tts36-v1-007",
+      "D20-tts36-v1-008",
+      "D20-tts36-v1-011",
+      "D20-tts36-v1-012",
+      "D20-voice54-v1-002",
+      "D20-voice54-v1-027",
+      "D20-voice54-v1-016",
+      "D20-voice54-v1-003",
+      "D20-voice54-v1-006",
+      "D20-voice54-v1-031",
+      "D20-voice54-v1-035",
+      "Serena18-voice54-v1-037",
+      "Serena18-voice54-v1-038",
+      "Serena18-voice54-v1-039",
+      "Serena18-voice54-v1-040",
+      "Serena18-voice54-v1-041",
+      "Serena18-voice54-v1-042",
+      "Serena18-voice54-v1-043",
+      "Serena18-voice54-v1-044",
+      "Serena18-voice54-v1-045",
+      "Serena18-voice54-v1-046",
+      "Serena18-voice54-v1-047",
+      "Serena18-voice54-v1-048",
+      "Serena18-voice54-v1-049",
+      "Serena18-voice54-v1-050",
+      "Serena18-voice54-v1-051",
+      "Serena18-voice54-v1-052",
+      "Serena18-voice54-v1-053",
+      "Serena18-voice54-v1-054",
+      "fixed12-cv3-8ca1aee3eb3ff856",
+      "fixed12-cv3-9b84105153978e65",
+      "fixed12-cv3-1e75ef21486bfb93",
+      "fixed12-cv3-2af7d33eb8104bf4",
+      "fixed12-cv3-4bcb3cb53449eb52",
+      "fixed12-cv3-a89132ebfb61128e",
+      "fixed12-cv3-1ebd9b107a5f33c6",
+      "fixed12-cv3-c1cc9d2f9a4b34b9",
+      "fixed12-cv3-8892d3ba8c07dce7",
+      "fixed12-cv3-79dcde0b3507ce2b",
+      "fixed12-cv3-3e7111e42feedbc6",
+      "fixed12-cv3-3a0101e32296afd9"
+    ],
+    "state_policy": "reset_per_asset_preserve_state_within_asset",
+    "sha256": "d426046078d88c672b5eed3ad6429df80bca1b17ecbb635150a7ff3a4b5fdb11",
+    "model_sha256": "a80b233d3c958d25f49085f487ef5cde839bd69f803ed057b59bbd20adc6e43d",
+    "source_sha256": "4a90303837f75183d55adf21bb3fd6bf2e7cf0c79a62e10d582e9f809612227e",
+    "decoder_config_sha256": null,
+    "split_frozen_before_predictions": false,
+    "heldout_open_authorized": false,
+    "matching": "disjoint_half_open_event_windows_first_correct",
+    "confidence": 0.95,
+    "iid_binomial_assumption": false,
+    "stationary_poisson_assumption": false
+  },
+  "assets": [
+    {
+      "id": "D20-tts-candidate-011",
+      "logical_path": "training/F-A-D20/audio/tts-candidate-011.wav",
+      "wav_sha256": "8ce4da865755224aadd9e90f63ff8f470e42c34ea627a0cb05382c5964a454fa",
+      "pcm_sha256": "d39fa9fd51aebfbe80e543fab7d2a764627e1a2fa01cda408dfd5f15d790db0d",
+      "sample_rate_hz": 16000,
+      "frames": 20480,
+      "duration_s": 1.28,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+          "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 540201,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts-candidate-011",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "你好小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts-candidate-011",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts-candidate-016",
+      "logical_path": "training/F-A-D20/audio/tts-candidate-016.wav",
+      "wav_sha256": "a994aabf9a0619389377fab22bbfe9414b23b89f78a21ea64693e1d3e7eaa9ff",
+      "pcm_sha256": "12ddcb5a8ec49fa21a8057d539b33f311cc60615cefef5d789f14c2a70843414",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 540201,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts-candidate-016",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "你好小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts-candidate-016",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts-candidate-017",
+      "logical_path": "training/F-A-D20/audio/tts-candidate-017.wav",
+      "wav_sha256": "e2f68c0dad27b65aa4630a2382d94bdfaf84cc64191c1ac2a15ff8aca6b6dee3",
+      "pcm_sha256": "ef0633202b7a7f324b8343878e49172c514079cb0bac3b89005898c1114e1a88",
+      "sample_rate_hz": 16000,
+      "frames": 35840,
+      "duration_s": 2.24,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 540202,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts-candidate-017",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts-candidate-017",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts-candidate-018",
+      "logical_path": "training/F-A-D20/audio/tts-candidate-018.wav",
+      "wav_sha256": "60106b7965485d2e14369fb04b69b7b0a1c317237eed395f9c852b89f2e05146",
+      "pcm_sha256": "40e7adc08ede4443ff2d856bdd250910d4a8361e7e10dfc61b48a9c8de235ceb",
+      "sample_rate_hz": 16000,
+      "frames": 25600,
+      "duration_s": 1.6,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 540203,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts-candidate-018",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts-candidate-018",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts-candidate-020",
+      "logical_path": "training/F-A-D20/audio/tts-candidate-020.wav",
+      "wav_sha256": "07b64abbfff16d6c484c1311fcb350dd16ae8619d60c6e0f614193323941015f",
+      "pcm_sha256": "c4eef324e4dae675d3521946f93880c6cfb4f0b6134179371a365af5ad25d102",
+      "sample_rate_hz": 16000,
+      "frames": 35840,
+      "duration_s": 2.24,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 540205,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts-candidate-020",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts-candidate-020",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-001",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-001.wav",
+      "wav_sha256": "b0f700e633d82083bfc7e3d297ffa0894a9c073b604b707b1d3c15ab41f5ca14",
+      "pcm_sha256": "99aca4173e1d8d849a0921e96a4bb36fad700c3087e281b0497b0a229d691ba9",
+      "sample_rate_hz": 16000,
+      "frames": 14080,
+      "duration_s": 0.88,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620001,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-001",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "你好小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-001",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-002",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-002.wav",
+      "wav_sha256": "e0fabd4f7f138a87768074c37673b3d93df9de9ff90c941604c2499f11b21864",
+      "pcm_sha256": "4a65b54755854a45375fc3e3d5958f9771c87038dad6ada985ea906e034a0a5f",
+      "sample_rate_hz": 16000,
+      "frames": 24320,
+      "duration_s": 1.52,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620002,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-002",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-002",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-004",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-004.wav",
+      "wav_sha256": "a916fbcc3443f6396775bdb44cbce8ed89c404db206ae130b4746e14389e4ea8",
+      "pcm_sha256": "a0d463070412ea074441c9f82ffd7d94dad3dd51796e4a829464d8863b77e96a",
+      "sample_rate_hz": 16000,
+      "frames": 42240,
+      "duration_s": 2.64,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620004,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-004",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-004",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-006",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-006.wav",
+      "wav_sha256": "b82b414e6580f4b0829004924cc3697b084eaad64ed8e7d0e79c960ad9931b3a",
+      "pcm_sha256": "47f43b5879384a2630f94033df21988e43209ce15ef32b8d9bba1801d07ce88d",
+      "sample_rate_hz": 16000,
+      "frames": 16640,
+      "duration_s": 1.04,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620006,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-006",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-006",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-007",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-007.wav",
+      "wav_sha256": "11a913fb170fdff1a1bdb9595851a7e61f6fe1d94649d2f34d932ea2ca146b2c",
+      "pcm_sha256": "5e134c645f4a7e684df29f904c4a60fd8476d9d31e4f6f9b69978eff99031eba",
+      "sample_rate_hz": 16000,
+      "frames": 12800,
+      "duration_s": 0.8,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620007,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-007",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "你好小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-007",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-008",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-008.wav",
+      "wav_sha256": "c811d1a91f8bac5fcfac3f1d05082c4e54d771b26ae33e56f65e84d1eba735d1",
+      "pcm_sha256": "eaa90fce03a7cf4f05d487e1b965bc04417d9e35d84bb43d294f2fa7b4f2ba89",
+      "sample_rate_hz": 16000,
+      "frames": 19200,
+      "duration_s": 1.2,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620008,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-008",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-008",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-011",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-011.wav",
+      "wav_sha256": "6bf47fc63f977092f71435216ddca58348a94386c2e1bcbaa48056f49abec060",
+      "pcm_sha256": "78985d30bc82f9c011a7674c021c4d439e7c0784ffdcd97f97db906945180715",
+      "sample_rate_hz": 16000,
+      "frames": 28160,
+      "duration_s": 1.76,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620011,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-011",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-011",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-tts36-v1-012",
+      "logical_path": "training/F-A-D20/audio/tts36-v1-012.wav",
+      "wav_sha256": "f17f4b53be5320d1259999a18eb9f1e3cd57bfbdbeeb09fee035773b0625163e",
+      "pcm_sha256": "f6b33b78e31caf831bcabac91b1c372414f39106275701cbe5cf3bcf66ef170f",
+      "sample_rate_hz": 16000,
+      "frames": 15360,
+      "duration_s": 0.96,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Vivian",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Vivian",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 620012,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "tts36-v1-012",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "tts36-v1-012",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-002",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-002.wav",
+      "wav_sha256": "017bec098e616ed1a141f68fcad90795c06e46c6afe7c6449fb2839e48e8a39c",
+      "pcm_sha256": "2aacc2c796125d3cc25674710cf40c400fd28ecee6bb114db4c15fa0c6cdd2e9",
+      "sample_rate_hz": 16000,
+      "frames": 39680,
+      "duration_s": 2.48,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630002,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-002",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "你好小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-002",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-027",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-027.wav",
+      "wav_sha256": "e654a049e804410f510de91aaf64db5cb4a48450bf05be10f567cad78eddd816",
+      "pcm_sha256": "3027d236dfe637b15d26f2267b435f1f47574fd8e520371de03d7913e7103239",
+      "sample_rate_hz": 16000,
+      "frames": 19200,
+      "duration_s": 1.2,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630027,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-027",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-027",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-016",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-016.wav",
+      "wav_sha256": "374f57ee905ee6bf7b7cccb6163e19f286da2422690472c082ac334b24818573",
+      "pcm_sha256": "e6491dca5bf29d091a07df594a688e26c60fc9e9a98c3a8990611a928caf45ef",
+      "sample_rate_hz": 16000,
+      "frames": 26880,
+      "duration_s": 1.68,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630016,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-016",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-016",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-003",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-003.wav",
+      "wav_sha256": "168b675d6bfe12358acc88269a96d73a91b54d70fa9f183bb736d7d71db5a5df",
+      "pcm_sha256": "addb3833011ca59f5d4d5595a6e15c97db1e06f064a34e3a1cf5bdaec0c2cf96",
+      "sample_rate_hz": 16000,
+      "frames": 26880,
+      "duration_s": 1.68,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630003,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-003",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-003",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-006",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-006.wav",
+      "wav_sha256": "41032c0926be4aac3db9ad48b0d5bcb2a70d8716090ff3a1551baca52e64bc04",
+      "pcm_sha256": "554d3de24a3b60f1dab39afe138c727f2ed98ea6190cbd0966c30f28ab1c5489",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630006,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-006",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-006",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-031",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-031.wav",
+      "wav_sha256": "f013abb277130f9f72feeb3e6043c8e163b4e49e714906a05656cda41ca8b2f2",
+      "pcm_sha256": "cbf893e70dd1c961b1aff8431611f83427c88e5d99ba84a0d8d71e9a1b2878b0",
+      "sample_rate_hz": 16000,
+      "frames": 40960,
+      "duration_s": 2.56,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630031,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-031",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-031",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "D20-voice54-v1-035",
+      "logical_path": "training/F-A-D20/audio/voice54-v1-035.wav",
+      "wav_sha256": "304b9db10250ecece206456538df40052dc0fc48464baa2db311333a49a4326f",
+      "pcm_sha256": "acc75053cdf3a6a903aef7e05f75591ba8c54281759e4c82388a8e7b2c06bbe5",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "D20",
+        "family": "D20-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+        "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+        "speaker": "Qwen3-TTS-CustomVoice:Uncle_Fu",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Uncle_Fu",
+          "evidence_ref": "training/F-A-D20/d20-manifest.public.json",
+          "evidence_sha256": "e9b65580487dbb094e60f965840c21d65a035b0cdd9513e9404713ac122c0db1",
+          "seed": 630035,
+          "prompt_family": "historical-D20-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-035",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "historical_training",
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "D20-historical-family",
+      "derivation_family": "voice54-v1-035",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "weak_foil"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-037",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-037.wav",
+      "wav_sha256": "4ba5bf2f6983f235e0ce5611258bad893e08b470c845ea70167be5df6d6398f3",
+      "pcm_sha256": "440aeca7b3ca07e5382fc51298e2019934f2f74fc7db5dc7beb25d2f564816bd",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630037,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-037",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-037",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-038",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-038.wav",
+      "wav_sha256": "36ea9a2081aca6c3fab4f32080edca3f51204de2c74ed460145c05b224982a24",
+      "pcm_sha256": "e55cb40343c66dc118b1611814a71bf6203de5e6389c5f7ee1a05d2f57d34563",
+      "sample_rate_hz": 16000,
+      "frames": 23040,
+      "duration_s": 1.44,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630038,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-038",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-038",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-039",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-039.wav",
+      "wav_sha256": "93d6c75d3a1f6a34b3c4894a94e4448eb03cb99d347c4d4c1673382791d7f6db",
+      "pcm_sha256": "9a5603a4b86b19a4e7c7a668eac1f4d5b89aa68b379b8a582e3afefd41e0ecca",
+      "sample_rate_hz": 16000,
+      "frames": 16640,
+      "duration_s": 1.04,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630039,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-039",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-039",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-040",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-040.wav",
+      "wav_sha256": "b64ada8840203e523c11e5a5ad1414aa523cf89ff548c48debbd43a936726849",
+      "pcm_sha256": "da8fded50368a5aebc0867e3398c3eb15a58db2659f86a246fc714f5870fd601",
+      "sample_rate_hz": 16000,
+      "frames": 19200,
+      "duration_s": 1.2,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630040,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-040",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-040",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-041",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-041.wav",
+      "wav_sha256": "51823fd19e43fad95cea855902e94f8499b1c040fdc9751f9f1858a8a4e659de",
+      "pcm_sha256": "e7ec482d2059b73937062089d322129535b7af2bf6b08226afb8457ff67be3f8",
+      "sample_rate_hz": 16000,
+      "frames": 90880,
+      "duration_s": 5.68,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630041,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-041",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-041",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-042",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-042.wav",
+      "wav_sha256": "3ca2b47cc32f5112e9c161b35a99435112d5860d8c1377dede10bf2c74647075",
+      "pcm_sha256": "c737d250488441b541c0c61958b4c464597f7c3def8a7cd96b3bfcdf2c5f1071",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630042,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-042",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-042",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-043",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-043.wav",
+      "wav_sha256": "cb0f48086b9f6b6417c185e068774604861ad1ad24fa1a89150d7a3a68cb6e60",
+      "pcm_sha256": "75853b73c3ef22375473f08675b4cf86861112bfe4a6fc44bea335cf510abc9a",
+      "sample_rate_hz": 16000,
+      "frames": 24320,
+      "duration_s": 1.52,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630043,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-043",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-043",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-044",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-044.wav",
+      "wav_sha256": "c4940667446f901b9267b18c13d9b01f1bb54b68d979154c445e207c020167b6",
+      "pcm_sha256": "505a6aee37d91d56ad4dc24a773c9fda47b496a6bb0680d2801d4bab2f1750be",
+      "sample_rate_hz": 16000,
+      "frames": 21760,
+      "duration_s": 1.36,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630044,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-044",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-044",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-045",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-045.wav",
+      "wav_sha256": "52c98eff590f04960043f49769e9287f8e421f9dcc22da189594162fca40bc29",
+      "pcm_sha256": "e46d342aee8d858cd8dfd5ec6bd078c5bb493d7107aad8fd78e01369c9cc2172",
+      "sample_rate_hz": 16000,
+      "frames": 19200,
+      "duration_s": 1.2,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630045,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-045",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-045",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-046",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-046.wav",
+      "wav_sha256": "5b4a578cfd0f8bdd7948d38b7153e10b9b2bd8af4a1f6ae49ff4ef42e95d2a56",
+      "pcm_sha256": "453e38c05ca98ffd12d8c72532b9e24a96bec62ab77fbb6a0dcf437c74e824f0",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630046,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-046",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-046",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-047",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-047.wav",
+      "wav_sha256": "e0846120dcee58cd16b97dd10ea82deda352988378b442f4e2ecc65324989c9e",
+      "pcm_sha256": "16a54d26d25b1e90a20648a7c375e6e2f30880386a4e7df9e3e292851105d2d1",
+      "sample_rate_hz": 16000,
+      "frames": 28160,
+      "duration_s": 1.76,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630047,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-047",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-047",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-048",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-048.wav",
+      "wav_sha256": "58d3a16cb717b9bf38ce256b5e075f044dbd51c3676abcf717fd23a830cdd480",
+      "pcm_sha256": "bd94fde1255192edade466fb3e526929a4cb0bb3a518b475103fb64a69a2be60",
+      "sample_rate_hz": 16000,
+      "frames": 15360,
+      "duration_s": 0.96,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630048,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-048",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-048",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-049",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-049.wav",
+      "wav_sha256": "0161e7816f8273635a68d22cbf246a4fd141335698fe67b6a3def05b923d87d1",
+      "pcm_sha256": "52118de70ac82646df56398ba31faac8c058d1b36eeba72f7f58f2c7ec5051c0",
+      "sample_rate_hz": 16000,
+      "frames": 16640,
+      "duration_s": 1.04,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630049,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-049",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-049",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-050",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-050.wav",
+      "wav_sha256": "b4f1362e608c505b7a93cfb9dab1d032d1090dffc708b03c9e6be88f2a0d9d26",
+      "pcm_sha256": "2f281d6e4a0f938704a9ff9c407506e7badaf8f6d95f4ba2c61b6690204b1261",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630050,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-050",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "weak",
+      "label_binding": "source_bound",
+      "label_authority": "Historical TTS/ASR weak label only",
+      "declared_keywords": [
+        "小窝小窝"
+      ],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-050",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-051",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-051.wav",
+      "wav_sha256": "e45d646171e7eb56324e6f88e1c67a041dfb349afa25db1f6a32bc482c122355",
+      "pcm_sha256": "bb8a7df7e618ebd0c5321e81f41c1e6760dd2a9a69c21961a6702485556dd1c7",
+      "sample_rate_hz": 16000,
+      "frames": 16640,
+      "duration_s": 1.04,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630051,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-051",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-051",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-052",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-052.wav",
+      "wav_sha256": "a181c80137cd99ba36736307bf7893393bbc36a62f8b8817eaf1ca91b081f4eb",
+      "pcm_sha256": "effaff980fd4dbb9ffea73712867b786ab8a3b6709d78cfcb2fe6f225f733dc2",
+      "sample_rate_hz": 16000,
+      "frames": 21760,
+      "duration_s": 1.36,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630052,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-052",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-052",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-053",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-053.wav",
+      "wav_sha256": "d202ab38fd4b1b98623b0375b79eb18a3c295f473e0004d2571926f8e52bb476",
+      "pcm_sha256": "803f5f9e31820b4df792300cd517a0782b971832b820d19e3e477d3873552bdb",
+      "sample_rate_hz": 16000,
+      "frames": 34560,
+      "duration_s": 2.16,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630053,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-053",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-053",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "Serena18-voice54-v1-054",
+      "logical_path": "evaluation/F-A-Serena18/audio/voice54-v1-054.wav",
+      "wav_sha256": "09eff9814c3e18efda8cbf7b8c0691eb7639e98d6e551cb8131884ae60773408",
+      "pcm_sha256": "fa949261ee4d8d8b58bb9d6f582f1267bd537af66664e3dcd7aa31680479b94a",
+      "sample_rate_hz": 16000,
+      "frames": 16640,
+      "duration_s": 1.04,
+      "source": {
+        "dataset": "Serena18",
+        "family": "Serena18-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+        "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+        "speaker": "Qwen3-TTS-CustomVoice:Serena",
+        "generator": {
+          "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+          "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+          "voice": "Serena",
+          "evidence_ref": "evaluation/F-A-Serena18/source-mapping.public.json",
+          "evidence_sha256": "2cca22f1616f255ec3a3044c5d50e93ab4b02903da34cc1b1646af945d2ef319",
+          "seed": 630054,
+          "prompt_family": "historical-Serena18-weak-keyword-prompts"
+        },
+        "session": "voice54-v1-054",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "source_unknown",
+      "label_authority": "Historical label unresolved; TTS intent is not truth",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "Serena18-historical-family",
+      "derivation_family": "voice54-v1-054",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-8ca1aee3eb3ff856",
+      "logical_path": "audio/fixed12/cv3-8ca1aee3eb3ff856.wav",
+      "wav_sha256": "5e29788341b42b432433aab62def945dc006ea776ff39a24e3de683774cf8c5c",
+      "pcm_sha256": "be3f014cb938f3ccadd1089f0abf0ab932e3dbccb2c98ad2a70a6506a81426a4",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-8ca1aee3eb3ff856",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-8ca1aee3eb3ff856",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-9b84105153978e65",
+      "logical_path": "audio/fixed12/cv3-9b84105153978e65.wav",
+      "wav_sha256": "05685c49c30566f462e5f2943a31e37861664691169d213b4ab785658d0ae5ba",
+      "pcm_sha256": "2f222a55ba55d1cd1eac22507bfc2e907553ccfcfd833872ce40b3cc8f21ea0d",
+      "sample_rate_hz": 16000,
+      "frames": 22400,
+      "duration_s": 1.4,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-9b84105153978e65",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-9b84105153978e65",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-1e75ef21486bfb93",
+      "logical_path": "audio/fixed12/cv3-1e75ef21486bfb93.wav",
+      "wav_sha256": "107e8453d80d43366155184186511e5f07f6678abe1daaecb8273a9039dd7850",
+      "pcm_sha256": "8a628e1b4a6e5aa81c5ac4b64751f85a2875dd869b5cb454b9627aa48f6d0ac2",
+      "sample_rate_hz": 16000,
+      "frames": 17280,
+      "duration_s": 1.08,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-1e75ef21486bfb93",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-1e75ef21486bfb93",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-2af7d33eb8104bf4",
+      "logical_path": "audio/fixed12/cv3-2af7d33eb8104bf4.wav",
+      "wav_sha256": "48a6f11f1a9726d482a60c12787e7611369588b92bb91a832e0eff0e3b625e69",
+      "pcm_sha256": "fedc1d19c36ad33e1f9523a04c3872560379848dd4a6a89000116f47efde089b",
+      "sample_rate_hz": 16000,
+      "frames": 17920,
+      "duration_s": 1.12,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-2af7d33eb8104bf4",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-2af7d33eb8104bf4",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-4bcb3cb53449eb52",
+      "logical_path": "audio/fixed12/cv3-4bcb3cb53449eb52.wav",
+      "wav_sha256": "30a780e229a6c0c48d2b85a3cbebaaf6e962bf6f9748826c985d2977892fd13d",
+      "pcm_sha256": "2d7ac7e18d8e6f93109f9101280efe8cccade32bf07d2813a72179da83bf0bc2",
+      "sample_rate_hz": 16000,
+      "frames": 24960,
+      "duration_s": 1.56,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-4bcb3cb53449eb52",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-4bcb3cb53449eb52",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-a89132ebfb61128e",
+      "logical_path": "audio/fixed12/cv3-a89132ebfb61128e.wav",
+      "wav_sha256": "eb069b1ccc273c65fdff84e93db59a60d58ade1259fd80988c4c10f0175bbec6",
+      "pcm_sha256": "00768bfda2fbda25adcfbd3eddfd67df28cc6881e56d815c22e689b6e4f74f76",
+      "sample_rate_hz": 16000,
+      "frames": 21760,
+      "duration_s": 1.36,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-a89132ebfb61128e",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-a89132ebfb61128e",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-1ebd9b107a5f33c6",
+      "logical_path": "audio/fixed12/cv3-1ebd9b107a5f33c6.wav",
+      "wav_sha256": "0e3a1d225b8ca1078dc1d7dee8387122a49993eca472c2209dd10da7757d9a81",
+      "pcm_sha256": "d1524ffaa7e8464c4279570d594fa182ad29b2129012c1b80f86ac4a59a851eb",
+      "sample_rate_hz": 16000,
+      "frames": 18560,
+      "duration_s": 1.16,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-1ebd9b107a5f33c6",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-1ebd9b107a5f33c6",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-c1cc9d2f9a4b34b9",
+      "logical_path": "audio/fixed12/cv3-c1cc9d2f9a4b34b9.wav",
+      "wav_sha256": "d60be2f4b8895b1de816e00d6153a69753b7b3271993e75d7e2b3d8e6819146b",
+      "pcm_sha256": "906dab4106fbe4b7f10a22c86b113d77a3906b17645fb79c397d151c35303ac2",
+      "sample_rate_hz": 16000,
+      "frames": 24960,
+      "duration_s": 1.56,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-c1cc9d2f9a4b34b9",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-c1cc9d2f9a4b34b9",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-8892d3ba8c07dce7",
+      "logical_path": "audio/fixed12/cv3-8892d3ba8c07dce7.wav",
+      "wav_sha256": "bca7797b357650bc920e75d4e3a242e7f153298b24c0d0821c8ca4d9fdc03524",
+      "pcm_sha256": "afeea509a8cdaaeaaf4cde63abba7f589490def1a5f666d696f19ab5012e5e88",
+      "sample_rate_hz": 16000,
+      "frames": 21120,
+      "duration_s": 1.32,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-8892d3ba8c07dce7",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-8892d3ba8c07dce7",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-79dcde0b3507ce2b",
+      "logical_path": "audio/fixed12/cv3-79dcde0b3507ce2b.wav",
+      "wav_sha256": "6b43c40cc6254813485e53363d59eb9ff66c3e0ae939659a9e339e73cde9343a",
+      "pcm_sha256": "87d8664cca8dce087c45ce0be43c03241f01946b712bdb745f8ce2496bd2425d",
+      "sample_rate_hz": 16000,
+      "frames": 18560,
+      "duration_s": 1.16,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-79dcde0b3507ce2b",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-79dcde0b3507ce2b",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-3e7111e42feedbc6",
+      "logical_path": "audio/fixed12/cv3-3e7111e42feedbc6.wav",
+      "wav_sha256": "02b14749cc6db5bcb1eb936075a6a26f16c2a57c533def1acf830a6f75e6b91e",
+      "pcm_sha256": "1c01b892e9c55d02d31d4f855226c6faa81947a9498af9ece97e1f7e0c93158b",
+      "sample_rate_hz": 16000,
+      "frames": 23680,
+      "duration_s": 1.48,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-3e7111e42feedbc6",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-3e7111e42feedbc6",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    },
+    {
+      "id": "fixed12-cv3-3a0101e32296afd9",
+      "logical_path": "audio/fixed12/cv3-3a0101e32296afd9.wav",
+      "wav_sha256": "b5fa129fc0b59bafb166b70a2cedff9cde593ea77b6bbb44fdb58ea5c5dc0309",
+      "pcm_sha256": "b5d2b7abaea8092ba009a3cad333bc7068ee1f40a1cca8512552ad811b436a79",
+      "sample_rate_hz": 16000,
+      "frames": 17280,
+      "duration_s": 1.08,
+      "source": {
+        "dataset": "fixed12",
+        "family": "fixed12-historical-synthetic",
+        "tier": "synthetic",
+        "evidence_ref": "provenance/fixed12-audio.json",
+        "evidence_sha256": "374a7cf0ec9879d4855bd1ad3cbd2eed268072e7bd67f9a720f0abf59c060a70",
+        "speaker": null,
+        "generator": {
+          "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512",
+          "revision": "29e01c4e8d000f4bcd70751be16fa94bf3d85a18",
+          "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+          "evidence_sha256": "eaf54a7a0df963e2fbeb894c825097afb01a8b31c999dbaa6822c173597da21d",
+          "voice": "Qwen3-TTS-Serena-synthetic-reference",
+          "seed": null,
+          "prompt_family": "shared-synthetic-reference-fixed12"
+        },
+        "session": "cv3-3a0101e32296afd9",
+        "room": null,
+        "device": null,
+        "afe": null
+      },
+      "license": {
+        "identifier": "Recorded model/source Apache-2.0; output grant not established",
+        "evidence_ref": "research/2026-10-03-native-a20/LICENSES/SCOPE.md",
+        "review_status": "reviewed_research_scope",
+        "approved_roles": [
+          "inventory"
+        ],
+        "commercial_output_license": "not_established"
+      },
+      "role": "inventory",
+      "label_strength": "unknown",
+      "label_binding": "not_publicly_bound",
+      "label_authority": "Public byte provenance has no per-row label binding; aggregate human/ASR tiers are not transferable to individual rows",
+      "declared_keywords": [],
+      "exposures": [
+        "results_observed"
+      ],
+      "exposure_review_complete": true,
+      "leakage_group": "fixed12-historical-family",
+      "derivation_family": "cv3-3a0101e32296afd9",
+      "strata": {
+        "noise": "unknown",
+        "far_field": "unknown",
+        "hard_negative": "unknown"
+      },
+      "continuous": false,
+      "replayed_or_looped": false,
+      "positive_events": [],
+      "negative_intervals": []
+    }
+  ]
+}

@@ -161,6 +161,8 @@ jobs:
         run: python3 tests/test_parameter_contract.py
       - name: Verify tracked worktree after Parameter contract and generated header
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Parameter contract and generated header"'
+      - name: Prepare pinned scorer fixtures
+        run: python3 tools/prepare_eval_context_fixtures.py
       - name: Product metric scorer
         run: python3 tests/test_eval.py
       - name: Verify tracked worktree after Product metric scorer
