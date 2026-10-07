@@ -1,0 +1,32 @@
+{
+  "exhaustive_menu_matrices": 585,
+  "cases": 612,
+  "raw_paths_visited": 5523157,
+  "nonzero_paths": 619348,
+  "failures": [],
+  "tie_cases": [
+    "menu_3_244",
+    "menu_3_412",
+    "exact_tie",
+    "split_negative_tie",
+    "alignment_tie_23",
+    "alignment_tie_48",
+    "alignment_tie_456",
+    "prefix_product_tie"
+  ],
+  "decision_status_counts": {
+    "CERTIFIED_REJECT": 586,
+    "CERTIFIED_ACCEPT": 20,
+    "NUMERICALLY_UNRESOLVED": 6
+  },
+  "numerically_unresolved_cases": [
+    "menu_3_244",
+    "menu_3_412",
+    "alignment_tie_23",
+    "alignment_tie_48",
+    "alignment_tie_456",
+    "prefix_product_tie"
+  ],
+  "oracle_sha256": "3287fc944e85321342f38b31c8bc61342dd363b2bb014ba0ca197516b05ec68d",
+  "module_sha256": "e9edc93ffde5569cf7d931342b959738e3a40085957d3d6e1b275664d6729963"
+}

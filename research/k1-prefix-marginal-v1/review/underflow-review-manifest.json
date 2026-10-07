@@ -1,0 +1,67 @@
+{
+  "status": "PASS_NUMERICAL_RECOVERY_SOURCE_REVIEW",
+  "saved_values_read": false,
+  "saved_evaluation_executed": false,
+  "independent_adapter_check_groups": 8,
+  "observed_recovery_test_count": 12,
+  "observed_recovery_test_seconds": 0.011,
+  "synthetic_dp_rows_in_recovery_unit_suite": 4,
+  "unchanged_original_ledger_sha256": "cf9c92a0e8db14cd187d8bbbd606a4dc0739fc62781e0f5dae69404c0313dbc2",
+  "files": [
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/runner.py",
+      "bytes": 14505,
+      "sha256": "65ffdd0cad06747bea90f0e6297918300d4866993a4e55a3a257038cfcfb106b"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/test_runner.py",
+      "bytes": 10753,
+      "sha256": "894f9fd16d87cb811ab225bb6853f1bac50ed14f2e0a080c6618322280a7a43e"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/protocol.md",
+      "bytes": 6258,
+      "sha256": "fd8af968a7e5880a055a6be5968915b9c1b050194e930d82ad9b133e58698abc"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/causal-note.md",
+      "bytes": 3099,
+      "sha256": "da52eda7147ae488e823974054aff102935d98ae642c9afee2f5ea8cb06e9a96"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/manifest.json",
+      "bytes": 6080,
+      "sha256": "07970965185e45d6383bbe33f96ebc7740875dcc9ad68523b124a6ba4aa24578"
+    },
+    {
+      "source_id": "k1-prefix-marginal-v1/k1_prefix_marginal.py",
+      "bytes": 13689,
+      "sha256": "e9edc93ffde5569cf7d931342b959738e3a40085957d3d6e1b275664d6729963"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-assessment.md",
+      "bytes": 6313,
+      "sha256": "5f24cd1391faf142c15031a844d29c5f1e89de15f8934053fdf5ab586540796f"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow_mock_review.py",
+      "bytes": 4630,
+      "sha256": "9942ec859742a2a30730815cb46afbb0b085b321867b0ecec1ef02c4f699ee45"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-mock-results.json",
+      "bytes": 980,
+      "sha256": "3a127c09ab97f3e2bd4904e297dd672ca76e8d0319ba2f012592e14de0a1d73a"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-recovery-review.md",
+      "bytes": 4948,
+      "sha256": "1f0177e01ec492c6d17d5c6eb214ebf2985e757c72051b04f89d827c98583881"
+    }
+  ],
+  "projection": {
+    "original_manifest_sha256": "f3f6ccac7e2f0f73c1928727c23f3f2cf39808c0afd92128214e9aae32068c92",
+    "transform": "Executor paths replaced with logical relative source IDs; scientific values and source hashes preserved.",
+    "source_id_mapping": "Relative source IDs identify original artifact roles, not final repository locations."
+  }
+}

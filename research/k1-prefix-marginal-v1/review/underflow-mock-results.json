@@ -1,0 +1,18 @@
+{
+  "status": "PASS_ADAPTER_MOCKS_ONLY",
+  "checks": [
+    "four ordinary/positive-tail rows preserve original exact binary64 outputs",
+    "arithmetic exponential underflow keeps six positions and permits zero",
+    "positive term below -512 is retained; no threshold pruning",
+    "division-only underflow allowed after exact-difference validation",
+    "exact -512 guard boundary and next FP32 value above it; unexpected near-zero exp rejected",
+    "six invalid shape/type/nonfinite/FP32-overflow rows remain rejected",
+    "stage-separated underflow counts and indexed failure context",
+    "exact finite-product TV tail inequality illustration"
+  ],
+  "dp_runs": 0,
+  "saved_values_read": false,
+  "original_runner_sha256": "5125ed3f3237ee38611b628bc9f3d18dc34f50c036341381fd6991f310e8af8c",
+  "recovery_runner_sha256": "65ffdd0cad06747bea90f0e6297918300d4866993a4e55a3a257038cfcfb106b",
+  "test_sha256": "9942ec859742a2a30730815cb46afbb0b085b321867b0ecec1ef02c4f699ee45"
+}
