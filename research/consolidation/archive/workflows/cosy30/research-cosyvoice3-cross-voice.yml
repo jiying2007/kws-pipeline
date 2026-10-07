@@ -1,0 +1,92 @@
+name: research-cosyvoice3-cross-voice
+on:
+  push:
+    branches: ['research/a20-cosy30-cross-voice-v1']
+    paths:
+      - 'research/cosyvoice3_cross_voice/**'
+      - '.github/workflows/research-cosyvoice3-cross-voice.yml'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: research-cosy30-cross-voice-v1
+  cancel-in-progress: false
+jobs:
+  candidate-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      armed: ${{ steps.contract.outputs.armed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - id: contract
+        name: Validate only stdlib contracts and exact payload activation
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -I -S research/cosyvoice3_cross_voice/check_candidate.py
+  one-time-cosy30:
+    if: >-
+      needs.candidate-contract.outputs.armed == 'true' &&
+      github.event_name == 'push' &&
+      github.run_attempt == 1 &&
+      github.repository == 'jiying2007/kws-pipeline' &&
+      github.event.repository.private == false &&
+      github.ref == 'refs/heads/research/a20-cosy30-cross-voice-v1' &&
+      github.actor == 'jiying2007'
+    needs: candidate-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Admit exact arming parent and payload once
+        env:
+          GH_READ_TOKEN: ${{ github.token }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -I -S research/cosyvoice3_cross_voice/admit_run.py
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+      - name: Restore exact successful CPU stack and generate fixed30 once
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          CUDA_VISIBLE_DEVICES: ''
+          OMP_NUM_THREADS: '4'
+          MKL_NUM_THREADS: '4'
+          OPENBLAS_NUM_THREADS: '4'
+          NUMBA_NUM_THREADS: '4'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: python3 -I -S research/cosyvoice3_cross_voice/controller.py
+      - name: Package disjoint train-dev and sealed-recording artifacts
+        if: always()
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -I -S research/cosyvoice3_cross_voice/publish_results.py
+      - name: Publish train-dev technical data and four listening copies
+        if: always() && hashFiles('cosy30-artifacts/cosy30-train-dev-24/artifact-manifest.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cosy30-train-dev-24-${{ github.run_id }}
+          path: cosy30-artifacts/cosy30-train-dev-24/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: false
+          include-hidden-files: false
+      - name: Publish opaque sealed recordings without semantic inspection
+        if: always() && hashFiles('cosy30-artifacts/cosy30-sealed-six/artifact-manifest.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cosy30-sealed-six-${{ github.run_id }}
+          path: cosy30-artifacts/cosy30-sealed-six/
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: false
+          include-hidden-files: false

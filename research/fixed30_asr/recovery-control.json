@@ -1,0 +1,19 @@
+{
+  "attempt2_controlled_download_cap_bytes": 4294967296,
+  "attempt2_expected_controlled_download_bytes": 3340966447,
+  "attempt2_max_asr_calls": 60,
+  "cumulative_max_asr_calls": 60,
+  "expected_cumulative_controlled_download_bytes": 6681932894,
+  "infrastructure_transport": "checkout/action/interpreter transfer remains unmeasured and outside controlled response-body accounting",
+  "max_setup_attempts": 2,
+  "maximum_cumulative_controlled_download_bytes": 7635933743,
+  "prior_asr_calls": 0,
+  "prior_candidate_sha256": "1de9a21c6bfec7d13aff9f9205508756e7fc7ea1317ef80334e7ab992cfc144b",
+  "prior_controlled_download_bytes": 3340966447,
+  "prior_head_sha": "3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+  "prior_run_id": 37285275142,
+  "prior_status": "FAILED_NO_RETRY",
+  "schema": "fixed30-setup-recovery-control-v2",
+  "scope": "setup recovery followed conditionally by the first30x2 model calls; no original-run retry, no scientific changes",
+  "setup_attempt": 2
+}

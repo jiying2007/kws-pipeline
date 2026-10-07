@@ -1,0 +1,27 @@
+name: single-k1-followed-wu-pure
+
+on:
+  pull_request:
+    paths:
+      - "research/single_k1_followed_wu/**"
+      - ".github/workflows/research-single-k1-followed-wu.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  pure-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare pure numerical test dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/single-melo-tests"
+          "$RUNNER_TEMP/single-melo-tests/bin/python" -m pip install --disable-pip-version-check --only-binary=:all: --no-deps numpy==2.3.5 scipy==1.17.0
+      - name: Offline pure and mock checks only
+        working-directory: research/single_k1_followed_wu
+        run: |
+          "$RUNNER_TEMP/single-melo-tests/bin/python" -B -m unittest -v test_one_call test_conversion_recipe test_output_signature test_private_raw_cause test_setup_safety

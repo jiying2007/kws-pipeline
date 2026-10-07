@@ -1,0 +1,25 @@
+{
+  "diagnostic_only_v2": {
+    "capture_locals": false,
+    "private_raw_cause_file": "private-raw-cause.json",
+    "public_artifact_allowed": false,
+    "serialized_cap_bytes": 65536
+  },
+  "experiment_id": "melo-native-six-phrase-pilot-v1",
+  "inference_performed": false,
+  "pure_mock_test_count": 25,
+  "runtime_imported": false,
+  "schema": "melo-six-adapter-freeze-v1",
+  "source_sha256": {
+    "conversion_recipe.py": "860a4d127cea031f7339cb6d201ee97686f060ca190afca43509f71e00098d60",
+    "pack_blind.py": "ca54d424289717546cab20b5b6d23d7315127f0b850ce0f9aa56be6014292ead",
+    "run_melo6.py": "1916eb8d0bc2e9015b4632af0ef12bb95a7a805b2ebd2aa7fd84706370b90709",
+    "supervision.py": "dde8527fc562b43a3ca5bed034c43f66400780d6c36bf3d74046082dd7e19abb",
+    "test_adapter_mock.py": "ecf832fa5ec0264a00ec425a2d14986b64adf2fab9aea7ae18a3e6c5825d3790",
+    "test_conversion_recipe.py": "af7681cbf259410dd3e50f628fa6aaccd83aa41fddf996aa9874fae72a3286f0",
+    "test_output_signature.py": "1bbdd70e3c174d8f28038bb71b81fa331e8c2e2e9793d7cc96eff59486e54132",
+    "test_private_raw_cause.py": "b1a5387ac2848e3e484fc73e9f525f06274dfcbed1170bca72f406352ceb6759"
+  },
+  "supervision_copied_unchanged": true,
+  "supervision_origin": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/supervision.py"
+}

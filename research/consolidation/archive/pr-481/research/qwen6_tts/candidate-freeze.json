@@ -1,0 +1,22 @@
+{
+  "component": "tts",
+  "files": {
+    "README.md": "c264b2a1e1c9c76f22f355e422b517cf6b4f7cf3155741e6d0631547c24977de",
+    "artifact_bounds.py": "6dfc2eda76f00b750bce018832c0d27b99ae9e545c16d62e830bb9c3640799ee",
+    "generate_six.py": "25530b89fa3f58f44ceb8d3c2a8f26f3b37651c7173f62414dc96142919ea03e",
+    "model-lock.json": "c2dd1e752e1b139e490691b5e1d68daf75684e66687b4175672391d0bc9f3133",
+    "model-locks.json": "c206556a633b7d04c334494fc5a82934a19d572c125982c689f18f8b2d472110",
+    "pack_blind.py": "37fff015cee1aac68deef068e1184c0205f9b1486465e680998cb83ca3462f34",
+    "plan.json": "1b0e7296877432ee24c6bf79d79573d78eda8f8f4277fd06edb9dba79cefac4c",
+    "release_gate.py": "1a794bac5e87f38738896d7824e57a7bdc42b16d198f4c0818514590bd2802cd",
+    "run_tts.py": "2683e071dc6bda1d61058827af69cc734491bab102509c8e8cc1a3c1b5553f9e",
+    "runtime-lock.json": "a81448721bf3433e2b0efce205b5336c163a52a3ec2b39bf945fff44f5b0723a",
+    "runtime_gate.py": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815",
+    "setup_diagnostics.py": "e173a582406d6cbd4880aea43dd7213c2ac8482cb991c328e8d58f8b3ba7ab28",
+    "setup_locked.py": "0d0cbadf3ea77f973ccf6edf388669814bd24569b098724b149ce7851b431954",
+    "supervision.py": "9afb771c58febd574d1143c41daa7523cf1dea5c6a7f0424119d602423159b3f",
+    "wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
+    "workflow.yml": "186263a8bacc026aeb7b24e3469859e9b86ee67e6d3fc5886ea2d7d90d5f35ba"
+  },
+  "schema": "qwen6-component-code-freeze-v1"
+}

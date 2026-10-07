@@ -1,0 +1,20 @@
+{
+  "schema": "single-melo-local-validation-v1",
+  "scope": "Offline pure and mock checks; no runtime import, TTS, ASR, KWS experiment or training",
+  "working_directory": "research/single_k1_followed_wu",
+  "command": "python -B -m unittest -v test_one_call test_conversion_recipe test_output_signature test_private_raw_cause test_setup_safety",
+  "tests": 27,
+  "passed": 27,
+  "skipped": 0,
+  "failed": 0,
+  "runtime": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0"
+  },
+  "log_sha256": "a78e5d371d6f8bff509ee5fbdf5c5ea237a559f90e2e07a6fa645fe1a713a066",
+  "earlier_collection_issue": "A command started from the preparation parent directory could not import the five test modules; rerun from the documented source directory succeeded",
+  "ci_status_at_local_validation": "not_yet_run",
+  "ci_dependency_policy": "Dedicated pure workflow installs only pinned numpy and scipy; no TTS runtime or model",
+  "scientific_calls_during_validation": 0
+}

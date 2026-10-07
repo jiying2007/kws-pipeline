@@ -1,0 +1,26 @@
+name: cpu-torch-metadata-probe
+on:
+  push:
+    branches: [research/a20-cpu-metadata-probe-20261004]
+    paths:
+      - '.github/workflows/cpu-torch-metadata-probe.yml'
+      - 'research/cpu_torch_metadata_probe/**'
+permissions:
+  contents: read
+concurrency:
+  group: cpu-torch-metadata-probe-once-20261004
+  cancel-in-progress: false
+jobs:
+  metadata-only:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          sparse-checkout: research/cpu_torch_metadata_probe
+      - name: Offline pure tests
+        run: python3 -B -m unittest discover -s research/cpu_torch_metadata_probe/tests -v
+      - name: Exactly one official metadata-only attempt
+        run: python3 -B research/cpu_torch_metadata_probe/probe.py

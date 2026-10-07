@@ -1,0 +1,6 @@
+{
+  "schema": "fixed30-run-release-v1",
+  "approved": true,
+  "experiment_id": "fixed30-exposed-asr-regression-v1",
+  "candidate_sha256": "b622f8259112c842f80a652099db47f1a509c47889f29592aec44d8879959dd7"
+}

@@ -1,0 +1,896 @@
+{
+  "acquisition_bindings": {
+    "decoder_config_sha256": "289b3ba913b66145939d785c5061d9dd267da9e0e3996917a42c6fe632b79e1b",
+    "geometry_sha256": "8ceefa6cea8aa31eaaa20eafd474de01401447fa9b18466faeb338c9ce933f23",
+    "library_sha256": "68457311f93540405dfa0bf5fdc1cd74421fea22b44d5920fec465be5de4d912",
+    "manifest_sha256": "8bd5dca22b4208be14e0879936950f2c6907f9855627d983a85608a7f38b541f",
+    "model_sha256": "a80b233d3c958d25f49085f487ef5cde839bd69f803ed057b59bbd20adc6e43d",
+    "protocol_sha256": "868ae26f9ce80b590039dd63f14d626629f006dc3e9707a27402c841841f8a9a"
+  },
+  "build": {
+    "collector": {
+      "bytes": 25792,
+      "sha256": "363a647d10949b46d1eb8d806896f758beebd97713afcccf256bfe04e993fd62"
+    },
+    "collector_compile_argv": [
+      "gcc-14",
+      "-std=c11",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-fno-fast-math",
+      "-ffp-contract=off",
+      "-frounding-math",
+      "-fexcess-precision=standard",
+      "-fstack-usage",
+      "-fPIC",
+      "src/collector.c",
+      "-ldl",
+      "-lm",
+      "-o",
+      "build/collector"
+    ],
+    "compiler_sha256": "a23ecab8ff08f09ad8c80602c2c5df7f49e09c25905cb8975902e101bf72635f",
+    "model_and_runtime_binding": "identical to core; reconstruction uses its exact public runtime mapping",
+    "native_library_sha256": "68457311f93540405dfa0bf5fdc1cd74421fea22b44d5920fec465be5de4d912",
+    "runtime_recompiled": false
+  },
+  "control_adapter": "For the unchanged compare_prefix.py to consume the public control trace, a temporary copy of the saved control receipt changes only source_raw_sha256 to the core public raw hash. No PID is recovered. The report hash is explicitly mapped back to the acquired control identity for comparison with exact historical observations.",
+  "copied_frozen_files": {
+    "metadata/geometry.json": {
+      "bytes": 5929,
+      "sha256": "8ceefa6cea8aa31eaaa20eafd474de01401447fa9b18466faeb338c9ce933f23"
+    },
+    "metadata/manifest.json": {
+      "bytes": 3022,
+      "sha256": "8bd5dca22b4208be14e0879936950f2c6907f9855627d983a85608a7f38b541f"
+    },
+    "src/compare_prefix.py": {
+      "bytes": 4237,
+      "sha256": "d5d5fa33547cb245f85b0b03229d81f3dbdbb8362341981fcbdb55741dc5d257"
+    },
+    "src/inputs.h": {
+      "bytes": 1597,
+      "sha256": "b16d8390a0f780d0042b8d2a8bd60f97a26ea2a5d1407d5c5550308d7fb09e73"
+    }
+  },
+  "core_dependency": {
+    "acquired_control_raw": {
+      "bytes": 25615,
+      "sha256": "fc901e842278a9b2bf05cb1052f8c1a4b17a6633828e78ae1be008d6853a7636"
+    },
+    "data_path": "research/2026-10-06-melo5-a20-diagnostic",
+    "public_control_raw": {
+      "bytes": 25607,
+      "sha256": "b93d9068eba66a8a744d9e706b0d16a763240df566942714029fa3f053b6f4ff"
+    },
+    "reuse": "The original core must pass its own saved-only verifier before this annex. All model/runtime/decoder identity and public source dependency bindings are inherited unchanged.",
+    "source_files": {
+      "metadata/bindings.json": {
+        "bytes": 24791,
+        "sha256": "9893a8b10bda855856e43271b3a50a8ed1f557b22e54e7065ccf45844f02dd6d"
+      },
+      "verify_saved.py": {
+        "bytes": 6242,
+        "sha256": "3d1c20c8be659c566b35e86929358bb26ab3f132f413a0c02a730eef8ccad603"
+      }
+    },
+    "source_path": "research/melo5-a20-diagnostic-v1"
+  },
+  "data_files": {
+    "SUMMARY.json": {
+      "bytes": 4836,
+      "sha256": "3bc91c2a80049ff9e3aa07fa4677920513c66f07c8ae8414c3d96b25ea6a05b3"
+    },
+    "observations.json": {
+      "bytes": 30514,
+      "sha256": "797bef4955144642f2c8c92c41afc7034bfd118dc4bd1db7081ac76789bcad18"
+    },
+    "original_A20.raw.jsonl": {
+      "bytes": 13408,
+      "sha256": "90196e0730db17fbae25d604d7e57d51dec4bb1b6ef1192b3c36d7f2fae29cf2"
+    },
+    "resources.json": {
+      "bytes": 1802,
+      "sha256": "de6340e9b01100051a8b30fa96125d39ed4c9633265413ebb0288483e79b0b85"
+    }
+  },
+  "delta_encoding": "Sorted nonoverlapping Unicode-character [start,end) substitutions against the exact core file. Each old substring and original/result byte size and SHA256 is checked. Reconstruction yields exact frozen context source; no compilation or native execution.",
+  "input_modification": "For each exact bound original 44-byte-header PCM16 WAV: append 9600 zero bytes (4800 samples), set little-endian RIFF size at offset4 to resulting byte length minus8 and data size at offset40 to resulting byte length minus44. Preserve all original PCM bytes. No new source audio or waveform resampling.",
+  "original_source_freeze_sha256": "39ab5e21791430c47238c2923a78236c2766c4e7b7de7facba89aacb11d15249",
+  "projections": {
+    "observations.json": {
+      "original": {
+        "bytes": 30514,
+        "sha256": "797bef4955144642f2c8c92c41afc7034bfd118dc4bd1db7081ac76789bcad18"
+      },
+      "public": {
+        "bytes": 30514,
+        "sha256": "797bef4955144642f2c8c92c41afc7034bfd118dc4bd1db7081ac76789bcad18"
+      },
+      "transform": "None: original 30514 bytes retained. The saved report contains pre-projection context and original-control raw hashes. Verification scores public projections, then explicitly restores those two provenance hashes solely for byte-for-byte report comparison."
+    },
+    "original_A20.raw.jsonl": {
+      "original": {
+        "bytes": 13416,
+        "sha256": "bda14751fe0d9bf9a03d02d3e99ca84cfe4af79a4c8688dacbab4f08a311a698"
+      },
+      "public": {
+        "bytes": 13408,
+        "sha256": "90196e0730db17fbae25d604d7e57d51dec4bb1b6ef1192b3c36d7f2fae29cf2"
+      },
+      "transform": "Remove only run_start.pid, preserving every other acquired byte including all following 24 records and numeric spellings."
+    },
+    "resources.json": {
+      "original": {
+        "bytes": 2431,
+        "sha256": "ba3183eac0bd93a72c636dee4af63c335105aba3bd84a1969c09d56ddd89c69d"
+      },
+      "public": {
+        "bytes": 1802,
+        "sha256": "de6340e9b01100051a8b30fa96125d39ed4c9633265413ebb0288483e79b0b85"
+      },
+      "transform": "Remove process-sample absolute monotonic_ns and release-file inventory; replace resource_scope with the reviewed inherited-memory caveat. Retained measurements and bindings are unchanged."
+    }
+  },
+  "saved_control_receipt": {
+    "model_calls": 0,
+    "selected_original_controls": [
+      "M1",
+      "M2"
+    ],
+    "selected_original_event_counts": {
+      "M1": 0,
+      "M2": 0
+    },
+    "source_freeze_sha256": "bfbd8139860b76fe814a80b42cbe5ad46aae7d8c7649c3967942daa014799e1f",
+    "source_raw_sha256": "fc901e842278a9b2bf05cb1052f8c1a4b17a6633828e78ae1be008d6853a7636",
+    "source_rows": {
+      "callbacks": 16,
+      "clips": 5,
+      "decoder_rows_decoded": 128,
+      "fbank_rows": 390,
+      "feed_calls": 16,
+      "frames": 64090,
+      "model_rows": 128
+    },
+    "status": "PASS_SAVED_ONLY_ORIGINAL_TRACE"
+  },
+  "schema": "melo2-tail300ms-public-annex-bindings-v1",
+  "scope": "One fixed 300ms appended-digital-zero condition on M1/M2. Saved comparison only; M3-M6 absent, no automatic retry or duration/threshold/decoder sweep. Original controls and qualifications remain unchanged.",
+  "source_deltas": {
+    "metadata/plan.json": {
+      "core_original": {
+        "bytes": 2448,
+        "sha256": "665fce715ae5d0e0bee34fc098e688cb92454723fed97fb6304eedd917d82229"
+      },
+      "edits": [
+        {
+          "end": 42,
+          "new": "ndition\": \"M1_M2_EXACT_4800_ZERO_SAMPLES_APPENDED\",\n  \"co",
+          "old": "",
+          "start": 42
+        },
+        {
+          "end": 50,
+          "new": "\n    \"actual_decoder_searched_rows\": \"RESULT_DEPENDENT\",",
+          "old": "",
+          "start": 50
+        },
+        {
+          "end": 70,
+          "new": "8",
+          "old": "16",
+          "start": 68
+        },
+        {
+          "end": 86,
+          "new": "2",
+          "old": "5",
+          "start": 85
+        },
+        {
+          "end": 108,
+          "new": "2",
+          "old": "5",
+          "start": 107
+        },
+        {
+          "end": 139,
+          "new": "70",
+          "old": "128",
+          "start": 136
+        },
+        {
+          "end": 172,
+          "new": "8",
+          "old": "16",
+          "start": 170
+        },
+        {
+          "end": 195,
+          "new": "212",
+          "old": "390",
+          "start": 192
+        },
+        {
+          "end": 217,
+          "new": "8",
+          "old": "16",
+          "start": 215
+        },
+        {
+          "end": 240,
+          "new": "2",
+          "old": "5",
+          "start": 239
+        },
+        {
+          "end": 256,
+          "new": "34",
+          "old": "",
+          "start": 256
+        },
+        {
+          "end": 259,
+          "new": "7",
+          "old": "40",
+          "start": 257
+        },
+        {
+          "end": 261,
+          "new": "",
+          "old": "0",
+          "start": 260
+        },
+        {
+          "end": 284,
+          "new": "70",
+          "old": "128",
+          "start": 281
+        },
+        {
+          "end": 315,
+          "new": "70",
+          "old": "128",
+          "start": 312
+        },
+        {
+          "end": 319,
+          "new": ",\n  \"event_coordinate_scope\": \"Available input relative to original file EOF; acoustic word end unknown\"",
+          "old": "",
+          "start": 319
+        },
+        {
+          "end": 336,
+          "new": "\n    \"M3\",\n    \"M4\",\n    \"M5\",",
+          "old": "",
+          "start": 336
+        },
+        {
+          "end": 1446,
+          "new": "\n  ]",
+          "old": "",
+          "start": 1446
+        },
+        {
+          "end": 1447,
+          "new": "\n  \"prefix_comparison\": {",
+          "old": "",
+          "start": 1447
+        },
+        {
+          "end": 1454,
+          "new": "comparison\": \"serialized logits round-trip to float",
+          "old": "M",
+          "start": 1453
+        },
+        {
+          "end": 1455,
+          "new": "2 bytes; align by absolute center, not callback phase",
+          "old": "",
+          "start": 1455
+        },
+        {
+          "end": 1463,
+          "new": "max_preserved_centers\": {\n      \"",
+          "old": "",
+          "start": 1463
+        },
+        {
+          "end": 1465,
+          "new": "1",
+          "old": "4",
+          "start": 1464
+        },
+        {
+          "end": 1466,
+          "new": ": 69,\n      \"M2\": 75\n    }",
+          "old": "",
+          "start": 1466
+        },
+        {
+          "end": 1473,
+          "new": "support_contained_rows\": {\n      \"",
+          "old": "",
+          "start": 1473
+        },
+        {
+          "end": 1475,
+          "new": "1\": 24,\n      \"M2\": 26\n    },\n    \"support_rule\": \"(center+2)*160+400 <= original sample count",
+          "old": "5",
+          "start": 1474
+        },
+        {
+          "end": 1480,
+          "new": "}",
+          "old": "]",
+          "start": 1479
+        },
+        {
+          "end": 1800,
+          "new": "7",
+          "old": "888,\n    \"estimate_scope\": \"Rough compute comparison only, excludes fixed startup and is not measured on these clips; historical peak RSS was 13,848 KiB\",\n    \"historical_",
+          "start": 1629
+        },
+        {
+          "end": 1825,
+          "new": "",
+          "old": "8_clip_model_steps\": 518",
+          "start": 1801
+        },
+        {
+          "end": 1881,
+          "new": "",
+          "old": "9,\n    \"historical_98_clip_process_cpu_s\": 19.113835629",
+          "start": 1826
+        },
+        {
+          "end": 1967,
+          "new": "",
+          "old": ",\n    \"simple_row_ratio_cpu_seconds\": 0.047204672297594015",
+          "start": 1909
+        },
+        {
+          "end": 2129,
+          "new": "2-tail300ms",
+          "old": "5",
+          "start": 2128
+        },
+        {
+          "end": 2140,
+          "new": "",
+          "old": "-replay",
+          "start": 2133
+        },
+        {
+          "end": 2171,
+          "new": "Two synthet",
+          "old": "F",
+          "start": 2170
+        },
+        {
+          "end": 2174,
+          "new": "c",
+          "old": "ve",
+          "start": 2172
+        },
+        {
+          "end": 2178,
+          "new": "m",
+          "old": "exp",
+          "start": 2175
+        },
+        {
+          "end": 2180,
+          "new": "difi",
+          "old": "s",
+          "start": 2179
+        },
+        {
+          "end": 2184,
+          "new": "ontexts: preserve origina",
+          "old": "",
+          "start": 2184
+        },
+        {
+          "end": 2187,
+          "new": " PCM byte",
+          "old": "ip",
+          "start": 2185
+        },
+        {
+          "end": 2190,
+          "new": "and append exactly 4800 digital ze",
+          "old": "f",
+          "start": 2189
+        },
+        {
+          "end": 2193,
+          "new": "s; use saved",
+          "old": "m",
+          "start": 2192
+        },
+        {
+          "end": 2195,
+          "new": "riginal controls, no ",
+          "old": "",
+          "start": 2195
+        },
+        {
+          "end": 2202,
+          "new": "w",
+          "old": " Melo",
+          "start": 2197
+        },
+        {
+          "end": 2210,
+          "new": "",
+          "old": ";",
+          "start": 2209
+        },
+        {
+          "end": 2225,
+          "new": "",
+          "old": "native human w",
+          "start": 2211
+        },
+        {
+          "end": 2228,
+          "new": "",
+          "old": "d",
+          "start": 2227
+        },
+        {
+          "end": 2293,
+          "new": "",
+          "old": "labels; derived audio not independently heard; acoustic tails un",
+          "start": 2229
+        },
+        {
+          "end": 2302,
+          "new": "cation",
+          "old": "ed",
+          "start": 2300
+        },
+        {
+          "end": 2398,
+          "new": "2.167",
+          "old": "",
+          "start": 2398
+        },
+        {
+          "end": 2405,
+          "new": "37",
+          "old": ".00562",
+          "start": 2399
+        }
+      ],
+      "frozen_context_result": {
+        "bytes": 2731,
+        "sha256": "868ae26f9ce80b590039dd63f14d626629f006dc3e9707a27402c841841f8a9a"
+      }
+    },
+    "src/collector.c": {
+      "core_original": {
+        "bytes": 9606,
+        "sha256": "d941b9db947fb6674b124ea49ac2292e230db236859b7db95afa1cbfa65c070b"
+      },
+      "edits": [
+        {
+          "end": 283,
+          "new": "Two synthet",
+          "old": "F",
+          "start": 282
+        },
+        {
+          "end": 286,
+          "new": "c",
+          "old": "ve",
+          "start": 284
+        },
+        {
+          "end": 287,
+          "new": "tail-cont",
+          "old": "",
+          "start": 287
+        },
+        {
+          "end": 291,
+          "new": "t ",
+          "old": "po",
+          "start": 289
+        },
+        {
+          "end": 292,
+          "new": "tr",
+          "old": "",
+          "start": 292
+        },
+        {
+          "end": 299,
+          "new": "am",
+          "old": "d clip",
+          "start": 293
+        },
+        {
+          "end": 4843,
+          "new": "two-str",
+          "old": "fiv",
+          "start": 4840
+        },
+        {
+          "end": 4845,
+          "new": "am ",
+          "old": "-",
+          "start": 4844
+        },
+        {
+          "end": 4849,
+          "new": "ontext",
+          "old": "lip",
+          "start": 4846
+        },
+        {
+          "end": 5724,
+          "new": "2-tail300ms",
+          "old": "5",
+          "start": 5723
+        },
+        {
+          "end": 5737,
+          "new": "",
+          "old": "-baseline",
+          "start": 5728
+        },
+        {
+          "end": 9039,
+          "new": "2",
+          "old": "5",
+          "start": 9038
+        },
+        {
+          "end": 9051,
+          "new": "34",
+          "old": "",
+          "start": 9051
+        },
+        {
+          "end": 9054,
+          "new": "7",
+          "old": "40",
+          "start": 9052
+        },
+        {
+          "end": 9056,
+          "new": "",
+          "old": "0",
+          "start": 9055
+        },
+        {
+          "end": 9094,
+          "new": "2",
+          "old": "5",
+          "start": 9093
+        }
+      ],
+      "frozen_context_result": {
+        "bytes": 9632,
+        "sha256": "ffa9473f7f8cd0ada4c8744efabccaeae4aa061023515083d7acd0c48035eefe"
+      }
+    },
+    "src/score_endpoint.py": {
+      "core_original": {
+        "bytes": 30347,
+        "sha256": "6d3ee242f432aba0cbe3eebc792e411334c52508840efe27e7d3d87b20c04c2e"
+      },
+      "edits": [
+        {
+          "end": 58,
+          "new": "two",
+          "old": "five",
+          "start": 54
+        },
+        {
+          "end": 60,
+          "new": "tream tail-c",
+          "old": "",
+          "start": 60
+        },
+        {
+          "end": 64,
+          "new": "nt",
+          "old": "urc",
+          "start": 61
+        },
+        {
+          "end": 74,
+          "new": "xt",
+          "old": " baseline",
+          "start": 65
+        },
+        {
+          "end": 759,
+          "new": "2-tail300ms",
+          "old": "5",
+          "start": 758
+        },
+        {
+          "end": 772,
+          "new": "",
+          "old": "-baseline",
+          "start": 763
+        },
+        {
+          "end": 802,
+          "new": "2-tail300ms",
+          "old": "5",
+          "start": 801
+        },
+        {
+          "end": 1040,
+          "new": "8bd5dca22b4208be14e0879936950f2c6907f9855627d983",
+          "old": "",
+          "start": 1040
+        },
+        {
+          "end": 1042,
+          "new": "5608a7f38b5",
+          "old": "",
+          "start": 1042
+        },
+        {
+          "end": 1076,
+          "new": "",
+          "old": "7b9e16c9751d61519188ab7edc10eb97",
+          "start": 1044
+        },
+        {
+          "end": 1104,
+          "new": "",
+          "old": "bcd3730dc17e153127cdf7332a1",
+          "start": 1077
+        },
+        {
+          "end": 1129,
+          "new": "8",
+          "old": "",
+          "start": 1129
+        },
+        {
+          "end": 1132,
+          "new": "efa6cea8aa31eaaa2",
+          "old": "5",
+          "start": 1131
+        },
+        {
+          "end": 1133,
+          "new": "eafd474de01401447fa9",
+          "old": "",
+          "start": 1133
+        },
+        {
+          "end": 1134,
+          "new": "18466f",
+          "old": "",
+          "start": 1134
+        },
+        {
+          "end": 1138,
+          "new": "eb33",
+          "old": "759",
+          "start": 1135
+        },
+        {
+          "end": 1143,
+          "new": "9",
+          "old": "8d0",
+          "start": 1140
+        },
+        {
+          "end": 1149,
+          "new": "",
+          "old": "c1a5a",
+          "start": 1144
+        },
+        {
+          "end": 1158,
+          "new": "933f",
+          "old": "25cc00b1",
+          "start": 1150
+        },
+        {
+          "end": 1193,
+          "new": "",
+          "old": "dee8f4f6dbe686d96096ffba999217215",
+          "start": 1160
+        },
+        {
+          "end": 5950,
+          "new": "2",
+          "old": "5",
+          "start": 5949
+        },
+        {
+          "end": 6000,
+          "new": "two",
+          "old": "five",
+          "start": 5996
+        },
+        {
+          "end": 6558,
+          "new": "two",
+          "old": "five",
+          "start": 6554
+        },
+        {
+          "end": 6562,
+          "new": "t",
+          "old": "ou",
+          "start": 6560
+        },
+        {
+          "end": 6564,
+          "new": "",
+          "old": "c",
+          "start": 6563
+        },
+        {
+          "end": 6565,
+          "new": "am",
+          "old": "",
+          "start": 6565
+        },
+        {
+          "end": 6783,
+          "new": "two",
+          "old": "five",
+          "start": 6779
+        },
+        {
+          "end": 6787,
+          "new": "t",
+          "old": "ou",
+          "start": 6785
+        },
+        {
+          "end": 6789,
+          "new": "",
+          "old": "c",
+          "start": 6788
+        },
+        {
+          "end": 6790,
+          "new": "am",
+          "old": "",
+          "start": 6790
+        },
+        {
+          "end": 27055,
+          "new": "2",
+          "old": "5",
+          "start": 27054
+        },
+        {
+          "end": 27770,
+          "new": "2",
+          "old": "5",
+          "start": 27769
+        },
+        {
+          "end": 28373,
+          "new": "por",
+          "old": "",
+          "start": 28373
+        },
+        {
+          "end": 28378,
+          "new": "=",
+          "old": "urn ",
+          "start": 28374
+        },
+        {
+          "end": 28587,
+          "new": "Two synthet",
+          "old": "F",
+          "start": 28586
+        },
+        {
+          "end": 28589,
+          "new": "c 300 ms z",
+          "old": "v",
+          "start": 28588
+        },
+        {
+          "end": 28590,
+          "new": "ro-context modifications of",
+          "old": "",
+          "start": 28590
+        },
+        {
+          "end": 28609,
+          "new": "M1/M2;",
+          "old": "clips from",
+          "start": 28599
+        },
+        {
+          "end": 28611,
+          "new": "rigi",
+          "old": "",
+          "start": 28611
+        },
+        {
+          "end": 28626,
+          "new": "al",
+          "old": "e source, word",
+          "start": 28612
+        },
+        {
+          "end": 28636,
+          "new": "",
+          "old": "he",
+          "start": 28634
+        },
+        {
+          "end": 28638,
+          "new": "n",
+          "old": "r",
+          "start": 28637
+        },
+        {
+          "end": 28641,
+          "new": "machi",
+          "old": "o",
+          "start": 28640
+        },
+        {
+          "end": 28648,
+          "new": "",
+          "old": " nativ",
+          "start": 28642
+        },
+        {
+          "end": 28650,
+          "new": "FAIL unch",
+          "old": "",
+          "start": 28650
+        },
+        {
+          "end": 28658,
+          "new": "ng",
+          "old": "udio; d",
+          "start": 28651
+        },
+        {
+          "end": 28693,
+          "new": "",
+          "old": "rived clips not independently hear",
+          "start": 28659
+        },
+        {
+          "end": 28743,
+          "new": "",
+          "old": "true-",
+          "start": 28738
+        },
+        {
+          "end": 29366,
+          "new": "2",
+          "old": "5",
+          "start": 29365
+        },
+        {
+          "end": 29637,
+          "new": "\n    from compare_prefix import compare_prefix\n    report[\"prefix_context_comparison\"]=compare_prefix(records,manifest)\n    return report",
+          "old": "",
+          "start": 29637
+        }
+      ],
+      "frozen_context_result": {
+        "bytes": 30490,
+        "sha256": "d13c3cf734b4bb43712e1c8a7d10f470541f8e88f329c5e4bc2d08a97d0d35fe"
+      }
+    }
+  }
+}

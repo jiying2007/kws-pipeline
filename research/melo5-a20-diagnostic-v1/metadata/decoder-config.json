@@ -1,0 +1,37 @@
+{
+  "competing_tokens": 6,
+  "cooldown_frames": 50,
+  "decoder_header_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+  "decoder_source_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+  "frame_downsample": 3,
+  "inclusive_final_start_search": true,
+  "keywords": {
+    "1": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "2": [
+      3,
+      4,
+      3,
+      4
+    ]
+  },
+  "max_duration_frames": 250,
+  "min_duration_frames": 5,
+  "path_beam": 20,
+  "probability_prune_strictly_greater_than": 0.05,
+  "score": "sqrt(product of token peaks)",
+  "score_beam": 3,
+  "symbols": [
+    "<blank>",
+    "你",
+    "好",
+    "小",
+    "窝",
+    "屋"
+  ],
+  "threshold": 0
+}

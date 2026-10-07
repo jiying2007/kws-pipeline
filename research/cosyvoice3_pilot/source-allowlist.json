@@ -1,0 +1,480 @@
+{
+  "schema": "cosyvoice3.source-allowlist.v1",
+  "files": [
+    {
+      "path": "LICENSE.CosyVoice",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/LICENSE",
+      "bytes": 11357,
+      "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+    },
+    {
+      "path": "LICENSE.Matcha",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/LICENSE",
+      "bytes": 1069,
+      "git_blob_sha1": "858018e750da7be7b271bb7307e68d159ed67ef6"
+    },
+    {
+      "path": "cosyvoice/__init__.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "cosyvoice/cli/__init__.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/cli/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "cosyvoice/cli/cosyvoice.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/cli/cosyvoice.py",
+      "bytes": 14356,
+      "sha256": "4b2a605f129d172cd031286a14a591396c2e8ed0bf53258acc7445525fdaa65b",
+      "git_blob_sha1": "7ab04a70fff9a0960f2e34ef35555c55486bf2a1"
+    },
+    {
+      "path": "cosyvoice/cli/frontend.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/cli/frontend.py",
+      "bytes": 12553,
+      "sha256": "8d3dcb5880d76346f053f19344eac48adcff2aca70687293aadf4e1f33fadac3",
+      "git_blob_sha1": "6d397cc99be417e98b8d9fc7a1438ec722312276"
+    },
+    {
+      "path": "cosyvoice/cli/model.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/cli/model.py",
+      "bytes": 28138,
+      "sha256": "421ba52dd956505667668e0aec7fdcbcd85d733b52725b2d595bc32bcbb53ef9",
+      "git_blob_sha1": "92a15d985dfbca4bb676d3fdc02732be1d07c461"
+    },
+    {
+      "path": "cosyvoice/dataset/__init__.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/dataset/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "cosyvoice/dataset/processor.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/dataset/processor.py",
+      "bytes": 16749,
+      "sha256": "27c8009a8da606dfd7b541fa28b34faba6d8bd9ff586a4c72b4738b2ad0aaa9a",
+      "git_blob_sha1": "545c007874ea6064b0b4161e3a390e447202a731"
+    },
+    {
+      "path": "cosyvoice/flow/DiT/dit.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/flow/DiT/dit.py",
+      "bytes": 5688,
+      "sha256": "5d14492e3ed68f5446853b0defd447bc401b12803b027a7b9584a3f3527633bf",
+      "git_blob_sha1": "0d637e4ad2fc8514b62c7ea7e564b7d29d4d91d4"
+    },
+    {
+      "path": "cosyvoice/flow/DiT/modules.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/flow/DiT/modules.py",
+      "bytes": 20551,
+      "sha256": "8c97f2af995e9ce06288be35b5119b243bb6a1aec687ef23032f20314f3f18cf",
+      "git_blob_sha1": "be8caecb8a2acd290f4f6e7e1d756dff67f78e5b"
+    },
+    {
+      "path": "cosyvoice/flow/flow.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/flow/flow.py",
+      "bytes": 19736,
+      "sha256": "bb61c86b4cef2d000f397e7d99ca9096372046d433efbdbdfc29d5d5321e2111",
+      "git_blob_sha1": "c25518621bf98e95d5ed75b83c5a2a610d0822be"
+    },
+    {
+      "path": "cosyvoice/flow/flow_matching.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/flow/flow_matching.py",
+      "bytes": 10552,
+      "sha256": "d871c37176a673bde2a1bcd7c1f1e5083afdde246d05fe5d5203fcc9a23cf98e",
+      "git_blob_sha1": "d3beb9ec2ce8c26972433080c458f90c3f2c0467"
+    },
+    {
+      "path": "cosyvoice/hifigan/discriminator.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/hifigan/discriminator.py",
+      "bytes": 8617,
+      "sha256": "3db5b1b5584c600c996ee8c53ea021370a8ad9c62e3f5a28d5cf25f03ab9f9cf",
+      "git_blob_sha1": "bb8e85f7379d3de96f6eb1f6b0ef0ba1fdbb212a"
+    },
+    {
+      "path": "cosyvoice/hifigan/f0_predictor.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/hifigan/f0_predictor.py",
+      "bytes": 3757,
+      "sha256": "494630d73dad5e667c5042dae41acb673c4511b28c17e8ce343bbffa2fa3d512",
+      "git_blob_sha1": "c896890612053d97a9567bfe261dce000dae0f52"
+    },
+    {
+      "path": "cosyvoice/hifigan/generator.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/hifigan/generator.py",
+      "bytes": 30487,
+      "sha256": "dd1c9f1ab5024bbcb4cec089b46e80844dbd00b5faf717a1906e166987200806",
+      "git_blob_sha1": "bbc2a2112bfd260963765af33760c95c3161fe14"
+    },
+    {
+      "path": "cosyvoice/hifigan/hifigan.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/hifigan/hifigan.py",
+      "bytes": 3240,
+      "sha256": "e900da2f5e7ec302db9a6ea6d2b71990eabd8823e07e59419b7d8c52df7dc0d6",
+      "git_blob_sha1": "046c2cf97055967729dcf231f449bf9cf3058d19"
+    },
+    {
+      "path": "cosyvoice/llm/llm.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/llm/llm.py",
+      "bytes": 35971,
+      "sha256": "c3799f4b2a00baaf1784bda86c5c7f22d4f9199b45e1fb9edd247b996d101ffa",
+      "git_blob_sha1": "e8e81d942af886d85b1331f9ce8b72ba42f8843b"
+    },
+    {
+      "path": "cosyvoice/tokenizer/tokenizer.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/tokenizer/tokenizer.py",
+      "bytes": 11253,
+      "sha256": "b852d0047f46f77cfec3335cf53214c9b3e1939e61049e9cb53fac403e32d4fe",
+      "git_blob_sha1": "6ecf4ae84b1b88d10c42e110db4665f944cc0317"
+    },
+    {
+      "path": "cosyvoice/transformer/__init__.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "cosyvoice/transformer/activation.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/activation.py",
+      "bytes": 3089,
+      "sha256": "a4a96caea9f7b05111286de5ea760bdfdf9c4e53448f53420857dc04a50440c2",
+      "git_blob_sha1": "8cea54816385d3b6585ccc2417bc71630d578177"
+    },
+    {
+      "path": "cosyvoice/transformer/attention.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/attention.py",
+      "bytes": 14389,
+      "sha256": "41d269b2d5e3a3952c0a538f46480aff8570767eb88e80452f367436cef628b1",
+      "git_blob_sha1": "8c0c0983a833a6a91cae306a8198ebb2ca82696f"
+    },
+    {
+      "path": "cosyvoice/transformer/convolution.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/convolution.py",
+      "bytes": 9772,
+      "sha256": "bc248837af9458d7fdfa620a072d5f9e5a2851c420e1275fdda34c294e3a75c7",
+      "git_blob_sha1": "edb32b241035852ae07f027d1ea6fcf42f7aaba4"
+    },
+    {
+      "path": "cosyvoice/transformer/embedding.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/embedding.py",
+      "bytes": 11777,
+      "sha256": "b50c30be5c66c39c95e0db1015814c545fcd062a936c0ea7ad4c01508b2595dc",
+      "git_blob_sha1": "ba20d71bec11baa7081bed522399cf3a2046ef56"
+    },
+    {
+      "path": "cosyvoice/transformer/encoder_layer.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/encoder_layer.py",
+      "bytes": 9602,
+      "sha256": "1920582be2c9b7cf7835e7b539118ec1eb9da8f2c711c6257f8598b3792951b9",
+      "git_blob_sha1": "efbb12dd365770bebe8bca75276fe63be260a08f"
+    },
+    {
+      "path": "cosyvoice/transformer/label_smoothing_loss.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/label_smoothing_loss.py",
+      "bytes": 3459,
+      "sha256": "db8804cf1c20e1afbf6c33de4836589b1947d881797d02d507c2a8a8d4f40fdd",
+      "git_blob_sha1": "feacabf09609ee6eb047c89ce18d372256c72c71"
+    },
+    {
+      "path": "cosyvoice/transformer/positionwise_feed_forward.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/positionwise_feed_forward.py",
+      "bytes": 4219,
+      "sha256": "6e8038e3bcc8ca086ddca508fb9b9d40bf3ab98bebabcf5c94935d032329d0f8",
+      "git_blob_sha1": "b7a2cf6e7315e3a5ed2794423daff0a59cc5b208"
+    },
+    {
+      "path": "cosyvoice/transformer/subsampling.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/subsampling.py",
+      "bytes": 12666,
+      "sha256": "31fc0347a851abc1205dfd4cf68099c0c416589c3e99a07b250e8630cece19d0",
+      "git_blob_sha1": "e17c2e324e3afb24e1b619effe29cef07c9c5b3a"
+    },
+    {
+      "path": "cosyvoice/transformer/upsample_encoder.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/transformer/upsample_encoder.py",
+      "bytes": 14229,
+      "sha256": "fe1d2c689fac401c0ef38a0639921b1cd2849fe1d10596980e480f88dc06a682",
+      "git_blob_sha1": "baf7481977d7079dbbabd20332eced7b046738c4"
+    },
+    {
+      "path": "cosyvoice/utils/__init__.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "cosyvoice/utils/class_utils.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/class_utils.py",
+      "bytes": 3588,
+      "sha256": "f81a5509b5b4aecdb226b45ab43fa81d4cecb1bd88e48cd3bcda353891697b11",
+      "git_blob_sha1": "aab83266a2644b5110aeaa64317c25b61419ba0d"
+    },
+    {
+      "path": "cosyvoice/utils/common.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/common.py",
+      "bytes": 9323,
+      "sha256": "69aab9fe9cc80173f72a608e1b632611174f8c8e5032e4d9ce24fef18c8574bd",
+      "git_blob_sha1": "3f235a62e0455abbbf028635978b800e8be951af"
+    },
+    {
+      "path": "cosyvoice/utils/file_utils.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/file_utils.py",
+      "bytes": 4887,
+      "sha256": "aeb9792d4a828f51e42339139cc97753ea931ab246df2f5f5d2703043fb5db72",
+      "git_blob_sha1": "b173ef2014f76fcfd28ce4f927fa05773970692b"
+    },
+    {
+      "path": "cosyvoice/utils/frontend_utils.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/frontend_utils.py",
+      "bytes": 4273,
+      "sha256": "0d0ca94e0cf519e2d17f72cd1dcab6cb07aea0de48e7e792826362284ea18d30",
+      "git_blob_sha1": "ea1c9fc8cc7438f257eecffe460a8b6f4ddf8584"
+    },
+    {
+      "path": "cosyvoice/utils/losses.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/losses.py",
+      "bytes": 2121,
+      "sha256": "5cd0f7fd78ce5622c19bb9116516b705699e48c08f217b9b8aa1127f2bf95c10",
+      "git_blob_sha1": "2429fdcd5624297bf0c8ac3842e2e93ac84aee43"
+    },
+    {
+      "path": "cosyvoice/utils/mask.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/mask.py",
+      "bytes": 9728,
+      "sha256": "852c6e4b14201a238ab076396db599c157b2ee5a5a2aacf0f277ddce8c648976",
+      "git_blob_sha1": "5d3dfd6ca6cd84e95f237a9aef4467cb7d2d4c33"
+    },
+    {
+      "path": "cosyvoice/utils/onnx.py",
+      "repository": "QwenAudio/CosyVoice",
+      "revision": "074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc",
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/074ca6dc9e80a2f424f1f74b48bdd7d3fea531cc/cosyvoice/utils/onnx.py",
+      "bytes": 2867,
+      "sha256": "1e4951180be1b8a606999e854db49aafa641cd8e3a9944122d3cc23df00a2157",
+      "git_blob_sha1": "b459eb54df934ff304829891de7bac87f1606168"
+    },
+    {
+      "path": "matcha/__init__.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "matcha/hifigan/__init__.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/hifigan/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "matcha/hifigan/models.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/hifigan/models.py",
+      "bytes": 11668,
+      "sha256": "2e7ec9ed8cde378877ded04a4078653dca0d7e65feffe9300644d9218258e6af",
+      "git_blob_sha1": "d209d9a4e99ec29e4167a5a2eaa62d72b3eff694"
+    },
+    {
+      "path": "matcha/hifigan/xutils.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/hifigan/xutils.py",
+      "bytes": 1396,
+      "sha256": "68db58bb54b241a1ad6cdfcd9d27cb1a14e2fabff2def60a3087fb11819a0ce0",
+      "git_blob_sha1": "eefadcb7a1d0bf9015e636b88fee3e22c9771bc5"
+    },
+    {
+      "path": "matcha/models/__init__.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/models/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "matcha/models/components/__init__.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/models/components/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha1": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "matcha/models/components/decoder.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/models/components/decoder.py",
+      "bytes": 14459,
+      "sha256": "7ea94a61cd3c96703aa107fdcd1b82de2f2f6ade20a3c5f434b6005318176a6b",
+      "git_blob_sha1": "1137cd7008e9d07b4f306926a82e44c2b2cddbdf"
+    },
+    {
+      "path": "matcha/models/components/flow_matching.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/models/components/flow_matching.py",
+      "bytes": 4657,
+      "sha256": "a6f2b2eeca2600749d575dda8624d864d904227e2a9f764a6cb2b89290445e6c",
+      "git_blob_sha1": "5cad7431ef66a8d11da32a77c1af7f6e31d6b774"
+    },
+    {
+      "path": "matcha/models/components/transformer.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/models/components/transformer.py",
+      "bytes": 13237,
+      "sha256": "66ff2092d974a99b251b9d8e5c08bbcecceaedfaf41e2bd8af2b4bc7a56dcbea",
+      "git_blob_sha1": "dd1afa3aff5383912209e508676c6885e13ef4ee"
+    },
+    {
+      "path": "matcha/utils/__init__.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/__init__.py",
+      "bytes": 326,
+      "sha256": "60db3dd6b8f37947154acdda663bfdb6199ae3623cd4992ccbd445de7aaebcea",
+      "git_blob_sha1": "074db6461184e8cbb86d977cb41d9ebd918e958a"
+    },
+    {
+      "path": "matcha/utils/audio.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/audio.py",
+      "bytes": 2282,
+      "sha256": "2f741064bfcc9485d19a42356496d8ae24dec80c3d6ef5ca7f4e8abfbf9c61ca",
+      "git_blob_sha1": "0bcd74df47fb006f68deb5a5f4a4c2fb0aa84f57"
+    },
+    {
+      "path": "matcha/utils/instantiators.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/instantiators.py",
+      "bytes": 1828,
+      "sha256": "431a8e9d155a6c249ebaba4f3835ea87725267e13b9bc8ca4acc72d56bd35fe2",
+      "git_blob_sha1": "5547b4ed61ed8c21e63c528f58526a949879a94f"
+    },
+    {
+      "path": "matcha/utils/logging_utils.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/logging_utils.py",
+      "bytes": 1711,
+      "sha256": "825388fc91bcfd804a1d6c03e5144a2a409ecf737b0c9947dbb573e3cc8012d5",
+      "git_blob_sha1": "1a12d1ddafa25ca3ae8e497bcd7de2191f13659b"
+    },
+    {
+      "path": "matcha/utils/pylogger.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/pylogger.py",
+      "bytes": 720,
+      "sha256": "61b0bc626e4766b25c0c122c40eea34a7bb263908b650475dc4fe8012f526194",
+      "git_blob_sha1": "61600678029362e110f655edb91d5f3bc5b1cd1c"
+    },
+    {
+      "path": "matcha/utils/rich_utils.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/rich_utils.py",
+      "bytes": 3279,
+      "sha256": "3a3e63ae4cf9b356f74492fa9bff045e3f392d8d3bf4558294c2337ff1b0bdc7",
+      "git_blob_sha1": "f602f6e9351d948946eb419eb4e420190ea634bc"
+    },
+    {
+      "path": "matcha/utils/utils.py",
+      "repository": "shivammehta25/Matcha-TTS",
+      "revision": "dd9105b34bf2be2230f4aa1e4769fb586a3c824e",
+      "url": "https://raw.githubusercontent.com/shivammehta25/Matcha-TTS/dd9105b34bf2be2230f4aa1e4769fb586a3c824e/matcha/utils/utils.py",
+      "bytes": 7159,
+      "sha256": "f9768a89bbea7fa9970a818f90d705281f189eafdb2bafd2f3e9ed521491d561",
+      "git_blob_sha1": "af65e09070b4a4786ad139ec6e3d57d5ef578204"
+    }
+  ]
+}

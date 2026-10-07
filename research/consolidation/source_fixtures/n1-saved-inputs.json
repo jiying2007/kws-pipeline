@@ -1,0 +1,199 @@
+{
+  "schema": "n1-saved-fixture-allowlist-v1",
+  "files": [
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/README.md",
+      "destination": "data/README.md",
+      "bytes": 3191,
+      "sha256": "d17cf943f6d8a2dec6a81c7b16a3958aff56e628dbb38ad84e8a1a6d20199827",
+      "git_blob_sha1": "2a07cad78f728981a4c022731ccc88f2f9dde6a6",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/README.md"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/decoder-config.json",
+      "destination": "data/decoder-config.json",
+      "bytes": 731,
+      "sha256": "289b3ba913b66145939d785c5061d9dd267da9e0e3996917a42c6fe632b79e1b",
+      "git_blob_sha1": "c3277cff34fb40a05491d9a293db244b3a1f24f4",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/decoder-config.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/geometry.json",
+      "destination": "data/geometry.json",
+      "bytes": 7616,
+      "sha256": "ede14707bff0db19dd47125f8639c6d14a0f98c6516e2311636170376033a340",
+      "git_blob_sha1": "775cfe765e48ea0330461f313a13071cc9e9a6f9",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/geometry.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/manifest.json",
+      "destination": "data/manifest.json",
+      "bytes": 1625,
+      "sha256": "b8ec0c304f05f8c869f8c3c8d70198cb4b1ff6ecf46a2fd6a4604310a11de47e",
+      "git_blob_sha1": "8a0c7b0c182cc1ebbc6d35cf31ec968f573a3e96",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/manifest.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/model-binding.json",
+      "destination": "data/model-binding.json",
+      "bytes": 484,
+      "sha256": "84b0e985821ecf652ee1e694da5b1d7a111ecf8e035ecf78afac119b3e7cde23",
+      "git_blob_sha1": "9557ff1247e357448fe130d7ea87c4824ccc00e9",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/model-binding.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/observations.json",
+      "destination": "data/observations.json",
+      "bytes": 8907,
+      "sha256": "6ad6ff122473274d62c60f2d8433752efb87fc524073bfff9e598038acbb1ff5",
+      "git_blob_sha1": "6265340c7e97587da8f83360dbe675bb5d3738e0",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/observations.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/original_A20.raw.jsonl",
+      "destination": "data/original_A20.raw.jsonl",
+      "bytes": 17794,
+      "sha256": "013360aae469da5671994b1de4495687cb2324880108236dc5bb0d83d3b2e3ad",
+      "git_blob_sha1": "e43e4808c380900672f83135b357e68a132e1eb0",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/original_A20.raw.jsonl"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/plan.json",
+      "destination": "data/plan.json",
+      "bytes": 3689,
+      "sha256": "5e201271d9f244307585329836636add50eef51d8c371f7561355f483e17af22",
+      "git_blob_sha1": "95491aaf68f3b4bcb56e8a97a809d5b1993ab8e6",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/plan.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/pr485-context.json",
+      "destination": "data/pr485-context.json",
+      "bytes": 832,
+      "sha256": "47d92e0630c90f22bc5a784cdc58f9866b0962483632ef0086a5c5b0491f31e9",
+      "git_blob_sha1": "f9dc17a07f03f63083b5cf418a98d6155a7173c6",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/pr485-context.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/pr485-detections.jsonl",
+      "destination": "data/pr485-detections.jsonl",
+      "bytes": 86,
+      "sha256": "702e2a978cb45cc9ea6ba518a50be8aef19418afa674cec0e8707f2b2ff7eb0f",
+      "git_blob_sha1": "0614edd7c2680250c09c01d60e4bce8ef91e441f",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/pr485-detections.jsonl"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/pr485-references.jsonl",
+      "destination": "data/pr485-references.jsonl",
+      "bytes": 187,
+      "sha256": "ac28e5b360e6cf9997e39c140156ff646d3d6ea9174a35bafd89f99eb2cdbf9f",
+      "git_blob_sha1": "bc442d4d4495891a1920d09935023c5a9d09f3f4",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/pr485-references.jsonl"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/pr485-summary.json",
+      "destination": "data/pr485-summary.json",
+      "bytes": 2037,
+      "sha256": "dad92d7178181b23b6a205ac34875d5ec0939beb72018523437e00c638d3da41",
+      "git_blob_sha1": "a56d93f1a300ff8422463452c8d86aa6ed1ac0b0",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/pr485-summary.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/report.json",
+      "destination": "data/report.json",
+      "bytes": 6263,
+      "sha256": "80c3919195cba357e39a8076ac3f13b5859326ba4097e02abd0706924251ead2",
+      "git_blob_sha1": "da22d8f255a4af6d88d219b8ad1e84c1bbc02897",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/report.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/resources.json",
+      "destination": "data/resources.json",
+      "bytes": 2181,
+      "sha256": "16a7f9705e2704bd0dd7e56dc6e63c92df0f8ccf8ea9b1c0afa585ea28d504b6",
+      "git_blob_sha1": "9df55410cde1385a6f2906bc6cb5b977a71080d2",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/resources.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "aeb7bb86b5d2886ddca42a0692c5447b625031b6",
+      "path": "research/2026-10-07-n1-wholeclip-leading/source-preservation.json",
+      "destination": "data/source-preservation.json",
+      "bytes": 1496,
+      "sha256": "fd51d33cdc2e61c9b5813a67a8e833066b7cf42f2ad1941dc2a849226de56d20",
+      "git_blob_sha1": "16a30d277089fc025d192d76158f3ff332ae7ee9",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/aeb7bb86b5d2886ddca42a0692c5447b625031b6/research/2026-10-07-n1-wholeclip-leading/source-preservation.json"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "3856a7f07ad6fd571260103ce27469aabb6f4ea5",
+      "path": "research/2026-10-07-single-k1-followed-wu/single-k1-wu-001.pcm16.wav",
+      "destination": "source/single-k1-wu-001.pcm16.wav",
+      "bytes": 47600,
+      "sha256": "466f6be1c194afce96e96b2e02f75d5c9b79d9937dbdbbeaf186f457a376b886",
+      "git_blob_sha1": "07997eeb762ca5ad67759126e593f7c1115629e1",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/3856a7f07ad6fd571260103ce27469aabb6f4ea5/research/2026-10-07-single-k1-followed-wu/single-k1-wu-001.pcm16.wav"
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "3856a7f07ad6fd571260103ce27469aabb6f4ea5",
+      "path": "research/2026-10-07-single-k1-followed-wu/human-adjudication.json",
+      "destination": "source/human-adjudication.json",
+      "bytes": 1014,
+      "sha256": "64dbf620bdf5bb1ffcf204ca1d760f343d40694c32e299de6e4ce8a2ec6c30f9",
+      "git_blob_sha1": "de0d18bdce5d4d305c0eb0ae470abf9f079c0ce8",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/3856a7f07ad6fd571260103ce27469aabb6f4ea5/research/2026-10-07-single-k1-followed-wu/human-adjudication.json"
+    },
+    {
+      "repository": "jiying2007/kws-pipeline",
+      "commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "path": "eval/score_events.py",
+      "destination": "scorer/score_events.py",
+      "bytes": 26740,
+      "sha256": "04f2f03590259a1bd716c942e7945e3f33526efeace1991d0a04e2faaa947f8c",
+      "git_blob_sha1": "7125eceeb8e646cd1765a9e74e351217ae9f0588",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce/eval/score_events.py"
+    },
+    {
+      "repository": "jiying2007/kws-pipeline",
+      "commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "path": "eval/context_policy.py",
+      "destination": "scorer/context_policy.py",
+      "bytes": 5269,
+      "sha256": "134e16d2312bf0488099556d6e95e6972a02f8daf6a3d3e680ec0d5b0380748e",
+      "git_blob_sha1": "5fa8713030eeecceded0ff5e1f2c6c9c1c439617",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-pipeline/6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce/eval/context_policy.py"
+    }
+  ],
+  "total_files": 19,
+  "total_bytes": 137742,
+  "scope": "Exact already-public saved N1 bytes only. No native WAV required; no model/library/feature acquisition; no new acoustic execution.",
+  "local_preparation": "copy only verified files from explicit --source-dir with destination layout data/, source/, scorer/. No automatic downloads."
+}

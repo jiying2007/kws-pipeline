@@ -1,0 +1,2007 @@
+{
+  "all_copied_whole_historical_source_bytes_unchanged": true,
+  "execution_source_freeze_sha256": "97666d039c63c5a2756db793fa24ea66d86c4fdc3a4d3873db28762346b46288",
+  "new_code": [
+    "verify_archive.py",
+    "tests/test_archive.py"
+  ],
+  "private_execution_releases_not_copied": true,
+  "projected_helper_definition_bytes_unchanged": true,
+  "schema": "cosy49-historical-source-provenance-v1",
+  "source_closure": {
+    "completeness": "This is a bounded execution-source archive, not the complete historical source workspace. Preparation/assembly scripts and some historical tests listed here are absent. Private execution releases, machine runtime manifests, mixed98 input data and generated binaries are also absent. Public logical source bindings do not replace or activate original execution release/freeze records.",
+    "coverage": "Exact whole-file export, numerical runtime/adapters, endpoint collector/scorer/comparator and selected historical test/configuration sources, plus exact endpoint supervision helper definitions. Endpoint runtime copies are represented once under historical/numerical/vendor/runtime and are hash-bound here.",
+    "exact_helper_definitions": 8,
+    "frozen_source_manifests_sha256": {
+      "endpoint": "fb1607026482c6ec5c438a744e3929375a737f808e6790b108d66cb45f1bbf18",
+      "numerical": "97666d039c63c5a2756db793fa24ea66d86c4fdc3a4d3873db28762346b46288"
+    },
+    "helper_context": "The unchanged historical/endpoint/src/paired_supervisor.py AST-selects all eight definitions; it provides every imported module and constant. The subset is source evidence and is not intended to be directly imported.",
+    "intentionally_omitted_frozen_code": [
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "compile_static.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "freeze_static.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "prepare_sources.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "tests/test_guard_recovery.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "tests/test_pure.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Preparation/assembly or historical test source outside the bounded preserved execution-source set",
+        "source_relative_path": "write_protocol.py",
+        "stage": "numerical"
+      },
+      {
+        "reason": "Mixed98 input table contains excluded natural recording identities and runtime input references",
+        "source_relative_path": "src/inputs.h",
+        "stage": "endpoint"
+      }
+    ],
+    "new_scientific_execution": false,
+    "schema": "cosy49-public-source-closure-v1",
+    "source_bindings": [
+      {
+        "bytes": 4761,
+        "public_path": "historical/numerical/src/algorithms.py",
+        "public_sha256": "82356c981df37b010145cb5617012e369d39c4a33bb5112ff8b70b7d04d81dc6",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/algorithms.py",
+        "source_sha256": "82356c981df37b010145cb5617012e369d39c4a33bb5112ff8b70b7d04d81dc6",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 8457,
+        "public_path": "historical/numerical/src/build_native_pair.py",
+        "public_sha256": "ee613b75952aba526fe9b5beb56a4f7704c2abbed0d03f2d5178ef06b708fb15",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/build_native_pair.py",
+        "source_sha256": "ee613b75952aba526fe9b5beb56a4f7704c2abbed0d03f2d5178ef06b708fb15",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 7198,
+        "public_path": "historical/numerical/src/common.py",
+        "public_sha256": "d70cab2b505f6ce0de61b235e8f1fec0a1f0a2860504ef1207834c267ba05806",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/common.py",
+        "source_sha256": "d70cab2b505f6ce0de61b235e8f1fec0a1f0a2860504ef1207834c267ba05806",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2845,
+        "public_path": "historical/numerical/src/compare.py",
+        "public_sha256": "59ac48f122f119d7201c9d83007d0f144aff9c250a459723df790d663d8bdbcb",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/compare.py",
+        "source_sha256": "59ac48f122f119d7201c9d83007d0f144aff9c250a459723df790d663d8bdbcb",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 8921,
+        "public_path": "historical/numerical/src/export_candidate.py",
+        "public_sha256": "6ca430b041c5ffaa4b59f34626200cb586be0ec9b3ba1765eb7202611302a980",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/export_candidate.py",
+        "source_sha256": "6ca430b041c5ffaa4b59f34626200cb586be0ec9b3ba1765eb7202611302a980",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2063,
+        "public_path": "historical/numerical/src/geometry_reuse.py",
+        "public_sha256": "854f49efc94365ed346b67a5019c5b7c1d91c347586997e5f35128949d94549a",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/geometry_reuse.py",
+        "source_sha256": "854f49efc94365ed346b67a5019c5b7c1d91c347586997e5f35128949d94549a",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6620,
+        "public_path": "historical/numerical/src/group_inventory.py",
+        "public_sha256": "52137b3158837c7a8a31b1473e1e5b0b909e40dfe1faa1e4adf3798b283b2bc7",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/group_inventory.py",
+        "source_sha256": "52137b3158837c7a8a31b1473e1e5b0b909e40dfe1faa1e4adf3798b283b2bc7",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 8525,
+        "public_path": "historical/numerical/src/guard_reuse.py",
+        "public_sha256": "ff9c05dedaf35aac9352740ee538a4e129e0ed85b6b31de8c4528a0f7b8dfb80",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/guard_reuse.py",
+        "source_sha256": "ff9c05dedaf35aac9352740ee538a4e129e0ed85b6b31de8c4528a0f7b8dfb80",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2321,
+        "public_path": "historical/numerical/src/launch_phase.py",
+        "public_sha256": "a052ba1de7186d433c7e07b879f16e1301a29fc2706e28e28b6dffd33a6476c6",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/launch_phase.py",
+        "source_sha256": "a052ba1de7186d433c7e07b879f16e1301a29fc2706e28e28b6dffd33a6476c6",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2780,
+        "public_path": "historical/numerical/src/local_math.py",
+        "public_sha256": "ec9d4b43967e07c4968e5f6da3d6342ac8f69e0424c8b06501005ebe280acbdd",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/local_math.py",
+        "source_sha256": "ec9d4b43967e07c4968e5f6da3d6342ac8f69e0424c8b06501005ebe280acbdd",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 8944,
+        "public_path": "historical/numerical/src/native.py",
+        "public_sha256": "22df19b133133a107739d554e304c449485d3584c241677b5c66b2fa5c274504",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/native.py",
+        "source_sha256": "22df19b133133a107739d554e304c449485d3584c241677b5c66b2fa5c274504",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2204,
+        "public_path": "historical/numerical/src/numeric_worker.py",
+        "public_sha256": "70db04a46dc94e06da13fad73544cf776c64612d1e75142016014cf9332911db",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/numeric_worker.py",
+        "source_sha256": "70db04a46dc94e06da13fad73544cf776c64612d1e75142016014cf9332911db",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 4708,
+        "public_path": "historical/numerical/src/reference.py",
+        "public_sha256": "5b67ef4fa13c425abca0bfda8c19d460cdfd88593cc131f42495a8b8f93fbbd7",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/reference.py",
+        "source_sha256": "5b67ef4fa13c425abca0bfda8c19d460cdfd88593cc131f42495a8b8f93fbbd7",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1635,
+        "public_path": "historical/numerical/src/safe_failure.py",
+        "public_sha256": "b3e67b5575500e7973e1be1370728aae37c6a9844220d13614e29f2b9483540c",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/safe_failure.py",
+        "source_sha256": "b3e67b5575500e7973e1be1370728aae37c6a9844220d13614e29f2b9483540c",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6716,
+        "public_path": "historical/numerical/src/supervision_reuse.py",
+        "public_sha256": "78e2f97b3fb6958e7f6e3bc4cef9dcf5c89e3dd2d2419b71dc589752011704be",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/supervision_reuse.py",
+        "source_sha256": "78e2f97b3fb6958e7f6e3bc4cef9dcf5c89e3dd2d2419b71dc589752011704be",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 5683,
+        "public_path": "historical/numerical/vendor/canonical/assets.py",
+        "public_sha256": "7780a4b849fa185ff143f7f9fa3e305a1d3ca054845fbbbea45d616cce4f5549",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/assets.py",
+        "source_sha256": "7780a4b849fa185ff143f7f9fa3e305a1d3ca054845fbbbea45d616cce4f5549",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2680,
+        "public_path": "historical/numerical/vendor/canonical/authority.py",
+        "public_sha256": "a08254e575b9130064c3c4ff9f0af7b9d25f646e7a257bbbd35f608f56c6af14",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/authority.py",
+        "source_sha256": "a08254e575b9130064c3c4ff9f0af7b9d25f646e7a257bbbd35f608f56c6af14",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 4321,
+        "public_path": "historical/numerical/vendor/canonical/behavior.py",
+        "public_sha256": "b7e3ef9a289285f8dc919bc2c16895d48fff9389b033d4d545c277d06068813a",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/behavior.py",
+        "source_sha256": "b7e3ef9a289285f8dc919bc2c16895d48fff9389b033d4d545c277d06068813a",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 12512,
+        "public_path": "historical/numerical/vendor/canonical/canonical.py",
+        "public_sha256": "ad405564ab68988b999533b48428f20bbbf10d285961be2d5b8b0340b7c45d0a",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/canonical.py",
+        "source_sha256": "ad405564ab68988b999533b48428f20bbbf10d285961be2d5b8b0340b7c45d0a",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6214,
+        "public_path": "historical/numerical/vendor/canonical/decoder.py",
+        "public_sha256": "175504c3032c651251ca03eb92730d4038353b01eb4ad9393835ee568d8a113d",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/decoder.py",
+        "source_sha256": "175504c3032c651251ca03eb92730d4038353b01eb4ad9393835ee568d8a113d",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3693,
+        "public_path": "historical/numerical/vendor/canonical/diagnostics.py",
+        "public_sha256": "b1ae1d32e27ac810b911707c92fabea375404c55627d92b69956ee597d9e89f1",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/diagnostics.py",
+        "source_sha256": "b1ae1d32e27ac810b911707c92fabea375404c55627d92b69956ee597d9e89f1",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3559,
+        "public_path": "historical/numerical/vendor/canonical/ieee754.py",
+        "public_sha256": "2544ca4e325dc4c91a5887d759e51a7b6a5921f127e86d6efb40d0963975ac6b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/ieee754.py",
+        "source_sha256": "2544ca4e325dc4c91a5887d759e51a7b6a5921f127e86d6efb40d0963975ac6b",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1953,
+        "public_path": "historical/numerical/vendor/canonical/runtime_guard.py",
+        "public_sha256": "1e109da9cc553e1e3e1702c40e8fe8857f92edeefd5d7d8ae2108f8a0082015d",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/runtime_guard.py",
+        "source_sha256": "1e109da9cc553e1e3e1702c40e8fe8857f92edeefd5d7d8ae2108f8a0082015d",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 4161,
+        "public_path": "historical/numerical/vendor/canonical/schedule.py",
+        "public_sha256": "1551d0aba6a918b1c05f3130aa39232706008e8dbb372148e298ca2fdfce4058",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/schedule.py",
+        "source_sha256": "1551d0aba6a918b1c05f3130aa39232706008e8dbb372148e298ca2fdfce4058",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3888,
+        "public_path": "historical/numerical/vendor/canonical/softmax.py",
+        "public_sha256": "e8086d10c3c82cb2c5ae90b92c3bf918cc37750ab38dadbd4ee84a3eb6995e3e",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/canonical/softmax.py",
+        "source_sha256": "e8086d10c3c82cb2c5ae90b92c3bf918cc37750ab38dadbd4ee84a3eb6995e3e",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 718,
+        "public_path": "historical/numerical/vendor/historical/kws-alternate-fsmn-precheck-v1/decoder_tail_fix.py",
+        "public_sha256": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-alternate-fsmn-precheck-v1/decoder_tail_fix.py",
+        "source_sha256": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 24939,
+        "public_path": "historical/numerical/vendor/historical/kws-alternate-fsmn-precheck-v1/reference/upstream/wekws/bin/stream_kws_ctc.py",
+        "public_sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-alternate-fsmn-precheck-v1/reference/upstream/wekws/bin/stream_kws_ctc.py",
+        "source_sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 92,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/export/a20_identity.h",
+        "public_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/export/a20_identity.h",
+        "source_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 5209,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/frontend-diagnosis/decimal_dft.py",
+        "public_sha256": "b48c28657aabb91cd99c75a625dfcc0a50363749e30f30b97ccae05c8c50f789",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/frontend-diagnosis/decimal_dft.py",
+        "source_sha256": "b48c28657aabb91cd99c75a625dfcc0a50363749e30f30b97ccae05c8c50f789",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 24176,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/native/donor_fbank/frontend_tables.h",
+        "public_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/native/donor_fbank/frontend_tables.h",
+        "source_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 40886,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/oracle-corrected/harness/fixtures.py",
+        "public_sha256": "d87066b569ba60f67386eb74ce30fc7ac5eca6633f2efccd68f09b1266f627a9",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/oracle-corrected/harness/fixtures.py",
+        "source_sha256": "d87066b569ba60f67386eb74ce30fc7ac5eca6633f2efccd68f09b1266f627a9",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 12240,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/oracle-corrected/oracle/decimal_fsmn.py",
+        "public_sha256": "198900485f2ae9dcdcb73fdf4a5c29932bd17b6e1065b6c7aab930eab9601f71",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/oracle-corrected/oracle/decimal_fsmn.py",
+        "source_sha256": "198900485f2ae9dcdcb73fdf4a5c29932bd17b6e1065b6c7aab930eab9601f71",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 36882,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/v2/harness/fixtures.py",
+        "public_sha256": "0d91a630fd9808b0ace773009028ca784ad196ef1755aa848234fca5e702ea7c",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/historical/kws-native-a20-research-v1/v2/harness/fixtures.py",
+        "source_sha256": "0d91a630fd9808b0ace773009028ca784ad196ef1755aa848234fca5e702ea7c",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 12402,
+        "public_path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.c",
+        "public_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/decoder/a20_decoder.c",
+        "source_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3101,
+        "public_path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.h",
+        "public_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/decoder/a20_decoder.h",
+        "source_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 92,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/export/a20_identity.h",
+        "public_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/export/a20_identity.h",
+        "source_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 4795,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.c",
+        "public_sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/donor_fbank/donor_fbank.c",
+        "source_sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2281,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.h",
+        "public_sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/donor_fbank/donor_fbank.h",
+        "source_sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 12495,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/fft_twiddles.h",
+        "public_sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/donor_fbank/fft_twiddles.h",
+        "source_sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 24176,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/native/donor_fbank/frontend_tables.h",
+        "public_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/donor_fbank/frontend_tables.h",
+        "source_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2930,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.c",
+        "public_sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/model/a20_fsmn.c",
+        "source_sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 994,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.h",
+        "public_sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/model/a20_fsmn.h",
+        "source_sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 620,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/load.c",
+        "public_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/model/load.c",
+        "source_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6685,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.c",
+        "public_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/model/sha256.c",
+        "source_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 252,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.h",
+        "public_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/model/sha256.h",
+        "source_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1624,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_pcm_cli.c",
+        "public_sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/runtime/a20_pcm_cli.c",
+        "source_sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2172,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.c",
+        "public_sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/runtime/a20_stream.c",
+        "source_sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1515,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.h",
+        "public_sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/runtime/a20_stream.h",
+        "source_sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 7605,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.c",
+        "public_sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/stream/pcm.c",
+        "source_sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3800,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.h",
+        "public_sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/stream/pcm.h",
+        "source_sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6153,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.c",
+        "public_sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/stream/splice.c",
+        "source_sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3948,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.h",
+        "public_sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/native/stream/splice.h",
+        "source_sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3193,
+        "public_path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.c",
+        "public_sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/precision64/model/a20_fsmn.c",
+        "source_sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1105,
+        "public_path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.h",
+        "public_sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/precision64/model/a20_fsmn.h",
+        "source_sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 620,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/load.c",
+        "public_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/precision64/model/load.c",
+        "source_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6685,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.c",
+        "public_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/precision64/model/sha256.c",
+        "source_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 252,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.h",
+        "public_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/baseline/precision64/model/sha256.h",
+        "source_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3915,
+        "public_path": "historical/numerical/vendor/runtime/ctypes_api.py",
+        "public_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/ctypes_api.py",
+        "source_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3202,
+        "public_path": "historical/numerical/vendor/runtime/resource_sizes.c",
+        "public_sha256": "591873e92becf9c2f4c78fc52053e8cee6d776d0828ff682521c6040a383c9dc",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/resource_sizes.c",
+        "source_sha256": "591873e92becf9c2f4c78fc52053e8cee6d776d0828ff682521c6040a383c9dc",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1661,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_pcm_fft64_cli.c",
+        "public_sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/a20_pcm_fft64_cli.c",
+        "source_sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2494,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.c",
+        "public_sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/a20_stream_fft64.c",
+        "source_sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1668,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.h",
+        "public_sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/a20_stream_fft64.h",
+        "source_sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 570,
+        "public_path": "historical/numerical/vendor/runtime/src/abi_fft64.c",
+        "public_sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/abi_fft64.c",
+        "source_sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 6505,
+        "public_path": "historical/numerical/vendor/runtime/src/donor_fft64.c",
+        "public_sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/donor_fft64.c",
+        "source_sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 2509,
+        "public_path": "historical/numerical/vendor/runtime/src/donor_fft64.h",
+        "public_sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/donor_fft64.h",
+        "source_sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 11923,
+        "public_path": "historical/numerical/vendor/runtime/src/fft64_twiddles.h",
+        "public_sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/fft64_twiddles.h",
+        "source_sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 8001,
+        "public_path": "historical/numerical/vendor/runtime/src/pcm_fft64.c",
+        "public_sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/pcm_fft64.c",
+        "source_sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 3987,
+        "public_path": "historical/numerical/vendor/runtime/src/pcm_fft64.h",
+        "public_sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/runtime/src/pcm_fft64.h",
+        "source_sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 1509,
+        "public_path": "historical/numerical/vendor/validation/diagnostic.c",
+        "public_sha256": "8859be330c192999d6f1718a1f5601ec2955aef8c4c51837d5790beb86749c30",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "vendor/validation/diagnostic.c",
+        "source_sha256": "8859be330c192999d6f1718a1f5601ec2955aef8c4c51837d5790beb86749c30",
+        "stage": "numerical"
+      },
+      {
+        "bytes": 12402,
+        "public_path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.c",
+        "public_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/decoder/a20_decoder.c",
+        "source_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 3101,
+        "public_path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.h",
+        "public_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/decoder/a20_decoder.h",
+        "source_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 92,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/export/a20_identity.h",
+        "public_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/export/a20_identity.h",
+        "source_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 4795,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.c",
+        "public_sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/donor_fbank/donor_fbank.c",
+        "source_sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2281,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.h",
+        "public_sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/donor_fbank/donor_fbank.h",
+        "source_sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 12495,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/fft_twiddles.h",
+        "public_sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/donor_fbank/fft_twiddles.h",
+        "source_sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 24176,
+        "public_path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/native/donor_fbank/frontend_tables.h",
+        "public_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/donor_fbank/frontend_tables.h",
+        "source_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2930,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.c",
+        "public_sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/model/a20_fsmn.c",
+        "source_sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 994,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.h",
+        "public_sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/model/a20_fsmn.h",
+        "source_sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 620,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/load.c",
+        "public_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/model/load.c",
+        "source_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 6685,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.c",
+        "public_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/model/sha256.c",
+        "source_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 252,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.h",
+        "public_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/model/sha256.h",
+        "source_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1624,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_pcm_cli.c",
+        "public_sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/runtime/a20_pcm_cli.c",
+        "source_sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2172,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.c",
+        "public_sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/runtime/a20_stream.c",
+        "source_sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1515,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.h",
+        "public_sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/runtime/a20_stream.h",
+        "source_sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 7605,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.c",
+        "public_sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/stream/pcm.c",
+        "source_sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 3800,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.h",
+        "public_sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/stream/pcm.h",
+        "source_sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 6153,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.c",
+        "public_sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/stream/splice.c",
+        "source_sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 3948,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.h",
+        "public_sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/native/stream/splice.h",
+        "source_sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 3193,
+        "public_path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.c",
+        "public_sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/precision64/model/a20_fsmn.c",
+        "source_sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1105,
+        "public_path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.h",
+        "public_sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/precision64/model/a20_fsmn.h",
+        "source_sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 620,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/load.c",
+        "public_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/precision64/model/load.c",
+        "source_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 6685,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.c",
+        "public_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/precision64/model/sha256.c",
+        "source_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 252,
+        "public_path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.h",
+        "public_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/baseline/precision64/model/sha256.h",
+        "source_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1661,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_pcm_fft64_cli.c",
+        "public_sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/a20_pcm_fft64_cli.c",
+        "source_sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2494,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.c",
+        "public_sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/a20_stream_fft64.c",
+        "source_sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1668,
+        "public_path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.h",
+        "public_sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/a20_stream_fft64.h",
+        "source_sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 570,
+        "public_path": "historical/numerical/vendor/runtime/src/abi_fft64.c",
+        "public_sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/abi_fft64.c",
+        "source_sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 6505,
+        "public_path": "historical/numerical/vendor/runtime/src/donor_fft64.c",
+        "public_sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/donor_fft64.c",
+        "source_sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2509,
+        "public_path": "historical/numerical/vendor/runtime/src/donor_fft64.h",
+        "public_sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/donor_fft64.h",
+        "source_sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 11923,
+        "public_path": "historical/numerical/vendor/runtime/src/fft64_twiddles.h",
+        "public_sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/fft64_twiddles.h",
+        "source_sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 8001,
+        "public_path": "historical/numerical/vendor/runtime/src/pcm_fft64.c",
+        "public_sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/pcm_fft64.c",
+        "source_sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 3987,
+        "public_path": "historical/numerical/vendor/runtime/src/pcm_fft64.h",
+        "public_sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "runtime/src/pcm_fft64.h",
+        "source_sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 4400,
+        "public_path": "historical/endpoint/src/analyze_saved_pair.py",
+        "public_sha256": "dcb07d814ca116be8cad4ea970d03f3d230b2fc127344d5668f2137063712505",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/analyze_saved_pair.py",
+        "source_sha256": "dcb07d814ca116be8cad4ea970d03f3d230b2fc127344d5668f2137063712505",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 8334,
+        "public_path": "historical/endpoint/src/candidate_control.py",
+        "public_sha256": "33ac29d8f668fbede4409eb5bdb0990f8c5ed3714664e38aff426b9ec6606336",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/candidate_control.py",
+        "source_sha256": "33ac29d8f668fbede4409eb5bdb0990f8c5ed3714664e38aff426b9ec6606336",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 9684,
+        "public_path": "historical/endpoint/src/collector.c",
+        "public_sha256": "62d1f4e1978e58e648d865eae6666a4c3625e0af6dfce314ef998bd979faf58e",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/collector.c",
+        "source_sha256": "62d1f4e1978e58e648d865eae6666a4c3625e0af6dfce314ef998bd979faf58e",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 9891,
+        "public_path": "historical/endpoint/src/compare_endpoint.py",
+        "public_sha256": "cfc0bb5d79a7b3675858a7d44dcf043cd37b960d4f3cdb9028c8b5cf0df03b4b",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/compare_endpoint.py",
+        "source_sha256": "cfc0bb5d79a7b3675858a7d44dcf043cd37b960d4f3cdb9028c8b5cf0df03b4b",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 2789,
+        "public_path": "historical/endpoint/src/compare_saved_scores.py",
+        "public_sha256": "17ed818d8df94c858ff663c0ea9f498c6fc03e74c4767a18a283cffacec35843",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/compare_saved_scores.py",
+        "source_sha256": "17ed818d8df94c858ff663c0ea9f498c6fc03e74c4767a18a283cffacec35843",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 6227,
+        "public_path": "historical/endpoint/src/contracts.py",
+        "public_sha256": "9417af1f278ed2cdaab04734df9d51a2fe228680a7c4994978a84657be75d657",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/contracts.py",
+        "source_sha256": "9417af1f278ed2cdaab04734df9d51a2fe228680a7c4994978a84657be75d657",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 1602,
+        "public_path": "historical/endpoint/src/geometry.py",
+        "public_sha256": "cc6c73eae46231df20f80b36ab533c4d2447917611e86ca82a05f92e271536cf",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/geometry.py",
+        "source_sha256": "cc6c73eae46231df20f80b36ab533c4d2447917611e86ca82a05f92e271536cf",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 21468,
+        "public_path": "historical/endpoint/src/paired_supervisor.py",
+        "public_sha256": "53578c8e50d6e0147ac00198a50d103e0252c7cbae94d49d862738558f44b6aa",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/paired_supervisor.py",
+        "source_sha256": "53578c8e50d6e0147ac00198a50d103e0252c7cbae94d49d862738558f44b6aa",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 29234,
+        "public_path": "historical/endpoint/src/score_endpoint.py",
+        "public_sha256": "3fb8f6bd55938ea8100fb9d2c7a101d4553a73037e52bcc64b010eac3fe4e418",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "src/score_endpoint.py",
+        "source_sha256": "3fb8f6bd55938ea8100fb9d2c7a101d4553a73037e52bcc64b010eac3fe4e418",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 20486,
+        "public_path": "historical/endpoint/tests/test_endpoint98_scoring.py",
+        "public_sha256": "fcc524408564cae8c7b70b9b3a5cdb13060a4835bedd5da4c2b48705f77f41b0",
+        "representation": "exact whole-file bytes",
+        "source_relative_path": "tests/test_endpoint98_scoring.py",
+        "source_sha256": "fcc524408564cae8c7b70b9b3a5cdb13060a4835bedd5da4c2b48705f77f41b0",
+        "stage": "endpoint"
+      },
+      {
+        "bytes": 36578,
+        "public_path": "historical/endpoint/vendor/supervisor_original.py",
+        "public_sha256": "737a2cea23f746f27444a8e923ac213ccfaf5c8e21dbcc0945ce3ab041e72ee9",
+        "representation": "eight exact executed definition slices; whole original module not included",
+        "source_relative_path": "vendor/supervisor_original.py",
+        "source_sha256": "a5d4c07479b6331d5f074069c9f8e83b541b12a6e1a40051e6a1cc16048d1d66",
+        "stage": "endpoint"
+      }
+    ],
+    "whole_historical_files_exact": 84
+  },
+  "source_files": [
+    {
+      "bytes": 4761,
+      "classification": "historical_source",
+      "original_bytes": 4761,
+      "original_sha256": "82356c981df37b010145cb5617012e369d39c4a33bb5112ff8b70b7d04d81dc6",
+      "path": "historical/numerical/src/algorithms.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "82356c981df37b010145cb5617012e369d39c4a33bb5112ff8b70b7d04d81dc6"
+    },
+    {
+      "bytes": 8457,
+      "classification": "historical_source",
+      "original_bytes": 8457,
+      "original_sha256": "ee613b75952aba526fe9b5beb56a4f7704c2abbed0d03f2d5178ef06b708fb15",
+      "path": "historical/numerical/src/build_native_pair.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ee613b75952aba526fe9b5beb56a4f7704c2abbed0d03f2d5178ef06b708fb15"
+    },
+    {
+      "bytes": 7198,
+      "classification": "historical_source",
+      "original_bytes": 7198,
+      "original_sha256": "d70cab2b505f6ce0de61b235e8f1fec0a1f0a2860504ef1207834c267ba05806",
+      "path": "historical/numerical/src/common.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "d70cab2b505f6ce0de61b235e8f1fec0a1f0a2860504ef1207834c267ba05806"
+    },
+    {
+      "bytes": 2845,
+      "classification": "historical_source",
+      "original_bytes": 2845,
+      "original_sha256": "59ac48f122f119d7201c9d83007d0f144aff9c250a459723df790d663d8bdbcb",
+      "path": "historical/numerical/src/compare.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "59ac48f122f119d7201c9d83007d0f144aff9c250a459723df790d663d8bdbcb"
+    },
+    {
+      "bytes": 8921,
+      "classification": "historical_source",
+      "original_bytes": 8921,
+      "original_sha256": "6ca430b041c5ffaa4b59f34626200cb586be0ec9b3ba1765eb7202611302a980",
+      "path": "historical/numerical/src/export_candidate.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "6ca430b041c5ffaa4b59f34626200cb586be0ec9b3ba1765eb7202611302a980"
+    },
+    {
+      "bytes": 2063,
+      "classification": "historical_source",
+      "original_bytes": 2063,
+      "original_sha256": "854f49efc94365ed346b67a5019c5b7c1d91c347586997e5f35128949d94549a",
+      "path": "historical/numerical/src/geometry_reuse.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "854f49efc94365ed346b67a5019c5b7c1d91c347586997e5f35128949d94549a"
+    },
+    {
+      "bytes": 6620,
+      "classification": "historical_source",
+      "original_bytes": 6620,
+      "original_sha256": "52137b3158837c7a8a31b1473e1e5b0b909e40dfe1faa1e4adf3798b283b2bc7",
+      "path": "historical/numerical/src/group_inventory.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "52137b3158837c7a8a31b1473e1e5b0b909e40dfe1faa1e4adf3798b283b2bc7"
+    },
+    {
+      "bytes": 8525,
+      "classification": "historical_source",
+      "original_bytes": 8525,
+      "original_sha256": "ff9c05dedaf35aac9352740ee538a4e129e0ed85b6b31de8c4528a0f7b8dfb80",
+      "path": "historical/numerical/src/guard_reuse.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ff9c05dedaf35aac9352740ee538a4e129e0ed85b6b31de8c4528a0f7b8dfb80"
+    },
+    {
+      "bytes": 2321,
+      "classification": "historical_source",
+      "original_bytes": 2321,
+      "original_sha256": "a052ba1de7186d433c7e07b879f16e1301a29fc2706e28e28b6dffd33a6476c6",
+      "path": "historical/numerical/src/launch_phase.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "a052ba1de7186d433c7e07b879f16e1301a29fc2706e28e28b6dffd33a6476c6"
+    },
+    {
+      "bytes": 2780,
+      "classification": "historical_source",
+      "original_bytes": 2780,
+      "original_sha256": "ec9d4b43967e07c4968e5f6da3d6342ac8f69e0424c8b06501005ebe280acbdd",
+      "path": "historical/numerical/src/local_math.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ec9d4b43967e07c4968e5f6da3d6342ac8f69e0424c8b06501005ebe280acbdd"
+    },
+    {
+      "bytes": 8944,
+      "classification": "historical_source",
+      "original_bytes": 8944,
+      "original_sha256": "22df19b133133a107739d554e304c449485d3584c241677b5c66b2fa5c274504",
+      "path": "historical/numerical/src/native.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "22df19b133133a107739d554e304c449485d3584c241677b5c66b2fa5c274504"
+    },
+    {
+      "bytes": 2204,
+      "classification": "historical_source",
+      "original_bytes": 2204,
+      "original_sha256": "70db04a46dc94e06da13fad73544cf776c64612d1e75142016014cf9332911db",
+      "path": "historical/numerical/src/numeric_worker.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "70db04a46dc94e06da13fad73544cf776c64612d1e75142016014cf9332911db"
+    },
+    {
+      "bytes": 4708,
+      "classification": "historical_source",
+      "original_bytes": 4708,
+      "original_sha256": "5b67ef4fa13c425abca0bfda8c19d460cdfd88593cc131f42495a8b8f93fbbd7",
+      "path": "historical/numerical/src/reference.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "5b67ef4fa13c425abca0bfda8c19d460cdfd88593cc131f42495a8b8f93fbbd7"
+    },
+    {
+      "bytes": 1635,
+      "classification": "historical_source",
+      "original_bytes": 1635,
+      "original_sha256": "b3e67b5575500e7973e1be1370728aae37c6a9844220d13614e29f2b9483540c",
+      "path": "historical/numerical/src/safe_failure.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "b3e67b5575500e7973e1be1370728aae37c6a9844220d13614e29f2b9483540c"
+    },
+    {
+      "bytes": 6716,
+      "classification": "historical_source",
+      "original_bytes": 6716,
+      "original_sha256": "78e2f97b3fb6958e7f6e3bc4cef9dcf5c89e3dd2d2419b71dc589752011704be",
+      "path": "historical/numerical/src/supervision_reuse.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "78e2f97b3fb6958e7f6e3bc4cef9dcf5c89e3dd2d2419b71dc589752011704be"
+    },
+    {
+      "bytes": 5683,
+      "classification": "historical_source",
+      "original_bytes": 5683,
+      "original_sha256": "7780a4b849fa185ff143f7f9fa3e305a1d3ca054845fbbbea45d616cce4f5549",
+      "path": "historical/numerical/vendor/canonical/assets.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "7780a4b849fa185ff143f7f9fa3e305a1d3ca054845fbbbea45d616cce4f5549"
+    },
+    {
+      "bytes": 2680,
+      "classification": "historical_source",
+      "original_bytes": 2680,
+      "original_sha256": "a08254e575b9130064c3c4ff9f0af7b9d25f646e7a257bbbd35f608f56c6af14",
+      "path": "historical/numerical/vendor/canonical/authority.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "a08254e575b9130064c3c4ff9f0af7b9d25f646e7a257bbbd35f608f56c6af14"
+    },
+    {
+      "bytes": 4321,
+      "classification": "historical_source",
+      "original_bytes": 4321,
+      "original_sha256": "b7e3ef9a289285f8dc919bc2c16895d48fff9389b033d4d545c277d06068813a",
+      "path": "historical/numerical/vendor/canonical/behavior.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "b7e3ef9a289285f8dc919bc2c16895d48fff9389b033d4d545c277d06068813a"
+    },
+    {
+      "bytes": 12512,
+      "classification": "historical_source",
+      "original_bytes": 12512,
+      "original_sha256": "ad405564ab68988b999533b48428f20bbbf10d285961be2d5b8b0340b7c45d0a",
+      "path": "historical/numerical/vendor/canonical/canonical.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ad405564ab68988b999533b48428f20bbbf10d285961be2d5b8b0340b7c45d0a"
+    },
+    {
+      "bytes": 6214,
+      "classification": "historical_source",
+      "original_bytes": 6214,
+      "original_sha256": "175504c3032c651251ca03eb92730d4038353b01eb4ad9393835ee568d8a113d",
+      "path": "historical/numerical/vendor/canonical/decoder.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "175504c3032c651251ca03eb92730d4038353b01eb4ad9393835ee568d8a113d"
+    },
+    {
+      "bytes": 3693,
+      "classification": "historical_source",
+      "original_bytes": 3693,
+      "original_sha256": "b1ae1d32e27ac810b911707c92fabea375404c55627d92b69956ee597d9e89f1",
+      "path": "historical/numerical/vendor/canonical/diagnostics.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "b1ae1d32e27ac810b911707c92fabea375404c55627d92b69956ee597d9e89f1"
+    },
+    {
+      "bytes": 3559,
+      "classification": "historical_source",
+      "original_bytes": 3559,
+      "original_sha256": "2544ca4e325dc4c91a5887d759e51a7b6a5921f127e86d6efb40d0963975ac6b",
+      "path": "historical/numerical/vendor/canonical/ieee754.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "2544ca4e325dc4c91a5887d759e51a7b6a5921f127e86d6efb40d0963975ac6b"
+    },
+    {
+      "bytes": 1953,
+      "classification": "historical_source",
+      "original_bytes": 1953,
+      "original_sha256": "1e109da9cc553e1e3e1702c40e8fe8857f92edeefd5d7d8ae2108f8a0082015d",
+      "path": "historical/numerical/vendor/canonical/runtime_guard.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "1e109da9cc553e1e3e1702c40e8fe8857f92edeefd5d7d8ae2108f8a0082015d"
+    },
+    {
+      "bytes": 4161,
+      "classification": "historical_source",
+      "original_bytes": 4161,
+      "original_sha256": "1551d0aba6a918b1c05f3130aa39232706008e8dbb372148e298ca2fdfce4058",
+      "path": "historical/numerical/vendor/canonical/schedule.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "1551d0aba6a918b1c05f3130aa39232706008e8dbb372148e298ca2fdfce4058"
+    },
+    {
+      "bytes": 3888,
+      "classification": "historical_source",
+      "original_bytes": 3888,
+      "original_sha256": "e8086d10c3c82cb2c5ae90b92c3bf918cc37750ab38dadbd4ee84a3eb6995e3e",
+      "path": "historical/numerical/vendor/canonical/softmax.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "e8086d10c3c82cb2c5ae90b92c3bf918cc37750ab38dadbd4ee84a3eb6995e3e"
+    },
+    {
+      "bytes": 718,
+      "classification": "historical_source",
+      "original_bytes": 718,
+      "original_sha256": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d",
+      "path": "historical/numerical/vendor/historical/kws-alternate-fsmn-precheck-v1/decoder_tail_fix.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "5fc55921a555c78cb08c12018850652d98d4283594f875366284dc1df0e71f4d"
+    },
+    {
+      "bytes": 24939,
+      "classification": "historical_source",
+      "original_bytes": 24939,
+      "original_sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+      "path": "historical/numerical/vendor/historical/kws-alternate-fsmn-precheck-v1/reference/upstream/wekws/bin/stream_kws_ctc.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53"
+    },
+    {
+      "bytes": 92,
+      "classification": "historical_source",
+      "original_bytes": 92,
+      "original_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/export/a20_identity.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427"
+    },
+    {
+      "bytes": 5209,
+      "classification": "historical_source",
+      "original_bytes": 5209,
+      "original_sha256": "b48c28657aabb91cd99c75a625dfcc0a50363749e30f30b97ccae05c8c50f789",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/frontend-diagnosis/decimal_dft.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "b48c28657aabb91cd99c75a625dfcc0a50363749e30f30b97ccae05c8c50f789"
+    },
+    {
+      "bytes": 24176,
+      "classification": "historical_source",
+      "original_bytes": 24176,
+      "original_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/native/donor_fbank/frontend_tables.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b"
+    },
+    {
+      "bytes": 40886,
+      "classification": "historical_source",
+      "original_bytes": 40886,
+      "original_sha256": "d87066b569ba60f67386eb74ce30fc7ac5eca6633f2efccd68f09b1266f627a9",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/oracle-corrected/harness/fixtures.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "d87066b569ba60f67386eb74ce30fc7ac5eca6633f2efccd68f09b1266f627a9"
+    },
+    {
+      "bytes": 12240,
+      "classification": "historical_source",
+      "original_bytes": 12240,
+      "original_sha256": "198900485f2ae9dcdcb73fdf4a5c29932bd17b6e1065b6c7aab930eab9601f71",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/oracle-corrected/oracle/decimal_fsmn.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "198900485f2ae9dcdcb73fdf4a5c29932bd17b6e1065b6c7aab930eab9601f71"
+    },
+    {
+      "bytes": 36882,
+      "classification": "historical_source",
+      "original_bytes": 36882,
+      "original_sha256": "0d91a630fd9808b0ace773009028ca784ad196ef1755aa848234fca5e702ea7c",
+      "path": "historical/numerical/vendor/historical/kws-native-a20-research-v1/v2/harness/fixtures.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "0d91a630fd9808b0ace773009028ca784ad196ef1755aa848234fca5e702ea7c"
+    },
+    {
+      "bytes": 9108,
+      "classification": "historical_source",
+      "original_bytes": 9108,
+      "original_sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab",
+      "path": "historical/numerical/vendor/runtime/baseline/LICENSE",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "06d4c76347e397987c4951179b1c65fbd17bc948e09b5617b38be02bc1f93eab"
+    },
+    {
+      "bytes": 1708,
+      "classification": "historical_source",
+      "original_bytes": 1708,
+      "original_sha256": "f6e653f33c49238ca6df1739b390d7957bd23a5497fdc2d31d425b0dbb942601",
+      "path": "historical/numerical/vendor/runtime/baseline/NOTICE.md",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "f6e653f33c49238ca6df1739b390d7957bd23a5497fdc2d31d425b0dbb942601"
+    },
+    {
+      "bytes": 12402,
+      "classification": "historical_source",
+      "original_bytes": 12402,
+      "original_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+      "path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937"
+    },
+    {
+      "bytes": 3101,
+      "classification": "historical_source",
+      "original_bytes": 3101,
+      "original_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+      "path": "historical/numerical/vendor/runtime/baseline/decoder/a20_decoder.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4"
+    },
+    {
+      "bytes": 92,
+      "classification": "historical_source",
+      "original_bytes": 92,
+      "original_sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427",
+      "path": "historical/numerical/vendor/runtime/baseline/export/a20_identity.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "8c4b06d54d990cdb0039cc6106d8f27a10ad3fd0fe5f29e44ece163230f3c427"
+    },
+    {
+      "bytes": 4795,
+      "classification": "historical_source",
+      "original_bytes": 4795,
+      "original_sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208",
+      "path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "a53ea6558198b2d873a3fb937ced9973a470716f6c8d372789fab70de727d208"
+    },
+    {
+      "bytes": 2281,
+      "classification": "historical_source",
+      "original_bytes": 2281,
+      "original_sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc",
+      "path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/donor_fbank.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "4758bb3525062354f602a29c8ea40b0e9f959e593b9050e3c23eebd1c78fc3dc"
+    },
+    {
+      "bytes": 12495,
+      "classification": "historical_source",
+      "original_bytes": 12495,
+      "original_sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f",
+      "path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/fft_twiddles.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "fb628e5c3672a39dbd33bde612d48731f5abde72cbe401c4bc8273033ff01d0f"
+    },
+    {
+      "bytes": 24176,
+      "classification": "historical_source",
+      "original_bytes": 24176,
+      "original_sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b",
+      "path": "historical/numerical/vendor/runtime/baseline/native/donor_fbank/frontend_tables.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "269c14d6aacbe189e9672ee58f207915f9fbb09e9db988340b1f2f494ac7ae0b"
+    },
+    {
+      "bytes": 2930,
+      "classification": "historical_source",
+      "original_bytes": 2930,
+      "original_sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93",
+      "path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "3e51218b079a9744542c4f9139f2b5c6361d3ca7cdbf634c73bbdedb068cbc93"
+    },
+    {
+      "bytes": 994,
+      "classification": "historical_source",
+      "original_bytes": 994,
+      "original_sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+      "path": "historical/numerical/vendor/runtime/baseline/native/model/a20_fsmn.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db"
+    },
+    {
+      "bytes": 620,
+      "classification": "historical_source",
+      "original_bytes": 620,
+      "original_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+      "path": "historical/numerical/vendor/runtime/baseline/native/model/load.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291"
+    },
+    {
+      "bytes": 6685,
+      "classification": "historical_source",
+      "original_bytes": 6685,
+      "original_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+      "path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066"
+    },
+    {
+      "bytes": 252,
+      "classification": "historical_source",
+      "original_bytes": 252,
+      "original_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+      "path": "historical/numerical/vendor/runtime/baseline/native/model/sha256.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
+    },
+    {
+      "bytes": 1624,
+      "classification": "historical_source",
+      "original_bytes": 1624,
+      "original_sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e",
+      "path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_pcm_cli.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "06d47761bdad1444fa8797994b33de3486220bea92eb7ebb08644c37935a258e"
+    },
+    {
+      "bytes": 2172,
+      "classification": "historical_source",
+      "original_bytes": 2172,
+      "original_sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a",
+      "path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "3f49e7dd263f552947654b39bee3ea621be8e0fdafdff567f5661e03b37bb33a"
+    },
+    {
+      "bytes": 1515,
+      "classification": "historical_source",
+      "original_bytes": 1515,
+      "original_sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087",
+      "path": "historical/numerical/vendor/runtime/baseline/native/runtime/a20_stream.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "107e939985dd814a62c46ae5ab4bd394c87f637886179a709db3fbdeeab38087"
+    },
+    {
+      "bytes": 7605,
+      "classification": "historical_source",
+      "original_bytes": 7605,
+      "original_sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0",
+      "path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "4e7c275e8f3add4d82f356872b0537fa084c83937e927be12ee927dbf8dbbbe0"
+    },
+    {
+      "bytes": 3800,
+      "classification": "historical_source",
+      "original_bytes": 3800,
+      "original_sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c",
+      "path": "historical/numerical/vendor/runtime/baseline/native/stream/pcm.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "e7eba8ead8def77ebb8436042e836007db7a05ffb43e252754802abbf888014c"
+    },
+    {
+      "bytes": 6153,
+      "classification": "historical_source",
+      "original_bytes": 6153,
+      "original_sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0",
+      "path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "d0b9a7207ae9aad5b99e7cc1f3d11476f4d53bef66eeb7c630c430dd7831fee0"
+    },
+    {
+      "bytes": 3948,
+      "classification": "historical_source",
+      "original_bytes": 3948,
+      "original_sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861",
+      "path": "historical/numerical/vendor/runtime/baseline/native/stream/splice.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "33c47cbb20f65caa3b3d1abe41409d2b6b48467ca2a727db0e6edcb53cd7d861"
+    },
+    {
+      "bytes": 3193,
+      "classification": "historical_source",
+      "original_bytes": 3193,
+      "original_sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68",
+      "path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68"
+    },
+    {
+      "bytes": 1105,
+      "classification": "historical_source",
+      "original_bytes": 1105,
+      "original_sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b",
+      "path": "historical/numerical/vendor/runtime/baseline/precision64/model/a20_fsmn.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "6cbe555072b192f9719e1a580eb754873fe5d37c680052e619906c8b132b570b"
+    },
+    {
+      "bytes": 620,
+      "classification": "historical_source",
+      "original_bytes": 620,
+      "original_sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291",
+      "path": "historical/numerical/vendor/runtime/baseline/precision64/model/load.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "26943c1083787f928a7d1babfcaaa1e58cc6c16479f31e35afd4ff28766a5291"
+    },
+    {
+      "bytes": 6685,
+      "classification": "historical_source",
+      "original_bytes": 6685,
+      "original_sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+      "path": "historical/numerical/vendor/runtime/baseline/precision64/model/sha256.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066"
+    },
+    {
+      "bytes": 252,
+      "classification": "historical_source",
+      "original_bytes": 252,
+      "original_sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+      "path": "historical/numerical/vendor/runtime/baseline/precision64/model/sha256.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
+    },
+    {
+      "bytes": 3915,
+      "classification": "historical_source",
+      "original_bytes": 3915,
+      "original_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
+      "path": "historical/numerical/vendor/runtime/ctypes_api.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0"
+    },
+    {
+      "bytes": 3202,
+      "classification": "historical_source",
+      "original_bytes": 3202,
+      "original_sha256": "591873e92becf9c2f4c78fc52053e8cee6d776d0828ff682521c6040a383c9dc",
+      "path": "historical/numerical/vendor/runtime/resource_sizes.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "591873e92becf9c2f4c78fc52053e8cee6d776d0828ff682521c6040a383c9dc"
+    },
+    {
+      "bytes": 1661,
+      "classification": "historical_source",
+      "original_bytes": 1661,
+      "original_sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5",
+      "path": "historical/numerical/vendor/runtime/src/a20_pcm_fft64_cli.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "4c1a85ea6432774f250bf4f684e3411f696afbd2d12d7f5fd345d5c7a69cbfd5"
+    },
+    {
+      "bytes": 2494,
+      "classification": "historical_source",
+      "original_bytes": 2494,
+      "original_sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d",
+      "path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "4f2e690ec637f0f0a92c45e202642da947c2f9549c9ed41d02845173d367d43d"
+    },
+    {
+      "bytes": 1668,
+      "classification": "historical_source",
+      "original_bytes": 1668,
+      "original_sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+      "path": "historical/numerical/vendor/runtime/src/a20_stream_fft64.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59"
+    },
+    {
+      "bytes": 570,
+      "classification": "historical_source",
+      "original_bytes": 570,
+      "original_sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7",
+      "path": "historical/numerical/vendor/runtime/src/abi_fft64.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "491c05dc4233bc940384f04a89c0133cbd9154a43a6a4c441e3b53c38f8addf7"
+    },
+    {
+      "bytes": 6505,
+      "classification": "historical_source",
+      "original_bytes": 6505,
+      "original_sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f",
+      "path": "historical/numerical/vendor/runtime/src/donor_fft64.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "ceba6e7a410f627fc70e77c105709114a4a5503820a3b0f5d2c2118950e0e10f"
+    },
+    {
+      "bytes": 2509,
+      "classification": "historical_source",
+      "original_bytes": 2509,
+      "original_sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471",
+      "path": "historical/numerical/vendor/runtime/src/donor_fft64.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "3c9caaa70a68abd33956a234ca89f9e8795f595174c912b2d3021b038d219471"
+    },
+    {
+      "bytes": 11923,
+      "classification": "historical_source",
+      "original_bytes": 11923,
+      "original_sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074",
+      "path": "historical/numerical/vendor/runtime/src/fft64_twiddles.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074"
+    },
+    {
+      "bytes": 8001,
+      "classification": "historical_source",
+      "original_bytes": 8001,
+      "original_sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60",
+      "path": "historical/numerical/vendor/runtime/src/pcm_fft64.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "89ffe788fffa8c099c084d875a4eb5a59796e81c56ddac6d543a794de792af60"
+    },
+    {
+      "bytes": 3987,
+      "classification": "historical_source",
+      "original_bytes": 3987,
+      "original_sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9",
+      "path": "historical/numerical/vendor/runtime/src/pcm_fft64.h",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9"
+    },
+    {
+      "bytes": 1509,
+      "classification": "historical_source",
+      "original_bytes": 1509,
+      "original_sha256": "8859be330c192999d6f1718a1f5601ec2955aef8c4c51837d5790beb86749c30",
+      "path": "historical/numerical/vendor/validation/diagnostic.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "8859be330c192999d6f1718a1f5601ec2955aef8c4c51837d5790beb86749c30"
+    },
+    {
+      "bytes": 4400,
+      "classification": "historical_source",
+      "original_bytes": 4400,
+      "original_sha256": "dcb07d814ca116be8cad4ea970d03f3d230b2fc127344d5668f2137063712505",
+      "path": "historical/endpoint/src/analyze_saved_pair.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "dcb07d814ca116be8cad4ea970d03f3d230b2fc127344d5668f2137063712505"
+    },
+    {
+      "bytes": 8334,
+      "classification": "historical_source",
+      "original_bytes": 8334,
+      "original_sha256": "33ac29d8f668fbede4409eb5bdb0990f8c5ed3714664e38aff426b9ec6606336",
+      "path": "historical/endpoint/src/candidate_control.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "33ac29d8f668fbede4409eb5bdb0990f8c5ed3714664e38aff426b9ec6606336"
+    },
+    {
+      "bytes": 9684,
+      "classification": "historical_source",
+      "original_bytes": 9684,
+      "original_sha256": "62d1f4e1978e58e648d865eae6666a4c3625e0af6dfce314ef998bd979faf58e",
+      "path": "historical/endpoint/src/collector.c",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "62d1f4e1978e58e648d865eae6666a4c3625e0af6dfce314ef998bd979faf58e"
+    },
+    {
+      "bytes": 9891,
+      "classification": "historical_source",
+      "original_bytes": 9891,
+      "original_sha256": "cfc0bb5d79a7b3675858a7d44dcf043cd37b960d4f3cdb9028c8b5cf0df03b4b",
+      "path": "historical/endpoint/src/compare_endpoint.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "cfc0bb5d79a7b3675858a7d44dcf043cd37b960d4f3cdb9028c8b5cf0df03b4b"
+    },
+    {
+      "bytes": 2789,
+      "classification": "historical_source",
+      "original_bytes": 2789,
+      "original_sha256": "17ed818d8df94c858ff663c0ea9f498c6fc03e74c4767a18a283cffacec35843",
+      "path": "historical/endpoint/src/compare_saved_scores.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "17ed818d8df94c858ff663c0ea9f498c6fc03e74c4767a18a283cffacec35843"
+    },
+    {
+      "bytes": 6227,
+      "classification": "historical_source",
+      "original_bytes": 6227,
+      "original_sha256": "9417af1f278ed2cdaab04734df9d51a2fe228680a7c4994978a84657be75d657",
+      "path": "historical/endpoint/src/contracts.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "9417af1f278ed2cdaab04734df9d51a2fe228680a7c4994978a84657be75d657"
+    },
+    {
+      "bytes": 1602,
+      "classification": "historical_source",
+      "original_bytes": 1602,
+      "original_sha256": "cc6c73eae46231df20f80b36ab533c4d2447917611e86ca82a05f92e271536cf",
+      "path": "historical/endpoint/src/geometry.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "cc6c73eae46231df20f80b36ab533c4d2447917611e86ca82a05f92e271536cf"
+    },
+    {
+      "bytes": 21468,
+      "classification": "historical_source",
+      "original_bytes": 21468,
+      "original_sha256": "53578c8e50d6e0147ac00198a50d103e0252c7cbae94d49d862738558f44b6aa",
+      "path": "historical/endpoint/src/paired_supervisor.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "53578c8e50d6e0147ac00198a50d103e0252c7cbae94d49d862738558f44b6aa"
+    },
+    {
+      "bytes": 29234,
+      "classification": "historical_source",
+      "original_bytes": 29234,
+      "original_sha256": "3fb8f6bd55938ea8100fb9d2c7a101d4553a73037e52bcc64b010eac3fe4e418",
+      "path": "historical/endpoint/src/score_endpoint.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "3fb8f6bd55938ea8100fb9d2c7a101d4553a73037e52bcc64b010eac3fe4e418"
+    },
+    {
+      "bytes": 20486,
+      "classification": "historical_test_source_not_executed",
+      "original_bytes": 20486,
+      "original_sha256": "fcc524408564cae8c7b70b9b3a5cdb13060a4835bedd5da4c2b48705f77f41b0",
+      "path": "historical/endpoint/tests/test_endpoint98_scoring.py",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "fcc524408564cae8c7b70b9b3a5cdb13060a4835bedd5da4c2b48705f77f41b0"
+    },
+    {
+      "bytes": 5505,
+      "classification": "historical_configuration",
+      "original_bytes": 5505,
+      "original_sha256": "85615d5269e8a920a172ba37adef8563c763ca434c007032a77f11c249c8e2db",
+      "path": "historical/numerical/PROTOCOL.json",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "85615d5269e8a920a172ba37adef8563c763ca434c007032a77f11c249c8e2db"
+    },
+    {
+      "bytes": 7744,
+      "classification": "historical_configuration",
+      "original_bytes": 7744,
+      "original_sha256": "fa10e0a11750e2b3e215c44f340e80bfdec1b374c68cd03eacd23b07b119dcea",
+      "path": "historical/numerical/metadata/A20-TENSOR-SCHEMA.json",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "fa10e0a11750e2b3e215c44f340e80bfdec1b374c68cd03eacd23b07b119dcea"
+    },
+    {
+      "bytes": 4954,
+      "classification": "historical_configuration",
+      "original_bytes": 4954,
+      "original_sha256": "d34829b949dea62d2f60792cde608f70de8d0fb6939a0b2aa053dc7de51bda24",
+      "path": "historical/numerical/metadata/fixture-manifest.json",
+      "projection": "exact bytes",
+      "repository": "pipeline",
+      "sha256": "d34829b949dea62d2f60792cde608f70de8d0fb6939a0b2aa053dc7de51bda24"
+    },
+    {
+      "bytes": 8138,
+      "classification": "historical_source_definition_projection",
+      "original_bytes": 36578,
+      "original_sha256": "a5d4c07479b6331d5f074069c9f8e83b541b12a6e1a40051e6a1cc16048d1d66",
+      "path": "historical/endpoint/vendor/supervisor_original.py",
+      "projection": "Exact source-line slices of the eight definitions selected by paired_supervisor.get_helpers; only explanatory comments and inter-definition whitespace added; unused original module code omitted",
+      "repository": "pipeline",
+      "selected_definitions": [
+        {
+          "bytes": 118,
+          "name": "MissingProcField",
+          "original_line_end": 80,
+          "original_line_start": 79,
+          "public_line_end": 7,
+          "public_line_start": 6,
+          "sha256": "ffa4c2fab5ad13f469e764cf701f0e0d7cf0c9936bfd3b1f8df2b028c26244a8"
+        },
+        {
+          "bytes": 289,
+          "name": "error_record",
+          "original_line_end": 86,
+          "original_line_start": 83,
+          "public_line_end": 13,
+          "public_line_start": 10,
+          "sha256": "e76fe34f3672b8c254055d4ba7c66d5e3a1c5499da529c5d62ebf1cfe7c81005"
+        },
+        {
+          "bytes": 114,
+          "name": "unknown_io",
+          "original_line_end": 90,
+          "original_line_start": 89,
+          "public_line_end": 17,
+          "public_line_start": 16,
+          "sha256": "8ed220241c319c05558b60867581c2764168d09e13e6ae3a2c68250b79f22b18"
+        },
+        {
+          "bytes": 3601,
+          "name": "read_proc",
+          "original_line_end": 159,
+          "original_line_start": 93,
+          "public_line_end": 86,
+          "public_line_start": 20,
+          "sha256": "5b329d7bfe0df97000f4d01261e9cc630d2487f1013ec1bc32c1bfc434721d47"
+        },
+        {
+          "bytes": 1329,
+          "name": "observe_process",
+          "original_line_end": 184,
+          "original_line_start": 162,
+          "public_line_end": 111,
+          "public_line_start": 89,
+          "sha256": "62112e583691ba9e57abcbab0f79271f67e60189e98d55319f1926d688cce9c5"
+        },
+        {
+          "bytes": 719,
+          "name": "guard_reason",
+          "original_line_end": 196,
+          "original_line_start": 187,
+          "public_line_end": 123,
+          "public_line_start": 114,
+          "sha256": "bee7cdf5fdefbba4988aaf4503a2b6d181ae7c6aca9f52c22ed7e00cd91c86c9"
+        },
+        {
+          "bytes": 446,
+          "name": "apply_hard_limits",
+          "original_line_end": 206,
+          "original_line_start": 199,
+          "public_line_end": 133,
+          "public_line_start": 126,
+          "sha256": "2e43edea3228264a946ab5385f5c356e9c7f2a72627780944701dc8ce0b76ea7"
+        },
+        {
+          "bytes": 1194,
+          "name": "cleanup_owned_process",
+          "original_line_end": 289,
+          "original_line_start": 267,
+          "public_line_end": 158,
+          "public_line_start": 136,
+          "sha256": "0e95f7d9528e679ab80029c0c0a7392f772a2d844e4a24626a1288b234c09327"
+        }
+      ],
+      "sha256": "737a2cea23f746f27444a8e923ac213ccfaf5c8e21dbcc0945ce3ab041e72ee9"
+    }
+  ],
+  "training_source_not_copied": true
+}

@@ -1,0 +1,311 @@
+{
+  "schema": "k1-first-prefix-saved-evaluation-v1",
+  "candidate": "k1-first-prefix-ctc-eof-v1",
+  "status": "FROZEN_PROTOCOL_NOT_EXECUTED",
+  "token_order": [
+    "blank",
+    "你",
+    "好",
+    "小",
+    "窝",
+    "屋"
+  ],
+  "source_token_order": [
+    "<blank>",
+    "你",
+    "好",
+    "小",
+    "窝",
+    "屋"
+  ],
+  "sample_rate_hz": 16000,
+  "lead_ms": 1500,
+  "tail_ms": 300,
+  "evaluation_order": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "N1"
+  ],
+  "sources": {
+    "melo5": {
+      "repository": "kws-data",
+      "commit": "dc90c3aa325700fdf17da449452437c90373818e",
+      "path": "research/2026-10-06-melo5-leading-context/original_A20.raw.jsonl",
+      "sha256": "53fe05237bdc3544462243b36566cf784a380f373aa7da1572f00ed69da8b043",
+      "bytes": 69596,
+      "schema": "melo5-leading1500ms-tail300ms-a20-raw-v1",
+      "observations": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5"
+      ]
+    },
+    "n1": {
+      "repository": "kws-data",
+      "commit": "8c301d7a4709b066633ebfd9316159281ee320ea",
+      "path": "research/2026-10-07-n1-wholeclip-leading/original_A20.raw.jsonl",
+      "sha256": "013360aae469da5671994b1de4495687cb2324880108236dc5bb0d83d3b2e3ad",
+      "bytes": 17794,
+      "schema": "n1-wholeclip-leading-a20-raw-v1",
+      "observations": [
+        "N1"
+      ]
+    }
+  },
+  "common_raw_header": {
+    "model_sha256": "a80b233d3c958d25f49085f487ef5cde839bd69f803ed057b59bbd20adc6e43d",
+    "decoder_config_sha256": "289b3ba913b66145939d785c5061d9dd267da9e0e3996917a42c6fe632b79e1b",
+    "library_sha256": "68457311f93540405dfa0bf5fdc1cd74421fea22b44d5920fec465be5de4d912"
+  },
+  "observations": [
+    {
+      "id": "M1",
+      "source": "melo5",
+      "human_text": "你好小窝",
+      "label": "A",
+      "rows": 84,
+      "callbacks": 9,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        5
+      ],
+      "eof_samples": 40875,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    },
+    {
+      "id": "M2",
+      "source": "melo5",
+      "human_text": "小窝小窝",
+      "label": "R",
+      "rows": 86,
+      "callbacks": 9,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        7
+      ],
+      "eof_samples": 41804,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    },
+    {
+      "id": "M3",
+      "source": "melo5",
+      "human_text": "你好小屋",
+      "label": "B",
+      "rows": 85,
+      "callbacks": 9,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        6
+      ],
+      "eof_samples": 41246,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    },
+    {
+      "id": "M4",
+      "source": "melo5",
+      "human_text": "小屋小屋",
+      "label": "R",
+      "rows": 90,
+      "callbacks": 10,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        1
+      ],
+      "eof_samples": 43847,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    },
+    {
+      "id": "M5",
+      "source": "melo5",
+      "human_text": "你好你好",
+      "label": "R",
+      "rows": 83,
+      "callbacks": 9,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        4
+      ],
+      "eof_samples": 40318,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    },
+    {
+      "id": "N1",
+      "source": "n1",
+      "human_text": "你好小窝，屋里有人",
+      "label": "A",
+      "rows": 109,
+      "callbacks": 11,
+      "rows_per_callback": [
+        9,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "eof_samples": 52578,
+      "phases": [
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "feed",
+        "finish"
+      ]
+    }
+  ],
+  "totals": {
+    "rows": 537,
+    "callbacks": 57,
+    "dp_instances": 6
+  },
+  "gate": {
+    "primary": [
+      "M3",
+      "N1"
+    ],
+    "required_accept": [
+      "M1",
+      "N1"
+    ],
+    "required_certified_reject": [
+      "M2",
+      "M3",
+      "M4",
+      "M5"
+    ],
+    "unresolved": "FAIL",
+    "any_failure": "STOP_CANDIDATE_NO_TUNING"
+  },
+  "limits": {
+    "cpu_seconds": 5,
+    "wall_seconds": 15,
+    "address_space_bytes": 67108864,
+    "total_output_bytes": 1048576
+  },
+  "source_semantics": [
+    {
+      "sha256": "9d5e6e0b71639027d112d5224dccc6637fede5be7432fe6f81058830dbc6c5ed",
+      "role": "melo5_FP32_collector"
+    },
+    {
+      "sha256": "461f6b0fde22ebae53012b4d90d6ecb0fc569f79279ebc95977db20e965eb502",
+      "role": "n1_FP32_collector"
+    },
+    {
+      "sha256": "ed865c9f216f6269ea0ab77f3b160e8219e1e77f2247c8a6c6f82f5935d6f3db",
+      "role": "A20_full_six_logit_header"
+    },
+    {
+      "sha256": "1f4913e77f76aeccdb730330f562ca6a09b01d8b48d559b25f8c9b81f919cc59",
+      "role": "A20_batch_float_logit_header"
+    },
+    {
+      "sha256": "289b3ba913b66145939d785c5061d9dd267da9e0e3996917a42c6fe632b79e1b",
+      "role": "A20_token_id_mapping"
+    }
+  ],
+  "scope": "Existing exposed single stock voice; no fresh or generalization evidence; M6 excluded; K2 outside candidate."
+}

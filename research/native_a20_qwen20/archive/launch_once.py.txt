@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Explicitly released once-only bounded collector supervisor. Import has no run effects."""
+import argparse,fcntl,hashlib,json,os,pathlib,resource,signal,subprocess,time
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+LIMITS={'rss_bytes':268435456,'cpu_seconds':60,'wall_seconds':120,'output_bytes':16777216,'collector_threads':1,'collector_processes':1}
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def load(p):return json.loads(p.read_text())
+def save(p,v):p.write_text(json.dumps(v,sort_keys=True,indent=2,allow_nan=False)+'\n')
+def require(v,m):
+    if not v:raise RuntimeError(m)
+def verify_freeze(root,freeze):
+    got={}
+    for x in freeze['files']:
+        p=root/x['path'];require(p.is_file() and not p.is_symlink(),'missing/symlink identity '+x['path'])
+        require(p.stat().st_size==x['bytes'] and sha(p)==x['sha256'],'identity mismatch '+x['path'])
+        if x.get('executable'):require(os.access(p,os.X_OK),'not executable '+x['path'])
+        got[x['path']]=x['sha256']
+    return got
+
+def read_proc(pid):
+    base=pathlib.Path('/proc')/str(pid);s={}
+    try:
+        for line in (base/'status').read_text().splitlines():
+            if line.split(':',1)[0] in ('VmRSS','VmHWM','Threads','VmSize'):
+                k,v=line.split(':',1);s[k]=int(v.strip().split()[0])
+        s['io']={k:int(v) for k,v in (l.split(':',1) for l in (base/'io').read_text().splitlines())}
+        s['children']=(base/'task'/str(pid)/'children').read_text().strip()
+    except FileNotFoundError:pass
+    return s
+
+def run(release_path):
+    release=load(release_path);freeze_path=ROOT/'SOURCE-FREEZE.json';protocol_path=ROOT/'PROTOCOL.json';protocol=load(protocol_path);freeze=load(freeze_path)
+    require(release['owner_execution_release']=='EXECUTE_EXACT_QWEN20_ONCE_AFTER_REVIEW_AND_PERSISTENCE','no owner execution release')
+    require(release['freeze_sha256']==sha(freeze_path) and release['protocol_sha256']==sha(protocol_path),'release identity mismatch')
+    require(release['no_competing_acoustic_run_confirmed'] is True,'resource context not confirmed')
+    for kind in ('independent_review','private_snapshot_readback'):
+        ref=release[kind];p=pathlib.Path(ref['path']);require(sha(p)==ref['sha256'],kind+' receipt identity')
+        receipt=load(p);require(receipt['status']=='PASS' and receipt['freeze_sha256']==sha(freeze_path),kind+' not PASS for freeze')
+    require(protocol['limits']==LIMITS,'limits drift')
+    identities_before=verify_freeze(ROOT,freeze)
+    for p,h in protocol['system_dependencies'].items():require(sha(pathlib.Path(p))==h,'system dependency mismatch '+p)
+    shared=ROOT.parent/'kws-native-a20-recovery-v1/.heavy.lock'
+    with open(shared,'a+') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        # Never remove either the ledger or output directory to permit a rerun.
+        ledger=ROOT/'EXECUTION-LEDGER.json';out=ROOT/'run-once'
+        fd=os.open(ledger,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        os.write(fd,(json.dumps({'status':'START_RESERVED_NO_RETRY','release_sha256':sha(release_path),'freeze_sha256':sha(freeze_path),'utc_epoch_s':time.time()})+'\n').encode());os.fsync(fd);os.close(fd)
+        out.mkdir(exist_ok=False)
+        save(out/'release-used.json',release);save(out/'identities-before.json',identities_before)
+        cpu=protocol['cpu_affinity'];require(cpu in os.sched_getaffinity(0),'frozen CPU unavailable')
+        env=dict(os.environ);env.update(OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1',NUMEXPR_NUM_THREADS='1');env.pop('LD_PRELOAD',None);env.pop('LD_LIBRARY_PATH',None)
+        context={'host_uname':list(os.uname()),'cpu_affinity':[cpu],'supervisor_separate_from_single_collector_process':True,'loadavg':pathlib.Path('/proc/loadavg').read_text().strip(),'parallel_context':release.get('parallel_context'),'cpuinfo':pathlib.Path('/proc/cpuinfo').read_text().split('\n\n')[0],'limits':LIMITS,'clock_monotonic_resolution_s':time.get_clock_info('monotonic').resolution}
+        save(out/'resource-context.json',context)
+        def guard():
+            os.sched_setaffinity(0,{cpu});resource.setrlimit(resource.RLIMIT_AS,(LIMITS['rss_bytes'],)*2);resource.setrlimit(resource.RLIMIT_CPU,(60,60));resource.setrlimit(resource.RLIMIT_FSIZE,(6*1024*1024,)*2);resource.setrlimit(resource.RLIMIT_CORE,(0,0));signal.alarm(120)
+        bindings=load(ROOT/'metadata/run-bindings.json')
+        argv=[str(ROOT/'build/collector'),'--run',sha(protocol_path),sha(ROOT/'metadata/verified-inputs.json'),sha(ROOT/'metadata/geometry.json'),sha(ROOT/'metadata/decoder-config.json')]
+        start=time.monotonic();samples=[];reason=None;peak=0;io_last={};proc=None
+        try:
+            with open(out/'raw.jsonl','xb',buffering=0) as raw,open(out/'stderr.log','xb',buffering=0) as err:
+                proc=subprocess.Popen(argv,cwd=ROOT,stdout=raw,stderr=err,env=env,start_new_session=True,preexec_fn=guard)
+                while True:
+                    state=read_proc(proc.pid);elapsed=time.monotonic()-start
+                    rss=state.get('VmRSS',0)*1024;peak=max(peak,rss,state.get('VmHWM',0)*1024)
+                    if state.get('io'):io_last=state['io']
+                    samples.append({'wall_s':elapsed,**state})
+                    total=sum(p.stat().st_size for p in out.iterdir() if p.is_file())
+                    if elapsed>120:reason='WALL_LIMIT'
+                    elif rss>LIMITS['rss_bytes']:reason='RSS_LIMIT'
+                    elif state.get('Threads',1)>1:reason='THREAD_LIMIT'
+                    elif state.get('children',''):reason='CHILD_PROCESS_FORBIDDEN'
+                    elif total>LIMITS['output_bytes']-2097152:reason='OUTPUT_LIMIT'
+                    if reason and proc.poll() is None:os.killpg(proc.pid,signal.SIGKILL)
+                    rc=proc.poll()
+                    if rc is not None:break
+                    time.sleep(0.1)
+            returncode=proc.wait()
+        except BaseException as ex:
+            reason='SUPERVISOR_EXCEPTION:'+type(ex).__name__+':'+str(ex)
+            if proc is not None and proc.poll() is None:os.killpg(proc.pid,signal.SIGKILL);proc.wait()
+            returncode=None if proc is None else proc.returncode
+        try:
+            after=verify_freeze(ROOT,freeze);identity_ok=after==identities_before
+            for p,h in protocol['system_dependencies'].items():require(sha(pathlib.Path(p))==h,'system dependency changed '+p)
+        except Exception as ex:after={'error':str(ex)};identity_ok=False
+        save(out/'identities-after.json',after)
+        status='RAW_COMPLETE_PENDING_AUDIT' if returncode==0 and reason is None and identity_ok else 'FAILED_NO_RETRY'
+        save(out/'resource-record.json',{'status':status,'returncode':returncode,'guard_stop_reason':reason,'elapsed_wall_s':time.monotonic()-start,'sampled_peak_rss_bytes':peak,'io_last_observed':io_last,'proc_samples':samples,'sampling_interval_s':0.1,'sampling_may_miss_exit_peak':True,'exact_child_rusage_in_raw_run_end_if_complete':True,'identity_after_ok':identity_ok,'raw_sha256':sha(out/'raw.jsonl') if (out/'raw.jsonl').exists() else None,'artifact_bytes_before_resource_record_write':sum(p.stat().st_size for p in out.iterdir() if p.is_file()),'model_runs_attempted':1,'retries_allowed':False})
+        save(ledger,{'status':status,'release_sha256':sha(release_path),'freeze_sha256':sha(freeze_path),'output_dir':'run-once','returncode':returncode,'guard_stop_reason':reason,'once_only':True})
+        return 0 if status=='RAW_COMPLETE_PENDING_AUDIT' else 1
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--run',type=pathlib.Path,required=True);a=p.parse_args();raise SystemExit(run(a.run))

@@ -1,0 +1,47 @@
+name: a20-token-preparation
+run-name: a20-token-preparation-once-20261004-v1
+on:
+  push:
+    branches: [research/a20-token-preparation-20261004]
+    paths:
+      - '.github/workflows/a20-token-preparation.yml'
+      - 'research/token_preparation/**'
+permissions:
+  contents: read
+concurrency:
+  group: a20-token-preparation-once-20261004-v1
+  cancel-in-progress: false
+jobs:
+  prepare-only:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+          sparse-checkout: |
+            research/token_preparation
+            .github/workflows
+      - name: Offline invented-fixture tests only
+        run: python3 -B -m unittest discover -s research/token_preparation/tests -v
+      - name: Exactly one approved preparation, then stop
+        run: python3 -B research/token_preparation/src/launch_once.py --execute-release research/token_preparation/EXECUTION-RELEASE.json
+      - name: Verify exact publication pair after preparation
+        id: publication_check
+        if: always() && hashFiles('research/token_preparation/work/PUBLICATION-READY.json') != ''
+        run: python3 -B research/token_preparation/src/verify_publication.py
+      - name: Upload only the bounded privacy-checked preparation artifact
+        if: always() && steps.publication_check.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: a20-token-preparation-once-v1
+          path: |
+            research/token_preparation/publication/token-preparation-artifact.tar.gz
+            research/token_preparation/publication/token-preparation-artifact.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+          overwrite: false
+          include-hidden-files: false

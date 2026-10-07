@@ -1,0 +1,303 @@
+{
+  "schema": "k1-first-prefix-public-source-map-v1",
+  "files": [
+    {
+      "source_id": "k1-prefix-marginal-v1/k1_prefix_marginal.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-marginal-v1/k1_prefix_marginal.py",
+      "transformation": "byte-identical",
+      "bytes": 13689,
+      "sha256": "e9edc93ffde5569cf7d931342b959738e3a40085957d3d6e1b275664d6729963",
+      "git_blob_sha": "4e1071d4dd8df0cea4153fe4f3b2f6af70533bb2"
+    },
+    {
+      "source_id": "k1-prefix-marginal-v1/README.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-marginal-v1/README.md",
+      "transformation": "byte-identical",
+      "bytes": 12475,
+      "sha256": "974f47503b3a0cd133ea02bb209697b837c8410d471c06b76cb2fbf6f54c2df0",
+      "git_blob_sha": "ec2722edb9c3f9cb1e5e4aaf2bfddbe5ca46ebde"
+    },
+    {
+      "source_id": "k1-prefix-marginal-v1/tests/test_k1_prefix_marginal.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-marginal-v1/tests/test_k1_prefix_marginal.py",
+      "transformation": "byte-identical",
+      "bytes": 20750,
+      "sha256": "2c1214e7baf35f48c5ce7d2add906d82d41fec6819893376feb6b14de072a648",
+      "git_blob_sha": "bf801bf0bd58b63634b42bba8f0a59a6b4c5249f"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/runner.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-v1/runner.py",
+      "transformation": "byte-identical",
+      "bytes": 12136,
+      "sha256": "5125ed3f3237ee38611b628bc9f3d18dc34f50c036341381fd6991f310e8af8c",
+      "git_blob_sha": "6dccf7ffbd913225994dca8adf18dcc9b00ef6a4"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/test_runner.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-v1/test_runner.py",
+      "transformation": "byte-identical",
+      "bytes": 7776,
+      "sha256": "7a4effa4ddbd0695ea9f0c0610c7b12a3e2f2c3b77a094370bc9368ce5438413",
+      "git_blob_sha": "926413cc5339a4a894f9dc8b5bb20f0082b281bc"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/protocol.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-v1/protocol.md",
+      "transformation": "byte-identical",
+      "bytes": 4512,
+      "sha256": "9d87d0c464495cd1da6ad4192e89f649d986572e8421008d87611442dae45c75",
+      "git_blob_sha": "31dffa89b6b724e040259bda5cd951913d7cd8e4"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/manifest.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-v1/manifest.json",
+      "transformation": "byte-identical",
+      "bytes": 6080,
+      "sha256": "07970965185e45d6383bbe33f96ebc7740875dcc9ad68523b124a6ba4aa24578",
+      "git_blob_sha": "e3099dd6a4afe5b3edf7ae386c8ed0742463dbe8"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/release-request.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-v1/release-request.json",
+      "transformation": "byte-identical",
+      "bytes": 636,
+      "sha256": "f3dcf4d89272ab309a8b735d47483ea60288c0a293555ca9ee4b0bd1afc40004",
+      "git_blob_sha": "525cb6d5d76a84c94b14982eff93b5dc937cb354"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/runner.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/runner.py",
+      "transformation": "byte-identical",
+      "bytes": 14505,
+      "sha256": "65ffdd0cad06747bea90f0e6297918300d4866993a4e55a3a257038cfcfb106b",
+      "git_blob_sha": "f290794e50b74a578ea2aedbd04fba778f8878db"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/test_runner.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/test_runner.py",
+      "transformation": "byte-identical",
+      "bytes": 10753,
+      "sha256": "894f9fd16d87cb811ab225bb6853f1bac50ed14f2e0a080c6618322280a7a43e",
+      "git_blob_sha": "b6c964c1877022509f200e80d5fffb9e6dbe9c4a"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/protocol.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/protocol.md",
+      "transformation": "byte-identical",
+      "bytes": 6258,
+      "sha256": "fd8af968a7e5880a055a6be5968915b9c1b050194e930d82ad9b133e58698abc",
+      "git_blob_sha": "04bb71cbe6fbc5b95a9a7f8145bf5e71b3620479"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/manifest.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/manifest.json",
+      "transformation": "byte-identical",
+      "bytes": 6080,
+      "sha256": "07970965185e45d6383bbe33f96ebc7740875dcc9ad68523b124a6ba4aa24578",
+      "git_blob_sha": "e3099dd6a4afe5b3edf7ae386c8ed0742463dbe8"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/release-request.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/release-request.json",
+      "transformation": "byte-identical",
+      "bytes": 850,
+      "sha256": "84ff45521081ae76492bed8c146c08bb2abb7a04bbfdc443cc37b6485fa88674",
+      "git_blob_sha": "c19a2b759025d46a1eafb51b20793e42e278b2ab"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/causal-note.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/frozen/k1-prefix-saved-evaluation-recovery-v2/causal-note.md",
+      "transformation": "byte-identical",
+      "bytes": 3099,
+      "sha256": "da52eda7147ae488e823974054aff102935d98ae642c9afee2f5ea8cb06e9a96",
+      "git_blob_sha": "0f9a7bf492c8119221589b2d630e027bbba436ee"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/independent_review.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/independent_review.py",
+      "transformation": "byte-identical",
+      "bytes": 10621,
+      "sha256": "3287fc944e85321342f38b31c8bc61342dd363b2bb014ba0ca197516b05ec68d",
+      "git_blob_sha": "c4303d8feb25f96b0744298b49ebb6b1d21445d5"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/edge_review.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/edge_review.py",
+      "transformation": "byte-identical",
+      "bytes": 8850,
+      "sha256": "0622716eca859a1e0cbd0706fb075992b895332a22adfc3c84c62680c77ceb68",
+      "git_blob_sha": "6e0b7a57a658030ca672dd9c840f656dfa014312"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow_mock_review.py",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/underflow_mock_review.py",
+      "transformation": "byte-identical",
+      "bytes": 4630,
+      "sha256": "9942ec859742a2a30730815cb46afbb0b085b321867b0ecec1ef02c4f699ee45",
+      "git_blob_sha": "12d207e4ddb5739755948ecb00421708f3befd05"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/initial-oracle-results.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/initial-oracle-results.json",
+      "transformation": "byte-identical",
+      "bytes": 769,
+      "sha256": "38cc775d0235a898cf189efc4f9e76b47bb051093b896fa81818615b1f9a004b",
+      "git_blob_sha": "e5f6b2ac7a032a010e9c0d55f505226cf0084308"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/oracle-results.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/oracle-results.json",
+      "transformation": "byte-identical",
+      "bytes": 803,
+      "sha256": "b58d71d9eaddd9b46c317f50b256959b404f40e3942db424c241b0d723f42f65",
+      "git_blob_sha": "dce0771055eb29f45eb18ea54be67d6966b39d11"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/edge-results.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/edge-results.json",
+      "transformation": "byte-identical",
+      "bytes": 1799,
+      "sha256": "8f2d8d04b291f56720c87d5a01ec3c37fbe335c6d4541e0f72e7480a0563680b",
+      "git_blob_sha": "104cc698c4bdc108f640365aac1a8c2cf77b78c6"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-mock-results.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/underflow-mock-results.json",
+      "transformation": "byte-identical",
+      "bytes": 980,
+      "sha256": "3a127c09ab97f3e2bd4904e297dd672ca76e8d0319ba2f012592e14de0a1d73a",
+      "git_blob_sha": "6c6a2a9b40d8444a73a513a41a354517dac36a12"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/review.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/review.md",
+      "transformation": "byte-identical",
+      "bytes": 11075,
+      "sha256": "e3b6046056d18da081709d979c32322989810a8085e9ff0e2f9dd88050d50c95",
+      "git_blob_sha": "4192e120603ca5fd42fda4e72b02fc31ad64feb8"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-assessment.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/underflow-assessment.md",
+      "transformation": "byte-identical",
+      "bytes": 6313,
+      "sha256": "5f24cd1391faf142c15031a844d29c5f1e89de15f8934053fdf5ab586540796f",
+      "git_blob_sha": "32ec8242a8ef9e2952c66c412a8caa99338452d7"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-recovery-review.md",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/underflow-recovery-review.md",
+      "transformation": "byte-identical",
+      "bytes": 4948,
+      "sha256": "1f0177e01ec492c6d17d5c6eb214ebf2985e757c72051b04f89d827c98583881",
+      "git_blob_sha": "ee4d4474c8849bc655f3955628e4766a947e3c7d"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/attempt.jsonl",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/attempt-v1/attempt.jsonl",
+      "transformation": "byte-identical",
+      "bytes": 659,
+      "sha256": "cf9c92a0e8db14cd187d8bbbd606a4dc0739fc62781e0f5dae69404c0313dbc2",
+      "git_blob_sha": "88569d5ae24779ca474d12da3b9524adfcde8cb4"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-v1/underflow-diagnosis.json",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/attempt-v1/underflow-diagnosis.json",
+      "transformation": "byte-identical",
+      "bytes": 700,
+      "sha256": "7f8e7a69b32ef0cdd04d17009970f0a04d81541324d56b40790f0d0e51f4d316",
+      "git_blob_sha": "20733c4f4dce09fdd681e1f1811f2f0b76b8b12e"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/attempt.jsonl",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/recovery-v2/attempt.jsonl",
+      "transformation": "byte-identical",
+      "bytes": 11493,
+      "sha256": "e772664b181d69de66192669ea94ae2c652453db39768b4f6aeffdf4bede9d33",
+      "git_blob_sha": "8153de2d078400a0da0a7e2b408d1f875473c3ab"
+    },
+    {
+      "source_id": "k1-prefix-saved-evaluation-recovery-v2/results.json",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/recovery-v2/results.json",
+      "transformation": "byte-identical",
+      "bytes": 11283,
+      "sha256": "76e35a4f16a004f6e3724b282c00775c350e3d02a7d833c4e8e5856bf68fc54a",
+      "git_blob_sha": "f1a880816f2f9adba42c6c70e6c8d4c281e9d9a9"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/review-manifest.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/review-manifest.json",
+      "transformation": "path-only metadata projection",
+      "bytes": 3357,
+      "sha256": "227e9926beecb1b3617a98221cf1f1b09612dc01d2a9c8ec4af53026a09b179a",
+      "git_blob_sha": "b143e580180be7769655e59ab64f216af3c6b140"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/underflow-review-manifest.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/underflow-review-manifest.json",
+      "transformation": "path-only metadata projection",
+      "bytes": 2698,
+      "sha256": "c2e30203889ef8e409e932f10a927d2a0c39d532cece8897845c99325b26ff90",
+      "git_blob_sha": "063420c82a1389b1d835bafb0f45724a29960016"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/projection-map.json",
+      "repository": "jiying2007/kws-pipeline",
+      "path": "research/k1-prefix-marginal-v1/review/projection-map.json",
+      "transformation": "byte-identical review deliverable",
+      "bytes": 1905,
+      "sha256": "e16216a753fef350b5d4188a0316d0b92010f1004e6c09a4834789c3765b191a",
+      "git_blob_sha": "adcba26ba89f6d3114f0cfff16dad551ba40b0b9"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/saved-audit.json",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/review/saved-audit.json",
+      "transformation": "byte-identical review deliverable",
+      "bytes": 4856,
+      "sha256": "7b8ae006018e581a2c5ee3931cd37351391aabcf34c200e9d8cc54ac1ebfd716",
+      "git_blob_sha": "d63777dda04ada19b46b543b470c551572b4f228"
+    },
+    {
+      "source_id": "k1-prefix-marginal-review-v1/saved-audit.md",
+      "repository": "jiying2007/kws-data",
+      "path": "research/2026-10-07-k1-prefix-marginal/review/saved-audit.md",
+      "transformation": "byte-identical review deliverable",
+      "bytes": 3764,
+      "sha256": "2e33201201158dc216a0a10f7d48acd9b0e4655361854f38ced1537e04f55f96",
+      "git_blob_sha": "ee8b80e5089737cd447ccadf31dd28649343543b"
+    }
+  ],
+  "note": "Original and projected review-manifest identities are declared in review/projection-map.json. Logical source IDs are historical artifact roles; repository and path give final archive locations."
+}

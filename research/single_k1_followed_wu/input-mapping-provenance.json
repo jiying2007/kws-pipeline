@@ -1,0 +1,224 @@
+{
+  "assets": [
+    {
+      "bytes": 655,
+      "name": "tokens.txt",
+      "sha256": "d18664a7e12bd7ea1022ddaf951e534e136815016c5a809d6b64156bffb4369d"
+    },
+    {
+      "bytes": 6837671,
+      "name": "lexicon.txt",
+      "sha256": "7236884b02435ac5d10cf69b4be40a61b45aa676b5300f0e412f185748fee528"
+    }
+  ],
+  "blank_policy": "zero ID/tone at both ends and between each phone",
+  "character_lookup_order": [
+    "你",
+    "好",
+    "小",
+    "窝",
+    "，",
+    "屋",
+    "里",
+    "有",
+    "人"
+  ],
+  "comma_duration_or_acoustic_boundary_claim": false,
+  "dictionary_tone_policy": "retained 你好3+3; no tone sandhi/segmenter executed",
+  "entries": {
+    "人": {
+      "line_1_based": 129653,
+      "phone_ids": [
+        74,
+        30
+      ],
+      "phones": [
+        "r",
+        "en"
+      ],
+      "raw_line": "人 r en 2 2",
+      "tones": [
+        2,
+        2
+      ]
+    },
+    "你": {
+      "line_1_based": 129819,
+      "phone_ids": [
+        62,
+        40
+      ],
+      "phones": [
+        "n",
+        "i"
+      ],
+      "raw_line": "你 n i 3 3",
+      "tones": [
+        3,
+        3
+      ]
+    },
+    "好": {
+      "line_1_based": 132402,
+      "phone_ids": [
+        37,
+        16
+      ],
+      "phones": [
+        "h",
+        "ao"
+      ],
+      "raw_line": "好 h ao 3 3",
+      "tones": [
+        3,
+        3
+      ]
+    },
+    "小": {
+      "line_1_based": 133060,
+      "phone_ids": [
+        98,
+        46
+      ],
+      "phones": [
+        "x",
+        "iao"
+      ],
+      "raw_line": "小 x iao 3 3",
+      "tones": [
+        3,
+        3
+      ]
+    },
+    "屋": {
+      "line_1_based": 133120,
+      "phone_ids": [
+        97,
+        82
+      ],
+      "phones": [
+        "w",
+        "u"
+      ],
+      "raw_line": "屋 w u 1 1",
+      "tones": [
+        1,
+        1
+      ]
+    },
+    "有": {
+      "line_1_based": 135870,
+      "phone_ids": [
+        99,
+        68
+      ],
+      "phones": [
+        "y",
+        "ou"
+      ],
+      "raw_line": "有 y ou 3 3",
+      "tones": [
+        3,
+        3
+      ]
+    },
+    "窝": {
+      "line_1_based": 140875,
+      "phone_ids": [
+        97,
+        65
+      ],
+      "phones": [
+        "w",
+        "o"
+      ],
+      "raw_line": "窝 w o 1 1",
+      "tones": [
+        1,
+        1
+      ]
+    },
+    "里": {
+      "line_1_based": 146809,
+      "phone_ids": [
+        59,
+        40
+      ],
+      "phones": [
+        "l",
+        "i"
+      ],
+      "raw_line": "里 l i 3 3",
+      "tones": [
+        3,
+        3
+      ]
+    },
+    "，": {
+      "normalized_from": "，",
+      "normalized_to": ",",
+      "phone_ids": [
+        106
+      ],
+      "phones": [
+        ","
+      ],
+      "source": "pinned official Lexicon.__init__ and _convert",
+      "tones": [
+        0
+      ]
+    }
+  },
+  "frontend": {
+    "bytes": 5302,
+    "git_blob": "304c8d4624640e7481d250900e10d064c262772e",
+    "sha256": "78367533c237f0fde3f644058f725dc1479c4990a367c626ace6ffdb7b89a5f7",
+    "source_imported_or_executed": false,
+    "url": "https://github.com/k2-fsa/sherpa-onnx/blob/040afe360a38e25daaa325ce8889abf93ea02609/scripts/melo-tts/test.py"
+  },
+  "input_preblank_phone_ids": [
+    62,
+    40,
+    37,
+    16,
+    98,
+    46,
+    97,
+    65,
+    106,
+    97,
+    82,
+    59,
+    40,
+    99,
+    68,
+    74,
+    30
+  ],
+  "input_preblank_tones": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    1,
+    1,
+    0,
+    1,
+    1,
+    3,
+    3,
+    3,
+    3,
+    2,
+    2
+  ],
+  "publisher_git_blobs": {
+    "lexicon.txt": "1a1119efceca0c2dae243f84061e70e4e3d99710",
+    "tokens.txt": "78ed7abf73cfa7955577a2894388dcd8f5a317c3"
+  },
+  "schema": "single-melo-input-mapping-v1",
+  "text": "你好小窝，屋里有人",
+  "token_lexicon_revision": "a0d5c6a264c0ef92d70d8661d8cc502d79627cd6"
+}

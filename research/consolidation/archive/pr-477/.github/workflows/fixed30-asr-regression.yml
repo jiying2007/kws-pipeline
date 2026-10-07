@@ -1,0 +1,57 @@
+name: fixed30 exposed ASR regression
+on:
+  push:
+    branches:
+      - research/fixed30-asr-regression-v1
+permissions:
+  contents: read
+concurrency:
+  group: fixed30-exposed-regression
+  cancel-in-progress: false
+jobs:
+  regression:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.ref == 'refs/heads/research/fixed30-asr-regression-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    defaults:
+      run:
+        working-directory: research/fixed30_asr
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Start provisioning budget
+        working-directory: ${{ github.workspace }}
+        run: echo "FIXED30_STARTED_UNIX_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        timeout-minutes: 3
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+      - name: Verify exact provisioned interpreter
+        run: |
+          python -c 'import os, platform, time; assert platform.python_version() == "3.12.14"; assert time.time()-float(os.environ["FIXED30_STARTED_UNIX_SECONDS"]) <= 300'
+          echo "FIXED30_PYTHON=$(command -v python)" >> "$GITHUB_ENV"
+      - name: One exact reviewed run
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$FIXED30_PYTHON" run_fixed30.py --release "$GITHUB_WORKSPACE/research/fixed30-asr-release.json" --execute-reviewed-fixed30
+      - name: Verify artifact bounds
+        id: artifact_bounds
+        if: always()
+        run: |
+          "$FIXED30_PYTHON" -c 'from run_fixed30 import artifact_check_cli; raise SystemExit(artifact_check_cli())'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.artifact_bounds.outcome == 'success' && hashFiles('research/fixed30_asr/runtime/artifact/artifact-freeze.json') != ''
+        with:
+          name: fixed30-raw-asr-status-resources
+          path: research/fixed30_asr/runtime/artifact/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false

@@ -1,0 +1,57 @@
+{
+  "checks_passed": [
+    "missing/reordered/unknown token maps rejected",
+    "15 invalid row types rejected; single-row and chunk rollback",
+    "row and chunk iterator failure rollback",
+    "empty chunks, EOF no transition, one emission, post-EOF block, finalized/partial reset",
+    "4096-row limit, exact-capacity EOF, overflowing chunk rollback",
+    "nine-row deterministic initial confuser remains B after later wake",
+    "unbounded malformed row consumes only seven values",
+    "finite max/subnormal weights, full-row normalization, tiny positive logs",
+    "exact tie and nearest binary64 weights on both sides",
+    "per-row common powers-of-two scaling invariance across exponent range",
+    "4096 nontrivial rows: conservation and absorbed-mass monotonicity"
+  ],
+  "extreme_cases": [
+    {
+      "case": "finite_sum_overflow",
+      "raw_paths": 1296,
+      "A": 0.16666666666666669,
+      "log_A": -1.791759469228055
+    },
+    {
+      "case": "positive_subnormal_terminal",
+      "raw_paths": 1296,
+      "A": 0.0,
+      "log_A": -1454.2227848147652
+    },
+    {
+      "case": "positive_subnormal_chain",
+      "raw_paths": 1296,
+      "A": 0.0,
+      "log_A": -5816.891139259061
+    },
+    {
+      "case": "smallest_uniform",
+      "raw_paths": 1296,
+      "A": 0.16666666666666669,
+      "log_A": -1.791759469228055
+    }
+  ],
+  "boundary_cases": [
+    {
+      "terminal_weight": 0.9999999999999999,
+      "decision": "REJECT_K1"
+    },
+    {
+      "terminal_weight": 1.0,
+      "decision": "REJECT_K1"
+    },
+    {
+      "terminal_weight": 1.0000000000000002,
+      "decision": "ACCEPT_K1"
+    }
+  ],
+  "module_sha256": "e9edc93ffde5569cf7d931342b959738e3a40085957d3d6e1b275664d6729963",
+  "review_sha256": "0622716eca859a1e0cbd0706fb075992b895332a22adfc3c84c62680c77ceb68"
+}

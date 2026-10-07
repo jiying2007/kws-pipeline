@@ -1,0 +1,8 @@
+{
+  "commit": "06cb1dffda0da624a16bce707d7729393d9bf2a8",
+  "manifest_sha256": "6ccd5b24ff0aa2ed0eb3b51755fed6767a1547fb4cd5ccd42cb92451751061f1",
+  "path": "research/2026-10-04-n0-deterministic-controls",
+  "publication_ready": true,
+  "repository": "jiying2007/kws-data",
+  "schema": "n0-data-reference-v1"
+}

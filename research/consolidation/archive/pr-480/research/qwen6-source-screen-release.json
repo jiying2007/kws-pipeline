@@ -1,0 +1,8 @@
+{
+  "approved": true,
+  "asr_candidate_sha256": "775be307bf58cfb94a1af6efc36a2e0774917da52f8fe32cd7b6193db523d0df",
+  "experiment_id": "qwen-stock-source-screen-v1",
+  "plan_sha256": "1b0e7296877432ee24c6bf79d79573d78eda8f8f4277fd06edb9dba79cefac4c",
+  "schema": "qwen6-source-screen-release-v1",
+  "tts_candidate_sha256": "068b18ab3718599332d48870680336d373117c8afa2bdecc48552029fe245d28"
+}

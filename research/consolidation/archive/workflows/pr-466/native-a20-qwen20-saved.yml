@@ -1,0 +1,45 @@
+name: native-a20-qwen20-saved
+on:
+  pull_request:
+    paths:
+      - "research/native_a20_qwen20/**"
+      - ".github/workflows/native-a20-qwen20-saved.yml"
+  push:
+    branches: [main, "research/**", "codex/**"]
+    paths:
+      - "research/native_a20_qwen20/**"
+      - ".github/workflows/native-a20-qwen20-saved.yml"
+permissions:
+  contents: read
+jobs:
+  offline-saved-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      A20_QWEN20_DATA_ROOT: qwen20-data/research/2026-10-04-qwen20-descriptive
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Fetch the immutable numeric evidence checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: jiying2007/kws-data
+          ref: 617b66bb30148a675805be2f17c61703d31e6e79
+          path: qwen20-data
+          persist-credentials: false
+          sparse-checkout: research/2026-10-04-qwen20-descriptive
+      - name: Require the exact evidence commit
+        run: test "$(git -C qwen20-data rev-parse HEAD)" = "617b66bb30148a675805be2f17c61703d31e6e79"
+      - name: Verify saved evidence without acoustic execution
+        run: python3 -B research/native_a20_qwen20/validate.py --data-root "$A20_QWEN20_DATA_ROOT"
+      - name: Frozen scorer and public projection tests
+        run: python3 -B -m unittest discover -s research/native_a20_qwen20/tests -v
+      - name: Disabled future supervisor pure mocks
+        run: python3 -B -m unittest discover -s research/native_a20_qwen20/future/tests -v
+      - name: Independent future boundary mocks
+        run: python3 -B -m unittest discover -s research/native_a20_qwen20/future/review -v
+      - name: Confirm tracked source/evidence unchanged
+        run: |
+          git diff --exit-code
+          git -C qwen20-data diff --exit-code

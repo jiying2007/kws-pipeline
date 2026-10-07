@@ -1,0 +1,21 @@
+{
+  "adapter_runtime_imported": false,
+  "conversion_copied_unchanged": true,
+  "experiment_id": "single-k1-followed-wu-v1",
+  "inference_performed": false,
+  "origin_guard_sha256": "1916eb8d0bc2e9015b4632af0ef12bb95a7a805b2ebd2aa7fd84706370b90709",
+  "schema": "melo-single-adapter-freeze-v1",
+  "source_sha256": {
+    "conversion_recipe.py": "860a4d127cea031f7339cb6d201ee97686f060ca190afca43509f71e00098d60",
+    "dependency-lock.json": "e74ff8f2cde83b2b8a1f99e22ddc1a2f8bdc6c35c06652ebcc7791213c6508f5",
+    "requirements-runtime.txt": "ccd5c09fa81e98ec2fa76136be7ae6f3a4bcc0eb1e27e7a47ce646869acf9ffc",
+    "run_single_melo.py": "d682476b16b6eaebcea42c9107c8091e29315af03a775da2f23b1ae5ca27f6cc",
+    "supervision.py": "dde8527fc562b43a3ca5bed034c43f66400780d6c36bf3d74046082dd7e19abb",
+    "test_conversion_recipe.py": "af7681cbf259410dd3e50f628fa6aaccd83aa41fddf996aa9874fae72a3286f0",
+    "test_one_call.py": "75dba2a4668651ec5299de1c7c9d7566058068357f7664dfffc5bc81747b0eda",
+    "test_output_signature.py": "ad22706bbd4e095a544065b6a90b544cfe8e9cc5f8ea5a37770aa51ac134255b",
+    "test_private_raw_cause.py": "3478b7d936c7bf30dbd1d32ef5fe681324ff5a6ea77e1e3c3089bc0597303b5a",
+    "wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5"
+  },
+  "supervision_copied_unchanged": true
+}

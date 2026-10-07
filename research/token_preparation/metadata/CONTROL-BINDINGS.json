@@ -1,0 +1,16 @@
+{
+  "a20_tensor_schema_sha256": "fa10e0a11750e2b3e215c44f340e80bfdec1b374c68cd03eacd23b07b119dcea",
+  "checkpoint_path": "model/A-terminal.reference.pt",
+  "cmvn_path": "reference/upstream/wekws/model/cmvn.py",
+  "fsmn_path": "reference/upstream/wekws/model/fsmn.py",
+  "historical_training_protocol_sha256": "da6545afa90989d1cab008a0fdfd30cabbfbb612cdf3297b91c132bfe0df036f",
+  "numpy_version": "1.26.4",
+  "source_sha256": {
+    "model/A-terminal.reference.pt": "5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39",
+    "reference/upstream/torchaudio/kaldi.py": "5cbea1a584ddea748f6f68a621d794e13334e88d9faa1d40986f7af32f196d29",
+    "reference/upstream/wekws/bin/stream_kws_ctc.py": "2a5d462f1c0830beee844427cbf0063e38f7b981dcd6e7990ec7a633acf46e53",
+    "reference/upstream/wekws/model/cmvn.py": "6b25a77adb3b33361798f0d72110915827015fada0ddb0cc22e30e9d70afe05c",
+    "reference/upstream/wekws/model/fsmn.py": "62265f349ae1dd95580e614557ee58c0ee361fea9e41ac62c6634d5c6ff6c2d3"
+  },
+  "torch_version": "2.12.1+cpu"
+}
