@@ -37,8 +37,10 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
 
 ## Results worth retaining
 
-These links identify immutable public evidence, whether or not the companion
-archive has yet been integrated into the data repository's default branch.
+The companion public evidence is now integrated into `kws-data` main by
+[#21](https://github.com/jiying2007/kws-data/pull/21). Use its
+[current research index](https://github.com/jiying2007/kws-data/blob/main/docs/RESEARCH_INDEX.md)
+for navigation; the immutable links below preserve each original evidence identity.
 They are historical observations, not instructions to rerun an experiment.
 
 | Question | Preserved outcome | Evidence |
@@ -76,7 +78,9 @@ They are historical observations, not instructions to rerun an experiment.
   grant no new execution permission
 - [Historical outcome index](consolidation/history/BRANCH_OUTCOMES.md) records
   dormant-branch decisions and corrected interpretations. Older narrative notes
-  are retained verbatim as historical evidence, not current guidance
+  are retained verbatim as historical evidence, not current guidance. The
+  [historical-note reading guide](consolidation/history/READING_NOTES.md) explains
+  relocated links and unavailable old build artifacts
 - The existing automatic repository cleanup now explicitly retains all 61
   non-main branch names in the [2026-10-07 inventory](consolidation/branch-retention-2026-10-07.json).
   The guard runs before merged-tip, retired-branch or old closed-unmerged-PR

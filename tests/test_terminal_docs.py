@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
+import tempfile
+from urllib.parse import unquote, urlsplit
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -19,7 +22,50 @@ def load_keyword_rows(path: pathlib.Path) -> list[list[str]]:
     ]
 
 
+def navigation_targets(text: str) -> list[str]:
+    return re.findall(r"!?\[[^\]\n]*\]\(([^\s)]+)\)", text)
+
+
+def require_local_navigation(path: pathlib.Path) -> None:
+    for target in navigation_targets(path.read_text(encoding="utf-8")):
+        parsed = urlsplit(target)
+        if parsed.scheme or target.startswith(("#", "//")) or not parsed.path:
+            continue
+        candidate = path.parent / unquote(parsed.path)
+        assert candidate.exists(), f"{path}: missing navigation target {target}"
+
+
+def check_navigation_indexes() -> None:
+    # Current navigation is checked separately from immutable historical notes,
+    # whose original local-build references are explicitly explained by the guide.
+    for relative in (
+        "docs/README.md", "tools/README.md", "research/README.md",
+        "research/consolidation/history/READING_NOTES.md",
+    ):
+        require_local_navigation(ROOT / relative)
+    tools = ROOT / "tools"
+    expected = {path.name for path in tools.iterdir() if path.suffix in {".py", ".c", ".h"}}
+    indexed = navigation_targets((tools / "README.md").read_text(encoding="utf-8"))
+    source_targets = [target for target in indexed if pathlib.PurePosixPath(target).suffix in {".py", ".c", ".h"}]
+    assert len(source_targets) == len(set(source_targets)), "duplicate engineering-tool index entry"
+    assert set(source_targets) == expected, "engineering-tool index is incomplete or stale"
+    with tempfile.TemporaryDirectory(prefix="navigation-docs-") as tmp:
+        root = pathlib.Path(tmp)
+        page = root / "index.md"
+        (root / "file name.md").write_text("fixture", encoding="utf-8")
+        page.write_text("[ok](file%20name.md#section) [anchor](#here) [web](https://example.invalid/missing)", encoding="utf-8")
+        require_local_navigation(page)
+        page.write_text("[bad](missing.md)", encoding="utf-8")
+        try:
+            require_local_navigation(page)
+        except AssertionError as error:
+            assert "missing.md" in str(error)
+        else:
+            raise AssertionError("missing local navigation target was accepted")
+
+
 def main() -> int:
+    check_navigation_indexes()
     docs = [
         ROOT / "README.md",
         ROOT / "README.zh-CN.md",
