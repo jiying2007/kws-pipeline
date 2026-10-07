@@ -1,8 +1,0 @@
-{
-  "commit": "617b66bb30148a675805be2f17c61703d31e6e79",
-  "manifest_sha256": "da35f24ddf42f06e7ba49e29d9fe1a72d7c9173d26dd887b85e22a8d8a0d626a",
-  "path": "research/2026-10-04-qwen20-descriptive",
-  "publication_ready": true,
-  "repository": "jiying2007/kws-data",
-  "schema": "qwen20-immutable-data-reference-v1"
-}

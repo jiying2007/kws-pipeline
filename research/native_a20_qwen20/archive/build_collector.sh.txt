@@ -1,5 +1,0 @@
-#!/bin/sh
-set -eu
-cd "$(dirname "$0")/.."
-cc -std=c11 -O2 -Wall -Wextra -Werror -fno-fast-math -ffp-contract=off -frounding-math -fexcess-precision=standard src/collector.c -Lruntime -la20_fft64 '-Wl,-rpath,$ORIGIN/../runtime' -lm -o build/collector
-./build/collector --toy-test

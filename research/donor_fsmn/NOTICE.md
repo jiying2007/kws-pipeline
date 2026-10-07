@@ -1,5 +1,0 @@
-# Provenance and limits
-
-The C finite-memory model and splice adapter implement the behavior of the pinned WeKws Python sources at commit6a45aeb994dd81c0969ff877a5a7c46d60ed0c86, distributed under Apache-2.0. Preserve upstream author attribution (FSMN: Yueyue Nyy, Jing Du; streaming keyword spotter: upstream WeKws contributors) and the repository's applicable license notices when distributing derived implementation code. Source hashes and exact reference behavior are documented in the approved implementation specification.
-
-The separately obtained `iic/speech_charctc_kws_phone-xiaoyun` checkpoint remains local. Its model-specific README declares Apache License2.0, but internal pretraining audio is not provided by that declaration. No checkpoint, donor tensor payload, model-derived large golden array, corpus audio or third-party dependency is included in this proposed source inventory. Scalar comparison reports and historical diagnostic variants are maintained separately in the kws-data research archive; they preserve failed acceptance results without duplicating current source.

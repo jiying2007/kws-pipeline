@@ -1,0 +1,518 @@
+{
+  "schema": "kws-branch-archive-snapshot-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "snapshot_baseline_main": "221dedd21d0892965aacda15e676fc97d29bd32b",
+  "original_branch_count": 60,
+  "purpose": "Preserve full original commit history and bytes without adding them to current main or activating their workflows. This archival commit is not a functional integration.",
+  "branches": [
+    {
+      "branch": "codex/github-asr-runtime-once-20261001",
+      "head": "1535031d186ee32190f40cd5263459c21b63b753",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/1535031d186ee32190f40cd5263459c21b63b753",
+      "tree": "55b02db6a437a67341a4aa2f79955f4f2a9f511e"
+    },
+    {
+      "branch": "codex/kws-expanded-train-readback-20260927",
+      "head": "c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8",
+      "content_disposition": "historical-notes-plus-stale-prototypes",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8",
+      "tree": "b655373e6007e1ab4fbb907930857e0382497151"
+    },
+    {
+      "branch": "diag/ctc-occurrence-target-blank-gradient",
+      "head": "2468af38e1f2a797e4c1e15b7387fb524fe62e19",
+      "content_disposition": "negative-pretraining-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/2468af38e1f2a797e4c1e15b7387fb524fe62e19",
+      "tree": "1715f71e2a4a54ea8ad3e96ccbabd5511310285b"
+    },
+    {
+      "branch": "diag/ctc-viterbi-separability-v1",
+      "head": "0b45ab32c65c36a3613404dce8ec755d00fb0c50",
+      "content_disposition": "negative-decoder-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/0b45ab32c65c36a3613404dce8ec755d00fb0c50",
+      "tree": "53ce2ff22cf224b8a6cfcae9d5ea5a9d8c6ea21b"
+    },
+    {
+      "branch": "diag/frozen-far-history-decomposition-rerun-v1",
+      "head": "22610f6f2012d5d7c3a86118c70b3ed187d4d951",
+      "content_disposition": "trigger-only-superseded-interpretation",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/22610f6f2012d5d7c3a86118c70b3ed187d4d951",
+      "tree": "c4cc6b86995acfd351a4408c241f4ebf6ab8d32c"
+    },
+    {
+      "branch": "diag/frozen-far-source-replay-cases-v1-rerun1",
+      "head": "d0828c3e2c35dffb8406cd1c504463951c3f8076",
+      "content_disposition": "trigger-only-completed-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d0828c3e2c35dffb8406cd1c504463951c3f8076",
+      "tree": "5e93ac22696a34d6fc716a27a70088793954acdb"
+    },
+    {
+      "branch": "diag/frozen-far-source-replay-cases-v1",
+      "head": "a9b29dccea1e4b03fd94a2f3745987bf88a363cb",
+      "content_disposition": "trigger-only-infrastructure-failed",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/a9b29dccea1e4b03fd94a2f3745987bf88a363cb",
+      "tree": "9a74a454a69f22083e4a6198dda01abcc8214889"
+    },
+    {
+      "branch": "diag/frozen-far-stream-context-replay-v1",
+      "head": "73ff31a39090eff9d1e696c964c60cc31a218a2c",
+      "content_disposition": "trigger-only-corrected-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/73ff31a39090eff9d1e696c964c60cc31a218a2c",
+      "tree": "ad8fc536b0b14d68593917e98edb6932cb4a1bf4"
+    },
+    {
+      "branch": "diag/fuzzy-competitor-token-provenance",
+      "head": "924bc52c2bcc35fc69bd25e077f8dfed15e48811",
+      "content_disposition": "functionality-retained-in-main",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/924bc52c2bcc35fc69bd25e077f8dfed15e48811",
+      "tree": "4c9842be548d7ad46d675e3a8741283744739a27"
+    },
+    {
+      "branch": "diag/fuzzy-temporal-neighborhood-stack",
+      "head": "a0e06819e679fdbcedce05499bb494dae0567f37",
+      "content_disposition": "functionality-retained-in-main",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/a0e06819e679fdbcedce05499bb494dae0567f37",
+      "tree": "e0a1406c404ccb334fc316cf9e8f19a7a9645a5b"
+    },
+    {
+      "branch": "diag/nonroot-exact-top-admission-probe",
+      "head": "fb735bc609b7bc3be5418c36e9a91c5547d60cf2",
+      "content_disposition": "negative-runtime-counterfactual",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/fb735bc609b7bc3be5418c36e9a91c5547d60cf2",
+      "tree": "d274fded2b15369f52fa37d691faaf386a65503c"
+    },
+    {
+      "branch": "diag/retained-frozen-far-path-summary-seed3301-rerun1",
+      "head": "3a30f2878323b313d7361541faf451b78f643ecd",
+      "content_disposition": "trigger-only-completed-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/3a30f2878323b313d7361541faf451b78f643ecd",
+      "tree": "33bcbff053a7ee66b715cb4f563976280f933fad"
+    },
+    {
+      "branch": "diag/retained-frozen-far-path-summary-seed3301",
+      "head": "1e84b3c2b58fab504befa1c0a71b061f0347f7f5",
+      "content_disposition": "trigger-only-infrastructure-failed",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/1e84b3c2b58fab504befa1c0a71b061f0347f7f5",
+      "tree": "967f0fdf8980e97ee065ce9c23d7c5e7e9a59a84"
+    },
+    {
+      "branch": "diag/strict-fuzzy-child-cost-probe",
+      "head": "f79f9540aa9b0811e34592f5b77cc9b1b70d7826",
+      "content_disposition": "unvalidated-diagnostic-superseded-by-closure",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/f79f9540aa9b0811e34592f5b77cc9b1b70d7826",
+      "tree": "7d9b5721114ac7194cd2fb6feadb52770f862fab"
+    },
+    {
+      "branch": "exp/ctc-keyword-competition-positive-pair-v1",
+      "head": "d08abbf3b5c43155f9bcb3986aef687e7bcb1ec3",
+      "content_disposition": "trigger-only-causal-negative",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d08abbf3b5c43155f9bcb3986aef687e7bcb1ec3",
+      "tree": "d9c8007a2ac88aa82a9898873a4da5f092d521e2"
+    },
+    {
+      "branch": "exp/decoder-exact-nonroot-probe-v1",
+      "head": "03453a6c408cb038ad80f38b0afd0911ab7dd88a",
+      "content_disposition": "negative-runtime-counterfactual",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/03453a6c408cb038ad80f38b0afd0911ab7dd88a",
+      "tree": "804267ecb69b03301e314589ebf373372ec217c9"
+    },
+    {
+      "branch": "exp/decoder-nonroot-blank-evidence-probe-v1",
+      "head": "9f7947a07d7a00b7ebf5b7c427e423837a5d2618",
+      "content_disposition": "negative-runtime-counterfactual",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/9f7947a07d7a00b7ebf5b7c427e423837a5d2618",
+      "tree": "4219cc88976fa21d79cd7f1c604c1d43caacd1ae"
+    },
+    {
+      "branch": "exp/decoder-nonroot-defer-probe-v1",
+      "head": "8589e99d85f01f4a4dd3499548329c2357a5aa8b",
+      "content_disposition": "negative-runtime-counterfactual",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/8589e99d85f01f4a4dd3499548329c2357a5aa8b",
+      "tree": "1e34730580ee455759e517b7c44a2b07c1cb330c"
+    },
+    {
+      "branch": "exp/label-prior-primary-ctc-pair-v1-rerun1",
+      "head": "d74ff5589568d6a3b81f38e04f6e86688b51aebf",
+      "content_disposition": "trigger-only-causal-negative",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d74ff5589568d6a3b81f38e04f6e86688b51aebf",
+      "tree": "ca7d2a25e99e172f72ff4c8a7c2a0d959605328e"
+    },
+    {
+      "branch": "exp/label-prior-primary-ctc-pair-v1",
+      "head": "a06f36bdeab9a00c5b7581255ea3d8fd4c5a0f51",
+      "content_disposition": "trigger-only-infrastructure-failed",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/a06f36bdeab9a00c5b7581255ea3d8fd4c5a0f51",
+      "tree": "aa7c725b4c347f7bd464f396dbda69bfd8f1ac06"
+    },
+    {
+      "branch": "exp/runtime-exec-replay-control-v1",
+      "head": "54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+      "content_disposition": "trigger-only-causal-invalid",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/54de5a632090bdb4c7645919a78a8ac47e8bebf5",
+      "tree": "f1d818a21fdcddbcf91468ece1749266dd6bffc5"
+    },
+    {
+      "branch": "exp/runtime-exec-replay-treatment-v1",
+      "head": "1edc7bc09a8739b4d49d1be9b03d5532898efb75",
+      "content_disposition": "trigger-only-causal-invalid",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/1edc7bc09a8739b4d49d1be9b03d5532898efb75",
+      "tree": "21b9ba5837a9679d8faf25c915f03379eb2e21ce"
+    },
+    {
+      "branch": "exp/runtime-search-aligned-positive-pair-v1",
+      "head": "1455685aa050c3508ca755b480f80dca0ac9ff9e",
+      "content_disposition": "trigger-only-causal-negative",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/1455685aa050c3508ca755b480f80dca0ac9ff9e",
+      "tree": "9a347962090df59059949f128cc4b35c5cae924b"
+    },
+    {
+      "branch": "exp/vad-align-control-current-v1",
+      "head": "fd44748f18728621df20b65b15ad14639350d5f6",
+      "content_disposition": "trigger-only-infrastructure-failed",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/fd44748f18728621df20b65b15ad14639350d5f6",
+      "tree": "97c24c973740d2ae670b3fe403019d23deb75de0"
+    },
+    {
+      "branch": "exp/vad-align-control-current-v2",
+      "head": "8ffc1200a900728fde3d392479a863f42132be5c",
+      "content_disposition": "trigger-only-completed-control",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/8ffc1200a900728fde3d392479a863f42132be5c",
+      "tree": "f4be2660b3bf571049807e9c0009cacf2a6f0489"
+    },
+    {
+      "branch": "exp/vad-align-suffix-root-v1",
+      "head": "2b38131cf20966ac0bc24b92b617ae308ba19cd1",
+      "content_disposition": "trigger-only-infrastructure-failed",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/2b38131cf20966ac0bc24b92b617ae308ba19cd1",
+      "tree": "ec35bae4b52839b3c8531e421d2e02b785e29d95"
+    },
+    {
+      "branch": "exp/vad-align-suffix-root-v2",
+      "head": "e45902a23696a95018ac80b9445c36d05c7203bb",
+      "content_disposition": "trigger-only-causal-negative",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/e45902a23696a95018ac80b9445c36d05c7203bb",
+      "tree": "c47d8f359b55f0736419694ea698bb5b51abe371"
+    },
+    {
+      "branch": "feat/label-prior-ctc-objective",
+      "head": "8381df126a1f8c9decca2579dff612833bfcc5b1",
+      "content_disposition": "superseded-implementation",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/8381df126a1f8c9decca2579dff612833bfcc5b1",
+      "tree": "80bc2a93bcacfc87782be6448668ce329aa5ee26"
+    },
+    {
+      "branch": "feat/restricted-development-dataset-iteration-v1",
+      "head": "064493c5bd71c4de40aa9d6569254724ee1ada46",
+      "content_disposition": "unmerged-useful-design-needs-current-review",
+      "branch_ref_disposition": "hold-pending-functional-port-review",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/064493c5bd71c4de40aa9d6569254724ee1ada46",
+      "tree": "63bb77e16213c531d3521200b3a600b86aef0054"
+    },
+    {
+      "branch": "research/a20-cosy30-cross-voice-v1",
+      "head": "d5c64d273f680f274d673439f9525cc634089d4a",
+      "content_disposition": "completed-generation-source-armed-tip",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d5c64d273f680f274d673439f9525cc634089d4a",
+      "tree": "5f128bf38ec77191511a897d2232109e1a9e48d3"
+    },
+    {
+      "branch": "research/a20-cosy49-single-candidate-v1",
+      "head": "28e90204e40b8da07f5d887fee43f3e19a3e865d",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/28e90204e40b8da07f5d887fee43f3e19a3e865d",
+      "tree": "2e673942a005dd689c2de10b8537aa93a087136f"
+    },
+    {
+      "branch": "research/a20-cpu-metadata-probe-20261004",
+      "head": "ff0a1bbd1815655aeec448ed43da728e2cf2c955",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/ff0a1bbd1815655aeec448ed43da728e2cf2c955",
+      "tree": "d9dbb17aa23c8c5a7884a1782e05d217b2f5fca7"
+    },
+    {
+      "branch": "research/a20-fixed300-single-candidate-v1",
+      "head": "a44a8d785bacfc2daf3f94951547e74063e30d26",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/a44a8d785bacfc2daf3f94951547e74063e30d26",
+      "tree": "6166d2fdf366da94e741766d23cdcd065f80876d"
+    },
+    {
+      "branch": "research/a20-token-preparation-20261004",
+      "head": "f63ace695467e310129fb51f5e09c031ed834d34",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/f63ace695467e310129fb51f5e09c031ed834d34",
+      "tree": "51abb06d32f4e268dcdabdbdcece54fc534f5cef"
+    },
+    {
+      "branch": "research/a20-token-preparation-metadata-recovery-20261004",
+      "head": "4a62fc91f7140c6e875692c88235152da4c68e4d",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/4a62fc91f7140c6e875692c88235152da4c68e4d",
+      "tree": "90fd9641b93e09d59e53c810414c1e50bfc9ced2"
+    },
+    {
+      "branch": "research/asr-label-decision-regressions-v1",
+      "head": "7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+      "tree": "f5a17e8a09659ecf30ef451c27e4218b7e52e5e3"
+    },
+    {
+      "branch": "research/cosy49-results-archive-v1",
+      "head": "5abf8de13f0ed097c223c82a98428bec3aab7e7f",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/5abf8de13f0ed097c223c82a98428bec3aab7e7f",
+      "tree": "69ce9bea34e0e3a336e51755a1e2c91286d32662"
+    },
+    {
+      "branch": "research/cosyvoice3-six-pair-pilot-20261002",
+      "head": "a352b52946ebde8e7a790fd2abd4b4f98dc39d98",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/a352b52946ebde8e7a790fd2abd4b4f98dc39d98",
+      "tree": "123e71beaafe7699b1a9f0d35074fb12b072e6dd"
+    },
+    {
+      "branch": "research/experiment-quality-guards-v1",
+      "head": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+      "tree": "3cd313dca717a1dbea2e4247a7992e991dfd0c40"
+    },
+    {
+      "branch": "research/firered-cpu-preflight-20261002",
+      "head": "d68ebc1a45b5ec6e2c5d64a91bc54c0fb3be4662",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d68ebc1a45b5ec6e2c5d64a91bc54c0fb3be4662",
+      "tree": "1920bd71056c7cd6ee607af6d84624e9d79cb90f"
+    },
+    {
+      "branch": "research/fixed30-asr-regression-v1",
+      "head": "3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+      "tree": "792f97a81beca65697fc04c45d3360e48de39b85"
+    },
+    {
+      "branch": "research/fixed30-asr-setup-recovery-v2",
+      "head": "94b9fbf562aca9487beb8096bc3f50924369a3ce",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/94b9fbf562aca9487beb8096bc3f50924369a3ce",
+      "tree": "f80284d5cd7c4e8230b454cce5bf0c8d2c7d9d3a"
+    },
+    {
+      "branch": "research/frozen-far-phase-aligned-control-20260930",
+      "head": "0595b248b19b856df80902a6656bbea94ddd5a94",
+      "content_disposition": "trigger-only-completed-corrective-diagnostic",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/0595b248b19b856df80902a6656bbea94ddd5a94",
+      "tree": "682de6d24487f556f61f1f9b025c592a71f21fea"
+    },
+    {
+      "branch": "research/k1-fixed-slot-ctc-v1",
+      "head": "71313a67ab6ef4bc6dede51e4897b305eb5577b3",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/71313a67ab6ef4bc6dede51e4897b305eb5577b3",
+      "tree": "c9bd90ff7b5aab0fd9c7c9c9428da54f927a623d"
+    },
+    {
+      "branch": "research/k1-prefix-marginal-v1",
+      "head": "5058065799edfa223b9cd6b06c3aea48fecf795e",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/5058065799edfa223b9cd6b06c3aea48fecf795e",
+      "tree": "99bbac5dc4dccb94754a737cacdac3973e23b848"
+    },
+    {
+      "branch": "research/matched-context-evaluation-v1",
+      "head": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "tree": "797ffa55621130c192358053c6998d471b7e141e"
+    },
+    {
+      "branch": "research/melo6-saved-result-checks-v1",
+      "head": "3be91857f80ba63f80a5caac82744cb141f39987",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/3be91857f80ba63f80a5caac82744cb141f39987",
+      "tree": "bf1738f70d672f80ddb842f3c2f216768d8b5ccd"
+    },
+    {
+      "branch": "research/melo6-source-screen-v1",
+      "head": "dd859c5b9feeaeedcff937cf94ac0858a9793ad1",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/dd859c5b9feeaeedcff937cf94ac0858a9793ad1",
+      "tree": "16f5bf851a0e34837e309b295d83c4e0a8d334e6"
+    },
+    {
+      "branch": "research/native-a20-arm-compile-only-20261004",
+      "head": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "tree": "c80e995187fc714c03af8f7cef03621832659313"
+    },
+    {
+      "branch": "research/native-a20-domain-tools-20261004",
+      "head": "fe53ae5a11e676560d18d5ef94fb696b6013ce9f",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/fe53ae5a11e676560d18d5ef94fb696b6013ce9f",
+      "tree": "2af0c4ed1b887c8f1d89d4f4c4ded54e75a938ef"
+    },
+    {
+      "branch": "research/native-a20-n0-tools-20261004",
+      "head": "6d06a04403a93c5b7138870deb900baf5a8fefc4",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/6d06a04403a93c5b7138870deb900baf5a8fefc4",
+      "tree": "196470a7d50efaa199e092bcd9bd7e0d1d689261"
+    },
+    {
+      "branch": "research/native-a20-quality-tools-20261004",
+      "head": "d8453ae8b2b2c620716b32c96d9647834ce96746",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/d8453ae8b2b2c620716b32c96d9647834ce96746",
+      "tree": "6dcb23976cd3152eb3c80cf4569d4c15462b8516"
+    },
+    {
+      "branch": "research/native-a20-qwen20-saved-20261004",
+      "head": "09ec823d16fc149463bb898f6408221b05471e64",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/09ec823d16fc149463bb898f6408221b05471e64",
+      "tree": "d9f475734bd5951c5e98ec203f91ed1336222aa2"
+    },
+    {
+      "branch": "research/native-a20-recovery-20261003",
+      "head": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "content_disposition": "core-integration-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "tree": "08ff7c8e5be2872f7f45461c9a8c862d3b3d5703"
+    },
+    {
+      "branch": "research/qwen6-source-screen-native-recovery-v3",
+      "head": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+      "tree": "3dc33763d2206f7bc643d9388cf2b96bd25c8103"
+    },
+    {
+      "branch": "research/qwen6-source-screen-recovery-v2",
+      "head": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/480e4f013349917b0cea514633d3f7ae2d98c0b4",
+      "tree": "219a74aa4ee44bc78d8f662d5e115b922afc943a"
+    },
+    {
+      "branch": "research/qwen6-source-screen-v1",
+      "head": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+      "tree": "8cf78ca3a32055d94e337af4dcd93009d86f1904"
+    },
+    {
+      "branch": "research/single-k1-followed-wu-v1",
+      "head": "c81396934ad4c83876086d35ffb79478435d19d0",
+      "content_disposition": "integrated-source-and-findings",
+      "branch_ref_disposition": "eligible-only-after-archive-verification-and-explicit-ref-approval",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/c81396934ad4c83876086d35ffb79478435d19d0",
+      "tree": "cc039534d861769429bd908faaeb2d1249784341"
+    },
+    {
+      "branch": "training/keyword-set-contract-v1",
+      "head": "986d44c9e0efe15ce0656413a2f2112aeccaea96",
+      "content_disposition": "explicitly-retained-design",
+      "branch_ref_disposition": "hold-pending-functional-port-review",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/986d44c9e0efe15ce0656413a2f2112aeccaea96",
+      "tree": "120c0366458093ad20416c87fe100a45fe37740b"
+    },
+    {
+      "branch": "training/keyword-set-identity-v1",
+      "head": "2d52b58f36163fb93b9ba1b1356fa184c187fa2f",
+      "content_disposition": "explicitly-retained-design",
+      "branch_ref_disposition": "hold-pending-functional-port-review",
+      "source_url": "https://github.com/jiying2007/kws-pipeline/tree/2d52b58f36163fb93b9ba1b1356fa184c187fa2f",
+      "tree": "c49f0d37376524cf7cbdbbd81fc502f485cfa062"
+    }
+  ],
+  "root_tree_contract": [
+    "README.md",
+    "BRANCHES.json"
+  ],
+  "authority": "This record does not authorize execution, model promotion, data admission, publication of new data, or branch deletion.",
+  "snapshot_baseline_tree": "256648cbc8313ff44b31e74ae6ab92f20480663c",
+  "pointer_only_bytes_preserved_through_parents": [
+    {
+      "source_heads": [
+        "3385bf2a7f6838b743546f2ee9f481e2fa7ee975",
+        "94b9fbf562aca9487beb8096bc3f50924369a3ce"
+      ],
+      "path": "research/fixed30_asr/fixed30-blind-inputs.zip",
+      "git_blob_sha1": "f72723835df35121419a3c5698cebf5368f21a60",
+      "bytes": 827058,
+      "mode": "100644"
+    }
+  ],
+  "proposed_tag": "archive/branches-2026-10-07",
+  "tag_immutability": "create-only; existing conflicting tag stops the operation; no force update",
+  "verification_before_any_ref_deletion": [
+    "exact original heads unchanged",
+    "archive tree contains only README.md and BRANCHES.json",
+    "all expected direct parents match with no omissions",
+    "tag resolves to verified archival commit",
+    "all recorded heads/trees and pointer ZIP reachable/readable",
+    "restore drill passes",
+    "deletion list explicitly approved"
+  ]
+}
