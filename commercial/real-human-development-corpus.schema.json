@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jiying2007/kws-pipeline/commercial/real-human-development-corpus.schema.json",
+  "title": "Restricted development corpus structural manifest",
+  "description": "Standalone restricted development structure only. Declarations do not certify consent, labels or anonymity and grant no training, qualification, shipping or publication authority. The CLI also enforces strict JSON token types, duplicate-key/nonfinite rejection, filesystem/byte/WAV identity, coverage and event relationships.",
+  "$comment": "Design provenance: feat/restricted-development-dataset-iteration-v1 at 064493c5bd71c4de40aa9d6569254724ee1ada46. Hardened standalone port; not an old workflow compatibility contract. JSON Schema considers 1.0 an integer; this CLI intentionally requires integer JSON tokens for integer fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "corpus_role",
+    "recordings"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "dataset_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "corpus_role": {
+      "type": "string",
+      "const": "development-feedback"
+    },
+    "recordings": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recording",
+          "input_path",
+          "input_sha256",
+          "input_bytes",
+          "duration_s",
+          "speaker_id",
+          "session_id",
+          "source_id",
+          "room_id",
+          "device_id",
+          "distance_m",
+          "azimuth_deg",
+          "tags",
+          "expected",
+          "capture",
+          "consent_scope",
+          "retention_class"
+        ],
+        "properties": {
+          "recording": {
+            "$ref": "#/$defs/identifier"
+          },
+          "input_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63}/){0,7}[A-Za-z0-9][A-Za-z0-9._-]{0,59}\\.wav$"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "input_bytes": {
+            "type": "integer",
+            "minimum": 46,
+            "maximum": 536870912
+          },
+          "duration_s": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 3600
+          },
+          "speaker_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "session_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "source_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "room_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "device_id": {
+            "$ref": "#/$defs/identifier"
+          },
+          "distance_m": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "azimuth_deg": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMaximum": 360
+          },
+          "snr_db": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -100,
+            "maximum": 100
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 9,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "quiet",
+                "household",
+                "speech",
+                "music",
+                "traffic",
+                "noise",
+                "near",
+                "far",
+                "rear"
+              ]
+            }
+          },
+          "expected": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "keyword_id",
+                "start_s",
+                "end_s"
+              ],
+              "properties": {
+                "keyword_id": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    2
+                  ]
+                },
+                "start_s": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 3600
+                },
+                "end_s": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 3600
+                }
+              }
+            }
+          },
+          "capture": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sample_rate_hz",
+              "channels",
+              "sample_format"
+            ],
+            "properties": {
+              "sample_rate_hz": {
+                "type": "integer",
+                "minimum": 8000,
+                "maximum": 192000
+              },
+              "channels": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16
+              },
+              "sample_format": {
+                "type": "string",
+                "const": "pcm_s16le"
+              }
+            }
+          },
+          "consent_scope": {
+            "type": "string",
+            "const": "product-kws-development"
+          },
+          "retention_class": {
+            "type": "string",
+            "const": "restricted-raw-audio"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    }
+  }
+}
