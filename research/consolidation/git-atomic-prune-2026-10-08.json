@@ -1,0 +1,67 @@
+{
+  "schema": "kws-git-atomic-prune-public-source-v1",
+  "date": "2026-10-08",
+  "repository": "jiying2007/kws-pipeline",
+  "change": "Add separately gated standard Git atomic prune with pinned exact-row pre-push guard",
+  "immutable_plan_sha256": "8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09",
+  "files": [
+    {
+      "path": "tools/archive_branches_once_20261007.py",
+      "sha256": "0bf56f14978e8a2136199ec39bb49fadf722cd91daefe32fd7db957318036a37",
+      "bytes": 41502
+    },
+    {
+      "path": "tests/test_archive_branches_once_20261007.py",
+      "sha256": "cc341905c521ece1e1c4e3f5a62dce837209969ec9db75faaa9946e05e4c12f3",
+      "bytes": 27059
+    },
+    {
+      "path": "tools/git_atomic_prune_20261008.py",
+      "sha256": "df9599c8ad28d9b954f503120964060f5ef4d220beec70a5c73fb6fcd8e00328",
+      "bytes": 23001
+    },
+    {
+      "path": "tools/git_atomic_guard_20261008.py",
+      "sha256": "3773f51b07b018352ad471ee74d0f4a5f8d6fe54ba00532380d10faba80b9917",
+      "bytes": 2692
+    },
+    {
+      "path": "tools/git_atomic_askpass_20261008.py",
+      "sha256": "9b96628994be01753317b89e26c63e3f35eaa1b81d1fa15cb843027401e1b53c",
+      "bytes": 642
+    },
+    {
+      "path": "tests/test_git_atomic_prune_20261008.py",
+      "sha256": "83aeb92425b53ee7b35dc6f03fcfb442b776289559a53e68802e2d60a1bfa804",
+      "bytes": 36185
+    },
+    {
+      "path": "tests/test_git_atomic_coordinator_20261008.py",
+      "sha256": "9c87a44984eaa81690a10d1e6311f5016487f7d571d2889f8f318d62cb0dd390",
+      "bytes": 13605
+    },
+    {
+      "path": "tests/atomic_git_test_fixtures.py",
+      "sha256": "8adbbb4bf62ad7130a62166d4d9bd88a1e8502b8f385152afaf9daae14ea1fcc",
+      "bytes": 4324
+    },
+    {
+      "path": "tests/test_git_atomic_api_budget_20261008.py",
+      "sha256": "d4401c94575fcee46cd277c96d1fc4ecba50bc1edd4a01291ee9a1443e2d4a2c",
+      "bytes": 18270
+    },
+    {
+      "path": ".github/workflows/archive-branches-once-20261007.yml",
+      "sha256": "f6f762b81c56f7ae15c754e5f63577c04d2eb6a5314400fd8098daf893db7f4d",
+      "bytes": 7528
+    }
+  ],
+  "required_exact_main_workflows": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/research-consolidation.yml",
+    ".github/workflows/research-source-consolidation.yml"
+  ],
+  "publication_ci": "PENDING_EXACT_COMMIT_CI",
+  "contains_private_payloads": false,
+  "owner_full_policy_postcheck_required": true
+}
