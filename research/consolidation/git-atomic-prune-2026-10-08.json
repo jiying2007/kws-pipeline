@@ -76,6 +76,12 @@
       "mode": "100644",
       "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
       "bytes": 25543
+    },
+    {
+      "path": "research/consolidation/source-retention-2026-10-07.json",
+      "mode": "100644",
+      "sha256": "db09e945fee9facb3131dd7226c60bb3086ea4bf1d27cc28df9c86e70d43ef79",
+      "bytes": 775887
     }
   ],
   "required_exact_main_workflows": [
