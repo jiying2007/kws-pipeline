@@ -56,7 +56,6 @@ class RetentionTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes((ROOT / row["path"]).read_bytes())
         (self.root / ".github/workflows/research-source-consolidation.yml").write_text("name: fixture\n")
-        (self.root / ".github/workflows/archive-branches-once-20261007.yml").write_text("name: temporary fixture\n")
         arm = self.root / SOURCE_RETENTION.ARM
         arm.parent.mkdir(parents=True)
         arm.write_text(json.dumps(SOURCE_RETENTION.DISABLED_ARM))
@@ -66,8 +65,7 @@ class RetentionTests(unittest.TestCase):
                       provenance=[dict(archive, original_path=archive["source_path"],
                           source_url="https://github.com/jiying2007/kws-pipeline/blob/" + archive["source_commit"] + "/" + archive["source_path"])],
                       source_projections=[], baseline_active_workflows=[active], pointer_only=[],
-                      allowed_new_active_workflows=[".github/workflows/research-source-consolidation.yml",
-                          ".github/workflows/archive-branches-once-20261007.yml"])
+                      allowed_new_active_workflows=[".github/workflows/research-source-consolidation.yml"])
         self.assertEqual(RETENTION.verify(self.root, core), 1)
         self.assertEqual(SOURCE_RETENTION.verify(self.root, source), 1)
         old = self.root / archive["path"]

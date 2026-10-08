@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "910df5c0c3b55292430fcdeda302456ab7716481",
-      "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
-      "bytes": 25543
+      "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+      "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+      "bytes": 24234
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15630,8 +15630,7 @@
     }
   ],
   "allowed_new_active_workflows": [
-    ".github/workflows/research-source-consolidation.yml",
-    ".github/workflows/archive-branches-once-20261007.yml"
+    ".github/workflows/research-source-consolidation.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -15802,6 +15801,40 @@
             "bytes": 25543
           }
         }
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "from_commit": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+      "from_tree": "f9d5c601850036f823e76dfef49050a72d8e88ad",
+      "operation_id": "git-atomic-prune-20261008-retirement",
+      "scope": "Retire the completed one-shot archive/prune workflow, its operation-only helpers and offline tests. Remove only their four CI test/guard pairs and restore the permanent singleton workflow allowance.",
+      "rationale": "All 79 approved archived branches were deleted and both recovery anchors created. Preserve historical source identities, retained files, provenance, projections and maintenance records.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "910df5c0c3b55292430fcdeda302456ab7716481",
+            "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
+            "bytes": 25543
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+            "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+            "bytes": 24234
+          }
+        }
+      ],
+      "allowed_new_active_workflows_before": [
+        ".github/workflows/research-source-consolidation.yml",
+        ".github/workflows/archive-branches-once-20261007.yml"
+      ],
+      "allowed_new_active_workflows_after": [
+        ".github/workflows/research-source-consolidation.yml"
       ]
     }
   ]

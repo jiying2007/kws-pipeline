@@ -2,7 +2,7 @@
   "schema": "kws-git-atomic-prune-public-source-v1",
   "date": "2026-10-08",
   "repository": "jiying2007/kws-pipeline",
-  "change": "Add separately gated standard Git atomic prune with pinned exact-row pre-push guard",
+  "change": "Completed approved atomic cleanup and retire the one-shot execution sources",
   "immutable_plan_sha256": "8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09",
   "files": [
     {
@@ -89,7 +89,143 @@
     ".github/workflows/research-consolidation.yml",
     ".github/workflows/research-source-consolidation.yml"
   ],
-  "publication_ci": "PENDING_EXACT_COMMIT_CI",
+  "publication_ci": "EXACT_EXECUTION_SOURCE_MAIN_CI_PASSED",
   "contains_private_payloads": false,
-  "owner_full_policy_postcheck_required": true
+  "owner_full_policy_postcheck_required": true,
+  "files_semantics": "Historical executed-source snapshot at source_commit; these rows do not require files to remain on the current main branch.",
+  "source_commit": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+  "source_url": "https://github.com/jiying2007/kws-pipeline/tree/152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+  "required_exact_main_workflows_semantics": "Required workflow checks for the historical execution source commit.",
+  "owner_full_policy_postcheck_status": "PASSED",
+  "execution_authority": "None; historical completed operation only",
+  "completion": {
+    "status": "COMPLETED_AND_OWNER_POSTCHECK_PASSED",
+    "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/37722486662",
+    "run_attempt": 1,
+    "source_commit": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+    "atomicity": "OWN_REPOSITORY_ONLY",
+    "transport_disposition": "ACKNOWLEDGED",
+    "deleted_branches": 57,
+    "anchor": {
+      "oid": "795ffd731a78bf2794774c9bc97f519536025781",
+      "ref": "refs/tags/archive/branches-2026-10-07-prune-anchor"
+    },
+    "original_archives_unchanged": true,
+    "unrelated_refs_unchanged": true,
+    "peer_refs_unchanged": true,
+    "before_recovery_proofs": {
+      "kws-data": {
+        "archive_oid": "b0da8abbe96d2d9c2377255fdf24a8efbedaedbf",
+        "blobs": 1582,
+        "external_payload_gap": false,
+        "full_object_identity": true,
+        "object_bytes": 214733449,
+        "object_receipt_sha256": "c9383de455f1c518f4681fff7d605adc7f79175e46ee63236fea00b4e3a84998",
+        "objects": 1940,
+        "pointer_zip": false,
+        "restored_heads": 22,
+        "restored_trees": true,
+        "status": "PASS",
+        "tag_only_fetch": true,
+        "wrong_before_is_strict_ancestor": true
+      },
+      "kws-pipeline": {
+        "archive_oid": "795ffd731a78bf2794774c9bc97f519536025781",
+        "blobs": 2704,
+        "external_payload_gap": false,
+        "full_object_identity": true,
+        "object_bytes": 40033224,
+        "object_receipt_sha256": "ea27019d832dfe5199fb5ce3e3d7e9083f621c7cbb38e3baf462fb03da04ffba",
+        "objects": 5460,
+        "pointer_zip": true,
+        "restored_heads": 60,
+        "restored_trees": true,
+        "status": "PASS",
+        "tag_only_fetch": true,
+        "wrong_before_is_strict_ancestor": true
+      }
+    },
+    "after_recovery_proofs": {
+      "kws-data": {
+        "archive_oid": "b0da8abbe96d2d9c2377255fdf24a8efbedaedbf",
+        "blobs": 1582,
+        "external_payload_gap": false,
+        "full_object_identity": true,
+        "object_bytes": 214733449,
+        "object_receipt_sha256": "c9383de455f1c518f4681fff7d605adc7f79175e46ee63236fea00b4e3a84998",
+        "objects": 1940,
+        "pointer_zip": false,
+        "restored_heads": 22,
+        "restored_trees": true,
+        "status": "PASS",
+        "tag_only_fetch": true,
+        "wrong_before_is_strict_ancestor": true
+      },
+      "kws-pipeline": {
+        "archive_oid": "795ffd731a78bf2794774c9bc97f519536025781",
+        "blobs": 2704,
+        "external_payload_gap": false,
+        "full_object_identity": true,
+        "object_bytes": 40033224,
+        "object_receipt_sha256": "ea27019d832dfe5199fb5ce3e3d7e9083f621c7cbb38e3baf462fb03da04ffba",
+        "objects": 5460,
+        "pointer_zip": true,
+        "restored_heads": 60,
+        "restored_trees": true,
+        "status": "PASS",
+        "tag_only_fetch": true,
+        "wrong_before_is_strict_ancestor": true
+      }
+    },
+    "owner_policy_observation": {
+      "method": "Owner-authorized GitHub connector observation",
+      "status": "OWNER_REFS_POLICY_POSTCHECK_PASS",
+      "final_observed_at": "2026-10-08T03:42:52.386Z",
+      "policies_sha256": "5f7c96d910de214c67846124d8b27d929a75e7aaa4744b344a92bafdf5f567b7",
+      "runtime_hidden_actors": "UNAVAILABLE; separately observed through the owner-authorized connector"
+    },
+    "final_repository_states": {
+      "kws-pipeline": "FULLY_COMPLETED",
+      "kws-data": "FULLY_COMPLETED"
+    },
+    "execution_source_ci": [
+      {
+        "head_sha": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+        "path": ".github/workflows/ci.yml",
+        "run_id": 37722026962
+      },
+      {
+        "head_sha": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+        "path": ".github/workflows/research-consolidation.yml",
+        "run_id": 37722026956
+      },
+      {
+        "head_sha": "152fa48a33af905ef2ecb8d263a916761fd3bcf3",
+        "path": ".github/workflows/research-source-consolidation.yml",
+        "run_id": 37722026966
+      }
+    ]
+  },
+  "retirement": {
+    "operation": "Remove completed one-shot execution entrypoints from the active tree",
+    "removed_paths": [
+      ".github/workflows/archive-branches-once-20261007.yml",
+      "tools/archive_branches_once_20261007.py",
+      "tools/git_atomic_prune_20261008.py",
+      "tools/git_atomic_guard_20261008.py",
+      "tools/git_atomic_askpass_20261008.py",
+      "tests/test_archive_branches_once_20261007.py",
+      "tests/test_git_atomic_prune_20261008.py",
+      "tests/test_git_atomic_coordinator_20261008.py",
+      "tests/test_git_atomic_api_budget_20261008.py",
+      "tests/atomic_git_test_fixtures.py"
+    ],
+    "preserved_plan": "docs/archive-branches-once-20261007.json",
+    "preserved_archive_refs": [
+      "refs/tags/archive/branches-2026-10-07",
+      "refs/tags/archive/branches-2026-10-07-prune-anchor"
+    ],
+    "scope": "Source files and current integrity metadata only; no reference deletions or repository settings changes.",
+    "ci_evidence": "Retirement commit checks are reported by GitHub on the exact published commit."
+  }
 }
