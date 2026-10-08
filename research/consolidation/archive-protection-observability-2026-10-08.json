@@ -1,0 +1,89 @@
+{
+  "schema": "kws-archive-protection-observability-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "date": "2026-10-08",
+  "from_commit": "9cd53b4ce323a40f8a10a7d591d7a72cc75203bc",
+  "from_tree": "0adb58c2dd82d1e0bd8fe95fb1265cd195a45749",
+  "operation_id": "archive-branches-once-20261007",
+  "scope": "Archive-only: represent an omitted ruleset bypass_actors field as UNAVAILABLE. Require exact visible policy, full ruleset inventory, and the frozen default-main-only scope. No protection, permission, archive identity, branch target, or pruning gate changes. Archive performs exactly one create-tag write and does not run the stopped GraphQL CAS diagnostic.",
+  "limitation": "The workflow cannot observe omitted bypass actor details or detect concurrent administrative changes to those hidden details. A separate owner-visible policy review is not a runtime observation.",
+  "api_reference": "https://docs.github.com/en/rest/repos/rules#get-a-repository-ruleset",
+  "evidence_run": "https://github.com/jiying2007/kws-pipeline/actions/runs/37706230517",
+  "files": [
+    {
+      "path": ".github/workflows/archive-branches-once-20261007.yml",
+      "before": {
+        "path": ".github/workflows/archive-branches-once-20261007.yml",
+        "mode": "100644",
+        "bytes": 5836,
+        "sha256": "a588ffe5421ae1f7c3184be8062e40c28fe0dea0e5ac326f9a6bd6b9b9176c84",
+        "git_blob_sha1": "5d973300e00a52f6add5bf7fba6328292ef84f3c"
+      },
+      "after": {
+        "path": ".github/workflows/archive-branches-once-20261007.yml",
+        "mode": "100644",
+        "bytes": 5836,
+        "sha256": "98fee062d2212316a7f690ae855915e6fabf4d52eb2275c34035d4c235b6462d",
+        "git_blob_sha1": "d322687e91ac0f0b07afbf65d11737b870360eb4"
+      }
+    },
+    {
+      "path": "tools/archive_branches_once_20261007.py",
+      "before": {
+        "path": "tools/archive_branches_once_20261007.py",
+        "mode": "100644",
+        "bytes": 36340,
+        "sha256": "56774a403c19ef2b31d4fe8ca207bdb1379a66b469a11f8d202442f09403ab2e",
+        "git_blob_sha1": "8f1a4103132a23a70aa6777583636967ad884509"
+      },
+      "after": {
+        "path": "tools/archive_branches_once_20261007.py",
+        "mode": "100644",
+        "bytes": 39626,
+        "sha256": "f149c3e19f01f5d278889e435a9d671ea2f0413e4ed7936caebcc197141600e7",
+        "git_blob_sha1": "d0a226c208e06ac53abe67fe86a66bccbeee3752"
+      }
+    },
+    {
+      "path": "tests/test_archive_branches_once_20261007.py",
+      "before": {
+        "path": "tests/test_archive_branches_once_20261007.py",
+        "mode": "100644",
+        "bytes": 20197,
+        "sha256": "4f233fb8caa66c13f43c0fa25bda88971c0325559ddfbbc0d251c5ca4c760bf4",
+        "git_blob_sha1": "07088b7a265390625523356e62211ea888627d7a"
+      },
+      "after": {
+        "path": "tests/test_archive_branches_once_20261007.py",
+        "mode": "100644",
+        "bytes": 27059,
+        "sha256": "cc341905c521ece1e1c4e3f5a62dce837209969ec9db75faaa9946e05e4c12f3",
+        "git_blob_sha1": "2cbf60c2931d75d1f6b7adc95ff195d0d03142c5"
+      }
+    }
+  ],
+  "validation": {
+    "offline_tests_passed": 44,
+    "prune_on_unavailable_field": "BLOCKED",
+    "present_changed_bypass_list": "BLOCKED",
+    "other_policy_change": "BLOCKED",
+    "new_or_missing_ruleset": "BLOCKED",
+    "non_default_main_scope": "BLOCKED",
+    "archive_write_count": 1,
+    "archive_cas_diagnostic": "NOT_RUN",
+    "prune_status": "BLOCKED_CAS_UNPROVEN",
+    "archive_incomplete_restore_receipt": "BLOCKED"
+  },
+  "archive_plan_unchanged": {
+    "path": "docs/archive-branches-once-20261007.json",
+    "mode": "100644",
+    "bytes": 29669,
+    "sha256": "8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09",
+    "git_blob_sha1": "b9d16400f1cc90669364d641fd87cddf2afa4318"
+  },
+  "source_retention_manifest_unchanged": {
+    "path": "research/consolidation/source-retention-2026-10-07.json",
+    "git_blob_sha1": "9fd4c34614aa3f0a5621424ecf42c8525a2b7ea2",
+    "sha256": "4d9d42648e80337291ce1aeb6542c82b27427c3a438aff9c1c5b509acc59cca6"
+  }
+}

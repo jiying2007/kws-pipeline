@@ -37,8 +37,8 @@ jobs:
     permissions:
       contents: write
     env:
-      ARCHIVE_SCRIPT_SHA256: 56774a403c19ef2b31d4fe8ca207bdb1379a66b469a11f8d202442f09403ab2e
-      ARCHIVE_TEST_SHA256: 4f233fb8caa66c13f43c0fa25bda88971c0325559ddfbbc0d251c5ca4c760bf4
+      ARCHIVE_SCRIPT_SHA256: f149c3e19f01f5d278889e435a9d671ea2f0413e4ed7936caebcc197141600e7
+      ARCHIVE_TEST_SHA256: cc341905c521ece1e1c4e3f5a62dce837209969ec9db75faaa9946e05e4c12f3
       ARCHIVE_PLAN_SHA256: 8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09
     steps:
       - name: Load exact reviewed source and run offline tests
