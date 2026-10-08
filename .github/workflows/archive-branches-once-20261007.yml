@@ -3,13 +3,18 @@ name: One-shot reviewed branch archive 20261007
   workflow_dispatch:
     inputs:
       operation:
-        description: Fixed archive, diagnostic-only, or prune phase
+        description: Fixed archive, diagnostic, GraphQL prune, or reviewed Git atomic prune
         required: true
         type: choice
-        options: [archive, diagnose, prune]
+        options: [archive, diagnose, prune, git-prune]
       reviewed_source_sha:
         description: Exact reviewed current main commit (40 hex characters)
         required: true
+        type: string
+      owner_policy_attestation:
+        description: Git-prune only; fresh owner full-policy attestation JSON, exact both-main identities
+        required: false
+        default: ''
         type: string
       reviewed_cas_signature_sha256:
         description: Prune only; SHA-256 of the reviewed normalized archive/diagnostic CAS mismatch signature
@@ -37,9 +42,16 @@ jobs:
     permissions:
       contents: write
     env:
-      ARCHIVE_SCRIPT_SHA256: f149c3e19f01f5d278889e435a9d671ea2f0413e4ed7936caebcc197141600e7
+      ARCHIVE_SCRIPT_SHA256: 0bf56f14978e8a2136199ec39bb49fadf722cd91daefe32fd7db957318036a37
       ARCHIVE_TEST_SHA256: cc341905c521ece1e1c4e3f5a62dce837209969ec9db75faaa9946e05e4c12f3
       ARCHIVE_PLAN_SHA256: 8ff9b809dc585efa3bde0e119c309a22185ef142c98475b5422488160aa9ca09
+      ATOMIC_MODULE_SHA256: df9599c8ad28d9b954f503120964060f5ef4d220beec70a5c73fb6fcd8e00328
+      ATOMIC_GUARD_SHA256: 3773f51b07b018352ad471ee74d0f4a5f8d6fe54ba00532380d10faba80b9917
+      ATOMIC_ASKPASS_SHA256: 9b96628994be01753317b89e26c63e3f35eaa1b81d1fa15cb843027401e1b53c
+      ATOMIC_TEST_SHA256: 83aeb92425b53ee7b35dc6f03fcfb442b776289559a53e68802e2d60a1bfa804
+      ATOMIC_COORDINATOR_TEST_SHA256: 9c87a44984eaa81690a10d1e6311f5016487f7d571d2889f8f318d62cb0dd390
+      ATOMIC_TEST_FIXTURE_SHA256: 8adbbb4bf62ad7130a62166d4d9bd88a1e8502b8f385152afaf9daae14ea1fcc
+      ATOMIC_API_BUDGET_TEST_SHA256: d4401c94575fcee46cd277c96d1fc4ecba50bc1edd4a01291ee9a1443e2d4a2c
     steps:
       - name: Load exact reviewed source and run offline tests
         shell: python
@@ -65,28 +77,33 @@ jobs:
               ('tools/archive_branches_once_20261007.py', 'archive_branches_once_20261007.py', 'ARCHIVE_SCRIPT_SHA256'),
               ('tests/test_archive_branches_once_20261007.py', 'test_archive_branches_once_20261007.py', 'ARCHIVE_TEST_SHA256'),
               ('docs/archive-branches-once-20261007.json', 'archive-plan.json', 'ARCHIVE_PLAN_SHA256'),
+              ('tools/git_atomic_prune_20261008.py', 'git_atomic_prune_20261008.py', 'ATOMIC_MODULE_SHA256'),
+              ('tools/git_atomic_guard_20261008.py', 'git_atomic_guard_20261008.py', 'ATOMIC_GUARD_SHA256'),
+              ('tools/git_atomic_askpass_20261008.py', 'git_atomic_askpass_20261008.py', 'ATOMIC_ASKPASS_SHA256'),
+              ('tests/test_git_atomic_prune_20261008.py', 'test_git_atomic_prune_20261008.py', 'ATOMIC_TEST_SHA256'),
+              ('tests/test_git_atomic_coordinator_20261008.py', 'test_git_atomic_coordinator_20261008.py', 'ATOMIC_COORDINATOR_TEST_SHA256'),
+              ('tests/atomic_git_test_fixtures.py', 'atomic_git_test_fixtures.py', 'ATOMIC_TEST_FIXTURE_SHA256'),
+              ('tests/test_git_atomic_api_budget_20261008.py', 'test_git_atomic_api_budget_20261008.py', 'ATOMIC_API_BUDGET_TEST_SHA256'),
           ]
           for path, name, pin in files:
-              url = 'https://api.github.com/repos/jiying2007/kws-pipeline/contents/' + path + '?ref=' + source
-              request = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json'})
+              url = 'https://raw.githubusercontent.com/jiying2007/kws-pipeline/' + source + '/' + path
+              request = urllib.request.Request(url)
               with opener.open(request, timeout=30) as response:
-                  payload = response.read(262145)
-              if len(payload) > 262144:
+                  raw = response.read(262145)
+              if len(raw) > 262144:
                   raise RuntimeError('source response limit')
-              item = json.loads(payload)
-              if item.get('encoding') != 'base64':
-                  raise RuntimeError('source response encoding')
-              raw = base64.b64decode(item['content'].replace('\n', ''), validate=True)
               if hashlib.sha256(raw).hexdigest() != os.environ[pin]:
                   raise RuntimeError('reviewed source hash mismatch')
               (root / name).write_bytes(raw)
-          clean = {'PATH': os.environ['PATH'], 'HOME': str(root), 'LANG': 'C', 'LC_ALL': 'C'}
-          subprocess.run(['python3', '-B', str(root / 'test_archive_branches_once_20261007.py')],
-                         check=True, timeout=120, env=clean, cwd=root)
+          clean = {'PATH': '/usr/bin:/bin', 'HOME': str(root), 'LANG': 'C', 'LC_ALL': 'C'}
+          for test in ('test_archive_branches_once_20261007.py', 'test_git_atomic_prune_20261008.py', 'test_git_atomic_coordinator_20261008.py', 'test_git_atomic_api_budget_20261008.py'):
+              subprocess.run(['python3', '-B', str(root / test)],
+                             check=True, timeout=120, env=clean, cwd=root)
       - name: Verify archives and perform only the frozen phase
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          ARCHIVE_CTX_OWNER_POLICY_ATTESTATION: ${{ inputs.owner_policy_attestation }}
           ARCHIVE_PLAN_FILE: ${{ runner.temp }}/kws-archive-reviewed/archive-plan.json
           ARCHIVE_CTX_REPOSITORY: ${{ github.repository }}
           ARCHIVE_CTX_REPOSITORY_ID: ${{ github.repository_id }}

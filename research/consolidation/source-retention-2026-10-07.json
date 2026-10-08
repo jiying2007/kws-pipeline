@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "93212eaad6b9db032d6cf4df87aa9ece78fbc927",
-      "sha256": "6feff9a7fe0ed931240d9ccef21383f7c3fb9876e121d0b10294123f5631db21",
-      "bytes": 24557
+      "git_blob_sha1": "910df5c0c3b55292430fcdeda302456ab7716481",
+      "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
+      "bytes": 25543
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15773,6 +15773,33 @@
             "git_blob_sha1": "93212eaad6b9db032d6cf4df87aa9ece78fbc927",
             "sha256": "6feff9a7fe0ed931240d9ccef21383f7c3fb9876e121d0b10294123f5631db21",
             "bytes": 24557
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "from_commit": "3538bf81da92cba1d728a1f025a3566c7d972164",
+      "from_tree": "8e414e1f90d178d675e1c5f1052c1a1e2b538ffe",
+      "operation_id": "git-atomic-prune-20261008-offline-ci",
+      "scope": "Run the three reviewed offline atomic cleanup suites with production PATH and an immediate tracked-worktree check after each. No permission, trigger, cleanup target or runtime change.",
+      "rationale": "Maintain the current active CI byte identity after adding mandatory test coverage. Original base_commit/base_tree, all retained source files/provenance/projections, historical CI archives and source-freeze records remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "93212eaad6b9db032d6cf4df87aa9ece78fbc927",
+            "sha256": "6feff9a7fe0ed931240d9ccef21383f7c3fb9876e121d0b10294123f5631db21",
+            "bytes": 24557
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "910df5c0c3b55292430fcdeda302456ab7716481",
+            "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
+            "bytes": 25543
           }
         }
       ]

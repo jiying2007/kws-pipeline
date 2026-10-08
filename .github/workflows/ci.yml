@@ -246,6 +246,18 @@ jobs:
         run: python3 -B tests/test_archive_branches_once_20261007.py
       - name: Verify tracked worktree after One-shot archive coordinator offline contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "One-shot archive coordinator offline contract"'
+      - name: Atomic Git transport offline contract
+        run: PATH=/usr/bin:/bin /usr/bin/python3 -B tests/test_git_atomic_prune_20261008.py
+      - name: Verify tracked worktree after Atomic Git transport offline contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic Git transport offline contract"'
+      - name: Atomic Git coordinator offline contract
+        run: PATH=/usr/bin:/bin /usr/bin/python3 -B tests/test_git_atomic_coordinator_20261008.py
+      - name: Verify tracked worktree after Atomic Git coordinator offline contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic Git coordinator offline contract"'
+      - name: Atomic Git API budget offline contract
+        run: PATH=/usr/bin:/bin /usr/bin/python3 -B tests/test_git_atomic_api_budget_20261008.py
+      - name: Verify tracked worktree after Atomic Git API budget offline contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Atomic Git API budget offline contract"'
       - name: Test inventory tool contract
         run: python3 tests/test_test_inventory.py
       - name: Verify tracked worktree after Test inventory tool contract
