@@ -247,12 +247,35 @@ class CoordinatorTests(unittest.TestCase):
         c=A.Coordinator(self.p,context(phase='archive'),self.api,proof)
         with self.assertRaises(A.Stop):c.run()
         self.assertEqual(self.api.writes,[])
-    def test_archive_creates_tag_and_collects_diagnostic_without_deleting(self):
+    def test_not_run_receipt_cannot_unlock_prune(self):
+        api=FakeAPI(self.p,tagged=False)
+        c=A.Coordinator(self.p,context(phase='archive'),api,proof)
+        c.verify_server_archive=lambda r:None
+        receipt=c.run()['tag_guard_diagnostic']
+        ctx=context();ctx['reviewed_cas_signature_sha256']=A.sha256(A.canonical(receipt))
+        api=FakeAPI(self.p);c=A.Coordinator(self.p,ctx,api,proof)
+        c.verify_server_archive=lambda r:None
+        with self.assertRaises(A.Stop):c.run()
+        self.assertTrue(all(len(batch)==1 and batch[0]['name']==A.TAG for batch in api.writes))
+        self.assertFalse(any(u['afterOid']==A.ZERO for batch in api.writes for u in batch))
+    def test_archive_incomplete_proof_blocks_success_without_followup_write(self):
+        for field in ['status','archive_oid','restored_heads','full_object_identity','restored_trees',
+                      'tag_only_fetch','external_payload_gap','pointer_zip','wrong_before_is_strict_ancestor']:
+            api=FakeAPI(self.p,tagged=False)
+            c=A.Coordinator(self.p,context(phase='archive'),api,
+                            lambda r,p:{k:v for k,v in proof(r,p).items() if k!=field})
+            c.verify_server_archive=lambda r:None
+            with self.assertRaises((A.Stop,KeyError)):c.run()
+            self.assertEqual(api.writes,[[A.ref_entry(A.TAG,A.ZERO,
+                             self.p['repositories']['kws-pipeline']['archive_commit_oid'])]])
+    def test_archive_creates_exactly_one_tag_without_any_cas_diagnostic(self):
         api=FakeAPI(self.p,tagged=False);c=A.Coordinator(self.p,context(phase='archive'),api,proof)
         c.verify_server_archive=lambda r:None;out=c.run()
-        self.assertEqual(out['deletions'],0);self.assertEqual(out['tag_guard_diagnostic']['status'],'REQUIRES_REVIEW')
-        self.assertEqual(out['tag_guard_diagnostic']['signature_sha256'],A.sha256(A.canonical(SIG)))
-        self.assertTrue(all(len(b)==1 and b[0]['name']==A.TAG for b in api.writes))
+        self.assertEqual(out['deletions'],0)
+        self.assertEqual(out['tag_guard_diagnostic'],{'status':'NOT_RUN',
+                         'prune_status':'BLOCKED_CAS_UNPROVEN','explicit_expected_oid_evidence':False})
+        self.assertEqual(api.writes,[[A.ref_entry(A.TAG,A.ZERO,
+                         self.p['repositories']['kws-pipeline']['archive_commit_oid'])]])
 
 class ApiAndStaticTests(unittest.TestCase):
     def test_transport_rejects_peer_authenticated_path_without_network(self):
@@ -268,6 +291,79 @@ class ApiAndStaticTests(unittest.TestCase):
             self.assertNotIn(bad,src)
         self.assertIn("'GIT_CONFIG_GLOBAL':'/dev/null'",src)
         self.assertIn("'GIT_TERMINAL_PROMPT':'0'",src)
+
+class ProtectionObservationTests(unittest.TestCase):
+    def setUp(self):
+        self.p=ready();self.repo=self.p['repositories']['kws-pipeline']
+        self.actual=copy.deepcopy(self.repo['protection_snapshot'])
+        self.actual['rulesets'][0]['bypass_actors']=dict(A.UNAVAILABLE_BYPASS_ACTORS)
+    def test_archive_missing_bypass_has_truthful_partial_receipt(self):
+        result=A.validate_protection_observation(self.repo,self.actual,'archive')
+        self.assertEqual(result['status'],'PARTIAL_RUNTIME_VISIBILITY')
+        self.assertFalse(result['hidden_actor_list_observed'])
+        self.assertEqual(result['unavailable_fields'],[{'ruleset_id':22507875,'field':'bypass_actors','observation':'UNAVAILABLE'}])
+        self.assertEqual(self.repo['protection_snapshot']['rulesets'][0]['bypass_actors'],[])
+    def test_missing_bypass_blocks_every_nonarchive_phase(self):
+        for phase in ('prune','diagnose','git-prune','arbitrary'):
+            with self.subTest(phase=phase),self.assertRaises(A.Stop):
+                A.validate_protection_observation(self.repo,self.actual,phase)
+    def test_present_actor_list_exact_equality_still_required(self):
+        actual=copy.deepcopy(self.repo['protection_snapshot'])
+        result=A.validate_protection_observation(self.repo,actual,'archive')
+        self.assertEqual(result['status'],'COMPLETE_RUNTIME_VISIBILITY')
+        self.assertTrue(result['hidden_actor_list_observed'])
+        for value in (None,'UNAVAILABLE',{},[{'actor_id':1,'actor_type':'User','bypass_mode':'always'}]):
+            actual['rulesets'][0]['bypass_actors']=value
+            with self.subTest(value=value),self.assertRaises(A.Stop):
+                A.validate_protection_observation(self.repo,actual,'archive')
+    def test_every_other_policy_change_and_new_ruleset_blocks(self):
+        changes={'id':22507876,'target':'tag','source_type':'Organization','source':'other/repo',
+                 'enforcement':'disabled','name':'changed','rules':[],
+                 'conditions':{'ref_name':{'include':['~ALL'],'exclude':[]}}}
+        for key,value in changes.items():
+            actual=copy.deepcopy(self.actual);actual['rulesets'][0][key]=value
+            with self.subTest(key=key),self.assertRaises(A.Stop):
+                A.validate_protection_observation(self.repo,actual,'archive')
+        for key in self.actual['rulesets'][0]:
+            actual=copy.deepcopy(self.actual);del actual['rulesets'][0][key]
+            with self.subTest(missing=key),self.assertRaises(A.Stop):
+                A.validate_protection_observation(self.repo,actual,'archive')
+        for rows in ([],self.actual['rulesets']*2):
+            actual={**self.actual,'rulesets':rows}
+            with self.assertRaises(A.Stop):A.validate_protection_observation(self.repo,actual,'archive')
+        actual={**self.actual,'branch_protected':False}
+        with self.assertRaises(A.Stop):A.validate_protection_observation(self.repo,actual,'archive')
+    def test_exception_does_not_apply_to_nonmain_or_other_repository(self):
+        for field,value in [('default_branch','other'),('full_name','jiying2007/kws-data')]:
+            repo={**self.repo,field:value}
+            with self.assertRaises(A.Stop):A.validate_protection_observation(repo,self.actual,'archive')
+        repo=copy.deepcopy(self.repo);repo['delete_refs'][0]['name']='refs/heads/main'
+        with self.assertRaises(A.Stop):A.validate_protection_observation(repo,self.actual,'archive')
+    def test_coordinator_partial_archive_tag_only_and_prune_zero_writes(self):
+        api=FakeAPI(self.p,tagged=False);api.protection_snapshot=lambda r:copy.deepcopy(self.actual)
+        c=A.Coordinator(self.p,context(phase='archive'),api,proof);c.verify_server_archive=lambda r:None
+        result=c.run()
+        self.assertEqual(result['deletions'],0)
+        self.assertEqual(result['protection_observation']['status'],'PARTIAL_RUNTIME_VISIBILITY')
+        self.assertEqual(api.writes,[[A.ref_entry(A.TAG,A.ZERO,
+                         self.p['repositories']['kws-pipeline']['archive_commit_oid'])]])
+        self.assertEqual(result['tag_guard_diagnostic']['status'],'NOT_RUN')
+        api=FakeAPI(self.p);api.protection_snapshot=lambda r:copy.deepcopy(self.actual)
+        c=A.Coordinator(self.p,context(phase='prune'),api,proof)
+        with self.assertRaises(A.Stop):c.run()
+        self.assertEqual(api.writes,[])
+    def test_api_omission_is_unavailable_and_null_is_rejected(self):
+        api=A.GitHub(self.repo['full_name'],'invented-test-token')
+        api.pages=lambda *args:[{'id':22507875}]
+        rule=copy.deepcopy(self.repo['protection_snapshot']['rulesets'][0]);del rule['bypass_actors']
+        branch={'protected':True,'protection':self.repo['protection_snapshot']['legacy_protection_summary']}
+        api.read=lambda repository,suffix: branch if suffix=='/branches/main' else rule
+        observed=api.protection_snapshot(self.repo['full_name'])
+        self.assertEqual(observed['rulesets'][0]['bypass_actors'],A.UNAVAILABLE_BYPASS_ACTORS)
+        self.assertNotEqual(observed['rulesets'][0]['bypass_actors'],[])
+        for malformed in (None,dict(A.UNAVAILABLE_BYPASS_ACTORS),'',{}):
+            rule['bypass_actors']=malformed
+            with self.assertRaises(A.Stop):api.protection_snapshot(self.repo['full_name'])
 
 class RealRestorerAncestorTests(unittest.TestCase):
     """Local Git-only fixture; no credentials, network, or historical repository files."""

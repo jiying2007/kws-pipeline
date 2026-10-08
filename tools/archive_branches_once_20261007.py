@@ -105,6 +105,42 @@ def validate_plan(p):
             'bytes':827058,'sha256':'c5b466d8091f06fcdf6579770d9962b8fc44449287b9608ceb59de8f7c688e02',
             'must_be_reachable_from_archive':True}, 'pointer identity or reachability requirement changed')
 
+UNAVAILABLE_BYPASS_ACTORS = {'observation': 'UNAVAILABLE'}
+
+
+def validate_protection_observation(repo, actual, operation):
+    """Omitted private actor details are unknown, never an observed empty list."""
+    expected = repo['protection_snapshot']
+    require(isinstance(actual,dict) and set(actual)==set(expected), 'protection observation shape')
+    require(isinstance(actual['rulesets'],list) and
+            len(actual['rulesets'])==len(expected['rulesets']), 'ruleset inventory changed')
+    unavailable = []
+    for observed, frozen in zip(actual['rulesets'], expected['rulesets']):
+        require(isinstance(observed,dict) and set(observed)==set(frozen), 'ruleset observation shape')
+        row = dict(observed)
+        if row['bypass_actors'] == UNAVAILABLE_BYPASS_ACTORS:
+            require(operation=='archive' and repo['full_name']=='jiying2007/kws-pipeline' and
+                    row['id']==22507875 and row['target']=='branch' and
+                    row['source_type']=='Repository' and row['source']==repo['full_name'] and
+                    row['conditions']=={'ref_name':{'include':['~DEFAULT_BRANCH'],'exclude':[]}} and
+                    repo['default_branch']=='main', 'unavailable protection field blocks this phase/scope')
+            require(all(x['name']!='refs/heads/main' for x in frozen_rows(repo)),
+                    'default main may not be a mutation target')
+            unavailable.append({'ruleset_id':row['id'],'field':'bypass_actors','observation':'UNAVAILABLE'})
+            # Compare the observable projection only. This is not evidence of the
+            # actual bypass list; the explicit receipt preserves that distinction.
+            del row['bypass_actors']
+            frozen = {key:value for key,value in frozen.items() if key!='bypass_actors'}
+        else:
+            require(isinstance(row['bypass_actors'],list), 'invalid observed bypass actor list')
+        require(row==frozen,'protection/rules changed')
+    require(all(actual[key]==expected[key] for key in expected if key!='rulesets'),
+            'branch protection observation changed')
+    return {'status':'PARTIAL_RUNTIME_VISIBILITY' if unavailable else 'COMPLETE_RUNTIME_VISIBILITY',
+            'unavailable_fields':unavailable,
+            'visible_policy_matches':True,
+            'hidden_actor_list_observed':not bool(unavailable)}
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs): raise Stop('HTTP redirect refused')
 
@@ -162,7 +198,12 @@ class GitHub:
         for row in sorted(rows,key=lambda x:x['id']):
             value=self.read(repository,'/rulesets/'+str(row['id']))
             details.append({k:value[k] for k in ('id','name','target','source_type','source','enforcement',
-                                               'conditions','rules','bypass_actors')})
+                                               'conditions','rules')})
+            if 'bypass_actors' in value:
+                require(isinstance(value['bypass_actors'],list), 'invalid API bypass actor list')
+                details[-1]['bypass_actors']=value['bypass_actors']
+            else:
+                details[-1]['bypass_actors']=dict(UNAVAILABLE_BYPASS_ACTORS)
         branch=self.read(repository,'/branches/main')
         return {'rulesets':details,'branch_protected':branch['protected'],
                 'legacy_protection_summary':branch['protection']}
@@ -270,8 +311,8 @@ class Coordinator:
         require(branch['commit']['sha']==self.ctx['reviewed_source_sha'] and
                 branch['protected'] is r['main_protected_expected'],'live main source/protection changed')
         # Explicit injected read uses GraphQL/public rules, not a permission escalation.
-        require(self.api.protection_snapshot(r['full_name'])==r['protection_snapshot'],
-                'protection/rules changed')
+        self.protection_observation=validate_protection_observation(
+            r,self.api.protection_snapshot(r['full_name']),self.ctx['operation'])
         self.api.assert_successful_workflows(r['full_name'],self.ctx['reviewed_source_sha'],
                                             r['required_success_workflows'],self.ctx['run_id'])
         self.node_id=meta['node_id']
@@ -347,12 +388,19 @@ class Coordinator:
             self.write('archive',[ref_entry(TAG,ZERO,self.repo['archive_commit_oid'])])
             require(self.tag(self.repo)==self.repo['archive_commit_oid'],'archive tag readback failed')
             proof=self.restore(self.repo,self.plan)
-            require(proof['status']=='PASS','archive restoration failed')
+            require(proof['status']=='PASS' and proof['archive_oid']==self.repo['archive_commit_oid']
+                    and proof['restored_heads']==self.repo['original_count']
+                    and proof['full_object_identity'] is True and proof['restored_trees'] is True
+                    and proof['tag_only_fetch'] is True and proof['external_payload_gap'] is False,
+                    'incomplete archive restoration proof')
+            if self.repo['full_name']==self.plan['pointer_zip']['repository']:
+                require(proof['pointer_zip'] is True,'pointer ZIP proof missing')
             require(self.branches(self.repo)==before,'branch changed during archive; reconcile read-only')
             require(proof['wrong_before_is_strict_ancestor'] is True,'probe before OID is not a strict archive ancestor')
-            self.archive_probe_ancestor_verified=True
-            diagnostic=self.verify_noop_guard(diagnostic_only=True)
-            return {'phase':'archive','proof':proof,'deletions':0,'tag_guard_diagnostic':diagnostic}
+            diagnostic={'status':'NOT_RUN','prune_status':'BLOCKED_CAS_UNPROVEN',
+                        'explicit_expected_oid_evidence':False}
+            return {'phase':'archive','proof':proof,'deletions':0,'tag_guard_diagnostic':diagnostic,
+                    'protection_observation':self.protection_observation}
         if self.ctx['operation']=='diagnose':
             require(self.tag(self.repo)==self.repo['archive_commit_oid'],'diagnose requires existing exact archive tag')
             self.verify_server_archive(self.repo)
