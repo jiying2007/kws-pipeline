@@ -8,8 +8,8 @@
     {
       "path": "tools/archive_branches_once_20261007.py",
       "mode": "100644",
-      "sha256": "0bf56f14978e8a2136199ec39bb49fadf722cd91daefe32fd7db957318036a37",
-      "bytes": 41502
+      "sha256": "4bff4406e3a981c5f98b2b4e9003f7e8686001173c482aa3d0226343d4ae92a5",
+      "bytes": 43959
     },
     {
       "path": "tests/test_archive_branches_once_20261007.py",
@@ -56,13 +56,13 @@
     {
       "path": "tests/test_git_atomic_api_budget_20261008.py",
       "mode": "100644",
-      "sha256": "d4401c94575fcee46cd277c96d1fc4ecba50bc1edd4a01291ee9a1443e2d4a2c",
-      "bytes": 18270
+      "sha256": "bf22ba478ad73fbb7401a654e2c4512479f1caf27bc2d86518cac6d01c19628c",
+      "bytes": 38508
     },
     {
       "path": ".github/workflows/archive-branches-once-20261007.yml",
       "mode": "100644",
-      "sha256": "f6f762b81c56f7ae15c754e5f63577c04d2eb6a5314400fd8098daf893db7f4d",
+      "sha256": "577367d46dd127775e835f1e2c9dc16b3bf4163d81660c63702200797749a0ef",
       "bytes": 7528
     },
     {

@@ -1,17 +1,22 @@
 """Offline API-budget regressions using real GitHub read/pagination/cache code.
 
-Only request() is replaced with deterministic HTTP-response fixtures. Git object
+Coordinator fixtures replace only request(). Diagnostic fixtures instead replace
+the urllib opener, exercising the real request/body/header/error paths. Git object
 restoration and the one Git write boundary are synthetic; no network is used.
 """
 from collections import Counter
+from contextlib import redirect_stdout
 import copy
 from datetime import datetime, timezone
+from email.message import Message
+import io
 import json
 import os
 from pathlib import Path
 import sys
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+import urllib.error
 from urllib.parse import parse_qs, urlsplit
 
 ROOT = Path(__file__).resolve().parent
@@ -172,7 +177,8 @@ class BudgetCoordinatorTests(unittest.TestCase):
                 del api.refs[own][row['name']]
             api.tags[own][G.ANCHOR] = repo['archive_commit_oid']
             return {'status': 'OFFLINE_FIXTURE_ACKNOWLEDGED'}
-        with patch.dict(os.environ, env), patch.object(G.GitAtomicTransport, 'push', side_effect=push) as mocked:
+        # Fixture observations must not look like real runtime quota receipts in CI logs.
+        with patch.dict(os.environ, env), patch.object(G.GitAtomicTransport, 'push', side_effect=push) as mocked, redirect_stdout(io.StringIO()):
             try:
                 result = G.run_git_prune(coordinator, 'offline-fixture-not-a-credential', ROOT)
             except BaseException:
@@ -309,6 +315,345 @@ class ImmutableReadCacheTests(unittest.TestCase):
         self.assertEqual(len(self.api.calls), 14)
         self.assertTrue(all(not call['authenticated'] for call in self.api.calls))
         self.assertEqual(self.api.remaining, 46)
+
+
+class PublicBudgetObservationTests(unittest.TestCase):
+    """Offline real-transport tests; no API request method is replaced here."""
+    HEADER_KEYS = {'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-used',
+                   'x-ratelimit-reset', 'x-ratelimit-resource', 'retry-after'}
+    BODY_KEYS = {'remaining', 'limit', 'used', 'reset'}
+    TOKEN = 'offline-token-never-log-562'
+    SECRET = 'private-server-text-never-log-731'
+    RESET = 1800000000
+    RESET_UTC = '2027-01-15T08:00:00+00:00'
+
+    def make_api(self):
+        opener = Mock(spec=['open'])
+        with patch.object(A.urllib.request, 'build_opener', return_value=opener):
+            api = A.GitHub('jiying2007/kws-pipeline', self.TOKEN)
+        return api, opener
+
+    def headers(self, remaining=58, reset=RESET, **extra):
+        headers = Message()
+        values = {'X-RateLimit-Limit': '60', 'X-RateLimit-Remaining': str(remaining),
+                  'X-RateLimit-Used': str(60 - remaining), 'X-RateLimit-Reset': str(reset),
+                  'X-RateLimit-Resource': 'core', 'Retry-After': '17'}
+        values.update(extra)
+        for key, value in values.items():
+            headers[key] = value
+        return headers
+
+    def body(self, remaining=58, **extra):
+        value = {'remaining': remaining, 'limit': 60, 'used': 60 - remaining if type(remaining) is int else 0,
+                 'reset': self.RESET}
+        value.update(extra)
+        return {'resources': {'core': value}}
+
+    def response(self, body, headers=None):
+        raw = body if isinstance(body, bytes) else json.dumps(body).encode()
+        response = io.BytesIO(raw)
+        response.headers = headers if headers is not None else Message()
+        response.status = 200
+        return response
+
+    def observe(self, api, minimum=58):
+        output = io.StringIO()
+        result = error = None
+        before = datetime.now(timezone.utc)
+        with redirect_stdout(output):
+            try:
+                result = api.unauthenticated_rate_budget(minimum)
+            except Exception as exc:
+                error = exc
+        after = datetime.now(timezone.utc)
+        lines = output.getvalue().splitlines()
+        self.assertEqual(len(lines), 1, 'Each budget check emits exactly one observation, without retry.')
+        observation = json.loads(lines[0])
+        self.assertEqual(set(observation), {'status', 'observed_at', 'required_remaining', 'body',
+                                             'body_reset_utc', 'headers', 'header_reset_utc'})
+        self.assertEqual(observation['status'], 'PUBLIC_API_BUDGET_OBSERVATION')
+        self.assertEqual(observation['required_remaining'], minimum)
+        stamp = datetime.fromisoformat(observation['observed_at'])
+        self.assertIsNotNone(stamp.utcoffset())
+        self.assertEqual(stamp.utcoffset().total_seconds(), 0)
+        self.assertLessEqual(before, stamp)
+        self.assertLessEqual(stamp, after)
+        self.assertEqual(set(observation['body']), self.BODY_KEYS)
+        self.assertEqual(set(observation['headers']), self.HEADER_KEYS)
+        self.assertNotIn(self.TOKEN, output.getvalue())
+        self.assertNotIn(self.SECRET, output.getvalue())
+        return result, error, observation
+
+    def assert_public_request(self, opener):
+        opener.open.assert_called_once()
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://api.github.com/rate_limit')
+        self.assertEqual(request.get_method(), 'GET')
+        self.assertIsNone(request.data)
+        self.assertNotIn('authorization', {key.lower() for key, _ in request.header_items()})
+        self.assertEqual(opener.open.call_args.kwargs, {'timeout': 45})
+
+    def test_exact_58_and_30_body_floors_preserve_return_shape_and_utc_diagnostics(self):
+        for minimum in (58, 30):
+            with self.subTest(minimum=minimum):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(self.body(minimum), self.headers(minimum))
+                result, error, observation = self.observe(api, minimum)
+                self.assertIsNone(error)
+                self.assertEqual(result, {'remaining': minimum, 'limit': 60, 'reset': self.RESET})
+                self.assertEqual(observation['body'], {'remaining': minimum, 'limit': 60,
+                                                      'used': 60 - minimum, 'reset': self.RESET})
+                self.assertEqual(observation['headers'], {'x-ratelimit-limit': 60,
+                    'x-ratelimit-remaining': minimum, 'x-ratelimit-used': 60 - minimum,
+                    'x-ratelimit-reset': self.RESET, 'x-ratelimit-resource': 'core', 'retry-after': 17})
+                self.assertEqual(observation['body_reset_utc'], self.RESET_UTC)
+                self.assertEqual(observation['header_reset_utc'], self.RESET_UTC)
+                self.assert_public_request(opener)
+
+    def test_57_and_29_stop_only_after_diagnostics_even_if_headers_claim_sufficient(self):
+        for minimum in (58, 30):
+            with self.subTest(minimum=minimum):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(self.body(minimum - 1), self.headers(60))
+                result, error, observation = self.observe(api, minimum)
+                self.assertIsNone(result)
+                self.assertIsInstance(error, A.Stop)
+                self.assertEqual(str(error), 'insufficient public API read budget; no write permitted')
+                self.assertEqual(observation['body']['remaining'], minimum - 1)
+                self.assertEqual(observation['headers']['x-ratelimit-remaining'], 60)
+                self.assert_public_request(opener)
+
+    def test_insufficient_headers_do_not_replace_sufficient_original_body_gate(self):
+        for minimum in (58, 30):
+            with self.subTest(minimum=minimum):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(self.body(minimum), self.headers(0, self.RESET + 60))
+                result, error, observation = self.observe(api, minimum)
+                self.assertIsNone(error)
+                self.assertEqual(result['remaining'], minimum)
+                self.assertEqual(observation['body']['remaining'], minimum)
+                self.assertEqual(observation['headers']['x-ratelimit-remaining'], 0)
+                self.assertEqual(observation['header_reset_utc'], '2027-01-15T08:01:00+00:00')
+                self.assert_public_request(opener)
+
+    def test_http_403_and_429_log_whitelisted_headers_without_body_read_or_retry(self):
+        for status in (403, 429):
+            with self.subTest(status=status):
+                api, opener = self.make_api()
+                body = Mock(spec=['read', 'close'])
+                error = urllib.error.HTTPError('https://api.github.com/rate_limit', status, self.SECRET,
+                    self.headers(0, **{'Authorization': self.TOKEN, 'Set-Cookie': self.SECRET,
+                                      'X-Arbitrary-Server-Text': self.SECRET}), body)
+                opener.open.side_effect = error
+                result, raised, observation = self.observe(api)
+                self.assertIsNone(result)
+                self.assertIsInstance(raised, A.ApiError)
+                self.assertEqual(raised.status, status)
+                self.assertEqual(raised.errors, [])
+                self.assertNotIn(self.SECRET, str(raised))
+                self.assertEqual(observation['body'], dict.fromkeys(self.BODY_KEYS))
+                self.assertIsNone(observation['body_reset_utc'])
+                self.assertEqual(observation['headers']['x-ratelimit-remaining'], 0)
+                self.assertEqual(observation['headers']['retry-after'], 17)
+                self.assertEqual(observation['header_reset_utc'], self.RESET_UTC)
+                body.read.assert_not_called()
+                self.assert_public_request(opener)
+
+    def test_transport_failures_emit_empty_safe_observation_and_do_not_retry(self):
+        for error in (urllib.error.URLError(self.SECRET), TimeoutError(self.SECRET), OSError(self.SECRET)):
+            with self.subTest(kind=type(error).__name__):
+                api, opener = self.make_api()
+                opener.open.side_effect = error
+                result, raised, observation = self.observe(api)
+                self.assertIsNone(result)
+                self.assertIsInstance(raised, A.Stop)
+                self.assertEqual(str(raised), 'Transport failure; write outcome may be unknown. Do not retry.')
+                self.assertEqual(observation['body'], dict.fromkeys(self.BODY_KEYS))
+                self.assertEqual(observation['headers'], dict.fromkeys(self.HEADER_KEYS))
+                self.assertIsNone(observation['body_reset_utc'])
+                self.assertIsNone(observation['header_reset_utc'])
+                self.assert_public_request(opener)
+
+    def test_previous_response_headers_are_not_reused_after_next_transport_failure(self):
+        api, opener = self.make_api()
+        opener.open.side_effect = [self.response(self.body(), self.headers()), urllib.error.URLError(self.SECRET)]
+        self.assertIsNone(self.observe(api)[1])
+        result, error, observation = self.observe(api)
+        self.assertIsNone(result)
+        self.assertIsInstance(error, A.Stop)
+        self.assertEqual(observation['headers'], dict.fromkeys(self.HEADER_KEYS))
+        self.assertEqual(opener.open.call_count, 2)
+
+    def test_malformed_json_and_response_shapes_log_once_then_fail_closed(self):
+        malformed = [b'not-json-' + self.SECRET.encode(), b'{"resources":NaN}',
+                     b'{"resources":{},"resources":{}}', {}, None, [],
+                     {'resources': None}, {'resources': []}, {'resources': {}},
+                     {'resources': {'core': None}}, {'resources': {'core': []}},
+                     {'resources': {'core': {}}}]
+        for value in malformed:
+            with self.subTest(value=value):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(value, self.headers())
+                result, error, observation = self.observe(api)
+                self.assertIsNone(result)
+                self.assertIsInstance(error, (A.Stop, ValueError, TypeError, KeyError))
+                self.assertEqual(observation['body'], dict.fromkeys(self.BODY_KEYS))
+                self.assertEqual(observation['headers']['x-ratelimit-limit'], 60)
+                self.assert_public_request(opener)
+
+    def test_malformed_remaining_is_redacted_and_cannot_pass_either_real_floor(self):
+        for minimum in (58, 30):
+            for value in (None, True, False, '58', 58.0, -1, [], {}, self.SECRET):
+                with self.subTest(minimum=minimum, value=value):
+                    api, opener = self.make_api()
+                    opener.open.return_value = self.response(self.body(value), self.headers())
+                    result, error, observation = self.observe(api, minimum)
+                    self.assertIsNone(result)
+                    self.assertIsInstance(error, A.Stop)
+                    self.assertIsNone(observation['body']['remaining'])
+                    self.assert_public_request(opener)
+
+    def test_missing_return_fields_still_raise_after_body_observation(self):
+        for missing in ('remaining', 'limit', 'reset'):
+            with self.subTest(missing=missing):
+                api, opener = self.make_api()
+                value = self.body()
+                del value['resources']['core'][missing]
+                opener.open.return_value = self.response(value, self.headers())
+                result, error, observation = self.observe(api)
+                self.assertIsNone(result)
+                self.assertIsInstance(error, KeyError)
+                self.assertIsNone(observation['body'][missing])
+                self.assert_public_request(opener)
+
+    def test_body_and_header_unknown_fields_never_enter_success_diagnostics(self):
+        api, opener = self.make_api()
+        value = self.body(note=self.SECRET, authorization=self.TOKEN)
+        value['private'] = {'cookie': self.SECRET}
+        opener.open.return_value = self.response(value, self.headers(**{
+            'Authorization': self.TOKEN, 'Cookie': self.SECRET, 'Set-Cookie': self.SECRET,
+            'X-GitHub-Request-Id': self.SECRET, 'X-Arbitrary-Server-Text': self.SECRET}))
+        result, error, observation = self.observe(api)
+        self.assertIsNone(error)
+        self.assertEqual(result, {'remaining': 58, 'limit': 60, 'reset': self.RESET})
+        self.assertEqual(set(observation['body']), self.BODY_KEYS)
+        self.assertEqual(set(observation['headers']), self.HEADER_KEYS)
+        self.assert_public_request(opener)
+
+    def test_invalid_allowed_header_values_are_redacted_and_cannot_change_body_gate(self):
+        malformed = ('', '-1', '+60', '60.0', ' 60 ', '1e2', '9' * 13, '\u0666\u0660',
+                     '60\r\nAuthorization:' + self.TOKEN, self.SECRET)
+        for value in malformed:
+            with self.subTest(value=value):
+                api, opener = self.make_api()
+                headers = Message()
+                for key in self.HEADER_KEYS:
+                    headers[key] = value
+                opener.open.return_value = self.response(self.body(), headers)
+                result, error, observation = self.observe(api)
+                self.assertIsNone(error)
+                self.assertEqual(result['remaining'], 58)
+                self.assertEqual(observation['headers'], dict.fromkeys(self.HEADER_KEYS))
+                self.assertIsNone(observation['header_reset_utc'])
+                self.assert_public_request(opener)
+
+    def test_invalid_body_metadata_is_redacted_without_changing_existing_return_values(self):
+        for value in (True, False, -1, 1.5, '60', None, [], {}, self.SECRET, 10**12):
+            with self.subTest(value=value):
+                api, opener = self.make_api()
+                body = self.body(limit=value, used=value, reset=value)
+                opener.open.return_value = self.response(body, self.headers())
+                result, error, observation = self.observe(api)
+                self.assertIsNone(error)
+                self.assertEqual(result, {'remaining': 58, 'limit': value, 'reset': value})
+                self.assertEqual(observation['body'], {'remaining': 58, 'limit': None, 'used': None, 'reset': None})
+                self.assertIsNone(observation['body_reset_utc'])
+                self.assert_public_request(opener)
+
+    def test_out_of_range_utc_conversion_is_safe_and_zero_is_unix_epoch(self):
+        for reset, expected in ((0, '1970-01-01T00:00:00+00:00'), (999999999999, None)):
+            with self.subTest(reset=reset):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(self.body(reset=reset), self.headers(reset=reset))
+                result, error, observation = self.observe(api)
+                self.assertIsNone(error)
+                self.assertEqual(result['reset'], reset)
+                self.assertEqual(observation['body']['reset'], reset)
+                self.assertEqual(observation['headers']['x-ratelimit-reset'], reset)
+                self.assertEqual(observation['body_reset_utc'], expected)
+                self.assertEqual(observation['header_reset_utc'], expected)
+                self.assert_public_request(opener)
+
+    def test_existing_integer_gate_is_not_redefined_by_diagnostic_sanitization(self):
+        # The original gate uses isinstance(value, int); telemetry must not
+        # silently introduce a stricter gate, even for these unusual fixtures.
+        for remaining, minimum in ((10**12, 58), (True, 1)):
+            with self.subTest(remaining=remaining, minimum=minimum):
+                api, opener = self.make_api()
+                opener.open.return_value = self.response(self.body(remaining), self.headers())
+                result, error, observation = self.observe(api, minimum)
+                self.assertIsNone(error)
+                self.assertEqual(result['remaining'], remaining)
+                self.assertIsNone(observation['body']['remaining'])
+                self.assert_public_request(opener)
+
+    def test_error_after_response_headers_preserves_headers_without_raw_error_text(self):
+        api, opener = self.make_api()
+        response = Mock()
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+        response.headers = self.headers(29)
+        response.read.side_effect = OSError(self.SECRET)
+        opener.open.return_value = response
+        result, error, observation = self.observe(api, 30)
+        self.assertIsNone(result)
+        self.assertIsInstance(error, A.Stop)
+        self.assertNotIn(self.SECRET, str(error))
+        self.assertEqual(observation['body'], dict.fromkeys(self.BODY_KEYS))
+        self.assertEqual(observation['headers']['x-ratelimit-remaining'], 29)
+        self.assertEqual(observation['header_reset_utc'], self.RESET_UTC)
+        self.assert_public_request(opener)
+
+    def test_non_budget_success_and_http_error_do_not_even_inspect_response_headers(self):
+        api, opener = self.make_api()
+        headers = Mock(spec=['get'])
+        headers.get.side_effect = AssertionError('Non-budget headers must not be inspected.')
+        opener.open.side_effect = [self.response({'full_name': 'jiying2007/kws-pipeline'}, headers),
+            urllib.error.HTTPError('https://api.github.com/repos/jiying2007/kws-pipeline', 403,
+                                   self.SECRET, headers, io.BytesIO(self.SECRET.encode()))]
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(api.read('jiying2007/kws-pipeline'), {'full_name': 'jiying2007/kws-pipeline'})
+            with self.assertRaises(A.ApiError) as caught:
+                api.read('jiying2007/kws-pipeline')
+        self.assertEqual(caught.exception.status, 403)
+        self.assertEqual(output.getvalue(), '')
+        self.assertEqual(opener.open.call_count, 2)
+        headers.get.assert_not_called()
+
+    def test_ordinary_own_read_auth_and_peer_public_routing_are_unchanged(self):
+        api, opener = self.make_api()
+        opener.open.side_effect = [self.response({'full_name': 'jiying2007/kws-pipeline'}, self.headers()),
+                                   self.response({'full_name': 'jiying2007/kws-data'}, self.headers())]
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(api.read('jiying2007/kws-pipeline'), {'full_name': 'jiying2007/kws-pipeline'})
+            self.assertEqual(api.read('jiying2007/kws-data'), {'full_name': 'jiying2007/kws-data'})
+            with self.assertRaisesRegex(A.Stop, 'cross-repository token use rejected'):
+                api.request('GET', '/repos/jiying2007/kws-data', authenticated=True)
+            with self.assertRaisesRegex(A.Stop, 'cross-repository token use rejected'):
+                api.request('GET', '/rate_limit', authenticated=True)
+        self.assertEqual(output.getvalue(), '')
+        self.assertEqual(opener.open.call_count, 2)
+        own, peer = [call.args[0] for call in opener.open.call_args_list]
+        self.assertEqual(own.full_url, 'https://api.github.com/repos/jiying2007/kws-pipeline')
+        self.assertEqual(peer.full_url, 'https://api.github.com/repos/jiying2007/kws-data')
+        self.assertEqual({key.lower(): value for key, value in own.header_items()}['authorization'], 'Bearer ' + self.TOKEN)
+        self.assertNotIn('authorization', {key.lower() for key, _ in peer.header_items()})
+        for call in opener.open.call_args_list:
+            self.assertEqual(call.kwargs, {'timeout': 45})
+            self.assertEqual(call.args[0].get_method(), 'GET')
+            self.assertIsNone(call.args[0].data)
 
 
 if __name__ == '__main__':

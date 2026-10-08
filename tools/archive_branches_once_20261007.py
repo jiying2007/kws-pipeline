@@ -5,6 +5,7 @@ Only tag create/no-op and frozen branch deletions can reach the mutation transpo
 from __future__ import annotations
 import base64
 import copy
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -51,6 +52,35 @@ def decode(raw):
 def canonical(value): return json.dumps(value,sort_keys=True,separators=(',',':')).encode()
 def sha256(raw): return hashlib.sha256(raw).hexdigest()
 def valid_oid(value): return isinstance(value,str) and SHA.fullmatch(value) and value != ZERO
+
+# Diagnostics only: do not use headers to weaken or replace the reviewed body gate.
+PUBLIC_BUDGET_HEADERS = ('x-ratelimit-limit', 'x-ratelimit-remaining',
+                        'x-ratelimit-used', 'x-ratelimit-reset',
+                        'x-ratelimit-resource', 'retry-after')
+
+def budget_number(value):
+    if type(value) is int and 0 <= value <= 999999999999:
+        return value
+    if type(value) is str and re.fullmatch(r'[0-9]{1,12}', value):
+        return int(value)
+    return None
+
+def budget_reset_utc(value):
+    number = budget_number(value)
+    if number is None:
+        return None
+    try:
+        return datetime.fromtimestamp(number, timezone.utc).isoformat()
+    except (ValueError, OverflowError, OSError):
+        return None
+
+def budget_headers(headers):
+    result = {}
+    for key in PUBLIC_BUDGET_HEADERS:
+        value = headers.get(key) if headers is not None else None
+        result[key] = (value if value == 'core' else None) if key == 'x-ratelimit-resource' else budget_number(value)
+    return result
+
 
 def frozen_rows(repo): return repo['delete_refs'] + repo['keep_refs']
 
@@ -151,6 +181,7 @@ class GitHub:
         require(repository in ['jiying2007/'+x for x in REPOS] and bool(token), 'transport identity')
         self.repository, self.__token = repository, token
         self.__immutable_reads = {}
+        self.__budget_headers = budget_headers(None)
         self.__opener=urllib.request.build_opener(NoRedirect())
     def request(self, method, path, payload=None, authenticated=True):
         require(path.startswith('/') and not path.startswith('//') and '\\' not in path,
@@ -164,12 +195,19 @@ class GitHub:
         if payload is not None:headers['Content-Type']='application/json'
         raw=None if payload is None else canonical(payload)
         request=urllib.request.Request('https://api.github.com'+path,data=raw,headers=headers,method=method)
+        is_budget_read = method == 'GET' and path == '/rate_limit' and not authenticated
+        if is_budget_read:
+            self.__budget_headers = budget_headers(None)
         try:
             with self.__opener.open(request,timeout=45) as response:
+                if is_budget_read:
+                    self.__budget_headers = budget_headers(response.headers)
                 body=response.read(16*1024*1024+1)
                 require(len(body)<=16*1024*1024,'API response too large')
                 data=decode(body)
         except urllib.error.HTTPError as error:
+            if is_budget_read:
+                self.__budget_headers = budget_headers(error.headers)
             raise ApiError(error.code,[]) from None
         except (urllib.error.URLError,TimeoutError,OSError):
             raise Stop('Transport failure; write outcome may be unknown. Do not retry.') from None
@@ -217,8 +255,23 @@ class GitHub:
         branch=main_branch if main_branch is not None else self.read(repository,'/branches/main')
         return {'rulesets':details,'branch_protected':branch['protected'],
                 'legacy_protection_summary':branch['protection']}
+    def log_public_budget(self, minimum, value):
+        body = {key:budget_number(value.get(key)) if isinstance(value,dict) and type(value.get(key)) is int else None
+                for key in ('remaining','limit','used','reset')}
+        print(json.dumps({'status':'PUBLIC_API_BUDGET_OBSERVATION',
+                          'observed_at':datetime.now(timezone.utc).isoformat(),
+                          'required_remaining':minimum, 'body':body,
+                          'body_reset_utc':budget_reset_utc(body['reset']),
+                          'headers':dict(self.__budget_headers),
+                          'header_reset_utc':budget_reset_utc(self.__budget_headers['x-ratelimit-reset'])},
+                         sort_keys=True), flush=True)
     def unauthenticated_rate_budget(self, minimum):
-        value=self.request('GET','/rate_limit',authenticated=False)['resources']['core']
+        try:
+            value=self.request('GET','/rate_limit',authenticated=False)['resources']['core']
+        except (Stop,KeyError,ValueError,TypeError):
+            self.log_public_budget(minimum,None)
+            raise
+        self.log_public_budget(minimum,value)
         require(isinstance(value['remaining'],int) and value['remaining']>=minimum, 'insufficient public API read budget; no write permitted')
         return {key:value[key] for key in ('remaining','limit','reset')}
     def assert_successful_workflows(self, repository, sha, required_paths, current_run_id):
