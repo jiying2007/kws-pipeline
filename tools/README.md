@@ -112,6 +112,9 @@ make collected measurements auditable and do not substitute for those measuremen
 ## Repository verification and maintenance
 
 - [`archive_branches_once_20261007.py`](archive_branches_once_20261007.py): temporary reviewed manual archive/prune coordinator; this index grants no execution authority
+- [`git_atomic_prune_20261008.py`](git_atomic_prune_20261008.py): temporary scoped atomic-prune transport and recovery gates; no standalone execution authority
+- [`git_atomic_guard_20261008.py`](git_atomic_guard_20261008.py): temporary pinned pre-push guard for the frozen cleanup ref set
+- [`git_atomic_askpass_20261008.py`](git_atomic_askpass_20261008.py): temporary own-repository credential helper used only by the reviewed cleanup transport
 - [`check_bench_signal.py`](check_bench_signal.py)
 - [`check_deferred_verdicts.py`](check_deferred_verdicts.py)
 - [`check_gcov.py`](check_gcov.py)
