@@ -70,6 +70,12 @@
       "mode": "100644",
       "sha256": "8a288828e81e18d5d09c6d67b9baa12d5969ceee9074ea3893e4815dbf229977",
       "bytes": 7781
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "sha256": "eac3517711a325d8e7206ae0ceb0696a5adc0a6878ba6964472914fe46d189ab",
+      "bytes": 25543
     }
   ],
   "required_exact_main_workflows": [
