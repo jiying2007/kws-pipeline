@@ -1,0 +1,84 @@
+{
+  "schema": "kws-archive-cas-repair-provenance-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "date": "2026-10-07",
+  "from_commit": "aeaa86e09996b31943f84f4dc87dc105f2872c41",
+  "from_tree": "918c029efdf76f8b70498b82397da260a514facf",
+  "operation_id": "archive-branches-once-20261007",
+  "scope": "Repair the temporary archive guard diagnostic using the frozen strict-ancestor before OID; add an existing-tag diagnostic-only phase and regression tests. Preserve exact archive identities, original branch targets, force:false and the explicit expected-OID gate.",
+  "rationale": "The original data archive diagnostic returned only a non-fast-forward rejection, not explicit expected-OID evidence. Record the reviewed public repair bytes and require fresh exact-main research-source-consolidation CI; retain all historical source baselines, counts and provenance unchanged.",
+  "evidence_run": "https://github.com/jiying2007/kws-data/actions/runs/37660116807",
+  "files": [
+    {
+      "path": ".github/workflows/archive-branches-once-20261007.yml",
+      "before": {
+        "path": ".github/workflows/archive-branches-once-20261007.yml",
+        "mode": "100644",
+        "git_blob_sha1": "330f78c20c8e1ac365f995e39c67ad8e12ff4d90",
+        "sha256": "d3b3f610efff417e94d6a7fcb6c9f4dc49c6aedb0ce22571286c6188dd2281c6",
+        "bytes": 5801
+      },
+      "after": {
+        "path": ".github/workflows/archive-branches-once-20261007.yml",
+        "mode": "100644",
+        "git_blob_sha1": "5d973300e00a52f6add5bf7fba6328292ef84f3c",
+        "sha256": "a588ffe5421ae1f7c3184be8062e40c28fe0dea0e5ac326f9a6bd6b9b9176c84",
+        "bytes": 5836
+      }
+    },
+    {
+      "path": "tools/archive_branches_once_20261007.py",
+      "before": {
+        "path": "tools/archive_branches_once_20261007.py",
+        "mode": "100644",
+        "git_blob_sha1": "074eb5bb871838fa79bc473ab6e658bd3d5d70d7",
+        "sha256": "37d2b61faa87d692776f0017be03102e467f357dba2e9bdb94be6f65c7aef398",
+        "bytes": 34882
+      },
+      "after": {
+        "path": "tools/archive_branches_once_20261007.py",
+        "mode": "100644",
+        "git_blob_sha1": "8f1a4103132a23a70aa6777583636967ad884509",
+        "sha256": "56774a403c19ef2b31d4fe8ca207bdb1379a66b469a11f8d202442f09403ab2e",
+        "bytes": 36340
+      }
+    },
+    {
+      "path": "tests/test_archive_branches_once_20261007.py",
+      "before": {
+        "path": "tests/test_archive_branches_once_20261007.py",
+        "mode": "100644",
+        "git_blob_sha1": "a65afb3a6488b59af7bf8a4d9ea82feb7185c47c",
+        "sha256": "1a46b5901b85a08615dd34fc47ad2681c8854d0187697b2cbf910f9e1279ea11",
+        "bytes": 14293
+      },
+      "after": {
+        "path": "tests/test_archive_branches_once_20261007.py",
+        "mode": "100644",
+        "git_blob_sha1": "07088b7a265390625523356e62211ea888627d7a",
+        "sha256": "4f233fb8caa66c13f43c0fa25bda88971c0325559ddfbbc0d251c5ca4c760bf4",
+        "bytes": 20197
+      }
+    }
+  ],
+  "retention_manifest_unchanged": {
+    "path": "research/consolidation/source-retention-2026-10-07.json",
+    "git_blob_sha1": "9fd4c34614aa3f0a5621424ecf42c8525a2b7ea2",
+    "sha256": "4d9d42648e80337291ce1aeb6542c82b27427c3a438aff9c1c5b509acc59cca6"
+  },
+  "validation": {
+    "offline_tests": 35,
+    "new_checks": [
+      "real local Git strict ancestor",
+      "equal archive rejection",
+      "unrelated commit rejection",
+      "diagnostic ignored beforeOid rejection",
+      "diagnostic generic error remains unreviewable"
+    ],
+    "required_pipeline_main_push_workflows": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/research-consolidation.yml",
+      ".github/workflows/research-source-consolidation.yml"
+    ]
+  }
+}

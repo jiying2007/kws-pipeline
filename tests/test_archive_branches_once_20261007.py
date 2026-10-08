@@ -35,7 +35,7 @@ def context(name='kws-pipeline',phase='prune'):
 def proof(repo,plan):
     return {'status':'PASS','archive_oid':repo['archive_commit_oid'],'restored_heads':repo['original_count'],
             'full_object_identity':True,'restored_trees':True,'tag_only_fetch':True,
-            'external_payload_gap':False,'pointer_zip':True,'wrong_before_not_ancestor':True}
+            'external_payload_gap':False,'pointer_zip':True,'wrong_before_is_strict_ancestor':True}
 
 class FakeAPI:
     def __init__(self,p,own='kws-pipeline',tagged=True):
@@ -133,7 +133,7 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaises(A.Stop):self.coord.run()
         self.assertEqual(len(self.api.writes),count)
     def test_any_required_proof_missing_prevents_delete(self):
-        for field in ['status','archive_oid','restored_heads','full_object_identity','restored_trees','tag_only_fetch','external_payload_gap','pointer_zip','wrong_before_not_ancestor']:
+        for field in ['status','archive_oid','restored_heads','full_object_identity','restored_trees','tag_only_fetch','external_payload_gap','pointer_zip','wrong_before_is_strict_ancestor']:
             c=A.Coordinator(self.p,self.ctx,FakeAPI(self.p),lambda r,p:{k:v for k,v in proof(r,p).items() if k!=field})
             c.verify_server_archive=lambda r:None
             with self.assertRaises((A.Stop,KeyError)):c.run()
@@ -195,6 +195,54 @@ class CoordinatorTests(unittest.TestCase):
         for phase,pin in [('archive','f'*64),('prune',''),('prune','not-a-digest')]:
             ctx=context(phase=phase);ctx['reviewed_cas_signature_sha256']=pin
             with self.assertRaises(A.Stop):A.Coordinator(self.p,ctx,self.api,proof)
+    def test_diagnostic_existing_tag_only_uses_same_value_after_oid(self):
+        c=A.Coordinator(self.p,context(phase='diagnose'),self.api,proof)
+        c.verify_server_archive=lambda r:None
+        before=copy.deepcopy(self.api.refs);tags=copy.deepcopy(self.api.tags)
+        result=c.run()
+        self.assertEqual(result['phase'],'diagnose');self.assertEqual(result['deletions'],0)
+        self.assertEqual(self.api.refs,before);self.assertEqual(self.api.tags,tags)
+        self.assertEqual(self.api.writes,[[A.ref_entry(A.TAG,self.p['repositories']['kws-pipeline']['archive_commit_oid'],self.p['repositories']['kws-pipeline']['archive_commit_oid'])],
+                         [A.ref_entry(A.TAG,self.p['repositories']['kws-pipeline']['snapshot_baseline_main'],self.p['repositories']['kws-pipeline']['archive_commit_oid'])]])
+    def test_diagnostic_missing_tag_stops_before_writes(self):
+        self.api.tags['kws-pipeline']=None
+        c=A.Coordinator(self.p,context(phase='diagnose'),self.api,proof)
+        with self.assertRaises(A.Stop):c.run()
+        self.assertEqual(self.api.writes,[])
+    def test_diagnostic_unproven_ancestor_stops_before_writes(self):
+        def badproof(r,p):return {**proof(r,p),'wrong_before_is_strict_ancestor':False}
+        c=A.Coordinator(self.p,context(phase='diagnose'),self.api,badproof)
+        c.verify_server_archive=lambda r:None
+        with self.assertRaises(A.Stop):c.run()
+        self.assertEqual(self.api.writes,[])
+    def test_diagnostic_ignored_before_stops_without_deletion(self):
+        self.api.fail_mode='ignored-before'
+        c=A.Coordinator(self.p,context(phase='diagnose'),self.api,proof)
+        c.verify_server_archive=lambda r:None
+        with self.assertRaises(A.Stop):c.run()
+        self.assertTrue(all(len(batch)==1 and batch[0]['name']==A.TAG for batch in self.api.writes))
+    def test_diagnostic_nonempty_signature_pin_rejected(self):
+        ctx=context(phase='diagnose');ctx['reviewed_cas_signature_sha256']='f'*64
+        with self.assertRaises(A.Stop):A.Coordinator(self.p,ctx,self.api,proof)
+        self.assertEqual(self.api.writes,[])
+    def test_diagnostic_generic_error_stays_unreviewable(self):
+        update=self.api.update_refs
+        def generic(node,updates):
+            try:return update(node,updates)
+            except A.ApiError:raise A.ApiError(200,[{'type':'UNPROCESSABLE','message':'rejecting non-fast forward update'}])
+        self.api.update_refs=generic
+        c=A.Coordinator(self.p,context(phase='diagnose'),self.api,proof)
+        c.verify_server_archive=lambda r:None
+        result=c.run()
+        self.assertFalse(result['tag_guard_diagnostic']['explicit_expected_oid_evidence'])
+        self.assertEqual(result['deletions'],0)
+
+    def test_negative_probe_uses_frozen_ancestor_not_source(self):
+        self.coord.run()
+        u=self.api.writes[1][0]
+        self.assertEqual(u['beforeOid'],self.p['repositories']['kws-pipeline']['snapshot_baseline_main'])
+        self.assertNotEqual(u['beforeOid'],SOURCE);self.assertFalse(u['force'])
+
     def test_archive_existing_tag_even_correct_stops(self):
         c=A.Coordinator(self.p,context(phase='archive'),self.api,proof)
         with self.assertRaises(A.Stop):c.run()
@@ -221,4 +269,46 @@ class ApiAndStaticTests(unittest.TestCase):
         self.assertIn("'GIT_CONFIG_GLOBAL':'/dev/null'",src)
         self.assertIn("'GIT_TERMINAL_PROMPT':'0'",src)
 
+class RealRestorerAncestorTests(unittest.TestCase):
+    """Local Git-only fixture; no credentials, network, or historical repository files."""
+    def test_real_git_strict_ancestor_and_invalid_probes(self):
+        import os, subprocess, tempfile
+        with tempfile.TemporaryDirectory(prefix='archive-ancestor-test-') as directory:
+            root=Path(directory);origin=root/'source.git'
+            env={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':str(root),
+                 'GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null',
+                 'GIT_AUTHOR_NAME':'Fixture','GIT_AUTHOR_EMAIL':'fixture@example.invalid',
+                 'GIT_COMMITTER_NAME':'Fixture','GIT_COMMITTER_EMAIL':'fixture@example.invalid'}
+            def git(*args,input=None):
+                return subprocess.run(['git','--git-dir='+str(origin),*args],input=input,
+                                      capture_output=True,check=True,env=env).stdout.decode().strip()
+            git('init','--bare','--quiet',str(origin))
+            docs=[];tree_rows=[]
+            for name,raw in [('BRANCHES.json',b'{}\n'),('README.md',b'fixture\n')]:
+                oid=git('hash-object','-w','--stdin',input=raw)
+                docs.append({'path':name,'bytes':len(raw),'sha256':A.sha256(raw)})
+                tree_rows.append('100644 blob '+oid+'\t'+name+'\n')
+            tree=git('mktree',input=''.join(tree_rows).encode())
+            baseline=git('commit-tree',tree,input=b'baseline\n')
+            archive=git('commit-tree',tree,'-p',baseline,input=b'archive\n')
+            unrelated=git('commit-tree',tree,input=b'unrelated\n')
+            git('update-ref',A.TAG,archive)
+            repo={'full_name':'jiying2007/kws-data','archive_commit_oid':archive,
+                  'archive_tree_oid':tree,'archive_docs':docs,'ordered_archive_parents':[baseline],
+                  'snapshot_baseline_main':baseline,'delete_refs':[{'name':'refs/heads/fixture',
+                  'before_oid':baseline,'tree_oid':tree}],'keep_refs':[]}
+            plan={'resource_limits':BASE['resource_limits'],'pointer_zip':BASE['pointer_zip']}
+            class LocalRestorer(A.GitRestorer):
+                def fetch_tag(self,command,repo):
+                    command('-c','protocol.file.allow=always','fetch','--quiet','--no-tags',
+                            str(origin),A.TAG+':'+A.TAG)
+            result=LocalRestorer()(repo,plan)
+            self.assertTrue(result['wrong_before_is_strict_ancestor'])
+            self.assertTrue(result['full_object_identity']);self.assertTrue(result['restored_trees'])
+            for invalid in (archive,unrelated):
+                with self.subTest(invalid=invalid):
+                    bad={**repo,'snapshot_baseline_main':invalid}
+                    with self.assertRaises(A.Stop):LocalRestorer()(bad,plan)
+
 if __name__=='__main__':unittest.main(verbosity=2)
+

@@ -212,13 +212,13 @@ def guard_context(plan, ctx, own):
             ctx['repository_owner_id']=='33591504' and ctx['actor_id']=='33591504' and
             ctx['actor']=='jiying2007' and ctx['triggering_actor']=='jiying2007', 'run identity')
     require(ctx['event_name']=='workflow_dispatch' and ctx['ref']=='refs/heads/main' and
-            ctx['run_attempt']=='1' and ctx['operation'] in ('archive','prune'), 'event/phase/rerun')
+            ctx['run_attempt']=='1' and ctx['operation'] in ('archive','diagnose','prune'), 'event/phase/rerun')
     require(valid_oid(ctx['reviewed_source_sha']) and ctx['sha']==ctx['workflow_sha']==ctx['reviewed_source_sha'],
             'reviewed execution source mismatch')
     digest=ctx['reviewed_cas_signature_sha256']
-    require((ctx['operation']=='archive' and digest=='') or
+    require((ctx['operation'] in ('archive','diagnose') and digest=='') or
             (ctx['operation']=='prune' and re.fullmatch(r'[0-9a-f]{64}',digest) and digest!='0'*64),
-            'archive requires empty CAS pin; prune requires reviewed signature SHA-256')
+            'archive/diagnose require empty CAS pin; prune requires reviewed signature SHA-256')
     expected=r['full_name']+'/'+plan['source_identity']['workflow_path']+'@refs/heads/main'
     require(ctx['workflow_ref']==expected,'workflow source path')
 
@@ -249,7 +249,7 @@ class Coordinator:
         require(self.own in REPOS,'unknown own repo')
         guard_context(plan,context,self.own)
         self.repo=plan['repositories'][self.own]
-        self.mutations=[];self.archive_source_not_ancestor=False
+        self.mutations=[];self.archive_probe_ancestor_verified=False
     def tag(self, repo):
         try: obj=self.api.read(repo['full_name'],'/git/ref/tags/archive/branches-2026-10-07')
         except ApiError as e:
@@ -294,7 +294,7 @@ class Coordinator:
             raw=base64.b64decode(blob['content'].replace('\n',''),validate=True)
             require(len(raw)==row['bytes'] and sha256(raw)==row['sha256'],'archive document bytes')
     def write(self, mode, updates):
-        assert_write_scope(self.repo,updates,mode,self.ctx['reviewed_source_sha'])
+        assert_write_scope(self.repo,updates,mode,self.repo['snapshot_baseline_main'])
         self.mutations.append({'mode':mode,'updates':updates})
         return self.api.update_refs(self.node_id,updates)
     def prove_both(self):
@@ -311,13 +311,13 @@ class Coordinator:
             if repo['full_name']==self.plan['pointer_zip']['repository']:
                 require(proof['pointer_zip'] is True,'pointer ZIP proof missing')
             if name==self.own:
-                require(proof['wrong_before_not_ancestor'] is True,'workflow source is an archive ancestor')
-                self.archive_source_not_ancestor=True
+                require(proof['wrong_before_is_strict_ancestor'] is True,'probe before OID is not a strict archive ancestor')
+                self.archive_probe_ancestor_verified=True
             proofs[name]=proof
         return proofs
     def verify_noop_guard(self, diagnostic_only=False):
         A=self.repo['archive_commit_oid']
-        require(self.archive_source_not_ancestor,'safe nonzero wrong-before proof missing')
+        require(self.archive_probe_ancestor_verified,'strict archive-ancestor wrong-before proof missing')
         require(self.tag(self.repo)==A,'tag changed before guard test')
         self.write('tag-guard',[ref_entry(TAG,A,A)])
         require(self.tag(self.repo)==A,'tag changed after same-value guard')
@@ -325,9 +325,9 @@ class Coordinator:
         if not diagnostic_only:
             require(bool(re.fullmatch(r'[0-9a-f]{64}',expected)) and expected!='0'*64,
                     'reviewed CAS signature SHA-256 missing; prune blocked')
-        try:self.write('negative-tag-guard',[ref_entry(TAG,self.ctx['reviewed_source_sha'],A)])
+        try:self.write('negative-tag-guard',[ref_entry(TAG,self.repo['snapshot_baseline_main'],A)])
         except ApiError as error:
-            actual=cas_signature(error.errors,self.ctx['reviewed_source_sha'],A)
+            actual=cas_signature(error.errors,self.repo['snapshot_baseline_main'],A)
             if diagnostic_only:
                 require(error.status==200 and actual,'negative guard did not return a GraphQL rejection')
                 require(self.tag(self.repo)==A,'tag changed during guard diagnostic')
@@ -349,10 +349,23 @@ class Coordinator:
             proof=self.restore(self.repo,self.plan)
             require(proof['status']=='PASS','archive restoration failed')
             require(self.branches(self.repo)==before,'branch changed during archive; reconcile read-only')
-            require(proof['wrong_before_not_ancestor'] is True,'workflow source is an archive ancestor')
-            self.archive_source_not_ancestor=True
+            require(proof['wrong_before_is_strict_ancestor'] is True,'probe before OID is not a strict archive ancestor')
+            self.archive_probe_ancestor_verified=True
             diagnostic=self.verify_noop_guard(diagnostic_only=True)
             return {'phase':'archive','proof':proof,'deletions':0,'tag_guard_diagnostic':diagnostic}
+        if self.ctx['operation']=='diagnose':
+            require(self.tag(self.repo)==self.repo['archive_commit_oid'],'diagnose requires existing exact archive tag')
+            self.verify_server_archive(self.repo)
+            proof=self.restore(self.repo,self.plan)
+            require(proof['status']=='PASS' and proof['wrong_before_is_strict_ancestor'] is True,
+                    'diagnostic restoration or strict ancestor proof failed')
+            self.archive_probe_ancestor_verified=True
+            self.check_source();self.check_original_heads(self.branches(self.repo))
+            require(self.branches(self.repo)==before,'branch inventory changed before diagnostic')
+            diagnostic=self.verify_noop_guard(diagnostic_only=True)
+            require(self.branches(self.repo)==before,'branch changed during diagnostic; reconcile read-only')
+            self.check_source()
+            return {'phase':'diagnose','proof':proof,'deletions':0,'tag_guard_diagnostic':diagnostic}
         proofs=self.prove_both()
         self.check_source();self.check_original_heads(self.branches(self.repo))
         require(self.branches(self.repo)==before,'branch inventory changed before prune')
@@ -433,6 +446,9 @@ class GitRestorer:
         require(command('rev-parse',TAG).decode().strip()==repo['archive_commit_oid'],'fetched tag OID')
         require(command('show','-s','--format=%P',TAG).decode().strip().split()==repo['ordered_archive_parents'],
                 'fetched archive parents')
+        require(repo['snapshot_baseline_main'] != repo['archive_commit_oid'],
+                'wrong-before probe must be a strict ancestor, not archive itself')
+        command('merge-base','--is-ancestor',repo['snapshot_baseline_main'],repo['archive_commit_oid'])
         require(command('rev-parse',TAG+'^{tree}').decode().strip()==repo['archive_tree_oid'],'fetched archive tree')
         require(command('ls-tree','--name-only',TAG).decode().splitlines()==['BRANCHES.json','README.md'],
                 'fetched archive contains extra files')
@@ -490,7 +506,7 @@ class GitRestorer:
             if process.poll() is None:
                 import signal
                 os.killpg(process.pid,signal.SIGKILL);process.wait()
-            stderr.close()
+            process.stdin.close();process.stdout.close();stderr.close()
         if repo['full_name']==pointer['repository']:
             require(pointer_ok,'pointer ZIP absent from archive reachability')
             for source in ('3385bf2a7f6838b743546f2ee9f481e2fa7ee975','94b9fbf562aca9487beb8096bc3f50924369a3ce'):
@@ -509,7 +525,7 @@ class GitRestorer:
         budget()
         return {'status':'PASS','archive_oid':repo['archive_commit_oid'],'restored_heads':len(frozen_rows(repo)),
                 'full_object_identity':True,'restored_trees':True,'tag_only_fetch':True,'external_payload_gap':False,
-                'pointer_zip':pointer_ok,'wrong_before_not_ancestor':bool(valid_oid(self.source_sha)) and self.source_sha not in objects,'objects':len(objects),'blobs':blob_count,'object_bytes':byte_count,
+                'pointer_zip':pointer_ok,'wrong_before_is_strict_ancestor':repo['snapshot_baseline_main'] != repo['archive_commit_oid'] and repo['snapshot_baseline_main'] in objects,'objects':len(objects),'blobs':blob_count,'object_bytes':byte_count,
                 'object_receipt_sha256':digest.hexdigest()}
 
 
@@ -538,3 +554,4 @@ if __name__=='__main__':
     except (Stop,KeyError,ValueError,TypeError,subprocess.SubprocessError) as error:
         print('STOP: '+str(error)+'; no automatic retry. Reconcile server state read-only.')
         raise SystemExit(1)
+
