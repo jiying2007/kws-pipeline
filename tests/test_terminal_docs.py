@@ -133,7 +133,7 @@ def main() -> int:
     require_all(
         target_evidence.read_text(encoding="utf-8"),
         target_evidence,
-        ("schema v2", "--runtime-soak", "--power-raw", "external attestation"),
+        ("schema v3", "process-cpu-one-core-v1", "--runtime-soak", "--power-raw", "external attestation"),
     )
 
     shipping = json.loads((ROOT / "configs" / "shipping.xiaowo.json").read_text(encoding="utf-8"))

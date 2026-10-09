@@ -149,6 +149,6 @@ For every shipping model/pack tuple retain:
 - corpus identity/version;
 - target-board benchmark and machine/raw target evidence;
 - approved SKU policy;
-- qualification manifest schema v2 and gate result schema v3.
+- qualification manifest schema v3 and gate result schema v4.
 
 Hosted CI and cross compilation are software correctness signals, not target-board acoustic qualification.

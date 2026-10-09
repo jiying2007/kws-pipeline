@@ -474,15 +474,33 @@ class IdentityTests(unittest.TestCase):
 
     def test_current_shipping_tuple_unchanged(self):
         expected_sha = {
-            "configs/parameter-contract.json": "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b",
+            "configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
             "keywords/zh_cn_example.tsv": "1d17ed101c950bbc55327dd56c7e0a03faa6ab1a6ef36cf73ede55d7d9b88db5",
             "keywords/tokens.example.txt": "af113e57eb6375b3c364b3845c6698ea460e29f718c8303657777183d6eda8c7",
-            "configs/shipping.xiaowo.json": "04db2b7000813199775bd6b47fa7afe6c32d5b0ec942fed630907c51cc9421ce",
+            "configs/shipping.xiaowo.json": "4f39810a362096f2345c8e2e3326c3899e0d30b0b5e0632a6f2622a1364d5b21",
             "configs/nightly.xiaowo-frozen-model.json": "a515749b2987e1df23f588a1db8f1e9a7f710662ed6f8b4df92c09aacf40f5f6",
         }
         shipping = json.loads((ROOT / "configs/shipping.xiaowo.json").read_text())
         self.assertFalse(shipping["shipping_approved"])
         self.assertEqual(shipping["model"]["release_tag"], "model-749187ec1d66")
+        calibration = shipping["threshold_calibration"]
+        self.assertEqual(calibration["parameter_contract_sha256"],
+                         "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b")
+        self.assertEqual(calibration["required_parameter_contract_sha256"],
+                         expected_sha["configs/parameter-contract.json"])
+        self.assertTrue(calibration["recalibration_required"])
+        self.assertEqual([entry["value"] for entry in calibration["thresholds"]], [0.55, 0.55])
+        self.assertEqual(shipping["runtime"], {
+            "min_speech_dbfs": -55.0, "token_boost": 1.5, "state_retention": 0.94,
+            "refractory_ms": 1200, "external_vad_threshold": 0.45,
+        })
+        for key, value in {
+            "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+            "checkpoint_sha256": "d005bfe74188c0e24e9e665c10251fd6feea5c879ebcbe96cb8c85f6a85ea14b",
+            "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+            "keyword_tsv_sha256": "d04023ccaeeafc6938fd8620762edd739e4760c35321be6edc8b32631b982ab4",
+        }.items():
+            self.assertEqual(shipping["model"][key], value)
         self.assertEqual(shipping["vocabulary"]["size"], 5)
         for path, digest in expected_sha.items():
             self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)

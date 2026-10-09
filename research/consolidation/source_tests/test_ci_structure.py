@@ -35,7 +35,7 @@ class CIContracts(unittest.TestCase):
                      'test_domain_scene.py', 'test_statistical_bounds.py',
                      'test_domain_curriculum.py', 'test_false_reject_mining.py',
                      'test_domain_metrics.py', 'test_training_diagnostics.py',
-                     'test_acoustic_alignment_diagnostic.py', 'test_decoder_policy_replay.py',
+                     'test_acoustic_alignment_diagnostic.py',
                      'test_decoder_boundary_references.py',
                      'test_decoder_boundary_product_references.py',
                      'test_decoder_boundary_requalification.py',
@@ -47,9 +47,13 @@ class CIContracts(unittest.TestCase):
             self.assertNotIn(name, hosted)
         for command in ('test_frontend_parity.py', 'test_domain_loop.py --runner',
                         'test_long_far.py --runner', 'test_board_bench.py --runner',
-                        'test_parameter_contract.py', 'check_runtime_purity.py',
+                        'test_parameter_contract.py',
+                        'test_decoder_policy_replay.py --path-runner ./build/kws_decoder_path_replay',
+                        'check_runtime_purity.py',
                         'check_reproducible_sdk.py', 'ctest --test-dir build'):
             self.assertIn(command, hosted)
+        self.assertEqual(self.ci.count('test_decoder_policy_replay.py'), 1)
+        self.assertNotIn('test_decoder_policy_replay.py', shared)
 
     def test_only_ordinary_same_pr_ci_is_cancelled(self):
         self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", self.ci)

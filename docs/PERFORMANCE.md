@@ -43,7 +43,7 @@ references.jsonl + real WAV corpus
 
 v0.3 binds every original WAV by file SHA256 + decoded PCM SHA256 + frame count. `references.duration_s` must equal the real WAV duration, so FAR exposure comes from actual audio bytes.
 
-Policy schema v2 gates point estimates and one-sided confidence bounds:
+Policy schema v3 gates point estimates and one-sided confidence bounds:
 
 - FRR: one-sided Wilson binomial upper bound;
 - FAR: one-sided exact Poisson rate upper bound.
@@ -77,7 +77,7 @@ python3 tools/collect_runtime_soak.py \
   --command ./product-kws-soak --config qualification/product-config.json
 ```
 
-Runtime-soak schema v2 retains actual/requested duration, early-exit state, child-process CPU-time/RSS/thermal samples and summary fields. Later verification independently recomputes CPU/RSS/max temperature from the retained samples.
+Runtime-soak schema v3 retains actual/requested duration, early-exit state, child-process CPU-time/RSS/thermal/thread samples and summary fields. CPU gates use `process-cpu-one-core-v1`: aggregate process CPU seconds / measured wall seconds × 100, with no core-count division or 100% clamp. `max_thread_count` is the observed sample maximum; CPU/audio-second is null because soak audio exposure is not measured. Board-benchmark RTF has its own known input-audio duration and is a separate metric. Later verification independently recomputes the retained summaries. Older capacity-normalized evidence is rejected. See [the CPU unit contract](TARGET_EVIDENCE.md#cpu-units-and-unavailable-audio-exposure).
 
 ## Canonical raw measurement identity
 
@@ -119,7 +119,7 @@ python3 tools/collect_target_evidence.py \
   --calibration-id <calibration-id>
 ```
 
-`builder-id` and `dut-id` must be distinct. Accepted shipping resource evidence is schema v2 with `evidence_class=product-board` and exact SKU/source/artifact/raw/attestation identity.
+`builder-id` and `dut-id` must be distinct. Accepted shipping resource evidence is schema v3 with `evidence_class=product-board` and exact SKU/source/artifact/raw/attestation identity.
 
 ## Audio continuity and soak
 
@@ -143,7 +143,7 @@ When capture continuity breaks, integration must call `kws_engine_notify_discont
 - clean dataset-audit coverage;
 - evaluation summary/provenance plus actual held-out WAV identity/duration;
 - target board runner/audio/summary;
-- product-board evidence schema v2;
+- product-board evidence schema v3;
 - exact collector, canonical `--evidence-raw`, `--attestation-verification` and every raw evidence file;
 - exact `--sku` and `--source-sha`.
 
@@ -167,6 +167,6 @@ For every shipping SKU retain:
 - playback/near-homophone/AEC residual/mechanical-noise scenarios;
 - XRUN/backpressure/discontinuity evidence;
 - original held-out WAV identity;
-- qualification manifest v2, policy v2 and gate result v3.
+- qualification manifest v3, policy v3 and gate result v4.
 
 Hosted execution, synthetic models, simulated RIR, cross-build or QEMU-style signals must never be presented as real-board latency, acoustic quality, CPU, thermal or power data.

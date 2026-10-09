@@ -1,4 +1,9 @@
-# 新诊断准入与保存证据补充（2026-10-09）
+# 历史诊断准入与保存证据补充（2026-10-09，PR #502）
+
+本文保留该日的公开证据与环境观察，不能作为当前执行清单。当前唯一入口为
+[D20 准入清单](../d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)。
+旧的准备顺序已被取代：必须先建立并独立验证硬内存限制，再在该隔离范围内检查
+精确后端 import；不得先无约束安装或 import 再判断预算。所有数值执行仍未获准。
 
 本轮仅核对公开字节、源码与保存结果。新增模型、单算子、decoder replay、TTS、ASR、训练调用均为0。D20原raw FAIL、D90 NOT_RUN不变；不作新的资格或shipping通过结论。
 
@@ -12,7 +17,7 @@
 2. RSS512MiB硬限制未建立：当前/sys/fs/cgroup不可用，未验证等效机制，不能把RLIMIT_AS当RSS；也未测精确后端的只import峰值。
 3. 单算子驱动尚未实现并独立验收：C仅公开全网a20_step，静态affine/memory/relu可由独立包装暴露；参考FSMNBlock.forward源码支持显式单行input/cache。必须冻结编译器、IEEE/RNE、gradual-underflow、FP/FMA设置及Torch dispatch语义；禁止fallback到全网。单行后端不自动等价于历史chunk dispatch。
 
-剩余路径：先安装/核对确切依赖并完成无模型资源准入，制作及独立review单算子包装；冻结一个公共C保存pre-input/真实cache输入锚点，给两个后端相同字节。19×21×2=798；同时使用C和Torch两个锚点会需要1596，超出合同。每次仅消费保存输入，不把新输出传下一层。Torch重构cache只作为有明确标签的历史证据，不能冒称真实观测。单进程单线程CPU、禁网、无GPU；798行/120s/RSS512MiB。超限、身份或语义不符即停止，不能涨额度后继续。
+历史方案所列驱动要求如下；当前准备顺序以上方唯一准入清单为准。制作及独立review单算子包装；冻结一个公共C保存pre-input/真实cache输入锚点，给两个后端相同字节。19×21×2=798；同时使用C和Torch两个锚点会需要1596，超出合同。每次仅消费保存输入，不把新输出传下一层。Torch重构cache只作为有明确标签的历史证据，不能冒称真实观测。单进程单线程CPU、禁网、无GPU；798行/120s/RSS512MiB。超限、身份或语义不符即停止，不能涨额度后继续。
 
 原门限保留：raw atol1e-4/rtol1e-5；probability atol1e-5/rtol0；frontend atol1e-3/rtol0；composed_cmvn atol2e-4/rtol0。局部诊断不是v3整网资格，旧FAIL不覆盖。
 

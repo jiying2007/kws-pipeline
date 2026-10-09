@@ -18,8 +18,8 @@ typedef struct kws_trie_node {
   float next_score;
   float next_blank_score;
   /* Acoustic evidence follows the winning search path but excludes search-only
-   * token boost and retention decay. It is therefore safe to use for emitted
-   * confidence without making confidence depend on token duration or blanks. */
+   * retention decay and fuzzy-child costs. It is therefore safe to use for
+   * emitted confidence without including token duration or blank costs. */
   float acoustic_score;
   float blank_acoustic_score;
   float next_acoustic_score;
@@ -37,6 +37,7 @@ typedef struct kws_decoder {
   uint8_t priorities[KWS_MAX_KEYWORDS];
   uint8_t prefix_policies[KWS_MAX_KEYWORDS];
   uint8_t grace_frames[KWS_MAX_KEYWORDS];
+  /* Compatibility value only: never participates in decoder arithmetic. */
   float token_boost;
   float retention_log;
   /* Repo-internal replay diagnostics may override these two search-only
@@ -44,6 +45,12 @@ typedef struct kws_decoder {
    * parameter-contract defaults. */
   float silence_retention_log;
   float fuzzy_child_retention_cost_log;
+  /* Immediate terminals with a nonzero blank gate wait independently, so
+   * ready candidates retain immediate priority-before-depth arbitration.
+   * Nonblank evidence cancels a wait; only a newly qualified live terminal
+   * can restart it. Fixed-size internal storage; no public ABI fields change. */
+  float immediate_confidences[KWS_MAX_KEYWORDS];
+  uint8_t immediate_blank_frames[KWS_MAX_KEYWORDS];
   uint16_t inactive_frames;
   int16_t pending_keyword;
   float pending_confidence;

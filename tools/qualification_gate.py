@@ -10,6 +10,8 @@ import pathlib
 import re
 import sys
 
+from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
+
 from corpus_identity import corpus_digest
 from statistical_bounds import qualification_bounds
 
@@ -61,8 +63,9 @@ def validate_sha(value, label: str) -> str:
 
 
 def validate_policy(policy: dict) -> dict:
-    if integer(policy.get("schema_version"), "policy.schema_version") != 2:
-        raise ValueError("policy schema_version must be 2")
+    if integer(policy.get("schema_version"), "policy.schema_version") != 3:
+        raise ValueError("policy schema_version must be 3")
+    require_cpu_contract(policy, "policy")
     name = policy.get("name")
     if not isinstance(name, str) or not name.strip():
         raise ValueError("policy name must be non-empty text")
@@ -76,6 +79,7 @@ def validate_policy(policy: dict) -> dict:
     if shipping_approved is not True:
         raise ValueError("qualification gate requires shipping_approved=true")
     result = {
+        "measurement_contract_id": policy["measurement_contract_id"],
         "policy_id": policy_id.strip(),
         "sku": sku.strip(),
         "shipping_approved": True,
@@ -100,8 +104,8 @@ def validate_policy(policy: dict) -> dict:
     }
     if not 0.5 < result["confidence_level"] < 1.0:
         raise ValueError("policy confidence_level must be in (0.5,1)")
-    if result["max_frr"] > 1.0 or result["max_frr_upper_bound"] > 1.0 or result["max_cpu_percent"] > 100.0:
-        raise ValueError("policy FRR/CPU limits exceed valid ranges")
+    if result["max_frr"] > 1.0 or result["max_frr_upper_bound"] > 1.0:
+        raise ValueError("policy FRR limits exceed valid ranges")
     if result["max_frr_upper_bound"] < result["max_frr"]:
         raise ValueError("statistical FRR upper-bound limit cannot be below point limit")
     if result["max_far_upper_bound_per_hour"] < result["max_far_per_hour"]:
@@ -130,8 +134,8 @@ def validate_corpus(value: object, label: str) -> str:
 
 
 def validate_manifest(manifest: dict) -> dict:
-    if integer(manifest.get("schema_version"), "manifest.schema_version") != 2:
-        raise ValueError("manifest schema_version must be 2")
+    if integer(manifest.get("schema_version"), "manifest.schema_version") != 3:
+        raise ValueError("manifest schema_version must be 3")
     runtime = manifest.get("runtime")
     vocabulary = manifest.get("vocabulary")
     lineage = manifest.get("model_lineage")
@@ -278,8 +282,8 @@ def validate_manifest(manifest: dict) -> dict:
     validate_sha(board.get("summary_sha256"), "board.summary_sha256")
     if validate_sha(evidence.get("sha256"), "evidence.sha256") != hashes["evidence"]:
         raise ValueError("manifest evidence hash does not match evidence artifact")
-    if integer(evidence.get("schema_version"), "evidence.schema_version") != 2:
-        raise ValueError("manifest evidence schema_version must be 2")
+    if integer(evidence.get("schema_version"), "evidence.schema_version") != 3:
+        raise ValueError("manifest evidence schema_version must be 3")
     if evidence.get("evidence_class") != "product-board":
         raise ValueError("manifest evidence_class must be product-board")
     if evidence.get("sku") != sku or evidence.get("source_sha") != source_sha:
@@ -350,13 +354,13 @@ def validate_manifest(manifest: dict) -> dict:
         "rtf": finite(board.get("rtf"), "board.rtf", 0.0),
         "p99_headroom": finite(board.get("p99_headroom"), "board.p99_headroom", 0.0),
         "soak_hours": finite(evidence.get("soak_hours"), "evidence.soak_hours", 0.0),
-        "cpu_percent": finite(evidence.get("cpu_percent"), "evidence.cpu_percent", 0.0),
+        **validate_cpu_metrics(evidence, "evidence"),
         "rss_kib": finite(evidence.get("rss_kib"), "evidence.rss_kib", 0.0),
         "stack_high_water_bytes": finite(evidence.get("stack_high_water_bytes"), "evidence.stack_high_water_bytes", 0.0),
         "max_temp_c": finite(evidence.get("max_temp_c"), "evidence.max_temp_c"),
         "average_power_mw": finite(evidence.get("average_power_mw"), "evidence.average_power_mw", 0.0),
     }
-    if result["audio_hours"] <= 0.0 or result["frr"] > 1.0 or result["cpu_percent"] > 100.0:
+    if result["audio_hours"] <= 0.0 or result["frr"] > 1.0:
         raise ValueError("manifest contains impossible evaluation/resource values")
     expected_frr = false_rejects / expected
     expected_far = false_accepts / result["audio_hours"]
@@ -405,7 +409,8 @@ def main() -> int:
     )
     violations = [message for failed, message in checks if failed]
     result = {
-        "schema_version": 3,
+        "schema_version": 4,
+        "measurement_contract_id": policy["measurement_contract_id"],
         "qualified": not violations,
         "policy": policy["name"],
         "policy_id": policy["policy_id"],

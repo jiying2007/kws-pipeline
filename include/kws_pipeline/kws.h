@@ -77,7 +77,8 @@ typedef struct kws_keyword {
   uint16_t num_tokens;
   /* Acceptance threshold on the emitted confidence, in (0,1). */
   float threshold;
-  /* Blank-separated frames required before a held terminal may fire, 0..8. */
+  /* Consecutive blank-dominant frames required after qualification, 0..8.
+   * Applies to every prefix policy, including KWS_PREFIX_IMMEDIATE. */
   uint8_t min_trailing_blanks;
   /* Arbitration rank, 0..15.  Higher wins; ties break on depth, then
    * confidence, so duplicate ranks stay deterministic. */
@@ -105,10 +106,9 @@ typedef struct kws_keyword_pack {
 typedef struct kws_config {
   /* Speech gate applied to the post-AFE frame energy, in dBFS. */
   float min_speech_dbfs;
-  /* DEPRECATED and INEFFECTIVE.  Added once per trie depth, so it is a constant
-   * offset on the search score; the emitted confidence uses exp(acoustic/depth)
-   * and the retention gate subtracts token_boost*depth, which cancels it
-   * exactly.  Retained for source and ABI compatibility only. */
+  /* DEPRECATED and INEFFECTIVE. Validated as finite and nonnegative, but never
+   * used in search, retention or confidence arithmetic. Retained for source
+   * and ABI compatibility only. */
   float token_boost;
   /* Per-frame retention factor for a live prefix on a speech frame, in (0,1). */
   float state_retention;

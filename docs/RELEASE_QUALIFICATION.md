@@ -12,12 +12,14 @@ Repository CI proves software contracts. A shipping wake-word claim requires a s
 - model provenance: **schema v3**;
 - evaluation provenance: **schema v2**;
 - dataset audit: **schema v3**;
-- runtime-soak evidence: **schema v2**;
-- target evidence: **schema v2**, `evidence_class=product-board`;
+- runtime-soak evidence: **schema v3**;
+- target evidence: **schema v3**, `evidence_class=product-board`;
 - attestation verification: **schema v1**;
-- qualification manifest: **schema v2**;
-- qualification policy: **schema v2**;
-- qualification gate result: **schema v3**.
+- qualification manifest: **schema v3**;
+- qualification policy: **schema v3**;
+- qualification gate result: **schema v4**.
+
+The CPU-unit hard cut rejects runtime-soak/target-evidence/manifest/policy v2 and earlier gate results; no archived capacity-normalized evidence is silently promoted. Current physical-target policies are v3, approved resource budgets v2, and DUT/cohort summaries and public receipts v2. All bind the fixed CPU measurement contract.
 
 The software version may change while KWSP/KWKP remain unchanged. v0.3 changes public discontinuity/evidence contracts, not the on-device model/keyword binary layouts.
 
@@ -42,7 +44,7 @@ KWSP + KWKP + exact runtime/AFE
         |       -> board timing summary
         |
         +-> actual product process under collect_runtime_soak.py
-        |       -> runtime-soak schema v2
+        |       -> runtime-soak schema v3
         |
         +-> stack/power/other raw measurement files
                  |
@@ -52,15 +54,15 @@ KWSP + KWKP + exact runtime/AFE
                  |
                  v
        collect_target_evidence.py
-       -> product-board evidence schema v2
+       -> product-board evidence schema v3
                  |
                  v
-       qualification_manifest.py schema v2
+       qualification_manifest.py schema v3
                  |
-        shipping-approved SKU policy v2
+        shipping-approved SKU policy v3
                  |
                  v
-       qualification_gate.py -> result schema v3
+       qualification_gate.py -> result schema v4
 ```
 
 ## 1. Freeze the training environment
@@ -177,7 +179,7 @@ python3 tools/collect_runtime_soak.py \
   --command ./product-kws-soak --config qualification/product-config.json
 ```
 
-Runtime-soak schema v2 retains child-process CPU/RSS/thermal samples and fails on early exit. Summary CPU/RSS/temperature values are independently recomputed from those samples during later verification.
+Runtime-soak schema v3 retains child-process CPU/RSS/thermal/thread samples and fails on early exit. CPU is aggregate process CPU seconds / measured wall seconds × 100 under `measurement_contract_id=process-cpu-one-core-v1`; it is never divided by machine capacity or clipped at 100%. Summary values are independently recomputed. Soak audio duration and CPU/audio-second remain null without real audio-counter evidence; the separate board benchmark has known input-audio duration. See [the complete CPU unit contract](TARGET_EVIDENCE.md#cpu-units-and-unavailable-audio-exposure).
 
 ## 10. Freeze canonical raw evidence
 
@@ -237,7 +239,7 @@ python3 tools/collect_target_evidence.py \
   --calibration-id <calibration-id>
 ```
 
-Target evidence schema v2 is accepted as shipping resource evidence only when `evidence_class=product-board` and all SKU/source/artifact/raw/attestation bindings agree.
+Target evidence schema v3 is accepted as shipping resource evidence only when `evidence_class=product-board` and all SKU/source/artifact/raw/attestation bindings agree.
 
 ## 13. Build the byte-complete qualification manifest
 
@@ -285,7 +287,7 @@ python3 tools/qualification_gate.py \
   --output qualification/gate-result.json
 ```
 
-Policy schema v2 must identify the same SKU and set `shipping_approved=true`. It gates FAR/FRR point estimates and one-sided confidence bounds plus latency, p99 process time, RTF/headroom, soak, CPU, RSS, stack, temperature and power.
+Policy schema v3 must identify the same SKU, set `shipping_approved=true` and bind `measurement_contract_id=process-cpu-one-core-v1`. It gates FAR/FRR point estimates and one-sided confidence bounds plus latency, p99 process time, RTF/headroom, soak, CPU, RSS, stack, temperature and power.
 
 Exit codes:
 
@@ -293,7 +295,7 @@ Exit codes:
 - `1`: structurally valid evidence but thresholds failed;
 - `2`: malformed, inconsistent or tampered evidence/policy.
 
-Gate result schema v3 binds the exact manifest/policy identity.
+Gate result schema v4 binds the exact manifest/policy identity.
 
 ## 15. Retain the complete release tuple
 

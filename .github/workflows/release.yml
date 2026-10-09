@@ -50,6 +50,10 @@ jobs:
             clang --analyze -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
               -Iinclude -Isrc -Ibuild/generated "$source"
           done
+      - name: Prepare pinned public evaluation context fixtures
+        run: python3 tools/prepare_eval_context_fixtures.py
+      - name: Release workflow command contract
+        run: python3 tests/test_release_workflow_contract.py
       - name: Python/product tests
         run: |
           python3 tests/test_frontend_parity.py ./build/kws_feature_dump
@@ -58,6 +62,7 @@ jobs:
           python3 tests/test_false_reject_mining.py
           python3 tests/test_domain_scene.py
           python3 tests/test_domain_metrics.py
+          python3 tests/test_decoder_policy_replay.py --path-runner ./build/kws_decoder_path_replay
           python3 tests/test_domain_curriculum.py
           python3 tests/test_domain_loop.py --runner ./build/kws_wav
           python3 tests/test_long_far.py --runner ./build/kws_raw_stream
@@ -78,11 +83,7 @@ jobs:
       - name: Hosted benchmark signal
         run: ./build/kws_bench
       - name: Python test inventory
-        run: >-
-          python3 tools/test_inventory.py
-          --workflow .github/workflows/ci.yml
-          --workflow .github/workflows/training-integration.yml
-          --workflow .github/workflows/release.yml
+        run: python3 tools/test_inventory.py --official-workflows
       - name: Python syntax
         run: python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
 
@@ -369,15 +370,17 @@ jobs:
 
   cleanup-bootstrap-branch:
     needs: [hosted, coverage, sanitizers, fuzz, armv7-cross, publish]
-    if: ${{ always() && startsWith(github.ref, 'refs/heads/release/v') }}
+    if: ${{ success() && needs.publish.result == 'success' && startsWith(github.ref, 'refs/heads/release/v') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
       - name: Delete release bootstrap branch
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: |
-          set -euo pipefail
-          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}"
+        run: bash tools/cleanup_bootstrap_branch.sh sdk

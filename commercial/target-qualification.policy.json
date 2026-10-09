@@ -1,6 +1,6 @@
 {
-  "schema_version": 2,
-  "policy_id": "xiaowo-physical-target-phase-b-v2",
+  "schema_version": 3,
+  "policy_id": "xiaowo-physical-target-phase-b-v3",
   "deployment_tag": "deployment-c20f3eb88e43",
   "shipping_approved": false,
   "per_dut_hard_gates": {
@@ -44,5 +44,6 @@
     "runtime-soak.json",
     "power.csv",
     "audio-continuity.json"
-  ]
+  ],
+  "measurement_contract_id": "process-cpu-one-core-v1"
 }

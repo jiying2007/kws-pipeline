@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import contextlib
 import io
+import importlib.util
 import json
 import pathlib
 import types
@@ -104,7 +105,7 @@ class ProbeTests(unittest.TestCase):
     def test_stdlib_only_and_fixed_io_allowlist(self):
         tree = ast.parse(INLINE)
         imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
-        self.assertEqual(imports, {"importlib.metadata", "json", "os", "platform", "re", "shutil", "site", "sys"})
+        self.assertEqual(imports, {"email.parser", "email.policy", "importlib.metadata", "itertools", "json", "os", "pathlib", "platform", "re", "shutil", "site", "stat", "sys"})
         self.assertFalse(any(isinstance(node, ast.ImportFrom) for node in ast.walk(tree)))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
@@ -240,6 +241,34 @@ class ProbeTests(unittest.TestCase):
                 self.assertNotIn("torch", PROBE.sys.modules)
         self.fixture()
         self.assertIn("without_pth_or_user_site", PROBE.collect()["distribution_metadata_scope"])
+
+    def test_bounded_reader_identical_to_d20_and_same_negative_fixtures(self):
+        # No-checkout workflow embeds the same implementation. Compare its AST,
+        # then run every metadata fixture against the actual inline function.
+        source = ROOT / "research/d20-diagnostic-admission-v1/admission.py"
+        reference = ast.parse(source.read_text())
+        candidate = ast.parse(INLINE)
+        find = lambda tree: next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                                 and node.name == "metadata_version")
+        self.assertEqual(ast.dump(find(reference)), ast.dump(find(candidate)))
+        contract_path = ROOT / "research/d20-diagnostic-admission-v1"
+        modules = {}
+        for name in ('admission', 'contract', 'test_contract'):
+            spec = importlib.util.spec_from_file_location(name, contract_path / (name + '.py'))
+            module = importlib.util.module_from_spec(spec)
+            modules[name] = module
+            with mock.patch.dict(PROBE.sys.modules, modules):
+                spec.loader.exec_module(module)
+        # Metadata fixtures use inspect only for D20-specific result assertions.
+        # Keep that method bound to D20 but substitute the inline reader it calls.
+        reference_module = modules['admission']
+        with mock.patch.object(reference_module, 'metadata_version', PROBE.metadata_version):
+            suite = unittest.defaultTestLoader.loadTestsFromTestCase(modules['test_contract'].DistributionMetadataTests)
+            outcome = unittest.TestResult()
+            suite.run(outcome)
+        self.assertEqual(outcome.testsRun, 10)
+        self.assertEqual(outcome.errors, [])
+        self.assertEqual(outcome.failures, [])
 
     def test_fixed_reads_bounded_and_errors_not_reported(self):
         with mock.patch("builtins.open", mock.mock_open(read_data="x" * 65537)) as source:

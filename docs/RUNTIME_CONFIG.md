@@ -22,8 +22,13 @@ Consequences:
 - The generated header records `KWS_PARAMETER_CONTRACT_SHA256`, so a shipped
   binary can be tied back to the exact contract revision that produced it.
 - `configs/shipping.xiaowo.json` pins the same digest in its
-  `parameter_contract.sha256` and `threshold_calibration.parameter_contract_sha256`
-  fields. Editing the contract without revisiting the shipping contract fails
+  `parameter_contract.sha256` and
+  `threshold_calibration.required_parameter_contract_sha256` fields. The separate
+  `threshold_calibration.parameter_contract_sha256` retains the contract identity
+  recorded for the historical calibration; metadata maintenance must not silently
+  rewrite that evidence binding. While the historical and required digests differ,
+  `recalibration_required` must remain true and `shipping_approved` false. Editing
+  the contract without revisiting these bindings fails
   `tests/test_parameter_contract.py`.
 
 Regenerate the header manually with:
@@ -73,7 +78,7 @@ contract defaults below.
 | Field | Type | Default | Range | Unit | Effective | Invalidates thresholds |
 | --- | --- | --- | --- | --- | --- | --- |
 | `min_speech_dbfs` | float | `-55.0` | `[-120.0, 0.0]` | dBFS | yes | yes |
-| `token_boost` | float | `1.5` | `[0.0, +inf)` | nat | **no — deprecated** | no |
+| `token_boost` | float | `1.5` | finite, `>= 0.0` | nat | **no — deprecated** | no |
 | `state_retention` | float | `0.94` | `(0.0, 1.0)` exclusive | ratio per frame | yes | yes |
 | `refractory_ms` | uint32 | `1200` | `[0, 10000]` | ms | yes | no |
 | `external_vad_threshold` | float | `0.45` | `(0.0, 1.0)` exclusive | probability | yes | yes |
@@ -118,18 +123,31 @@ calibrated thresholds.
 
 ### `token_boost` — deprecated and ineffective
 
-The field is retained for source and ABI compatibility. It is added exactly once
-per trie depth to the search score, so it is a constant offset; the emitted
-confidence is `exp(acoustic_score / depth)` and the retention gate computes
-`retention_log = terminal_score - terminal_acoustic - token_boost * depth`, which
-cancels the offset exactly.
+The field is retained for source and ABI compatibility, including its finite,
+nonnegative validation and default `1.5`. Its value no longer participates in
+search, retention or confidence arithmetic. Search scores accumulate acoustic
+log-probability and retention/fuzzy-child costs; the terminal retention gate uses
+`retention_log = terminal_score - terminal_acoustic`. Confidence remains
+`exp(acoustic_score / depth)`.
 
-Measured evidence: sweeping `token_boost` from `0.0` to `10.0` over a 12-clip
-positive set produced byte-identical output for every clip, while the control
-parameters (`state_retention` `0.94 -> 0.50`, `min_speech_dbfs` `-55 -> -20`)
-both changed the results. The contract marks the parameter `"effective": false`
-and the generated header emits `KWS_PARAM_TOKEN_BOOST_VALID` but no behavioural
-claim.
+The older implementation added `token_boost` once per depth, then subtracted
+`token_boost * depth` at the retention gate. Although these offsets cancel in
+real arithmetic, they do not cancel exactly in floating point: a large finite
+boost can round away fuzzy-child costs, and a maximum finite boost can overflow
+and bypass the retention gate through NaN. Removing this unused offset makes
+all accepted boost values use identical decoder arithmetic.
+
+The historical `0.0` to `10.0` sweep over 12 positive clips found byte-identical
+output, but that limited result never established equivalence for all inputs or
+all finite boosts. The regression suite now checks ordinary and extreme values
+(`0.0`, `1.5`, `10.0`, `1e9`, `FLT_MAX`), retention rejection and identical search
+states/confidence on deterministic replay. These are software contract tests,
+not acoustic qualification. Removing an offset can still change rounding and
+path selection near decision boundaries versus an older source revision,
+including at default boost `1.5`; qualification must bind the new source and
+rerun affected replay/calibration and product gates. Existing thresholds and
+shipping defaults are unchanged, and older evidence must retain its original
+source identity.
 
 Do not use this field to tune recall. Use `state_retention`,
 `min_speech_dbfs`, or per-keyword `threshold`.
@@ -149,8 +167,11 @@ KWKP v3 pack and revalidated by `src/keyword_pack.c` on load.
 `threshold` has no default: every keyword must state its acceptance threshold
 explicitly in the TSV, so an uncalibrated keyword cannot slip through.
 
-`min_trailing_blanks` is the number of blank-dominant frames required before a
-held terminal may fire. It applies to every prefix policy. The default is
+`min_trailing_blanks` is the number of consecutive blank-dominant frames
+required after a terminal qualifies and before it may fire. It applies to every
+prefix policy. The qualifying frame itself does not count as a trailing blank,
+even if blank is dominant while a fuzzy terminal qualifies. A nonblank frame
+restarts the consecutive-blank count. The default is
 `policy_defaults.longest.min_trailing_blanks = 1` for `longest` and
 `policy_defaults.grace.grace_frames = 3` for `grace`; the compiler applies those
 only when the TSV leaves the field empty and the value would otherwise be `0`.
@@ -168,6 +189,17 @@ configuration error rather than a capability.
 | `longest` | 1 | hold the terminal and keep extending while longer keywords still match; requires `min_trailing_blanks >= 1` |
 | `grace` | 2 | hold the terminal for `grace_frames` after it first qualifies; requires `grace_frames >= 1` |
 
+`immediate` with zero trailing blanks keeps same-frame emission. A nonzero
+blank requirement uses fixed-size per-keyword waiting state, separate from
+`longest`/`grace` arbitration. A nonblank frame cancels the previous immediate
+wait; a currently qualifying terminal can start a fresh wait. A dead or
+retention-exhausted terminal also cancels it, so unrelated speech followed by
+blanks cannot release an old immediate detection. New qualification requires
+speech activity; an already-qualified terminal may finish its blank wait on
+inactive frames, subject to the existing utterance-boundary reset. Ready
+immediate terminals compete by priority, then depth, then confidence. Reset,
+discontinuity and keyword replacement clear these waits.
+
 Use `longest` when one wake word is a prefix of another (for example `小窝`
 against `小窝小窝`). Use `grace` when the longer variant may arrive late.
 
@@ -178,7 +210,12 @@ against `小窝小窝`). Use `grace` when the longer variant may arrive late.
 2. If the parameter is `effective` and `invalidates_thresholds`, re-run
    threshold calibration and update `threshold_calibration` in
    `configs/shipping.xiaowo.json`, including its `parameter_contract_sha256`.
-3. Update `parameter_contract.sha256` in `configs/shipping.xiaowo.json`.
+3. Update `parameter_contract.sha256` and
+   `threshold_calibration.required_parameter_contract_sha256` in
+   `configs/shipping.xiaowo.json`. Preserve the historical calibration digest
+   unless a new source-bound calibration has actually run. Even a documentation-
+   only contract edit changes its byte identity; identify it as metadata
+   maintenance, retain `recalibration_required`, and never infer new qualification.
 4. Run `python3 tests/test_parameter_contract.py`, then `cmake --build` and
    `ctest` to confirm the C side accepts the new range.
 5. If a frontend L1 constant changed, re-run the frontend parity test

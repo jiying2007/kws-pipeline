@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
+import struct
+import subprocess
 import pathlib
 import sys
 import tempfile
@@ -18,6 +22,7 @@ from diagnose_decoder_selected_path_provenance import (  # noqa: E402
     self_test as selected_path_provenance_self_test,
 )
 from score_events import score, validate_detections, validate_recordings  # noqa: E402
+from qualification_fixture import write_model, write_tokens  # noqa: E402
 
 
 def write_jsonl(path: pathlib.Path, rows: list[dict]) -> None:
@@ -45,7 +50,99 @@ def expect_failure(call, needle: str) -> None:
     raise AssertionError(f"expected failure containing {needle!r}")
 
 
+def verify_path_runner(runner: pathlib.Path) -> None:
+    # Public, deterministic synthetic model/pack/trace fixtures only. No
+    # historical acoustic traces or qualification records are rewritten.
+    runner = runner.resolve(strict=True)
+    with tempfile.TemporaryDirectory(prefix="decoder-shadow-contract-") as td:
+        root = pathlib.Path(td)
+        model = root / "model.kwm"
+        _, fingerprint = write_tokens(root / "tokens.txt")
+        write_model(model, fingerprint)
+        model_digest = hashlib.sha256(model.read_bytes()).hexdigest().encode("ascii")
+        pack = root / "keywords.kwk"
+        trace = root / "trace.kwtr"
+
+        def replay(name: str, tokens: list[int], frames: list[list[float]],
+                   *, threshold: float = 0.1, min_blanks: int = 0) -> dict:
+            pack.write_bytes(
+                struct.pack("<4sHHHHIQ", b"KWKP", 3, 24, 1, 5, 72, fingerprint)
+                + struct.pack("<IfHBBBBH16H", 1, threshold, len(tokens),
+                              min_blanks, 0, 0, 0, 0,
+                              *(tokens + [0] * (16 - len(tokens))))
+            )
+            trace.write_bytes(
+                struct.pack("<8sIHHIIIIQQ64s8x", b"KWTRACE1", 1, 5, 0,
+                            16000, 400, 320, 0, fingerprint, len(frames),
+                            model_digest)
+                + b"".join(struct.pack("<QB7x5f", 400 + index * 320, 1, *frame)
+                           for index, frame in enumerate(frames))
+            )
+            result = subprocess.run([str(runner), str(model), str(pack),
+                                     str(trace), name], capture_output=True,
+                                    text=True, check=True)
+            payload = json.loads(result.stdout)
+            assert payload["frames"] == len(frames)
+            assert payload["decoder"]["token_boost"] == 1.5
+            assert len(payload["keywords"]) == 1
+            return payload["keywords"][0]
+
+        root_token = [-8.0, 8.0, -8.0, -8.0, -8.0]
+        blank = [8.0, -8.0, -8.0, -8.0, -8.0]
+        exact_second = [-8.0, -8.0, 8.0, -8.0, -8.0]
+        exact_third = [-8.0, -8.0, -8.0, 8.0, -8.0]
+        fuzzy_second = [8.0, -8.0, 7.0, -8.0, -8.0]
+        fuzzy_third = [8.0, -8.0, -8.0, 7.0, -8.0]
+        exact = replay("exact-default", [1, 2, 3],
+                       [root_token, exact_second, exact_third])
+        assert exact["detections"] == 1
+        one_fuzzy = replay("one-fuzzy", [1, 2, 3],
+                           [root_token, fuzzy_second, exact_third])
+        assert one_fuzzy["detections"] == 1
+        two_fuzzy = replay("two-fuzzy", [1, 2, 3],
+                           [root_token, fuzzy_second, fuzzy_third])
+        assert two_fuzzy["detections"] == 0
+        assert abs(two_fuzzy["max_terminal_retention_log"] + 16.5) < 1e-5
+        expired = replay("expired", [1, 2, 3],
+                         [root_token] + [blank] * 80 + [exact_second, exact_third])
+        assert expired["detections"] == 0
+        delayed = replay("immediate-blank-gate", [1], [root_token] + [blank] * 8,
+                         min_blanks=8)
+        assert delayed["detections"] == 1
+        before_gate = replay("before-immediate-blank-gate", [1],
+                             [root_token] + [blank] * 7, min_blanks=8)
+        assert before_gate["detections"] == 0
+        interrupted = replay("interrupted-immediate-blank-gate", [1],
+                             [root_token, blank, exact_third] + [blank] * 8,
+                             min_blanks=8)
+        assert interrupted["detections"] == 0
+        fuzzy_qualifies = replay("qualifying-blank-is-not-trailing", [1, 2],
+                                 [root_token, fuzzy_second], min_blanks=1)
+        assert fuzzy_qualifies["detections"] == 0
+        after_fuzzy = replay("blank-after-fuzzy-terminal", [1, 2],
+                             [root_token, fuzzy_second, blank], min_blanks=1)
+        assert after_fuzzy["detections"] == 1
+        below_threshold = replay("blank-gate-still-needs-confidence", [1],
+                                 [[0.0] * 5] + [blank] * 8,
+                                 threshold=0.5, min_blanks=8)
+        assert below_threshold["detections"] == 0
+
+        # Large common offsets must not erase the normalizer in the shadow
+        # scorer. All five logits tie, so confidence is 1/5, never 1.
+        for offset in (1e9, -1e9, 3.4028234663852886e38):
+            tied = replay(f"large-offset-{offset}", [1], [[offset] * 5],
+                          threshold=0.5)
+            assert tied["detections"] == 0
+            assert abs(tied["max_terminal_confidence"] - 0.2) < 1e-6
+            assert abs(tied["max_terminal_retention_log"]) < 1e-6
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path-runner", type=pathlib.Path, required=True,
+                        help="built kws_decoder_path_replay executable")
+    args = parser.parse_args()
+    verify_path_runner(args.path_runner)
     selected_path_provenance_self_test()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)

@@ -355,16 +355,17 @@ jobs:
 
   cleanup-bootstrap-branch:
     needs: publish
-    if: ${{ always() && needs.publish.result == 'success' }}
+    if: ${{ success() && needs.publish.result == 'success' && github.ref == 'refs/heads/deployment/commercial-candidate' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
       - name: Delete successful deployment bootstrap branch
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REF_NAME" = deployment/commercial-candidate
-          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${GITHUB_REF_NAME}"
+        run: bash tools/cleanup_bootstrap_branch.sh deployment

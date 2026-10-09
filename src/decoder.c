@@ -258,6 +258,8 @@ kws_status_t kws_decoder_set_keywords(kws_decoder_t *d,
 }
 
 static void reset_paths(kws_decoder_t *d) {
+  memset(d->immediate_confidences, 0, sizeof(d->immediate_confidences));
+  memset(d->immediate_blank_frames, 0, sizeof(d->immediate_blank_frames));
   for (uint16_t i = 0u; i < d->node_count; ++i) {
     init_node_scores(&d->nodes[i], i == 0u);
   }
@@ -366,6 +368,21 @@ int kws_decoder_step(kws_decoder_t *d,
     d->inactive_frames++;
   }
 
+  for (uint16_t k = 0u; k < d->keyword_count; ++k) {
+    if (d->immediate_confidences[k] > 0.0f) {
+      if (blank_dominant != 0) {
+        if (d->immediate_blank_frames[k] < d->min_trailing_blanks[k]) {
+          d->immediate_blank_frames[k]++;
+        }
+      } else {
+        /* A fresh qualifying terminal below may start a new wait, but blanks
+         * from before this nonblank frame can never count toward it. */
+        d->immediate_confidences[k] = 0.0f;
+        d->immediate_blank_frames[k] = 0u;
+      }
+    }
+  }
+
   if (d->pending_keyword >= 0) {
     if (d->pending_age_frames != UINT16_MAX) {
       d->pending_age_frames++;
@@ -450,8 +467,10 @@ int kws_decoder_step(kws_decoder_t *d,
             logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
         float acoustic_log_probability =
             (logits[token] - max_logit) - shifted_norm;
-        float search_log_probability =
-            acoustic_log_probability + d->token_boost;
+        /* token_boost is a deprecated compatibility field. Adding and then
+         * subtracting its depth offset is not a floating-point identity:
+         * large finite values erase retention costs or overflow to Inf/NaN. */
+        float search_log_probability = acoustic_log_probability;
         if (i != 0u && top_token != token) {
           search_log_probability += d->fuzzy_child_retention_cost_log;
         }
@@ -483,9 +502,7 @@ int kws_decoder_step(kws_decoder_t *d,
         terminal_score > NEG_INF / 2.0f &&
         terminal_acoustic > NEG_INF / 2.0f) {
       int kw = d->nodes[i].terminal_keyword;
-      float retention_log =
-          terminal_score - terminal_acoustic -
-          d->token_boost * (float)d->nodes[i].depth;
+      float retention_log = terminal_score - terminal_acoustic;
       float conf;
 
       if (retention_log < KWS_MIN_PATH_RETENTION_LOG) {
@@ -497,7 +514,12 @@ int kws_decoder_step(kws_decoder_t *d,
         conf = 1.0f;
       }
       if (conf >= d->thresholds[kw]) {
-        if (d->prefix_policies[kw] == (uint8_t)KWS_PREFIX_IMMEDIATE) {
+        if (d->prefix_policies[kw] == (uint8_t)KWS_PREFIX_IMMEDIATE &&
+            d->min_trailing_blanks[kw] > 0u) {
+          if (conf > d->immediate_confidences[kw]) {
+            d->immediate_confidences[kw] = conf;
+          }
+        } else if (d->prefix_policies[kw] == (uint8_t)KWS_PREFIX_IMMEDIATE) {
           if (immediate_better(d, kw, conf, d->nodes[i].depth,
                                immediate_kw, immediate_conf,
                                immediate_depth) != 0) {
@@ -508,6 +530,28 @@ int kws_decoder_step(kws_decoder_t *d,
         } else {
           offer_pending(d, kw, conf, d->nodes[i].depth);
         }
+      }
+    }
+  }
+
+  for (uint16_t k = 0u; k < d->keyword_count; ++k) {
+    if (d->immediate_confidences[k] > 0.0f) {
+      const kws_trie_node_t *terminal = &d->nodes[d->terminal_nodes[k]];
+      int use_nonblank = terminal->score >= terminal->blank_score;
+      float score = use_nonblank != 0 ? terminal->score : terminal->blank_score;
+      float acoustic = use_nonblank != 0 ? terminal->acoustic_score
+                                         : terminal->blank_acoustic_score;
+      if (score <= NEG_INF / 2.0f || acoustic <= NEG_INF / 2.0f ||
+          score - acoustic < KWS_MIN_PATH_RETENTION_LOG) {
+        d->immediate_confidences[k] = 0.0f;
+        d->immediate_blank_frames[k] = 0u;
+      } else if (d->immediate_blank_frames[k] >= d->min_trailing_blanks[k] &&
+                 immediate_better(d, (int)k, d->immediate_confidences[k],
+                                  terminal->depth, immediate_kw, immediate_conf,
+                                  immediate_depth) != 0) {
+        immediate_kw = (int)k;
+        immediate_conf = d->immediate_confidences[k];
+        immediate_depth = terminal->depth;
       }
     }
   }

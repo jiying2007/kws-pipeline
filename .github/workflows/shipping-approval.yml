@@ -108,6 +108,10 @@ jobs:
           receipt=build/approval/phase-b/public-target-cohort-receipt.json
           summary=build/approval/phase-b/target-cohort-qualification-summary.json
           budget=build/approval/phase-b/resource-budget.json
+          jq -e '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' commercial/target-qualification.policy.json >/dev/null
+          for file in "$receipt" "$summary" "$budget"; do
+            jq -e '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' "$file" >/dev/null
+          done
           test "$(jq -r '.qualified' "$receipt")" = true
           test "$(jq -r '.shipping_approved' "$receipt")" = false
           test "$(jq -r '.deployment_tag' "$receipt")" = "$DEPLOYMENT_TAG"
@@ -148,6 +152,13 @@ jobs:
           cohort = load(root/'phase-b/target-cohort-qualification-summary.json')
           budget = load(root/'phase-b/resource-budget.json')
           governance = load(root/'governance/verification.json')
+          policy = load(root/'policies/target-qualification.policy.json')
+          for label, value, version in (
+              ('target policy', policy, 3), ('resource budget', budget, 2),
+              ('target cohort', cohort, 2), ('target cohort receipt', cohort_receipt, 2),
+          ):
+              if value.get('schema_version') != version or value.get('measurement_contract_id') != 'process-cpu-one-core-v1':
+                  raise SystemExit(f'{label} uses an unsupported CPU measurement contract')
           if governance.get('qualified') is not True:
               raise SystemExit('live governance verification is not qualified')
           if human.get('qualified') is not True or cohort.get('qualified') is not True:

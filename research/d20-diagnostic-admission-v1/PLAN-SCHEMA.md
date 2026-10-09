@@ -12,7 +12,14 @@ and raw/probability/frontend/composed-CMVN tolerances are unchanged.
 read-only environment inventory to an exclusively created file. It inspects
 installed distribution metadata without importing numerical packages, lists
 visible cgroup information, and verifies CPU affinity in a tiny standard-library
-child. Reads are capped at 64KiB, output at 16KiB; versions are character/length-limited.
+child. Reads are capped at 64KiB (one extra sentinel byte detects overflow), output
+at 16KiB; versions are character/length-limited. METADATA is opened as a regular
+file with no-follow directory-relative opens, then decoded strictly as UTF-8.
+Oversized files, duplicate installations/identity headers, unsupported metadata
+layouts, symlinks, invalid names/versions and malformed encoding fail closed.
+Neither Distribution.version nor its unbounded metadata/read_text APIs are used.
+The no-checkout hosted probe embeds the same reader; CI checks source equivalence
+and runs the same positive/negative metadata fixtures against both implementations.
 Only structured capability counts/limits are emitted; raw cgroup paths, mount
 lines and child stderr never appear. Child failures use fixed error codes.
 It ALWAYS reports execution_ready=false. It neither configures nor proves
@@ -33,13 +40,14 @@ No numerical execution caller may use this checker as its authorization gate.
 Unknown identity MUST remain fail-closed at that future gate.
 
 `python -B -m unittest discover -s . -v` tests one synthetic shape-valid plan and
-17 invalid metadata mutations, plus four bounded-output/redaction tests. Run also with `-O` and `-OO`: validation uses
+17 invalid plan mutations, plus bounded-output/redaction and real temporary
+METADATA fixtures (including the 64KiB boundary). Run also with `-O` and `-OO`: validation uses
 explicit exceptions, not removable asserts. These are metadata tests, NOT
 single-op tests or numerical backend qualification.
 
-## Current independently observable environment facts
+## Historical local environment observation (2026-10-09)
 
-Rechecked on 2026-10-09 with the included checker: Python 3.12.14;
+Observed on 2026-10-09 (a dated snapshot, not a live environment claim): Python 3.12.14;
 Torch distribution NOT_INSTALLED; NumPy distribution 2.3.5. Required versions
 are Torch 2.11.0+cpu and NumPy 1.26.4. Metadata is not an imported-runtime check.
 CPU-only standard-library child affinity could be restricted to [0] and it had
@@ -49,7 +57,27 @@ one thread. Torch intra/inter-op dispatch/threading remains unverified.
 mechanism in this environment. RLIMIT_AS is NOT RSS; RSS sampling is not a hard
 limit. No unconstrained Torch import was attempted to measure whether it fits.
 
-## Driver design and missing preconditions
+## Current admission checklist
+
+This is the single current diagnostic preparation checklist. The [PR #502
+supplement](../diagnostic-readiness-2026-10-09/PUBLIC-PROTOCOL.zh-CN.md) and earlier
+protocols preserve dated observations; their older preparation order is superseded.
+Prioritize existing saved traces over new acquisition. Matching PCM across runs
+still does not establish identical initial state or resolve the original FA cause.
+
+Before using the saved PR450 pointer, run these offline metadata regressions:
+
+```sh
+python3 -B tools/verify_durable_trace.py
+python3 -B research/diagnostic-readiness-2026-10-09/test_durable_trace.py
+```
+
+They bind the fixed source, original ZIP, distinct wrapper ZIP, three ordered
+parts and their byte sum, four verification-input identities, and all 44 existing
+member identities. They read neither archive payloads nor network resources and
+do not claim a fresh restoration/hash verification of payload bytes. Full recovery
+remains the fixed source verifier's separate saved-byte-only task. No historical
+scripts, model calls or replay are authorized by either metadata test.
 
 D20 driver status: NOT_READY. No driver or numerical runner is published here.
 
