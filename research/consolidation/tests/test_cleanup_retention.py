@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import re
+import shlex
 import subprocess
 import unittest
 
@@ -23,15 +24,43 @@ class CleanupRetentionTests(unittest.TestCase):
         self.assertEqual(folded_env("RETAINED_CONSOLIDATION_BRANCHES"), expected)
         self.assertNotIn("main", expected)
 
-    def test_guard_precedes_every_cleanup_eligibility_rule(self):
-        start = WORKFLOW.index('          for row in "${branch_rows[@]}"; do')
-        loop = WORKFLOW[start:]
+    def check_guard_order(self, workflow):
+        start = workflow.index('          for row in "${branch_rows[@]}"; do')
+        loop = workflow[start:]
         guard = loop.index('if is_retained_consolidation "${branch}"; then')
+        # Inspect the actual sole push, rather than binding guard order to the
+        # obsolete unleased command. Reject additional/unguarded push owners.
+        pushes = re.findall(r'^\s*(git [^\n]*\bpush\b[^\n]*)$', workflow, re.M)
+        self.assertEqual(len(pushes), 1)
+        deletion = pushes[0]
+        self.assertEqual(shlex.split(deletion), [
+            'git', '-C', '${graph}', 'push', '--quiet',
+            '--force-with-lease=refs/heads/${branch}:${sha}',
+            'origin', ':refs/heads/${branch}',
+        ])
         for later in ('is_safe_prefix "${branch}"', 'is_explicitly_retired "${branch}"',
-                      'merge-base --is-ancestor', 'closed_unmerged_at=',
-                      'git -C "${graph}" push --quiet origin ":refs/heads/${branch}"'):
+                      'merge-base --is-ancestor', 'closed_unmerged_at=', deletion):
             self.assertLess(guard, loop.index(later))
         self.assertIn('echo "skip consolidation retention: ${branch}"\n              continue', loop)
+        for preflight in ('latest_sha=', 'latest_open_prs=', 'latest_active_runs=',
+                          '"${latest_sha}" != "${sha}"',
+                          '"${latest_open_prs}" != "0"',
+                          '"${latest_active_runs}" != "0"'):
+            self.assertLess(loop.index(preflight), loop.index(deletion))
+
+    def test_guard_precedes_every_cleanup_eligibility_rule(self):
+        self.check_guard_order(WORKFLOW)
+
+    def test_rejects_unleased_or_early_deletion(self):
+        with self.assertRaises(AssertionError):
+            self.check_guard_order(WORKFLOW.replace(
+                '--force-with-lease="refs/heads/${branch}:${sha}" ', ''))
+        deletion = re.search(r'^            git [^\n]*\bpush\b[^\n]*$', WORKFLOW, re.M).group()
+        early = WORKFLOW.replace(deletion + '\n', '')
+        marker = '          for row in "${branch_rows[@]}"; do\n'
+        early = early.replace(marker, marker + deletion + '\n')
+        with self.assertRaises(AssertionError):
+            self.check_guard_order(early)
 
     def test_actual_shell_guard_retains_old_closed_or_merged_heads(self):
         function = re.search(r"          is_retained_consolidation\(\) \{.*?\n          \}", WORKFLOW, re.S).group()

@@ -1,6 +1,7 @@
 #include "kws_pipeline/kws.h"
 #include "kws_debug.h"
 
+#include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -912,7 +913,123 @@ static void test_replay_output_contract(void) {
   }
 }
 
+/* End-to-end KWSP -> model -> PCM frontend -> decoder regression. Zero weights
+ * make these synthetic logits equal to the serialized output biases. */
+static void check_bias_detection(const float biases[4], float threshold,
+                                 int expected_detection, float expected_confidence) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  uint16_t token = 1u;
+  kws_keyword_t keyword = make_keyword(42u, &token, 1u, threshold);
+  int16_t pcm[320];
+  kws_detection_t detection = {UINT32_MAX, -1.0f, UINT64_MAX};
+  int detected = 7;
+  for (size_t i = 0u; i < 4u; ++i) {
+    putf(blob + TEST_BO_OFFSET + 4u * i, biases[i]);
+  }
+  for (size_t i = 0u; i < 320u; ++i) {
+    pcm[i] = 10000;
+  }
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+  CHECK(kws_engine_set_keywords(engine, &keyword, 1u,
+                                 TEST_VOCAB_FINGERPRINT) == KWS_OK);
+  CHECK(kws_engine_accept_pcm16(engine, pcm, 320u, &detection, &detected) == KWS_OK);
+  CHECK(detected == 0);
+  CHECK(kws_engine_accept_pcm16(engine, pcm, 80u, &detection, &detected) == KWS_OK);
+  CHECK(detected == expected_detection);
+  if (detected != 0) {
+    CHECK(detection.keyword_id == 42u);
+    CHECK(isfinite(detection.confidence));
+    CHECK(fabsf(detection.confidence - expected_confidence) < 2.0e-6f);
+  } else {
+    CHECK(detection.keyword_id == UINT32_MAX);
+    CHECK(detection.confidence == -1.0f);
+    CHECK(detection.end_sample == UINT64_MAX);
+  }
+}
+
+static void test_keyword_pack_engine_ownership(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  uint8_t keyword_blob[72] = {0};
+  kws_keyword_pack_t pack;
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  int16_t pcm[320];
+  kws_detection_t detection = {0};
+  int detected = 0;
+  memcpy(keyword_blob, "KWKP", 4u);
+  put16(keyword_blob + 4u, KWS_KEYWORD_PACK_VERSION);
+  put16(keyword_blob + 6u, 24u);
+  put16(keyword_blob + 8u, 1u);
+  put16(keyword_blob + 10u, 4u);
+  put32(keyword_blob + 12u, sizeof(keyword_blob));
+  put64(keyword_blob + 16u, TEST_VOCAB_FINGERPRINT);
+  put32(keyword_blob + 24u, 42u);
+  putf(keyword_blob + 28u, 0.5f);
+  put16(keyword_blob + 32u, 1u);
+  keyword_blob[36u] = (uint8_t)KWS_PREFIX_IMMEDIATE;
+  put16(keyword_blob + 40u, 1u);
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(kws_keyword_pack_open(keyword_blob, sizeof(keyword_blob), &model, &pack) == KWS_OK);
+  memset(keyword_blob, 0, sizeof(keyword_blob));
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+  CHECK(kws_engine_set_keyword_pack(engine, &pack) == KWS_OK);
+  memset(&pack, 0, sizeof(pack));
+  for (size_t i = 0u; i < 320u; ++i) {
+    pcm[i] = 10000;
+  }
+  CHECK(kws_engine_accept_pcm16(engine, pcm, 320u, &detection, &detected) == KWS_OK);
+  CHECK(detected == 0);
+  CHECK(kws_engine_accept_pcm16(engine, pcm, 80u, &detection, &detected) == KWS_OK);
+  CHECK(detected == 1);
+  CHECK(detection.keyword_id == 42u);
+  CHECK(detection.confidence > 0.7f);
+}
+
+static void test_logit_common_offset(void) {
+  const float offsets[] = {0.0f, 1024.0f, -1024.0f, 1.0e8f, -1.0e8f,
+                           FLT_MAX, -FLT_MAX};
+  for (size_t i = 0u; i < sizeof(offsets) / sizeof(offsets[0]); ++i) {
+    const float equal[] = {offsets[i], offsets[i], offsets[i], offsets[i]};
+    check_bias_detection(equal, 0.9f, 0, 0.25f);
+    check_bias_detection(equal, nextafterf(0.25f, 0.0f), 1, 0.25f);
+    check_bias_detection(equal, 0.25f, 1, 0.25f);
+    check_bias_detection(equal, nextafterf(0.25f, 1.0f), 0, 0.25f);
+  }
+  {
+    /* Preserve the existing (1 + x/256)^256 approximation and -8 cutoff.
+     * The differences below stay exactly representable after each offset. */
+    const float shifts[] = {0.0f, 1024.0f, -1024.0f, 1048576.0f, -1048576.0f};
+    const float expected = (float)(1.0 / (1.0 + pow(1.0 - 1.0 / 256.0, 256.0)));
+    /* Fractional ordinary-range logits exercise the rounding-sensitive case;
+     * confidence is bounded, rather than promised bit-identical to old runs. */
+    const float fractional[] = {-0.6f, 0.4f, -8.0f, -8.0f};
+    check_bias_detection(fractional, expected - 1.0e-5f, 1, expected);
+    check_bias_detection(fractional, expected + 1.0e-5f, 0, expected);
+    for (size_t i = 0u; i < sizeof(shifts) / sizeof(shifts[0]); ++i) {
+      const float values[] = {shifts[i] - 4.0f, shifts[i] + 4.0f,
+                              shifts[i] + 3.0f, shifts[i] - 4.0f};
+      check_bias_detection(values, expected - 1.0e-5f, 1, expected);
+      check_bias_detection(values, expected + 1.0e-5f, 0, expected);
+    }
+  }
+  {
+    /* Opposite finite extremes can subtract to -infinity; the existing
+     * cutoff must safely give zero mass to those non-winning logits. */
+    const float extremes[] = {-FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX};
+    check_bias_detection(extremes, 0.99f, 1, 1.0f);
+  }
+}
+
 int main(void) {
+  test_logit_common_offset();
+  test_keyword_pack_engine_ownership();
   test_init_failure_contract();
   test_model_argument_matrix();
   test_frontend_kind_matrix();

@@ -1,6 +1,7 @@
 """Offline consistency checks for archive delivery; never run restored content."""
 import hashlib
 import json
+import re
 from pathlib import Path
 import unittest
 
@@ -57,16 +58,34 @@ class ArchiveDeliveryTests(unittest.TestCase):
         decision = json.loads((C / 'archive-delivery-decision-2026-10-09.json').read_text())
         self.assertEqual(r['counts'], decision['expanded_copy']['counts'])
 
-    def test_ci_is_offline_and_integrated(self):
+    def test_historical_ci_identity_is_immutable(self):
+        # A local, non-active snapshot also works in shallow/source-only checkouts.
+        # The decision records a past change, never the hash of every future CI.
         d = json.loads((C / 'archive-delivery-decision-2026-10-09.json').read_text())
         ci = d['ci_change']
-        raw = (ROOT / ci['workflow']).read_bytes()
+        self.assertEqual(ci['after']['sha256'], 'fe89f15dbfbf3b063f44e4b0cec00d19a47049f174aca92d8eb3c9c7d975b288')
+        self.assertEqual(ci['workflow'], '.github/workflows/research-source-consolidation.yml')
+        snapshot = C / 'history/ci/research-source-consolidation-archive-delivery-2026-10-09.yml.txt'
+        raw = snapshot.read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), ci['after']['sha256'])
         self.assertEqual(len(raw), ci['after']['bytes'])
-        local = raw.decode().split('  local-source-inventory:', 1)[1].split('  offline-source-checks:', 1)[0]
-        self.assertIn('research/consolidation/source_tests/test_archive_delivery.py', local)
-        for forbidden in ('--fetch', 'pip install', 'verify_archive.py'):
-            self.assertNotIn(forbidden, local)
+        blob = b'blob ' + str(len(raw)).encode() + b'\0' + raw
+        self.assertEqual(hashlib.sha1(blob).hexdigest(), ci['after']['git_blob_sha1'])
+        self.assertEqual(ci['after']['path'], ci['workflow'])
+        self.assertNotIn(ROOT / '.github/workflows', snapshot.parents)
+
+    def test_current_ci_is_offline_and_integrated(self):
+        # Check current structure separately from historical byte identity.
+        text = (ROOT / '.github/workflows/ci.yml').read_text()
+        jobs = re.split(r'(?m)^  (?=[a-z][a-z0-9-]*:\s*$)', text.split('\njobs:\n', 1)[1])
+        local = next(part for part in jobs if part.startswith('python-contracts:'))
+        self.assertNotRegex(local, r'(?m)^    (?:if|needs):')
+        step = next(part for part in local.split('      - name: ')
+                    if part.startswith('Verify local research source retention and delivery\n'))
+        self.assertIn('python3 -B research/consolidation/source_tests/test_archive_delivery.py', step)
+        self.assertNotRegex(step, r'(?m)^        (?:if|continue-on-error):')
+        for forbidden in ('--fetch', 'pip install', 'verify_archive.py', 'curl ', 'wget '):
+            self.assertNotIn(forbidden, step)
 
     def test_product_qualification_unchanged(self):
         decision = json.loads((C / 'archive-delivery-decision-2026-10-09.json').read_text())
@@ -79,6 +98,12 @@ class ArchiveDeliveryTests(unittest.TestCase):
     def test_navigation_points_to_current_delivery(self):
         for name in ('README.md', 'README.zh-CN.md', 'research/README.md'):
             self.assertIn('ARCHIVE_DELIVERY_2026-10-09.md', (ROOT / name).read_text())
+        research = (ROOT / 'research/README.md').read_text()
+        current = 'diagnostic-readiness-2026-10-09/PUBLIC-PROTOCOL.zh-CN.md'
+        historical = 'saved-diagnostics-2026-10-09/REPORT.zh-CN.md'
+        self.assertLess(research.index(current), research.index(historical))
+        for target in (current, historical, 'diagnostic-readiness-2026-10-09/PUBLIC-READINESS-SUMMARY.json'):
+            self.assertTrue((ROOT / 'research' / target).is_file())
 
 
 if __name__ == '__main__':

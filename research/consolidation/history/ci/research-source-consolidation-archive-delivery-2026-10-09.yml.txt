@@ -1,31 +1,55 @@
 name: research-source-consolidation
 on:
-  workflow_call:
-  push:
-    branches: ['consolidate/**']
+  pull_request:
     paths:
       - 'research/**'
       - 'tools/verify_research_sources.py'
       - 'tools/verify_research_publication.py'
       - 'tools/run_research_source_checks.py'
       - 'tools/check_workflow_path_filters.py'
-      - 'tools/research_ci_changes.py'
-      - 'tests/test_research_ci_changes.py'
+      - '.github/workflows/**'
+  push:
+    branches: [main, 'consolidate/**']
+    paths:
+      - 'research/**'
+      - 'tools/verify_research_sources.py'
+      - 'tools/verify_research_publication.py'
+      - 'tools/run_research_source_checks.py'
+      - 'tools/check_workflow_path_filters.py'
       - '.github/workflows/**'
 permissions:
   contents: read
 jobs:
+  local-source-inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify retention and inactive historical workflows
+        run: |
+          python3 -B tools/verify_research_sources.py
+          python3 -B research/consolidation/source_tests/test_source_retention.py
+      - name: Test publication and archive delivery metadata locally
+        run: |
+          python3 -B research/consolidation/source_tests/test_publication_index.py
+          python3 -B research/consolidation/source_tests/test_archive_delivery.py
+      - name: Verify CI optimization boundaries
+        run: python3 -B research/consolidation/source_tests/test_ci_structure.py
+      - name: Verify workflow filters locally
+        run: python3 -B tools/check_workflow_path_filters.py .github/workflows
   offline-source-checks:
-    needs: decoder-scratch
+    needs: [local-source-inventory, decoder-scratch]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
-      # Local source/retention checks run once in ci.yml python-contracts.
-      - name: Require decoder scratch checks
+      - name: Require local source inventory
         env:
+          INVENTORY_RESULT: ${{ needs.local-source-inventory.result }}
           SCRATCH_RESULT: ${{ needs.decoder-scratch.result }}
-        run: test "$SCRATCH_RESULT" = success
+        run: test "$INVENTORY_RESULT" = success && test "$SCRATCH_RESULT" = success
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false

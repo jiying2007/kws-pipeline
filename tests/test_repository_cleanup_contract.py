@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import pathlib
+import os
+import subprocess
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / '.github' / 'workflows' / 'repository-cleanup.yml'
@@ -141,6 +144,51 @@ def folded_env_items(source: str, key: str) -> tuple[str, ...]:
     return tuple(values)
 
 
+def check_delete_lease(delete_command: str) -> None:
+    """Execute the workflow's exact push against local-only disposable remotes."""
+    with tempfile.TemporaryDirectory(prefix='cleanup-lease-test-') as tmp:
+        root = pathlib.Path(tmp)
+        remote, writer, graph = (root / name for name in ('remote.git', 'writer', 'graph'))
+        env = dict(os.environ, GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull,
+                   GIT_TERMINAL_PROMPT='0')
+
+        def git(*args: str) -> str:
+            return subprocess.check_output(['git', *map(str, args)], env=env,
+                                           stderr=subprocess.PIPE, text=True).strip()
+
+        git('init', '--bare', remote)
+        git('init', writer)
+        git('-C', writer, 'config', 'user.name', 'Synthetic Test')
+        git('-C', writer, 'config', 'user.email', 'test@example.invalid')
+        git('-C', writer, 'commit', '--allow-empty', '-m', 'A')
+        a = git('-C', writer, 'rev-parse', 'HEAD')
+        branch = 'cleanup/synthetic-lease'
+        git('-C', writer, 'remote', 'add', 'origin', remote)
+        git('-C', writer, 'push', 'origin', f'HEAD:refs/heads/{branch}')
+        git('clone', '--bare', remote, graph)
+        # A passed the workflow's last preflight. Another writer moves it to B
+        # before deletion. The production command must reject the stale lease.
+        checked = git('ls-remote', '--heads', remote, f'refs/heads/{branch}').split()[0]
+        assert checked == a
+        git('-C', writer, 'commit', '--allow-empty', '-m', 'B concurrent push')
+        b = git('-C', writer, 'rev-parse', 'HEAD')
+        git('-C', writer, 'push', 'origin', f'HEAD:refs/heads/{branch}')
+
+        def delete(expected: str) -> subprocess.CompletedProcess:
+            return subprocess.run(['bash', '-e', '-c', delete_command],
+                                  env=dict(env, graph=str(graph), branch=branch, sha=expected),
+                                  capture_output=True, text=True)
+
+        raced = delete(a)
+        assert raced.returncode != 0, 'stale-SHA deletion unexpectedly succeeded'
+        assert git('--git-dir', remote, 'rev-parse', f'refs/heads/{branch}') == b
+        # A fresh exact lease may delete only this synthetic local branch.
+        matched = delete(b)
+        assert matched.returncode == 0, matched.stderr
+        assert not git('ls-remote', '--heads', remote, f'refs/heads/{branch}')
+        print('cleanup lease: stale A rejected, concurrent B preserved, exact B accepted')
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
 
@@ -235,8 +283,11 @@ def main() -> int:
         assert needle in source, f'closed-PR reclamation contract missing: {needle}'
 
     assert 'is_explicitly_retired "${branch}"' in source
-    delete_line = 'git -C "${graph}" push --quiet origin ":refs/heads/${branch}"'
+    delete_line = 'git -C "${graph}" push --quiet --force-with-lease="refs/heads/${branch}:${sha}" origin ":refs/heads/${branch}"'
     assert source.count(delete_line) == 1, 'branch deletion must have one guarded owner'
+
+    assert 'not atomic with deletion' in source
+    check_delete_lease(delete_line)
 
     print('test_repository_cleanup_contract: ok')
     return 0

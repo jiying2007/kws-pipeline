@@ -1,8 +1,8 @@
 name: research-consolidation
 on:
-  pull_request:
   push:
-    branches: [main, "consolidate/**"]
+    # PR/main checks run once in ci.yml python-contracts, behind required hosted checks.
+    branches: ["consolidate/**"]
 permissions:
   contents: read
 jobs:

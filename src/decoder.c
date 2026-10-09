@@ -33,20 +33,18 @@ static float fast_exp_nonpos(float x) {
   return y;
 }
 
-static float approx_logsumexp(const float *x, uint16_t n) {
-  float max_value = x[0];
+/* Keep the common offset separate: adding log(sum) to a large maximum
+ * rounds away the normalizer and can turn tied logits into confidence 1. */
+static float approx_shifted_logsumexp(const float *x,
+                                      uint16_t n,
+                                      float max_value) {
   float sum = 0.0f;
 
-  for (uint16_t i = 1u; i < n; ++i) {
-    if (x[i] > max_value) {
-      max_value = x[i];
-    }
-  }
   for (uint16_t i = 0u; i < n; ++i) {
     sum += fast_exp_nonpos(x[i] - max_value);
   }
 
-  return max_value + logf(sum);
+  return logf(sum);
 }
 
 static uint16_t dominant_token(const float *logits, uint16_t vocab_size) {
@@ -351,11 +349,12 @@ int kws_decoder_step(kws_decoder_t *d,
                      int speech_active,
                      uint32_t *keyword_id,
                      float *confidence) {
-  float norm = approx_logsumexp(logits, vocab_size);
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
   float decay = speech_active ? d->retention_log : d->silence_retention_log;
   uint16_t top_token = dominant_token(logits, vocab_size);
+  float max_logit = logits[top_token];
+  float shifted_norm = approx_shifted_logsumexp(logits, vocab_size, max_logit);
   int blank_dominant = top_token == 0u;
   int top_is_keyword_root =
       top_token != 0u && is_keyword_root_token(d, top_token) != 0;
@@ -449,7 +448,8 @@ int kws_decoder_step(kws_decoder_t *d,
           (i != 0u || top_token == token ||
            ((blank_dominant != 0 || top_is_keyword_root != 0) &&
             logits[top_token] - logits[token] <= KWS_ROOT_START_LOGIT_MARGIN))) {
-        float acoustic_log_probability = logits[token] - norm;
+        float acoustic_log_probability =
+            (logits[token] - max_logit) - shifted_norm;
         float search_log_probability =
             acoustic_log_probability + d->token_boost;
         if (i != 0u && top_token != token) {

@@ -60,10 +60,22 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
   build with 33,600 bytes less host workspace. The historical baseline stays intact;
   callers must rebuild for its new workspace ABI. This is opt-in research, not a
   shipping/default or board-qualified replacement.
-- [Saved failure diagnosis and next protocol](saved-diagnostics-2026-10-09/REPORT.zh-CN.md):
-  exact saved-array and source attribution checks, an invented-logit boundary test,
-  and an unexecuted next-experiment plan. Original numerical/effectiveness failures
-  remain unresolved; the new synthetic tests cannot relabel them as passes.
+- [Current diagnostic admission and saved-trace priority](diagnostic-readiness-2026-10-09/PUBLIC-PROTOCOL.zh-CN.md)
+  ([machine-readable readiness](diagnostic-readiness-2026-10-09/PUBLIC-READINESS-SUMMARY.json),
+  PR #502): start here before proposing further diagnostics. Saved inputs are
+  identified, but exact backend, RSS enforcement and independently accepted
+  single-operator driver prerequisites still block numerical execution. Prefer
+  existing saved traces and an independently reviewed decoder-state observation
+  plan; do not duplicate audio acquisition or expand training. FA causality is
+  unresolved; matching PCM from different runs does not establish identical state.
+- [Earlier saved failure diagnosis and protocol supplement](saved-diagnostics-2026-10-09/REPORT.zh-CN.md):
+  retained saved-array/source attribution, invented-logit boundary tests and the
+  original unexecuted plan. Read this alongside the newer admission above, not as
+  a fresh execution permit. Synthetic tests cannot relabel numerical failures.
+
+最新准入以 PR #502 的保存证据补充为入口；旧协议作为背景补充。先复核已有 trace，
+不重复采集、不扩大训练。D20 raw FAIL、D90 NOT_RUN、FA 根因未定、fixed50 支持不足、
+真人及实机资格 deferred 均不变；整理与 CI 改进不构成实验执行许可。
 
 ## Results worth retaining
 
@@ -117,3 +129,9 @@ They are historical observations, not instructions to rerun an experiment.
   two recovery tags. See the [completed cleanup record](consolidation/git-atomic-prune-2026-10-08.json)
   and the dated current status above. Historical snapshots are unchanged;
   no new deletion or experiment is authorized by this navigation update.
+
+### D20 no-model admission preparation / 无模型准入准备
+
+[Plan-shape checks and remaining admission requirements](d20-diagnostic-admission-v1/PLAN-SCHEMA.md) provide bounded metadata-only inventory and synthetic schema tests. They do not authenticate saved numerical inputs or establish execution readiness; the historical-source-bound C/Torch drivers and enforced resource scope remain unqualified.
+
+仅补齐无模型检查与计划形状测试；不等于输入真实性、单算子驱动或数值资格通过。C 包装不随本轮发布。

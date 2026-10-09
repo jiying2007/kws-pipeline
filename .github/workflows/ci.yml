@@ -14,12 +14,15 @@ concurrency:
 
 jobs:
   python-contracts:
+    outputs:
+      research_required: ${{ steps.research_changes.outputs.required }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
       - name: Install tracked-worktree integrity guard
         run: |
           set -euo pipefail
@@ -66,6 +69,13 @@ jobs:
           EOF
           chmod +x "$guard"
           "$guard" "checkout baseline"
+      - name: Select research checks from the complete change
+        id: research_changes
+        run: python3 -B tools/research_ci_changes.py
+      - name: Research change selection contract
+        run: python3 -B tests/test_research_ci_changes.py
+      - name: Verify tracked worktree after Research change selection contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Research change selection contract"'
       - name: Workflow exact path-filter integrity
         run: |
           python3 tools/check_workflow_path_filters.py --self-test
@@ -107,6 +117,45 @@ jobs:
         run: python3 tests/test_statistical_bounds.py
       - name: Verify tracked worktree after Statistical qualification bounds
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Statistical qualification bounds"'
+      - name: Domain metric scorer
+        run: |
+          python3 tests/test_domain_metrics.py
+          python3 tests/test_training_diagnostics.py
+          python3 tests/test_acoustic_alignment_diagnostic.py
+          python3 tests/test_decoder_policy_replay.py
+          python3 tests/test_decoder_boundary_references.py
+          python3 tests/test_decoder_boundary_product_references.py
+          python3 tests/test_decoder_boundary_requalification.py
+          python3 tests/test_decoder_boundary_separability.py
+          python3 tests/test_acoustic_boundary_segmentation.py
+      - name: Verify tracked worktree after Domain metric scorer
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
+      - name: Recorded verdict boolean contract
+        run: python3 tests/test_recorded_verdict_booleans.py
+      - name: Verify tracked worktree after Recorded verdict boolean contract
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Recorded verdict boolean contract"'
+      # Always runs, including PRs outside research paths. Hosted required checks
+      # fail closed on this job's result, so source retention blocks merging.
+      - name: Verify integrated research retention and cleanup guards
+        run: |
+          python3 -B tools/verify_research_consolidation.py
+          python3 -B research/consolidation/tests/test_research_consolidation.py
+          python3 -B research/consolidation/tests/test_cleanup_retention.py
+          python3 -B tools/test_inventory.py --root research/consolidation/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Integrated research retention and cleanup guards
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Integrated research retention and cleanup guards"'
+      - name: Verify local research source retention and delivery
+        run: |
+          python3 -B tools/verify_research_sources.py
+          python3 -B research/consolidation/source_tests/test_source_retention.py
+          python3 -B research/consolidation/source_tests/test_publication_index.py
+          python3 -B research/consolidation/source_tests/test_archive_delivery.py
+          python3 -B research/consolidation/source_tests/test_ci_structure.py
+          python3 -B research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -B -O research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -B -OO research/d20-diagnostic-admission-v1/test_contract.py
+      - name: Verify tracked worktree after Local research source retention and delivery
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research source retention and delivery"'
       - name: Python test inventory
         run: >-
           python3 tools/test_inventory.py
@@ -122,8 +171,13 @@ jobs:
       - name: Verify tracked worktree after Python syntax
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Python syntax"'
 
-  hosted:
+  research-sources:
     needs: python-contracts
+    if: ${{ needs.python-contracts.outputs.research_required == 'true' }}
+    uses: ./.github/workflows/research-source-consolidation.yml
+
+  hosted:
+    needs: [python-contracts, research-sources]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -135,7 +189,16 @@ jobs:
       - name: Require compiler-independent contracts
         env:
           CONTRACT_RESULT: ${{ needs.python-contracts.result }}
-        run: test "$CONTRACT_RESULT" = success
+          RESEARCH_REQUIRED: ${{ needs.python-contracts.outputs.research_required }}
+          RESEARCH_RESULT: ${{ needs.research-sources.result }}
+        run: |
+          test "$CONTRACT_RESULT" = success
+          if [[ "$RESEARCH_REQUIRED" == true ]]; then
+            test "$RESEARCH_RESULT" = success
+          else
+            test "$RESEARCH_REQUIRED" = false
+            test "$RESEARCH_RESULT" = skipped
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -213,23 +276,6 @@ jobs:
         run: python3 tests/test_frontend_parity.py ./build/kws_feature_dump
       - name: Verify tracked worktree after Frontend C/spec parity
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Frontend C/spec parity"'
-      - name: Domain metric scorer
-        run: |
-          python3 tests/test_domain_metrics.py
-          python3 tests/test_training_diagnostics.py
-          python3 tests/test_acoustic_alignment_diagnostic.py
-          python3 tests/test_decoder_policy_replay.py
-          python3 tests/test_decoder_boundary_references.py
-          python3 tests/test_decoder_boundary_product_references.py
-          python3 tests/test_decoder_boundary_requalification.py
-          python3 tests/test_decoder_boundary_separability.py
-          python3 tests/test_acoustic_boundary_segmentation.py
-      - name: Verify tracked worktree after Domain metric scorer
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Domain metric scorer"'
-      - name: Recorded verdict boolean contract
-        run: python3 tests/test_recorded_verdict_booleans.py
-      - name: Verify tracked worktree after Recorded verdict boolean contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Recorded verdict boolean contract"'
       - name: Domain-aware multi-frontend training loop
         run: python3 tests/test_domain_loop.py --runner ./build/kws_wav
       - name: Verify tracked worktree after Domain-aware multi-frontend training loop

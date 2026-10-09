@@ -88,6 +88,8 @@ typedef struct kws_keyword {
   uint8_t grace_frames;
 } kws_keyword_t;
 
+/* Owns decoded tokens; keyword token pointers refer to this object's storage.
+ * Keep it at its original address. See the ownership contract below. */
 typedef struct kws_keyword_pack {
   kws_keyword_t keywords[KWS_MAX_KEYWORDS];
   uint16_t token_storage[KWS_MAX_KEYWORDS][KWS_MAX_TOKENS_PER_KEYWORD];
@@ -214,9 +216,20 @@ typedef struct kws_engine kws_engine_t;
  *   lifetime. Release the arena only after the last call on that engine.
  *
  * Read-only blob views
- *   kws_model_open() and kws_keyword_pack_open() do not copy. The structures
- *   they return point into the caller's blob, so that blob must outlive every
- *   engine built from it.
+ *   kws_model_open() returns read-only tensor views into the caller's blob.
+ *   That blob must remain unchanged and outlive every engine built from it.
+ *
+ * Keyword pack ownership
+ *   kws_keyword_pack_open() copies decoded records and tokens into out_pack;
+ *   the input keyword blob need only remain valid for that call. Each keyword's
+ *   tokens pointer refers to token_storage inside the same out_pack object.
+ *   Keep the opened pack at its original address while using its keywords.
+ *   Do not copy/move an opened pack by assignment, memcpy or return-by-value:
+ *   the copied pointers would still refer to the original object's storage.
+ *   To obtain another independent pack, open the blob into that destination.
+ *   kws_engine_set_keyword_pack() and kws_engine_set_keywords() copy their
+ *   keyword configuration into the engine; after a successful call, the pack
+ *   and keyword/token arrays need not remain alive for that engine.
  *
  * Concurrency
  *   Engines are independent: several may run in parallel on separate arenas.
