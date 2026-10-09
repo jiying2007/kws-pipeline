@@ -120,6 +120,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`gen_parameter_limits.py`](gen_parameter_limits.py)
 - [`generate_sbom.py`](generate_sbom.py)
 - [`prepare_eval_context_fixtures.py`](prepare_eval_context_fixtures.py)
+- [`research_ci_changes.py`](research_ci_changes.py) — Select complete PR/main changes for required research CI; no model execution.
 - [`run_research_source_checks.py`](run_research_source_checks.py)
 - [`statistical_bounds.py`](statistical_bounds.py)
 - [`test_inventory.py`](test_inventory.py)
