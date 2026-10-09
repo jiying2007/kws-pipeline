@@ -1,0 +1,144 @@
+{
+  "schema": "research-source-retention-publication-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "base_commit": "22ae0a1cbd9e4a062a7bf6f51abf8d73cf18b958",
+  "date": "2026-10-09",
+  "publication_scope": "PUBLIC_METADATA_ONLY",
+  "expanded_pipeline_source_copy": "NOT_PUSHED",
+  "source_repository": "jiying2007/kws-data",
+  "source_pull_request": {
+    "number": 27,
+    "url": "https://github.com/jiying2007/kws-data/pull/27",
+    "head_commit": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+    "state": "open",
+    "draft": true,
+    "merged": false
+  },
+  "archive": {
+    "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+    "bytes": 59417250,
+    "sha256": "8719a8ed67f440afe4adc450d47418523a7595dd02fb674c77da686964c84368",
+    "logical_member_count": 1886,
+    "unique_object_count": 1403,
+    "part_count": 8
+  },
+  "files": [
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/ARCHIVE.json",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "4f313a689dd8adcd507ea896895fe3f5bb824fc7",
+      "sha256": "a471d16a48a7cf905b1c9925d37b9e887589ceca2116a106f315fc9b9efdf8ba",
+      "bytes": 1566,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/ARCHIVE.json"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/CATALOG.json",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "29d49bd28347ffab7af0a075b666d2fd34d27edc",
+      "sha256": "45a5fd349aa4faa696abef89230d8315c9860be01684eb2a0fefd7366fba6ec7",
+      "bytes": 1110336,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/CATALOG.json"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-000",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "df67a58ee8d2985735b17485edc40681eab17158",
+      "sha256": "63d5d916aed1686cccd124b4d92a996b6085b28fda6b7a7b45f317c0b183cd24",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-000"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-001",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "554c73fc81f7a83d0834889b51b60316777112bf",
+      "sha256": "122ac5ecc46c5022c2af530f8deb79ea5fd8dd8e36ec14f48485a76427137ebe",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-001"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-002",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "54144bd39742b9db8847eed85663203ba99bdb18",
+      "sha256": "392bf7e1d4141a23cfdc6551cd0497973ac6bf893ec35c50856148f41438c90d",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-002"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-003",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "72c05941860aa04a131b9fc45d879022e0243168",
+      "sha256": "765974aab7364650a0e82b247088c658db74f374b326072fb4dd518e64ce3c9c",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-003"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-004",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "67aa5a02f6878abf6588d8bba6d3ab2c08a5a070",
+      "sha256": "00821052e24c56d234acd8968347aa3bda092e6f67152067835b6e523f2f97d8",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-004"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-005",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "b04f433e14423b509794626ea3e5024c287e2f01",
+      "sha256": "8281391d331c8e2995f5eae1c9a46b2dd77e1ccb85f0b106dfa0274f4a993ad2",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-005"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-006",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "afc146983bac3cd30e8acb40cfd0a83b878fda5b",
+      "sha256": "bc205b6225eb7e1fac40991b2b69b6b1dcd0fa51071eda99405e0f77a687fa7e",
+      "bytes": 8388608,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-006"
+    },
+    {
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-007",
+      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+      "git_blob_sha1": "71f7d970d44de7a0a3a1e933f0a142f4f2b28cc4",
+      "sha256": "36d7a9019193fafcad24833bf436b552d0e2bc12d3017829af1fd6f3913ad3c5",
+      "bytes": 696994,
+      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/objects.zip.part-007"
+    }
+  ],
+  "source_ci_runs": [
+    {
+      "run_id": 37865036826,
+      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036826"
+    },
+    {
+      "run_id": 37865036840,
+      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036840"
+    },
+    {
+      "run_id": 37865036885,
+      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036885"
+    },
+    {
+      "run_id": 37865033010,
+      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865033010"
+    },
+    {
+      "run_id": 37865033021,
+      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865033021"
+    }
+  ]
+}
