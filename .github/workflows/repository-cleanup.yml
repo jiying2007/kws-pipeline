@@ -329,8 +329,9 @@ jobs:
               continue
             fi
 
-            # Re-read both safety conditions immediately before deletion to avoid
-            # racing a new push or PR created during the sweep.
+            # Re-read PR/run state immediately before deletion. These API checks
+            # are best effort, not atomic with deletion; the exact-SHA lease below
+            # independently rejects any concurrent branch-tip update.
             latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
             latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
@@ -341,7 +342,7 @@ jobs:
               continue
             fi
 
-            git -C "${graph}" push --quiet origin ":refs/heads/${branch}"
+            git -C "${graph}" push --quiet --force-with-lease="refs/heads/${branch}:${sha}" origin ":refs/heads/${branch}"
             deleted=$((deleted + 1))
             echo "deleted: ${branch}"
           done

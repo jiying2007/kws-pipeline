@@ -4,7 +4,9 @@ All notable source-level changes are recorded here. A source/software version do
 
 ## Unreleased
 
-- None.
+- Fixed decoder normalization for large common finite logit offsets by retaining the maximum separately from the log-sum correction. This preserves the exponential approximation and does not change model weights, keyword thresholds, KWSP v2 or KWKP v3 layouts.
+- Ordinary-range confidence values can still change by floating-point rounding, including decisions extremely close to a threshold. Unchanged weights and thresholds do **not** make historical acoustic results transferable to the new runner: qualify the new source/runner independently before any shipping claim. Historical FAIL results and frozen candidates remain bound to their original commit and runner; this fix does not retroactively approve or rewrite them.
+- Corrected keyword-pack ownership documentation: decoded tokens live inside the opened pack, which must not be copied or moved without rebinding. Reopen the blob into a new destination for an independent pack. Engine keyword setters copy configuration, so successfully installed packs need not outlive the engine.
 
 ## 0.3.0 software and evidence hardening — 2026-08-30
 

@@ -124,6 +124,27 @@ int main(void) {
   CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
   CHECK(kws_engine_set_keyword_pack(engine, &pack) == KWS_OK);
 
+  /* Reopening creates an independent object; raw struct copies cannot rebind
+   * self-referential token pointers. The input blob is not retained. */
+  {
+    kws_keyword_pack_t independent;
+    CHECK(kws_keyword_pack_open(blob, bytes, &model, &independent) == KWS_OK);
+    for (size_t k = 0u; k < pack.keyword_count; ++k) {
+      CHECK(pack.keywords[k].tokens == pack.token_storage[k]);
+      CHECK(independent.keywords[k].tokens == independent.token_storage[k]);
+      CHECK(independent.keywords[k].tokens != pack.keywords[k].tokens);
+    }
+    memset(blob, 0, sizeof(blob));
+    CHECK(pack.keywords[0].tokens[0] == 1u);
+    CHECK(independent.keywords[0].tokens[0] == 1u);
+    pack.token_storage[0][0] = 7u;
+    CHECK(independent.keywords[0].tokens[0] == 1u);
+    CHECK(kws_engine_set_keyword_pack(engine, &independent) == KWS_OK);
+    bytes = make_pack(blob, sizeof(blob));
+    CHECK(kws_keyword_pack_open(blob, bytes, &model, &pack) == KWS_OK);
+  }
+
+
   CHECK(kws_keyword_pack_open(blob, bytes - 1u, &model, &pack) == KWS_EFORMAT);
 
   put16(blob + 4u, 2u);

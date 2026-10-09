@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "940b5a7c5d572dfb1e751160a6f5596739558dc5",
-      "sha256": "057661e7afbad7c57a8f65c743afef86a257ec75248a9ef6aa5c16fc27a29af3",
-      "bytes": 26890
+      "git_blob_sha1": "d8bcd5ecc030f230c74f7490edc6e58bbf6c86f6",
+      "sha256": "4da28f55b2eb6b79bf587d3ad0b3470a609de1e9d0c0748ab45b06149ddfe065",
+      "bytes": 29055
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "git_blob_sha1": "3e0e65359dd2412d78b97ad5ae74ff844473ae7c",
-      "sha256": "4e84ff8696cacf363f40f26739eb56ba77057f08aa104fdd14e83257fe79211b",
-      "bytes": 14773
+      "git_blob_sha1": "1abca3ff1d8cdaa1e0a58702aaf9c9e1901ec0a7",
+      "sha256": "fd35b7192baf22f80bdc18d939ef9ec52326e99e1a37ae798f925083c6c14fbb",
+      "bytes": 14910
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -15860,6 +15860,67 @@
             "git_blob_sha1": "940b5a7c5d572dfb1e751160a6f5596739558dc5",
             "sha256": "057661e7afbad7c57a8f65c743afef86a257ec75248a9ef6aa5c16fc27a29af3",
             "bytes": 26890
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "from_commit": "fa523b3fe7fda0486bf3f15ab54bfcca27d2d8c1",
+      "from_tree": "83ba7c18e7a569b7488a688659bd1a64fccd27ff",
+      "operation_id": "required-source-and-lease-cleanup-20261009",
+      "scope": "Required hosted checks gate local source retention and related reusable research results; exact-SHA lease branch cleanup; shared compiler-independent checks. Obsolete PR research checks follow core PR cancellation, while main/consolidate are not cancelled.",
+      "rationale": "Current public CI metadata maintenance. Historical source/provenance and delivery snapshots remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "940b5a7c5d572dfb1e751160a6f5596739558dc5",
+            "sha256": "057661e7afbad7c57a8f65c743afef86a257ec75248a9ef6aa5c16fc27a29af3",
+            "bytes": 26890
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 29055,
+            "sha256": "4da28f55b2eb6b79bf587d3ad0b3470a609de1e9d0c0748ab45b06149ddfe065",
+            "git_blob_sha1": "d8bcd5ecc030f230c74f7490edc6e58bbf6c86f6"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "git_blob_sha1": "3e0e65359dd2412d78b97ad5ae74ff844473ae7c",
+            "sha256": "4e84ff8696cacf363f40f26739eb56ba77057f08aa104fdd14e83257fe79211b",
+            "bytes": 14773
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1abca3ff1d8cdaa1e0a58702aaf9c9e1901ec0a7",
+            "sha256": "fd35b7192baf22f80bdc18d939ef9ec52326e99e1a37ae798f925083c6c14fbb",
+            "bytes": 14910
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1be314d6ed2ddec812dab0ad0feb48facb93b492",
+            "sha256": "fe89f15dbfbf3b063f44e4b0cec00d19a47049f174aca92d8eb3c9c7d975b288",
+            "bytes": 4876
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
+            "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+            "bytes": 3719
           }
         }
       ]

@@ -46,3 +46,21 @@ The acceptance receipt's `inventory_file` and its SHA-256 identify an audit-gene
 D20 raw-logit numerical gate failed; D90 was not run. Fixed50 remains `EVAL_INCONCLUSIVE_LABEL_SUPPORT`. The old frozen-model nightly failed separately. Human/final-AFE and physical target-device qualification remain deferred; `shipping_approved=false`. Archive integrity is not acoustic qualification, experiment reproduction, or authorization for new acquisition/training/device work.
 
 D20 raw 数值门限失败、D90 未跑、fixed50 支持不足及旧模型 nightly 失败分别保留；真人/最终 AFE 与端侧实机未验，出货批准仍为 false。归档恢复通过不改变任何产品资格。
+
+## Historical CI identity and current checks / 历史 CI 身份与当前检查
+
+The delivery decision's `ci_change.after` is an immutable record of its original
+workflow bytes. Its [non-active local snapshot](history/ci/research-source-consolidation-archive-delivery-2026-10-09.yml.txt)
+is checked by size, SHA-256 and Git blob identity without network or Git history.
+It is not a workflow to activate or execute. Subsequent CI changes do not rewrite
+that decision or turn its old acceptance receipt into a new run.
+
+Current archive metadata checks run in `ci.yml`'s unconditional `python-contracts`
+job, alongside local retention checks. Their integration is tested independently
+of the historical workflow hash; the archive check step downloads nothing and
+never runs restored content. CI run results for a new commit must still be checked
+separately; these structural assertions do not claim a new hosted CI pass.
+
+已把历史字节身份与活跃 CI 结构分开：历史 decision 和验收回执保持原样，离线检查
+核对非激活快照；现行检查随普通 CI 执行，不再因后续 workflow 合理调整而误报历史
+证据失效。本次仅调整导航与检查接线，不新增模型、单算子、训练或采集执行。
