@@ -36,6 +36,10 @@ start any computation. The caller supplies an externally reviewed binding;
 `approval_binding` only exposes its canonical schema. Default `armed=False`.
 No CLI launcher is provided.
 
+Raw NPZ members are written explicitly, so keys such as `file` and `allow_pickle`
+remain evidence rather than binding serializer parameters. Exact member-name
+readback also distinguishes `x` from `x.npy`. NUL-containing names cannot be
+represented faithfully by ZIP and are refused with an incomplete rejected receipt.
 Object-dtype arrays and non-ndarray objects cannot be safely persisted without
 pickle and are explicitly refused, leaving STARTED/REJECTED evidence. Disk errors
 can make evidence incomplete; no complete receipt is fabricated. An abrupt OS
@@ -73,7 +77,8 @@ must not be treated as a replacement for a model-execution authorization guard.
 The caller must separately authorize and isolate any process before starting it.
 
 It retains exact raw byte prefixes, enforces a combined stdout+stderr byte cap,
-checks a monotonic wall deadline even after pipe EOF, kills/reaps its child on
+uses one absolute monotonic deadline, bounds each select by its remaining time,
+checks the deadline again after observing final pipe EOF and exit, kills/reaps its child on
 failure, and persists terminal returncode/completeness/hash evidence. Timeout
 and cap exhaustion never claim complete capture; explicit truncation identifies
 cap exhaustion. Exit failure may have complete captured bytes but never success.

@@ -51,6 +51,12 @@ The current immutable model release is [`model-749187ec1d66`](https://github.com
 - strict robustness pass;
 - continuous synthetic hard-negative FAR evidence with `0 FA` and full manifest coverage.
 
+These are **historical release qualification results**. The later frozen-model
+[nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
+failed: **2 false accepts / 8 hours**, upper95 **0.786974 FA/h** (gate: 0 false
+accepts and upper95 ≤ 0.40). It tested this same old model, not D20/D90. Shipping
+approval remains false. See the [current audit](research/consolidation/CI_AUDIT_2026-10-09.md).
+
 `configs/shipping.xiaowo.json` is the machine-readable product contract. It intentionally records `shipping_approved=false`: synthetic qualification is engineering evidence, not a substitute for final real-human/final-AFE acoustic qualification and physical target-board evidence.
 
 ### Fetching and verifying the release

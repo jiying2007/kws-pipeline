@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import zipfile
 
 import numpy as np
 
@@ -92,15 +93,23 @@ def _snapshot_arrays(path, arrays):
         for k, v in arrays.items()
     ):
         raise TypeError('raw evidence requires string-keyed non-object ndarrays')
+    if any('\x00' in key for key in arrays):
+        raise TypeError('raw evidence member names cannot contain NUL')
     with Path(path).open('xb') as stream:
-        np.savez(stream, **arrays)
+        # Write explicit NPY members: keyword names such as file/allow_pickle
+        # must remain data, never bind NumPy's serializer parameters.
+        with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_STORED) as archive:
+            for key, value in arrays.items():
+                with archive.open(key + '.npy', 'w', force_zip64=True) as member:
+                    np.lib.format.write_array(member, value, allow_pickle=False)
         stream.flush()
         os.fsync(stream.fileno())
-    with np.load(path, allow_pickle=False) as saved:
-        if set(saved.files) != set(arrays):
+    with zipfile.ZipFile(path) as saved:
+        if set(saved.namelist()) != {k + '.npy' for k in arrays}:
             raise IOError('raw evidence member mismatch')
         for key, value in arrays.items():
-            copy = saved[key]
+            with saved.open(key + '.npy') as member:
+                copy = np.lib.format.read_array(member, allow_pickle=False)
             if copy.dtype != value.dtype or copy.shape != value.shape or copy.tobytes() != value.tobytes():
                 raise IOError('raw evidence readback mismatch')
 
@@ -174,10 +183,16 @@ def save_then_compare(destination, native, reference, identity, *, helper_path,
         # Validate snapshots, never mutable caller arrays after the persistence step.
         native_bytes = read_bound('native-raw.npz', raw_receipt['native_sha256'])
         reference_bytes = read_bound('reference-raw.npz', raw_receipt['reference_sha256'])
-        with np.load(io.BytesIO(native_bytes), allow_pickle=False) as data:
-            native_saved = {k: data[k] for k in data.files}
-        with np.load(io.BytesIO(reference_bytes), allow_pickle=False) as data:
-            reference_saved = {k: data[k] for k in data.files}
+        def load_snapshot(raw):
+            # Read exact member names, avoiding NpzFile's x versus x.npy alias.
+            with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+                result = {}
+                for name in archive.namelist():
+                    with archive.open(name) as member:
+                        result[name[:-4]] = np.lib.format.read_array(member, allow_pickle=False)
+                return result
+        native_saved = load_snapshot(native_bytes)
+        reference_saved = load_snapshot(reference_bytes)
         result = helper.save_then_compare(dest / 'validated', native_saved, reference_saved, identity)
         # Detect ordinary drift during the comparison as well as before it.
         helper.require_admission(ticket, work, attempt)

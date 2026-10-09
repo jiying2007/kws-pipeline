@@ -2,6 +2,7 @@
 """Pure synthetic differential test. No audio, acoustic model, old once runner."""
 import ctypes as C, json, pathlib, subprocess, hashlib, random, argparse, sys
 from native_elf import require_native, native_expected
+from compiler_flags import CFLAGS, STRICT_FP_FLAGS
 ROOT=pathlib.Path(__file__).resolve().parent
 class Result(C.Structure):
  _fields_=[('valid',C.c_int32),('state',C.c_int32),('keyword',C.c_int32),('start_frame',C.c_int64),('end_frame',C.c_int64),('score',C.c_double),('rows_decoded',C.c_size_t)]
@@ -17,10 +18,17 @@ def snapshot(d):
 def main():
  if sys.flags.optimize:raise RuntimeError("optimized Python disables test assertions; refused")
  ap=argparse.ArgumentParser();ap.add_argument("--cc",default="cc");ap.add_argument("--original",type=pathlib.Path,required=True);ap.add_argument("--optimized",type=pathlib.Path,required=True);ap.add_argument("--output",type=pathlib.Path,required=True);args=ap.parse_args();args.output.mkdir(parents=True,exist_ok=False)
- libs=[];states=[];spaces=[];sizes=[]
+ libs=[];states=[];spaces=[];sizes=[];commands=[];binaries={}
+ def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
+ def compile_library(source,target):
+  command=[args.cc,*CFLAGS,'-shared',str(source),'-lm','-o',str(target)]
+  p=subprocess.run(command,capture_output=True,text=True,timeout=120)
+  commands.append({'command':command,'exit':p.returncode,'stdout':p.stdout,'stderr':p.stderr})
+  p.check_returncode()
  for name in ('original','optimized'):
-  target=args.output/(name+'-decoder.so');subprocess.run([args.cc,'-std=c11','-Wall','-Wextra','-Werror','-O2','-fPIC','-shared',str(getattr(args,name)/'a20_decoder.c'),'-lm','-o',str(target)],check=True,timeout=120)
+  target=args.output/(name+'-decoder.so');source=getattr(args,name)/'a20_decoder.c';compile_library(source,target)
   require_native(target,(3,))
+  binaries[name]={'library_sha256':sha(target),'source_sha256':sha(source),'header_sha256':sha(source.with_suffix('.h'))}
   lib=C.CDLL(str(target));lib.a20d_decoder_bytes.restype=C.c_size_t;lib.a20d_workspace_bytes.restype=C.c_size_t
   sizes.append({'decoder':lib.a20d_decoder_bytes(),'workspace':lib.a20d_workspace_bytes()});assert lib.a20d_decoder_bytes()==C.sizeof(State)
   libs.append(lib);states.append(State());spaces.append(C.create_string_buffer(lib.a20d_workspace_bytes()));lib.a20d_init(C.byref(states[-1]))
@@ -72,6 +80,7 @@ def main():
     r=[rng.random() for _ in range(6)];s=sum(r);r=[x/s for x in r]
    rows.append(r)
   run(rows,logits);rows_tested+=n
- report={'pass':True,'compiler_command':args.cc,'native_elf':native_expected(),'synthetic_calls':calls,'random_rows':rows_tested,'activations':activations,'status_counts':statuses,'sizes':dict(zip(('original','optimized'),sizes)),'workspace_saved_bytes':sizes[0]['workspace']-sizes[1]['workspace'],'beam_unchanged':True,'transaction_copy_preserved':True,'scope':'host ABI synthetic decoder only; no model/audio evaluation or SSC305 measurement'}
+ compiler=subprocess.run([args.cc,'--version'],capture_output=True,text=True,check=True,timeout=120).stdout.splitlines()[0]
+ report={'schema':'decoder-scratch-v1-differential','compiler':compiler,'compile_flags':list(CFLAGS),'strict_fp_flags':list(STRICT_FP_FLAGS),'compiler_flags_sha256':sha(ROOT/'compiler_flags.py'),'commands':commands,'binaries':binaries,'pass':True,'compiler_command':args.cc,'native_elf':native_expected(),'synthetic_calls':calls,'random_rows':rows_tested,'activations':activations,'status_counts':statuses,'sizes':dict(zip(('original','optimized'),sizes)),'workspace_saved_bytes':sizes[0]['workspace']-sizes[1]['workspace'],'beam_unchanged':True,'transaction_copy_preserved':True,'scope':'host ABI synthetic decoder only; no model/audio evaluation or SSC305 measurement'}
  (args.output/'decoder-test-results.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 if __name__=='__main__':main()

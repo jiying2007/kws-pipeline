@@ -1,6 +1,7 @@
 """Strictly derive scratch-v1; compile full runtime, execute decoder-only tests."""
 import argparse, hashlib, json, os, pathlib, shutil, subprocess, sys
 from native_elf import require_native, native_expected
+from compiler_flags import CFLAGS, STRICT_FP_FLAGS
 ROOT=pathlib.Path(__file__).resolve().parent
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 def main():
@@ -36,9 +37,9 @@ def main():
  run(['patch','--batch','--fuzz=0','-p0','-i',str(ROOT/'scratch-lifetimes.patch')])
  for name,row in deriv['files'].items():
   if sha(tree/'baseline/decoder'/name)!=row['derived_sha256']:raise ValueError('derived hash mismatch: '+name)
- (tree/'DERIVED_PROVENANCE.json').write_text(json.dumps({'schema':'decoder-scratch-lifetime-derived-v1','source_manifest_sha256':sha(src/'SOURCE_MANIFEST.json'),'derivation':deriv,'historical_baseline_unmodified':True,'native_decoder_layout_changed':True,'board_measured':False},indent=2)+'\n')
+ (tree/'DERIVED_PROVENANCE.json').write_text(json.dumps({'schema':'decoder-scratch-lifetime-derived-v1','source_manifest_sha256':sha(src/'SOURCE_MANIFEST.json'),'derivation':deriv,'driver_sha256':{name:sha(ROOT/name) for name in ('build.py','test_decoder.py','compiler_flags.py','native_elf.py')},'historical_baseline_unmodified':True,'native_decoder_layout_changed':True,'board_measured':False},indent=2)+'\n')
  (tree/'DERIVED_MANIFEST.json').write_text(json.dumps({str(p.relative_to(tree)):sha(p) for p in sorted(tree.rglob('*')) if p.is_file()},indent=2)+'\n')
- flags=['-std=c11','-O2','-Wall','-Wextra','-Werror','-fno-fast-math','-ffp-contract=off','-frounding-math','-fexcess-precision=standard','-fPIC']
+ flags=CFLAGS
  sources=['baseline/precision64/model/a20_fsmn.c','baseline/precision64/model/load.c','baseline/precision64/model/sha256.c','baseline/native/stream/splice.c','baseline/decoder/a20_decoder.c','src/donor_fft64.c','src/pcm_fft64.c','src/a20_stream_fft64.c','src/abi_fft64.c']
  run([args.cc,*flags,'-shared',*sources,'-lm','-o',str(out/'liba20_scratch_v1.so')])
  require_native(out/'liba20_scratch_v1.so',(3,))
@@ -48,6 +49,7 @@ def main():
  for mode,extra in [('normal',[]),('asan',['-O1','-g','-fsanitize=address','-fno-omit-frame-pointer','-fno-pie','-no-pie']),('ubsan',['-O1','-g','-fsanitize=undefined','-fno-sanitize-recover=all'])]:
   exe=out/('decoder-'+mode);run([args.cc,*flags,*extra,'tests/test_decoder.c','baseline/decoder/a20_decoder.c','-lm','-o',str(exe)]);env=dict(os.environ,ASAN_OPTIONS='detect_leaks=0');require_native(exe);run([str(exe)],env=env)
  run([sys.executable,str(ROOT/'test_decoder.py'),'--cc',args.cc,'--original',str(src/'baseline/decoder'),'--optimized',str(tree/'baseline/decoder'),'--output',str(out/'differential')])
- receipt={'schema':'decoder-scratch-v1-build','pass':True,'compiler':run([args.cc,'--version']).splitlines()[0],'compiler_command':args.cc,'native_elf':native_expected(),'subprocess_timeout_seconds':120,'sizes':sizes,'commands':commands,'acoustic_model_forwards':0,'audio_frames':0,'runtime_built_not_executed':True,'board_measured':False,'leak_detection':False,'library_sha256':sha(out/'liba20_scratch_v1.so')}
+ differential_path=out/'differential/decoder-test-results.json'
+ receipt={'schema':'decoder-scratch-v1-build','pass':True,'compiler':run([args.cc,'--version']).splitlines()[0],'compiler_command':args.cc,'compile_flags':list(CFLAGS),'strict_fp_flags':list(STRICT_FP_FLAGS),'compiler_flags_sha256':sha(ROOT/'compiler_flags.py'),'differential_receipt_sha256':sha(differential_path),'differential':json.loads(differential_path.read_text()),'native_elf':native_expected(),'subprocess_timeout_seconds':120,'sizes':sizes,'commands':commands,'acoustic_model_forwards':0,'audio_frames':0,'runtime_built_not_executed':True,'board_measured':False,'leak_detection':False,'library_sha256':sha(out/'liba20_scratch_v1.so')}
  (out/'RESULTS.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps({'pass':True,'receipt':str(out/'RESULTS.json'),'stream_before':sizes['original']['stream_bytes'],'stream_after':sizes['optimized']['stream_bytes']}))
 if __name__=='__main__':main()

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
-      "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
-      "bytes": 24234
+      "git_blob_sha1": "940b5a7c5d572dfb1e751160a6f5596739558dc5",
+      "sha256": "057661e7afbad7c57a8f65c743afef86a257ec75248a9ef6aa5c16fc27a29af3",
+      "bytes": 26890
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15835,6 +15835,33 @@
       ],
       "allowed_new_active_workflows_after": [
         ".github/workflows/research-source-consolidation.yml"
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "from_commit": "1b3774a24f8712e043e8d82eea5eeb51911dfcf2",
+      "from_tree": "f5637877d293554ebb6985adc039a2eed5b45166",
+      "operation_id": "ci-efficiency-20261009",
+      "scope": "Run selected compiler-independent checks once, retain compiler/ABI coverage and required hosted names, add fail-closed prerequisite propagation, bounded job timeouts and same-PR-only cancellation.",
+      "rationale": "Authorized current public CI metadata maintenance only. Retained source files, provenance, projections, original base identities and historical snapshots remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "99a3ddf5b3ff5c65d1c1dc00df2920a1cbf96796",
+            "sha256": "0f3c3e02d5990e6af643e2cc29236413f8c664be9fd714bc4db4ea8497919ce5",
+            "bytes": 24234
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "940b5a7c5d572dfb1e751160a6f5596739558dc5",
+            "sha256": "057661e7afbad7c57a8f65c743afef86a257ec75248a9ef6aa5c16fc27a29af3",
+            "bytes": 26890
+          }
+        }
       ]
     }
   ]

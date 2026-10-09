@@ -43,3 +43,39 @@ def fetch_helper(lock, destination, *, opener=urllib.request.urlopen):
         with archive.open(members[0]) as stream:
             raw = stream.read(lock['helper_bytes'] + 1)
     return verify_helper(raw, lock)
+
+
+def cached_helper(lock, cache_directory, destination, *, opener=urllib.request.urlopen):
+    """Use verified public source bytes only; a cache hit never establishes trust.
+
+    A corrupt hit fails closed instead of silently replacing evidence. A missing
+    entry follows the original full pinned archive/part verification path.
+    """
+    import os
+    import re
+    import tempfile
+
+    digest = lock['helper_sha256']
+    if not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None:
+        raise ValueError('invalid public helper cache identity')
+    if type(lock['helper_bytes']) is not int or not 0 < lock['helper_bytes'] <= 1024 * 1024:
+        raise ValueError('invalid public helper cache size')
+    cache = Path(cache_directory)
+    entry = cache / (digest + '.py')
+    try:
+        with entry.open('rb') as stream:
+            return verify_helper(stream.read(lock['helper_bytes'] + 1), lock)
+    except FileNotFoundError:
+        pass
+    raw = fetch_helper(lock, destination, opener=opener)
+    # Never cache the archive, other members, weights, logs, or private inputs.
+    cache.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix='.' + digest + '-', dir=cache)
+    try:
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(raw)
+        os.replace(temporary, entry)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return verify_helper(raw, lock)

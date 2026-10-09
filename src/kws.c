@@ -51,6 +51,8 @@ static int model_contract_valid(const kws_model_t *model) {
   if (model == NULL || model->sample_rate_hz != KWS_SAMPLE_RATE_HZ ||
       model->frame_length_samples != KWS_FRAME_LENGTH_SAMPLES ||
       model->frame_hop_samples != KWS_FRAME_HOP_SAMPLES ||
+      (model->frontend_kind != KWS_FRONTEND_LOGMEL &&
+       model->frontend_kind != KWS_FRONTEND_PCEN_LITE) ||
       model->feature_dim == 0u || model->feature_dim > KWS_MAX_FEATURE_DIM ||
       model->hidden_dim == 0u || model->hidden_dim > KWS_MAX_HIDDEN_DIM ||
       model->vocab_size < 2u || model->vocab_size > KWS_MAX_VOCAB_SIZE ||
@@ -107,13 +109,14 @@ kws_status_t kws_engine_init(void *arena,
   kws_config_t c;
   kws_engine_t *e;
 
-  if (arena == NULL || out_engine == NULL || model_contract_valid(model) == 0 ||
-      arena_bytes < sizeof(kws_engine_t)) {
+  if (out_engine == NULL) {
     return KWS_EINVAL;
   }
-  /* Every return below leaves the caller with a null engine rather than a
-   * pointer to a partially initialised arena. */
+  /* Clear the result before validating any other argument. */
   *out_engine = NULL;
+  if (arena == NULL || model_contract_valid(model) == 0) {
+    return KWS_EINVAL;
+  }
   if (((uintptr_t)arena % _Alignof(kws_engine_t)) != 0u) {
     return KWS_EINVAL;
   }
@@ -125,6 +128,10 @@ kws_status_t kws_engine_init(void *arena,
       !KWS_PARAM_REFRACTORY_MS_VALID(c.refractory_ms) ||
       !KWS_PARAM_EXTERNAL_VAD_THRESHOLD_VALID(c.external_vad_threshold)) {
     return KWS_EINVAL;
+  }
+
+  if (arena_bytes < sizeof(kws_engine_t)) {
+    return KWS_ENOMEM;
   }
 
   e = (kws_engine_t *)arena;
@@ -281,7 +288,8 @@ static kws_status_t process_decoder_frame(kws_engine_t *engine,
   int decoder_hit;
   uint16_t top_index;
 
-  if (engine == NULL || logits == NULL || out_detected == NULL ||
+  *out_detected = 0;
+  if (engine == NULL || logits == NULL ||
       vocab_size != engine->model.vocab_size ||
       (speech_active != 0 && speech_active != 1) ||
       end_sample < engine->processed_samples) {
@@ -294,7 +302,6 @@ static kws_status_t process_decoder_frame(kws_engine_t *engine,
     }
   }
 
-  *out_detected = 0;
   if (logits != engine->logits) {
     memcpy(engine->logits, logits, (size_t)vocab_size * sizeof(float));
   }
@@ -423,12 +430,14 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
                                         const kws_frame_metadata_t *metadata,
                                         kws_detection_t *out_detection,
                                         int *out_detected) {
-  if (engine == NULL || (samples == NULL && sample_count != 0u) ||
-      out_detected == NULL) {
+  int detected_sink = 0;
+  if (out_detected == NULL) {
+    out_detected = &detected_sink;
+  }
+  *out_detected = 0;
+  if (engine == NULL || (samples == NULL && sample_count != 0u)) {
     return KWS_EINVAL;
   }
-
-  *out_detected = 0;
   if (sample_count > KWS_MAX_PCM_BLOCK_SAMPLES) {
     return KWS_EBOUNDS;
   }
@@ -556,12 +565,14 @@ kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
                                            uint64_t end_sample,
                                            kws_detection_t *out_detection,
                                            int *out_detected) {
-  if (engine == NULL || logits == NULL || out_detected == NULL ||
+  int detected_sink = 0;
+  if (out_detected == NULL) {
+    out_detected = &detected_sink;
+  }
+  *out_detected = 0;
+  if (engine == NULL || logits == NULL ||
       vocab_size != engine->model.vocab_size ||
       end_sample <= engine->processed_samples) {
-    if (out_detected != NULL) {
-      *out_detected = 0;
-    }
     return KWS_EINVAL;
   }
   return process_decoder_frame(engine, logits, vocab_size, speech_active,
