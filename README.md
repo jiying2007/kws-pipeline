@@ -4,6 +4,8 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
+Current research and retention: [2026-10-09 status snapshot](research/consolidation/CURRENT_STATUS_2026-10-09.md). D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
+
 > **Evidence boundary — read this before quoting any number below.**
 > The qualification recorded in this repository was produced on a **synthetic
 > corpus**. It is engineering evidence, not a commercial acoustic claim. Two

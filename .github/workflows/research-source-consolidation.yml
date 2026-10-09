@@ -4,6 +4,7 @@ on:
     paths:
       - 'research/**'
       - 'tools/verify_research_sources.py'
+      - 'tools/verify_research_publication.py'
       - 'tools/run_research_source_checks.py'
       - '.github/workflows/research-source-consolidation.yml'
   push:
@@ -11,6 +12,7 @@ on:
     paths:
       - 'research/**'
       - 'tools/verify_research_sources.py'
+      - 'tools/verify_research_publication.py'
       - 'tools/run_research_source_checks.py'
       - '.github/workflows/research-source-consolidation.yml'
 permissions:
@@ -26,12 +28,34 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
+      - name: Verify publication index with pinned public metadata
+        run: |
+          python3 -B research/consolidation/source_tests/test_publication_index.py
+          python3 -B tools/verify_research_publication.py --fetch-metadata
       - name: Install numeric test dependencies only
         run: |
           python3 -m pip install --only-binary=:all: --disable-pip-version-check numpy==2.3.5 scipy==1.17.0
+      - name: Test new saved-only admission and failure evidence
+        run: python3 -B research/offline-evidence-safety-v1/run_tests.py --fetch-helper
+      - name: Build and test opt-in decoder scratch lifetime version
+        run: |
+          python3 -B research/decoder_scratch_v1/test_driver_guards.py
+          python3 -B research/decoder_scratch_v1/build.py --output "$RUNNER_TEMP/decoder-scratch-v1"
+      - name: Test invented-logit boundary mechanism without a model
+        run: python3 -B research/saved-diagnostics-2026-10-09/run_shipping_synthetic.py . --output "$RUNNER_TEMP/shipping-boundary-synthetic"
       - name: Verify retention and inactive historical workflows
         run: |
           python3 -B tools/verify_research_sources.py
           python3 -B research/consolidation/source_tests/test_source_retention.py
       - name: Run the explicit synthetic and mock allowlist
         run: python3 -B tools/run_research_source_checks.py --suite synthetic
+      - name: Retain synthetic-only resource and mechanism receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: research-optimization-synthetic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/decoder-scratch-v1/RESULTS.json
+            ${{ runner.temp }}/shipping-boundary-synthetic/RESULTS.json
+          if-no-files-found: ignore
+          retention-days: 30

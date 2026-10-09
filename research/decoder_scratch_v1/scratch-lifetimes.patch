@@ -1,0 +1,69 @@
+--- baseline/decoder/a20_decoder.c
++++ baseline/decoder/a20_decoder.c
+@@ -84,11 +84,11 @@
+ static a20d_status a20d_find(a20d_decoder *d,a20d_workspace *w,size_t *count,
+                             const a20d_hyp *cur,int append,int token,a20d_hyp **out) {
+     if((size_t)cur->len+(size_t)append>A20D_PREFIX_CAP) return A20D_CAPACITY;
+-    for(size_t i=0;i<*count;++i) if(a20d_same(d,&w->next[i],cur,append,token)) {
+-        *out=&w->next[i]; return A20D_OK;
++    for(size_t i=0;i<*count;++i) if(a20d_same(d,&w->scratch.next[i],cur,append,token)) {
++        *out=&w->scratch.next[i]; return A20D_OK;
+     }
+     if(*count>=A20D_NEXT_CAP) return A20D_CAPACITY;
+-    *out=&w->next[(*count)++]; memset(*out,0,sizeof(**out));
++    *out=&w->scratch.next[(*count)++]; memset(*out,0,sizeof(**out));
+     /* A new dictionary entry's nodes start empty. The branch writes them. */
+     return A20D_OK;
+ }
+@@ -147,26 +147,27 @@
+     if(!eligible) return A20D_OK;
+     /* Python sorted is stable: insertion order resolves equal path scores. */
+     for(size_t i=1;i<count;++i) {
+-        a20d_hyp v=w->next[i]; size_t j=i;
+-        while(j && (v.pb+v.pnb)>(w->next[j-1].pb+w->next[j-1].pnb)) {
+-            w->next[j]=w->next[j-1]; --j;
+-        }
+-        w->next[j]=v;
++        a20d_hyp v=w->scratch.next[i]; size_t j=i;
++        while(j && (v.pb+v.pnb)>(w->scratch.next[j-1].pb+w->scratch.next[j-1].pnb)) {
++            w->scratch.next[j]=w->scratch.next[j-1]; --j;
++        }
++        w->scratch.next[j]=v;
+     }
+     size_t kept=count<A20D_PATH_BEAM?count:A20D_PATH_BEAM, nn=0;
+     for(size_t i=0;i<d->node_count;++i) w->remap[i]=UINT16_MAX;
++    /* End next lifetime before activating overlapping compact storage. */
++    for(size_t h=0;h<kept;++h) d->hyps[h]=w->scratch.next[h];
+     for(size_t h=0;h<kept;++h) {
+-        d->hyps[h]=w->next[h];
+         for(size_t j=0;j<d->hyps[h].len;++j) {
+             uint16_t id=d->hyps[h].node[j];
+             if(w->remap[id]==UINT16_MAX) {
+                 if(nn>=A20D_LIVE_NODES) return A20D_CAPACITY;
+-                w->remap[id]=(uint16_t)nn; w->compact[nn++]=d->nodes[id];
++                w->remap[id]=(uint16_t)nn; w->scratch.compact[nn++]=d->nodes[id];
+             }
+             d->hyps[h].node[j]=w->remap[id];
+         }
+     }
+-    memcpy(d->nodes,w->compact,nn*sizeof(d->nodes[0]));
++    memcpy(d->nodes,w->scratch.compact,nn*sizeof(d->nodes[0]));
+     d->node_count=(uint16_t)nn; d->hyp_count=(uint16_t)kept; return A20D_OK;
+ }
+ static int a20d_sublist(const a20d_decoder *d,const a20d_hyp *h,const int *keyword) {
+--- baseline/decoder/a20_decoder.h
++++ baseline/decoder/a20_decoder.h
+@@ -44,8 +44,11 @@
+ } a20d_decoder;
+ typedef struct {
+     a20d_decoder work;         /* Transactional copy: errors do not change state. */
+-    a20d_hyp next[A20D_NEXT_CAP];
+-    a20d_node compact[A20D_LIVE_NODES];
++    /* Disjoint lifetimes: copy every retained hypothesis before compaction. */
++    union {
++        a20d_hyp next[A20D_NEXT_CAP];
++        a20d_node compact[A20D_LIVE_NODES];
++    } scratch;
+     uint16_t remap[A20D_NODE_CAP];
+ } a20d_workspace;
+ typedef struct {

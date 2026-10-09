@@ -1,0 +1,13 @@
+{
+  "schema": "kws-saved-diagnostic-data-pointer-v1",
+  "repository": "jiying2007/kws-data",
+  "commit": "4b10cf76ca42386e0e932de719e6424fa6f2ed57",
+  "path": "research/2026-10-09-saved-numerical-diagnostics/saved-diagnostics-bitexact-v2.json",
+  "url": "https://github.com/jiying2007/kws-data/blob/4b10cf76ca42386e0e932de719e6424fa6f2ed57/research/2026-10-09-saved-numerical-diagnostics/saved-diagnostics-bitexact-v2.json",
+  "sha256": "cb2b52bee879d4f136682ac3cf8c14b82bcaa9ff02e8042a8452260805d6a0f8",
+  "bytes": 39423,
+  "scope": "Detailed derived numerical trace stored in kws-data; pipeline retains source tools and deidentified report only.",
+  "model_calls": 0,
+  "original_D20_numerical_status": "FAIL",
+  "D90_numerical_status": "NOT_RUN"
+}

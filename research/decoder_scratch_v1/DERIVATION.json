@@ -1,0 +1,33 @@
+{
+  "schema": "decoder-scratch-lifetime-v1",
+  "derived_from": "../native_a20",
+  "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+  "files": {
+    "a20_decoder.c": {
+      "source_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+      "derived_sha256": "86e680cd3f957ddfc4a3abebb9924a2347272c75c2a44db33ea00c637a5a38cb"
+    },
+    "a20_decoder.h": {
+      "source_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4",
+      "derived_sha256": "519ce5a6fb8948f1df560cdf1783628111b481cf49a8926692375eef499f8045"
+    }
+  },
+  "patch_sha256": "33a03127b3ff6d1e64e3f05223e70abf00fc44d61984d2472a57da6cf0185596",
+  "native_decoder_layout_changed": true,
+  "decoder_algorithm_thresholds_beams_changed": false,
+  "shipping_changed": false,
+  "native_elf_guard": {
+    "copied_from": "research/native_a20/build.py",
+    "source_file_sha256": "fe6f92977a0a77cb2b5f82895afac3581faa0ee3320b0919b9b8443dbe8afa0f",
+    "copied_functions": [
+      "read_elf",
+      "check_elf"
+    ],
+    "local_adapter": [
+      "native_expected",
+      "require_native"
+    ],
+    "historical_source_unmodified": true
+  },
+  "source_manifest_sha256": "7b78434574af4227239a524cec92fc6a21fbefaeea2a52b3f6793875f80f3efc"
+}

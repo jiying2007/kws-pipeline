@@ -8,6 +8,22 @@ are unchanged by this consolidation.
 本入口把可复用工具、实验结论与产品资格分开。研究代码通过测试，不代表模型通过
 声学或板端验证。失败结论保留；旧实验的一次性执行许可不因整理而重新生效。
 
+## Current research and retention / 当前研究与保留状态
+
+See the dated [English status](consolidation/CURRENT_STATUS_2026-10-09.md) /
+[中文状态](consolidation/CURRENT_STATUS_2026-10-09.zh-CN.md) and
+[public archive index](consolidation/source-retention-publication-2026-10-09.json).
+As observed on 2026-10-09, data #27 and pipeline #501 are draft and unmerged;
+the full 1886-member / 1403-object archive is public, while the expanded
+500-file pipeline copy remains NOT_PUSHED.
+
+- D20/D90 v2: two raw-logit coordinates exceeded the gate in the same D20 failed fixture; D90 not run
+- Fixed50: EVAL_INCONCLUSIVE_LABEL_SUPPORT; K2 4 clips / 4 voices < 5,
+  targets 11 < 12, unknown 8; no admissible KWS comparison
+- Old frozen-model nightly: 2 FA / 8 h, upper95 0.786974 FA/h, failing 0 / 0.40;
+  this is not D20/D90 evidence
+- Human and physical-board qualification remains deferred
+
 ## Integrated reusable software
 
 | Entry | What is usable | Boundary |
@@ -34,6 +50,20 @@ The fixture-preparation command explicitly fetches three immutable public numeri
 logs totaling 59,574 bytes, then checks their size and SHA-256. The test itself
 never downloads or silently skips missing evidence. See each module for its
 complete tests and exact scope; the CTC workflow runs both independent oracles.
+
+## Current opt-in engineering tools (2026-10-09)
+
+- [Saved-only evidence safety](offline-evidence-safety-v1/README.md): explicit preflight,
+  real saved-reference admission, and failure capture. Tests fetch a pinned public
+  archive to load one helper only; no old attempt, model or audio is executed.
+- [Decoder scratch lifetime v1](decoder_scratch_v1/README.md): a verified derived
+  build with 33,600 bytes less host workspace. The historical baseline stays intact;
+  callers must rebuild for its new workspace ABI. This is opt-in research, not a
+  shipping/default or board-qualified replacement.
+- [Saved failure diagnosis and next protocol](saved-diagnostics-2026-10-09/REPORT.zh-CN.md):
+  exact saved-array and source attribution checks, an invented-logit boundary test,
+  and an unexecuted next-experiment plan. Original numerical/effectiveness failures
+  remain unresolved; the new synthetic tests cannot relabel them as passes.
 
 ## Results worth retaining
 
@@ -81,10 +111,9 @@ They are historical observations, not instructions to rerun an experiment.
   are retained verbatim as historical evidence, not current guidance. The
   [historical-note reading guide](consolidation/history/READING_NOTES.md) explains
   relocated links and unavailable old build artifacts
-- The existing automatic repository cleanup now explicitly retains all 61
-  non-main branch names in the [2026-10-07 inventory](consolidation/branch-retention-2026-10-07.json).
-  The guard runs before merged-tip, retired-branch or old closed-unmerged-PR
-  deletion eligibility, and remains in effect if a retained branch head changes.
-  Removing a guard requires a separate reviewed retention decision; this batch
-  does not authorize deletion. Unrelated cleanup and branch protections remain
-  governed by their existing rules
+- The [2026-10-07 inventory](consolidation/branch-retention-2026-10-07.json)
+  is historical, not a current claim that all 61 branches remain. The approved
+  cleanup subsequently deleted 57 pipeline and 22 data branches, preserving
+  two recovery tags. See the [completed cleanup record](consolidation/git-atomic-prune-2026-10-08.json)
+  and the dated current status above. Historical snapshots are unchanged;
+  no new deletion or experiment is authorized by this navigation update.

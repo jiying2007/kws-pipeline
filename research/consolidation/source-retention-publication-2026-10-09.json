@@ -9,7 +9,7 @@
   "source_pull_request": {
     "number": 27,
     "url": "https://github.com/jiying2007/kws-data/pull/27",
-    "head_commit": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+    "head_commit": "8073019b6088199811342b012769d6957fba4371",
     "state": "open",
     "draft": true,
     "merged": false
@@ -33,11 +33,11 @@
     },
     {
       "path": "research/2026-10-08-d20-d90-host-research/CATALOG.json",
-      "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
-      "git_blob_sha1": "29d49bd28347ffab7af0a075b666d2fd34d27edc",
-      "sha256": "45a5fd349aa4faa696abef89230d8315c9860be01684eb2a0fefd7366fba6ec7",
-      "bytes": 1110336,
-      "url": "https://github.com/jiying2007/kws-data/blob/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research/CATALOG.json"
+      "commit": "3a095f435f2dd6a611aee6314f7b48c86675a103",
+      "git_blob_sha1": "15d59aa5f503eb594f9d778388d1d29a07abb7e3",
+      "sha256": "f12b1c13b8d06f9767596d9afd63422beb373da6c42be1581e3b6ea871d819ca",
+      "bytes": 1114316,
+      "url": "https://github.com/jiying2007/kws-data/blob/3a095f435f2dd6a611aee6314f7b48c86675a103/research/2026-10-08-d20-d90-host-research/CATALOG.json"
     },
     {
       "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-000",
@@ -106,39 +106,66 @@
   ],
   "source_ci_runs": [
     {
-      "run_id": 37865036826,
-      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "run_id": 37877596843,
+      "repository": "jiying2007/kws-data",
+      "workflow_id": 370944134,
+      "path": ".github/workflows/assets.yml",
+      "event": "pull_request",
+      "run_attempt": 1,
+      "head_sha": "8073019b6088199811342b012769d6957fba4371",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036826"
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37877596843"
     },
     {
-      "run_id": 37865036840,
-      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "run_id": 37877596903,
+      "repository": "jiying2007/kws-data",
+      "workflow_id": 379143432,
+      "path": ".github/workflows/host-research-publication.yml",
+      "event": "pull_request",
+      "run_attempt": 1,
+      "head_sha": "8073019b6088199811342b012769d6957fba4371",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036840"
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37877596903"
     },
     {
-      "run_id": 37865036885,
-      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "run_id": 37877596841,
+      "repository": "jiying2007/kws-data",
+      "workflow_id": 377351813,
+      "path": ".github/workflows/research-retention.yml",
+      "event": "pull_request",
+      "run_attempt": 1,
+      "head_sha": "8073019b6088199811342b012769d6957fba4371",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865036885"
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37877596841"
     },
     {
-      "run_id": 37865033010,
-      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "run_id": 37877591925,
+      "repository": "jiying2007/kws-data",
+      "workflow_id": 370944134,
+      "path": ".github/workflows/assets.yml",
+      "event": "push",
+      "run_attempt": 1,
+      "head_sha": "8073019b6088199811342b012769d6957fba4371",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865033010"
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37877591925"
     },
     {
-      "run_id": 37865033021,
-      "head_sha": "5709e97bd7bfc90e7274e155daf6c488469ff0c8",
+      "run_id": 37877591906,
+      "repository": "jiying2007/kws-data",
+      "workflow_id": 379143432,
+      "path": ".github/workflows/host-research-publication.yml",
+      "event": "push",
+      "run_attempt": 1,
+      "head_sha": "8073019b6088199811342b012769d6957fba4371",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/jiying2007/kws-data/actions/runs/37865033021"
+      "url": "https://github.com/jiying2007/kws-data/actions/runs/37877591906"
     }
-  ]
+  ],
+  "observed_at": "2026-10-09T03:05:57Z",
+  "snapshot_semantics": "Point-in-time public metadata observation; not a live PR status or acoustic qualification."
 }
