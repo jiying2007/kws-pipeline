@@ -1,0 +1,286 @@
+{
+  "schema": "kws-diagnostic-readiness-public-summary-v1",
+  "pipeline_base": "1b3774a24f8712e043e8d82eea5eeb51911dfcf2",
+  "data_base": "7f421105eee4674f59c5437f315204a978721cfb",
+  "new_model_calls": 0,
+  "new_operator_calls": 0,
+  "new_decoder_replays": 0,
+  "D20_original_status": "FAIL",
+  "D90_status": "NOT_RUN",
+  "new_numerical_admission": "BLOCKED_DEPENDENCIES_AND_RSS_ENFORCEMENT",
+  "numerical_frozen_inputs": [
+    {
+      "logical_path": "local-certificate-v2-failed/qualification/run-once/D20/pcm9600.npz",
+      "sha256": "2bff23791b80147968fb7e5b4986f1dc612a088f7310d17f352092de2e69cdc3",
+      "bytes": 301434,
+      "object": "objects/2bff23791b80147968fb7e5b4986f1dc612a088f7310d17f352092de2e69cdc3",
+      "availability": "MATERIALIZED_HASH_VERIFIED"
+    },
+    {
+      "logical_path": "local-certificate-v2-failed/qualification/run-once/D20/pcm9600-C.npz",
+      "sha256": "2b02fbb3179d3c25a65e6881539b1bf4bbb5d7048e73b8f6528e342bf8b73992",
+      "bytes": 442116,
+      "object": "objects/2b02fbb3179d3c25a65e6881539b1bf4bbb5d7048e73b8f6528e342bf8b73992",
+      "availability": "MATERIALIZED_HASH_VERIFIED"
+    },
+    {
+      "logical_path": "host-runtime-ab/exports/D20/manifest.json",
+      "sha256": "bd7b256f5def4ad2c211b47789ada0c8f07ced107c8add0afea79561ff96d6eb",
+      "bytes": 8034,
+      "object": "objects/bd7b256f5def4ad2c211b47789ada0c8f07ced107c8add0afea79561ff96d6eb",
+      "availability": "MATERIALIZED_HASH_VERIFIED"
+    },
+    {
+      "logical_path": "host-runtime-ab/exports/D20/a20.f32",
+      "sha256": "b1061525d82c2d1c9dfab30e382701a04e9861c8fda32cf1b8a7f539cdf185a1",
+      "bytes": 1565280,
+      "object": "objects/b1061525d82c2d1c9dfab30e382701a04e9861c8fda32cf1b8a7f539cdf185a1",
+      "availability": "MATERIALIZED_HASH_VERIFIED"
+    }
+  ],
+  "backend_required": {
+    "torch": "2.11.0+cpu",
+    "numpy": "1.26.4",
+    "torch_wheel_sha256": "f82e2ae20c1545bb03997d1cc3143d94e14b800038669ee1aca45808a9acc338",
+    "precision": "ieee; highest float32 matmul; deterministic; gradual-underflow; FE_TONEAREST; no cpu autocast; float32; 1 thread/interop"
+  },
+  "backend_actual": {
+    "numpy": "2.3.5",
+    "torch": "NOT_INSTALLED",
+    "onnxruntime": "NOT_INSTALLED",
+    "funasr": "NOT_INSTALLED"
+  },
+  "original_gates": {
+    "raw_atol": 0.0001,
+    "raw_rtol": 1e-05,
+    "other_original_thresholds": "source evidence.py verified from archive; all preserved",
+    "probability_atol": 1e-05,
+    "probability_rtol": 0,
+    "frontend_atol": 0.001,
+    "frontend_rtol": 0,
+    "composed_cmvn_atol": 0.0002,
+    "composed_cmvn_rtol": 0
+  },
+  "shipping_saved_evidence": {
+    "artifact_id": 11085476672,
+    "run_id": 36689641752,
+    "historical_nightly_run": 36640828135,
+    "newer_nightly_run": 37860130019,
+    "artifact_sha256": "dafaa468c0d9d6ffb323dca2845df74128ea128f0fc3870ce2d4224fcfe26672",
+    "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "keyword_pack_sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "member_identities": {
+      ".github/triggers/frozen-far-source-replay.json": {
+        "sha256": "57819223817d37fd0d5d463305ad339267cf5fe87675c1c6ad2d1f7b0997f01e",
+        "bytes": 1463
+      },
+      "build/model-release.json": {
+        "sha256": "c0e0149dab066d7c1f996197e0e2e5b6bb5026b396bd021e5da5c7bf2dfd5205",
+        "bytes": 131
+      },
+      "build/historical-artifact-metadata.json": {
+        "sha256": "c45b2da14789690c0024de73e799700bbb2d824b65221e8e0ac5975f034a692e",
+        "bytes": 700
+      },
+      "build/historical-source-binding.json": {
+        "sha256": "0909900e58028834624565a5dd155a0bc9263eba5a03cb15cfb1a8dcdf772ae2",
+        "bytes": 1394
+      },
+      "build/nightly-render-summary.log": {
+        "sha256": "dbca8f99b6cafe9ab6f1d9555329281436f3ec9cebb3833e128d3a45ab56f202",
+        "bytes": 2841
+      },
+      "build/nightly-domain/domain-index.jsonl": {
+        "sha256": "b0da52b840ebb0d3654c71d7dac60207413a43264ab5c84cf4f9b175ce853ab4",
+        "bytes": 340358
+      },
+      "build/nightly-negative.tsv": {
+        "sha256": "47aff28b67f7ae3cc7c8fb2988fbf435046af4f373c5600b4ac9e7d67bb3b571",
+        "bytes": 21336
+      },
+      "build/historical-long_far_stream.py": {
+        "sha256": "80ae3b148c049316e37691d8c51e0c75393d292f01067f6aa2e21faefc5145e7",
+        "bytes": 18288
+      },
+      "build/historical-long_far_stream.sha256": {
+        "sha256": "fef19206ab20c6558f49752da1294dfdf89b117cd14a6aa83eb758f2a4270a1b",
+        "bytes": 102
+      },
+      "build/frozen-far-source-replay/seed-1103-random-negative-source/historical-gain-source.kwtr": {
+        "sha256": "4e1bae9f919ffa663d8206cd4e98ea52c919468f740a33cb3ae45adde7afc21b",
+        "bytes": 3108
+      },
+      "build/frozen-far-source-replay/seed-1103-random-negative-source/historical-gain-source.wav": {
+        "sha256": "f3a6427600de02b26be49641d009dacd03e255cf8de2e2e6995f4328dffe0614",
+        "bytes": 53900
+      },
+      "build/frozen-far-source-replay/seed-1103-random-negative-source/result.json": {
+        "sha256": "13159c12e3116a58f8b5431c4da033e57431e37797eebe170471331aa522deec",
+        "bytes": 4736
+      },
+      "build/frozen-far-source-replay/seed-3301-kw2-confusable-source/historical-gain-source.kwtr": {
+        "sha256": "87790515853182eeb12b7bc8a8cf9903e9a76941c19abd2e1b36e89a97b30222",
+        "bytes": 3576
+      },
+      "build/frozen-far-source-replay/seed-3301-kw2-confusable-source/historical-gain-source.wav": {
+        "sha256": "9833bb2851bcf78ea401784c933eed79e5722900e6b104814d865538db58746d",
+        "bytes": 61740
+      },
+      "build/frozen-far-source-replay/seed-3301-kw2-confusable-source/result.json": {
+        "sha256": "0096553ba864f6d2f5fcb435e268786e954e3dc632861fc792ca4f7ae6af643b",
+        "bytes": 4783
+      },
+      "build/frozen-far-source-replay/summary.json": {
+        "sha256": "bde582528aae4fad57b3019fa00fbc919c1dc31d9a3cd18dc54eafa583382053",
+        "bytes": 11263
+      },
+      "build/frozen-far-stream-context/seed-1103-random-negative-source/far/captures.jsonl": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "build/frozen-far-stream-context/seed-1103-random-negative-source/far/detections.jsonl": {
+        "sha256": "3aa7b3d827cee560fb559d95c346c9d8394b031bce9e84674ac177697a943d41",
+        "bytes": 99
+      },
+      "build/frozen-far-stream-context/seed-1103-random-negative-source/far/hard-negative-injections.jsonl": {
+        "sha256": "027892e6a179f5b3adc289b9e08f525f2a235835e7e7622280e99ff6a617682d",
+        "bytes": 99914
+      },
+      "build/frozen-far-stream-context/seed-1103-random-negative-source/far/summary.json": {
+        "sha256": "ff7f6e1717029058e490b2bf9438edb014af8a049c1470fdaa1f07af6e9a95e6",
+        "bytes": 1397
+      },
+      "build/frozen-far-stream-context/seed-3301-kw2-confusable-source/far/captures/fa-0000-kw2.wav": {
+        "sha256": "f6e6a2ae65f0f9c47ab129f01801b479f67014bfa1974ffa14421dedf3d69c32",
+        "bytes": 128044
+      },
+      "build/frozen-far-stream-context/seed-3301-kw2-confusable-source/far/captures.jsonl": {
+        "sha256": "9cb3de663256ed48235ae4840e54820cc2d382779b92c2758664ef65ec95dc58",
+        "bytes": 375
+      },
+      "build/frozen-far-stream-context/seed-3301-kw2-confusable-source/far/detections.jsonl": {
+        "sha256": "8636c3223fea069f9f54d04cd6fb859a3aecbd2efcef143735c2a80ef130768c",
+        "bytes": 99
+      },
+      "build/frozen-far-stream-context/seed-3301-kw2-confusable-source/far/hard-negative-injections.jsonl": {
+        "sha256": "173aae6771946a6a6ec364fa20dc2c7883e08fac68169801e7b8a5067bae1203",
+        "bytes": 109584
+      },
+      "build/frozen-far-stream-context/seed-3301-kw2-confusable-source/far/summary.json": {
+        "sha256": "1befac35523c8f7de3071cfdddc5eebb85a1f4bf512472b8c8fd2081465b02f9",
+        "bytes": 1398
+      },
+      "build/frozen-far-mixed-context-analysis/seed-1103-random-negative-source/mixed-stream-context.wav": {
+        "sha256": "c231ca9d59cb1f0c3875bb9cc6db81ef059c83168be11b876b6196b6346d100e",
+        "bytes": 384044
+      },
+      "build/frozen-far-mixed-context-analysis/seed-1103-random-negative-source/mixed-stream-context.kwtr": {
+        "sha256": "f2042dc4125c464352e12daebeadb6aef18e15f4c3f7d9bd35ab576aa5fdfd63",
+        "bytes": 21684
+      },
+      "build/frozen-far-mixed-context-analysis/seed-1103-random-negative-source/stream-context-result.json": {
+        "sha256": "0af99f080efdf7014c029d484ae8e95bcbdce9bd8e9f11839f93c3ab58a939bf",
+        "bytes": 3827
+      },
+      "build/frozen-far-mixed-context-analysis/seed-3301-kw2-confusable-source/mixed-stream-context.kwtr": {
+        "sha256": "0d8a0b4b1d14ca80e839dce42e07071dc285e68f45e6a0bee0fdfe7daa60c1bb",
+        "bytes": 21684
+      },
+      "build/frozen-far-mixed-context-analysis/seed-3301-kw2-confusable-source/mixed-stream-context.wav": {
+        "sha256": "1856665ec6af94538fef23af90032f1d112413327fa8c2595a91a684f8b50c98",
+        "bytes": 384044
+      },
+      "build/frozen-far-mixed-context-analysis/seed-3301-kw2-confusable-source/stream-context-result.json": {
+        "sha256": "b98424823a580c32b038cf2d6570ba6bf51d867edadaaf56fdb2c9066c40f546",
+        "bytes": 5068
+      },
+      "build/frozen-far-mixed-context-analysis/stream-context-summary.json": {
+        "sha256": "2fd43561410f900ffd755a760d349ac170f225e24cf84c7e449077ad93c0c286",
+        "bytes": 10597
+      },
+      "build/frozen-far-history-decomposition/history-decomposition-summary.json": {
+        "sha256": "df0c1fd47c9ba4c196d2a29db18075d5a82ff705fbe9fe3f6379cdbe668ff976",
+        "bytes": 8667
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/full.kwtr": {
+        "sha256": "930a97057be8a43e2aa5a495ea5bbf2e4a02a9a1c03dfe5085277a172795259c",
+        "bytes": 12948132
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/full-stream.kwtr": {
+        "sha256": "85ad950b5614d4739e9be025e67c9a0935064e1a43fdf9dad815e2a13d5a03f9",
+        "bytes": 12960084
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/history-decomposition-result.json": {
+        "sha256": "a1e5c0efefff167d00d4d8c4b361bfe340fd8cc244fabf67f57bfecf9c442402",
+        "bytes": 7036
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/phase-aligned-cold-absolute.kwtr": {
+        "sha256": "40931720a3c1c9b41404d5a5f547dd52ae9f747e3601b22be661c31d824d6599",
+        "bytes": 21720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/phase-aligned-cold-context.wav": {
+        "sha256": "0f2b496ea2c7ba49ceb8e67d4d26856a35a4bca5cdeab21007203b9f2fd225e6",
+        "bytes": 384204
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/phase-aligned-cold-relative.kwtr": {
+        "sha256": "76eb5fdffd993ba4c85c2ff69caa3799577e9472605a1a97ccf8beed3b888821",
+        "bytes": 21720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/pre-10s.kwtr": {
+        "sha256": "278428895801d43feef5ba29dc5185a202ad1a0cea7caedfa8e65431b5148a58",
+        "bytes": 21720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/pre-1800s.kwtr": {
+        "sha256": "bdac40ac0101843c2713722e877326b809add9032fa7cbb593666a5d25197c78",
+        "bytes": 3243720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/pre-3600s.kwtr": {
+        "sha256": "56429b5cf39100b65a4a84d497f53b8e1184a57aef7d6a70b97920deff4f5902",
+        "bytes": 6483720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/pre-600s.kwtr": {
+        "sha256": "e259a49240d2e354c6e32833bbda2b49cb5399f467925e7aa1319700da577249",
+        "bytes": 1083720
+      },
+      "build/frozen-far-history-decomposition/seed-1103-random-negative-source/pre-60s.kwtr": {
+        "sha256": "a183334b0001ec6c5d0a71d1da88ebf91310761add6cd2e31730e0ec565d5614",
+        "bytes": 111720
+      }
+    },
+    "both_cases_context_tail4s_pcm_match_newer_capture": true,
+    "seed1103_phase": {
+      "frames": 600,
+      "frames_with_logit_byte_difference": 463,
+      "last_different_absolute_s": 7190.745,
+      "exact_equal_tail_frames": 130,
+      "vad_and_frame_grid_equal": true
+    },
+    "seed1103_saved_detection": {
+      "time_s": 7191.345,
+      "confidence": 0.603046
+    },
+    "seed3301_reset_stream_saved_detection": {
+      "absolute_time_s": 2372.65,
+      "relative_time_s": 10.005,
+      "confidence": 0.993992,
+      "different_from_original_confidence": 0.962665
+    },
+    "causal_limit": "No complete actual per-frame trie state; older diagnostic and newer nightly are different runs. Saved reset-stream observations do not establish exact newer-nightly prefix lineage.",
+    "next_step": "Prefer saved-only analysis/state-observer preparation over new acoustic capture.",
+    "matching_tail4s_pcm_sha256": {
+      "1103": "cf16ec6fb1b91b21f2454266852374e2bc65e8cd3cf78ab8f8c9aead61208221",
+      "3301": "f66c69436d72f6605fb70711688481f69f3fdddca4137c8b69b979b1c45fbe82"
+    }
+  },
+  "source_links": [
+    "https://github.com/jiying2007/kws-pipeline/pull/450#issuecomment-5907722111",
+    "https://github.com/jiying2007/kws-pipeline/actions/runs/36689641752",
+    "https://github.com/jiying2007/kws-pipeline/blob/1b3774a24f8712e043e8d82eea5eeb51911dfcf2/research/saved-diagnostics-2026-10-09/REPORT.zh-CN.md"
+  ],
+  "remaining_blockers": [
+    "exact Torch2.11.0+cpu/NumPy1.26.4 backend absent",
+    "512MiB RSS hard-limit and backend import viability unverified",
+    "single-op driver not implemented and independently accepted"
+  ],
+  "execution_ready": false
+}
