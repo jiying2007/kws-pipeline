@@ -4,7 +4,7 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
-当前研究与保留状态：[2026-10-09 状态快照](research/consolidation/CURRENT_STATUS_2026-10-09.zh-CN.md)。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
+当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。

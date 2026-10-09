@@ -4,7 +4,7 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
-Current research and retention: [2026-10-09 status snapshot](research/consolidation/CURRENT_STATUS_2026-10-09.md). D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
+Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
 > **Evidence boundary — read this before quoting any number below.**
 > The qualification recorded in this repository was produced on a **synthetic

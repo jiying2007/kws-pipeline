@@ -1,0 +1,188 @@
+{
+  "schema": "kws-public-archive-independent-acceptance-v1",
+  "status": "PASS_FULL_PUBLICATION_RESTORE",
+  "verified_date_utc": "2026-10-09",
+  "repository": "jiying2007/kws-data",
+  "commit": "d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a",
+  "archive": {
+    "bytes": 59417250,
+    "sha256": "8719a8ed67f440afe4adc450d47418523a7595dd02fb674c77da686964c84368",
+    "parts_verified": 8
+  },
+  "remote_pinned_files": [
+    {
+      "name": "ARCHIVE.json",
+      "git_blob_sha1": "4f313a689dd8adcd507ea896895fe3f5bb824fc7",
+      "bytes": 1566,
+      "path": "research/2026-10-08-d20-d90-host-research/ARCHIVE.json",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/ARCHIVE.json",
+      "sha256": "a471d16a48a7cf905b1c9925d37b9e887589ceca2116a106f315fc9b9efdf8ba",
+      "remote_identity_match": true
+    },
+    {
+      "name": "CATALOG.json",
+      "git_blob_sha1": "15d59aa5f503eb594f9d778388d1d29a07abb7e3",
+      "bytes": 1114316,
+      "path": "research/2026-10-08-d20-d90-host-research/CATALOG.json",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/CATALOG.json",
+      "sha256": "f12b1c13b8d06f9767596d9afd63422beb373da6c42be1581e3b6ea871d819ca",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-000",
+      "git_blob_sha1": "df67a58ee8d2985735b17485edc40681eab17158",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-000",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-000",
+      "sha256": "63d5d916aed1686cccd124b4d92a996b6085b28fda6b7a7b45f317c0b183cd24",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-001",
+      "git_blob_sha1": "554c73fc81f7a83d0834889b51b60316777112bf",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-001",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-001",
+      "sha256": "122ac5ecc46c5022c2af530f8deb79ea5fd8dd8e36ec14f48485a76427137ebe",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-002",
+      "git_blob_sha1": "54144bd39742b9db8847eed85663203ba99bdb18",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-002",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-002",
+      "sha256": "392bf7e1d4141a23cfdc6551cd0497973ac6bf893ec35c50856148f41438c90d",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-003",
+      "git_blob_sha1": "72c05941860aa04a131b9fc45d879022e0243168",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-003",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-003",
+      "sha256": "765974aab7364650a0e82b247088c658db74f374b326072fb4dd518e64ce3c9c",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-004",
+      "git_blob_sha1": "67aa5a02f6878abf6588d8bba6d3ab2c08a5a070",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-004",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-004",
+      "sha256": "00821052e24c56d234acd8968347aa3bda092e6f67152067835b6e523f2f97d8",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-005",
+      "git_blob_sha1": "b04f433e14423b509794626ea3e5024c287e2f01",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-005",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-005",
+      "sha256": "8281391d331c8e2995f5eae1c9a46b2dd77e1ccb85f0b106dfa0274f4a993ad2",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-006",
+      "git_blob_sha1": "afc146983bac3cd30e8acb40cfd0a83b878fda5b",
+      "bytes": 8388608,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-006",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-006",
+      "sha256": "bc205b6225eb7e1fac40991b2b69b6b1dcd0fa51071eda99405e0f77a687fa7e",
+      "remote_identity_match": true
+    },
+    {
+      "name": "objects.zip.part-007",
+      "git_blob_sha1": "71f7d970d44de7a0a3a1e933f0a142f4f2b28cc4",
+      "bytes": 696994,
+      "path": "research/2026-10-08-d20-d90-host-research/objects.zip.part-007",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/objects.zip.part-007",
+      "sha256": "36d7a9019193fafcad24833bf436b552d0e2bc12d3017829af1fd6f3913ad3c5",
+      "remote_identity_match": true
+    },
+    {
+      "name": "test_verify_archive.py",
+      "git_blob_sha1": "11f9eacb7c5fa2e14a3107df653d95bf21d14d74",
+      "bytes": 15378,
+      "path": "research/2026-10-08-d20-d90-host-research/test_verify_archive.py",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/test_verify_archive.py",
+      "sha256": "6eb94ec64476c7ecf3783091d30f70eea98b1f11cb82392fff269a0e295d5f65",
+      "remote_identity_match": true
+    },
+    {
+      "name": "verify_archive.py",
+      "git_blob_sha1": "0e97bbe8e8a04969d466e9af1f9eda295efebb0d",
+      "bytes": 11542,
+      "path": "research/2026-10-08-d20-d90-host-research/verify_archive.py",
+      "url": "https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/verify_archive.py",
+      "sha256": "d6e93e00112916907a5f72717a15286a33e9d50fccd528b41532b34d9afd9605",
+      "remote_identity_match": true
+    }
+  ],
+  "restore": {
+    "fresh_destination": true,
+    "members_verified": 1886,
+    "unique_objects_verified": 1403,
+    "published_bytes_verified": 223112990,
+    "directories": 218,
+    "missing_paths": 0,
+    "extra_paths": 0,
+    "hash_mismatches": 0,
+    "size_mismatches": 0,
+    "symlinks_or_special_files": 0,
+    "regular_file_mode": "0600",
+    "directory_mode": "0700",
+    "inventory_file": "RESTORED-INVENTORY.json",
+    "inventory_file_sha256": "a17dc0b1ea966ecf2250efc4e23bb98c9f1b0244b234d7117298f32cf4b04367"
+  },
+  "tests": {
+    "total": 29,
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "cases": [
+      "test_corrupted_part",
+      "test_duplicate_members",
+      "test_traversal",
+      "test_undeclared_change",
+      "test_valid_and_restore",
+      "test_alias_rejected_before_destination_creation",
+      "test_archive_hash",
+      "test_byte_limits_and_invalid_types",
+      "test_duplicate_json_keys",
+      "test_duplicate_parts",
+      "test_existing_file_and_symlink_destination",
+      "test_noncanonical_and_windows_paths",
+      "test_object_corruption_with_rehashed_outer_archive",
+      "test_object_inventory_extra_missing_and_duplicate",
+      "test_object_symlink_and_special_modes",
+      "test_portable_alias_and_prefix_inventory",
+      "test_restore_exclusive_leaf",
+      "test_restore_symlink_directory_injection",
+      "test_reused_object_restores_both_members",
+      "test_same_object_conflicting_sizes",
+      "test_advertised_count_rejected_before_allocation",
+      "test_central_directory_size_rejected_before_allocation",
+      "test_disk_and_zip64_directory_rejected_before_allocation",
+      "test_forged_small_count_cannot_hide_extra_records",
+      "test_local_zip64_headers_remain_supported",
+      "test_oversized_utf8_path_rejected_before_restore",
+      "test_record_bounds_rejected_before_allocation",
+      "test_record_signature_rejected_before_allocation",
+      "test_utf8_segment_limits_and_invalid_surrogates"
+    ]
+  },
+  "scope": {
+    "publication_bytes_only": true,
+    "models_executed": 0,
+    "training_runs": 0,
+    "tts_asr_runs": 0,
+    "restored_content_executed": false,
+    "remote_writes": 0
+  },
+  "limitations": [
+    "Verifies retained publication bytes, not originals prior to declared transformations.",
+    "This is archive restoration and integrity acceptance, not historical experiment or model-result reproduction.",
+    "No restored member bodies are included in acceptance metadata."
+  ]
+}

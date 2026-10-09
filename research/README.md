@@ -10,12 +10,12 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
-See the dated [English status](consolidation/CURRENT_STATUS_2026-10-09.md) /
-[中文状态](consolidation/CURRENT_STATUS_2026-10-09.zh-CN.md) and
-[public archive index](consolidation/source-retention-publication-2026-10-09.json).
-As observed on 2026-10-09, data #27 and pipeline #501 are draft and unmerged;
-the full 1886-member / 1403-object archive is public, while the expanded
-500-file pipeline copy remains NOT_PUSHED.
+Current delivery: [complete public archive + index + verified restoration / 完整归档＋索引＋可验证恢复](consolidation/ARCHIVE_DELIVERY_2026-10-09.md).
+All 1,886 public logical members / 1,403 unique objects were restored and verified
+at fixed data commit `d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a`.
+The old 500-file expanded-copy target is cancelled; its historical status remains
+NOT_PUSHED. This does not claim all 500 wrapper files are byte-identical archive
+members. Earlier dated snapshots remain available from the delivery page.
 
 - D20/D90 v2: two raw-logit coordinates exceeded the gate in the same D20 failed fixture; D90 not run
 - Fixed50: EVAL_INCONCLUSIVE_LABEL_SUPPORT; K2 4 clips / 4 voices < 5,
