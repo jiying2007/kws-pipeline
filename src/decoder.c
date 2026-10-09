@@ -287,24 +287,34 @@ static int immediate_better(const kws_decoder_t *d,
   if (candidate_depth != current_depth) {
     return candidate_depth > current_depth;
   }
-  return candidate_conf > current_conf;
+  if (candidate_conf != current_conf) {
+    return candidate_conf > current_conf;
+  }
+  /* IDs are unique uint32 values; compare directly rather than subtracting or
+   * using the pack/trie index, which depends on keyword insertion order. */
+  return d->keyword_ids[candidate] < d->keyword_ids[current];
 }
 
 static int pending_better(const kws_decoder_t *d,
                           int candidate,
                           float candidate_conf,
-                          uint16_t candidate_depth) {
-  int current = d->pending_keyword;
+                          uint16_t candidate_depth,
+                          int current,
+                          float current_conf,
+                          uint16_t current_depth) {
   if (current < 0) {
     return 1;
   }
-  if (candidate_depth != d->pending_depth) {
-    return candidate_depth > d->pending_depth;
+  if (candidate_depth != current_depth) {
+    return candidate_depth > current_depth;
   }
   if (d->priorities[candidate] != d->priorities[current]) {
     return d->priorities[candidate] > d->priorities[current];
   }
-  return candidate_conf > d->pending_confidence;
+  if (candidate_conf != current_conf) {
+    return candidate_conf > current_conf;
+  }
+  return d->keyword_ids[candidate] < d->keyword_ids[current];
 }
 
 static void offer_pending(kws_decoder_t *d,
@@ -317,7 +327,8 @@ static void offer_pending(kws_decoder_t *d,
     }
     return;
   }
-  if (pending_better(d, kw, conf, depth) != 0) {
+  if (pending_better(d, kw, conf, depth, d->pending_keyword,
+                     d->pending_confidence, d->pending_depth) != 0) {
     d->pending_keyword = (int16_t)kw;
     d->pending_confidence = conf;
     d->pending_depth = depth;
@@ -353,6 +364,9 @@ int kws_decoder_step(kws_decoder_t *d,
                      float *confidence) {
   float immediate_conf = 0.0f;
   uint16_t immediate_depth = 0u;
+  float pending_conf = 0.0f;
+  uint16_t pending_depth = 0u;
+  int pending_kw = -1;
   float decay = speech_active ? d->retention_log : d->silence_retention_log;
   uint16_t top_token = dominant_token(logits, vocab_size);
   float max_logit = logits[top_token];
@@ -527,11 +541,21 @@ int kws_decoder_step(kws_decoder_t *d,
             immediate_conf = conf;
             immediate_depth = d->nodes[i].depth;
           }
-        } else {
-          offer_pending(d, kw, conf, d->nodes[i].depth);
+        } else if (pending_better(d, kw, conf, d->nodes[i].depth,
+                                  pending_kw, pending_conf, pending_depth) != 0) {
+          pending_kw = kw;
+          pending_conf = conf;
+          pending_depth = d->nodes[i].depth;
         }
       }
     }
+  }
+
+  /* Resolve the entire frame before mutating the held candidate. Otherwise
+   * traversal order can briefly replace it and reset its grace age, even when
+   * the same keyword ultimately wins with refreshed confidence. */
+  if (pending_kw >= 0) {
+    offer_pending(d, pending_kw, pending_conf, pending_depth);
   }
 
   for (uint16_t k = 0u; k < d->keyword_count; ++k) {

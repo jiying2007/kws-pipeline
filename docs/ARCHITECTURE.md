@@ -69,11 +69,13 @@ A repeated child token can advance only from `blank_score`. Non-repeated childre
 
 Per keyword:
 
-- `immediate`: qualifying terminal can emit in the current step. If several immediate terminals compete, higher priority wins, then deeper path, then confidence.
+- `immediate`: qualifying terminal can emit in the current step. If several immediate terminals compete, higher priority wins, then deeper path, then higher confidence, then smaller unsigned keyword ID. This order also applies to immediate terminals waiting for trailing blanks.
 - `longest`: terminal is offered to bounded pending state and releases only after `min_trailing_blanks`; a deeper shared-prefix candidate can replace it before release.
 - `grace`: terminal is held for at least `grace_frames` and its trailing-blank condition; deeper/higher-priority pending candidates can replace it during the grace window.
 
-The pending state is fixed-size. Emission resets decoder state, preserving one-detection-per-call semantics.
+Pending candidates (`longest`/`grace`) rank deeper path first, then higher priority, then higher confidence, then smaller unsigned keyword ID. The ID is a final tie-break only; keyword-pack/TSV order and Trie insertion order never resolve an otherwise exact tie. All comparisons use the full unsigned 32-bit ID, including `0` and `UINT32_MAX`.
+
+Each frame selects its best pending candidate before updating the held state. Refreshing the held winner's confidence preserves its grace age; traversal-order-dependent temporary replacements cannot restart the wait. The pending state is fixed-size. Emission resets decoder state, preserving one-detection-per-call semantics.
 
 ## Domain-aware offline loop
 

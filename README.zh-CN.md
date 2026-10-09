@@ -87,7 +87,7 @@ python3 tools/verify_model_release.py --assets-dir model-release
 - **KWSP ABI v2**：固定 16 kHz / 400 sample / 320 sample 几何、vocabulary fingerprint、frontend identity。
 - **KWKP ABI v3**：每关键词 threshold、trailing blank、priority、`immediate/longest/grace` prefix policy。
 - 相邻重复 acoustic token 遵守 CTC blank-separated 结构语义。
-- 共享前缀由确定性 Trie/priority/depth/confidence 策略处理，不依赖 TSV 行顺序。
+- 共享前缀仲裁不依赖 TSV 行顺序：`immediate` 依次比较 priority、depth、confidence；`longest`/`grace` 依次比较 depth、priority、confidence。以上全部相同时，选择较小的无符号 keyword ID。每帧先完成 pending 仲裁；若仍由原候选胜出且仅 confidence 提升，保留其已等待的 grace 帧数。
 - `kws_engine_notify_discontinuity()` 在 XRUN、route、clock、suspend/resume 后清理 partial acoustic state。
 - 外部 AFE metadata 和 runtime telemetry 均是版本化、有边界的产品接口。
 

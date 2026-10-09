@@ -91,7 +91,7 @@ python3 tools/verify_model_release.py --assets-dir model-release
 - **KWSP ABI v2**: fixed 16-kHz / 400-sample / 320-sample geometry, vocabulary fingerprint and frontend identity.
 - **KWKP ABI v3**: per-keyword threshold, trailing-blank requirement, priority and `immediate` / `longest` / `grace` prefix policy.
 - Adjacent repeated acoustic tokens obey structural CTC blank-separation semantics.
-- Shared-prefix phrases are resolved deterministically rather than by TSV order.
+- Shared-prefix phrases are resolved independently of TSV order: `immediate` ranks priority, depth, confidence; `longest`/`grace` rank depth, priority, confidence. Exact ties select the smaller unsigned keyword ID. Per-frame pending arbitration preserves the held winner's grace age when only its confidence improves.
 - `kws_engine_notify_discontinuity()` clears partial acoustic state on XRUN, route, clock or suspend/resume discontinuities.
 - Runtime accepts versioned external-AFE metadata and exposes bounded telemetry suitable for product diagnostics.
 

@@ -561,7 +561,216 @@ static void test_held_immediate_uses_priority_before_depth(void) {
   CHECK(id == 154u);
 }
 
+/* Exercise the public decoder path rather than its private comparison helpers.
+ * Every permutation must agree on identity, confidence and release timing. */
+static void check_arbitration_permutations(const kws_keyword_t *keywords,
+                                           size_t count,
+                                           const float first[5],
+                                           const float terminal[5],
+                                           uint8_t policy,
+                                           uint8_t min_blanks,
+                                           uint32_t expected_id) {
+  static const uint8_t permutations[6][3] = {
+      {0u, 1u, 2u}, {1u, 0u, 2u}, {0u, 2u, 1u},
+      {2u, 0u, 1u}, {1u, 2u, 0u}, {2u, 1u, 0u},
+  };
+  const float blank[5] = {8.0f, -8.0f, -8.0f, -8.0f, -8.0f};
+  const size_t permutation_count = count == 2u ? 2u : 6u;
+  const uint8_t grace_frames = policy == (uint8_t)KWS_PREFIX_GRACE ? 3u : 0u;
+  const unsigned wait = min_blanks > grace_frames ? min_blanks : grace_frames;
+  float reference_confidence = 0.0f;
+
+  CHECK(count == 2u || count == 3u);
+  for (size_t p = 0u; p < permutation_count; ++p) {
+    kws_decoder_t decoder;
+    kws_keyword_t items[3];
+    uint32_t id = 0u;
+    float confidence = 0.0f;
+    int detected;
+    for (size_t k = 0u; k < count; ++k) {
+      items[k] = keywords[permutations[p][k]];
+      items[k].prefix_policy = policy;
+      items[k].min_trailing_blanks = min_blanks;
+      items[k].grace_frames = grace_frames;
+    }
+    kws_decoder_init(&decoder, 1.5f, 0.94f);
+    CHECK(kws_decoder_set_keywords(&decoder, items, count, 5u) == KWS_OK);
+    CHECK(kws_decoder_step(&decoder, first, 5u, 1, &id, &confidence) == 0);
+    detected = kws_decoder_step(&decoder, terminal, 5u, 1, &id, &confidence);
+    CHECK(detected == (wait == 0u));
+    for (unsigned frame = 1u; frame <= wait; ++frame) {
+      detected = kws_decoder_step(&decoder, blank, 5u, 1, &id, &confidence);
+      CHECK(detected == (frame == wait));
+    }
+    CHECK(detected == 1);
+    CHECK(id == expected_id);
+    CHECK(isfinite(confidence) && confidence > 0.0f && confidence <= 1.0f);
+    if (p == 0u) {
+      reference_confidence = confidence;
+    } else {
+      CHECK(confidence == reference_confidence);
+    }
+    /* Emission must still reset every candidate and pending/blank gate. */
+    CHECK(kws_decoder_step(&decoder, blank, 5u, 1, &id, &confidence) == 0);
+  }
+}
+
+static void test_arbitration_is_independent_of_keyword_order(void) {
+  static const uint8_t policies[4] = {
+      (uint8_t)KWS_PREFIX_IMMEDIATE, (uint8_t)KWS_PREFIX_IMMEDIATE,
+      (uint8_t)KWS_PREFIX_LONGEST, (uint8_t)KWS_PREFIX_GRACE,
+  };
+  static const uint8_t min_blanks[4] = {0u, 2u, 2u, 2u};
+  static const uint32_t ids[3][3] = {
+      {0u, UINT32_C(0x80000000), UINT32_MAX},
+      {UINT32_MAX, 1u, UINT32_C(0x80000000)},
+      {UINT32_MAX, UINT32_MAX - 1u, UINT32_MAX - 2u},
+  };
+  const uint16_t paths[3][2] = {{1u, 2u}, {1u, 3u}, {1u, 4u}};
+  const float first[5] = {-8.0f, 8.0f, -8.0f, -8.0f, -8.0f};
+  const float two_way_tie[5] = {-8.0f, -8.0f, 8.0f, 8.0f, -8.0f};
+  const float three_way_tie[5] = {-8.0f, -8.0f, 8.0f, 8.0f, 8.0f};
+
+  for (size_t policy = 0u; policy < 4u; ++policy) {
+    kws_keyword_t pair[2] = {
+        keyword(10u, paths[0], 2u, 0.70f),
+        keyword(20u, paths[1], 2u, 0.70f),
+    };
+    check_arbitration_permutations(pair, 2u, first, two_way_tie,
+                                  policies[policy], min_blanks[policy], 10u);
+    for (size_t set = 0u; set < 3u; ++set) {
+      kws_keyword_t items[3];
+      uint32_t expected_id = UINT32_MAX;
+      for (size_t k = 0u; k < 3u; ++k) {
+        items[k] = keyword(ids[set][k], paths[k], 2u, 0.57f);
+        if (ids[set][k] < expected_id) {
+          expected_id = ids[set][k];
+        }
+      }
+      check_arbitration_permutations(items, 3u, first, three_way_tie,
+                                    policies[policy], min_blanks[policy],
+                                    expected_id);
+    }
+  }
+}
+
+static void test_grace_pending_refresh_and_replacement_are_order_independent(void) {
+  const uint16_t paths[2][2] = {{1u, 2u}, {1u, 3u}};
+  const float uncertain_root[5] = {-8.0f, 8.0f, -8.0f, -8.0f, 8.0f};
+  const float certain_root[5] = {-8.0f, 8.0f, -8.0f, -8.0f, -8.0f};
+  const float tie[5] = {-8.0f, -8.0f, 8.0f, 8.0f, -8.0f};
+  const float stronger_left[5] = {-8.0f, -8.0f, 8.0f, 7.75f, -8.0f};
+  const float stronger_right[5] = {-8.0f, -8.0f, 7.75f, 8.0f, -8.0f};
+  const float blank[5] = {8.0f, -8.0f, -8.0f, -8.0f, -8.0f};
+
+  /* Refresh the held winner with tied or unequal confidence; replace it with
+   * a genuinely stronger different winner; or keep its historical confidence
+   * when even the best candidate in the new frame is weaker. */
+  for (unsigned scenario = 0u; scenario < 4u; ++scenario) {
+    const float *initial_root = scenario == 3u ? certain_root : uncertain_root;
+    const float *refresh_root = scenario == 3u ? uncertain_root : certain_root;
+    const float *refresh_terminal = scenario == 0u ? tie
+                                    : scenario == 1u ? stronger_left
+                                                     : stronger_right;
+    const unsigned emit_frame = scenario == 2u ? 6u : 4u;
+    const uint32_t expected_id = scenario == 2u ? 20u : 10u;
+    float reference_confidence = 0.0f;
+    for (size_t reverse = 0u; reverse < 2u; ++reverse) {
+      kws_decoder_t decoder;
+      kws_keyword_t items[2];
+      uint32_t id = 0u;
+      float confidence = 0.0f;
+      float original_confidence = 0.0f;
+      for (size_t k = 0u; k < 2u; ++k) {
+        size_t index = reverse != 0u ? 1u - k : k;
+        items[k] = keyword(index == 0u ? 10u : 20u, paths[index], 2u, 0.40f);
+        items[k].prefix_policy = (uint8_t)KWS_PREFIX_GRACE;
+        items[k].grace_frames = 3u;
+        items[k].min_trailing_blanks = 1u;
+      }
+      kws_decoder_init(&decoder, 1.5f, 0.94f);
+      CHECK(kws_decoder_set_keywords(&decoder, items, 2u, 5u) == KWS_OK);
+      for (unsigned frame = 0u; frame <= emit_frame; ++frame) {
+        const float *logits = frame == 0u ? initial_root
+                              : frame == 1u ? tie
+                              : frame == 2u ? refresh_root
+                              : frame == 3u ? refresh_terminal : blank;
+        int detected = kws_decoder_step(&decoder, logits, 5u, 1,
+                                        &id, &confidence);
+        CHECK(detected == (frame == emit_frame));
+        if (frame == 1u || frame == 3u) {
+          CHECK(decoder.pending_keyword >= 0);
+          CHECK(decoder.keyword_ids[decoder.pending_keyword] ==
+                (frame == 1u ? 10u : expected_id));
+          CHECK(decoder.pending_age_frames ==
+                (frame == 1u || scenario == 2u ? 0u : 2u));
+          if (frame == 1u) {
+            original_confidence = decoder.pending_confidence;
+          } else if (scenario == 3u) {
+            CHECK(decoder.pending_confidence == original_confidence);
+          } else {
+            CHECK(decoder.pending_confidence > original_confidence);
+          }
+        }
+      }
+      CHECK(id == expected_id);
+      if (scenario == 0u || scenario == 3u) {
+        CHECK(fabsf(confidence - sqrtf(0.5f)) < 1.0e-6f);
+      }
+      if (reverse == 0u) {
+        reference_confidence = confidence;
+      } else {
+        CHECK(confidence == reference_confidence);
+      }
+    }
+  }
+}
+
+static void test_stable_identity_is_only_the_final_tie_break(void) {
+  const uint16_t left[] = {1u, 2u};
+  const uint16_t right[] = {1u, 3u};
+  const uint16_t short_path[] = {2u};
+  const float first[5] = {-8.0f, 8.0f, -8.0f, -8.0f, -8.0f};
+  const float uncertain_first[5] = {-8.0f, 8.0f, -8.0f, 8.0f, -8.0f};
+  const float exact_terminal[5] = {-8.0f, -8.0f, 8.0f, -8.0f, -8.0f};
+  const float stronger_right[5] = {-8.0f, -8.0f, 7.75f, 8.0f, -8.0f};
+
+  for (uint8_t variant = 0u; variant < 4u; ++variant) {
+    uint8_t policy = variant < 2u ? (uint8_t)KWS_PREFIX_IMMEDIATE
+                                 : (uint8_t)(variant - 1u);
+    uint8_t min_blanks = variant == 0u ? 0u : 2u;
+    kws_keyword_t items[2] = {
+        keyword(0u, left, 2u, 0.50f),
+        keyword(UINT32_MAX, right, 2u, 0.50f),
+    };
+    /* Higher confidence wins even when its ID is the largest uint32 value. */
+    check_arbitration_permutations(items, 2u, first, stronger_right,
+                                  policy, min_blanks, UINT32_MAX);
+    /* Priority still beats confidence for equal-depth paths. */
+    items[0].id = UINT32_MAX;
+    items[1].id = 0u;
+    items[0].priority = 15u;
+    check_arbitration_permutations(items, 2u, first, stronger_right,
+                                  policy, min_blanks, UINT32_MAX);
+
+    items[0] = keyword(0u, short_path, 1u, 0.50f);
+    items[1] = keyword(UINT32_MAX, left, 2u, 0.50f);
+    /* Depth still beats confidence: the short path scores 1, the long one
+     * sqrt(1/2). The minimum ID must not override the deeper path either. */
+    check_arbitration_permutations(items, 2u, uncertain_first, exact_terminal,
+                                  policy, min_blanks, UINT32_MAX);
+    items[0].priority = 15u;
+    /* Immediate ranks priority before depth; pending ranks depth first. */
+    check_arbitration_permutations(
+        items, 2u, uncertain_first, exact_terminal, policy, min_blanks,
+        policy == (uint8_t)KWS_PREFIX_IMMEDIATE ? 0u : UINT32_MAX);
+  }
+}
+
 int main(void) {
+  test_arbitration_is_independent_of_keyword_order();
+  test_stable_identity_is_only_the_final_tie_break();
+  test_grace_pending_refresh_and_replacement_are_order_independent();
   test_deprecated_boost_has_no_search_effect();
   test_all_policies_obey_trailing_blank_gate();
   test_trailing_blanks_restart_after_nonblank();

@@ -176,10 +176,13 @@ restarts the consecutive-blank count. The default is
 `policy_defaults.grace.grace_frames = 3` for `grace`; the compiler applies those
 only when the TSV leaves the field empty and the value would otherwise be `0`.
 
-`priority` is the arbitration rank. Higher wins. Ties are resolved by trie depth
-and then by confidence, so duplicate ranks remain deterministic. Ranks above 15
-are rejected, because the pack record is a single byte and unbounded ranks are a
-configuration error rather than a capability.
+`priority` is the arbitration rank; higher values win at the priority comparison.
+Immediate candidates compare priority, trie depth, then confidence. Pending
+`longest`/`grace` candidates compare depth, priority, then confidence. Both resolve
+an exact tie by the smaller unsigned 32-bit keyword ID, including boundary IDs
+`0` and `UINT32_MAX`, independently of TSV/pack order. Ranks above 15 are rejected,
+because the pack record is a single byte and unbounded ranks are a configuration
+error rather than a capability.
 
 ## Prefix policies
 
@@ -197,7 +200,8 @@ retention-exhausted terminal also cancels it, so unrelated speech followed by
 blanks cannot release an old immediate detection. New qualification requires
 speech activity; an already-qualified terminal may finish its blank wait on
 inactive frames, subject to the existing utterance-boundary reset. Ready
-immediate terminals compete by priority, then depth, then confidence. Reset,
+immediate terminals compete by priority, then depth, then confidence, then the
+smaller unsigned keyword ID. Reset,
 discontinuity and keyword replacement clear these waits.
 
 Use `longest` when one wake word is a prefix of another (for example `小窝`

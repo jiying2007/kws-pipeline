@@ -18,28 +18,6 @@ option(KWS_STRICT "Enable strict warnings" ON)
 set(KWS_STRICT_OPTIONS -Wall -Wextra -Wpedantic -Werror -Wconversion -Wshadow -Wcast-qual)
 
 set(KWS_SOURCE_REVISION "" CACHE STRING "Exact source revision embedded in build identity")
-if(KWS_SOURCE_REVISION STREQUAL "")
-  execute_process(
-    COMMAND git rev-parse HEAD
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_VARIABLE KWS_SOURCE_REVISION
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE KWS_GIT_REVISION_RESULT
-  )
-  if(NOT KWS_GIT_REVISION_RESULT EQUAL 0 OR KWS_SOURCE_REVISION STREQUAL "")
-    set(KWS_SOURCE_REVISION "unknown")
-  else()
-    execute_process(
-      COMMAND git status --porcelain --untracked-files=no
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      OUTPUT_VARIABLE KWS_GIT_DIRTY
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    if(NOT KWS_GIT_DIRTY STREQUAL "")
-      string(APPEND KWS_SOURCE_REVISION "-dirty")
-    endif()
-  endif()
-endif()
 # configs/parameter-contract.json is the single source of truth for every
 # tunable parameter and its validation range.  src/*.c include the generated
 # header, so a contract edit that breaks a bound fails the build instead of
@@ -241,6 +219,42 @@ endif()
 
 # Collect target settings only after all core and hosted targets are defined.
 include(cmake/KwsBuildIdentity.cmake)
+
+# Git state changes do not reliably trigger CMake regeneration (and may involve
+# a worktree gitfile, packed refs, or only tracked contents). Check on every core
+# build, but configure_file preserves the header timestamp when identity is
+# unchanged, so no-op builds do not compile or relink the library.
+set(KWS_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+set(KWS_SOURCE_REVISION_OVERRIDE "${KWS_SOURCE_REVISION}")
+set(KWS_SOURCE_REVISION_HEADER
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/kws_source_revision.h")
+include(cmake/KwsSourceRevision.cmake)
+if(KWS_SOURCE_REVISION STREQUAL "")
+  add_custom_target(kws_source_identity
+    COMMAND "${CMAKE_COMMAND}"
+      "-DKWS_SOURCE_DIRECTORY=${KWS_SOURCE_DIRECTORY}"
+      "-DKWS_SOURCE_REVISION_HEADER=${KWS_SOURCE_REVISION_HEADER}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/KwsSourceRevision.cmake"
+    BYPRODUCTS "${KWS_SOURCE_REVISION_HEADER}"
+    VERBATIM
+  )
+  add_dependencies(kws_pipeline kws_source_identity)
+endif()
+
+# Both SDK discovery formats promise prefix relocation. Absolute directories or
+# parent traversal would escape that prefix, including with --install --prefix
+# or DESTDIR, so reject these layouts instead of publishing a misleading .pc.
+foreach(directory IN ITEMS CMAKE_INSTALL_LIBDIR CMAKE_INSTALL_INCLUDEDIR)
+  if(IS_ABSOLUTE "${${directory}}" OR "${${directory}}" STREQUAL "" OR
+     "${${directory}}" MATCHES "(^|/)\\.\\.(/|$)")
+    message(FATAL_ERROR
+      "${directory} must be a nonempty prefix-relative directory without '..' for a relocatable SDK")
+  endif()
+endforeach()
+file(RELATIVE_PATH KWS_PKGCONFIG_PREFIX_RELATIVE
+  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+  "${CMAKE_INSTALL_PREFIX}")
+string(REGEX REPLACE "/$" "" KWS_PKGCONFIG_PREFIX_RELATIVE "${KWS_PKGCONFIG_PREFIX_RELATIVE}")
 
 install(TARGETS kws_pipeline
   EXPORT KwsPipelineTargets
