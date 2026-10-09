@@ -12,6 +12,8 @@ import tempfile
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "eval"))
+from run_corpus import cached_trace_valid, ensure_cached_trace, trace_cache_paths  # noqa: E402
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -121,6 +123,7 @@ def main() -> int:
             "import json, pathlib, sys\n"
             "pack=pathlib.Path(sys.argv[2]).read_bytes()\n"
             "keyword=2 if pack.endswith(b'v2') else 1\n"
+            "if pathlib.Path(sys.argv[3]).read_bytes().startswith(b'trace-v2:'): keyword=3\n"
             "print(json.dumps({'recording':sys.argv[4],'keyword_id':keyword,"
             "'time_s':1.0,'confidence':0.8}))\n",
             encoding="utf-8",
@@ -131,23 +134,39 @@ def main() -> int:
         env["DUMP_COUNT_FILE"] = str(dump_count)
 
         cached_provenance = root / "cached-provenance.json"
-        subprocess.check_call(
-            [
-                sys.executable,
-                str(ROOT / "eval" / "run_corpus.py"),
-                "--runner", str(runner),
-                "--model", str(model),
-                "--keywords", str(keywords),
-                "--references", str(references),
-                "--audio-root", str(root),
-                "--detections", str(detections),
-                "--provenance", str(cached_provenance),
-                "--posterior-dump", str(posterior_dump),
-                "--decoder-replay", str(decoder_replay),
-                "--posterior-cache", str(posterior_cache),
-            ],
-            env=env,
-        )
+        cached_command = [
+            sys.executable, str(ROOT / "eval" / "run_corpus.py"),
+            "--runner", str(runner), "--model", str(model),
+            "--keywords", str(keywords), "--references", str(references),
+            "--audio-root", str(root), "--detections", str(detections),
+            "--provenance", str(cached_provenance),
+            "--posterior-dump", str(posterior_dump),
+            "--decoder-replay", str(decoder_replay),
+            "--posterior-cache", str(posterior_cache),
+        ]
+        first_dump_sha = sha256_file(posterior_dump)
+        identity_args = {
+            "model_sha256": sha256_file(model),
+            "audio_sha256": sha256_file(audio),
+            "posterior_dump_sha256": first_dump_sha,
+        }
+        # A valid pre-producer-identity cache must not be reused or relabelled.
+        legacy_trace = (posterior_cache / identity_args["model_sha256"]
+                        / identity_args["audio_sha256"][:2]
+                        / (identity_args["audio_sha256"] + ".kwtr"))
+        legacy_trace.parent.mkdir(parents=True)
+        legacy_trace.write_bytes(b"trace-v2:unidentified-producer")
+        legacy_summary = {
+            "schema_version": 1,
+            "evidence_class": "kws-posterior-trace-cache-v1",
+            "model_sha256": identity_args["model_sha256"],
+            "audio_sha256": identity_args["audio_sha256"],
+            "trace_sha256": sha256_file(legacy_trace), "frames": 3, "vocab_size": 4,
+        }
+        legacy_sidecar = legacy_trace.with_suffix(".json")
+        legacy_sidecar.write_text(json.dumps(legacy_summary), encoding="utf-8")
+        assert cached_trace_valid(legacy_trace, legacy_sidecar, **identity_args) is None
+        subprocess.check_call(cached_command, env=env)
         cached_first = json.loads(cached_provenance.read_text(encoding="utf-8"))
         cached_rows = [
             json.loads(line)
@@ -158,6 +177,12 @@ def main() -> int:
         assert cached_first["posterior_cache_hits"] == 0
         assert cached_first["posterior_cache_misses"] == 1
         assert len(cached_first["posterior_traces"]) == 1
+        assert cached_first["posterior_dump_sha256"] == first_dump_sha
+        assert cached_first["posterior_traces"][0]["posterior_dump_sha256"] == first_dump_sha
+        first_trace, first_sidecar, _ = trace_cache_paths(posterior_cache, **identity_args)
+        assert first_trace.parent.parent.name == first_dump_sha
+        assert json.loads(first_sidecar.read_text())["posterior_dump_sha256"] == first_dump_sha
+        assert legacy_trace.read_bytes() == b"trace-v2:unidentified-producer"
         first_trace_sha = cached_first["posterior_traces"][0]["trace_sha256"]
         assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
 
@@ -199,6 +224,108 @@ def main() -> int:
         }
         assert cached_second["posterior_traces"][0]["trace_sha256"] == first_trace_sha
         assert dump_count.read_text(encoding="utf-8").splitlines() == ["1"]
+
+        def check_cached_run(*, hits: int, misses: int, keyword_id: int) -> dict:
+            subprocess.check_call(cached_command, env=env)
+            result = json.loads(cached_provenance.read_text(encoding="utf-8"))
+            producer_sha = sha256_file(posterior_dump)
+            assert result["posterior_cache_hits"] == hits
+            assert result["posterior_cache_misses"] == misses
+            assert result["posterior_dump_sha256"] == producer_sha
+            assert result["posterior_traces"][0]["posterior_dump_sha256"] == producer_sha
+            assert json.loads(detections.read_text())["keyword_id"] == keyword_id
+            return result
+
+        # Decoder-only changes still reuse acoustic traces.
+        decoder_replay.write_text(decoder_replay.read_text() + "# decoder-only change\n")
+        decoder_changed = check_cached_run(hits=1, misses=0, keyword_id=2)
+        assert decoder_changed["decoder_replay_sha256"] != cached_second["decoder_replay_sha256"]
+        assert dump_count.read_text().splitlines() == ["1"]
+
+        # Same executable path, different bytes: regenerate and identify the new producer.
+        posterior_dump.write_text(posterior_dump.read_text().replace("trace-v1:", "trace-v2:"))
+        second_dump_sha = sha256_file(posterior_dump)
+        producer_changed = check_cached_run(hits=0, misses=1, keyword_id=3)
+        assert second_dump_sha != first_dump_sha
+        assert producer_changed["posterior_traces"][0]["trace_sha256"] != first_trace_sha
+        assert first_trace.is_file() and first_sidecar.is_file()
+        check_cached_run(hits=1, misses=0, keyword_id=3)
+        assert dump_count.read_text().splitlines() == ["1", "1"]
+
+        identity_args["posterior_dump_sha256"] = second_dump_sha
+        _, sidecar, _ = trace_cache_paths(posterior_cache, **identity_args)
+        for bad_producer in (None, first_dump_sha):
+            summary = json.loads(sidecar.read_text())
+            if bad_producer is None:
+                summary.pop("posterior_dump_sha256")
+            else:
+                summary["posterior_dump_sha256"] = bad_producer
+            sidecar.write_text(json.dumps(summary), encoding="utf-8")
+            check_cached_run(hits=0, misses=1, keyword_id=3)
+        # Even a legacy entry copied into the new namespace cannot be admitted.
+        summary = json.loads(sidecar.read_text())
+        summary.update(schema_version=1, evidence_class="kws-posterior-trace-cache-v1")
+        sidecar.write_text(json.dumps(summary), encoding="utf-8")
+        check_cached_run(hits=0, misses=1, keyword_id=3)
+        assert len(dump_count.read_text().splitlines()) == 5
+
+        # A stale caller snapshot must fail before a hit or generator invocation.
+        try:
+            ensure_cached_trace(
+                posterior_dump=posterior_dump, cache_root=posterior_cache,
+                model=model, audio=audio,
+                **{**identity_args, "posterior_dump_sha256": first_dump_sha},
+            )
+        except ValueError as exc:
+            assert "executable changed during this run" in str(exc)
+        else:
+            raise AssertionError("stale producer identity accepted")
+        assert len(dump_count.read_text().splitlines()) == 5
+
+        # Mutation while dumping must not publish a cache entry under the old identity.
+        stable_dump_source = posterior_dump.read_text()
+        posterior_dump.write_text(
+            stable_dump_source.replace("os.environ['DUMP_COUNT_FILE']", repr(str(dump_count)))
+            + "self=pathlib.Path(__file__); self.write_text(self.read_text()+'# changed\\n')\n"
+        )
+        drift_args = {**identity_args, "posterior_dump_sha256": sha256_file(posterior_dump)}
+        try:
+            ensure_cached_trace(
+                posterior_dump=posterior_dump, cache_root=posterior_cache,
+                model=model, audio=audio, **drift_args,
+            )
+        except ValueError as exc:
+            assert "executable changed during trace generation" in str(exc)
+        else:
+            raise AssertionError("mid-generation producer mutation accepted")
+        drift_trace, drift_sidecar, _ = trace_cache_paths(posterior_cache, **drift_args)
+        assert not drift_trace.exists() and not drift_sidecar.exists()
+        assert not list(drift_trace.parent.glob("*.tmp"))
+
+        # A later executable replacement must not relabel a trace already consumed.
+        posterior_dump.write_text(stable_dump_source)
+        replay_source = decoder_replay.read_text()
+        decoder_replay.write_text(
+            replay_source + f"producer=pathlib.Path({str(posterior_dump)!r}); "
+            "producer.write_text(producer.read_text()+'# replaced after replay\\n')\n"
+        )
+        subprocess.check_call(cached_command, env=env)
+        consumed = json.loads(cached_provenance.read_text())
+        assert consumed["posterior_cache_hits"] == 1
+        assert sha256_file(posterior_dump) != second_dump_sha
+        assert consumed["posterior_dump_sha256"] == second_dump_sha
+        assert consumed["posterior_traces"][0]["posterior_dump_sha256"] == second_dump_sha
+        posterior_dump.write_text(stable_dump_source)
+        decoder_replay.write_text(replay_source)
+
+        # Model and WAV identity remain separate invalidation dimensions.
+        model.write_bytes(model.read_bytes() + b"-changed")
+        check_cached_run(hits=0, misses=1, keyword_id=3)
+        audio_bytes = audio.read_bytes()
+        audio.write_bytes(audio_bytes[:-2] + b"\x02\x00")
+        check_cached_run(hits=0, misses=1, keyword_id=3)
+        check_cached_run(hits=1, misses=0, keyword_id=3)
+        audio.write_bytes(audio_bytes)
 
         override_without_replay = subprocess.run(
             [

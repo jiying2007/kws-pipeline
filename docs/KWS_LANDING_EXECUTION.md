@@ -1,5 +1,12 @@
 # 唤醒词训练与产品落地执行检查点
 
+> 历史范围：以下正文保留当时源码、实验与执行阶段的记录，其中“当前”“下一步”及
+> 许可描述仅适用于各自记录日期，不构成今日执行许可，也不恢复已退役通道。
+> 当前从[产品状态](KWS_LANDING_STATUS.md)、[研究入口](../research/README.md)及
+> [唯一准入清单](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
+> 开始；公开证据交付见[归档与恢复](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。
+> 产品机器权威仍为 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`。
+
 ## 冻结基线与目标
 
 - 审查基线：`15b97d89b88835d722371e03a4bba3a7a2a6a65a`。修改工作树后应重新记录源码身份。

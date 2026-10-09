@@ -285,6 +285,87 @@ static void test_grace_policy_holds_then_emits(void) {
   CHECK(keyword_id == 20u);
 }
 
+static void test_grace_obeys_inactive_boundary_before_emission(void) {
+  const uint16_t tokens[] = {1u};
+  const uint8_t grace_cases[] = {11u, 12u, 32u};
+  const float terminal[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float blank[4] = {8.0f, -8.0f, -8.0f, -8.0f};
+
+  for (size_t c = 0u; c < sizeof(grace_cases) / sizeof(grace_cases[0]); ++c) {
+    for (int speech_active = 0; speech_active <= 1; ++speech_active) {
+      kws_decoder_t decoder;
+      kws_keyword_t item = keyword(21u, tokens, 1u, 0.50f);
+      uint32_t keyword_id = 0u;
+      float confidence = 0.0f;
+      const unsigned grace = grace_cases[c];
+      const int will_emit = speech_active != 0 || grace < 12u;
+      const unsigned clear_frame = will_emit != 0 ? grace : 12u;
+      item.prefix_policy = (uint8_t)KWS_PREFIX_GRACE;
+      item.grace_frames = grace_cases[c];
+      item.min_trailing_blanks = 1u;
+
+      kws_decoder_init(&decoder, 0.0f, 0.94f);
+      CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+      CHECK(kws_decoder_step(&decoder, terminal, 4u, 1,
+                             &keyword_id, &confidence) == 0);
+      CHECK(decoder.pending_keyword == 0);
+      CHECK(decoder.pending_age_frames == 0u);
+      for (unsigned frame = 1u; frame <= 40u; ++frame) {
+        int hit = kws_decoder_step(&decoder, blank, 4u, speech_active,
+                                   &keyword_id, &confidence);
+        CHECK(hit == (will_emit != 0 && frame == grace));
+        if (frame < clear_frame) {
+          CHECK(decoder.pending_keyword == 0);
+          CHECK(decoder.pending_age_frames == frame);
+          CHECK(decoder.pending_blank_frames == frame);
+        } else {
+          CHECK(decoder.pending_keyword == -1);
+          CHECK(decoder.pending_age_frames == 0u);
+        }
+        if (will_emit == 0 && frame >= 12u) {
+          CHECK(decoder.inactive_frames == 12u);
+        }
+      }
+      CHECK(keyword_id == (will_emit != 0 ? 21u : 0u));
+      CHECK((confidence > 0.50f) == will_emit);
+      /* Resuming speech cannot resurrect a candidate cleared at the boundary. */
+      CHECK(kws_decoder_step(&decoder, blank, 4u, 1,
+                             &keyword_id, &confidence) == 0);
+      CHECK(decoder.inactive_frames == 0u);
+      CHECK(decoder.pending_keyword == -1);
+    }
+  }
+}
+
+static void test_grace_speech_resumption_preserves_pending_age(void) {
+  kws_decoder_t decoder;
+  const uint16_t tokens[] = {1u};
+  kws_keyword_t item = keyword(22u, tokens, 1u, 0.50f);
+  const float terminal[4] = {-8.0f, 8.0f, -8.0f, -8.0f};
+  const float blank[4] = {8.0f, -8.0f, -8.0f, -8.0f};
+  uint32_t keyword_id = 0u;
+  float confidence = 0.0f;
+  item.prefix_policy = (uint8_t)KWS_PREFIX_GRACE;
+  item.grace_frames = 12u;
+  item.min_trailing_blanks = 1u;
+
+  kws_decoder_init(&decoder, 0.0f, 0.94f);
+  CHECK(kws_decoder_set_keywords(&decoder, &item, 1u, 4u) == KWS_OK);
+  CHECK(kws_decoder_step(&decoder, terminal, 4u, 1,
+                         &keyword_id, &confidence) == 0);
+  for (unsigned frame = 1u; frame < 12u; ++frame) {
+    CHECK(kws_decoder_step(&decoder, blank, 4u, 0,
+                           &keyword_id, &confidence) == 0);
+    CHECK(decoder.inactive_frames == frame);
+    CHECK(decoder.pending_age_frames == frame);
+  }
+  CHECK(kws_decoder_step(&decoder, blank, 4u, 1,
+                         &keyword_id, &confidence) == 1);
+  CHECK(keyword_id == 22u);
+  CHECK(confidence > 0.50f);
+  CHECK(decoder.inactive_frames == 0u);
+}
+
 
 static void test_debug_blank_retention_changes_long_blank_gap_survival(void) {
   kws_decoder_t decoder;
@@ -789,6 +870,8 @@ int main(void) {
   test_longest_prefix_waits_for_longer_keyword();
   test_longest_prefix_emits_after_blank();
   test_grace_policy_holds_then_emits();
+  test_grace_obeys_inactive_boundary_before_emission();
+  test_grace_speech_resumption_preserves_pending_age();
   puts("kws_decoder_tests: ok");
   return 0;
 }

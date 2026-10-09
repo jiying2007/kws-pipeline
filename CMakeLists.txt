@@ -55,7 +55,7 @@ endif()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
              "${KWS_PARAMETER_CONTRACT}" "${KWS_PARAMETER_GENERATOR}")
 
-add_library(kws_pipeline STATIC
+set(KWS_CORE_SOURCES
   src/kws.c
   src/build_info.c
   src/frontend.c
@@ -63,23 +63,27 @@ add_library(kws_pipeline STATIC
   src/decoder.c
   src/keyword_pack.c
 )
+add_library(kws_pipeline STATIC ${KWS_CORE_SOURCES})
 add_library(KwsPipeline::core ALIAS kws_pipeline)
 set_target_properties(kws_pipeline PROPERTIES EXPORT_NAME core OUTPUT_NAME kws_pipeline)
 
-target_include_directories(kws_pipeline
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>
-    ${CMAKE_CURRENT_BINARY_DIR}/generated
-)
-target_compile_features(kws_pipeline PUBLIC c_std_11)
-target_link_libraries(kws_pipeline PUBLIC m)
+function(kws_configure_core target)
+  target_include_directories(${target}
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+      ${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>
+      ${CMAKE_CURRENT_BINARY_DIR}/generated
+  )
+  target_compile_features(${target} PUBLIC c_std_11)
+  target_link_libraries(${target} PUBLIC m)
 
-if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(kws_pipeline PRIVATE ${KWS_STRICT_OPTIONS})
-endif()
+  if(KWS_STRICT AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${target} PRIVATE ${KWS_STRICT_OPTIONS})
+  endif()
+endfunction()
+kws_configure_core(kws_pipeline)
 
 if(KWS_BUILD_TESTS OR KWS_BUILD_TOOLS)
   add_library(kws_trace_io STATIC tools/kws_trace_io.c)
@@ -201,13 +205,21 @@ if(KWS_BUILD_FUZZ)
     message(FATAL_ERROR "KWS_BUILD_FUZZ requires Clang/libFuzzer")
   endif()
 
+  # Compile a separate copy of the code under test. Instrumenting only the
+  # harness gives libFuzzer no feedback from parser branches. Keep all fuzzer
+  # flags private to this uninstalled library and its drivers, so ordinary
+  # executables and the installed SDK never acquire a libFuzzer dependency.
+  add_library(kws_fuzz_core STATIC ${KWS_CORE_SOURCES})
+  kws_configure_core(kws_fuzz_core)
+  target_compile_options(kws_fuzz_core PRIVATE -fsanitize=fuzzer-no-link)
+
   add_executable(kws_fuzz_model fuzz/fuzz_model.c)
-  target_link_libraries(kws_fuzz_model PRIVATE KwsPipeline::core)
+  target_link_libraries(kws_fuzz_model PRIVATE kws_fuzz_core)
   target_compile_options(kws_fuzz_model PRIVATE -fsanitize=fuzzer-no-link)
   target_link_options(kws_fuzz_model PRIVATE -fsanitize=fuzzer)
 
   add_executable(kws_fuzz_keyword_pack fuzz/fuzz_keyword_pack.c)
-  target_link_libraries(kws_fuzz_keyword_pack PRIVATE KwsPipeline::core)
+  target_link_libraries(kws_fuzz_keyword_pack PRIVATE kws_fuzz_core)
   target_compile_options(kws_fuzz_keyword_pack PRIVATE -fsanitize=fuzzer-no-link)
   target_link_options(kws_fuzz_keyword_pack PRIVATE -fsanitize=fuzzer)
 
@@ -239,6 +251,9 @@ if(KWS_SOURCE_REVISION STREQUAL "")
     VERBATIM
   )
   add_dependencies(kws_pipeline kws_source_identity)
+  if(TARGET kws_fuzz_core)
+    add_dependencies(kws_fuzz_core kws_source_identity)
+  endif()
 endif()
 
 # Both SDK discovery formats promise prefix relocation. Absolute directories or

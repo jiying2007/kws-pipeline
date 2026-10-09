@@ -235,9 +235,8 @@ static float dot_i8_f32(const int8_t *weights,
   return sum;
 }
 
-static uint16_t infer_frame(kws_engine_t *e) {
+static void infer_frame(kws_engine_t *e) {
   const kws_model_t *m = &e->model;
-  uint16_t top_index = 0u;
 
   for (uint16_t h = 0u; h < m->hidden_dim; ++h) {
     float acc = m->bh[h];
@@ -258,22 +257,7 @@ static uint16_t infer_frame(kws_engine_t *e) {
     size_t base = (size_t)v * (size_t)m->hidden_dim;
     float sum = dot_i8_f32(m->wo + base, e->hidden, (size_t)m->hidden_dim);
     e->logits[v] = m->bo[v] + m->wo_scale * sum;
-    if (v == 0u || e->logits[v] > e->logits[top_index]) {
-      top_index = v;
-    }
   }
-  return top_index;
-}
-
-static uint16_t top_logit_index(const float *logits, uint16_t vocab_size) {
-  uint16_t top_index = 0u;
-
-  for (uint16_t v = 1u; v < vocab_size; ++v) {
-    if (logits[v] > logits[top_index]) {
-      top_index = v;
-    }
-  }
-  return top_index;
 }
 
 static kws_status_t process_decoder_frame(kws_engine_t *engine,
@@ -286,7 +270,7 @@ static kws_status_t process_decoder_frame(kws_engine_t *engine,
   uint32_t keyword_id = 0u;
   float confidence = 0.0f;
   int decoder_hit;
-  uint16_t top_index;
+  uint16_t top_index = 0u;
 
   *out_detected = 0;
   if (engine == NULL || logits == NULL ||
@@ -300,6 +284,11 @@ static kws_status_t process_decoder_frame(kws_engine_t *engine,
     if (!isfinite(logits[v])) {
       return KWS_EINVAL;
     }
+    /* Reuse validation's scan; strict greater-than retains the first tied
+     * token, matching the decoder. No engine state changes before validation. */
+    if (logits[v] > logits[top_index]) {
+      top_index = v;
+    }
   }
 
   if (logits != engine->logits) {
@@ -311,7 +300,6 @@ static kws_status_t process_decoder_frame(kws_engine_t *engine,
   if (speech_active != 0) {
     engine->speech_frames++;
   }
-  top_index = top_logit_index(engine->logits, vocab_size);
   if (top_index == 0u) {
     engine->blank_top1_frames++;
   }
@@ -460,7 +448,7 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
         speech_active = kws_frontend_last_dbfs(&engine->frontend) >=
                         engine->config.min_speech_dbfs;
       }
-      (void)infer_frame(engine);
+      infer_frame(engine);
       if (process_decoder_frame(engine, engine->logits, engine->model.vocab_size,
                                 speech_active, engine->processed_samples,
                                 out_detection, out_detected) != KWS_OK) {

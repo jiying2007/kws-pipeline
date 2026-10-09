@@ -19,10 +19,12 @@ of roughly `3/T` per hour at 95% confidence. Measured on this repository's own
 fixtures, **12 seconds of negative exposure produces an upper bound of about
 900 false accepts per hour** -- reported by the governed gate as a clean `0.0`.
 
-Asking for zero false rejects *and* zero false accepts at the same time also
-removes the solution space: lowering the threshold satisfies recall and breaks
-the false-accept rate, raising it does the reverse, and the only remaining
-point -- reject everything -- still fails recall.
+Zero observed false rejects *and* zero observed false accepts can coexist on a
+finite, separable dataset. Such a result does not establish zero population
+risk or generalization to other speakers and conditions. Threshold changes often
+trade recall against false accepts, but that tradeoff does not mathematically
+rule out a zero-error sample. Report positive support, negative exposure and
+confidence bounds; rejecting everything still fails recall when positives exist.
 
 So this lane does not judge. It **measures**, in a form that can be compared.
 

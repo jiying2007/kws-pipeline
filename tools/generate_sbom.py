@@ -2,18 +2,13 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import pathlib
 import re
 
-
-def sha256_file(path: pathlib.Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from validate_sbom import (
+    document_namespace, file_checksums, sdk_files, validate, verification_code,
+)
 
 
 def spdx_id(index: int) -> str:
@@ -31,21 +26,23 @@ def main() -> int:
     root = args.root.resolve()
     if not root.is_dir():
         raise ValueError("SBOM root must be a directory")
-    if re.fullmatch(r"[0-9a-f]{40,64}", args.source_sha) is None:
+    if re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", args.source_sha) is None:
         raise ValueError("source-sha must be lowercase git/SHA256 hex")
+
+    if args.output.resolve().is_relative_to(root):
+        raise ValueError("SBOM output must be outside the SDK root")
 
     files = []
     relationships = []
-    for index, path in enumerate(
-        sorted(item for item in root.rglob("*") if item.is_file()), 1
-    ):
+    for index, path in enumerate(sdk_files(root), 1):
         identifier = spdx_id(index)
         files.append(
             {
                 "SPDXID": identifier,
                 "fileName": path.relative_to(root).as_posix(),
                 "checksums": [
-                    {"algorithm": "SHA256", "checksumValue": sha256_file(path)}
+                    {"algorithm": algorithm, "checksumValue": value}
+                    for algorithm, value in file_checksums(path).items()
                 ],
             }
         )
@@ -59,15 +56,11 @@ def main() -> int:
     if not files:
         raise ValueError("SBOM root contains no files")
 
-    namespace_seed = hashlib.sha256(
-        f"{args.name}\0{args.version}\0{args.source_sha}".encode("utf-8")
-    ).hexdigest()
     document = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
         "SPDXID": "SPDXRef-DOCUMENT",
         "name": f"{args.name}-{args.version}",
-        "documentNamespace": f"https://github.com/jiying2007/kws-pipeline/sbom/{namespace_seed}",
         "creationInfo": {
             "created": "1970-01-01T00:00:00Z",
             "creators": ["Tool: kws-pipeline/tools/generate_sbom.py"],
@@ -79,6 +72,12 @@ def main() -> int:
                 "versionInfo": args.version,
                 "downloadLocation": "NOASSERTION",
                 "filesAnalyzed": True,
+                "packageVerificationCode": {
+                    "packageVerificationCodeValue": verification_code([
+                        checksum["checksumValue"] for file in files
+                        for checksum in file["checksums"] if checksum["algorithm"] == "SHA1"
+                    ]),
+                },
                 "licenseConcluded": "NOASSERTION",
                 "licenseDeclared": "NOASSERTION",
                 "copyrightText": "NOASSERTION",
@@ -101,6 +100,8 @@ def main() -> int:
             *relationships,
         ],
     }
+    document["documentNamespace"] = document_namespace(document)
+    validate(document)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(document, indent=2, sort_keys=True, allow_nan=False) + "\n",

@@ -91,6 +91,21 @@ def build_status(root: pathlib.Path) -> dict:
     if not isinstance(decision, dict) or decision.get("architecture_search_paused") is not True:
         raise ValueError("architecture search is not explicitly paused")
 
+    calibration = shipping.get("threshold_calibration")
+    if not isinstance(calibration, dict) or type(calibration.get("recalibration_required")) is not bool:
+        raise ValueError("threshold calibration must explicitly declare recalibration_required")
+    if type(shipping.get("shipping_approved")) is not bool:
+        raise ValueError("shipping_approved must be a boolean")
+
+    # Link retained observations instead of maintaining another outcome ledger.
+    # Reading these local files is not a live regression/research status check.
+    snapshot_path = root / "research" / "consolidation" / "CURRENT_STATUS_2026-10-09.md"
+    research_entry = root / "research" / "README.md"
+    admission_entry = root / "research" / "d20-diagnostic-admission-v1" / "PLAN-SCHEMA.md"
+    for path in (snapshot_path, research_entry, admission_entry):
+        if not path.is_file():
+            raise ValueError(f"status evidence/navigation missing: {path.relative_to(root)}")
+
     qualification = model.get("qualification")
     synthetic_qualified = (
         shipping.get("evidence_status") == "synthetic-qualified"
@@ -103,8 +118,8 @@ def build_status(root: pathlib.Path) -> dict:
     )
 
     status = {
-        "schema_version": 1,
-        "policy": "kws-product-landing-status-v1",
+        "schema_version": 2,
+        "policy": "kws-product-landing-status-v2",
         "assessment_scope": "repository-source-contract-only",
         "live_qualification_checked": False,
         "model": {
@@ -118,23 +133,51 @@ def build_status(root: pathlib.Path) -> dict:
             "git_registry_path": registry_dir.relative_to(root).as_posix(),
             "registry_bytes": int(registry.get("storage", {}).get("release_assets_bytes", 0)),
         },
-        "evidence": {
+        "historical_release_qualification": {
+            "scope": "frozen-model-release-only",
+            "source_path": shipping_path.relative_to(root).as_posix(),
+            "release_tag": tag,
             "status": str(shipping.get("evidence_status") or ""),
             "synthetic_qualification_passed": synthetic_qualified,
+            "qualification": qualification,
+            "applies_to_current_source": False,
+        },
+        "current_source": {
+            "scope": "source-contract-only-no-acoustic-evaluation",
+            "contract_path": shipping_path.relative_to(root).as_posix(),
+            "contract_sha256": sha256(shipping_path),
+            "recalibration_required": calibration["recalibration_required"],
+            "recalibration_reason": str(calibration.get("recalibration_reason") or ""),
+            "synthetic_qualification_checked": False,
+        },
+        "dated_regression_and_research": {
+            "scope": "retained-dated-observations-not-live-status",
+            "snapshot_path": snapshot_path.relative_to(root).as_posix(),
+            "snapshot_sha256": sha256(snapshot_path),
+            "live_status_checked": False,
+            "current_research_entry": research_entry.relative_to(root).as_posix(),
+            "current_admission_entry": admission_entry.relative_to(root).as_posix()
+            + "#current-admission-checklist",
+        },
+        "external_qualification": {
+            "scope": "pending-in-source-contract-not-live-checked",
             "real_human_final_afe_passed": False,
             "physical_target_board_passed": False,
         },
         "product": {
-            "shipping_approved": bool(shipping.get("shipping_approved", False)),
+            "shipping_approved": shipping["shipping_approved"],
             "blockers": pending,
             "next_gate": pending[0] if pending else None,
         },
-        "research": {
+        "historical_research_closure": {
+            "scope": "retained-closed-research-line-not-current-authorization",
+            "source_path": closure_path.relative_to(root).as_posix(),
             "architecture_search_paused": True,
             "next_authorized_lane": str(decision["next_authorized_lane"]),
             "reopen_condition": "product-data-implicates-model-capacity",
         },
         "control_plane": {
+            "scope": "repository-file-presence-only",
             "dataset_iteration_ready": True,
             "real_human_phase_a_ready": True,
             "physical_target_phase_b_policy_ready": True,
@@ -150,14 +193,26 @@ def verify(status: dict) -> None:
         raise ValueError("trained deployable model is unavailable")
     if status["model"]["git_registry_mirrored"] is not True:
         raise ValueError("trained model is not in Git registry")
-    if status["evidence"]["synthetic_qualification_passed"] is not True:
-        raise ValueError("pinned model is not synthetic-qualified")
+    if status["historical_release_qualification"]["synthetic_qualification_passed"] is not True:
+        raise ValueError("pinned model has no historical synthetic qualification")
+    if status["historical_release_qualification"]["applies_to_current_source"] is not False:
+        raise ValueError("historical qualification must not qualify current source")
+    if status["current_source"]["synthetic_qualification_checked"] is not False:
+        raise ValueError("source status must not claim acoustic evaluation")
+    if status["live_qualification_checked"] is not False:
+        raise ValueError("source status must not claim live qualification")
+    if status["dated_regression_and_research"]["live_status_checked"] is not False:
+        raise ValueError("retained observations must not claim live status")
+    if any(status["external_qualification"][key] is not False for key in (
+        "real_human_final_afe_passed", "physical_target_board_passed"
+    )):
+        raise ValueError("source status must not claim external qualification")
     if status["product"]["shipping_approved"] is not False:
         raise ValueError("status unexpectedly claims shipping approval")
     if status["product"]["next_gate"] != "real-human-final-afe-acoustic-qualification":
         raise ValueError("unexpected next product gate")
-    if status["research"]["architecture_search_paused"] is not True:
-        raise ValueError("synthetic architecture search should be paused")
+    if status["historical_research_closure"]["architecture_search_paused"] is not True:
+        raise ValueError("historical synthetic architecture closure should remain paused")
 
 
 def main() -> int:

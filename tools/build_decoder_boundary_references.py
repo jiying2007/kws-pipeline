@@ -433,6 +433,7 @@ def build(args: argparse.Namespace) -> dict:
         raise ValueError("gap duration must be > 0")
 
     model_sha = sha256_file(model)
+    posterior_dump_sha = sha256_file(posterior_dump)
     positive_refs: list[dict] = []
     negative_refs: list[dict] = []
     evidence: list[dict] = []
@@ -469,6 +470,7 @@ def build(args: argparse.Namespace) -> dict:
             audio=alignment_audio,
             model_sha256=model_sha,
             audio_sha256=alignment_sha,
+            posterior_dump_sha256=posterior_dump_sha,
         )
         alignment = internal_split_from_alignment(
             read_trace_logits(trace),
@@ -538,6 +540,7 @@ def build(args: argparse.Namespace) -> dict:
                 "cross_boundary_effective_silence_samples": effective_gap,
                 "alignment_audio_sha256": alignment_sha,
                 "posterior_trace_sha256": str(trace_summary["trace_sha256"]),
+                "posterior_dump_sha256": trace_summary["posterior_dump_sha256"],
                 "posterior_cache_hit": cache_hit,
                 "within_word_wav_sha256": sha256_file(positive_out),
                 "cross_boundary_wav_sha256": sha256_file(negative_out),
@@ -561,7 +564,7 @@ def build(args: argparse.Namespace) -> dict:
         "dataset_index": str(index),
         "dataset_index_sha256": sha256_file(index),
         "model_sha256": model_sha,
-        "posterior_dump_sha256": sha256_file(posterior_dump),
+        "posterior_dump_sha256": posterior_dump_sha,
         "gap_ms": args.gap_ms,
         "lead_ms": args.lead_ms,
         "tail_ms": args.tail_ms,

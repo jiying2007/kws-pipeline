@@ -207,6 +207,27 @@ discontinuity and keyword replacement clear these waits.
 Use `longest` when one wake word is a prefix of another (for example `小窝`
 against `小窝小窝`). Use `grace` when the longer variant may arrive late.
 
+### Grace and the inactive-frame boundary
+
+`grace_frames` values through `32` are legal, but a legal grace value does not
+override the L1 utterance boundary. Grace age counts every frame after the
+terminal first qualifies; the boundary counts only **consecutive speech-inactive
+frames**. On the twelfth inactive frame, the decoder clears pending candidates
+**before** checking whether a grace candidate is ready to emit.
+
+For example, if a terminal qualifies and is followed immediately by inactive,
+blank-dominant frames, `grace_frames = 11` can emit on the eleventh frame, while
+`12` and `32` lose the pending candidate on the twelfth frame. If those frames
+remain speech-active, all three values can reach their configured grace age.
+Speech resumption before the boundary resets the inactive-frame count; it does
+not reset the age of the same pending candidate. Trailing-blank requirements and
+pending-candidate replacement still apply independently.
+
+Account for this interaction when choosing an explicit keyword policy. Raising
+grace alone cannot extend a candidate across a sustained inactive boundary. A
+different boundary policy requires an intentional L1 change and recalibration;
+the runtime does not silently clamp grace or extend the boundary.
+
 ## Change checklist
 
 1. Edit `configs/parameter-contract.json` and rerun `python3 tools/gen_parameter_limits.py

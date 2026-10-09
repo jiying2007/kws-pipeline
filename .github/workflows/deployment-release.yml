@@ -149,7 +149,7 @@ jobs:
             --version "$version" \
             --source-sha "$GITHUB_SHA" \
             --output "dist/${stem}.spdx.json"
-          python3 -m json.tool "dist/${stem}.spdx.json" >/dev/null
+          python3 tools/validate_sbom.py "dist/${stem}.spdx.json" --root "$RUNNER_TEMP/sdk-a"
           printf 'version=%s\nstem=%s\n' "$version" "$stem" >> "$GITHUB_OUTPUT"
 
       - name: Assemble fail-closed deployment manifest

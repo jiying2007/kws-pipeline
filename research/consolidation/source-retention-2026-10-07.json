@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "98528b071a006778e2d96c9420655d5f50121c80",
-      "sha256": "ad16a0c4014615313284f7b43c44ab4ea265126e9b989d13264809961ed516ba",
-      "bytes": 30493
+      "git_blob_sha1": "45038c573646b83b6e051da5c4f3c52740a37041",
+      "sha256": "5a365082133b8f81182efcfe49cf55e5d3bf6348e8854b6a9fc8f2a1dc375e06",
+      "bytes": 30660
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15288,9 +15288,9 @@
     {
       "path": ".github/workflows/deployment-release.yml",
       "mode": "100644",
-      "git_blob_sha1": "14d1133b72b9546ce67869f40b3eaf69e8a01988",
-      "sha256": "c599b0ea6d55eadec270ae9ba6b6397e6c4dee644af6c9537e36acabc4419c26",
-      "bytes": 18881
+      "git_blob_sha1": "c23809f9cde0b1fd355b917587f08f8a25b213e7",
+      "sha256": "9d288a41dc2f1c4321519109a46710165d7b9b82cfe32606dc79213d0fd1ac27",
+      "bytes": 18908
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
@@ -15414,9 +15414,9 @@
     {
       "path": ".github/workflows/release.yml",
       "mode": "100644",
-      "git_blob_sha1": "c443e3523b7e3fbba0be24588d11270474849ce8",
-      "sha256": "c885399b0187d481cc04d20e437cef0dde6ec91a84a2f78fb752b9c678fa3654",
-      "bytes": 16249
+      "git_blob_sha1": "e2161bb740fa4e655606064a8dccfe435b19a215",
+      "sha256": "57554ceea6b34fe63e9cc7d0c87652273d4880975306e88e3c936d5ba4e732e8",
+      "bytes": 16429
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
@@ -16109,6 +16109,67 @@
             "git_blob_sha1": "f706fe2be3d0147d3f60082ae56feec88bdc5db9",
             "sha256": "b7499b23d2eba2800f962520d4df06b940a15712c710f5d50d4259f6cec6596b",
             "bytes": 11666
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "from_commit": "678423c0771ab1edec92b160b7e8692901fbc628",
+      "from_tree": "8fbe694d89af7bb13a72da5ac546619fb87d7413",
+      "operation_id": "parser-fuzz-sdk-sbom-contracts-20261009",
+      "scope": "Required real parser coverage instrumentation and shipping SDK isolation regression; SPDX 2.3 SDK profile semantic and installed-byte validation.",
+      "rationale": "Current public CI metadata maintenance only. Historical retained source bytes, provenance, delivery snapshots and acoustic qualification results are unchanged. No workflow dispatch, protection change or diagnostic execution authority is introduced.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "98528b071a006778e2d96c9420655d5f50121c80",
+            "sha256": "ad16a0c4014615313284f7b43c44ab4ea265126e9b989d13264809961ed516ba",
+            "bytes": 30493
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "45038c573646b83b6e051da5c4f3c52740a37041",
+            "sha256": "5a365082133b8f81182efcfe49cf55e5d3bf6348e8854b6a9fc8f2a1dc375e06",
+            "bytes": 30660
+          }
+        },
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "14d1133b72b9546ce67869f40b3eaf69e8a01988",
+            "sha256": "c599b0ea6d55eadec270ae9ba6b6397e6c4dee644af6c9537e36acabc4419c26",
+            "bytes": 18881
+          },
+          "after": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c23809f9cde0b1fd355b917587f08f8a25b213e7",
+            "sha256": "9d288a41dc2f1c4321519109a46710165d7b9b82cfe32606dc79213d0fd1ac27",
+            "bytes": 18908
+          }
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c443e3523b7e3fbba0be24588d11270474849ce8",
+            "sha256": "c885399b0187d481cc04d20e437cef0dde6ec91a84a2f78fb752b9c678fa3654",
+            "bytes": 16249
+          },
+          "after": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e2161bb740fa4e655606064a8dccfe435b19a215",
+            "sha256": "57554ceea6b34fe63e9cc7d0c87652273d4880975306e88e3c936d5ba4e732e8",
+            "bytes": 16429
           }
         }
       ]

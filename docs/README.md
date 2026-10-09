@@ -3,7 +3,7 @@
 ## Start here
 
 - [Build and use the engine](../README.md#build-and-install)
-- [Current product status](KWS_LANDING_STATUS.md) and [research roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md)
+- [Current product status](KWS_LANDING_STATUS.md) and [historical research roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md)
 - [Reusable research modules and outcomes](../research/README.md)
 - [Public research evidence in kws-data](https://github.com/jiying2007/kws-data/blob/main/docs/RESEARCH_INDEX.md)
 - [Engineering tool index](../tools/README.md)
@@ -13,7 +13,7 @@
 
 ## Product contracts
 
-Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, qualified for exactly `你好小窝` and `小窝小窝`. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.
+Current machine-readable product authority is `configs/shipping.xiaowo.json`. The immutable promoted model is `model-749187ec1d66`, historically synthetic-qualified for exactly `你好小窝` and `小窝小窝`. The current source contract records `recalibration_required=true`; that historical result does not qualify changed runtime source. The frozen commercial candidate is `deployment-c20f3eb88e43`. The product remains `shipping_approved=false` until real-human final-AFE acoustic evidence and physical target-board evidence both pass and the explicit terminal shipping promotion succeeds.
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — runtime/offline architecture and hard bounds
 - [`RUNTIME_CONFIG.md`](RUNTIME_CONFIG.md) — parameter contract, L0-L3 layers, ranges, tuning and change checklist
@@ -30,7 +30,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`AUDIO_DISCONTINUITY.md`](AUDIO_DISCONTINUITY.md) — XRUN/route/clock reset semantics
 - [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — traceable/rebuildable/bit-reproducible claims
 - [`TESTING_STRATEGY.md`](TESTING_STRATEGY.md) — layered regression and product evidence
-- [`KWS_LANDING_EXECUTION.md`](KWS_LANDING_EXECUTION.md) — staged training diagnosis, algorithm comparison and product-evidence closure
+- [`KWS_LANDING_EXECUTION.md`](KWS_LANDING_EXECUTION.md) — historical staged training diagnosis, algorithm comparison and product-evidence closure
 - [`PRODUCT_MODEL_TRAINING.md`](PRODUCT_MODEL_TRAINING.md) — canonical governed model-training/preflight handoff, provenance and promotion boundaries
 - [`DATASET_ITERATION.md`](DATASET_ITERATION.md) — dataset-driven iteration for the registered deployable model without changing release authority
 - [`research/`](research/) — retained historical experiment/negative-result evidence; archived files are not current executable runbooks

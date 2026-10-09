@@ -74,6 +74,22 @@ Evaluation provenance schema v2 binds:
 
 The scorer reports FAR/hour, FRR, per-keyword counts and p50/p95 post-end latency. Matching is monotonic per keyword: maximize valid matches first, then minimize total distance to annotated keyword end. NaN/Inf and out-of-range values are rejected.
 
+### Posterior replay cache identity
+
+When `--posterior-dump`, `--decoder-replay` and `--posterior-cache` are supplied
+together, cached traces are keyed by model SHA256, posterior-dump executable
+SHA256 and original WAV SHA256. The cache sidecar uses schema v2 and
+`kws-posterior-trace-cache-v2`; its producer hash must match the requested
+executable. Legacy v1 entries and entries with missing or mismatched producer
+identity are never reused or relabelled. Changing the generator forces a fresh
+trace; decoder, keyword-pack and replay-override changes can reuse it.
+
+Evaluation and boundary-tool provenance retain the producer SHA256 recorded for
+each trace, including cache hits. The executable is checked against the run's
+initial hash before cache admission and after trace generation; a change during
+generation fails without publishing that trace. This binds the executable bytes,
+not external shared libraries or the surrounding execution environment.
+
 ## Domain metrics
 
 When references contain domain metadata:
