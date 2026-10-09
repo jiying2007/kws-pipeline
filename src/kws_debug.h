@@ -61,6 +61,8 @@ kws_status_t kws_engine_debug_set_decoder_search_policy(
     float blank_retention,
     float fuzzy_child_cost_log);
 
+/* Detection outputs follow the optional-output contract of
+ * kws_engine_accept_pcm16*(), including clearing out_detected on failure. */
 kws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,
                                            const float *logits,
                                            uint16_t vocab_size,

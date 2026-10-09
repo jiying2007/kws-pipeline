@@ -47,6 +47,12 @@
 - strict robustness 全通过；
 - continuous synthetic hard-negative FAR：`0 FA` 且 negative manifest 全覆盖。
 
+以上是**历史 Release qualification 结果**。后续同一旧模型的
+[nightly run 37860130019](https://github.com/jiying2007/kws-pipeline/actions/runs/37860130019)
+已失败：**8 小时内 2 次误接受**，upper95 **0.786974 FA/h**（门槛为 0 次误接受且
+upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 false。
+见[本次审计](research/consolidation/CI_AUDIT_2026-10-09.md)。
+
 `configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
 
 ### 获取与校验 Release

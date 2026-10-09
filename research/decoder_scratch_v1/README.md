@@ -23,7 +23,10 @@ under ASan (leak detection disabled), under UBSan, and in an exact semantic-stat
 differential test against the unchanged original decoder. No acoustic model
 forward, audio processing, training, original once-run replay, or threshold
 search occurs. The shared runtime is built but never loaded/executed by this
-command. Build receipts include compiler, commands, outputs and binary hash.
+command. Build receipts include compiler version, exact flags and commands, outputs and
+binary hashes. The standalone differential receipt records both original and
+optimized library commands, source/header hashes and library hashes; the build
+receipt embeds and hashes that receipt.
 
 ## Why the change is safe within this scope
 
@@ -84,4 +87,32 @@ both differential libraries. Python assertion optimization remains rejected.
 
 Source admission additionally rejects symlinks, self-consistent rewrites of the
 source manifest, modified checker bytes before execution, and unlisted files.
-The six end-to-end guard tests include those three source-admission negatives.
+The eight driver tests include those three source-admission negatives, required
+floating-point policy checks, and rejection of unsupported strict flags by both
+drivers. The selected-compiler test checks all eight compilations and verifies
+that both differential library hashes and command receipts match the build.
+
+## Strict floating-point consistency
+
+`compiler_flags.py` is the single authoritative compile policy for the complete
+runtime, resource-size tools, normal/sanitized decoder tests, and both original
+and optimized differential libraries. Every compile uses `-fno-fast-math`,
+`-ffp-contract=off`, `-frounding-math` and `-fexcess-precision=standard` with
+`-Werror`. Unsupported options fail the build; no compiler-specific fallback
+silently relaxes numerical semantics. Sanitizers override only optimization
+level and add instrumentation. Native ELF admission is unchanged.
+
+Exercise both supported compiler families separately on a native Linux host:
+
+```
+python3 -B research/decoder_scratch_v1/build.py --cc gcc --output /tmp/scratch-gcc
+CC=gcc python3 -B research/decoder_scratch_v1/test_driver_guards.py
+python3 -B research/decoder_scratch_v1/build.py --cc clang --output /tmp/scratch-clang
+CC=clang python3 -B research/decoder_scratch_v1/test_driver_guards.py
+```
+
+The compiler must accept all flags; each build writes an independent RESULTS.json
+with its compiler identity, exact commands and binary hashes. A passing GCC run
+does not establish a Clang result or cross-compiler bitwise identity. The checked-in
+host summary retains its historical measurements; `STRICT_FP_VALIDATION.json`
+records the newly verified scope and compiler availability.

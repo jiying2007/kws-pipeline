@@ -29,7 +29,7 @@ def capture(process, destination, *, timeout_seconds=1.0, max_output_bytes=65536
     complete = False
     selector = selectors.DefaultSelector()
     streams = {}
-    start = time.monotonic()
+    deadline = time.monotonic() + timeout_seconds
     try:
         for name in ('stdout', 'stderr'):
             pipe = getattr(process, name)
@@ -40,10 +40,11 @@ def capture(process, destination, *, timeout_seconds=1.0, max_output_bytes=65536
             streams[name] = stream
             selector.register(pipe, selectors.EVENT_READ, name)
         while selector.get_map() or process.poll() is None:
-            if time.monotonic() - start >= timeout_seconds:
+            remaining_seconds = deadline - time.monotonic()
+            if remaining_seconds <= 0:
                 reason = 'timeout'
                 break
-            for key, _ in selector.select(min(0.02, timeout_seconds)):
+            for key, _ in selector.select(min(0.02, remaining_seconds)):
                 chunk = os.read(key.fileobj.fileno(), 8192)
                 if not chunk:
                     selector.unregister(key.fileobj)
@@ -59,6 +60,11 @@ def capture(process, destination, *, timeout_seconds=1.0, max_output_bytes=65536
             if reason:
                 break
         complete = not selector.get_map() and process.poll() is not None and reason is None
+        # EOF and exit may arrive during the final select/read iteration.
+        # Check the same absolute deadline before granting complete capture.
+        if reason is None and time.monotonic() >= deadline:
+            reason = 'timeout'
+            complete = False
         if complete and process.returncode != 0:
             reason = 'exit_failure'
     except BaseException as exc:

@@ -1,0 +1,546 @@
+{
+  "schema": "decoder-scratch-v1-strict-fp-validation",
+  "date": "2026-10-09",
+  "base_commit": "1b3774a24f8712e043e8d82eea5eeb51911dfcf2",
+  "scope": "Synthetic decoder only; no model inference, audio processing, board measurements or cross-compiler equivalence claim.",
+  "tooling_sha256": {
+    "build.py": "faed181294f42e0f38cba0605d4538aa4ccb7674d263c1da99806431dbd5d0b5",
+    "compiler_flags.py": "7151046c9646bdee0f3a76c5f74646738bcf4bc0308fceb39b7faf4958d81a7c",
+    "test_decoder.py": "6d3be0d9bc630b8022b351dfbbe591c163ad6fc7074b269397415220b77eda75",
+    "test_driver_guards.py": "37c0e2e6a96ea64b86b760aaaf29bf6c1068a9ba7b5531f923826ea1d4e718fd",
+    "native_elf.py": "368826924504292021fbcef6d648ef425cc7bf51a605de2ceb38fd49c43f1366",
+    "test_native_elf.py": "8c6ba98d88bfb0447fa8c5c023470f46224f4c26f35bf4f5fa382339064ec185"
+  },
+  "historical_native_a20_unmodified": true,
+  "native_elf_file_tests": {
+    "passed": 12
+  },
+  "driver_tests": {
+    "passed": 8
+  },
+  "gcc": {
+    "status": "passed",
+    "receipt": {
+      "schema": "decoder-scratch-v1-build",
+      "pass": true,
+      "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+      "compiler_command": "gcc",
+      "compile_flags": [
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fno-fast-math",
+        "-ffp-contract=off",
+        "-frounding-math",
+        "-fexcess-precision=standard",
+        "-fPIC"
+      ],
+      "strict_fp_flags": [
+        "-fno-fast-math",
+        "-ffp-contract=off",
+        "-frounding-math",
+        "-fexcess-precision=standard"
+      ],
+      "compiler_flags_sha256": "7151046c9646bdee0f3a76c5f74646738bcf4bc0308fceb39b7faf4958d81a7c",
+      "differential_receipt_sha256": "33856b25658e7473b7db7fc8de7f9e8235666f00305534ed72674787e4faa700",
+      "differential": {
+        "schema": "decoder-scratch-v1-differential",
+        "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+        "compile_flags": [
+          "-std=c11",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-frounding-math",
+          "-fexcess-precision=standard",
+          "-fPIC"
+        ],
+        "strict_fp_flags": [
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-frounding-math",
+          "-fexcess-precision=standard"
+        ],
+        "compiler_flags_sha256": "7151046c9646bdee0f3a76c5f74646738bcf4bc0308fceb39b7faf4958d81a7c",
+        "commands": [
+          {
+            "command": [
+              "gcc",
+              "-std=c11",
+              "-O2",
+              "-Wall",
+              "-Wextra",
+              "-Werror",
+              "-fno-fast-math",
+              "-ffp-contract=off",
+              "-frounding-math",
+              "-fexcess-precision=standard",
+              "-fPIC",
+              "-shared",
+              "/workspace/shared/kws-scratch-fix-20261009/research/native_a20/baseline/decoder/a20_decoder.c",
+              "-lm",
+              "-o",
+              "/workspace/shared/scratch-gcc14-strict-20261009/differential/original-decoder.so"
+            ],
+            "exit": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "gcc",
+              "-std=c11",
+              "-O2",
+              "-Wall",
+              "-Wextra",
+              "-Werror",
+              "-fno-fast-math",
+              "-ffp-contract=off",
+              "-frounding-math",
+              "-fexcess-precision=standard",
+              "-fPIC",
+              "-shared",
+              "/workspace/shared/scratch-gcc14-strict-20261009/source/baseline/decoder/a20_decoder.c",
+              "-lm",
+              "-o",
+              "/workspace/shared/scratch-gcc14-strict-20261009/differential/optimized-decoder.so"
+            ],
+            "exit": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        ],
+        "binaries": {
+          "original": {
+            "library_sha256": "406579cd0e6ef0589688f3ff75bb62b56d37db34dd2421e7163ab6aa152e6c3e",
+            "source_sha256": "6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937",
+            "header_sha256": "8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4"
+          },
+          "optimized": {
+            "library_sha256": "b3a0fa6ce3976f73b12a336e254b68d6c435f342cc7efe66d87b3b43ef6cebe6",
+            "source_sha256": "86e680cd3f957ddfc4a3abebb9924a2347272c75c2a44db33ea00c637a5a38cb",
+            "header_sha256": "519ce5a6fb8948f1df560cdf1783628111b481cf49a8926692375eef499f8045"
+          }
+        },
+        "pass": true,
+        "compiler_command": "gcc",
+        "native_elf": {
+          "class": 64,
+          "machine": 62,
+          "endian": "little",
+          "type": 2,
+          "osabi": 0,
+          "abi_version": 0,
+          "flags": 0
+        },
+        "synthetic_calls": 1612,
+        "random_rows": 17177,
+        "activations": 207,
+        "status_counts": {
+          "0": 1606,
+          "1": 4,
+          "2": 1,
+          "3": 1
+        },
+        "sizes": {
+          "original": {
+            "decoder": 70000,
+            "workspace": 170400
+          },
+          "optimized": {
+            "decoder": 70000,
+            "workspace": 136800
+          }
+        },
+        "workspace_saved_bytes": 33600,
+        "beam_unchanged": true,
+        "transaction_copy_preserved": true,
+        "scope": "host ABI synthetic decoder only; no model/audio evaluation or SSC305 measurement"
+      },
+      "native_elf": {
+        "class": 64,
+        "machine": 62,
+        "endian": "little",
+        "type": 2,
+        "osabi": 0,
+        "abi_version": 0,
+        "flags": 0
+      },
+      "subprocess_timeout_seconds": 120,
+      "sizes": {
+        "original": {
+          "float_bytes": 4,
+          "double_bytes": 8,
+          "pointer_bytes": 8,
+          "frontend_original_bytes": 4928,
+          "frontend_bytes": 13120,
+          "frontend_alignment": 8,
+          "frontend_added_double_workspace_bytes": 8192,
+          "frontend_existing_float_scratch_bytes": 4096,
+          "frontend_trace_bytes": 6916,
+          "frontend_local_output_row_bytes": 320,
+          "pcm_original_bytes": 62264,
+          "pcm_bytes": 70456,
+          "pcm_alignment": 8,
+          "splice_bytes": 1328,
+          "stream_original_bytes": 325512,
+          "stream_bytes": 333704,
+          "stream_alignment": 8,
+          "weights_bytes": 1565280,
+          "model_state_bytes": 22544,
+          "model_cache_bytes": 22528,
+          "model_explicit_local_array_bytes": 4624,
+          "optional_model_trace_bytes": 21000,
+          "decoder_state_bytes": 70000,
+          "decoder_workspace_bytes": 170400,
+          "caller_arena_plus_weights_bytes": 1898984,
+          "hamming_table_bytes": 1600,
+          "mel_offsets_table_bytes": 162,
+          "mel_bins_table_bytes": 1002,
+          "mel_weights_table_bytes": 2004,
+          "twiddle_tables_bytes": 4096,
+          "original_twiddle_tables_bytes": 2048,
+          "all_frontend_tables_bytes": 8864,
+          "donor_fft64_state.pcm": 32,
+          "donor_fft64_state.re": 832,
+          "donor_fft64_state.im": 2880,
+          "donor_fft64_state.fft_re": 4928,
+          "donor_fft64_state.fft_im": 9024,
+          "donor_fft64_pcm_state.frontend": 22168,
+          "donor_fft64_pcm_state.trace": 35288,
+          "donor_fft64_pcm_state.fbank": 42204,
+          "donor_fft64_pcm_state.rows": 52764,
+          "donor_fft64_pcm_state.centers": 70368,
+          "a20fft64s_state.pcm": 0,
+          "a20fft64s_state.model": 70456,
+          "a20fft64s_state.decoder": 93000,
+          "a20fft64s_state.decoder_work": 163000,
+          "a20fft64s_state.logits": 333400,
+          "a20fft64s_state.initialized": 333664,
+          "a20fft64s_state.trace_buffer": 333680,
+          "pcm_batch_bytes": 104,
+          "stream_batch_bytes": 32,
+          "decoder_result_bytes": 48,
+          "a20_model_steps": 0,
+          "actual_audio_frames": 0,
+          "board_measured": false
+        },
+        "optimized": {
+          "float_bytes": 4,
+          "double_bytes": 8,
+          "pointer_bytes": 8,
+          "frontend_original_bytes": 4928,
+          "frontend_bytes": 13120,
+          "frontend_alignment": 8,
+          "frontend_added_double_workspace_bytes": 8192,
+          "frontend_existing_float_scratch_bytes": 4096,
+          "frontend_trace_bytes": 6916,
+          "frontend_local_output_row_bytes": 320,
+          "pcm_original_bytes": 62264,
+          "pcm_bytes": 70456,
+          "pcm_alignment": 8,
+          "splice_bytes": 1328,
+          "stream_original_bytes": 291912,
+          "stream_bytes": 300104,
+          "stream_alignment": 8,
+          "weights_bytes": 1565280,
+          "model_state_bytes": 22544,
+          "model_cache_bytes": 22528,
+          "model_explicit_local_array_bytes": 4624,
+          "optional_model_trace_bytes": 21000,
+          "decoder_state_bytes": 70000,
+          "decoder_workspace_bytes": 136800,
+          "caller_arena_plus_weights_bytes": 1865384,
+          "hamming_table_bytes": 1600,
+          "mel_offsets_table_bytes": 162,
+          "mel_bins_table_bytes": 1002,
+          "mel_weights_table_bytes": 2004,
+          "twiddle_tables_bytes": 4096,
+          "original_twiddle_tables_bytes": 2048,
+          "all_frontend_tables_bytes": 8864,
+          "donor_fft64_state.pcm": 32,
+          "donor_fft64_state.re": 832,
+          "donor_fft64_state.im": 2880,
+          "donor_fft64_state.fft_re": 4928,
+          "donor_fft64_state.fft_im": 9024,
+          "donor_fft64_pcm_state.frontend": 22168,
+          "donor_fft64_pcm_state.trace": 35288,
+          "donor_fft64_pcm_state.fbank": 42204,
+          "donor_fft64_pcm_state.rows": 52764,
+          "donor_fft64_pcm_state.centers": 70368,
+          "a20fft64s_state.pcm": 0,
+          "a20fft64s_state.model": 70456,
+          "a20fft64s_state.decoder": 93000,
+          "a20fft64s_state.decoder_work": 163000,
+          "a20fft64s_state.logits": 299800,
+          "a20fft64s_state.initialized": 300064,
+          "a20fft64s_state.trace_buffer": 300080,
+          "pcm_batch_bytes": 104,
+          "stream_batch_bytes": 32,
+          "decoder_result_bytes": 48,
+          "a20_model_steps": 0,
+          "actual_audio_frames": 0,
+          "board_measured": false
+        }
+      },
+      "commands": [
+        {
+          "command": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+            "-B",
+            "/workspace/shared/kws-scratch-fix-20261009/research/decoder_scratch_v1/test_native_elf.py"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": "............\n----------------------------------------------------------------------\nRan 12 tests in 0.327s\n\nOK\n"
+        },
+        {
+          "command": [
+            "patch",
+            "--batch",
+            "--fuzz=0",
+            "-p0",
+            "-i",
+            "/workspace/shared/kws-scratch-fix-20261009/research/decoder_scratch_v1/scratch-lifetimes.patch"
+          ],
+          "exit": 0,
+          "stdout": "patching file baseline/decoder/a20_decoder.c\npatching file baseline/decoder/a20_decoder.h\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "-shared",
+            "baseline/precision64/model/a20_fsmn.c",
+            "baseline/precision64/model/load.c",
+            "baseline/precision64/model/sha256.c",
+            "baseline/native/stream/splice.c",
+            "baseline/decoder/a20_decoder.c",
+            "src/donor_fft64.c",
+            "src/pcm_fft64.c",
+            "src/a20_stream_fft64.c",
+            "src/abi_fft64.c",
+            "-lm",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/liba20_scratch_v1.so"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "/workspace/shared/kws-scratch-fix-20261009/research/native_a20/resource_sizes.c",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/sizes-original"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/shared/scratch-gcc14-strict-20261009/sizes-original"
+          ],
+          "exit": 0,
+          "stdout": "{\n\"float_bytes\":4,\n\"double_bytes\":8,\n\"pointer_bytes\":8,\n\"frontend_original_bytes\":4928,\n\"frontend_bytes\":13120,\n\"frontend_alignment\":8,\n\"frontend_added_double_workspace_bytes\":8192,\n\"frontend_existing_float_scratch_bytes\":4096,\n\"frontend_trace_bytes\":6916,\n\"frontend_local_output_row_bytes\":320,\n\"pcm_original_bytes\":62264,\n\"pcm_bytes\":70456,\n\"pcm_alignment\":8,\n\"splice_bytes\":1328,\n\"stream_original_bytes\":325512,\n\"stream_bytes\":333704,\n\"stream_alignment\":8,\n\"weights_bytes\":1565280,\n\"model_state_bytes\":22544,\n\"model_cache_bytes\":22528,\n\"model_explicit_local_array_bytes\":4624,\n\"optional_model_trace_bytes\":21000,\n\"decoder_state_bytes\":70000,\n\"decoder_workspace_bytes\":170400,\n\"caller_arena_plus_weights_bytes\":1898984,\n\"hamming_table_bytes\":1600,\n\"mel_offsets_table_bytes\":162,\n\"mel_bins_table_bytes\":1002,\n\"mel_weights_table_bytes\":2004,\n\"twiddle_tables_bytes\":4096,\n\"original_twiddle_tables_bytes\":2048,\n\"all_frontend_tables_bytes\":8864,\n\"donor_fft64_state.pcm\":32,\n\"donor_fft64_state.re\":832,\n\"donor_fft64_state.im\":2880,\n\"donor_fft64_state.fft_re\":4928,\n\"donor_fft64_state.fft_im\":9024,\n\"donor_fft64_pcm_state.frontend\":22168,\n\"donor_fft64_pcm_state.trace\":35288,\n\"donor_fft64_pcm_state.fbank\":42204,\n\"donor_fft64_pcm_state.rows\":52764,\n\"donor_fft64_pcm_state.centers\":70368,\n\"a20fft64s_state.pcm\":0,\n\"a20fft64s_state.model\":70456,\n\"a20fft64s_state.decoder\":93000,\n\"a20fft64s_state.decoder_work\":163000,\n\"a20fft64s_state.logits\":333400,\n\"a20fft64s_state.initialized\":333664,\n\"a20fft64s_state.trace_buffer\":333680,\n\"pcm_batch_bytes\":104,\n\"stream_batch_bytes\":32,\n\"decoder_result_bytes\":48,\n\"a20_model_steps\":0,\"actual_audio_frames\":0,\"board_measured\":false}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "/workspace/shared/scratch-gcc14-strict-20261009/source/resource_sizes.c",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/sizes-optimized"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/shared/scratch-gcc14-strict-20261009/sizes-optimized"
+          ],
+          "exit": 0,
+          "stdout": "{\n\"float_bytes\":4,\n\"double_bytes\":8,\n\"pointer_bytes\":8,\n\"frontend_original_bytes\":4928,\n\"frontend_bytes\":13120,\n\"frontend_alignment\":8,\n\"frontend_added_double_workspace_bytes\":8192,\n\"frontend_existing_float_scratch_bytes\":4096,\n\"frontend_trace_bytes\":6916,\n\"frontend_local_output_row_bytes\":320,\n\"pcm_original_bytes\":62264,\n\"pcm_bytes\":70456,\n\"pcm_alignment\":8,\n\"splice_bytes\":1328,\n\"stream_original_bytes\":291912,\n\"stream_bytes\":300104,\n\"stream_alignment\":8,\n\"weights_bytes\":1565280,\n\"model_state_bytes\":22544,\n\"model_cache_bytes\":22528,\n\"model_explicit_local_array_bytes\":4624,\n\"optional_model_trace_bytes\":21000,\n\"decoder_state_bytes\":70000,\n\"decoder_workspace_bytes\":136800,\n\"caller_arena_plus_weights_bytes\":1865384,\n\"hamming_table_bytes\":1600,\n\"mel_offsets_table_bytes\":162,\n\"mel_bins_table_bytes\":1002,\n\"mel_weights_table_bytes\":2004,\n\"twiddle_tables_bytes\":4096,\n\"original_twiddle_tables_bytes\":2048,\n\"all_frontend_tables_bytes\":8864,\n\"donor_fft64_state.pcm\":32,\n\"donor_fft64_state.re\":832,\n\"donor_fft64_state.im\":2880,\n\"donor_fft64_state.fft_re\":4928,\n\"donor_fft64_state.fft_im\":9024,\n\"donor_fft64_pcm_state.frontend\":22168,\n\"donor_fft64_pcm_state.trace\":35288,\n\"donor_fft64_pcm_state.fbank\":42204,\n\"donor_fft64_pcm_state.rows\":52764,\n\"donor_fft64_pcm_state.centers\":70368,\n\"a20fft64s_state.pcm\":0,\n\"a20fft64s_state.model\":70456,\n\"a20fft64s_state.decoder\":93000,\n\"a20fft64s_state.decoder_work\":163000,\n\"a20fft64s_state.logits\":299800,\n\"a20fft64s_state.initialized\":300064,\n\"a20fft64s_state.trace_buffer\":300080,\n\"pcm_batch_bytes\":104,\n\"stream_batch_bytes\":32,\n\"decoder_result_bytes\":48,\n\"a20_model_steps\":0,\"actual_audio_frames\":0,\"board_measured\":false}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "tests/test_decoder.c",
+            "baseline/decoder/a20_decoder.c",
+            "-lm",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-normal"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-normal"
+          ],
+          "exit": 0,
+          "stdout": "{\"native_c_tests\":\"passed\",\"synthetic_stress_rows\":72000,\"decoder_bytes\":70000,\"workspace_bytes\":136800,\"result_bytes\":48}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "-O1",
+            "-g",
+            "-fsanitize=address",
+            "-fno-omit-frame-pointer",
+            "-fno-pie",
+            "-no-pie",
+            "tests/test_decoder.c",
+            "baseline/decoder/a20_decoder.c",
+            "-lm",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-asan"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-asan"
+          ],
+          "exit": 0,
+          "stdout": "{\"native_c_tests\":\"passed\",\"synthetic_stress_rows\":72000,\"decoder_bytes\":70000,\"workspace_bytes\":136800,\"result_bytes\":48}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fno-fast-math",
+            "-ffp-contract=off",
+            "-frounding-math",
+            "-fexcess-precision=standard",
+            "-fPIC",
+            "-O1",
+            "-g",
+            "-fsanitize=undefined",
+            "-fno-sanitize-recover=all",
+            "tests/test_decoder.c",
+            "baseline/decoder/a20_decoder.c",
+            "-lm",
+            "-o",
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-ubsan"
+          ],
+          "exit": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/workspace/shared/scratch-gcc14-strict-20261009/decoder-ubsan"
+          ],
+          "exit": 0,
+          "stdout": "{\"native_c_tests\":\"passed\",\"synthetic_stress_rows\":72000,\"decoder_bytes\":70000,\"workspace_bytes\":136800,\"result_bytes\":48}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+            "/workspace/shared/kws-scratch-fix-20261009/research/decoder_scratch_v1/test_decoder.py",
+            "--cc",
+            "gcc",
+            "--original",
+            "/workspace/shared/kws-scratch-fix-20261009/research/native_a20/baseline/decoder",
+            "--optimized",
+            "/workspace/shared/scratch-gcc14-strict-20261009/source/baseline/decoder",
+            "--output",
+            "/workspace/shared/scratch-gcc14-strict-20261009/differential"
+          ],
+          "exit": 0,
+          "stdout": "{\n  \"schema\": \"decoder-scratch-v1-differential\",\n  \"compiler\": \"gcc (Debian 14.2.0-19) 14.2.0\",\n  \"compile_flags\": [\n    \"-std=c11\",\n    \"-O2\",\n    \"-Wall\",\n    \"-Wextra\",\n    \"-Werror\",\n    \"-fno-fast-math\",\n    \"-ffp-contract=off\",\n    \"-frounding-math\",\n    \"-fexcess-precision=standard\",\n    \"-fPIC\"\n  ],\n  \"strict_fp_flags\": [\n    \"-fno-fast-math\",\n    \"-ffp-contract=off\",\n    \"-frounding-math\",\n    \"-fexcess-precision=standard\"\n  ],\n  \"compiler_flags_sha256\": \"7151046c9646bdee0f3a76c5f74646738bcf4bc0308fceb39b7faf4958d81a7c\",\n  \"commands\": [\n    {\n      \"command\": [\n        \"gcc\",\n        \"-std=c11\",\n        \"-O2\",\n        \"-Wall\",\n        \"-Wextra\",\n        \"-Werror\",\n        \"-fno-fast-math\",\n        \"-ffp-contract=off\",\n        \"-frounding-math\",\n        \"-fexcess-precision=standard\",\n        \"-fPIC\",\n        \"-shared\",\n        \"/workspace/shared/kws-scratch-fix-20261009/research/native_a20/baseline/decoder/a20_decoder.c\",\n        \"-lm\",\n        \"-o\",\n        \"/workspace/shared/scratch-gcc14-strict-20261009/differential/original-decoder.so\"\n      ],\n      \"exit\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\"\n    },\n    {\n      \"command\": [\n        \"gcc\",\n        \"-std=c11\",\n        \"-O2\",\n        \"-Wall\",\n        \"-Wextra\",\n        \"-Werror\",\n        \"-fno-fast-math\",\n        \"-ffp-contract=off\",\n        \"-frounding-math\",\n        \"-fexcess-precision=standard\",\n        \"-fPIC\",\n        \"-shared\",\n        \"/workspace/shared/scratch-gcc14-strict-20261009/source/baseline/decoder/a20_decoder.c\",\n        \"-lm\",\n        \"-o\",\n        \"/workspace/shared/scratch-gcc14-strict-20261009/differential/optimized-decoder.so\"\n      ],\n      \"exit\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\"\n    }\n  ],\n  \"binaries\": {\n    \"original\": {\n      \"library_sha256\": \"406579cd0e6ef0589688f3ff75bb62b56d37db34dd2421e7163ab6aa152e6c3e\",\n      \"source_sha256\": \"6a89f56f9d4a15f774c5f4fe13e9e6b86f574797879c0eda91ed3f49444d4937\",\n      \"header_sha256\": \"8fff95d8b4bbac1e37d88d4e093e4f81a07467e397ead258d54f4a9edae6d2e4\"\n    },\n    \"optimized\": {\n      \"library_sha256\": \"b3a0fa6ce3976f73b12a336e254b68d6c435f342cc7efe66d87b3b43ef6cebe6\",\n      \"source_sha256\": \"86e680cd3f957ddfc4a3abebb9924a2347272c75c2a44db33ea00c637a5a38cb\",\n      \"header_sha256\": \"519ce5a6fb8948f1df560cdf1783628111b481cf49a8926692375eef499f8045\"\n    }\n  },\n  \"pass\": true,\n  \"compiler_command\": \"gcc\",\n  \"native_elf\": {\n    \"class\": 64,\n    \"machine\": 62,\n    \"endian\": \"little\",\n    \"type\": 2,\n    \"osabi\": 0,\n    \"abi_version\": 0,\n    \"flags\": 0\n  },\n  \"synthetic_calls\": 1612,\n  \"random_rows\": 17177,\n  \"activations\": 207,\n  \"status_counts\": {\n    \"0\": 1606,\n    \"1\": 4,\n    \"2\": 1,\n    \"3\": 1\n  },\n  \"sizes\": {\n    \"original\": {\n      \"decoder\": 70000,\n      \"workspace\": 170400\n    },\n    \"optimized\": {\n      \"decoder\": 70000,\n      \"workspace\": 136800\n    }\n  },\n  \"workspace_saved_bytes\": 33600,\n  \"beam_unchanged\": true,\n  \"transaction_copy_preserved\": true,\n  \"scope\": \"host ABI synthetic decoder only; no model/audio evaluation or SSC305 measurement\"\n}\n",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "gcc",
+            "--version"
+          ],
+          "exit": 0,
+          "stdout": "gcc (Debian 14.2.0-19) 14.2.0\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+          "stderr": ""
+        }
+      ],
+      "acoustic_model_forwards": 0,
+      "audio_frames": 0,
+      "runtime_built_not_executed": true,
+      "board_measured": false,
+      "leak_detection": false,
+      "library_sha256": "aee2e57df1f8403b4f7a91d15cbad082b549fbcc0a8353b36814dbedbd6932d5"
+    }
+  },
+  "clang": {
+    "status": "not_run_locally",
+    "reason": "Clang is not installed in the local execution environment; dedicated GCC/Clang CI matrix required before reporting both compiler families verified."
+  }
+}

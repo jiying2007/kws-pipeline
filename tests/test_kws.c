@@ -663,7 +663,261 @@ static void test_weighted_kernel_inference(void) {
   CHECK((fired[0] == 1 ? best[0] : best[1]) > 0.10f);
 }
 
+/* Exercise every early init rejection with a stale, non-NULL result. */
+static void test_init_failure_contract(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  const size_t required = kws_engine_required_bytes(&model);
+  CHECK(required > 0u && required <= sizeof(arena));
+  CHECK(kws_engine_required_bytes(NULL) == 0u);
+  for (unsigned i = 0u; i < 11u; ++i) {
+    kws_model_t candidate = model;
+    kws_config_t config = kws_default_config();
+    void *memory = arena;
+    size_t capacity = required;
+    const kws_model_t *input = &candidate;
+    kws_status_t expected = KWS_EINVAL;
+    switch (i) {
+      case 0u: memory = NULL; break;
+      case 1u: input = NULL; break;
+      case 2u: candidate.feature_dim = 0u; break;
+      case 3u: memory = arena + 1u; break;
+      case 4u: config.min_speech_dbfs = INFINITY; break;
+      case 5u: config.token_boost = NAN; break;
+      case 6u: config.state_retention = 1.0f; break;
+      case 7u: config.refractory_ms = UINT32_MAX; break;
+      case 8u: config.external_vad_threshold = 0.0f; break;
+      case 9u: capacity = 0u; expected = KWS_ENOMEM; break;
+      default: capacity = required - 1u; expected = KWS_ENOMEM; break;
+    }
+    memset(arena, 0xa5, sizeof(arena));
+    engine = (kws_engine_t *)arena;
+    CHECK(kws_engine_init(memory, capacity, input, &config, &engine) == expected);
+    CHECK(engine == NULL);
+    for (size_t j = 0u; j < sizeof(arena); ++j) {
+      CHECK(arena[j] == 0xa5u);
+    }
+  }
+  CHECK(kws_engine_init(arena, required, &model, NULL, NULL) == KWS_EINVAL);
+  CHECK(kws_engine_init(NULL, 0u, NULL, NULL, NULL) == KWS_EINVAL);
+  engine = (kws_engine_t *)arena;
+  CHECK(kws_engine_init(NULL, 0u, &model, NULL, &engine) == KWS_EINVAL);
+  CHECK(engine == NULL);
+  CHECK(kws_engine_init(arena, required, &model, NULL, &engine) == KWS_OK);
+  CHECK(engine == (kws_engine_t *)arena);
+}
+
+static void test_model_argument_matrix(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  for (unsigned bad = 0u; bad < 25u; ++bad) {
+    kws_model_t candidate = model;
+    kws_engine_t *engine = (kws_engine_t *)arena;
+    switch (bad) {
+      case 0u: candidate.sample_rate_hz = 0u; break;
+      case 1u: candidate.frame_length_samples = 0u; break;
+      case 2u: candidate.frame_hop_samples = 0u; break;
+      case 3u: candidate.feature_dim = 0u; break;
+      case 4u: candidate.feature_dim = KWS_MAX_FEATURE_DIM + 1u; break;
+      case 5u: candidate.hidden_dim = 0u; break;
+      case 6u: candidate.hidden_dim = KWS_MAX_HIDDEN_DIM + 1u; break;
+      case 7u: candidate.vocab_size = 1u; break;
+      case 8u: candidate.vocab_size = KWS_MAX_VOCAB_SIZE + 1u; break;
+      case 9u: candidate.vocab_fingerprint = 0u; break;
+      case 10u: candidate.wx_scale = NAN; break;
+      case 11u: candidate.wh_scale = INFINITY; break;
+      case 12u: candidate.wo_scale = -INFINITY; break;
+      case 13u: candidate.wx_scale = 0.0f; break;
+      case 14u: candidate.wh_scale = -1.0f; break;
+      case 15u: candidate.wo_scale = 0.0f; break;
+      case 16u: candidate.wx = NULL; break;
+      case 17u: candidate.wh = NULL; break;
+      case 18u: candidate.bh = NULL; break;
+      case 19u: candidate.wo = NULL; break;
+      case 20u: candidate.bo = NULL; break;
+      case 21u: candidate.bh = (const float *)(blob + TEST_BH_OFFSET + 1u); break;
+      case 22u: candidate.bo = (const float *)(blob + TEST_BO_OFFSET + 1u); break;
+      case 23u: putf(blob + TEST_BH_OFFSET, NAN); break;
+      default: putf(blob + TEST_BO_OFFSET, INFINITY); break;
+    }
+    CHECK(kws_engine_required_bytes(&candidate) == 0u);
+    CHECK(kws_engine_init(arena, sizeof(arena), &candidate, NULL, &engine) == KWS_EINVAL);
+    CHECK(engine == NULL);
+    (void)make_test_model(blob, sizeof(blob));
+  }
+}
+
+static void test_frontend_kind_matrix(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  const uint16_t kinds[] = {KWS_FRONTEND_LOGMEL, KWS_FRONTEND_PCEN_LITE,
+                            2u, 9u, UINT16_MAX};
+  kws_model_t model;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  for (size_t i = 0u; i < sizeof(kinds) / sizeof(kinds[0]); ++i) {
+    const int valid = i < 2u;
+    kws_model_t parsed;
+    kws_engine_t *engine = (kws_engine_t *)arena;
+    model.frontend_kind = kinds[i];
+    put16(blob + 14u, kinds[i]);
+    CHECK(kws_model_open(blob, bytes, &parsed) ==
+          (valid != 0 ? KWS_OK : KWS_EFORMAT));
+    CHECK((kws_engine_required_bytes(&model) != 0u) == valid);
+    CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) ==
+          (valid != 0 ? KWS_OK : KWS_EINVAL));
+    CHECK((engine != NULL) == valid);
+  }
+}
+
+static void check_detection_sentinel(const kws_detection_t *d) {
+  CHECK(d->keyword_id == UINT32_MAX);
+  CHECK(d->confidence == -1.0f);
+  CHECK(d->end_sample == UINT64_MAX);
+}
+
+static void test_pcm_output_contract(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  kws_config_t config = kws_default_config();
+  const uint16_t token[] = {1u};
+  const kws_keyword_t keyword = make_keyword(42u, token, 1u, 0.10f);
+  int16_t pcm[KWS_MAX_PCM_BLOCK_SAMPLES];
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  config.min_speech_dbfs = -80.0f;
+  for (size_t i = 0u; i < KWS_MAX_PCM_BLOCK_SAMPLES; ++i) {
+    pcm[i] = ((i / 20u) & 1u) != 0u ? 12000 : -12000;
+  }
+  /* Both public entry points, all four NULL/output combinations, with a
+   * no-frame call followed by an actual synthetic detection. */
+  for (unsigned ex = 0u; ex < 2u; ++ex) {
+    for (unsigned mask = 0u; mask < 4u; ++mask) {
+      kws_detection_t detection = {UINT32_MAX, -1.0f, UINT64_MAX};
+      int detected = 7;
+      kws_detection_t *d = (mask & 1u) != 0u ? &detection : NULL;
+      int *flag = (mask & 2u) != 0u ? &detected : NULL;
+      kws_engine_stats_t stats;
+      CHECK(kws_engine_init(arena, sizeof(arena), &model, &config, &engine) == KWS_OK);
+      CHECK(kws_engine_set_keywords(engine, &keyword, 1u, TEST_VOCAB_FINGERPRINT) == KWS_OK);
+      CHECK((ex != 0u ? kws_engine_accept_pcm16_ex(engine, NULL, 0u, NULL, d, flag)
+                      : kws_engine_accept_pcm16(engine, NULL, 0u, d, flag)) == KWS_OK);
+      CHECK(detected == (flag != NULL ? 0 : 7));
+      check_detection_sentinel(&detection);
+      for (unsigned block = 0u; block < 2u; ++block) {
+        const size_t count = block == 0u ? KWS_MAX_PCM_BLOCK_SAMPLES : 80u;
+        CHECK((ex != 0u ? kws_engine_accept_pcm16_ex(engine, pcm, count, NULL, d, flag)
+                        : kws_engine_accept_pcm16(engine, pcm, count, d, flag)) == KWS_OK);
+      }
+      CHECK(detected == (flag != NULL ? 1 : 7));
+      if (d != NULL) {
+        CHECK(detection.keyword_id == 42u);
+        CHECK(detection.confidence > 0.10f);
+        CHECK(detection.end_sample == KWS_FRAME_LENGTH_SAMPLES);
+      }
+      CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
+      CHECK(stats.detections == 1u);
+    }
+    /* Every public validation branch, with both optional flags states. */
+    for (unsigned bad = 0u; bad < 18u; ++bad) {
+      for (unsigned mask = 0u; mask < 4u; ++mask) {
+        kws_frame_metadata_t metadata = {0};
+        kws_detection_t detection = {UINT32_MAX, -1.0f, UINT64_MAX};
+        int detected = 7;
+        kws_engine_t *input = engine;
+        const int16_t *samples = pcm;
+        size_t count = 1u;
+        kws_status_t expected = KWS_EINVAL;
+        metadata.struct_size = sizeof(metadata);
+        metadata.api_version = KWS_FRAME_METADATA_API_VERSION;
+        switch (bad) {
+          case 0u: input = NULL; break;
+          case 1u: samples = NULL; break;
+          case 2u: count = KWS_MAX_PCM_BLOCK_SAMPLES + 1u; expected = KWS_EBOUNDS; break;
+          case 3u: metadata.struct_size--; break;
+          case 4u: metadata.api_version = 0u; break;
+          case 5u: metadata.flags = UINT32_C(0x80000000); break;
+          case 6u: metadata.lost_samples = 1u; break;
+          case 7u: metadata.flags = KWS_FRAME_EXTERNAL_VAD_VALID; metadata.external_vad_probability = NAN; break;
+          case 8u: metadata.flags = KWS_FRAME_EXTERNAL_VAD_VALID; metadata.external_vad_probability = -0.1f; break;
+          case 9u: metadata.flags = KWS_FRAME_EXTERNAL_VAD_VALID; metadata.external_vad_probability = 1.1f; break;
+          default: metadata.reserved[bad - 10u] = 1u; break;
+        }
+        if (ex == 0u && bad > 2u) {
+          continue;
+        }
+        const uint64_t before = kws_engine_processed_samples(engine);
+        kws_detection_t *d = (mask & 1u) != 0u ? &detection : NULL;
+        int *flag = (mask & 2u) != 0u ? &detected : NULL;
+        CHECK((ex != 0u ? kws_engine_accept_pcm16_ex(input, samples, count, &metadata, d, flag)
+                        : kws_engine_accept_pcm16(input, samples, count, d, flag)) == expected);
+        CHECK(detected == (flag != NULL ? 0 : 7));
+        check_detection_sentinel(&detection);
+        CHECK(kws_engine_processed_samples(engine) == before);
+      }
+    }
+  }
+}
+
+static void test_replay_output_contract(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+  for (unsigned bad = 0u; bad < 8u; ++bad) {
+    for (unsigned mask = 0u; mask < 4u; ++mask) {
+      float logits[] = {0.0f, 1.0f, 0.0f, 0.0f};
+      kws_detection_t detection = {UINT32_MAX, -1.0f, UINT64_MAX};
+      int detected = 7;
+      kws_engine_t *input = engine;
+      const float *values = logits;
+      uint16_t vocab = model.vocab_size;
+      int speech = 1;
+      uint64_t end = 320u;
+      switch (bad) {
+        case 0u: input = NULL; break;
+        case 1u: values = NULL; break;
+        case 2u: vocab--; break;
+        case 3u: end = 0u; break;
+        case 4u: speech = -1; break;
+        case 5u: speech = 2; break;
+        case 6u: logits[0] = NAN; break;
+        default: logits[3] = INFINITY; break;
+      }
+      CHECK(kws_engine_debug_replay_frame(input, values, vocab, speech, end,
+            (mask & 1u) != 0u ? &detection : NULL,
+            (mask & 2u) != 0u ? &detected : NULL) == KWS_EINVAL);
+      CHECK(detected == ((mask & 2u) != 0u ? 0 : 7));
+      check_detection_sentinel(&detection);
+      CHECK(kws_engine_processed_samples(engine) == 0u);
+    }
+  }
+  {
+    const float logits[] = {0.0f, 1.0f, 0.0f, 0.0f};
+    CHECK(kws_engine_debug_replay_frame(engine, logits, model.vocab_size, 1,
+                                        320u, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_processed_samples(engine) == 320u);
+  }
+}
+
 int main(void) {
+  test_init_failure_contract();
+  test_model_argument_matrix();
+  test_frontend_kind_matrix();
+  test_pcm_output_contract();
+  test_replay_output_contract();
   test_model_and_engine();
   test_debug_frame_replay();
   test_validation();

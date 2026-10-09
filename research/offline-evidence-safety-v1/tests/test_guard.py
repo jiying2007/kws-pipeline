@@ -240,7 +240,7 @@ class SavedAdmissionTests(unittest.TestCase):
         self.assertFalse(self.terminal()['complete'])
 
     def test_partial_save_never_gets_complete_receipt(self):
-        with patch.object(g.np, 'savez', side_effect=OSError('synthetic disk full')):
+        with patch.object(g.np.lib.format, 'write_array', side_effect=OSError('synthetic disk full')):
             with self.assertRaises(OSError): self.run_review()
         self.assertFalse(self.terminal()['complete'])
         self.assertFalse(self.terminal()['qualified'])

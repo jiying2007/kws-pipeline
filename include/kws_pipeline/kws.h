@@ -234,12 +234,16 @@ typedef struct kws_engine kws_engine_t;
  *   KWS_EBOUNDS for an oversized block; KWS_EFORMAT for a blob or vocabulary
  *   fingerprint mismatch; KWS_ENOMEM when the arena or the trie cannot hold
  *   the request. A failing call never reports a detection, and a failing
- *   kws_engine_init() sets *out_engine to NULL.
+ *   kws_engine_init() sets *out_engine to NULL when out_engine is non-NULL.
+ *   Invalid init arguments take precedence over an insufficient arena size.
  *
  * Optional outputs
- *   out_detection may be NULL when only the detected flag is wanted, and
- *   out_detected may be NULL when only the detection is wanted. Outputs are
- *   written only on KWS_OK.
+ *   For kws_engine_accept_pcm16*(), either or both detection outputs may be
+ *   NULL. A non-NULL out_detected is set to 0 on failure or when no detection
+ *   is emitted, and to 1 when a detection is emitted. A non-NULL out_detection
+ *   is written only when a detection is emitted on KWS_OK; otherwise it is
+ *   unchanged. When omitting out_detected, initialise out_detection to a
+ *   sentinel if the caller needs to distinguish no detection from a new one.
  * ------------------------------------------------------------------------ */
 
 kws_status_t kws_model_open(const void *blob,

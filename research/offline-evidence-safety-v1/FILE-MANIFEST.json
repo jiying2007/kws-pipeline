@@ -2,8 +2,8 @@
   "schema": "offline-evidence-safety-file-manifest-v1",
   "target_directory": "research/offline-evidence-safety-v1",
   "base_repository": "jiying2007/kws-pipeline",
-  "base_commit": "22ae0a1cbd9e4a062a7bf6f51abf8d73cf18b958",
-  "scope": "New public source/tools/tests/docs only; no historical file edits or private data.",
+  "base_commit": "1b3774a24f8712e043e8d82eea5eeb51911dfcf2",
+  "scope": "Public audit fixes and synthetic-only tests; original historical experiments and archive payload unchanged.",
   "exclusions": [
     "FILE-MANIFEST.json (self)",
     "SOURCE.patch (delivery container)",
@@ -27,8 +27,8 @@
     {
       "path": "README.md",
       "repository_path": "research/offline-evidence-safety-v1/README.md",
-      "bytes": 8442,
-      "sha256": "4348ff832f2e4c62a93a4824018ac94513fcbd02f4d37b74f27244cd1368b449"
+      "bytes": 8854,
+      "sha256": "317affdfa6adc0cbd233efdb8ac02d21f3e43a26fb74dd6d614cc45e731c21f9"
     },
     {
       "path": "VALIDATION.json",
@@ -39,8 +39,8 @@
     {
       "path": "fetch_public_helper.py",
       "repository_path": "research/offline-evidence-safety-v1/fetch_public_helper.py",
-      "bytes": 2222,
-      "sha256": "e55dfa4fa3b925d4210ccf1be508e80a313f600e042cbad3d26c26a236b0c218"
+      "bytes": 3688,
+      "sha256": "d3e146c5cda78ee6e6232df04eeefa019532ed9c84bb08970e8502892e46eb37"
     },
     {
       "path": "requirements-test.txt",
@@ -51,8 +51,8 @@
     {
       "path": "run_tests.py",
       "repository_path": "research/offline-evidence-safety-v1/run_tests.py",
-      "bytes": 1727,
-      "sha256": "1543a6a1ae55353683ecb875300303ee2a066b943b2c17342d9a0127fd482732"
+      "bytes": 2143,
+      "sha256": "e66ac547a85189f04d1910b9cf3f9199bc1d6b8151d45d65bec9484d56279f05"
     },
     {
       "path": "src/offline_safety/__init__.py",
@@ -63,8 +63,8 @@
     {
       "path": "src/offline_safety/guard.py",
       "repository_path": "research/offline-evidence-safety-v1/src/offline_safety/guard.py",
-      "bytes": 9728,
-      "sha256": "853203158666aee6a18fd4a1dba60208a1c3381290bde6185ac6c28b908bfe53"
+      "bytes": 10639,
+      "sha256": "98002d74abe6742329c5baa836813be48af521421366574be77d904ff3a598e4"
     },
     {
       "path": "src/offline_safety/preflight.py",
@@ -75,8 +75,8 @@
     {
       "path": "src/offline_safety/supervisor.py",
       "repository_path": "research/offline-evidence-safety-v1/src/offline_safety/supervisor.py",
-      "bytes": 3789,
-      "sha256": "9fcc982f742a0523b789d48741c34feeea97e29d199a421365e8ebf9415cc98a"
+      "bytes": 4122,
+      "sha256": "c52dc5b062e9d4d4395945411999844eddb856d3644a078aafa39e3a8fdf28b9"
     },
     {
       "path": "tests/synthetic.py",
@@ -85,16 +85,22 @@
       "sha256": "11ba9a31a968535568fbbb15b0114db9670b35739f31dd11880f60c0a50a4363"
     },
     {
+      "path": "tests/test_evidence_boundaries.py",
+      "repository_path": "research/offline-evidence-safety-v1/tests/test_evidence_boundaries.py",
+      "bytes": 5176,
+      "sha256": "613bbd832bcc461ccc31af79c6704e966a210d5262faf2dfbb5e3411ca8c2e6b"
+    },
+    {
       "path": "tests/test_fetch_helper.py",
       "repository_path": "research/offline-evidence-safety-v1/tests/test_fetch_helper.py",
-      "bytes": 3700,
-      "sha256": "c56a57b4db94087f810bfc28e2c3929f6dc816a6e44645281b38378424026512"
+      "bytes": 5403,
+      "sha256": "9a9ea3c5a4decdd4b925a851e1fa54dbadb8896c06626dae96089f836229a91b"
     },
     {
       "path": "tests/test_guard.py",
       "repository_path": "research/offline-evidence-safety-v1/tests/test_guard.py",
-      "bytes": 20301,
-      "sha256": "5ca6cef8747529390bcdfe9e3023928a1b73f2b0bdf07c8ad3ca4385ebb9036d"
+      "bytes": 20318,
+      "sha256": "d20fad948730267aa2411ca7ed2aeb2eae3a343c1b8824b03fd97399d999adff"
     }
   ]
 }

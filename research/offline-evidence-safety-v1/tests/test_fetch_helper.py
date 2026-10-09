@@ -83,5 +83,41 @@ class PublicHelperFetchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'wrong-sized'): self.fetch()
 
 
+class PublicHelperCacheTests(PublicHelperFetchTests):
+    def cache(self, opener=None):
+        return fetcher.cached_helper(self.lock, Path(self.tmp.name) / 'cache',
+                                     self.tmp.name, opener=opener or self.opener)
+
+    @staticmethod
+    def no_network(*args, **kwargs):
+        raise AssertionError('verified cache hit must not access network')
+
+    def test_miss_then_verified_hit_without_network(self):
+        self.assertEqual(self.cache(), self.helper)
+        self.assertEqual(self.cache(self.no_network), self.helper)
+        files = list((Path(self.tmp.name) / 'cache').iterdir())
+        self.assertEqual([p.name for p in files], [self.lock['helper_sha256'] + '.py'])
+        self.assertEqual(files[0].read_bytes(), self.helper)
+
+    def test_corrupt_cache_fails_closed_without_network(self):
+        for raw in (self.helper + b'x', self.helper[:-1], b'x' * len(self.helper)):
+            cache = Path(self.tmp.name) / 'cache'
+            cache.mkdir(exist_ok=True)
+            (cache / (self.lock['helper_sha256'] + '.py')).write_bytes(raw)
+            with self.assertRaisesRegex(ValueError, 'size/hash mismatch'):
+                self.cache(self.no_network)
+
+    def test_failed_archive_never_creates_cache_entry(self):
+        self.lock['archive_sha256'] = '0' * 64
+        with self.assertRaisesRegex(ValueError, 'archive size/hash mismatch'):
+            self.cache()
+        self.assertFalse((Path(self.tmp.name) / 'cache').exists())
+
+    def test_invalid_cache_key_rejected_before_io(self):
+        self.lock['helper_sha256'] = '../untrusted'
+        with self.assertRaisesRegex(ValueError, 'cache identity'):
+            self.cache(self.no_network)
+
+
 if __name__ == '__main__':
     unittest.main()
