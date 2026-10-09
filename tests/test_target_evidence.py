@@ -8,7 +8,9 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+from qualification_fixture import runtime_soak_fixture
+from collect_target_evidence import load_runtime_soak
+from qualification_metrics import _runtime_soak_metrics
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -19,46 +21,78 @@ def sha256_file(path: pathlib.Path) -> str:
     return digest.hexdigest()
 
 
+def check_runtime_contract(root: pathlib.Path) -> None:
+    path = root / "synthetic-soak-contract.json"
+
+    def validate(value: dict) -> tuple[dict, dict]:
+        text = json.dumps(value, sort_keys=True)
+        path.write_text(text, encoding="utf-8")
+        return (load_runtime_soak(path), _runtime_soak_metrics(
+            {"runtime_soak_raw": text}, hashlib.sha256(text.encode()).hexdigest()))
+
+    # One-core CPU units never depend on machine capacity. Multithread process
+    # time may exceed 100%; zero usage and the exact 100% boundary are legal.
+    for percent, capacity, threads in ((0, 1, 1), (10, 1, 1), (20, 2, 1),
+                                       (20, 8, 1), (100, 1, 1), (150, 2, 2)):
+        left, right = validate(runtime_soak_fixture(1.0, cpu_percent=percent,
+                                                   capacity=capacity, threads=threads))
+        assert left == right
+        assert abs(left["cpu_percent"] - percent) < 1e-9
+        assert left["max_thread_count"] == threads
+        assert left["audio_seconds"] is None
+        assert left["cpu_seconds_per_audio_second"] is None
+
+    mutations = [
+        ("schema_version", 2),
+        ("measurement_contract_id", "legacy-online-capacity"),
+        ("cpu_percent_semantics", "process_cpu_time / elapsed / online_cpu_capacity * 100"),
+        ("average_cpu_percent", 10.0),  # 20% on two cores is NOT 10%.
+        ("process_cpu_seconds", 360.0),
+        ("wall_seconds", 7200.0),
+        ("max_thread_count", 2),
+        ("cpu_capacity_count", True),
+        ("audio_seconds", 3600.0),
+        ("cpu_seconds_per_audio_second", 0.2),
+    ]
+    invalid = []
+    for key, replacement in mutations:
+        value = runtime_soak_fixture(1.0, cpu_percent=20.0)
+        value[key] = replacement
+        invalid.append(value)
+    for key in ("measurement_contract_id", "max_thread_count", "audio_seconds"):
+        value = runtime_soak_fixture(1.0)
+        del value[key]
+        invalid.append(value)
+    for key, replacement in (("cpu_seconds", None), ("cpu_seconds", 9.0),
+                             ("elapsed_s", 3500.0), ("thread_count", 0),
+                             ("thread_count", True)):
+        value = runtime_soak_fixture(1.0)
+        value["samples"][-1][key] = replacement
+        invalid.append(value)
+    for value in invalid:
+        text = json.dumps(value, sort_keys=True)
+        path.write_text(text, encoding="utf-8")
+        for validator in (lambda: load_runtime_soak(path), lambda: _runtime_soak_metrics(
+                {"runtime_soak_raw": text}, hashlib.sha256(text.encode()).hexdigest())):
+            try:
+                validator()
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"invalid runtime CPU evidence accepted: {value}")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
+        check_runtime_contract(root)
         collector = ROOT / "tools" / "collect_target_evidence.py"
         power = root / "power.csv"
         power.write_text("t,power_mw\n0,123\n", encoding="utf-8")
         soak = root / "runtime-soak.json"
         soak.write_text(
             json.dumps(
-                {
-                    "schema_version": 2,
-                    "command": ["fixture"],
-                    "pid": 123,
-                    "cpu_capacity_count": 2,
-                    "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
-                    "requested_hours": 1.0,
-                    "elapsed_seconds": 3636.0,
-                    "elapsed_hours": 1.01,
-                    "completed_requested_duration": True,
-                    "termination_returncode": -15,
-                    "sample_seconds": 60.0,
-                    "initial_cpu_seconds": 10.0,
-                    "samples": [
-                        {
-                            "elapsed_s": 0.0,
-                            "rss_kib": 500.0,
-                            "cpu_seconds": 10.0,
-                            "temp_c": 50.0,
-                        },
-                        {
-                            "elapsed_s": 3636.0,
-                            "rss_kib": 512.0,
-                            "cpu_seconds": 373.6,
-                            "temp_c": 55.0,
-                        },
-                    ],
-                    "max_rss_kib": 512.0,
-                    "average_cpu_percent": 5.0,
-                    "max_temp_c": 55.0,
-                },
+                runtime_soak_fixture(1.01, requested_hours=1.0),
                 indent=2,
             )
             + "\n",
@@ -152,7 +186,7 @@ def main() -> int:
             ]
         )
         value = json.loads(output.read_text(encoding="utf-8"))
-        assert value["schema_version"] == 2
+        assert value["schema_version"] == 3
         assert value["evidence_class"] == "product-board"
         assert value["sku"] == "fixture-sku"
         assert value["source_sha"] == "b" * 40

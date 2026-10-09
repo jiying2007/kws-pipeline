@@ -3,10 +3,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import pathlib
 import subprocess
 import time
+
+from runtime_soak_contract import (
+    CPU_MEASUREMENT_CONTRACT_ID, CPU_PERCENT_SEMANTICS,
+    RUNTIME_SOAK_SCHEMA_VERSION, cpu_percent,
+)
 
 
 def read_text(path: pathlib.Path) -> str | None:
@@ -49,6 +55,18 @@ def process_cpu_seconds(pid: int) -> float | None:
     return ticks / float(hz) if hz > 0 else None
 
 
+def process_thread_count(pid: int) -> int | None:
+    text = read_text(pathlib.Path(f"/proc/{pid}/status"))
+    for line in (text or "").splitlines():
+        if line.startswith("Threads:"):
+            try:
+                count = int(line.split()[1])
+                return count if count > 0 else None
+            except (IndexError, ValueError):
+                return None
+    return None
+
+
 def online_cpu_count() -> int:
     value = os.cpu_count()
     return value if isinstance(value, int) and value > 0 else 1
@@ -79,7 +97,7 @@ def main() -> int:
         help="child command and all remaining arguments; place this option last",
     )
     args = parser.parse_args()
-    if args.hours <= 0.0 or args.sample_seconds <= 0.0:
+    if not all(math.isfinite(value) and value > 0.0 for value in (args.hours, args.sample_seconds)):
         raise ValueError("hours and sample-seconds must be > 0")
     if not args.command:
         parser.error("--command requires a child executable")
@@ -94,16 +112,17 @@ def main() -> int:
         deadline = started + args.hours * 3600.0
         while True:
             now = time.monotonic()
+            if process.poll() is not None:
+                raise RuntimeError(f"soak command exited early: {process.returncode}")
             if now >= deadline:
                 completed_requested_duration = True
                 break
-            if process.poll() is not None:
-                raise RuntimeError(f"soak command exited early: {process.returncode}")
             samples.append(
                 {
                     "elapsed_s": now - started,
                     "rss_kib": process_rss_kib(process.pid),
                     "cpu_seconds": process_cpu_seconds(process.pid),
+                    "thread_count": process_thread_count(process.pid),
                     "temp_c": thermal_max_c(),
                 }
             )
@@ -115,6 +134,7 @@ def main() -> int:
                 "elapsed_s": final_now - started,
                 "rss_kib": process_rss_kib(process.pid),
                 "cpu_seconds": process_cpu_seconds(process.pid),
+                "thread_count": process_thread_count(process.pid),
                 "temp_c": thermal_max_c(),
             }
         )
@@ -127,17 +147,15 @@ def main() -> int:
                 process.kill()
                 process.wait()
 
-    elapsed_s = time.monotonic() - started
-    final_cpu_values = [
-        row["cpu_seconds"] for row in samples if row["cpu_seconds"] is not None
-    ]
-    last_cpu = final_cpu_values[-1] if final_cpu_values else None
+    # Exclude process termination/wait time from the measured CPU interval.
+    elapsed_s = samples[-1]["elapsed_s"]
+    last_cpu = samples[-1]["cpu_seconds"]
+    process_cpu_time = None
     average_cpu_percent = None
     if initial_cpu is not None and last_cpu is not None and elapsed_s > 0.0:
-        one_core_fraction = max(0.0, (last_cpu - initial_cpu) / elapsed_s)
-        average_cpu_percent = min(
-            100.0, one_core_fraction / capacity_cpus * 100.0
-        )
+        process_cpu_time = last_cpu - initial_cpu
+        average_cpu_percent = cpu_percent(process_cpu_time, elapsed_s)
+    thread_values = [row["thread_count"] for row in samples if row["thread_count"] is not None]
 
     rss_values = [
         row["rss_kib"] for row in samples if row["rss_kib"] is not None
@@ -146,13 +164,17 @@ def main() -> int:
         row["temp_c"] for row in samples if row["temp_c"] is not None
     ]
     result = {
-        "schema_version": 2,
+        "schema_version": RUNTIME_SOAK_SCHEMA_VERSION,
         "command": args.command,
         "pid": process.pid,
         "cpu_capacity_count": capacity_cpus,
-        "cpu_percent_semantics": (
-            "process_cpu_time / elapsed / online_cpu_capacity * 100"
-        ),
+        "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID,
+        "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
+        "process_cpu_seconds": process_cpu_time,
+        "wall_seconds": elapsed_s,
+        "max_thread_count": max(thread_values) if thread_values else None,
+        "audio_seconds": None,
+        "cpu_seconds_per_audio_second": None,
         "requested_hours": args.hours,
         "elapsed_seconds": elapsed_s,
         "elapsed_hours": elapsed_s / 3600.0,

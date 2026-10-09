@@ -249,7 +249,8 @@ CPU 时间、RTF、p50/p95/p99/max、文件 I/O、分配与音频连续性，模
 预加载/常驻的设计意图不保证零物理 I/O 或零缺页，仍需测量实际页错误与存储计数。
 模型文件字节、权重张量、因果状态、arena/工作区与完整进程 RSS 分开；
 Python/ONNX/PyTorch RSS 不能冒充未来 C 端缓存，x86 时间和 MAC 不能换算成 SSC305 实测。
-SSC305 双核 Cortex-A32 的 CPU 预算按单核记录 CPU-seconds/audio-second、线程数和 block deadline；
+SSC305 双核 Cortex-A32 的 CPU gate 采用单核口径 `process-cpu-one-core-v1`：进程全部线程 CPU-seconds / wall-second × 100，不除在线核数、不截断超过 100% 的多线程值；记录实测线程数和 block deadline。
+CPU-seconds/audio-second 仍需真实音频采样计数及采样率证据；当前 soak 不具备音频计数接口，该比率与音频时长明确为 null，不拿墙钟秒或独立 board-bench 的输入音频时长补造；
 软件阶段先验证目标 ARM32 构建、ABI、固定内存、流式黄金轨迹与集成行为，再由板端验收实际 CPU/I/O。
 具体产品预算结合目标 AFE 和并发业务负载确认；本文不把 x86 测量或研究预算模板写成已生效目标板策略。
 使用目标板 profile 定位 FFT/前端/激活/矩阵/decoder 热点，再优化并重跑声学/资源门禁。

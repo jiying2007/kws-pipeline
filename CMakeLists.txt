@@ -40,28 +40,6 @@ if(KWS_SOURCE_REVISION STREQUAL "")
     endif()
   endif()
 endif()
-execute_process(
-  COMMAND ${CMAKE_C_COMPILER} -dumpmachine
-  OUTPUT_VARIABLE KWS_TARGET_TRIPLE
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  RESULT_VARIABLE KWS_TARGET_RESULT
-)
-if(NOT KWS_TARGET_RESULT EQUAL 0 OR KWS_TARGET_TRIPLE STREQUAL "")
-  set(KWS_TARGET_TRIPLE "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
-endif()
-if(CMAKE_BUILD_TYPE)
-  set(KWS_BUILD_TYPE_NAME "${CMAKE_BUILD_TYPE}")
-else()
-  set(KWS_BUILD_TYPE_NAME "unspecified")
-endif()
-string(CONCAT KWS_CONFIG_IDENTITY
-  "tests=${KWS_BUILD_TESTS}\nbench=${KWS_BUILD_BENCH}\ntools=${KWS_BUILD_TOOLS}\n"
-  "strict=${KWS_STRICT}\ncompiler=${CMAKE_C_COMPILER_ID}-${CMAKE_C_COMPILER_VERSION}\n"
-  "target=${KWS_TARGET_TRIPLE}\nbuild_type=${KWS_BUILD_TYPE_NAME}\nflags=${CMAKE_C_FLAGS}\n")
-string(SHA256 KWS_CONFIG_DIGEST "${KWS_CONFIG_IDENTITY}")
-configure_file(cmake/kws_build_config.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/generated/kws_build_config.h @ONLY)
-
 # configs/parameter-contract.json is the single source of truth for every
 # tunable parameter and its validation range.  src/*.c include the generated
 # header, so a contract edit that breaks a bound fails the build instead of
@@ -114,7 +92,9 @@ target_include_directories(kws_pipeline
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/generated
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/$<CONFIG>
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 target_compile_features(kws_pipeline PUBLIC c_std_11)
 target_link_libraries(kws_pipeline PUBLIC m)
@@ -258,6 +238,9 @@ if(KWS_BUILD_FUZZ)
     target_compile_options(kws_fuzz_keyword_pack PRIVATE ${KWS_STRICT_OPTIONS})
   endif()
 endif()
+
+# Collect target settings only after all core and hosted targets are defined.
+include(cmake/KwsBuildIdentity.cmake)
 
 install(TARGETS kws_pipeline
   EXPORT KwsPipelineTargets

@@ -53,7 +53,9 @@ raw/audio-continuity.json
 
 `target-evidence.json` is produced by `tools/collect_target_evidence.py`. It must carry both the final-AFE executable SHA and the **full Phase-A final-AFE identity SHA**. The external trust-layer verification must independently bind that full identity together with the raw-evidence manifest, collector, board runner, model and keyword pack; `target-dut-qualification` parses and re-verifies those fields instead of trusting the summary alone. `board-summary.json` is produced by the exact shipping target `kws_board_bench`.
 
-Per-DUT policy is `commercial/target-qualification.policy.json`. Current gates require at least 24 h soak and bound p99 processing, RTF/headroom, CPU, RSS, stack high-water, temperature, average power, XRUN, lost-sample, discontinuity and backpressure evidence.
+Per-DUT policy v3 is `commercial/target-qualification.policy.json`, with approved resource-budget schema v2. Both require the fixed `measurement_contract_id=process-cpu-one-core-v1`. CPU is aggregate process CPU seconds / wall seconds × 100 in one-core units; capacity is never a denominator and multithreaded usage can exceed 100%. Target evidence and runtime-soak are v3. Actual sampled thread counts and CPU seconds are retained; soak audio duration and CPU/audio-second are null until backed by actual audio-counter evidence. See [CPU units](TARGET_EVIDENCE.md#cpu-units-and-unavailable-audio-exposure).
+
+DUT/cohort summaries and their public receipts are v2. Promotion and terminal shipping approval reject older versions or missing/mismatched CPU contracts; historical artifacts are not relabeled. Current gates require at least 24 h soak and bound p99 processing, RTF/headroom, CPU, RSS, stack high-water, temperature, average power, XRUN, lost-sample, discontinuity and backpressure evidence.
 
 A PASS publishes immutable:
 

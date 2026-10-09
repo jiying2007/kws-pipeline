@@ -7,9 +7,12 @@ import pathlib
 import subprocess
 import sys
 import tempfile
+import textwrap
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+from qualification_fixture import runtime_soak_fixture
+from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
+from score_target_dut_qualification import validate_resource_budget
 DIAGNOSTIC_PATH = ROOT / ".target-shipping-contract-diagnostic.json"
 DIAGNOSTIC_STDOUT_LIMIT = 4096
 
@@ -70,36 +73,7 @@ def run(*args: str, expect: int = 0) -> subprocess.CompletedProcess[str]:
 
 
 def write_runtime_soak(path: pathlib.Path, hours: float) -> None:
-    elapsed = hours * 3600.0
-    path.write_text(
-        json.dumps(
-            {
-                "schema_version": 2,
-                "command": ["fixture-product-soak"],
-                "pid": 123,
-                "cpu_capacity_count": 1,
-                "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
-                "requested_hours": hours,
-                "elapsed_seconds": elapsed,
-                "elapsed_hours": hours,
-                "completed_requested_duration": True,
-                "termination_returncode": -15,
-                "sample_seconds": 60.0,
-                "initial_cpu_seconds": 10.0,
-                "samples": [
-                    {"elapsed_s": 0.0, "rss_kib": 500.0, "cpu_seconds": 10.0, "temp_c": 50.0},
-                    {"elapsed_s": elapsed, "rss_kib": 512.0, "cpu_seconds": 10.0 + elapsed * 0.05, "temp_c": 55.0},
-                ],
-                "max_rss_kib": 512.0,
-                "average_cpu_percent": 5.0,
-                "max_temp_c": 55.0,
-            },
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    path.write_text(json.dumps(runtime_soak_fixture(hours), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def make_bundle(
@@ -110,6 +84,9 @@ def make_bundle(
     deployment_tag: str,
     afe_sha: str,
     afe_identity: str,
+    cpu_percent: float = 5.0,
+    capacity: int = 2,
+    threads: int = 1,
 ) -> pathlib.Path:
     bundle = root / "bundle"
     raw = bundle / "raw"
@@ -127,12 +104,12 @@ def make_bundle(
     resource_budget.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "status": "approved",
                 "budget_id": "fixture-budget-v1",
                 "sku": "fixture-sku",
                 "board_revision": "A",
-                "measurement_contract_id": "fixture-measurement-v1",
+                "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID,
                 "authority": "fixture-product-owner",
                 "approved_at_utc": "2026-09-08T00:00:00Z",
                 "limits": {
@@ -153,7 +130,7 @@ def make_bundle(
     soak = raw / "runtime-soak.json"
     power = raw / "power.csv"
     continuity = raw / "audio-continuity.json"
-    write_runtime_soak(soak, 24.0)
+    soak.write_text(json.dumps(runtime_soak_fixture(24.0, cpu_percent=cpu_percent, capacity=capacity, threads=threads)) + "\n", encoding="utf-8")
     power.write_text("t,power_mw\n0,123\n", encoding="utf-8")
     continuity.write_text(
         json.dumps(
@@ -299,7 +276,7 @@ def main() -> int:
     production = json.loads(
         (ROOT / "commercial/target-qualification.policy.json").read_text(encoding="utf-8")
     )
-    assert production["schema_version"] == 2
+    assert production["schema_version"] == 3
     assert production["shipping_approved"] is False
     assert production["per_dut_hard_gates"]["min_soak_hours"] == 24.0
     assert production["resource_budget"]["required"] is True
@@ -332,6 +309,33 @@ def main() -> int:
     assert "verify_live_main_ruleset.py" in approval_workflow or "require_current_main.sh" in approval_workflow
     assert "public-phase-a-receipt.json" in approval_workflow
     assert "public-target-cohort-receipt.json" in approval_workflow
+    # Keep every public-receipt path on the current unit/version before it can
+    # reach publishing. The terminal inline Python check is also executed with
+    # synthetic objects, without any GitHub, approval or publication operation.
+    for text in (dut_workflow, cohort_workflow, approval_workflow):
+        assert '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' in text
+        assert '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' in text
+    assert '{schema_version:2,phase:"physical-target-dut-qualification"' in dut_workflow
+    assert '{schema_version:2,phase:"physical-target-cohort-qualification"' in cohort_workflow
+    assert '.resource_budget.measurement_contract_id == "process-cpu-one-core-v1" and .metrics.measurement_contract_id == "process-cpu-one-core-v1"' in cohort_workflow
+    start = approval_workflow.index("          for label, value, version in (")
+    end = approval_workflow.index("          if governance.get", start)
+    guard = compile(textwrap.dedent(approval_workflow[start:end]), "shipping-approval-cpu-contract", "exec")
+    good = {name: {"schema_version": version, "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID}
+            for name, version in (("policy", 3), ("budget", 2), ("cohort", 2), ("cohort_receipt", 2))}
+    exec(guard, dict(good))
+    for name in good:
+        for field, bad_value in (("schema_version", 1), ("measurement_contract_id", None),
+                                 ("measurement_contract_id", "legacy-online-capacity")):
+            bad = json.loads(json.dumps(good))
+            bad[name][field] = bad_value
+            try:
+                exec(guard, bad)
+            except SystemExit as exc:
+                assert "unsupported CPU measurement contract" in str(exc)
+            else:
+                raise AssertionError(f"shipping approval accepted old {name}/{field}")
+
 
     with tempfile.TemporaryDirectory(prefix="kws-target-shipping-") as td:
         root = pathlib.Path(td)
@@ -431,6 +435,62 @@ def main() -> int:
         assert dut["resource_budget"]["budget_id"] == "fixture-budget-v1"
         assert dut["resource_budget"]["sha256"] == sha(bundle / "resource-budget.json")
         assert dut["next_gate"] == "physical-target-cohort-qualification"
+        assert dut["schema_version"] == 2
+        assert dut["metrics"]["measurement_contract_id"] == CPU_MEASUREMENT_CONTRACT_ID
+        assert dut["metrics"]["audio_seconds"] is None
+        budget = json.loads((bundle / "resource-budget.json").read_text())
+        required_limits = production["resource_budget"]["required_limit_fields"]
+        schema = json.loads((ROOT / "commercial/target-resource-budget.schema.json").read_text())
+        assert schema["properties"]["schema_version"]["const"] == 2
+        assert schema["properties"]["measurement_contract_id"]["const"] == CPU_MEASUREMENT_CONTRACT_ID
+        assert "maximum" not in schema["properties"]["limits"]["properties"]["max_cpu_percent"]
+        assert validate_resource_budget(budget, required_limits)["measurement_contract_id"] == CPU_MEASUREMENT_CONTRACT_ID
+        for section, key, replacement in ((None, "schema_version", 1),
+                (None, "measurement_contract_id", "legacy-online-capacity"),
+                ("limits", "max_cpu_percent", float("nan")),
+                ("limits", "max_cpu_percent", 0)):
+            old_budget = json.loads(json.dumps(budget))
+            (old_budget if section is None else old_budget[section])[key] = replacement
+            try:
+                validate_resource_budget(old_budget, required_limits)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("invalid CPU budget accepted")
+        budget["limits"]["max_cpu_percent"] = 150.0
+        assert validate_resource_budget(budget, required_limits)["limits"]["max_cpu_percent"] == 150.0
+
+
+        # Exercise collector -> retained raw/attestation -> DUT scorer, rather
+        # than merely comparing two hand-written CPU numbers.
+        for name, percent, capacity, threads, exit_code in (
+            ("one-core-boundary", 10.0, 1, 1, 0),
+            ("two-core-boundary", 10.0, 2, 1, 0),
+            ("two-core-overbudget", 20.0, 2, 1, 1),
+            ("two-thread-overbudget", 150.0, 2, 2, 1),
+        ):
+            case_root = root / name
+            case_root.mkdir()
+            case_bundle = make_bundle(case_root, source_sha=source_sha,
+                phase_a_tag=human_tag, deployment_tag=deployment_tag,
+                afe_sha=afe_executable, afe_identity=afe_identity,
+                cpu_percent=percent, capacity=capacity, threads=threads)
+            case_output = case_root / "dut-summary.json"
+            run(sys.executable, "tools/score_target_dut_qualification.py",
+                "--bundle", str(case_bundle), "--policy", str(policy_path),
+                "--phase-a-receipt", str(phase_a_receipt),
+                "--phase-a-summary", str(phase_a_summary),
+                "--deployment-manifest", str(deployment),
+                "--model", str(case_root / "model.kwm"),
+                "--keywords", str(case_root / "keywords.kwk"),
+                "--output", str(case_output), expect=exit_code)
+            measured = json.loads(case_output.read_text())
+            assert measured["metrics"]["cpu_percent"] == percent
+            assert measured["metrics"]["max_thread_count"] == threads
+            assert measured["qualified"] is (exit_code == 0)
+            if exit_code:
+                assert "cpu-budget" in measured["failures"]
+
 
         drift = json.loads((bundle / "target-evidence.json").read_text(encoding="utf-8"))
         drift["audio_frontend_identity_sha256"] = "f" * 64
@@ -475,6 +535,19 @@ def main() -> int:
         assert cohort["long_soak_duts"] == 1
         assert cohort["resource_budget_sha256"] == dut["resource_budget"]["sha256"]
         assert cohort["next_gate"] == "shipping-approval-promotion"
+
+        original = cohort_paths[0].read_text(encoding="utf-8")
+        for section, key, replacement in (
+            (None, "schema_version", 1),
+            ("resource_budget", "measurement_contract_id", "legacy-online-capacity"),
+            ("metrics", "cpu_percent_semantics", "process_cpu_time / elapsed / online_cpu_capacity * 100"),
+            ("metrics", "cpu_percent", 2.5),
+        ):
+            old = json.loads(original)
+            (old if section is None else old[section])[key] = replacement
+            cohort_paths[0].write_text(json.dumps(old), encoding="utf-8")
+            run(*args, expect=2)
+        cohort_paths[0].write_text(original, encoding="utf-8")
 
         duplicate = json.loads(cohort_paths[2].read_text(encoding="utf-8"))
         duplicate["evidence_sha256"]["target_evidence"] = json.loads(

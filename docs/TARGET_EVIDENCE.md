@@ -22,7 +22,20 @@ python3 tools/collect_runtime_soak.py \
   --command ./product-kws-soak --config qualification/product-config.json
 ```
 
-Runtime-soak schema v2 records requested/actual duration, early-exit state, child PID/command, max child-process RSS, average child-process CPU from CPU-time deltas, thermal samples/max temperature and the retained raw time series. If the process exits before the requested duration, the collector fails.
+Runtime-soak schema v3 records requested/actual duration, early-exit state, child PID/command, max child-process RSS, aggregate process CPU time, observed thread counts, thermal samples/max temperature and the retained raw time series. If the process exits before the requested duration, the collector fails.
+
+### CPU units and unavailable audio exposure
+
+All CPU gates use the fixed `measurement_contract_id=process-cpu-one-core-v1` and `cpu_percent_semantics="process_cpu_seconds / wall_seconds * 100"`:
+
+- `process_cpu_seconds` is the final minus initial `/proc/<pid>/stat` user + system CPU time, summed over that process's threads. Descendant processes are outside this sampler's scope; run the actual product process directly, not a launcher that forks the workload away.
+- `wall_seconds` equals `elapsed_seconds` and the final sample's `elapsed_s`. Termination and cleanup waits are excluded from the denominator.
+- `average_cpu_percent` in the raw soak becomes `cpu_percent` in evidence and scores. 100% means one occupied core, 150% means 1.5 cores. Values are not clipped to 100 and are never divided by online cores, affinity, configured threads or measured threads.
+- `cpu_capacity_count` is descriptive topology only. Two-core hardware using 20 CPU-seconds in 100 wall-seconds measures 20%, so a 10% budget FAILS.
+- Every sample retains an actual `/proc/<pid>/status` `thread_count`; `max_thread_count` is the maximum observed at sample times, not a guarantee about threads between samples.
+- This sampler has no retained audio sample counter. `audio_seconds` and `cpu_seconds_per_audio_second` must both be null; wall time is not audio exposure. A future CPU/audio-second measurement must bind real processed-sample counters and their sample rate. `kws_board_bench` separately reports processing-time RTF against its known input WAV duration/repeats; that audio duration cannot be reused for the soak.
+
+Collection and independent qualification both recompute the same schema-v3 contract. Missing/reset CPU counters, missing/invalid thread counts, inconsistent endpoint durations or changed units fail closed. Runtime-soak v2 and target-evidence v2 used online-capacity units and are rejected, even on a single-core host. Do not relabel historical evidence or simply change its version/semantics string; recollect and attest the current contract. Historical archived artifacts retain their original bytes and authority boundaries.
 
 Also retain audio-pipeline XRUN/backpressure counters and `kws_engine_get_stats()` discontinuity snapshots when the SKU requires them.
 
@@ -110,7 +123,7 @@ python3 tools/collect_target_evidence.py \
   --calibration-id <calibration-id>
 ```
 
-The collector emits target evidence schema v2 with `evidence_class=product-board`. It derives soak hours, CPU, RSS and max temperature from the retained runtime-soak bytes, embeds those exact soak bytes for independent recomputation, and binds:
+The collector emits target evidence schema v3 with `evidence_class=product-board`. It derives soak hours, CPU, RSS and max temperature from the retained runtime-soak bytes, embeds those exact soak bytes for independent recomputation, and binds:
 
 - SKU and exact source SHA;
 - builder/DUT/collector identity;

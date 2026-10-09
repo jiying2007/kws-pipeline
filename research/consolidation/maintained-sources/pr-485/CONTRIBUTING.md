@@ -17,7 +17,6 @@ python3 tests/test_dataset_audit.py
 python3 tests/test_corpus_identity.py
 python3 tests/test_false_reject_mining.py
 python3 tests/test_keyword_compile.py
-python3 tests/test_decoder_policy_replay.py --path-runner ./build/kws_decoder_path_replay
 python3 tools/prepare_eval_context_fixtures.py
 python3 tests/test_eval.py
 python3 tests/test_statistical_bounds.py
@@ -31,7 +30,6 @@ python3 tests/test_training_supply_chain.py
 python3 tests/test_reproducible_sdk.py
 python3 tests/test_terminal_docs.py
 python3 tests/test_test_inventory.py
-python3 tools/test_inventory.py --official-workflows
 python3 -m py_compile tools/*.py training/*.py eval/*.py tests/*.py
 ```
 
@@ -110,10 +108,10 @@ A software change is not a shipping acoustic qualification. v0.3 release qualifi
 - clean dataset audit covering exact training/final references manifests;
 - exact evaluation runner/references/original held-out WAVs/detections/provenance/metrics;
 - exact target board benchmark runner/audio/summary;
-- product-board evidence schema v3;
+- product-board evidence schema v2;
 - exact collector, canonical raw evidence manifest, attestation verification and raw evidence files;
 - matching `shipping_approved=true` SKU policy;
-- qualification manifest schema v3 and gate result schema v4.
+- qualification manifest schema v2 and gate result schema v3.
 
 See `docs/RELEASE_QUALIFICATION.md`.
 

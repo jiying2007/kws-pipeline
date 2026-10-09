@@ -60,22 +60,28 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
   build with 33,600 bytes less host workspace. The historical baseline stays intact;
   callers must rebuild for its new workspace ABI. This is opt-in research, not a
   shipping/default or board-qualified replacement.
-- [Current diagnostic admission and saved-trace priority](diagnostic-readiness-2026-10-09/PUBLIC-PROTOCOL.zh-CN.md)
-  ([machine-readable readiness](diagnostic-readiness-2026-10-09/PUBLIC-READINESS-SUMMARY.json),
-  PR #502): start here before proposing further diagnostics. Saved inputs are
-  identified, but exact backend, RSS enforcement and independently accepted
-  single-operator driver prerequisites still block numerical execution. Prefer
-  existing saved traces and an independently reviewed decoder-state observation
-  plan; do not duplicate audio acquisition or expand training. FA causality is
-  unresolved; matching PCM from different runs does not establish identical state.
-- [Earlier saved failure diagnosis and protocol supplement](saved-diagnostics-2026-10-09/REPORT.zh-CN.md):
+- [Current admission checklist / 当前唯一准入清单](d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist):
+  start here before proposing further diagnostics. Establish and independently
+  verify a hard-memory scope before any exact-backend import inside that scope.
+  Exact backend, historical source binding and independently accepted one-stage
+  wrappers remain blockers; metadata-only tests never admit numerical execution.
+  Prefer saved traces and a reviewed decoder-state observation plan; do not
+  duplicate audio acquisition or expand training. FA causality is unresolved;
+  matching PCM across runs does not establish identical state.
+- [Historical PR #502 saved-evidence supplement](diagnostic-readiness-2026-10-09/PUBLIC-PROTOCOL.zh-CN.md)
+  and its [dated observations](diagnostic-readiness-2026-10-09/PUBLIC-READINESS-SUMMARY.json)
+  preserve evidence identities and findings. Its former preparation order is
+  superseded by the current checklist; it is not an execution permit.
+- [Earlier saved failure diagnosis](saved-diagnostics-2026-10-09/REPORT.zh-CN.md):
   retained saved-array/source attribution, invented-logit boundary tests and the
-  original unexecuted plan. Read this alongside the newer admission above, not as
-  a fresh execution permit. Synthetic tests cannot relabel numerical failures.
+  original unexecuted plan. Historical background only; synthetic tests cannot
+  relabel numerical failures.
 
-最新准入以 PR #502 的保存证据补充为入口；旧协议作为背景补充。先复核已有 trace，
-不重复采集、不扩大训练。D20 raw FAIL、D90 NOT_RUN、FA 根因未定、fixed50 支持不足、
-真人及实机资格 deferred 均不变；整理与 CI 改进不构成实验执行许可。
+当前只以以上准入清单为操作入口；PR #502 补充及更早协议保留为历史证据。
+必须先建立并验证硬限制，再在该隔离范围内检查精确后端 import；不得无约束安装、
+import 后再判断是否符合预算。先复核已有 trace，不重复采集、不扩大训练。
+D20 raw FAIL、D90 NOT_RUN、FA 根因未定、fixed50 支持不足、真人及实机资格 deferred
+均不变；整理与 CI 改进不构成实验执行许可。
 
 ## Results worth retaining
 
@@ -129,9 +135,3 @@ They are historical observations, not instructions to rerun an experiment.
   two recovery tags. See the [completed cleanup record](consolidation/git-atomic-prune-2026-10-08.json)
   and the dated current status above. Historical snapshots are unchanged;
   no new deletion or experiment is authorized by this navigation update.
-
-### D20 no-model admission preparation / 无模型准入准备
-
-[Plan-shape checks and remaining admission requirements](d20-diagnostic-admission-v1/PLAN-SCHEMA.md) provide bounded metadata-only inventory and synthetic schema tests. They do not authenticate saved numerical inputs or establish execution readiness; the historical-source-bound C/Torch drivers and enforced resource scope remain unqualified.
-
-仅补齐无模型检查与计划形状测试；不等于输入真实性、单算子驱动或数值资格通过。C 包装不随本轮发布。

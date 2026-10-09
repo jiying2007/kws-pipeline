@@ -19,7 +19,7 @@
       "layer": "L2", "type": "float", "default": 1.5,
       "min": 0.0, "max": null, "min_exclusive": false, "max_exclusive": false,
       "unit": "nat", "effective": false, "invalidates_thresholds": false,
-      "summary": "DEPRECATED / INEFFECTIVE. Retained for source and ABI compatibility. It is added once per trie depth, so it is a constant offset on the search score; emitted confidence uses exp(acoustic/depth) and the retention gate subtracts token_boost*depth, which cancels it exactly. See docs/RUNTIME_CONFIG.md."
+      "summary": "DEPRECATED / INEFFECTIVE. Retained for source and ABI compatibility and validated as finite and nonnegative. Never used in search, retention or confidence arithmetic. Removing the former floating-point offset requires source-bound requalification; it does not change this field's default or legal range. See docs/RUNTIME_CONFIG.md."
     },
     "state_retention": {
       "layer": "L2", "type": "float", "default": 0.94,

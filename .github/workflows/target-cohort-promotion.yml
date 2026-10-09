@@ -83,6 +83,10 @@ jobs:
               --pattern resource-budget.json \
               --pattern TARGET_DUT_PUBLIC_SHA256SUMS
             (cd "$dir" && sha256sum -c TARGET_DUT_PUBLIC_SHA256SUMS)
+            jq -e '.schema_version == 3 and .measurement_contract_id == "process-cpu-one-core-v1"' "$dir/target-qualification.policy.json" >/dev/null
+            jq -e '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' "$dir/resource-budget.json" >/dev/null
+            jq -e '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' "$dir/public-target-dut-receipt.json" >/dev/null
+            jq -e '.schema_version == 2 and .resource_budget.measurement_contract_id == "process-cpu-one-core-v1" and .metrics.measurement_contract_id == "process-cpu-one-core-v1"' "$dir/target-dut-qualification-summary.json" >/dev/null
             test "$(sha256sum "$dir/target-qualification.policy.json" | awk '{print $1}')" = "$(sha256sum commercial/target-qualification.policy.json | awk '{print $1}')"
             test "$(jq -r '.qualified' "$dir/public-target-dut-receipt.json")" = true
             test "$(jq -r '.shipping_approved' "$dir/public-target-dut-receipt.json")" = false
@@ -116,6 +120,7 @@ jobs:
         run: |
           set -euo pipefail
           summary=build/cohort/target-cohort-qualification-summary.json
+          jq -e '.schema_version == 2 and .measurement_contract_id == "process-cpu-one-core-v1"' "$summary" >/dev/null
           budget_sha="$(jq -r '.resource_budget_sha256' "$summary")"
           budget_source="$(find build/cohort/duts -name resource-budget.json -print | sort | head -n1)"
           test -n "$budget_source"
@@ -133,7 +138,7 @@ jobs:
             --arg budget_sha "$budget_sha" \
             --arg measurement_contract_id "$(jq -r '.measurement_contract_id' "$summary")" \
             --arg summary_sha "$(sha256sum "$summary" | awk '{print $1}')" \
-            '{schema_version:1,phase:"physical-target-cohort-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,next_gate:"shipping-approval-promotion"}' \
+            '{schema_version:2,phase:"physical-target-cohort-qualification",qualified:true,shipping_approved:false,release_tag:$tag,deployment_tag:$deployment_tag,deployment_target:$deployment_target,human_qualification_tag:$human_tag,human_corpus_sha256:$human_corpus,final_afe_identity_sha256:$afe_identity,resource_budget_id:$budget_id,resource_budget_sha256:$budget_sha,measurement_contract_id:$measurement_contract_id,qualification_summary_sha256:$summary_sha,next_gate:"shipping-approval-promotion"}' \
             > build/cohort/public-target-cohort-receipt.json
           cp commercial/target-qualification.policy.json build/cohort/
           (cd build/cohort && sha256sum \

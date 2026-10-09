@@ -94,18 +94,13 @@ static float shadow_fast_exp_nonpos(float x) {
   return y;
 }
 
-static float shadow_logsumexp(const float *x, uint16_t n) {
-  float max_value = x[0];
+static float shadow_shifted_logsumexp(const float *x, uint16_t n,
+                                      float max_value) {
   float sum = 0.0f;
-  for (uint16_t i = 1u; i < n; ++i) {
-    if (x[i] > max_value) {
-      max_value = x[i];
-    }
-  }
   for (uint16_t i = 0u; i < n; ++i) {
     sum += shadow_fast_exp_nonpos(x[i] - max_value);
   }
-  return max_value + logf(sum);
+  return logf(sum);
 }
 
 static uint16_t shadow_dominant_token(const float *logits,
@@ -234,10 +229,11 @@ static void shadow_step(
     uint16_t vocab_size,
     int speech_active,
     uint64_t frame_index) {
-  float norm = shadow_logsumexp(logits, vocab_size);
   float decay = speech_active != 0 ? decoder->retention_log
                                    : decoder->silence_retention_log;
   uint16_t top_token = shadow_dominant_token(logits, vocab_size);
+  float max_logit = logits[top_token];
+  float norm = shadow_shifted_logsumexp(logits, vocab_size, max_logit);
   int blank_dominant = top_token == 0u;
   int top_is_keyword_root =
       top_token != 0u &&
@@ -307,9 +303,8 @@ static void shadow_step(
         continue;
       }
 
-      float acoustic_log_probability = logits[token] - norm;
-      float search_log_probability =
-          acoustic_log_probability + decoder->token_boost;
+      float acoustic_log_probability = (logits[token] - max_logit) - norm;
+      float search_log_probability = acoustic_log_probability;
       path_provenance_t provenance = base_lane->provenance;
       provenance.token_advances = saturating_inc(provenance.token_advances);
       if (i == 0u) {
@@ -372,9 +367,7 @@ static void shadow_step(
     if (shadow_lane_alive(lane) == 0) {
       continue;
     }
-    float retention_log =
-        lane->score - lane->acoustic -
-        decoder->token_boost * (float)node_meta[terminal_index].depth;
+    float retention_log = lane->score - lane->acoustic;
     float confidence =
         expf(lane->acoustic / (float)node_meta[terminal_index].depth);
     if (confidence > 1.0f) {
@@ -664,9 +657,7 @@ int main(int argc, char **argv) {
           terminal_acoustic = terminal->blank_acoustic_score;
         }
         if (terminal_score > DEAD_SCORE && terminal_acoustic > DEAD_SCORE) {
-          retention_log =
-              terminal_score - terminal_acoustic -
-              decoder_state.token_boost * (float)terminal->depth;
+          retention_log = terminal_score - terminal_acoustic;
           confidence = expf(terminal_acoustic / (float)terminal->depth);
           if (confidence > 1.0f) {
             confidence = 1.0f;

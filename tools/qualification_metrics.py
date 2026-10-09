@@ -14,7 +14,9 @@ from qualification_common import (
     sha256_value,
 )
 
-CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+from runtime_soak_contract import (
+    TARGET_EVIDENCE_SCHEMA_VERSION, validate_cpu_metrics, validate_runtime_soak,
+)
 UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
@@ -145,7 +147,7 @@ def validate_board(
     return result
 
 
-def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict[str, float]:
+def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict:
     raw_text = evidence.get("runtime_soak_raw")
     if not isinstance(raw_text, str) or not raw_text.strip():
         raise ValueError("evidence.runtime_soak_raw must be non-empty text")
@@ -157,57 +159,7 @@ def _runtime_soak_metrics(evidence: dict, runtime_soak_sha256: str) -> dict[str,
         raise ValueError("embedded runtime soak is not valid JSON") from exc
     if not isinstance(value, dict):
         raise ValueError("embedded runtime soak must be a JSON object")
-    if json_int(value.get("schema_version"), "runtime soak schema_version") != 2:
-        raise ValueError("runtime soak schema_version must be 2")
-    if value.get("completed_requested_duration") is not True:
-        raise ValueError("runtime soak did not complete the requested duration")
-    if value.get("cpu_percent_semantics") != CPU_PERCENT_SEMANTICS:
-        raise ValueError("runtime soak CPU percentage semantics are unsupported")
-
-    capacity = json_int(value.get("cpu_capacity_count"), "runtime soak cpu_capacity_count", 1)
-    requested_hours = finite(value.get("requested_hours"), "runtime soak requested_hours", 0.0)
-    elapsed_seconds = finite(value.get("elapsed_seconds"), "runtime soak elapsed_seconds", 0.0)
-    elapsed_hours = finite(value.get("elapsed_hours"), "runtime soak elapsed_hours", 0.0)
-    if requested_hours <= 0.0 or elapsed_seconds <= 0.0:
-        raise ValueError("runtime soak requested/elapsed duration must be > 0")
-    close_enough(elapsed_hours, elapsed_seconds / 3600.0, "runtime soak elapsed_hours", 1e-9, 1e-12)
-    if elapsed_hours + 1e-6 < requested_hours:
-        raise ValueError("runtime soak elapsed_hours is shorter than requested_hours")
-
-    initial_cpu = finite(value.get("initial_cpu_seconds"), "runtime soak initial_cpu_seconds", 0.0)
-    samples = value.get("samples")
-    if not isinstance(samples, list) or not samples:
-        raise ValueError("runtime soak samples must be non-empty")
-    rss_values: list[float] = []
-    cpu_values: list[float] = []
-    temp_values: list[float] = []
-    for index, sample in enumerate(samples):
-        if not isinstance(sample, dict):
-            raise ValueError(f"runtime soak samples[{index}] must be an object")
-        finite(sample.get("elapsed_s"), f"runtime soak samples[{index}].elapsed_s", 0.0)
-        if sample.get("rss_kib") is not None:
-            rss_values.append(finite(sample["rss_kib"], f"runtime soak samples[{index}].rss_kib", 0.0))
-        if sample.get("cpu_seconds") is not None:
-            cpu_values.append(finite(sample["cpu_seconds"], f"runtime soak samples[{index}].cpu_seconds", 0.0))
-        if sample.get("temp_c") is not None:
-            temp_values.append(finite(sample["temp_c"], f"runtime soak samples[{index}].temp_c"))
-    if not rss_values or not cpu_values or not temp_values:
-        raise ValueError("runtime soak must retain RSS, CPU and thermal samples")
-    if cpu_values[-1] < initial_cpu:
-        raise ValueError("runtime soak CPU time regressed")
-
-    expected_cpu = min(100.0, max(0.0, (cpu_values[-1] - initial_cpu) / elapsed_seconds) / capacity * 100.0)
-    expected_rss = max(rss_values)
-    expected_temp = max(temp_values)
-    close_enough(finite(value.get("average_cpu_percent"), "runtime soak average_cpu_percent", 0.0), expected_cpu, "runtime soak average_cpu_percent", 1e-9, 1e-9)
-    close_enough(finite(value.get("max_rss_kib"), "runtime soak max_rss_kib", 0.0), expected_rss, "runtime soak max_rss_kib", 1e-9, 1e-9)
-    close_enough(finite(value.get("max_temp_c"), "runtime soak max_temp_c"), expected_temp, "runtime soak max_temp_c", 1e-9, 1e-9)
-    return {
-        "soak_hours": elapsed_hours,
-        "cpu_percent": expected_cpu,
-        "rss_kib": expected_rss,
-        "max_temp_c": expected_temp,
-    }
+    return validate_runtime_soak(value)
 
 
 def validate_evidence(
@@ -217,8 +169,8 @@ def validate_evidence(
     source_sha: str,
     actual_hashes: dict[str, str],
 ) -> dict:
-    if json_int(evidence.get("schema_version"), "evidence.schema_version") != 2:
-        raise ValueError("target evidence schema_version must be 2")
+    if json_int(evidence.get("schema_version"), "evidence.schema_version") != TARGET_EVIDENCE_SCHEMA_VERSION:
+        raise ValueError("target evidence schema_version must be 3")
     if evidence.get("evidence_class") != "product-board":
         raise ValueError("evidence_class must be product-board")
     if required_text(evidence, "collector", "evidence") != "collect_target_evidence.py":
@@ -271,7 +223,7 @@ def validate_evidence(
 
     raw_metrics = _runtime_soak_metrics(evidence, runtime_soak_sha256)
     result = {
-        "schema_version": 2,
+        "schema_version": TARGET_EVIDENCE_SCHEMA_VERSION,
         "evidence_class": "product-board",
         "sku": sku,
         "source_sha": source_sha,
@@ -292,7 +244,7 @@ def validate_evidence(
         "cpu_online": required_text(evidence, "cpu_online", "evidence"),
         "uptime_s": finite(evidence["uptime_s"], "evidence.uptime_s", 0.0),
         "soak_hours": finite(evidence["soak_hours"], "evidence.soak_hours", 0.0),
-        "cpu_percent": finite(evidence["cpu_percent"], "evidence.cpu_percent", 0.0),
+        **validate_cpu_metrics(evidence, "evidence"),
         "rss_kib": finite(evidence["rss_kib"], "evidence.rss_kib", 0.0),
         "stack_high_water_bytes": finite(evidence["stack_high_water_bytes"], "evidence.stack_high_water_bytes", 0.0),
         "max_temp_c": finite(evidence["max_temp_c"], "evidence.max_temp_c"),
@@ -308,8 +260,9 @@ def validate_evidence(
     }
     if result["builder_id"] == result["dut_id"]:
         raise ValueError("evidence builder_id and dut_id must be distinct")
-    if result["cpu_percent"] > 100.0:
-        raise ValueError("evidence.cpu_percent must be <= 100")
     for key, expected in raw_metrics.items():
-        close_enough(result[key], expected, f"evidence.{key}", 1e-9, 1e-9)
+        if isinstance(expected, (int, float)):
+            close_enough(result[key], expected, f"evidence.{key}", 1e-9, 1e-9)
+        elif result[key] != expected:
+            raise ValueError(f"evidence.{key} does not match runtime soak")
     return result

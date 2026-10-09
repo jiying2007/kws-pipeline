@@ -8,6 +8,7 @@ import sys
 import tempfile
 
 from qualification_fixture import (
+    runtime_soak_fixture,
     sha256_file,
     write_json,
     write_model,
@@ -21,7 +22,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import evaluation_corpus_identity  # noqa: E402
 
-CPU_PERCENT_SEMANTICS = "process_cpu_time / elapsed / online_cpu_capacity * 100"
+from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
 
 
 def main() -> int:
@@ -231,37 +232,7 @@ def main() -> int:
 
         write_json(
             runtime_soak,
-            {
-                "schema_version": 2,
-                "command": ["fixture-kws"],
-                "pid": 123,
-                "cpu_capacity_count": 2,
-                "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
-                "requested_hours": 8.0,
-                "elapsed_seconds": 28800.0,
-                "elapsed_hours": 8.0,
-                "completed_requested_duration": True,
-                "termination_returncode": -15,
-                "sample_seconds": 60.0,
-                "initial_cpu_seconds": 10.0,
-                "samples": [
-                    {
-                        "elapsed_s": 0.0,
-                        "rss_kib": 500.0,
-                        "cpu_seconds": 10.0,
-                        "temp_c": 50.0,
-                    },
-                    {
-                        "elapsed_s": 28800.0,
-                        "rss_kib": 512.0,
-                        "cpu_seconds": 2890.0,
-                        "temp_c": 55.0,
-                    },
-                ],
-                "max_rss_kib": 512.0,
-                "average_cpu_percent": 5.0,
-                "max_temp_c": 55.0,
-            },
+            runtime_soak_fixture(8.0),
         )
         raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
         power_raw.write_text("t,power_mw\n0,120\n", encoding="utf-8")
@@ -344,7 +315,8 @@ def main() -> int:
         )
 
         valid_policy = {
-            "schema_version": 2,
+            "schema_version": 3,
+            "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID,
             "policy_id": "fixture-policy-v1",
             "name": "fixture-policy",
             "sku": "fixture-sku",
@@ -404,7 +376,7 @@ def main() -> int:
         ]
         subprocess.check_call(command)
         result = json.loads(manifest.read_text(encoding="utf-8"))
-        assert result["schema_version"] == 2
+        assert result["schema_version"] == 3
         assert result["sku"] == "fixture-sku"
         assert result["artifacts"]["model_checkpoint"]["sha256"] == checkpoint_hash
         assert result["model_lineage"]["training_corpus_sha256"]
@@ -425,12 +397,61 @@ def main() -> int:
             ]
         )
         gate_result = json.loads(gate.read_text(encoding="utf-8"))
-        assert gate_result["schema_version"] == 3
+        assert gate_result["schema_version"] == 4
         assert gate_result["qualified"] is True
         assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
         assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
+        gate_command = [sys.executable, str(ROOT / "tools" / "qualification_gate.py"),
+                        "--manifest", str(manifest), "--policy", str(policy)]
+        def gate_exit(expected: int) -> None:
+            checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
+            assert checked.returncode == expected, checked.stdout + checked.stderr
+
+        original_manifest = manifest.read_text(encoding="utf-8")
+        for section, key, replacement in (
+            (None, "schema_version", 2),
+            ("evidence", "schema_version", 2),
+            ("evidence", "measurement_contract_id", "legacy-online-capacity"),
+            ("evidence", "cpu_percent_semantics", "process_cpu_time / elapsed / online_cpu_capacity * 100"),
+            ("evidence", "max_thread_count", 0),
+        ):
+            old = json.loads(original_manifest)
+            (old if section is None else old[section])[key] = replacement
+            write_json(manifest, old)
+            gate_exit(2)
+        manifest.write_text(original_manifest, encoding="utf-8")
+        for key, replacement in (("schema_version", 2),
+                                 ("measurement_contract_id", "legacy-online-capacity")):
+            old_policy = dict(valid_policy)
+            old_policy[key] = replacement
+            write_json(policy, old_policy)
+            gate_exit(2)
+        write_json(policy, valid_policy)
+
+        # Gate-only synthetic summaries test the one-core boundaries, including
+        # legal >100% observations and a corresponding >100% explicit budget.
+        for percent, threads, expected in ((10.0, 1, 0), (20.0, 1, 1), (150.0, 2, 1)):
+            changed = json.loads(original_manifest)
+            changed["evidence"].update(cpu_percent=percent, max_thread_count=threads,
+                process_cpu_seconds=changed["evidence"]["wall_seconds"] * percent / 100.0)
+            write_json(manifest, changed)
+            gate_exit(expected)
+        generous = dict(valid_policy, max_cpu_percent=150.0)
+        write_json(policy, generous)
+        gate_exit(0)
+        write_json(policy, valid_policy)
+        manifest.write_text(original_manifest, encoding="utf-8")
+
 
         original_evidence = evidence.read_text(encoding="utf-8")
+        old_evidence = json.loads(original_evidence)
+        old_evidence["schema_version"] = 2
+        write_json(evidence, old_evidence)
+        rejected = subprocess.run(command, capture_output=True, text=True, check=False)
+        assert rejected.returncode == 2
+        assert "target evidence schema_version must be 3" in rejected.stderr
+        evidence.write_text(original_evidence, encoding="utf-8")
+
         tampered_evidence = json.loads(original_evidence)
         tampered_evidence["cpu_percent"] = 6.0
         write_json(evidence, tampered_evidence)

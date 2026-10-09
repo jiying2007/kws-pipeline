@@ -44,7 +44,7 @@ Human qualification data must be audited for decoded-PCM and identity leakage. S
 
 ### Product-board evidence
 
-Shipping resource evidence is accepted only through target evidence schema v2 with `evidence_class=product-board`. The tuple binds exact `sku`, `source_sha`, distinct builder/DUT identities, collector/station identity, the exact repository collector, board runner, model, keyword pack and board audio.
+Shipping resource evidence is accepted only through target evidence schema v3 with `evidence_class=product-board`. The tuple binds exact `sku`, `source_sha`, distinct builder/DUT identities, collector/station identity, the exact repository collector, board runner, model, keyword pack and board audio.
 
 The retained raw measurement set is frozen through canonical `evidence-raw.jsonl`. Its rows are exact `{name, sha256, bytes}` identities and must equal runtime-soak + every additional raw artifact + the raw power file. Missing, extra, duplicate or substituted raw files are rejected.
 
@@ -56,14 +56,14 @@ A self-consistent manually typed JSON is not proof that a physical measurement o
 
 ### Qualification evidence
 
-`qualification_manifest.py` schema v2 independently re-hashes/reopens the release-candidate tuple, including:
+`qualification_manifest.py` schema v3 independently re-hashes/reopens the release-candidate tuple, including:
 
 - model/pack/token/config/checkpoint artifacts;
 - model provenance schema v3 and actual training-corpus WAV/decoded-PCM identity;
 - clean dataset audit covering the selected manifests;
 - evaluation runner/references/detections plus actual held-out WAV identity/duration;
 - target benchmark runner/board audio/summary;
-- target evidence schema v2;
+- target evidence schema v3;
 - exact evidence collector;
 - canonical `--evidence-raw` manifest;
 - exact `--attestation-verification` result;

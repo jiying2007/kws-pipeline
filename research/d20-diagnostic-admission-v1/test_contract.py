@@ -3,6 +3,9 @@ import unittest
 from unittest import mock
 import io
 import json
+import pathlib
+import tempfile
+import types
 import subprocess
 import admission
 import contract
@@ -79,5 +82,140 @@ class InventorySafetyTests(unittest.TestCase):
         self.assertNotIn('private',json.dumps(result))
         self.assertEqual(result['cgroup_capabilities']['mount_count'],1)
         self.assertIs(result['execution_ready'],False)
+
+class DistributionMetadataTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = pathlib.Path(self.temp.name)
+        self.directory = self.root / 'torch-2.11.0.dist-info'
+        self.directory.mkdir()
+        self.file = self.directory / 'METADATA'
+        self.good = b'Metadata-Version: 2.1\nName: torch\nVersion: 2.11.0+cpu\n'
+        self.file.write_bytes(self.good)
+        patch = mock.patch.object(admission.site, 'getsitepackages', return_value=[str(self.root)])
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_real_metadata_without_package_pth_or_customization_import(self):
+        for name in ('torch.py', 'sitecustomize.py'):
+            (self.root / name).write_text("raise AssertionError('must not execute')\n")
+        (self.root / 'bad.pth').write_text('import must_not_execute_pth\n')
+        before = set(admission.sys.modules)
+        self.assertEqual(admission.metadata_version('torch'), '2.11.0+cpu')
+        self.assertEqual(set(admission.sys.modules) - before, set())
+        with self.assertRaises(admission.importlib.metadata.PackageNotFoundError):
+            admission.metadata_version('numpy')
+
+    def test_exact_byte_boundary_and_actual_read_size(self):
+        self.file.write_bytes(self.good + b'\n' + b'x' * (admission.MAX_READ_BYTES - len(self.good) - 1))
+        original = admission.os.fdopen
+        reads = []
+        def wrapped(*args, **kwargs):
+            source = original(*args, **kwargs)
+            proxy = mock.MagicMock(wraps=source)
+            proxy.__enter__.return_value = proxy
+            proxy.__exit__.side_effect = source.__exit__
+            proxy.read.side_effect = lambda size: (reads.append(size), source.read(size))[1]
+            return proxy
+        with mock.patch.object(admission.os, 'fdopen', side_effect=wrapped):
+            self.assertEqual(admission.metadata_version('torch'), '2.11.0+cpu')
+        self.assertEqual(reads, [admission.MAX_READ_BYTES + 1])
+        self.file.write_bytes(self.file.read_bytes() + b'x')
+        with self.assertRaises(ValueError):
+            admission.metadata_version('torch')
+
+    def test_byte_cap_does_not_trust_stat_size_hint(self):
+        self.file.write_bytes(self.good + b'\n' + b'x'*admission.MAX_READ_BYTES)
+        understated = types.SimpleNamespace(st_mode=admission.stat.S_IFREG, st_size=1)
+        with mock.patch.object(admission.os, 'fstat', return_value=understated):
+            with self.assertRaisesRegex(ValueError, 'exceeds byte cap'):
+                admission.metadata_version('torch')
+
+    def test_nonregular_metadata_and_unsupported_finder_fail_closed(self):
+        self.file.unlink()
+        self.file.mkdir()
+        with self.assertRaises(ValueError):
+            admission.metadata_version('torch')
+        for candidate in (object(), admission.importlib.metadata.PathDistribution(self.root / 'torch.egg-info'),
+                          admission.importlib.metadata.PathDistribution(str(self.directory))):
+            with mock.patch.object(admission.importlib.metadata.Distribution, 'discover',
+                                   return_value=iter([candidate])):
+                with self.assertRaises(ValueError):
+                    admission.metadata_version('torch')
+
+    def test_duplicate_installs_fail_without_reading_version(self):
+        extra = self.root / 'torch-9.0.dist-info'
+        extra.mkdir()
+        (extra / 'METADATA').write_bytes(self.good)
+        with mock.patch.object(admission.importlib.metadata.PathDistribution, 'read_text',
+                               side_effect=AssertionError('unbounded API forbidden')):
+            with self.assertRaises(ValueError):
+                admission.metadata_version('torch')
+
+    def test_invalid_metadata_fail_closed(self):
+        cases = [self.good + b'Version: 2.11.0+cpu\n',
+                 self.good + b'Name: torch\n',
+                 self.good + b'Metadata-Version: 2.1\n',
+                 self.good.replace(b'Name: torch', b'Name: numpy'),
+                 self.good.replace(b'Version: 2.11.0+cpu\n', b''),
+                 self.good.replace(b'2.11.0+cpu', b'2.11.0\n +cpu'),
+                 self.good.replace(b'2.11.0+cpu', b'/private/secret'),
+                 self.good.replace(b'2.11.0+cpu', b'x'*65),
+                 self.good + b'\n\xff',
+                 b'\xef\xbb\xbf' + self.good,
+                 b'malformed header\n' + self.good]
+        for raw in cases:
+            with self.subTest(raw=raw):
+                self.file.write_bytes(raw)
+                with self.assertRaises((ValueError, UnicodeError, admission.email.errors.MessageError)):
+                    admission.metadata_version('torch')
+                with mock.patch.object(admission, 'read', return_value=None), \
+                     mock.patch.object(admission, 'cpu_probe', return_value={'status':'probe_failed'}):
+                    result = admission.inspect()
+                self.assertIsNone(result['installed_distribution_metadata']['torch'])
+                self.assertIs(result['execution_ready'], False)
+                self.assertIn('torch_metadata_missing_mismatched_or_unreadable', result['blockers'])
+                self.assertNotIn('private', json.dumps(result))
+
+    def test_symlink_file_and_directory_rejected(self):
+        saved = self.root / 'unrelated-file'
+        self.file.rename(saved)
+        self.file.symlink_to(saved)
+        with self.assertRaises(OSError):
+            admission.metadata_version('torch')
+        self.file.unlink()
+        self.file.write_bytes(self.good)
+        outside = self.root / 'elsewhere'
+        self.directory.rename(outside)
+        self.directory.symlink_to(outside, target_is_directory=True)
+        with self.assertRaises(OSError):
+            admission.metadata_version('torch')
+
+    def test_unknown_name_never_discovers_or_reads(self):
+        with mock.patch.object(admission.importlib.metadata.Distribution, 'discover') as discover:
+            with self.assertRaises(ValueError):
+                admission.metadata_version('/private/secret')
+        discover.assert_not_called()
+
+    def test_matching_metadata_never_grants_execution(self):
+        numpy = self.root / 'numpy-1.26.4.dist-info'
+        numpy.mkdir()
+        (numpy / 'METADATA').write_bytes(b'Metadata-Version: 2.1\nName: numpy\nVersion: 1.26.4\n')
+        with mock.patch.object(admission, 'read', return_value=None), \
+             mock.patch.object(admission, 'cpu_probe', return_value={'status':'probe_failed'}):
+            result = admission.inspect()
+        self.assertEqual(result['installed_distribution_metadata'], admission.REQUIRED)
+        self.assertIs(result['execution_ready'], False)
+        self.assertEqual(result['numerical_imports'], 0)
+        self.assertEqual(result['model_calls'], 0)
+        self.assertEqual(result['operator_calls'], 0)
+        self.assertIn('numerical_authorization_required', result['blockers'])
+
+    def test_public_unbounded_metadata_apis_are_unused(self):
+        with mock.patch.object(admission.importlib.metadata.PathDistribution, 'read_text',
+                               side_effect=AssertionError('unbounded API forbidden')):
+            self.assertEqual(admission.metadata_version('torch'), '2.11.0+cpu')
+
 
 if __name__=='__main__':unittest.main()

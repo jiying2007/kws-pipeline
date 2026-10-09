@@ -398,7 +398,7 @@ def main() -> int:
     }
 
     manifest = {
-        "schema_version": 2,
+        "schema_version": 3,
         "sku": sku,
         "source_sha": source_sha,
         "corpus_id": corpus_id,

@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import pathlib
+import json
+import re
+import sys
+import textwrap
 import os
 import subprocess
 import tempfile
@@ -189,6 +193,86 @@ def check_delete_lease(delete_command: str) -> None:
         print('cleanup lease: stale A rejected, concurrent B preserved, exact B accepted')
 
 
+
+def check_active_run_queries(source: str) -> None:
+    """Run the actual production pagination guard with a network-free gh stub."""
+    function = re.search(r'          active_runs_present\(\) \{.*?\n          \}',
+                         source, re.S).group()
+    for assignment in ('active_runs="$(active_runs_present "$branch")"',
+                       'latest_active_runs="$(active_runs_present "$branch")"'):
+        assert len(re.findall(r'^\s*' + re.escape(assignment) + r'$', source, re.M)) == 1, assignment
+    assert 'continue-on-error:' not in source
+    states = ('queued', 'in_progress', 'requested', 'waiting', 'pending', 'future_nonterminal')
+    with tempfile.TemporaryDirectory(prefix='cleanup-active-runs-') as tmp:
+        root = pathlib.Path(tmp)
+        stub = root / 'gh'
+        stub.write_text(f'#!{sys.executable}\n' + textwrap.dedent("""
+            import json, os, pathlib, sys
+            args = sys.argv[1:]
+            assert args[:6] == ['api', '--paginate', '--slurp', '-X', 'GET', 'repos/test/synthetic/actions/runs'], args
+            fields = dict(args[index + 1].split('=', 1) for index, value in enumerate(args) if value == '-f')
+            assert fields == {'branch': 'research/synthetic-active', 'per_page': '100'}, fields
+            fixture = json.loads((pathlib.Path(os.environ['MOCK_ROOT']) / 'fixture.json').read_text())
+            print(fixture['response'])
+            sys.exit(fixture.get('exit_code', 0))
+        """))
+        stub.chmod(0o755)
+        env = {'PATH': f'{root}:/usr/bin:/bin', 'MOCK_ROOT': str(root),
+               'GITHUB_REPOSITORY': 'test/synthetic', 'branch': 'research/synthetic-active'}
+        script = function + '\nactive_runs="$(active_runs_present "$branch")"\nprintf "AFTER_CHECK:%s\\n" "$active_runs"\n'
+
+        def probe(response, code=0):
+            if not isinstance(response, str):
+                response = json.dumps(response)
+            (root / 'fixture.json').write_text(json.dumps(dict(response=response, exit_code=code)))
+            return subprocess.run(['bash', '-e', '-u', '-o', 'pipefail', '-c', script],
+                                  env=env, capture_output=True, text=True)
+
+        def pages(history):
+            return [dict(total_count=len(history), workflow_runs=history[i:i + 100])
+                    for i in range(0, len(history), 100)] or [dict(total_count=0, workflow_runs=[])]
+
+        history = [dict(id=index, status='completed', head_branch=env['branch']) for index in range(3700)]
+        for complete in ([], history[:100], history):
+            inactive = probe(pages(complete))
+            assert inactive.returncode == 0 and inactive.stdout.strip() == 'AFTER_CHECK:0', inactive.stderr
+        for state in states:
+            for preceding in (history[:100], history):
+                active = probe(pages(preceding + [dict(id=3701, status=state, head_branch=env['branch'])]))
+                assert active.returncode == 0 and active.stdout.strip() == 'AFTER_CHECK:1', (state, active.stderr)
+
+        # Real filtered searches may cap at 1,000 rows. Treat any missing pages,
+        # truncation, concurrent count change or duplicate page as unsafe.
+        truncated = pages(history)[:10]
+        inconsistent = pages(history[:101])
+        inconsistent[-1]['total_count'] = 102
+        duplicate = pages(history[:101])
+        duplicate[-1]['workflow_runs'][0]['id'] = 0
+        invalid = (
+            '', 'not-json', 'null', '[]', '{}',
+            [dict(total_count=None, workflow_runs=[])],
+            [dict(total_count=True, workflow_runs=[])],
+            [dict(total_count='0', workflow_runs=[])],
+            [dict(total_count=-1, workflow_runs=[])],
+            [dict(total_count=0.5, workflow_runs=[])],
+            [dict(total_count=0)], [dict(total_count=0, workflow_runs=None)],
+            [dict(total_count=1, workflow_runs=[])],
+            [dict(total_count=101, workflow_runs=history[:101])],
+            [dict(total_count=1, workflow_runs=[dict(id=1, status='waiting', head_branch='another-branch')])],
+            [dict(total_count=1, workflow_runs=[dict(id=1, head_branch=env['branch'])])],
+            [dict(total_count=1, workflow_runs=[dict(id=1, status='', head_branch=env['branch'])])],
+            [dict(total_count=1, workflow_runs=[dict(status='completed', head_branch=env['branch'])])],
+            truncated, inconsistent, duplicate,
+        )
+        for response in invalid:
+            failed = probe(response)
+            assert failed.returncode != 0 and 'AFTER_CHECK' not in failed.stdout, (str(response)[:200], failed)
+        for code in (1, 22, 124):  # permission/rate-limit failure and timeout
+            failed = probe(pages([]), code)
+            assert failed.returncode != 0 and 'AFTER_CHECK' not in failed.stdout, code
+    print('cleanup active runs: all 5 unfinished/future states on page 38 retained; truncation, malformed/API errors fail closed')
+
+
 def main() -> int:
     source = WORKFLOW.read_text(encoding='utf-8')
 
@@ -288,6 +372,7 @@ def main() -> int:
 
     assert 'not atomic with deletion' in source
     check_delete_lease(delete_line)
+    check_active_run_queries(source)
 
     print('test_repository_cleanup_contract: ok')
     return 0

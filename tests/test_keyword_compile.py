@@ -95,6 +95,26 @@ def main() -> int:
         assert p0[3:8] == (1, 2, 1, 0, 0)
         assert p1[3:8] == (0, 3, 2, 4, 0)
 
+        # Compile the checked-in example itself, not only synthetic overlap TSVs.
+        example_root = root / "overlap-example"
+        example_root.mkdir()
+        _, example_json, example_pack = compile_one(
+            token_file, ROOT / "keywords" / "zh_cn_overlap_example.tsv", example_root
+        )
+        example_items = json.loads(example_json.read_text(encoding="utf-8"))["keywords"]
+        assert [item["id"] for item in example_items] == [1, 2, 3]
+        assert [item["priority"] for item in example_items] == [5, 15, 10]
+        assert [item["prefix_policy"] for item in example_items] == [
+            "grace", "longest", "immediate"
+        ]
+        example_blob = example_pack.read_bytes()
+        assert len(example_blob) == 24 + 3 * 48
+        for index, expected in enumerate(((1, 5, 2, 3, 0),
+                                           (1, 15, 1, 0, 0),
+                                           (1, 10, 0, 0, 0))):
+            start = 24 + index * 48
+            assert struct.unpack("<IfHBBBBH16H", example_blob[start:start + 48])[3:8] == expected
+
         # Shipping validation must compare threshold semantics, not decimal formatting.
         shipping = root / "shipping.tsv"
         shipping.write_text(

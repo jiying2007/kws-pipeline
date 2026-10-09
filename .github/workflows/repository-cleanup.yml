@@ -208,6 +208,40 @@ jobs:
             return 1
           }
 
+          active_runs_present() {
+            local candidate="$1" response
+            # Follow every advertised page, then prove the result is complete.
+            # GitHub caps filtered searches at 1,000: a truncated/changing result
+            # must abort cleanup, never become an apparent zero active count.
+            # Unknown future non-completed states also retain the branch.
+            response="$(gh api --paginate --slurp -X GET \
+              "repos/${GITHUB_REPOSITORY}/actions/runs" \
+              -f branch="${candidate}" -f per_page=100)" || return 1
+            jq -er --arg branch "$candidate" '
+              if type != "array" or length == 0 then
+                error("missing workflow-runs pages")
+              elif any(.[]; type != "object" or (.total_count | type) != "number" or
+                       (.workflow_runs | type) != "array") then
+                error("invalid workflow-runs page")
+              elif any(.[]; .total_count < 0 or (.total_count | floor) != .total_count or
+                       (.workflow_runs | length) > 100) then
+                error("invalid workflow-runs count")
+              elif ([.[].total_count] | unique | length) != 1 then
+                error("workflow-runs changed during pagination")
+              else .[0].total_count as $total | [.[].workflow_runs[]] as $runs |
+                if ($runs | length) != $total then
+                  error("incomplete workflow-runs pagination; preserve branch")
+                elif any($runs[]; (.id | type) != "number" or
+                         .head_branch != $branch or (.status | type) != "string" or .status == "") then
+                  error("invalid workflow-run identity or status")
+                elif ([$runs[].id] | unique | length) != $total then
+                  error("duplicate workflow runs across pages")
+                elif any($runs[]; .status != "completed") then 1
+                else 0 end
+              end
+            ' <<<"$response"
+          }
+
           dry_run=false
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${INPUT_DRY_RUN:-false}" == "true" ]]; then
             dry_run=true
@@ -277,8 +311,7 @@ jobs:
             reason=""
             branch_ref="refs/remotes/origin/${branch}"
             if is_explicitly_retired "${branch}"; then
-              active_runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" \
-                -f branch="${branch}" -f per_page=100 --jq '[.workflow_runs[] | select(.status != "completed")] | length')"
+              active_runs="$(active_runs_present "$branch")"
               if (( active_runs != 0 )); then
                 echo "skip active retired branch: ${branch}"
                 continue
@@ -335,8 +368,7 @@ jobs:
             latest_sha="$(git ls-remote --heads "${remote}" "refs/heads/${branch}" | awk '{print $1}')"
             latest_open_prs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
               -f state=open -f head="${owner}:${branch}" -f per_page=100 --jq 'length')"
-            latest_active_runs="$(gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs" \
-              -f branch="${branch}" -f per_page=100 --jq '[.workflow_runs[] | select(.status != "completed")] | length')"
+            latest_active_runs="$(active_runs_present "$branch")"
             if [[ "${latest_sha}" != "${sha}" || "${latest_open_prs}" != "0" || "${latest_active_runs}" != "0" ]]; then
               echo "skip race: ${branch} changed while cleanup was running"
               continue

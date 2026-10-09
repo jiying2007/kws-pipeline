@@ -1,15 +1,21 @@
 """Bounded stdlib capability inventory; never numerical execution admission."""
 import argparse
+import email.parser
+import email.policy
 import importlib.metadata
 import itertools
 import json
+import os
+import pathlib
 import platform
 import re
 import site
+import stat
 import subprocess
 import sys
 
 REQUIRED = {'torch': '2.11.0+cpu', 'numpy': '1.26.4'}
+DISTRIBUTIONS = tuple(REQUIRED)
 LIMITS = {'operator_rows': 798, 'wall_seconds': 120, 'rss_bytes': 536870912}
 READ_PATHS = {'/proc/self/mountinfo', '/proc/self/cgroup', '/sys/fs/cgroup/memory.max'}
 MAX_READ_BYTES = 65536
@@ -21,6 +27,66 @@ def version(value):
     if isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9._+!-]{1,64}', value):
         return value
     return None
+
+
+def metadata_version(name):
+    """Read one allowlisted wheel's metadata with a real byte cap; never import it.
+
+    PathDistribution._path is used only to locate its directory. Public .version,
+    .metadata and .read_text would load the whole file before we could bound it.
+    Unsupported finders, zip/egg metadata, symlinks and ambiguous installs fail
+    closed. Keep this function identical in the no-checkout hosted probe.
+    """
+    if name not in DISTRIBUTIONS:
+        raise ValueError('distribution not allowlisted')
+    roots = {pathlib.Path(p).resolve() for p in site.getsitepackages()}
+    matches = list(itertools.islice(importlib.metadata.Distribution.discover(
+        name=name, path=sorted(str(p) for p in roots)), 2))
+    if not matches:
+        raise importlib.metadata.PackageNotFoundError(name)
+    if len(matches) != 1 or type(matches[0]) is not importlib.metadata.PathDistribution:
+        raise ValueError('ambiguous or unsupported distribution')
+    directory = matches[0]._path
+    if (not isinstance(directory, pathlib.Path) or
+            not directory.name.endswith('.dist-info') or
+            directory.parent.resolve() not in roots):
+        raise ValueError('unsupported metadata location')
+    # Directory-relative, no-follow opens also reject symlink substitution races.
+    flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
+    root_fd = os.open(directory.parent.resolve(), flags | os.O_DIRECTORY)
+    try:
+        directory_fd = os.open(directory.name, flags | os.O_DIRECTORY, dir_fd=root_fd)
+        try:
+            fd = os.open('METADATA', flags | os.O_NONBLOCK, dir_fd=directory_fd)
+            try:
+                info = os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_READ_BYTES:
+                    raise ValueError('metadata is not a bounded regular file')
+                with os.fdopen(fd, 'rb', closefd=False) as source:
+                    raw = source.read(MAX_READ_BYTES + 1)
+            finally:
+                os.close(fd)
+        finally:
+            os.close(directory_fd)
+    finally:
+        os.close(root_fd)
+    if len(raw) > MAX_READ_BYTES:
+        raise ValueError('metadata exceeds byte cap')
+    decoded = raw.decode('utf-8', errors='strict')
+    headers = email.parser.HeaderParser(policy=email.policy.strict).parsestr(decoded)
+    values = {}
+    for field in ('Metadata-Version', 'Name', 'Version'):
+        entries = headers.get_all(field, [])
+        if len(entries) != 1:
+            raise ValueError('missing or duplicate identity field')
+        values[field] = str(entries[0])
+    normalize = lambda value: re.sub(r'[-_.]+', '-', value).lower()
+    if (not re.fullmatch(r'[0-9]+\.[0-9]+', values['Metadata-Version']) or
+            not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', values['Name']) or
+            normalize(values['Name']) != normalize(name) or
+            not re.fullmatch(r'[A-Za-z0-9._+!-]{1,64}', values['Version'])):
+        raise ValueError('invalid metadata identity')
+    return values['Version']
 
 
 def read(path):
@@ -68,9 +134,7 @@ def inspect():
     versions = {}
     for name in REQUIRED:
         try:
-            matches = list(itertools.islice(importlib.metadata.Distribution.discover(
-                name=name, path=site.getsitepackages()), 2))
-            versions[name] = version(matches[0].version) if len(matches) == 1 else None
+            versions[name] = metadata_version(name)
         except Exception:
             versions[name] = None
     mounts = read('/proc/self/mountinfo')

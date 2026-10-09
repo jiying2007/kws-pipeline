@@ -92,6 +92,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`qualification_metrics.py`](qualification_metrics.py)
 - [`run_dataset_iteration.py`](run_dataset_iteration.py)
 - [`run_final_afe_corpus.py`](run_final_afe_corpus.py)
+- [`runtime_soak_contract.py`](runtime_soak_contract.py) — Versioned single-core CPU evidence validation.
 - [`score_real_human_qualification.py`](score_real_human_qualification.py)
 - [`score_target_cohort.py`](score_target_cohort.py)
 - [`score_target_dut_qualification.py`](score_target_dut_qualification.py)
@@ -111,6 +112,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Repository verification and maintenance
 
+- [`cleanup_bootstrap_branch.sh`](cleanup_bootstrap_branch.sh) — Exact-trigger-SHA cleanup after successful publication.
 - [`check_bench_signal.py`](check_bench_signal.py)
 - [`check_deferred_verdicts.py`](check_deferred_verdicts.py)
 - [`check_gcov.py`](check_gcov.py)
@@ -125,6 +127,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`statistical_bounds.py`](statistical_bounds.py)
 - [`test_inventory.py`](test_inventory.py)
 - [`verify_development_source_binding.py`](verify_development_source_binding.py)
+- [`verify_durable_trace.py`](verify_durable_trace.py) — Offline validation of the fixed PR450 evidence pointer.
 - [`verify_frozen_replay_build_contract.py`](verify_frozen_replay_build_contract.py)
 - [`verify_research_consolidation.py`](verify_research_consolidation.py)
 - [`verify_research_publication.py`](verify_research_publication.py)

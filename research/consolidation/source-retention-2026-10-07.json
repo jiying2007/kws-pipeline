@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "e76917b43385fb2bd04fb90d3f0d9f3415f1dd3e",
-      "sha256": "f1f08204077959f93194fdcb464babebc6843e2702b47f93d1173b24e4c3d258",
-      "bytes": 29674
+      "git_blob_sha1": "98528b071a006778e2d96c9420655d5f50121c80",
+      "sha256": "ad16a0c4014615313284f7b43c44ab4ea265126e9b989d13264809961ed516ba",
+      "bytes": 30493
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15288,9 +15288,9 @@
     {
       "path": ".github/workflows/deployment-release.yml",
       "mode": "100644",
-      "git_blob_sha1": "5bf4ab6f0b3d95c45d2f1547535f7f871fb2e61f",
-      "sha256": "a5ca838292ec4cb760983b5aa0d4a3f779265b3d1a2570ab5f84f916c8c6d182",
-      "bytes": 18797
+      "git_blob_sha1": "14d1133b72b9546ce67869f40b3eaf69e8a01988",
+      "sha256": "c599b0ea6d55eadec270ae9ba6b6397e6c4dee644af6c9537e36acabc4419c26",
+      "bytes": 18881
     },
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
@@ -15316,9 +15316,9 @@
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
       "mode": "100644",
-      "git_blob_sha1": "06ba96c406f62fd70e3f478a147bf8b7a0c1569d",
-      "sha256": "1f901da7bcfc6ec19dd02ebbb2703d9192424deefe26dbd6509d633ed6738aee",
-      "bytes": 9808
+      "git_blob_sha1": "5b6d6f7c33601422de2fdaeb4549e4a0ec4e7afa",
+      "sha256": "0d47dd73f958ee97bcd20a5fde82da9dac76b183a18852d167f1932cb45288df",
+      "bytes": 13031
     },
     {
       "path": ".github/workflows/k1-fixed-slot-math.yml",
@@ -15414,16 +15414,16 @@
     {
       "path": ".github/workflows/release.yml",
       "mode": "100644",
-      "git_blob_sha1": "aea0c82d2bfa90f1dadaa2b6e1d944187c136f91",
-      "sha256": "7240b773520e8952f374469069c6f8f205f05cdc7f345a012e9c8f430acc7d1f",
-      "bytes": 15949
+      "git_blob_sha1": "c443e3523b7e3fbba0be24588d11270474849ce8",
+      "sha256": "c885399b0187d481cc04d20e437cef0dde6ec91a84a2f78fb752b9c678fa3654",
+      "bytes": 16249
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "git_blob_sha1": "1abca3ff1d8cdaa1e0a58702aaf9c9e1901ec0a7",
-      "sha256": "fd35b7192baf22f80bdc18d939ef9ec52326e99e1a37ae798f925083c6c14fbb",
-      "bytes": 14910
+      "git_blob_sha1": "fad7d1c11d3b86ac8a68b2189e9041ed187c1f9f",
+      "sha256": "803c6600aab27777807f4e734ff618cea337fa358616ccd94a5e4ee93e46f7d9",
+      "bytes": 16607
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -15533,9 +15533,9 @@
     {
       "path": ".github/workflows/shipping-approval.yml",
       "mode": "100644",
-      "git_blob_sha1": "693103d47368a4bc1a9a634d16d3928f2af307f1",
-      "sha256": "c0418b07d6875987b68fee27c069460cc71f84a187cdd8afba1bacf093de30dc",
-      "bytes": 15728
+      "git_blob_sha1": "37c6838173feb9d15d945a3e1139727d26f174d1",
+      "sha256": "255fb744b388ce32a372c2d72478c2ffdbe67627d730d81e83935d26e4fa2648",
+      "bytes": 16583
     },
     {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
@@ -15603,16 +15603,16 @@
     {
       "path": ".github/workflows/target-cohort-promotion.yml",
       "mode": "100644",
-      "git_blob_sha1": "c6ee99ac7a9dbb345a9626333b0703eecd8a7e1b",
-      "sha256": "70c0fa1ff63bb8b91e6fa91e1ebceaa88d3736b6de1319cf79d2569b3dcf9427",
-      "bytes": 9713
+      "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522",
+      "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
+      "bytes": 10505
     },
     {
       "path": ".github/workflows/target-dut-qualification.yml",
       "mode": "100644",
-      "git_blob_sha1": "c787ff43c5b0628bd0d6e90f0d7d73b7c449a8bc",
-      "sha256": "0d5c50f69ba824f51230935a19920da1d9711db8bc92d2ee5fbe6907c94de878",
-      "bytes": 11182
+      "git_blob_sha1": "f706fe2be3d0147d3f60082ae56feec88bdc5db9",
+      "sha256": "b7499b23d2eba2800f962520d4df06b940a15712c710f5d50d4259f6cec6596b",
+      "bytes": 11666
     },
     {
       "path": ".github/workflows/training-audit-closure.yml",
@@ -15963,6 +15963,152 @@
             "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721",
             "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
             "bytes": 840
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "from_commit": "c7a5d768ddabcc86a004d49b1d6943386ed28bb6",
+      "from_tree": "8fb6c53a7998b8db3243583bee0ff0278e76a3b0",
+      "operation_id": "deep-audit-cpu-release-evidence-hardening-20261009",
+      "scope": "Versioned one-core CPU evidence and approval consumers; release fixtures/shared inventory; success-gated exact-SHA bootstrap cleanup; complete active-run retention queries; required durable pointer checks; bounded no-model metadata inventory.",
+      "rationale": "Current public CI metadata maintenance only. Historical retained source bytes, provenance, delivery snapshots and acoustic qualification results are unchanged. No repository protection settings or diagnostic execution authorization are changed.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e76917b43385fb2bd04fb90d3f0d9f3415f1dd3e",
+            "sha256": "f1f08204077959f93194fdcb464babebc6843e2702b47f93d1173b24e4c3d258",
+            "bytes": 29674
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "98528b071a006778e2d96c9420655d5f50121c80",
+            "sha256": "ad16a0c4014615313284f7b43c44ab4ea265126e9b989d13264809961ed516ba",
+            "bytes": 30493
+          }
+        },
+        {
+          "path": ".github/workflows/deployment-release.yml",
+          "before": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "5bf4ab6f0b3d95c45d2f1547535f7f871fb2e61f",
+            "sha256": "a5ca838292ec4cb760983b5aa0d4a3f779265b3d1a2570ab5f84f916c8c6d182",
+            "bytes": 18797
+          },
+          "after": {
+            "path": ".github/workflows/deployment-release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "14d1133b72b9546ce67869f40b3eaf69e8a01988",
+            "sha256": "c599b0ea6d55eadec270ae9ba6b6397e6c4dee644af6c9537e36acabc4419c26",
+            "bytes": 18881
+          }
+        },
+        {
+          "path": ".github/workflows/github-hosted-resource-probe.yml",
+          "before": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "git_blob_sha1": "06ba96c406f62fd70e3f478a147bf8b7a0c1569d",
+            "sha256": "1f901da7bcfc6ec19dd02ebbb2703d9192424deefe26dbd6509d633ed6738aee",
+            "bytes": 9808
+          },
+          "after": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "git_blob_sha1": "5b6d6f7c33601422de2fdaeb4549e4a0ec4e7afa",
+            "sha256": "0d47dd73f958ee97bcd20a5fde82da9dac76b183a18852d167f1932cb45288df",
+            "bytes": 13031
+          }
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "aea0c82d2bfa90f1dadaa2b6e1d944187c136f91",
+            "sha256": "7240b773520e8952f374469069c6f8f205f05cdc7f345a012e9c8f430acc7d1f",
+            "bytes": 15949
+          },
+          "after": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c443e3523b7e3fbba0be24588d11270474849ce8",
+            "sha256": "c885399b0187d481cc04d20e437cef0dde6ec91a84a2f78fb752b9c678fa3654",
+            "bytes": 16249
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1abca3ff1d8cdaa1e0a58702aaf9c9e1901ec0a7",
+            "sha256": "fd35b7192baf22f80bdc18d939ef9ec52326e99e1a37ae798f925083c6c14fbb",
+            "bytes": 14910
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "git_blob_sha1": "fad7d1c11d3b86ac8a68b2189e9041ed187c1f9f",
+            "sha256": "803c6600aab27777807f4e734ff618cea337fa358616ccd94a5e4ee93e46f7d9",
+            "bytes": 16607
+          }
+        },
+        {
+          "path": ".github/workflows/shipping-approval.yml",
+          "before": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "git_blob_sha1": "693103d47368a4bc1a9a634d16d3928f2af307f1",
+            "sha256": "c0418b07d6875987b68fee27c069460cc71f84a187cdd8afba1bacf093de30dc",
+            "bytes": 15728
+          },
+          "after": {
+            "path": ".github/workflows/shipping-approval.yml",
+            "mode": "100644",
+            "git_blob_sha1": "37c6838173feb9d15d945a3e1139727d26f174d1",
+            "sha256": "255fb744b388ce32a372c2d72478c2ffdbe67627d730d81e83935d26e4fa2648",
+            "bytes": 16583
+          }
+        },
+        {
+          "path": ".github/workflows/target-cohort-promotion.yml",
+          "before": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c6ee99ac7a9dbb345a9626333b0703eecd8a7e1b",
+            "sha256": "70c0fa1ff63bb8b91e6fa91e1ebceaa88d3736b6de1319cf79d2569b3dcf9427",
+            "bytes": 9713
+          },
+          "after": {
+            "path": ".github/workflows/target-cohort-promotion.yml",
+            "mode": "100644",
+            "git_blob_sha1": "f5474e96339b3a0a996dd96c86c79eceb2878522",
+            "sha256": "6d83eace1ed35937d9073677de8da100e8d2ae3b56a1c36cd4da3910de6af18d",
+            "bytes": 10505
+          }
+        },
+        {
+          "path": ".github/workflows/target-dut-qualification.yml",
+          "before": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c787ff43c5b0628bd0d6e90f0d7d73b7c449a8bc",
+            "sha256": "0d5c50f69ba824f51230935a19920da1d9711db8bc92d2ee5fbe6907c94de878",
+            "bytes": 11182
+          },
+          "after": {
+            "path": ".github/workflows/target-dut-qualification.yml",
+            "mode": "100644",
+            "git_blob_sha1": "f706fe2be3d0147d3f60082ae56feec88bdc5db9",
+            "sha256": "b7499b23d2eba2800f962520d4df06b940a15712c710f5d50d4259f6cec6596b",
+            "bytes": 11666
           }
         }
       ]

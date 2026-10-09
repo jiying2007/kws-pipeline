@@ -169,6 +169,17 @@ def within(value: float, entry: dict) -> bool:
     return True
 
 
+def check_calibration_binding(shipping: dict, digest: str) -> None:
+    calibration = shipping["threshold_calibration"]
+    historical = calibration["parameter_contract_sha256"]
+    assert re.fullmatch(r"[0-9a-f]{64}", historical), "invalid historical calibration binding"
+    assert calibration["required_parameter_contract_sha256"] == digest
+    if historical != digest:
+        assert calibration["recalibration_required"] is True, "contract drift requires recalibration"
+        assert shipping["shipping_approved"] is False, "historical calibration cannot approve shipping"
+        assert calibration["recalibration_reason"], "contract drift needs an explicit reason"
+
+
 def check_shipping_contract(contract: dict, digest: str) -> None:
     """The shipping contract must pin the contract and re-derive the same list."""
     shipping = json.loads(
@@ -180,7 +191,23 @@ def check_shipping_contract(contract: dict, digest: str) -> None:
     assert pinned["sha256"] == digest, "shipping contract pins a stale parameter contract"
 
     calibration = shipping["threshold_calibration"]
-    assert calibration["parameter_contract_sha256"] == digest
+    check_calibration_binding(shipping, digest)
+
+    # Updating active metadata must not relabel the historical calibration as
+    # current evidence. Both safety flags fail closed while these bindings differ.
+    assert calibration["parameter_contract_sha256"] != digest
+    for section, key, value in (("threshold_calibration", "recalibration_required", False),
+                                (None, "shipping_approved", True),
+                                ("threshold_calibration", "required_parameter_contract_sha256", "0" * 64)):
+        changed = json.loads(json.dumps(shipping))
+        target = changed if section is None else changed[section]
+        target[key] = value
+        try:
+            check_calibration_binding(changed, digest)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError(f"unsafe calibration binding accepted: {key}")
 
     # The recalibration list must equal the contract's own invalidation flags,
     # plus the L0 model release tag which the contract cannot see.

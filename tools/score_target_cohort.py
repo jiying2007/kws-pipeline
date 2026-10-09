@@ -7,6 +7,9 @@ import json
 import pathlib
 import sys
 
+from qualification_common import finite
+from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
+
 
 def sha256_file(path: pathlib.Path) -> str:
     h = hashlib.sha256()
@@ -30,9 +33,13 @@ def current_policy_failures(item: dict, policy: dict) -> list[str]:
     budget = item.get("resource_budget")
     if not isinstance(metrics, dict) or not isinstance(continuity, dict) or not isinstance(budget, dict):
         raise ValueError(f"DUT {dut} summary is missing metrics/continuity/resource budget")
+    require_cpu_contract(budget, f"DUT {dut} resource budget")
+    validate_cpu_metrics(metrics, f"DUT {dut} metrics")
     limits = budget.get("limits")
     if not isinstance(limits, dict):
         raise ValueError(f"DUT {dut} resource budget limits are missing")
+    if finite(limits.get("max_cpu_percent"), f"DUT {dut} max_cpu_percent", 0.0) <= 0.0:
+        raise ValueError(f"DUT {dut} max_cpu_percent must be > 0")
     hard = policy["per_dut_hard_gates"]
     failures: list[str] = []
     if float(metrics["soak_hours"]) < float(hard["min_soak_hours"]):
@@ -77,13 +84,14 @@ def main() -> int:
     args = parser.parse_args()
 
     policy = load(args.policy)
-    if policy.get("schema_version") != 2:
-        raise ValueError("target policy schema_version must be 2")
+    if policy.get("schema_version") != 3:
+        raise ValueError("target policy schema_version must be 3")
+    require_cpu_contract(policy, "target policy")
     summaries = [load(path) for path in args.summary]
     if not summaries:
         raise ValueError("target cohort is empty")
     for index, item in enumerate(summaries):
-        if item.get("schema_version") != 1 or item.get("phase") != "physical-target-dut-qualification":
+        if item.get("schema_version") != 2 or item.get("phase") != "physical-target-dut-qualification":
             raise ValueError(f"summary[{index}] is not a target-DUT summary")
         if item.get("qualified") is not True or item.get("shipping_approved") is not False:
             raise ValueError(f"summary[{index}] is not a qualified pre-shipping DUT")
@@ -156,7 +164,7 @@ def main() -> int:
 
     first = summaries[0]
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "phase": "physical-target-cohort-qualification",
         "qualified": not failures,
         "shipping_approved": False,

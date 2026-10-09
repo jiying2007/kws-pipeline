@@ -10,6 +10,7 @@ import re
 import sys
 
 from qualification_metrics import validate_board, validate_evidence
+from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
@@ -74,8 +75,8 @@ def require_number(value: object, label: str, *, positive: bool = False) -> floa
 
 
 def validate_resource_budget(value: dict, required_fields: list[str]) -> dict:
-    if value.get("schema_version") != 1 or value.get("status") != "approved":
-        raise ValueError("resource budget must be schema_version 1 and status=approved")
+    if value.get("schema_version") != 2 or value.get("status") != "approved":
+        raise ValueError("resource budget must be schema_version 2 and status=approved")
     budget_id = require_text(value.get("budget_id"), "resource budget budget_id")
     sku = require_text(value.get("sku"), "resource budget sku")
     board_revision = require_text(
@@ -85,6 +86,7 @@ def validate_resource_budget(value: dict, required_fields: list[str]) -> dict:
         value.get("measurement_contract_id"),
         "resource budget measurement_contract_id",
     )
+    require_cpu_contract(value, "resource budget")
     authority = require_text(value.get("authority"), "resource budget authority")
     approved_at = require_text(
         value.get("approved_at_utc"), "resource budget approved_at_utc"
@@ -118,8 +120,6 @@ def validate_resource_budget(value: dict, required_fields: list[str]) -> dict:
             positive=True,
         ),
     }
-    if normalized["max_cpu_percent"] > 100.0:
-        raise ValueError("resource budget max_cpu_percent must be <=100")
     return {
         "budget_id": budget_id,
         "sku": sku,
@@ -196,8 +196,9 @@ def main() -> int:
 
     if profile.get("schema_version") != 1:
         raise ValueError("target profile schema_version must be 1")
-    if policy.get("schema_version") != 2:
-        raise ValueError("target policy schema_version must be 2")
+    if policy.get("schema_version") != 3:
+        raise ValueError("target policy schema_version must be 3")
+    require_cpu_contract(policy, "target policy")
     deployment_tag = str(policy["deployment_tag"])
     human_tag = str(profile.get("human_qualification_tag", ""))
     if profile.get("deployment_tag") != deployment_tag:
@@ -391,7 +392,7 @@ def main() -> int:
     failures.extend(label for passed, label in resource_comparisons if not passed)
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "phase": "physical-target-dut-qualification",
         "qualified": not failures,
         "shipping_approved": False,
@@ -421,7 +422,7 @@ def main() -> int:
             "rtf": board["rtf"],
             "p99_headroom": board["p99_headroom"],
             "soak_hours": evidence["soak_hours"],
-            "cpu_percent": evidence["cpu_percent"],
+            **validate_cpu_metrics(evidence, "evidence"),
             "rss_kib": evidence["rss_kib"],
             "stack_high_water_bytes": evidence["stack_high_water_bytes"],
             "max_temp_c": evidence["max_temp_c"],

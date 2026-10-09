@@ -13,7 +13,12 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as td:
         output = pathlib.Path(td) / "soak.json"
         child = (
-            "import time\n"
+            "import time, threading, signal\n"
+            "def stop(*args):\n"
+            "    time.sleep(0.10)\n"
+            "    raise SystemExit(0)\n"
+            "signal.signal(signal.SIGTERM, stop)\n"
+            "threading.Thread(target=time.sleep, args=(10,), daemon=True).start()\n"
             "x = 0\n"
             "end = time.time() + 10\n"
             "while time.time() < end:\n"
@@ -36,7 +41,7 @@ def main() -> int:
             ]
         )
         value = json.loads(output.read_text(encoding="utf-8"))
-        assert value["schema_version"] == 2
+        assert value["schema_version"] == 3
         assert value["completed_requested_duration"] is True
         assert value["elapsed_seconds"] > 0
         assert abs(value["elapsed_hours"] - value["elapsed_seconds"] / 3600.0) < 1e-9
@@ -44,20 +49,21 @@ def main() -> int:
         assert value["initial_cpu_seconds"] is not None
         assert value["cpu_capacity_count"] >= 1
         assert value["cpu_percent_semantics"] == (
-            "process_cpu_time / elapsed / online_cpu_capacity * 100"
+            "process_cpu_seconds / wall_seconds * 100"
         )
         assert value["max_rss_kib"] is not None and value["max_rss_kib"] > 0
         assert value["average_cpu_percent"] is not None
-        assert 0 <= value["average_cpu_percent"] <= 100
+        assert 0 <= value["average_cpu_percent"]
         assert isinstance(value["samples"], list) and value["samples"]
         cpu_values = [row["cpu_seconds"] for row in value["samples"] if row["cpu_seconds"] is not None]
         assert cpu_values
-        expected_cpu = min(
-            100.0,
-            max(0.0, (cpu_values[-1] - value["initial_cpu_seconds"]) / value["elapsed_seconds"])
-            / value["cpu_capacity_count"]
-            * 100.0,
-        )
+        expected_cpu = (cpu_values[-1] - value["initial_cpu_seconds"]) / value["elapsed_seconds"] * 100.0
+        assert value["max_thread_count"] == max(row["thread_count"] for row in value["samples"])
+        assert value["max_thread_count"] == 2
+        assert value["audio_seconds"] is None
+        assert value["cpu_seconds_per_audio_second"] is None
+        assert value["wall_seconds"] == value["samples"][-1]["elapsed_s"]
+        assert value["process_cpu_seconds"] == cpu_values[-1] - value["initial_cpu_seconds"]
         assert abs(value["average_cpu_percent"] - expected_cpu) < 1e-9
     print("test_runtime_soak: ok")
     return 0

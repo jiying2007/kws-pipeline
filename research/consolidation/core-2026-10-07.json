@@ -81,13 +81,14 @@
       "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
     },
     {
-      "path": "CONTRIBUTING.md",
+      "path": "research/consolidation/maintained-sources/pr-485/CONTRIBUTING.md",
       "mode": "100644",
       "git_blob_sha1": "54a673b46dd2e121871648f2d3a7e66cf9a31a89",
       "sha256": "feaf04b66b2e872b884b8ca1e7a96c5fb5b7f2362651c19d79cb31e03b88742f",
       "bytes": 7861,
       "source_pr": 485,
-      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "source_path": "CONTRIBUTING.md"
     },
     {
       "path": "eval/README.md",

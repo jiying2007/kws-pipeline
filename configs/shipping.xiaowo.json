@@ -14,7 +14,7 @@
   "parameter_contract": {
     "contract_id": "kws-parameter-contract-v1",
     "path": "configs/parameter-contract.json",
-    "sha256": "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b"
+    "sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06"
   },
   "threshold_calibration": {
     "method": "plateau-median",
@@ -22,6 +22,8 @@
     "corpus": "synthetic-qualified-domain-corpus",
     "seed": 271838,
     "parameter_contract_sha256": "eb124d432382f989aa9e40951d8561c1c1448fd74f167324f2383fa6e6f73a3b",
+    "required_parameter_contract_sha256": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+    "contract_identity_note": "parameter_contract_sha256 retains the historical calibration binding. The active contract description/hash is maintained without claiming a new calibration or qualification run; required_parameter_contract_sha256 identifies the contract to use when recalibrating.",
     "invalidated_by": [
       "runtime.min_speech_dbfs",
       "runtime.state_retention",
@@ -42,7 +44,7 @@
       }
     ],
     "recalibration_required": true,
-    "recalibration_reason": "thresholds were selected on a synthetic corpus; the real-human final-AFE corpus in shipping_evidence_boundary.pending has not been run"
+    "recalibration_reason": "thresholds were selected on a synthetic corpus; the real-human final-AFE corpus in shipping_evidence_boundary.pending has not been run; removing deprecated token_boost from decoder floating-point arithmetic may change boundary decisions, so replay/calibration and product qualification must be rerun against the new source and active parameter contract"
   },
   "shipping_wake_words": [
     {

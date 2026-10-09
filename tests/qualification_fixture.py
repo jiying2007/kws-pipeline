@@ -173,3 +173,43 @@ def write_json(path: pathlib.Path, value: dict) -> None:
         json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
+
+
+def runtime_soak_fixture(
+    hours: float, *, cpu_percent: float = 5.0, capacity: int = 2, threads: int = 1,
+    requested_hours: float | None = None,
+) -> dict:
+    """Synthetic schema-v3 trace only; never physical-board evidence."""
+    from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID, CPU_PERCENT_SEMANTICS
+
+    elapsed = hours * 3600.0
+    cpu_seconds = elapsed * cpu_percent / 100.0
+    return {
+        "schema_version": 3,
+        "command": ["synthetic-fixture-product-soak"],
+        "pid": 123,
+        "cpu_capacity_count": capacity,
+        "measurement_contract_id": CPU_MEASUREMENT_CONTRACT_ID,
+        "cpu_percent_semantics": CPU_PERCENT_SEMANTICS,
+        "requested_hours": hours if requested_hours is None else requested_hours,
+        "elapsed_seconds": elapsed,
+        "elapsed_hours": hours,
+        "wall_seconds": elapsed,
+        "process_cpu_seconds": cpu_seconds,
+        "max_thread_count": threads,
+        "audio_seconds": None,
+        "cpu_seconds_per_audio_second": None,
+        "completed_requested_duration": True,
+        "termination_returncode": -15,
+        "sample_seconds": 60.0,
+        "initial_cpu_seconds": 10.0,
+        "samples": [
+            {"elapsed_s": 0.0, "rss_kib": 500.0, "cpu_seconds": 10.0,
+             "temp_c": 50.0, "thread_count": threads},
+            {"elapsed_s": elapsed, "rss_kib": 512.0, "cpu_seconds": 10.0 + cpu_seconds,
+             "temp_c": 55.0, "thread_count": threads},
+        ],
+        "max_rss_kib": 512.0,
+        "average_cpu_percent": cpu_percent,
+        "max_temp_c": 55.0,
+    }
