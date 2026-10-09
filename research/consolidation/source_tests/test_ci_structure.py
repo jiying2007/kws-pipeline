@@ -123,6 +123,23 @@ class CIContracts(unittest.TestCase):
             self.assertIn('permissions:\n  contents: read\n', workflow)
         self.assertNotIn('continue-on-error:', self.source)
 
+    def test_legacy_consolidation_checks_are_required_without_duplicate_pr_runs(self):
+        shared = jobs(self.ci)['python-contracts']
+        for command in ('tools/verify_research_consolidation.py',
+                        'research/consolidation/tests/test_research_consolidation.py',
+                        'research/consolidation/tests/test_cleanup_retention.py',
+                        'tools/test_inventory.py --root research/consolidation/tests --workflow .github/workflows/ci.yml'):
+            self.assertIn(command, shared)
+            self.assertEqual(self.ci.count(command), 1)
+        legacy = (ROOT / '.github/workflows/research-consolidation.yml').read_text()
+        trigger = legacy.split('permissions:', 1)[0]
+        self.assertNotIn('  pull_request:', trigger)
+        self.assertIn('    branches: ["consolidate/**"]', trigger)
+        self.assertNotRegex(trigger, r'branches:.*\bmain\b')
+        self.assertNotIn('"consolidate/**"', self.ci.split('permissions:', 1)[0])
+        self.assertNotIn('    if:', shared)
+        self.assertNotIn('continue-on-error:', shared)
+
     def test_cache_key_is_pinned_and_harness_verifies_hits(self):
         self.assertIn("hashFiles('research/offline-evidence-safety-v1/PUBLIC-DEPENDENCY.json')", self.source)
         self.assertNotIn('restore-keys:', self.source)

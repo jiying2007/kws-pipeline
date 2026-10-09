@@ -136,6 +136,14 @@ jobs:
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Recorded verdict boolean contract"'
       # Always runs, including PRs outside research paths. Hosted required checks
       # fail closed on this job's result, so source retention blocks merging.
+      - name: Verify integrated research retention and cleanup guards
+        run: |
+          python3 -B tools/verify_research_consolidation.py
+          python3 -B research/consolidation/tests/test_research_consolidation.py
+          python3 -B research/consolidation/tests/test_cleanup_retention.py
+          python3 -B tools/test_inventory.py --root research/consolidation/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Integrated research retention and cleanup guards
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Integrated research retention and cleanup guards"'
       - name: Verify local research source retention and delivery
         run: |
           python3 -B tools/verify_research_sources.py

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "d8bcd5ecc030f230c74f7490edc6e58bbf6c86f6",
-      "sha256": "4da28f55b2eb6b79bf587d3ad0b3470a609de1e9d0c0748ab45b06149ddfe065",
-      "bytes": 29055
+      "git_blob_sha1": "e76917b43385fb2bd04fb90d3f0d9f3415f1dd3e",
+      "sha256": "f1f08204077959f93194fdcb464babebc6843e2702b47f93d1173b24e4c3d258",
+      "bytes": 29674
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15442,9 +15442,9 @@
     {
       "path": ".github/workflows/research-consolidation.yml",
       "mode": "100644",
-      "git_blob_sha1": "91367e568e032b20254c862b89a2b1edb5963cde",
-      "sha256": "30cb587a240e7c9638fd1c2ac4c2dd7b95ba04f443e2438bca73fa0255804d4c",
-      "bytes": 773
+      "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721",
+      "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
+      "bytes": 840
     },
     {
       "path": ".github/workflows/research-donor-fbank.yml",
@@ -15921,6 +15921,48 @@
             "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
             "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
             "bytes": 3719
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "from_commit": "d0b1d4509d8c89a71e6f3411afaa1a1e7d7eb146",
+      "scope": "Move the existing integrated retention verifier, retention tests, cleanup guard tests and their test inventory into the always-triggered compiler-independent CI job, whose result is required by hosted checks. Keep the legacy workflow only for consolidate/** pushes to avoid duplicate PR/main execution.",
+      "rationale": "Close the remaining legacy consolidation gate gap and adapt its cleanup order test to the exact-SHA lease. Retained source bytes, historical CI evidence, branch retention names and repository protection settings are unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "d8bcd5ecc030f230c74f7490edc6e58bbf6c86f6",
+            "sha256": "4da28f55b2eb6b79bf587d3ad0b3470a609de1e9d0c0748ab45b06149ddfe065",
+            "bytes": 29055
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e76917b43385fb2bd04fb90d3f0d9f3415f1dd3e",
+            "sha256": "f1f08204077959f93194fdcb464babebc6843e2702b47f93d1173b24e4c3d258",
+            "bytes": 29674
+          }
+        },
+        {
+          "path": ".github/workflows/research-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "91367e568e032b20254c862b89a2b1edb5963cde",
+            "sha256": "30cb587a240e7c9638fd1c2ac4c2dd7b95ba04f443e2438bca73fa0255804d4c",
+            "bytes": 773
+          },
+          "after": {
+            "path": ".github/workflows/research-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "78f7fa38913cc1b7f5df2a91ed82b7f499572721",
+            "sha256": "0ee5f1b9d037d308654aea822069631bc586d789126d5b4b0594dd26f7975eff",
+            "bytes": 840
           }
         }
       ]
