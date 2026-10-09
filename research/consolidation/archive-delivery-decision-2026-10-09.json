@@ -1,0 +1,78 @@
+{
+  "schema": "kws-archive-delivery-decision-v1",
+  "date": "2026-10-09",
+  "repository": "jiying2007/kws-pipeline",
+  "base_commit": "979fe8b4e42d75154d3f1563ce4f65e16b2fad07",
+  "status": "ARCHIVE_INDEX_VERIFIED_RESTORATION_SELECTED",
+  "status_semantics": "Current delivery choice; earlier dated publication and PR snapshots remain historical observations. This is not a live CI or PR monitor.",
+  "publication_scope": "PUBLIC_DECISION_AND_METADATA_ONLY",
+  "delivery": {
+    "repository": "jiying2007/kws-data",
+    "commit": "d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a",
+    "path": "research/2026-10-08-d20-d90-host-research",
+    "logical_member_count": 1886,
+    "unique_object_count": 1403,
+    "archive_bytes": 59417250,
+    "archive_sha256": "8719a8ed67f440afe4adc450d47418523a7595dd02fb674c77da686964c84368",
+    "verified_scope": "PUBLICATION_BYTES_ONLY"
+  },
+  "expanded_copy": {
+    "planned_files": 500,
+    "historical_publication_status": "NOT_PUSHED",
+    "delivery_target": "CANCELLED",
+    "reason": "User selected complete public archive, index and verifiable restoration instead of duplicate expanded publication.",
+    "all_500_bytes_archived_claim": false,
+    "counts": {
+      "legacy_delivery_derived_or_packaging": 7,
+      "public_data_sidecar_exact_bytes": 18,
+      "archive_exact_bytes": 471,
+      "navigation_projection_full_original_in_archive": 4
+    },
+    "exact_byte_retention_count": 489,
+    "unclassified": 0
+  },
+  "qualification": {
+    "D20_raw_numerical_gate": "FAIL",
+    "D90": "NOT_RUN",
+    "human_and_device_qualification": "DEFERRED",
+    "shipping_approved": false,
+    "historical_experiment_reproduction": "NOT_CLAIMED"
+  },
+  "evidence": [
+    {
+      "path": "research/consolidation/archive-restoration-acceptance-2026-10-09.json",
+      "bytes": 8922,
+      "sha256": "c637d80f1fe748c059200d363745cb2a4ce4d3124ee5fe72e9d52c970d8dab0e",
+      "git_blob_sha1": "9f9ee0cbef0f6ac7752f99fe38d3344e24a70340"
+    },
+    {
+      "path": "research/consolidation/archive-expanded-copy-reconciliation-2026-10-09.json",
+      "bytes": 386093,
+      "sha256": "6becb189f7ed9de286e8af74153c5b97d1e252f4342860fef168a76b85b88b11",
+      "git_blob_sha1": "41c7774ea188ada35ea85d326b89938f0b6775fb"
+    },
+    {
+      "path": "research/consolidation/source-retention-publication-2026-10-09.json",
+      "bytes": 8038,
+      "sha256": "76ea928f239ed6bedf3c0dcd83bb15b252cc63b63b09263a45012a81d77b032f",
+      "git_blob_sha1": "99b7ec720d04a45e43b3a639d875d81294213ef5"
+    }
+  ],
+  "ci_change": {
+    "workflow": ".github/workflows/research-source-consolidation.yml",
+    "job": "local-source-inventory",
+    "scope": "Add one offline metadata consistency test to the existing local job; no new workflow, network access, archive downloads or research execution.",
+    "before": {
+      "path": ".github/workflows/research-source-consolidation.yml",
+      "bytes": 4758,
+      "sha256": "d28a5e880406900026e6ca95196268ed73764496bc4891bb91ec6df02a4db159",
+      "git_blob_sha1": "231cdede35205af7a4ebbcced98a403051729880"
+    },
+    "after": {
+      "path": ".github/workflows/research-source-consolidation.yml",
+      "bytes": 4876,
+      "sha256": "fe89f15dbfbf3b063f44e4b0cec00d19a47049f174aca92d8eb3c9c7d975b288",
+      "git_blob_sha1": "1be314d6ed2ddec812dab0ad0feb48facb93b492"
+    }
+  }
+}
