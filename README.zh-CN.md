@@ -4,6 +4,8 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+当前研究与保留状态：[2026-10-09 状态快照](research/consolidation/CURRENT_STATUS_2026-10-09.zh-CN.md)。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
+
 > **证据边界 —— 引用下方任何数字前请先读这一段。**
 > 本仓库记录的 qualification 全部产生于**合成语料**，属于工程证据，不是商用声学结论。
 > 有两项产品证据被刻意**排除在本仓库可执行范围之外**：真实人声经过最终麦克风/结构/AFE，以及物理目标板 performance/soak —— 它们需要硬件和真人受试者。消费这两项证据的 workflow（`real-human-qualification.yml`、`target-dut-qualification.yml`）均为 `workflow_dispatch` only 且需要 self-hosted runner，因此不会在 `push` 或 fork 中触发。`configs/shipping.xiaowo.json` 在两者齐备前始终保留 `shipping_approved=false`。详见「验证边界」。

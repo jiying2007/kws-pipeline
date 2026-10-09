@@ -1,0 +1,37 @@
+{
+  "schema": "offline-evidence-safety-validation-v1",
+  "test_command": "python run_tests.py --helper /path/to/verified/public/admission.py",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "tests": 55,
+  "result": "PASS",
+  "network_fetch_verified": true,
+  "real_public_archive_local_transport_verified": true,
+  "public_archive_bytes": 59417250,
+  "helper_bytes": 13145,
+  "coverage": [
+    "real saved-reference audit without mocked audit",
+    "actual saved-only entry admission",
+    "default disarmed and missing/wrong approval",
+    "source/input/dependency/fixture and policy binding failures",
+    "preflight-before-real-synthetic-spawn; negative spawn count zero",
+    "-O/-OO at actual saved-review and preflight entry points",
+    "NaN/Inf/shape/dtype/count/missing-member raw evidence persistence",
+    "raw file substitution/missing file/receipt drift rejected",
+    "terminal fsync staging and directory-fsync error propagation",
+    "timeout/exit failure/stdout+stderr cap/truncation/EOF deadline",
+    "pinned part/archive/helper size and hash; duplicate/missing ZIP member denial"
+  ],
+  "model_calls": 0,
+  "historical_files_modified": false,
+  "old_once_authorization_consumed": false,
+  "remote_writes": false,
+  "boundaries": [
+    "Historical frozen guard is not repaired or made runnable by this toolkit.",
+    "Preflight admits only separately authorized new synthetic-process scope and provides no launcher.",
+    "Pipe supervisor is not a CPU/RSS/filesystem/process-tree sandbox.",
+    "A final directory-fsync error propagates; an already published numerical verdict then has unconfirmed durability."
+  ],
+  "network_test_command": "python run_tests.py --fetch-helper",
+  "network_test_result": "PASS: all 8 pinned public parts downloaded; one helper extracted; 55 tests passed in 9.162 seconds"
+}

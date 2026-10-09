@@ -1,0 +1,55 @@
+{
+  "schema": "pinned-public-admission-helper-v1",
+  "repository": "jiying2007/kws-data",
+  "commit": "b7cc1dba279af896ebcbb642c2fe1018fc870092",
+  "base_url": "https://raw.githubusercontent.com/jiying2007/kws-data/b7cc1dba279af896ebcbb642c2fe1018fc870092/research/2026-10-08-d20-d90-host-research",
+  "archive_bytes": 59417250,
+  "archive_sha256": "8719a8ed67f440afe4adc450d47418523a7595dd02fb674c77da686964c84368",
+  "parts": [
+    {
+      "path": "objects.zip.part-000",
+      "bytes": 8388608,
+      "sha256": "63d5d916aed1686cccd124b4d92a996b6085b28fda6b7a7b45f317c0b183cd24"
+    },
+    {
+      "path": "objects.zip.part-001",
+      "bytes": 8388608,
+      "sha256": "122ac5ecc46c5022c2af530f8deb79ea5fd8dd8e36ec14f48485a76427137ebe"
+    },
+    {
+      "path": "objects.zip.part-002",
+      "bytes": 8388608,
+      "sha256": "392bf7e1d4141a23cfdc6551cd0497973ac6bf893ec35c50856148f41438c90d"
+    },
+    {
+      "path": "objects.zip.part-003",
+      "bytes": 8388608,
+      "sha256": "765974aab7364650a0e82b247088c658db74f374b326072fb4dd518e64ce3c9c"
+    },
+    {
+      "path": "objects.zip.part-004",
+      "bytes": 8388608,
+      "sha256": "00821052e24c56d234acd8968347aa3bda092e6f67152067835b6e523f2f97d8"
+    },
+    {
+      "path": "objects.zip.part-005",
+      "bytes": 8388608,
+      "sha256": "8281391d331c8e2995f5eae1c9a46b2dd77e1ccb85f0b106dfa0274f4a993ad2"
+    },
+    {
+      "path": "objects.zip.part-006",
+      "bytes": 8388608,
+      "sha256": "bc205b6225eb7e1fac40991b2b69b6b1dcd0fa51071eda99405e0f77a687fa7e"
+    },
+    {
+      "path": "objects.zip.part-007",
+      "bytes": 696994,
+      "sha256": "36d7a9019193fafcad24833bf436b552d0e2bc12d3017829af1fd6f3913ad3c5"
+    }
+  ],
+  "helper_object": "objects/f825a3e081723b8e153e6ec93a68b6a1d69acbc27c84937cefed9cf0d3dc900c",
+  "helper_sha256": "f825a3e081723b8e153e6ec93a68b6a1d69acbc27c84937cefed9cf0d3dc900c",
+  "helper_bytes": 13145,
+  "original_member": "reference-admission-hardening/admission.py",
+  "scope": "Download public archive bytes; load this one public saved-only helper, never old guards or model files."
+}

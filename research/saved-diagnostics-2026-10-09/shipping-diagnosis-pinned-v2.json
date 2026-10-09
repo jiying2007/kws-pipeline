@@ -1,0 +1,112 @@
+{
+  "artifact_id": 11585689303,
+  "run_id": 37860130019,
+  "artifact_zip_sha256": "77e3d3fda81bef000c72927bf196dbed1b680e431c4455ee122ecdbdef1a38d0",
+  "source_members_verified": {
+    "far-aggregate.json": "a9514e28f24904e6256fe994b806b0f09e00c0ef889605232680a3d08c230d53",
+    "far-run-1103/detection-source-map.jsonl": "e25d1c2b87737ab9cc4c028351e28ba5637616d31d50cfed054b5e2425df6f61",
+    "far-run-3301/detection-source-map.jsonl": "72c5ad42d75431b5f64729471adebf2bf9878790fcc4587413ff74770b7b055c"
+  },
+  "zip_hash_verified": true,
+  "model_sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+  "events": [
+    {
+      "seed": 1103,
+      "time_s": 7191.345,
+      "confidence": 0.603046,
+      "keyword": 2,
+      "source_map_sha256": "e25d1c2b87737ab9cc4c028351e28ba5637616d31d50cfed054b5e2425df6f61",
+      "active_tokens": [
+        "xiao3",
+        "xiao3",
+        "xiao3",
+        "wo1"
+      ],
+      "active_offset_s": 1.3450000000002547,
+      "prior_tokens": [
+        "xiao3",
+        "wo1",
+        "hao3",
+        "wo1"
+      ],
+      "prior_end_to_detection_s": 31.71125000000029,
+      "gap_between_prior_end_and_active_start_s": 30.366250000000036,
+      "source_sha256": "40a5ab93a7fad21dd3c234e659a092e890e8269eeeb0d69f04415124a53d6966",
+      "scene": {
+        "afe_backend": "proxy",
+        "afe_identity": "builtin-delay-and-sum-v1",
+        "afe_latency_samples": 0,
+        "afe_provenance": {
+          "identity_sha256": "01594e8f950e0a0590b5f32436392dd0958339c7de69ef88e0ffdee25433a8e6",
+          "latency_samples": 0,
+          "schema_version": 1
+        },
+        "azimuth_deg": 0.0,
+        "direct_delay_samples": 228,
+        "direct_gain": 0.1537303667685826,
+        "distance_band": "far",
+        "distance_m": 4.878671766450734,
+        "itd_samples": 0.0,
+        "mic_spacing_m": 0.06,
+        "noise_profile": "motor",
+        "playback_sir_db": 14.705016148759462,
+        "reflection_count": 12,
+        "rir_backend": "simulated-sparse-v1",
+        "rir_id": "sim-far",
+        "room_id": "sim-far",
+        "rt60_s": 0.27021346133973784,
+        "snr_db": 24.232710767055448
+      }
+    },
+    {
+      "seed": 3301,
+      "time_s": 2372.645,
+      "confidence": 0.962665,
+      "keyword": 2,
+      "source_map_sha256": "72c5ad42d75431b5f64729471adebf2bf9878790fcc4587413ff74770b7b055c",
+      "active_tokens": [
+        "xiao3",
+        "wo1",
+        "xiao3",
+        "ni3"
+      ],
+      "active_offset_s": 0.6449999999999818,
+      "prior_tokens": [
+        "xiao3",
+        "hao3",
+        "xiao3",
+        "wo1"
+      ],
+      "prior_end_to_detection_s": 1.0255624999999782,
+      "gap_between_prior_end_and_active_start_s": 0.38056249999999636,
+      "source_sha256": "ca75c2442d163e01fcedef656853116fd571a001241c7a6260bf38beb051f78c",
+      "scene": {
+        "afe_backend": "proxy",
+        "afe_identity": "builtin-delay-and-sum-v1",
+        "afe_latency_samples": 3,
+        "afe_provenance": {
+          "identity_sha256": "01594e8f950e0a0590b5f32436392dd0958339c7de69ef88e0ffdee25433a8e6",
+          "latency_samples": 3,
+          "schema_version": 1
+        },
+        "azimuth_deg": 120.0,
+        "direct_delay_samples": 88,
+        "direct_gain": 0.3960177162023226,
+        "distance_band": "mid",
+        "distance_m": 1.893854666887757,
+        "itd_samples": 2.423861188434581,
+        "mic_spacing_m": 0.06,
+        "noise_profile": "white",
+        "playback_sir_db": null,
+        "reflection_count": 18,
+        "rir_backend": "simulated-sparse-v1",
+        "rir_id": "sim-mid",
+        "room_id": "sim-mid",
+        "rt60_s": 0.6098101412123657,
+        "snr_db": 10.547065438883886
+      }
+    }
+  ],
+  "model_scope": "shipping model, not D20/D90",
+  "root_cause": "UNDETERMINED: source attribution is not a saved decoder/logit/VAD state trace"
+}

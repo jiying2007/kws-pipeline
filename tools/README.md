@@ -126,4 +126,5 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_development_source_binding.py`](verify_development_source_binding.py)
 - [`verify_frozen_replay_build_contract.py`](verify_frozen_replay_build_contract.py)
 - [`verify_research_consolidation.py`](verify_research_consolidation.py)
+- [`verify_research_publication.py`](verify_research_publication.py)
 - [`verify_research_sources.py`](verify_research_sources.py)

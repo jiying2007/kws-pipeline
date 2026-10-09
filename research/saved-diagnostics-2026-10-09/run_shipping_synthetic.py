@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+"""Compile current shipping decoder with invented logits; no model/audio calls."""
+import argparse,pathlib,subprocess,json,hashlib,sys
+p=argparse.ArgumentParser();p.add_argument('repository',type=pathlib.Path);p.add_argument('--output',type=pathlib.Path,required=True);a=p.parse_args();repo=a.repository.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=False);here=pathlib.Path(__file__).resolve().parent
+subprocess.run([sys.executable,str(repo/'tools/gen_parameter_limits.py'),str(repo/'configs/parameter-contract.json'),str(out/'generated')],check=True)
+cmd=['cc','-std=c11','-Wall','-Wextra','-Werror','-O2','-I'+str(repo/'src'),'-I'+str(repo/'include'),'-I'+str(out/'generated'),str(here/'shipping_synthetic.c'),str(repo/'src/decoder.c'),'-lm','-o',str(out/'repro')];subprocess.run(cmd,check=True);r=json.loads(subprocess.check_output([str(out/'repro')],text=True));r['source_sha256']={str(q.relative_to(repo)):hashlib.sha256(q.read_bytes()).hexdigest() for q in [repo/'src/decoder.c',repo/'src/decoder.h',repo/'configs/parameter-contract.json']};r['scope']='Invented logits mechanism only; original nightly logits/VAD/state unavailable; not causal reproduction';(out/'RESULTS.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r,indent=2))

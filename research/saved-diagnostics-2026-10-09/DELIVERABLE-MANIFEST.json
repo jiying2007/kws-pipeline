@@ -1,0 +1,44 @@
+{
+  "files": {
+    "REPORT.zh-CN.md": {
+      "sha256": "40f6d3ffd1fc9110760fd8c663b467a60f883d36936c5cad62340facfdf97bba",
+      "bytes": 10486
+    },
+    "analyze_saved.py": {
+      "sha256": "251883c039961c582d1e9a60f088aa6854df5e00b32aaf00fa7be5a154ef7f7c",
+      "bytes": 4707
+    },
+    "check_shipping_evidence.py": {
+      "sha256": "f331475dd00aaafad404ba1508274feea98d47a7360aab79323c22d451ee6731",
+      "bytes": 2771
+    },
+    "shipping_synthetic.c": {
+      "sha256": "05aaf717d7867a42c8bb49a333bf798148acacab3a4f78d9cc7697b68f5a1374",
+      "bytes": 1420
+    },
+    "run_shipping_synthetic.py": {
+      "sha256": "be7af38434bc6ab84031d484f0610f7a17789ba07af98e84178bc3fdbd0129c0",
+      "bytes": 1297
+    },
+    "shipping-synthetic-results.json": {
+      "sha256": "dd0789682230b61498ee58e0aeb1d74a7eafc92841269b80df26c949ba191d59",
+      "bytes": 209
+    },
+    "shipping-diagnosis-pinned-v2.json": {
+      "sha256": "f813fc33e984a7a24b76e82a18cf4b221344e27c92af2ff633b2cab1d5b235da",
+      "bytes": 3854
+    },
+    "DATA-RESULTS.json": {
+      "sha256": "6ff097d84a00b91b823bff24ff6139621264080ae77daf9f2ab9e8d8b10c7176",
+      "bytes": 751
+    }
+  },
+  "excluded": [
+    "shipping artifact audio",
+    "model weights",
+    "NPZ tensors",
+    "temporary compiled binaries",
+    "Detailed derived numerical trace is linked in DATA-RESULTS.json and retained in kws-data, not copied here."
+  ],
+  "scope": "Reports, public-source metadata, and tools only"
+}
