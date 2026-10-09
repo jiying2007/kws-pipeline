@@ -32,3 +32,9 @@
 ## 保留分支
 
 只读检查确认pipeline三个保留设计分支仍应按现有记录保留，不能自动合入或删除。data七个非main分支分别对应已合并PR21–27；大部分因squash仍显示diverged，不能据此认定未合并。没有删除或改动任何分支引用。
+
+## 保存证据持久化补充（2026-10-09）
+
+PR450 原始 23,590,873 字节工件现有[固定 data 来源](https://github.com/jiying2007/kws-data/tree/528cdc880256ad417fcb839cdeba89ba59c2d331/research/2026-10-09-pr450-saved-trace-retention)及[机器可读身份指针](DURABLE-TRACE.json)。三分片封装恢复后得到原始 ZIP，44 项成员逐项核验，原 Actions 工件不再是唯一恢复入口。外层封装与原始工件 ZIP 的 SHA 不同，不能混用。恢复只读取保存字节，不执行历史脚本、模型或 decoder replay；仍不证明两个运行的连续初态一致，不改变原 FA 结论。
+
+The original PR450 artifact now has a commit-pinned restoration source in kws-data. This is persistence of existing evidence, not a new replay or acoustic qualification. See DURABLE-TRACE.json for original/wrapper identities and the source verifier.
