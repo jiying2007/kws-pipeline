@@ -4,6 +4,11 @@ All notable source-level changes are recorded here. A source/software version do
 
 ## Unreleased
 
+- Document and regress the existing interaction between grace windows and the twelfth inactive-frame reset. Remove unused inference top-token work and reuse the validated-logit scan without changing decoder policy or public ABI; no target-board performance gain is claimed.
+- Bind posterior replay caches to the actual producer executable SHA and reject unidentified legacy cache entries. Cache hits retain the recorded producer identity; decoder/keyword-only changes can still reuse compatible posterior traces.
+- Validate FAR counts, exposure, seed and input identities per shard before aggregation. Reject coercible or malformed values instead of allowing cancellation or truncation to produce a qualified summary; retained historical results are not recalculated.
+- Instrument a dedicated parser core for coverage-guided fuzzing while keeping the installed SDK separate, and verify generated SPDX 2.3 SDK inventories beyond JSON syntax, including file checksums and content-bound document identity.
+- Replace the landing-status projection with schema v2, separating historical release qualification, current-source recalibration requirements, dated research references and external product gates. Correct model-registry and decoder documentation and mark superseded plans as historical; shipping approval remains false.
 - Resolve fully tied keyword candidates by stable keyword ID rather than input order. Rank all pending candidates within each frame before updating the held winner, preserving its grace age when it remains the winner even as confidence improves. Existing policy-specific priority/depth/confidence ordering and all model/threshold values are retained. Historical acoustic qualification is not transferred to this new runner.
 - Refresh automatically detected Git source revision and dirty state during incremental builds, including builds without an explicit reconfigure. Explicit source-revision overrides and source archives retain their documented identity boundaries.
 - Correct relocatable pkg-config metadata for supported multi-level installation directories, and validate real pkg-config consumer compilation/linking instead of relying only on a version query.

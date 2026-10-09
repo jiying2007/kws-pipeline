@@ -11,7 +11,7 @@ mono PCM16 @ 16 kHz
  -> 32-d feature normalization
  -> int8-weight tiny recurrent acoustic model
  -> blank + pinyin token logits
- -> dominant-token CTC admission
+ -> bounded root/fuzzy-child CTC admission
  -> shared-prefix keyword trie
  -> prefix-policy arbitration
  -> speech / threshold / refractory gates
@@ -54,7 +54,20 @@ The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s and
 
 The decoder is a bounded shared-prefix Trie with a lightweight Viterbi-style scorer; it is not a general CTC prefix-beam search.
 
-Each frame admits at most one nonblank structural label: the highest-logit nonblank token only when it also beats blank. Non-dominant token posteriors still contribute to normalization/confidence but cannot fabricate Trie transitions.
+Each frame selects one dominant token (including blank), but this is not a strict
+top-1-only transition rule. A keyword can start on its dominant root token, or on
+a root within `KWS_ROOT_START_LOGIT_MARGIN` of a dominant blank or another
+configured keyword root. An unrelated non-root dominant token blocks the start.
+
+Once a prefix exists, non-dominant children can also advance. Each such fuzzy
+child advance consumes `KWS_FUZZY_CHILD_RETENTION_COST_LOG` of the cumulative
+search-only retention budget. Blank-dominant frames use the faster
+`KWS_SILENCE_RETENTION_LOG` even when VAD is active; holding a matching nonblank
+uses speech-dependent retention. Terminal paths below `KWS_MIN_PATH_RETENTION_LOG`
+are rejected. Confidence comes from the retained acoustic scores, separately
+from these search costs. The constants and change boundaries are documented in
+[RUNTIME_CONFIG.md](RUNTIME_CONFIG.md) and sourced from
+[`configs/parameter-contract.json`](../configs/parameter-contract.json).
 
 Each non-root Trie node retains two independent states:
 

@@ -55,9 +55,15 @@ upper95 ≤ 0.40）。这不是 D20/D90 的结果，shipping approval 仍为 fal
 
 `configs/shipping.xiaowo.json` 是机器可读的当前产品 contract。它故意保持 `shipping_approved=false`：synthetic qualification 是强工程证据，但不能替代后续真实人声 + 最终 AFE 声学资格和物理目标板证据。
 
+当前源码 contract 另行记录 `recalibration_required=true`；历史资格不构成变更后
+运行时源码的资格。各证据范围见[产品状态](docs/KWS_LANDING_STATUS.md)。
+
 ### 获取与校验 Release
 
-模型、checkpoint 与 keyword pack 是 Release 资产，不是仓库跟踪文件（`.gitignore` 排除 `*.kwm`/`*.pt`，原因见 `models/README.md`）。下载后用 contract 校验：
+模型、checkpoint 与 keyword pack 是不可变 Release 资产，也已跟踪到
+[正式模型 Git registry](models/registry/model-749187ec1d66/)。`.gitignore` 排除中间
+`*.kwm`/`*.pt` 文件，但明确放行 `models/registry/**`；见[模型存储策略](models/README.md)。
+可以使用本地 registry 镜像，也可下载 Release 后用 contract 校验：
 
 ```bash
 gh release download model-749187ec1d66 \

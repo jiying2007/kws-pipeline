@@ -37,8 +37,9 @@ def trace_cache_paths(
     *,
     model_sha256: str,
     audio_sha256: str,
+    posterior_dump_sha256: str,
 ) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
-    root = cache_root / model_sha256 / audio_sha256[:2]
+    root = cache_root / model_sha256 / posterior_dump_sha256 / audio_sha256[:2]
     trace = root / f"{audio_sha256}.kwtr"
     sidecar = root / f"{audio_sha256}.json"
     lock = root / f"{audio_sha256}.lock"
@@ -51,6 +52,7 @@ def cached_trace_valid(
     *,
     model_sha256: str,
     audio_sha256: str,
+    posterior_dump_sha256: str,
 ) -> dict | None:
     if not trace.is_file() or not sidecar.is_file():
         return None
@@ -59,10 +61,11 @@ def cached_trace_valid(
     except (json.JSONDecodeError, OSError, ValueError):
         return None
     if (
-        value.get("schema_version") != 1
-        or value.get("evidence_class") != "kws-posterior-trace-cache-v1"
+        value.get("schema_version") != 2
+        or value.get("evidence_class") != "kws-posterior-trace-cache-v2"
         or value.get("model_sha256") != model_sha256
         or value.get("audio_sha256") != audio_sha256
+        or value.get("posterior_dump_sha256") != posterior_dump_sha256
         or value.get("trace_sha256") != sha256_file(trace)
         or int(value.get("frames", 0)) <= 0
     ):
@@ -78,6 +81,7 @@ def ensure_cached_trace(
     audio: pathlib.Path,
     model_sha256: str,
     audio_sha256: str,
+    posterior_dump_sha256: str,
 ) -> tuple[pathlib.Path, dict, bool]:
     try:
         import fcntl
@@ -88,15 +92,19 @@ def ensure_cached_trace(
         cache_root,
         model_sha256=model_sha256,
         audio_sha256=audio_sha256,
+        posterior_dump_sha256=posterior_dump_sha256,
     )
     trace.parent.mkdir(parents=True, exist_ok=True)
     with lock.open("a+b") as lock_stream:
         fcntl.flock(lock_stream.fileno(), fcntl.LOCK_EX)
+        if sha256_file(posterior_dump) != posterior_dump_sha256:
+            raise ValueError("posterior dump executable changed during this run")
         cached = cached_trace_valid(
             trace,
             sidecar,
             model_sha256=model_sha256,
             audio_sha256=audio_sha256,
+            posterior_dump_sha256=posterior_dump_sha256,
         )
         if cached is not None:
             return trace, cached, True
@@ -112,6 +120,8 @@ def ensure_cached_trace(
                 text=True,
                 stdout=subprocess.PIPE,
             )
+            if sha256_file(posterior_dump) != posterior_dump_sha256:
+                raise ValueError("posterior dump executable changed during trace generation")
             lines = [line for line in completed.stdout.splitlines() if line.strip()]
             if len(lines) != 1:
                 raise ValueError("posterior dump must emit exactly one provenance JSON line")
@@ -127,10 +137,11 @@ def ensure_cached_trace(
                 raise ValueError("posterior dump provenance mismatch")
             os.replace(temp_trace, trace)
             cached_summary = {
-                "schema_version": 1,
-                "evidence_class": "kws-posterior-trace-cache-v1",
+                "schema_version": 2,
+                "evidence_class": "kws-posterior-trace-cache-v2",
                 "model_sha256": model_sha256,
                 "audio_sha256": audio_sha256,
+                "posterior_dump_sha256": posterior_dump_sha256,
                 "trace_sha256": sha256_file(trace),
                 "frames": int(summary["frames"]),
                 "vocab_size": int(summary["vocab_size"]),
@@ -264,6 +275,7 @@ def main() -> int:
     posterior_cache_hits = 0
     posterior_cache_misses = 0
     model_sha256 = sha256_file(args.model)
+    posterior_dump_sha256 = sha256_file(args.posterior_dump) if cache_enabled else None
     for row in rows:
         recording = str(row["recording"])
         audio = pathlib.Path(str(row["_execution_path"]))
@@ -280,6 +292,7 @@ def main() -> int:
                 audio=audio,
                 model_sha256=model_sha256,
                 audio_sha256=audio_sha256,
+                posterior_dump_sha256=posterior_dump_sha256,
             )
             if cache_hit:
                 posterior_cache_hits += 1
@@ -289,6 +302,7 @@ def main() -> int:
                 {
                     "recording": recording,
                     "audio_sha256": audio_sha256,
+                    "posterior_dump_sha256": trace_summary["posterior_dump_sha256"],
                     "trace_sha256": trace_summary["trace_sha256"],
                     "frames": trace_summary["frames"],
                     "cache_hit": cache_hit,
@@ -390,7 +404,7 @@ def main() -> int:
         if cache_enabled:
             provenance.update(
                 {
-                    "posterior_dump_sha256": sha256_file(args.posterior_dump),
+                    "posterior_dump_sha256": posterior_dump_sha256,
                     "decoder_replay_sha256": sha256_file(args.decoder_replay),
                     "posterior_cache_hits": posterior_cache_hits,
                     "posterior_cache_misses": posterior_cache_misses,

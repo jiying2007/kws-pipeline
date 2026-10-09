@@ -342,7 +342,9 @@ jobs:
       - name: Verify tracked worktree after Model promotion contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
       - name: Reproducibility tool contract
-        run: python3 tests/test_reproducible_sdk.py
+        run: |
+          python3 tests/test_reproducible_sdk.py
+          python3 tests/test_sbom.py
       - name: Verify tracked worktree after Reproducibility tool contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Reproducibility tool contract"'
       - name: Terminal documentation contract
@@ -521,6 +523,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify parser instrumentation and SDK isolation
+        run: python3 tests/test_fuzz_instrumentation.py
       - name: Configure Clang libFuzzer + ASan/UBSan
         env:
           CC: clang

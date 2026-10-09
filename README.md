@@ -59,9 +59,17 @@ approval remains false. See the [current audit](research/consolidation/CI_AUDIT_
 
 `configs/shipping.xiaowo.json` is the machine-readable product contract. It intentionally records `shipping_approved=false`: synthetic qualification is engineering evidence, not a substitute for final real-human/final-AFE acoustic qualification and physical target-board evidence.
 
+The current source contract separately records `recalibration_required=true`;
+historical qualification does not qualify changed runtime source.
+See [product status](docs/KWS_LANDING_STATUS.md) for the exact evidence scopes.
+
 ### Fetching and verifying the release
 
-The model, checkpoint and keyword pack are release assets rather than tracked files (`.gitignore` excludes `*.kwm`/`*.pt`; `models/README.md` explains why). Fetch them, then check them against the contract:
+The model, checkpoint and keyword pack are immutable Release assets and are also
+tracked in the promoted [Git registry](models/registry/model-749187ec1d66/).
+`.gitignore` excludes intermediate `*.kwm`/`*.pt` files but explicitly permits
+`models/registry/**`; see [model storage policy](models/README.md). You can use the
+local registry mirror or fetch the Release and check it against the contract:
 
 ```bash
 gh release download model-749187ec1d66 \

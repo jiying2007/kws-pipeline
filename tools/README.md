@@ -121,6 +121,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`check_workflow_path_filters.py`](check_workflow_path_filters.py)
 - [`gen_parameter_limits.py`](gen_parameter_limits.py)
 - [`generate_sbom.py`](generate_sbom.py)
+- [`validate_sbom.py`](validate_sbom.py) — validate the generated SDK SPDX profile and installed file identities
 - [`prepare_eval_context_fixtures.py`](prepare_eval_context_fixtures.py)
 - [`research_ci_changes.py`](research_ci_changes.py) — Select complete PR/main changes for required research CI; no model execution.
 - [`run_research_source_checks.py`](run_research_source_checks.py)

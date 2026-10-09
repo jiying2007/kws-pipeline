@@ -913,6 +913,54 @@ static void test_replay_output_contract(void) {
   }
 }
 
+static void test_replay_top1_ties_and_invalid_frames_are_atomic(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  uint8_t before[65536];
+  kws_model_t model;
+  kws_engine_t *engine = NULL;
+  const size_t bytes = make_test_model(blob, sizeof(blob));
+  const float frames[][4] = {
+      {8.0f, 8.0f, 7.0f, 6.0f},
+      {7.0f, 8.0f, 8.0f, 6.0f},
+      {-0.0f, 0.0f, -0.0f, 0.0f},
+      {-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX},
+      {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX},
+  };
+  const float invalid[] = {NAN, INFINITY, -INFINITY};
+  const uint64_t expected_blanks[] = {1u, 1u, 2u, 3u, 4u};
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+
+  for (size_t f = 0u; f < sizeof(frames) / sizeof(frames[0]); ++f) {
+    kws_engine_stats_t stats = {0};
+    const uint64_t end_sample = (uint64_t)(f + 1u) * 320u;
+    CHECK(kws_engine_debug_replay_frame(engine, frames[f], 4u, 1,
+                                        end_sample, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_get_stats(engine, &stats) == KWS_OK);
+    CHECK(stats.processed_frames == f + 1u);
+    CHECK(stats.blank_top1_frames == expected_blanks[f]);
+    /* Every invalid position must leave all runtime/debug state unchanged,
+     * including after finite values already found a new top token. */
+    for (size_t v = 0u; v < 4u; ++v) {
+      for (size_t bad = 0u; bad < sizeof(invalid) / sizeof(invalid[0]); ++bad) {
+        float logits[4] = {-8.0f, 8.0f, 7.0f, -8.0f};
+        kws_detection_t detection = {UINT32_MAX, -1.0f, UINT64_MAX};
+        int detected = 7;
+        const size_t engine_bytes = kws_engine_required_bytes(&model);
+        logits[v] = invalid[bad];
+        memcpy(before, arena, engine_bytes);
+        CHECK(kws_engine_debug_replay_frame(engine, logits, 4u, 1,
+                                            end_sample + 320u, &detection,
+                                            &detected) == KWS_EINVAL);
+        CHECK(detected == 0);
+        check_detection_sentinel(&detection);
+        CHECK(memcmp(before, arena, engine_bytes) == 0);
+      }
+    }
+  }
+}
+
 /* End-to-end KWSP -> model -> PCM frontend -> decoder regression. Zero weights
  * make these synthetic logits equal to the serialized output biases. */
 static void check_bias_detection(const float biases[4], float threshold,
@@ -1028,6 +1076,7 @@ static void test_logit_common_offset(void) {
 }
 
 int main(void) {
+  test_replay_top1_ties_and_invalid_frames_are_atomic();
   test_logit_common_offset();
   test_keyword_pack_engine_ownership();
   test_init_failure_contract();

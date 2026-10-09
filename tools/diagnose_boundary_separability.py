@@ -373,6 +373,7 @@ def build(args: argparse.Namespace) -> dict:
     assert_train_split(rows)
     selected = select_boundary_sources(rows)
     model_sha = sha256_file(model)
+    posterior_dump_sha = sha256_file(posterior_dump)
 
     gap_samples = round(args.gap_ms * SAMPLE_RATE_HZ / 1000.0)
     lead_samples = round(args.lead_ms * SAMPLE_RATE_HZ / 1000.0)
@@ -418,13 +419,14 @@ def build(args: argparse.Namespace) -> dict:
         alignment_audio = alignment_dir / f"{stem}-fullword.wav"
         write_wav(alignment_audio, [0] * lead_samples + raw + [0] * tail_samples)
         alignment_sha = sha256_file(alignment_audio)
-        alignment_trace, _, _ = ensure_cached_trace(
+        alignment_trace, alignment_trace_summary, _ = ensure_cached_trace(
             posterior_dump=posterior_dump,
             cache_root=cache,
             model=model,
             audio=alignment_audio,
             model_sha256=model_sha,
             audio_sha256=alignment_sha,
+            posterior_dump_sha256=posterior_dump_sha,
         )
         alignment = internal_split_from_alignment(
             [frame["logits"] for frame in read_trace_frames(alignment_trace)],
@@ -448,6 +450,7 @@ def build(args: argparse.Namespace) -> dict:
             audio=positive_out,
             model_sha256=model_sha,
             audio_sha256=positive_sha,
+            posterior_dump_sha256=posterior_dump_sha,
         )
         positive_features = extract_features(
             read_trace_frames(positive_trace),
@@ -475,6 +478,7 @@ def build(args: argparse.Namespace) -> dict:
             audio=negative_out,
             model_sha256=model_sha,
             audio_sha256=negative_sha,
+            posterior_dump_sha256=posterior_dump_sha,
         )
         negative_gap_start = lead_samples + len(left_samples)
         negative_features = extract_features(
@@ -494,9 +498,15 @@ def build(args: argparse.Namespace) -> dict:
                 "positive_source_id": positive_row["speech_like_provenance"]["source_id"],
                 "left_source_id": left_row["speech_like_provenance"]["source_id"],
                 "right_source_id": right_row["speech_like_provenance"]["source_id"],
+                "alignment": {
+                    "audio_sha256": alignment_sha,
+                    "trace_sha256": alignment_trace_summary["trace_sha256"],
+                    "posterior_dump_sha256": alignment_trace_summary["posterior_dump_sha256"],
+                },
                 "positive": {
                     "audio_sha256": positive_sha,
                     "trace_sha256": positive_trace_summary["trace_sha256"],
+                    "posterior_dump_sha256": positive_trace_summary["posterior_dump_sha256"],
                     "gap_start_sample": lead_samples + split,
                     "gap_end_sample": lead_samples + split + gap_samples,
                     "features": positive_features,
@@ -504,6 +514,7 @@ def build(args: argparse.Namespace) -> dict:
                 "negative": {
                     "audio_sha256": negative_sha,
                     "trace_sha256": negative_trace_summary["trace_sha256"],
+                    "posterior_dump_sha256": negative_trace_summary["posterior_dump_sha256"],
                     "gap_start_sample": negative_gap_start,
                     "gap_end_sample": negative_gap_start + effective_gap,
                     "features": negative_features,
@@ -535,7 +546,7 @@ def build(args: argparse.Namespace) -> dict:
         "source_split": "train",
         "dataset_index_sha256": sha256_file(index),
         "model_sha256": model_sha,
-        "posterior_dump_sha256": sha256_file(posterior_dump),
+        "posterior_dump_sha256": posterior_dump_sha,
         "gap_ms": args.gap_ms,
         "lead_ms": args.lead_ms,
         "tail_ms": args.tail_ms,

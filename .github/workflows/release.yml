@@ -77,6 +77,7 @@ jobs:
           python3 tests/test_audio_discontinuity_contract.py
           python3 tests/test_training_supply_chain.py
           python3 tests/test_reproducible_sdk.py
+          python3 tests/test_sbom.py
           python3 tests/test_terminal_docs.py
           python3 tests/test_test_inventory.py
           python3 tests/test_product_training_entry_contract.py
@@ -173,6 +174,8 @@ jobs:
           expected="${release_tag#v}"
           actual="$(sed -nE 's/^project\(kws_pipeline VERSION ([0-9]+\.[0-9]+\.[0-9]+) LANGUAGES C\)$/\1/p' CMakeLists.txt)"
           test "$expected" = "$actual"
+      - name: Verify parser instrumentation and SDK isolation
+        run: python3 tests/test_fuzz_instrumentation.py
       - name: Configure libFuzzer
         env:
           CC: clang
@@ -314,7 +317,7 @@ jobs:
             --version "$VERSION" \
             --source-sha "$GITHUB_SHA" \
             --output "dist/kws-pipeline-${VERSION}.spdx.json"
-          python3 -m json.tool "dist/kws-pipeline-${VERSION}.spdx.json" >/dev/null
+          python3 tools/validate_sbom.py "dist/kws-pipeline-${VERSION}.spdx.json" --root "$RUNNER_TEMP/sdk"
           (cd dist && sha256sum "kws-pipeline-${VERSION}-sdk.tar.gz" "kws-pipeline-${VERSION}-source.tar.gz" "kws-pipeline-${VERSION}.spdx.json" > SHA256SUMS && sha256sum -c SHA256SUMS)
       - name: Validate release artifacts
         env:
