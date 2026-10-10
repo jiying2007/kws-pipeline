@@ -1,0 +1,75 @@
+{
+  "schema": "screen32-probe-failure-provenance-v1",
+  "retrieved_utc": "2026-10-10",
+  "run_id": 38016468182,
+  "job_id": 114107731707,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38016468182",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38016468182/job/114107731707",
+  "head_sha": "a4a680b33e847712b44c7d622caa03fd71618011",
+  "source_freeze_sha256": "9dd75d4f86b81be2ab9c937338caf7624177854b20c0d8104de8676d05eb79cf",
+  "archive": {
+    "artifact_id": 11656337577,
+    "local_download_filename": "qwen16-probe1-38016468182.zip",
+    "workflow_declared_artifact_name": "qwen16-container-probe-1-terminal-evidence",
+    "bytes": 3166,
+    "sha256": "d13958e194de647d42df073932c0d341482b3b4ca915198ede2dd14a95a5a207",
+    "archive_body_retained": false
+  },
+  "exact_members": {
+    "artifact-freeze.json": {
+      "bytes": 416,
+      "sha256": "2946a0316a1417efa43d4a1232a610cfab63719bd1d566094489a5f9b57fba76"
+    },
+    "container-setup.json": {
+      "bytes": 1005,
+      "sha256": "2b8f434999138634d0e05c88806dba3ef2fadcd1154fcb4e3dbe9c1cecb4be3d"
+    },
+    "host-receipt.json": {
+      "bytes": 2631,
+      "sha256": "b7232977f8a44f0c19c49f257fa33dcfb623f708ce40209f84230842752b0a76"
+    },
+    "image-transfer.json": {
+      "bytes": 1297,
+      "sha256": "47f9ffb8033c9bb84fa2dfdb4dd6b2f8223534ef74d064380ed767ef35d4901a"
+    }
+  },
+  "member_retention": "Exact unmodified public JSON member bytes, with archive and original internal hashes verified.",
+  "observed_result": {
+    "probe_attempt": 1,
+    "container_start_attempts": 1,
+    "create": "COMPLETE",
+    "inspect_configuration": "COMPLETE",
+    "start": "FAILED_NO_RETRY",
+    "watch": "NOT_RUN",
+    "cleanup": "COMPLETE",
+    "model_calls": 0,
+    "runtime_installs": 0,
+    "kernel_receipt": "ABSENT",
+    "docker_daemon_version": "NOT_RETAINED"
+  },
+  "derived_stderr_proof": {
+    "file": "derived-stderr-reconstruction.txt",
+    "classification": "DERIVED_RECONSTRUCTION_NOT_RAW_CAPTURE",
+    "bytes": 229,
+    "sha256": "c88004f52342b8848ee6f308b1976580f0f79d062a316435dc7c0ee6308dd9c2",
+    "matches_exact_recorded_stderr_byte_count_and_sha256": true,
+    "derivation": "Constructed from the reviewed official logging error literal, Docker error wrappers and immutable container name. Its complete229-byte body, including both newlines, independently matches the exact captured-byte digest and length recorded by the failed run. The raw stderr body was not part of the artifact.",
+    "sources": [
+      "https://raw.githubusercontent.com/moby/moby/v28.5.1/daemon/logger/local/config.go",
+      "https://raw.githubusercontent.com/moby/moby/v28.5.1/daemon/logger/local/local.go"
+    ],
+    "reviewed_source_version": "v28.5.1",
+    "not_a_claim_about_runner_daemon_version": true
+  },
+  "identified_cause": "The local logging driver rejected default compression with max-file=1 during container start. The corrected fixed args set compress=false while keeping max-file=1 and max-size=1m, with exact effective LogConfig readback.",
+  "historical_scope": "This byte proof applies to probe1. It does not reconstruct or replace the unretained stderr from earlier v1/v2 runs.",
+  "probe_slots_used": 1,
+  "probe_slots_remaining": 1,
+  "automatic_retry": false,
+  "screen_v3_requires_new_successful_probe": true,
+  "human_gold": false,
+  "training_admitted": false,
+  "shipping_approved": false,
+  "d20": "FAIL",
+  "d90": "NOT_RUN"
+}

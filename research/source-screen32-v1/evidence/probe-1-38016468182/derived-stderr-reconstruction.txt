@@ -1,0 +1,2 @@
+Error response from daemon: failed to create task for container: failed to initialize logging driver: compression cannot be enabled when max file count is 1
+Error: failed to start containers: qwen16-container-probe-1-38016468182

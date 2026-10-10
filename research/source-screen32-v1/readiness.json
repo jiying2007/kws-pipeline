@@ -1,6 +1,6 @@
 {
   "schema": "screen32-readiness-v1",
-  "status": "BOUNDED_NO_MODEL_PROBES_AND_PROBE_GATED_V3_PREPARED_UNEXECUTED",
+  "status": "LOGGING_ROOT_CAUSE_FIXED_PENDING_FINAL_PROBE_SLOT",
   "execution_ready": false,
   "real_tts_calls": 0,
   "real_asr_calls": 0,
@@ -40,8 +40,8 @@
     "image_transfer_reserve_bytes": 134217728
   },
   "qwen_blockers": [
-    "V1/v2 identities are consumed. User authorized at most2 serial fixed no-model setup probes, then one new16-cell/two-ASR v3 round only after a matching probe succeeds. Both release files remain false; no probe or v3 is executed by this preparation.",
-    "V2 verified fresh capacity and exact image config, but artifact evidence cannot identify the failing Docker operation or prove a worker ran. Actual private kernel scope, installed runtime and model fit remain unproven.",
+    "Probe1 consumed one authorized diagnostic slot and failed Docker start because local log compression cannot be enabled with max-file1. The byte-exact derived stderr proof is retained separately from raw artifact members. The fixed compress=false source is unexecuted; only slot2 remains, with both admissions false.",
+    "Probe1 confirmed exact image, successful create/inspect and cleanup, but no worker kernel receipt exists. Repaired LogConfig readback and actual kernel/model fit still require the final authorized probe and, only after success, separately admitted v3.",
     "Pinned Python image/native-library compatibility and 1.7B model fit/latency remain unmeasured. Failures consume the admitted setup/source attempt; no automatic restart or regeneration."
   ],
   "firered_blockers": [
@@ -56,7 +56,7 @@
   "next_safe_command": "python3 -B research/source-screen32-v1/contract.py",
   "next_safe_preview_command": "python3 -B research/source-screen32-v1/contract.py --preview-cell screen32-001",
   "actual_generation_command": null,
-  "reason_no_execution_command": "Both probe and screen admissions are false. The user-authorized next phase requires reviewed/merged exact source, root-owned probe activation, successful raw kernel/container evidence, and separate probe-bound v3 activation.",
+  "reason_no_execution_command": "Both admissions remain false. Probe1 identified the logging-driver conflict; repaired exact source needs review/merge and final slot2 success before proof-bound v3 activation.",
   "preserved_boundary": {
     "d20": "FAIL",
     "d90": "NOT_RUN",
@@ -84,7 +84,7 @@
   "qwen_remaining_steps_smallest_16_cell_route": [
     "COMPLETE: exact11 sidecars,92 TTS runtime pins and17 locked wheel-source members were verified during metadata/source preparation without installing runtime or weights. Actual post-v2-failure installation/download state is unverified.",
     "COMPLETE_IMPLEMENTATION: explicit locked-setup binding, actual cgroup scope verifier, unprivileged bounded Docker launcher, sixteen-cell durable TTS/EOS/native+PCM worker, audio-only handoff and two isolated primary ASR workers. Offline fixtures do not prove execution.",
-    "PENDING: independent review/checks/merge of fixed probe and inertv3, then root-owned explicit probe activation. Up to2 serial probe identities only; no automatic retry. V3 requires exact retained successful raw probe evidence matching its final source freeze and container contract.",
+    "PENDING: review/check/merge the minimal logging repair, then root-owned activation of final probe slot2. V3 remains blocked until exact-source successful kernel/lifecycle evidence exists. No additional probe or model reroll is admitted.",
     "PENDING_AT_EXECUTION: fresh host capacity, official image identity and measured transfer, actual cgroup/security/network readback before imports, exact installed/source/asset verification and native I/O checks.",
     "After admission, generate only cells001–016 once each;001 is the included first cell. A failed setup/container/cell stops the stage and downstream execution. FireRed017–032 remain NOT_RUN; source role remains screening only and human review pending."
   ],
@@ -132,7 +132,7 @@
     "install_or_container_calls": "UNKNOWN_V2_SETUP_FAILED",
     "transfer_boundary": "V2 selected eth0 RX observation passed at45832909B against128MiB; all-interface diagnostic93540958B. Exact daemon bytes remain unverified.",
     "exact_config_digest_verified_on_run": 38014209435,
-    "total_recorded_image_pull_client_attempts": 2
+    "total_recorded_image_pull_client_attempts": 3
   },
   "failed_execution": {
     "run_id": 38012657985,
@@ -156,18 +156,6 @@
     "previous_tts_attempts": 0,
     "execution_performed": true
   },
-  "latest_failed_execution": {
-    "run_id": 38014209435,
-    "head_sha": "469538ec6554585adee3c2a9b4f16c85bd457ae5",
-    "evidence": "evidence/run-38014209435/provenance.json",
-    "setup_stage": "FAILED_NO_RETRY",
-    "failed_docker_operation": "UNKNOWN",
-    "real_tts_calls": 0,
-    "real_asr_calls": 0,
-    "automatic_retry_authorized": false,
-    "new_execution_identity_allocated": false,
-    "kernel_container_scope": "NOT_PROVEN"
-  },
   "prepared_next_execution": {
     "max_no_model_probes": 2,
     "probe_branches": [
@@ -180,13 +168,44 @@
     "probe_runtime_installs": 0,
     "probe_model_calls": 0,
     "probe_deadline_seconds": 300,
-    "probe_execution_performed": false,
+    "probe_execution_performed": true,
     "screen_experiment": "qwen16-voicedesign-once-v3",
     "screen_branch": "research/qwen16-voicedesign-once-v3",
     "screen_workflow_path": ".github/workflows/source-screen32-run-v3.yml",
     "screen_requires_successful_same_freeze_probe": true,
     "screen_execution_performed": false,
     "both_admissions": false,
-    "user_scope_authorized": true
+    "user_scope_authorized": true,
+    "probe_slots_used": 1,
+    "probe_slots_remaining": 1,
+    "successful_probe_available": false,
+    "logging_repair_executed": false
+  },
+  "v2_failed_execution": {
+    "run_id": 38014209435,
+    "head_sha": "469538ec6554585adee3c2a9b4f16c85bd457ae5",
+    "evidence": "evidence/run-38014209435/provenance.json",
+    "setup_stage": "FAILED_NO_RETRY",
+    "failed_docker_operation": "UNKNOWN",
+    "real_tts_calls": 0,
+    "real_asr_calls": 0,
+    "automatic_retry_authorized": false,
+    "new_execution_identity_allocated": false,
+    "kernel_container_scope": "NOT_PROVEN"
+  },
+  "latest_failed_execution": {
+    "run_id": 38016468182,
+    "head_sha": "a4a680b33e847712b44c7d622caa03fd71618011",
+    "evidence": "evidence/probe-1-38016468182/provenance.json",
+    "probe_attempt": 1,
+    "failed_operation": "start",
+    "create": "COMPLETE",
+    "inspect_configuration": "COMPLETE",
+    "cleanup": "COMPLETE",
+    "kernel_receipt": "ABSENT",
+    "model_calls": 0,
+    "runtime_installs": 0,
+    "derived_stderr_sha256": "c88004f52342b8848ee6f308b1976580f0f79d062a316435dc7c0ee6308dd9c2",
+    "automatic_retry": false
   }
 }
