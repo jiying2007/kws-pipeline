@@ -353,3 +353,34 @@ V3 still uses the same fixed cells/seeds and one attempt per cell; historical v1
 records are retained unchanged. All existing label/training/shipping boundaries
 remain in force. No future successful probe or generated output is fabricated in
 this preparation; unit receipts are confined to temporary fictional fixtures.
+
+
+## Probe1 logging-driver cause and final diagnostic slot
+
+[Probe1 run38016468182](https://github.com/jiying2007/kws-pipeline/actions/runs/38016468182)
+completed container creation, configuration inspection and cleanup, but Docker
+start failed before a kernel receipt was produced. Its exact four artifact JSON
+members remain under `evidence/probe-1-38016468182/`. The derived stderr
+reconstruction is separately labelled, not presented as a raw captured file:
+its229 bytes and SHA-256 exactly match the captured-byte count/digest in both
+original failure receipts.
+
+The matching error identifies local-driver compression with only one log file.
+The reviewed official [Moby config validator](https://raw.githubusercontent.com/moby/moby/v28.5.1/daemon/logger/local/config.go)
+rejects that combination; [the driver's defaults and option parser](https://raw.githubusercontent.com/moby/moby/v28.5.1/daemon/logger/local/local.go)
+show compression enabled by default and support an explicit false setting. This
+source review does not establish the runner's unretained Docker version, and the
+proof is not substituted for the missing earlier v2 stderr.
+
+The sole container-argument repair is `--log-opt compress=false`. The local driver,
+`max-size=1m`, `max-file=1`, memory/CPU/PID/wall limits, mounts, non-root identity and
+security/network settings are preserved. Inspection now requires the exact
+three-option effective LogConfig before start. Fixed logging-error phrases are
+also retained by the existing positive diagnostic allowlist. No raw logs become
+public. The repaired source changes the setup-contract/source-freeze digests;
+only a successful probe of this repaired exact source can unlock v3.
+
+One authorized probe slot is consumed. Slot2 remains available after checks,
+review and merge; it is the final diagnostic slot, not an unlimited retry grant.
+Both admissions remain false in this preparation. No second probe, successful
+kernel evidence or model generation has been fabricated or executed here.

@@ -102,10 +102,11 @@ DOCKER_ERROR_PHRASES = (
     'failed to mount', 'error mounting', 'failed to set rlimit', 'failed to write',
     'unable to apply cgroup configuration', 'connection refused', 'cannot connect to the Docker daemon',
     'context deadline exceeded', 'conflict', 'is already in use', 'not found',
+    'failed to initialize logging driver', 'compression cannot be enabled when max file count is 1',
 )
 DOCKER_ERROR_OPTIONS = ('--memory', '--memory-swap', '--cpus', '--pids-limit', '--cgroupns', '--ipc',
     '--read-only', '--cap-drop', '--security-opt', '--user', '--network', '--ulimit', '--log-driver',
-    '--log-opt', '--tmpfs', '--mount', '--platform', '--pull', 'core', 'nofile', 'fsize', 'max-file', 'max-size', 'uid', 'gid', 'mode', 'size', 'no-new-privileges')
+    '--log-opt', '--tmpfs', '--mount', '--platform', '--pull', 'core', 'nofile', 'fsize', 'max-file', 'max-size', 'compress', 'uid', 'gid', 'mode', 'size', 'no-new-privileges')
 
 
 def public_failure(error, operation):
@@ -124,7 +125,7 @@ def public_failure(error, operation):
                   'fixed_option_mentions': [option for option in DOCKER_ERROR_OPTIONS if re.search(r'(?<![A-Za-z0-9_-])' + re.escape(option.lower()) + r'(?![A-Za-z0-9_-])', sample)],
                   'fixed_argument_values': [value for value in (
                       'core=0', 'nofile=1024:1024', 'fsize=4294967296', 'fsize=8388608',
-                      'max-file=1', 'max-size=1m', 'size=268435456', 'size=134217728',
+                      'max-file=1', 'max-size=1m', 'compress=false', 'size=268435456', 'size=134217728',
                       'uid=' + str(os.getuid()), 'gid=' + str(os.getgid()), 'mode=0700',
                       'noexec', 'nosuid', 'nodev')
                       if re.search(r'(?<![A-Za-z0-9_=:-])' + re.escape(value) + r'(?![A-Za-z0-9_:-])', sample)],
@@ -285,6 +286,7 @@ def container_args(name, image, code, runtime, output, profile, stage, input_dir
             '--ulimit', 'core=0', '--ulimit', 'nofile=1024:1024',
             '--ulimit', 'fsize=' + str(4 * GIB if stage == 'setup' else 8 * 1024 ** 2),
             '--log-driver', 'local', '--log-opt', 'max-size=1m', '--log-opt', 'max-file=1',
+            '--log-opt', 'compress=false',
             '--tmpfs', f'/scratch:rw,noexec,nosuid,nodev,size=268435456,uid={uid},gid={gid},mode=0700',
             '--tmpfs', f'/tmp:rw,noexec,nosuid,nodev,size=134217728,uid={uid},gid={gid},mode=0700',
             '--mount', f'type=bind,src={code},dst=/code,readonly',
@@ -401,6 +403,8 @@ def verify_successful_probe(reference, freeze, freeze_sha):
 
 def validate_container_inspect(record, stage):
     host = record['HostConfig']
+    require(host.get('LogConfig') == {'Type': 'local', 'Config': {
+        'max-size': '1m', 'max-file': '1', 'compress': 'false'}}, 'exact bounded local log configuration required')
     require(host.get('Memory') == MEMORY and host.get('MemorySwap') == MEMORY and
             host.get('NanoCpus') == 4_000_000_000 and host.get('PidsLimit') == PIDS,
             'Docker effective host configuration differs')

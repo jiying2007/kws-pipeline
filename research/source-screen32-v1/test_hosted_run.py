@@ -76,6 +76,52 @@ class HostTests(unittest.TestCase):
         self.assertFalse(any(value in command for value in ('--privileged', '--pid=host', '--network=host')))
         self.assertNotIn('/input', ' '.join(command))
 
+    def log_record(self):
+        return {'HostConfig': {'LogConfig': {'Type': 'local', 'Config': {
+            'max-size': '1m', 'max-file': '1', 'compress': 'false'}},
+            'Memory': scope.MEMORY, 'MemorySwap': scope.MEMORY, 'NanoCpus': 4_000_000_000, 'PidsLimit': scope.PIDS,
+            'ReadonlyRootfs': True, 'Privileged': False, 'CgroupnsMode': 'private', 'PidMode': '', 'IpcMode': 'private',
+            'CapAdd': None, 'CapDrop': ['ALL'], 'SecurityOpt': ['no-new-privileges'], 'NetworkMode': 'bridge'},
+            'Mounts': [{'Type': 'bind', 'Destination': name, 'RW': writable}
+                       for name, writable in (('/code', False), ('/runtime', True), ('/output', True))]}
+
+    def test_single_file_local_logger_explicitly_disables_compression(self):
+        command = self.command(stage='setup')
+        options = [command[index + 1] for index, item in enumerate(command) if item == '--log-opt']
+        self.assertEqual(options, ['max-size=1m', 'max-file=1', 'compress=false'])
+        self.assertEqual(command[command.index('--log-driver') + 1], 'local')
+        host.validate_container_inspect(self.log_record(), 'setup')
+        for mutation in ({'max-size': '1m', 'max-file': '1'},
+                         {'max-size': '1m', 'max-file': '1', 'compress': 'true'},
+                         {'max-size': '2m', 'max-file': '1', 'compress': 'false'},
+                         {'max-size': '1m', 'max-file': '2', 'compress': 'false'}):
+            record = self.log_record(); record['HostConfig']['LogConfig']['Config'] = mutation
+            with self.assertRaisesRegex(ValueError, 'local log configuration'): host.validate_container_inspect(record, 'setup')
+        record = self.log_record(); record['HostConfig']['LogConfig']['Type'] = 'json-file'
+        with self.assertRaises(ValueError): host.validate_container_inspect(record, 'setup')
+
+    def test_probe1_derived_logging_error_is_byte_exact_and_not_raw_capture(self):
+        root = HERE / 'evidence/probe-1-38016468182'
+        provenance = json.loads((root / 'provenance.json').read_text())
+        self.assertEqual(provenance['archive']['sha256'], 'd13958e194de647d42df073932c0d341482b3b4ca915198ede2dd14a95a5a207')
+        for name, row in provenance['exact_members'].items():
+            self.assertEqual(host.file_hash(root / name), row['sha256'])
+            self.assertEqual((root / name).stat().st_size, row['bytes'])
+        for name, digest in json.loads((root / 'artifact-freeze.json').read_text())['files'].items():
+            self.assertEqual(host.file_hash(root / name), digest)
+        raw = (root / 'derived-stderr-reconstruction.txt').read_bytes()
+        recorded = json.loads((root / 'container-setup.json').read_text())['primary_failure']['stderr']
+        self.assertEqual(len(raw), recorded['observed_bytes']); self.assertEqual(len(raw), 229)
+        self.assertEqual(host.hashlib.sha256(raw).hexdigest(), recorded['sha256'])
+        self.assertEqual(recorded['sha256'], 'c88004f52342b8848ee6f308b1976580f0f79d062a316435dc7c0ee6308dd9c2')
+        self.assertEqual(provenance['derived_stderr_proof']['classification'], 'DERIVED_RECONSTRUCTION_NOT_RAW_CAPTURE')
+        self.assertEqual(provenance['observed_result']['docker_daemon_version'], 'NOT_RETAINED')
+        failure = host.public_failure(host.subprocess.CalledProcessError(1, ['docker', 'start'], stderr=raw), 'start')
+        self.assertIn('compression cannot be enabled when max file count is 1', failure['stderr']['safe_fragments'])
+        self.assertIn('failed to initialize logging driver', failure['stderr']['safe_fragments'])
+        self.assertNotIn('qwen16-container-probe-1-38016468182', json.dumps(failure))
+        self.assertEqual(provenance['probe_slots_used'], 1); self.assertEqual(provenance['probe_slots_remaining'], 1)
+
     def test_setup_network_and_asr_input_are_explicit(self):
         self.assertEqual(self.command(stage='setup')[self.command(stage='setup').index('--network') + 1], 'bridge')
         command = self.command('asr', 'qwen06')
