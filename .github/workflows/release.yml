@@ -53,7 +53,10 @@ jobs:
       - name: Prepare pinned public evaluation context fixtures
         run: python3 tools/prepare_eval_context_fixtures.py
       - name: Release workflow command contract
-        run: python3 tests/test_release_workflow_contract.py
+        run: |
+          python3 tests/test_release_workflow_contract.py
+          python3 -O tests/test_release_workflow_contract.py
+          python3 -OO tests/test_release_workflow_contract.py
       - name: Python/product tests
         run: |
           python3 tests/test_frontend_parity.py ./build/kws_feature_dump
@@ -346,6 +349,9 @@ jobs:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
+          python3 tools/verify_release_tag.py \
+            --repository "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" \
+            --expected-commit "$GITHUB_SHA"
           gh release create "$RELEASE_TAG" \
             "dist/kws-pipeline-${VERSION}-sdk.tar.gz" \
             "dist/kws-pipeline-${VERSION}-source.tar.gz" \
@@ -362,6 +368,9 @@ jobs:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
+          python3 tools/verify_release_tag.py \
+            --repository "$GITHUB_REPOSITORY" --tag "$RELEASE_TAG" \
+            --expected-commit "$GITHUB_SHA" --allow-absent
           gh release create "$RELEASE_TAG" \
             "dist/kws-pipeline-${VERSION}-sdk.tar.gz" \
             "dist/kws-pipeline-${VERSION}-source.tar.gz" \

@@ -14,6 +14,8 @@ import torch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
+from training_admission import require_current_dataset
+from feature_cached_trainer import normalize_feature_cache
 from corpus_identity import corpus_digest  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
@@ -164,22 +166,7 @@ def training_environment(checkpoint: dict) -> dict:
     result["training_code_sha256"] = dict(sorted(normalized_code.items()))
     feature_cache = value.get("feature_cache")
     if feature_cache is not None:
-        if not isinstance(feature_cache, dict):
-            raise ValueError("checkpoint training_environment.feature_cache must be an object")
-        if feature_cache.get("policy") != "deterministic-feature-cache-v1":
-            raise ValueError("checkpoint training_environment.feature_cache policy mismatch")
-        max_items = int(feature_cache.get("max_items", -1))
-        if not 0 <= max_items <= 32768:
-            raise ValueError("checkpoint training_environment.feature_cache max_items is invalid")
-        if feature_cache.get("training_math_changed") is not False:
-            raise ValueError(
-                "checkpoint training_environment.feature_cache must preserve training math"
-            )
-        result["feature_cache"] = {
-            "policy": "deterministic-feature-cache-v1",
-            "max_items": max_items,
-            "training_math_changed": False,
-        }
+        result["feature_cache"] = normalize_feature_cache(feature_cache)
     return result
 
 
@@ -248,6 +235,13 @@ def training_metadata(checkpoint: dict) -> dict:
         "grad_clip_norm": float(checkpoint["grad_clip_norm"]),
         "environment": training_environment(checkpoint),
     }
+    # Historical/diagnostic checkpoints remain inspectable. A receipt that
+    # claims promotion must bind all inherited datasets and the source weights.
+    if isinstance(result["admission"], dict) and result["admission"].get("promotion_allowed") is True:
+        require_current_dataset(
+            result["admission"], normalized_manifests, result["corpus_identity"],
+            warm_start_binding=checkpoint.get("warm_start_binding"),
+        )
     if result["examples"] <= 0 or result["epochs"] <= 0 or result["batch_size"] <= 0:
         raise ValueError("checkpoint training counts must be positive")
     for key in ("learning_rate", "weight_decay", "grad_clip_norm"):

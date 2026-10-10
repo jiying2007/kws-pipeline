@@ -91,7 +91,19 @@ A formal release is valid only when the following identity is coherent:
 - SPDX SBOM;
 - GitHub build-provenance and SBOM attestations.
 
-The bootstrap workflow refuses version mismatches and duplicate releases. Failed bootstrap runs delete the temporary release branch and must not leave a partial tag/Release.
+The bootstrap workflow refuses version mismatches, duplicate releases and existing tags
+whose resolved commit differs from the artifact source SHA. Annotated tags are peeled to
+their commit before publication; API failures are not treated as missing tags.
+`tools/verify_release_tag.py` performs this read-only check for SDK and model releases.
+Model promotion also requires the exact current protected-main control plane; the
+selected historical training run and its source SHA remain independently verified.
+
+Failed, cancelled or skipped bootstrap runs preserve the temporary branch for diagnosis.
+Automatic cleanup requires successful validation and publication, and deletes only the
+branch still at the exact run SHA using an atomic lease. A newer branch tip is preserved.
+A failed publication can leave a tag or Release; inspect its actual state and assets before
+retrying rather than assuming that failure rolled back remote writes. These checks do not
+move existing tags, rewrite published releases or change release permissions.
 
 ## Software milestone completion
 

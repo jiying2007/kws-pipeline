@@ -14,7 +14,9 @@ TRAINING = ROOT / "training"
 from adversarial_lexicon import mine_adversarial_lexicon
 from development_failure_replay import render_development_failure_replay
 from hard_negative_replay import render_hard_negative_replay
-from feature_cached_trainer import feature_cache_max_items, rewrite_training_command
+from feature_cached_trainer import (
+    feature_cache_max_bytes, feature_cache_max_items, rewrite_training_command,
+)
 from objective_config import optional_objective_cli_args
 from development_signal import POLICY as SIGNAL_POLICY, record_signal, selection_enabled
 from iterate_domain import (
@@ -350,7 +352,9 @@ def _train_refinement(
             str(checkpoint),
         ]
     )
-    command = rewrite_training_command(command, feature_cache_max_items(train))
+    command = rewrite_training_command(
+        command, feature_cache_max_items(train), feature_cache_max_bytes(train)
+    )
     run(command)
     run(
         [

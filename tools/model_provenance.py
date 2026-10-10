@@ -159,6 +159,10 @@ def validate_model_provenance(
     # Absence stays unknown; current product certification checks it strictly.
     if "admission" in training:
         normalized_training["admission"] = training["admission"]
+    # Preserve the source-weight link for the independent admission gate. Never
+    # turn a warm-start provenance record into an apparent cold-start record.
+    if "warm_start_binding" in training:
+        normalized_training["warm_start_binding"] = training["warm_start_binding"]
 
     negative_policy = training.get("sequence_margin_negative_policy")
     negative_scope = training.get("sequence_margin_negative_policy_scope")

@@ -87,7 +87,10 @@ jobs:
       - name: Verify tracked worktree after GitHub hosted resource probe contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "GitHub hosted resource probe contract"'
       - name: Release workflow command contract
-        run: python3 tests/test_release_workflow_contract.py
+        run: |
+          python3 tests/test_release_workflow_contract.py
+          python3 -O tests/test_release_workflow_contract.py
+          python3 -OO tests/test_release_workflow_contract.py
       - name: Verify tracked worktree after Release workflow command contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release workflow command contract"'
       - name: Repository cleanup safety contract
@@ -104,8 +107,12 @@ jobs:
       - name: Corpus byte identity
         run: |
           python3 tests/test_corpus_identity.py
+          python3 -S -B -O tests/test_corpus_identity.py
+          python3 -S -B -OO tests/test_corpus_identity.py
           python3 tests/test_reviewed_corpus_admission.py
           python3 tests/test_training_admission.py
+          python3 -S -B -O tests/test_training_admission.py
+          python3 -S -B -OO tests/test_training_admission.py
           python3 tests/test_native_clip_readback.py
       - name: Verify tracked worktree after Corpus byte identity
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus byte identity"'
@@ -364,7 +371,10 @@ jobs:
       - name: Verify tracked worktree after Real-artifact board benchmark contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-artifact board benchmark contract"'
       - name: Release qualification manifest and gate
-        run: python3 tests/test_release_qualification.py
+        run: |
+          python3 tests/test_release_qualification.py
+          python3 -S -B -O tests/test_release_qualification.py --event-metadata-only
+          python3 -S -B -OO tests/test_release_qualification.py --event-metadata-only
       - name: Verify tracked worktree after Release qualification manifest and gate
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Release qualification manifest and gate"'
       - name: Runtime soak collector contract
@@ -384,7 +394,9 @@ jobs:
       - name: Verify tracked worktree after Training supply-chain contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Training supply-chain contract"'
       - name: Model promotion contract
-        run: python3 tests/test_model_promotion.py
+        run: |
+          python3 tests/test_model_promotion.py
+          python3 tests/test_feature_cache_contract.py
       - name: Verify tracked worktree after Model promotion contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
       - name: Reproducibility tool contract

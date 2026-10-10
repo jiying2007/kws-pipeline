@@ -43,6 +43,7 @@ board-runner
 board-audio.wav
 evidence-raw.jsonl
 attestation-verification.json
+raw/board-summary.json
 raw/runtime-soak.json
 raw/power.csv
 raw/audio-continuity.json
@@ -51,7 +52,7 @@ raw/audio-continuity.json
 
 `board-audio.wav` must be `non-human-public-safe`. Human or Phase-A post-AFE recordings are forbidden as a public target benchmark fixture.
 
-`target-evidence.json` is produced by `tools/collect_target_evidence.py`. It must carry both the final-AFE executable SHA and the **full Phase-A final-AFE identity SHA**. The external trust-layer verification must independently bind that full identity together with the raw-evidence manifest, collector, board runner, model and keyword pack; `target-dut-qualification` parses and re-verifies those fields instead of trusting the summary alone. `board-summary.json` is produced by the exact shipping target `kws_board_bench`.
+`target-evidence.json` is produced by `tools/collect_target_evidence.py`. It must carry both the final-AFE executable SHA and the **full Phase-A final-AFE identity SHA**. The external trust-layer verification must independently bind that full identity together with the raw-evidence manifest, collector, board runner, model and keyword pack; `target-dut-qualification` parses and re-verifies those fields instead of trusting the summary alone. `board-summary.json` is produced by the exact shipping target `kws_board_bench` under schema v2. Its byte-identical copy `raw/board-summary.json` must be retained in `evidence-raw.jsonl` and supplied to the collector with `--raw-evidence`; the verified raw-manifest hash therefore binds timing results. Phase B independently decodes the selected board WAV and verifies sample/frame geometry, per-repeat effective model-frame counts, repeats/blocks, reset/tail policies and timing/percentile semantics. A non-WAV, truncated PCM, fewer than 400 samples per reset repeat, zero-work timings, or an unattested/replaced summary fails closed.
 
 Per-DUT policy v3 is `commercial/target-qualification.policy.json`, with approved resource-budget schema v2. Both require the fixed `measurement_contract_id=process-cpu-one-core-v1`. CPU is aggregate process CPU seconds / wall seconds × 100 in one-core units; capacity is never a denominator and multithreaded usage can exceed 100%. Target evidence and runtime-soak are v3. Actual sampled thread counts and CPU seconds are retained; soak audio duration and CPU/audio-second are null until backed by actual audio-counter evidence. See [CPU units](TARGET_EVIDENCE.md#cpu-units-and-unavailable-audio-exposure).
 

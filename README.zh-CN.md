@@ -242,6 +242,7 @@ python3 tools/collect_target_evidence.py \
   --stack-high-water-bytes <measured> \
   --average-power-mw <measured> \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --power-raw qualification/power.csv \
   --evidence-raw qualification/evidence-raw.jsonl \
   --attestation-verification qualification/attestation-verification.json \
@@ -290,6 +291,7 @@ python3 tools/qualification_manifest.py \
   --attestation-verification qualification/attestation-verification.json \
   --raw-evidence qualification/runtime-soak.json \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --raw-evidence qualification/power.csv \
   --source-sha "$(git rev-parse HEAD)" \
   --sku product-sku-a \
@@ -297,6 +299,9 @@ python3 tools/qualification_manifest.py \
   --output qualification/qualification-manifest.json
 
 python3 tools/qualification_gate.py \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
+  --board-audio qualification/board-audio.wav \
   --manifest qualification/qualification-manifest.json \
   --policy qualification/sku-policy.json \
   --output qualification/gate-result.json

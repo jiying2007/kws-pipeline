@@ -14,6 +14,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from ctc_primary import normalize_label_prior_contract  # noqa: E402
+from feature_cached_trainer import (  # noqa: E402
+    CACHE_POLICY, feature_cache_max_bytes, feature_cache_max_items, normalize_feature_cache,
+)
 from training_admission import require_promotable_admission  # noqa: E402
 
 HEX = set("0123456789abcdef")
@@ -44,6 +47,19 @@ def require_promotable_training(training_provenance: object) -> dict:
     ):
         raise ValueError("development CTC VAD alignment cannot promote as a product model")
     return training_provenance
+
+
+def require_current_feature_cache(value: object, train_config: dict) -> dict:
+    feature_cache = normalize_feature_cache(value)
+    if (
+        feature_cache.get("policy") != CACHE_POLICY
+        or feature_cache["max_items"] != 8192
+        or feature_cache["max_items"] != feature_cache_max_items(train_config)
+        or feature_cache["max_bytes"] != feature_cache_max_bytes(train_config)
+        or feature_cache["max_bytes"] <= 0
+    ):
+        raise ValueError("promoted product candidate lacks current byte-bounded feature-cache evidence")
+    return feature_cache
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -415,14 +431,7 @@ def verify(args: argparse.Namespace) -> dict:
         training_environment = provenance.get("training", {}).get("environment")
         if not isinstance(training_environment, dict):
             raise ValueError("promoted product candidate lacks training environment")
-        feature_cache = training_environment.get("feature_cache")
-        if (
-            not isinstance(feature_cache, dict)
-            or feature_cache.get("policy") != "deterministic-feature-cache-v1"
-            or int(feature_cache.get("max_items", -1)) != 8192
-            or feature_cache.get("training_math_changed") is not False
-        ):
-            raise ValueError("promoted product candidate lacks deterministic feature-cache evidence")
+        require_current_feature_cache(training_environment.get("feature_cache"), train_config)
         if base_contract.get("policy") != "product-speech-like-base-v1":
             raise ValueError("promoted product base contract identity mismatch")
         if sha256(dist / "xiaowo-product-speech-like-base-contract.json") != str(

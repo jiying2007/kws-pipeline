@@ -10,6 +10,10 @@ import sys
 import wave
 from collections import defaultdict
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tools"))
+from corpus_identity import audio_identity, canonical_audio_path, resolve_audio_path  # noqa: E402
+
 SAMPLE_RATE_HZ = 16000
 PCM_IDENTITY_FIELDS = ("pcm_sha256", "source_pcm_sha256", "original_pcm_sha256")
 LINEAGE_IDENTITY_FIELDS = (
@@ -127,12 +131,7 @@ def _metadata_value(row: dict, field: str, path: pathlib.Path, line_no: int) -> 
 def parse_record(row: dict, path: pathlib.Path, line_no: int) -> dict:
     if not isinstance(row, dict):
         raise ValueError(f"{path}:{line_no}: expected JSON object")
-    path_value = row.get("audio", row.get("path"))
-    if not isinstance(path_value, str) or not path_value.strip():
-        raise ValueError(f"{path}:{line_no}: expected non-empty audio or path")
-    if row.get("audio") is not None and row.get("path") is not None:
-        if str(row["audio"]).strip() != str(row["path"]).strip():
-            raise ValueError(f"{path}:{line_no}: audio and path disagree")
+    path_value = canonical_audio_path(row, f"{path}:{line_no}")
     if "target_ids" in row and (not isinstance(row["target_ids"], list)
                                 or any(type(value) is not int for value in row["target_ids"])):
         raise ValueError(f"{path}:{line_no}: target_ids must be an integer list")
@@ -235,19 +234,14 @@ def audit_splits(
         local_pcm_hashes: dict[str, list[str]] = defaultdict(list)
         total_frames = 0
         resolved_rows: list[dict] = []
+        audio_rows: list[dict] = []
         metadata_coverage = {field: 0 for field in IDENTITY_FIELDS}
         verified_source_rows = 0
 
         for row_index, row in enumerate(rows, 1):
             raw_path = str(row["path"])
             metadata = dict(row["metadata"])
-            wav_path = pathlib.Path(raw_path)
-            if not wav_path.is_absolute():
-                wav_path = root / wav_path
-            try:
-                resolved = wav_path.resolve(strict=True)
-            except FileNotFoundError as exc:
-                raise ValueError(f"{wav_path}: audio file does not exist") from exc
+            resolved = resolve_audio_path(row, root, f"{manifest}:{row_index}")
             frames, duration_s, pcm_sha256, file_sha256 = inspect(resolved)
             lineage = row.get("lineage", {})
             if "wav_sha256" in lineage and lineage["wav_sha256"] != file_sha256:
@@ -281,6 +275,8 @@ def audit_splits(
                 "metadata": metadata,
             }
             resolved_rows.append(entry)
+            audio_rows.append({"path": raw_path, "file_sha256": file_sha256,
+                               "pcm_sha256": pcm_sha256, "frames": frames})
             local_pcm_hashes[pcm_sha256].append(str(resolved))
             # Final and ancestor PCM hashes name the same content namespace.
             # Keep the field and verification basis so a declared original hash
@@ -317,6 +313,7 @@ def audit_splits(
         split_summaries[name] = {
             "manifest": str(manifest.resolve()),
             "manifest_sha256": sha256_file(manifest),
+            "audio_identity": audio_identity(audio_rows),
             "examples": len(resolved_rows),
             "unique_pcm": len(local_pcm_hashes),
             "audio_hours": total_frames / SAMPLE_RATE_HZ / 3600.0,
@@ -420,7 +417,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Detect decoded-PCM and identity leakage across training/calibration/"
-            "evaluation splits. JSONL manifests may use audio/path plus speaker_id, "
+            "evaluation splits. JSONL manifests may use audio/audio_path/path plus speaker_id, "
             "session_id, source_id and source lineage. TSV lineage sidecars bind exact "
             "manifest rows and original WAV/PCM. Known identity overlap is a hard failure; "
             "room/device overlap is policy-driven. Missing lineage identities remain unknown."
@@ -430,7 +427,7 @@ def main() -> int:
         "--split",
         required=True,
         action="append",
-        help="split manifest as NAME=PATH; TSV uses first column, JSONL uses audio/path",
+        help="split manifest as NAME=PATH; TSV uses first column, JSONL uses audio/audio_path/path",
     )
     parser.add_argument(
         "--audio-root",

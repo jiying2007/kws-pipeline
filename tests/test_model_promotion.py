@@ -149,7 +149,7 @@ def main() -> int:
         "promoted product candidate sequence-margin negative policy differs from effective config",
         "promoted product candidate sequence-margin negative policy scope is unsupported",
         "promoted product candidate lacks dataset-mean sample-weight normalization",
-        "promoted product candidate lacks deterministic feature-cache evidence",
+        "promoted product candidate lacks current byte-bounded feature-cache evidence",
         "two-character 小窝 is not a shipping wake word",
         "ni3 hao3 xiao3 wo1",
         "xiao3 wo1 xiao3 wo1",
@@ -322,8 +322,7 @@ def main() -> int:
         '"sequence_margin_negative_policy_scope"',
         '"dataset-mean-sample-weight-v1"',
         '"sample_weight_normalization"',
-        '"deterministic-feature-cache-v1"',
-        '"training_math_changed"',
+        'normalize_feature_cache(feature_cache)',
     ):
         require(exporter, needle, "model exporter weighting provenance")
 
@@ -333,14 +332,19 @@ def main() -> int:
     ):
         for needle in (
             "feature_cache_max_items",
+            "feature_cache_max_bytes",
             "rewrite_training_command",
         ):
             require(text, needle, label)
 
     for needle in (
-        'CACHE_POLICY = "deterministic-feature-cache-v1"',
+        'CACHE_POLICY = "deterministic-feature-cache-v2"',
         '"training_math_changed": False',
         '"feature_cache"',
+        '"resident_bytes"',
+        '"hits"',
+        '"misses"',
+        'BYTE_ACCOUNTING = "unique-tensor-storage"',
     ):
         require(feature_cache, needle, "deterministic feature-cache wrapper")
 
@@ -349,6 +353,13 @@ def main() -> int:
         '"feature_cache_max_items": 8192',
         "product training feature-cache configuration",
     )
+
+    require(training_config, '"feature_cache_max_bytes": 268435456',
+            "product training feature-cache byte budget")
+    require(verifier, 'feature_cache.get("policy") != CACHE_POLICY',
+            "current candidate cache policy")
+    require(verifier, 'feature_cache_max_bytes(train_config)',
+            "current candidate cache byte budget")
 
     for needle in (
         'EVIDENCE_CLASS = "governed-model-training-invocation-v1"',

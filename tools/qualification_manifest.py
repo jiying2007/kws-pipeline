@@ -13,7 +13,8 @@ sys.path.insert(0, str(ROOT / "training"))
 
 from audit_dataset import lineage_path
 from training_admission import require_promotable_admission, require_qualification_admission
-from corpus_identity import evaluation_corpus_identity, training_corpus_identity
+from corpus_identity import (evaluation_corpus_identity, training_corpus_identity,
+                             validate_audio_identity, require_audited_corpora)
 from model_provenance import validate_model_provenance
 from qualification_common import (
     FRAME_HOP_SAMPLES,
@@ -34,7 +35,8 @@ from qualification_common import (
     sha256_value,
     validate_runtime_config,
 )
-from qualification_metrics import validate_board, validate_evidence, validate_eval
+from qualification_metrics import (validate_board, validate_evidence, validate_eval,
+                                   board_wav_stats, require_board_raw_binding)
 
 REQUIRED_HUMAN_IDENTITY = {"speaker_id", "session_id", "source_id"}
 
@@ -134,23 +136,6 @@ def detection_count(path: pathlib.Path, recordings: dict[str, float]) -> int:
     return len(rows)
 
 
-def board_wav_stats(path: pathlib.Path) -> tuple[float, int]:
-    with wave.open(str(path), "rb") as reader:
-        if (
-            reader.getnchannels() != 1
-            or reader.getframerate() != SAMPLE_RATE_HZ
-            or reader.getsampwidth() != 2
-            or reader.getcomptype() != "NONE"
-        ):
-            raise ValueError("board audio must be mono 16-kHz PCM16 WAV")
-        frames = reader.getnframes()
-    if frames <= 0:
-        raise ValueError("board audio must be non-empty")
-    seconds = frames / float(SAMPLE_RATE_HZ)
-    blocks = (frames + FRAME_HOP_SAMPLES - 1) // FRAME_HOP_SAMPLES
-    return seconds, blocks
-
-
 def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> dict:
     audit = load_json(path)
     if json_int(audit.get("schema_version"), "dataset audit schema_version") != 3:
@@ -182,7 +167,9 @@ def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> di
             lineage_hash = digest
         else:
             lineage_hash = sidecar_hash
-        bindings.append({"name": manifest.name, "sha256": digest, "lineage_sha256": lineage_hash})
+        bindings.append({"name": manifest.name, "sha256": digest, "lineage_sha256": lineage_hash,
+                         "audio_identity": validate_audio_identity(
+                             split.get("audio_identity"), f"dataset audit split {name}")})
         audited_hashes.append(digest)
     missing = Counter(required_hashes) - Counter(audited_hashes)
     if missing:
@@ -323,6 +310,9 @@ def main() -> int:
         model_lineage["training"], training_manifest_artifacts, dataset_audit, hashes["references"],
     )
 
+    require_audited_corpora(dataset_audit, training_corpus, training_manifest_artifacts,
+                           eval_corpus["recordings"], hashes["references"])
+
     recordings, expected_count, audio_hours = reference_stats(args.references)
     detections_count = detection_count(args.detections, recordings)
     eval_summary = load_json(args.eval_summary)
@@ -351,6 +341,8 @@ def main() -> int:
             "detections_sha256": hashes["detections"],
         },
         eval_corpus,
+        {"references": args.references.read_bytes().decode("utf-8"),
+         "detections": args.detections.read_bytes().decode("utf-8")},
     )
 
     board_summary = load_json(args.board_summary)
@@ -365,11 +357,8 @@ def main() -> int:
             "keyword_pack_sha256": hashes["keyword_pack"],
             "audio_sha256": hashes["board_audio"],
         },
+        board_wav_stats(args.board_audio),
     )
-    board_seconds, board_blocks = board_wav_stats(args.board_audio)
-    close_enough(board["audio_seconds"], board_seconds, "board.audio_seconds", 1e-9, 1e-6)
-    if board["blocks"] != board_blocks * board["repeats"]:
-        raise ValueError("board block count does not match board WAV and repeats")
 
     evidence_json = load_json(args.evidence)
     evidence = validate_evidence(
@@ -392,6 +381,9 @@ def main() -> int:
         raise ValueError("target evidence raw artifacts do not match selected --raw-evidence files")
     if raw_manifest_identity(args.evidence_raw) != raw_hashes:
         raise ValueError("canonical evidence-raw manifest does not match selected raw evidence")
+
+    require_board_raw_binding(artifact(args.board_summary, hashes["board_summary"]),
+                              evidence["raw_evidence"])
 
     attestation = validate_attestation_verification(
         load_json(args.attestation_verification),
@@ -419,6 +411,7 @@ def main() -> int:
         "references": artifact(args.references, hashes["references"]),
         "detections": artifact(args.detections, hashes["detections"]),
         "board_runner": artifact(args.board_runner, hashes["board_runner"]),
+        "board_summary": artifact(args.board_summary, hashes["board_summary"]),
         "board_audio": artifact(args.board_audio, hashes["board_audio"]),
         "evidence_collector": artifact(args.evidence_collector, hashes["evidence_collector"]),
         "evidence_raw": artifact(args.evidence_raw, hashes["evidence_raw"]),
@@ -449,7 +442,8 @@ def main() -> int:
         "dataset_audit": dataset_audit,
         "model_lineage": {"provenance_sha256": hashes["model_provenance"], **model_lineage},
         "evaluation": {"summary_sha256": hashes["eval_summary"], "provenance_sha256": hashes["eval_provenance"], **evaluation},
-        "board": {"summary_sha256": hashes["board_summary"], **board},
+        "board": {"summary_sha256": hashes["board_summary"],
+                  "summary_raw": args.board_summary.read_bytes().decode("utf-8"), **board},
         "evidence": {
             "sha256": hashes["evidence"],
             "attestation": attestation,

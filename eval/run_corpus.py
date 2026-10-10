@@ -12,7 +12,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
+from corpus_identity import canonical_audio_path, corpus_digest, inspect_pcm16_wav, resolve_audio_path  # noqa: E402
 
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -171,12 +171,10 @@ def load_references(path: pathlib.Path) -> list[dict]:
         row = json.loads(raw)
         if not isinstance(row, dict):
             raise ValueError(f"{path}:{line_no}: expected JSON object")
-        recording = str(row.get("recording", ""))
-        audio_path = row.get("audio_path") or row.get("path")
-        if not recording or recording in seen:
+        recording = row.get("recording")
+        audio_path = canonical_audio_path(row, f"{path}:{line_no}")
+        if not isinstance(recording, str) or not recording or recording in seen:
             raise ValueError(f"{path}:{line_no}: recording must be non-empty and unique")
-        if not isinstance(audio_path, str) or not audio_path.strip():
-            raise ValueError(f"{path}:{line_no}: path is required for corpus execution")
         row["_execution_path"] = audio_path.strip()
         seen.add(recording)
         rows.append(row)
@@ -303,9 +301,7 @@ def main() -> int:
     posterior_dump_sha256 = sha256_file(args.posterior_dump) if cache_enabled else None
     for row in rows:
         recording = str(row["recording"])
-        audio = pathlib.Path(str(row["_execution_path"]))
-        if not audio.is_absolute():
-            audio = args.audio_root / audio
+        audio = resolve_audio_path(row, args.audio_root, recording)
         metadata = None
         if "metadata_path" in row or "metadata_sha256" in row:
             if cache_enabled:

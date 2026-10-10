@@ -145,6 +145,8 @@ python3 eval/score_events.py \
   --false-rejects qualification/false-rejects.jsonl
 ```
 
+The release manifest and independent gate both replay `eval/score_events.py` on the exact hash-bound reference and detection files. The fixed release event policy is 150 ms pre-tolerance / 500 ms post-tolerance, keyword-specific maximum-cardinality monotonic matching, minimum end-time distance and linear-rank latency percentiles. Every canonical count, rate, per-keyword result and latency is recomputed; arithmetic consistency alone is insufficient. The independent gate requires the original `--references` and `--detections` files without copying their private rows into the release manifest. The separate real-human Phase-A policy remains unchanged.
+
 Evaluation provenance schema v2 reopens every referenced WAV and binds file SHA256, decoded PCM SHA256, frame count and canonical corpus SHA256. Every declared `duration_s` must equal real WAV duration, so FAR exposure cannot be inflated by metadata alone.
 
 ## 7. Real far-field coverage
@@ -164,6 +166,8 @@ Run the exact target binary/model/pack and retain all bytes:
   qualification/board-audio.wav \
   10 > qualification/board-summary.json
 ```
+
+Benchmark schema v2 requires mono 16-kHz PCM16 input with at least 400 samples per repeat. Each repeat resets the engine; actual processed samples and model-frame counts must match `1 + floor((samples - 400) / 320)`. Repeats cannot turn a sub-window file into effective model work. Geometry, block count, unpadded final-call length and positive timing are independently checked against decoded WAV bytes in both release and Phase-B gates. Timing uses input calls, a nominal 320-sample deadline, nearest-rank (`ceil(p * n)`) percentiles, and includes the short final call without padding.
 
 Hosted x86 or cross-build success is not physical target timing evidence.
 
@@ -189,7 +193,7 @@ After acquisition, freeze the exact selected files in `qualification/evidence-ra
 {"name":"runtime-soak.json","sha256":"<64 lowercase hex>","bytes":12345}
 ```
 
-The row set must exactly match runtime-soak + every `--raw-evidence` + `--power-raw`. Extra, missing, duplicate or mismatched rows are rejected.
+The exact `board-summary.json` bytes must be included in the raw tuple, so the external attestation binds the benchmark result transitively. The row set must exactly match runtime-soak + every `--raw-evidence` + `--power-raw`. Extra, missing, duplicate or mismatched rows are rejected.
 
 ## 11. Verify the product-board attestation
 
@@ -221,6 +225,7 @@ python3 tools/collect_target_evidence.py \
   --stack-high-water-bytes <measured> \
   --average-power-mw <measured> \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --power-raw qualification/power.csv \
   --evidence-raw qualification/evidence-raw.jsonl \
   --attestation-verification qualification/attestation-verification.json \
@@ -267,6 +272,7 @@ python3 tools/qualification_manifest.py \
   --attestation-verification qualification/attestation-verification.json \
   --raw-evidence qualification/runtime-soak.json \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --raw-evidence qualification/power.csv \
   --source-sha "$(git rev-parse HEAD)" \
   --sku product-sku-a \
@@ -280,6 +286,9 @@ Repeat `--training-manifest` and `--raw-evidence` as needed. The verifier indepe
 
 ```bash
 python3 tools/qualification_gate.py \
+  --references qualification/references.jsonl \
+  --detections qualification/detections.jsonl \
+  --board-audio qualification/board-audio.wav \
   --manifest qualification/qualification-manifest.json \
   --policy qualification/sku-policy.json \
   --output qualification/gate-result.json

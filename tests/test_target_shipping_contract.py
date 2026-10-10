@@ -11,6 +11,7 @@ import textwrap
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 from qualification_fixture import runtime_soak_fixture
+from test_board_bench import board_summary_fixture, write_pcm_fixture
 from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
 from score_target_dut_qualification import validate_resource_budget
 DIAGNOSTIC_PATH = ROOT / ".target-shipping-contract-diagnostic.json"
@@ -98,7 +99,7 @@ def make_bundle(
     runner = bundle / "board-runner"
     audio = bundle / "board-audio.wav"
     runner.write_bytes(b"fixture-board-runner")
-    audio.write_bytes(b"non-human-board-audio")
+    write_pcm_fixture(audio, 16000)
 
     resource_budget = bundle / "resource-budget.json"
     resource_budget.write_text(
@@ -127,6 +128,15 @@ def make_bundle(
         encoding="utf-8",
     )
 
+    board_summary = board_summary_fixture(audio)
+    board_summary.update(runner_sha256=sha(runner), model_sha256=sha(model),
+                         keyword_pack_sha256=sha(keywords), runtime_source_revision=source_sha,
+                         model_bytes=model.stat().st_size, keyword_pack_bytes=keywords.stat().st_size)
+    summary_path = bundle / "board-summary.json"
+    summary_path.write_text(json.dumps(board_summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    raw_summary_path = raw / "board-summary.json"
+    raw_summary_path.write_bytes(summary_path.read_bytes())
+
     soak = raw / "runtime-soak.json"
     power = raw / "power.csv"
     continuity = raw / "audio-continuity.json"
@@ -147,7 +157,7 @@ def make_bundle(
         encoding="utf-8",
     )
     evidence_raw = bundle / "evidence-raw.jsonl"
-    raw_paths = [soak, power, continuity]
+    raw_paths = [soak, power, continuity, raw_summary_path]
     evidence_raw.write_text(
         "".join(
             json.dumps(
@@ -204,6 +214,7 @@ def make_bundle(
         "--stack-high-water-bytes", "4096",
         "--average-power-mw", "123",
         "--raw-evidence", str(continuity),
+        "--raw-evidence", str(raw_summary_path),
         "--power-raw", str(power),
         "--evidence-raw", str(evidence_raw),
         "--attestation-verification", str(attestation),
@@ -220,39 +231,6 @@ def make_bundle(
         "--calibration-id", "cal-a",
     )
 
-    blocks = 100
-    total_us = 100000.0
-    p99 = 1000.0
-    board_summary = {
-        "schema_version": 1,
-        "runner_sha256": sha(runner),
-        "model_sha256": sha(model),
-        "keyword_pack_sha256": sha(keywords),
-        "audio_sha256": sha(audio),
-        "runtime_version": "fixture",
-        "runtime_source_revision": source_sha,
-        "runtime_config_digest": "a" * 64,
-        "runtime_target": "fixture-target",
-        "block_samples": 320,
-        "block_deadline_us": 20000.0,
-        "audio_seconds": 1.0,
-        "repeats": 2,
-        "blocks": blocks,
-        "model_bytes": model.stat().st_size,
-        "keyword_pack_bytes": keywords.stat().st_size,
-        "arena_bytes": 8192,
-        "total_process_us": total_us,
-        "mean_process_us": total_us / blocks,
-        "p50_process_us": 800.0,
-        "p95_process_us": 900.0,
-        "p99_process_us": p99,
-        "max_process_us": 1100.0,
-        "rtf": total_us / 2_000_000.0,
-        "p99_headroom": 20000.0 / p99,
-    }
-    (bundle / "board-summary.json").write_text(
-        json.dumps(board_summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
     (bundle / "target-profile.json").write_text(
         json.dumps(
             {
@@ -426,6 +404,26 @@ def main() -> int:
             "--keywords", str(keywords),
             "--output", str(dut_summary),
         )
+        # A plausible, internally consistent faster summary is still invalid if
+        # it is not the exact raw result bound by the external attestation.
+        summary_path = bundle / "board-summary.json"
+        original_board = summary_path.read_bytes()
+        forged_board = json.loads(original_board)
+        for field in ("total_process_us", "mean_process_us", "p50_process_us",
+                      "p95_process_us", "p99_process_us", "max_process_us", "rtf"):
+            forged_board[field] /= 2.0
+        forged_board["p99_headroom"] *= 2.0
+        summary_path.write_text(json.dumps(forged_board) + "\n", encoding="utf-8")
+        rejected = run(sys.executable, "tools/score_target_dut_qualification.py",
+            "--bundle", str(bundle), "--policy", str(policy_path),
+            "--phase-a-receipt", str(phase_a_receipt),
+            "--phase-a-summary", str(phase_a_summary),
+            "--deployment-manifest", str(deployment),
+            "--model", str(model), "--keywords", str(keywords),
+            "--output", str(root / "forged-board.json"), expect=2)
+        if "board summary must be retained" not in rejected.stdout:
+            raise AssertionError("DUT scorer did not enforce board-summary attestation")
+        summary_path.write_bytes(original_board)
         dut = json.loads(dut_summary.read_text(encoding="utf-8"))
         assert dut["qualified"] is True
         assert dut["shipping_approved"] is False

@@ -34,6 +34,10 @@ on:
       - "training/sitecustomize.py"
       - "training/frontend.py"
       - "training/feature_cached_trainer.py"
+      - "tests/test_feature_cache_contract.py"
+      - "training/iterate_domain.py"
+      - "configs/training/xiaowo.torch-domain.json"
+      - "configs/research/effect-chain-iteration-2026-10-10.json"
       - "training/sequence_margin.py"
       - "training/completion_loss.py"
       - "training/suffix_root_loss.py"
@@ -84,6 +88,10 @@ on:
       - "training/sitecustomize.py"
       - "training/frontend.py"
       - "training/feature_cached_trainer.py"
+      - "tests/test_feature_cache_contract.py"
+      - "training/iterate_domain.py"
+      - "configs/training/xiaowo.torch-domain.json"
+      - "configs/research/effect-chain-iteration-2026-10-10.json"
       - "training/sequence_margin.py"
       - "training/completion_loss.py"
       - "training/suffix_root_loss.py"
@@ -119,6 +127,7 @@ jobs:
       - name: Product training entry contract
         run: |
           python3 tests/test_product_training_entry_contract.py
+          python3 tests/test_feature_cache_contract.py
           python3 tests/test_replay_provider_semantic_identity.py
           python3 training/compare_product_objective_pair.py --self-test
       - name: Python syntax
@@ -145,8 +154,12 @@ jobs:
           tests/test_suffix_root_objective.py
           training/path_purity.py
           training/export_model.py
+          training/feature_cached_trainer.py
+          training/frontend.py
+          training/iterate_domain.py
           training/test_sequence_margin.py
           tests/test_product_training_entry_contract.py
+          tests/test_feature_cache_contract.py
           tests/test_replay_provider_semantic_identity.py
           tests/test_adversarial_refinement_source.py
       - name: Governed product training shell syntax

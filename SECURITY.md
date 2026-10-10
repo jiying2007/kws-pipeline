@@ -70,7 +70,7 @@ A self-consistent manually typed JSON is not proof that a physical measurement o
 - every selected `--raw-evidence` file;
 - exact `--sku` and `--source-sha` identity.
 
-`qualification_gate.py` validates cross-links, requires the matching SKU policy with `shipping_approved=true`, applies acoustic/statistical/resource thresholds and binds its schema-v3 result to the exact manifest/policy.
+`qualification_gate.py` independently replays the selected hash-bound reference/detection files, checks decoded board-audio workload and the attested board summary, validates cross-links, requires the matching SKU policy with `shipping_approved=true`, applies acoustic/statistical/resource thresholds and binds its schema-v4 result to the exact manifest/policy. Private event rows remain in the controlled input files, outside the public release manifest.
 
 These SHA256 relationships provide **integrity and internal consistency**. External authenticity still depends on the approved attestation issuer/policy, controlled DUT/qualification infrastructure, authenticated release signing and OTA/update trust roots. A party able to replace every artifact and the trust policy can construct a new internally consistent bundle; cryptographic identity does not replace organizational trust management.
 

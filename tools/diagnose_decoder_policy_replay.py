@@ -13,6 +13,7 @@ TRAINING = ROOT / "training"
 EVAL = ROOT / "eval"
 sys.path[:0] = [str(TRAINING), str(EVAL)]
 
+from corpus_identity import canonical_audio_path
 from score_events import load_jsonl, validate_recordings  # noqa: E402
 from development_signal import selection_enabled
 from iterate_domain import (  # noqa: E402
@@ -88,9 +89,7 @@ def boundary_reference_contract(
             raise ValueError(
                 f"{path}:{line_no}: boundary_role must be {required_boundary_role!r}"
             )
-        audio_path = row.get("audio_path") or row.get("path")
-        if not isinstance(audio_path, str) or not audio_path.strip():
-            raise ValueError(f"{path}:{line_no}: audio path is required")
+        canonical_audio_path(row, f"{path}:{line_no}")
         expected = row.get("expected")
         assert isinstance(expected, list)
         expected_events += len(expected)

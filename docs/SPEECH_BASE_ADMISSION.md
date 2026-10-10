@@ -81,6 +81,42 @@ original sources; a boolean admission flag alone never grants training. Admissio
 does not authorize qualification, deployment, new holdout claims, data sharing,
 or a new training run.
 
+## Warm-start dataset ancestry
+
+New promotable checkpoints require `training_admission.dataset_ancestry`
+schema v1. Its ordered stages retain the reviewed manifest and lineage hashes,
+canonical measured WAV/PCM/frame corpus, reviewed row count, source checkpoint
+hash, and preceding ancestry digest. The corpus uses
+`hashed-path-and-metadata-v1`: private path and speaker/session/source/room/device
+text is replaced by SHA-256 identifiers, while the original corpus digest is
+retained. Audit comparison independently hashes the supplied audited paths.
+No audio, transcripts, credentials, or private path text is copied into ancestry. The complete stage list has its own
+canonical SHA-256. A cold start has one stage and no parent; each warm start
+copies all validated stages and appends the current stage. Recording indices
+remain scoped to their stage, including when different manifests share a name.
+This binds supplied evidence, not listener or checkpoint-author authenticity.
+
+`training_manifests`, `training_corpus_identity`, and the admission's top-level
+`manifests` continue to describe only the current optimization inputs. They are
+checked against the final ancestry stage before optimization and at export.
+The trainer rereads current manifest, lineage, and WAV/PCM identity before saving
+to reject input drift. Provenance normalization preserves the source-checkpoint
+link so the independent qualification gate can check it again.
+
+Qualification must audit the union of every stage's exact manifest, lineage,
+and measured audio identities against held-out audio. Reusing the exact same
+dataset across generations reuses one audit binding while preserving each
+checkpoint stage; different content under the same basename is never collapsed.
+The existing audit policy still requires all distinct named splits to be
+disjoint. Partially overlapping but different training-stage manifests therefore
+fail closed; this change does not introduce an exception for those overlaps.
+
+Missing, malformed, or legacy-only ancestor evidence cannot be reconstructed
+from the child dataset. Such a warm start retains the existing permanent
+`diagnostic-or-unverified` promotion taint. Historical provenance remains
+readable, and immutable registry byte verification is unchanged; it does not
+grant new candidate eligibility or retrofit reviewed ancestry to retained models.
+
 ## Two-phase generation
 
 `run_speech_like_corpus_generation.py` and its bootstrap accept `--generate-only`

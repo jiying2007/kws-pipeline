@@ -8,8 +8,9 @@ import sys
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
+sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "training")]
 from corpus_identity import training_corpus_identity  # noqa: E402
+from training_admission import initial_dataset_ancestry  # noqa: E402
 
 
 def fnv1a64_token_fingerprint(tokens: list[str]) -> int:
@@ -96,6 +97,12 @@ def write_model_provenance(
     }
     frontend_name = "logmel" if frontend_kind == 0 else "pcen-lite"
     corpus = training_corpus_identity(training_manifests)
+    admitted_manifests = [
+        {"name": manifest.name, "sha256": sha256_file(manifest),
+         "lineage_sha256": sha256_file(manifest if manifest.suffix.lower() == ".jsonl"
+                                      else pathlib.Path(str(manifest) + ".lineage.json"))}
+        for manifest in training_manifests
+    ]
     write_json(
         path,
         {
@@ -133,13 +140,9 @@ def write_model_provenance(
                     "promotion_allowed": True,
                     "reviewed_rows": len(corpus["recordings"]),
                     "listener_authenticity_verified": False,
-                    "manifests": [
-                        {"name": manifest.name, "sha256": sha256_file(manifest),
-                         "lineage_sha256": sha256_file(
-                             manifest if manifest.suffix.lower() == ".jsonl"
-                             else pathlib.Path(str(manifest) + ".lineage.json"))}
-                        for manifest in training_manifests
-                    ],
+                    "manifests": admitted_manifests,
+                    "dataset_ancestry": initial_dataset_ancestry(
+                        admitted_manifests, corpus, len(corpus["recordings"])),
                 },
                 "corpus_identity": corpus,
                 "examples": len(corpus["recordings"]),

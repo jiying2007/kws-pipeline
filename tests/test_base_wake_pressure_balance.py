@@ -98,6 +98,7 @@ def main() -> int:
                     "batch_size": 16,
                     "lr": 0.001,
                     "feature_cache_max_items": 8192,
+                    "feature_cache_max_bytes": 268435456,
                 },
                 "domain_iteration": {
                     "lr_decay_per_round": 0.85,
