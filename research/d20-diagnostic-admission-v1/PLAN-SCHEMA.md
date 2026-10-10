@@ -1,4 +1,4 @@
-# D20 no-model preparation: plan shape only, execution NOT_READY
+# D20 no-model preparation: saved-byte binding, execution NOT_READY
 
 This work is based on public fa523b3 diagnostic-readiness and saved-diagnostics
 protocols. D20 original FAIL and D90 NOT_RUN remain unchanged. No model/operator,
@@ -38,6 +38,99 @@ the real weights, or establish C/Torch dispatch identity. Matching hash strings
 are claims, not verification. Synthetic fixture hashes are placeholders only.
 No numerical execution caller may use this checker as its authorization gate.
 Unknown identity MUST remain fail-closed at that future gate.
+
+### Saved-input materializer (byte-only)
+
+`saved_inputs.py` closes the source-byte link that `contract.py` intentionally
+does not provide. It accepts exactly the four frozen files listed in
+`PUBLIC-READINESS-SUMMARY.json`, with their full SHA-256 identities and byte
+lengths, under a caller-supplied local root. There is no hash/layout override,
+download, backend import, shared-library load, execution mode or runner.
+
+```sh
+python3 -S -B research/d20-diagnostic-admission-v1/saved_inputs.py \
+  --saved-root /path/to/already-restored-saved-files \
+  --output /path/to/new-private-binding-directory
+```
+
+All four full-file hashes must pass before any archive, NPY or JSON parsing.
+The fixed NPZs contain 52 Torch and 58 C members, using DEFLATE and NPY 1.0 with
+128-byte data offsets. Every member name, shape, dtype, order and byte length is
+checked, and member/payload digests are recorded. The bounded NPY-header pattern
+extends `cosyvoice3_cross_voice/packager.py`; historical readers are unchanged.
+No floating-point values are unpacked, rounded or recomputed.
+
+- Global rows 0–8 use part 0; rows 9–18 use part 1. Both saved `counts` arrays
+  must be exactly the little-endian int64 bytes for `[9, 10]`.
+- Stage 0 uses the C-saved `cmvn{part}` output, never raw `input` or
+  `cmvn_same{part}`. This is a separately saved call with the same C input and
+  CMVN function, not an internal stage-0-input hook. The report explicitly sets
+  `historical_stage0_input_hook_recorded=false` and
+  `cmvn_observation=saved_separate_call_same_c_function_and_input`.
+  Stage `s > 0` uses C-saved `stage{part}_{s-1}`.
+- Memory stages 4/8/12/16 share the same actual C `cache_before_{part}` row,
+  all 22,528 bytes in `[128,11,4]` order. The layer index and before-row-update
+  state are explicit. No cache is reconstructed or shifted by the materializer.
+- The exact export's 30 tensors are checked in fixed contiguous byte-offset
+  order, including each tensor SHA. Only the stage's own weight names are bound.
+  Stage 0 does not apply CMVN again; its weights are the first affine's weights.
+  The research export has six symbols `<blank>/你/好/小/窝/屋` and output width 6;
+  production transcript-mapping rules are not applied to this historical export.
+- `inputs.bin` starts with the unchanged exported weight payload, followed by
+  one cache slice per row and the saved stage-input slices. `binding.json`
+  records exact source/member and bundle offsets, the existing 798-job plan,
+  hashes and remaining blockers. The C/Torch jobs reference equal byte ranges;
+  every pair is dereferenced and byte-compared before output. Both written files
+  are re-opened and hash/length-checked before a success receipt is printed.
+
+The output directory must not already exist and is created with private access.
+Do not commit or upload these generated weight/input bytes. The stdout receipt
+contains only identity metadata. It reports `saved_byte_identity_verified=true`
+only after the fixed source checks, while `backend_dispatch_identity_verified`,
+`numerical_admission` and `execution_ready` remain false. This proves saved-byte
+mapping, not actual backend consumption, numerical correctness, historical build
+identity, CMVN arithmetic correctness, or equivalence to historical chunk dispatch.
+A future runner must re-authenticate its source and consumed buffers; a copied or
+edited JSON receipt is not an admission token. `contract.validate` still returns
+`input_authenticity_verified=false` for every plan, including this generated plan.
+
+```sh
+python3 -S -B research/d20-diagnostic-admission-v1/test_saved_inputs.py
+python3 -S -B -O research/d20-diagnostic-admission-v1/test_saved_inputs.py
+python3 -S -B -OO research/d20-diagnostic-admission-v1/test_saved_inputs.py
+```
+
+These nine tests cover only small valid-format byte/metadata fixtures, all row
+and stage mappings, exact offsets, signed-zero bytes, and shared pair slices.
+Two ordinary-file expected SHA/length mismatches must fail before parsing.
+Synthetic helper results cannot claim authenticity. Tests use no model, archive
+codec/decompression counterexamples, backend, resource qualification or runtime
+probe. CI runs the same tests in the existing standard-library source-check job.
+
+The CMVN provenance check used the hash-verified saved worker
+`local-certificate-v2-failed/qualification/src/worker.py` (11,053 bytes,
+SHA-256 `dfb089e16122ea7d6bd9c5cd7336f6096397e60e15f431c72d514814ec85867b`)
+from the [fixed public archive catalog](https://github.com/jiying2007/kws-data/blob/d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a/research/2026-10-08-d20-d90-host-research/CATALOG.json).
+Its `native_sequence` saves `bridge.cmvn(x)` separately, while `cmvn_same` uses
+the reference input. The [historical precision64 C source](https://github.com/jiying2007/kws-pipeline/blob/0b748959a414fb3a02ef3dfec1de1cc5278a40a9/research/native_a20/baseline/precision64/model/a20_fsmn.c#L25-L47)
+(3,193 bytes, SHA-256
+`40ddbb89ddea5bbd7b989046279a7bc56688b922563ddb0969fa1dc9fbe69a68`)
+uses the same `a20_cmvn` function inside `a20_step` before stage 0. This establishes
+the saved key's static provenance; it does not prove a new build, floating-point
+environment or dispatch equivalence. Neither historical source was executed.
+
+On 2026-10-10, the real four-file saved-only materialization passed all file,
+member and tensor checks and produced 798 planned jobs. The output binary was
+2,312,816 bytes, SHA-256
+`c26c0d3a675623f6c4ec9ad3d243c765a3614876072370e65d8d16286b7f1392`;
+the binding JSON was 877,794 bytes, SHA-256
+`bd86b3d6d0ccfa23f8389099fdafc55b507c4f222ee9f4196a8fbb26fec728fc`.
+Both files were re-opened and verified. Outputs were kept outside the repository.
+An independent standard-library readback, without importing the materializer's
+helpers, matched all 798 job-input slices, 152 job-cache slices and 30 weight
+offsets directly against the original saved bytes.
+All nine focused tests passed in normal, `-O` and `-OO` modes. No model/operator
+calls or numerical imports occurred; execution remained NOT_READY.
 
 `python -B -m unittest discover -s . -v` tests one synthetic shape-valid plan and
 17 invalid plan mutations, plus bounded-output/redaction and real temporary
@@ -93,10 +186,12 @@ D20 driver status: NOT_READY. No driver or numerical runner is published here.
    remains labelled reconstruction, not observation. Single-row dispatch does
    not establish equivalence to historical chunk dispatch. Never call a full
    model or feed fresh outputs to subsequent stages.
-3. A real materializer must hash-check archive/member bytes, verify NPZ names,
-   array keys, 9+10 frame identities, dimensions/dtype/order, saved CMVN provenance,
-   weight offsets and signed-zero bytes. It must bind each planned row to those
-   exact bytes and independently verify both backends receive the same data.
+3. Use the byte-only `saved_inputs.py` materializer above to authenticate and bind
+   the fixed NPZ members, 9+10 frame identities, saved CMVN/pre-input/cache bytes,
+   exact export offsets and byte-preserving slices. Independently review this
+   mapping and its source provenance. A future numerical wrapper must separately
+   verify what both backends actually receive; planned shared bytes do not prove
+   dispatch or consumption. The materializer does not implement such wrappers.
 4. Establish a verified dedicated hard-memory scope, ancestry, swap/OOM policy,
    CPU/backend single-thread behavior, no GPU/network and one execution process.
    A stricter cgroup charged-memory limit may be acceptable only if accurately
