@@ -20,7 +20,7 @@ The final held-out qualification corpus must remain independent from hard-negati
 
 `tools/speech_like_corpus_plan.py admit-reviewed` is a read-only admission check
 for the existing canonical request intents, generated provider JSONL manifests,
-and `speech-like-audio-review-v1` receipts. It does not synthesize audio, issue
+and supplied `speech-like-audio-review-v2` receipt histories. It does not synthesize audio, issue
 review receipts, or convert an archive into a new corpus format.
 
 ```sh
@@ -39,16 +39,22 @@ absolute audio path semantics. Rebinding obsolete container paths must preserve
 WAV bytes, source IDs, texts, labels and original receipts; retain the original
 manifest and record the revised manifest hash separately.
 
-The command binds every receipt to the exact WAV hash, source, intended text,
-positive/negative kind and keyword ID. Missing, extra, duplicate, rejected or
-uncertain receipts fail. Actual WAV/PCM hashes and mono 16-kHz PCM16 format are
-checked using the existing corpus identity helper. Empty/truncated files,
-duplicate source IDs or decoded PCM, invalid labels, and cross-split voice reuse
-fail. Stdout contains the input hashes, split counts and a research-only report;
-failures return nonzero without materializing a corpus. The existing `materialize`
-command can use `--audio-review` to apply the same gate before writing and retain
-its admission result in the summary. Without that option its existing contract
-is unchanged; read-only admission does not invoke materialization.
+The command binds the latest accepted human-origin revision to the exact source,
+WAV and decoded PCM, actual transcript/tokens, acoustic completeness, allowed
+purpose, event kind and keyword ID. Full revision chains are retained and the
+latest revision wins, including a later rejection. The bounded Mandarin mapper
+checks actual text against token labels; unsupported/OOV speech is rejected,
+never mapped to blank. A rejected OOV observation may remain in revision history
+and be corrected by a later accepted review.
+
+Actual WAV/PCM hashes and mono 16-kHz PCM16 format are recomputed. Empty/truncated
+files, duplicate sources/PCM, invalid labels, and cross-split voices or supplied
+source-family/speaker/reference/session/derivation identities fail. Stdout contains
+input hashes and an internal-development report; failures return nonzero without
+materializing a corpus. `materialize` now requires `--audio-review` by default.
+Only an explicit `--admission-mode synthetic-fixture-v1` permits test fixtures
+without listening receipts; those outputs are marked ineligible for CTC training.
+See [speech base admission](SPEECH_BASE_ADMISSION.md) for the three separate lanes.
 
 For the historical Qwen20 candidate, first compare the restored archive's SHA-256
 with `ed7ccc918422cd2a241728dee853af57bf3b3705818c7eaaba19bc1e231cf196`
@@ -60,6 +66,9 @@ when files are unavailable, nor extend it to future generated samples. Archive
 bytes and schema have not been recovered or tested here; do not invent missing
 intents, receipt fields, or a successful real-batch admission. If the archive lacks
 canonical planning inputs, recover their original controlled source before use.
+A historical v1 receipt remains historical evidence, not a v2 actual-transcript
+admission. Do not convert its intended label into an actual label or invent a
+review revision. New training admission requires genuine supplied v2 review.
 The generic validator reports split counts; it does not reconstruct or independently
 prove the historical 12/4/4 split specification.
 
@@ -67,6 +76,5 @@ Receipt binding is not authentication of a reviewer or proof that listening took
 place. Provider identity hashes alone do not establish distinct generator families,
 weight provenance, source rights, or licensing. Already-observed clips remain
 research/development regression data; even a legacy `qualification` split name
-does not authorize product qualification. The exact receipt validator is selectively
-ported from `c4025ee2e686c0c6cfd1ba078e6d1dabc3f70ee8`; the surrounding old research
-pipeline is not imported. Tests use only clearly marked synthetic fixtures.
+does not authorize product qualification. The former v1 intent-only receipt contract is superseded for new training. Tests
+use only clearly marked synthetic schema fixtures, not operational human receipts.

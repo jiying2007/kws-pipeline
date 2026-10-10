@@ -72,6 +72,7 @@ from suffix_root_loss import (
     suffix_root_suppression_loss,
 )
 from synthetic_audio import UINT32_MAX
+from training_admission import verify_training_manifests, inherit_warm_start_admission
 
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
@@ -221,6 +222,9 @@ def training_environment() -> dict:
         ROOT / "training" / "ctc_primary.py",
         ROOT / "training" / "path_purity.py",
         ROOT / "training" / "training_state.py",
+        ROOT / "training" / "training_admission.py",
+        ROOT / "training" / "audit_dataset.py",
+        ROOT / "tools" / "speech_label_admission.py",
         ROOT / "tools" / "corpus_identity.py",
     ]
     code = {
@@ -397,7 +401,9 @@ def manifest_rows(path: pathlib.Path) -> list[dict]:
             if not isinstance(value, dict):
                 raise ValueError(f"{path}:{line_no}: expected JSON object")
             audio = value.get("audio", value.get("path"))
-            targets = value.get("tokens", value.get("target_ids"))
+            # Reviewed rows retain token names alongside their bound numeric IDs.
+            # Numeric-only diagnostic manifests remain supported in their lane.
+            targets = value.get("target_ids", value.get("tokens"))
             if not isinstance(audio, str) or not audio.strip():
                 raise ValueError(f"{path}:{line_no}: audio/path must be non-empty")
             metadata = {}
@@ -999,6 +1005,8 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument("--warm-start", type=pathlib.Path)
+    parser.add_argument("--synthetic-contract-test-only", action="store_true",
+                        help="explicit diagnostic fixture lane; output and descendants cannot promote")
     parser.add_argument(
         "--ctc-primary-policy",
         choices=sorted(CTC_PRIMARY_POLICIES),
@@ -1067,6 +1075,9 @@ def main() -> None:
     args = parser.parse_args()
 
     token_map = load_tokens(args.tokens)
+    admission = verify_training_manifests(
+        args.manifest, token_map, diagnostic=args.synthetic_contract_test_only,
+    )
     keyword_sequences, keyword_operating_points, margin_profile_path = (
         load_keyword_operating_points(args.keywords, token_map)
     )
@@ -1161,6 +1172,8 @@ def main() -> None:
         args.frontend,
         ctc_vad_threshold_dbfs=vad_threshold,
     )
+    if not args.synthetic_contract_test_only and admission["reviewed_rows"] != len(dataset):
+        raise ValueError("consumed training rows differ from reviewed admission")
     weight_statistics = sample_weight_statistics(
         dataset.rows,
         keyword_sequences,
@@ -1186,6 +1199,7 @@ def main() -> None:
         source_bytes = args.warm_start.read_bytes()
         source_sha256 = hashlib.sha256(source_bytes).hexdigest()
         checkpoint = torch.load(io.BytesIO(source_bytes), map_location="cpu", weights_only=True)
+        inherit_warm_start_admission(admission, checkpoint.get("training_admission"))
         warm_start_binding = validate_warm_start(
             checkpoint, args, vocab_size_value, fingerprint, source_sha256
         )
@@ -1428,6 +1442,11 @@ def main() -> None:
     manifest_metadata = [
         {"name": path.name, "sha256": sha256_file(path)} for path in args.manifest
     ]
+    final_admission = verify_training_manifests(
+        args.manifest, token_map, diagnostic=args.synthetic_contract_test_only,
+    )
+    if final_admission["manifests"] != admission["manifests"]:
+        raise ValueError("training admission inputs changed during optimization")
     if args.warm_start and sha256_file(args.warm_start) != warm_start_binding["source_checkpoint_sha256"]:
         raise ValueError("warm-start checkpoint changed during training")
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -1453,6 +1472,7 @@ def main() -> None:
             "training_examples": len(dataset),
             "training_manifests": manifest_metadata,
             "training_corpus_identity": dataset.corpus_identity,
+            "training_admission": admission,
             "seed": args.seed,
             "epochs": args.epochs,
             "epoch_history": epoch_history,

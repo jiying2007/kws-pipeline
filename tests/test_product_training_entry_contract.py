@@ -82,6 +82,7 @@ def main() -> int:
         }
         for split in ("train", "calibration", "test", "qualification")
     }
+    config["generator"]["external_base_admission_mode"] = "reviewed-real-v1"
     import tempfile, json
     with tempfile.TemporaryDirectory() as td:
         path = pathlib.Path(td) / "effective.json"
@@ -94,6 +95,15 @@ def main() -> int:
         )
         assert result["product_speech_like_base_required"] is True
         assert result["product_external_base_bundle_sha256"] == "1" * 64
+        assert result["actual_review_receipts_verified"] is False
+        config["generator"]["external_base_admission_mode"] = "historical-frozen-diagnostic-v1"
+        path.write_text(json.dumps(config), encoding="utf-8")
+        try:
+            verify(path, shipping, keywords, require_product_speech_like_base=True)
+        except ValueError as exc:
+            assert "historical frozen base is diagnostic-only" in str(exc)
+        else:
+            raise AssertionError("historical base was admitted for new product training")
 
     trainer = (ROOT / "training/train_ctc.py").read_text(encoding="utf-8")
     assert "ordered_token_sample_weighting" in trainer

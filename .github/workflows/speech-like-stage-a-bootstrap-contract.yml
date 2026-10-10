@@ -181,7 +181,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
-          python3 tools/bootstrap_speech_like_stage_a.py \
+          python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/cache" \
             --work-dir "$root/full-run" \
@@ -237,7 +237,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
-          python3 tools/bootstrap_speech_like_stage_a.py \
+          python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/relocated/cache" \
             --work-dir "$root/relocated/full-run" \
@@ -270,7 +270,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
-          python3 tools/bootstrap_speech_like_stage_a.py \
+          python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/cache" \
             --work-dir "$root/cache-hit-run" \
@@ -300,7 +300,7 @@ jobs:
           data[len(data) // 2] ^= 1
           path.write_bytes(data)
           PY
-          if python3 tools/bootstrap_speech_like_stage_a.py \
+          if python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/cache" \
             --work-dir "$root/tamper-run" \
@@ -314,7 +314,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
-          python3 tools/bootstrap_speech_like_stage_a.py \
+          python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/cache" \
             --work-dir "$root/refresh-run" \
@@ -348,7 +348,7 @@ jobs:
           data[0] ^= 1
           path.write_bytes(data)
           PY
-          if python3 tools/bootstrap_speech_like_stage_a.py \
+          if python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/cache" \
             --work-dir "$root/backend-tamper-run" \
@@ -362,7 +362,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-bootstrap"
-          if python3 tools/bootstrap_speech_like_stage_a.py \
+          if python3 tools/bootstrap_speech_like_stage_a.py --admission-mode synthetic-fixture-v1 \
             --provider-reference "$root/fixture-reference.json" \
             --cache-dir "$root/isolated-cache" \
             --work-dir "$root/no-file-url-run" \

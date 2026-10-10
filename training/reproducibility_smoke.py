@@ -121,6 +121,7 @@ def main() -> int:
         "--feature-cache-max-items",
         "128",
         "--",
+        "--synthetic-contract-test-only",
         "--manifest",
         str(manifest),
         "--tokens",

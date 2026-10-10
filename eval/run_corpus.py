@@ -212,6 +212,30 @@ def audio_identity(row: dict, audio: pathlib.Path) -> dict:
     return item
 
 
+def validate_constant_afe_timeline(path: pathlib.Path | None, row: dict, frames: int) -> None:
+    if row.get("timing_contract") != "afe-output-sample-v1":
+        return
+    if path is None:
+        raise ValueError("declared AFE timing requires its hash-bound metadata timeline")
+    lines = path.read_text(encoding="ascii").splitlines()
+    if not lines or lines[0] != "kws-afe-timeline-v1":
+        raise ValueError("invalid AFE timeline header")
+    end, config = 0, None
+    for sequence, line in enumerate(lines[1:]):
+        columns = line.split()
+        if len(columns) != 9:
+            raise ValueError("invalid AFE timeline columns")
+        start, count, seq, timestamp, flags, lost = map(int, columns[:6])
+        delay = int(columns[7])
+        if (start != end or count <= 0 or seq != sequence or timestamp != start * 62500 or
+                flags not in (0, 16) or lost != 0 or delay != row.get("afe_latency_samples") or
+                (config is not None and columns[8] != config)):
+            raise ValueError("AFE timeline conflicts with constant-delay reference timing")
+        end, config = start + count, columns[8]
+    if end != frames:
+        raise ValueError("AFE timeline coverage does not match output WAV")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runner", required=True, type=pathlib.Path)
@@ -272,6 +296,7 @@ def main() -> int:
     output_lines: list[str] = []
     identities: list[dict] = []
     posterior_traces: list[dict] = []
+    metadata_files: list[dict] = []
     posterior_cache_hits = 0
     posterior_cache_misses = 0
     model_sha256 = sha256_file(args.model)
@@ -281,7 +306,21 @@ def main() -> int:
         audio = pathlib.Path(str(row["_execution_path"]))
         if not audio.is_absolute():
             audio = args.audio_root / audio
+        metadata = None
+        if "metadata_path" in row or "metadata_sha256" in row:
+            if cache_enabled:
+                raise ValueError("AFE metadata replay is not supported by the posterior cache")
+            if not isinstance(row.get("metadata_path"), str) or not row["metadata_path"]:
+                raise ValueError("AFE metadata_path must be non-empty text")
+            metadata = pathlib.Path(row["metadata_path"])
+            if not metadata.is_absolute():
+                metadata = args.audio_root / metadata
+            if sha256_file(metadata) != row.get("metadata_sha256"):
+                raise ValueError("AFE metadata SHA-256 mismatch")
+            metadata_files.append({"recording": recording, "path": row["metadata_path"],
+                                   "sha256": row["metadata_sha256"]})
         identity = audio_identity(row, audio)
+        validate_constant_afe_timeline(metadata, row, identity["frames"])
         identities.append(identity)
         if cache_enabled:
             audio_sha256 = str(identity["file_sha256"])
@@ -339,12 +378,16 @@ def main() -> int:
                 str(audio),
                 recording,
             ]
+        if metadata is not None:
+            command.extend(["--metadata-tsv", str(metadata)])
         completed = subprocess.run(
             command,
             check=True,
             text=True,
             stdout=subprocess.PIPE,
         )
+        if metadata is not None and sha256_file(metadata) != row["metadata_sha256"]:
+            raise ValueError("AFE metadata changed during replay")
         for line_no, raw in enumerate(completed.stdout.splitlines(), 1):
             if not raw.strip():
                 continue
@@ -401,6 +444,9 @@ def main() -> int:
             "recordings": len(rows),
             "detections": len(output_lines),
         }
+        if metadata_files:
+            provenance["afe_metadata_files"] = metadata_files
+            provenance["recalibration_required"] = True
         if cache_enabled:
             provenance.update(
                 {

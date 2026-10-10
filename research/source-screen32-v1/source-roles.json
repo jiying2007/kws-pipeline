@@ -1,0 +1,98 @@
+{
+  "schema": "screen32-source-roles-v1",
+  "roles": [
+    {
+      "source": "fixed50 evaluation",
+      "allowed_role": "exposed_inconclusive_research_only",
+      "blocked_roles": [
+        "fresh_holdout",
+        "qualified_kws_comparison",
+        "training_admission_by_relabeling"
+      ],
+      "evidence": "research/consolidation/CURRENT_STATUS_2026-10-09.md",
+      "gap": "K2 4 clips/4 voices below 5; targets 11 below 12; 8 unknown; no admissible comparison",
+      "evidence_sha256": "3553f6e02f6030778d8a4d3aeff7356f401175865869f09557e18efb727bf8cf"
+    },
+    {
+      "source": "native A20 existing-50 inventory (not a new 50-clip set)",
+      "allowed_role": "inventory_only",
+      "blocked_roles": [
+        "fresh_holdout",
+        "independent_frr",
+        "continuous_negative_far",
+        "training_admission"
+      ],
+      "evidence": "research/native_a20_quality/inventory/existing-50.manifest.json",
+      "gap": "All exposed synthetic: D20 20 weak, Serena18 4 weak +14 unknown, fixed12 12 unknown",
+      "evidence_sha256": "276cf9c4e2b4bcb3b5b04cd51325694083e4084e273b3b7bb51799aaff66cd1d"
+    },
+    {
+      "source": "Serena18",
+      "allowed_role": "exposed_inventory_only",
+      "blocked_roles": [
+        "fresh_holdout",
+        "human_gold_from_asr",
+        "training_admission"
+      ],
+      "evidence": "research/native_a20_quality/inventory/existing-50.manifest.json",
+      "gap": "18 exposed clips; 4 weak and14 unknown in retained public row bindings",
+      "evidence_sha256": "276cf9c4e2b4bcb3b5b04cd51325694083e4084e273b3b7bb51799aaff66cd1d"
+    },
+    {
+      "source": "Cosy6 Z1-Z6",
+      "allowed_role": "exposed_regression_only",
+      "blocked_roles": [
+        "fresh_holdout",
+        "new_generator_independence",
+        "training_admission"
+      ],
+      "evidence": "research/experiment_quality_guards/fixtures/public_regressions.json",
+      "gap": "Dylan synthetic reference equals existing training WAV; preserve human actual words, including OOV Z3 小挖; cannot use intended text as actual label",
+      "evidence_sha256": "930e033465728252e9db1307db1b30375be2079dfed97ada09dfe2bf0ddf5c78"
+    },
+    {
+      "source": "CosyVoice SFT historical six (different from Z1-Z6)",
+      "allowed_role": "quarantined_or_unreviewed_research_only",
+      "blocked_roles": [
+        "fresh_holdout",
+        "automatic_positive_admission"
+      ],
+      "evidence": "research/consolidation/history/notes/COSYVOICE_SFT_AND_SCENE_PROBE_2026-09-28.md",
+      "gap": "Female K1 pronunciation suspect; comma variant discontinuous; other per-clip truth remains unconfirmed",
+      "evidence_sha256": "3df6ccb35c1746f7f71c00d769c64eb34676258edc7664e9c4d97a712c26857e"
+    },
+    {
+      "source": "qwen6 exposed stock-voice outputs and reusable recipes",
+      "allowed_role": "exposed_regression_and_software_reuse_only",
+      "blocked_roles": [
+        "new_execution_using_old_approval",
+        "pretend_voicedesign_qualification",
+        "fresh_voice_identity_by_alias"
+      ],
+      "evidence": "research/qwen6_tts/README.md",
+      "gap": "Run37343458180 completed6TTS/12ASR; only AidenK2 has weak machine support; no voice supports both wakes. All6 exposed, human truth unknown, training admission0; Sohee remains ungenerated. Not1.7BVoiceDesign qualification.",
+      "evidence_sha256": "864d35615e7704d5c2ce2568cf605de05df6b9c8fa5e7e6e694af9b4e4508331",
+      "latest_evidence_url": "https://github.com/jiying2007/kws-pipeline/pull/482"
+    },
+    {
+      "source": "prospective source-screen32",
+      "allowed_role": "source_screen_only",
+      "blocked_roles": [
+        "training",
+        "fresh_final_evaluation",
+        "human_gold",
+        "product_qualification"
+      ],
+      "evidence": "research/source-screen32-v1/plan.json",
+      "gap": "32 planned attempts, zero generated; four prompt groups are not four verified people or stable cloned voices; generators are not proven statistically independent",
+      "evidence_sha256": "ecf8ff83e73953456e194741d77b6332bfc9c6fce51e71295e2b13bf452cb97d"
+    }
+  ],
+  "global_gaps": [
+    "No newly verified actual spoken-word or acoustic completeness labels",
+    "No final microphone/enclosure/AFE real-human coverage",
+    "No physical SSC305 board timing/power/soak qualification",
+    "No fresh heldout or continuous-negative exposure created by this preparation"
+  ],
+  "automatic_admission": false
+}

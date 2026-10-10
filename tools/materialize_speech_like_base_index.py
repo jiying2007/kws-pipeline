@@ -14,7 +14,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "training"))
 
 from kws_vocab import load_tokens  # noqa: E402
-from synthetic_audio import SPLITS, activity_bounds, parse_keywords, sha256_file  # noqa: E402
+from synthetic_audio import SPLITS, activity_bounds, parse_keywords, sha256_file, contains_subsequence  # noqa: E402
+
+from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, fixture_admission, validate_admission)
 
 MANIFEST_CLASS = "speech-like-synthetic-recording-v1"
 ALLOWED_KINDS = {"positive", "confusable", "negative", "background"}
@@ -40,7 +42,10 @@ def inspect_pcm16(path: pathlib.Path) -> tuple[list[int], str]:
     with wave.open(str(path), "rb") as reader:
         if reader.getnchannels() != 1 or reader.getsampwidth() != 2 or reader.getframerate() != 16000 or reader.getcomptype() != "NONE":
             raise ValueError(f"{path}: expected mono PCM16 16-kHz WAV")
-        raw = reader.readframes(reader.getnframes())
+        frames = reader.getnframes()
+        raw = reader.readframes(frames)
+        if len(raw) != frames * 2:
+            raise ValueError(f"{path}: truncated PCM payload")
     if not raw:
         raise ValueError(f"{path}: empty WAV")
     import struct
@@ -69,6 +74,8 @@ def corpus_sha(rows: list[dict]) -> str:
                 "generation_config_sha256": provenance["generation_config_sha256"],
                 "label_provenance_sha256": provenance["label_provenance_sha256"],
                 "pcm_sha256": provenance["pcm_sha256"],
+                **{field: provenance[field] for field in LINEAGE_FIELDS if field in provenance},
+                **({"admission": row["admission"], "actual_text": row.get("actual_text")} if "admission" in row else {}),
             }
         )
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -83,9 +90,12 @@ def materialize(
     keywords_path: pathlib.Path,
     portable_audio_dir: pathlib.Path | None = None,
     path_base: pathlib.Path | None = None,
+    admission_mode: str = REAL_MODE,
 ) -> tuple[list[dict], dict]:
     if split not in SPLITS:
         raise ValueError(f"unsupported split: {split}")
+    if admission_mode not in {REAL_MODE, FIXTURE_MODE}:
+        raise ValueError("new base materialization requires real review or explicit synthetic fixture mode")
     token_map = load_tokens(tokens_path)
     keywords = parse_keywords(keywords_path, token_map)
     keyword_by_id = {int(item["id"]): item for item in keywords}
@@ -105,6 +115,7 @@ def materialize(
         raise ValueError("path_base is only valid with portable_audio_dir")
     rows: list[dict] = []
     seen_audio: set[str] = set()
+    seen_pcm: set[str] = set()
     for index, source in enumerate(load_jsonl(manifest), 1):
         label = f"{manifest}:{index}"
         if int(source.get("schema_version", 0)) != 1 or source.get("evidence_class") != MANIFEST_CLASS:
@@ -131,6 +142,9 @@ def materialize(
         samples, pcm_sha = inspect_pcm16(audio)
         if pcm_sha != source.get("pcm_sha256"):
             raise ValueError(f"{label}: PCM sha256 mismatch")
+        if pcm_sha in seen_pcm:
+            raise ValueError(f"{label}: duplicate decoded PCM identity")
+        seen_pcm.add(pcm_sha)
         tokens = source.get("tokens")
         if not isinstance(tokens, list) or any(not isinstance(item, str) or item not in token_map for item in tokens):
             raise ValueError(f"{label}: tokens are invalid for canonical vocabulary")
@@ -150,6 +164,11 @@ def materialize(
             raise ValueError(f"{label}: non-positive keyword_id must be null")
         if kind == "background" and tokens:
             raise ValueError(f"{label}: background must not carry token targets")
+        if kind in {"negative", "confusable"}:
+            if not tokens:
+                raise ValueError(f"{label}: speech negative requires non-empty actual targets; unknown is not blank")
+            if any(contains_subsequence(tokens, item["tokens"]) for item in keywords):
+                raise ValueError(f"{label}: negative target contains a configured wake path")
         provenance = {
             "provider_kind": source.get("provider_kind"),
             "provider_name": source.get("provider_name"),
@@ -160,11 +179,20 @@ def materialize(
             "generation_config_sha256": source.get("generation_config_sha256"),
             "label_provenance_sha256": label_sha,
             "pcm_sha256": pcm_sha,
+            **{field: source[field] for field in LINEAGE_FIELDS if field in source},
         }
         for field in ("provider_kind", "provider_name", "provider_version", "license_id", "voice_id", "source_id", "generation_config_sha256"):
             value = provenance[field]
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{label}: missing speech-like provenance field {field}")
+        admission = source.get("admission")
+        if admission_mode == FIXTURE_MODE and admission is None:
+            if source.get("synthetic") is not True:
+                raise ValueError(f"{label}: fixture lane requires explicit synthetic=true")
+            admission = fixture_admission()
+        validate_admission(admission, mode=admission_mode, source_id=provenance["source_id"],
+                           file_sha256=file_sha, pcm_sha256=pcm_sha, text=source.get("actual_text"),
+                           tokens=tokens, kind=kind, keyword_id=keyword_id, provenance=provenance)
         stored_path = str(audio)
         if portable_dir is not None and portable_root is not None:
             target = portable_dir / f"recording-{index-1:06d}-{file_sha[:12]}.wav"
@@ -177,7 +205,7 @@ def materialize(
         rows.append({
             "split": split,
             "kind": kind,
-            "family_id": f"speech-like-{split}-{index-1:06d}",
+            "family_id": provenance.get("source_family_id", f"speech-like-{split}-{index-1:06d}"),
             "variant": 0,
             "keyword_id": keyword_id,
             "tokens": list(tokens),
@@ -188,6 +216,8 @@ def materialize(
             "event_end_frame": event_end,
             "path": stored_path,
             "speech_like_provenance": provenance,
+            "admission": admission,
+            **({"actual_text": source["actual_text"]} if admission_mode == REAL_MODE else {}),
         })
     summary = {
         "schema_version": 1,
@@ -202,6 +232,9 @@ def materialize(
         "corpus_sha256": corpus_sha(rows),
         "audio_path_contract": "index-relative-v1" if portable_dir is not None else "absolute-v1",
         "tone_backend_used": False,
+        "admission_mode": admission_mode,
+        "ctc_training_allowed": admission_mode == REAL_MODE,
+        "allowed_purpose": "ctc-training-only" if admission_mode == REAL_MODE else "synthetic-contract-test-only",
     }
     return rows, summary
 
@@ -215,6 +248,7 @@ def main() -> int:
     parser.add_argument("--output-index", required=True, type=pathlib.Path)
     parser.add_argument("--output-summary", required=True, type=pathlib.Path)
     parser.add_argument("--portable-audio-dir", type=pathlib.Path)
+    parser.add_argument("--admission-mode", choices=(REAL_MODE, FIXTURE_MODE), default=REAL_MODE)
     args = parser.parse_args()
     output_index = args.output_index.resolve()
     output_summary = args.output_summary.resolve()
@@ -223,6 +257,7 @@ def main() -> int:
         tokens_path=args.tokens.resolve(), keywords_path=args.keywords.resolve(),
         portable_audio_dir=args.portable_audio_dir,
         path_base=output_index.parent if args.portable_audio_dir is not None else None,
+        admission_mode=args.admission_mode,
     )
     output_index.parent.mkdir(parents=True, exist_ok=True)
     output_index.write_text("\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows) + "\n", encoding="utf-8")

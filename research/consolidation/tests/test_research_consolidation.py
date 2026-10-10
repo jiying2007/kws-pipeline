@@ -94,6 +94,15 @@ class RetentionTests(unittest.TestCase):
     def test_exact_source(self):
         self.assertEqual(RETENTION.verify(self.root, self.manifest), 1)
 
+    def test_historical_scorer_bytes_remain_separate_from_current_diagnostics(self):
+        manifest = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
+        for name in ("eval/score_events.py", "tests/test_eval.py"):
+            row = next(item for item in manifest["files"] if item.get("source_path") == name)
+            self.assertEqual(row["path"], f"research/consolidation/maintained-sources/pr-{row['source_pr']}/{name}")
+            archived = (ROOT / row["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(archived).hexdigest(), row["sha256"])
+            self.assertNotEqual(archived, (ROOT / name).read_bytes())
+
     def test_original_contributor_guide_retained_separately_from_current_guide(self):
         manifest = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
         archive = next(row for row in manifest["files"] if row.get("source_path") == "CONTRIBUTING.md")

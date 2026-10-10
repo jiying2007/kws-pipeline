@@ -71,6 +71,8 @@ def verify(
         generator = config.get("generator")
         if not isinstance(generator, dict):
             raise ValueError("governed product training generator must be an object")
+        if generator.get("external_base_admission_mode") != "reviewed-real-v1":
+            raise ValueError("new product training requires reviewed-real-v1; historical frozen base is diagnostic-only")
         tts = generator.get("tts")
         if not isinstance(tts, dict) or tts.get("backend") != "command":
             raise ValueError("governed product training replay TTS must use command backend")
@@ -138,6 +140,8 @@ def verify(
         "retired_seed_count": len(retired),
         "shipping_wake_words": [row[1] for row in rows],
         "product_speech_like_base_required": require_product_speech_like_base,
+        "actual_review_receipts_verified": False,
+        "verification_scope": "configuration-only; optimizer independently verifies bound receipts",
         "product_external_base_bundle_sha256": (
             str(product_data["external_base_bundle_sha256"]) if product_data else None
         ),

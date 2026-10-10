@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import subprocess
 import sys
@@ -47,6 +48,52 @@ def write_jsonl(path: pathlib.Path, rows: list[dict]) -> None:
                 json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)
                 + "\n"
             )
+
+
+def write_aligned_timeline(path: pathlib.Path, sidecar: dict, frames: int,
+                           config_sha256: str) -> None:
+    """Explicit constant-delay/continuous-output contract, with optional VAD.
+
+    Discontinuous capture belongs in the direct replay TSV adapter: final
+    reference shifting cannot silently apply one scalar delay across gaps.
+    """
+    if sidecar.get("timing_contract") != "afe-output-sample-v1":
+        raise ValueError("unsupported AFE timing_contract")
+    if any(sidecar.get(key) for key in ("lost_samples", "discontinuities", "timeline")):
+        raise ValueError("final AFE scalar timing contract requires continuous capture")
+    latency = sidecar.get("latency_samples")
+    if type(latency) is not int or not 0 <= latency <= 0xffffffff:
+        raise ValueError("latency_samples must fit uint32")
+    if (type(frames) is not int or frames <= 0 or len(config_sha256) != 64 or
+            any(c not in "0123456789abcdef" for c in config_sha256)):
+        raise ValueError("invalid timeline geometry or config SHA-256")
+    segments = sidecar.get("vad_segments")
+    if segments is None:
+        segments = [{"start_sample": 0, "sample_count": frames}]
+    if not isinstance(segments, list) or not segments:
+        raise ValueError("vad_segments must be a non-empty complete sample timeline")
+    lines = ["kws-afe-timeline-v1"]
+    end = 0
+    for sequence, segment in enumerate(segments):
+        if not isinstance(segment, dict) or set(segment) - {"start_sample", "sample_count", "probability"}:
+            raise ValueError("unsupported VAD segment fields")
+        start, count = segment.get("start_sample"), segment.get("sample_count")
+        if (type(start) is not int or type(count) is not int or
+                start != end or count <= 0 or count > 0xffffffff or start + count > frames):
+            raise ValueError("VAD segment coverage must be contiguous and match output samples")
+        probability = segment.get("probability")
+        flags = 0 if probability is None else 16
+        if probability is not None and (isinstance(probability, bool) or
+                not isinstance(probability, (int, float)) or not math.isfinite(probability) or
+                not 0.0 <= probability <= 1.0):
+            raise ValueError("VAD segment probability must be finite in [0,1]")
+        lines.append("\t".join(map(str, [start, count, sequence, start * 62500,
+            flags, 0, 0.0 if probability is None else probability,
+            sidecar["latency_samples"], config_sha256])))
+        end = start + count
+    if end != frames:
+        raise ValueError("VAD segment coverage must match output samples")
+    path.write_text("\n".join(lines) + "\n", encoding="ascii")
 
 
 def main() -> int:
@@ -120,18 +167,38 @@ def main() -> int:
         if (
             isinstance(latency_samples, bool)
             or not isinstance(latency_samples, int)
-            or latency_samples < 0
+            or not 0 <= latency_samples <= 0xffffffff
         ):
             raise ValueError(
                 f"{recording}: result sidecar requires non-negative integer latency_samples"
             )
         latency_samples_all.append(latency_samples)
         latency_s = latency_samples / float(SAMPLE_RATE_HZ)
+        aligned_fields = {}
+        if "timing_contract" in sidecar or "vad_segments" in sidecar:
+            metadata_path = post_root / f"{recording}.timeline.tsv"
+            write_aligned_timeline(metadata_path, sidecar, output_geometry["frames"],
+                                   identity["config_bundle_sha256"])
+            with wave.open(str(input_path), "rb") as raw_reader:
+                raw_duration = raw_reader.getnframes() / raw_reader.getframerate()
+            aligned_fields = {
+                "timing_contract": "afe-output-sample-v1",
+                "sample_rate_hz": SAMPLE_RATE_HZ,
+                "raw_duration_s": raw_duration,
+                "metadata_path": metadata_path.name,
+                "metadata_sha256": sha256_file(metadata_path),
+                "metadata_api_version": 2,
+                "recalibration_required": True,
+            }
 
         expected = []
         for event in row.get("expected", []):
             start_s = float(event["start_s"]) + latency_s
             end_s = float(event["end_s"]) + latency_s
+            if (not math.isfinite(start_s) or not math.isfinite(end_s) or
+                    start_s < latency_s or end_s < start_s or
+                    (aligned_fields and end_s - latency_s > aligned_fields["raw_duration_s"] + 1e-9)):
+                raise ValueError(f"{recording}: invalid raw expected event")
             if end_s > output_geometry["duration_s"] + 1e-9:
                 raise ValueError(
                     f"{recording}: latency-adjusted expected event exceeds AFE output"
@@ -141,6 +208,8 @@ def main() -> int:
                     "keyword_id": int(event["keyword_id"]),
                     "start_s": start_s,
                     "end_s": end_s,
+                    **({"raw_start_s": float(event["start_s"]),
+                        "raw_end_s": float(event["end_s"])} if aligned_fields else {}),
                 }
             )
 
@@ -162,6 +231,7 @@ def main() -> int:
                 "tags": row["tags"],
                 "afe_latency_samples": latency_samples,
                 "expected": expected,
+                **aligned_fields,
             }
         )
         evidence_rows.append(
@@ -178,6 +248,7 @@ def main() -> int:
                 "pipeline_source_sha": identity.get("pipeline_source_sha"),
                 "toolchain": identity["toolchain"],
                 "latency_samples": latency_samples,
+                **aligned_fields,
                 "sample_rate_hz": SAMPLE_RATE_HZ,
                 "channels": 1,
                 "sample_format": "pcm_s16le",
@@ -193,6 +264,8 @@ def main() -> int:
                 "sha256": output_sha,
                 "bytes": output_path.stat().st_size,
                 "duration_s": output_geometry["duration_s"],
+                **({"metadata_sha256": aligned_fields["metadata_sha256"]}
+                   if aligned_fields else {}),
             }
         )
 

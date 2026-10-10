@@ -396,6 +396,37 @@ def main() -> int:
             else:
                 raise AssertionError(duration)
 
+        # Direct runner receives exactly the hash-bound metadata path. The
+        # metadata-blind posterior cache must never silently strip this input.
+        metadata = root / "timeline.tsv"
+        metadata.write_text("synthetic-sidecar-v1\n", encoding="ascii")
+        references.write_text(json.dumps({"recording": "room-1", "path": "audio.wav",
+            "duration_s": 2.0, "expected": [], "metadata_path": metadata.name,
+            "metadata_sha256": sha256_file(metadata)}) + "\n", encoding="utf-8")
+        runner.write_text("#!/usr/bin/env python3\nimport sys\n"
+                          "assert sys.argv[5:] == ['--metadata-tsv', " + repr(str(metadata)) + "]\n",
+                          encoding="utf-8")
+        command = [sys.executable, str(ROOT / "eval/run_corpus.py"),
+                   "--runner", str(runner), "--model", str(model), "--keywords", str(keywords),
+                   "--references", str(references), "--audio-root", str(root),
+                   "--detections", str(detections), "--provenance", str(provenance)]
+        result = subprocess.run(command, check=False, text=True, capture_output=True)
+        assert result.returncode == 0, result.stderr
+        result = json.loads(provenance.read_text())
+        assert result["afe_metadata_files"] == [{"recording": "room-1", "path": metadata.name,
+                                                 "sha256": sha256_file(metadata)}]
+        assert result["recalibration_required"] is True
+        result = subprocess.run(command + ["--posterior-dump", str(posterior_dump),
+            "--decoder-replay", str(decoder_replay), "--posterior-cache", str(posterior_cache)],
+            check=False, text=True, capture_output=True)
+        assert result.returncode == 2 and "not supported by the posterior cache" in result.stderr
+        runner.write_text("#!/usr/bin/env python3\nimport pathlib, sys\n"
+                          "pathlib.Path(sys.argv[6]).write_text('changed')\n", encoding="utf-8")
+        result = subprocess.run(command, check=False, text=True, capture_output=True)
+        assert result.returncode == 2 and "metadata changed during replay" in result.stderr
+        result = subprocess.run(command, check=False, text=True, capture_output=True)
+        assert result.returncode == 2 and "metadata SHA-256 mismatch" in result.stderr
+
     print("test_run_corpus: ok")
     return 0
 

@@ -1,0 +1,111 @@
+{
+  "schema": "screen32-readiness-v1",
+  "status": "PREPARED_NOT_EXECUTION_READY",
+  "execution_ready": false,
+  "real_tts_calls": 0,
+  "real_asr_calls": 0,
+  "acquired_weight_bytes": 0,
+  "installed_packages": 0,
+  "proposed_qwen_environment": {
+    "provider": "GitHub Actions standard public repository ubuntu-24.04 x64",
+    "free_status": "Standard public-repository runner is free; no paid/larger/GPU fallback",
+    "hardware_documentation": "https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories",
+    "documented_vcpu": 4,
+    "documented_ram_GB": 16,
+    "documented_storage_GB": 14,
+    "actual_available_resources_verified": false,
+    "python": "3.12.14 exact isolated runtime candidate",
+    "precision": "float32",
+    "attention": "eager",
+    "threads": 4,
+    "interop_threads": 1
+  },
+  "proposed_qwen_limits_NOT_ADMITTED": {
+    "kernel_memory_max_bytes": 12884901888,
+    "kernel_memory_swap_max_bytes": 0,
+    "host_memory_available_floor_bytes": 2147483648,
+    "initial_free_disk_floor_bytes": 8589934592,
+    "controlled_transfer_cap_bytes": 6442450944,
+    "minimum_remaining_disk_bytes": 1073741824,
+    "startup_wall_seconds": 1200,
+    "per_clip_wall_seconds": 300,
+    "generation_wall_seconds": 4800,
+    "job_wall_seconds": 7200,
+    "max_native_or_derived_clip_seconds": 12,
+    "output_total_cap_bytes": 67108864,
+    "limits_verified": false
+  },
+  "qwen_blockers": [
+    "Complete and independently review the minimal runtime orchestration: bind the new model lock and sixteen-cell plan to existing exact setup/native-I/O/local-loader/audio/failure guards, persistent attempt claims, deadlines, EOS capture and blind byte packing. The narrow mocked call adapter does not provide this launcher.",
+    "Establish and read back a hard12GiB/zero-swap process/container scope before runtime imports; historical free-runner memory could fit this reservation, but effective enforcement and current available capacity remain unverified.",
+    "Confirm actual disk/memory, locked native-I/O imports and strict local-only model loading within proposed bounds; no full-model capacity result exists.",
+    "Bind reviewed source/head/runtime/assets/budgets to a one-shot admission, using no paid account or persistent secrets."
+  ],
+  "firered_blockers": [
+    "No verified CPU implementation; pinned official code requires CUDA. Do not silently patch CUDA, rent a GPU, or substitute another source.",
+    "About 12.26GB displayed Instruct+RedAE weights, plus tokenizer/runtime, leave inadequate proven headroom under documented standard-runner resources.",
+    "Exact model-file byte/hash inventory and runtime/source lock remain incomplete."
+  ],
+  "asr_blockers": [
+    "The retained ASR job hardcodes exactly six clips. A reviewed bounded adapter must accept only the generated subset of the frozen 32 cells while preserving original full denominator.",
+    "Whisper exact model/runtime assets and one-shot dispute admission remain unfrozen; selection helper alone grants no execution."
+  ],
+  "next_safe_command": "python3 -B research/source-screen32-v1/contract.py",
+  "next_safe_preview_command": "python3 -B research/source-screen32-v1/contract.py --preview-cell screen32-001",
+  "actual_generation_command": null,
+  "reason_no_execution_command": "Exact asset metadata and locked VoiceDesign API review are complete; the narrow call adapter is mocked only. No reviewed full runtime orchestration, effective hard-memory enforcement or exact-head one-shot admission exists. Historical six-cell commands are not substitutes.",
+  "preserved_boundary": {
+    "d20": "FAIL",
+    "d90": "NOT_RUN",
+    "fixed50": "EVAL_INCONCLUSIVE_LABEL_SUPPORT",
+    "shipping_approved": false
+  },
+  "historical_free_runner_observation": {
+    "file": "hosted-resource-observation.json",
+    "sha256": "2f4d529fdd71837b28658e8e7966acfe92754e81a663dc95d1b1bdf23ed1932d",
+    "source_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/36915231606/job/110547462206",
+    "run_id": 36915231606,
+    "job_id": 110547462206,
+    "observed_utc": "2026-10-01T19:34:08Z",
+    "retrieved_utc": "2026-10-10",
+    "verification": "1925-byte JSON re-extracted from returned official job log after timestamp removal; operational log/environment lines excluded",
+    "available_memory_bytes": 15265845248,
+    "root_free_disk_bytes": 92425285632,
+    "memory_margin_over_12GiB_plus_2GiB_bytes": 233459712,
+    "memory_sufficient_for_proposed_reservation_at_that_time": true,
+    "actual_12GiB_model_fit": "NOT_TESTED",
+    "effective_cgroup_enforcement": "UNKNOWN",
+    "current_resource_availability": "UNKNOWN",
+    "new_probe_dispatched_by_this_task": false
+  },
+  "qwen_remaining_steps_smallest_16_cell_route": [
+    "COMPLETE: all11 exact official sidecars acquired under8MiB; byte sizes/SHA256/Git blobs and declared revision verified. Existing92 runtime metadata pins are complete; no version refresh proposed.",
+    "COMPLETE: exact113529-byte qwen-tts0.1.1 source wheel and17 existing member digests verified without import/install. Narrow VoiceDesign API/output adapter has mocked tests only. Still needed: parameter-bound orchestration reusing exact setup, native-I/O/local loader guards, complete16-outcome ledger and bounded audio-only ASR consumer.",
+    "Reuse existing free hosted resource probe for current availability; establish/read back the reviewed hard process/container limit separately before imports. Root cgroup unknown values cannot grant admission.",
+    "Freeze reviewed changed-head/adapter/assets and declared6GiB transfer/12GiB memory budget; these supersede smaller historical run caps only in this new source lane.",
+    "After actual resource/admission gates pass, generate only Qwen cells001–016 once each, starting with001 as the included smoke cell, then blind primary readback. FireRed cells017–032 remain NOT_RUN until its CPU blocker is resolved."
+  ],
+  "budget_change_is_not_hardware_unavailability": true,
+  "sidecar_metadata": {
+    "status": "COMPLETE_EXACT_BYTES_VERIFIED",
+    "file_count": 11,
+    "actual_bytes": 4468188,
+    "weight_bytes": 0,
+    "source_revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+    "static_safety": "PASS",
+    "asset_lock": "research/source-screen32-v1/qwen-model-lock.json",
+    "exact_model_plus_candidate_runtime_bytes": 4956729799
+  },
+  "reviewed_source_archive_bytes": 113529,
+  "qwen_adapter": {
+    "file": "research/source-screen32-v1/qwen_adapter.py",
+    "status": "MOCK_TESTED_NOT_EXECUTION_READY",
+    "runtime_orchestration": "NOT_IMPLEMENTED",
+    "hard_scope_enforcement": "NOT_IMPLEMENTED",
+    "exact_model_dependency_imports": 0,
+    "real_tts_calls": 0,
+    "termination_capture": "OUTER_LAUNCHER_REQUIRED",
+    "human_gold": false,
+    "training_admitted": false
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "schema": "screen32-official-source-metadata-v1",
+  "observed_utc": "2026-10-10",
+  "metadata_only": true,
+  "weight_bodies_downloaded": false,
+  "execution_ready": false,
+  "qwen_voicedesign": {
+    "model_id": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
+    "license": "Apache-2.0 declared by pinned official model card",
+    "license_evidence": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign/raw/5ecdb67327fd37bb2e042aab12ff7391903235d3/README.md",
+    "model_output_rights": "Not inferred from model/code license; prospective research screening only",
+    "weights": [
+      {
+        "path": "model.safetensors",
+        "size_bytes": 3833402552,
+        "sha256": "391e8db219f292c515297cdceeb43e4eae67cdde35fa57e79a6a8a532fca0522",
+        "evidence": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign/raw/5ecdb67327fd37bb2e042aab12ff7391903235d3/model.safetensors",
+        "verification": "official metadata pointer only; body not downloaded"
+      },
+      {
+        "path": "speech_tokenizer/model.safetensors",
+        "size_bytes": 682293092,
+        "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+        "evidence": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign/blob/5ecdb67327fd37bb2e042aab12ff7391903235d3/speech_tokenizer/model.safetensors",
+        "verification": "official SHA256 matches retained qwen6 tokenizer identity and byte size; body not downloaded"
+      }
+    ],
+    "known_weight_bytes": 4515695644,
+    "sidecar_hashes_complete": true,
+    "candidate_runtime": "research/qwen6_tts/runtime-lock.json",
+    "candidate_runtime_input_bytes": 436565967,
+    "known_weight_plus_candidate_runtime_bytes": 4952261611,
+    "old_4GiB_cap_sufficient": false,
+    "api_evidence": "https://files.pythonhosted.org/packages/31/01/95f3ae26f5b7eb2105f69ad2c15af5a28b9ebdd1258a0b27541f5ebd6225/qwen_tts-0.1.1-py3-none-any.whl",
+    "api_evidence_scope": "Exact locked official qwen-tts 0.1.1 wheel bytes and all17 existing Python member digests verified; AST/read-only source review, no package import, installation or inference.",
+    "cpu_route": "Exact wheel supports VoiceDesign with device-generic core and12Hz codec paths. Candidate CPU FP32/eager/local-only loading needs retained recursive loader guards and a new verified hard scope. 1.7B resource viability remains NOT_TESTED.",
+    "readiness": "BLOCKED_RUNTIME_ORCHESTRATION_HARD_SCOPE_AND_SOURCE_ADMISSION",
+    "remaining_model_sidecars": [],
+    "smallest_metadata_completion": {
+      "files": 11,
+      "maximum_total_bytes": 8388608,
+      "maximum_file_bytes": 3145728,
+      "weights_excluded": true,
+      "source": "Exact official pinned URLs above; verify actual byte sizes/SHA256 and config safety before freezing acquisition. No bulk model download is needed to close these metadata gaps.",
+      "status": "COMPLETE_EXACT_BYTES_VERIFIED",
+      "actual_bytes": 4468188
+    },
+    "dependency_pin_status": {
+      "complete_existing_exact_inputs": 92,
+      "missing_candidate_runtime_metadata_pins": 0,
+      "root_requirements": [
+        "qwen-tts==0.1.1",
+        "torch==2.11.0+cpu",
+        "torchaudio==2.11.0+cpu",
+        "numpy==1.26.4",
+        "scipy==1.17.1",
+        "soundfile==0.13.1"
+      ],
+      "lock_sha256": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de",
+      "body_and_api_qualification_this_task": false,
+      "new_package_versions_proposed": false,
+      "static_qwen_wheel_source_review_complete": true
+    },
+    "prior_06_cpu_execution": {
+      "run_id": 37343458180,
+      "run_attempt": 1,
+      "head_sha": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+      "url": "https://github.com/jiying2007/kws-pipeline/actions/runs/37343458180",
+      "source_report": "https://github.com/jiying2007/kws-pipeline/pull/482",
+      "tts_calls": 6,
+      "asr_calls": 12,
+      "generation_wall_seconds": 301.404,
+      "source_panel_result": "REJECTED_NO_VOICE_SUPPORTS_BOTH_WAKE_WORDS",
+      "human_truth": "UNKNOWN",
+      "scope": "Retained exact-run report demonstrates smaller CustomVoice CPU execution, not 1.7B VoiceDesign capacity. This task has not re-restored its saved model/audio bodies."
+    },
+    "complete_asset_lock": "research/source-screen32-v1/qwen-model-lock.json",
+    "complete_asset_lock_sha256": "747562e07b4788bcae25c13004139048741e18f07f39eca291891010f459a25b",
+    "total_model_snapshot_bytes": 4520163832,
+    "exact_model_plus_candidate_runtime_bytes": 4956729799,
+    "exact_wheel_review": {
+      "distribution": "qwen-tts",
+      "version": "0.1.1",
+      "source_url": "https://files.pythonhosted.org/packages/31/01/95f3ae26f5b7eb2105f69ad2c15af5a28b9ebdd1258a0b27541f5ebd6225/qwen_tts-0.1.1-py3-none-any.whl",
+      "size_bytes": 113529,
+      "sha256": "11a290d8dabc7ef91a90c54478c8ab19b3edb1d85c0882313721892bdc4af15d",
+      "body_digest_verified": true,
+      "existing_source_lock": "research/qwen6_tts/model-locks.json",
+      "verified_python_member_count": 17,
+      "reviewed_members": [
+        {
+          "distribution": "qwen-tts",
+          "relative_path": "qwen_tts/core/models/modeling_qwen3_tts.py",
+          "sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+          "ast_parse": "PASS"
+        },
+        {
+          "distribution": "qwen-tts",
+          "relative_path": "qwen_tts/core/tokenizer_12hz/modeling_qwen3_tts_tokenizer_v2.py",
+          "sha256": "844e8dd8c0182ef9c6463c874631c22ef3c5a4fd1899dd657016164cc5379628",
+          "ast_parse": "PASS"
+        },
+        {
+          "distribution": "qwen-tts",
+          "relative_path": "qwen_tts/inference/qwen3_tts_model.py",
+          "sha256": "e1da450732857c1f5fe3e36ebab85db2f6dc6a48caaff6973f463384e30275e4",
+          "ast_parse": "PASS"
+        },
+        {
+          "distribution": "qwen-tts",
+          "relative_path": "qwen_tts/inference/qwen3_tts_tokenizer.py",
+          "sha256": "ac2d855022a1bd21d33ab7b267ec952eef71f81d3f8d969a306139ff1a929515",
+          "ast_parse": "PASS"
+        }
+      ],
+      "license": "Apache-2.0 declared in exact wheel METADATA and LICENSE",
+      "metadata_sha256": "f4c78c77e79916d9610490ed71d0020e9c3e2f29803587473502652b9cbffccc",
+      "license_sha256": "a44a6081c73ad75f0255bb2bb5cab74ef1829565a895a24e53a4f11290ab7655",
+      "api": "Qwen3TTSModel.generate_voice_design(text, instruct, language=None, non_streaming_mode=True, **kwargs)",
+      "api_source_lines": [
+        636,
+        735
+      ],
+      "verified_static_findings": [
+        "VoiceDesign method rejects other model variants, builds instruction tokens and forwards the frozen generation recipe. It takes no speaker or reference-audio argument.",
+        "1b7 voice_design config has no stock-speaker tables; the main constructor leaves speaker_encoder=None for this variant.",
+        "Main model and12Hz codec rotary autocast derive device_type from tensors. No mandatory CUDA route was found in the reviewed VoiceDesign call path; this is not a runtime compatibility result.",
+        "Codec decode returns float32 CPU NumPy arrays and an integer sample rate; locked codec config declares24kHz.",
+        "Upstream AutoProcessor and AutoFeatureExtractor do not themselves forward every local-only flag. Retain runtime_gate.local_loader_policy for all five Auto loaders and both exact model roots; eager/CPU/FP32/safetensors guards cannot be replaced by top-level kwargs alone."
+      ],
+      "archive_published": false,
+      "installed": false,
+      "imported": false,
+      "model_calls": 0,
+      "scope": "Static source compatibility only. No measured memory, latency, dependency-import compatibility or execution admission."
+    }
+  },
+  "firered_instruct": {
+    "model_id": "FireRedTeam/FireRedTTS3",
+    "variant": "fireredtts3_instruct",
+    "revision": "dcf1bdcd1b8b25b382fa84c3e34eb82e3054a610",
+    "source_commit": "7a1f3a7282ff184cc1c7f070556baaf5f08b5216",
+    "license": "Apache-2.0 declared by pinned official model card and source LICENSE",
+    "license_evidence": [
+      "https://huggingface.co/FireRedTeam/FireRedTTS3/raw/dcf1bdcd1b8b25b382fa84c3e34eb82e3054a610/README.md",
+      "https://github.com/FireRedTeam/FireRedTTS3/blob/7a1f3a7282ff184cc1c7f070556baaf5f08b5216/LICENSE"
+    ],
+    "model_output_rights": "Not inferred from model/code license; prospective research screening only",
+    "required_subdirectories": [
+      "fireredtts3_instruct",
+      "redae",
+      "text_tokenizer"
+    ],
+    "excluded_subdirectories": [
+      "fireredtts3_base",
+      "campp"
+    ],
+    "weight_metadata": [
+      {
+        "path": "fireredtts3_instruct/model.safetensors",
+        "display_size_GB": 8.48,
+        "exact_size_bytes": null,
+        "sha256": null,
+        "evidence": "https://huggingface.co/FireRedTeam/FireRedTTS3/tree/dcf1bdcd1b8b25b382fa84c3e34eb82e3054a610/fireredtts3_instruct"
+      },
+      {
+        "path": "redae/model.safetensors",
+        "display_size_GB": 3.78,
+        "exact_size_bytes": null,
+        "sha256": null,
+        "evidence": "https://huggingface.co/FireRedTeam/FireRedTTS3/tree/dcf1bdcd1b8b25b382fa84c3e34eb82e3054a610/redae"
+      }
+    ],
+    "weight_size_scope": "Rounded official directory metadata; about 12.26 GB before tokenizer/dependencies; exact asset lock missing",
+    "cpu_route": "Official constructor hardcodes torch.device(cuda); backbone uses CUDA autocast. No qualified CPU implementation in this task.",
+    "source_evidence": "https://github.com/FireRedTeam/FireRedTTS3/blob/7a1f3a7282ff184cc1c7f070556baaf5f08b5216/fireredtts3/llm/fireredtts3_instruct.py#L300-L317",
+    "existing_firered_preflight": "research/firered_cpu_preflight is FireRed AED ASR dependency work, unrelated to this TTS model; no qualification transfers",
+    "readiness": "BLOCKED_NO_VERIFIED_FREE_CPU_ROUTE",
+    "runtime_patch_applied": false
+  },
+  "asr": {
+    "qwen06": {
+      "model_id": "Qwen/Qwen3-ASR-0.6B",
+      "revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0"
+    },
+    "sensevoice": {
+      "model_id": "FunAudioLLM/SenseVoiceSmall",
+      "revision": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7",
+      "model_license": "FunASR Model Open Source License Agreement v1.1; not code MIT",
+      "notice": "research/qwen6_asr/NOTICE.md"
+    },
+    "reuse_locks": "research/qwen6_asr/model-locks.json",
+    "primary_model_calls": 64,
+    "primary_policy": "Sequential single pass; empty context; no hotwords; audio-only hashes; freeze raw outputs before plan join",
+    "whisper": "Only pre-frozen clean two-ASR disagreements, at most one call each; exact model/runtime lock remains missing; unavailable/quality-flagged outputs remain unresolved",
+    "machine_consensus": "Weak lexical evidence only; never human label or training admission",
+    "independence_limit": "Qwen TTS and Qwen ASR may share systematic bias; SenseVoice provides another ASR family, not guaranteed statistical independence. FireRedTTS3 also uses a Qwen3 backbone."
+  }
+}

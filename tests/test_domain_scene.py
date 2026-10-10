@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -10,11 +11,17 @@ import struct
 import sys
 import tempfile
 import wave
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
+sys.path.insert(0, str(ROOT / "tools"))
+
+from materialize_speech_like_base_index import corpus_sha  # noqa: E402
 
 from acoustic_scene import render_scene  # noqa: E402
+from audit_dataset import verify_manifest_lineage  # noqa: E402
+import render_domains  # noqa: E402
 from development_stress import (  # noqa: E402
     apply_development_stress_scene,
     build_development_stress_plan,
@@ -238,6 +245,7 @@ def test_external_speech_like_base_renderer() -> None:
         config["domains"]["scenes_per_example"] = {
             split: 1 for split in ("train", "calibration", "test", "qualification")
         }
+        config["generator"]["external_base_admission_mode"] = "synthetic-fixture-v1"
         external = {}
         for index, split in enumerate(("train", "calibration", "test", "qualification")):
             wav = root / f"{split}.wav"
@@ -250,6 +258,9 @@ def test_external_speech_like_base_renderer() -> None:
                 "kind": "positive",
                 "family_id": f"speech-like-{split}-000000",
                 "variant": 0,
+                "admission": {"mode": "synthetic-fixture-v1",
+                              "allowed_purpose": "synthetic-contract-test-only",
+                              "ctc_training_allowed": False},
                 "keyword_id": 1,
                 "tokens": ["ni3", "hao3", "xiao3", "wo1"],
                 "target_ids": [1, 2, 3, 4],
@@ -259,6 +270,11 @@ def test_external_speech_like_base_renderer() -> None:
                 "event_end_frame": 4000,
                 "path": str(wav.resolve()),
                 "speech_like_provenance": {
+                    "source_family_id": f"source-family-{index}",
+                    "speaker_id": f"speaker-{index}",
+                    "reference_audio_sha256": hashlib.sha256(f"reference-{index}".encode()).hexdigest(),
+                    "session_id": f"session-{index}",
+                    "derivation_family_id": f"derivation-{index}",
                     "provider_kind": "offline-tts",
                     "provider_name": "fixture",
                     "provider_version": "1",
@@ -288,10 +304,11 @@ def test_external_speech_like_base_renderer() -> None:
                 "recordings": 1,
                 "positive_recordings": 1,
                 "negative_recordings": 0,
-                "corpus_sha256": hashlib.sha256(
-                    f"corpus-{index}".encode()
-                ).hexdigest(),
+                "corpus_sha256": corpus_sha([row]),
                 "tone_backend_used": False,
+                "audio_path_contract": "absolute-v1",
+                "admission_mode": "synthetic-fixture-v1",
+                "ctc_training_allowed": False,
             }
             summary_path = root / f"{split}.summary.json"
             summary_path.write_text(
@@ -332,6 +349,44 @@ def test_external_speech_like_base_renderer() -> None:
             row["speech_like_provenance"]["provider_kind"] == "offline-tts"
             for row in domain_rows
         )
+
+        audits = summary["lineage_audit"]
+        assert audits["pre_render"]["clean"] and audits["post_render"]["clean"]
+        assert set(audits["pre_render"]["splits"]) == {"train", "calibration", "test", "qualification"}
+        assert audits["identity_disjointness"]["speaker_id"] == "verified"
+        for domain_row in domain_rows:
+            split = domain_row["split"]
+            verified = verify_manifest_lineage(output / f"{split}.tsv")
+            assert verified == [domain_row]
+            for field in ("source_family_id", "speaker_id", "session_id",
+                          "reference_audio_sha256", "derivation_family_id"):
+                assert verified[0][field] == domain_row["speech_like_provenance"][field]
+            assert verified[0]["admission"]["ctc_training_allowed"] is False
+        # Exercise renderer gates independently of the external loader's checks.
+        raw_base = [json.loads(line) for line in (output / "base/dataset-index.jsonl").read_text().splitlines()]
+        contaminated = copy.deepcopy(raw_base)
+        contaminated[2]["speech_like_provenance"]["source_family_id"] = "reused-source"
+        contaminated[3]["speech_like_provenance"]["source_family_id"] = "reused-source"
+        with mock.patch.object(render_domains, "load_external_base_bundle", return_value=(contaminated, base_summary)), \
+             mock.patch.object(render_domains, "render_scene", side_effect=AssertionError("rendered before pre-audit")):
+            try:
+                render_domain_dataset(config_path, root / "leaked-base", splits=("train",))
+            except ValueError as exc:
+                assert "pre-render dataset lineage audit failed" in str(exc)
+            else:
+                raise AssertionError("leaked unrendered held-out base source was accepted")
+
+        def identical_output(*args, **kwargs):
+            _, scene_meta = render_scene(*args, **kwargs)
+            return [100] * 4800, scene_meta
+
+        with mock.patch.object(render_domains, "render_scene", side_effect=identical_output):
+            try:
+                render_domain_dataset(config_path, root / "leaked-rendered", splits=("train", "test"))
+            except ValueError as exc:
+                assert "post-render dataset lineage audit failed" in str(exc)
+            else:
+                raise AssertionError("identical rendered PCM across splits was accepted")
 
         subset_output = root / "rendered-subset"
         subset = render_domain_dataset(

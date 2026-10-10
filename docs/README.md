@@ -26,6 +26,7 @@ Current machine-readable product authority is `configs/shipping.xiaowo.json`. Th
 - [`RELEASE_QUALIFICATION.md`](RELEASE_QUALIFICATION.md) — artifact-bound shipping qualification
 - [`SYNTHETIC_TRAINING.md`](SYNTHETIC_TRAINING.md) — deterministic synthetic/domain loop
 - [`CORPUS_IDENTITY.md`](CORPUS_IDENTITY.md) — byte-complete training/evaluation corpus identity
+- [`SPEECH_BASE_ADMISSION.md`](SPEECH_BASE_ADMISSION.md) — reviewed actual labels, source lineage and diagnostic-only historical inputs
 - [`TARGET_EVIDENCE.md`](TARGET_EVIDENCE.md) — machine-collected physical target evidence contract
 - [`AUDIO_DISCONTINUITY.md`](AUDIO_DISCONTINUITY.md) — XRUN/route/clock reset semantics
 - [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — traceable/rebuildable/bit-reproducible claims

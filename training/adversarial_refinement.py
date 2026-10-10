@@ -37,7 +37,7 @@ from qualification_failure_replay import (
     REPAIR_LR_SCALE,
     render_qualification_failure_replay,
 )
-from render_domains import render_domain_dataset
+from render_domains import audit_rendered_dataset, render_domain_dataset
 from synthetic_audio import load_config
 from wake_pressure_balance import (
     DEFAULT_POSITIVE_EXAMPLE_WEIGHT,
@@ -238,11 +238,7 @@ def _audit(
     dataset: pathlib.Path,
     splits: tuple[str, ...] = ("train", "calibration", "test", "qualification"),
 ) -> None:
-    argv = [sys.executable, str(TRAINING / "audit_dataset.py")]
-    for split in splits:
-        argv.extend(["--split", f"{split}={dataset / (split + '.tsv')}"])
-    argv.extend(["--report", str(dataset / "audit.json"), "--fail-within-split"])
-    run(argv)
+    audit_rendered_dataset(dataset, splits)
 
 
 def _write_effective_seed_config(cfg: dict, seed: int, path: pathlib.Path) -> pathlib.Path:
@@ -275,7 +271,10 @@ def _train_refinement(
     lr_scale: float,
     refinement_round: int,
     seed_offset: int = 0,
+    synthetic_contract_test_only: bool = False,
 ) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path, dict]:
+    if not isinstance(synthetic_contract_test_only, bool):
+        raise ValueError("synthetic_contract_test_only must be boolean")
     train = cfg.get("train", {})
     if not isinstance(train, dict):
         raise ValueError("train config must be an object")
@@ -340,6 +339,8 @@ def _train_refinement(
             json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
         ]
     )
+    if synthetic_contract_test_only:
+        command.append("--synthetic-contract-test-only")
     command.extend(optional_objective_cli_args(train))
     command.extend(
         [
@@ -437,6 +438,8 @@ def main() -> int:
         action="store_true",
         help="write development-only refinement metrics and stop before any qualification work",
     )
+    parser.add_argument("--synthetic-contract-test-only", action="store_true",
+                        help="explicit algorithm-fixture lane; checkpoints cannot be promoted")
     args = parser.parse_args()
 
     config_path = args.config.resolve()
@@ -557,6 +560,7 @@ def main() -> int:
         epochs=int(policy["epochs"]),
         lr_scale=float(policy["lr_scale"]),
         refinement_round=refinement_round,
+        synthetic_contract_test_only=args.synthetic_contract_test_only,
     )
     progress.finish("train-export")
 
@@ -758,6 +762,7 @@ def main() -> int:
             lr_scale=REPAIR_LR_SCALE,
             refinement_round=refinement_round,
             seed_offset=700_001,
+            synthetic_contract_test_only=args.synthetic_contract_test_only,
         )
         repaired_keywords, repaired_pack, repaired_cal_base, repaired_cal_domains = calibrate(
             runner=runner,

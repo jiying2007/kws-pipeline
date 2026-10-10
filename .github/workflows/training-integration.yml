@@ -101,6 +101,7 @@ jobs:
             -v "$PWD:/workspace" -w /workspace \
             "$TRAINING_IMAGE" \
             training/iterate_domain.py \
+              --synthetic-contract-test-only \
               --config build/torch-ctc-integration.json \
               --runner build/kws_wav \
               --work-dir build/torch-ctc-e2e

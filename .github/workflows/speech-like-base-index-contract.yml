@@ -81,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-base"
-          python3 tools/materialize_speech_like_base_index.py \
+          python3 tools/materialize_speech_like_base_index.py --admission-mode synthetic-fixture-v1 \
             --manifest "$root/enriched.jsonl" --split train \
             --tokens keywords/tokens.example.txt --keywords keywords/zh_cn_example.tsv \
             --output-index "$root/dataset-index.jsonl" --output-summary "$root/summary.json" \
@@ -123,7 +123,7 @@ jobs:
           (root/'bad-tone.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in bad))
           PY
           for bad in bad-hash bad-tokens bad-tone; do
-            if python3 tools/materialize_speech_like_base_index.py \
+            if python3 tools/materialize_speech_like_base_index.py --admission-mode synthetic-fixture-v1 \
               --manifest "$root/$bad.jsonl" --split train \
               --tokens keywords/tokens.example.txt --keywords keywords/zh_cn_example.tsv \
               --output-index "$root/nope.jsonl" --output-summary "$root/nope.json"; then

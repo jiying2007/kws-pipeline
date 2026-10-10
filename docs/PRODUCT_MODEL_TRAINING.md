@@ -5,6 +5,26 @@ generator.
 
 ## Current state
 
+As of the 0.4.0 source changes, **new real CTC optimization requires reviewed
+actual-label receipts and verified source lineage for every input row**. The
+historical immutable base below has no such upgraded review evidence. Its bytes
+remain available for historical diagnostics; materialization does not authorize
+new product training. A replacement reviewed base is pending. Do not fabricate
+reviews from generation requests or relabel the old release as reviewed.
+
+`training/train_ctc.py` consumes the source receipts before optimization and
+checks their manifest bindings again before saving. Its explicit
+`--synthetic-contract-test-only` lane is for algorithm fixtures, emits a
+non-promotable checkpoint, and is not a fallback for failed real-data admission.
+Export preserves that status. An unverified or diagnostic warm-start ancestor
+also prevents promotion of its descendants. The promotion gate requires the
+reviewed admission and exact training-manifest bindings. Receipt consistency
+does not authenticate a reviewer or establish independent acoustic qualification.
+
+The existing immutable-download/preflight mechanics described below are retained
+historical context, not evidence that their old base satisfies the new gate.
+See [speech-base admission](SPEECH_BASE_ADMISSION.md) for the new input contract.
+
 The currently pinned model `model-749187ec1d66` was trained at source
 `749187ec1d6662658f06aa9c76d47fde835968db`. At that exact source revision:
 
@@ -16,9 +36,9 @@ explains why later speech-like research did not automatically improve the
 deployable `.kwm`: the research corpus and the product training lane were
 separate execution paths.
 
-## Governed base for future candidates
+## Historical governed base (diagnostic-only under the new gate)
 
-Future governed `model-training` runs use the immutable release:
+The historical governed workflow pinned the immutable release:
 
 `speech-like-base-5204b798033f`
 
@@ -34,7 +54,8 @@ and provider identity:
 The release is immutable and its corpus archive is additionally pinned by SHA256
 in `configs/training/product-speech-like-base-v1.json`.
 
-Before training begins, the workflow:
+The historical workflow performed these checks; none substitutes for human
+actual-label admission required for a new optimization:
 
 1. requires the exact current `main` source SHA;
 2. downloads the immutable release;
@@ -91,6 +112,10 @@ bound into `training_code_sha256`, and exported model provenance records
 that lack this evidence.
 
 ## Product development preflight
+
+The following preflight is blocked for new real optimization until a reviewed
+base replaces the historical diagnostic-only input. Its former hash checks and
+successes are not retroactively upgraded to reviewed-data evidence.
 
 A versioned model-training request is validated on its pull request before any
 full governed training can start. The preflight uses the same immutable

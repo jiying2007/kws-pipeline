@@ -226,6 +226,9 @@ def main() -> int:
     parser.add_argument("--backend-lib-dir", type=pathlib.Path)
     parser.add_argument("--resampler-executable", type=pathlib.Path)
     parser.add_argument("--generation-workers", type=int, default=2)
+    parser.add_argument("--admission-mode", choices=("reviewed-real-v1", "synthetic-fixture-v1"), default="reviewed-real-v1")
+    parser.add_argument("--audio-review", type=pathlib.Path, help="Supplied v2 human review histories, bound to this exact generated batch")
+    parser.add_argument("--generate-only", action="store_true", help="Generate an unadmitted batch for later listening; do not create a training bundle")
     parser.add_argument(
         "--prepare-provider-only",
         action="store_true",
@@ -234,6 +237,11 @@ def main() -> int:
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     args = parser.parse_args()
 
+    if args.admission_mode == "synthetic-fixture-v1" and args.audio_review is not None:
+        raise ValueError("synthetic fixture lane cannot claim human review")
+    if not args.prepare_provider_only and not args.generate_only and args.admission_mode == "reviewed-real-v1" and args.audio_review is None:
+        raise ValueError("future real corpus materialization requires --audio-review; use --generate-only for a batch awaiting human review")
+    audio_review = require_file(args.audio_review, "human audio review") if args.audio_review else None
     if args.generation_workers <= 0 or args.generation_workers > 4:
         raise ValueError("generation-workers must be in [1,4]")
 
@@ -526,6 +534,15 @@ def main() -> int:
     if int(generation_summary.get("workers", 0)) != args.generation_workers:
         raise ValueError("speech-like generation worker evidence mismatch")
 
+    if args.generate_only:
+        pending = {"schema_version": 1, "status": "awaiting-human-audio-review-v2",
+                   "recordings": 384, "ctc_training_allowed": False,
+                   "generated_root": str(generated_root), "intents": str(intents),
+                   "generation_summary_sha256": sha256_file(generation_summary_path)}
+        (work / "pending-review.json").write_text(json.dumps(pending, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print("speech-like batch generated for review; no admitted training bundle exists")
+        return 0
+
     labeled_root = work / "labeled"
     label_summary_path = work / "label-summary.json"
     run_checked(
@@ -533,6 +550,8 @@ def main() -> int:
             sys.executable,
             str(TOOLS / "speech_like_corpus_plan.py"),
             "materialize",
+            "--admission-mode", args.admission_mode,
+            *(["--audio-review", str(audio_review)] if audio_review else []),
             "--intents",
             str(intents),
             "--generated-root",
@@ -561,6 +580,7 @@ def main() -> int:
             [
                 sys.executable,
                 str(TOOLS / "materialize_speech_like_base_index.py"),
+                "--admission-mode", args.admission_mode,
                 "--manifest",
                 str(manifest),
                 "--split",
@@ -638,6 +658,7 @@ def main() -> int:
     if "external_base_dataset" in generator:
         raise ValueError("Stage A base config already declares external_base_dataset")
     generator["external_base_dataset"] = external
+    generator["external_base_admission_mode"] = args.admission_mode
     validation_config.write_text(
         json.dumps(effective, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -664,6 +685,9 @@ def main() -> int:
         "schema_version": 1,
         "evidence_class": BUNDLE_CLASS,
         "evidence_scope": "development-only",
+        "admission_mode": args.admission_mode,
+        "ctc_training_allowed": args.admission_mode == "reviewed-real-v1",
+        "audio_review_sha256": sha256_file(audio_review) if audio_review else None,
         "provider_candidate": candidate_name,
         "provider_reference_sha256": sha256_file(reference_path),
         "provider_identity_sha256": str(provider_summary["provider_identity_sha256"]),

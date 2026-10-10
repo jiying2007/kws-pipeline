@@ -123,7 +123,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/speech-like-corpus-plan"
-          python3 tools/speech_like_corpus_plan.py materialize \
+          python3 tools/speech_like_corpus_plan.py materialize --admission-mode synthetic-fixture-v1 \
             --intents "$root/intents.jsonl" \
             --generated-root "$root/generated" \
             --output-root "$root/materialized" \
@@ -148,7 +148,7 @@ jobs:
               rows = [json.loads(x) for x in (root / 'materialized' / split / 'labeled-manifest.jsonl').read_text().splitlines() if x.strip()]
               voices[split] = {x['voice_id'] for x in rows}
               assert len(rows) == count
-              assert all(x['label_source'] == 'speech-like-corpus-plan-v1' for x in rows)
+              assert all(x['label_source'] == 'synthetic-fixture-plan-v1' for x in rows)
               for row in rows:
                   audio_ref = pathlib.Path(row['audio'])
                   assert not audio_ref.is_absolute()
@@ -220,7 +220,7 @@ jobs:
           lines = path.read_text().splitlines()
           path.write_text('\n'.join(lines[:-1]) + '\n')
           PY
-          if python3 tools/speech_like_corpus_plan.py materialize \
+          if python3 tools/speech_like_corpus_plan.py materialize --admission-mode synthetic-fixture-v1 \
             --intents "$root/intents.jsonl" \
             --generated-root "$root/generated-missing" \
             --output-root "$root/materialized-missing" \

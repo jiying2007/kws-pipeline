@@ -236,6 +236,7 @@ def training_metadata(checkpoint: dict) -> dict:
         )
     result = {
         "manifests": normalized_manifests,
+        "admission": checkpoint.get("training_admission"),
         "corpus_identity": normalize_training_corpus(checkpoint),
         "examples": int(checkpoint["training_examples"]),
         "seed": int(checkpoint["seed"]),

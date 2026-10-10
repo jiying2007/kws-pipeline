@@ -252,7 +252,7 @@ def test_pkgconfig_consumers(root: pathlib.Path) -> None:
             pc = pc_files[0]
             env = {**os.environ, "PKG_CONFIG_PATH": "", "PKG_CONFIG_LIBDIR": str(pc.parent),
                    "PKG_CONFIG_SYSROOT_DIR": ""}
-            assert run("pkg-config", "--modversion", "kws-pipeline", env=env).strip() == "0.3.0"
+            assert run("pkg-config", "--modversion", "kws-pipeline", env=env).strip() == "0.4.0"
             observed_prefix = pathlib.Path(run("pkg-config", "--variable=prefix", "kws-pipeline", env=env).strip())
             assert observed_prefix.resolve() == sdk.resolve(), (pc.read_text(), observed_prefix, sdk)
             flags = shlex.split(run("pkg-config", "--cflags", "--libs", "kws-pipeline", env=env))

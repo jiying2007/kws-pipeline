@@ -109,13 +109,15 @@
       "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
     },
     {
-      "path": "eval/score_events.py",
+      "path": "research/consolidation/maintained-sources/pr-485/eval/score_events.py",
       "mode": "100644",
       "git_blob_sha1": "7125eceeb8e646cd1765a9e74e351217ae9f0588",
       "sha256": "04f2f03590259a1bd716c942e7945e3f33526efeace1991d0a04e2faaa947f8c",
       "bytes": 26740,
       "source_pr": 485,
-      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "source_path": "eval/score_events.py",
+      "relocation_reason": "Retain original source bytes separately from current signed-timing diagnostics; historical scoring and results are unchanged."
     },
     {
       "path": "research/experiment_quality_guards/README.md",
@@ -937,13 +939,15 @@
       "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
     },
     {
-      "path": "tests/test_eval.py",
+      "path": "research/consolidation/maintained-sources/pr-485/tests/test_eval.py",
       "mode": "100644",
       "git_blob_sha1": "485fa59a82207cacf23260e1a40ece4c4203f7f1",
       "sha256": "0471ed1eddeeb6ef12bc6eacf0b896b2be7805f6b2e2a9cf91c3e75868938e66",
       "bytes": 29707,
       "source_pr": 485,
-      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce"
+      "source_commit": "6f2461ff11cddf0a1264f5e2a04282c40b5dc4ce",
+      "source_path": "tests/test_eval.py",
+      "relocation_reason": "Retain original source bytes separately from current signed-timing diagnostics; historical scoring and results are unchanged."
     },
     {
       "path": "tools/prepare_eval_context_fixtures.py",

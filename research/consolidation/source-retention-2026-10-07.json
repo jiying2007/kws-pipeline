@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "45038c573646b83b6e051da5c4f3c52740a37041",
-      "sha256": "5a365082133b8f81182efcfe49cf55e5d3bf6348e8854b6a9fc8f2a1dc375e06",
-      "bytes": 30660
+      "git_blob_sha1": "8fbdd08baa5ff94dc913cd74496ef64b5d3743e9",
+      "sha256": "e5d25769b187fb29848dca5ef7b828f0ad536c150d78519032def6695fa21ea9",
+      "bytes": 31228
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15316,9 +15316,9 @@
     {
       "path": ".github/workflows/github-hosted-resource-probe.yml",
       "mode": "100644",
-      "git_blob_sha1": "5b6d6f7c33601422de2fdaeb4549e4a0ec4e7afa",
-      "sha256": "0d47dd73f958ee97bcd20a5fde82da9dac76b183a18852d167f1932cb45288df",
-      "bytes": 13031
+      "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2",
+      "sha256": "b6bb538d9ff51240ff54602e3b4ad9c81d0dffbd126e7fa1c6088f5f872b6a14",
+      "bytes": 13154
     },
     {
       "path": ".github/workflows/k1-fixed-slot-math.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "08b3c3df2836288207b5242292aa69d768e8ee2d",
-      "sha256": "c5c323b7fcfc275e65dc7c055efae2a0a3adacfd43e21353cceca2ad74760cad",
-      "bytes": 24218
+      "git_blob_sha1": "236d42d4b89aeddd13dc0e0867600c4f67f467d5",
+      "sha256": "d9136d907eb2c329ef388063364a8182e73224b25baa2b09f2259f9c3ffd5846",
+      "bytes": 24450
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -15540,9 +15540,9 @@
     {
       "path": ".github/workflows/speech-like-base-index-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "0698f3adefb10bcb7d72f0a05ab4a95146753d43",
-      "sha256": "af7db606b4fc7ad71f26e273ac0c6ae45828aa1ab7d379250fc15effbc1a5859",
-      "bytes": 6627
+      "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7",
+      "sha256": "a61a399bf51d00516f5ea4972b13d0dde825e8d6bbcecb2e6c43e5d549cf9060",
+      "bytes": 6703
     },
     {
       "path": ".github/workflows/speech-like-command-provider-contract.yml",
@@ -15554,23 +15554,23 @@
     {
       "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "0ccd3dd4d97cf545fcd9da167e82f404912168ad",
-      "sha256": "7ffa1d12050875c968836d677063b2cb103f0bf91f8d79ed15adb18ac9577fa6",
-      "bytes": 17385
+      "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa",
+      "sha256": "8a0990d9f9446486fd81316ef62e177dd3afd13fc670c32b3ac021e45917e0a5",
+      "bytes": 17590
     },
     {
       "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "942e194ec4fca33a3af1a306001d9e3d1f6790a9",
-      "sha256": "0345c68c61488a911f3bb2708e7efefcb9d8fe83f950dc0a037056d6f8a17756",
-      "bytes": 10573
+      "git_blob_sha1": "bf579f1153c845a45a9f1f6447fecbcfa2a9ca26",
+      "sha256": "ae37981fc25f4ff1c9dd3c59f23bcb7d5a0f5c18207e31f3a5205e8410b1b24a",
+      "bytes": 10648
     },
     {
       "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "cd7c4eb5697cd5d24eb470e16af64d0d525f50bd",
-      "sha256": "963ba9b484156e957d3233119166fa73c248337d9f5bbd69eabc3af276b2bca3",
-      "bytes": 6558
+      "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae",
+      "sha256": "d6fdb0d57b9026519c02c3d4997286c9ec50cd0ce34c5224cd6ed42cb0fbe591",
+      "bytes": 7687
     },
     {
       "path": ".github/workflows/speech-like-label-contract.yml",
@@ -15589,9 +15589,9 @@
     {
       "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "def4e62de85fd1f5b806b182b1247a0bda9fd04a",
-      "sha256": "d8b00557c773dba530a3cd279547f2344136b4b02a28e950dbb927a130dc44a7",
-      "bytes": 19805
+      "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa",
+      "sha256": "1f671b58df277c3f64e17317c5e53637cce6e49e0e2bdcd72da0708e05d7a4ff",
+      "bytes": 20071
     },
     {
       "path": ".github/workflows/speech-like-synthetic-contract.yml",
@@ -15624,9 +15624,9 @@
     {
       "path": ".github/workflows/training-integration.yml",
       "mode": "100644",
-      "git_blob_sha1": "2b8babe4e570687ca2e1949b587736a046d73f14",
-      "sha256": "a3ab52671efc17fb1fcb2c46934ed9c7cb7dfb2c4299cd77b5017b76756b5887",
-      "bytes": 4535
+      "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
+      "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
+      "bytes": 4582
     }
   ],
   "allowed_new_active_workflows": [
@@ -16170,6 +16170,169 @@
             "git_blob_sha1": "e2161bb740fa4e655606064a8dccfe435b19a215",
             "sha256": "57554ceea6b34fe63e9cc7d0c87652273d4880975306e88e3c936d5ba4e732e8",
             "bytes": 16429
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "17e064bb122a0b620d360b88b71b8c50d7cacaff",
+      "from_tree": "75194ef303a67f475cf983ff9b8e9819579b465c",
+      "operation_id": "reviewed-effect-chain-contracts-20261010",
+      "scope": "Reviewed-label and source-lineage contract tests, explicit synthetic-only fixture lanes, historical-base rejection and bounded source-screen metadata checks.",
+      "rationale": "Current public CI metadata only. Existing read-only hosted resource probe observes source-screen planning PRs without model execution. Historical retained source bytes, archive evidence, source provenance and acoustic outcomes are unchanged; no training or shipping approval is introduced.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "45038c573646b83b6e051da5c4f3c52740a37041",
+            "sha256": "5a365082133b8f81182efcfe49cf55e5d3bf6348e8854b6a9fc8f2a1dc375e06",
+            "bytes": 30660
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8fbdd08baa5ff94dc913cd74496ef64b5d3743e9",
+            "sha256": "e5d25769b187fb29848dca5ef7b828f0ad536c150d78519032def6695fa21ea9",
+            "bytes": 31228
+          }
+        },
+        {
+          "path": ".github/workflows/github-hosted-resource-probe.yml",
+          "before": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "git_blob_sha1": "5b6d6f7c33601422de2fdaeb4549e4a0ec4e7afa",
+            "sha256": "0d47dd73f958ee97bcd20a5fde82da9dac76b183a18852d167f1932cb45288df",
+            "bytes": 13031
+          },
+          "after": {
+            "path": ".github/workflows/github-hosted-resource-probe.yml",
+            "mode": "100644",
+            "git_blob_sha1": "0f6778fa9f8a55c5bd8c9e219cdaf05a36c7a5b2",
+            "sha256": "b6bb538d9ff51240ff54602e3b4ad9c81d0dffbd126e7fa1c6088f5f872b6a14",
+            "bytes": 13154
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "08b3c3df2836288207b5242292aa69d768e8ee2d",
+            "sha256": "c5c323b7fcfc275e65dc7c055efae2a0a3adacfd43e21353cceca2ad74760cad",
+            "bytes": 24218
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "236d42d4b89aeddd13dc0e0867600c4f67f467d5",
+            "sha256": "d9136d907eb2c329ef388063364a8182e73224b25baa2b09f2259f9c3ffd5846",
+            "bytes": 24450
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-base-index-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-base-index-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "0698f3adefb10bcb7d72f0a05ab4a95146753d43",
+            "sha256": "af7db606b4fc7ad71f26e273ac0c6ae45828aa1ab7d379250fc15effbc1a5859",
+            "bytes": 6627
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-base-index-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "dfc9e17936cb8a65defa8acf104cc4836aad73f7",
+            "sha256": "a61a399bf51d00516f5ea4972b13d0dde825e8d6bbcecb2e6c43e5d549cf9060",
+            "bytes": 6703
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "0ccd3dd4d97cf545fcd9da167e82f404912168ad",
+            "sha256": "7ffa1d12050875c968836d677063b2cb103f0bf91f8d79ed15adb18ac9577fa6",
+            "bytes": 17385
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-corpus-generation-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "9327db5ee8f27951eb93c8e8d04628bc5bbc56fa",
+            "sha256": "8a0990d9f9446486fd81316ef62e177dd3afd13fc670c32b3ac021e45917e0a5",
+            "bytes": 17590
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "942e194ec4fca33a3af1a306001d9e3d1f6790a9",
+            "sha256": "0345c68c61488a911f3bb2708e7efefcb9d8fe83f950dc0a037056d6f8a17756",
+            "bytes": 10573
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "bf579f1153c845a45a9f1f6447fecbcfa2a9ca26",
+            "sha256": "ae37981fc25f4ff1c9dd3c59f23bcb7d5a0f5c18207e31f3a5205e8410b1b24a",
+            "bytes": 10648
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "cd7c4eb5697cd5d24eb470e16af64d0d525f50bd",
+            "sha256": "963ba9b484156e957d3233119166fa73c248337d9f5bbd69eabc3af276b2bca3",
+            "bytes": 6558
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "c14f609a8fc5d898ecc7cb79a64796bb626aa6ae",
+            "sha256": "d6fdb0d57b9026519c02c3d4997286c9ec50cd0ce34c5224cd6ed42cb0fbe591",
+            "bytes": 7687
+          }
+        },
+        {
+          "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "def4e62de85fd1f5b806b182b1247a0bda9fd04a",
+            "sha256": "d8b00557c773dba530a3cd279547f2344136b4b02a28e950dbb927a130dc44a7",
+            "bytes": 19805
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-stage-a-bootstrap-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "a04ed9fd3630aec0c28df956c0fb17a126ee04aa",
+            "sha256": "1f671b58df277c3f64e17317c5e53637cce6e49e0e2bdcd72da0708e05d7a4ff",
+            "bytes": 20071
+          }
+        },
+        {
+          "path": ".github/workflows/training-integration.yml",
+          "before": {
+            "path": ".github/workflows/training-integration.yml",
+            "mode": "100644",
+            "git_blob_sha1": "2b8babe4e570687ca2e1949b587736a046d73f14",
+            "sha256": "a3ab52671efc17fb1fcb2c46934ed9c7cb7dfb2c4299cd77b5017b76756b5887",
+            "bytes": 4535
+          },
+          "after": {
+            "path": ".github/workflows/training-integration.yml",
+            "mode": "100644",
+            "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
+            "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
+            "bytes": 4582
           }
         }
       ]

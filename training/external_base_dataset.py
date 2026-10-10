@@ -12,6 +12,10 @@ import wave
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
+from corpus_identity import inspect_pcm16_wav  # noqa: E402
+from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
+                                    LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
+from materialize_speech_like_base_index import corpus_sha  # noqa: E402
 
 from synthetic_audio import contains_subsequence, parse_keywords  # noqa: E402
 
@@ -159,6 +163,9 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         return None
     if not isinstance(spec, dict):
         raise ValueError("generator.external_base_dataset must be an object")
+    admission_mode = generator.get("external_base_admission_mode", REAL_MODE)
+    if admission_mode not in MODES:
+        raise ValueError("unsupported external base admission mode")
     if set(spec) != set(SPLITS):
         missing = sorted(set(SPLITS) - set(spec))
         extra = sorted(set(spec) - set(SPLITS))
@@ -182,6 +189,8 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
     wav_owner: dict[str, str] = {}
     voice_owner: dict[str, str] = {}
     source_owner: dict[str, str] = {}
+    pcm_owner: dict[str, str] = {}
+    lineage_owners: dict[str, dict[str, str]] = {field: {} for field in LINEAGE_FIELDS}
 
     for split in SPLITS:
         item = spec[split]
@@ -202,7 +211,15 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
             raise ValueError(f"external base {split}: summary identity mismatch")
         if summary.get("split") != split or summary.get("tone_backend_used") is not False:
             raise ValueError(f"external base {split}: summary split/tone contract mismatch")
+        if admission_mode != HISTORICAL_MODE:
+            if summary.get("admission_mode") != admission_mode or summary.get("ctc_training_allowed") is not (admission_mode == REAL_MODE):
+                raise ValueError(f"external base {split}: mandatory admission summary is missing or mismatched")
+            if admission_mode == REAL_MODE and (summary.get("tokens_sha256") != sha256_file(tokens_path)
+                                               or summary.get("keywords_sha256") != sha256_file(keywords_path)):
+                raise ValueError(f"external base {split}: reviewed vocabulary/keyword identity mismatch")
         split_rows = load_jsonl(index_path)
+        if corpus_sha(split_rows) != summary.get("corpus_sha256"):
+            raise ValueError(f"external base {split}: corpus identity differs from index")
         if int(summary.get("recordings", -1)) != len(split_rows):
             raise ValueError(f"external base {split}: recording count mismatch")
         positive_count = sum(row.get("kind") == "positive" for row in split_rows)
@@ -219,7 +236,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
             ):
                 raise ValueError(f"external base {split}: {field} differs from index")
         path_contract = str(summary.get("audio_path_contract", "legacy-v0"))
-        if path_contract not in {"index-relative-v1", "absolute-v1", "legacy-v0"}:
+        if path_contract not in {"index-relative-v1", "absolute-v1"}:
             raise ValueError(f"external base {split}: unsupported audio_path_contract={path_contract}")
         normalized_rows: list[dict] = []
         index_root = index_path.parent.resolve()
@@ -257,11 +274,32 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                     raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
                 _validate_audio_format(audio_path, row["frames"], f"external base {split} row {idx}")
                 normalized["path"] = str(audio_path)
-            else:
-                # Historical bundles predate an explicit audio-path contract. Preserve
-                # their metadata/binding behavior; actual rendering still validates the
-                # referenced WAV when the corpus is consumed.
-                normalized["path"] = str(audio_ref)
+            inspected = inspect_pcm16_wav(audio_path)
+            if inspected["frames"] != row["frames"] or inspected["frames"] <= 0:
+                raise ValueError(f"external base {split} row {idx}: decoded frame mismatch")
+            provenance = row["speech_like_provenance"]
+            pcm_sha = inspected["pcm_sha256"]
+            if provenance.get("pcm_sha256") != pcm_sha:
+                raise ValueError(f"external base {split} row {idx}: decoded PCM sha256 mismatch")
+            if admission_mode != HISTORICAL_MODE:
+                validate_admission(row.get("admission"), mode=admission_mode, source_id=source,
+                                   file_sha256=wav_sha, pcm_sha256=pcm_sha, text=row.get("actual_text"),
+                                   tokens=row["tokens"], kind=row["kind"], keyword_id=row.get("keyword_id"),
+                                   provenance=provenance)
+            elif "admission" in row:
+                raise ValueError("historical frozen rows cannot claim new review admission")
+            for field in LINEAGE_FIELDS:
+                if field in provenance:
+                    value = provenance[field]
+                    expected_sha(value, field) if field.endswith("sha256") else require_text(value, field)
+                    previous = lineage_owners[field].get(value)
+                    if previous is not None and previous != split:
+                        raise ValueError(f"external base cross-split {field} overlap: {value} in {previous}/{split}")
+                    lineage_owners[field][value] = split
+            previous = pcm_owner.get(pcm_sha)
+            if previous is not None and previous != split:
+                raise ValueError(f"external base cross-split decoded PCM overlap: {pcm_sha} in {previous}/{split}")
+            pcm_owner[pcm_sha] = split
             normalized_rows.append(normalized)
             for identity, owners, label in ((wav_sha, wav_owner, "wav"), (voice, voice_owner, "voice"), (source, source_owner, "source")):
                 previous = owners.get(identity)
@@ -304,6 +342,18 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
     }
     raw = json.dumps(identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     aggregate["bundle_sha256"] = hashlib.sha256(raw).hexdigest()
+    if admission_mode == HISTORICAL_MODE:
+        # The only exception is this exact immutable historical diagnostic base.
+        # Caller-supplied contract paths or expected hashes cannot extend it.
+        frozen = load_json(ROOT / "configs/training/product-speech-like-base-v1.json")
+        if frozen.get("policy") != "product-speech-like-base-v1" or aggregate["bundle_sha256"] != frozen.get("external_base_bundle_sha256"):
+            raise ValueError("historical diagnostic admission requires the exact pinned frozen bundle identity")
+    aggregate.update({"admission_mode": admission_mode, "ctc_training_allowed": admission_mode == REAL_MODE,
+                      "allowed_purpose": "ctc-training-only" if admission_mode == REAL_MODE else
+                      ("historical-diagnostic-only" if admission_mode == HISTORICAL_MODE else "synthetic-contract-test-only"),
+                      "lineage_identity_coverage": {field: sum(field in row["speech_like_provenance"] for row in rows)
+                                                    for field in LINEAGE_FIELDS},
+                      "review_authenticity_independently_verified": False})
     return rows, aggregate
 
 
