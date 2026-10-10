@@ -622,8 +622,7 @@ def public_evidence(root, phase):
     """Allowlist bounded outputs only; never copy setup/runtime/model/download trees."""
     destination = root / 'artifact'; destination.mkdir()
     sources = [root / 'host-receipt.json']; incomplete = []
-    for name in ('primary-raw.json', 'primary-raw-freeze.json', 'frozen-disputes.json', 'image-transfer.json',
-                 'continuation-ledger.json', 'continuation-provenance.json'):
+    for name in ('primary-raw.json', 'primary-raw-freeze.json', 'frozen-disputes.json', 'image-transfer.json'):
         if (root / name).exists(): sources.append(root / name)
     for stage in ('setup', 'tts', 'qwen06', 'sensevoice'):
         path = root / ('container-' + stage + '.json')
@@ -729,44 +728,27 @@ def run_probe(env):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--phase', choices=('tts', 'asr', 'probe', 'sense-continuation'), required=True)
+    parser.add_argument('--phase', choices=('tts', 'asr', 'probe'), required=True)
     parser.add_argument('--input', type=Path)
     args = parser.parse_args()
     if args.phase == 'probe':
         require(args.input is None, 'probe accepts no input')
         return run_probe(os.environ)
-    continuation = args.phase == 'sense-continuation'
-    if continuation:
-        require(args.input is None, 'continuation accepts only its fixed retained input lock')
-        import sense_continuation
-        freeze, continuation_lock, compatibility = sense_continuation.verify_admission(os.environ, sys.modules[__name__])
-        experiment, profile = sense_continuation.EXPERIMENT, 'asr'
-    else:
-        freeze = verify_admission(os.environ)
-        require((args.phase == 'asr') == (args.input is not None), 'exact input/phase boundary')
-        experiment, profile = EXPERIMENT, args.phase
-    root = Path(os.environ['RUNNER_TEMP']) / (experiment + '-' + os.environ['GITHUB_RUN_ID'] + '-' + args.phase)
+    freeze = verify_admission(os.environ)
+    require((args.phase == 'asr') == (args.input is not None), 'exact input/phase boundary')
+    root = Path(os.environ['RUNNER_TEMP']) / (EXPERIMENT + '-' + os.environ['GITHUB_RUN_ID'] + '-' + args.phase)
     root.mkdir(exist_ok=False)  # Durable local stage claim before any acquisition.
     require(shutil.disk_usage(root).free >= 16 * GIB, 'current 16GiB disk headroom required')
     started = time.monotonic(); deadline = started + 7200
     input_job = None
-    if continuation:
-        args.input = root / 'blind-input'
-        input_job = sense_continuation.prepare_input(args.input, continuation_lock, sys.modules[__name__])
-        sense_continuation.retain_prior_qwen(root, continuation_lock, sys.modules[__name__])
-    elif args.phase == 'asr':
+    if args.phase == 'asr':
         input_job = validate_blind_input(args.input)
         require(file_hash(args.input / 'job.json') == os.environ.get('SCREEN32_BLIND_JOB_SHA256'), 'producer-bound blind input')
     code, runtime = root / 'code', root / 'runtime'; code.mkdir(); runtime.mkdir()
-    stage_code(freeze, profile, code)
-    stages = ['setup', 'sensevoice'] if continuation else ['setup', 'tts'] if args.phase == 'tts' else ['setup', 'qwen06', 'sensevoice']
+    stage_code(freeze, args.phase, code)
     receipt = {'schema': 'screen32-host-run-v1', 'status': 'started', 'phase': args.phase,
                'head_sha': os.environ['GITHUB_SHA'], 'run_id': os.environ['GITHUB_RUN_ID'],
-               'stages': {stage: {'status': 'not_run'} for stage in stages}, 'human_review': 'PENDING', 'human_gold': False, 'training_admitted': False}
-    if continuation:
-        receipt['continuation'] = {'experiment': experiment, 'source_run_id': 38018029787,
-            'new_qwen06_calls': 0, 'new_tts_calls': 0, 'whisper_calls': 0,
-            'max_new_sensevoice_calls': 16, 'probe_compatibility': compatibility}
+               'stages': {stage: {'status': 'not_run'} for stage in (['setup', 'tts'] if args.phase == 'tts' else ['setup', 'qwen06', 'sensevoice'])}, 'human_review': 'PENDING', 'human_gold': False, 'training_admitted': False}
     target = root / 'host-receipt.json'
     atomic(target, receipt)
     try:
@@ -776,12 +758,13 @@ def main():
         receipt['capacity'] = host_capacity()
         lock = bounded_json(HERE / 'container-lock.json')
         receipt['image'] = pull_image(lock, root / 'image-transfer.json')
+        stages = ['setup', 'tts'] if args.phase == 'tts' else ['setup', 'qwen06', 'sensevoice']
         for stage in stages:
             # Recheck current host reserve immediately before creating each scope.
             host_capacity()
             output = root / stage; output.mkdir()
-            name = experiment + '-' + os.environ['GITHUB_RUN_ID'] + '-' + args.phase + '-' + stage
-            command = container_args(name, lock['image'], code, runtime, output, profile, stage, args.input)
+            name = EXPERIMENT + '-' + os.environ['GITHUB_RUN_ID'] + '-' + args.phase + '-' + stage
+            command = container_args(name, lock['image'], code, runtime, output, args.phase, stage, args.input)
             receipt['stages'][stage] = {'status': 'started'}; atomic(target, receipt)
             receipt['stages'][stage] = supervise_container(command, name, output, stage, deadline)
             atomic(target, receipt)
@@ -799,11 +782,9 @@ def main():
             receipt['blind'] = pack_blind(output, root / 'blind', terminal['ledger'])
         else:
             from asr_worker import terminal_outcomes
-            for model in (('sensevoice',) if continuation else ('qwen06', 'sensevoice')):
+            for model in ('qwen06', 'sensevoice'):
                 output = root / model; output.mkdir(exist_ok=True)
                 terminal_outcomes(args.input, output, model)
-            if continuation:
-                sense_continuation.finalize_cross_run(root, input_job, continuation_lock, sys.modules[__name__])
             freeze_primary(root, input_job)
         receipt['wall_seconds'] = time.monotonic() - started
         atomic(target, receipt)
