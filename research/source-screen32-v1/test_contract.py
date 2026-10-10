@@ -204,7 +204,7 @@ class PlanningTests(unittest.TestCase):
             self.assertIs(source[name], False)
         readiness = c.decode((HERE / "readiness.json").read_bytes())
         self.assertIs(readiness["execution_ready"], False)
-        self.assertEqual(readiness["qwen_adapter"]["runtime_orchestration"], "NOT_IMPLEMENTED")
+        self.assertEqual(readiness["qwen_adapter"]["runtime_orchestration"], "IMPLEMENTED_UNEXECUTED")
         self.assertIsNone(readiness["actual_generation_command"])
 
     def test_no_model_dependencies_imported(self):
@@ -287,11 +287,11 @@ class QwenAdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.adapter()
 
     def test_real_scope_guard_has_no_caller_bypass(self):
-        with self.assertRaisesRegex(RuntimeError, "not implemented or admitted"):
+        with mock.patch("runtime_scope.read", return_value="0::/not-a-private-root"), self.assertRaises(RuntimeError):
             self.real_scope_guard()
         with self.assertRaises(TypeError):
             self.a.FixedQwenAdapter(self.wrapper, torch=self.torch, numpy=self.numpy, scope_check=lambda: True)
-        with mock.patch.object(self.a, "verify_runtime_scope", self.real_scope_guard):
+        with mock.patch.object(self.a, "verify_runtime_scope", self.real_scope_guard), mock.patch("runtime_scope.read", return_value="0::/not-a-private-root"):
             with self.assertRaises(RuntimeError): self.adapter()
         self.wrapper.generate_voice_design.assert_not_called()
 
@@ -343,6 +343,14 @@ class QwenAdapterTests(unittest.TestCase):
     def test_no_execution_entry_or_dependency_import(self):
         self.assertFalse(self.a.EXECUTION_READY)
         self.assertFalse(any(name in sys.modules for name in ("torch", "numpy", "qwen_tts", "transformers")))
+
+
+def load_tests(loader, tests, pattern):
+    for filename in ("test_hosted_run.py", "test_setup_adapter.py", "test_asr_worker.py"):
+        spec = importlib.util.spec_from_file_location(filename[:-3], HERE / filename)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        tests.addTests(loader.loadTestsFromModule(module))
+    return tests
 
 
 if __name__ == "__main__":
