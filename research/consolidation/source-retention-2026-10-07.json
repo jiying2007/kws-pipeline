@@ -15627,6 +15627,13 @@
       "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
       "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
       "bytes": 4582
+    },
+    {
+      "path": ".github/workflows/source-screen32-probe.yml",
+      "mode": "100644",
+      "bytes": 1432,
+      "git_blob_sha1": "e9c068c0a512448e19c4698d9e6186b05848742e",
+      "sha256": "4367814fcd360ef43f26416bf8e23591f5bc3ad2a7fa76d3e624a582bf7a63c0"
     }
   ],
   "allowed_new_active_workflows": [
@@ -16336,6 +16343,48 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "64c5b0323ea10f331d47b37ed8fd10bafdfbf072",
+      "from_tree": "a5a4eb28a916ed1380286134ad6293295b8283b6",
+      "operation_id": "qwen16-container-probe-1-activation",
+      "scope": "Register the exact fixed no-model setup-container probe workflow and admit only attempt1 of the user-authorized two serial diagnostic slots. No screen/model execution is activated; the separate v3 release remains false with successful_probe null.",
+      "rationale": "Append one exact active-workflow inventory row while preserving every existing baseline row, singleton separately allowed workflow, historical consolidation provenance and retained v1/v2 failed evidence. Probe1 performs at most one setup-container start using fixed stdlib/kernel checks, unchanged container limits and the pinned official Python image; no package installation or model asset acquisition occurs. An unexpected workflow run number fails closed.",
+      "prepared_source_pull_request": "https://github.com/jiying2007/kws-pipeline/pull/511",
+      "prepared_source_freeze_sha256": "9dd75d4f86b81be2ab9c937338caf7624177854b20c0d8104de8676d05eb79cf",
+      "execution_branch": "research/qwen16-container-probe-1",
+      "execution_limits": {
+        "admitted_probe_attempt": 1,
+        "max_probe_attempt_slots": 2,
+        "max_container_start_calls_this_attempt": 1,
+        "max_model_calls": 0,
+        "runtime_installs": 0,
+        "automatic_retry": false,
+        "paid_resources": false,
+        "image_observation_reservation_bytes": 134217728,
+        "image_reservation_is_hard_transfer_limit": false,
+        "probe_wall_seconds": 300,
+        "human_gold": false,
+        "training_admitted": false,
+        "screen_release_approved": false
+      },
+      "files": [
+        {
+          "path": ".github/workflows/source-screen32-probe.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/source-screen32-probe.yml",
+            "mode": "100644",
+            "bytes": 1432,
+            "git_blob_sha1": "e9c068c0a512448e19c4698d9e6186b05848742e",
+            "sha256": "4367814fcd360ef43f26416bf8e23591f5bc3ad2a7fa76d3e624a582bf7a63c0"
+          }
+        }
+      ],
+      "baseline_count_before": 54,
+      "baseline_count_after": 55,
+      "allowed_new_active_workflows_unchanged": true
     }
   ]
 }
