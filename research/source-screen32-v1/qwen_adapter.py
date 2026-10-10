@@ -2,9 +2,9 @@
 
 The future admitted launcher owns exact installed/asset verification, a hard scope
 established before runtime imports/loading, persistent attempt claims, deadlines,
-EOS capture, native/derived file binding and blind packing. No reviewed hard-scope
-checker exists in the retained Qwen6 code, so verify_runtime_scope currently always
-raises. Only tests patch that guard. Mock tests do not prove enforcement. Constructing
+EOS capture, native/derived file binding and blind packing. A stdlib checker reads the
+actual kernel scope; a missing/unbounded scope fails before runtime imports in the
+worker. Mock tests do not prove enforcement. Constructing
 a new adapter does not grant a new attempt. This is not a runnable job.
 """
 from __future__ import annotations
@@ -14,17 +14,9 @@ import random
 import struct
 
 from contract import expected_plan, request_preview, require, validate_plan
+from runtime_scope import verify_runtime_scope
 
 EXECUTION_READY = False
-
-
-def verify_runtime_scope():
-    """Fail closed until a separately reviewed live hard-scope checker exists.
-
-    Sampled RSS in the retained Qwen6 supervisor is not kernel enforcement. There
-    is deliberately no boolean, callback or environment-variable bypass here.
-    """
-    raise RuntimeError("Source-screen hard runtime scope is not implemented or admitted")
 
 
 def validate_loaded_model(wrapper):
@@ -69,9 +61,9 @@ def validate_output(wavs, rate):
 class FixedQwenAdapter:
     """One in-memory ordered batch; persistent once-only admission remains external.
 
-    torch and numpy are the caller's already verified modules. No filesystem,
-    shell, network or model load API exists. The unimplemented hard-scope guard
-    always raises in ordinary code; this contract is currently mock-testable only.
+    torch and numpy are the caller's already verified modules. Only fixed source
+    pins and kernel records are read; no shell, network or model load API exists. The hard-scope guard reads the actual kernel scope; no caller boolean or
+    callback can stand in for containment or reviewed admission.
     """
     def __init__(self, wrapper, *, torch, numpy):
         self.wrapper, self.torch, self.numpy = wrapper, torch, numpy

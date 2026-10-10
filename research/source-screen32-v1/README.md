@@ -1,9 +1,9 @@
 # Bounded source-screen preparation: 32 planned, zero generated
 
-This is a small offline preparation layer over the retained Qwen TTS/ASR and
-experiment-quality tools. It has no runnable download, install, model job,
-workflow-dispatch or publication path. The narrow call adapter is tested only with
-fictional objects; passing tests validates its contract, not actual execution.
+This reuses retained Qwen TTS/ASR and experiment-quality tools. It now includes an
+unexecuted source-specific container launcher, with admission still disabled and
+its workflow only a research template. Tests use fictional objects and kernel
+records; they validate contracts, not actual hosted or model execution.
 `readiness.json` is explicitly **not execution ready**.
 
 ## Frozen design
@@ -97,9 +97,10 @@ python3 -B -OO research/source-screen32-v1/test_contract.py
 
 There is no valid generation command yet. Qwen asset metadata is complete.
 The exact locked-wheel VoiceDesign API is now verified by source inspection, and
-the narrow adapter is mock-tested. Implement and review the missing runtime
-orchestration and effective hard-resource scope, then obtain exact-head one-shot
-admission before generation. A staged start may leave FireRed's
+the narrow adapter is mock-tested. The runtime
+orchestration and actual hard-scope readback are now implemented with offline
+fixtures. Independently review and admit the frozen implementation, then verify
+the live container/native-runtime gates before generation. A staged start may leave FireRed's
 16 cells NOT_RUN, preserving denominator and blocker rather than substituting a
 source. Never invoke the historical `--execute-reviewed-six` or FireRed ASR
 preflight as a substitute. This preparation does not reopen unrelated denied
@@ -139,8 +140,8 @@ Only metadata is committed; the sidecar bodies are not published here. The exist
 92-input runtime already has complete pins; no package-version refresh is proposed.
 The retained static JSON checker passed all eight model JSON files without importing
 model dependencies. Config bytes confirm VoiceDesign/1b7 and Transformers4.57.3.
-The remaining work is reviewed runtime orchestration and its verified hard scope,
-then admission for cells 001–016. The larger declared transfer/resource budget
+The remaining work is review/admission of the implemented orchestration and
+actual hosted proof of its hard scope, then cells 001–016. The larger declared transfer/resource budget
 is distinct from a hardware blocker; historical small-run limits are not universal
 resource limits. FireRed's sixteen cells remain visibly NOT_RUN. No valid command
 for actual generation is manufactured before these gates are implemented.
@@ -164,12 +165,10 @@ and peak flags without waveform repair. An exception consumes the in-memory
 attempt and stops that source. The caller still needs durable once-only claims;
 reconstructing this object is never permission for another attempt.
 
-The adapter does not load a model or create an execution scope. Its hard-scope
-guard currently raises unconditionally: the retained Qwen6 supervisor provides
-sampled RSS monitoring, not the required kernel scope. There is no caller-supplied
-boolean or callback bypass. Unit tests patch that guard locally; ordinary adapter
-construction cannot reach a model call. A separately reviewed implementation must
-replace it with an actual live scope check before execution. Its native receipt
+The adapter does not load a model or create an execution scope. The new scope checker reads actual private cgroup-v2 memory/swap/CPU/PID limits,
+read-only mounts, dropped capabilities, seccomp/no-new-privileges and network
+interfaces. There is no caller boolean or callback bypass. Unit tests supply
+fictional kernel records; no actual container scope has been executed here. Its native receipt
 keeps termination unverified and acoustic completeness UNKNOWN. The future admitted
 launcher must establish and verify hard limits before imports; then enforce current
 capacity, exact installed/source/asset identity, local-only loading, persistent
@@ -179,3 +178,66 @@ old runner and ASR/packing code fix six clips. They cannot be invoked unchanged 
 silently monkey-patched into this new sixteen-cell lane. Reuse their audited helpers
 through a separately reviewed, bounded orchestration delta, leaving old evidence
 and source pins intact. CPU fit and runtime compatibility remain NOT_RUN.
+
+
+## Reviewed next execution path, still unexecuted
+
+The source-specific files now fit together: `hosted_run.py`, `runtime_scope.py`,
+`setup_adapter.py`, `tts_worker.py` and `asr_worker.py`. The setup adapter binds
+only the exact new model identity, locks, budgets, cache paths and fixed child
+roles to retained helpers. It does not invoke historical runners or modify their
+source files. ASR scientific loader bodies remain AST-identical; only the new
+bounded audio-only preloader replaces their six-clip entry contract.
+
+The official Python 3.12.14 slim-bookworm amd64 image is pinned in
+`container-lock.json`; its verified manifest declares 45,449,534 compressed
+layer/config bytes. A single image-pull client is monitored for 180 s; all host receive-counter deltas
+during it conservatively count against a 64 MiB reservation. This is an observed
+budget with an abort-before-setup rule, not a hard Docker-daemon transfer cutoff.
+Polling can overshoot; cancelling the client does not prove daemon fetching stops.
+A failed, timed-out or over-budget pull retains daemon completion and cumulative
+bytes as unverified and starts no setup or generation. No daemon shutdown or host
+security change is used. TTS package
+and model acquisition gets 6 GiB minus that reservation. ASR preserves its 4 GiB
+input cap, plus the declared 64 MiB image allowance. Each fresh job requires at
+least 16 GiB free disk, with a 12 GiB runtime workspace cap; these are explicit
+new-lane budgets, not new hosted hardware claims.
+
+Every container has 12 GiB RAM, zero swap, four CPU quota, 256 PIDs, no capabilities,
+no-new-privileges, read-only root/code and no privileged/host namespace/socket
+mount. Inference has `--network none`, read-only runtime/model inputs and only its
+own output/scratch. Kernel values are read back inside the scope before runtime
+imports; launcher flags alone never qualify it. The host enforces setup 1200 s,
+inference-stage 4800 s, load/startup 1200 s, each clip 300 s and whole job 7200 s.
+A kill removes the entire dedicated container; no automatic restart exists.
+These ceilings may stop a slow run before all cells finish.
+
+Exclusive durable TTS/ASR claims consume an attempt before a call. Terminalizers
+reconcile claims with exact receipts after normal exit, interruption or OOM;
+unstarted cells stay NOT_RUN. All 32 producer cells remain visible. Native float
+WAVs, float-value hashes, fixed 16k PCM16 derivatives, decoded-PCM hashes, EOS and
+quality flags are retained without repair or selection. Human actual labels stay
+PENDING; no candidate is training-admitted.
+
+The ASR container source allowlist excludes producer contracts, plans, prompts and
+TTS outputs. Its only data mount is `job.json` plus content-hash named WAVs. Qwen
+and SenseVoice have separate processes/output mounts and cannot read each other's
+answers. Raw individual receipts and immutable freezes precede terminal summaries.
+Whisper is not part of this execution path. A TTS failure preserves its valid
+prefix evidence but does not automatically start downstream ASR.
+
+`workflow.yml` is deliberately only a template. `execution-release.json` remains
+`approved=false`. After root review of `execution-freeze.json` and immutable source,
+activation must copy the exact template to
+`.github/workflows/source-screen32-run.yml`, bind the reviewed freeze in the release,
+and create the unique `research/qwen16-voicedesign-once-v1` branch once. Both workflow
+run number and attempt must be 1. No dispatch/retry path or admission from CI exists.
+The intended TTS entry is:
+
+```sh
+python3 -I -B research/source-screen32-v1/hosted_run.py --phase tts
+```
+
+Running it from this unapproved preparation fails before acquisition. Local tests
+use only stdlib fixtures and mocks; no image layers, installed runtime, exact native
+libraries, model fit, latency, speech quality or ASR result is claimed.
