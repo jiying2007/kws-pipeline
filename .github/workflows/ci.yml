@@ -158,6 +158,9 @@ jobs:
           python3 -B research/d20-diagnostic-admission-v1/test_contract.py
           python3 -B -O research/d20-diagnostic-admission-v1/test_contract.py
           python3 -B -OO research/d20-diagnostic-admission-v1/test_contract.py
+          python3 -S -B research/d20-diagnostic-admission-v1/test_saved_inputs.py
+          python3 -S -B -O research/d20-diagnostic-admission-v1/test_saved_inputs.py
+          python3 -S -B -OO research/d20-diagnostic-admission-v1/test_saved_inputs.py
       - name: Verify tracked worktree after Local research source retention and delivery
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Local research source retention and delivery"'
       - name: Durable diagnostic evidence chain contract

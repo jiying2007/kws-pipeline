@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "8fbdd08baa5ff94dc913cd74496ef64b5d3743e9",
-      "sha256": "e5d25769b187fb29848dca5ef7b828f0ad536c150d78519032def6695fa21ea9",
-      "bytes": 31228
+      "git_blob_sha1": "31f178bae571e21119ebff2a1e4cf8ec895391c2",
+      "sha256": "33279abdac928c64200910338351102fc3007be5a43a32693e878641bafbf899",
+      "bytes": 31481
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16360,6 +16360,33 @@
             "bytes": 2326,
             "sha256": "7f36b5d8a8aae931560b17c68daf36c227585a148f9ba8dca85abeb3586d95bd",
             "git_blob_sha1": "f6092ff3145726e33cc3ebc515cfa0a93ec2b57a"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "0b748959a414fb3a02ef3dfec1de1cc5278a40a9",
+      "from_tree": "95669238a47ad33eba55df0b15a9ce07aa5ef813",
+      "operation_id": "d20-saved-input-byte-binding-20261010",
+      "scope": "Add nine standard-library saved-input byte mapping tests in normal, -O and -OO modes to the existing source-check job.",
+      "rationale": "Public CI metadata maintenance only. No model/backend import, execution, runtime qualification, archive codec counterexample or historical source change.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8fbdd08baa5ff94dc913cd74496ef64b5d3743e9",
+            "sha256": "e5d25769b187fb29848dca5ef7b828f0ad536c150d78519032def6695fa21ea9",
+            "bytes": 31228
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "31f178bae571e21119ebff2a1e4cf8ec895391c2",
+            "sha256": "33279abdac928c64200910338351102fc3007be5a43a32693e878641bafbf899",
+            "bytes": 31481
           }
         }
       ]
