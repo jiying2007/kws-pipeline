@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define KWS_BENCH_PERCENTILE_ESTIMATOR "nearest-rank-ceil-v1"
 
@@ -31,6 +32,23 @@ static inline double kws_bench_percentile_nearest_rank(const double *values,
     rank = count;
   }
   return values[rank - 1u];
+}
+
+/* Runtime statistics are lifetime counters: an algorithm/frontend reset does
+ * not clear them. Admit only an exact, positive observed interval and reject
+ * counter regression before subtracting unsigned values. */
+static inline int kws_bench_counter_delta(uint64_t before, uint64_t after,
+                                          uint64_t expected,
+                                          uint64_t *out_delta) {
+  if (out_delta == NULL) {
+    return 0;
+  }
+  *out_delta = 0u;
+  if (expected == 0u || after < before || after - before != expected) {
+    return 0;
+  }
+  *out_delta = after - before;
+  return 1;
 }
 
 #endif

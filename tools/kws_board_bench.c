@@ -140,10 +140,19 @@ int main(int argc, char **argv) {
 
   for (unsigned repeat = 0u; repeat < repeats; ++repeat) {
     uint32_t remaining = wav_bytes;
+    kws_engine_stats_v2_t before = {0};
     kws_engine_stats_v2_t stats = {0};
+    uint64_t repeat_frames = 0u;
+    uint64_t repeat_samples = 0u;
+    before.struct_size = sizeof(before);
+    before.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
     stats.struct_size = sizeof(stats);
     stats.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
     kws_engine_reset(engine);
+    if (kws_engine_get_stats_v2(engine, &before) != KWS_OK) {
+      fprintf(stderr, "cannot snapshot benchmark workload counters\n");
+      goto cleanup;
+    }
     if (fseek(wav, wav_data_offset, SEEK_SET) != 0) {
       fprintf(stderr, "cannot seek WAV data\n");
       goto cleanup;
@@ -187,15 +196,21 @@ int main(int argc, char **argv) {
     }
     /* Query actual completed model/decoder frames outside the timed region.
      * Each repeat resets frontend state, so short streams never accumulate
-     * enough input merely by increasing repeats. */
+     * enough input merely by increasing repeats. The runtime counters survive
+     * reset, so compare the observed interval, not the lifetime totals. */
     if (kws_engine_get_stats_v2(engine, &stats) != KWS_OK ||
-        stats.processed_frames != frames_per_repeat ||
-        stats.processed_samples != (uint64_t)wav_bytes / sizeof(int16_t)) {
+        kws_bench_counter_delta(before.processed_frames, stats.processed_frames,
+                                frames_per_repeat, &repeat_frames) == 0 ||
+        kws_bench_counter_delta(before.processed_samples, stats.processed_samples,
+                                (uint64_t)wav_bytes / sizeof(int16_t),
+                                &repeat_samples) == 0) {
       fprintf(stderr, "benchmark effective workload mismatch\n");
       goto cleanup;
     }
-    total_processed_frames += stats.processed_frames;
-    total_processed_samples += stats.processed_samples;
+    /* wav_bytes is uint32_t and repeats <= 1000: aggregate samples are
+     * below 2^41, and frame counts cannot exceed sample counts. */
+    total_processed_frames += repeat_frames;
+    total_processed_samples += repeat_samples;
   }
 
   if (sample_index != total_blocks) {

@@ -37,10 +37,26 @@ int main(void) {
   const double ties[] = {0.0, 0.0, 0.0, 5.0, 5.0};
   double hundred_one[101];
   double tail[101];
+  uint64_t delta = 0u;
   for (size_t i = 0u; i < 101u; ++i) {
     hundred_one[i] = (double)(i + 1u);
     tail[i] = i < 99u ? 1.0 : (double)(i - 98u) * 5000.0;
   }
+  /* Synthetic lifetime-counter snapshots only; no model/runtime execution. */
+  CHECK(kws_bench_counter_delta(0u, 49u, 49u, &delta) == 1 && delta == 49u);
+  CHECK(kws_bench_counter_delta(49u, 98u, 49u, &delta) == 1 && delta == 49u);
+  CHECK(kws_bench_counter_delta(16000u, 32000u, 16000u, &delta) == 1 && delta == 16000u);
+  CHECK(kws_bench_counter_delta(17u, 18u, 1u, &delta) == 1 && delta == 1u);
+  CHECK(kws_bench_counter_delta(18u, 19u, 1u, &delta) == 1 && delta == 1u);
+  CHECK(kws_bench_counter_delta(19u, 21u, 2u, &delta) == 1 && delta == 2u);
+  CHECK(kws_bench_counter_delta(21u, 23u, 2u, &delta) == 1 && delta == 2u);
+  CHECK(kws_bench_counter_delta(0u, 98u, 49u, &delta) == 0 && delta == 0u);
+  CHECK(kws_bench_counter_delta(49u, 49u, 49u, &delta) == 0 && delta == 0u);
+  CHECK(kws_bench_counter_delta(49u, 0u, 49u, &delta) == 0 && delta == 0u);
+  CHECK(kws_bench_counter_delta(0u, 0u, 0u, &delta) == 0 && delta == 0u);
+  CHECK(kws_bench_counter_delta(UINT64_MAX - 2u, UINT64_MAX, 2u, &delta) == 1 && delta == 2u);
+  CHECK(kws_bench_counter_delta(UINT64_MAX, 0u, 1u, &delta) == 0 && delta == 0u);
+  CHECK(kws_bench_counter_delta(0u, 49u, 49u, NULL) == 0);
   CHECK(kws_bench_percentile_nearest_rank(NULL, 0u, 0.99) == 0.0);
   CHECK(kws_bench_percentile_nearest_rank(singleton, 1u, 0.99) == 7.0);
   CHECK(kws_bench_percentile_nearest_rank(three, 3u, 0.0) == 1.0);
@@ -207,7 +223,7 @@ def main() -> int:
             return 0
         verify_statistics(root)
         if args.statistics_only:
-            print("test_board_bench: nearest-rank statistics ok (no model execution)")
+            print("test_board_bench: nearest-rank statistics and observed counter deltas ok (no model execution)")
             return 0
         from qualification_fixture import (
             sha256_file, write_model, write_pack, write_tokens, write_wav,
