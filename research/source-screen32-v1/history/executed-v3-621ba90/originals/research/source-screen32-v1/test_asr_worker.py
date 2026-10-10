@@ -147,27 +147,23 @@ class ExecutionTests(unittest.TestCase):
         import setup_adapter
         cls.setup = setup_adapter
 
-    def exercise(self, count, failure_index=None, model="qwen06", completeness="complete", load_failure=False, terminal_mutation=None, failure_after_forward=False):
+    def exercise(self, count, failure_index=None, model="qwen06", completeness="complete", load_failure=False, terminal_mutation=None):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); make_input(root / "input", count); (root / "output").mkdir()
             calls = []
-            def infer(_runtime, bound, manifest_sha, *_sense_path_and_state):
+            def infer(_runtime, bound, manifest_sha):
                 calls.append(bound.opaque_id)
                 if len(calls) == failure_index:
-                    if failure_after_forward:
-                        _sense_path_and_state[-1].update(stage="token_binding", model_inference_returned=True)
                     raise RuntimeError("fictional failure")
                 return {"raw_text": "fictional transcript", "completeness": completeness, "quality_flags": [] if completeness == "complete" else ["decoding_warning"]}, {"fictional": True}
             loader_name = "load_qwen_after_approval" if model == "qwen06" else "load_sense_after_approval"
-            import sense_adapter
-            infer_owner = self.adapters if model == "qwen06" else sense_adapter
             infer_name = "infer_qwen_once_after_approval" if model == "qwen06" else "infer_sense_once_after_approval"
             with patch.object(w, "verify_scope", return_value={"test_only": True}) as scope, \
                  patch.object(w, "prepare_caches"), \
                  patch.object(self.execution, "require_offline_flags", return_value={"test_only": True}), \
                  patch.object(self.setup, "verify_runtime") as setup, \
                  patch.object(w, loader_name, return_value=SimpleNamespace(receipt={"test_only": True}), side_effect=RuntimeError("fictional load failure") if load_failure else None) as load, \
-                 patch.object(infer_owner, infer_name, side_effect=infer):
+                 patch.object(self.adapters, infer_name, side_effect=infer):
                 summary = w.run(model, root / "input", root / "output", root / "runtime")
                 folder = root / "output" / model
                 rows = json.loads((folder / "outcomes.json").read_bytes())
@@ -201,8 +197,6 @@ class ExecutionTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     w.terminal_outcomes(root / "input", root / "output", model)
                 self.last_terminal = (terminal, terminal_rows)
-                self.last_decoder_evidence = [json.loads(p.read_bytes())["evidence"]
-                                             for p in sorted(folder.glob("clip-*.decoder.json"))]
                 with self.assertRaises((FileExistsError, ValueError)):
                     w.run(model, root / "input", root / "output", root / "runtime")
                 self.assertFalse(raw_freeze["labels_joined"])
@@ -214,20 +208,6 @@ class ExecutionTests(unittest.TestCase):
                 self.assertEqual(load.call_count, 0 if count == 0 else 1)
                 self.assertGreaterEqual(scope.call_count, 2 + len(calls))
                 return summary, rows, calls
-
-    def test_failed_sense_forward_checkpoint_is_retained_without_success_promotion(self):
-        summary, rows, calls = self.exercise(2, failure_index=1, model="sensevoice", failure_after_forward=True)
-        self.assertEqual(summary["attempted"], 1)
-        self.assertEqual(summary["success"], 0)
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(rows[1]["status"], "not_run")
-        diagnostic = self.last_decoder_evidence[0]["diagnostic"]
-        self.assertEqual(diagnostic["stage"], "token_binding")
-        self.assertTrue(diagnostic["model_inference_returned"])
-        self.assertEqual(diagnostic["code"], "UNCLASSIFIED")
-        self.assertNotIn("fictional failure", json.dumps(diagnostic))
-        self.assertEqual(self.last_terminal[1][0]["status"], "failed_no_retry")
-        self.assertEqual(self.last_terminal[1][0]["validation"], "validated_receipt")
 
     def test_zero_does_not_load_setup_or_models(self):
         summary, rows, calls = self.exercise(0)

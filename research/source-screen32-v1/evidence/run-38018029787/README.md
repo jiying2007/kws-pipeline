@@ -7,10 +7,13 @@ All generated audio and raw terminal evidence are retained here, including failu
 
 The [source README](../../README.md), plan and readiness files are the **historical
 pre-execution preparation snapshot**, not the latest execution status. Their 66
-frozen files remain byte-identical to the executed source; the
-[execution freeze](../../execution-freeze.json) SHA-256 is
+frozen files are preserved by the
+[historical execution freeze](../../history/executed-v3-621ba90/execution-freeze.json)
+and [reconstruction map](../../history/executed-v3-621ba90/snapshot.json); its SHA-256 is
 `abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2`.
-This dated result page and derived summary sit outside that freeze. No active
+The [later inert software repair](../../ASR_REPAIR_2026-10-10.md) has a separate
+current source freeze; it does not rewrite this run. This dated result page and
+derived summary sit outside the historical freeze. No active
 workflow or approved release is added to main by evidence retention.
 
 ## Outcome and limits
