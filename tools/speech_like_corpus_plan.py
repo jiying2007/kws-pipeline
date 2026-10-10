@@ -13,7 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from attach_speech_like_labels import attach as attach_labels, normalize_label  # noqa: E402
-from corpus_identity import inspect_pcm16_wav  # noqa: E402
+from corpus_identity import inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, admission_from_reviews,
                                     fixture_admission, latest_review, validate_review_record)  # noqa: E402
 
@@ -375,8 +375,7 @@ def load_planned_recordings(intents_path: pathlib.Path, generated_root: pathlib.
             audio_raw = require_text(row.get("audio"), f"{manifest}:{index}.audio")
             audio = pathlib.Path(audio_raw)
             audio = audio.resolve() if audio.is_absolute() else (manifest.parent / audio).resolve()
-            normalized = dict(row)
-            normalized["audio"] = str(audio)
+            normalized = rebind_audio_path(row, str(audio), field="audio", label=f"{manifest}:{index}")
             generated[key] = normalized
 
     if set(generated) != set(intent_map):
@@ -512,8 +511,7 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
             shutil.copyfile(source, target)
             if sha256_file(target) != file_sha:
                 raise ValueError(f"{split}: labeled audio sha256 mismatch after copy")
-            portable = dict(row)
-            portable["audio"] = target.relative_to(split_root).as_posix()
+            portable = rebind_audio_path(row, target.relative_to(split_root).as_posix(), field="audio")
             portable_rows.append(portable)
         write_jsonl(raw_manifest, portable_rows)
         write_jsonl(labels_path, split_labels[split])

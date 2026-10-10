@@ -12,7 +12,7 @@ import wave
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from kws_vocab import load_tokens  # noqa: E402
-from corpus_identity import inspect_pcm16_wav  # noqa: E402
+from corpus_identity import canonical_audio_path, inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
                                     LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
 from materialize_speech_like_base_index import corpus_sha  # noqa: E402
@@ -243,11 +243,8 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         for idx, row in enumerate(split_rows):
             wav_sha, voice, source = _identity(row, split, idx)
             _validate_label(row, split, idx, token_map, wake_keywords)
-            raw_audio = row.get("path")
-            if not isinstance(raw_audio, str) or not raw_audio.strip():
-                raise ValueError(f"external base {split} row {idx}: audio path is required")
+            raw_audio = canonical_audio_path(row, f"external base {split} row {idx}")
             audio_ref = pathlib.Path(raw_audio)
-            normalized = dict(row)
             if path_contract == "index-relative-v1":
                 if audio_ref.is_absolute() or any(part in {"", ".", ".."} for part in audio_ref.parts):
                     raise ValueError(f"external base {split} row {idx}: portable audio path is unsafe")
@@ -263,7 +260,6 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                 if sha256_file(audio_path) != wav_sha:
                     raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
                 _validate_audio_format(audio_path, row["frames"], f"external base {split} row {idx}")
-                normalized["path"] = str(audio_path)
             elif path_contract == "absolute-v1":
                 if not audio_ref.is_absolute():
                     raise ValueError(f"external base {split} row {idx}: absolute-v1 path must be absolute")
@@ -273,7 +269,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                 if sha256_file(audio_path) != wav_sha:
                     raise ValueError(f"external base {split} row {idx}: audio sha256 mismatch")
                 _validate_audio_format(audio_path, row["frames"], f"external base {split} row {idx}")
-                normalized["path"] = str(audio_path)
+            normalized = rebind_audio_path(row, str(audio_path))
             inspected = inspect_pcm16_wav(audio_path)
             if inspected["frames"] != row["frames"] or inspected["frames"] <= 0:
                 raise ValueError(f"external base {split} row {idx}: decoded frame mismatch")

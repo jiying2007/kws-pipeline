@@ -37,6 +37,21 @@ def canonical_audio_path(row: dict, label: str = "audio row") -> str:
     return values[0]
 
 
+def rebind_audio_path(row: dict, path: str, *, field: str = "path", label: str = "audio row") -> dict:
+    """Copy derived metadata with one path alias, validating before replacement.
+
+    A producer may relocate or transform audio, but must never conceal an
+    ambiguous source row or retain an obsolete consumer execution path.
+    """
+    if not isinstance(row, dict) or field not in AUDIO_PATH_FIELDS:
+        raise ValueError(f"{label}: invalid audio row or output alias")
+    if any(alias in row for alias in AUDIO_PATH_FIELDS):
+        canonical_audio_path(row, label)
+    target = canonical_audio_path({field: path}, label)
+    return {**{key: value for key, value in row.items()
+               if key not in (*AUDIO_PATH_FIELDS, "_execution_path")}, field: target}
+
+
 def resolve_audio_path(row: dict, root: pathlib.Path, label: str = "audio row") -> pathlib.Path:
     path = pathlib.Path(canonical_audio_path(row, label))
     try:

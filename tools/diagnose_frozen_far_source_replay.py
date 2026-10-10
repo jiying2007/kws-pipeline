@@ -16,6 +16,7 @@ import wave
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 from synthetic_audio import clamp16  # noqa: E402
+from corpus_identity import canonical_audio_path, rebind_audio_path  # noqa: E402
 
 SCHEMA_VERSION = 1
 EVIDENCE_CLASS = "frozen-far-source-replay-request-v1"
@@ -248,14 +249,12 @@ def find_domain_row(rows: list[dict], case: dict) -> dict:
     row = matches[0]
     if row.get("tokens") != case["expected_tokens"]:
         raise ValueError(f"{case['case_id']}: domain tokens drifted")
-    path = pathlib.Path(str(row.get("path", ""))).resolve()
+    path = pathlib.Path(canonical_audio_path(row, str(case["case_id"]))).resolve()
     if not path.is_file():
         raise ValueError(f"{case['case_id']}: rendered WAV is missing: {path}")
     if sha256_file(path) != case["rendered_wav_sha256"]:
         raise ValueError(f"{case['case_id']}: rendered WAV SHA drifted")
-    result = dict(row)
-    result["path"] = str(path)
-    return result
+    return rebind_audio_path(row, str(path))
 
 
 def target_path_summary(rows: list[dict], keyword_id: int) -> dict:
