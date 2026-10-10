@@ -191,17 +191,36 @@ bounded audio-only preloader replaces their six-clip entry contract.
 
 The official Python 3.12.14 slim-bookworm amd64 image is pinned in
 `container-lock.json`; its verified manifest declares 45,449,534 compressed
-layer/config bytes. A single image-pull client is monitored for 180 s; all host receive-counter deltas
-during it conservatively count against a 64 MiB reservation. This is an observed
-budget with an abort-before-setup rule, not a hard Docker-daemon transfer cutoff.
+layer/config bytes. The first admitted run stopped in the image observation gate
+before setup; its exact four public JSON members and provenance are retained in
+`evidence/run-38012657985/`. All 32 cells remain NOT_RUN with zero attempts, and ASR
+was skipped. The original all-interface sum was 93,615,466 bytes, but it cannot
+establish image bytes: stacked-interface duplication and unrelated traffic are
+possible, and the old artifact contains no per-interface snapshots.
+
+The revised, unexecuted observer selects one common IPv4/IPv6 default-route
+interface, binds its ifindex and monotonic RX counter, and retains before/after
+interface snapshots. Missing or multiple default interfaces fail before pulling;
+a changed selected interface or counter fails before setup. The all-interface sum
+is diagnostic only and never the gate. One interface still includes protocol and
+unrelated traffic and may omit non-default/policy-routed paths; it does not verify
+cumulative image transfer. No claim of exact attribution or hard network cutoff
+is made. See the [Linux interface-statistics documentation](https://docs.kernel.org/networking/statistics.html).
+
+The proposed observation reservation is 128 MiB, with a single image-pull client
+and 180 s wall bound. This allows declared 45,449,534-byte payload plus protocol
+and background headroom without treating the earlier 93,615,466-byte sum as an
+image measurement. A larger allowance alone would not repair the old accounting.
 Polling can overshoot; cancelling the client does not prove daemon fetching stops.
 A failed, timed-out or over-budget pull retains daemon completion and cumulative
 bytes as unverified and starts no setup or generation. No daemon shutdown or host
-security change is used. TTS package
-and model acquisition gets 6 GiB minus that reservation. ASR preserves its 4 GiB
-input cap, plus the declared 64 MiB image allowance. Each fresh job requires at
-least 16 GiB free disk, with a 12 GiB runtime workspace cap; these are explicit
-new-lane budgets, not new hosted hardware claims.
+security change is used. TTS package/model acquisition gets 6 GiB minus 128 MiB:
+6,308,233,216 bytes, above its exact 4,956,729,799-byte pinned payload. Total declared
+TTS allocation remains 6 GiB; its image part is observational, not a proven hard
+transfer cap. ASR preserves its 4 GiB input cap plus the proposed 128 MiB image
+allowance. Each fresh job requires at least 16 GiB free disk and a 12 GiB runtime
+workspace cap. The revised observer and allowance require new review; they have
+not been used for another acquisition or run.
 
 Every container has 12 GiB RAM, zero swap, four CPU quota, 256 PIDs, no capabilities,
 no-new-privileges, read-only root/code and no privileged/host namespace/socket
@@ -226,12 +245,20 @@ answers. Raw individual receipts and immutable freezes precede terminal summarie
 Whisper is not part of this execution path. A TTS failure preserves its valid
 prefix evidence but does not automatically start downstream ASR.
 
-`workflow.yml` is deliberately only a template. `execution-release.json` remains
-`approved=false`. After root review of `execution-freeze.json` and immutable source,
-activation must copy the exact template to
-`.github/workflows/source-screen32-run.yml`, bind the reviewed freeze in the release,
-and create the unique `research/qwen16-voicedesign-once-v1` branch once. Both workflow
-run number and attempt must be 1. No dispatch/retry path or admission from CI exists.
+`workflow.yml` is deliberately only a template on this preparation branch and
+`execution-release.json` remains `approved=false`. The original
+`research/qwen16-voicedesign-once-v1` branch/run identity is consumed by run
+38012657985; its failed evidence remains unchanged. The inert v2 template and guard prepare
+`research/qwen16-voicedesign-once-v2` and
+`.github/workflows/source-screen32-run-v2.yml`; no execution ref or active workflow
+is created. The user has authorized one separate v2 attempt after fix checks and merge;
+this preparation remains unexecuted and release remains false.
+This is a retry of the same fixed cells and seeds, whose model attempts are zero;
+it does not rename old evidence or create a fresh-label claim. After authorization
+and immutable review, activation must copy the exact v2 template and bind the
+reviewed source freeze in a separate complete commit before creating its branch.
+Reusing or rerunning v1 fails its first-run/attempt gate. Both v2 run number and
+attempt must also be1; prior history is not presumed absent. CI cannot grant admission.
 The intended TTS entry is:
 
 ```sh

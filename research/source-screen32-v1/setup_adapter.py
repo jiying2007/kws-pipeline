@@ -22,9 +22,9 @@ import sys
 
 ROOT = Path(__file__).resolve().parent
 GIB = 1024 ** 3
-IMAGE_METADATA_RESERVE = 64 * 1024 ** 2
+IMAGE_TRANSFER_RESERVE = 128 * 1024 ** 2
 TTS_TRANSFER_CAP = 6 * GIB
-TTS_INPUT_CAP = TTS_TRANSFER_CAP - IMAGE_METADATA_RESERVE
+TTS_INPUT_CAP = TTS_TRANSFER_CAP - IMAGE_TRANSFER_RESERVE
 MODEL_ID = "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
 MODEL_REVISION = "5ecdb67327fd37bb2e042aab12ff7391903235d3"
 MODEL_LOCK_SHA256 = "747562e07b4788bcae25c13004139048741e18f07f39eca291891010f459a25b"
@@ -164,7 +164,7 @@ def bind(profile, runtime, stage):
         locks["limits"] = {"input_download_bytes": helper.DOWNLOAD_CAP, "installed_bytes": helper.INSTALL_CAP,
                            "buildtmp_bytes": helper.BUILD_CAP, "workspace_bytes": helper.WORKSPACE_CAP,
                            "initial_free_bytes": helper.INITIAL_FREE,
-                           "image_metadata_reserve_bytes": IMAGE_METADATA_RESERVE if profile == "tts" else 0}
+                           "image_transfer_reserve_bytes": IMAGE_TRANSFER_RESERVE if profile == "tts" else 0}
         helper.validate_locks(runtime_lock, models)
         return runtime_lock, models, locks
 

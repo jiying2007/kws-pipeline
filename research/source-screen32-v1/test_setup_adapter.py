@@ -133,7 +133,7 @@ class SetupBindings(unittest.TestCase):
 
     def test_tts_download_default_is_rebound_and_reserve_excluded(self):
         helper = self.bound()
-        self.assertEqual(helper.DOWNLOAD_CAP, 6 * a.GIB - 64 * 1024 ** 2)
+        self.assertEqual(helper.DOWNLOAD_CAP, 6 * a.GIB - 128 * 1024 ** 2)
         self.assertEqual(helper.Downloader(opener=object()).cap, helper.DOWNLOAD_CAP)
         with self.assertRaises(ValueError):
             helper.Downloader(cap=6 * a.GIB, opener=object())

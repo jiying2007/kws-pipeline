@@ -114,20 +114,207 @@ class HostTests(unittest.TestCase):
             host.verify_admission({})
         docker.assert_not_called()
 
+    def admission_fixture(self, root):
+        here = root / 'research/source-screen32-v1'; here.mkdir(parents=True)
+        (here / 'workflow.yml').write_text('fictional-v2-workflow')
+        (here / 'execution-freeze.json').write_text(json.dumps({'schema': 'screen32-execution-source-freeze-v1', 'files': {}, 'profiles': {}}))
+        release = {'schema': 'screen32-execution-release-v1', 'experiment': 'qwen16-voicedesign-once-v2',
+                   'approved': True, 'source_freeze_sha256': host.file_hash(here / 'execution-freeze.json')}
+        (here / 'execution-release.json').write_text(json.dumps(release))
+        workflows = root / '.github/workflows'; workflows.mkdir(parents=True)
+        (workflows / 'source-screen32-run-v2.yml').write_text('fictional-v2-workflow')
+        event = {'created': True, 'deleted': False, 'after': 'a' * 40,
+                 'repository': {'private': False, 'full_name': 'jiying2007/kws-pipeline'}}
+        (root / 'event.json').write_text(json.dumps(event))
+        env = {'GITHUB_REPOSITORY': 'jiying2007/kws-pipeline', 'GITHUB_REF': 'refs/heads/research/qwen16-voicedesign-once-v2',
+               'GITHUB_EVENT_NAME': 'push', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_RUN_NUMBER': '1',
+               'GITHUB_SHA': 'a' * 40, 'GITHUB_RUN_ID': '12345', 'GITHUB_EVENT_PATH': str(root / 'event.json')}
+        return here, release, event, env
+
+    def test_v2_admission_rejects_consumed_v1_release_ref_or_workflow(self):
+        self.assertEqual(host.EXPERIMENT, 'qwen16-voicedesign-once-v2')
+        self.assertEqual(host.BRANCH, 'research/qwen16-voicedesign-once-v2')
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); here, release, event, env = self.admission_fixture(root)
+            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root):
+                host.verify_admission(env)
+                old = dict(env, GITHUB_REF='refs/heads/research/qwen16-voicedesign-once-v1')
+                with self.assertRaises(ValueError): host.verify_admission(old)
+                release['experiment'] = 'qwen16-voicedesign-once-v1'
+                (here / 'execution-release.json').write_text(json.dumps(release))
+                with self.assertRaises(ValueError): host.verify_admission(env)
+                release['experiment'] = host.EXPERIMENT
+                (here / 'execution-release.json').write_text(json.dumps(release))
+                (root / '.github/workflows/source-screen32-run-v2.yml').rename(root / '.github/workflows/source-screen32-run.yml')
+                with self.assertRaisesRegex(ValueError, 'activated workflow drift'): host.verify_admission(env)
+
+    def test_v2_still_requires_first_created_run_and_attempt_and_exact_template(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); here, release, event, env = self.admission_fixture(root)
+            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root):
+                for field in ('GITHUB_RUN_NUMBER', 'GITHUB_RUN_ATTEMPT'):
+                    with self.assertRaises(ValueError): host.verify_admission(dict(env, **{field: '2'}))
+                event['created'] = False; (root / 'event.json').write_text(json.dumps(event))
+                with self.assertRaises(ValueError): host.verify_admission(env)
+                event['created'] = True; (root / 'event.json').write_text(json.dumps(event))
+                (root / '.github/workflows/source-screen32-run-v2.yml').write_text('modified-workflow')
+                with self.assertRaisesRegex(ValueError, 'activated workflow drift'): host.verify_admission(env)
+        workflow = (HERE / 'workflow.yml').read_text()
+        for expected in ('name: Qwen16 VoiceDesign source screen once v2',
+                         'branches: [research/qwen16-voicedesign-once-v2]', 'group: qwen16-voicedesign-once-v2',
+                         'github.run_number == 1', 'github.run_attempt == 1', 'github.event.created == true'):
+            self.assertIn(expected, workflow)
+        self.assertNotIn('qwen16-voicedesign-once-v1', workflow)
+
+    def network(self, received=100, virtual=200, interface='eth0', ifindex=2):
+        return {'default_interface': interface, 'interfaces': {
+            interface: {'ifindex': ifindex, 'rx_bytes': received},
+            'veth0': {'ifindex': 3, 'rx_bytes': virtual}}}
+
+    def lock(self):
+        return json.loads((HERE / 'container-lock.json').read_text())
+
+    def test_default_interface_observer_uses_readonly_route_and_counter_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixtures = {'/proc/net/route': 'Iface Destination Gateway Flags RefCnt Use Metric Mask MTU Window IRTT\n'
+                'eth0 00000000 0100000A 0003 0 0 100 00000000 0 0 0\n',
+                '/proc/net/ipv6_route': '0' * 32 + ' 00 ' + '0' * 32 + ' 00 ' + '0' * 32 + ' 00000000 00000000 00000000 00200200 lo\n',
+                '/sys/class/net/eth0/statistics/rx_bytes': '100', '/sys/class/net/eth0/ifindex': '2',
+                '/sys/class/net/veth0/statistics/rx_bytes': '200', '/sys/class/net/veth0/ifindex': '3',
+                '/sys/class/net/lo/statistics/rx_bytes': '999999'}
+            for name, text in fixtures.items():
+                path = root / name.lstrip('/'); path.parent.mkdir(parents=True, exist_ok=True); path.write_text(text)
+            with mock.patch.object(host, 'Path', side_effect=lambda name: root / str(name).lstrip('/')):
+                self.assertEqual(host.network_received(), self.network())
+                (root / 'proc/net/route').write_text(fixtures['/proc/net/route'] +
+                    'eth1 00000000 0200000A 0003 0 0 100 00000000 0 0 0\n')
+                with self.assertRaisesRegex(ValueError, 'single non-loopback'): host.network_received()
+                (root / 'proc/net/route').write_text(fixtures['/proc/net/route'].splitlines()[0] + '\n')
+                with self.assertRaisesRegex(ValueError, 'single non-loopback'): host.network_received()
+                (root / 'proc/net/route').write_text(fixtures['/proc/net/route'])
+                (root / 'proc/net/ipv6_route').write_text('0' * 32 + ' 00 ' + '0' * 32 + ' 00 ' + '0' * 32 +
+                    ' 00000000 00000000 00000000 00000001 eth1\n')
+                with self.assertRaisesRegex(ValueError, 'single non-loopback'): host.network_received()
+
+    def test_stacked_interface_aggregate_is_diagnostic_never_image_gate(self):
+        observation = {}
+        before = self.network(100, 200)
+        after = self.network(100 + 70 * 1024 ** 2, 200 + 70 * 1024 ** 2)
+        host.record_network_delta(before, after, observation)
+        self.assertEqual(observation['default_interface_received_delta_bytes'], 70 * 1024 ** 2)
+        self.assertEqual(observation['all_interface_delta_diagnostic_only_bytes'], 140 * 1024 ** 2)
+        self.assertEqual(observation['network_after'], after)
+        self.assertGreater(observation['all_interface_delta_diagnostic_only_bytes'], host.IMAGE_TRANSFER_RESERVE)
+
+    def test_selected_interface_change_reset_or_overshoot_fails_closed(self):
+        for after in (self.network(interface='eth1'), self.network(ifindex=99), self.network(received=99),
+                      self.network(received=100 + host.IMAGE_TRANSFER_RESERVE + 1)):
+            observation = {}
+            with self.assertRaises(ValueError): host.record_network_delta(self.network(), after, observation)
+            self.assertEqual(observation['network_after'], after)
+
+    def test_virtual_interface_churn_does_not_hide_selected_interface_observation(self):
+        after = self.network(received=110); del after['interfaces']['veth0']
+        observation = {}; host.record_network_delta(self.network(), after, observation)
+        self.assertEqual(observation['default_interface_received_delta_bytes'], 10)
+        self.assertIsNone(observation['all_interface_delta_diagnostic_only_bytes'])
+
+    def test_successful_pull_retains_background_inclusive_observation_not_exact_bytes(self):
+        process = mock.Mock(); process.poll.return_value = 0; process.returncode = 0
+        lock = self.lock()
+        image = [{'Id': lock['manifest']['config']['digest'], 'Architecture': 'amd64', 'Os': 'linux'}]
+        with tempfile.TemporaryDirectory() as temporary, \
+                mock.patch.object(host.subprocess, 'Popen', return_value=process) as popen, \
+                mock.patch.object(host, 'network_received', side_effect=[self.network(), self.network(received=100000000)]), \
+                mock.patch.object(host, 'docker', return_value=json.dumps(image)):
+            target = Path(temporary) / 'image-transfer.json'
+            result = host.pull_image(lock, target)
+            self.assertEqual(result, json.loads(target.read_text()))
+            self.assertTrue(result['daemon_completion_verified'])
+            self.assertFalse(result['cumulative_image_transfer_bytes_verified'])
+            self.assertEqual(result['declared_config_and_compressed_layer_bytes'], 45449534)
+            self.assertEqual(result['default_interface_received_delta_bytes'], 99999900)
+            self.assertIn('unrelated_host_traffic', result['byte_scope'])
+            self.assertEqual(result['pull_client_attempts'], 1); popen.assert_called_once()
+            process.terminate.assert_not_called()
+
     def test_failed_image_pull_does_not_claim_daemon_transfer_cutoff(self):
         process = mock.Mock(); process.poll.return_value = None
         with tempfile.TemporaryDirectory() as temporary, \
                 mock.patch.object(host.subprocess, 'Popen', return_value=process), \
-                mock.patch.object(host, 'network_received', side_effect=[{'eth0': 1}, {'eth0': 1 + host.IMAGE_TRANSFER_RESERVE + 1}]), \
+                mock.patch.object(host, 'network_received', side_effect=[self.network(), self.network(received=101 + host.IMAGE_TRANSFER_RESERVE)]), \
                 mock.patch.object(host, 'docker') as docker:
             target = Path(temporary) / 'image-transfer.json'
-            with self.assertRaises(ValueError): host.pull_image({'image': 'fictional-image'}, target)
+            with self.assertRaises(ValueError): host.pull_image(self.lock(), target)
             record = json.loads(target.read_text())
             self.assertEqual(record['status'], 'stopped_before_setup_daemon_completion_unverified')
             self.assertTrue(record['daemon_fetch_may_continue'])
             self.assertFalse(record['daemon_completion_verified'])
             self.assertFalse(record['cumulative_image_transfer_bytes_verified'])
+            self.assertEqual(record['default_interface_received_delta_bytes'], host.IMAGE_TRANSFER_RESERVE + 1)
+            self.assertEqual(record['network_before'], self.network())
             process.terminate.assert_called_once(); docker.assert_not_called()
+
+    def test_immediate_failed_client_retains_terminal_counter_and_exit_code(self):
+        process = mock.Mock(); process.poll.return_value = 1; process.returncode = 1
+        with tempfile.TemporaryDirectory() as temporary, \
+                mock.patch.object(host.subprocess, 'Popen', return_value=process) as popen, \
+                mock.patch.object(host, 'network_received', side_effect=[self.network(), self.network(received=500)]), \
+                mock.patch.object(host, 'docker') as docker:
+            target = Path(temporary) / 'image-transfer.json'
+            with self.assertRaisesRegex(ValueError, 'single image pull failed'): host.pull_image(self.lock(), target)
+            record = json.loads(target.read_text())
+            self.assertEqual(record['pull_client_exit_code'], 1)
+            self.assertEqual(record['default_interface_received_delta_bytes'], 400)
+            self.assertTrue(record['after_snapshot_available']); self.assertTrue(record['daemon_fetch_may_continue'])
+            popen.assert_called_once(); docker.assert_not_called()
+
+    def test_unavailable_terminal_counter_is_explicit_and_never_retries(self):
+        process = mock.Mock(); process.poll.return_value = 1; process.returncode = 1
+        with tempfile.TemporaryDirectory() as temporary, \
+                mock.patch.object(host.subprocess, 'Popen', return_value=process) as popen, \
+                mock.patch.object(host, 'network_received', side_effect=[self.network(), OSError('fictional missing counter')]):
+            target = Path(temporary) / 'image-transfer.json'
+            with self.assertRaises(OSError): host.pull_image(self.lock(), target)
+            record = json.loads(target.read_text())
+            self.assertEqual(record['pull_client_exit_code'], 1)
+            self.assertFalse(record['after_snapshot_available']); self.assertNotIn('network_after', record)
+            self.assertFalse(record['cumulative_image_transfer_bytes_verified']); popen.assert_called_once()
+
+    def test_route_failure_records_zero_pull_attempts(self):
+        with tempfile.TemporaryDirectory() as temporary, \
+                mock.patch.object(host.subprocess, 'Popen') as popen, \
+                mock.patch.object(host, 'network_received', side_effect=ValueError('fictional ambiguous default')):
+            target = Path(temporary) / 'image-transfer.json'
+            with self.assertRaises(ValueError): host.pull_image(self.lock(), target)
+            record = json.loads(target.read_text())
+            self.assertEqual(record['pull_client_attempts'], 0)
+            self.assertFalse(record['daemon_fetch_may_continue']); popen.assert_not_called()
+
+    def test_image_allowance_stays_inside_unchanged_tts_transfer_budget(self):
+        import setup_adapter
+        self.assertEqual(host.IMAGE_TRANSFER_RESERVE, setup_adapter.IMAGE_TRANSFER_RESERVE)
+        self.assertEqual(host.IMAGE_TRANSFER_RESERVE, 128 * 1024 ** 2)
+        self.assertEqual(setup_adapter.TTS_INPUT_CAP + host.IMAGE_TRANSFER_RESERVE, 6 * host.GIB)
+        self.assertLess(4956729799, setup_adapter.TTS_INPUT_CAP)
+
+    def test_retained_failed_run_exact_bytes_and_zero_model_attempts(self):
+        root = HERE / 'evidence/run-38012657985'
+        provenance = json.loads((root / 'provenance.json').read_text())
+        self.assertEqual(provenance['archive']['sha256'], '6caaff3718e9e44ae66c345121b49edc0cb6d74979b3a6d1d26c09e883eea138')
+        for name, row in provenance['exact_members'].items():
+            self.assertEqual(host.file_hash(root / name), row['sha256'])
+            self.assertEqual((root / name).stat().st_size, row['bytes'])
+        freeze = json.loads((root / 'artifact-freeze.json').read_text())
+        for name, digest in freeze['files'].items(): self.assertEqual(host.file_hash(root / name), digest)
+        receipt = json.loads((root / 'tts/tts-receipt.json').read_text())
+        self.assertEqual(len(receipt['ledger']), 32)
+        self.assertTrue(all(row['attempts'] == 0 and row['status'] == 'NOT_RUN' for row in receipt['ledger']))
+        transfer = json.loads((root / 'image-transfer.json').read_text())
+        self.assertEqual(transfer['host_received_delta_bytes'], 93615466)
+        self.assertFalse(transfer['cumulative_image_transfer_bytes_verified'])
+        self.assertFalse(provenance['automatic_retry_authorized'])
 
     def test_terminal_tts_load_failure_retains_all32(self):
         with tempfile.TemporaryDirectory() as temporary:
