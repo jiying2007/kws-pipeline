@@ -41,27 +41,31 @@
     "research/qwen6_tts/setup_locked.py": "aac8d8e66504444f2965aa8d95dcfef9e8c6fa63d74f2eade15ca1290bc6b4b3",
     "research/qwen6_tts/supervision.py": "9afb771c58febd574d1143c41daa7523cf1dea5c6a7f0424119d602423159b3f",
     "research/qwen6_tts/wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
-    "research/source-screen32-v1/README.md": "23e9c2d35e75ea62cdc651da1bf862ae356a2e45e9b8198ff1a622d3b9c04891",
+    "research/source-screen32-v1/README.md": "8b7f5a7e08d4a8f749e2a73ef381593b34062e14ebc43876e8891159078af905",
     "research/source-screen32-v1/asr_worker.py": "0a64fd9dd2b7345043b890cbe168d47bac6b9abe723f399753c4bbc050bbc754",
     "research/source-screen32-v1/container-lock.json": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
     "research/source-screen32-v1/contract.py": "5aa40db17ae3d67df3995a55714b880e5aec0b68b262db82c37b9935c28af3b5",
     "research/source-screen32-v1/hosted-resource-observation.json": "2f4d529fdd71837b28658e8e7966acfe92754e81a663dc95d1b1bdf23ed1932d",
-    "research/source-screen32-v1/hosted_run.py": "edc11c13fafd0433aea2228aa3fc0a02e93c7ddfb571fbe547368f40c00d3bed",
+    "research/source-screen32-v1/hosted_run.py": "09c946e3627ccb6509cd2e685e43d16da5e0cd3474ab0c909958158362792761",
     "research/source-screen32-v1/plan.json": "ecf8ff83e73953456e194741d77b6332bfc9c6fce51e71295e2b13bf452cb97d",
+    "research/source-screen32-v1/probe-workflow.yml": "4367814fcd360ef43f26416bf8e23591f5bc3ad2a7fa76d3e624a582bf7a63c0",
+    "research/source-screen32-v1/probe_worker.py": "28cc6f3c461fdb54ffdbae8cfd96316662f8fdcce10759ffa14ed7923d065427",
     "research/source-screen32-v1/qwen-model-lock.json": "747562e07b4788bcae25c13004139048741e18f07f39eca291891010f459a25b",
     "research/source-screen32-v1/qwen_adapter.py": "0b3397c50be95b63262b603e323ad68a888a4025e6d8fd1a7de11769071f8826",
-    "research/source-screen32-v1/readiness.json": "68003f55899fe9989e88f7e0900640fcd0978ff05c9e4bb9ab0b51b229abbc78",
+    "research/source-screen32-v1/readiness.json": "2eabbff77de97d59682f6da663f5bc87daeecf5b64fbf9692024d147d2b5edee",
     "research/source-screen32-v1/reuse-pins.json": "74aa14f2fb7fb95b5ee060b089ff3b1342e0939bc87c933d72293879bfe16023",
     "research/source-screen32-v1/runtime_scope.py": "c08bd46d34bea011a63d32867386b26637d5a02753769654e08e4c32c31cb927",
     "research/source-screen32-v1/setup_adapter.py": "b7f6c3493ad0da909c7e6856d27f3247f5e1716ce6c981cb396a03687aa7e547",
     "research/source-screen32-v1/source-review.json": "e7cb41bd39e306258f4ebb3a2ed0201c3fee1a749f83e3e459a7b2dd4c6d98fd",
     "research/source-screen32-v1/source-roles.json": "89da35606dfd0a0934b2b47de5b5f9eb28cf9ea8066f5f8d428da9da668aef5d",
     "research/source-screen32-v1/test_asr_worker.py": "62639420842cf0cd57624eb8420619eb2d30715f57bc3e07ec4af311e588293e",
-    "research/source-screen32-v1/test_contract.py": "ebf8a8f659bc478c5797dd1f381af186b7b83ba092cbb026b490689015745ba2",
-    "research/source-screen32-v1/test_hosted_run.py": "3a37dde24081db27263ef83290a3313ba16f1752fa352b27833912030073899e",
+    "research/source-screen32-v1/test_contract.py": "b52904a02fc9476043f9873205dde5067a2848fe44385932f1f19d56a95193fa",
+    "research/source-screen32-v1/test_hosted_run.py": "720cba8b5438651b5efb6e331dd2151f2421be97c27227dba592804e8599b6ed",
+    "research/source-screen32-v1/test_probe_host.py": "c7e2ee72917d03380effc958d85a38b1ebf21f690800d8f7eef8125efa6fc545",
+    "research/source-screen32-v1/test_probe_worker.py": "07c6dddd56f9eaf76f47de61d953a7e2c3640f459f28c4e3a53342dbde1d0035",
     "research/source-screen32-v1/test_setup_adapter.py": "a84287814b8d5bb79fb60fd9fce8d77a8facd3e5f16c4b8374238d9b87458a59",
     "research/source-screen32-v1/tts_worker.py": "fea079a39605b311337bcea99fbef0fa0486263c1eba122dba6e8c8834868612",
-    "research/source-screen32-v1/workflow.yml": "f18fdc0792b6503749b6142925b78f882d7debca6663c3e04ad6448fb04ac0a9"
+    "research/source-screen32-v1/workflow.yml": "941c4724ae1bdae1d7347bc947f624770c1043108302a6108fc958a1b03c3085"
   },
   "profiles": {
     "asr": [
@@ -93,6 +97,10 @@
       "research/source-screen32-v1/asr_worker.py",
       "research/source-screen32-v1/runtime_scope.py",
       "research/source-screen32-v1/setup_adapter.py"
+    ],
+    "probe": [
+      "research/source-screen32-v1/probe_worker.py",
+      "research/source-screen32-v1/runtime_scope.py"
     ],
     "tts": [
       "research/consolidation/CURRENT_STATUS_2026-10-09.md",

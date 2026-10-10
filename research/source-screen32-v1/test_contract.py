@@ -346,7 +346,7 @@ class QwenAdapterTests(unittest.TestCase):
 
 
 def load_tests(loader, tests, pattern):
-    for filename in ("test_hosted_run.py", "test_setup_adapter.py", "test_asr_worker.py"):
+    for filename in ("test_hosted_run.py", "test_setup_adapter.py", "test_asr_worker.py", "test_probe_host.py", "test_probe_worker.py"):
         spec = importlib.util.spec_from_file_location(filename[:-3], HERE / filename)
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
         tests.addTests(loader.loadTestsFromModule(module))
