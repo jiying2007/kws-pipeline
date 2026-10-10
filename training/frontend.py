@@ -67,6 +67,13 @@ def features(
     frontend_id(frontend)
     if wave.ndim != 1:
         raise ValueError("wave must be mono")
+    if frame_len < 2 or frame_len > FFT_SIZE or hop <= 0 or hop > frame_len:
+        raise ValueError("invalid frontend geometry")
+    if feature_dim <= 0:
+        raise ValueError("feature_dim must be positive")
+    # Streaming C emits only complete windows; EOF does not pad or flush.
+    if wave.numel() < frame_len:
+        return wave.new_empty((0, feature_dim))
 
     key = _cache_key(
         wave,
@@ -80,9 +87,6 @@ def features(
         if cached is not None:
             _FEATURE_CACHE.move_to_end(key)
             return cached
-
-    if wave.numel() < frame_len:
-        wave = torch.nn.functional.pad(wave, (0, frame_len - wave.numel()))
 
     frames = wave.unfold(0, frame_len, hop)
     window = torch.hann_window(

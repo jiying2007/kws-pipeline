@@ -185,13 +185,14 @@
       "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
     },
     {
-      "path": "research/experiment_quality_guards/quality_gates.py",
+      "path": "research/consolidation/maintained-sources/pr-479/research/experiment_quality_guards/quality_gates.py",
       "mode": "100644",
       "git_blob_sha1": "a77d8ddee987c9ccfb7dc23bbd1c6ecaa4c9dbe4",
       "sha256": "e9a0a838e134746bbd0fdd60aeff48ca9ad2963b721e3ea45bd0d8b45690b15d",
       "bytes": 25076,
       "source_pr": 479,
-      "source_commit": "7d565b40d171b95167b85444bf2bfd1428dc7f1d"
+      "source_commit": "7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+      "source_path": "research/experiment_quality_guards/quality_gates.py"
     },
     {
       "path": "research/experiment_quality_guards/review_saved.py",
@@ -203,13 +204,14 @@
       "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
     },
     {
-      "path": "research/experiment_quality_guards/tests/test_admission_cli.py",
+      "path": "research/consolidation/maintained-sources/pr-479/research/experiment_quality_guards/tests/test_admission_cli.py",
       "mode": "100644",
       "git_blob_sha1": "0db1b6c4bde202741506b495f96dac7851b956e3",
       "sha256": "eb8132222b956016e7cd473241222ebd4c2ecb9649bc97e7d454f861aea25680",
       "bytes": 8908,
       "source_pr": 479,
-      "source_commit": "7d565b40d171b95167b85444bf2bfd1428dc7f1d"
+      "source_commit": "7d565b40d171b95167b85444bf2bfd1428dc7f1d",
+      "source_path": "research/experiment_quality_guards/tests/test_admission_cli.py"
     },
     {
       "path": "research/experiment_quality_guards/tests/test_public_report.py",
@@ -221,13 +223,14 @@
       "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
     },
     {
-      "path": "research/experiment_quality_guards/tests/test_quality_gates.py",
+      "path": "research/consolidation/maintained-sources/pr-476/research/experiment_quality_guards/tests/test_quality_gates.py",
       "mode": "100644",
       "git_blob_sha1": "353e57283a251dc40aab3b46fc21b53b1eef0850",
       "sha256": "1936d1c7c45b217ed5d958f33f56f0250b541a995a8a532be15134255492b587",
       "bytes": 21415,
       "source_pr": 476,
-      "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
+      "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+      "source_path": "research/experiment_quality_guards/tests/test_quality_gates.py"
     },
     {
       "path": "research/experiment_quality_guards/tests/test_review_counterexamples.py",

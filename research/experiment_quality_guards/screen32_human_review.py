@@ -6,6 +6,7 @@ No model execution, target generation, admission, network, or training occurs.
 import argparse
 import copy
 import hashlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -26,6 +27,18 @@ PINS = {
     ASR + "/sensevoice/sensevoice/decoder-inputs.json": "3a61e9c35018c63d7117f791b3fd84ea7a32cbba5167891ef00f4271dc9dad1e",
     ASR + "/primary-raw.json": "79b1567e5739beab72b1da94490ea90c41ff8e0b32f604df85d12ac37ee054d5",
     ASR + "/primary-raw-freeze.json": "334c7e2df9649fd5431f97f7870fe57594d9c68094e2b034cf701242001defbc",
+}
+# Historical read-only evidence review only. Execution admission and staging
+# must continue checking the live source paths against the unchanged freeze.
+HISTORICAL_SOURCE_PATHS = {
+    "research/experiment_quality_guards/quality_gates.py":
+        "research/consolidation/maintained-sources/pr-479/research/experiment_quality_guards/quality_gates.py",
+    "research/source-screen32-v1/test_contract.py":
+        "research/source-screen32-v1/history/maintained-f47e81d/test_contract.py",
+    "research/source-screen32-v1/test_hosted_run.py":
+        "research/source-screen32-v1/history/maintained-f47e81d/test_hosted_run.py",
+    "research/source-screen32-v1/test_sense_continuation.py":
+        "research/source-screen32-v1/history/maintained-f47e81d/test_sense_continuation.py",
 }
 REPRESENTATION = "derived_16000_pcm16"
 PRODUCTION_PUNCTUATION = frozenset("。，！？、；：…,.!?;: \t\n\r")
@@ -51,11 +64,15 @@ def unique_object(pairs):
     return result
 
 
-def load(path):
+def parse_json(raw):
     def reject_constant(value):
         raise ValueError("nonfinite JSON value: " + value)
-    return json.loads(Path(path).read_text(encoding="utf-8"),
+    return json.loads(raw,
                       object_pairs_hook=unique_object, parse_constant=reject_constant)
+
+
+def load(path):
+    return parse_json(Path(path).read_text(encoding="utf-8"))
 
 
 def keyed(rows, field):
@@ -69,31 +86,42 @@ def keyed(rows, field):
 
 
 def verified_inputs(repo):
+    """Read one call-local byte snapshot and parse exactly the verified bytes."""
     base = Path(repo) / BASE
+    raw_inputs = {}
+
+    def verified_bytes(path, expected, message):
+        require(not path.is_symlink(), message)
+        if path not in raw_inputs:
+            raw_inputs[path] = path.read_bytes()
+        raw = raw_inputs[path]
+        require(digest(raw) == expected, message)
+        return raw
+
     values = {}
     for relative, expected in PINS.items():
-        path = base / relative
-        require(not path.is_symlink() and digest(path.read_bytes()) == expected,
-                "retained input hash mismatch: " + relative)
-        values[relative] = load(path)
+        raw = verified_bytes(base / relative, expected, "retained input hash mismatch: " + relative)
+        values[relative] = parse_json(raw.decode("utf-8"))
     freeze = values["execution-freeze.json"]["files"]
     require(len(freeze) == 74, "frozen source denominator changed")
     for relative, expected in freeze.items():
-        path = Path(repo) / relative
-        require(not path.is_symlink() and digest(path.read_bytes()) == expected,
-                "frozen source changed: " + relative)
+        path = Path(repo) / HISTORICAL_SOURCE_PATHS.get(relative, relative)
+        verified_bytes(path, expected, "frozen source changed: " + relative)
     raw_freeze = values[ASR + "/primary-raw-freeze.json"]
     require(raw_freeze["primary_raw_sha256"] == PINS[ASR + "/primary-raw.json"], "primary raw freeze mismatch")
     for name in ("qwen06", "sensevoice"):
         terminal = base / ASR / name / "terminal-outcomes.json"
-        require(not terminal.is_symlink() and digest(terminal.read_bytes())
-                == raw_freeze["terminal_outcomes_sha256"][name], "terminal outcomes freeze mismatch")
+        verified_bytes(terminal, raw_freeze["terminal_outcomes_sha256"][name],
+                       "terminal outcomes freeze mismatch")
     return values
 
 
 def build_packet(repo):
     """Verify bytes, then expose only audio bindings and empty listening fields."""
-    values = verified_inputs(repo)
+    return _build_packet(repo, verified_inputs(repo))
+
+
+def _build_packet(repo, values):
     generated = keyed(values[GEN + "/generation/tts/tts-receipt.json"]["ledger"], "cell_id")
     require({key for key, row in generated.items() if row["status"] == "GENERATED"}
             == {f"screen32-{n:03d}" for n in range(1, 17)},
@@ -109,9 +137,10 @@ def build_packet(repo):
         require(entry["status"] == "GENERATED", "generated audio required")
         path = Path(repo) / BASE / GEN / "generation/tts" / (cell + ".wav")
         require(not path.is_symlink(), "audio symlink rejected")
-        wav_hash = digest(path.read_bytes())
+        wav_bytes = path.read_bytes()
+        wav_hash = digest(wav_bytes)
         require(wav_hash == entry["audio"]["wav_sha256"], "WAV digest mismatch")
-        with wave.open(str(path), "rb") as audio:
+        with wave.open(io.BytesIO(wav_bytes), "rb") as audio:
             require((audio.getnchannels(), audio.getsampwidth(), audio.getframerate(), audio.getcomptype())
                     == (1, 2, 16000, "NONE"), "derived PCM16 representation required")
             frames = audio.getnframes()
@@ -216,10 +245,13 @@ def validate_history(packet, documents):
 
 
 def source_report(repo, documents):
-    packet = build_packet(repo)
+    return _source_report(repo, documents, verified_inputs(repo))
+
+
+def _source_report(repo, documents, values):
+    packet = _build_packet(repo, values)
     histories = validate_history(packet, documents)
-    # Hypotheses are read into the derived report only after receipt validation.
-    values = verified_inputs(repo)
+    # Hypotheses enter the derived report only after receipt validation.
     plan = keyed(values["plan.json"]["cells"], "cell_id")
     clips = keyed(values[GEN + "/blind/job.json"]["clips"], "wav_sha256")
     saved = {name: keyed(rows, "audio_id") for name, rows in values[ASR + "/primary-raw.json"].items()}
@@ -323,9 +355,9 @@ def screening_report(repo, documents):
     The existing report and human/partial words remain intact. Receipt
     completeness records declarations, not adjudicated ground truth.
     """
-    report = source_report(repo, documents)
-    original_digest = digest(canonical(report))
     values = verified_inputs(repo)
+    report = _source_report(repo, documents, values)
+    original_digest = digest(canonical(report))
     clips = keyed(values[GEN + "/blind/job.json"]["clips"], "wav_sha256")
     names = ("qwen06", "sensevoice")
     saved = {name: keyed(values[ASR + "/primary-raw.json"].get(name, []), "audio_id")

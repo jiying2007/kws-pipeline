@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "kws_pipeline/kws.h"
+#include "kws_bench_statistics.h"
 #include "sha256.h"
 #include "tool_io.h"
 
@@ -24,21 +25,6 @@ static double elapsed_us(const struct timespec *begin,
   int64_t sec = (int64_t)end->tv_sec - (int64_t)begin->tv_sec;
   int64_t nsec = (int64_t)end->tv_nsec - (int64_t)begin->tv_nsec;
   return (double)sec * 1000000.0 + (double)nsec / 1000.0;
-}
-
-static double percentile_nearest(const double *values, size_t count, double p) {
-  size_t index;
-  if (count == 0u) {
-    return 0.0;
-  }
-  index = (size_t)(p * (double)count);
-  if (index == 0u) {
-    index = 1u;
-  }
-  if (index > count) {
-    index = count;
-  }
-  return values[index - 1u];
 }
 
 static int parse_repeats(const char *text, unsigned *out_repeats) {
@@ -203,13 +189,18 @@ int main(int argc, char **argv) {
         (double)(wav_bytes / 2u) / (double)KWS_SAMPLE_RATE_HZ;
     const double total_audio_seconds = audio_seconds * (double)repeats;
     const double mean_us = total_process_us / (double)total_blocks;
-    const double p50_us = percentile_nearest(block_us, total_blocks, 0.50);
-    const double p95_us = percentile_nearest(block_us, total_blocks, 0.95);
-    const double p99_us = percentile_nearest(block_us, total_blocks, 0.99);
+    const double p50_us = kws_bench_percentile_nearest_rank(block_us, total_blocks, 0.50);
+    const double p95_us = kws_bench_percentile_nearest_rank(block_us, total_blocks, 0.95);
+    const double p99_us = kws_bench_percentile_nearest_rank(block_us, total_blocks, 0.99);
     const double rtf =
         total_audio_seconds > 0.0
             ? total_process_us / (total_audio_seconds * 1000000.0)
             : 0.0;
+    /* The nominal 320-sample call deadline is not a product 160-sample
+     * callback deadline. A shorter final call is included without padding. */
+    const unsigned final_block_samples =
+        (unsigned)(((size_t)wav_bytes / sizeof(int16_t) - 1u) %
+                   BENCH_BLOCK_SAMPLES + 1u);
     const double deadline_us =
         (double)BENCH_BLOCK_SAMPLES * 1000000.0 /
         (double)KWS_SAMPLE_RATE_HZ;
@@ -221,6 +212,11 @@ int main(int argc, char **argv) {
             "\"runtime_config_digest\":\"%s\",\"runtime_target\":\"%s\","
             "\"model_sha256\":\"%s\",\"keyword_pack_sha256\":\"%s\","
             "\"audio_sha256\":\"%s\",\"block_samples\":%u,"
+            "\"sample_rate_hz\":%u,\"frame_length_samples\":%u,"
+            "\"frame_hop_samples\":%u,\"final_block_samples\":%u,"
+            "\"timing_unit\":\"input-call\",\"deadline_basis\":\"nominal-block\","
+            "\"tail_policy\":\"short-final-call-included-no-padding\","
+            "\"percentile_estimator\":\"" KWS_BENCH_PERCENTILE_ESTIMATOR "\","
             "\"block_deadline_us\":%.3f,\"audio_seconds\":%.6f,"
             "\"repeats\":%u,\"blocks\":%zu,\"model_bytes\":%zu,"
             "\"keyword_pack_bytes\":%zu,\"arena_bytes\":%zu,"
@@ -231,7 +227,9 @@ int main(int argc, char **argv) {
             runner_sha256, build_info->version, build_info->source_revision,
             build_info->config_digest, build_info->target_triple,
             model_sha256, pack_sha256, audio_sha256,
-            (unsigned)BENCH_BLOCK_SAMPLES, deadline_us, audio_seconds, repeats,
+            (unsigned)BENCH_BLOCK_SAMPLES, (unsigned)KWS_SAMPLE_RATE_HZ,
+            (unsigned)KWS_FRAME_LENGTH_SAMPLES, (unsigned)KWS_FRAME_HOP_SAMPLES,
+            final_block_samples, deadline_us, audio_seconds, repeats,
             total_blocks, model_bytes, pack_bytes,
             kws_engine_required_bytes(&model), total_process_us, mean_us,
             p50_us, p95_us, p99_us, max_process_us, rtf, p99_headroom);

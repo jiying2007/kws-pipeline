@@ -18,7 +18,7 @@ mono PCM16 @ 16 kHz
  -> detection {keyword_id, confidence, end_sample}
 ```
 
-The model ABI fixes 400-sample analysis frames and 320-sample acoustic hops. `kws_engine_accept_pcm16()` accepts at most `KWS_MAX_PCM_BLOCK_SAMPLES` (320) samples per call, so one call can produce at most one acoustic step and one detection. A 10-ms/160-sample upstream audio block is therefore safe without another resampler.
+The model ABI fixes 400-sample analysis frames and 320-sample acoustic hops. `kws_engine_accept_pcm16()` accepts at most `KWS_MAX_PCM_BLOCK_SAMPLES` (320) samples per call, so one call can produce at most one acoustic step and one detection. A 10-ms/160-sample upstream audio block is therefore accepted without another resampler; callback cadence is not acoustic-hop geometry or proof that its real-time deadline is met. Only complete 400-sample frames produce acoustic steps; a shorter recording or incomplete EOF frame is not padded into a step.
 
 The runtime is C11 + libm, owns no worker thread, performs no heap allocation or filesystem I/O and does no text/pinyin conversion. The caller owns one aligned arena and keeps the model blob alive for the engine lifetime. That dependency surface is enforced rather than documented: `tools/check_runtime_purity.py` asserts that every undefined symbol of `libkws_pipeline.a` stays inside an explicit allowlist.
 
@@ -49,6 +49,15 @@ CI runs the actual C frontend through `kws_feature_dump` and compares both modes
 The acoustic network learns reusable pinyin-token acoustics. Configured wake phrases are bounded token paths, not dedicated binary classifiers. A normal L0 phrase change can therefore update `.kwk` only when the acoustic model already separates the required tokens.
 
 The default 32-feature / 48-hidden / ~420-token geometry is about 1.2 MMAC/s and about 26 KB of model weights+biases. These are design calculations, not physical target-board measurements.
+
+The promoted `model-749187ec1d66` is a distinct, smaller 32-input / 64-hidden /
+5-output tanh RNN: blank plus the four product tokens for `你/好/小/窝`. The current
+[production transcript mapper](SPEECH_BASE_ADMISSION.md#human-review-v2) supports
+those four characters. The isolated native A20 research export instead has six
+classes, `<blank>/你/好/小/窝/屋`; that research label set neither extends the
+production mapper nor admits `屋` as a production CTC target. Reference-only
+research results do not establish native numerical admission or qualify either
+model for shipping.
 
 ## Decoder state and CTC admission
 

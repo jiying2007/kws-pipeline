@@ -1,10 +1,12 @@
 """Ordinary valid-format byte/metadata fixtures only; no backend or codec probes."""
+from contextlib import ExitStack
 import hashlib
 import inspect
 from pathlib import Path
 import struct
 import tempfile
 import unittest
+from unittest import mock
 
 import contract
 import saved_inputs as saved
@@ -40,6 +42,30 @@ class SavedInputTests(unittest.TestCase):
                                  (len(raw) + 1, hashlib.sha256(raw).hexdigest())):
                 with self.subTest(size=size, digest=digest), self.assertRaises(ValueError):
                     saved._read_frozen(path, size, digest)
+
+    def test_fourth_source_failure_precedes_all_parsing_and_output(self):
+        # An orchestration-only failure: no archive is constructed or decoded.
+        with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
+            root, output = Path(directory) / 'saved', Path(directory) / 'new-output'
+            reads = stack.enter_context(mock.patch.object(saved, '_read_frozen', side_effect=[
+                b'opaque first file', b'opaque second file', b'opaque third file',
+                ValueError('fourth frozen identity mismatch')]))
+            forbidden = [stack.enter_context(mock.patch.object(owner, name))
+                         for owner, name in ((saved, '_arrays'), (saved.json, 'loads'),
+                                             (saved, '_weights'), (saved, '_build_plan'),
+                                             (saved.json, 'dumps'), (Path, 'mkdir'), (Path, 'open'))]
+            receipt = stack.enter_context(mock.patch('builtins.print'))
+            stack.enter_context(mock.patch('sys.argv', ['saved_inputs.py', '--saved-root', str(root),
+                                                        '--output', str(output)]))
+            with self.assertRaisesRegex(ValueError, 'fourth frozen identity mismatch'):
+                saved.main()
+            self.assertEqual(reads.call_args_list,
+                             [mock.call(root / path, size, contract.FROZEN_SOURCES[name])
+                              for name, (path, size) in saved.SOURCE_FILES.items()])
+            for operation in forbidden:
+                operation.assert_not_called()
+            receipt.assert_not_called()
+            self.assertFalse(output.exists())
 
     def test_positive_negative_zero_preserved(self):
         positive, negative = bytes.fromhex('00000000'), bytes.fromhex('00000080')

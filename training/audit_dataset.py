@@ -11,6 +11,7 @@ import wave
 from collections import defaultdict
 
 SAMPLE_RATE_HZ = 16000
+PCM_IDENTITY_FIELDS = ("pcm_sha256", "source_pcm_sha256", "original_pcm_sha256")
 LINEAGE_IDENTITY_FIELDS = (
     "source_pcm_sha256", "original_pcm_sha256", "source_family_id", "family_id",
     "reference_audio_sha256", "derivation_family_id",
@@ -281,7 +282,19 @@ def audit_splits(
             }
             resolved_rows.append(entry)
             local_pcm_hashes[pcm_sha256].append(str(resolved))
-            by_pcm_hash[pcm_sha256].append(entry)
+            # Final and ancestor PCM hashes name the same content namespace.
+            # Keep the field and verification basis so a declared original hash
+            # is never presented as a decoded/verified source observation.
+            pcm_observations = [("pcm_sha256", pcm_sha256, "decoded-final-wav", str(resolved))]
+            if "source_pcm_sha256" in metadata:
+                pcm_observations.append(("source_pcm_sha256", metadata["source_pcm_sha256"],
+                                         "verified-source-wav", str(source)))
+            if "original_pcm_sha256" in metadata:
+                pcm_observations.append(("original_pcm_sha256", metadata["original_pcm_sha256"],
+                                         "declared-original-pcm", None))
+            for field, digest, basis, observed_path in pcm_observations:
+                by_pcm_hash[digest].append(dict(entry, identity_field=field,
+                                               evidence_basis=basis, observed_path=observed_path))
             for field, value in metadata.items():
                 metadata_coverage[field] += 1
                 by_identity[field][value].append(entry)
@@ -328,6 +341,11 @@ def audit_splits(
                     "splits": splits,
                     "paths": sorted({entry["path"] for entry in entries}),
                     "file_sha256": sorted({entry["file_sha256"] for entry in entries}),
+                    "observations": sorted(
+                        ({"split": entry["split"], "path": entry["path"],
+                          "field": entry["identity_field"], "evidence_basis": entry["evidence_basis"],
+                          "observed_path": entry["observed_path"]} for entry in entries),
+                        key=lambda item: (item["split"], item["path"], item["field"])),
                 }
             )
 
@@ -350,6 +368,7 @@ def audit_splits(
         "audio_identity": "decoded-mono-16khz-pcm16-sha256",
         "identity_policy": {
             "hard_cross_split_fields": sorted(HARD_IDENTITY_FIELDS),
+            "shared_pcm_identity_fields": list(PCM_IDENTITY_FIELDS),
             "fail_room_overlap": bool(fail_room_overlap),
             "fail_device_overlap": bool(fail_device_overlap),
             "required_metadata": sorted(set(require_metadata)),
@@ -366,6 +385,8 @@ def audit_splits(
         "clean_scope": "observed-identities-only",
         "identity_disjointness": {
             field: ("violated" if any(leak["field"] == field for leak in identity_leaks)
+                    or any(observation["field"] == field for leak in cross_split_leaks
+                           for observation in leak["observations"])
                     else "unknown" if any(split["identity_coverage"][field]["unknown"]
                                           for split in split_summaries.values())
                     else "verified" if len(split_specs) > 1 else "not-cross-split-tested")

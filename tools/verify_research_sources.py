@@ -109,6 +109,20 @@ def verify(root, manifest):
     approved = ['.github/workflows/research-source-consolidation.yml']
     if additions != approved:
         raise ValueError('unexpected active workflow addition')
+    # The original 54-workflow baseline and the separately allowed addition
+    # both bind CURRENT bytes. Historical maintenance receipts are evidence,
+    # not the source of the current identity and not an existence-only escape.
+    current_additions = manifest.get('current_added_active_workflows')
+    if not isinstance(current_additions, list) or len(current_additions) != len(approved):
+        raise ValueError('missing or duplicate current added workflow identity')
+    current_paths = []
+    for row in current_additions:
+        if not isinstance(row, dict) or row.get('path') not in approved:
+            raise ValueError('unexpected current added workflow identity')
+        check_file(root, row)
+        current_paths.append(row['path'])
+    if sorted(current_paths) != sorted(approved) or paths.intersection(current_paths):
+        raise ValueError('current added workflow identities do not match allowance')
     actual = {str(p.relative_to(root)) for p in (root / '.github/workflows').glob('*') if p.is_file()}
     if actual != paths | set(additions):
         raise ValueError('active workflow inventory changed')

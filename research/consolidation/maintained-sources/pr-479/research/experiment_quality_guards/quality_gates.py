@@ -102,53 +102,11 @@ def _unique_rows(rows):
     require(len(set(ids)) == len(ids), "duplicate row ID")
 
 
-def _content_label_audit(rows):
-    """Resolve current WAV/PCM aliases and quarantine contradictory full labels.
-
-    Only current, complete human declarations participate in label comparison.
-    Historical receipts may be superseded and do not vote against a correction.
-    WAV and decoded PCM hashes retain separate namespaces, joined by a row that
-    binds both; voice/reference/lineage identity does not imply identical words.
-    """
-    wav_to_pcm = {}
-    for row in rows:
-        wav, pcm = row.get("wav_sha256"), row.get("pcm_sha256")
-        if wav and pcm:
-            require(wav not in wav_to_pcm or wav_to_pcm[wav] == pcm,
-                    "same WAV has conflicting PCM hashes")
-            wav_to_pcm[wav] = pcm
-    identities = {}
-    members = defaultdict(list)
-    for row in rows:
-        wav, pcm = row.get("wav_sha256"), row.get("pcm_sha256")
-        pcm = pcm or wav_to_pcm.get(wav)
-        identity = ("pcm_sha256", pcm) if pcm else (("wav_sha256", wav) if wav else None)
-        identities[row["id"]] = identity
-        if identity:
-            members[identity].append(row)
-    conflicts = []
-    quarantined = set()
-    for (field, digest), group in sorted(members.items()):
-        complete = [row for row in group if human_truth(row) is not None]
-        labels = {normalized_actual(row["actual_text"]) for row in complete}
-        if len(labels) <= 1:
-            continue
-        ids = sorted(row["id"] for row in group)
-        quarantined.update(ids)
-        conflicts.append({"kind": "CONFLICTING_COMPLETE_ACTUAL_TEXT", "ids": ids,
-                          "content_identity": {field: digest},
-                          "normalized_actual_texts": sorted(labels),
-                          "label_evidence": [{"id": row["id"], "actual_text": row["actual_text"]}
-                                             for row in sorted(complete, key=lambda row: row["id"])]})
-    return identities, quarantined, conflicts
-
-
 def coverage_admission(rows, declarations, policy, frozen_policy_sha256):
     """Frozen absolute counts per declared source group/split, no percentages.
 
     Nonwake case names are policy-defined and must be independently assigned.
     Exact duplicate audio contributes at most once per group/category.
-    Contradictory complete labels quarantine every alias before counting.
     """
     _unique_rows(rows)
     require(hashlib.sha256(json.dumps(policy, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest() == frozen_policy_sha256,
@@ -164,7 +122,12 @@ def coverage_admission(rows, declarations, policy, frozen_policy_sha256):
     declared_keys = [(d["source_group"], d["split"]) for d in declarations]
     require(len(set(declared_keys)) == len(declared_keys), "duplicate group declaration")
     require(all((r["source_group"], r["split"]) in declared_keys for r in rows), "undeclared group")
-    identities, quarantined, content_conflicts = _content_label_audit(rows)
+    wav_to_pcm = {}
+    for row in rows:
+        wav, pcm = row.get("wav_sha256"), row.get("pcm_sha256")
+        if wav and pcm:
+            require(wav not in wav_to_pcm or wav_to_pcm[wav] == pcm, "same WAV has conflicting PCM hashes")
+            wav_to_pcm[wav] = pcm
     reports = []
     for declaration in declarations:
         require(declaration["role"] in ("balanced", "negative_only"), "unknown cohort role")
@@ -172,14 +135,10 @@ def coverage_admission(rows, declarations, policy, frozen_policy_sha256):
         members = [r for r in rows if (r["source_group"], r["split"]) == key]
         seen = defaultdict(set)
         excluded = []
-        excluded_conflicting = []
         positive_rows = []
         for row in members:
             truth = human_truth(row)
-            digest = identities[row["id"]]
-            if row["id"] in quarantined:
-                excluded_conflicting.append(row["id"])
-                continue
+            digest = row.get("pcm_sha256") or wav_to_pcm.get(row.get("wav_sha256")) or row.get("wav_sha256")
             if truth is None or not digest:
                 excluded.append(row["id"])
                 continue
@@ -203,10 +162,8 @@ def coverage_admission(rows, declarations, policy, frozen_policy_sha256):
         else:
             status = "ADMITTED_BALANCED" if not missing else "REJECTED_COVERAGE"
         reports.append(dict(declaration, status=status, counts=counts, missing=missing,
-                            excluded_unclean_or_unbound=excluded,
-                            excluded_conflicting_content=excluded_conflicting, positive_rows=positive_rows))
+                            excluded_unclean_or_unbound=excluded, positive_rows=positive_rows))
     return {"policy_id": policy["policy_id"], "groups": reports,
-            "content_label_conflicts": content_conflicts,
             "balanced_admission": bool(reports) and all(r["status"] == "ADMITTED_BALANCED"
               for r in reports if r["role"] == "balanced") and any(r["role"] == "balanced" for r in reports)
               and not any(r["status"] == "INVALID_NEGATIVE_ONLY" for r in reports),
@@ -267,7 +224,7 @@ def identity_audit(rows, history=()):
     for i, row in enumerate(all_rows):
         groups[root(i)].append((i, row))
     audit = []
-    _, _, conflicts = _content_label_audit(rows)
+    conflicts = []
     ledger = [dict(row) for row in history]
     history_audio = {r.get(f) for r in history for f in ("wav_sha256", "pcm_sha256") if r.get(f)}
     current_content = defaultdict(set)

@@ -1,4 +1,5 @@
 """Plan-shape checker ONLY. It does not authenticate inputs or admit execution."""
+import math
 import re
 
 LIMITS = {'operator_rows': 798, 'wall_seconds': 120, 'rss_bytes': 536870912}
@@ -18,13 +19,19 @@ def require(condition, message):
 def digest(value):
     require(isinstance(value,str) and re.fullmatch('[0-9a-f]{64}', value) is not None,'invalid SHA256')
 
+def integer_shape(value, expected):
+    return isinstance(value, list) and all(type(n) is int for n in value) and value == expected
+
 def validate(plan):
     """Check plan shape, never input authenticity, authorization or admission."""
     require(plan.get('schema') == 'd20-saved-single-op-plan-v1', 'wrong schema')
     require(plan.get('frozen_sources') == FROZEN_SOURCES, 'frozen source identity mismatch')
-    require(plan.get('gates') == GATES, 'original gates changed')
+    gates = plan.get('gates')
+    require(gates == GATES and all(type(value) in (int, float) and math.isfinite(value)
+                                  for pair in gates.values() for value in pair), 'original gates changed')
     require(plan.get('required_backend') == {'torch':'2.11.0+cpu','numpy':'1.26.4'}, 'backend version changed')
-    require(plan.get('limits') == LIMITS, 'limits must remain frozen')
+    limits = plan.get('limits')
+    require(limits == LIMITS and all(type(value) is int for value in limits.values()), 'limits must remain frozen integers')
     require(plan.get('anchor') == 'C_SAVED_OBSERVED', 'one common C saved anchor required')
     require(plan.get('input_chaining') is False, 'output chaining prohibited')
     require(plan.get('historical_chunk_equivalence') is False, 'single-row is not historical chunk dispatch')
@@ -37,13 +44,14 @@ def validate(plan):
         key=(r,s,b); require(key not in seen,'duplicate job'); seen.add(key)
         require(j.get('input_origin')=='frozen_saved_pre_input','input must be saved, never newly computed')
         require(j.get('dtype')=='<f4' and j.get('order')=='C','float32 little-endian C order required')
-        require(j.get('input_shape')==[400 if s==0 else DIMS[s-1]],'input shape mismatch')
-        require(j.get('output_shape')==[DIMS[s]],'output shape mismatch')
+        require(integer_shape(j.get('input_shape'), [400 if s==0 else DIMS[s-1]]),'input shape mismatch')
+        require(integer_shape(j.get('output_shape'), [DIMS[s]]),'output shape mismatch')
         digest(j.get('input_sha256'))
-        require(j.get('input_bytes')==j['input_shape'][0]*4,'input byte count mismatch')
+        require(type(j.get('input_bytes')) is int and j['input_bytes']==j['input_shape'][0]*4,'input byte count mismatch')
         if s in MEMORY_STAGES:
             require(j.get('cache_origin')=='C_SAVED_OBSERVED','memory requires actual C saved cache')
-            require(j.get('cache_shape')==[128,11,4] and j.get('cache_bytes')==22528,'cache layout mismatch')
+            require(integer_shape(j.get('cache_shape'), [128,11,4])
+                    and type(j.get('cache_bytes')) is int and j['cache_bytes']==22528,'cache layout mismatch')
             digest(j.get('cache_sha256'))
         else:
             require(all(j.get(k) is None for k in ('cache_origin','cache_shape','cache_bytes','cache_sha256')),'unexpected cache')

@@ -1,0 +1,28 @@
+{
+  "schema": "screen32-maintained-test-source-snapshot-v1",
+  "source_commit": "f47e81d3924006f48ed2a0a4d2074e5891577f95",
+  "scope": "Historical test-source retention only; no execution source substitution or new authority.",
+  "files": [
+    {
+      "original_path": "research/source-screen32-v1/test_contract.py",
+      "archive_path": "research/source-screen32-v1/history/maintained-f47e81d/test_contract.py",
+      "bytes": 20786,
+      "sha256": "861e713b4d117992247abfd7f868a5bea82b365ea524ea339f7a6939fe773449",
+      "mode": "100644"
+    },
+    {
+      "original_path": "research/source-screen32-v1/test_hosted_run.py",
+      "archive_path": "research/source-screen32-v1/history/maintained-f47e81d/test_hosted_run.py",
+      "bytes": 49875,
+      "sha256": "fc063596b754380c4bd9e682bf1881ab2a68f47112f62eab88b6a9a4f85ca8bb",
+      "mode": "100644"
+    },
+    {
+      "original_path": "research/source-screen32-v1/test_sense_continuation.py",
+      "archive_path": "research/source-screen32-v1/history/maintained-f47e81d/test_sense_continuation.py",
+      "bytes": 20677,
+      "sha256": "01b58c462b6606c9f58b9c7c25a4e13f62a427496ee1c038000ca56ad56ed161",
+      "mode": "100644"
+    }
+  ]
+}

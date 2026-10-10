@@ -7,6 +7,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_CHUNK_SIZES 16u
+
+/* Repeating input partition for frontend-only streaming parity fixtures. */
+static int parse_chunk_sizes(const char *text, size_t *sizes, size_t *count) {
+  const char *cursor = text;
+  *count = 0u;
+  while (*cursor != '\0') {
+    char *end = NULL;
+    unsigned long value;
+    if (*count >= MAX_CHUNK_SIZES || *cursor < '0' || *cursor > '9') {
+      return 0;
+    }
+    errno = 0;
+    value = strtoul(cursor, &end, 10);
+    if (errno != 0 || end == cursor || value == 0ul ||
+        value > (unsigned long)KWS_MAX_PCM_BLOCK_SAMPLES) {
+      return 0;
+    }
+    sizes[(*count)++] = (size_t)value;
+    if (*end == '\0') {
+      return 1;
+    }
+    if (*end != ',' || end[1] == '\0') {
+      return 0;
+    }
+    cursor = end + 1;
+  }
+  return 0;
+}
+
 static int parse_feature_dim(const char *text, uint16_t *out_value) {
   char *end = NULL;
   unsigned long value;
@@ -44,18 +74,30 @@ int main(int argc, char **argv) {
   float features[KWS_MAX_FEATURE_DIM];
   uint32_t remaining;
   size_t frame_index = 0u;
+  size_t chunk_sizes[MAX_CHUNK_SIZES] = {1u};
+  size_t chunk_count = 1u;
+  size_t chunk_index = 0u;
   int exit_code = 1;
 
-  if (argc < 2 || argc > 4) {
-    fprintf(stderr, "usage: %s audio.wav [feature-dim] [logmel|pcen-lite]\n", argv[0]);
+  if (argc < 2 || argc > 5) {
+    fprintf(stderr,
+            "usage: %s audio.wav [feature-dim] [logmel|pcen-lite] "
+            "[chunk-samples,...]\n", argv[0]);
     return 2;
   }
   if (argc >= 3 && parse_feature_dim(argv[2], &feature_dim) == 0) {
     fprintf(stderr, "feature-dim must be 1..%u\n", KWS_MAX_FEATURE_DIM);
     return 2;
   }
-  if (argc == 4 && parse_frontend(argv[3], &frontend_kind) == 0) {
+  if (argc >= 4 && parse_frontend(argv[3], &frontend_kind) == 0) {
     fprintf(stderr, "frontend must be logmel or pcen-lite\n");
+    return 2;
+  }
+
+  if (argc == 5 &&
+      parse_chunk_sizes(argv[4], chunk_sizes, &chunk_count) == 0) {
+    fprintf(stderr, "chunk sizes must be 1..%u (at most %u entries)\n",
+            KWS_MAX_PCM_BLOCK_SAMPLES, MAX_CHUNK_SIZES);
     return 2;
   }
 
@@ -81,24 +123,31 @@ int main(int argc, char **argv) {
 
   remaining = wav_bytes;
   while (remaining >= sizeof(int16_t)) {
-    int16_t sample;
-    if (fread(&sample, sizeof(sample), 1u, wav) != 1u) {
+    int16_t pcm[KWS_MAX_PCM_BLOCK_SAMPLES];
+    size_t count = chunk_sizes[chunk_index];
+    if (count > (size_t)remaining / sizeof(pcm[0])) {
+      count = (size_t)remaining / sizeof(pcm[0]);
+    }
+    if (fread(pcm, sizeof(pcm[0]), count, wav) != count) {
       fprintf(stderr, "truncated WAV data\n");
       goto cleanup;
     }
-    remaining -= (uint32_t)sizeof(sample);
-    if (kws_frontend_push(&frontend, sample, features) != 0) {
-      fprintf(stdout,
-              "{\"frame\":%zu,\"dbfs\":%.9g,\"features\":[",
-              frame_index, (double)kws_frontend_last_dbfs(&frontend));
-      for (uint16_t i = 0u; i < feature_dim; ++i) {
-        if (i != 0u) {
-          fputc(',', stdout);
+    remaining -= (uint32_t)(count * sizeof(pcm[0]));
+    chunk_index = (chunk_index + 1u) % chunk_count;
+    for (size_t sample = 0u; sample < count; ++sample) {
+      if (kws_frontend_push(&frontend, pcm[sample], features) != 0) {
+        fprintf(stdout,
+                "{\"frame\":%zu,\"dbfs\":%.9g,\"features\":[",
+                frame_index, (double)kws_frontend_last_dbfs(&frontend));
+        for (uint16_t i = 0u; i < feature_dim; ++i) {
+          if (i != 0u) {
+            fputc(',', stdout);
+          }
+          fprintf(stdout, "%.9g", (double)features[i]);
         }
-        fprintf(stdout, "%.9g", (double)features[i]);
+        fputs("]}\n", stdout);
+        frame_index++;
       }
-      fputs("]}\n", stdout);
-      frame_index++;
     }
   }
   if (remaining != 0u) {

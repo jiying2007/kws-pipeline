@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "31f178bae571e21119ebff2a1e4cf8ec895391c2",
-      "sha256": "33279abdac928c64200910338351102fc3007be5a43a32693e878641bafbf899",
-      "bytes": 31481
+      "git_blob_sha1": "d4668faa13392984311d348aeeb5738ba40c0456",
+      "sha256": "8ca3fc180180d84249cb396f59d45203fdfdc8bbc66a1110312fc085dcfeea6c",
+      "bytes": 34706
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15295,9 +15295,9 @@
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
       "mode": "100644",
-      "git_blob_sha1": "f6092ff3145726e33cc3ebc515cfa0a93ec2b57a",
-      "sha256": "7f36b5d8a8aae931560b17c68daf36c227585a148f9ba8dca85abeb3586d95bd",
-      "bytes": 2326
+      "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8",
+      "sha256": "3c2c64bad335b31a5d22624f84055a8dc52eed83aaaf152698d2d2e60c131920",
+      "bytes": 2555
     },
     {
       "path": ".github/workflows/far-nightly.yml",
@@ -16390,6 +16390,75 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "f47e81d3924006f48ed2a0a4d2074e5891577f95",
+      "operation_id": "required-review-current-workflow-identities-20261010",
+      "scope": "Run all five pure-stdlib quality review suites and dataset identity guards in the canonical required chain under normal, -O and -OO; keep the standalone quality suite manual-only to avoid duplicate automatic runs. Enforce current identity of the separately allowed source-consolidation workflow.",
+      "rationale": "Current public workflow metadata only. Explicit current_added_active_workflows binds the allowed 55th workflow by exact byte count, mode, Git blob SHA-1 and SHA-256, independently of historical maintenance receipts. All original retained source bytes and freezes remain unchanged; no ruleset, runtime authority or model result changes.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "31f178bae571e21119ebff2a1e4cf8ec895391c2",
+            "sha256": "33279abdac928c64200910338351102fc3007be5a43a32693e878641bafbf899",
+            "bytes": 31481
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "d4668faa13392984311d348aeeb5738ba40c0456",
+            "sha256": "8ca3fc180180d84249cb396f59d45203fdfdc8bbc66a1110312fc085dcfeea6c",
+            "bytes": 34706
+          }
+        },
+        {
+          "path": ".github/workflows/experiment-quality-guards.yml",
+          "before": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "git_blob_sha1": "f6092ff3145726e33cc3ebc515cfa0a93ec2b57a",
+            "sha256": "7f36b5d8a8aae931560b17c68daf36c227585a148f9ba8dca85abeb3586d95bd",
+            "bytes": 2326
+          },
+          "after": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8ed245655eca703543563e6382cb212ea95b6ef8",
+            "sha256": "3c2c64bad335b31a5d22624f84055a8dc52eed83aaaf152698d2d2e60c131920",
+            "bytes": 2555
+          }
+        },
+        {
+          "path": ".github/workflows/research-source-consolidation.yml",
+          "before": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
+            "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+            "bytes": 3719
+          },
+          "after": {
+            "path": ".github/workflows/research-source-consolidation.yml",
+            "mode": "100644",
+            "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
+            "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+            "bytes": 3719
+          }
+        }
+      ]
+    }
+  ],
+  "current_added_active_workflows": [
+    {
+      "path": ".github/workflows/research-source-consolidation.yml",
+      "mode": "100644",
+      "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
+      "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
+      "bytes": 3719
     }
   ]
 }

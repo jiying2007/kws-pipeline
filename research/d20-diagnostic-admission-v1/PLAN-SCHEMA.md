@@ -28,7 +28,9 @@ a hard resource limit, backend thread control, dependency identity or admission.
 `contract.py` is a PLAN-SHAPE CHECKER ONLY. The function `validate(plan)` checks
 798 distinct row/stage/backend labels, shapes, byte counts, syntactic digests,
 paired digest equality, frozen expected source-hash strings, original gates and
-versions, a single declared C-saved anchor, and no output chaining. Its return
+versions, a single declared C-saved anchor, and no output chaining. Dimensions,
+byte counts and frozen budgets must be JSON integers; equal-valued floats and
+booleans are rejected, as they already are for row and stage indices. Its return
 always says numerical_admission=false, execution_ready=false and
 input_authenticity_verified=false, even for a syntactically valid plan.
 
@@ -100,9 +102,13 @@ python3 -S -B -O research/d20-diagnostic-admission-v1/test_saved_inputs.py
 python3 -S -B -OO research/d20-diagnostic-admission-v1/test_saved_inputs.py
 ```
 
-These nine tests cover only small valid-format byte/metadata fixtures, all row
+These ten tests cover only small valid-format byte/metadata fixtures, all row
 and stage mappings, exact offsets, signed-zero bytes, and shared pair slices.
-Two ordinary-file expected SHA/length mismatches must fail before parsing.
+Two ordinary-file expected SHA/length mismatches fail in the byte reader. A mocked
+fourth-file authentication failure through the public CLI additionally verifies
+that all four reads precede archive/JSON parsing, plan construction, output
+directory/file creation and success receipts. No archive codec is exercised by
+this failure test.
 Synthetic helper results cannot claim authenticity. Tests use no model, archive
 codec/decompression counterexamples, backend, resource qualification or runtime
 probe. CI runs the same tests in the existing standard-library source-check job.
@@ -133,7 +139,7 @@ All nine focused tests passed in normal, `-O` and `-OO` modes. No model/operator
 calls or numerical imports occurred; execution remained NOT_READY.
 
 `python -B -m unittest discover -s . -v` tests one synthetic shape-valid plan and
-17 invalid plan mutations, plus bounded-output/redaction and real temporary
+17 invalid plan mutations and JSON integer-type regressions, plus bounded-output/redaction and real temporary
 METADATA fixtures (including the 64KiB boundary). Run also with `-O` and `-OO`: validation uses
 explicit exceptions, not removable asserts. These are metadata tests, NOT
 single-op tests or numerical backend qualification.
