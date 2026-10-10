@@ -1,0 +1,85 @@
+{
+  "schema": "screen32-successful-probe-provenance-v1",
+  "retrieved_utc": "2026-10-10",
+  "run_id": 38017741858,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38017741858",
+  "head_sha": "d877ae89da6d42ad6135b30e19a3362773ec1f88",
+  "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2",
+  "archive": {
+    "artifact_id": 11656763110,
+    "local_download_filename": "qwen16-probe2-38017741858.zip",
+    "workflow_declared_artifact_name": "qwen16-container-probe-2-terminal-evidence",
+    "bytes": 3277,
+    "sha256": "26b44670e4398cb5aa21ec8cdf5027c26a0949ff8ff9e644cf4c48ad8150f1d5",
+    "archive_body_retained": false
+  },
+  "exact_members": {
+    "artifact-freeze.json": {
+      "bytes": 511,
+      "sha256": "16367bda2b3873c8c14bb11ff36f4a4f78570e51c87844b6712108559b996f4f"
+    },
+    "container-setup.json": {
+      "bytes": 553,
+      "sha256": "c135d51e8ec6a84436b1210056e092164e65cb1ec2b3bb4dcf0b06d0630a22a9"
+    },
+    "host-receipt.json": {
+      "bytes": 2133,
+      "sha256": "20eb28e54d05c3ac99a4064b663fd8818be84d3cca4937f1abce56332c71098b"
+    },
+    "image-transfer.json": {
+      "bytes": 1297,
+      "sha256": "983fec8bf8724c57259fc2fb109e43d9cfccd9f1fdd8a993df09f4f5fe577747"
+    },
+    "setup/probe-kernel.json": {
+      "bytes": 679,
+      "sha256": "acbdf040467f8ce9f6202359a4901f029548cd84b8f613cf690ef3b199aeb79b"
+    }
+  },
+  "successful_probe_reference": {
+    "directory": "research/source-screen32-v1/evidence/probe-2-38017741858",
+    "artifact_freeze_sha256": "16367bda2b3873c8c14bb11ff36f4a4f78570e51c87844b6712108559b996f4f",
+    "source_head_sha": "d877ae89da6d42ad6135b30e19a3362773ec1f88"
+  },
+  "member_retention": "Only the exact five original public JSON members are inside the proof directory; this provenance is a sibling. Archive digest, internal hashes and the unmocked frozen verify_successful_probe function passed on the retained bytes.",
+  "observed_scope": {
+    "probe_attempt": 2,
+    "run_number": 2,
+    "run_attempt": 1,
+    "container_start_attempts": 1,
+    "all_five_lifecycle_operations": "COMPLETE",
+    "exit_code": 0,
+    "oom_killed": false,
+    "cleanup": "COMPLETE",
+    "python_version": "3.12.14",
+    "kernel_memory_max_bytes": 12884901888,
+    "kernel_swap_max_bytes": 0,
+    "kernel_cpu_max": "400000 100000",
+    "kernel_pids_max": 256,
+    "non_root_uid": 1001,
+    "capabilities": "none",
+    "no_new_privileges": true,
+    "seccomp_filter": true,
+    "private_cgroup_root": true,
+    "read_only_root": true,
+    "network_mode": "SETUP_BRIDGE",
+    "model_calls": 0,
+    "runtime_installs": 0
+  },
+  "container_contract_sha256": "f632e016c091ba008cdc3f0fc09b214ae86338a8572f3f0bdbaa262aaedf3243",
+  "evidence_limits": {
+    "model_fit": "NOT_TESTED",
+    "model_latency": "NOT_TESTED",
+    "inference_network_none": "NOT_EXERCISED_BY_SETUP_PROBE",
+    "current_host_capacity": "MUST_BE_RECHECKED",
+    "cumulative_image_transfer_bytes": "UNVERIFIED"
+  },
+  "diagnostic_slots_consumed": 2,
+  "diagnostic_slots_remaining": 0,
+  "automatic_retry": false,
+  "human_review": "PENDING",
+  "human_gold": false,
+  "training_admitted": false,
+  "shipping_approved": false,
+  "d20": "FAIL",
+  "d90": "NOT_RUN"
+}

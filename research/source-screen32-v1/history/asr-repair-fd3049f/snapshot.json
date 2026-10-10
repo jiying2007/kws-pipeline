@@ -1,33 +1,24 @@
 {
-  "schema": "screen32-executed-v3-source-reconstruction-v1",
-  "executed_head_sha": "621ba90acd2d78976f4dcf07a385cd4e615ac358",
-  "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2",
-  "frozen_file_count": 66,
-  "evidence_retention_commit": "9934a5e04e50b7609259c70dfbd3c3cb11bf9eaa",
-  "reconstruction": "For each of the 66 paths in execution-freeze.json, use the snapshot override if listed; otherwise use the same path in the current tree. Verify every SHA-256. Never execute this historical reconstruction or reactivate its consumed identity.",
+  "schema": "screen32-inert-source-reconstruction-v1",
+  "prepared_source_commit": "fd3049f744f5e098e69ce9122fbca65fc2726b23",
+  "execution_performed": false,
+  "new_execution_approved": false,
+  "reconstruction": "For each frozen source path use a listed snapshot override, otherwise the same current-tree path; verify every SHA-256. This is historical software preservation, not an execution route.",
+  "source_freeze_sha256": "8a400de6dac99cc4cb0834e50492d2bfdb1307069257f2ac6d9f1fd878ac9ce7",
+  "frozen_file_count": 69,
   "overrides": {
-    "research/source-screen32-v1/asr_worker.py": {
-      "snapshot_path": "research/source-screen32-v1/history/executed-v3-621ba90/originals/research/source-screen32-v1/asr_worker.py",
-      "bytes": 39671,
-      "sha256": "0a64fd9dd2b7345043b890cbe168d47bac6b9abe723f399753c4bbc050bbc754"
-    },
     "research/source-screen32-v1/hosted_run.py": {
-      "snapshot_path": "research/source-screen32-v1/history/executed-v3-621ba90/originals/research/source-screen32-v1/hosted_run.py",
+      "snapshot_path": "research/source-screen32-v1/history/asr-repair-fd3049f/originals/research/source-screen32-v1/hosted_run.py",
       "bytes": 50711,
       "sha256": "91c864baabd3f1eae90b4829e31e1be8c9b8da79a99755d8de4338eb801cec1f"
     },
-    "research/source-screen32-v1/test_asr_worker.py": {
-      "snapshot_path": "research/source-screen32-v1/history/executed-v3-621ba90/originals/research/source-screen32-v1/test_asr_worker.py",
-      "bytes": 17726,
-      "sha256": "62639420842cf0cd57624eb8420619eb2d30715f57bc3e07ec4af311e588293e"
-    },
     "research/source-screen32-v1/test_contract.py": {
-      "snapshot_path": "research/source-screen32-v1/history/executed-v3-621ba90/originals/research/source-screen32-v1/test_contract.py",
-      "bytes": 20731,
-      "sha256": "b52904a02fc9476043f9873205dde5067a2848fe44385932f1f19d56a95193fa"
+      "snapshot_path": "research/source-screen32-v1/history/asr-repair-fd3049f/originals/research/source-screen32-v1/test_contract.py",
+      "bytes": 20756,
+      "sha256": "efbc77de438ca3da946022d51fda2832b63bc70aa49bad4fc36d34526fb3b19b"
     },
     "research/source-screen32-v1/test_hosted_run.py": {
-      "snapshot_path": "research/source-screen32-v1/history/executed-v3-621ba90/originals/research/source-screen32-v1/test_hosted_run.py",
+      "snapshot_path": "research/source-screen32-v1/history/asr-repair-fd3049f/originals/research/source-screen32-v1/test_hosted_run.py",
       "bytes": 44764,
       "sha256": "f63421c36f3e22f841ee72bb2558ebd101e0fbd183e7b75873005bfe2ac505e5"
     }
@@ -74,7 +65,9 @@
     "research/qwen6_tts/setup_locked.py",
     "research/qwen6_tts/supervision.py",
     "research/qwen6_tts/wheel_identity.py",
+    "research/source-screen32-v1/ASR_REPAIR_2026-10-10.md",
     "research/source-screen32-v1/README.md",
+    "research/source-screen32-v1/asr_worker.py",
     "research/source-screen32-v1/container-lock.json",
     "research/source-screen32-v1/contract.py",
     "research/source-screen32-v1/hosted-resource-observation.json",
@@ -86,15 +79,18 @@
     "research/source-screen32-v1/readiness.json",
     "research/source-screen32-v1/reuse-pins.json",
     "research/source-screen32-v1/runtime_scope.py",
+    "research/source-screen32-v1/sense_adapter.py",
     "research/source-screen32-v1/setup_adapter.py",
     "research/source-screen32-v1/source-review.json",
     "research/source-screen32-v1/source-roles.json",
+    "research/source-screen32-v1/test_asr_worker.py",
     "research/source-screen32-v1/test_probe_host.py",
     "research/source-screen32-v1/test_probe_worker.py",
+    "research/source-screen32-v1/test_sense_adapter.py",
     "research/source-screen32-v1/test_setup_adapter.py",
     "research/source-screen32-v1/tts_worker.py",
     "research/source-screen32-v1/workflow.yml"
   ],
-  "historical_execution_permission_consumed": true,
-  "new_execution_approved": false
+  "public_main_commit": "00fd40b6625f9606cf03481f0ac741d135ef2747",
+  "public_main_tree": "f99b6034834bce21dd0580bb992817067be5ea40"
 }
