@@ -1,6 +1,6 @@
 {
   "schema": "screen32-probe-release-v1",
-  "approved": false,
-  "attempt": null,
+  "approved": true,
+  "attempt": 2,
   "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2"
 }
