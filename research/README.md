@@ -10,6 +10,13 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
+**2026-10-10 source-screen result:** [Qwen16 actual run: 16 generated, ASR partial failure](source-screen32-v1/evidence/run-38018029787/README.md).
+Qwen-ASR completed 16 decodes; SenseVoice failed its first attempted clip and left
+15 unrun. Single-ASR intended-text agreement is 9/16; human review is pending for
+all clips. The source-screen preparation README/plan/readiness remain the frozen
+historical snapshot. Raw audio, failed outcomes and exact hashes are retained;
+there is no two-ASR pass or training admission.
+
 Current delivery: [complete public archive + index + verified restoration / 完整归档＋索引＋可验证恢复](consolidation/ARCHIVE_DELIVERY_2026-10-09.md).
 All 1,886 public logical members / 1,403 unique objects were restored and verified
 at fixed data commit `d9a65cc616cbb0e55a99f4c0e77c16e29bc6622a`.
