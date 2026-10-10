@@ -3,10 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import pathlib
+import sys
+import wave
 
-from corpus_identity import corpus_digest
+from corpus_identity import corpus_digest, inspect_pcm16_wav
 from qualification_common import (
     FRAME_HOP_SAMPLES,
+    FRAME_LENGTH_SAMPLES,
+    SAMPLE_RATE_HZ,
     close_enough,
     finite,
     json_int,
@@ -20,11 +25,110 @@ from runtime_soak_contract import (
 UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
+# Use the same matcher as acoustic qualification, with a fixed, recorded release
+# policy. Never accept tolerances supplied by a measured summary as authority.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "eval"))
+from score_events import score, validate_detections, validate_recordings
+
+EVENT_SCORING_CONTRACT = {
+    "matcher": "keyword-monotonic-max-cardinality-min-end-distance-v1",
+    "pre_tolerance_ms": 150.0,
+    "post_tolerance_ms": 500.0,
+    "latency": "max-zero-detection-minus-reference-end-ms",
+    "percentile_estimator": "linear-rank-n-minus-one-v1",
+}
+BOARD_SCHEMA_VERSION = 2
+BOARD_SEMANTICS = {
+    "timing_unit": "input-call",
+    "deadline_basis": "nominal-block",
+    "tail_policy": "short-final-call-included-no-padding",
+    "percentile_estimator": "nearest-rank-ceil-v1",
+    "repeat_policy": "reset-before-each-repeat",
+    "workload_contract": "pcm16-400-window-320-hop-v1",
+}
+
+
+def _jsonl_text(raw: str, label: str) -> list[dict]:
+    rows = []
+    for line in raw.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        row = json.loads(line)
+        if not isinstance(row, dict):
+            raise ValueError(f"{label}: expected JSON object")
+        rows.append(row)
+    return rows
+
+
+def _same_metric(actual, expected, label: str) -> None:
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict) or actual.keys() != expected.keys():
+            raise ValueError(f"{label} does not match canonical event scoring")
+        for key, value in expected.items():
+            _same_metric(actual[key], value, f"{label}.{key}")
+    elif isinstance(expected, float):
+        minimum = 0.0 if label.endswith("_post_end_latency_ms") else None
+        close_enough(finite(actual, label, minimum), expected, label, 1e-12, 1e-9)
+    elif type(actual) is not type(expected) or actual != expected:
+        raise ValueError(f"{label} does not match canonical event scoring")
+
+
+def validate_event_metrics(summary: dict, raw_inputs: dict, hashes: dict) -> dict:
+    """Replay original hash-bound JSONL bytes, not a summary's claimed matches."""
+    if not isinstance(raw_inputs, dict):
+        raise ValueError("evaluation scoring_inputs must retain original JSONL text")
+    for key in ("references", "detections"):
+        raw = raw_inputs.get(key)
+        if not isinstance(raw, str):
+            raise ValueError(f"evaluation scoring_inputs.{key} must be text")
+        if hashlib.sha256(raw.encode("utf-8")).hexdigest() != hashes[f"{key}_sha256"]:
+            raise ValueError(f"evaluation scoring_inputs.{key} hash does not match selected file")
+    recordings = validate_recordings(_jsonl_text(raw_inputs["references"], "references"))
+    detections = validate_detections(_jsonl_text(raw_inputs["detections"], "detections"), recordings)
+    canonical, _, _ = score(
+        recordings, detections,
+        EVENT_SCORING_CONTRACT["pre_tolerance_ms"] / 1000.0,
+        EVENT_SCORING_CONTRACT["post_tolerance_ms"] / 1000.0,
+    )
+    for key, expected in canonical.items():
+        _same_metric(summary.get(key), expected, f"evaluation.{key}")
+    return {**canonical, "scoring_contract": dict(EVENT_SCORING_CONTRACT)}
+
+
+def board_audio_geometry(audio_samples: int) -> dict:
+    samples = json_int(audio_samples, "board.audio_samples", FRAME_LENGTH_SAMPLES)
+    return {
+        "audio_samples": samples,
+        "audio_seconds": samples / float(SAMPLE_RATE_HZ),
+        "blocks_per_repeat": (samples + FRAME_HOP_SAMPLES - 1) // FRAME_HOP_SAMPLES,
+        "processed_frames_per_repeat": 1 + (samples - FRAME_LENGTH_SAMPLES) // FRAME_HOP_SAMPLES,
+        "final_block_samples": (samples - 1) % FRAME_HOP_SAMPLES + 1,
+    }
+
+
+def board_wav_stats(path: pathlib.Path) -> dict:
+    # Read decoded payload as well as header: non-empty/truncated/non-PCM files
+    # and sub-window workloads cannot be promoted by repeating a reset stream.
+    try:
+        identity = inspect_pcm16_wav(path)
+    except (wave.Error, EOFError) as exc:
+        raise ValueError("board audio must be complete mono 16-kHz PCM16 WAV") from exc
+    return {**identity, **board_audio_geometry(identity["frames"])}
+
+
+def require_board_raw_binding(summary_artifact: dict, raw_artifacts: list[dict]) -> None:
+    expected = {key: summary_artifact[key] for key in ("name", "sha256", "bytes")}
+    matches = [item for item in raw_artifacts if item.get("name") == expected["name"]]
+    if len(matches) != 1 or matches[0] != expected:
+        raise ValueError("board summary must be retained in the attested raw evidence tuple")
+
+
 def validate_eval(
     summary: dict,
     provenance: dict,
     actual_hashes: dict[str, str],
     actual_corpus: dict,
+    scoring_inputs: dict,
 ) -> dict:
     if json_int(provenance.get("schema_version"), "evaluation provenance schema_version") != 2:
         raise ValueError("evaluation provenance schema_version must be 2")
@@ -85,6 +189,7 @@ def validate_eval(
     close_enough(result["far_per_hour"], expected_far, "evaluation.far_per_hour", 1e-9, 1e-12)
     if result["frr"] > 1.0 or result["p50_post_end_latency_ms"] > result["p95_post_end_latency_ms"]:
         raise ValueError("evaluation summary contains impossible values")
+    result.update(validate_event_metrics(summary, scoring_inputs, actual_hashes))
     return result
 
 
@@ -94,9 +199,24 @@ def validate_board(
     pack_bytes: int,
     source_sha: str,
     actual_hashes: dict[str, str],
+    actual_audio: dict,
 ) -> dict:
-    if json_int(summary.get("schema_version"), "board.schema_version") != 1:
-        raise ValueError("board benchmark schema_version must be 1")
+    if not isinstance(summary, dict):
+        raise ValueError("board summary must be a JSON object")
+    if json_int(summary.get("schema_version"), "board.schema_version") != BOARD_SCHEMA_VERSION:
+        raise ValueError("board benchmark schema_version must be 2")
+    if actual_audio.get("file_sha256") != actual_hashes["audio_sha256"]:
+        raise ValueError("board WAV identity does not match selected audio")
+    geometry = board_audio_geometry(actual_audio.get("frames"))
+    for key, expected in BOARD_SEMANTICS.items():
+        if summary.get(key) != expected:
+            raise ValueError(f"board.{key} does not match required benchmark semantics")
+    for key, expected in {"sample_rate_hz": SAMPLE_RATE_HZ,
+                          "frame_length_samples": FRAME_LENGTH_SAMPLES,
+                          "frame_hop_samples": FRAME_HOP_SAMPLES,
+                          **{k: v for k, v in geometry.items() if k != "audio_seconds"}}.items():
+        if json_int(summary.get(key), f"board.{key}", 1) != expected:
+            raise ValueError(f"board.{key} does not match selected PCM geometry")
     for key, expected in actual_hashes.items():
         measured = sha256_value(summary.get(key), f"board.{key}")
         if measured != expected:
@@ -109,13 +229,25 @@ def validate_board(
     ):
         raise ValueError("board benchmark artifact sizes do not match selected artifacts")
     result = {
+        "schema_version": BOARD_SCHEMA_VERSION,
+        **BOARD_SEMANTICS,
+        **geometry,
+        "audio_identity": actual_audio,
+        "sample_rate_hz": SAMPLE_RATE_HZ,
+        "frame_length_samples": FRAME_LENGTH_SAMPLES,
+        "frame_hop_samples": FRAME_HOP_SAMPLES,
+        "block_samples": FRAME_HOP_SAMPLES,
+        "model_bytes": model_bytes,
+        "keyword_pack_bytes": pack_bytes,
+        "processed_frames": json_int(summary.get("processed_frames"), "board.processed_frames", 1),
+        "processed_samples": json_int(summary.get("processed_samples"), "board.processed_samples", 1),
         **actual_hashes,
         "runtime_version": required_text(summary, "runtime_version", "board"),
         "runtime_source_revision": required_text(summary, "runtime_source_revision", "board"),
         "runtime_config_digest": sha256_value(summary.get("runtime_config_digest"), "board.runtime_config_digest"),
         "runtime_target": required_text(summary, "runtime_target", "board"),
         "audio_seconds": finite(summary["audio_seconds"], "board.audio_seconds", 0.0),
-        "repeats": json_int(summary["repeats"], "board.repeats", 1),
+        "repeats": json_int(summary["repeats"], "board.repeats", 1, 1000),
         "blocks": json_int(summary["blocks"], "board.blocks", 1),
         "arena_bytes": json_int(summary["arena_bytes"], "board.arena_bytes", 1),
         "block_deadline_us": finite(summary["block_deadline_us"], "board.block_deadline_us", 0.0),
@@ -128,12 +260,23 @@ def validate_board(
         "rtf": finite(summary["rtf"], "board.rtf", 0.0),
         "p99_headroom": finite(summary["p99_headroom"], "board.p99_headroom", 0.0),
     }
+    close_enough(result["audio_seconds"], geometry["audio_seconds"], "board.audio_seconds", 0.0, 0.00000051)
+    if result["blocks"] != geometry["blocks_per_repeat"] * result["repeats"]:
+        raise ValueError("board block count does not match selected PCM geometry and repeats")
+    if result["processed_samples"] != geometry["audio_samples"] * result["repeats"]:
+        raise ValueError("board processed samples do not match PCM input and repeats")
+    if result["processed_frames"] != geometry["processed_frames_per_repeat"] * result["repeats"]:
+        raise ValueError("board processed frames do not match effective model workload")
+    if any(result[key] <= 0.0 for key in ("total_process_us", "p99_process_us")):
+        raise ValueError("board timings must represent a positive measured workload")
     if result["audio_seconds"] <= 0.0 or result["block_deadline_us"] != 20000.0:
         raise ValueError("board benchmark audio/deadline is invalid")
     if result["runtime_source_revision"] != source_sha:
         raise ValueError("board benchmark runtime source does not match qualification source")
     if not result["p50_process_us"] <= result["p95_process_us"] <= result["p99_process_us"] <= result["max_process_us"]:
         raise ValueError("board benchmark percentiles are not monotonic")
+    if result["mean_process_us"] > result["max_process_us"] + 0.001:
+        raise ValueError("board mean processing time exceeds maximum")
     close_enough(result["mean_process_us"], result["total_process_us"] / result["blocks"], "board.mean_process_us", 1e-6, 0.01)
     close_enough(
         result["rtf"],

@@ -90,7 +90,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`collect_target_evidence.py`](collect_target_evidence.py)
 - [`final_afe_identity.py`](final_afe_identity.py)
 - [`qualification_common.py`](qualification_common.py)
-- [`qualification_gate.py`](qualification_gate.py)
+- [`qualification_gate.py`](qualification_gate.py) (requires original `--references`, `--detections`, and `--board-audio` for independent replay)
 - [`qualification_manifest.py`](qualification_manifest.py)
 - [`qualification_metrics.py`](qualification_metrics.py)
 - [`run_dataset_iteration.py`](run_dataset_iteration.py)
@@ -112,6 +112,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
 - [`verify_model_registry.py`](verify_model_registry.py)
 - [`verify_model_release.py`](verify_model_release.py)
+- [`verify_release_tag.py`](verify_release_tag.py) — Read-only exact commit binding for lightweight or annotated release tags; bootstrap absence is explicit.
 
 ## Repository verification and maintenance
 

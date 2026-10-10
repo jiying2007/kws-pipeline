@@ -97,19 +97,37 @@ qualification evidence boundary physical rather than merely conventional.
 
 ## Deterministic feature cache
 
-Product RNN training enables the existing deterministic frontend feature cache
-with `train.feature_cache_max_items=8192`. Training manifests contain already
-rendered PCM WAV files and `Manifest.__getitem__` performs only deterministic
-WAV decoding plus frontend feature extraction, so caching does not freeze any
-stochastic augmentation or change the training sample stream.
+Product RNN training uses one manifest cache with
+`train.feature_cache_max_items=8192` and
+`train.feature_cache_max_bytes=268435456` (256 MiB). Both limits apply together
+across all manifests in a trainer process. The frontend has no separate cache.
+Zero in either limit disables retention entirely, including direct frontend
+calls; an enabled item limit requires an explicit byte budget.
 
-The same cache wrapper is used for base domain rounds and adversarial refinement.
-It changes wall-clock work only: epoch count, sample order, optimizer state,
-losses, replay composition, thresholds and gates are unchanged. The wrapper is
-bound into `training_code_sha256`, and exported model provenance records
-`deterministic-feature-cache-v1`, the configured capacity and
-`training_math_changed=false`. Promotion rejects future product candidates
-that lack this evidence.
+Entries retain the exact feature/target/optional VAD tuple. The byte limit counts
+unique retained CPU tensor storage, including complete backing storage for views
+and storage shared across entries. It does not claim to cap Python object overhead,
+transient tensors, model/optimizer memory or total process RSS. Oversized entries
+are returned without caching and do not evict useful entries. Deterministic LRU
+eviction enforces both limits; accelerator/gradient-bearing results bypass the
+cache. Inputs are the already-rendered immutable PCM WAV corpus, with no stochastic
+augmentation in `Manifest.__getitem__`.
+
+Base domain rounds and adversarial refinement share this wrapper. Sample order,
+feature arithmetic, targets, optimizer state, losses, replay composition and gates
+are unchanged. Cache statistics are available via `feature_cache_stats()` and are
+printed as `feature_cache_stats={...}` at trainer exit, including hits, misses,
+evictions, bypasses, oversized entries, resident items/bytes and peak resident
+bytes. These are bookkeeping counters, not measured speedup or acoustic evidence.
+
+The wrapper is bound into `training_code_sha256`. New provenance records
+`deterministic-feature-cache-v2`, both capacities, process scope, storage accounting,
+LRU policy and `training_math_changed=false`. Historical v1 evidence remains
+readable with its original item-only claim; current promotion requires v2 and the
+configured positive byte budget. The retired GRU trainer route is rejected rather
+than forwarded to a nonexistent script. Stdlib fake-tensor tests cover cache
+ownership and accounting; numerical/bitwise parity and acoustic effect are not
+established by those tests and retain their separate validation boundaries.
 
 ## Product development preflight
 

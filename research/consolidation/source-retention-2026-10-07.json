@@ -15260,16 +15260,16 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "d4668faa13392984311d348aeeb5738ba40c0456",
-      "sha256": "8ca3fc180180d84249cb396f59d45203fdfdc8bbc66a1110312fc085dcfeea6c",
-      "bytes": 34706
+      "git_blob_sha1": "6580110e027ed07a6f311fc8f7cd78f41528af58",
+      "sha256": "fcafbba7e444d0bcb3040054ad1ab93d4d6eb4e9fabe9605653fefb83db9de58",
+      "bytes": 35327
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
       "mode": "100644",
-      "git_blob_sha1": "2875f16d075fb923df15839db0d0d63c03d9b427",
-      "sha256": "a91d825b466d811b6dd3c20532998af9d1be5410d3125fd07c231805638be193",
-      "bytes": 7534
+      "git_blob_sha1": "10d8d9d80edc8b0239f3a93dbce2d685e53cad09",
+      "sha256": "c94f33f945ff92ed7a2db362d10a177a2f8737a2347c9da84609e2633659a323",
+      "bytes": 8555
     },
     {
       "path": ".github/workflows/decoder-boundary-requalification.yml",
@@ -15344,9 +15344,9 @@
     {
       "path": ".github/workflows/model-promotion.yml",
       "mode": "100644",
-      "git_blob_sha1": "61dbe7e8c0fddbe39530325951764d05162a02b2",
-      "sha256": "07b3aa49cbbe0b64618023ce25e179aafeb5f816c606b1d035ebdd06cd9b38a9",
-      "bytes": 13202
+      "git_blob_sha1": "e08425a6be731ee2811dc1b902ee06d1bb4bb1f1",
+      "sha256": "24613f3de0158ddc94e44d8905a093cfd70cc4c7886e5fe433f056589902f14a",
+      "bytes": 14130
     },
     {
       "path": ".github/workflows/model-registry-contract.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "236d42d4b89aeddd13dc0e0867600c4f67f467d5",
-      "sha256": "d9136d907eb2c329ef388063364a8182e73224b25baa2b09f2259f9c3ffd5846",
-      "bytes": 24450
+      "git_blob_sha1": "1b1df381b0c55eb10e1377b955d4c2a433716095",
+      "sha256": "1e2ff6413a7d708047374e82cd2ec72be7a4cec3d73a14137b821dd9ea7bab7d",
+      "bytes": 25069
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -15414,9 +15414,9 @@
     {
       "path": ".github/workflows/release.yml",
       "mode": "100644",
-      "git_blob_sha1": "e2161bb740fa4e655606064a8dccfe435b19a215",
-      "sha256": "57554ceea6b34fe63e9cc7d0c87652273d4880975306e88e3c936d5ba4e732e8",
-      "bytes": 16429
+      "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1",
+      "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
+      "bytes": 16901
     },
     {
       "path": ".github/workflows/repository-cleanup.yml",
@@ -16447,6 +16447,129 @@
             "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
             "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
             "bytes": 3719
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "8d3c54aaeacf3590e695fc03e2aea157122c2de5",
+      "from_tree": "29eaf794cd95076ac471faf9abb06584b9313f77",
+      "operation_id": "release-provenance-cache-contract-hardening-20261010",
+      "scope": "Bind SDK/model publication to the actual peeled Git tag commit; require current protected-main promotion control plane; preserve literal model/dataset PR provenance; route offline release and cache regression contracts through existing CI.",
+      "rationale": "Public code and CI metadata maintenance only. All 55 current workflow identities are retained; original 102 core and 718 public research source bytes, archived originals, workflow allowance, execution authority, release/tag state and permission settings are unchanged. No model training, archive expansion, probe or product qualification is performed by this maintenance record.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "d4668faa13392984311d348aeeb5738ba40c0456",
+            "sha256": "8ca3fc180180d84249cb396f59d45203fdfdc8bbc66a1110312fc085dcfeea6c",
+            "bytes": 34706
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "a238e1211e3e083d2801bbb4d8c70f0b13d0cc6d",
+            "sha256": "f5108cb5b6b445a0db5af398784521afe0082588949acb395f0347f83b6a88fd",
+            "bytes": 34908
+          }
+        },
+        {
+          "path": ".github/workflows/dataset-driven-iteration.yml",
+          "before": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "git_blob_sha1": "2875f16d075fb923df15839db0d0d63c03d9b427",
+            "sha256": "a91d825b466d811b6dd3c20532998af9d1be5410d3125fd07c231805638be193",
+            "bytes": 7534
+          },
+          "after": {
+            "path": ".github/workflows/dataset-driven-iteration.yml",
+            "mode": "100644",
+            "git_blob_sha1": "10d8d9d80edc8b0239f3a93dbce2d685e53cad09",
+            "sha256": "c94f33f945ff92ed7a2db362d10a177a2f8737a2347c9da84609e2633659a323",
+            "bytes": 8555
+          }
+        },
+        {
+          "path": ".github/workflows/model-promotion.yml",
+          "before": {
+            "path": ".github/workflows/model-promotion.yml",
+            "mode": "100644",
+            "git_blob_sha1": "61dbe7e8c0fddbe39530325951764d05162a02b2",
+            "sha256": "07b3aa49cbbe0b64618023ce25e179aafeb5f816c606b1d035ebdd06cd9b38a9",
+            "bytes": 13202
+          },
+          "after": {
+            "path": ".github/workflows/model-promotion.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e08425a6be731ee2811dc1b902ee06d1bb4bb1f1",
+            "sha256": "24613f3de0158ddc94e44d8905a093cfd70cc4c7886e5fe433f056589902f14a",
+            "bytes": 14130
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "236d42d4b89aeddd13dc0e0867600c4f67f467d5",
+            "sha256": "d9136d907eb2c329ef388063364a8182e73224b25baa2b09f2259f9c3ffd5846",
+            "bytes": 24450
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1b1df381b0c55eb10e1377b955d4c2a433716095",
+            "sha256": "1e2ff6413a7d708047374e82cd2ec72be7a4cec3d73a14137b821dd9ea7bab7d",
+            "bytes": 25069
+          }
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "before": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e2161bb740fa4e655606064a8dccfe435b19a215",
+            "sha256": "57554ceea6b34fe63e9cc7d0c87652273d4880975306e88e3c936d5ba4e732e8",
+            "bytes": 16429
+          },
+          "after": {
+            "path": ".github/workflows/release.yml",
+            "mode": "100644",
+            "git_blob_sha1": "ff808152fd3a947d323f865f4e4bad101419eed1",
+            "sha256": "57e9059fce5d6d4069679be97cc4f35af9621caadff23509545be4fedfa7cf39",
+            "bytes": 16901
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "8d3c54aaeacf3590e695fc03e2aea157122c2de5",
+      "from_tree": "29eaf794cd95076ac471faf9abb06584b9313f77",
+      "operation_id": "optimized-corpus-admission-event-ci-contracts-20261010",
+      "prior_maintenance_operation_id": "release-provenance-cache-contract-hardening-20261010",
+      "scope": "Continue maintenance from the same reviewed public base by running corpus identity and training admission contracts in -O and -OO modes, plus optimized event-metadata-only qualification contracts, in existing canonical CI steps.",
+      "rationale": "Current public CI metadata only. Existing normal full qualification and board statistics lanes remain intact; no new workflow or benchmark job is added. All 55 current workflow identities, original 102 core and 718 public source bytes, archived originals, prior receipts, execution authority and repository permissions are preserved. The additional qualification commands process metadata only and do not execute a model or physical qualification.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "a238e1211e3e083d2801bbb4d8c70f0b13d0cc6d",
+            "sha256": "f5108cb5b6b445a0db5af398784521afe0082588949acb395f0347f83b6a88fd",
+            "bytes": 34908
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "6580110e027ed07a6f311fc8f7cd78f41528af58",
+            "sha256": "fcafbba7e444d0bcb3040054ad1ab93d4d6eb4e9fabe9605653fefb83db9de58",
+            "bytes": 35327
           }
         }
       ]

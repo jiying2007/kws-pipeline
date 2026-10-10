@@ -9,6 +9,7 @@ import math
 import pathlib
 import re
 import sys
+import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
@@ -16,7 +17,9 @@ sys.path.insert(0, str(ROOT / "training"))
 from training_admission import require_qualification_admission
 from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
-from corpus_identity import corpus_digest
+from corpus_identity import corpus_digest, require_audited_corpora
+from qualification_metrics import (validate_event_metrics, validate_board, board_wav_stats,
+                                   require_board_raw_binding, EVENT_SCORING_CONTRACT)
 from statistical_bounds import qualification_bounds
 
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
@@ -137,7 +140,9 @@ def validate_corpus(value: object, label: str) -> str:
     return digest
 
 
-def validate_manifest(manifest: dict) -> dict:
+def validate_manifest(manifest: dict, *, references: pathlib.Path | None = None,
+                      detections: pathlib.Path | None = None,
+                      board_audio: pathlib.Path | None = None) -> dict:
     if integer(manifest.get("schema_version"), "manifest.schema_version") != 3:
         raise ValueError("manifest schema_version must be 3")
     runtime = manifest.get("runtime")
@@ -184,6 +189,7 @@ def validate_manifest(manifest: dict) -> dict:
         "references",
         "detections",
         "board_runner",
+        "board_summary",
         "board_audio",
         "evidence_collector",
         "evidence_raw",
@@ -261,6 +267,17 @@ def validate_manifest(manifest: dict) -> dict:
     if corpus_digest(eval_rows) != eval_corpus_sha:
         raise ValueError("manifest evaluation audio corpus digest is inconsistent")
 
+    require_audited_corpora(dataset_audit, training["corpus_identity"], training_artifacts,
+                           eval_rows, hashes["references"])
+    if references is None or detections is None:
+        raise ValueError("qualification gate requires selected references and detections files")
+    if evaluation.get("scoring_contract") != EVENT_SCORING_CONTRACT:
+        raise ValueError("manifest evaluation scoring contract is unsupported")
+    validate_event_metrics(evaluation,
+        {"references": references.read_bytes().decode("utf-8"),
+         "detections": detections.read_bytes().decode("utf-8")},
+        {"references_sha256": hashes["references"], "detections_sha256": hashes["detections"]})
+
     board_links = {
         "runner_sha256": "board_runner",
         "model_sha256": "model",
@@ -270,6 +287,18 @@ def validate_manifest(manifest: dict) -> dict:
     for key, artifact_name in board_links.items():
         if validate_sha(board.get(key), f"board.{key}") != hashes[artifact_name]:
             raise ValueError(f"manifest board {key} cross-link is inconsistent")
+    if board_audio is None:
+        raise ValueError("qualification gate requires selected board audio")
+    raw_summary = board.get("summary_raw")
+    if not isinstance(raw_summary, str) or hashlib.sha256(raw_summary.encode("utf-8")).hexdigest() != hashes["board_summary"]:
+        raise ValueError("manifest board summary bytes do not match selected artifact")
+    validated_board = validate_board(json.loads(raw_summary), artifacts["model"]["bytes"],
+                                    artifacts["keyword_pack"]["bytes"], source_sha,
+                                    {key: hashes[name] for key, name in board_links.items()},
+                                    board_wav_stats(board_audio))
+    for key, expected_value in validated_board.items():
+        if board.get(key) != expected_value:
+            raise ValueError(f"manifest board.{key} does not match retained benchmark summary")
     if validate_sha(evidence.get("collector_sha256"), "evidence.collector_sha256") != hashes["evidence_collector"]:
         raise ValueError("manifest evidence collector cross-link is inconsistent")
     declared_raw = evidence.get("raw_evidence")
@@ -279,9 +308,16 @@ def validate_manifest(manifest: dict) -> dict:
     if len(declared_raw_hashes) != len(declared_raw) or Counter(declared_raw_hashes) != Counter(raw_hashes):
         raise ValueError("manifest raw evidence artifacts are inconsistent")
 
+    declared_tuples = [(item.get("name"), item.get("sha256"), item.get("bytes")) for item in declared_raw]
+    artifact_tuples = [(item.get("name"), item.get("sha256"), item.get("bytes")) for item in raw_artifacts]
+    if len({item[0] for item in declared_tuples}) != len(declared_tuples) or Counter(declared_tuples) != Counter(artifact_tuples):
+        raise ValueError("manifest raw evidence names, hashes or sizes disagree")
+
     validate_sha(evaluation.get("summary_sha256"), "evaluation.summary_sha256")
     validate_sha(evaluation.get("provenance_sha256"), "evaluation.provenance_sha256")
-    validate_sha(board.get("summary_sha256"), "board.summary_sha256")
+    if validate_sha(board.get("summary_sha256"), "board.summary_sha256") != hashes["board_summary"]:
+        raise ValueError("manifest board summary cross-link is inconsistent")
+    require_board_raw_binding(artifacts["board_summary"], declared_raw)
     if validate_sha(evidence.get("sha256"), "evidence.sha256") != hashes["evidence"]:
         raise ValueError("manifest evidence hash does not match evidence artifact")
     if integer(evidence.get("schema_version"), "evidence.schema_version") != 3:
@@ -376,12 +412,16 @@ def validate_manifest(manifest: dict) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True, type=pathlib.Path)
+    parser.add_argument("--references", required=True, type=pathlib.Path)
+    parser.add_argument("--detections", required=True, type=pathlib.Path)
+    parser.add_argument("--board-audio", required=True, type=pathlib.Path)
     parser.add_argument("--policy", required=True, type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
     manifest = load_json(args.manifest)
     policy = validate_policy(load_json(args.policy))
-    measured = validate_manifest(manifest)
+    measured = validate_manifest(manifest, references=args.references,
+                                 detections=args.detections, board_audio=args.board_audio)
     if measured["sku"] != policy["sku"]:
         raise ValueError("manifest SKU does not match shipping policy SKU")
     statistics = qualification_bounds(
@@ -441,6 +481,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError) as exc:
+    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError, wave.Error) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

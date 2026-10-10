@@ -97,7 +97,7 @@
     {
       "id": "original-failure-mechanism",
       "requires": [
-        "bounded-source-screen"
+        "actual-label-and-pcm-lineage"
       ],
       "required_evidence": [
         "original-audio-and-model-source-identities",
@@ -112,11 +112,13 @@
         "decoder-or-endpoint"
       ],
       "missing_state_verdict": "UNKNOWN",
-      "synthetic_or_cold_start_replay": "condition-specific-mechanism-only-not-original-state-causal-proof"
+      "synthetic_or_cold_start_replay": "condition-specific-mechanism-only-not-original-state-causal-proof",
+      "parallel_review_scope": "existing-artifact-identity-and-state-inventory-only; may overlap source-screen admission review; no runtime execution authority"
     },
     {
       "id": "paired-two-seed-screen",
       "requires": [
+        "bounded-source-screen",
         "original-failure-mechanism"
       ],
       "hypothesis": null,

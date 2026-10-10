@@ -32,8 +32,16 @@ class CIContracts(unittest.TestCase):
     def test_independent_checks_run_once_and_runner_checks_stay_matrixed(self):
         shared = jobs(self.ci)['python-contracts']
         hosted = jobs(self.ci)['hosted']
-        for name in ('test_corpus_identity.py',
-                     'test_domain_scene.py', 'test_statistical_bounds.py',
+        corpus_commands = [
+            'python3 tests/test_corpus_identity.py',
+            'python3 -S -B -O tests/test_corpus_identity.py',
+            'python3 -S -B -OO tests/test_corpus_identity.py',
+        ]
+        self.assertEqual([line.strip() for line in shared.splitlines()
+                          if 'tests/test_corpus_identity.py' in line], corpus_commands)
+        self.assertEqual(self.ci.count('test_corpus_identity.py'), 3)
+        self.assertNotIn('test_corpus_identity.py', hosted)
+        for name in ('test_domain_scene.py', 'test_statistical_bounds.py',
                      'test_domain_curriculum.py', 'test_false_reject_mining.py',
                      'test_domain_metrics.py', 'test_training_diagnostics.py',
                      'test_acoustic_alignment_diagnostic.py',

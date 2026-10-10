@@ -435,7 +435,7 @@ def main() -> int:
         )
         expect_failure(
             lambda: boundary_reference_contract(missing_audio, positive=True),
-            "audio path is required",
+            "expected non-empty audio/audio_path/path",
         )
 
     print("test_decoder_policy_replay: ok")

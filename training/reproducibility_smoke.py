@@ -120,6 +120,8 @@ def main() -> int:
         "rnn",
         "--feature-cache-max-items",
         "128",
+        "--feature-cache-max-bytes",
+        "16777216",
         "--",
         "--synthetic-contract-test-only",
         "--manifest",

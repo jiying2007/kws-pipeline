@@ -11,6 +11,7 @@ import wave
 
 from acoustic_scene import render_scene, sha256_file
 from audit_dataset import audit_splits, inspect_wav, write_lineage_sidecar
+from corpus_identity import canonical_audio_path, rebind_audio_path
 from development_stress import (
     apply_development_stress_scene,
     build_development_stress_plan,
@@ -656,6 +657,35 @@ def audit_rendered_dataset(
     return report
 
 
+def domain_reference_row(row: dict, *, recording: str, frames: int) -> dict:
+    """Build reference metadata without rendering audio or executing a model."""
+    audio_path = canonical_audio_path(row, recording)
+    if type(frames) is not int or frames <= 0:
+        raise ValueError(f"{recording}: reference audio must have positive frames")
+    expected: list[dict] = []
+    if row["kind"] == "positive":
+        delay = int(row["scene"]["direct_delay_samples"]) + int(row["scene"]["afe_latency_samples"])
+        start = max(0, min(int(row["event_start_frame"]) + delay, frames - 1))
+        end = max(start + 1, min(int(row["event_end_frame"]) + delay, frames))
+        expected.append({"keyword_id": int(row["keyword_id"]),
+                         "start_s": start / SAMPLE_RATE_HZ, "end_s": end / SAMPLE_RATE_HZ})
+    return {
+        **{key: row[key] for key in (
+            "speaker_id", "session_id", "source_id", "family_id",
+            "source_family_id", "reference_audio_sha256", "derivation_family_id",
+            "original_pcm_sha256", "source_path", "source_wav_sha256",
+            "source_pcm_sha256", "wav_sha256", "speech_like_provenance", "admission",
+        ) if key in row},
+        "recording": recording,
+        "path": audio_path,
+        "duration_s": frames / SAMPLE_RATE_HZ,
+        "expected": expected,
+        "domain": row["scene"],
+        "domain_id": row["domain_id"],
+        "kind": row["kind"],
+    }
+
+
 def render_domain_dataset(
     config_path: pathlib.Path,
     output: pathlib.Path,
@@ -822,8 +852,7 @@ def render_domain_dataset(
             )
             write_wav(target, mono)
             meta = {
-                **row,
-                "path": str(target.resolve()),
+                **rebind_audio_path(row, str(target.resolve())),
                 "source_path": str(source.resolve()),
                 "source_wav_sha256": str(row["wav_sha256"]),
                 "wav_sha256": sha256_file(target),
@@ -857,50 +886,10 @@ def render_domain_dataset(
         lines: list[str] = []
         for index, row in enumerate(rows_by_split[split]):
             samples = read_wav(pathlib.Path(row["path"]))
-            expected: list[dict] = []
-            if row["kind"] == "positive":
-                start = (
-                    int(row["event_start_frame"])
-                    + int(row["scene"]["direct_delay_samples"])
-                    + int(row["scene"]["afe_latency_samples"])
-                )
-                end = (
-                    int(row["event_end_frame"])
-                    + int(row["scene"]["direct_delay_samples"])
-                    + int(row["scene"]["afe_latency_samples"])
-                )
-                start = max(0, min(start, len(samples) - 1))
-                end = max(start + 1, min(end, len(samples)))
-                expected.append(
-                    {
-                        "keyword_id": int(row["keyword_id"]),
-                        "start_s": start / SAMPLE_RATE_HZ,
-                        "end_s": end / SAMPLE_RATE_HZ,
-                    }
-                )
-            lines.append(
-                json.dumps(
-                    {
-                        **{key: row[key] for key in (
-                            "speaker_id", "session_id", "source_id", "family_id",
-                            "source_family_id", "reference_audio_sha256", "derivation_family_id",
-                            "original_pcm_sha256", "source_path", "source_wav_sha256",
-                            "source_pcm_sha256", "wav_sha256", "speech_like_provenance", "admission",
-                        ) if key in row},
-                        "recording": f"domain-{split}-{index:06d}",
-                        "path": pathlib.Path(row["path"]).name,
-                        "audio_path": row["path"],
-                        "duration_s": len(samples) / SAMPLE_RATE_HZ,
-                        "expected": expected,
-                        "domain": row["scene"],
-                        "domain_id": row["domain_id"],
-                        "kind": row["kind"],
-                    },
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    allow_nan=False,
-                )
-            )
+            lines.append(json.dumps(
+                domain_reference_row(row, recording=f"domain-{split}-{index:06d}", frames=len(samples)),
+                ensure_ascii=False, sort_keys=True, allow_nan=False,
+            ))
         references.write_text("\n".join(lines) + "\n", encoding="utf-8")
         reference_paths[split] = references
 

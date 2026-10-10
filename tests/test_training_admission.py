@@ -15,7 +15,11 @@ sys.path[:0] = [str(ROOT / "training"), str(ROOT / "tools")]
 from audit_dataset import write_lineage_sidecar
 from speech_label_admission import admission_from_reviews, canonical_sha256
 from training_admission import (verify_training_manifests, require_promotable_admission,
-                                inherit_warm_start_admission, require_qualification_admission)
+                                inherit_warm_start_admission, require_qualification_admission,
+                                initial_dataset_ancestry, require_current_dataset,
+                                validate_dataset_ancestry)
+from corpus_identity import (canonical_audio_path, corpus_digest, audio_identity,
+                             training_manifest_audio_bindings, canonical_hash, training_corpus_identity)
 
 
 class AdmissionTests(unittest.TestCase):
@@ -127,7 +131,8 @@ class AdmissionTests(unittest.TestCase):
         tree = ast.parse((ROOT / "training/train_ctc.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
                      and node.name in {"parse_token_ids", "manifest_rows"}]
-        namespace = {"json": json, "pathlib": pathlib, "IDENTITY_FIELDS": ()}
+        namespace = {"json": json, "pathlib": pathlib, "IDENTITY_FIELDS": (),
+                     "canonical_audio_path": canonical_audio_path}
         exec(compile(ast.Module(body=functions, type_ignores=[]), "train_ctc.py", "exec"), namespace)
         manifest = self.root / "reviewed.jsonl"
         manifest.write_text(json.dumps(self.row) + "\n")
@@ -162,7 +167,9 @@ class AdmissionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 require_promotable_admission(child)
         clean = copy.deepcopy(reviewed)
-        inherit_warm_start_admission(clean, reviewed)
+        inherit_warm_start_admission(clean, reviewed,
+            source_checkpoint_sha256="a" * 64, ancestor_manifests=reviewed["manifests"],
+            ancestor_corpus_identity=training_corpus_identity([self.manifest]))
         require_promotable_admission(clean)
 
     def test_no_unsupported_listener_authentication_or_missing_manifest_name(self):
@@ -196,6 +203,9 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
             "admission": self.admission,
             "manifests": [{key: self.binding[key] for key in ("name", "sha256")}],
         }
+        self.corpus = self.fixture_corpus("train.tsv", "a", "b")
+        self.training["corpus_identity"] = self.corpus
+        self.refresh_ancestry()
         self.selected = [copy.deepcopy(self.binding)]
         self.audit = {
             "schema_version": 3, "sha256": "4" * 64,
@@ -205,9 +215,201 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
                 {"name": "references.jsonl", "sha256": self.references,
                  "lineage_sha256": self.references}],
         }
+        self.audit["manifest_bindings"][0]["audio_identity"] = audio_identity(self.corpus["recordings"])
+        self.audit["manifest_bindings"][1]["audio_identity"] = audio_identity([
+            {"path": "heldout.wav", "file_sha256": "c" * 64, "pcm_sha256": "d" * 64, "frames": 160}])
+
+    @staticmethod
+    def fixture_corpus(manifest, file_char, pcm_char):
+        rows = [{"recording": "manifest-0:1", "manifest": manifest, "path": "unused.wav",
+                 "file_sha256": file_char * 64, "pcm_sha256": pcm_char * 64,
+                 "frames": 160, "duration_s": 0.01}]
+        return {"schema_version": 1, "corpus_sha256": corpus_digest(rows), "recordings": rows}
+
+    def refresh_ancestry(self):
+        self.training["admission"]["dataset_ancestry"] = initial_dataset_ancestry(
+            self.training["admission"]["manifests"], self.training["corpus_identity"],
+            self.training["admission"]["reviewed_rows"])
 
     def check(self):
         return require_qualification_admission(self.training, self.selected, self.audit, self.references)
+
+    def descendant(self, ancestor, name="next.tsv", file_char="e", pcm_char="f"):
+        corpus = self.fixture_corpus(name, file_char, pcm_char)
+        binding = {"name": name, "sha256": file_char * 64, "lineage_sha256": pcm_char * 64}
+        admission = dict(policy=self.admission["policy"], purpose="reviewed-ctc-training",
+                         promotion_allowed=True, reviewed_rows=1,
+                         listener_authenticity_verified=False, manifests=[binding])
+        admission["dataset_ancestry"] = initial_dataset_ancestry([binding], corpus, 1)
+        source_hash = canonical_hash(ancestor)
+        inherit_warm_start_admission(
+            admission, ancestor["admission"], source_checkpoint_sha256=source_hash,
+            ancestor_manifests=ancestor["manifests"],
+            ancestor_corpus_identity=ancestor["corpus_identity"],
+            ancestor_warm_start_binding=ancestor.get("warm_start_binding"),
+        )
+        return {"admission": admission, "manifests": [{"name": name, "sha256": file_char * 64}],
+                "corpus_identity": corpus,
+                "warm_start_binding": {"source_checkpoint_sha256": source_hash}}
+
+    def cover(self, training):
+        bindings = training_manifest_audio_bindings(training["admission"]["manifests"],
+                                                   training["corpus_identity"])
+        for binding in bindings:
+            if binding not in self.audit["manifest_bindings"]:
+                self.audit["manifest_bindings"].append(binding)
+                self.audit["audited_manifest_sha256s"].append(binding["sha256"])
+
+    def select(self, training):
+        self.training = training
+        self.selected = copy.deepcopy(training["admission"]["manifests"])
+
+    def test_reviewed_multihop_keeps_current_dataset_and_audits_all_ancestors(self):
+        root = copy.deepcopy(self.training)
+        child = self.descendant(root)
+        grandchild = self.descendant(child, "third.tsv", "5", "6")
+        self.assertEqual(len(validate_dataset_ancestry(grandchild["admission"])), 3)
+        self.assertEqual(grandchild["manifests"], [{"name": "third.tsv", "sha256": "5" * 64}])
+        self.assertEqual(len(grandchild["corpus_identity"]["recordings"]), 1)
+        self.select(grandchild)
+        self.cover(grandchild)
+        with self.assertRaisesRegex(ValueError, "all ancestors"):
+            self.check()
+        self.cover(child)
+        self.check()
+        for index in (0, 2):
+            audit = copy.deepcopy(self.audit)
+            del self.audit["manifest_bindings"][index]
+            del self.audit["audited_manifest_sha256s"][index]
+            with self.subTest(missing=index), self.assertRaises(ValueError):
+                self.check()
+            self.audit = audit
+        # Child construction copied its parent's evidence, rather than aliasing it.
+        root["admission"]["dataset_ancestry"]["stages"].clear()
+        self.check()
+
+    def test_heldout_ancestor_audio_and_relocated_ancestor_bytes_rejected(self):
+        child = self.descendant(self.training)
+        self.select(child)
+        self.cover(child)
+        self.check()
+        original = copy.deepcopy(self.audit)
+        # Even a claimed clean audit cannot certify A->B with held-out A.
+        self.audit["manifest_bindings"][1]["audio_identity"] = audio_identity([
+            {"path": "heldout.wav", "file_sha256": "a" * 64, "pcm_sha256": "b" * 64, "frames": 160}])
+        with self.assertRaisesRegex(ValueError, "cross-split PCM overlap"):
+            self.check()
+        self.audit = original
+        self.audit["manifest_bindings"][0]["audio_identity"] = audio_identity([
+            {"path": "unused.wav", "file_sha256": "7" * 64, "pcm_sha256": "8" * 64, "frames": 160}])
+        with self.assertRaisesRegex(ValueError, "WAV/PCM"):
+            self.check()
+
+    def test_repeated_dataset_uses_one_audit_and_retains_linear_stage_chain(self):
+        root = copy.deepcopy(self.training)
+        parent = root
+        initial_bytes = len(json.dumps(parent["admission"]))
+        for generation in range(1, 7):
+            child = copy.deepcopy(root)
+            source_hash = canonical_hash(parent)
+            inherit_warm_start_admission(
+                child["admission"], parent["admission"], source_checkpoint_sha256=source_hash,
+                ancestor_manifests=parent["manifests"], ancestor_corpus_identity=parent["corpus_identity"],
+                ancestor_warm_start_binding=parent.get("warm_start_binding"))
+            child["warm_start_binding"] = {"source_checkpoint_sha256": source_hash}
+            self.select(child)
+            self.check()
+            self.assertEqual(len(self.audit["manifest_bindings"]), 2)
+            self.assertEqual(len(validate_dataset_ancestry(child["admission"])), generation + 1)
+            parent = child
+        self.assertLess(len(json.dumps(parent["admission"])), initial_bytes * 8)
+
+    def test_same_manifest_name_different_content_is_not_collapsed(self):
+        child = self.descendant(self.training, "train.tsv")
+        self.select(child)
+        with self.assertRaises(ValueError):
+            self.check()
+        self.cover(child)
+        self.check()
+        self.assertEqual(sum(row["name"] == "train.tsv" for row in self.audit["manifest_bindings"]), 2)
+
+    def test_missing_tampered_or_truncated_ancestry_is_nonpromotable(self):
+        child = self.descendant(self.training)
+        for field in ("dataset_ancestry",):
+            broken = copy.deepcopy(child["admission"])
+            del broken[field]
+            with self.subTest(missing=field), self.assertRaises(ValueError):
+                require_promotable_admission(broken)
+        for mutation in ("drop-root", "parent-hash", "corpus", "lineage", "digest"):
+            broken = copy.deepcopy(child["admission"])
+            ancestry = broken["dataset_ancestry"]
+            if mutation == "drop-root": ancestry["stages"].pop(0)
+            elif mutation == "parent-hash": ancestry["stages"][1]["parent_ancestry_sha256"] = "0" * 64
+            elif mutation == "corpus": ancestry["stages"][0]["corpus_identity"]["recordings"][0]["pcm_sha256"] = "0" * 64
+            elif mutation == "lineage": ancestry["stages"][0]["manifests"][0]["lineage_sha256"] = "0" * 64
+            else: ancestry["sha256"] = "0" * 64
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                require_promotable_admission(broken)
+        # A later reviewed child may still be built for diagnostics, but cannot
+        # retroactively recreate missing evidence for an old source checkpoint.
+        for missing in ("dataset_ancestry", "corpus_identity", "manifests"):
+            parent = copy.deepcopy(self.training)
+            if missing == "dataset_ancestry": del parent["admission"][missing]
+            else: parent[missing] = None
+            descendant = self.descendant(parent)
+            self.assertFalse(descendant["admission"]["promotion_allowed"])
+            with self.assertRaises(ValueError):
+                require_promotable_admission(descendant["admission"])
+
+    def test_ancestry_keeps_content_hashes_without_private_paths_or_metadata(self):
+        private = copy.deepcopy(self.training)
+        row = private["corpus_identity"]["recordings"][0]
+        row["path"] = "/restricted/private-corpus/sensitive-source-name.wav"
+        row["speaker_id"] = "private-speaker-name"
+        row["source_id"] = "private-source-catalog-id"
+        private["corpus_identity"]["corpus_sha256"] = corpus_digest([row])
+        private["admission"]["dataset_ancestry"] = initial_dataset_ancestry(
+            private["admission"]["manifests"], private["corpus_identity"], 1)
+        child = self.descendant(private)
+        receipt = json.dumps(child["admission"]["dataset_ancestry"])
+        for secret in (row["path"], row["speaker_id"], row["source_id"]):
+            self.assertNotIn(secret, receipt)
+        self.assertIn(row["file_sha256"], receipt)
+        self.assertIn(row["pcm_sha256"], receipt)
+        self.assertIn(private["corpus_identity"]["corpus_sha256"], receipt)
+        require_current_dataset(child["admission"], child["manifests"], child["corpus_identity"],
+                                warm_start_binding=child["warm_start_binding"])
+
+    def test_checkpoint_source_link_and_current_corpus_must_survive_export(self):
+        child = self.descendant(self.training)
+        self.select(child)
+        self.cover(child)
+        self.check()
+        for mutation in ("missing-source", "different-source", "cold-start", "current-corpus"):
+            saved = copy.deepcopy(self.training)
+            if mutation == "missing-source": del self.training["warm_start_binding"]
+            elif mutation == "different-source": self.training["warm_start_binding"]["source_checkpoint_sha256"] = "0" * 64
+            elif mutation == "cold-start": self.refresh_ancestry()
+            else: self.training["corpus_identity"] = self.fixture_corpus("next.tsv", "7", "8")
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.check()
+            self.training = saved
+        # Export executes this exact metadata-only guard before any quantization.
+        tree = ast.parse((ROOT / "training/export_model.py").read_text())
+        method = next(node for node in tree.body if isinstance(node, ast.FunctionDef)
+                      and node.name == "training_metadata")
+        guards = [node for node in method.body if isinstance(node, ast.If)
+                  and any(isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+                          and call.func.id == "require_current_dataset" for call in ast.walk(node))]
+        self.assertEqual(len(guards), 1)
+        namespace = {"require_current_dataset": require_current_dataset, "result": self.training,
+                     "normalized_manifests": self.training["manifests"],
+                     "checkpoint": {"warm_start_binding": self.training["warm_start_binding"]}}
+        exec(compile(ast.Module(body=guards, type_ignores=[]), "export_model.py", "exec"), namespace)
+        namespace["checkpoint"] = {}
+        with self.assertRaises(ValueError):
+            exec(compile(ast.Module(body=guards, type_ignores=[]), "export_model.py", "exec"), namespace)
+
 
     def raw_audit(self):
         return {
@@ -216,9 +418,11 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
             "splits": {
                 "train": {"manifest": "/private/corpus/train.tsv",
                           "manifest_sha256": self.binding["sha256"],
-                          "lineage_sidecar_sha256": self.binding["lineage_sha256"]},
+                          "lineage_sidecar_sha256": self.binding["lineage_sha256"],
+                          "audio_identity": self.audit["manifest_bindings"][0]["audio_identity"]},
                 "qualification": {"manifest": "/private/held-out/references.jsonl",
-                                  "manifest_sha256": self.references},
+                                  "manifest_sha256": self.references,
+                                  "audio_identity": self.audit["manifest_bindings"][1]["audio_identity"]},
             },
         }
 
@@ -235,9 +439,12 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
             rows[0]["name"] = "train.jsonl"
             if "lineage_sha256" in rows[0]:
                 rows[0]["lineage_sha256"] = self.binding["sha256"]
+        self.corpus["recordings"][0]["manifest"] = "train.jsonl"
+        self.refresh_ancestry()
         self.assertIs(self.check(), self.admission)
         for rows in (self.admission["manifests"], self.selected, self.audit["manifest_bindings"]):
             rows[0]["lineage_sha256"] = "5" * 64
+        self.refresh_ancestry()
         with self.assertRaisesRegex(ValueError, "JSONL lineage"):
             self.check()
 
@@ -283,7 +490,9 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
         before = training_manifest_artifact(manifest, digest)
         self.training["manifests"] = [{"name": before["name"], "sha256": before["sha256"]}]
         self.admission["manifests"] = [copy.deepcopy(before)]
-        self.audit["manifest_bindings"][0] = copy.deepcopy(before)
+        self.audit["manifest_bindings"][0] = dict(copy.deepcopy(before),
+            audio_identity=audio_identity(self.corpus["recordings"]))
+        self.refresh_ancestry()
         self.audit["audited_manifest_sha256s"][0] = digest
         self.selected = [before]
         self.check()
@@ -314,14 +523,6 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
                 with self.subTest(target=target, change=change), self.assertRaises(ValueError):
                     self.check()
                 self.training, self.selected, self.audit = saved
-        # Two identical selections need two matching audited bindings.
-        for rows in (self.training["admission"]["manifests"], self.training["manifests"], self.selected):
-            rows.append(copy.deepcopy(rows[0]))
-        with self.assertRaisesRegex(ValueError, "reviewed training lineage"):
-            self.check()
-        self.audit["manifest_bindings"].append(copy.deepcopy(self.audit["manifest_bindings"][0]))
-        self.audit["audited_manifest_sha256s"].append(self.binding["sha256"])
-        self.check()
         # Bare hash lists cannot replace the separately named lineage bindings.
         self.audit["manifest_bindings"][0]["name"] = "different.tsv"
         with self.assertRaisesRegex(ValueError, "reviewed training lineage"):
@@ -357,7 +558,7 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
         # evidence is fabricated or evaluated by these metadata tests.
         names = ("model", "model_provenance", "model_checkpoint", "training_tokens",
                  "dataset_audit", "keyword_pack", "tokens", "config", "eval_runner",
-                 "references", "detections", "board_runner", "board_audio",
+                 "references", "detections", "board_runner", "board_audio", "board_summary",
                  "evidence_collector", "evidence_raw", "attestation_verification", "evidence")
         artifacts = {name: {"name": name, "sha256": "8" * 64, "bytes": 1} for name in names}
         artifacts["dataset_audit"]["sha256"] = self.audit["sha256"]
@@ -462,6 +663,8 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
             self.assertEqual(read()["training"]["admission"], admission)
         del training["admission"]
         self.assertNotIn("admission", read()["training"])
+        training["warm_start_binding"] = {"source_checkpoint_sha256": "f" * 64}
+        self.assertEqual(read()["training"]["warm_start_binding"], training["warm_start_binding"])
 
 
 if __name__ == "__main__":

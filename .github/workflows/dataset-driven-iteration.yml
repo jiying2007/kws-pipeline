@@ -82,6 +82,12 @@ jobs:
           fi
           test -f "$model"
           test -f "$keywords"
+          for value in "$model" "$keywords" "$label"; do
+            if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+              echo "model tuple output must be a single line" >&2
+              exit 2
+            fi
+          done
           {
             echo "model_path=$model"
             echo "keywords_path=$keywords"
@@ -94,30 +100,40 @@ jobs:
           cmake --build build --parallel --target kws_wav
 
       - name: Run the dataset iteration
+        env:
+          MODEL_PATH: ${{ steps.tuple.outputs.model_path }}
+          KEYWORDS_PATH: ${{ steps.tuple.outputs.keywords_path }}
+          DATASET_PATH: ${{ inputs.dataset_path }}
+          CONTROLLED_VARIABLE: ${{ inputs.variable }}
+          MODEL_LABEL: ${{ steps.tuple.outputs.model_label }}
+          SEED: ${{ inputs.seed }}
         run: |
           set -euo pipefail
           python3 tools/run_dataset_iteration.py \
             --runner build/kws_wav \
-            --model "${{ steps.tuple.outputs.model_path }}" \
-            --keywords "${{ steps.tuple.outputs.keywords_path }}" \
-            --references "${{ inputs.dataset_path }}" \
+            --model "$MODEL_PATH" \
+            --keywords "$KEYWORDS_PATH" \
+            --references "$DATASET_PATH" \
             --audio-root . \
             --work-dir build/dataset-iteration \
             --output build/dataset-iteration/scorecard.json \
-            --variable "${{ inputs.variable }}" \
-            --dataset-label "${{ inputs.dataset_path }}" \
-            --model-label "${{ steps.tuple.outputs.model_label }}" \
-            --seed "${{ inputs.seed }}"
+            --variable "$CONTROLLED_VARIABLE" \
+            --dataset-label "$DATASET_PATH" \
+            --model-label "$MODEL_LABEL" \
+            --seed "$SEED"
 
       - name: Compare against the declared baseline
         id: compare
         if: inputs.baseline_card != ''
         continue-on-error: true
+        env:
+          BASELINE_CARD: ${{ inputs.baseline_card }}
+          FAR_BUDGET: ${{ inputs.far_budget }}
         run: |
           python3 tools/compare_dataset_iterations.py \
-            --baseline "${{ inputs.baseline_card }}" \
+            --baseline "$BASELINE_CARD" \
             --candidate build/dataset-iteration/scorecard.json \
-            --far-budget "${{ inputs.far_budget }}" \
+            --far-budget "$FAR_BUDGET" \
             --output build/dataset-iteration/comparison.json
 
       - name: Show the comparison
@@ -131,6 +147,9 @@ jobs:
           fi
 
       - name: Record scorecard through a protected-main PR
+        env:
+          CONTROLLED_VARIABLE: ${{ inputs.variable }}
+          MODEL_LABEL: ${{ steps.tuple.outputs.model_label }}
         run: |
           set -euo pipefail
           card=build/dataset-iteration/scorecard.json
@@ -168,23 +187,27 @@ jobs:
           gh auth setup-git
           git push origin "$branch"
 
-          cat > /tmp/dataset-iteration-pr.md <<EOF
-          Dataset-driven KWS measurement.
+          DATASET_ID="$dataset" DATASET_RUN_ID="$run_id" python3 - <<'PYBODY'
+          import os
+          from pathlib import Path
 
-          - dataset id: `$dataset`
-          - run id: `$run_id`
-          - controlled variable: `${{ inputs.variable }}`
-          - model: `${{ steps.tuple.outputs.model_label }}`
-
-          The scorecard is evidence only; it does not freeze, promote or
-          shipping-approve a model.
-          EOF
+          body = (
+              "Dataset-driven KWS measurement.\n\n"
+              f"- dataset id: `{os.environ['DATASET_ID']}`\n"
+              f"- run id: `{os.environ['DATASET_RUN_ID']}`\n"
+              f"- controlled variable: `{os.environ['CONTROLLED_VARIABLE']}`\n"
+              f"- model: `{os.environ['MODEL_LABEL']}`\n\n"
+              "The scorecard is evidence only; it does not freeze, promote or\n"
+              "shipping-approve a model.\n"
+          )
+          (Path(os.environ['RUNNER_TEMP']) / 'dataset-iteration-pr.md').write_text(body, encoding='utf-8')
+          PYBODY
           pr_url="$(gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base main \
             --head "$branch" \
             --title "evidence(dataset): record $run_id" \
-            --body-file /tmp/dataset-iteration-pr.md)"
+            --body-file "$RUNNER_TEMP/dataset-iteration-pr.md")"
           echo "scorecard PR: $pr_url" >>"$GITHUB_STEP_SUMMARY"
 
       - name: Upload the full evidence

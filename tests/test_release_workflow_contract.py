@@ -2,6 +2,7 @@
 """Offline contracts for release commands and atomic bootstrap cleanup."""
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import re
@@ -23,7 +24,7 @@ def job(source: str, name: str) -> str:
 
 def step(source: str, name: str) -> str:
     tail = source.split(f'      - name: {name}\n', 1)[1]
-    return re.split(r'(?m)^      - ', tail, maxsplit=1)[0]
+    return re.split(r'(?m)^      - |^  [a-z][a-z0-9-]*:\s*$', tail, maxsplit=1)[0]
 
 
 def command(source: str, name: str) -> str:
@@ -99,6 +100,23 @@ class ReleaseCommands(unittest.TestCase):
         self.assertNotIn('test_decoder_policy_replay.py', job(self.ci, 'python-contracts'))
         self.assertIn(replay, command(job(self.release, 'hosted'), 'Python/product tests'))
 
+    def test_canonical_identity_and_event_checks_survive_optimized_python(self):
+        canonical = job(self.ci, 'python-contracts')
+        corpus = command(canonical, 'Corpus byte identity')
+        for name in ('test_corpus_identity.py', 'test_training_admission.py'):
+            self.assertIn(f'python3 tests/{name}', corpus.splitlines())
+            for mode in ('-O', '-OO'):
+                self.assertIn(f'python3 -S -B {mode} tests/{name}', corpus.splitlines())
+        qualification = command(job(self.ci, 'hosted'), 'Release qualification manifest and gate')
+        self.assertEqual(qualification.splitlines(), [
+            'python3 tests/test_release_qualification.py',
+            'python3 -S -B -O tests/test_release_qualification.py --event-metadata-only',
+            'python3 -S -B -OO tests/test_release_qualification.py --event-metadata-only',
+        ])
+        # Optimized regressions remain metadata-only. The existing normal full
+        # qualification test is retained without adding another execution lane.
+        self.assertEqual(qualification.count('--event-metadata-only'), 2)
+
     def test_cleanup_requires_all_success_and_original_ref(self):
         for filename, mode, ref in (
             ('release.yml', 'sdk', 'refs/heads/release/v1.2.3'),
@@ -130,6 +148,260 @@ class ReleaseCommands(unittest.TestCase):
                         expr = expr.replace('github.ref', repr(current_ref)).replace('&&', 'and')
                         allowed = eval(expr, {'__builtins__': {}}, {})
                         self.assertEqual(bool(allowed), all_success and publish == 'success' and current_ref == ref)
+
+
+class ReleaseTagBinding(unittest.TestCase):
+    """Exercise exact publication shell commands against a strictly offline gh."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='release-tag-binding-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        (self.root / 'bin').mkdir()
+        (self.root / 'tools').mkdir()
+        shutil.copyfile(ROOT / 'tools/verify_release_tag.py', self.root / 'tools/verify_release_tag.py')
+        gh = self.root / 'bin/gh'
+        gh.write_text(f'#!{sys.executable}\n' + textwrap.dedent('''
+            import json, os, pathlib, sys
+            root = pathlib.Path(os.environ['FAKE_GH_ROOT'])
+            args = sys.argv[1:]
+            with (root / 'commands.jsonl').open('a') as out:
+                out.write(json.dumps(args) + '\\n')
+            if args[:1] == ['api']:
+                if args[1:3] != ['--method', 'GET']:
+                    sys.exit(91)
+                responses = json.loads((root / 'responses.json').read_text())
+                endpoint = args[-1]
+                if endpoint not in responses:
+                    sys.exit(92)
+                row = responses[endpoint]
+                if row.get('exit'):
+                    sys.exit(row['exit'])
+                print(row.get('raw', json.dumps(row.get('value'))))
+            elif args[:2] == ['release', 'create']:
+                (root / 'publication.json').write_text(json.dumps(args))
+            else:
+                sys.exit(93)
+        '''))
+        gh.chmod(0o755)
+        self.env = dict(os.environ, PATH=f'{self.root / "bin"}:/usr/bin:/bin',
+                        FAKE_GH_ROOT=str(self.root), GITHUB_REPOSITORY='test/synthetic',
+                        GITHUB_SHA='b' * 40, EXPECTED_HEAD_SHA='b' * 40,
+                        RELEASE_TAG='v1.2.3', MODEL_RELEASE_TAG='model-test',
+                        TRAINING_RUN_ID='12345', MODEL_SHA256='c' * 64, VERSION='1.2.3')
+        self.endpoint = 'repos/test/synthetic/git/matching-refs/tags/v1.2.3'
+
+    def run_publish(self, refs, *, annotations=None, bootstrap=True, error=None, model=False):
+        endpoint = self.endpoint.replace('v1.2.3', 'model-test') if model else self.endpoint
+        responses = {endpoint: error or {'value': refs}}
+        for sha, value in (annotations or {}).items():
+            responses[f'repos/test/synthetic/git/tags/{sha}'] = {'value': value}
+        (self.root / 'responses.json').write_text(json.dumps(responses))
+        published = self.root / 'publication.json'
+        published.unlink(missing_ok=True)
+        if model:
+            source = (WORKFLOWS / 'model-promotion.yml').read_text()
+            script = command(source, 'Publish trained model release')
+        else:
+            source = (WORKFLOWS / 'release.yml').read_text()
+            script = command(source, 'Publish bootstrap release and tag' if bootstrap else 'Publish existing-tag release')
+        result = subprocess.run(['bash', '-euo', 'pipefail', '-c', script],
+                                cwd=self.root, env=self.env, text=True, capture_output=True)
+        return result, published.exists()
+
+    @staticmethod
+    def ref(sha, kind='commit', tag='v1.2.3'):
+        return {'ref': 'refs/tags/' + tag, 'object': {'type': kind, 'sha': sha}}
+
+    def test_absent_tag_is_allowed_only_for_bootstrap(self):
+        for refs in ([], [self.ref('a' * 40, tag='v1.2.30')]):
+            result, published = self.run_publish(refs)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(published)
+            result, published = self.run_publish(refs, bootstrap=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(published)
+
+    def test_existing_lightweight_tag_must_match_artifact_source(self):
+        for bootstrap in (True, False):
+            for sha in ('a' * 40, 'b' * 40):
+                result, published = self.run_publish([self.ref(sha)], bootstrap=bootstrap)
+                self.assertEqual(result.returncode == 0, sha == 'b' * 40, result.stderr)
+                self.assertEqual(published, sha == 'b' * 40)
+                if not published:
+                    self.assertIn('release tag commit mismatch', result.stderr)
+
+    def test_annotated_and_nested_tags_are_peeled_before_publish(self):
+        for target in ('a' * 40, 'b' * 40):
+            for nested in (False, True):
+                annotations = {'c' * 40: {'sha': 'c' * 40, 'object': {
+                    'type': 'tag' if nested else 'commit', 'sha': 'd' * 40 if nested else target}}}
+                if nested:
+                    annotations['d' * 40] = {'sha': 'd' * 40, 'object': {'type': 'commit', 'sha': target}}
+                result, published = self.run_publish([self.ref('c' * 40, 'tag')], annotations=annotations)
+                self.assertEqual(result.returncode == 0, target == 'b' * 40, result.stderr)
+                self.assertEqual(published, target == 'b' * 40)
+
+    def test_api_errors_malformed_objects_and_cycles_fail_closed(self):
+        cases = [
+            ([], {}, {'exit': 1}), ([], {}, {'raw': 'not JSON'}),
+            ([], {}, {'value': {'message': 'Not Found'}}),
+            ([self.ref('b' * 40), self.ref('b' * 40)], {}, None),
+            ([self.ref('b' * 40, 'tree')], {}, None),
+            ([self.ref('b' * 39)], {}, None),
+            ([self.ref('c' * 40, 'tag')], {'c' * 40: {'sha': 'a' * 40, 'object': {'type': 'commit', 'sha': 'b' * 40}}}, None),
+            ([self.ref('c' * 40, 'tag')], {'c' * 40: {'sha': 'c' * 40, 'object': {'type': 'tag', 'sha': 'c' * 40}}}, None),
+        ]
+        for refs, annotations, error in cases:
+            with self.subTest(refs=refs, error=error):
+                result, published = self.run_publish(refs, annotations=annotations, error=error)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(published)
+
+    def test_model_publication_uses_same_commit_binding(self):
+        for sha in ('a' * 40, 'b' * 40):
+            result, published = self.run_publish([self.ref(sha, tag='model-test')], model=True)
+            self.assertEqual(result.returncode == 0, sha == 'b' * 40, result.stderr)
+            self.assertEqual(published, sha == 'b' * 40)
+        source = (WORKFLOWS / 'model-promotion.yml').read_text()
+        for name in ('Resolve immutable model release tag', 'Verify immutable model release'):
+            self.assertIn('tools/verify_release_tag.py', command(source, name))
+        self.assertNotIn('--allow-absent', command(source, 'Verify immutable model release'))
+
+
+class PromotionControlPlane(unittest.TestCase):
+    def test_current_protected_main_precedes_all_promotion_work(self):
+        source = (WORKFLOWS / 'model-promotion.yml').read_text()
+        guard_name = 'Require exact current protected main control plane'
+        guard = command(source, guard_name)
+        self.assertEqual(guard, 'bash governance/require_current_main.sh')
+        for name in ('Verify requested training run', 'Download exact trained-model artifact',
+                     'Freeze and verify deployable model evidence', 'Attest promoted model assets',
+                     'Publish trained model release', 'Mirror promoted model into Git registry'):
+            self.assertLess(source.index(guard_name), source.index(name))
+        self.assertIn("run.get('head_sha') != expected", source)
+        with tempfile.TemporaryDirectory(prefix='promotion-control-plane-') as tmp:
+            root = Path(tmp)
+            (root / 'bin').mkdir()
+            (root / 'governance').mkdir()
+            for name in ('require_current_main.sh', 'main-ruleset-target.json', 'verify_live_main_ruleset.py'):
+                shutil.copyfile(ROOT / 'governance' / name, root / 'governance' / name)
+            gh = root / 'bin/gh'
+            gh.write_text(f'#!{sys.executable}\n' + textwrap.dedent('''
+                import json, os, pathlib, sys
+                args = sys.argv[1:]
+                if len(args) != 2 or args[0] != 'api':
+                    sys.exit(91)
+                responses = json.loads(pathlib.Path('responses.json').read_text())
+                if args[1] not in responses:
+                    sys.exit(92)
+                print(json.dumps(responses[args[1]]))
+            '''))
+            gh.chmod(0o755)
+            target = json.loads((root / 'governance/main-ruleset-target.json').read_text())
+            for ref, sha, protected, ruleset_valid, allowed in (
+                ('refs/heads/main', 'b' * 40, True, True, True),
+                ('refs/heads/main', 'a' * 40, True, True, False),
+                ('refs/heads/feature/test', 'b' * 40, True, True, False),
+                ('refs/tags/v1.2.3', 'b' * 40, True, True, False),
+                ('refs/heads/main', 'b' * 40, False, True, False),
+                ('refs/heads/main', 'b' * 40, True, False, False),
+            ):
+                live = dict(target, id=1, bypass_actors=[] if ruleset_valid else [{'actor_id': 7}])
+                responses = {
+                    'repos/test/synthetic/branches/main': {'commit': {'sha': 'b' * 40}, 'protected': protected},
+                    'repos/test/synthetic/rulesets': [dict(target, id=1)],
+                    'repos/test/synthetic/rulesets/1': live,
+                }
+                (root / 'responses.json').write_text(json.dumps(responses))
+                env = dict(os.environ, PATH=f'{root / "bin"}:/usr/bin:/bin', GH_TOKEN='offline-fixture',
+                           GITHUB_REPOSITORY='test/synthetic', GITHUB_REF=ref, GITHUB_SHA=sha,
+                           # Historical training identity remains separate from current control-plane identity.
+                           EXPECTED_HEAD_SHA='c' * 40)
+                marker = root / 'promotion-may-start'
+                marker.unlink(missing_ok=True)
+                result = subprocess.run(['bash', '-euo', 'pipefail', '-c', guard + '\ntouch promotion-may-start'],
+                                        cwd=root, env=env, text=True, capture_output=True)
+                self.assertEqual(result.returncode == 0, allowed, result.stderr)
+                self.assertEqual(marker.exists(), allowed)
+
+
+class WorkflowProvenance(unittest.TestCase):
+    def test_full_model_and_dataset_pr_bodies_are_literal_and_complete(self):
+        cases = (
+            ('model-promotion.yml', 'Mirror promoted model into Git registry', 'model-registry-pr.md'),
+            ('dataset-driven-iteration.yml', 'Record scorecard through a protected-main PR', 'dataset-iteration-pr.md'),
+        )
+        for hostile in (False, True):
+            suffix = "`touch should-not-exist` $(touch should-not-exist) \"' 中文" if hostile else ''
+            values = {'MODEL_RELEASE_TAG': 'model-aaaaaaaaaaaa' + suffix, 'TRAINING_RUN_ID': '12345',
+                      'EXPECTED_HEAD_SHA': 'a' * 40, 'dataset': 'dataset-abc' + suffix,
+                      'run_id': 'run-abc' + suffix, 'CONTROLLED_VARIABLE': 'dataset',
+                      'MODEL_LABEL': 'git-registry:model-aaaaaaaaaaaa' + suffix}
+            for filename, name, output in cases:
+                with self.subTest(filename=filename, hostile=hostile), tempfile.TemporaryDirectory() as tmp:
+                    script = command((WORKFLOWS / filename).read_text(), name)
+                    body = re.search(r"(?m)^[^\n]*python3 - <<'PYBODY'\n.*?^PYBODY$", script, re.S).group()
+                    result = subprocess.run(['bash', '-euo', 'pipefail', '-c', body], cwd=tmp,
+                                            env=dict(os.environ, RUNNER_TEMP=tmp, **values),
+                                            text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stderr, '')
+                    self.assertFalse((Path(tmp) / 'should-not-exist').exists())
+                    actual = (Path(tmp) / output).read_text()
+                    if filename == 'model-promotion.yml':
+                        expected = (
+                            f"Byte-for-byte Git mirror of immutable model release `{values['MODEL_RELEASE_TAG']}`.\n\n"
+                            f"Generated by `model-promotion` from training run `{values['TRAINING_RUN_ID']}`\n"
+                            f"at source `{values['EXPECTED_HEAD_SHA']}`.\n\n"
+                            'Shipping approval remains governed independently by\n'
+                            '`configs/shipping.xiaowo.json` and protected qualification evidence.\n')
+                    else:
+                        expected = (
+                            'Dataset-driven KWS measurement.\n\n'
+                            f"- dataset id: `{values['dataset']}`\n"
+                            f"- run id: `{values['run_id']}`\n"
+                            f"- controlled variable: `{values['CONTROLLED_VARIABLE']}`\n"
+                            f"- model: `{values['MODEL_LABEL']}`\n\n"
+                            'The scorecard is evidence only; it does not freeze, promote or\n'
+                            'shipping-approve a model.\n')
+                    self.assertEqual(actual, expected)
+                    self.assertIn('--body-file "$RUNNER_TEMP/' + output + '"', script)
+
+    def test_dataset_shell_reads_dispatch_values_from_environment(self):
+        source = (WORKFLOWS / 'dataset-driven-iteration.yml').read_text()
+        for name in ('Run the dataset iteration', 'Compare against the declared baseline',
+                     'Record scorecard through a protected-main PR'):
+            script = command(source, name)
+            self.assertNotIn('${{', script)
+            subprocess.run(['bash', '-n'], input=script, text=True, check=True)
+        self.assertIn('bash governance/require_current_main.sh', source)
+
+    def test_tuple_output_rejects_multiline_values(self):
+        source = (WORKFLOWS / 'dataset-driven-iteration.yml').read_text()
+        script = command(source, 'Resolve deployable model tuple')
+        with tempfile.TemporaryDirectory(prefix='dataset-tuple-') as tmp:
+            root = Path(tmp)
+            for name in ('model.kwm', 'keywords.kwk', 'model\\nforged=value.kwm'):
+                (root / name.replace('\\n', '\n')).touch()
+            for model, allowed in (('model.kwm', True), ('model\nforged=value.kwm', False)):
+                output = root / 'output'
+                output.unlink(missing_ok=True)
+                result = subprocess.run(['bash', '-euo', 'pipefail', '-c', script], cwd=root,
+                                        env=dict(os.environ, INPUT_MODEL_PATH=model,
+                                                 INPUT_KEYWORDS_PATH='keywords.kwk', GITHUB_OUTPUT=str(output)),
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode == 0, allowed, result.stderr)
+                self.assertEqual(output.exists(), allowed)
+                if allowed:
+                    self.assertEqual(output.read_text(),
+                                     'model_path=model.kwm\nkeywords_path=keywords.kwk\nmodel_label=custom:model.kwm\n')
+
+    def test_governance_preserves_failed_bootstrap_branches(self):
+        source = (ROOT / 'docs/REPOSITORY_GOVERNANCE.md').read_text()
+        self.assertIn('Failed, cancelled or skipped bootstrap runs preserve the temporary branch', source)
+        self.assertIn('atomic lease', source)
+        self.assertNotIn('Failed bootstrap runs delete', source)
 
 
 class BootstrapLease(unittest.TestCase):

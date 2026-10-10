@@ -63,7 +63,7 @@ Build `kws_board_bench` with the shipping target toolchain and execute the exact
   > qualification/board-summary.json
 ```
 
-The summary binds runtime source/config identity, board runner, model, pack and audio, and reports model/pack/engine bytes, mean/p50/p95/p99/max processing time, RTF and p99 headroom. Cross-build success proves compiler/ISA compatibility only; it is not target timing evidence.
+The schema-v2 summary binds runtime source/config identity, board runner, model, pack and audio, and reports model/pack/engine bytes, mean/p50/p95/p99/max processing time, RTF and p99 headroom. Cross-build success proves compiler/ISA compatibility only; it is not target timing evidence.
 
 ## Sustained process evidence
 
@@ -87,6 +87,8 @@ Power requires the original instrument export plus instrument/calibration identi
 
 The controlled product trust layer must also produce `qualification/attestation-verification.json`, schema v1, verifying the canonical raw manifest plus exact collector/board-runner/model/keyword-pack identities.
 
+Benchmark input must contain at least one complete 400-sample model frame per reset repeat. Schema v2 records actual processed samples/frames and binds 16-kHz / 400-window / 320-hop geometry, per-repeat blocks and final-call length. Input-call timings include the unpadded tail and use a nominal 20 ms deadline with nearest-rank percentiles. Release and Phase-B gates independently verify the WAV and require the exact board summary in the externally attested raw-evidence tuple.
+
 ## Product-board evidence assembly
 
 ```bash
@@ -103,6 +105,7 @@ python3 tools/collect_target_evidence.py \
   --stack-high-water-bytes <measured> \
   --average-power-mw <measured> \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --power-raw qualification/power.csv \
   --evidence-raw qualification/evidence-raw.jsonl \
   --attestation-verification qualification/attestation-verification.json \
@@ -147,7 +150,7 @@ When capture continuity breaks, integration must call `kws_engine_notify_discont
 - exact collector, canonical `--evidence-raw`, `--attestation-verification` and every raw evidence file;
 - exact `--sku` and `--source-sha`.
 
-`qualification_gate.py` then applies the matching `shipping_approved=true` SKU policy.
+`qualification_gate.py` requires the selected `--references`, `--detections` and `--board-audio` files, independently replays canonical event scoring and verifies effective benchmark workload, then applies the matching `shipping_approved=true` SKU policy.
 
 ## Target-board certification checklist
 

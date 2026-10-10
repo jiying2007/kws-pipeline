@@ -30,7 +30,9 @@ from development_failure_replay import (  # noqa: E402
 from fit_domain_prototype import fit_domain_prototype  # noqa: E402
 from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
-from feature_cached_trainer import feature_cache_max_items, rewrite_training_command  # noqa: E402
+from feature_cached_trainer import (
+    feature_cache_max_bytes, feature_cache_max_items, rewrite_training_command,
+)  # noqa: E402
 from objective_config import optional_objective_cli_args  # noqa: E402
 from render_domains import audit_rendered_dataset, render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
@@ -928,7 +930,9 @@ def build_torch(
         command.append("--synthetic-contract-test-only")
     command.extend(optional_objective_cli_args(train))
     command.extend(warm_start_args(previous, warm_start_strategy))
-    command = rewrite_training_command(command, feature_cache_max_items(train))
+    command = rewrite_training_command(
+        command, feature_cache_max_items(train), feature_cache_max_bytes(train)
+    )
     run(command)
     run(
         [

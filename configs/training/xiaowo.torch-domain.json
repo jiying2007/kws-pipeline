@@ -122,6 +122,7 @@
     "batch_size": 16,
     "lr": 0.001,
     "feature_cache_max_items": 8192,
+    "feature_cache_max_bytes": 268435456,
     "positive_example_weight": 2.0,
     "wake_pressure_balance_policy": "per-keyword-provenance-pressure-balance-v3"
   },

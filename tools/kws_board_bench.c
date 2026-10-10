@@ -6,6 +6,7 @@
 #include "tool_io.h"
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +56,9 @@ int main(int argc, char **argv) {
   long wav_data_offset = 0L;
   size_t blocks_per_repeat;
   size_t total_blocks;
+  uint64_t total_processed_frames = 0u;
+  uint64_t total_processed_samples = 0u;
+  uint64_t frames_per_repeat;
   double *block_us = NULL;
   int16_t pcm[BENCH_BLOCK_SAMPLES];
   unsigned repeats = 1u;
@@ -108,11 +112,13 @@ int main(int argc, char **argv) {
   wav = fopen(argv[3], "rb");
   if (wav == NULL ||
       kws_tool_open_wav(wav, &wav_bytes, &wav_data_offset) == 0 ||
-      wav_bytes == 0u) {
-    fprintf(stderr, "expected non-empty mono 16-kHz PCM16 WAV: %s\n", argv[3]);
+      wav_bytes < KWS_FRAME_LENGTH_SAMPLES * sizeof(int16_t)) {
+    fprintf(stderr, "expected mono 16-kHz PCM16 WAV with at least one 400-sample frame: %s\n", argv[3]);
     goto cleanup;
   }
 
+  frames_per_repeat = 1u + ((uint64_t)wav_bytes / sizeof(int16_t) -
+                             KWS_FRAME_LENGTH_SAMPLES) / KWS_FRAME_HOP_SAMPLES;
   blocks_per_repeat =
       ((size_t)wav_bytes / sizeof(int16_t) + BENCH_BLOCK_SAMPLES - 1u) /
       BENCH_BLOCK_SAMPLES;
@@ -134,7 +140,19 @@ int main(int argc, char **argv) {
 
   for (unsigned repeat = 0u; repeat < repeats; ++repeat) {
     uint32_t remaining = wav_bytes;
+    kws_engine_stats_v2_t before = {0};
+    kws_engine_stats_v2_t stats = {0};
+    uint64_t repeat_frames = 0u;
+    uint64_t repeat_samples = 0u;
+    before.struct_size = sizeof(before);
+    before.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
+    stats.struct_size = sizeof(stats);
+    stats.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
     kws_engine_reset(engine);
+    if (kws_engine_get_stats_v2(engine, &before) != KWS_OK) {
+      fprintf(stderr, "cannot snapshot benchmark workload counters\n");
+      goto cleanup;
+    }
     if (fseek(wav, wav_data_offset, SEEK_SET) != 0) {
       fprintf(stderr, "cannot seek WAV data\n");
       goto cleanup;
@@ -176,6 +194,23 @@ int main(int argc, char **argv) {
         max_process_us = duration_us;
       }
     }
+    /* Query actual completed model/decoder frames outside the timed region.
+     * Each repeat resets frontend state, so short streams never accumulate
+     * enough input merely by increasing repeats. The runtime counters survive
+     * reset, so compare the observed interval, not the lifetime totals. */
+    if (kws_engine_get_stats_v2(engine, &stats) != KWS_OK ||
+        kws_bench_counter_delta(before.processed_frames, stats.processed_frames,
+                                frames_per_repeat, &repeat_frames) == 0 ||
+        kws_bench_counter_delta(before.processed_samples, stats.processed_samples,
+                                (uint64_t)wav_bytes / sizeof(int16_t),
+                                &repeat_samples) == 0) {
+      fprintf(stderr, "benchmark effective workload mismatch\n");
+      goto cleanup;
+    }
+    /* wav_bytes is uint32_t and repeats <= 1000: aggregate samples are
+     * below 2^41, and frame counts cannot exceed sample counts. */
+    total_processed_frames += repeat_frames;
+    total_processed_samples += repeat_samples;
   }
 
   if (sample_index != total_blocks) {
@@ -206,14 +241,23 @@ int main(int argc, char **argv) {
         (double)KWS_SAMPLE_RATE_HZ;
     const double p99_headroom = p99_us > 0.0 ? deadline_us / p99_us : 0.0;
 
+    if (total_process_us <= 0.0 || p99_us <= 0.0) {
+      fprintf(stderr, "benchmark has no positive measured runtime\n");
+      goto cleanup;
+    }
     fprintf(stdout,
-            "{\"schema_version\":1,\"runner_sha256\":\"%s\","
+            "{\"schema_version\":2,\"runner_sha256\":\"%s\","
             "\"runtime_version\":\"%s\",\"runtime_source_revision\":\"%s\","
             "\"runtime_config_digest\":\"%s\",\"runtime_target\":\"%s\","
             "\"model_sha256\":\"%s\",\"keyword_pack_sha256\":\"%s\","
             "\"audio_sha256\":\"%s\",\"block_samples\":%u,"
+            "\"audio_samples\":%u,\"blocks_per_repeat\":%zu,"
+            "\"processed_frames_per_repeat\":%" PRIu64 ","
+            "\"processed_frames\":%" PRIu64 ",\"processed_samples\":%" PRIu64 ","
             "\"sample_rate_hz\":%u,\"frame_length_samples\":%u,"
             "\"frame_hop_samples\":%u,\"final_block_samples\":%u,"
+            "\"repeat_policy\":\"reset-before-each-repeat\","
+            "\"workload_contract\":\"pcm16-400-window-320-hop-v1\","
             "\"timing_unit\":\"input-call\",\"deadline_basis\":\"nominal-block\","
             "\"tail_policy\":\"short-final-call-included-no-padding\","
             "\"percentile_estimator\":\"" KWS_BENCH_PERCENTILE_ESTIMATOR "\","
@@ -227,7 +271,9 @@ int main(int argc, char **argv) {
             runner_sha256, build_info->version, build_info->source_revision,
             build_info->config_digest, build_info->target_triple,
             model_sha256, pack_sha256, audio_sha256,
-            (unsigned)BENCH_BLOCK_SAMPLES, (unsigned)KWS_SAMPLE_RATE_HZ,
+            (unsigned)BENCH_BLOCK_SAMPLES, (unsigned)(wav_bytes / 2u),
+            blocks_per_repeat, frames_per_repeat, total_processed_frames,
+            total_processed_samples, (unsigned)KWS_SAMPLE_RATE_HZ,
             (unsigned)KWS_FRAME_LENGTH_SAMPLES, (unsigned)KWS_FRAME_HOP_SAMPLES,
             final_block_samples, deadline_us, audio_seconds, repeats,
             total_blocks, model_bytes, pack_bytes,

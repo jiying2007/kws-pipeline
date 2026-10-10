@@ -61,7 +61,7 @@ The set must exactly equal:
 - every repeated `--raw-evidence` file;
 - the `--power-raw` file.
 
-Duplicate names, missing rows, extra rows, size mismatches or hash mismatches are rejected. This manifest should be emitted by the controlled qualification harness after measurements are frozen.
+Release and Phase-B qualification also require the exact schema-v2 `board-summary.json` as a raw artifact, binding timing/workload results through this attested manifest. Phase-B bundles retain byte-identical copies at `board-summary.json` and `raw/board-summary.json`. Duplicate names, missing rows, extra rows, size mismatches or hash mismatches are rejected. This manifest should be emitted by the controlled qualification harness after measurements are frozen.
 
 ## External attestation verification
 
@@ -107,6 +107,7 @@ python3 tools/collect_target_evidence.py \
   --stack-high-water-bytes <measured> \
   --average-power-mw <measured> \
   --raw-evidence qualification/stack-watermark.txt \
+  --raw-evidence qualification/board-summary.json \
   --power-raw qualification/power.csv \
   --evidence-raw qualification/evidence-raw.jsonl \
   --attestation-verification qualification/attestation-verification.json \
@@ -147,6 +148,7 @@ The collector emits target evidence schema v3 with `evidence_class=product-board
 --attestation-verification qualification/attestation-verification.json \
 --raw-evidence qualification/runtime-soak.json \
 --raw-evidence qualification/stack-watermark.txt \
+--raw-evidence qualification/board-summary.json \
 --raw-evidence qualification/power.csv \
 --sku product-sku-a
 ```

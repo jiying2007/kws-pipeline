@@ -33,7 +33,7 @@ from torch.utils.data import DataLoader, Dataset
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from corpus_identity import corpus_digest, inspect_pcm16_wav  # noqa: E402
+from corpus_identity import canonical_audio_path, corpus_digest, inspect_pcm16_wav  # noqa: E402
 from kws_vocab import load_tokens, vocab_fingerprint, vocab_size  # noqa: E402
 
 from completion_loss import PREFIX_COMPLETION_TAIL_STEPS, strict_prefix_completion_loss
@@ -72,7 +72,8 @@ from suffix_root_loss import (
     suffix_root_suppression_loss,
 )
 from synthetic_audio import UINT32_MAX
-from training_admission import verify_training_manifests, inherit_warm_start_admission
+from training_admission import (verify_training_manifests, inherit_warm_start_admission,
+                                require_current_dataset)
 
 MAX_FEATURE_DIM = 40
 MAX_HIDDEN_DIM = 64
@@ -226,6 +227,8 @@ def training_environment() -> dict:
         ROOT / "training" / "audit_dataset.py",
         ROOT / "tools" / "speech_label_admission.py",
         ROOT / "tools" / "corpus_identity.py",
+        ROOT / "tools" / "model_provenance.py",
+        ROOT / "tools" / "qualification_common.py",
     ]
     code = {
         path.relative_to(ROOT).as_posix(): sha256_file(path)
@@ -400,7 +403,7 @@ def manifest_rows(path: pathlib.Path) -> list[dict]:
                 raise ValueError(f"{path}:{line_no}: invalid JSON: {exc}") from exc
             if not isinstance(value, dict):
                 raise ValueError(f"{path}:{line_no}: expected JSON object")
-            audio = value.get("audio", value.get("path"))
+            audio = canonical_audio_path(value, f"{path}:{line_no}")
             # Reviewed rows retain token names alongside their bound numeric IDs.
             # Numeric-only diagnostic manifests remain supported in their lane.
             targets = value.get("target_ids", value.get("tokens"))
@@ -1182,6 +1185,8 @@ def main() -> None:
     )
     if not args.synthetic_contract_test_only and admission["reviewed_rows"] != len(dataset):
         raise ValueError("consumed training rows differ from reviewed admission")
+    if not args.synthetic_contract_test_only:
+        require_current_dataset(admission, admission["manifests"], dataset.corpus_identity)
     weight_statistics = sample_weight_statistics(
         dataset.rows,
         keyword_sequences,
@@ -1207,7 +1212,13 @@ def main() -> None:
         source_bytes = args.warm_start.read_bytes()
         source_sha256 = hashlib.sha256(source_bytes).hexdigest()
         checkpoint = torch.load(io.BytesIO(source_bytes), map_location="cpu", weights_only=True)
-        inherit_warm_start_admission(admission, checkpoint.get("training_admission"))
+        inherit_warm_start_admission(
+            admission, checkpoint.get("training_admission"),
+            source_checkpoint_sha256=source_sha256,
+            ancestor_manifests=checkpoint.get("training_manifests"),
+            ancestor_corpus_identity=checkpoint.get("training_corpus_identity"),
+            ancestor_warm_start_binding=checkpoint.get("warm_start_binding"),
+        )
         warm_start_binding = validate_warm_start(
             checkpoint, args, vocab_size_value, fingerprint, source_sha256
         )
@@ -1453,6 +1464,8 @@ def main() -> None:
     final_admission = verify_training_manifests(
         args.manifest, token_map, diagnostic=args.synthetic_contract_test_only,
     )
+    if not args.synthetic_contract_test_only:
+        require_current_dataset(final_admission, manifest_metadata, dataset.corpus_identity)
     if final_admission["manifests"] != admission["manifests"]:
         raise ValueError("training admission inputs changed during optimization")
     if args.warm_start and sha256_file(args.warm_start) != warm_start_binding["source_checkpoint_sha256"]:

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import copy
+import argparse
 import pathlib
 import subprocess
 import sys
@@ -23,9 +25,71 @@ sys.path.insert(0, str(ROOT / "tools"))
 from corpus_identity import evaluation_corpus_identity  # noqa: E402
 
 from runtime_soak_contract import CPU_MEASUREMENT_CONTRACT_ID
+from qualification_metrics import (validate_event_metrics, score, validate_recordings,
+                                   validate_detections, EVENT_SCORING_CONTRACT)
+from test_board_bench import board_summary_fixture
 
+
+
+def verify_event_metadata() -> None:
+    import hashlib
+    def prepare(refs, detections):
+        raw = {"references": "".join(json.dumps(row) + "\n" for row in refs),
+               "detections": "".join(json.dumps(row) + "\n" for row in detections)}
+        hashes = {f"{key}_sha256": hashlib.sha256(value.encode()).hexdigest()
+                  for key, value in raw.items()}
+        recordings = validate_recordings(refs)
+        summary, _, _ = score(recordings, validate_detections(detections, recordings), 0.15, 0.5)
+        return raw, hashes, summary
+    def rejects(summary, raw, hashes):
+        try:
+            validate_event_metrics(summary, raw, hashes)
+        except ValueError:
+            return
+        raise AssertionError("forged event metrics admitted")
+    refs = [{"recording": "r", "duration_s": 10.0,
+             "expected": [{"keyword_id": 1, "start_s": 1.0, "end_s": 2.0}]}]
+    # All variants are pure annotations/detection metadata; no runner is invoked.
+    for keyword, time, matched in ((1, 2.1, 1), (2, 9.0, 0), (1, 9.0, 0),
+                                   (1, 0.85, 1), (1, 2.5, 1), (1, 2.5001, 0)):
+        raw, hashes, canonical = prepare(refs, [{"recording": "r", "keyword_id": keyword,
+                                                "time_s": time, "confidence": 0.9}])
+        result = validate_event_metrics(canonical, raw, hashes)
+        if result["matched"] != matched or result["scoring_contract"] != EVENT_SCORING_CONTRACT:
+            raise AssertionError("canonical event policy changed")
+        forged = copy.deepcopy(canonical)
+        forged.update(matched=1 - matched, false_rejects=matched,
+                      false_accepts=matched, frr=float(matched),
+                      far_per_hour=matched / canonical["audio_hours"])
+        rejects(forged, raw, hashes)
+        for field, value in (("p50_post_end_latency_ms", -1.0),
+                             ("p50_post_end_latency_ms", -1e-12),
+                             ("p95_post_end_latency_ms", float("nan")),
+                             ("p95_post_end_latency_ms", 777.0),
+                             ("event_match_pre_tolerance_ms", 9999.0),
+                             ("event_match_post_tolerance_ms", 9999.0),
+                             ("per_keyword", {})):
+            rejects(dict(canonical, **{field: value}), raw, hashes)
+        rejects(canonical, dict(raw, detections=raw["detections"] + "\n"), hashes)
+    raw, hashes, canonical = prepare(refs, [])
+    validate_event_metrics(canonical, raw, hashes)
+    if canonical["p95_post_end_latency_ms"] != 0.0 or canonical["false_rejects"] != 1:
+        raise AssertionError("empty detection semantics changed")
+    # Duplicate detections are one match and one false accept, not two matches.
+    det = {"recording": "r", "keyword_id": 1, "time_s": 2.1, "confidence": 0.9}
+    raw, hashes, canonical = prepare(refs, [det, det])
+    validate_event_metrics(canonical, raw, hashes)
+    if canonical["matched"] != 1 or canonical["false_accepts"] != 1:
+        raise AssertionError("duplicate detection consumed twice")
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--event-metadata-only", action="store_true")
+    args = parser.parse_args()
+    verify_event_metadata()
+    if args.event_metadata_only:
+        print("test_release_qualification: canonical event metadata contracts ok (no model execution)")
+        return 0
     synthetic_holdout = (
         ROOT / "training" / "render_qualification_holdout.py"
     ).read_text(encoding="utf-8")
@@ -181,54 +245,21 @@ def main() -> int:
             },
         )
         audio_hours = 10.0 / 3600.0
-        write_json(
-            eval_summary,
-            {
-                "recordings": 1,
-                "audio_hours": audio_hours,
-                "expected": 10,
-                "matched": 9,
-                "false_rejects": 1,
-                "false_accepts": 1,
-                "frr": 0.1,
-                "far_per_hour": 1.0 / audio_hours,
-                "p50_post_end_latency_ms": 100.0,
-                "p95_post_end_latency_ms": 100.0,
-                "per_keyword": {},
-                "references_sha256": refs_hash,
-                "detections_sha256": detections_hash,
-            },
-        )
-        write_json(
-            board_summary,
-            {
-                "schema_version": 1,
-                "runtime_version": "0.3.0",
-                "runtime_source_revision": "a" * 40,
-                "runtime_config_digest": "b" * 64,
-                "runtime_target": "arm-linux-gnueabihf",
-                "runner_sha256": board_runner_hash,
-                "model_sha256": model_hash,
-                "keyword_pack_sha256": pack_hash,
-                "audio_sha256": board_audio_hash,
-                "block_samples": 320,
-                "block_deadline_us": 20000.0,
-                "audio_seconds": 1.0,
-                "repeats": 10,
-                "blocks": 500,
-                "model_bytes": model_bytes,
-                "keyword_pack_bytes": pack_bytes,
-                "arena_bytes": 16000,
-                "total_process_us": 500000.0,
-                "mean_process_us": 1000.0,
-                "p50_process_us": 900.0,
-                "p95_process_us": 1800.0,
-                "p99_process_us": 3000.0,
-                "max_process_us": 4200.0,
-                "rtf": 0.05,
-                "p99_headroom": 20000.0 / 3000.0,
-            },
-        )
+        score_recordings = validate_recordings([json.loads(references.read_text(encoding="utf-8"))])
+        canonical, _, _ = score(score_recordings,
+                                validate_detections(detection_rows, score_recordings), 0.15, 0.5)
+        write_json(eval_summary, {**canonical, "references_sha256": refs_hash,
+                                  "detections_sha256": detections_hash})
+
+        benchmark = board_summary_fixture(board_audio, repeats=10)
+        benchmark.update(runtime_target="arm-linux-gnueabihf", runner_sha256=board_runner_hash,
+                         model_sha256=model_hash, keyword_pack_sha256=pack_hash,
+                         model_bytes=model_bytes, keyword_pack_bytes=pack_bytes,
+                         p50_process_us=900.0, p95_process_us=1800.0,
+                         p99_process_us=3000.0, max_process_us=4200.0,
+                         p99_headroom=20000.0 / 3000.0)
+        write_json(board_summary, benchmark)
+
 
         write_json(
             runtime_soak,
@@ -236,7 +267,7 @@ def main() -> int:
         )
         raw_evidence.write_text("fixture target measurements\n", encoding="utf-8")
         power_raw.write_text("t,power_mw\n0,120\n", encoding="utf-8")
-        raw_paths = [runtime_soak, raw_evidence, power_raw]
+        raw_paths = [runtime_soak, raw_evidence, power_raw, board_summary]
         evidence_raw.write_text(
             "".join(
                 json.dumps(
@@ -283,6 +314,7 @@ def main() -> int:
                 "--stack-high-water-bytes", "32768",
                 "--average-power-mw", "120",
                 "--raw-evidence", str(raw_evidence),
+                "--raw-evidence", str(board_summary),
                 "--power-raw", str(power_raw),
                 "--evidence-raw", str(evidence_raw),
                 "--attestation-verification", str(attestation_verification),
@@ -369,6 +401,7 @@ def main() -> int:
             "--raw-evidence", str(runtime_soak),
             "--raw-evidence", str(raw_evidence),
             "--raw-evidence", str(power_raw),
+            "--raw-evidence", str(board_summary),
             "--source-sha", "a" * 40,
             "--sku", "fixture-sku",
             "--corpus-id", "home-kws-heldout-fixture-v2",
@@ -392,6 +425,8 @@ def main() -> int:
                 sys.executable,
                 str(ROOT / "tools" / "qualification_gate.py"),
                 "--manifest", str(manifest),
+                "--references", str(references), "--detections", str(detections),
+                "--board-audio", str(board_audio),
                 "--policy", str(policy),
                 "--output", str(gate),
             ]
@@ -402,12 +437,23 @@ def main() -> int:
         assert gate_result["training_corpus_sha256"] == result["model_lineage"]["training_corpus_sha256"]
         assert gate_result["evaluation_corpus_sha256"] == eval_corpus["corpus_sha256"]
         gate_command = [sys.executable, str(ROOT / "tools" / "qualification_gate.py"),
-                        "--manifest", str(manifest), "--policy", str(policy)]
+                        "--manifest", str(manifest),
+                "--references", str(references), "--detections", str(detections),
+                "--board-audio", str(board_audio), "--policy", str(policy)]
         def gate_exit(expected: int) -> None:
             checked = subprocess.run(gate_command, capture_output=True, text=True, check=False)
             assert checked.returncode == expected, checked.stdout + checked.stderr
 
         original_manifest = manifest.read_text(encoding="utf-8")
+        for updates in ({"matched": 10, "false_rejects": 0, "false_accepts": 0,
+                         "frr": 0.0, "far_per_hour": 0.0},
+                        {"p95_post_end_latency_ms": 0.0},
+                        {"scoring_contract": {}}):
+            forged = json.loads(original_manifest)
+            forged["evaluation"].update(updates)
+            write_json(manifest, forged)
+            gate_exit(2)
+        manifest.write_text(original_manifest, encoding="utf-8")
         for section, key, replacement in (
             (None, "schema_version", 2),
             ("evidence", "schema_version", 2),
@@ -483,6 +529,8 @@ def main() -> int:
                 sys.executable,
                 str(ROOT / "tools" / "qualification_gate.py"),
                 "--manifest", str(manifest),
+                "--references", str(references), "--detections", str(detections),
+                "--board-audio", str(board_audio),
                 "--policy", str(policy),
             ],
             check=False,

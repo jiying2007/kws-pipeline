@@ -8,8 +8,10 @@ import math
 import pathlib
 import re
 import sys
+import wave
 
-from qualification_metrics import validate_board, validate_evidence
+from qualification_metrics import (validate_board, validate_evidence, board_wav_stats,
+                                   require_board_raw_binding)
 from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -307,6 +309,7 @@ def main() -> int:
             "keyword_pack_sha256": keyword_pack_sha256,
             "audio_sha256": sha256_file(board_audio),
         },
+        board_wav_stats(board_audio),
     )
     evidence = validate_evidence(
         target_raw,
@@ -326,7 +329,7 @@ def main() -> int:
         raise ValueError("approved resource budget board revision differs from DUT evidence")
 
     manifest_rows = load_jsonl(evidence_raw)
-    required_names = set(policy["required_raw_evidence"])
+    required_names = set(policy["required_raw_evidence"]) | {"board-summary.json"}
     actual_names = {str(row.get("name", "")) for row in manifest_rows}
     if not required_names.issubset(actual_names):
         raise ValueError(f"target raw evidence is missing required files: {sorted(required_names - actual_names)}")
@@ -339,7 +342,17 @@ def main() -> int:
         digest = sha256_file(path)
         if digest != row.get("sha256") or path.stat().st_size != row.get("bytes"):
             raise ValueError(f"raw evidence bytes do not match manifest: {name}")
+        if name in raw_hashes:
+            raise ValueError("evidence-raw names must be unique")
         raw_hashes[name] = digest
+
+    canonical_raw = [{"name": row["name"], "sha256": row["sha256"], "bytes": row["bytes"]}
+                     for row in manifest_rows]
+    if sorted(canonical_raw, key=lambda item: item["name"]) != sorted(evidence["raw_evidence"], key=lambda item: item["name"]):
+        raise ValueError("target evidence raw artifacts differ from attested raw manifest")
+    summary_path = require_bundle_file(bundle, "board-summary.json")
+    require_board_raw_binding({"name": "board-summary.json", "sha256": sha256_file(summary_path),
+                              "bytes": summary_path.stat().st_size}, canonical_raw)
 
     continuity_path = require_bundle_file(bundle, "raw/audio-continuity.json")
     continuity = load_json(continuity_path)
@@ -453,6 +466,6 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError, wave.Error) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2)

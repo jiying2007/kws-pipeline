@@ -15,8 +15,9 @@ import threading
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "training"))
+sys.path[:0] = [str(ROOT / "training"), str(ROOT / "tools")]
 from frontend_spec import SAMPLE_RATE_HZ  # noqa: E402
+from corpus_identity import rebind_audio_path  # noqa: E402
 from synthetic_audio import clamp16, noise_profile  # noqa: E402
 
 
@@ -173,6 +174,7 @@ def materialize_captures(
                 / "captures"
                 / f"fa-{index:04d}-kw{int(row['keyword_id'])}.wav"
             )
+            capture = rebind_audio_path(row, str(path))
             path.parent.mkdir(parents=True, exist_ok=True)
             with wave.open(str(path), "wb") as writer:
                 writer.setnchannels(1)
@@ -181,8 +183,7 @@ def materialize_captures(
                 writer.writeframes(pcm)
             captures.append(
                 {
-                    **row,
-                    "path": str(path),
+                    **capture,
                     "sha256": sha256_file(path),
                     "start_sample": start,
                     "end_sample": end,

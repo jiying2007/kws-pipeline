@@ -31,7 +31,7 @@ def verify_training_short_admission(root: pathlib.Path) -> None:
     # Execute only the real manifest parser/constructor, with no Torch/model
     # import, optimizer, frontend inference or training entry point.
     sys.path.insert(0, str(ROOT / "tools"))
-    from corpus_identity import corpus_digest, inspect_pcm16_wav
+    from corpus_identity import canonical_audio_path, corpus_digest, inspect_pcm16_wav
     tree = ast.parse((ROOT / "training" / "train_ctc.py").read_text())
     selected = [node for node in tree.body
                 if isinstance(node, (ast.ClassDef, ast.FunctionDef))
@@ -40,6 +40,7 @@ def verify_training_short_admission(root: pathlib.Path) -> None:
         "Dataset": object, "pathlib": pathlib, "json": json,
         "FRAME_LENGTH_SAMPLES": FRAME_LEN, "IDENTITY_FIELDS": (),
         "inspect_pcm16_wav": inspect_pcm16_wav, "corpus_digest": corpus_digest,
+        "canonical_audio_path": canonical_audio_path,
     }
     exec(compile(ast.Module(body=selected, type_ignores=[]),
                  "train_ctc.py", "exec"), namespace)
@@ -53,7 +54,8 @@ def verify_training_short_admission(root: pathlib.Path) -> None:
                 dataset = namespace["Manifest"]([manifest], FEATURE_DIM, 5, FRONTEND_LOGMEL)
             except ValueError as exc:
                 require(count < FRAME_LEN, str(exc))
-                require("at least 400 samples" in str(exc), str(exc))
+                expected = "empty PCM payload" if count == 0 else "at least 400 samples"
+                require(expected in str(exc), str(exc))
             else:
                 require(count >= FRAME_LEN, f"accepted {count}-sample target {tokens}")
                 require(len(dataset) == 1)
