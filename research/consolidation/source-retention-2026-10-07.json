@@ -15627,6 +15627,13 @@
       "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
       "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
       "bytes": 4582
+    },
+    {
+      "path": ".github/workflows/source-screen32-run.yml",
+      "mode": "100644",
+      "bytes": 3157,
+      "git_blob_sha1": "f5a32f9f4973add18ababc2c7ee0058d21df3e9d",
+      "sha256": "b78370d0113c84b607c71204f8d405899e4a591c0f3638e098a47f8af37b2ceb"
     }
   ],
   "allowed_new_active_workflows": [
@@ -16336,6 +16343,42 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "efd9598e51716ba042de98360d95674405bdb11d",
+      "from_tree": "c18f55461ff41f100f1d9ebb776093db7d154513",
+      "operation_id": "qwen16-voicedesign-once-v1-activation",
+      "scope": "Register one new exact-byte workflow for the user-approved single free standard-hosted Qwen16 source screen. This is a new source-specific experiment, not reactivation of any retained historical workflow.",
+      "rationale": "Append to the currently enforced active inventory while preserving every existing baseline row, the singleton separately allowed workflow, original consolidation base, retained source/provenance/projections, pointer-only data and disabled historical arms. Public synthetic audio and evaluation evidence are approved; human review remains pending and training admission remains false.",
+      "prepared_source_pull_request": "https://github.com/jiying2007/kws-pipeline/pull/509",
+      "prepared_source_freeze_sha256": "7a07b099081fbf8dc39f3d1a876abf1fac9560f99b760b67f155764f219475b8",
+      "execution_branch": "research/qwen16-voicedesign-once-v1",
+      "execution_limits": {
+        "max_tts_calls": 16,
+        "max_primary_asr_calls": 32,
+        "attempts_per_cell": 1,
+        "automatic_regeneration": false,
+        "paid_resources": false,
+        "human_gold": false,
+        "training_admitted": false
+      },
+      "files": [
+        {
+          "path": ".github/workflows/source-screen32-run.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/source-screen32-run.yml",
+            "mode": "100644",
+            "bytes": 3157,
+            "git_blob_sha1": "f5a32f9f4973add18ababc2c7ee0058d21df3e9d",
+            "sha256": "b78370d0113c84b607c71204f8d405899e4a591c0f3638e098a47f8af37b2ceb"
+          }
+        }
+      ],
+      "baseline_count_before": 54,
+      "baseline_count_after": 55,
+      "allowed_new_active_workflows_unchanged": true
     }
   ]
 }
