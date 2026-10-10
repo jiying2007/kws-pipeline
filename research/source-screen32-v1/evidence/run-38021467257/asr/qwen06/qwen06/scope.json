@@ -1,0 +1,1 @@
+{"capabilities":"none","limits":{"cpu.max":"400000 100000","memory.max":"12884901888","memory.swap.max":"0","pids.max":"256"},"network_disabled":true,"network_interfaces":["lo"],"no_new_privileges":true,"private_cgroup_root":true,"read_only_root":true,"schema":"screen32-kernel-scope-v1","seccomp_filter":true,"uid":1001}
