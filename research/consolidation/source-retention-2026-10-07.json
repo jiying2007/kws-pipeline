@@ -15627,6 +15627,13 @@
       "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
       "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
       "bytes": 4582
+    },
+    {
+      "path": ".github/workflows/source-screen32-run-v3.yml",
+      "mode": "100644",
+      "bytes": 3172,
+      "git_blob_sha1": "d376cdf107c1734f7b298114cc467801d503ab09",
+      "sha256": "941c4724ae1bdae1d7347bc947f624770c1043108302a6108fc958a1b03c3085"
     }
   ],
   "allowed_new_active_workflows": [
@@ -16336,6 +16343,57 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "86d7825ac7b3d7405480f87d2644ec908c8a662f",
+      "from_tree": "34d61edbc29a6665793dfdcc9b92ebcfc8ef2ab1",
+      "operation_id": "qwen16-voicedesign-once-v3-activation",
+      "scope": "Register one exact v3 screening workflow only after the user-authorized second and final no-model probe succeeded. Admit one new fixed16-cell/two-ASR round with exact retained probe evidence bound to the unchanged source freeze and setup-container contract. No probe workflow is activated.",
+      "rationale": "Append one exact active-workflow inventory row while preserving every existing baseline row, singleton separately allowed workflow, historical consolidation provenance and failed v1/v2/probe1 evidence. Retain the successful probe as exactly five raw JSON files with sibling provenance. All66 frozen source files remain unchanged after that successful probe. Human review remains pending, training admission false and shipping false; no automatic rerun or regeneration is admitted.",
+      "reviewed_source_pull_request": "https://github.com/jiying2007/kws-pipeline/pull/512",
+      "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2",
+      "execution_branch": "research/qwen16-voicedesign-once-v3",
+      "successful_probe": {
+        "directory": "research/source-screen32-v1/evidence/probe-2-38017741858",
+        "artifact_freeze_sha256": "16367bda2b3873c8c14bb11ff36f4a4f78570e51c87844b6712108559b996f4f",
+        "source_head_sha": "d877ae89da6d42ad6135b30e19a3362773ec1f88"
+      },
+      "successful_probe_run_id": 38017741858,
+      "successful_probe_archive_sha256": "26b44670e4398cb5aa21ec8cdf5027c26a0949ff8ff9e644cf4c48ad8150f1d5",
+      "verified_container_contract_sha256": "f632e016c091ba008cdc3f0fc09b214ae86338a8572f3f0bdbaa262aaedf3243",
+      "execution_limits": {
+        "max_tts_calls": 16,
+        "max_primary_asr_calls": 32,
+        "attempts_per_cell": 1,
+        "automatic_regeneration": false,
+        "paid_resources": false,
+        "diagnostic_slots_consumed": 2,
+        "diagnostic_slots_remaining": 0,
+        "probe_release_approved": false,
+        "tts_total_declared_transfer_allocation_bytes": 6442450944,
+        "image_observation_reservation_bytes": 134217728,
+        "image_reservation_is_hard_transfer_limit": false,
+        "human_gold": false,
+        "training_admitted": false,
+        "shipping_approved": false
+      },
+      "files": [
+        {
+          "path": ".github/workflows/source-screen32-run-v3.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/source-screen32-run-v3.yml",
+            "mode": "100644",
+            "bytes": 3172,
+            "git_blob_sha1": "d376cdf107c1734f7b298114cc467801d503ab09",
+            "sha256": "941c4724ae1bdae1d7347bc947f624770c1043108302a6108fc958a1b03c3085"
+          }
+        }
+      ],
+      "baseline_count_before": 54,
+      "baseline_count_after": 55,
+      "allowed_new_active_workflows_unchanged": true
     }
   ]
 }

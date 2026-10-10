@@ -1,0 +1,77 @@
+name: Qwen16 VoiceDesign source screen once v3
+on:
+  push:
+    branches: [research/qwen16-voicedesign-once-v3]
+permissions:
+  contents: read
+concurrency:
+  group: qwen16-voicedesign-once-v3
+  cancel-in-progress: false
+jobs:
+  tts:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    outputs:
+      blind_job_sha256: ${{ steps.run.outputs.blind_job_sha256 }}
+      blind_clips: ${{ steps.run.outputs.blind_clips }}
+      blind_artifact_id: ${{ steps.blind.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run reviewed fixed Qwen cells once
+        id: run
+        run: python3 -I -B research/source-screen32-v1/hosted_run.py --phase tts
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.run.outputs.evidence_root != ''
+        with:
+          name: qwen16-generation-terminal-evidence-v3
+          path: ${{ steps.run.outputs.evidence_root }}/artifact/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success() && steps.run.outputs.blind_clips != '0'
+        id: blind
+        with:
+          name: qwen16-blind-audio-only-v3
+          path: ${{ steps.run.outputs.evidence_root }}/blind/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false
+  asr:
+    needs: tts
+    if: needs.tts.result == 'success' && needs.tts.outputs.blind_artifact_id != '' && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    env:
+      SCREEN32_BLIND_JOB_SHA256: ${{ needs.tts.outputs.blind_job_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        timeout-minutes: 2
+        with:
+          artifact-ids: ${{ needs.tts.outputs.blind_artifact_id }}
+          path: ${{ runner.temp }}/qwen16-blind-incoming-v3
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Run both blinded recognizers once
+        id: run
+        run: python3 -I -B research/source-screen32-v1/hosted_run.py --phase asr --input "$RUNNER_TEMP/qwen16-blind-incoming-v3"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.run.outputs.evidence_root != ''
+        with:
+          name: qwen16-asr-terminal-evidence-v3
+          path: ${{ steps.run.outputs.evidence_root }}/artifact/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false

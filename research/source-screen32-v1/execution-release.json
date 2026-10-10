@@ -1,7 +1,11 @@
 {
   "schema": "screen32-execution-release-v1",
   "experiment": "qwen16-voicedesign-once-v3",
-  "approved": false,
+  "approved": true,
   "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2",
-  "successful_probe": null
+  "successful_probe": {
+    "directory": "research/source-screen32-v1/evidence/probe-2-38017741858",
+    "artifact_freeze_sha256": "16367bda2b3873c8c14bb11ff36f4a4f78570e51c87844b6712108559b996f4f",
+    "source_head_sha": "d877ae89da6d42ad6135b30e19a3362773ec1f88"
+  }
 }
