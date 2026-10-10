@@ -1,0 +1,66 @@
+{
+  "schema": "screen32-failed-run-provenance-v1",
+  "retrieved_utc": "2026-10-10",
+  "run_id": 38012657985,
+  "job_id": 114095922642,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38012657985",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38012657985/job/114095922642",
+  "head_sha": "d9500b579db555d2ab6d298118a03d05c8f5514f",
+  "head_tree": "ade84db1cc4ea3f63b3a2502b4931f5e579eed85",
+  "source_freeze_sha256": "7a07b099081fbf8dc39f3d1a876abf1fac9560f99b760b67f155764f219475b8",
+  "archive": {
+    "artifact_id": 11655305369,
+    "bytes": 1814,
+    "sha256": "6caaff3718e9e44ae66c345121b49edc0cb6d74979b3a6d1d26c09e883eea138",
+    "archive_body_retained": false,
+    "local_download_filename": "qwen16-terminal-38012657985.zip",
+    "workflow_declared_artifact_name": "qwen16-generation-terminal-evidence"
+  },
+  "exact_members": {
+    "artifact-freeze.json": {
+      "bytes": 416,
+      "sha256": "08f9496d68719d9cc87429ffc9b3dad2e8460fc68cb2e7f3a338e961aec39eab"
+    },
+    "host-receipt.json": {
+      "bytes": 663,
+      "sha256": "4e93bb3ebfc0f5e6557a6c2ebdbcd0fd932346492be4bda94f326da6b5d9b3a1"
+    },
+    "image-transfer.json": {
+      "bytes": 554,
+      "sha256": "c52e91992977f0856ddf2532bd83eb0d70325a7294b0cb7c727042a8b577deaa"
+    },
+    "tts/tts-receipt.json": {
+      "bytes": 2740,
+      "sha256": "48d8c2cdef47ff94f8c3391783fcc60b84fbc7dc81d2bdcf97f56213c804df2e"
+    }
+  },
+  "member_retention": "Exact unmodified public JSON bytes extracted after archive digest verification; no reconstructed content.",
+  "observed_result": {
+    "setup": "NOT_RUN",
+    "tts_attempts": 0,
+    "tts_generated": 0,
+    "asr": "SKIPPED",
+    "all32_cells": "NOT_RUN",
+    "image_pull_client_attempts": 1,
+    "all_non_loopback_interface_receive_delta_bytes": 93615466,
+    "declared_image_payload_bytes": 45449534,
+    "actual_image_transfer_bytes": "UNKNOWN",
+    "daemon_completion": "UNKNOWN",
+    "image_fetch_after_client_stop": "MAY_CONTINUE",
+    "container_kernel_enforcement": "NOT_TESTED",
+    "model_fit": "NOT_TESTED"
+  },
+  "diagnosis": "The v1 observer summed every non-loopback interface RX counter. Interface totals can count stacked-link traffic more than once and include unrelated host traffic. The artifact lacks interface snapshots, so neither mechanism nor actual image bytes can be established for this run.",
+  "diagnosis_sources": [
+    "https://docs.kernel.org/networking/statistics.html",
+    "https://docs.docker.com/reference/cli/docker/image/pull/"
+  ],
+  "human_review": "PENDING",
+  "human_gold": false,
+  "training_admitted": false,
+  "shipping_approved": false,
+  "d20": "FAIL",
+  "d90": "NOT_RUN",
+  "automatic_retry_authorized": false,
+  "original_run_has_no_retry_path": true
+}

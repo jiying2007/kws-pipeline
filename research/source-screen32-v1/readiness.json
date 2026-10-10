@@ -1,6 +1,6 @@
 {
   "schema": "screen32-readiness-v1",
-  "status": "RUNNABLE_IMPLEMENTATION_PENDING_REVIEW_AND_HOST_PROOF",
+  "status": "FIRST_EXECUTION_STOPPED_BEFORE_SETUP_ACCOUNTING_FIX_UNEXECUTED",
   "execution_ready": false,
   "real_tts_calls": 0,
   "real_asr_calls": 0,
@@ -37,11 +37,11 @@
     "workspace_cap_bytes": 12884901888,
     "kernel_pids_max": 256,
     "kernel_cpu_max": "400000 100000",
-    "image_transfer_reserve_bytes": 67108864
+    "image_transfer_reserve_bytes": 134217728
   },
   "qwen_blockers": [
-    "Independent review and exact-source admission remain required; execution-release.json stays approved=false and the workflow is a research template, not an activated execution workflow.",
-    "Docker availability, current host reserve and actual private cgroup-v2 limits must pass in the new run before any dependency import. No container or exact runtime has been executed by this preparation.",
+    "The v1 identity is consumed. The user authorized one separate v2 attempt after fix checks and merge, but the v2 template and guard remain inert and release remains false. Independent review and post-merge exact-source activation are required.",
+    "Fresh capacity and cgroup-v2 Docker availability passed on failed run38012657985, but no container was created. Actual private cgroup limits, exact runtime and model fit remain untested.",
     "Pinned Python image/native-library compatibility and 1.7B model fit/latency remain unmeasured. Failures consume the admitted setup/source attempt; no automatic restart or regeneration."
   ],
   "firered_blockers": [
@@ -56,7 +56,7 @@
   "next_safe_command": "python3 -B research/source-screen32-v1/contract.py",
   "next_safe_preview_command": "python3 -B research/source-screen32-v1/contract.py --preview-cell screen32-001",
   "actual_generation_command": null,
-  "reason_no_execution_command": "The source-specific launcher and workers now fit together, but its committed release is unapproved and workflow unactivated. Root review of immutable code and live Docker/kernel/native-runtime/resource checks are still required before generation.",
+  "reason_no_execution_command": "The v1 run failed before setup. The user authorized one separate v2 attempt after fix checks and merge. This preparation remains unexecuted, with approved=false source admission and no active workflow until immutable review and post-merge activation.",
   "preserved_boundary": {
     "d20": "FAIL",
     "d90": "NOT_RUN",
@@ -84,7 +84,7 @@
   "qwen_remaining_steps_smallest_16_cell_route": [
     "COMPLETE: exact11 sidecars,92 TTS runtime pins and17 locked wheel-source members are verified by metadata/source inspection. No weights or runtime were installed.",
     "COMPLETE_IMPLEMENTATION: explicit locked-setup binding, actual cgroup scope verifier, unprivileged bounded Docker launcher, sixteen-cell durable TTS/EOS/native+PCM worker, audio-only handoff and two isolated primary ASR workers. Offline fixtures do not prove execution.",
-    "PENDING: independent source review, immutable freeze admission, template activation and first-created one-shot branch. Run number and run attempt must both be1; no workflow_dispatch or rerun path.",
+    "PENDING: review transfer accounting and the inert v2 identity, then check/merge the fix before separate exact-source activation. User renewal approval is received; no new execution ref or active workflow exists in this preparation.",
     "PENDING_AT_EXECUTION: fresh host capacity, official image identity and measured transfer, actual cgroup/security/network readback before imports, exact installed/source/asset verification and native I/O checks.",
     "After admission, generate only cells001–016 once each;001 is the included first cell. A failed setup/container/cell stops the stage and downstream execution. FireRed017–032 remain NOT_RUN; source role remains screening only and human review pending."
   ],
@@ -128,8 +128,31 @@
   "container_image": {
     "lock": "research/source-screen32-v1/container-lock.json",
     "config_and_compressed_layer_bytes": 45449534,
-    "layers_acquired": false,
+    "layers_acquired": "UNKNOWN_AFTER_FAILED_PULL",
     "install_or_container_calls": 0,
-    "transfer_boundary": "64MiB monitored host-receive reservation, not hard daemon transfer cutoff; failed/over-budget pull stops before setup and leaves daemon completion/cumulative image bytes unverified"
+    "transfer_boundary": "Proposed128MiB monitored stable default-interface RX reservation, not exact image bytes or hard daemon cutoff; before/after snapshots retained. Unexecuted correction; failed run v1 evidence retained unchanged.",
+    "image_pull_client_attempts": 1
+  },
+  "failed_execution": {
+    "run_id": 38012657985,
+    "head_sha": "d9500b579db555d2ab6d298118a03d05c8f5514f",
+    "evidence": "evidence/run-38012657985/provenance.json",
+    "setup": "NOT_RUN",
+    "real_tts_calls": 0,
+    "real_asr_calls": 0,
+    "kernel_container_scope": "NOT_TESTED",
+    "automatic_retry_authorized": false
+  },
+  "prepared_retry": {
+    "experiment": "qwen16-voicedesign-once-v2",
+    "branch": "research/qwen16-voicedesign-once-v2",
+    "active_workflow_path": ".github/workflows/source-screen32-run-v2.yml",
+    "template_only": true,
+    "renewed_execution_approval": "AUTHORIZED_ONE_V2_ATTEMPT_AFTER_FIX_CHECKS_AND_MERGE",
+    "execution_ref_created": false,
+    "same_fixed_cells_and_seeds": true,
+    "previous_run_id": 38012657985,
+    "previous_tts_attempts": 0,
+    "execution_performed": false
   }
 }

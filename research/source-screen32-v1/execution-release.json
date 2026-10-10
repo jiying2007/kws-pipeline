@@ -1,6 +1,6 @@
 {
   "schema": "screen32-execution-release-v1",
-  "experiment": "qwen16-voicedesign-once-v1",
+  "experiment": "qwen16-voicedesign-once-v2",
   "approved": false,
-  "source_freeze_sha256": null
+  "source_freeze_sha256": "646d961f07cd47d10901b8a1b408d0e7778b395e9ec4b324ad9018f2bdacbe08"
 }

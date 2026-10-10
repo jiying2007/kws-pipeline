@@ -23,9 +23,9 @@ from tts_worker import atomic, file_hash, initial_ledger
 from runtime_scope import MEMORY, PIDS
 
 GIB = 1024 ** 3
-IMAGE_TRANSFER_RESERVE = 64 * 1024 ** 2
-BRANCH = 'research/qwen16-voicedesign-once-v1'
-EXPERIMENT = 'qwen16-voicedesign-once-v1'
+IMAGE_TRANSFER_RESERVE = 128 * 1024 ** 2
+BRANCH = 'research/qwen16-voicedesign-once-v2'
+EXPERIMENT = 'qwen16-voicedesign-once-v2'
 
 
 def bounded_json(path, maximum=1024 * 1024):
@@ -64,7 +64,7 @@ def verify_admission(env):
                 re.fullmatch(r'[0-9a-f]{64}', digest), 'source path/hash')
         path = ROOT / name
         require(path.is_file() and not path.is_symlink() and file_hash(path) == digest, 'reviewed source drift')
-    workflow = ROOT / '.github/workflows/source-screen32-run.yml'
+    workflow = ROOT / '.github/workflows/source-screen32-run-v2.yml'
     require(workflow.is_file() and workflow.read_bytes() == (HERE / 'workflow.yml').read_bytes(), 'activated workflow drift')
     return freeze
 
@@ -90,8 +90,51 @@ def host_capacity():
 
 
 def network_received():
-    return {path.parent.parent.name: int(path.read_text())
-            for path in Path('/sys/class/net').glob('*/statistics/rx_bytes') if path.parent.parent.name != 'lo'}
+    """Observe one stable default-route interface, never sum stacked links.
+
+    This is host-interface traffic, not per-process/daemon accounting. Reading
+    routes sends no packets and changes no host settings. Ambiguous defaults fail.
+    """
+    defaults = set()
+    for line in Path('/proc/net/route').read_text().splitlines()[1:]:
+        fields = line.split()
+        require(len(fields) == 11, 'malformed IPv4 route observation')
+        if fields[1] == fields[7] == '00000000' and int(fields[3], 16) & 1 and not int(fields[3], 16) & 0x200:
+            defaults.add(fields[0])
+    for line in Path('/proc/net/ipv6_route').read_text().splitlines():
+        fields = line.split()
+        require(len(fields) == 10, 'malformed IPv6 route observation')
+        if fields[0] == '0' * 32 and fields[1] == '00' and int(fields[8], 16) & 1 and not int(fields[8], 16) & 0x200:
+            defaults.add(fields[9])
+    require(len(defaults) == 1 and 'lo' not in defaults, 'single non-loopback default interface required')
+    counters = {}
+    for path in Path('/sys/class/net').glob('*/statistics/rx_bytes'):
+        device = path.parent.parent
+        if device.name == 'lo': continue
+        require(re.fullmatch(r'[A-Za-z0-9_.:-]{1,64}', device.name), 'interface name boundary')
+        counters[device.name] = {'rx_bytes': int(path.read_text()), 'ifindex': int((device / 'ifindex').read_text())}
+    require(0 < len(counters) <= 64 and defaults <= counters.keys() and
+            all(row['rx_bytes'] >= 0 and row['ifindex'] > 0 for row in counters.values()), 'bounded interface counters')
+    return {'default_interface': next(iter(defaults)), 'interfaces': counters}
+
+
+def record_network_delta(before, after, observation):
+    observation['network_after'] = after
+    device = before['default_interface']
+    require(after['default_interface'] == device, 'default interface changed')
+    first, last = before['interfaces'][device], after['interfaces'][device]
+    require(first['ifindex'] == last['ifindex'] and last['rx_bytes'] >= first['rx_bytes'],
+            'default interface identity/counter changed')
+    delta = last['rx_bytes'] - first['rx_bytes']
+    observation['default_interface_received_delta_bytes'] = delta
+    # Retain the old aggregate only as diagnostic evidence, never an image-byte
+    # claim or gate. Virtual devices may observe the same traffic again.
+    comparable = before['interfaces'].keys() == after['interfaces'].keys() and all(
+        row['ifindex'] == after['interfaces'][name]['ifindex'] and
+        row['rx_bytes'] <= after['interfaces'][name]['rx_bytes'] for name, row in before['interfaces'].items())
+    observation['all_interface_delta_diagnostic_only_bytes'] = sum(
+        after['interfaces'][name]['rx_bytes'] - row['rx_bytes'] for name, row in before['interfaces'].items()) if comparable else None
+    require(delta <= IMAGE_TRANSFER_RESERVE, 'observed default-interface reservation exceeded; no setup or generation')
 
 
 def pull_image(lock, receipt_path):
@@ -101,42 +144,40 @@ def pull_image(lock, receipt_path):
     no setup is started and the retained receipt leaves cumulative bytes unknown.
     The daemon and host security settings are never changed or shut down here.
     """
-    observation = {'schema': 'screen32-image-transfer-observation-v1', 'status': 'started',
+    observation = {'schema': 'screen32-image-transfer-observation-v2', 'status': 'started',
         'image': lock['image'], 'reservation_bytes': IMAGE_TRANSFER_RESERVE,
-        'reservation_kind': 'monitored_host_receive_observation_not_hard_transfer_limit',
-        'host_received_delta_bytes': None, 'daemon_completion_verified': False,
-        'cumulative_image_transfer_bytes_verified': False, 'pull_client_attempts': 1}
+        'reservation_kind': 'monitored_default_interface_receive_observation_not_hard_transfer_limit',
+        'declared_config_and_compressed_layer_bytes': lock['config_and_compressed_layer_bytes'],
+        'declared_manifest_bytes': lock['manifest_bytes'],
+        'default_interface_received_delta_bytes': None, 'daemon_completion_verified': False,
+        'cumulative_image_transfer_bytes_verified': False, 'pull_client_attempts': 0,
+        'byte_scope': 'selected_default_interface_includes_protocol_and_unrelated_host_traffic_not_exact_daemon_accounting'}
     atomic(receipt_path, observation)
     process = None
     try:
-        before = network_received(); require(before, 'host transfer counters unavailable')
+        before = network_received(); observation['network_before'] = before
+        atomic(receipt_path, observation)
         started = time.monotonic()
         process = subprocess.Popen(['docker', 'pull', '--platform', 'linux/amd64', lock['image']],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        observation['pull_client_attempts'] = 1
         while process.poll() is None:
-            after = network_received()
-            require(after.keys() == before.keys() and all(after[key] >= before[key] for key in before),
-                    'host transfer counter identity changed')
-            observation['host_received_delta_bytes'] = sum(after[key] - before[key] for key in before)
-            require(observation['host_received_delta_bytes'] <= IMAGE_TRANSFER_RESERVE,
-                    'observed image reservation exceeded; no setup or generation')
+            record_network_delta(before, network_received(), observation)
             require(time.monotonic() - started <= 180, 'image pull client wall limit')
             time.sleep(0.1)
+        observation['pull_client_exit_code'] = process.returncode
+        record_network_delta(before, network_received(), observation)
         require(process.returncode == 0, 'single image pull failed; no retry')
-        after = network_received()
-        require(after.keys() == before.keys() and all(after[key] >= before[key] for key in before), 'transfer counters changed')
-        observation['host_received_delta_bytes'] = sum(after[key] - before[key] for key in before)
-        require(observation['host_received_delta_bytes'] <= IMAGE_TRANSFER_RESERVE, 'observed image reservation exceeded')
         image = json.loads(docker('image', 'inspect', lock['image']))[0]
         require(image['Id'] == lock['manifest']['config']['digest'] and image['Architecture'] == 'amd64'
                 and image['Os'] == 'linux', 'exact official image config/platform mismatch')
         observation.update(status='completed_observed_within_reservation', daemon_completion_verified=True,
-                           image_config_digest=image['Id'],
-                           byte_scope='all_host_receive_traffic_during_completed_pull_conservative_not_exact_daemon_accounting')
+                           image_config_digest=image['Id'])
         return dict(observation)
     except BaseException as error:
         observation.update(status='stopped_before_setup_daemon_completion_unverified',
-                           error_type=type(error).__name__, daemon_fetch_may_continue=True)
+                           error_type=type(error).__name__, daemon_fetch_may_continue=process is not None,
+                           after_snapshot_available='network_after' in observation)
         raise
     finally:
         if process is not None and process.poll() is None:

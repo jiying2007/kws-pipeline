@@ -1,11 +1,11 @@
-name: Qwen16 VoiceDesign source screen once v1
+name: Qwen16 VoiceDesign source screen once v2
 on:
   push:
-    branches: [research/qwen16-voicedesign-once-v1]
+    branches: [research/qwen16-voicedesign-once-v2]
 permissions:
   contents: read
 concurrency:
-  group: qwen16-voicedesign-once-v1
+  group: qwen16-voicedesign-once-v2
   cancel-in-progress: false
 jobs:
   tts:
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && steps.run.outputs.evidence_root != ''
         with:
-          name: qwen16-generation-terminal-evidence
+          name: qwen16-generation-terminal-evidence-v2
           path: ${{ steps.run.outputs.evidence_root }}/artifact/
           retention-days: 1
           if-no-files-found: error
@@ -38,7 +38,7 @@ jobs:
         if: success() && steps.run.outputs.blind_clips != '0'
         id: blind
         with:
-          name: qwen16-blind-audio-only
+          name: qwen16-blind-audio-only-v2
           path: ${{ steps.run.outputs.evidence_root }}/blind/
           retention-days: 1
           if-no-files-found: error
@@ -61,16 +61,16 @@ jobs:
         timeout-minutes: 2
         with:
           artifact-ids: ${{ needs.tts.outputs.blind_artifact_id }}
-          path: ${{ runner.temp }}/qwen16-blind-incoming
+          path: ${{ runner.temp }}/qwen16-blind-incoming-v2
           merge-multiple: true
           digest-mismatch: error
       - name: Run both blinded recognizers once
         id: run
-        run: python3 -I -B research/source-screen32-v1/hosted_run.py --phase asr --input "$RUNNER_TEMP/qwen16-blind-incoming"
+        run: python3 -I -B research/source-screen32-v1/hosted_run.py --phase asr --input "$RUNNER_TEMP/qwen16-blind-incoming-v2"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always() && steps.run.outputs.evidence_root != ''
         with:
-          name: qwen16-asr-terminal-evidence
+          name: qwen16-asr-terminal-evidence-v2
           path: ${{ steps.run.outputs.evidence_root }}/artifact/
           retention-days: 1
           if-no-files-found: error
