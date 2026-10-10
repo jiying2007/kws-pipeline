@@ -82,6 +82,13 @@ jobs:
           python3 tools/check_workflow_path_filters.py .github/workflows
       - name: Verify tracked worktree after Workflow exact path-filter integrity
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Workflow exact path-filter integrity"'
+      - name: Disabled parallel candidate plan metadata
+        run: |
+          python3 -S -B tests/test_parallel_candidate_plan.py
+          python3 -S -B -O tests/test_parallel_candidate_plan.py
+          python3 -S -B -OO tests/test_parallel_candidate_plan.py
+      - name: Verify tracked worktree after Disabled parallel candidate plan metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Disabled parallel candidate plan metadata"'
       - name: GitHub hosted resource probe contract
         run: python3 tests/test_github_hosted_resource_probe.py
       - name: Verify tracked worktree after GitHub hosted resource probe contract

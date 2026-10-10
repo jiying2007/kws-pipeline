@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "6580110e027ed07a6f311fc8f7cd78f41528af58",
-      "sha256": "fcafbba7e444d0bcb3040054ad1ab93d4d6eb4e9fabe9605653fefb83db9de58",
-      "bytes": 35327
+      "git_blob_sha1": "8e477f47a5febfe9315fb8d04d5f924b819880a6",
+      "sha256": "9ebaa1b348a9e5bc7a54647acbb8f64b9ef6a5b4eeabb6bacec9c3abe32909fb",
+      "bytes": 35777
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16570,6 +16570,33 @@
             "git_blob_sha1": "6580110e027ed07a6f311fc8f7cd78f41528af58",
             "sha256": "fcafbba7e444d0bcb3040054ad1ab93d4d6eb4e9fabe9605653fefb83db9de58",
             "bytes": 35327
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "5144df99a9273e28d33677d856bce10d813c8be0",
+      "from_tree": "b6f8400bf6e8c15f961089bf5072e152507a2555",
+      "operation_id": "disabled-parallel-candidate-plan-metadata-contract-20261010",
+      "scope": "Add one pure-stdlib disabled parallel candidate plan metadata test suite to existing required python-contracts CI in normal, -O and -OO modes, retaining the tracked-worktree guard.",
+      "rationale": "Public code and CI metadata only. The three-slot registry and 6+2 fit ceiling are a disabled proposal, not executable admission, a fair-convergence result or promotion authority. No model, audio, training, inference, generation, numerical benchmark, resource probe or new active workflow is added. All original retained files, provenance, archives and historical receipts remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "6580110e027ed07a6f311fc8f7cd78f41528af58",
+            "sha256": "fcafbba7e444d0bcb3040054ad1ab93d4d6eb4e9fabe9605653fefb83db9de58",
+            "bytes": 35327
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8e477f47a5febfe9315fb8d04d5f924b819880a6",
+            "sha256": "9ebaa1b348a9e5bc7a54647acbb8f64b9ef6a5b4eeabb6bacec9c3abe32909fb",
+            "bytes": 35777
           }
         }
       ]

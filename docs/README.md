@@ -5,6 +5,7 @@
 - [Build and use the engine](../README.md#build-and-install)
 - [Current product status](KWS_LANDING_STATUS.md) and [historical research roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md)
 - [Reusable research modules and outcomes](../research/README.md)
+- [2026-10-10 parallel optimization review](KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md): evidence-based candidate shortlist, fair comparison and final-AFE/target closure; proposed plan only, no new run authority
 - [Public research evidence in kws-data](https://github.com/jiying2007/kws-data/blob/main/docs/RESEARCH_INDEX.md)
 - [Engineering tool index](../tools/README.md)
 - [Complete offline keyword-set identity](KEYWORD_SET_IDENTITY.md): parsed vocabulary/policy identity; no deployment or training approval
