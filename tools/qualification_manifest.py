@@ -8,6 +8,11 @@ import pathlib
 import sys
 import wave
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from audit_dataset import lineage_path
+from training_admission import require_promotable_admission, require_qualification_admission
 from corpus_identity import evaluation_corpus_identity, training_corpus_identity
 from model_provenance import validate_model_provenance
 from qualification_common import (
@@ -39,6 +44,13 @@ def artifact(path: pathlib.Path, digest: str) -> dict:
     if size <= 0:
         raise ValueError(f"{path}: release artifact must be non-empty")
     return {"name": path.name, "sha256": digest, "bytes": size}
+
+
+def training_manifest_artifact(path: pathlib.Path, digest: str) -> dict:
+    # A TSV hash does not bind its speaker/source/family sidecar. Re-read the
+    # selected lineage bytes rather than copying the admission or audit claim.
+    lineage = path if path.suffix.lower() == ".jsonl" else lineage_path(path)
+    return {**artifact(path, digest), "lineage_sha256": sha256_file(lineage)}
 
 
 def validate_attestation_verification(value: dict, expected: dict[str, str]) -> dict:
@@ -153,12 +165,24 @@ def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> di
     if not REQUIRED_HUMAN_IDENTITY.issubset(required_metadata):
         raise ValueError("dataset audit must require speaker_id/session_id/source_id")
     audited_hashes = []
+    bindings = []
     for name, split in splits.items():
         if not isinstance(split, dict):
             raise ValueError(f"dataset audit split {name} is invalid")
-        digest = split.get("manifest_sha256")
-        if not isinstance(digest, str):
-            raise ValueError(f"dataset audit split {name} manifest hash is invalid")
+        digest = sha256_value(split.get("manifest_sha256"), f"dataset audit split {name} manifest hash")
+        manifest = pathlib.Path(required_text(split, "manifest", f"dataset audit split {name}"))
+        if not manifest.name:
+            raise ValueError(f"dataset audit split {name} manifest name is invalid")
+        sidecar_hash = split.get("lineage_sidecar_sha256")
+        if "lineage_sidecar_sha256" in split:
+            sidecar_hash = sha256_value(sidecar_hash, f"dataset audit split {name} lineage sidecar hash")
+        if manifest.suffix.lower() == ".jsonl":
+            if sidecar_hash is not None:
+                raise ValueError("dataset audit JSONL lineage must be in its manifest")
+            lineage_hash = digest
+        else:
+            lineage_hash = sidecar_hash
+        bindings.append({"name": manifest.name, "sha256": digest, "lineage_sha256": lineage_hash})
         audited_hashes.append(digest)
     missing = Counter(required_hashes) - Counter(audited_hashes)
     if missing:
@@ -168,6 +192,7 @@ def validate_dataset_audit(path: pathlib.Path, required_hashes: list[str]) -> di
         "sha256": sha256_file(path),
         "required_metadata": sorted(required_metadata),
         "audited_manifest_sha256s": sorted(audited_hashes),
+        "manifest_bindings": sorted(bindings, key=lambda row: (row["name"], row["sha256"], row["lineage_sha256"] or "")),
     }
 
 
@@ -285,6 +310,19 @@ def main() -> int:
         training_corpus_sha256=training_corpus["corpus_sha256"],
     )
 
+    require_promotable_admission(model_lineage["training"].get("admission"))
+    dataset_audit = validate_dataset_audit(
+        args.dataset_audit,
+        [*training_manifest_hashes, hashes["references"]],
+    )
+    training_manifest_artifacts = [
+        training_manifest_artifact(path, digest)
+        for path, digest in zip(args.training_manifest, training_manifest_hashes)
+    ]
+    require_qualification_admission(
+        model_lineage["training"], training_manifest_artifacts, dataset_audit, hashes["references"],
+    )
+
     recordings, expected_count, audio_hours = reference_stats(args.references)
     detections_count = detection_count(args.detections, recordings)
     eval_summary = load_json(args.eval_summary)
@@ -366,14 +404,6 @@ def main() -> int:
         },
     )
 
-    dataset_audit = validate_dataset_audit(
-        args.dataset_audit,
-        [*training_manifest_hashes, hashes["references"]],
-    )
-
-    training_manifest_artifacts = [
-        artifact(path, digest) for path, digest in zip(args.training_manifest, training_manifest_hashes)
-    ]
     raw_evidence_artifacts = [artifact(path, sha256_file(path)) for path in args.raw_evidence]
     artifacts = {
         "model": {**artifact(args.model, hashes["model"]), "feature_dim": model["feature_dim"], "hidden_dim": model["hidden_dim"]},

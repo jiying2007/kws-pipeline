@@ -125,6 +125,22 @@ def write_model_provenance(
                     {"name": manifest.name, "sha256": sha256_file(manifest)}
                     for manifest in training_manifests
                 ],
+                # Invented schema-only receipt for the release contract fixture;
+                # this is not a listened corpus or product evidence.
+                "admission": {
+                    "policy": "reviewed-source-training-consumption-v1",
+                    "purpose": "reviewed-ctc-training",
+                    "promotion_allowed": True,
+                    "reviewed_rows": len(corpus["recordings"]),
+                    "listener_authenticity_verified": False,
+                    "manifests": [
+                        {"name": manifest.name, "sha256": sha256_file(manifest),
+                         "lineage_sha256": sha256_file(
+                             manifest if manifest.suffix.lower() == ".jsonl"
+                             else pathlib.Path(str(manifest) + ".lineage.json"))}
+                        for manifest in training_manifests
+                    ],
+                },
                 "corpus_identity": corpus,
                 "examples": len(corpus["recordings"]),
                 "seed": 1337,
