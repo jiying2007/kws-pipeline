@@ -1,7 +1,7 @@
 # SOURCE listening handoff, 16 retained clips
 
-This is a label-free listening packet and an unfilled receipt template. No human
-labels have been supplied. It does not grant dataset, CTC, training, shipping or
+This is a label-free listening packet and an unfilled receipt template. No filled
+human receipts are checked in. It does not grant dataset, CTC, training, shipping or
 independent-accuracy qualification. No inference or new audio is generated.
 
 ## Listen and record
@@ -76,6 +76,57 @@ older complete label is never silently reused. Keep the complete history when
 moving these private files. Hashes cannot authenticate a reviewer or prove that
 anyone listened, and an omitted later revision cannot be detected from old files.
 
+## Dual-ASR-first weak screening
+
+Use the separate opt-in view to prioritize agreement of the two **saved** ASR
+observations while retaining all human declarations and receipt history:
+
+```sh
+python3 -B research/experiment_quality_guards/screen32_human_review.py screening \
+  --receipts /private/review-1.json --output /private/screening-report.json
+```
+
+The packet, template and original `report` behavior are unchanged. Screening
+first validates the complete chronological receipt history and all original
+source/audio/decoder bindings. It then joins both saved ASR observations by WAV
+identity, in the explicit order `qwen06`, `sensevoice`. The output binds the
+canonical original report digest and preserves every original report-row field.
+A separate `screening` object retains each recognizer's raw text, status and
+quality flags, plus comparison-only normalized strings. `actual_text` and
+`partial_text` always remain the human's own declaration or null.
+
+Every one of the 16 rows belongs to exactly one partition:
+
+- `human_and_both_asr_agree`: a complete human receipt matches both ASR strings.
+- `dual_asr_agree_human_uncertain`: ASR agrees but the human receipt is absent,
+  pending, ambiguous, partial, unattributed or otherwise not complete.
+- `human_vs_dual_asr_disagreement`: a complete human declaration conflicts with
+  the agreeing ASR pair; neither side is adjudicated correct.
+- `dual_asr_disagree`: two complete usable ASR observations disagree.
+- `dual_asr_missing_incomplete_or_flagged`: either observation is missing,
+  noncomplete, empty after normalization, or carries quality flags.
+
+Only two complete, nonempty, unflagged observations with equal normalized
+strings yield `screening_candidate_text`. Normalization removes whitespace and
+Unicode punctuation for comparison; it does not fold characters or repair words.
+All three agreement partitions are **weak machine consensus**, including
+human-agreeing rows. A complete receipt means the declaration was sufficiently
+recorded, not that it is gold. Counts use the full 16-row denominator and are not
+accuracy or error rates. Disagreement and unusable rows get no candidate.
+
+Screening without `--receipts` is allowed but explicitly reveals saved machine
+hypotheses. Pending human words, human completeness, acoustic completeness and
+original label diagnostics remain unknown/unqualified. Do not give this view to
+someone who is meant to review from audio alone. Filled receipts and screening
+reports remain private unless publication is separately authorized.
+
+The production-vocabulary diagnostic remains conditional on the preserved
+human declaration. Machine consensus, even for an OOV word, does not expand the
+production vocabulary, convert review formats, create a CTC/blank target, admit
+training, qualify shipping or independent accuracy, authorize a new run, or
+publish anything. Both humans and ASR may mishear; final adjudicated text stays
+null. Corrections still require new receipt revisions, never overwriting history.
+
 ## Boundaries and reproducibility
 
 The packet binds both immutable run identities, the unchanged 74-file source
@@ -109,3 +160,14 @@ retained generation WAVs, both run manifests/results and frozen source files;
 they are not standalone when copied out of this repository. All 103 tests pass
 locally in normal, `-O` and `-OO` modes using the standard library. The workflow
 also checks test-file inventory and runs the new adapter tests in all three modes.
+
+### Weak-screening extension
+
+The opt-in screening view adds 15 synthetic-label regression tests to the same
+test file: 41 focused tests and 118 package tests in total. The existing workflow
+already runs this file in normal, `-O` and `-OO` modes, so no CI or historical
+retention metadata changes are needed. The added cases cover all partitions,
+missing/failed/blank/flagged observations, exact comparison, invalid types,
+private output non-overwrite, receipt supersession, preserved human/ASR words,
+OOV diagnostics, and no promotion to gold or admission. No private filled review
+records are used as repository fixtures.

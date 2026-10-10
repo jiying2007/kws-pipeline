@@ -268,17 +268,108 @@ def source_report(repo, documents):
             "limits": "Declared listening evidence is not authenticated by hashes. No coverage, lineage, CTC or training admission is made."}
 
 
+SCREENING_CATEGORIES = (
+    "human_and_both_asr_agree",
+    "dual_asr_agree_human_uncertain",
+    "human_vs_dual_asr_disagreement",
+    "dual_asr_disagree",
+    "dual_asr_missing_incomplete_or_flagged",
+)
+
+
+def weak_screening(actual_text, human_complete, observations):
+    """Comparison-only machine consensus; never replace a human declaration.
+
+    A missing, failed, flagged, blank or punctuation-only observation is unresolved,
+    even when both normalized strings would otherwise compare equal.
+    """
+    require(type(human_complete) is bool, "human completeness must be boolean")
+    diagnostics = gates.label_preparation({"actual_text": actual_text,
+                                          "asr_results": observations})
+    require(not human_complete or bool(gates.normalized_actual(actual_text or "")),
+            "complete human receipt requires nonempty actual words")
+    flags = [flag for observation in observations if observation
+             for flag in observation.get("quality_flags", [])]
+    state = "unresolved" if flags else diagnostics["machine_state"]
+    texts = diagnostics["machine_normalized_texts"]
+    agreed = state == "machinesAgreeWeak"
+    if state == "unresolved":
+        category = "dual_asr_missing_incomplete_or_flagged"
+    elif state == "disagree":
+        category = "dual_asr_disagree"
+    elif not human_complete:
+        category = "dual_asr_agree_human_uncertain"
+    elif gates.normalized_actual(actual_text) == texts[0]:
+        category = "human_and_both_asr_agree"
+    else:
+        category = "human_vs_dual_asr_disagreement"
+    return {"category": category, "machine_state": state,
+            "asr_results": copy.deepcopy(observations), "asr_quality_flags": flags,
+            "machine_normalized_texts": texts, "dual_asr_agreement": agreed,
+            "screening_candidate_text": texts[0] if agreed else None,
+            "screening_evidence_strength": "weak_machine_consensus" if agreed else "unresolved",
+            "human_actual_review_complete": human_complete,
+            "final_adjudicated_text": None, "human_gold": False,
+            "acoustic_completeness": "UNKNOWN", "automatic_relabel": False,
+            "silence_or_blank_target_inferred": False,
+            "machine_consensus_overwrites_actual_text": False,
+            "ctc_target": None, "training_admitted": False,
+            "shipping_approved": False, "independent_accuracy_qualified": False}
+
+
+def screening_report(repo, documents):
+    """Explicit opt-in view of saved hypotheses, including pending human rows.
+
+    The existing report and human/partial words remain intact. Receipt
+    completeness records declarations, not adjudicated ground truth.
+    """
+    report = source_report(repo, documents)
+    original_digest = digest(canonical(report))
+    values = verified_inputs(repo)
+    clips = keyed(values[GEN + "/blind/job.json"]["clips"], "wav_sha256")
+    names = ("qwen06", "sensevoice")
+    saved = {name: keyed(values[ASR + "/primary-raw.json"].get(name, []), "audio_id")
+             for name in names}
+    partitions = {category: [] for category in SCREENING_CATEGORIES}
+    candidate_ids = []
+    rows = copy.deepcopy(report["rows"])
+    for row in rows:
+        opaque_id = clips[row["wav_sha256"]]["audio_id"]
+        screening = weak_screening(row["actual_text"], row["human_actual_review_complete"],
+                                   [saved[name].get(opaque_id) for name in names])
+        row["screening"] = screening
+        partitions[screening["category"]].append(row["review_id"])
+        if screening["dual_asr_agreement"]:
+            candidate_ids.append(row["review_id"])
+    identities = [identity for group in partitions.values() for identity in group]
+    require(len(identities) == len(set(identities)) == report["denominator"] == 16,
+            "screening partition must retain all 16 unique rows")
+    return dict(report, schema="screen32-dual-asr-screening-report-v1", scope="SOURCE_SCREENING_ONLY",
+                source_review_schema=report["schema"], source_review_report_canonical_sha256=original_digest,
+                screening_policy="dual-asr-consensus-weak-v1", asr_observation_order=list(names),
+                partition_counts={key: len(ids) for key, ids in partitions.items()},
+                partition_rows=partitions, dual_asr_agreement_rows=candidate_ids,
+                dual_asr_agreement_weak_candidates=len(candidate_ids), rows=rows,
+                human_gold=False, final_adjudicated_text=None, ctc_target=None, new_run_authorized=False,
+                publication_authorized=False, machine_consensus_overwrites_actual_text=False,
+                limits="Dual-ASR consensus is weak screening evidence, including when human declarations conflict. "
+                       "Complete receipts record declarations, not adjudicated truth. Pending human words remain "
+                       "unknown. No CTC, training, shipping, independent accuracy, new execution or publication is granted.")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("packet", "template", "report"))
+    parser.add_argument("mode", choices=("packet", "template", "report", "screening"))
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--receipts", action="append", type=Path, default=[], help="Complete chronological receipt-document history")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     try:
-        require(args.mode == "report" or not args.receipts, "receipts are only valid in report mode")
-        if args.mode == "report":
-            result = source_report(args.repo, [load(path) for path in args.receipts])
+        require(args.mode in ("report", "screening") or not args.receipts,
+                "receipts are only valid in report or screening mode")
+        if args.mode in ("report", "screening"):
+            reporter = screening_report if args.mode == "screening" else source_report
+            result = reporter(args.repo, [load(path) for path in args.receipts])
         else:
             packet = build_packet(args.repo)
             result = packet if args.mode == "packet" else receipt_template(packet)
