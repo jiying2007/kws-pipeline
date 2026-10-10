@@ -2,5 +2,5 @@
   "schema": "screen32-sense-continuation-release-v1",
   "experiment": "qwen16-sensevoice-continuation-v1",
   "approved": false,
-  "source_freeze_sha256": "ad862852e1d54a1c55dee3b53cb7bef9ddb794b529f565ef55b7f5803df15789"
+  "source_freeze_sha256": "242565d3dec5174c57572eafef68f5ea49a2ddd42d213b0debdd7f7b44d33079"
 }

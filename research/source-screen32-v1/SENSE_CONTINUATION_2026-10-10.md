@@ -44,6 +44,12 @@ source freeze, the first creation of that public branch, workflow run number 1
 and run attempt 1. Workflow numbering is not assumed available: any unexpected
 number fails closed. The old v3 and both diagnostic identities remain consumed.
 
+The worker contract's existing `run_id` is derived from the blind-job hash and
+therefore stays the same for these unchanged inputs. It is an input-contract
+identifier, **not a globally unique execution ID**. The new host branch, workflow
+run/head, exclusively created output root, artifact freeze and cross-run ledger
+jointly distinguish this continuation's consumed attempts from the old run.
+
 The [retained probe2 proof](evidence/probe-2-38017741858) is verified against its
 **original 66-file source freeze**, image, kernel receipt and completed cleanup.
 Compatibility additionally requires exact unchanged source hashes for the scope,

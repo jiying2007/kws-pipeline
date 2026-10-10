@@ -43,7 +43,7 @@
     "research/qwen6_tts/wheel_identity.py": "623ee07a0d8f85ba1d7218a56fcd0e270df8c6e2c3e353dd52b3184ca915d8d5",
     "research/source-screen32-v1/ASR_REPAIR_2026-10-10.md": "d335c696f75cf27042a5f76470ab6c11a496df11c377448c9d81f71b420a589c",
     "research/source-screen32-v1/README.md": "9ea6c0643d748d907f84a4d18a996ecbeb03e4cc6ca78ab29b27ba8d1bf7e77a",
-    "research/source-screen32-v1/SENSE_CONTINUATION_2026-10-10.md": "5351a06244f9685609cc00b8d1795d5a19dc7cf4c4302d87f0400a4201fcc0b5",
+    "research/source-screen32-v1/SENSE_CONTINUATION_2026-10-10.md": "a5ec9a98791fd731aff0ff6fa518f2bdc8a56cf43bbef78aae81fde96a2352d3",
     "research/source-screen32-v1/asr_worker.py": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
     "research/source-screen32-v1/container-lock.json": "71a687d9580c2310dcc73768daffa6f881c41aa96310be144cf4dfccbefb5ba1",
     "research/source-screen32-v1/continuation-lock.json": "22743f09b085e4fae20c90aa2bf30db9b865b1d386e1917e85cd8a5b6c2d702e",
