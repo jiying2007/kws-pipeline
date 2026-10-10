@@ -45,13 +45,15 @@
       "relocation_reason": "Preserve the original PR 485 CI bytes after adding keyword identity v2 tests to active CI. This archived workflow is inactive. Active CI remains exactly pinned by source-retention-2026-10-07.json with before/after maintenance identities."
     },
     {
-      "path": ".github/workflows/experiment-quality-guards.yml",
+      "path": "research/consolidation/maintained-sources/pr-476/experiment-quality-guards.yml",
       "mode": "100644",
       "git_blob_sha1": "68f23539d7963ab0737194fff6fc9c1d57635956",
       "sha256": "b39ad42481d042cc73bc8c3dc74d4a298dffaee2d2c4f5282a03ad8a6692b7e9",
       "bytes": 1378,
       "source_pr": 476,
-      "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14"
+      "source_commit": "f0c2e1b7674b8a135761bedf2aee975b33dc8d14",
+      "source_path": ".github/workflows/experiment-quality-guards.yml",
+      "relocation_reason": "Preserve exact original PR 476 workflow bytes while adding offline screen32 human-review regression tests. This archived workflow is inactive; current CI identity and before/after maintenance are pinned in source-retention-2026-10-07.json."
     },
     {
       "path": ".github/workflows/k1-fixed-slot-math.yml",

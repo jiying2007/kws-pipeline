@@ -10,6 +10,10 @@ import pathlib
 import re
 import sys
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "training"))
+
+from training_admission import require_qualification_admission
 from runtime_soak_contract import require_cpu_contract, validate_cpu_metrics
 
 from corpus_identity import corpus_digest
@@ -193,7 +197,8 @@ def validate_manifest(manifest: dict) -> dict:
         raise ValueError("artifacts.training_manifests must be non-empty")
     if not isinstance(raw_artifacts, list) or not raw_artifacts:
         raise ValueError("artifacts.raw_evidence must be non-empty")
-    training_hashes = [validate_artifact(item, f"training_manifests[{i}]") for i, item in enumerate(training_artifacts)]
+    for i, item in enumerate(training_artifacts):
+        validate_artifact(item, f"training_manifests[{i}]")
     raw_hashes = [validate_artifact(item, f"raw_evidence[{i}]") for i, item in enumerate(raw_artifacts)]
 
     if validate_sha(vocabulary.get("sha256"), "vocabulary.sha256") != hashes["tokens"]:
@@ -232,12 +237,9 @@ def validate_manifest(manifest: dict) -> dict:
     quantization = lineage.get("quantization")
     if not isinstance(training, dict) or not isinstance(quantization, dict):
         raise ValueError("manifest model-lineage training/quantization is missing")
-    recorded = training.get("manifests")
-    if not isinstance(recorded, list) or not recorded:
-        raise ValueError("manifest model-lineage training manifests are missing")
-    recorded_hashes = [validate_sha(item.get("sha256"), f"training.manifests[{i}].sha256") for i, item in enumerate(recorded) if isinstance(item, dict)]
-    if len(recorded_hashes) != len(recorded) or Counter(recorded_hashes) != Counter(training_hashes):
-        raise ValueError("manifest model-lineage training-manifest hashes are inconsistent")
+    # The gate also checks admission independently: a hand-authored manifest
+    # must not bypass the strict producer or substitute a different sidecar.
+    require_qualification_admission(training, training_artifacts, dataset_audit, hashes["references"])
     training_corpus_sha = validate_corpus(training.get("corpus_identity"), "model_lineage.training.corpus_identity")
     if validate_sha(lineage.get("training_corpus_sha256"), "model_lineage.training_corpus_sha256") != training_corpus_sha:
         raise ValueError("model-lineage training corpus cross-link is inconsistent")

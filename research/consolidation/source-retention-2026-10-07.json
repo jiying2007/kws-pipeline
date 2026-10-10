@@ -15295,9 +15295,9 @@
     {
       "path": ".github/workflows/experiment-quality-guards.yml",
       "mode": "100644",
-      "git_blob_sha1": "68f23539d7963ab0737194fff6fc9c1d57635956",
-      "sha256": "b39ad42481d042cc73bc8c3dc74d4a298dffaee2d2c4f5282a03ad8a6692b7e9",
-      "bytes": 1378
+      "git_blob_sha1": "f6092ff3145726e33cc3ebc515cfa0a93ec2b57a",
+      "sha256": "7f36b5d8a8aae931560b17c68daf36c227585a148f9ba8dca85abeb3586d95bd",
+      "bytes": 2326
     },
     {
       "path": ".github/workflows/far-nightly.yml",
@@ -16333,6 +16333,33 @@
             "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
             "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
             "bytes": 4582
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "b7668d060a4d5df111d6c4f162c8789f73fdbc52",
+      "from_tree": "8b255b364dddcf3bd3f9d7278e567f53a68a7ba6",
+      "operation_id": "screen32-human-source-review-handoff-20261010",
+      "scope": "Add offline screen32 label-free packet and human receipt regression checks in normal, -O and -OO modes; trigger on the two retained input runs and source identity files.",
+      "rationale": "Public CI metadata maintenance only. Original PR476 workflow bytes remain under maintained-sources; frozen screen32 source, all machine/audio evidence, historical provenance, workflow allowlist and execution authority are unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/experiment-quality-guards.yml",
+          "before": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "git_blob_sha1": "68f23539d7963ab0737194fff6fc9c1d57635956",
+            "sha256": "b39ad42481d042cc73bc8c3dc74d4a298dffaee2d2c4f5282a03ad8a6692b7e9",
+            "bytes": 1378
+          },
+          "after": {
+            "path": ".github/workflows/experiment-quality-guards.yml",
+            "mode": "100644",
+            "bytes": 2326,
+            "sha256": "7f36b5d8a8aae931560b17c68daf36c227585a148f9ba8dca85abeb3586d95bd",
+            "git_blob_sha1": "f6092ff3145726e33cc3ebc515cfa0a93ec2b57a"
           }
         }
       ]

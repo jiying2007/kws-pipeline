@@ -79,11 +79,9 @@ The real `torch_ctc` integration workflow uses repository variable **`KWS_TRAINI
 
 ## 2. Bind the real training corpus
 
-`train_ctc.py` accepts TSV (`WAV<TAB>token_ids`) or JSONL. Human qualification projects should use JSONL identity metadata:
+`train_ctc.py` accepts TSV (`WAV<TAB>token_ids`) with a bound lineage sidecar, or JSONL containing the reviewed source lineage. Both require the review/admission fields described in [Speech base admission](SPEECH_BASE_ADMISSION.md), including the actual transcript, token names, numeric `target_ids`, and source-byte bindings. Speaker/session/source metadata alone, or a numeric-only JSONL row, is not sufficient for current release training.
 
-```json
-{"audio":"audio/u001.wav","tokens":[1,2,3],"speaker_id":"spk001","session_id":"s01","source_id":"src001","room_id":"living-room-a","device_id":"robot-a"}
-```
+Current qualification requires a promotable `training.admission` receipt with no diagnostic or unverified ancestor. The manifest producer and standalone gate both cross-check its exact manifest name/hash multiplicities and lineage hashes against the selected training artifacts and dataset audit. TSV lineage is bound by the sidecar SHA256; JSONL lineage is bound by the manifest SHA256. The producer also re-hashes selected lineage bytes. Historical provenance without admission remains readable for inspection, but cannot support new product certification.
 
 At checkpoint save time the trainer reopens every WAV and records file SHA256, decoded mono-16-kHz PCM16 SHA256, frame count/duration, stable metadata and canonical whole-corpus SHA256. Replacing a WAV underneath an unchanged manifest changes the model lineage.
 

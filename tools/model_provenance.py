@@ -154,6 +154,12 @@ def validate_model_provenance(
     if normalized_training["learning_rate"] <= 0.0 or normalized_training["grad_clip_norm"] <= 0.0:
         raise ValueError("model provenance training learning-rate/grad-clip must be > 0")
 
+    # Historical provenance remains inspectable, but never erase a present
+    # admission (including diagnostic/ancestor taint) before qualification.
+    # Absence stays unknown; current product certification checks it strictly.
+    if "admission" in training:
+        normalized_training["admission"] = training["admission"]
+
     negative_policy = training.get("sequence_margin_negative_policy")
     negative_scope = training.get("sequence_margin_negative_policy_scope")
     if negative_policy is not None or negative_scope is not None:
