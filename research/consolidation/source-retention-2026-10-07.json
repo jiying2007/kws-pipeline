@@ -15627,6 +15627,13 @@
       "git_blob_sha1": "6c82340bc9a18f35deb72229bcf3fa62496f9ea5",
       "sha256": "7ada549a0b8c83d5c421c479b74b05b4b82ab129863f82e95bc8dd5a766b67b3",
       "bytes": 4582
+    },
+    {
+      "path": ".github/workflows/source-screen32-sense-continuation-v1.yml",
+      "mode": "100644",
+      "bytes": 1286,
+      "git_blob_sha1": "635586736c57b1f1d60a5089f83f9e124d5888c7",
+      "sha256": "cc6eef90ddf2461b0a5fc27aa45cece17d3b8fcc3ef58f20e64208b4814db77a"
     }
   ],
   "allowed_new_active_workflows": [
@@ -16336,6 +16343,75 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "from_commit": "b3872bf93c6a9f970e435b86a468ea54ddcbdd5a",
+      "from_tree": "4782508b366d2efc8c0815d59b43a0b1a065f1e1",
+      "operation_id": "qwen16-sensevoice-continuation-v1-activation",
+      "scope": "Register one exact user-approved SenseVoice-only continuation workflow on the first creation of its separate public branch. Reuse the hash-bound sixteen v3 WAVs and byte-exact completed Qwen evidence; no TTS, Qwen, Whisper, or probe execution.",
+      "rationale": "Append one exact active-workflow inventory row while preserving all existing baseline rows, the separately allowed workflow, historical provenance, and raw v3 evidence. One new attempt per SenseVoice cell; clip-000001 is cumulative attempt2, the other15 are their first attempts. Stop on failure; no automatic restart or regeneration.",
+      "reviewed_source_pull_request": "https://github.com/jiying2007/kws-pipeline/pull/515",
+      "source_freeze_sha256": "242565d3dec5174c57572eafef68f5ea49a2ddd42d213b0debdd7f7b44d33079",
+      "execution_branch": "research/qwen16-sensevoice-continuation-v1",
+      "original_run": {
+        "head_sha": "621ba90acd2d78976f4dcf07a385cd4e615ac358",
+        "run_id": 38018029787,
+        "source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2"
+      },
+      "original_blind_job_sha256": "425a705515339ff7054e4f1148971a342e5f882a1e9b84ac2be144a3d7aeecc5",
+      "original_qwen_raw_freeze_sha256": "e33f49e427f3b7ad4738f544e7f04bdf372246130c90f5357335707599973d68",
+      "continuation_lock_sha256": "22743f09b085e4fae20c90aa2bf30db9b865b1d386e1917e85cd8a5b6c2d702e",
+      "probe_compatibility": {
+        "reference": {
+          "artifact_freeze_sha256": "16367bda2b3873c8c14bb11ff36f4a4f78570e51c87844b6712108559b996f4f",
+          "directory": "research/source-screen32-v1/evidence/probe-2-38017741858",
+          "source_head_sha": "d877ae89da6d42ad6135b30e19a3362773ec1f88"
+        },
+        "original_source_freeze_sha256": "abfc1121ed82367eb8d18fb79ad28911a8453b867be49298ac3cfd93e5ebf2f2",
+        "setup_contract_sha256": "f632e016c091ba008cdc3f0fc09b214ae86338a8572f3f0bdbaa262aaedf3243",
+        "claim": "Original probe2 raw proof plus unchanged scope/probe/setup/image bytes and eight host safety-function AST pins. This is limited setup/kernel compatibility, not proof of the new whole source freeze.",
+        "new_whole_source_freeze_probed": false,
+        "new_probe_calls": 0
+      },
+      "execution_limits": {
+        "max_new_sensevoice_attempts": 16,
+        "max_new_attempts_per_cell": 1,
+        "cumulative_attempt_cap_first_clip": 2,
+        "cumulative_attempt_cap_other_clips": 1,
+        "new_tts_calls": 0,
+        "new_qwen_calls": 0,
+        "new_whisper_calls": 0,
+        "new_probe_calls": 0,
+        "automatic_retry": false,
+        "paid_resources": false,
+        "asr_setup_pinned_input_bytes": 3340966447,
+        "asr_setup_input_cap_bytes": 4294967296,
+        "image_observation_reservation_bytes": 134217728,
+        "image_reservation_is_hard_transfer_limit": false,
+        "overall_declared_allocation_bytes": 6442450944,
+        "historical_v3_release_approved": false,
+        "probe_release_approved": false,
+        "human_gold": false,
+        "training_admitted": false,
+        "shipping_approved": false
+      },
+      "files": [
+        {
+          "path": ".github/workflows/source-screen32-sense-continuation-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/source-screen32-sense-continuation-v1.yml",
+            "mode": "100644",
+            "bytes": 1286,
+            "git_blob_sha1": "635586736c57b1f1d60a5089f83f9e124d5888c7",
+            "sha256": "cc6eef90ddf2461b0a5fc27aa45cece17d3b8fcc3ef58f20e64208b4814db77a"
+          }
+        }
+      ],
+      "baseline_count_before": 54,
+      "baseline_count_after": 55,
+      "allowed_new_active_workflows_unchanged": true
     }
   ]
 }

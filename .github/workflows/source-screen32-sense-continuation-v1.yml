@@ -1,0 +1,32 @@
+name: Qwen16 retained-audio SenseVoice continuation once v1
+on:
+  push:
+    branches: [research/qwen16-sensevoice-continuation-v1]
+permissions:
+  contents: read
+concurrency:
+  group: qwen16-sensevoice-continuation-v1
+  cancel-in-progress: false
+jobs:
+  sensevoice:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run only SenseVoice once on the locked retained sixteen WAVs
+        id: run
+        run: python3 -I -B research/source-screen32-v1/hosted_run.py --phase sense-continuation
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.run.outputs.evidence_root != ''
+        with:
+          name: qwen16-sensevoice-continuation-terminal-v1
+          path: ${{ steps.run.outputs.evidence_root }}/artifact/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false
