@@ -10,11 +10,13 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
-**2026-10-10 current source-screen result:** [Completed SenseVoice continuation and full joint table](source-screen32-v1/evidence/run-38021467257/README.md).
+**2026-10-10 retained public source-screen result:** [Completed SenseVoice continuation and full joint table](source-screen32-v1/evidence/run-38021467257/README.md).
 The existing 16 WAVs now have both recognizers' outputs: 13/16 transcripts agree,
 but only 8/16 pairs match the intended phrase; 5 agree on a different phrase and
-3 disagree. Human actual-word review is pending for all clips; this batch is not
-training-ready. The [original partial failure](source-screen32-v1/evidence/run-38018029787/README.md)
+3 disagree. These are machine observations, not actual-word truth or training
+admission. Current listening/screening tools are linked below; the public packet
+contains no filled human receipts and does not report private review progress.
+The [original partial failure](source-screen32-v1/evidence/run-38018029787/README.md)
 and all raw evidence remain intact. Frozen preparation/readiness documents are
 historical snapshots; no further run or training is authorized by this result.
 
@@ -26,7 +28,7 @@ NOT_PUSHED. This does not claim all 500 wrapper files are byte-identical archive
 members. Earlier dated snapshots remain available from the delivery page.
 
 - D20/D90 v2: two raw-logit coordinates exceeded the gate in the same D20 failed fixture; D90 not run
-- Fixed50: EVAL_INCONCLUSIVE_LABEL_SUPPORT; K2 4 clips / 4 voices < 5,
+- Frozen Fixed50 outcome: EVAL_INCONCLUSIVE_LABEL_SUPPORT; K2 4 clips / 4 voices < 5,
   targets 11 < 12, unknown 8; no admissible KWS comparison
 - Old frozen-model nightly: 2 FA / 8 h, upper95 0.786974 FA/h, failing 0 / 0.40;
   this is not D20/D90 evidence
@@ -59,7 +61,7 @@ logs totaling 59,574 bytes, then checks their size and SHA-256. The test itself
 never downloads or silently skips missing evidence. See each module for its
 complete tests and exact scope; the CTC workflow runs both independent oracles.
 
-## Current opt-in engineering tools (2026-10-09)
+## Current opt-in engineering tools (2026-10-10)
 
 - [Saved-only evidence safety](offline-evidence-safety-v1/README.md): explicit preflight,
   real saved-reference admission, and failure capture. Tests fetch a pinned public
@@ -68,6 +70,19 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
   build with 33,600 bytes less host workspace. The historical baseline stays intact;
   callers must rebuild for its new workspace ABI. This is opt-in research, not a
   shipping/default or board-qualified replacement.
+- [Listening handoff and private receipt revisions](experiment_quality_guards/screen32-review/README.md#listen-and-record)
+  ([PR #517](https://github.com/jiying2007/kws-pipeline/pull/517)) and
+  [dual-ASR-first weak screening](experiment_quality_guards/screen32-review/README.md#dual-asr-first-weak-screening)
+  ([PR #518](https://github.com/jiying2007/kws-pipeline/pull/518)): join retained
+  audio identities without replacing human declarations. Machine consensus,
+  including human-agreeing rows, remains weak screening; filled receipts and
+  derived reports stay private. Neither view grants CTC or training admission.
+- [D20 saved-input byte materialization and independent readback](d20-diagnostic-admission-v1/PLAN-SCHEMA.md#saved-input-materializer-byte-only)
+  ([PR #519](https://github.com/jiying2007/kws-pipeline/pull/519)): the fixed four
+  sources and all 798 planned jobs are byte-bound. This completed byte-only step
+  does not prove backend consumption, historical dispatch or numerical admission.
+  CMVN is a saved separate call, not an internal stage-0 observation; D20 FAIL,
+  D90 NOT_RUN and execution NOT_READY remain unchanged.
 - [Current admission checklist / 当前唯一准入清单](d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist):
   start here before proposing further diagnostics. Establish and independently
   verify a hard-memory scope before any exact-backend import inside that scope.
@@ -84,6 +99,10 @@ complete tests and exact scope; the CTC workflow runs both independent oracles.
   retained saved-array/source attribution, invented-logit boundary tests and the
   original unexecuted plan. Historical background only; synthetic tests cannot
   relabel numerical failures.
+
+For the next scientific validation priority, see the
+[continuous-state, VAD and event-matched evaluation boundary](../docs/EVALUATION.md#current-diagnostic-priority-and-admission-boundary).
+This proposes no new run, blanket reset, threshold sweep, model or training.
 
 当前只以以上准入清单为操作入口；PR #502 补充及更早协议保留为历史证据。
 必须先建立并验证硬限制，再在该隔离范围内检查精确后端 import；不得无约束安装、

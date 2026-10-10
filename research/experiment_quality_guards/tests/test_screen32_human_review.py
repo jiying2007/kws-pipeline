@@ -1,6 +1,7 @@
 """Retained public bytes and explicitly invented review declarations only."""
 import copy
 import contextlib
+from collections import Counter
 import io
 import json
 from pathlib import Path
@@ -250,6 +251,81 @@ class Screen32HumanReviewTests(unittest.TestCase):
                 return read(path) + b" " if path == target else read(path)
             with patch.object(Path, "read_bytes", changed), self.assertRaises(ValueError):
                 review.build_packet(ROOT)
+
+    def test_one_verified_byte_snapshot_per_public_report_call(self):
+        read = Path.read_bytes
+        for reporter, arguments in ((review.build_packet, (ROOT,)),
+                                    (review.source_report, (ROOT, [])),
+                                    (review.screening_report, (ROOT, []))):
+            with self.subTest(reporter=reporter.__name__):
+                reads = Counter()
+                def counted(path):
+                    reads[path] += 1
+                    return read(path)
+                with patch.object(Path, "read_bytes", counted), \
+                     patch.object(review, "verified_inputs", wraps=review.verified_inputs) as verify, \
+                     patch.object(review, "parse_json", wraps=review.parse_json) as parse:
+                    reporter(*arguments)
+                self.assertEqual(verify.call_count, 1)
+                self.assertEqual(parse.call_count, len(review.PINS))
+                self.assertTrue(reads)
+                self.assertTrue(all(count == 1 for count in reads.values()), dict(reads))
+                self.assertEqual(sum(path.suffix == ".wav" for path in reads), 16)
+
+    def test_json_and_pcm_decode_the_hashed_bytes_without_reopening(self):
+        opened = review.wave.open
+        def byte_stream_only(source, mode):
+            self.assertIsInstance(source, io.BytesIO)
+            return opened(source, mode)
+        with patch.object(Path, "read_text", side_effect=AssertionError("verified JSON reopened")), \
+             patch.object(review.wave, "open", byte_stream_only):
+            self.assertEqual(review.build_packet(ROOT), self.packet)
+
+    def test_snapshot_is_local_to_call_and_next_call_revalidates(self):
+        read = Path.read_bytes
+        for relative in (review.BASE / "plan.json", review.BASE / review.GEN / "generation/tts/screen32-001.wav"):
+            with self.subTest(relative=relative):
+                target = ROOT / relative
+                calls = 0
+                def changed_after_first_read(path):
+                    nonlocal calls
+                    raw = read(path)
+                    if path == target:
+                        calls += 1
+                        return raw if calls == 1 else raw + b" "
+                    return raw
+                with patch.object(Path, "read_bytes", changed_after_first_read):
+                    self.assertEqual(review.build_packet(ROOT), self.packet)
+                    with self.assertRaises(ValueError):
+                        review.build_packet(ROOT)
+                self.assertEqual(calls, 2)
+
+    def test_historical_review_requires_exact_archive_without_live_fallback(self):
+        read = Path.read_bytes
+        original = "research/experiment_quality_guards/quality_gates.py"
+        archive = ROOT / review.HISTORICAL_SOURCE_PATHS[original]
+        def corrupted(path):
+            return read(path) + b" " if path == archive else read(path)
+        with patch.object(Path, "read_bytes", corrupted), self.assertRaisesRegex(ValueError, "frozen source changed"):
+            review.build_packet(ROOT)
+        def absent(path):
+            if path == archive:
+                raise FileNotFoundError(path)
+            return read(path)
+        with patch.object(Path, "read_bytes", absent), self.assertRaises(FileNotFoundError):
+            review.build_packet(ROOT)
+        # A historical report neither executes nor authenticates the new live
+        # source. The runtime admission guard separately remains live-path-bound.
+        def changed_live(path):
+            return read(path) + b" " if path == ROOT / original else read(path)
+        with patch.object(Path, "read_bytes", changed_live):
+            self.assertEqual(review.build_packet(ROOT), self.packet)
+
+    def test_pending_reports_preserve_exact_preoptimization_canonical_bytes(self):
+        expected = {review.source_report: "7891a59df8dd2bdb97be331174a2fe1c354ec9eb8fa5d307b59e58ac74712c10",
+                    review.screening_report: "5ff67b095870b070c122c6e01a20e0abf542ac54260cac37da8faffdafd3250d"}
+        for reporter, digest in expected.items():
+            self.assertEqual(review.digest(review.canonical(reporter(ROOT, []))), digest)
 
     def test_errors_and_reports_do_not_mutate_supplied_evidence(self):
         document = self.document()

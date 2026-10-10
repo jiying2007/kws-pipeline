@@ -18,6 +18,7 @@ make collected measurements auditable and do not substitute for those measuremen
 ## Runtime command-line programs and C helpers
 
 - [`kws_board_bench.c`](kws_board_bench.c)
+- [`kws_bench_statistics.h`](kws_bench_statistics.h)
 - [`kws_decoder_path_replay.c`](kws_decoder_path_replay.c)
 - [`kws_decoder_replay.c`](kws_decoder_replay.c)
 - [`kws_feature_dump.c`](kws_feature_dump.c)

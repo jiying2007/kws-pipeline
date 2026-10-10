@@ -95,7 +95,10 @@ jobs:
       - name: Verify tracked worktree after Repository cleanup safety contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Repository cleanup safety contract"'
       - name: Dataset split leakage audit
-        run: python3 tests/test_dataset_audit.py
+        run: |
+          python3 -S -B tests/test_dataset_audit.py
+          python3 -S -B -O tests/test_dataset_audit.py
+          python3 -S -B -OO tests/test_dataset_audit.py
       - name: Verify tracked worktree after Dataset split leakage audit
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Dataset split leakage audit"'
       - name: Corpus byte identity
@@ -152,9 +155,13 @@ jobs:
         run: |
           python3 -B tools/verify_research_sources.py
           python3 -B research/consolidation/source_tests/test_source_retention.py
+          python3 -B -O research/consolidation/source_tests/test_source_retention.py
+          python3 -B -OO research/consolidation/source_tests/test_source_retention.py
           python3 -B research/consolidation/source_tests/test_publication_index.py
           python3 -B research/consolidation/source_tests/test_archive_delivery.py
           python3 -B research/consolidation/source_tests/test_ci_structure.py
+          python3 -B -O research/consolidation/source_tests/test_ci_structure.py
+          python3 -B -OO research/consolidation/source_tests/test_ci_structure.py
           python3 -B research/d20-diagnostic-admission-v1/test_contract.py
           python3 -B -O research/d20-diagnostic-admission-v1/test_contract.py
           python3 -B -OO research/d20-diagnostic-admission-v1/test_contract.py
@@ -171,14 +178,36 @@ jobs:
           python3 -B -OO research/diagnostic-readiness-2026-10-09/test_durable_trace.py
       - name: Verify tracked worktree after Durable diagnostic evidence chain contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Durable diagnostic evidence chain contract"'
-      - name: Bounded source-screen planning contract
+      - name: Bounded source-screen historical review and live guard contracts
         run: |
-          python3 -B research/source-screen32-v1/contract.py
+          python3 -S -B research/experiment_quality_guards/screen32_human_review.py packet --output "$RUNNER_TEMP/screen32-historical-source-packet.json"
           python3 -B research/source-screen32-v1/test_contract.py
           python3 -B -O research/source-screen32-v1/test_contract.py
           python3 -B -OO research/source-screen32-v1/test_contract.py
-      - name: Verify tracked worktree after Bounded source-screen planning contract
-        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bounded source-screen planning contract"'
+      - name: Verify tracked worktree after Bounded source-screen historical review and live guard contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bounded source-screen historical review and live guard contracts"'
+      # Explicit stdlib-only suites run once per Python mode in the required
+      # compiler-independent chain. No optional/path-filtered workflow gate.
+      - name: Saved review and dataset quality guards (normal and optimized)
+        run: |
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -O -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_quality_gates.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_review_counterexamples.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_admission_cli.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_public_report.py -v
+          python3 -S -B -OO -m unittest discover -s research/experiment_quality_guards/tests -p test_screen32_human_review.py -v
+          python3 -B tools/test_inventory.py --root research/experiment_quality_guards/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Saved review and dataset quality guards
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Saved review and dataset quality guards"'
       - name: Python test inventory
         run: python3 tools/test_inventory.py --official-workflows
       - name: Verify tracked worktree after Python test inventory
@@ -326,7 +355,12 @@ jobs:
       - name: Verify tracked worktree after Corpus provenance sidecar
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Corpus provenance sidecar"'
       - name: Real-artifact board benchmark contract
-        run: python3 tests/test_board_bench.py --runner ./build/kws_board_bench
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          python3 -B tests/test_board_bench.py --runner ./build/kws_board_bench
+          python3 -B -O tests/test_board_bench.py --statistics-only
+          python3 -B -OO tests/test_board_bench.py --statistics-only
       - name: Verify tracked worktree after Real-artifact board benchmark contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Real-artifact board benchmark contract"'
       - name: Release qualification manifest and gate

@@ -27,8 +27,7 @@ def example():
 
 class AdmissionCliTests(unittest.TestCase):
     def run_cli(self, payload, expected_code):
-        result = subprocess.run([sys.executable, *(["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []),
-                                 str(HERE / "admit_dataset.py"), "-"],
+        result = subprocess.run([sys.executable, str(HERE / "admit_dataset.py"), "-"],
                                 input=json.dumps(payload), text=True, capture_output=True, check=False)
         self.assertEqual(result.returncode, expected_code, result.stderr + result.stdout)
         return json.loads(result.stdout)
@@ -39,37 +38,6 @@ class AdmissionCliTests(unittest.TestCase):
         self.assertFalse(result["training_authorized"])
         self.assertFalse(result["product_qualified"])
         self.assertFalse(result["fresh_validation_qualified"])
-
-    def test_same_content_cannot_supply_contradictory_balanced_categories(self):
-        for field in ("pcm_sha256", "wav_sha256"):
-            with self.subTest(field=field):
-                payload = example()
-                for row in payload["rows"]:
-                    row.pop("pcm_sha256")
-                    row[field] = "a" * 64
-                result = self.run_cli(payload, 1)
-                self.assertFalse(result["coverage_eligible"])
-                self.assertEqual(result["coverage"]["groups"][0]["counts"],
-                                 {"K1": 0, "K2": 0, "nonwake:你好小屋": 0})
-                self.assertIn("IDENTITY_OR_EXPOSURE_CONFLICT", result["reasons"])
-                self.assertIn("BALANCED_COVERAGE_INSUFFICIENT", result["reasons"])
-                self.assertFalse(result["training_authorized"])
-                self.assertFalse(result["product_qualified"])
-                self.assertFalse(result["fresh_validation_qualified"])
-
-    def test_extra_clean_coverage_does_not_hide_unresolved_content_conflict(self):
-        payload = example()
-        original = dict(payload["rows"][0], id="conflict-a", pcm_sha256="b" * 64)
-        conflicting = dict(original, id="conflict-b", actual_text="你好小屋")
-        payload["rows"].extend([original, conflicting])
-        result = self.run_cli(payload, 1)
-        # The untouched valid recordings can still be counted, but unresolved
-        # conflicting inputs cannot pass the combined admission decision.
-        self.assertTrue(result["coverage"]["balanced_admission"])
-        self.assertFalse(result["eligible"])
-        self.assertIn("IDENTITY_OR_EXPOSURE_CONFLICT", result["reasons"])
-        self.assertEqual(result["coverage"]["groups"][0]["excluded_conflicting_content"],
-                         ["conflict-a", "conflict-b"])
 
     def test_missing_positive_rejects_even_with_generation_intent(self):
         payload = example()

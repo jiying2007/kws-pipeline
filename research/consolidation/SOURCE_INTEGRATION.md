@@ -146,3 +146,26 @@ records, source-freeze identities, 102 core imports and the 61-branch retention
 guard remain unchanged. No historical archived workflow is upgraded or activated.
 The existing verifier continues to enforce exact current baseline bytes; no
 verification rule or allowlist is relaxed.
+
+## Required review and current workflow identity maintenance, 2026-10-10
+
+The original 54-file current baseline now works alongside the explicit
+`current_added_active_workflows` identity for the sole allowed addition,
+`.github/workflows/research-source-consolidation.yml`. All 55 active files are
+checked for byte count, SHA-256, Git blob SHA-1 and executable mode. The older
+presence-only allowance for the added workflow is closed. A reviewed current
+workflow edit updates its current record and appends before/after public
+metadata; historical maintenance entries never substitute for current bytes.
+
+All five saved quality/review suites run in the existing required canonical CI
+chain under normal Python, `-O` and `-OO`. Their separate workflow is manual-only,
+so PR/main runs are not duplicated or gated on path-filtered check creation.
+Original core-retained quality source/test bytes have explicit inactive copies;
+all 102 core entries and 718 source entries still verify their original hashes.
+
+Screen32's full 74-file freeze remains an immutable historical record. The
+existing read-only human-review packet checks it through a finite location map,
+including exact archived originals of maintained tests. Live execution guards
+still check live paths and reject modified sources under the old freeze; saved
+review does not grant execution. See the dated follow-up in
+[the CI audit](CI_AUDIT_2026-10-09.md) for coverage and lifetime boundaries.

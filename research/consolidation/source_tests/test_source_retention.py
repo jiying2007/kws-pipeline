@@ -26,7 +26,7 @@ class RetentionTests(unittest.TestCase):
         self.file = file
         archived = file('research/consolidation/archive/workflows/example.yml', b'name: historical\n')
         baseline = file('.github/workflows/base.yml', b'name: unchanged\n')
-        file('.github/workflows/research-source-consolidation.yml', b'name: offline\n')
+        added = file('.github/workflows/research-source-consolidation.yml', b'name: offline\n')
         file(ARM, json.dumps(DISABLED_ARM).encode())
         provenance = dict(archived, source_commit='a'*40, original_path='.github/workflows/old.yml')
         provenance['source_url'] = 'https://github.com/jiying2007/kws-pipeline/blob/'+'a'*40+'/.github/workflows/old.yml'
@@ -34,7 +34,7 @@ class RetentionTests(unittest.TestCase):
             base_commit='b'*40, files=[archived], provenance=[provenance],
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
-            baseline_active_workflows=[baseline], pointer_only=[],
+            baseline_active_workflows=[baseline], current_added_active_workflows=[added], pointer_only=[],
             allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
@@ -77,6 +77,64 @@ class RetentionTests(unittest.TestCase):
     def test_missing_allowed_workflow_rejected(self):
         (self.root / '.github/workflows/research-source-consolidation.yml').unlink()
         with self.assertRaises(ValueError): verify(self.root, self.manifest)
+    def test_current_added_workflow_same_size_byte_mutation_rejected(self):
+        path = self.root / '.github/workflows/research-source-consolidation.yml'
+        path.write_bytes(b'name: OFFLINE\n')
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            verify(self.root, self.manifest)
+    def test_current_added_workflow_size_mutation_rejected(self):
+        path = self.root / '.github/workflows/research-source-consolidation.yml'
+        path.write_bytes(path.read_bytes() + b'# changed\n')
+        with self.assertRaisesRegex(ValueError, 'byte count changed'):
+            verify(self.root, self.manifest)
+    @unittest.skipUnless(__import__('os').name == 'posix', 'POSIX mode contract')
+    def test_current_added_workflow_mode_mutation_rejected(self):
+        path = self.root / '.github/workflows/research-source-consolidation.yml'
+        path.chmod(0o755)
+        with self.assertRaisesRegex(ValueError, 'mode changed'):
+            verify(self.root, self.manifest)
+    def test_current_added_workflow_identity_is_required_and_closed(self):
+        original = copy.deepcopy(self.manifest['current_added_active_workflows'])
+        for bad in (None, [], original + original, [dict(original[0], path='.github/workflows/base.yml')], ['wrong']):
+            with self.subTest(bad=bad):
+                self.manifest['current_added_active_workflows'] = bad
+                with self.assertRaises(ValueError):
+                    verify(self.root, self.manifest)
+        del self.manifest['current_added_active_workflows']
+        with self.assertRaises(ValueError):
+            verify(self.root, self.manifest)
+    def test_current_added_workflow_identity_fields_all_bind(self):
+        original = copy.deepcopy(self.manifest['current_added_active_workflows'][0])
+        for key, value in (('bytes', True), ('bytes', original['bytes'] + 1),
+                           ('mode', '100755'), ('mode', '120000'),
+                           ('sha256', '0' * 64), ('git_blob_sha1', '0' * 40)):
+            with self.subTest(key=key, value=value):
+                self.manifest['current_added_active_workflows'] = [dict(original, **{key: value})]
+                with self.assertRaises(ValueError):
+                    verify(self.root, self.manifest)
+    def test_current_added_workflow_symlink_is_not_an_identity(self):
+        path = self.root / '.github/workflows/research-source-consolidation.yml'
+        archived = self.root / 'research/consolidation/archive/workflows/current.yml'
+        archived.write_bytes(path.read_bytes())
+        path.unlink()
+        path.symlink_to(archived)
+        with self.assertRaisesRegex(ValueError, 'symlink'):
+            verify(self.root, self.manifest)
+    def test_historical_workflow_receipts_do_not_replace_current_identity(self):
+        current = copy.deepcopy(self.manifest['current_added_active_workflows'][0])
+        old = self.file('research/consolidation/archive/workflows/previous.yml', b'name: previous\n')
+        self.manifest['active_workflow_maintenance'] = [{'files': [{'path': current['path'], 'before': old, 'after': current}]}]
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.manifest['current_added_active_workflows'] = [dict(old, path=current['path'])]
+        with self.assertRaises(ValueError):
+            verify(self.root, self.manifest)
+    def test_reviewed_current_workflow_update_does_not_rewrite_history(self):
+        previous = copy.deepcopy(self.manifest['current_added_active_workflows'][0])
+        updated = self.file(previous['path'], b'name: reviewed current source\n')
+        self.manifest['current_added_active_workflows'] = [updated]
+        self.manifest['active_workflow_maintenance'] = [{'files': [{'path': previous['path'], 'before': previous, 'after': updated}]}]
+        self.assertEqual(verify(self.root, self.manifest), 1)
+        self.assertNotEqual(previous['sha256'], updated['sha256'])
     def test_non_singleton_allowance_rejected(self):
         original = self.manifest['allowed_new_active_workflows']
         for bad in ([], original + original,

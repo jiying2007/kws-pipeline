@@ -111,6 +111,32 @@ Synthetic calibration/test/qualification rendering rotates positive domains `far
 
 `.github/workflows/far-nightly.yml` is a recurring hosted/synthetic regression. It may detect state accumulation regressions, but its generated exposure is **not** a shipping FAR/hour measurement. Shipping FAR needs long real continuous background audio through the final microphone/enclosure/AFE path and those original WAV bytes must be retained/bound by evaluation provenance.
 
+## Current diagnostic priority and admission boundary
+
+The highest-value next validation is a matched-context, event-matched check of
+continuous state and VAD behavior under one frozen source/model/pack/config/AFE
+tuple. Retain frame phase, VAD decisions, acoustic/decoder/refractory state
+provenance and annotated event boundaries. Positive and negative streams must
+use the same declared context policy; compare per-keyword misses, false accepts
+and matched-event latency, not clip-presence accuracy or surrogate scores alone.
+Use the [existing context contract](../eval/README.md#match-positive-and-negative-context-declarations).
+Missing historical initial state leaves the original false-accept cause unknown,
+even if PCM bytes match or a cold-start/reference-only diagnostic reproduces an
+error under its own conditions.
+
+Preserve continuous state within a recording. Reset only at an intended session
+boundary or an actual declared capture discontinuity; blanket per-clip resets
+are not a demonstrated fix. Reference-only analysis and native C/backend
+numerical admission are separate gates. D20 remains **FAIL** and D90 **NOT_RUN**;
+the [current admission checklist](../research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md#current-admission-checklist)
+keeps exact source/build, saved-input consumption, resource scope and separately
+authorized numerical execution explicit. Saved D20 CMVN is a separate call of
+the same C function on the same input, not an observed internal stage-0 hook.
+
+This is the next validation priority, not a completed experiment or permission
+to execute one. It introduces no blanket reset, threshold sweep, new model,
+training run or product qualification claim.
+
 ## Audio discontinuities
 
 A production capture pipeline can lose timeline continuity because of XRUN, device/route changes, clock resets or suspend/resume. The product integration must call `kws_engine_notify_discontinuity()` at those boundaries so pre-gap frontend/RNN/decoder state cannot be joined to post-gap audio.

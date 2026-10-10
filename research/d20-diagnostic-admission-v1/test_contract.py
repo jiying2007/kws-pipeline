@@ -30,10 +30,57 @@ def fixture():
 
 class ContractTests(unittest.TestCase):
     def test_valid_synthetic_metadata(self):
-        result=contract.validate(fixture())
+        result=contract.validate(json.loads(json.dumps(fixture())))
         self.assertEqual(result['planned_rows'],798)
         self.assertIs(result['execution_ready'],False)
         self.assertIs(result['input_authenticity_verified'],False)
+    def test_json_integer_metadata_rejects_equal_floats_and_booleans(self):
+        # JSON round trips distinguish integers from numerically equal floats.
+        # No saved input, archive, backend or operator is read or executed.
+        for key in ('input_shape', 'output_shape', 'cache_shape'):
+            job = 8 if key == 'cache_shape' else 0
+            for dimension in range(len(fixture()['jobs'][job][key])):
+                for convert in (float, bool):
+                    plan = fixture()
+                    shape = plan['jobs'][job][key]
+                    shape[dimension] = convert(shape[dimension])
+                    with self.subTest(key=key, dimension=dimension, type=convert.__name__):
+                        with self.assertRaises(ValueError):
+                            contract.validate(json.loads(json.dumps(plan)))
+        for key, job in (('input_bytes', 0), ('cache_bytes', 8), ('row', 0), ('stage', 0)):
+            for convert in (float, bool):
+                plan = fixture()
+                plan['jobs'][job][key] = convert(plan['jobs'][job][key])
+                with self.subTest(key=key, type=convert.__name__):
+                    with self.assertRaises(ValueError):
+                        contract.validate(json.loads(json.dumps(plan)))
+        for key in contract.LIMITS:
+            for convert in (float, bool):
+                plan = fixture()
+                plan['limits'][key] = convert(plan['limits'][key])
+                with self.subTest(limit=key, type=convert.__name__):
+                    with self.assertRaises(ValueError):
+                        contract.validate(json.loads(json.dumps(plan)))
+
+    def test_json_gates_require_finite_numbers_without_changing_tolerances(self):
+        for name, pair in contract.GATES.items():
+            for index in range(len(pair)):
+                for value in (False, True, '0', '0.0', None, float('nan'), float('inf'), -float('inf')):
+                    plan = fixture()
+                    plan['gates'][name][index] = value
+                    with self.subTest(gate=name, index=index, value=value):
+                        with self.assertRaises(ValueError):
+                            contract.validate(json.loads(json.dumps(plan)))
+        # Integer and float zero remain equivalent numeric thresholds.
+        for zero in (0, 0.0):
+            plan = fixture()
+            for pair in plan['gates'].values():
+                if pair[1] == 0:
+                    pair[1] = zero
+            result = contract.validate(json.loads(json.dumps(plan)))
+            self.assertIs(result['execution_ready'], False)
+            self.assertIs(result['numerical_admission'], False)
+
     def test_reject_invalid(self):
         cases=[lambda p:p['frozen_sources'].update(weights='4'*64),
                lambda p:p['gates'].update(raw=[1e-3,1e-5]),

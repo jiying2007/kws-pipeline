@@ -466,6 +466,14 @@ class Manifest(Dataset):
                         f"{path}:{row_index}: targets must be in 1..{vocab_size_value - 1}"
                     )
                 measured = inspect_pcm16_wav(resolved)
+                # Even an empty CTC target needs a real acoustic observation.
+                # A shorter recording produces no C frontend step at EOF.
+                if measured["frames"] < FRAME_LENGTH_SAMPLES:
+                    raise ValueError(
+                        f"{path}:{row_index}: {resolved}: training WAV requires "
+                        f"at least {FRAME_LENGTH_SAMPLES} samples for one complete "
+                        "acoustic frame (no EOF padding)"
+                    )
                 identity = {
                     "recording": f"manifest-{manifest_index}:{row_index}",
                     "manifest": path.name,
@@ -505,6 +513,8 @@ class Manifest(Dataset):
             hop=FRAME_HOP_SAMPLES,
             frontend=self.frontend,
         )
+        if acoustic.shape[0] == 0:
+            raise ValueError(f"{path}: training WAV has no complete acoustic frame")
         repeated_neighbors = sum(
             1 for left, right in zip(tokens, tokens[1:]) if left == right
         )
@@ -530,12 +540,10 @@ def pcm_vad_mask(pcm: torch.Tensor, threshold_dbfs: float) -> torch.Tensor:
         raise ValueError("CTC VAD requires a non-empty mono PCM tensor")
     if not math.isfinite(threshold_dbfs) or not -120.0 <= threshold_dbfs <= 0.0:
         raise ValueError("CTC VAD dBFS threshold is invalid")
-    vad_pcm = (
-        pcm if pcm.numel() >= FRAME_LENGTH_SAMPLES
-        else torch.nn.functional.pad(pcm, (0, FRAME_LENGTH_SAMPLES - pcm.numel()))
-    )
+    if pcm.numel() < FRAME_LENGTH_SAMPLES:
+        return torch.empty((0,), dtype=torch.bool, device=pcm.device)
     vad_energy = (
-        vad_pcm.unfold(0, FRAME_LENGTH_SAMPLES, FRAME_HOP_SAMPLES)
+        pcm.unfold(0, FRAME_LENGTH_SAMPLES, FRAME_HOP_SAMPLES)
         .square()
         .mean(dim=1)
     )

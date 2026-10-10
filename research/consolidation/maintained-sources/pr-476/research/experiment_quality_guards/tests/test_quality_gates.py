@@ -121,92 +121,11 @@ class CoverageTests(unittest.TestCase):
         rows.append(alias)
         self.assertEqual(self.run_gate(rows)["groups"][0]["counts"]["K1"], 1)
 
-    def test_conflicting_complete_labels_quarantine_every_content_alias(self):
-        for identity_kind in ("pcm", "wav", "mixed"):
-            with self.subTest(identity_kind=identity_kind):
-                rows = self.complete_group()
-                for index, item in enumerate(rows[:3]):
-                    if identity_kind == "pcm":
-                        item["pcm_sha256"] = "shared-pcm"
-                    elif identity_kind == "wav":
-                        item.pop("pcm_sha256")
-                        item["wav_sha256"] = "shared-wav"
-                    else:
-                        item["wav_sha256"] = "shared-wav" if index < 2 else "rewrapped-wav"
-                        if index == 1:
-                            item.pop("pcm_sha256")
-                        else:
-                            item["pcm_sha256"] = "shared-pcm"
-                before = copy.deepcopy(rows)
-                result = self.run_gate(rows)
-                group = result["groups"][0]
-                self.assertFalse(result["balanced_admission"])
-                self.assertEqual(group["excluded_conflicting_content"], ["0", "1", "2"])
-                self.assertEqual([group["counts"][key] for key in ("K1", "K2", "nonwake:你好小屋")], [0, 0, 0])
-                self.assertEqual(result["content_label_conflicts"][0]["ids"], ["0", "1", "2"])
-                self.assertEqual(rows, before)
-
-    def test_full_words_conflict_even_when_keyword_membership_matches(self):
-        rows = self.complete_group()
-        rows.append(dict(rows[0], id="conflict", actual_text="你好小窝你好"))
-        result = self.run_gate(rows)
-        self.assertEqual(result["groups"][0]["counts"]["K1"], 0)
-        self.assertEqual(len(result["content_label_conflicts"]), 1)
-
-    def test_same_normalized_full_label_aliases_remain_deduplicated(self):
-        rows = self.complete_group()
-        rows.append(dict(rows[0], id="punctuation-alias", actual_text="你好，小窝！ "))
-        result = self.run_gate(rows)
-        self.assertTrue(result["balanced_admission"])
-        self.assertEqual(result["groups"][0]["counts"]["K1"], 1)
-        self.assertEqual(result["content_label_conflicts"], [])
-
-    def test_one_consistent_complete_transcript_can_contain_both_keywords(self):
-        rows = self.complete_group()
-        rows[0]["actual_text"] = "你好小窝，小窝小窝"
-        del rows[1]
-        result = self.run_gate(rows)
-        self.assertTrue(result["balanced_admission"])
-        self.assertEqual(result["content_label_conflicts"], [])
-        self.assertEqual(result["groups"][0]["counts"]["K1"], 1)
-        self.assertEqual(result["groups"][0]["counts"]["K2"], 1)
-
-    def test_partial_labels_do_not_vote_against_complete_human_truth(self):
-        rows = self.complete_group()
-        rows.append(dict(rows[0], id="partial", actual_text="你好", review={"status": "incomplete"}))
-        result = self.run_gate(rows)
-        self.assertTrue(result["balanced_admission"])
-        self.assertEqual(result["groups"][0]["excluded_unclean_or_unbound"], ["partial"])
-        self.assertEqual(result["content_label_conflicts"], [])
-
-    def test_conflict_quarantine_spans_declared_source_groups(self):
-        rows = self.complete_group()
-        rows.append(dict(rows[0], id="other", actual_text="小窝小窝", source_group="voice-B"))
-        declarations = [{"source_group": name, "split": "dev", "role": "balanced"}
-                        for name in ("voice-A", "voice-B")]
-        result = self.run_gate(rows, declarations)
-        self.assertEqual(result["groups"][0]["counts"]["K1"], 0)
-        self.assertEqual(result["groups"][1]["counts"]["K2"], 0)
-
     def test_empty_transcript_is_not_silence_or_nonwake_truth(self):
         self.assertIsNone(gates.human_truth(row("empty", "")))
 
 
 class IdentityTests(unittest.TestCase):
-    def test_current_conflicting_labels_fail_identity(self):
-        original = row("original")
-        alias = dict(original, id="renamed", actual_text="你好小屋")
-        result = gates.identity_audit([original, alias])
-        self.assertEqual(result["status"], "FAIL")
-        self.assertEqual(result["conflicts"][0]["kind"], "CONFLICTING_COMPLETE_ACTUAL_TEXT")
-
-    def test_historical_labels_do_not_overrule_current_revision(self):
-        old = row("same-recording", "你好小窝")
-        latest = dict(old, actual_text="你好小屋")
-        result = gates.identity_audit([latest], [old])
-        self.assertEqual(result["status"], "CHECKED_DECLARED_LINEAGE")
-        self.assertEqual([item["actual_text"] for item in result["ledger"]], ["你好小窝", "你好小屋"])
-
     def test_saved_dylan_new_waveforms_are_not_unseen_voice(self):
         report = gates.identity_audit(FIXTURE["old6_rows"], FIXTURE["identity_history"])
         self.assertEqual(report["status"], "CHECKED_DECLARED_LINEAGE")

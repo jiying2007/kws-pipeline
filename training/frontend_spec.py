@@ -131,8 +131,11 @@ def features_pcm16(
     frontend_id(frontend)
     if frame_len < 2 or frame_len > FFT_SIZE or hop <= 0 or hop > frame_len:
         raise ValueError("invalid frontend geometry")
+    if feature_dim <= 0:
+        raise ValueError("feature_dim must be positive")
+    # Match streaming C: no startup padding and no incomplete EOF window.
     if len(samples) < frame_len:
-        samples = samples + [0] * (frame_len - len(samples))
+        return []
     result: list[list[float]] = []
     smooth = [0.0] * feature_dim
     initialized = False

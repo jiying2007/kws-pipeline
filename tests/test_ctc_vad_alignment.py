@@ -13,6 +13,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 sys.path.insert(0, str(ROOT / "tools"))
 
+from frontend import features  # noqa: E402
+from frontend_spec import features_pcm16  # noqa: E402
+
 from train_ctc import (  # noqa: E402
     Manifest,
     collate,
@@ -24,6 +27,19 @@ from verify_model_promotion_bundle import require_promotable_training  # noqa: E
 
 
 def main() -> int:
+    # Frontend/VAD fixtures only: no model or optimizer is instantiated here.
+    for frontend in ("logmel", "pcen-lite"):
+        for count, steps in ((0, 0), (1, 0), (399, 0), (400, 1), (719, 1), (720, 2)):
+            samples = [(index % 37) * 311 - 5500 for index in range(count)]
+            pcm = torch.tensor(samples, dtype=torch.float32) / 32768.0
+            acoustic = features(pcm, frontend=frontend)
+            if tuple(acoustic.shape) != (steps, 32):
+                raise AssertionError((frontend, count, acoustic.shape, steps))
+            if steps:
+                expected = torch.tensor(features_pcm16(samples, frontend=frontend))
+                torch.testing.assert_close(acoustic, expected, atol=5.0e-4, rtol=1.0e-4)
+            if count and tuple(pcm_vad_mask(pcm, -55.0).shape) != (steps,):
+                raise AssertionError(("VAD frame count", count, steps))
     pcm = torch.cat((torch.zeros(400), torch.full((320,), 0.5)))
     assert torch.equal(pcm_vad_mask(pcm, -55.0), torch.tensor([False, True]))
 

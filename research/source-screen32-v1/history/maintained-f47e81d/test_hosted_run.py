@@ -1,6 +1,5 @@
 """Fictional kernel/container/PCM fixtures only; no Docker or ML calls."""
 import copy
-import contextlib
 import importlib.util
 import json
 from pathlib import Path
@@ -16,44 +15,6 @@ sys.path.insert(0, str(HERE))
 import runtime_scope as scope
 import hosted_run as host
 import tts_worker as tts
-sys.path.insert(0, str(HERE.parent / "experiment_quality_guards"))
-import screen32_human_review as saved_review
-
-
-
-@contextlib.contextmanager
-def historical_source_tree():
-    """Test-only exact original-path projection; never a runtime admission root."""
-    freeze = json.loads((HERE / 'execution-freeze.json').read_text())
-    snapshot = saved_review.load(HERE / 'history/maintained-f47e81d/snapshot.json')
-    expected_tests = {'research/source-screen32-v1/' + name for name in
-                      ('test_contract.py', 'test_hosted_run.py', 'test_sense_continuation.py')}
-    if (snapshot.get('schema') != 'screen32-maintained-test-source-snapshot-v1' or
-            snapshot.get('source_commit') != 'f47e81d3924006f48ed2a0a4d2074e5891577f95' or
-            len(snapshot.get('files', [])) != len(expected_tests) or
-            {row['original_path'] for row in snapshot['files']} != expected_tests):
-        raise ValueError('historical test snapshot provenance')
-    for row in snapshot['files']:
-        path = host.ROOT / row['archive_path']
-        if (saved_review.HISTORICAL_SOURCE_PATHS[row['original_path']] != row['archive_path'] or
-                path.is_symlink() or not path.is_file() or row['mode'] != '100644' or
-                path.stat().st_mode & 0o111 or type(row['bytes']) is not int or
-                path.stat().st_size != row['bytes'] or
-                host.file_hash(path) != row['sha256'] or
-                row['sha256'] != freeze['files'][row['original_path']]):
-            raise ValueError('historical test snapshot identity')
-    if len(freeze['files']) != 74:
-        raise ValueError('historical source denominator')
-    with tempfile.TemporaryDirectory() as temporary:
-        root = Path(temporary)
-        for name, expected in freeze['files'].items():
-            source = host.ROOT / saved_review.HISTORICAL_SOURCE_PATHS.get(name, name)
-            if source.is_symlink() or host.file_hash(source) != expected:
-                raise ValueError('historical source drift: ' + name)
-            target = root / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(source.read_bytes())
-        yield root
 
 
 def kernel():
@@ -174,8 +135,7 @@ class HostTests(unittest.TestCase):
     def test_frozen_profiles_bind_sources_and_keep_asr_blind(self):
         freeze = json.loads((HERE / 'execution-freeze.json').read_text())
         for name, digest in freeze['files'].items():
-            historical = host.ROOT / saved_review.HISTORICAL_SOURCE_PATHS.get(name, name)
-            self.assertEqual(host.file_hash(historical), digest, name)
+            self.assertEqual(host.file_hash(host.ROOT / name), digest, name)
         reused = set(json.loads((HERE / 'reuse-pins.json').read_text()))
         self.assertTrue(reused <= set(freeze['profiles']['tts']))
         for name in freeze['profiles']['asr']:
@@ -183,38 +143,13 @@ class HostTests(unittest.TestCase):
             raw = (host.ROOT / name).read_bytes()
             for text in ('你好小窝', '小窝小窝', '你好小屋', '小屋小屋', '成年女性', '成年男性', 'screen32-001'):
                 self.assertNotIn(text.encode(), raw, name)
-        with historical_source_tree() as historical, tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory() as temporary:
             staged = Path(temporary)
-            with mock.patch.object(host, 'ROOT', historical):
-                host.stage_code(freeze, 'tts', staged)
+            host.stage_code(freeze, 'tts', staged)
             result = host.subprocess.run([sys.executable, '-I', '-B', str(staged / 'research/source-screen32-v1/contract.py')],
                                          capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['local_reuse_pins_verified'], len(reused))
-
-    def test_historical_archive_never_admits_changed_live_execution_sources(self):
-        freeze = json.loads((HERE / 'execution-freeze.json').read_text())
-        changed = 'research/experiment_quality_guards/quality_gates.py'
-        with historical_source_tree() as historical, tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            _, release, event, env = self.admission_fixture(root)
-            # Use the real 74-file freeze, with a matching declared approval.
-            here = root / 'research/source-screen32-v1'
-            (here / 'execution-freeze.json').write_bytes((HERE / 'execution-freeze.json').read_bytes())
-            release['source_freeze_sha256'] = host.file_hash(here / 'execution-freeze.json')
-            (here / 'execution-release.json').write_text(json.dumps(release))
-            archived = historical / saved_review.HISTORICAL_SOURCE_PATHS[changed]
-            archived.parent.mkdir(parents=True, exist_ok=True)
-            archived.write_bytes((historical / changed).read_bytes())
-            (historical / changed).write_bytes((historical / changed).read_bytes() + b'\n# changed live fixture\n')
-            with mock.patch.object(host, 'ROOT', historical), mock.patch.object(host, 'HERE', here), \
-                    mock.patch.object(host, 'docker') as docker, mock.patch.object(host, 'pull_image') as pull, \
-                    mock.patch.object(host, 'verify_successful_probe') as probe:
-                with self.assertRaisesRegex(ValueError, 'reviewed source drift'):
-                    host.verify_admission(env)
-                with self.assertRaisesRegex(ValueError, 'staged source identity'):
-                    host.stage_code(freeze, 'tts', root / 'staged')
-                docker.assert_not_called(); pull.assert_not_called(); probe.assert_not_called()
 
     def test_release_false_blocks_before_docker(self):
         release = {'schema': 'screen32-execution-release-v1', 'experiment': host.EXPERIMENT,

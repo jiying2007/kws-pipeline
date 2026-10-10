@@ -280,9 +280,7 @@ class ContinuationTests(unittest.TestCase):
                 self.assertEqual(set(snapshot['overrides']) | set(snapshot['unchanged_source_paths']), set(freeze['files']))
                 self.assertFalse(set(snapshot['overrides']) & set(snapshot['unchanged_source_paths']))
                 for path, sha in freeze['files'].items():
-                    from test_hosted_run import saved_review
-                    source = host.ROOT / (snapshot['overrides'][path]['snapshot_path'] if path in snapshot['overrides']
-                                          else saved_review.HISTORICAL_SOURCE_PATHS.get(path, path))
+                    source = host.ROOT / snapshot['overrides'][path]['snapshot_path'] if path in snapshot['overrides'] else host.ROOT / path
                     self.assertEqual(host.file_hash(source), sha, path)
 
     def test_fixed_template_has_one_sense_only_command_and_no_runtime_selector(self):

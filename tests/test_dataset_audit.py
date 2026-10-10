@@ -8,6 +8,8 @@ import struct
 import subprocess
 import sys
 import tempfile
+import unittest
+import wave
 
 from qualification_fixture import write_wav
 
@@ -22,7 +24,8 @@ from audit_dataset import (  # noqa: E402
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(AUDITOR), *args],
+        [sys.executable, *(["-" + "O" * sys.flags.optimize] if sys.flags.optimize else []),
+         str(AUDITOR), *args],
         check=False,
         text=True,
         stdout=subprocess.PIPE,
@@ -103,7 +106,7 @@ def test_bound_lineage_sidecars() -> None:
         leaked = record("render-b", "source-a", "family-b")
         write_lineage_sidecar(test, [leaked])
         report = audit_splits(specs, require_lineage=True)
-        assert report["cross_split_leaks"] == []
+        assert report["cross_split_leaks"]
         assert not report["clean"]
         assert any(item["field"] == "source_pcm_sha256" for item in report["identity_violations"])
         write_lineage_sidecar(test, [b])
@@ -162,7 +165,83 @@ def test_bound_lineage_sidecars() -> None:
         assert unknown["identity_disjointness"]["source_pcm_sha256"] == "unknown"
 
 
+class CrossFieldPCMTests(unittest.TestCase):
+    """Synthetic WAVs only; assertions remain active under -O and -OO."""
+
+    def test_all_final_source_original_pcm_pairs_share_one_namespace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            paths = []
+            for index in range(3):
+                path = root / f"invented-{index}.wav"
+                with wave.open(str(path), "wb") as output:
+                    output.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+                    output.writeframes(struct.pack("<4h", 1, 2, 3, index + 1))
+                paths.append(path)
+            common, first, second = paths
+            common_pcm = inspect_wav(common)[2]
+
+            def record(field, rendered, split):
+                row = metadata_row(str(common if field == "pcm_sha256" else rendered),
+                                   speaker=split, session=split, source=split)
+                if field == "source_pcm_sha256":
+                    row.update(source_path=str(common), source_wav_sha256=sha256_file(common),
+                               source_pcm_sha256=common_pcm)
+                elif field == "original_pcm_sha256":
+                    row[field] = common_pcm
+                return row
+
+            fields = ("pcm_sha256", "source_pcm_sha256", "original_pcm_sha256")
+            for left in fields:
+                for right in fields:
+                    with self.subTest(left=left, right=right):
+                        specs = []
+                        for split, field, path in (("train", left, first), ("heldout", right, second)):
+                            manifest = root / (split + ".jsonl")
+                            manifest.write_text(json.dumps(record(field, path, split)) + "\n")
+                            specs.append((split, manifest))
+                        result = audit_splits(specs, require_metadata=("speaker_id", "session_id", "source_id"))
+                        self.assertFalse(result["clean"])
+                        leak = next(item for item in result["cross_split_leaks"]
+                                    if item["pcm_sha256"] == common_pcm)
+                        self.assertEqual(leak["splits"], ["heldout", "train"])
+                        observations = {item["split"]: item for item in leak["observations"]}
+                        self.assertEqual(observations["train"]["field"], left)
+                        self.assertEqual(observations["heldout"]["field"], right)
+                        if "source_pcm_sha256" in (left, right):
+                            self.assertEqual(result["identity_disjointness"]["source_pcm_sha256"], "violated")
+                        for item in observations.values():
+                            if item["field"] == "original_pcm_sha256":
+                                self.assertEqual(item["evidence_basis"], "declared-original-pcm")
+                                self.assertIsNone(item["observed_path"])
+                            else:
+                                self.assertEqual(item["observed_path"], str(common))
+
+            # A bare TSV heldout row still contributes its decoded final PCM.
+            train = root / "train.jsonl"
+            train.write_text(json.dumps(record("source_pcm_sha256", first, "train")) + "\n")
+            heldout = root / "heldout.tsv"
+            heldout.write_text(str(common) + "\t1 2\n")
+            result = audit_splits([("train", train), ("heldout", heldout)])
+            self.assertFalse(result["clean"])
+            self.assertEqual(len(result["cross_split_leaks"]), 1)
+            cli = run("--split", f"train={train}", "--split", f"heldout={heldout}")
+            self.assertEqual(cli.returncode, 1, cli.stderr)
+            self.assertFalse(json.loads(cli.stdout)["clean"])
+
+            # Hash-shaped family/reference metadata is a different namespace.
+            unrelated = metadata_row(str(second), speaker="heldout", session="heldout", source="heldout")
+            unrelated.update(source_family_id=common_pcm, reference_audio_sha256=common_pcm)
+            other = root / "other.jsonl"
+            other.write_text(json.dumps(unrelated) + "\n")
+            self.assertTrue(audit_splits([("train", train), ("heldout", other)])["clean"])
+            self.assertTrue(audit_splits([("train", train)])["clean"])
+
+
 def main() -> int:
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(CrossFieldPCMTests)
+    if not unittest.TextTestRunner().run(suite).wasSuccessful():
+        return 1
     test_bound_lineage_sidecars()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)

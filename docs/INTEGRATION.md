@@ -56,7 +56,7 @@ The recommended integration is to pass each normal 10-ms output block directly:
 160 samples @ 16 kHz -> kws_engine_accept_pcm16(...)
 ```
 
-The one-hop upper bound guarantees one call can produce at most one acoustic step, so the single `kws_detection_t` output cannot silently discard multiple wake events. Accepted blocks are consumed completely.
+The one-hop upper bound guarantees one call can produce at most one acoustic step, so the single `kws_detection_t` output cannot silently discard multiple wake events. Accepted blocks are consumed completely. The 10-ms callback cadence is distinct from the 20-ms acoustic hop: measure the actual callback scheduling/work budget on the product. `kws_board_bench` times calls of up to 320 samples (the final call may be shorter) against a nominal 20-ms block deadline; its p99 headroom does not qualify a 10-ms callback deadline.
 
 One engine is single-owner. If capture and assistant state machines run on different threads, publish only the small wake event across a queue rather than calling one engine concurrently.
 
@@ -136,7 +136,9 @@ Threshold qualification must use the exact final microphone/enclosure/audio-pipe
 - SDK/source/SPDX/model/qualification/robustness/FAR/shipping/nightly/AFE identities are frozen into `deployment-manifest.json` and `DEPLOYMENT_SHA256SUMS`;
 - provenance and SDK-SBOM attestations succeed.
 
-The deployment manifest is deliberately `commercial-candidate` with `shipping_approved=false`. Its only remaining blockers are the two evidence classes already declared by `configs/shipping.xiaowo.json`: real-human final-AFE acoustic qualification and physical target-board performance/soak.
+The deployment manifest is deliberately `commercial-candidate` with `shipping_approved=false`. The two external evidence classes declared by `configs/shipping.xiaowo.json` remain pending: real-human final-AFE acoustic qualification and physical target-board performance/soak. They are not an exhaustive current readiness claim: the same policy separately requires source-specific replay/recalibration (`recalibration_required=true`). Historical model-release qualification does not qualify changed runtime source.
+
+The separate research lane also retains unresolved numerical and data-admission findings: D20 **FAIL**, D90 **NOT_RUN**, and the frozen Fixed50 **EVAL_INCONCLUSIVE_LABEL_SUPPORT** result. Saved-byte binding, listening tools and CI passes do not clear these findings or establish new human labels. See [scoped product status](KWS_LANDING_STATUS.md) and the [current research/admission entries](../research/README.md); numerical research admission and product qualification remain distinct.
 
 ## Release evidence boundary
 
@@ -151,4 +153,4 @@ The final product tuple must retain enough identity to connect the shipping data
 - original held-out human qualification WAVs and corpus identity;
 - physical target-board raw measurements.
 
-Hosted tests can prove API and evidence contracts. Only the final device/audio path can prove real FAR/FRR, far-field behavior and physical performance. Until those two real-world evidence classes pass, `shipping_approved` must remain false.
+Hosted tests can prove API and evidence contracts. Only the final device/audio path can prove real FAR/FRR, far-field behavior and physical performance. Until those real-world evidence classes and every applicable source-recalibration and tuple-consistency gate pass, `shipping_approved` must remain false.

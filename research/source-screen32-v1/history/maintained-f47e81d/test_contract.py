@@ -37,24 +37,7 @@ class PlanningTests(unittest.TestCase):
 
     def test_committed_freeze(self):
         self.assertEqual(len(c.validate_plan(c.decode((HERE / "plan.json").read_bytes()))), 32)
-        from test_hosted_run import historical_source_tree
-        with historical_source_tree() as historical, mock.patch.object(c, "ROOT", historical):
-            self.assertGreaterEqual(c.verify_local_pins(), 15)
-
-    def test_live_reuse_guard_rejects_drift_even_when_exact_archive_remains(self):
-        from test_hosted_run import historical_source_tree, saved_review
-        name = 'research/experiment_quality_guards/quality_gates.py'
-        with historical_source_tree() as historical:
-            path = historical / name
-            archive = historical / saved_review.HISTORICAL_SOURCE_PATHS[name]
-            archive.parent.mkdir(parents=True, exist_ok=True)
-            archive.write_bytes(path.read_bytes())
-            path.write_bytes(path.read_bytes() + b'\n# changed live fixture\n')
-            with mock.patch.object(c, 'ROOT', historical):
-                with self.assertRaisesRegex(ValueError, 'reused source changed'):
-                    c.verify_local_pins()
-                with self.assertRaisesRegex(ValueError, 'reused source changed'):
-                    c.request_preview(self.plan, 'screen32-001')
+        self.assertGreaterEqual(c.verify_local_pins(), 15)
 
     def test_exact_cells(self):
         rows = self.plan["cells"]
@@ -94,9 +77,7 @@ class PlanningTests(unittest.TestCase):
             with self.assertRaises(ValueError): c.decode(raw)
 
     def test_qwen_preview_is_design_only(self):
-        from test_hosted_run import historical_source_tree
-        with historical_source_tree() as historical, mock.patch.object(c, "ROOT", historical):
-            preview = c.request_preview(self.plan, "screen32-001")
+        preview = c.request_preview(self.plan, "screen32-001")
         self.assertEqual(preview["method"], "generate_voice_design")
         self.assertIn("instruct", preview["kwargs"])
         self.assertNotIn("speaker", preview["kwargs"])
@@ -105,9 +86,7 @@ class PlanningTests(unittest.TestCase):
         self.assertEqual(preview["kwargs"]["max_new_tokens"], 120)
 
     def test_firered_preview_stays_blocked(self):
-        from test_hosted_run import historical_source_tree
-        with historical_source_tree() as historical, mock.patch.object(c, "ROOT", historical):
-            preview = c.request_preview(self.plan, "screen32-017")
+        preview = c.request_preview(self.plan, "screen32-017")
         self.assertIn("CUDA", preview["blocked"])
         self.assertFalse(preview["execution_enabled"])
         self.assertFalse(preview["kwargs"]["do_tn"])
@@ -236,12 +215,6 @@ class QwenAdapterTests(unittest.TestCase):
     def setUp(self):
         spec = importlib.util.spec_from_file_location("qwen_adapter_test", HERE / "qwen_adapter.py")
         self.a = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.a)
-        from test_hosted_run import historical_source_tree
-        historical = self.enterContext(historical_source_tree())
-        self.preview_contract = sys.modules['contract']
-        self.live_root = self.preview_contract.ROOT
-        self.enterContext(mock.patch.object(self.preview_contract, 'ROOT', historical))
-        self.enterContext(mock.patch.object(c, 'ROOT', historical))
         self.calls = []
         self.real_scope_guard = self.a.verify_runtime_scope
         patcher = mock.patch.object(self.a, "verify_runtime_scope", side_effect=lambda: self.calls.append("scope"))
@@ -271,14 +244,6 @@ class QwenAdapterTests(unittest.TestCase):
 
     def adapter(self):
         return self.a.FixedQwenAdapter(self.wrapper, torch=self.torch, numpy=self.numpy)
-
-    def test_maintained_live_source_cannot_generate_under_historical_freeze(self):
-        adapter = self.adapter()
-        with mock.patch.object(self.preview_contract, 'ROOT', self.live_root):
-            with self.assertRaisesRegex(ValueError, 'reused source changed'):
-                adapter.generate_cell('screen32-001')
-        self.wrapper.generate_voice_design.assert_not_called()
-        self.assertEqual(adapter.attempted, [])
 
     def test_exact_api_seed_and_output_contract(self):
         adapter = self.adapter()
