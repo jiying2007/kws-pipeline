@@ -30,8 +30,11 @@ class NumericTraceTests(unittest.TestCase):
             if observed:
                 cmd.append("--numeric-trace")
             with (cls.root / (name + ".log")).open("w") as log:
-                subprocess.run(cmd, cwd=ROOT, env={**os.environ, "PYTHONHASHSEED": "0"},
-                               stdout=log, stderr=subprocess.STDOUT, check=True, timeout=120)
+                completed = subprocess.run(cmd, cwd=ROOT, env={**os.environ, "PYTHONHASHSEED": "0"},
+                                           stdout=log, stderr=subprocess.STDOUT, check=False, timeout=120)
+            if completed.returncode:
+                raise RuntimeError("synthetic reproducibility smoke failed:\n" +
+                                   (cls.root / (name + ".log")).read_text()[-16000:])
         cls.identity, cls.trace, _ = load_trace(cls.root / "observed-a.json")
 
     @classmethod

@@ -19,6 +19,18 @@ from training_admission import (verify_training_manifests, require_promotable_ad
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_reproducibility_smoke_explicitly_declares_fixture_lane(self):
+        import ast
+        tree = ast.parse((ROOT / "training/reproducibility_smoke.py").read_text())
+        assignments = [node for node in ast.walk(tree) if isinstance(node, ast.Assign)
+                       and any(isinstance(target, ast.Name) and target.id == "train_command"
+                               for target in node.targets)
+                       and isinstance(node.value, ast.List)]
+        values = [node.value for node in assignments[0].value.elts
+                  if isinstance(node, ast.Constant)]
+        self.assertIn("--synthetic-contract-test-only", values)
+        self.assertLess(values.index("--"), values.index("--synthetic-contract-test-only"))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
