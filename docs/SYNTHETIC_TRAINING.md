@@ -34,7 +34,44 @@ These are simulation parameters, not measured product coverage.
 
 ### Split semantics
 
-The domain renderer first creates independent base splits and then renders acoustic scenes. Decoded PCM leakage is audited across all four splits.
+The domain renderer audits all four base splits before creating any acoustic
+scene, even when a call renders only a subset. It then audits the rendered subset.
+Both stages are mandatory and their report hashes are retained in
+`domain-summary.json`. Different split seeds/noise cannot hide a shared original
+waveform or a known shared source family, speaker, reference audio, session or
+derivation family. The development and refinement callers recheck the rendered
+manifest immediately before consumption.
+
+Trainer TSV files keep their two-column format. Each rendered TSV has a
+`<manifest>.lineage.json` sidecar containing the exact manifest SHA256 and full,
+ordered source rows, including original labels and admission receipts. Auditing
+checks row count, order, paths and target IDs, then rereads both the rendered WAV
+and its pre-render source WAV to verify file and decoded-PCM identity. Source
+metadata and receipts also survive in `domain-index.jsonl` and evaluation
+references. Deleting, swapping or reusing a stale sidecar fails when
+`training/audit_dataset.py --require-lineage` is used.
+
+The standard-library helper
+`audit_dataset.verify_manifest_lineage(manifest, audio_root=None)` returns the
+full verified rows for training admission. It verifies the byte/manifest chain;
+the training consumer must separately validate review history, actual labels,
+reviewer/revision binding and permitted admission purpose.
+
+A clean audit means no violation among the identities observed. Per-field
+`identity_disjointness` and per-split `identity_coverage` explicitly report
+missing historical speaker/reference/session/derivation evidence as `unknown`.
+Provider names, synthesis engines and voice settings are not silently promoted
+to person or recording identity. A known `source_id` explicitly supplied as
+recording metadata remains an isolation requirement. These checks do not turn
+synthetic fixtures or historical diagnostic inputs into training-admitted or
+product-qualification evidence.
+
+Only deliberately synthetic algorithm tests may pass
+`--synthetic-contract-test-only` to `iterate_domain.py` or
+`adversarial_refinement.py`. The flag is forwarded explicitly to each CTC
+invocation, including repair; no config value or absent review receipt enables
+it automatically. The resulting checkpoints and descendants are non-promotable.
+Normal development/model-training runs retain reviewed admission by default.
 
 Training scenes remain weighted stochastic samples and can be reweighted by adaptive curriculum. Evaluation positives are deterministic:
 

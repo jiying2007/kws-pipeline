@@ -10,6 +10,7 @@ import struct
 import wave
 
 from acoustic_scene import render_scene, sha256_file
+from audit_dataset import audit_splits, inspect_wav, write_lineage_sidecar
 from development_stress import (
     apply_development_stress_scene,
     build_development_stress_plan,
@@ -607,6 +608,54 @@ def sample_scene(
     )
 
 
+def source_lineage(row: dict) -> dict:
+    """Bind the real pre-render bytes; never infer speaker identity from an engine."""
+    source = pathlib.Path(row["path"]).resolve(strict=True)
+    _, _, pcm_sha256 = inspect_wav(source)
+    wav_sha256 = sha256_file(source)
+    if row.get("wav_sha256") != wav_sha256:
+        raise ValueError(f"{source}: base WAV identity mismatch")
+    provenance = row.get("speech_like_provenance", {})
+    if not isinstance(provenance, dict):
+        raise ValueError(f"{source}: speech_like_provenance must be an object")
+    result = {
+        "source_path": str(source), "source_wav_sha256": wav_sha256,
+        "source_pcm_sha256": pcm_sha256,
+    }
+    if "pcm_sha256" in provenance:
+        if provenance["pcm_sha256"] != pcm_sha256:
+            raise ValueError(f"{source}: original source PCM identity mismatch")
+        result["original_pcm_sha256"] = provenance["pcm_sha256"]
+    for field in ("source_family_id", "speaker_id", "reference_audio_sha256",
+                  "session_id", "derivation_family_id"):
+        if field in row and field in provenance and row[field] != provenance[field]:
+            raise ValueError(f"{source}: conflicting {field} lineage")
+        if field in provenance:
+            result[field] = provenance[field]
+        elif field in row:
+            result[field] = row[field]
+    return result
+
+
+def _write_audit(report: dict, path: pathlib.Path, stage: str) -> None:
+    path.write_text(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True,
+                               allow_nan=False) + "\n", encoding="utf-8")
+    if not report["clean"]:
+        raise ValueError(f"{stage} dataset lineage audit failed; see {path}")
+
+
+def audit_rendered_dataset(
+    dataset: pathlib.Path, splits: tuple[str, ...], *, report_name: str = "audit.json",
+) -> dict:
+    """Recheck bound manifests immediately before a caller consumes the dataset."""
+    report = audit_splits(
+        [(split, dataset / f"{split}.tsv") for split in splits],
+        require_lineage=True, fail_within_split=True,
+    )
+    _write_audit(report, dataset / report_name, "post-render")
+    return report
+
+
 def render_domain_dataset(
     config_path: pathlib.Path,
     output: pathlib.Path,
@@ -668,6 +717,20 @@ def render_domain_dataset(
             "recordings": int(external_summary["recordings"]),
             "summary_sha256": base_dataset_summary_sha256,
         }
+    # Audit the entire base bundle, including held-out splits not rendered in
+    # this invocation. Split-specific augmentation must never conceal leakage.
+    base_rows = [{**row, **source_lineage(row)} for row in base_rows]
+    base_specs: list[tuple[str, pathlib.Path]] = []
+    for split in SPLITS:
+        audit_manifest = base_dir / f"{split}.lineage.jsonl"
+        audit_manifest.write_text(
+            "".join(json.dumps(row, ensure_ascii=False, sort_keys=True, allow_nan=False)
+                    + "\n" for row in base_rows if row["split"] == split), encoding="utf-8",
+        )
+        base_specs.append((split, audit_manifest))
+    pre_audit = audit_splits(base_specs, require_lineage=True)
+    pre_audit_path = base_dir / "audit.json"
+    _write_audit(pre_audit, pre_audit_path, "pre-render")
     seed = int(config.get("seed", 1337))
 
     development_stress_plans: dict[str, dict] = {}
@@ -786,6 +849,7 @@ def render_domain_dataset(
             ),
             encoding="utf-8",
         )
+        write_lineage_sidecar(manifest, rows_by_split[split])
         manifest_paths[split] = manifest
         if split == "train":
             continue
@@ -817,6 +881,12 @@ def render_domain_dataset(
             lines.append(
                 json.dumps(
                     {
+                        **{key: row[key] for key in (
+                            "speaker_id", "session_id", "source_id", "family_id",
+                            "source_family_id", "reference_audio_sha256", "derivation_family_id",
+                            "original_pcm_sha256", "source_path", "source_wav_sha256",
+                            "source_pcm_sha256", "wav_sha256", "speech_like_provenance", "admission",
+                        ) if key in row},
                         "recording": f"domain-{split}-{index:06d}",
                         "path": pathlib.Path(row["path"]).name,
                         "audio_path": row["path"],
@@ -866,8 +936,19 @@ def render_domain_dataset(
         }
         for split, plan in development_stress_plans.items()
     }
+    post_audit = audit_rendered_dataset(output, selected_splits)
     summary = {
         "schema_version": 3,
+        "lineage_audit": {
+            "policy": "source-and-rendered-split-isolation-v1",
+            "pre_render": {"path": str(pre_audit_path.resolve()),
+                           "sha256": sha256_file(pre_audit_path),
+                           "splits": list(pre_audit["splits"]), "clean": pre_audit["clean"]},
+            "post_render": {"path": str((output / "audit.json").resolve()),
+                            "sha256": sha256_file(output / "audit.json"),
+                            "splits": list(post_audit["splits"]), "clean": post_audit["clean"]},
+            "identity_disjointness": pre_audit["identity_disjointness"],
+        },
         "evidence_class": (
             "measured-rir-domain" if isinstance(rir_manifest, dict) else "synthetic-domain"
         ),
@@ -916,6 +997,9 @@ def render_domain_dataset(
                 "examples": len(rows_by_split[split]),
                 "manifest": str(manifest_paths[split]),
                 "manifest_sha256": sha256_file(manifest_paths[split]),
+                "lineage_sidecar": str(pathlib.Path(str(manifest_paths[split]) + ".lineage.json")),
+                "lineage_sidecar_sha256": sha256_file(
+                    pathlib.Path(str(manifest_paths[split]) + ".lineage.json")),
                 **(
                     {
                         "references": str(reference_paths[split]),

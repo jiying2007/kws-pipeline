@@ -40,6 +40,7 @@ def train(
 ) -> None:
     command = [
         sys.executable, str(ROOT / "training/train_ctc.py"),
+        "--synthetic-contract-test-only",
         "--manifest", str(manifest),
         "--tokens", str(ROOT / "keywords/tokens.example.txt"),
         "--keywords", str(ROOT / "keywords/zh_cn_example.tsv"),

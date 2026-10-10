@@ -41,6 +41,11 @@ struct kws_engine {
   uint32_t afe_latency_samples;
   uint8_t block_external_vad_valid;
   uint8_t afe_config_sha256[32];
+  float aligned_vad[KWS_FRAME_LENGTH_SAMPLES];
+  double aligned_vad_sum;
+  uint32_t aligned_vad_position;
+  uint32_t aligned_vad_fill;
+  uint32_t aligned_vad_valid;
   uint64_t debug_last_frame_number;
   uint64_t debug_last_frame_end_sample;
   uint8_t debug_last_frame_speech_active;
@@ -176,6 +181,10 @@ static void reset_algorithm_state(kws_engine_t *engine) {
   engine->suppress_until_sample = 0u;
   engine->block_external_vad_valid = 0u;
   engine->block_external_vad_probability = 0.0f;
+  engine->aligned_vad_sum = 0.0;
+  engine->aligned_vad_position = 0u;
+  engine->aligned_vad_fill = 0u;
+  engine->aligned_vad_valid = 0u;
   engine->debug_last_frame_number = 0u;
   engine->debug_last_frame_end_sample = 0u;
   engine->debug_last_frame_speech_active = 0u;
@@ -346,7 +355,8 @@ static kws_status_t validate_frame_metadata(const kws_frame_metadata_t *metadata
     return KWS_OK;
   }
   if (metadata->struct_size < sizeof(*metadata) ||
-      metadata->api_version != KWS_FRAME_METADATA_API_VERSION ||
+      (metadata->api_version != KWS_FRAME_METADATA_API_VERSION &&
+       metadata->api_version != KWS_FRAME_METADATA_ALIGNED_API_VERSION) ||
       (metadata->flags & ~all_flags) != 0u) {
     return KWS_EINVAL;
   }
@@ -412,6 +422,28 @@ static void apply_frame_metadata(kws_engine_t *engine,
          sizeof(engine->afe_config_sha256));
 }
 
+/* A fixed-size sample ring follows frontend overlap, independent of caller
+ * chunk boundaries. Double accumulation keeps float input probabilities exact
+ * at the common 0/1 and threshold fixtures without changing legacy decisions. */
+static void push_aligned_vad(kws_engine_t *engine, float probability) {
+  uint32_t position = engine->aligned_vad_position;
+  if (engine->aligned_vad_fill == KWS_FRAME_LENGTH_SAMPLES) {
+    float old = engine->aligned_vad[position];
+    if (old >= 0.0f) {
+      engine->aligned_vad_sum -= (double)old;
+      engine->aligned_vad_valid--;
+    }
+  } else {
+    engine->aligned_vad_fill++;
+  }
+  engine->aligned_vad[position] = probability;
+  if (probability >= 0.0f) {
+    engine->aligned_vad_sum += (double)probability;
+    engine->aligned_vad_valid++;
+  }
+  engine->aligned_vad_position = (position + 1u) % KWS_FRAME_LENGTH_SAMPLES;
+}
+
 kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
                                         const int16_t *samples,
                                         size_t sample_count,
@@ -435,12 +467,21 @@ kws_status_t kws_engine_accept_pcm16_ex(kws_engine_t *engine,
   apply_frame_metadata(engine, metadata);
 
   for (size_t i = 0u; i < sample_count; ++i) {
+    int aligned = metadata != NULL &&
+                  metadata->api_version == KWS_FRAME_METADATA_ALIGNED_API_VERSION;
+    push_aligned_vad(engine, aligned != 0 && engine->block_external_vad_valid != 0u
+                                ? engine->block_external_vad_probability : -1.0f);
     engine->processed_samples++;
     if (kws_frontend_push(&engine->frontend, samples[i],
                           engine->features) != 0) {
       int speech_active;
 
-      if (engine->block_external_vad_valid != 0u) {
+      if (aligned != 0 &&
+          engine->aligned_vad_valid == KWS_FRAME_LENGTH_SAMPLES) {
+        engine->external_vad_frames++;
+        speech_active = engine->aligned_vad_sum / (double)KWS_FRAME_LENGTH_SAMPLES >=
+                        (double)engine->config.external_vad_threshold;
+      } else if (aligned == 0 && engine->block_external_vad_valid != 0u) {
         engine->external_vad_frames++;
         speech_active = engine->block_external_vad_probability >=
                         engine->config.external_vad_threshold;

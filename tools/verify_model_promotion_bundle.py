@@ -14,6 +14,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
 from ctc_primary import normalize_label_prior_contract  # noqa: E402
+from training_admission import require_promotable_admission  # noqa: E402
 
 HEX = set("0123456789abcdef")
 PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"
@@ -195,6 +196,12 @@ def verify(args: argparse.Namespace) -> dict:
     }
 
     provenance = load_json(dist / "xiaowo-model-provenance.json", "model provenance")
+    admission = require_promotable_admission(provenance.get("training", {}).get("admission"))
+    admitted_manifests = [(row["name"], row["sha256"]) for row in admission["manifests"]]
+    actual_manifests = [(row.get("name"), row.get("sha256"))
+                        for row in provenance.get("training", {}).get("manifests", [])]
+    if admitted_manifests != actual_manifests:
+        raise ValueError("promotion manifest identities differ from training admission")
     if provenance.get("model", {}).get("sha256") != files["xiaowo-model.kwm"]["sha256"]:
         raise ValueError("model provenance SHA does not match promoted model.kwm")
     if provenance.get("checkpoint", {}).get("sha256") != files["xiaowo-model.pt"]["sha256"]:

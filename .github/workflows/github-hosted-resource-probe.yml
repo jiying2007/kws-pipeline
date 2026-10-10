@@ -9,6 +9,8 @@ on:
     paths:
       - '.github/workflows/github-hosted-resource-probe.yml'
       - 'tests/test_github_hosted_resource_probe.py'
+      # Source-screen planning requires a fresh observation, not model execution.
+      - 'research/source-screen32-v1/**'
 
 permissions: {}
 

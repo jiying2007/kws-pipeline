@@ -144,7 +144,7 @@ class RealTrainerReadbackTests(unittest.TestCase):
         cls.checkpoint = cls.root / "model.pt"
         cls.model = cls.root / "model.kwm"
         cls.zero = dict.fromkeys(AUXILIARY_LOSS_WEIGHT_NAMES, 0.0)
-        argv = ["train_ctc.py", "--manifest", str(manifest), "--tokens", str(cls.tokens),
+        argv = ["train_ctc.py", "--synthetic-contract-test-only", "--manifest", str(manifest), "--tokens", str(cls.tokens),
                 "--keywords", str(cls.keywords), "--output", str(cls.checkpoint),
                 "--feature-dim", "8", "--hidden-dim", "8", "--epochs", "1",
                 "--batch-size", "4", "--seed", "7", "--ordered-token-scope", "exact-configured-wake-targets-v1",

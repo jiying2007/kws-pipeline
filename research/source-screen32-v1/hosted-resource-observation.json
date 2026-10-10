@@ -1,0 +1,75 @@
+{
+  "cgroup": {
+    "scope": "visible_root_files_only_not_effective_process_limit",
+    "v1_cpu_period_us": "unknown",
+    "v1_cpu_quota_us": "unknown",
+    "v1_memory_limit_bytes": "unknown",
+    "v2_cpu_max": {
+      "period_us": "unknown",
+      "quota_us": "unknown"
+    },
+    "v2_memory_max_bytes": "unknown"
+  },
+  "cpu": {
+    "affinity_count": 4,
+    "affinity_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "affinity_ids_truncated": false,
+    "architecture": "x86_64",
+    "logical_count": 4
+  },
+  "distribution_metadata_scope": "current_interpreter_system_site_directories_without_pth_or_user_site",
+  "evidence_class": "hosted_resource_observation_only",
+  "identity": {
+    "event": "pull_request",
+    "head_sha": "e0392bb943df9795ab1854a4541ec9bb758bd958",
+    "run_attempt": 1,
+    "run_id": 36915231606,
+    "workflow_sha": "e7acb74ac0e4371abce87823609621df2c794989"
+  },
+  "installed_distributions": {
+    "numpy": {
+      "status": "not_installed",
+      "version": "unknown"
+    },
+    "onnxruntime": {
+      "status": "not_installed",
+      "version": "unknown"
+    },
+    "safetensors": {
+      "status": "not_installed",
+      "version": "unknown"
+    },
+    "torch": {
+      "status": "not_installed",
+      "version": "unknown"
+    },
+    "torchaudio": {
+      "status": "not_installed",
+      "version": "unknown"
+    },
+    "transformers": {
+      "status": "not_installed",
+      "version": "unknown"
+    }
+  },
+  "interpretation": "Fresh job measurements; metadata does not prove imports, wheel origin, model readiness, or model quality.",
+  "memory": {
+    "available_bytes": 15265845248,
+    "total_bytes": 16766418944
+  },
+  "root_filesystem_available_bytes": 92425285632,
+  "runner_image": {
+    "ImageOS": "ubuntu24",
+    "ImageVersion": "20260927.320.1"
+  },
+  "runtime": {
+    "glibc": "glibc 2.39",
+    "python": "3.12.3"
+  },
+  "schema": "kws.github-hosted-resource-probe.v1"
+}

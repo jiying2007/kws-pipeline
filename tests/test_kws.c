@@ -601,6 +601,62 @@ static void test_external_vad_threshold(void) {
   CHECK(stats.speech_frames == 0u);
 }
 
+/* Same per-sample VAD timeline under 160/320/irregular delivery. The first
+ * frame has 320 speech samples then 80 non-speech samples: v2 mean is speech,
+ * while the legacy completing-block decision is intentionally non-speech. */
+static void test_aligned_vad_chunks(void) {
+  _Alignas(max_align_t) uint8_t blob[512];
+  _Alignas(max_align_t) uint8_t arena[65536];
+  kws_model_t model;
+  int16_t pcm[320] = {0};
+  const size_t chunk_sizes[] = {160u, 320u, 73u};
+  const uint64_t expected_speech[] = {1u, 1u, 1u, 0u};
+  size_t bytes = make_test_model(blob, sizeof(blob));
+  CHECK(kws_model_open(blob, bytes, &model) == KWS_OK);
+  for (size_t run = 0u; run < 4u; ++run) {
+    kws_engine_t *engine = NULL;
+    kws_engine_stats_v2_t stats = {0};
+    kws_frame_metadata_t metadata = {0};
+    size_t position = 0u;
+    size_t step = run < 3u ? chunk_sizes[run] : 160u;
+    CHECK(kws_engine_init(arena, sizeof(arena), &model, NULL, &engine) == KWS_OK);
+    metadata.struct_size = sizeof(metadata);
+    metadata.api_version = run < 3u ? KWS_FRAME_METADATA_ALIGNED_API_VERSION :
+                                     KWS_FRAME_METADATA_API_VERSION;
+    metadata.flags = KWS_FRAME_EXTERNAL_VAD_VALID;
+    while (position < 1040u) {
+      size_t boundary = position < 320u ? 320u : 1040u;
+      size_t count = boundary - position;
+      if (count > step) count = step;
+      metadata.external_vad_probability = position < 320u ? 1.0f : 0.0f;
+      CHECK(kws_engine_accept_pcm16_ex(engine, pcm, count, &metadata, NULL, NULL) == KWS_OK);
+      position += count;
+    }
+    stats.struct_size = sizeof(stats);
+    stats.api_version = KWS_ENGINE_STATS_V2_API_VERSION;
+    CHECK(kws_engine_get_stats_v2(engine, &stats) == KWS_OK);
+    CHECK(stats.processed_frames == 3u);
+    CHECK(stats.external_vad_frames == 3u);
+    CHECK(stats.speech_frames == expected_speech[run]);
+
+    /* Reset discards VAD overlap. Missing VAD in even one sample forces frame
+     * energy fallback (silence here); a later complete valid frame recovers. */
+    CHECK(kws_engine_notify_discontinuity(engine, KWS_DISCONTINUITY_XRUN) == KWS_OK);
+    metadata.api_version = KWS_FRAME_METADATA_ALIGNED_API_VERSION;
+    metadata.external_vad_probability = 1.0f;
+    CHECK(kws_engine_accept_pcm16(engine, pcm, 1u, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_accept_pcm16_ex(engine, pcm, 320u, &metadata, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_accept_pcm16_ex(engine, pcm, 79u, &metadata, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_get_stats_v2(engine, &stats) == KWS_OK);
+    CHECK(stats.external_vad_frames == 3u);
+    CHECK(stats.speech_frames == expected_speech[run]);
+    CHECK(kws_engine_accept_pcm16_ex(engine, pcm, 320u, &metadata, NULL, NULL) == KWS_OK);
+    CHECK(kws_engine_get_stats_v2(engine, &stats) == KWS_OK);
+    CHECK(stats.external_vad_frames == 4u);
+    CHECK(stats.speech_frames == expected_speech[run] + 1u);
+  }
+}
+
 /* The int8 dot product is the only place the Cortex-A32 build takes a different
  * code path (NEON) from the hosted build. The zero-weight fixtures used
  * elsewhere cannot see it at all: every lane computes 0 * x. This test runs a
@@ -1089,6 +1145,7 @@ int main(void) {
   test_validation();
   test_metadata_and_build_identity();
   test_external_vad_threshold();
+  test_aligned_vad_chunks();
   test_weighted_kernel_inference();
   puts("kws_tests: ok");
   return 0;

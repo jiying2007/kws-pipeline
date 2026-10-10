@@ -23,6 +23,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`kws_feature_dump.c`](kws_feature_dump.c)
 - [`kws_posterior_dump.c`](kws_posterior_dump.c)
 - [`kws_raw_stream.c`](kws_raw_stream.c)
+- [`kws_timeline.h`](kws_timeline.h)
 - [`kws_trace_io.c`](kws_trace_io.c)
 - [`kws_trace_io.h`](kws_trace_io.h)
 - [`kws_trace_slice.c`](kws_trace_slice.c)
@@ -50,6 +51,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`materialize_speech_like_provider.py`](materialize_speech_like_provider.py)
 - [`run_speech_like_corpus_generation.py`](run_speech_like_corpus_generation.py)
 - [`speech_like_corpus_plan.py`](speech_like_corpus_plan.py)
+- [`speech_label_admission.py`](speech_label_admission.py) — Validate supplied actual-label review receipts; it does not authenticate a listener.
 - [`speech_like_vits_resample_adapter.py`](speech_like_vits_resample_adapter.py)
 - [`validate_speech_like_synthetic.py`](validate_speech_like_synthetic.py)
 - [`verify_speech_like_backend_bundle.py`](verify_speech_like_backend_bundle.py)

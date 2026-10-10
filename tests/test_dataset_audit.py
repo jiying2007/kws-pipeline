@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import copy
 import json
 import pathlib
 import struct
@@ -12,6 +13,11 @@ from qualification_fixture import write_wav
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 AUDITOR = ROOT / "training" / "audit_dataset.py"
+sys.path.insert(0, str(ROOT / "training"))
+from audit_dataset import (  # noqa: E402
+    audit_splits, inspect_wav, lineage_path, sha256_file,
+    verify_manifest_lineage, write_lineage_sidecar,
+)
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
@@ -45,7 +51,119 @@ def metadata_row(path: str, *, speaker: str, session: str, source: str) -> dict:
     }
 
 
+def test_bound_lineage_sidecars() -> None:
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        paths = {}
+        for index, name in enumerate(("source-a", "source-b", "render-a", "render-b")):
+            wav = root / f"{name}.wav"
+            write_wav(wav, seconds=1)
+            data = bytearray(wav.read_bytes())
+            data[-2:] = (index + 100).to_bytes(2, "little", signed=True)
+            wav.write_bytes(data)
+            paths[name] = wav
+
+        def record(name: str, source: str, family: str) -> dict:
+            source_path = paths[source]
+            return {
+                "path": str(paths[name]), "target_ids": [1, 2],
+                "wav_sha256": sha256_file(paths[name]),
+                "source_path": str(source_path),
+                "source_wav_sha256": sha256_file(source_path),
+                "source_pcm_sha256": inspect_wav(source_path)[2],
+                "source_family_id": family,
+                "speech_like_provenance": {"provider_kind": "offline-tts",
+                    "provider_name": "shared-engine", "source_id": "shared-engine-config"},
+                "admission": {"mode": "synthetic-fixture-v1", "ctc_training_allowed": False},
+            }
+
+        a = record("render-a", "source-a", "family-a")
+        b = record("render-b", "source-b", "family-b")
+        train, test = root / "train.tsv", root / "test.tsv"
+        train.write_text(a["path"] + "\t1 2\n", encoding="utf-8")
+        test.write_text(b["path"] + "\t1 2\n", encoding="utf-8")
+        write_lineage_sidecar(train, [a])
+        write_lineage_sidecar(test, [b])
+        specs = [("train", train), ("test", test)]
+        report = audit_splits(specs, require_lineage=True)
+        assert report["clean"]
+        assert report["identity_disjointness"]["source_pcm_sha256"] == "verified"
+        assert report["identity_disjointness"]["speaker_id"] == "unknown"
+        assert report["identity_disjointness"]["source_family_id"] == "verified"
+        assert report["clean_scope"] == "observed-identities-only"
+        assert report["splits"]["test"]["source_lineage_verified_rows"] == 1
+        assert len(report["splits"]["train"]["lineage_sidecar_sha256"]) == 64
+        assert verify_manifest_lineage(train) == [a]
+        jsonl = root / "train.jsonl"
+        jsonl.write_text(json.dumps(a) + "\n", encoding="utf-8")
+        assert verify_manifest_lineage(jsonl) == [a]
+
+        # New augmentation/noise gives distinct final PCM, but original PCM is
+        # still shared. Split-specific family names cannot conceal this leak.
+        leaked = record("render-b", "source-a", "family-b")
+        write_lineage_sidecar(test, [leaked])
+        report = audit_splits(specs, require_lineage=True)
+        assert report["cross_split_leaks"] == []
+        assert not report["clean"]
+        assert any(item["field"] == "source_pcm_sha256" for item in report["identity_violations"])
+        write_lineage_sidecar(test, [b])
+
+        for field, identity in (("source_family_id", "family-shared"),
+                                ("family_id", "ancestor-shared"),
+                                ("speaker_id", "person-a"), ("session_id", "session-a"),
+                                ("reference_audio_sha256", "a" * 64),
+                                ("derivation_family_id", "derivation-a")):
+            write_lineage_sidecar(train, [{**a, field: identity}])
+            write_lineage_sidecar(test, [{**b, field: identity}])
+            report = audit_splits(specs, require_lineage=True)
+            assert not report["clean"], field
+            assert any(item["field"] == field for item in report["identity_violations"])
+        write_lineage_sidecar(train, [a])
+        write_lineage_sidecar(test, [b])
+
+        def rejected(expected: str) -> None:
+            try:
+                verify_manifest_lineage(train)
+            except ValueError as exc:
+                assert expected in str(exc), str(exc)
+            else:
+                raise AssertionError(f"invalid lineage accepted: {expected}")
+
+        # The consumer sees exactly the target IDs covered by the sidecar.
+        original_tsv = train.read_text()
+        train.write_text(a["path"] + "\t2 1\n", encoding="utf-8")
+        rejected("manifest binding mismatch")
+        train.write_text(original_tsv, encoding="utf-8")
+        write_lineage_sidecar(train, [{**a, "target_ids": [2, 1]}])
+        rejected("row binding mismatch")
+        for invalid_targets in ([True, 2], [1.0, 2]):
+            write_lineage_sidecar(train, [{**a, "target_ids": invalid_targets}])
+            rejected("target_ids must be an integer list")
+        write_lineage_sidecar(train, [a, a])
+        rejected("row count mismatch")
+        write_lineage_sidecar(train, [a])
+
+        source_bytes = paths["source-a"].read_bytes()
+        paths["source-a"].write_bytes(source_bytes[:-2] + b"xx")
+        rejected("source WAV/PCM identity mismatch")
+        paths["source-a"].write_bytes(source_bytes)
+        rendered_bytes = paths["render-a"].read_bytes()
+        paths["render-a"].write_bytes(rendered_bytes[:-2] + b"xx")
+        rejected("rendered WAV hash mismatch")
+        paths["render-a"].write_bytes(rendered_bytes)
+
+        invalid = copy.deepcopy(a)
+        invalid["source_pcm_sha256"] = "b" * 64
+        write_lineage_sidecar(train, [invalid])
+        rejected("source WAV/PCM identity mismatch")
+        lineage_path(train).unlink()
+        rejected("source lineage is required")
+        unknown = audit_splits(specs)
+        assert unknown["identity_disjointness"]["source_pcm_sha256"] == "unknown"
+
+
 def main() -> int:
+    test_bound_lineage_sidecars()
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
         train_dir = root / "train"

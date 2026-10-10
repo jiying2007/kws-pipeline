@@ -91,7 +91,8 @@ class ProbeTests(unittest.TestCase):
         self.assertIn("    types: [opened, synchronize, reopened]\n", header)
         self.assertEqual(
             [line.strip() for line in header.splitlines() if line.strip().startswith("- '")],
-            ["- '.github/workflows/github-hosted-resource-probe.yml'", "- 'tests/test_github_hosted_resource_probe.py'"],
+            ["- '.github/workflows/github-hosted-resource-probe.yml'", "- 'tests/test_github_hosted_resource_probe.py'",
+             "- 'research/source-screen32-v1/**'"],
         )
         for forbidden in ("push:", "schedule:", "pull_request_target:", "uses:", "secrets.", "inputs.", "self-hosted", "matrix:"):
             self.assertNotIn(forbidden, header)

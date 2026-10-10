@@ -32,7 +32,7 @@ from frontend_spec import FRONTEND_IDS, FRONTEND_LOGMEL  # noqa: E402
 from hard_negative_replay import render_hard_negative_replay  # noqa: E402
 from feature_cached_trainer import feature_cache_max_items, rewrite_training_command  # noqa: E402
 from objective_config import optional_objective_cli_args  # noqa: E402
-from render_domains import render_domain_dataset  # noqa: E402
+from render_domains import audit_rendered_dataset, render_domain_dataset  # noqa: E402
 from synthetic_audio import load_config  # noqa: E402
 from wake_pressure_balance import (  # noqa: E402
     DEFAULT_POSITIVE_EXAMPLE_WEIGHT,
@@ -861,7 +861,10 @@ def build_torch(
     wake_balance: dict | None,
     warm_start_strategy: str,
     round_index: int,
+    synthetic_contract_test_only: bool = False,
 ) -> tuple[pathlib.Path, pathlib.Path]:
+    if not isinstance(synthetic_contract_test_only, bool):
+        raise ValueError("synthetic_contract_test_only must be boolean")
     checkpoint = output / "model.pt"
     model = output / "model.kwm"
     train = cfg.get("train", {})
@@ -921,6 +924,8 @@ def build_torch(
                 json.dumps(wake_balance["wake_keyword_weights"], sort_keys=True),
             ]
         )
+    if synthetic_contract_test_only:
+        command.append("--synthetic-contract-test-only")
     command.extend(optional_objective_cli_args(train))
     command.extend(warm_start_args(previous, warm_start_strategy))
     command = rewrite_training_command(command, feature_cache_max_items(train))
@@ -958,6 +963,8 @@ def main() -> int:
         action="store_true",
         help="emit compact round/final summaries instead of the full manifest on stdout",
     )
+    parser.add_argument("--synthetic-contract-test-only", action="store_true",
+                        help="explicit algorithm-fixture lane; checkpoints cannot be promoted")
     args = parser.parse_args()
     config_path = args.config.resolve()
     cfg = load_config(config_path)
@@ -1020,21 +1027,7 @@ def main() -> int:
             splits=("train", "calibration", "test"),
             train_seed_offset=acoustic_seed_offset,
         )
-        run(
-            [
-                sys.executable,
-                str(TRAINING / "audit_dataset.py"),
-                "--split",
-                f"train={dataset_dir / 'train.tsv'}",
-                "--split",
-                f"calibration={dataset_dir / 'calibration.tsv'}",
-                "--split",
-                f"test={dataset_dir / 'test.tsv'}",
-                "--report",
-                str(dataset_dir / "audit.json"),
-                "--fail-within-split",
-            ]
-        )
+        audit_rendered_dataset(dataset_dir, ("train", "calibration", "test"))
         replay = None
         base_failure_replay = None
         wake_balance = None
@@ -1164,6 +1157,7 @@ def main() -> int:
                         wake_balance=wake_balance,
                         warm_start_strategy=warm_start_strategy,
                         round_index=round_index,
+                        synthetic_contract_test_only=args.synthetic_contract_test_only,
                     )
                     provenance = pathlib.Path(str(model) + ".provenance.json")
                 calibrated, pack, cal_base, cal_domains = calibrate(

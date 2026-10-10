@@ -23,7 +23,10 @@ extern "C" {
 
 #define KWS_FRONTEND_LOGMEL 0u
 #define KWS_FRONTEND_PCEN_LITE 1u
+/* Version 1 preserves completing-block VAD semantics. Version 2 is opt-in:
+ * sample-aligned probability averaged over the complete 400-sample frame. */
 #define KWS_FRAME_METADATA_API_VERSION 1u
+#define KWS_FRAME_METADATA_ALIGNED_API_VERSION 2u
 #define KWS_ENGINE_STATS_V2_API_VERSION 1u
 #define KWS_BUILD_INFO_API_VERSION 1u
 
@@ -151,6 +154,16 @@ enum {
   KWS_FRAME_EXTERNAL_VAD_VALID = 1u << 4
 };
 
+/* Metadata describes every sample in this call, not a feature-frame callback.
+ * v1: external VAD on the completing block decides the frame (legacy).
+ * v2: mean VAD over all 400 samples decides the frame; if any sample lacks v2
+ * valid VAD, fall back to frame energy. Split at probability boundaries. Reset
+ * clears overlap/VAD history. No-metadata and v1 behavior is unchanged.
+ * Sequence/timestamp/config are telemetry here; an adapter must validate their
+ * continuity, declare gaps/config changes, and retain the raw/output mapping.
+ * end_sample and processed_samples count accepted output PCM, excluding losses;
+ * neither is a raw-capture timestamp or wall-clock callback latency.
+ * Changing metadata version/gating requires threshold recalibration. */
 typedef struct kws_frame_metadata {
   uint32_t struct_size;
   uint32_t api_version;

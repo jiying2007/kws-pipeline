@@ -1,0 +1,18 @@
+{
+  "research/qwen6_tts/plan.json": "1b0e7296877432ee24c6bf79d79573d78eda8f8f4277fd06edb9dba79cefac4c",
+  "research/qwen6_tts/generate_six.py": "25530b89fa3f58f44ceb8d3c2a8f26f3b37651c7173f62414dc96142919ea03e",
+  "research/qwen6_tts/runtime-lock.json": "6a707c2fa2c2ae8f842176a7f9c8301186d51fddef167c413160c7f2816613de",
+  "research/qwen6_tts/runtime_gate.py": "f4333b694bb1bc261e4bdeea6d586dc9f76b1afce6ce0af9dfcdb74d57d12815",
+  "research/qwen6_tts/import_preflight.py": "30cfe60347ccc6074d98a21406fccee3e3be5c54822aa8d874aae3655693ae1c",
+  "research/qwen6_tts/supervision.py": "9afb771c58febd574d1143c41daa7523cf1dea5c6a7f0424119d602423159b3f",
+  "research/qwen6_asr/model-locks.json": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
+  "research/qwen6_asr/runtime-lock.json": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
+  "research/qwen6_asr/core/asr6_contract.py": "d1c3368133e06a3de9758b23f136c3a37a74a63057f317ece863470ad0304b10",
+  "research/qwen6_asr/README.md": "01bea3649257c18ba19b45b6bb883b9d93999165f20123da9afdd234a1fe4429",
+  "research/firered_cpu_preflight/README.md": "75ed52862774b811df1c9124ebe4ebac88439815afa5316e3502339c98bbe6c4",
+  "research/native_a20_quality/inventory/existing-50.manifest.json": "276cf9c4e2b4bcb3b5b04cd51325694083e4084e273b3b7bb51799aaff66cd1d",
+  "research/experiment_quality_guards/quality_gates.py": "e9a0a838e134746bbd0fdd60aeff48ca9ad2963b721e3ea45bd0d8b45690b15d",
+  "research/experiment_quality_guards/fixtures/public_regressions.json": "930e033465728252e9db1307db1b30375be2079dfed97ada09dfe2bf0ddf5c78",
+  "research/consolidation/CURRENT_STATUS_2026-10-09.md": "3553f6e02f6030778d8a4d3aeff7356f401175865869f09557e18efb727bf8cf",
+  "research/source-screen32-v1/qwen-model-lock.json": "747562e07b4788bcae25c13004139048741e18f07f39eca291891010f459a25b"
+}

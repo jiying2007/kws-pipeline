@@ -5,7 +5,6 @@ import argparse
 import hashlib
 import json
 import pathlib
-import re
 import shutil
 import sys
 import wave
@@ -15,8 +14,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from attach_speech_like_labels import attach as attach_labels, normalize_label  # noqa: E402
 from corpus_identity import inspect_pcm16_wav  # noqa: E402
-
-SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
+from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, admission_from_reviews,
+                                    fixture_admission, latest_review, validate_review_record)  # noqa: E402
 
 POLICY = "speech-like-corpus-plan-v1"
 VOICE_CLASS = "speech-like-provider-voice-slot-v1"
@@ -304,44 +303,41 @@ def intent_key(group: str, row: dict) -> tuple[str, str, str, str, tuple[str, ..
     )
 
 
-def validate_audio_review(path: pathlib.Path, intent_map: dict, generated: dict) -> dict:
-    """Bind a human audio verdict to every planned recording and its WAV hash."""
-    reviews: dict[tuple[str, str], dict] = {}
-    reviewers: set[str] = set()
-    for index, row in enumerate(load_jsonl(path), 1):
-        if type(row.get("schema_version")) is not int or row["schema_version"] != 1 or row.get("evidence_class") != "speech-like-audio-review-v1":
-            raise ValueError(f"{path}:{index}: audio review identity mismatch")
-        if "keyword_id" not in row:
-            raise ValueError(f"{path}:{index}: audio review keyword_id is missing")
-        normalize_label({**row, "evidence_class": LABEL_CLASS}, f"{path}:{index}.review label")
-        source_id = require_text(row.get("source_id"), f"{path}:{index}.source_id")
-        file_sha = row.get("file_sha256")
-        if not isinstance(file_sha, str) or SHA256_RE.fullmatch(file_sha) is None:
-            raise ValueError(f"{path}:{index}: file_sha256 must be lowercase SHA-256")
-        key = (source_id, file_sha)
-        if key in reviews:
-            raise ValueError(f"{path}:{index}: duplicate audio review identity")
-        reviewers.add(require_text(row.get("reviewer_id"), f"{path}:{index}.reviewer_id"))
-        reviews[key] = row
-
-    expected: set[tuple[str, str]] = set()
+def _review_admissions(path: pathlib.Path, intent_map: dict, generated: dict) -> tuple[dict, dict]:
+    """Require complete supplied review histories and bind their latest actual labels."""
+    histories: dict[tuple[str, str], list[dict]] = {}
+    for row in load_jsonl(path):
+        validate_review_record(row)
+        histories.setdefault((row["source_id"], row["file_sha256"]), []).append(row)
+    expected = {(row["source_id"], row["file_sha256"]) for row in generated.values()}
+    if set(histories) != expected:
+        raise ValueError("audio review contains missing, unplanned or stale recordings")
+    admissions = {}
+    reviewers = set()
+    review_sha = sha256_file(path)
     for key, intent in intent_map.items():
         source = generated[key]
-        identity = (str(source["source_id"]), str(source["file_sha256"]))
-        expected.add(identity)
-        review = reviews.get(identity)
-        if review is None:
-            raise ValueError(f"audio review is missing for source_id={identity[0]}")
-        if (review.get("intended_text") != intent["text"]
-                or review.get("kind") != intent["kind"]
-                or review.get("keyword_id") != intent["keyword_id"]):
-            raise ValueError(f"audio review label differs from plan: source_id={identity[0]}")
-        if review.get("verdict") != "accepted":
-            raise ValueError(f"audio review is not accepted: source_id={identity[0]}")
-    if set(reviews) != expected:
-        raise ValueError("audio review contains unplanned or stale recordings")
-    return {"review_sha256": sha256_file(path), "recordings": len(reviews),
-            "reviewer_count": len(reviewers)}
+        identity = (source["source_id"], source["file_sha256"])
+        latest = latest_review(histories[identity])
+        if latest.get("intended_text") != intent["text"]:
+            raise ValueError(f"audio review intended_text differs from plan: source_id={identity[0]}")
+        if latest["pcm_sha256"] != source.get("pcm_sha256"):
+            raise ValueError("audio review pcm_sha256 mismatch")
+        for field in LINEAGE_FIELDS:
+            if field in source and source[field] != latest.get(field):
+                raise ValueError(f"audio review {field} differs from source metadata")
+        source_admission = source.get("admission")
+        if source_admission is not None:
+            if not isinstance(source_admission, dict) or source_admission.get("mode") != REAL_MODE:
+                raise ValueError("synthetic fixture recordings cannot promote to real training")
+        admissions[identity] = admission_from_reviews(histories[identity], review_sha)
+        reviewers.add(latest["reviewer_id"])
+    return admissions, {"review_sha256": review_sha, "recordings": len(histories),
+                        "reviewer_count": len(reviewers), "revision_policy": "latest-complete-supplied-history-v1"}
+
+
+def validate_audio_review(path: pathlib.Path, intent_map: dict, generated: dict) -> dict:
+    return _review_admissions(path, intent_map, generated)[1]
 
 
 def load_planned_recordings(intents_path: pathlib.Path, generated_root: pathlib.Path, *, planned_groups_only: bool = False) -> tuple[dict, dict, dict]:
@@ -398,10 +394,11 @@ def admit_reviewed_recordings(intents_path: pathlib.Path, generated_root: pathli
         intents_path, generated_root, planned_groups_only=True)
     if expected_count is not None and (expected_count < 1 or len(generated) != expected_count):
         raise ValueError("recording count differs from expected count")
-    review = validate_audio_review(audio_review, intent_map, generated)
+    admissions, review = _review_admissions(audio_review, intent_map, generated)
     seen_sources: set[str] = set()
     seen_pcm: set[str] = set()
     voice_splits: dict[str, str] = {}
+    lineage_owners: dict[tuple[str, str], str] = {}
     split_counts: dict[str, int] = {}
     for key, intent in intent_map.items():
         row = generated[key]
@@ -426,27 +423,62 @@ def admit_reviewed_recordings(intents_path: pathlib.Path, generated_root: pathli
         if inspected["pcm_sha256"] in seen_pcm:
             raise ValueError("duplicate decoded PCM in admitted batch")
         seen_pcm.add(inspected["pcm_sha256"])
+        receipt = latest_review(admissions[(source_id, row["file_sha256"])]["review_history"])
+        for field in LINEAGE_FIELDS:
+            if field in receipt:
+                identity = (field, receipt[field])
+                previous = lineage_owners.get(identity)
+                if previous is not None and previous != split:
+                    raise ValueError(f"{field} crosses splits")
+                lineage_owners[identity] = split
         split_counts[split] = split_counts.get(split, 0) + 1
-    return {"schema_version": 1, "evidence_class": "speech-like-reviewed-admission-v1",
+    return {"schema_version": 2, "evidence_class": "speech-like-reviewed-admission-v2",
+            "admission_mode": REAL_MODE, "ctc_training_allowed": True, "allowed_purpose": "ctc-training-only",
             "scope": "internal-development-only", "qualification_allowed": False,
             "intents_sha256": sha256_file(intents_path), "source_manifests": manifests,
             "audio_review": review, "recordings": len(generated), "split_counts": split_counts,
             "generator_family_independence_verified": False,
+            "review_history_globally_current_verified": False,
             "limits": ["Receipt binding does not independently prove listening or reviewer identity.",
+                       "Supplied history does not prove that no later revision exists in an external review catalog.",
                        "Provider IDs do not prove distinct model families or rights to source audio.",
                        "No product qualification or new holdout claim, including legacy qualification split names."]}
 
 
 def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
-                       output_root: pathlib.Path, *, audio_review: pathlib.Path | None = None) -> dict:
+                       output_root: pathlib.Path, *, audio_review: pathlib.Path | None = None,
+                       admission_mode: str = REAL_MODE) -> dict:
+    if admission_mode not in {REAL_MODE, FIXTURE_MODE}:
+        raise ValueError("new materialization must use reviewed-real-v1 or synthetic-fixture-v1")
+    if admission_mode == REAL_MODE and audio_review is None:
+        raise ValueError("mandatory human audio-review v2 is required for future training admission")
+    if admission_mode == FIXTURE_MODE and audio_review is not None:
+        raise ValueError("fixture lane cannot claim human review")
     admission = None
     if audio_review is not None:
         admission = admit_reviewed_recordings(intents_path, generated_root, audio_review)
     intent_map, generated, source_manifest_sha = load_planned_recordings(intents_path, generated_root)
+    admissions = _review_admissions(audio_review, intent_map, generated)[0] if audio_review else {}
     split_rows: dict[str, list[dict]] = {split: [] for split in SPLITS}
     split_labels: dict[str, list[dict]] = {split: [] for split in SPLITS}
     for key, intent in intent_map.items():
-        row = generated[key]
+        row = dict(generated[key])
+        if row.get("synthetic") is not True:
+            raise ValueError("speech-like materialization requires explicit synthetic=true")
+        actual_label = intent
+        if admission_mode == REAL_MODE:
+            row["admission"] = admissions[(row["source_id"], row["file_sha256"])]
+            receipt = latest_review(row["admission"]["review_history"])
+            actual_label = receipt
+            row["intended_text"] = row["text"]
+            row["intended_tokens"] = row["tokens"]
+            row["text"] = row["actual_text"] = receipt["actual_text"]
+            row["tokens"] = receipt["actual_tokens"]
+            for field in LINEAGE_FIELDS:
+                if field in receipt:
+                    row[field] = receipt[field]
+        else:
+            row["admission"] = fixture_admission()
         split = str(intent["split"])
         split_rows[split].append(row)
         split_labels[split].append(
@@ -456,9 +488,9 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
                 "voice_id": row["voice_id"],
                 "source_id": row["source_id"],
                 "file_sha256": row["file_sha256"],
-                "kind": intent["kind"],
-                "keyword_id": intent["keyword_id"],
-                "label_source": POLICY,
+                "kind": actual_label["kind"],
+                "keyword_id": actual_label["keyword_id"],
+                "label_source": "human-actual-transcript-v2" if admission_mode == REAL_MODE else "synthetic-fixture-plan-v1",
             }
         )
 
@@ -498,6 +530,8 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
     return {
         "schema_version": 1,
         "evidence_class": "speech-like-corpus-materialization-v1",
+        "admission_mode": admission_mode,
+        "ctc_training_allowed": admission_mode == REAL_MODE,
         "policy": POLICY,
         "intents_sha256": sha256_file(intents_path),
         "source_manifests": source_manifest_sha,
@@ -526,6 +560,7 @@ def main() -> int:
     materialize.add_argument("--summary", required=True, type=pathlib.Path)
 
     materialize.add_argument("--audio-review", type=pathlib.Path)
+    materialize.add_argument("--admission-mode", choices=(REAL_MODE, FIXTURE_MODE), default=REAL_MODE)
 
     admission = sub.add_parser("admit-reviewed", help="Read-only hash-bound admission of already-reviewed WAVs")
     admission.add_argument("--intents", required=True, type=pathlib.Path)
@@ -552,7 +587,8 @@ def main() -> int:
         return 0
 
     summary = materialize_labels(args.intents.resolve(), args.generated_root.resolve(), args.output_root.resolve(),
-                                 audio_review=args.audio_review.resolve() if args.audio_review else None)
+                                 audio_review=args.audio_review.resolve() if args.audio_review else None,
+                                 admission_mode=args.admission_mode)
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"speech-like corpus materialized: recordings={summary['recordings']}")

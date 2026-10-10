@@ -345,6 +345,7 @@ def main() -> int:
         }
 
     generator["external_base_dataset"] = split_spec
+    generator["external_base_admission_mode"] = "historical-frozen-diagnostic-v1"
     generator["tts"] = {
         "backend": "command",
         "command": resolved_command,
@@ -374,6 +375,9 @@ def main() -> int:
     effective["product_candidate_data"] = {
         "schema_version": 1,
         "policy": "external-speech-like-product-base-v1",
+        "admission_mode": "historical-frozen-diagnostic-v1",
+        "ctc_training_allowed": False,
+        "allowed_purpose": "historical-diagnostic-only",
         "release_tag": str(contract["release_tag"]),
         "source_repro_run_id": int(contract["source_repro_run_id"]),
         "source_repro_head_sha": str(contract["source_repro_head_sha"]),
@@ -412,7 +416,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(
-        "product training config: "
+        "historical diagnostic config (not admitted for new CTC training): "
         f"release={contract['release_tag']} bundle={expected_bundle} "
         f"provider={expected_provider}"
     )

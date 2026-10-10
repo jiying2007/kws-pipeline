@@ -4,9 +4,13 @@ from __future__ import annotations
 import pathlib
 import sys
 import tempfile
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
+
+import adversarial_refinement  # noqa: E402
+import iterate_domain  # noqa: E402
 
 from adversarial_refinement import (  # noqa: E402
     PRESSURE_ASSIGNMENT_POLICY,
@@ -87,7 +91,43 @@ def row(
     }
 
 
+def test_explicit_diagnostic_cli_forwarding() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = pathlib.Path(tmp)
+        for diagnostic in (False, True):
+            commands = []
+            # Even a config containing a similarly named field cannot enable
+            # this lane implicitly. Only the explicit typed argument may do so.
+            cfg = {"train": {"synthetic_contract_test_only": True}}
+            with mock.patch.object(iterate_domain, "run", side_effect=commands.append):
+                iterate_domain.build_torch(
+                    cfg=cfg, frontend="logmel", tokens=root / "tokens",
+                    keywords=root / "keywords", manifest=root / "manifest", output=root,
+                    previous=None, hard_negative_manifest=None, wake_balance=None,
+                    warm_start_strategy="full", round_index=0,
+                    synthetic_contract_test_only=diagnostic,
+                )
+            assert ("--synthetic-contract-test-only" in commands[0]) is diagnostic
+            assert "--synthetic-contract-test-only" not in commands[1]
+            commands.clear()
+            balance = {"positive_example_weight": 2.0, "default_wake_example_weight": 1.0,
+                       "wake_keyword_weights": {}}
+            with mock.patch.object(adversarial_refinement, "run", side_effect=commands.append), \
+                 mock.patch.object(adversarial_refinement, "derive_refinement_wake_balance", return_value=balance):
+                adversarial_refinement._train_refinement(
+                    cfg=cfg, frontend="logmel", tokens=root / "tokens", keywords=root / "keywords",
+                    dataset_manifest=root / "data", static_manifest=root / "static",
+                    adversarial_manifest=root / "adversarial", failure_manifest=None,
+                    focus_rows_by_manifest={}, warm_start=root / "warm.pt", output=root,
+                    epochs=1, lr_scale=0.5, refinement_round=2,
+                    synthetic_contract_test_only=diagnostic,
+                )
+            assert ("--synthetic-contract-test-only" in commands[0]) is diagnostic
+            assert "--synthetic-contract-test-only" not in commands[1]
+
+
 def main() -> int:
+    test_explicit_diagnostic_cli_forwarding()
     # Exact rounded operating-point shape from governed run 35447750283.
     # Round 2 wins the old zero-gate objective mainly by rejecting almost all
     # wakes. Refinement should instead start from the development checkpoint

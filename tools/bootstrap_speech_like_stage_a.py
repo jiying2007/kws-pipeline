@@ -285,9 +285,17 @@ def main() -> int:
     parser.add_argument("--work-dir", required=True, type=pathlib.Path)
     parser.add_argument("--assets-only", action="store_true")
     parser.add_argument("--provider-only", action="store_true")
+    parser.add_argument("--admission-mode", choices=("reviewed-real-v1", "synthetic-fixture-v1"), default="reviewed-real-v1")
+    parser.add_argument("--audio-review", type=pathlib.Path)
+    parser.add_argument("--generate-only", action="store_true")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--allow-file-urls", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.admission_mode == "synthetic-fixture-v1" and args.audio_review is not None:
+        raise ValueError("synthetic fixture lane cannot claim human review")
+    if (not args.assets_only and not args.provider_only and not args.generate_only
+            and args.admission_mode == "reviewed-real-v1" and args.audio_review is None):
+        raise ValueError("future real corpus bootstrap requires --audio-review or --generate-only before materialization")
     if args.assets_only and args.provider_only:
         raise ValueError("--assets-only and --provider-only are mutually exclusive")
 
@@ -561,6 +569,11 @@ def main() -> int:
         "--work-dir",
         str(corpus_work),
     ]
+    command.extend(["--admission-mode", args.admission_mode])
+    if args.audio_review is not None:
+        command.extend(["--audio-review", str(args.audio_review.resolve())])
+    if args.generate_only:
+        command.append("--generate-only")
     if backend_platform is not None:
         command.extend(
             [
@@ -599,6 +612,13 @@ def main() -> int:
             f"speech-like Stage A bootstrap: provider-ready candidate={candidate_name} "
             f"provider={provider}"
         )
+        return 0
+
+    if args.generate_only:
+        pending = load_object(corpus_work / "pending-review.json")
+        summary.update(status=pending["status"], ctc_training_allowed=False, pending_review=pending)
+        summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print("speech-like bootstrap: batch awaits human audio review; no training bundle")
         return 0
 
     corpus_manifest = corpus_work / "stage-a-base-bundle.json"

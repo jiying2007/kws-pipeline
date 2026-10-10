@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "plan_id": "effect-chain-iteration-2026-10-10",
+  "as_of": "2026-10-10",
+  "source_sha": "17e064bb122a0b620d360b88b71b8c50d7cacaff",
+  "scope": "bounded-research-plan-only",
+  "execution_enabled": false,
+  "automatic_phase_advancement": false,
+  "ci_pass_is_acoustic_or_shipping_approval": false,
+  "authority_paths": [
+    "configs/shipping.xiaowo.json",
+    "commercial/real-human-qualification.policy.json",
+    "commercial/target-qualification.policy.json",
+    "research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md"
+  ],
+  "observed_baseline": {
+    "scope": "dated-observations-not-a-new-qualification",
+    "model_release": "model-749187ec1d66",
+    "architecture": {
+      "kind": "tanh-rnn",
+      "input_features": 32,
+      "hidden_features": 64,
+      "outputs_including_blank": 5,
+      "model_file_bytes": 6812,
+      "weights": "int8",
+      "state_activation_accumulation": "float"
+    },
+    "d20": "FAIL",
+    "d90": "NOT_RUN",
+    "fixed50": "EVAL_INCONCLUSIVE_LABEL_SUPPORT",
+    "shipping_approved": false,
+    "nightly": {
+      "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38001706391",
+      "evidence_class": "hosted-synthetic-regression",
+      "false_accepts": 2,
+      "negative_hours": 8,
+      "far_per_hour": 0.25,
+      "far_upper95_per_hour": 0.786974
+    },
+    "original_fa": {
+      "saved_logits_available": true,
+      "saved_vad_available": true,
+      "complete_original_initial_state_available": false,
+      "causal_attribution": "UNKNOWN"
+    },
+    "real_human_final_afe_passed": false,
+    "physical_ssc305_passed": false,
+    "recalibration_required": true
+  },
+  "sequence": [
+    {
+      "id": "actual-label-and-pcm-lineage",
+      "requires": [],
+      "required_evidence": [
+        "reviewed-actual-pronunciation-and-event-label",
+        "source-file-and-decoded-pcm-sha256",
+        "parent-source-and-derived-pcm-sha256",
+        "transform-parameters-and-seed",
+        "sample-rate-real-sample-count-duration",
+        "speaker-voice-session-source-groups-and-split-role",
+        "rights-and-consent"
+      ],
+      "uncertain_or_conflicting_labels": "quarantine-not-automatic-negative",
+      "applies_to": "all downstream inputs including newly generated screening rows"
+    },
+    {
+      "id": "bounded-source-screen",
+      "requires": [
+        "actual-label-and-pcm-lineage"
+      ],
+      "spec_path": "research/source-screen32-v1/plan.json",
+      "max_candidates": 2,
+      "voices_per_candidate": 2,
+      "phrases_per_voice": 8,
+      "max_outputs": 32,
+      "regenerations": 0,
+      "checks": [
+        "resource-and-rights-admission",
+        "actual-pronunciation",
+        "native-bandwidth",
+        "voice-and-source-isolation",
+        "apply-label-and-pcm-lineage-to-every-output"
+      ],
+      "blocked_candidate_action": "retain-blocker-no-automatic-substitution-or-expansion",
+      "training_admitted": false,
+      "nearphone_policy": {
+        "phones": [
+          "wu",
+          "wa"
+        ],
+        "initial_role": "reviewed-no-wake-event-challenge",
+        "speech_as_blank_target": false,
+        "oov_as_wo1_target": false,
+        "default_vocabulary_change": false
+      }
+    },
+    {
+      "id": "original-failure-mechanism",
+      "requires": [
+        "bounded-source-screen"
+      ],
+      "required_evidence": [
+        "original-audio-and-model-source-identities",
+        "original-saved-logits-and-vad",
+        "original-frame-phase",
+        "complete-original-state-at-replay-start"
+      ],
+      "current_blocker": "complete-original-initial-state-missing",
+      "candidate_causes": [
+        "acoustic-or-quantization",
+        "frontend-or-vad",
+        "decoder-or-endpoint"
+      ],
+      "missing_state_verdict": "UNKNOWN",
+      "synthetic_or_cold_start_replay": "condition-specific-mechanism-only-not-original-state-causal-proof"
+    },
+    {
+      "id": "paired-two-seed-screen",
+      "requires": [
+        "original-failure-mechanism"
+      ],
+      "hypothesis": null,
+      "single_changed_variable": null,
+      "entry_requires": [
+        "frozen-evidence-supported-hypothesis",
+        "frozen-single-treatment",
+        "frozen-input-and-output-identities",
+        "all-data-admission-checks-passed",
+        "adequate-predeclared-word-and-slice-support",
+        "frozen-executable-source-data-and-development-seed-identities",
+        "reviewed-final-fixed-compute-budget"
+      ],
+      "arms": [
+        "control",
+        "treatment"
+      ],
+      "max_arms": 2,
+      "max_fits": 4,
+      "max_optimizer_updates_per_fit": 1000,
+      "fixed_except_declared_variable": [
+        "data-and-split",
+        "paired-seed-and-initialization",
+        "model-architecture-and-vocabulary",
+        "training-objective-and-other-loss-weights",
+        "optimizer-and-step-budget",
+        "sample-order-and-batching",
+        "checkpoint-selection-rule",
+        "quantization-and-export",
+        "c-runner",
+        "frontend-and-vad",
+        "decoder-and-endpoint-rules",
+        "keyword-pack-and-thresholds",
+        "scoring-and-exposure-rules"
+      ],
+      "acceptance": {
+        "comparison": "each paired seed versus its control",
+        "per_keyword_frr_delta_max": 0,
+        "continuous_negative_far_per_hour_delta_max": 0,
+        "predeclared_worst_slice_frr_delta_max": 0,
+        "each_predeclared_slice_frr_delta_max": 0,
+        "require_at_least_one_strict_improvement": true,
+        "require_coverage_and_exposure": true,
+        "uncertainty": "insufficient-support-is-inconclusive-not-pass",
+        "claim": "development-screen-not-statistical-or-product-victory"
+      },
+      "seed_slots": [
+        "development-screen-a",
+        "development-screen-b"
+      ],
+      "budget_status": "proposed-ceiling-not-validated-fair-convergence-budget"
+    },
+    {
+      "id": "third-seed-confirmation",
+      "requires": [
+        "paired-two-seed-screen"
+      ],
+      "arms": [
+        "control",
+        "treatment"
+      ],
+      "max_fits": 2,
+      "max_optimizer_updates_per_fit": 1000,
+      "same_recipe_and_acceptance": true,
+      "checkpoint_cherry_picking": false,
+      "seed_slots": [
+        "development-confirmation-c"
+      ],
+      "budget_status": "proposed-ceiling-not-validated-fair-convergence-budget"
+    },
+    {
+      "id": "development-recalibration",
+      "requires": [
+        "third-seed-confirmation"
+      ],
+      "data_role": "independent-development-calibration",
+      "final_qualification_data_consumption": false,
+      "freeze_after": [
+        "source",
+        "model",
+        "keyword-pack",
+        "afe",
+        "thresholds"
+      ],
+      "current_requirement_cleared_by_ci": false
+    },
+    {
+      "id": "fresh-human-final-afe",
+      "requires": [
+        "development-recalibration"
+      ],
+      "policy_path": "commercial/real-human-qualification.policy.json",
+      "fresh_unobserved_data": true,
+      "no_retry_policy_unchanged": true
+    },
+    {
+      "id": "physical-ssc305-and-shipping-review",
+      "requires": [
+        "fresh-human-final-afe"
+      ],
+      "policy_path": "commercial/target-qualification.policy.json",
+      "require_physical_multiple_duts": true,
+      "automatic_shipping_approval": false
+    }
+  ],
+  "stop_conditions": [
+    "any-keyword-or-predeclared-slice-regression",
+    "continuous-far-regression",
+    "insufficient-label-coverage-or-negative-exposure",
+    "identity-or-split-drift",
+    "ambiguous-or-contradictory-labels",
+    "missing-original-state-for-causal-claim",
+    "budget-exhausted",
+    "no-information-gain"
+  ],
+  "frozen_rejected_recipes": [
+    {
+      "recipe": "suffix-root",
+      "source": "research/consolidation/history/BRANCH_OUTCOMES.md#expvad-align-suffix-root-v2",
+      "sweep_allowed": false
+    },
+    {
+      "recipe": "label-prior",
+      "source": "research/consolidation/history/BRANCH_OUTCOMES.md#explabel-prior-primary-ctc-pair-v1-rerun1",
+      "sweep_allowed": false
+    }
+  ],
+  "unresolved_product_decision": {
+    "question": "Should complete wake words spoken by television or device playback trigger?",
+    "automatic_negative_label": false,
+    "blocks": "only labels or experiments depending on this semantic decision"
+  },
+  "diagnostic_only_slices": {
+    "charging_state": true,
+    "distance_m": [
+      3,
+      4,
+      5
+    ],
+    "official_policy_changed": false
+  },
+  "explicitly_not_executed": [
+    "source-generation",
+    "model-inference",
+    "training",
+    "recalibration",
+    "human-qualification",
+    "board-qualification"
+  ],
+  "excluded_scope": [
+    "runtime-or-training-implementation-in-this-plan",
+    "private-audio-or-weights-publication",
+    "credential-publication",
+    "historical-recipe-sweeps"
+  ],
+  "final_execution_preregistration": "PENDING",
+  "seed_policy": {
+    "namespace": "development-only",
+    "actual_seed_ids": null,
+    "seed_consumption_history": "must-verify-before-execution",
+    "formal_qualification_seeds_may_be_used": false,
+    "protected_seed_source": "configs/shipping.xiaowo.json:nightly_policy"
+  },
+  "controlled_variables_fixed_between_arms": [
+    "runtime",
+    "model-supply-chain",
+    "model-architecture",
+    "default-vocabulary",
+    "shipping-tuple",
+    "product-policy"
+  ]
+}

@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "kws_timeline.h"
+
 #define BLOCK_SAMPLES 160u
 
 int main(int argc, char **argv) {
@@ -22,23 +24,35 @@ int main(int argc, char **argv) {
   uint32_t wav_bytes = 0u;
   long wav_data_offset = 0L;
   uint32_t remaining;
-  int16_t pcm[BLOCK_SAMPLES];
+  int16_t pcm[KWS_MAX_PCM_BLOCK_SAMPLES];
+  const char *metadata_path = NULL;
+  FILE *timeline = NULL;
+  kws_timeline_span_t span = {0};
+  uint64_t output_samples = 0u;
+  uint64_t epoch = 0u;
+  size_t block_samples = BLOCK_SAMPLES;
   const char *stats_path = NULL;
   int exit_code = 1;
 
-  if (argc != 5 && argc != 7) {
-    fprintf(stderr,
-            "usage: %s model.kwm keywords.kwk audio.wav recording-id "
-            "[--stats-json path]\n",
-            argv[0]);
+  if (argc < 5 || (argc - 5) % 2 != 0) {
+    fprintf(stderr, "usage: %s model.kwm keywords.kwk audio.wav recording-id "
+            "[--stats-json path] [--metadata-tsv path] [--block-samples 1..320]\n", argv[0]);
     return 2;
   }
-  if (argc == 7) {
-    if (strcmp(argv[5], "--stats-json") != 0 || argv[6][0] == '\0') {
-      fprintf(stderr, "expected optional --stats-json path\n");
+  for (int i = 5; i < argc; i += 2) {
+    if (strcmp(argv[i], "--stats-json") == 0 && stats_path == NULL) {
+      stats_path = argv[i + 1];
+    } else if (strcmp(argv[i], "--metadata-tsv") == 0 && metadata_path == NULL) {
+      metadata_path = argv[i + 1];
+    } else if (strcmp(argv[i], "--block-samples") == 0) {
+      uint64_t value;
+      if (!timeline_uint(argv[i + 1], &value) || value == 0u ||
+          value > KWS_MAX_PCM_BLOCK_SAMPLES) return 2;
+      block_samples = (size_t)value;
+    } else {
+      fprintf(stderr, "unknown or duplicate option: %s\n", argv[i]);
       return 2;
     }
-    stats_path = argv[6];
   }
   if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||
       kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0) {
@@ -74,6 +88,13 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
 
+  if (metadata_path != NULL) {
+    timeline = fopen(metadata_path, "rb");
+    if (timeline == NULL || !timeline_validate(timeline, wav_bytes / 2u)) {
+      fprintf(stderr, "invalid AFE timeline (coverage/sequence/time/config): %s\n", metadata_path);
+      goto cleanup;
+    }
+  }
   remaining = wav_bytes;
   while (remaining != 0u) {
     size_t want_samples = (size_t)(remaining / 2u);
@@ -81,8 +102,14 @@ int main(int argc, char **argv) {
     kws_detection_t hit;
     int detected = 0;
 
-    if (want_samples > BLOCK_SAMPLES) {
-      want_samples = BLOCK_SAMPLES;
+    if (want_samples > block_samples) want_samples = block_samples;
+    if (timeline != NULL) {
+      if (output_samples == span.start + span.count) {
+        if (timeline_read(timeline, &span) != 1) goto cleanup;
+        if ((span.metadata.flags & KWS_FRAME_CLOCK_RESET) != 0u) epoch++;
+      }
+      if ((uint64_t)want_samples > span.start + span.count - output_samples)
+        want_samples = (size_t)(span.start + span.count - output_samples);
     }
     got_samples = fread(pcm, sizeof(pcm[0]), want_samples, wav);
     if (got_samples != want_samples) {
@@ -90,19 +117,39 @@ int main(int argc, char **argv) {
       goto cleanup;
     }
     remaining -= (uint32_t)(got_samples * sizeof(pcm[0]));
-    if (kws_engine_accept_pcm16(engine, pcm, got_samples, &hit, &detected) !=
-        KWS_OK) {
-      fprintf(stderr, "KWS runtime error\n");
-      goto cleanup;
+    {
+      kws_frame_metadata_t metadata = span.metadata;
+      if (timeline != NULL && output_samples != span.start) {
+        metadata.flags &= KWS_FRAME_EXTERNAL_VAD_VALID;
+        metadata.lost_samples = 0u;
+        metadata.capture_timestamp_ns += (output_samples - span.start) * UINT64_C(62500);
+      }
+      if (kws_engine_accept_pcm16_ex(engine, pcm, got_samples,
+              timeline != NULL ? &metadata : NULL, &hit, &detected) != KWS_OK) {
+        fprintf(stderr, "KWS runtime error\n");
+        goto cleanup;
+      }
     }
+    output_samples += got_samples;
     if (detected != 0) {
       fputs("{\"recording\":", stdout);
       kws_tool_print_json_string(stdout, argv[4]);
       fprintf(stdout,
-              ",\"keyword_id\":%u,\"time_s\":%.6f,\"confidence\":%.6f}\n",
+              ",\"keyword_id\":%u,\"time_s\":%.6f,\"confidence\":%.6f",
               hit.keyword_id,
               (double)hit.end_sample / (double)KWS_SAMPLE_RATE_HZ,
               (double)hit.confidence);
+      if (timeline != NULL) {
+        int64_t decision_ns = (int64_t)(span.metadata.capture_timestamp_ns +
+            (hit.end_sample - span.start) * UINT64_C(62500));
+        int64_t acoustic_ns = decision_ns -
+            (int64_t)span.metadata.afe_latency_samples * INT64_C(62500);
+        fprintf(stdout, ",\"timing_contract\":\"afe-timeline-v1\","
+                "\"output_end_sample\":%" PRIu64 ",\"capture_epoch\":%" PRIu64
+                ",\"decision_capture_ns\":%" PRId64 ",\"raw_acoustic_end_ns\":%" PRId64,
+                hit.end_sample, epoch, decision_ns, acoustic_ns);
+      }
+      fputs("}\n", stdout);
     }
   }
   if (stats_path != NULL) {
@@ -131,7 +178,10 @@ int main(int argc, char **argv) {
             "\"detections\":%" PRIu64 ","
             "\"pending_keyword_index\":%d,"
             "\"pending_age_frames\":%u,"
-            "\"max_detection_confidence\":%.9g}\n",
+            "\"max_detection_confidence\":%.9g,"
+            "\"external_vad_frames\":%" PRIu64 ","
+            "\"discontinuities\":%" PRIu64 ","
+            "\"lost_samples\":%" PRIu64 "}\n",
             stats.processed_samples,
             stats.processed_frames,
             stats.speech_frames,
@@ -141,7 +191,8 @@ int main(int argc, char **argv) {
             stats.detections,
             (int)stats.pending_keyword_index,
             (unsigned)stats.pending_age_frames,
-            (double)stats.max_detection_confidence);
+            (double)stats.max_detection_confidence,
+            stats.external_vad_frames, stats.discontinuities, stats.lost_samples);
     {
       int write_failed = ferror(stats_file) != 0;
       int close_failed = fclose(stats_file) != 0;
@@ -154,6 +205,7 @@ int main(int argc, char **argv) {
   exit_code = ferror(stdout) != 0 ? 1 : 0;
 
 cleanup:
+  if (timeline != NULL) fclose(timeline);
   if (wav != NULL) {
     fclose(wav);
   }

@@ -2,7 +2,11 @@
 
 All notable source-level changes are recorded here. A source/software version does **not** imply that a particular Mandarin wake-word SKU has passed acoustic or target-board qualification.
 
-## Unreleased
+## 0.4.0 — Unreleased
+
+- Require actual-label review receipts at new speech-base admission and CTC training consumption. Preserve source PCM/family identity through scene augmentation; explicit synthetic test checkpoints and unverified warm-start descendants are non-promotable. Supplied reviews are consistency evidence, not independently authenticated human listening.
+- Add opt-in sample-aligned external-VAD replay and explicit raw/output timing while retaining the existing metadata v1 and no-metadata behavior. Report signed word-end offsets separately from historical non-negative latency gates. New behavior requires fresh calibration; no acoustic or SSC305 qualification is claimed.
+- Freeze the next bounded effect-chain research plan and source-screen budget. Software versioning does not publish a release or change the frozen shipping model, thresholds, D20 FAIL or D90 NOT_RUN.
 
 - Document and regress the existing interaction between grace windows and the twelfth inactive-frame reset. Remove unused inference top-token work and reuse the validated-logit scan without changing decoder policy or public ABI; no target-board performance gain is claimed.
 - Bind posterior replay caches to the actual producer executable SHA and reject unidentified legacy cache entries. Cache hits retain the recorded producer identity; decoder/keyword-only changes can still reuse compatible posterior traces.

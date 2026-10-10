@@ -30,17 +30,25 @@ jobs:
           root="$RUNNER_TEMP/external-base"
           mkdir -p "$root"
           ROOT="$root" python3 - <<'PY'
-          import hashlib, json, os, pathlib
+          import hashlib, json, os, pathlib, struct, sys, wave
+          sys.path.insert(0, 'tools')
+          from materialize_speech_like_base_index import corpus_sha
+          from speech_label_admission import fixture_admission
           root = pathlib.Path(os.environ['ROOT'])
           splits = ['train','calibration','test','qualification']
           cfg = {
               'schema_version':1,
               'tokens':'keywords/tokens.example.txt',
               'keywords':'keywords/zh_cn_example.tsv',
-              'generator':{'external_base_dataset':{}},
+              'generator':{'external_base_admission_mode':'synthetic-fixture-v1','external_base_dataset':{}},
           }
           for i, split in enumerate(splits):
-              wav = hashlib.sha256(f'wav-{split}'.encode()).hexdigest()
+              pcm = struct.pack('<1600h', *([1000+i]*1600))
+              audio = root/f'{split}.wav'
+              with wave.open(str(audio), 'wb') as writer:
+                  writer.setparams((1,2,16000,0,'NONE','not compressed'))
+                  writer.writeframes(pcm)
+              wav = hashlib.sha256(audio.read_bytes()).hexdigest()
               row = {
                   'split':split,'kind':'positive' if split != 'qualification' else 'background',
                   'family_id':f'{split}-0','variant':0,'keyword_id':1 if split != 'qualification' else None,
@@ -48,11 +56,11 @@ jobs:
                   'target_ids':[1,2,3,4] if split != 'qualification' else [],
                   'wav_sha256':wav,'frames':1600,'event_start_frame':100 if split != 'qualification' else None,
                   'event_end_frame':1400 if split != 'qualification' else None,
-                  'path':f'/immutable/{split}.wav',
+                  'path':str(audio), 'admission':fixture_admission(),
                   'speech_like_provenance':{
                       'provider_kind':'offline-tts','provider_name':'fixture','provider_version':'1',
                       'license_id':'fixture-test-only','voice_id':f'voice-{split}','source_id':f'source-{split}',
-                      'generation_config_sha256':'a'*64,'label_provenance_sha256':'b'*64,'pcm_sha256':'c'*64,
+                      'generation_config_sha256':'a'*64,'label_provenance_sha256':'b'*64,'pcm_sha256':hashlib.sha256(pcm).hexdigest(),
                   },
               }
               index = root / f'{split}.jsonl'
@@ -62,7 +70,8 @@ jobs:
                   'schema_version':1,'evidence_class':'speech-like-base-dataset-v1','split':split,
                   'recordings':1,'positive_recordings':0 if split == 'qualification' else 1,
                   'negative_recordings':1 if split == 'qualification' else 0,
-                  'corpus_sha256':hashlib.sha256(split.encode()).hexdigest(),'tone_backend_used':False,
+                  'corpus_sha256':corpus_sha([row]),'tone_backend_used':False,
+                  'admission_mode':'synthetic-fixture-v1','ctc_training_allowed':False,'audio_path_contract':'absolute-v1',
               }, sort_keys=True)+'\n')
               cfg['generator']['external_base_dataset'][split] = {
                   'index':index.name,'summary':summary.name,
@@ -113,12 +122,18 @@ jobs:
           set -euo pipefail
           root="$RUNNER_TEMP/external-base"
           ROOT="$root" python3 - <<'PY'
-          import hashlib, json, os, pathlib
+          import hashlib, json, os, pathlib, sys
+          sys.path.insert(0, 'tools')
+          from materialize_speech_like_base_index import corpus_sha
           root = pathlib.Path(os.environ['ROOT'])
           cfg = json.loads((root/'config.json').read_text())
           p = root/'test.jsonl'; row = json.loads(p.read_text()); row['speech_like_provenance']['voice_id'] = 'voice-train'
           p.write_text(json.dumps(row, sort_keys=True)+'\n')
           cfg['generator']['external_base_dataset']['test']['index_sha256'] = hashlib.sha256(p.read_bytes()).hexdigest()
+          summary_path = root/'test.summary.json'
+          summary = json.loads(summary_path.read_text()); summary['corpus_sha256'] = corpus_sha([row])
+          summary_path.write_text(json.dumps(summary, sort_keys=True)+'\n')
+          cfg['generator']['external_base_dataset']['test']['summary_sha256'] = hashlib.sha256(summary_path.read_bytes()).hexdigest()
           (root/'overlap.json').write_text(json.dumps(cfg))
           PY
           if python3 training/external_base_dataset.py --config "$root/overlap.json"; then

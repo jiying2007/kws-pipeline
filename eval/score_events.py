@@ -17,6 +17,8 @@ else:
 UINT32_MAX = 0xFFFFFFFF
 DEFAULT_PRE_TOLERANCE_MS = 150.0
 DEFAULT_POST_TOLERANCE_MS = 500.0
+AFE_TIMING_CONTRACT = "afe-output-sample-v1"
+AFE_SAMPLE_RATE_HZ = 16000
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -134,6 +136,25 @@ def validate_recordings(rows: list[dict]) -> dict[str, dict]:
             raise ValueError(f"{name}: duration_s must be > 0")
         if not isinstance(expected, list):
             raise ValueError(f"{name}: expected must be a list")
+        timing_contract = row.get("timing_contract")
+        latency_samples = None
+        if timing_contract is not None:
+            if timing_contract != AFE_TIMING_CONTRACT:
+                raise ValueError(f"{name}: unsupported timing_contract: {timing_contract}")
+            latency_samples = row.get("afe_latency_samples")
+            if (isinstance(latency_samples, bool)
+                    or not isinstance(latency_samples, int)
+                    or latency_samples < 0):
+                raise ValueError(
+                    f"{name}: afe_latency_samples must be a non-negative integer"
+                )
+            # This contract fixes both raw and output coordinates at 16 kHz.
+            if row.get("sample_rate_hz", AFE_SAMPLE_RATE_HZ) != AFE_SAMPLE_RATE_HZ:
+                raise ValueError(f"{name}: {AFE_TIMING_CONTRACT} requires 16000 Hz")
+            try:
+                latency_s = latency_samples / AFE_SAMPLE_RATE_HZ
+            except OverflowError as exc:
+                raise ValueError(f"{name}: AFE latency must be finite") from exc
         normalized: list[dict] = []
         for index, event in enumerate(expected):
             if not isinstance(event, dict):
@@ -153,6 +174,23 @@ def validate_recordings(rows: list[dict]) -> dict[str, dict]:
                 "start_s": start,
                 "end_s": end,
             }
+            if timing_contract == AFE_TIMING_CONTRACT:
+                raw_start = finite_float(
+                    event["raw_start_s"], f"{name}: expected[{index}].raw_start_s"
+                )
+                raw_end = finite_float(
+                    event["raw_end_s"], f"{name}: expected[{index}].raw_end_s"
+                )
+                if raw_start < 0.0 or raw_end < raw_start:
+                    raise ValueError(f"{name}: invalid raw expected window")
+                if not (
+                    math.isclose(start, raw_start + latency_s,
+                                 rel_tol=0.0, abs_tol=1.0e-9)
+                    and math.isclose(end, raw_end + latency_s,
+                                     rel_tol=0.0, abs_tol=1.0e-9)
+                ):
+                    raise ValueError(f"{name}: raw/output timing mapping mismatch")
+                normalized_event.update(raw_start_s=raw_start, raw_end_s=raw_end)
             if match_not_before is not None:
                 match_not_before = finite_float(
                     match_not_before,
@@ -172,6 +210,9 @@ def validate_recordings(rows: list[dict]) -> dict[str, dict]:
                 normalized, key=lambda item: (item["start_s"], item["end_s"])
             ),
         }
+        if timing_contract == AFE_TIMING_CONTRACT:
+            recordings[name].update(timing_contract=timing_contract,
+                                    afe_latency_samples=latency_samples)
     if not recordings:
         raise ValueError("reference file contains no recordings")
     return recordings
@@ -247,6 +288,18 @@ def validate_detections(
             raise ValueError(f"{name}: detection time_s out of range: {time_s}")
         if confidence < 0.0 or confidence > 1.0:
             raise ValueError(f"{name}: detection confidence must be in [0,1]")
+        if (recordings[name].get("timing_contract") == AFE_TIMING_CONTRACT
+                and row.get("timing_contract") == "afe-timeline-v1"):
+            output_end = row.get("output_end_sample")
+            decision_ns = row.get("decision_capture_ns")
+            raw_ns = row.get("raw_acoustic_end_ns")
+            if (any(type(value) is not int for value in (output_end, decision_ns, raw_ns))
+                    or row.get("capture_epoch") != 0
+                    or decision_ns != output_end * 62500
+                    or raw_ns != decision_ns - recordings[name]["afe_latency_samples"] * 62500
+                    or not math.isclose(time_s, output_end / AFE_SAMPLE_RATE_HZ,
+                                        rel_tol=0.0, abs_tol=0.00000051)):
+                raise ValueError(f"{name}: detection timeline conflicts with constant-delay references")
         by_recording[name].append(
             {
                 "recording": name,
@@ -350,6 +403,13 @@ def score(
     false_rejects: list[dict] = []
     false_accepts: list[dict] = []
     latency_ms: list[float] = []
+    signed_end_offset_ms: list[float] = []
+    raw_signed_end_offset_ms: list[float] = []
+    timing_recordings = sum(
+        item.get("timing_contract") == AFE_TIMING_CONTRACT
+        for item in recordings.values()
+    )
+    complete_afe_timing = timing_recordings == len(recordings)
     by_keyword: dict[int, dict[str, int]] = defaultdict(
         lambda: {
             "expected": 0,
@@ -393,6 +453,13 @@ def score(
                 latency_ms.append(
                     max(0.0, (detection["time_s"] - event["end_s"]) * 1000.0)
                 )
+                signed_end_offset_ms.append(
+                    (detection["time_s"] - event["end_s"]) * 1000.0
+                )
+                if complete_afe_timing:
+                    raw_signed_end_offset_ms.append(
+                        (detection["time_s"] - event["raw_end_s"]) * 1000.0
+                    )
 
         for event_index, event in enumerate(events):
             if event_index not in matched_events:
@@ -474,8 +541,30 @@ def score(
         "negative_recording_far_policy": "negative-only-recordings-poisson-upper-v1",
         "p50_post_end_latency_ms": percentile(latency_ms, 0.50),
         "p95_post_end_latency_ms": percentile(latency_ms, 0.95),
+        "p50_signed_end_offset_ms": percentile(signed_end_offset_ms, 0.50),
+        "p95_signed_end_offset_ms": percentile(signed_end_offset_ms, 0.95),
+        "early_detection_count": sum(value < 0.0 for value in signed_end_offset_ms),
+        "timing_coordinates": {
+            "scope": "post-afe-output" if complete_afe_timing else "reference",
+            "afe_contract_recordings": timing_recordings,
+            "total_recordings": len(recordings),
+            "raw_metrics_available": complete_afe_timing,
+        },
         "per_keyword": per_keyword,
     }
+    if complete_afe_timing:
+        summary["timing_coordinates"].update(
+            contract=AFE_TIMING_CONTRACT,
+            sample_rate_hz=AFE_SAMPLE_RATE_HZ,
+            matched_events=matched_total,
+            raw_scope="raw-capture-end-to-decision; includes declared AFE delay",
+        )
+        for label, values in (("post_afe", signed_end_offset_ms),
+                              ("raw_capture", raw_signed_end_offset_ms)):
+            for quantile, probability in ((50, 0.50), (95, 0.95)):
+                summary[f"p{quantile}_{label}_signed_end_offset_ms"] = (
+                    percentile(values, probability) if values else None
+                )
     return summary, false_accepts, false_rejects
 
 

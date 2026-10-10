@@ -263,6 +263,144 @@ def run_score(references: pathlib.Path, detections: pathlib.Path, summary: pathl
     )
 
 
+def signed_timing_cli_cases(root):
+    """Timing contracts use synthetic JSON rows only; no fixtures or audio runner."""
+    references = [dict(
+        recording="timing", duration_s=8.0, timing_contract="afe-output-sample-v1",
+        afe_latency_samples=320,
+        expected=[dict(keyword_id=1, start_s=start + .02, end_s=end + .02,
+                       raw_start_s=start, raw_end_s=end)
+                  for start, end in ((1., 2.), (3., 4.), (5., 6.))],
+    )]
+    detections = [dict(recording="timing", keyword_id=1, time_s=time, confidence=.9)
+                  for time in (1.82, 4.02, 6.12)]
+    calls = 0
+
+    def invoke(refs=references, dets=detections, *, extra=(), code=0, error=""):
+        nonlocal calls
+        calls += 1
+        case = root / ("signed-timing-" + str(calls))
+        case.mkdir()
+        reference_path, detection_path = case / "references.jsonl", case / "detections.jsonl"
+        for path, rows in ((reference_path, refs), (detection_path, dets)):
+            path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        summary_path = case / "summary.json"
+        result = subprocess.run(
+            [sys.executable, str(SCORER), "--references", str(reference_path),
+             "--detections", str(detection_path), "--summary", str(summary_path), *extra],
+            capture_output=True, text=True, check=False,
+        )
+        assert result.returncode == code, (calls, result.stdout, result.stderr)
+        assert "Traceback" not in result.stderr, result.stderr
+        assert error in result.stderr, result.stderr
+        if code == 2:
+            assert not summary_path.exists(), "invalid timing contract must not produce a score"
+            return None
+        return json.loads(summary_path.read_text(encoding="utf-8"))
+
+    def near(actual, expected):
+        assert abs(actual - expected) < 1.e-9, (actual, expected)
+
+    def no_raw_metrics(report):
+        assert not any("raw_capture" in key or "post_afe" in key for key in report)
+        assert report["timing_coordinates"]["raw_metrics_available"] is False
+
+    report = invoke(extra=("--max-p95-latency-ms", "100"))
+    assert report["matched"] == 3 and report["early_detection_count"] == 1
+    assert report["false_accepts"] == report["false_rejects"] == 0
+    for key, expected in (
+        ("p50_post_end_latency_ms", 0.), ("p95_post_end_latency_ms", 90.),
+        ("p50_signed_end_offset_ms", 0.), ("p95_signed_end_offset_ms", 90.),
+        ("p50_post_afe_signed_end_offset_ms", 0.),
+        ("p95_post_afe_signed_end_offset_ms", 90.),
+        ("p50_raw_capture_signed_end_offset_ms", 20.),
+        ("p95_raw_capture_signed_end_offset_ms", 110.),
+    ):
+        near(report[key], expected)
+    assert report["timing_coordinates"] == dict(
+        scope="post-afe-output", afe_contract_recordings=1, total_recordings=1,
+        raw_metrics_available=True, contract="afe-output-sample-v1",
+        sample_rate_hz=16000, matched_events=3,
+        raw_scope="raw-capture-end-to-decision; includes declared AFE delay",
+    )
+    invoke(extra=("--max-p95-latency-ms", "50"), code=1, error="gate failed: p95 latency")
+    early = invoke(dets=detections[:1], extra=("--max-p95-latency-ms", "0"))
+    near(early["p50_signed_end_offset_ms"], -200.)
+    near(early["p95_signed_end_offset_ms"], -200.)
+    near(early["p95_raw_capture_signed_end_offset_ms"], -180.)
+    assert early["p95_post_end_latency_ms"] == 0.
+    assert early["early_detection_count"] == 1
+
+    empty = invoke(dets=[])
+    assert empty["matched"] == empty["early_detection_count"] == 0
+    assert empty["p95_signed_end_offset_ms"] == empty["p95_post_end_latency_ms"] == 0.
+    assert empty["p95_raw_capture_signed_end_offset_ms"] is None
+    assert empty["p50_post_afe_signed_end_offset_ms"] is None
+    invoke(dets=[], extra=("--max-p95-latency-ms", "0"), code=1,
+           error="latency has no matched events")
+
+    # Unmarked historic references must neither infer nor validate raw timing.
+    legacy = copy.deepcopy(references)
+    legacy[0].pop("timing_contract")
+    for event in legacy[0]["expected"]:
+        event.update(raw_start_s="unverified", raw_end_s="unverified")
+    old = invoke(legacy)
+    no_raw_metrics(old)
+    assert old["timing_coordinates"]["afe_contract_recordings"] == 0
+    for key in ("expected", "matched", "false_accepts", "false_rejects", "frr", "far_per_hour",
+                "per_keyword", "p50_post_end_latency_ms", "p95_post_end_latency_ms",
+                "p50_signed_end_offset_ms", "p95_signed_end_offset_ms", "early_detection_count"):
+        assert old[key] == report[key], key
+    mixed = invoke(references + [dict(recording="negative", duration_s=8., expected=[])])
+    no_raw_metrics(mixed)
+    assert mixed["timing_coordinates"]["afe_contract_recordings"] == 1
+    assert mixed["timing_coordinates"]["total_recordings"] == 2
+    missing_positive = copy.deepcopy(legacy[0])
+    missing_positive["recording"] = "unmarked-positive"
+    no_raw_metrics(invoke(references + [missing_positive]))
+
+    zero_delay = copy.deepcopy(references)
+    zero_delay[0]["afe_latency_samples"] = 0
+    for event in zero_delay[0]["expected"]:
+        event.update(raw_start_s=event["start_s"], raw_end_s=event["end_s"])
+    zero = invoke(zero_delay)
+    near(zero["p95_raw_capture_signed_end_offset_ms"], zero["p95_signed_end_offset_ms"])
+    negative = invoke([dict(recording="negative", duration_s=1., expected=[],
+                            timing_contract="afe-output-sample-v1", afe_latency_samples=0)], [])
+    assert negative["timing_coordinates"]["raw_metrics_available"] is True
+    assert negative["p95_raw_capture_signed_end_offset_ms"] is None
+
+    for key, value, error in (
+        ("timing_contract", "unknown", "unsupported timing_contract"),
+        ("afe_latency_samples", None, "non-negative integer"),
+        ("afe_latency_samples", True, "non-negative integer"),
+        ("afe_latency_samples", -1, "non-negative integer"),
+        ("afe_latency_samples", 320.0, "non-negative integer"),
+        ("afe_latency_samples", "320", "non-negative integer"),
+        ("afe_latency_samples", 321, "timing mapping mismatch"),
+        ("sample_rate_hz", 8000, "requires 16000 Hz"),
+    ):
+        invalid = copy.deepcopy(references)
+        invalid[0][key] = value
+        invoke(invalid, code=2, error=error)
+    for key, value, error in (
+        ("raw_start_s", -1., "invalid raw expected window"),
+        ("raw_start_s", 3., "invalid raw expected window"),
+        ("raw_start_s", 1.001, "timing mapping mismatch"),
+        ("raw_end_s", 2.001, "timing mapping mismatch"),
+        ("raw_start_s", float("nan"), "must be finite"),
+        ("raw_end_s", float("inf"), "must be finite"),
+    ):
+        invalid = copy.deepcopy(references)
+        invalid[0]["expected"][0][key] = value
+        invoke(invalid, code=2, error=error)
+    for key in ("raw_start_s", "raw_end_s"):
+        invalid = copy.deepcopy(references)
+        invalid[0]["expected"][0].pop(key)
+        invoke(invalid, code=2, error=key)
+    print("test_eval signed timing CLI cases:", calls, "ok (synthetic rows only)")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--context-fixtures", type=pathlib.Path,
@@ -643,6 +781,7 @@ def main() -> int:
         assert completed.returncode == 2
         assert "finite" in completed.stderr
 
+        signed_timing_cli_cases(root)
         context_cli_cases(root, args.context_fixtures)
         fixture_preparation_cases(root, args.context_fixtures)
 
