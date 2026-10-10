@@ -7,6 +7,13 @@
 > 开始；公开证据交付见[归档与恢复](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。
 > 产品机器权威仍为 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`。
 
+## 2026-10-10：并行候选审查入口
+
+新增 [并行优化评审](KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md) 与独立的
+[metadata-only 候选计划](../configs/research/parallel-candidate-screen-2026-10-10.json)，
+审查新训同数据 RNN64、因果 DS-TCN 与条件性因果 FSMN，以及标签、AFE、流式评估和资源缺口。
+它们没有运行新实验、改变产品 tuple 或替代下节的单因素效果链计划；实际执行仍需各自完整准入。
+
 ## 2026-10-10：本轮效果链路的最小执行顺序
 
 本节是当前有界改进计划；第 0–10 节的历史架构探索许可不扩展本轮范围。

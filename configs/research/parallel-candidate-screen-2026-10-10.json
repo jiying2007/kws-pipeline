@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "plan_id": "parallel-candidate-screen-2026-10-10",
+  "as_of": "2026-10-10",
+  "scope": "research-plan-metadata-only",
+  "source_sha": "5144df99a9273e28d33677d856bce10d813c8be0",
+  "source_tree": "b6f8400bf6e8c15f961089bf5072e152507a2555",
+  "supersedes": null,
+  "execution_enabled": false,
+  "automatic_phase_advancement": false,
+  "automatic_shipping_approval": false,
+  "authority_paths": [
+    "configs/shipping.xiaowo.json",
+    "commercial/real-human-qualification.policy.json",
+    "commercial/target-qualification.policy.json",
+    "configs/training/kws-v2-efficient-encoder-closure-v1.json",
+    "research/d20-diagnostic-admission-v1/PLAN-SCHEMA.md",
+    "research/experiment_quality_guards/admit_dataset.py",
+    "training/training_admission.py"
+  ],
+  "retained_plan_path": "configs/research/effect-chain-iteration-2026-10-10.json",
+  "historical_anchor": {
+    "model_release": "model-749187ec1d66",
+    "architecture": "tanh-rnn-32x64x5",
+    "role": "frozen-regression-anchor-only",
+    "matched_control": false,
+    "d20": "FAIL",
+    "d20_scope": "existing-native-a20-route-only",
+    "d90": "NOT_RUN",
+    "original_fa_causal_claim": false,
+    "missing_original_state_blocks": "original-fa-causal-attribution-only",
+    "shipping_approved": false
+  },
+  "candidates": [
+    {
+      "id": "rnn64_control",
+      "role": "matched-control",
+      "architecture": "tanh-rnn-32x64x5",
+      "execution_enabled": false,
+      "train_from_scratch": true,
+      "pretrained_weights_imported": false,
+      "shared_frontend_required": true,
+      "right_context_frames": 0,
+      "architecture_config_sha256": null,
+      "implementation_source_sha": null,
+      "training_recipe_sha256": null,
+      "resource_plan_sha256": null,
+      "source": {
+        "repository": "https://github.com/jiying2007/kws-pipeline",
+        "commit": "5144df99a9273e28d33677d856bce10d813c8be0",
+        "paths": [
+          "training/model.py",
+          "training/train_ctc.py",
+          "LICENSE"
+        ],
+        "code_license": "Apache-2.0",
+        "code_license_basis": "repository-LICENSE-notice",
+        "weights_license": "NOT_APPLICABLE_NO_IMPORT",
+        "training_data_license": "PENDING"
+      },
+      "gates": {
+        "design_review": "PENDING",
+        "actual_label_and_pcm_admission": "NOT_RUN",
+        "causal_cache_and_chunk_equivalence": "NOT_RUN",
+        "candidate_c_export_parity": "NOT_RUN",
+        "resource_admission": "PENDING",
+        "paired_development_comparison": "NOT_RUN"
+      },
+      "blockers": [
+        "same-admitted-data-retraining-not-yet-preregistered",
+        "existing-frozen-checkpoint-is-not-a-matched-training-control"
+      ],
+      "per_seed_initialization_sha256": null,
+      "per_seed_thresholds_sha256": null
+    },
+    {
+      "id": "causal_ds_tcn_ctc",
+      "role": "primary-challenger",
+      "architecture": "reduced-causal-depthwise-temporal-ctc",
+      "execution_enabled": false,
+      "train_from_scratch": true,
+      "pretrained_weights_imported": false,
+      "shared_frontend_required": true,
+      "right_context_frames": 0,
+      "architecture_config_sha256": null,
+      "implementation_source_sha": null,
+      "training_recipe_sha256": null,
+      "resource_plan_sha256": null,
+      "source": {
+        "repository": "https://github.com/wenet-e2e/wekws",
+        "commit": "6a45aeb994dd81c0969ff877a5a7c46d60ed0c86",
+        "paths": [
+          "wekws/model/tcn.py",
+          "examples/hi_xiaowen/s0/conf/ds_tcn_ctc.yaml",
+          "LICENSE"
+        ],
+        "code_license": "Apache-2.0",
+        "code_license_basis": "repository-LICENSE-notice",
+        "weights_license": "NOT_APPLICABLE_NO_IMPORT",
+        "training_data_license": "PENDING"
+      },
+      "gates": {
+        "design_review": "PENDING",
+        "actual_label_and_pcm_admission": "NOT_RUN",
+        "causal_cache_and_chunk_equivalence": "NOT_RUN",
+        "candidate_c_export_parity": "NOT_RUN",
+        "resource_admission": "PENDING",
+        "paired_development_comparison": "NOT_RUN"
+      },
+      "blockers": [
+        "published-256-channel-40-bin-recipe-is-reference-only",
+        "reduced-width-32-bin-causal-cache-adapter-not-implemented",
+        "own-c-export-and-chunk-equivalence-not-established"
+      ],
+      "per_seed_initialization_sha256": null,
+      "per_seed_thresholds_sha256": null
+    },
+    {
+      "id": "causal_fsmn_ctc",
+      "role": "conditional-challenger",
+      "architecture": "bounded-zero-lookahead-fsmn-ctc",
+      "execution_enabled": false,
+      "train_from_scratch": true,
+      "pretrained_weights_imported": false,
+      "shared_frontend_required": true,
+      "right_context_frames": 0,
+      "architecture_config_sha256": null,
+      "implementation_source_sha": null,
+      "training_recipe_sha256": null,
+      "resource_plan_sha256": null,
+      "source": {
+        "repository": "https://github.com/modelscope/FunASR",
+        "commit": "e7e61293d308f4342ab9307895e710e4b51b949c",
+        "paths": [
+          "funasr/models/fsmn_kws/encoder.py",
+          "funasr/models/fsmn_kws/model.py",
+          "LICENSE"
+        ],
+        "code_license": "MIT",
+        "code_license_basis": "repository-LICENSE-notice",
+        "weights_license": "NOT_APPLICABLE_NO_IMPORT",
+        "training_data_license": "PENDING"
+      },
+      "gates": {
+        "design_review": "PENDING",
+        "actual_label_and_pcm_admission": "NOT_RUN",
+        "causal_cache_and_chunk_equivalence": "NOT_RUN",
+        "candidate_c_export_parity": "NOT_RUN",
+        "resource_admission": "PENDING",
+        "paired_development_comparison": "NOT_RUN"
+      },
+      "blockers": [
+        "conditional-slot-not-an-admitted-third-arm",
+        "frontend-and-all-layers-must-have-zero-right-context",
+        "own-bounded-cache-chunk-equivalence-and-c-export-not-established",
+        "upstream-encoder-is-building-block-not-always-on-framewise-product"
+      ],
+      "per_seed_initialization_sha256": null,
+      "per_seed_thresholds_sha256": null
+    }
+  ],
+  "comparison_contract": {
+    "changed_axis": "architecture-only",
+    "factorial_sweep_allowed": false,
+    "original_fa_reconstruction_required": false,
+    "pretrained_system_references_in_matched_ranking": false,
+    "fixed_between_arms": [
+      "admitted-data-and-group-splits",
+      "vocabulary-and-frontend",
+      "training-objective",
+      "paired-seed-sample-order",
+      "optimizer-and-checkpoint-selection-policy",
+      "predeclared-budget-and-tuning-allowance",
+      "quantization-policy",
+      "decoder-and-endpoint-policy",
+      "metric-scoring-and-exposure-rules",
+      "paired-augmentation-and-data-exposure",
+      "chunk-context-lookahead-and-callback-timestamp-semantics",
+      "development-calibration-data-rule-grid-budget-and-target-far"
+    ],
+    "architecture_specific_initialization": "paired-seed-deterministic-construction-record-shape-specific-state-hashes-no-identical-weight-claim",
+    "final_preregistration": "PENDING",
+    "frozen_identities": {
+      "executable_source_sha": null,
+      "training_manifest_sha256": null,
+      "actual_label_receipts_sha256": null,
+      "decoded_pcm_manifest_sha256": null,
+      "group_split_sha256": null,
+      "vocabulary_sha256": null,
+      "frontend_sha256": null,
+      "decoder_policy_sha256": null,
+      "seed_consumption_history_sha256": null,
+      "budget_policy_sha256": null,
+      "metric_policy_sha256": null,
+      "sample_exposure_policy_sha256": null,
+      "checkpoint_selection_policy_sha256": null,
+      "calibration_policy_sha256": null,
+      "development_calibration_manifest_sha256": null,
+      "development_selection_manifest_sha256": null
+    },
+    "calibration_policy": "same-independent-development-data-method-grid-budget-target-far-per-arm-threshold-frozen-before-selection",
+    "identical_numeric_threshold_required": false,
+    "required_candidate_specification": [
+      "exact-layer-dimensions-kernels-dilations-strides",
+      "frontend-vocabulary-frame-hop-output-stride-identities",
+      "per-layer-cache-shape-dtype-reset-and-discontinuity-semantics",
+      "weight-activation-accumulator-dtypes-and-quantization",
+      "weights-bias-scales-state-scratch-and-frontend-ring-bytes",
+      "macs-per-frame-and-audio-second-plus-non-mac-costs",
+      "framewise-step-logits-state-interface-and-export-format",
+      "measured-cpu-latency-memory-null-until-target-evidence"
+    ]
+  },
+  "data_contract": {
+    "actual_labels_and_decoded_pcm_required": true,
+    "uncertain_labels": "quarantine",
+    "speech_as_blank_negative_allowed": false,
+    "required_lineage": [
+      "source-file-and-decoded-pcm-sha256",
+      "parent-source-and-transform-parameters-and-seed",
+      "actual-pronunciation-and-event-label-review",
+      "sample-rate-real-sample-count-duration",
+      "speaker-voice-session-source-family-groups",
+      "rights-consent-code-weights-data-licenses"
+    ],
+    "selection_role": "independent-development-selection",
+    "calibration_role": "independent-development-calibration",
+    "group_isolation_required": true,
+    "protected_final_heldout_used_for_selection": false,
+    "protected_final_heldout_shared_across_candidates": false,
+    "final_evaluation": "fresh-unobserved-human-final-afe-after-single-candidate-freeze",
+    "policy_dependent_playback_labels": "PENDING-user-product-decision",
+    "oov_nearphone_role": "reviewed-event-no-wake-scoring-only-no-blank-or-wo1-training-target",
+    "vocabulary_extension_in_screen": false,
+    "development_afe": "proxy-not-final-afe-qualification"
+  },
+  "seed_policy": {
+    "namespace": "development-only",
+    "screen_seed_ids": null,
+    "confirmation_seed_ids": null,
+    "paired_across_arms": true,
+    "formal_qualification_seeds_allowed": false,
+    "reuse_consumed_seeds_allowed": false
+  },
+  "budget": {
+    "status": "PROPOSED_CEILING_NOT_FAIR_CONVERGENCE_PROOF",
+    "max_screen_arms": 3,
+    "max_screen_seeds": 2,
+    "max_screen_fits": 6,
+    "max_confirmation_challengers": 1,
+    "max_confirmation_seeds": 1,
+    "max_confirmation_fits": 2,
+    "max_total_fits": 8,
+    "max_optimizer_updates_per_fit": 1000,
+    "max_concurrent_fits": 2,
+    "wall_clock_limit_s": null,
+    "peak_rss_limit_mib": null,
+    "budget_and_convergence_review": "PENDING",
+    "blocked_arm_action": "retain-blocker-no-substitution-no-expansion",
+    "sample_exposure_limit": null,
+    "compute_limit_per_fit": null,
+    "per_candidate_schedule_sha256": null,
+    "later_verifier_fits_included": false
+  },
+  "selection": {
+    "verdict": "NOT_RUN",
+    "selected_candidate_id": null,
+    "claim": "development-comparison-only",
+    "required_metrics": [
+      "per-keyword-frr-with-counts",
+      "continuous-negative-far-and-exposure-and-upper95",
+      "each-predeclared-slice-frr-with-support",
+      "worst-predeclared-slice-frr",
+      "trigger-latency-distribution",
+      "peak-memory-and-compute-cost"
+    ],
+    "each_paired_seed_must_pass": true,
+    "noninferiority_policy": "predeclare-each-keyword-slice-far-latency-and-resource-limits-before-execution",
+    "strict_improvement_required": true,
+    "insufficient_support_verdict": "INCONCLUSIVE",
+    "unknown_evidence_verdict": "UNKNOWN",
+    "tie_or_tradeoff_action": "retain-original-baseline-no-automatic-winner",
+    "multiple_comparisons": "screen-at-most-two-challengers-confirm-at-most-one-on-fresh-third-seed",
+    "no_checkpoint_cherry_picking": true,
+    "original_baseline_retained": true,
+    "latency_semantics": "word-end-to-callback-on-continuous-stream-not-clip-presence-or-eof-flush"
+  },
+  "later_trigger_verifier": {
+    "in_first_screen": false,
+    "execution_enabled": false,
+    "orthogonal_after_encoder_selection": true,
+    "requires": [
+      "separate-frozen-plan-and-budget",
+      "trigger-conditioned-frr-and-far-accounting",
+      "bounded-cache-and-worst-case-trigger-rate-cost",
+      "own-c-export-and-target-parity"
+    ]
+  },
+  "readiness": {
+    "execution_ready": false,
+    "input_authenticity_verified": false,
+    "numerical_admission": false,
+    "product_qualified": false,
+    "shipping_approved": false
+  },
+  "excluded_execution": [
+    "source-generation",
+    "training",
+    "inference",
+    "asr",
+    "tts",
+    "numerical-benchmark",
+    "resource-probe",
+    "model-runtime-implementation",
+    "recalibration",
+    "qualification",
+    "workflow-dispatch",
+    "shipping-modification"
+  ],
+  "stop_conditions": [
+    "identity-or-group-split-drift",
+    "label-conflict-or-insufficient-support",
+    "candidate-resource-or-parity-failure",
+    "any-predeclared-keyword-slice-far-latency-regression",
+    "budget-exhausted",
+    "no-information-gain"
+  ]
+}

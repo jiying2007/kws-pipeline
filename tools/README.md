@@ -58,6 +58,16 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`verify_speech_like_backend_bundle.py`](verify_speech_like_backend_bundle.py)
 - [`verify_speech_like_runtime_bundle.py`](verify_speech_like_runtime_bundle.py)
 
+## Disabled research plan metadata
+
+- [`validate_parallel_candidate_plan.py`](validate_parallel_candidate_plan.py) checks the
+  closed, disabled [`parallel candidate plan`](../configs/research/parallel-candidate-screen-2026-10-10.json).
+  It reads JSON only, never authenticates source/data/license claims, and always reports
+  execution, numerical admission and shipping readiness as false. Pending identities,
+  seeds and budgets require a separately reviewed executable preregistration; this
+  checker is not an execution gate. The earlier fixed-architecture effect-chain plan
+  is retained unchanged. No model, probe, training or qualification command is added.
+
 ## Diagnostics, replay and comparisons
 
 - [`build_decoder_boundary_product_references.py`](build_decoder_boundary_product_references.py)

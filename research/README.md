@@ -10,6 +10,8 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
+**2026-10-10 parallel candidate review:** [Evidence-based optimization review](../docs/KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md) and [disabled candidate plan](../configs/research/parallel-candidate-screen-2026-10-10.json) separate a fresh same-data RNN64 control, causal DS-TCN and conditional causal FSMN from the historical shipping anchor. The proposed 6+2 fit ceiling is not a run permit, a verified fair budget or a measured result. Original-FA causal attribution, native-A20 admission, actual-label/PCM data admission and final product gates retain their own boundaries.
+
 **2026-10-10 retained public source-screen result:** [Completed SenseVoice continuation and full joint table](source-screen32-v1/evidence/run-38021467257/README.md).
 The existing 16 WAVs now have both recognizers' outputs: 13/16 transcripts agree,
 but only 8/16 pairs match the intended phrase; 5 agree on a different phrase and
