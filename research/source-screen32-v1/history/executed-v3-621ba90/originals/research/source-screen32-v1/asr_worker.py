@@ -374,7 +374,6 @@ def run(model, input_root, output_root, runtime_root):
     prepare_caches()
     pins = verify_sources()
     helpers, evidence = import_helpers()
-    import sense_adapter
     job, job_raw, decoder_raw = bind_inputs(input_root)
     output_root = Path(output_root)
     require(not output_root.is_symlink() and output_root.is_dir(), "Output directory")
@@ -389,14 +388,12 @@ def run(model, input_root, output_root, runtime_root):
     contract_sha = retain("contract.json", declaration)
     retain("blind-job.json", job)
     retain("decoder-inputs.json", decode(decoder_raw, 1024**2))
-    retain("source-identity.json", {"files": pins, "scientific_loader_bodies": "AST-identical; bounded _preload only",
-           "source_specific_sense_adapter_sha256": digest(read_regular(HERE / "sense_adapter.py", 65536))})
+    retain("source-identity.json", {"files": pins, "scientific_loader_bodies": "AST-identical; bounded _preload only"})
     retain("scope.json", scope)
     outcomes = [{"opaque_id": row["audio_id"], "wav_sha256": row["wav_sha256"], "status": "not_run", "raw_text": None,
                  "completeness": "unknown", "quality_flags": [], "execution_receipt_sha256": None} for row in job["clips"]]
     retain("outcomes.initial.json", outcomes)
     attempted, failure, started = 0, None, time.monotonic()
-    diagnostic_state = {"stage": "runtime_verification", "model_inference_returned": False if model == "sensevoice" else None}
     try:
         if not outcomes:
             retain("not-run.json", {"status": "empty_generated_subset", "model_constructions": 0, "decode_attempts": 0})
@@ -409,18 +406,14 @@ def run(model, input_root, output_root, runtime_root):
             from setup_adapter import verify_runtime
             verify_runtime(runtime_root, "asr")
             loader = load_qwen_after_approval if model == "qwen06" else load_sense_after_approval
-            infer = helpers.infer_qwen_once_after_approval if model == "qwen06" else sense_adapter.infer_sense_once_after_approval
-            model_root = Path(runtime_root).absolute() / "models" / model
-            diagnostic_state["stage"] = "model_loading"
+            infer = helpers.infer_qwen_once_after_approval if model == "qwen06" else helpers.infer_sense_once_after_approval
             retain("model-load-started.json", {"model": model_identity, "execution_contract_sha256": contract_sha})
-            loaded = loader(str(model_root), lock["asset_lock"], lock["asset_lock_sha256"],
+            loaded = loader(str(Path(runtime_root) / "models" / model), lock["asset_lock"], lock["asset_lock_sha256"],
                             lock["source_lock"], lock["source_lock_sha256"], declaration, contract_sha, decoder_raw)
             retain("model-load.json", loaded.receipt)
             inputs = validate_decoder(decoder_raw, digest(decoder_raw))
             for index, outcome in enumerate(outcomes):
-                diagnostic_state = {"stage": "scope_verification", "model_inference_returned": False if model == "sensevoice" else None}
                 verify_scope()
-                diagnostic_state["stage"] = "input_binding"
                 oid = outcome["opaque_id"]
                 descriptor = inputs[oid]["descriptor"]
                 bound = bind_wave(str((Path(input_root) / "audio").absolute()), WaveExpectation(oid,
@@ -435,14 +428,8 @@ def run(model, input_root, output_root, runtime_root):
                 signal.setitimer(signal.ITIMER_REAL, 300)
                 began = time.monotonic()
                 forward_completed = False
-                diagnostic_state = {"stage": "adapter_dispatch", "model_inference_returned": False if model == "sensevoice" else None}
                 try:
-                    if model == "sensevoice":
-                        row, raw_evidence = infer(loaded, bound, digest(decoder_raw), model_root, diagnostic_state)
-                        raw_evidence = dict(raw_evidence, source_specific_diagnostic=dict(diagnostic_state))
-                    else:
-                        row, raw_evidence = infer(loaded, bound, digest(decoder_raw))
-                    diagnostic_state["stage"] = "adapter_result"
+                    row, raw_evidence = infer(loaded, bound, digest(decoder_raw))
                     require(type(row) is dict and set(row) == {"raw_text", "completeness", "quality_flags"}, "Adapter result")
                     require(type(row["raw_text"]) is str and len(row["raw_text"]) <= 32768
                             and row["completeness"] in ("complete", "incomplete", "unknown") and type(row["quality_flags"]) is list
@@ -451,8 +438,7 @@ def run(model, input_root, output_root, runtime_root):
                     forward_completed = True
                 except Exception as exc:
                     completed = dict(outcome, status="timeout" if isinstance(exc, ClipDeadline) else "error")
-                    raw_evidence = {"exception_type": type(exc).__name__, "forward_completion_confirmed": False,
-                                    "diagnostic": sense_adapter.failure_details(exc, diagnostic_state)}
+                    raw_evidence = {"exception_type": type(exc).__name__, "forward_completion_confirmed": False}
                 finally:
                     signal.setitimer(signal.ITIMER_REAL, 0)
                     signal.signal(signal.SIGALRM, previous)
@@ -471,8 +457,7 @@ def run(model, input_root, output_root, runtime_root):
                     break
     except Exception as exc:
         failure = {"exception_type": type(exc).__name__, "decode_attempts": attempted,
-                   "remaining_outputs": "not_run", "retries": 0,
-                   "diagnostic": sense_adapter.failure_details(exc, diagnostic_state)}
+                   "remaining_outputs": "not_run", "retries": 0}
         retain("stage-failure.json", failure)
     finally:
         retain("outcomes.json", outcomes)
