@@ -180,7 +180,7 @@ through a separately reviewed, bounded orchestration delta, leaving old evidence
 and source pins intact. CPU fit and runtime compatibility remain NOT_RUN.
 
 
-## Reviewed next execution path, still unexecuted
+## Prepared execution path, model execution still unproven
 
 The source-specific files now fit together: `hosted_run.py`, `runtime_scope.py`,
 `setup_adapter.py`, `tts_worker.py` and `asr_worker.py`. The setup adapter binds
@@ -198,7 +198,7 @@ was skipped. The original all-interface sum was 93,615,466 bytes, but it cannot
 establish image bytes: stacked-interface duplication and unrelated traffic are
 possible, and the old artifact contains no per-interface snapshots.
 
-The revised, unexecuted observer selects one common IPv4/IPv6 default-route
+The revised observer selects one common IPv4/IPv6 default-route
 interface, binds its ifindex and monotonic RX counter, and retains before/after
 interface snapshots. Missing or multiple default interfaces fail before pulling;
 a changed selected interface or counter fails before setup. The all-interface sum
@@ -207,7 +207,7 @@ unrelated traffic and may omit non-default/policy-routed paths; it does not veri
 cumulative image transfer. No claim of exact attribution or hard network cutoff
 is made. See the [Linux interface-statistics documentation](https://docs.kernel.org/networking/statistics.html).
 
-The proposed observation reservation is 128 MiB, with a single image-pull client
+The v2 observation reservation is 128 MiB, with a single image-pull client
 and 180 s wall bound. This allows declared 45,449,534-byte payload plus protocol
 and background headroom without treating the earlier 93,615,466-byte sum as an
 image measurement. A larger allowance alone would not repair the old accounting.
@@ -219,8 +219,8 @@ security change is used. TTS package/model acquisition gets 6 GiB minus 128 MiB:
 TTS allocation remains 6 GiB; its image part is observational, not a proven hard
 transfer cap. ASR preserves its 4 GiB input cap plus the proposed 128 MiB image
 allowance. Each fresh job requires at least 16 GiB free disk and a 12 GiB runtime
-workspace cap. The revised observer and allowance require new review; they have
-not been used for another acquisition or run.
+workspace cap. V2 exercised this observer and allowance as recorded below. Later changes require
+new review; that success does not admit another run.
 
 Every container has 12 GiB RAM, zero swap, four CPU quota, 256 PIDs, no capabilities,
 no-new-privileges, read-only root/code and no privileged/host namespace/socket
@@ -251,12 +251,12 @@ prefix evidence but does not automatically start downstream ASR.
 38012657985; its failed evidence remains unchanged. The inert v2 template and guard prepare
 `research/qwen16-voicedesign-once-v2` and
 `.github/workflows/source-screen32-run-v2.yml`; no execution ref or active workflow
-is created. The user has authorized one separate v2 attempt after fix checks and merge;
-this preparation remains unexecuted and release remains false.
+is created. The user authorized one separate v2 attempt after fix checks and merge; it was
+consumed by run38014209435, described below. This preparation keeps release false.
 This is a retry of the same fixed cells and seeds, whose model attempts are zero;
-it does not rename old evidence or create a fresh-label claim. After authorization
-and immutable review, activation must copy the exact v2 template and bind the
-reviewed source freeze in a separate complete commit before creating its branch.
+it does not rename old evidence or create a fresh-label claim. The consumed activation copied the exact v2 template and bound its reviewed
+source freeze in a complete commit before creating the v2 branch. Neither branch
+is eligible for another run, and this correction allocates no new identity.
 Reusing or rerunning v1 fails its first-run/attempt gate. Both v2 run number and
 attempt must also be1; prior history is not presumed absent. CI cannot grant admission.
 The intended TTS entry is:
@@ -268,3 +268,88 @@ python3 -I -B research/source-screen32-v1/hosted_run.py --phase tts
 Running it from this unapproved preparation fails before acquisition. Local tests
 use only stdlib fixtures and mocks; no image layers, installed runtime, exact native
 libraries, model fit, latency, speech quality or ASR result is claimed.
+
+
+## Second run stopped before model execution
+
+Run [38014209435](https://github.com/jiying2007/kws-pipeline/actions/runs/38014209435)
+completed the exact image pull/config check. Its default-interface observation was
+45,832,909 bytes; the separate all-interface diagnostic was 93,540,958 bytes. Thus
+the corrected observation gate passed, while exact cumulative daemon bytes remain
+unknown. The setup stage then retained only `CalledProcessError`. No setup receipt
+or container-worker output was present; all 32 cells had zero attempts and ASR was
+skipped. The exact four JSON artifact members are retained under
+`evidence/run-38014209435/`. These do not establish which Docker command failed.
+
+Static review identified a diagnostic defect: create/inspect/start/watch failure
+was not recorded before removal, and a failed cleanup could replace the primary
+exception. The correction writes a small host-owned `container-<stage>.json`
+outside container write mounts before create, configuration inspection, start,
+watch and cleanup. It records the failure operation before cleanup and preserves
+the original exception object if cleanup also fails. No unconfirmed-created
+container is removed; creation timeout still leaves its daemon-side result
+unverified. Only known-created dedicated containers use the existing removal.
+
+Public stderr evidence is positive-allowlisted: fixed Docker phrases, fixed option
+names and exact current fixed argument values, plus exact captured-stderr byte count and SHA-256, a 16 KiB
+examined-prefix bound, truncation and unclassified markers. Raw stderr/stdout,
+URLs, paths and arbitrary error text are excluded. A recognized category is not a
+root-cause conclusion. An unrecognized message remains explicitly unclassified.
+Mocked fixtures cover create/inspect/start/watch/cleanup failures, failed removal,
+exception preservation, exit/OOM state, redaction and publication boundaries.
+The diagnostic correction remains unexecuted. Both v1 and v2 one-shot identities
+are consumed. The separately authorized bounded next step is prepared below, with
+both admissions false.
+
+
+## Authorized no-model probe, then separately admitted v3
+
+The user authorized at most two serial no-model setup-container probes, with a
+reviewed repair between them if needed, followed by one new 16-cell/two-ASR round
+only after a matching probe succeeds. Neither has been executed by this source
+preparation. The probe uses `hosted_run.py --phase probe` and a fixed no-argument
+`probe_worker.py`. Only that worker and `runtime_scope.py` are staged. No setup
+adapter, package installation, dependency/model import or model asset acquisition
+occurs. The pinned Python image is the only external acquisition, under the same
+128 MiB observational allowance and no paid resources.
+
+Each probe creates exactly the normal TTS setup container. `setup_probe_args`
+asserts the complete original setup command tail and replaces only that tail
+with the fixed stdlib worker invocation. Image, create flags, mounts, limit values,
+non-root uid/gid, bridge network, readback and cleanup are unchanged. Its normalized
+setup-contract digest excludes only per-run names/host paths and uid/gid numbers;
+the actual full create argv is also hashed. The worker checks the real kernel
+scope, bridge interface inventory, exact CPython3.12.14 and an empty runtime mount,
+then writes a bounded kernel/source-hash receipt. This proves startup conditions,
+not model fit, and does not replace inference's own network-none pre-import guard.
+The host deadline is300s and the workflow ceiling8min. One invocation can call
+container start only once; there is no automatic repair or retry.
+
+`probe-workflow.yml` remains inert until copied exactly to
+`.github/workflows/source-screen32-probe.yml` with an approved `probe-release.json`
+and a complete reviewed commit. Its two explicit branch identities are
+`research/qwen16-container-probe-1` and `research/qwen16-container-probe-2`.
+They require workflow run numbers1 and2 respectively, run attempt1, and first
+branch creation. Root serializes attempts and reviews any repair. Prior workflow
+history is not presumed absent: unexpected numbering fails closed. No dispatch or
+rerun path exists. Probe release and active workflow/retention metadata are outside
+the source freeze; a source repair changes the freeze and invalidates older proof.
+
+The screen template/guard now target `research/qwen16-voicedesign-once-v3` and
+`.github/workflows/source-screen32-run-v3.yml`, still with release `approved=false`
+and `successful_probe=null`. Before activation, root must verify a successful
+probe's archive/source head and retain its exact five artifact JSON files under
+`research/source-screen32-v1/evidence/probe-<attempt>-<run_id>/`. The screen release's
+`successful_probe` reference must contain only that directory, its exact
+`artifact_freeze_sha256`, and the verified `source_head_sha`. The launcher validates
+all four member hashes, successful image/config, all five completed lifecycle
+operations including cleanup, one start, zero model/install calls, exact kernel and
+worker hashes, the same setup-contract digest and the same complete source-freeze
+SHA. No success boolean or reconstructed receipt suffices. All runtime source must
+remain unchanged between passing probe and v3 activation; release, retention and
+retained evidence metadata may change. A failed probe cannot unlock the screen.
+
+V3 still uses the same fixed cells/seeds and one attempt per cell; historical v1/v2
+records are retained unchanged. All existing label/training/shipping boundaries
+remain in force. No future successful probe or generated output is fabricated in
+this preparation; unit receipts are confined to temporary fictional fixtures.

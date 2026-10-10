@@ -1,0 +1,71 @@
+{
+  "schema": "screen32-failed-run-provenance-v1",
+  "retrieved_utc": "2026-10-10",
+  "run_id": 38014209435,
+  "job_id": 114100790327,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38014209435",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38014209435/job/114100790327",
+  "head_sha": "469538ec6554585adee3c2a9b4f16c85bd457ae5",
+  "source_freeze_sha256": "646d961f07cd47d10901b8a1b408d0e7778b395e9ec4b324ad9018f2bdacbe08",
+  "archive": {
+    "artifact_id": 11654518325,
+    "local_download_filename": "qwen16-v2-terminal-38014209435.zip",
+    "workflow_declared_artifact_name": "qwen16-generation-terminal-evidence-v2",
+    "bytes": 2602,
+    "sha256": "0f1a229464c0e6d1928116d2a0ff42cf8ef2cb9bf33fdb44e00c7d7b2ec96738",
+    "archive_body_retained": false
+  },
+  "exact_members": {
+    "artifact-freeze.json": {
+      "bytes": 416,
+      "sha256": "05cbd554c45f8abe149bca7610fd0a997b2bc3d7fed3aa5155c15186b52c80ec"
+    },
+    "host-receipt.json": {
+      "bytes": 1976,
+      "sha256": "1ad354802ab61ef894daa7b1523f077ac0e6fb4a7d6470aba2cf8dbd9602fe74"
+    },
+    "image-transfer.json": {
+      "bytes": 1287,
+      "sha256": "c9748987725e50b47e67b494d4183c9a1af8d9eaa2d1e85e145a2169a019531c"
+    },
+    "tts/tts-receipt.json": {
+      "bytes": 2740,
+      "sha256": "48d8c2cdef47ff94f8c3391783fcc60b84fbc7dc81d2bdcf97f56213c804df2e"
+    }
+  },
+  "member_retention": "Exact unmodified public JSON bytes extracted after archive digest and internal file-hash verification.",
+  "observed_result": {
+    "host_setup_stage": "FAILED_NO_RETRY",
+    "error_type": "CalledProcessError",
+    "failed_docker_operation": "UNKNOWN",
+    "raw_stderr": "NOT_RETAINED",
+    "setup_receipt": "ABSENT",
+    "container_worker_output": "ABSENT",
+    "tts_attempts": 0,
+    "tts_generated": 0,
+    "asr": "SKIPPED",
+    "all32_cells": "NOT_RUN",
+    "image_pull_client_attempts": 1,
+    "image_pull_client_exit_code": 0,
+    "image_config_digest_verified": true,
+    "daemon_completion_verified": true,
+    "default_eth0_receive_delta_bytes": 45832909,
+    "all_interface_receive_delta_diagnostic_only_bytes": 93540958,
+    "actual_image_transfer_bytes": "UNKNOWN",
+    "container_kernel_enforcement": "NOT_PROVEN",
+    "model_fit": "NOT_TESTED"
+  },
+  "diagnosis": "The revised default-interface observation passed its reservation and Docker confirmed the exact image config. A subsequent setup-stage CalledProcessError was retained without operation or stderr. Existing cleanup can mask a primary failure. The artifact cannot distinguish create, inspect, start, or cleanup failure; no exact runtime root cause is established.",
+  "static_review_sources": [
+    "https://docs.docker.com/reference/cli/docker/container/create/",
+    "https://docs.docker.com/reference/cli/docker/container/run/"
+  ],
+  "automatic_retry_authorized": false,
+  "original_run_has_no_retry_path": true,
+  "human_review": "PENDING",
+  "human_gold": false,
+  "training_admitted": false,
+  "shipping_approved": false,
+  "d20": "FAIL",
+  "d90": "NOT_RUN"
+}

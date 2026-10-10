@@ -116,27 +116,27 @@ class HostTests(unittest.TestCase):
 
     def admission_fixture(self, root):
         here = root / 'research/source-screen32-v1'; here.mkdir(parents=True)
-        (here / 'workflow.yml').write_text('fictional-v2-workflow')
+        (here / 'workflow.yml').write_text('fictional-v3-workflow')
         (here / 'execution-freeze.json').write_text(json.dumps({'schema': 'screen32-execution-source-freeze-v1', 'files': {}, 'profiles': {}}))
-        release = {'schema': 'screen32-execution-release-v1', 'experiment': 'qwen16-voicedesign-once-v2',
-                   'approved': True, 'source_freeze_sha256': host.file_hash(here / 'execution-freeze.json')}
+        release = {'schema': 'screen32-execution-release-v1', 'experiment': 'qwen16-voicedesign-once-v3',
+                   'approved': True, 'source_freeze_sha256': host.file_hash(here / 'execution-freeze.json'), 'successful_probe': None}
         (here / 'execution-release.json').write_text(json.dumps(release))
         workflows = root / '.github/workflows'; workflows.mkdir(parents=True)
-        (workflows / 'source-screen32-run-v2.yml').write_text('fictional-v2-workflow')
+        (workflows / 'source-screen32-run-v3.yml').write_text('fictional-v3-workflow')
         event = {'created': True, 'deleted': False, 'after': 'a' * 40,
                  'repository': {'private': False, 'full_name': 'jiying2007/kws-pipeline'}}
         (root / 'event.json').write_text(json.dumps(event))
-        env = {'GITHUB_REPOSITORY': 'jiying2007/kws-pipeline', 'GITHUB_REF': 'refs/heads/research/qwen16-voicedesign-once-v2',
+        env = {'GITHUB_REPOSITORY': 'jiying2007/kws-pipeline', 'GITHUB_REF': 'refs/heads/research/qwen16-voicedesign-once-v3',
                'GITHUB_EVENT_NAME': 'push', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_RUN_NUMBER': '1',
                'GITHUB_SHA': 'a' * 40, 'GITHUB_RUN_ID': '12345', 'GITHUB_EVENT_PATH': str(root / 'event.json')}
         return here, release, event, env
 
-    def test_v2_admission_rejects_consumed_v1_release_ref_or_workflow(self):
-        self.assertEqual(host.EXPERIMENT, 'qwen16-voicedesign-once-v2')
-        self.assertEqual(host.BRANCH, 'research/qwen16-voicedesign-once-v2')
+    def test_v3_admission_rejects_consumed_v1_release_ref_or_workflow(self):
+        self.assertEqual(host.EXPERIMENT, 'qwen16-voicedesign-once-v3')
+        self.assertEqual(host.BRANCH, 'research/qwen16-voicedesign-once-v3')
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary); here, release, event, env = self.admission_fixture(root)
-            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root):
+            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root), mock.patch.object(host, 'verify_successful_probe'):
                 host.verify_admission(env)
                 old = dict(env, GITHUB_REF='refs/heads/research/qwen16-voicedesign-once-v1')
                 with self.assertRaises(ValueError): host.verify_admission(old)
@@ -145,23 +145,23 @@ class HostTests(unittest.TestCase):
                 with self.assertRaises(ValueError): host.verify_admission(env)
                 release['experiment'] = host.EXPERIMENT
                 (here / 'execution-release.json').write_text(json.dumps(release))
-                (root / '.github/workflows/source-screen32-run-v2.yml').rename(root / '.github/workflows/source-screen32-run.yml')
+                (root / '.github/workflows/source-screen32-run-v3.yml').rename(root / '.github/workflows/source-screen32-run.yml')
                 with self.assertRaisesRegex(ValueError, 'activated workflow drift'): host.verify_admission(env)
 
-    def test_v2_still_requires_first_created_run_and_attempt_and_exact_template(self):
+    def test_v3_still_requires_first_created_run_and_attempt_and_exact_template(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary); here, release, event, env = self.admission_fixture(root)
-            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root):
+            with mock.patch.object(host, 'HERE', here), mock.patch.object(host, 'ROOT', root), mock.patch.object(host, 'verify_successful_probe'):
                 for field in ('GITHUB_RUN_NUMBER', 'GITHUB_RUN_ATTEMPT'):
                     with self.assertRaises(ValueError): host.verify_admission(dict(env, **{field: '2'}))
                 event['created'] = False; (root / 'event.json').write_text(json.dumps(event))
                 with self.assertRaises(ValueError): host.verify_admission(env)
                 event['created'] = True; (root / 'event.json').write_text(json.dumps(event))
-                (root / '.github/workflows/source-screen32-run-v2.yml').write_text('modified-workflow')
+                (root / '.github/workflows/source-screen32-run-v3.yml').write_text('modified-workflow')
                 with self.assertRaisesRegex(ValueError, 'activated workflow drift'): host.verify_admission(env)
         workflow = (HERE / 'workflow.yml').read_text()
-        for expected in ('name: Qwen16 VoiceDesign source screen once v2',
-                         'branches: [research/qwen16-voicedesign-once-v2]', 'group: qwen16-voicedesign-once-v2',
+        for expected in ('name: Qwen16 VoiceDesign source screen once v3',
+                         'branches: [research/qwen16-voicedesign-once-v3]', 'group: qwen16-voicedesign-once-v3',
                          'github.run_number == 1', 'github.run_attempt == 1', 'github.event.created == true'):
             self.assertIn(expected, workflow)
         self.assertNotIn('qwen16-voicedesign-once-v1', workflow)
@@ -316,6 +316,23 @@ class HostTests(unittest.TestCase):
         self.assertFalse(transfer['cumulative_image_transfer_bytes_verified'])
         self.assertFalse(provenance['automatic_retry_authorized'])
 
+    def test_retained_v2_failure_exact_bytes_and_unknown_docker_operation(self):
+        root = HERE / 'evidence/run-38014209435'
+        provenance = json.loads((root / 'provenance.json').read_text())
+        self.assertEqual(provenance['archive']['sha256'], '0f1a229464c0e6d1928116d2a0ff42cf8ef2cb9bf33fdb44e00c7d7b2ec96738')
+        for name, row in provenance['exact_members'].items():
+            self.assertEqual(host.file_hash(root / name), row['sha256'])
+            self.assertEqual((root / name).stat().st_size, row['bytes'])
+        for name, digest in json.loads((root / 'artifact-freeze.json').read_text())['files'].items():
+            self.assertEqual(host.file_hash(root / name), digest)
+        self.assertEqual(provenance['observed_result']['failed_docker_operation'], 'UNKNOWN')
+        transfer = json.loads((root / 'image-transfer.json').read_text())
+        self.assertEqual(transfer['default_interface_received_delta_bytes'], 45832909)
+        self.assertTrue(transfer['daemon_completion_verified'])
+        self.assertFalse(transfer['cumulative_image_transfer_bytes_verified'])
+        receipt = json.loads((root / 'tts/tts-receipt.json').read_text())
+        self.assertTrue(all(row['attempts'] == 0 and row['status'] == 'NOT_RUN' for row in receipt['ledger']))
+
     def test_terminal_tts_load_failure_retains_all32(self):
         with tempfile.TemporaryDirectory() as temporary:
             receipt = host.terminal_tts(Path(temporary))
@@ -343,9 +360,138 @@ class HostTests(unittest.TestCase):
             return ''
         with tempfile.TemporaryDirectory() as temporary, mock.patch.object(host, 'docker', side_effect=docker), \
                 mock.patch.object(host, 'validate_container_inspect'), \
-                mock.patch.object(host.time, 'monotonic', side_effect=[0, 2000]), self.assertRaises(ValueError):
-            host.supervise_container(['create'], 'test', Path(temporary), 'setup', 7200)
+                mock.patch.object(host.time, 'monotonic', side_effect=[0, 2000, 2001]), self.assertRaises(ValueError):
+            host.supervise_container(['create'], 'test', Path(temporary) / 'setup', 'setup', 7200)
         self.assertEqual(calls[-1], ('rm', '--force', 'test'))
+
+    def test_docker_stderr_is_positive_allowlisted_bounded_and_digest_bound(self):
+        raw = (b"Error: invalid ulimit type fsize=4294967296 --ulimit; max-file=1 max-size=1m "
+               b"tmpfs size=268435456 mode=0700 noexec uid=1001 gid=118 "
+               b"/home/private/path https://private.example/?token=SECRET123 Authorization: Bearer SECRET456 " + b'x' * 20000)
+        error = host.subprocess.CalledProcessError(125, ['docker', 'create', 'private'], stderr=raw)
+        with mock.patch.object(host.os, 'getuid', return_value=1001), mock.patch.object(host.os, 'getgid', return_value=118):
+            record = host.public_failure(error, 'create')
+        encoded = json.dumps(record)
+        for secret in ('SECRET123', 'SECRET456', 'private.example', '/home/private', 'Authorization', 'Bearer'):
+            self.assertNotIn(secret, encoded)
+        self.assertLess(len(encoded), 4096)
+        self.assertEqual(record['returncode'], 125)
+        self.assertEqual(record['stderr']['sha256'], host.hashlib.sha256(raw).hexdigest())
+        self.assertEqual(record['stderr']['observed_bytes'], len(raw))
+        self.assertTrue(record['stderr']['prefix_truncated']); self.assertFalse(record['stderr']['unclassified'])
+        for value in ('fsize=4294967296', 'max-file=1', 'max-size=1m', 'size=268435456', 'mode=0700', 'uid=1001', 'gid=118'):
+            self.assertIn(value, record['stderr']['fixed_argument_values'])
+        unknown = host.public_failure(host.subprocess.CalledProcessError(1, ['docker'], stderr='arbitrary private unknown message'), 'start')
+        self.assertTrue(unknown['stderr']['unclassified'])
+        self.assertNotIn('arbitrary private unknown message', json.dumps(unknown))
+
+    def test_docker_wrapper_preserves_original_exception_and_attaches_safe_summary(self):
+        error = host.subprocess.CalledProcessError(125, ['docker', 'create'], stderr='unknown flag --tmpfs secret-value')
+        with mock.patch.object(host.subprocess, 'run', side_effect=error):
+            with self.assertRaises(host.subprocess.CalledProcessError) as caught: host.docker('create', 'fixed')
+        self.assertIs(caught.exception, error)
+        self.assertEqual(error.screen32_diagnostic['operation'], 'create')
+        self.assertIn('unknown flag', error.screen32_diagnostic['stderr']['safe_fragments'])
+        self.assertNotIn('secret-value', json.dumps(error.screen32_diagnostic))
+
+    def test_docker_captures_binary_stderr_without_newline_normalization(self):
+        raw = b'unknown flag --tmpfs\r\nprivate\rdata\xff'
+        error = host.subprocess.CalledProcessError(125, ['docker', 'create'], stderr=raw)
+        with mock.patch.object(host.subprocess, 'run', side_effect=error) as run:
+            with self.assertRaises(host.subprocess.CalledProcessError) as caught: host.docker('create', 'fixed')
+        self.assertNotIn('text', run.call_args.kwargs)
+        self.assertIs(caught.exception.stderr, raw)
+        record = error.screen32_diagnostic['stderr']
+        self.assertEqual(record['representation'], 'captured_bytes')
+        self.assertEqual(record['observed_bytes'], len(raw))
+        self.assertEqual(record['sha256'], host.hashlib.sha256(raw).hexdigest())
+        with mock.patch.object(host.subprocess, 'run', return_value=types.SimpleNamespace(stdout=b'{"fixed":true}')):
+            self.assertEqual(host.docker('inspect', 'fixed'), '{"fixed":true}')
+
+    def supervise_fixture(self, root, failure=None, cleanup_failure=None, failed_state=None, invalid_config=False):
+        output = root / 'setup'; output.mkdir()
+        calls = []
+        error = host.subprocess.CalledProcessError(125, ['docker', failure or 'none'], stderr='permission denied /private SECRET')
+        cleanup = host.subprocess.CalledProcessError(1, ['docker', 'rm'], stderr='no such container private-name')
+        def docker(*args, **kwargs):
+            calls.append(args)
+            record = json.loads((root / 'container-setup.json').read_text())
+            if args[0] == 'rm':
+                self.assertEqual(record['operations']['cleanup']['status'], 'started')
+                if failure is not None or failed_state is not None or invalid_config:
+                    self.assertIsNotNone(record['primary_failure'])
+                if cleanup_failure: raise cleanup
+                return ''
+            operation = ('inspect_configuration' if args == ('inspect', 'fixed') else
+                         'watch' if args[0] == 'inspect' else args[0])
+            self.assertEqual(record['active_operation'], operation)
+            self.assertEqual(record['operations'][operation]['status'], 'started')
+            if operation == failure: raise error
+            if operation == 'inspect_configuration': return '[{}]'
+            if operation == 'watch': return json.dumps(failed_state or {'Running': False, 'ExitCode': 0, 'OOMKilled': False})
+            return ''
+        config = mock.Mock(side_effect=ValueError('fictional invalid configuration')) if invalid_config else mock.Mock()
+        with mock.patch.object(host, 'docker', side_effect=docker), mock.patch.object(host, 'validate_container_inspect', config):
+            try: result = host.supervise_container(['create'], 'fixed', output, 'setup', host.time.monotonic() + 100)
+            except BaseException as caught: result = caught
+        return result, json.loads((root / 'container-setup.json').read_text()), calls, error, cleanup
+
+    def test_create_failure_retains_operation_and_does_not_remove_unconfirmed_container(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            result, record, calls, error, cleanup = self.supervise_fixture(Path(temporary), failure='create')
+            self.assertIs(result, error); self.assertFalse(record['created_confirmed'])
+            self.assertEqual(record['failure_operation'], 'create')
+            self.assertEqual(record['operations']['cleanup']['status'], 'not_run')
+            self.assertEqual(calls, [('create',)])
+
+    def test_primary_inspect_start_watch_failure_survives_cleanup_failure(self):
+        for phase in ('inspect_configuration', 'start', 'watch'):
+            with self.subTest(phase=phase), tempfile.TemporaryDirectory() as temporary:
+                result, record, calls, error, cleanup = self.supervise_fixture(Path(temporary), failure=phase, cleanup_failure=True)
+                self.assertIs(result, error)
+                self.assertEqual(record['failure_operation'], phase)
+                self.assertEqual(record['primary_failure']['returncode'], 125)
+                self.assertEqual(record['cleanup_failure']['returncode'], 1)
+                self.assertEqual(calls[-1], ('rm', '--force', 'fixed'))
+                self.assertNotIn('SECRET', json.dumps(record)); self.assertNotIn('/private', json.dumps(record))
+
+    def test_validation_or_container_exit_failure_is_retained_before_cleanup(self):
+        for options in ({'invalid_config': True}, {'failed_state': {'Running': False, 'ExitCode': 137, 'OOMKilled': True}}):
+            with tempfile.TemporaryDirectory() as temporary:
+                result, record, calls, error, cleanup = self.supervise_fixture(Path(temporary), cleanup_failure=True, **options)
+                self.assertIsInstance(result, ValueError)
+                self.assertEqual(record['primary_failure']['error_type'], 'ValueError')
+                self.assertEqual(record['cleanup_failure']['returncode'], 1)
+                if 'failed_state' in options: self.assertEqual(record['container_state'], options['failed_state'])
+
+    def test_diagnostic_write_failure_does_not_replace_primary_exception(self):
+        real_atomic = host.atomic
+        def atomic(path, value):
+            if value.get('primary_failure') is not None: raise OSError('fictional receipt disk full')
+            return real_atomic(path, value)
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(host, 'atomic', side_effect=atomic):
+            result, record, calls, error, cleanup = self.supervise_fixture(Path(temporary), failure='create')
+            self.assertIs(result, error)
+            self.assertEqual(calls, [('create',)])
+
+    def test_cleanup_only_failure_stops_successful_stage_and_is_not_masked(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            result, record, calls, error, cleanup = self.supervise_fixture(Path(temporary), cleanup_failure=True)
+            self.assertIs(result, cleanup)
+            self.assertIsNone(record['primary_failure']); self.assertEqual(record['status'], 'failed_no_retry')
+            self.assertEqual(record['operations']['watch']['status'], 'complete')
+            self.assertEqual(record['operations']['cleanup']['status'], 'failed_no_retry')
+
+    def test_successful_stage_retains_complete_operations_and_public_allowlisted_record(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result, record, calls, error, cleanup = self.supervise_fixture(root)
+            self.assertEqual(result['status'], 'complete'); self.assertEqual(record['status'], 'complete')
+            self.assertTrue(all(row['status'] == 'complete' for row in record['operations'].values()))
+            (root / 'host-receipt.json').write_text('{}'); (root / 'tts').mkdir()
+            artifact = host.public_evidence(root, 'tts')
+            self.assertEqual((artifact / 'container-setup.json').read_bytes(), (root / 'container-setup.json').read_bytes())
+            self.assertNotIn('setup/', json.dumps(json.loads((artifact / 'artifact-freeze.json').read_text())['files']))
 
     def test_primary_projection_preserves_unknown_and_never_creates_human_gold(self):
         with tempfile.TemporaryDirectory() as temporary:
