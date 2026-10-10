@@ -1,0 +1,723 @@
+{
+  "schema": "screen32-sense-continuation-retained-result-v1",
+  "retained_utc_date": "2026-10-10",
+  "repository": "jiying2007/kws-pipeline",
+  "run_id": 38021467257,
+  "job_id": 114123182898,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38021467257",
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38021467257/job/114123182898",
+  "executed_head_sha": "4835c51e7d42e6b2cde8465327db136d2ff69c18",
+  "source_freeze_sha256": "242565d3dec5174c57572eafef68f5ea49a2ddd42d213b0debdd7f7b44d33079",
+  "source_frozen_files": 74,
+  "retention_base_main_commit": "b3872bf93c6a9f970e435b86a468ea54ddcbdd5a",
+  "retention_base_tree": "4782508b366d2efc8c0815d59b43a0b1a065f1e1",
+  "original_generation_and_qwen_run_id": 38018029787,
+  "original_executed_head_sha": "621ba90acd2d78976f4dcf07a385cd4e615ac358",
+  "original_blind_job_sha256": "425a705515339ff7054e4f1148971a342e5f882a1e9b84ac2be144a3d7aeecc5",
+  "archive": {
+    "artifact_id": 11658867061,
+    "workflow_declared_artifact_name": "qwen16-sensevoice-continuation-terminal-v1",
+    "local_download_filename": "qwen16-sense-continuation-38021467257.zip",
+    "bytes": 370705,
+    "sha256": "7606054814e3c76d801d587b6df3a4d71508b91c7a7653aff6de46a1f50fa5ef",
+    "expires_at": "2026-10-11T03:45:29Z",
+    "archive_body_retained": false,
+    "member_count": 169,
+    "uncompressed_bytes": 1524376,
+    "artifact_freeze_sha256": "38bb5d17795bdeeee2ed6a94b05d9b6275ac1a27ed118914274151b7903ac9f7",
+    "exact_members": {
+      "artifact-freeze.json": {
+        "bytes": 18613,
+        "sha256": "38bb5d17795bdeeee2ed6a94b05d9b6275ac1a27ed118914274151b7903ac9f7"
+      },
+      "container-sensevoice.json": {
+        "bytes": 557,
+        "sha256": "a911687880ad8e831ee2753cd73e98c3dfed49bc7fbf7eee1d7eccda19c48254"
+      },
+      "container-setup.json": {
+        "bytes": 547,
+        "sha256": "3cf3914c133fb013b90c5899f027b82fe4601fce578eb9fb998f2761f10631c4"
+      },
+      "continuation-ledger.json": {
+        "bytes": 5534,
+        "sha256": "430b719f632ac5575d047a3f692a1974fc6cb43c340c96d8745885e1d32a06bb"
+      },
+      "continuation-provenance.json": {
+        "bytes": 10425,
+        "sha256": "c271ab5083f924b943281c0dc55db628ca068039af11f5e1785205dd0bf3cf4b"
+      },
+      "frozen-disputes.json": {
+        "bytes": 425,
+        "sha256": "c4d002b77fbef31d09fa0b45b075ff1164385cbbdc78e755dd698d89e85e46a6"
+      },
+      "host-receipt.json": {
+        "bytes": 3802,
+        "sha256": "ee06eb90e1c4897147133d62ef80a1cbd5df5f8f798077eb8514fedf14c541ca"
+      },
+      "image-transfer.json": {
+        "bytes": 1236,
+        "sha256": "6e8f49f13c3c912a85899a46f03b32f5c4198980c0b49e2b58883e9b58106607"
+      },
+      "primary-raw-freeze.json": {
+        "bytes": 404,
+        "sha256": "334c7e2df9649fd5431f97f7870fe57594d9c68094e2b034cf701242001defbc"
+      },
+      "primary-raw.json": {
+        "bytes": 3294,
+        "sha256": "79b1567e5739beab72b1da94490ea90c41ff8e0b32f604df85d12ac37ee054d5"
+      },
+      "qwen06/progress.json": {
+        "bytes": 61,
+        "sha256": "d59d11d9f0e94a8a86015a03a34b15d946f943d30ee798c6c318e86ec1254a57"
+      },
+      "qwen06/qwen06/blind-job.json": {
+        "bytes": 3203,
+        "sha256": "a06ed76bbb4cf21dd736acf66b1e329fd16108f242100574bf6ef03ff51a5748"
+      },
+      "qwen06/qwen06/clip-000001.decoder.json": {
+        "bytes": 2791,
+        "sha256": "f0f0b644c284ece8f639e5fc3d5f2b2ba8e96e3818e63b626c4a3ce2517f2725"
+      },
+      "qwen06/qwen06/clip-000001.receipt.json": {
+        "bytes": 796,
+        "sha256": "bd667307147a2c1c81df5292cfb91ee5562a6f838964924a4a957e26d246ab66"
+      },
+      "qwen06/qwen06/clip-000001.started.json": {
+        "bytes": 494,
+        "sha256": "fc81c9a36bc5a240f2d51438a0a7d5a8b66dd6fced233c4c97592ec5b2fbe9f3"
+      },
+      "qwen06/qwen06/clip-000002.decoder.json": {
+        "bytes": 2780,
+        "sha256": "beb2bc45c987cad968776f17c6032e7fec08e1f4e4ef693f0536265452d862c0"
+      },
+      "qwen06/qwen06/clip-000002.receipt.json": {
+        "bytes": 796,
+        "sha256": "d0fb8fb6dcec720d2de9b3f941e9cea1d59fa73897166885b73858e02e5de83b"
+      },
+      "qwen06/qwen06/clip-000002.started.json": {
+        "bytes": 494,
+        "sha256": "60b631ac9f7645bb4ac92489199a8e782cd7e5d050ce80eb0d14307a098d38a1"
+      },
+      "qwen06/qwen06/clip-000003.decoder.json": {
+        "bytes": 2792,
+        "sha256": "bdb8c200d9c1b7512711aa7933a9cb6fb004189b9383cb9cf6c0b01e2ec43b92"
+      },
+      "qwen06/qwen06/clip-000003.receipt.json": {
+        "bytes": 796,
+        "sha256": "9ba725a13e018b847cf80df3929601fbc8816f1151bc462fac8bf6b8c304ec8b"
+      },
+      "qwen06/qwen06/clip-000003.started.json": {
+        "bytes": 494,
+        "sha256": "46a2490e1669c228197e77264ae77d145b948cac38de22a983d47b133cb55433"
+      },
+      "qwen06/qwen06/clip-000004.decoder.json": {
+        "bytes": 2787,
+        "sha256": "bb859fb9bc5ff6e4a572689d09bb7deb004c8b04c835da1dd9668c06a3439783"
+      },
+      "qwen06/qwen06/clip-000004.receipt.json": {
+        "bytes": 796,
+        "sha256": "8dddc046352022817bf45ea4da68c2865267d04bb793c25ca6bf822edcc57fe6"
+      },
+      "qwen06/qwen06/clip-000004.started.json": {
+        "bytes": 494,
+        "sha256": "be839c7a9c936e043e008c50ba20c8306cb6a90e1033e67cdc8a72077baaee7c"
+      },
+      "qwen06/qwen06/clip-000005.decoder.json": {
+        "bytes": 2778,
+        "sha256": "c3affaf79c231c9c20823fd1b5b08343b58f51a2933f1d45db52c70c5de69205"
+      },
+      "qwen06/qwen06/clip-000005.receipt.json": {
+        "bytes": 796,
+        "sha256": "7e9b52679b9defd11b037e5f300ec077947b9fb3a21f650c0917672ea8cd1106"
+      },
+      "qwen06/qwen06/clip-000005.started.json": {
+        "bytes": 494,
+        "sha256": "872e25910f7815179f20a9b9c515bba068d2f0d3cdc109059b3d04e1a1cdc82a"
+      },
+      "qwen06/qwen06/clip-000006.decoder.json": {
+        "bytes": 2788,
+        "sha256": "7614b6ae361db15ab60ac92f90a2e921fd70cb89cbe52f4cf65821a398706e8e"
+      },
+      "qwen06/qwen06/clip-000006.receipt.json": {
+        "bytes": 796,
+        "sha256": "a7561bd155d715cf59c050b601d15df1247c2b3a80dcb9d0a1595de1be44ce02"
+      },
+      "qwen06/qwen06/clip-000006.started.json": {
+        "bytes": 494,
+        "sha256": "ba12527e7ca9e5a817004180abae95f0eb4acb5090d29d99545e5064a69920c3"
+      },
+      "qwen06/qwen06/clip-000007.decoder.json": {
+        "bytes": 2783,
+        "sha256": "d0cbe62dbb218c74605665ce01ac33350a2aaadf646b110a7dee4ab5652f8e7b"
+      },
+      "qwen06/qwen06/clip-000007.receipt.json": {
+        "bytes": 796,
+        "sha256": "402bde83e4f32e72304f22b703a6571c03997d3aabb7a9ae25a59960d84f81cc"
+      },
+      "qwen06/qwen06/clip-000007.started.json": {
+        "bytes": 494,
+        "sha256": "c66f883e209b5882d2b080ea440cad9d136248ded01d6a3b9c422362ae9a9348"
+      },
+      "qwen06/qwen06/clip-000008.decoder.json": {
+        "bytes": 2773,
+        "sha256": "6458489f1032d0135f1837c5bce67d88f37709d989dbb5cfa5006a3a0f119cbd"
+      },
+      "qwen06/qwen06/clip-000008.receipt.json": {
+        "bytes": 796,
+        "sha256": "861d421f754e9e2bc4f2e956fd9577be9dfe6d755d7772b5437368570be073e6"
+      },
+      "qwen06/qwen06/clip-000008.started.json": {
+        "bytes": 494,
+        "sha256": "c8894e68ad90c086abe678340b987ef425b971c941d06426d84891fc5e5f40a8"
+      },
+      "qwen06/qwen06/clip-000009.decoder.json": {
+        "bytes": 2791,
+        "sha256": "c96c3efd5c6bd199e62129e6296600a2b5df90f7e92c20dd40dda7abb6b7713b"
+      },
+      "qwen06/qwen06/clip-000009.receipt.json": {
+        "bytes": 796,
+        "sha256": "ccbcdaffb6d4cc63eafef498fb2aba4bff38e2d6ef53292a20ab2b0414f1e0f5"
+      },
+      "qwen06/qwen06/clip-000009.started.json": {
+        "bytes": 494,
+        "sha256": "85ef51e58569de2c5a66456eaa51230470a50aa54692a34f6475b3b48dd503dd"
+      },
+      "qwen06/qwen06/clip-000010.decoder.json": {
+        "bytes": 2780,
+        "sha256": "9c9cc689888aa03197ef86e01228c92d948f3a919c16cfaa3e94358b97c09d4e"
+      },
+      "qwen06/qwen06/clip-000010.receipt.json": {
+        "bytes": 796,
+        "sha256": "278c243536c3cdd48edc313b9ed74cb91bed35f959035b383d724899a47ca85b"
+      },
+      "qwen06/qwen06/clip-000010.started.json": {
+        "bytes": 494,
+        "sha256": "4a425769b26ebab340b36e6beed9bf1e3b8dda8c073b4c094058c37fe8f8de6c"
+      },
+      "qwen06/qwen06/clip-000011.decoder.json": {
+        "bytes": 2784,
+        "sha256": "a5a0fa92d7274e62b622ad313ceb4617a6d5b220629026298da3a4431eabc070"
+      },
+      "qwen06/qwen06/clip-000011.receipt.json": {
+        "bytes": 796,
+        "sha256": "eeb4f8236160eb279c239788279b558944e20f0ea9e4d361b4406dc4c2c23b42"
+      },
+      "qwen06/qwen06/clip-000011.started.json": {
+        "bytes": 494,
+        "sha256": "83fb4e560e46f91c5b093875c1f69b090eb0f60746fecaefc4812af8b4b780af"
+      },
+      "qwen06/qwen06/clip-000012.decoder.json": {
+        "bytes": 2791,
+        "sha256": "5ffaa720f85be305c46e65659020f6281fe5eba87f223c10096bf7b42856b1db"
+      },
+      "qwen06/qwen06/clip-000012.receipt.json": {
+        "bytes": 796,
+        "sha256": "d37403b61e3b9a87028b0b984f6926f57d9e795edab4cd970c6eea3b654be7cd"
+      },
+      "qwen06/qwen06/clip-000012.started.json": {
+        "bytes": 494,
+        "sha256": "7af555c4848e1599e5382bb3cc8a58accdf719ade89c4b79cee42bc5e6c9cd2f"
+      },
+      "qwen06/qwen06/clip-000013.decoder.json": {
+        "bytes": 2791,
+        "sha256": "a6c94cdffb36ccc33053d376ca3e1889d47beac9d19890d4ebca46cceb4c16e9"
+      },
+      "qwen06/qwen06/clip-000013.receipt.json": {
+        "bytes": 796,
+        "sha256": "cc583eb7f7f59f0b9d59fc0bf71a6bc19184799bffda45da27691037bcb2612f"
+      },
+      "qwen06/qwen06/clip-000013.started.json": {
+        "bytes": 494,
+        "sha256": "2a7a5d9dfa11ce21af3c48393ef201532a17d050de1bd4f754c28e7be530ef9f"
+      },
+      "qwen06/qwen06/clip-000014.decoder.json": {
+        "bytes": 2736,
+        "sha256": "bd92762e32e8b344368409ed8fc34cb2784419127be2473d6bbd17c8fc271122"
+      },
+      "qwen06/qwen06/clip-000014.receipt.json": {
+        "bytes": 778,
+        "sha256": "e95a948238b4059e8201cb8c1af3bb4f7a9260103d673ec595dcf11f1897ab25"
+      },
+      "qwen06/qwen06/clip-000014.started.json": {
+        "bytes": 494,
+        "sha256": "0cf2c7e8a32bfdae0a2fbe6c91497f5afb164484a36e669e4366a1e627cd8cf4"
+      },
+      "qwen06/qwen06/clip-000015.decoder.json": {
+        "bytes": 2790,
+        "sha256": "de106fcbd8145f8c7842e1e4e623f83fe7bc5695ac5d89fb176613a10bc77e11"
+      },
+      "qwen06/qwen06/clip-000015.receipt.json": {
+        "bytes": 796,
+        "sha256": "2ab630746d8553118d169f98650ffcd74ed4b5ec84b3e3719d267b7f5e24b7a1"
+      },
+      "qwen06/qwen06/clip-000015.started.json": {
+        "bytes": 494,
+        "sha256": "7f02e229b79170d47112e8b96105cdd02b06a47a2e5e4bfd0866d4065060e971"
+      },
+      "qwen06/qwen06/clip-000016.decoder.json": {
+        "bytes": 2732,
+        "sha256": "7537b790ebc6cb1b23a54b1beee4a59329d75bbc9e66cde8ec20c9fb1bdd79dd"
+      },
+      "qwen06/qwen06/clip-000016.receipt.json": {
+        "bytes": 778,
+        "sha256": "6870d9843c439a9063a59ba6df13765a603ab1dd30d92d6e3a6f7cc8b6ddad34"
+      },
+      "qwen06/qwen06/clip-000016.started.json": {
+        "bytes": 494,
+        "sha256": "0b90d96cdbc94c9b1c84b1821167ca1f993f6ebe2105c9d26b0882e2fd3e7e28"
+      },
+      "qwen06/qwen06/contract.json": {
+        "bytes": 848,
+        "sha256": "f22d33b075b6226fd75997868ea553ba9421b8a9c4cfc8828209abf3cf72c0ea"
+      },
+      "qwen06/qwen06/decoder-inputs.json": {
+        "bytes": 18685,
+        "sha256": "3a61e9c35018c63d7117f791b3fd84ea7a32cbba5167891ef00f4271dc9dad1e"
+      },
+      "qwen06/qwen06/environment.json": {
+        "bytes": 485,
+        "sha256": "6b429663a65cb33ea9eae6b83a32155605559bef2abee186d337705ecae17c30"
+      },
+      "qwen06/qwen06/model-load-started.json": {
+        "bytes": 193,
+        "sha256": "efce4c2c1b09b4cd6b5c65c45cd425bc9d058fc90b0992ae24c43a238b42613e"
+      },
+      "qwen06/qwen06/model-load.json": {
+        "bytes": 623146,
+        "sha256": "b4b69c449df49d8dd6b0477ceab24b293c9f47ea47971c50bc9487a8d185edbc"
+      },
+      "qwen06/qwen06/outcomes.0001.json": {
+        "bytes": 3602,
+        "sha256": "63e0c847e43c4815cf62c4107b0506190e26a0951a3fe405844a46e3e696ef6d"
+      },
+      "qwen06/qwen06/outcomes.0002.json": {
+        "bytes": 3699,
+        "sha256": "6f1dfa6919e1b260d600570c77e778120fbcb42c2de627ca2cbadce13a6ab6ff"
+      },
+      "qwen06/qwen06/outcomes.0003.json": {
+        "bytes": 3796,
+        "sha256": "1001c2ede3b81390019d5353759535461b0ba0244050d3a9e7df2317f22d4aa2"
+      },
+      "qwen06/qwen06/outcomes.0004.json": {
+        "bytes": 3893,
+        "sha256": "7914296fc9db1fc6e1e69d301ada4e7ab2f5d54d14ac72102087df122589d406"
+      },
+      "qwen06/qwen06/outcomes.0005.json": {
+        "bytes": 3990,
+        "sha256": "4294a3e5a430c04244c4cefa14a4c0f6124956af748c33524a09905c79e6c70a"
+      },
+      "qwen06/qwen06/outcomes.0006.json": {
+        "bytes": 4087,
+        "sha256": "a1bf18ab85ea3e5a442c368a70854de5ece594af6faff01cd2fb5ef57c9991e1"
+      },
+      "qwen06/qwen06/outcomes.0007.json": {
+        "bytes": 4184,
+        "sha256": "763ed7569e8b9c7e7002d3e234443d87e998213d90ff5b6c65ee84c81b3bd677"
+      },
+      "qwen06/qwen06/outcomes.0008.json": {
+        "bytes": 4281,
+        "sha256": "f014309d3327d9e1dcf86adc1612c1dd2f4a4c15ce8e06a5064aa2801bbca6c6"
+      },
+      "qwen06/qwen06/outcomes.0009.json": {
+        "bytes": 4378,
+        "sha256": "6fa6131da9648751ce7e8a29052245cbb5f4e3e13f2f6ec27d6eb543c2ba01bf"
+      },
+      "qwen06/qwen06/outcomes.0010.json": {
+        "bytes": 4475,
+        "sha256": "47d1e58eb7ec649abc453cb932f9bd1ff9e661b5e1a2ea52e7afdeb6834148f8"
+      },
+      "qwen06/qwen06/outcomes.0011.json": {
+        "bytes": 4572,
+        "sha256": "e57639456d6163afe8fe9e26372b87e0c9088488858790209eff5f59a9a3132f"
+      },
+      "qwen06/qwen06/outcomes.0012.json": {
+        "bytes": 4669,
+        "sha256": "6ccfc894a4092733a001f2881dafd3df80ab49764679ac69c7804831d08d7240"
+      },
+      "qwen06/qwen06/outcomes.0013.json": {
+        "bytes": 4766,
+        "sha256": "55fa3b45a92b04b2530256c0f29e48acb4c4e21c971cacef1c9225eb65b24e9c"
+      },
+      "qwen06/qwen06/outcomes.0014.json": {
+        "bytes": 4845,
+        "sha256": "14472fddf94171e8fce73126c6f838d0a6072048ca643a925decac1febb33d34"
+      },
+      "qwen06/qwen06/outcomes.0015.json": {
+        "bytes": 4942,
+        "sha256": "82a84537051e0d49a9cf13b2acd546c0b0a27f64c9926964f1accc799c21f45b"
+      },
+      "qwen06/qwen06/outcomes.0016.json": {
+        "bytes": 5021,
+        "sha256": "84a16d50c312eff16d504d0bcd80360ed84e3f09ff2cbeb19f8cbe355e12053e"
+      },
+      "qwen06/qwen06/outcomes.initial.json": {
+        "bytes": 3505,
+        "sha256": "0d20832542b525838340a7cf93e20d44163dae9bdb11f29daaed75aab16a107c"
+      },
+      "qwen06/qwen06/outcomes.json": {
+        "bytes": 5021,
+        "sha256": "84a16d50c312eff16d504d0bcd80360ed84e3f09ff2cbeb19f8cbe355e12053e"
+      },
+      "qwen06/qwen06/raw-freeze.json": {
+        "bytes": 6950,
+        "sha256": "e33f49e427f3b7ad4738f544e7f04bdf372246130c90f5357335707599973d68"
+      },
+      "qwen06/qwen06/scope.json": {
+        "bytes": 321,
+        "sha256": "4f0f43b9baf82f35d16756be4359947f39f9a59f6063774b33527280cedf94fa"
+      },
+      "qwen06/qwen06/source-identity.json": {
+        "bytes": 2452,
+        "sha256": "d90ea275be60717f395d7f38faf0e39de76ec253edbc9c1ea4e1971cffbd844a"
+      },
+      "qwen06/qwen06/summary.json": {
+        "bytes": 622,
+        "sha256": "3b2a4978d2f359e40e689ab6be132e8c5613a35fed518dccd822998e4c988061"
+      },
+      "qwen06/terminal-outcomes.json": {
+        "bytes": 6749,
+        "sha256": "4b63fa328e0c332f963250239292344bfb61c62a6b4d588e63437f4039a40392"
+      },
+      "qwen06/terminal-summary.json": {
+        "bytes": 384,
+        "sha256": "2cd6025057eb27e46c6ae9298aadd828d5c83f134aee9ce11e40e2c96a0e32c7"
+      },
+      "sensevoice/progress.json": {
+        "bytes": 61,
+        "sha256": "b7fb675267321bf1253e99f211a95a8b24ddca175f004d6a02b9e24028c4c380"
+      },
+      "sensevoice/sensevoice/blind-job.json": {
+        "bytes": 3203,
+        "sha256": "a06ed76bbb4cf21dd736acf66b1e329fd16108f242100574bf6ef03ff51a5748"
+      },
+      "sensevoice/sensevoice/clip-000001.decoder.json": {
+        "bytes": 2964,
+        "sha256": "81631bac63f4b73629a95044e9e810957cc5ec7fbfb0f230532dc6983018aa2e"
+      },
+      "sensevoice/sensevoice/clip-000001.receipt.json": {
+        "bytes": 792,
+        "sha256": "47ff281d62006f80a96b9a498e5985a66b902064477e8b95ddfef964e1708d6c"
+      },
+      "sensevoice/sensevoice/clip-000001.started.json": {
+        "bytes": 502,
+        "sha256": "1d1235be7a2a7ac723702b9f1ee36552a46a0e432927c24a9702682cf8b70997"
+      },
+      "sensevoice/sensevoice/clip-000002.decoder.json": {
+        "bytes": 2979,
+        "sha256": "b2fc928ccd5fa806a7774bc06ff80342295c8d33e012e68b192c1323b4a22494"
+      },
+      "sensevoice/sensevoice/clip-000002.receipt.json": {
+        "bytes": 792,
+        "sha256": "bbada7e2928f6ace8a1daa89236b10b2961580bf895a6ad07456a7513cdec043"
+      },
+      "sensevoice/sensevoice/clip-000002.started.json": {
+        "bytes": 502,
+        "sha256": "b3ade37050d302f193a3fefdbf253ea5d45b4dd188bb44875471596aadd59888"
+      },
+      "sensevoice/sensevoice/clip-000003.decoder.json": {
+        "bytes": 2996,
+        "sha256": "8ae7f2fc9b31d5cec8b9d77cd45a424f20c962b40d7a55ed464961fc87a7d3f5"
+      },
+      "sensevoice/sensevoice/clip-000003.receipt.json": {
+        "bytes": 792,
+        "sha256": "159e2bc0f085dc6b5071be40336efdd5284a2ba3ba54d3c9a3a35a9409c282d5"
+      },
+      "sensevoice/sensevoice/clip-000003.started.json": {
+        "bytes": 502,
+        "sha256": "f178b56478c803a218f29eff10e68eac69071855edbeffd1b1b20571b9ecef06"
+      },
+      "sensevoice/sensevoice/clip-000004.decoder.json": {
+        "bytes": 2979,
+        "sha256": "2fe84784d51c39cd6e319e905a4e39a6ed7d4c18e40c95c51826cab7b653f9fe"
+      },
+      "sensevoice/sensevoice/clip-000004.receipt.json": {
+        "bytes": 792,
+        "sha256": "0874f8ee147ad07ecb9a3b5b93ad980d3f5877bc8b982982daeaa4ba724aa91b"
+      },
+      "sensevoice/sensevoice/clip-000004.started.json": {
+        "bytes": 502,
+        "sha256": "b460cf24089b36ffd0c4c31685b95a47978d9f9b0ea2e88b67b033c0195a5e82"
+      },
+      "sensevoice/sensevoice/clip-000005.decoder.json": {
+        "bytes": 2980,
+        "sha256": "686229f6cadc40ca6fa8d0ebf315a2ca17b62ea6de2cbbbaf83ca8a4c8326d58"
+      },
+      "sensevoice/sensevoice/clip-000005.receipt.json": {
+        "bytes": 792,
+        "sha256": "17a975fc3981a6e0055a7f5348e3736c0db67b1e6285899cb673062519143821"
+      },
+      "sensevoice/sensevoice/clip-000005.started.json": {
+        "bytes": 502,
+        "sha256": "05d109d15bcb442db969adf4701bb0a75ae3cd1979a8f46d823bf998ca34d07a"
+      },
+      "sensevoice/sensevoice/clip-000006.decoder.json": {
+        "bytes": 2979,
+        "sha256": "508757a0463155bd9c098740d10007517ecc233f9ab6008754a60c15377dba57"
+      },
+      "sensevoice/sensevoice/clip-000006.receipt.json": {
+        "bytes": 792,
+        "sha256": "44533e7863e1c1103f846904473edc3b0eae542d7c1d1cf85ebfbe373ef7596a"
+      },
+      "sensevoice/sensevoice/clip-000006.started.json": {
+        "bytes": 502,
+        "sha256": "1505e80a549fe31c00a826929dec7d37b132cd2180008382cf8664fad911f28d"
+      },
+      "sensevoice/sensevoice/clip-000007.decoder.json": {
+        "bytes": 2979,
+        "sha256": "81b8a6557012bc625e7ce5b6f16923cf383beb4617cf5aca6ea8ec7e4d0a639f"
+      },
+      "sensevoice/sensevoice/clip-000007.receipt.json": {
+        "bytes": 792,
+        "sha256": "e84df57af08872b198e95b1265b3ee6b66815992569590da34d99509bc841ac9"
+      },
+      "sensevoice/sensevoice/clip-000007.started.json": {
+        "bytes": 502,
+        "sha256": "e8597063b14137440fb2a0e3ff5a548ee35eacb9f0785251000ca5051e5380a1"
+      },
+      "sensevoice/sensevoice/clip-000008.decoder.json": {
+        "bytes": 2970,
+        "sha256": "c4d42c3d4ef9bc219892c8a8df8fddc5c1832ef769a48a4008abff85475494e2"
+      },
+      "sensevoice/sensevoice/clip-000008.receipt.json": {
+        "bytes": 792,
+        "sha256": "f4268e974746840e38b5a74b0a6b63e66d85e87e30dae2fc629b68540d2c7339"
+      },
+      "sensevoice/sensevoice/clip-000008.started.json": {
+        "bytes": 502,
+        "sha256": "5cebdcd2c05306d913ee273ec2cf989f93bc23c5c7ad4c884ee9d2a22650be8e"
+      },
+      "sensevoice/sensevoice/clip-000009.decoder.json": {
+        "bytes": 2979,
+        "sha256": "6e6208cf868aed1a894939fd5d5d83b577aa5219cbb6a25e02a8c1ce8a45e4bf"
+      },
+      "sensevoice/sensevoice/clip-000009.receipt.json": {
+        "bytes": 792,
+        "sha256": "38b475ba91c217bb39b0306ca04f6d39b2de443a0ca746f27efa2a3f4f603863"
+      },
+      "sensevoice/sensevoice/clip-000009.started.json": {
+        "bytes": 502,
+        "sha256": "0d0ef3e3a3c7d67674651b1f5870461d85d726bcc87d74a7b0337d69b9b1c98c"
+      },
+      "sensevoice/sensevoice/clip-000010.decoder.json": {
+        "bytes": 2971,
+        "sha256": "dfcd83744d5d1e8860cfe0f21a9e9d3eaeb723cc0c7eb2f7505dfe2d1bb0d650"
+      },
+      "sensevoice/sensevoice/clip-000010.receipt.json": {
+        "bytes": 792,
+        "sha256": "b6b55bceb45b6154ebf93010f3d56ef96a0a6d18ae327350f00bf62b03d9a73d"
+      },
+      "sensevoice/sensevoice/clip-000010.started.json": {
+        "bytes": 502,
+        "sha256": "21e758c957000eb820cbbd06962901d449022d1cf6b0148d89c6e244ab229f6d"
+      },
+      "sensevoice/sensevoice/clip-000011.decoder.json": {
+        "bytes": 2980,
+        "sha256": "57ebc6d709df6ed4166d2997d14478886fa8804bff65183ab1026428644c5cfa"
+      },
+      "sensevoice/sensevoice/clip-000011.receipt.json": {
+        "bytes": 792,
+        "sha256": "46086c4fba96aec109b0e5027e687adac145a4b87f747825c6641355b594ddcc"
+      },
+      "sensevoice/sensevoice/clip-000011.started.json": {
+        "bytes": 502,
+        "sha256": "788d7abb617124a8a24b36df7de3c0d3d49a18de3fbb04b9878e436908431507"
+      },
+      "sensevoice/sensevoice/clip-000012.decoder.json": {
+        "bytes": 2979,
+        "sha256": "4a9abc441eb0a34132a855ab77db2f01cee2325538c1f74185d21926b5c576ef"
+      },
+      "sensevoice/sensevoice/clip-000012.receipt.json": {
+        "bytes": 792,
+        "sha256": "b476787579fe1ff6c31cc7b79f715236f78ff2f317c2ecdb3d2709d17586caff"
+      },
+      "sensevoice/sensevoice/clip-000012.started.json": {
+        "bytes": 502,
+        "sha256": "d9dac0e6d7906db3727a0e9a68494e1fdeba354b6e369a9c92c4dfcf1a7e70c6"
+      },
+      "sensevoice/sensevoice/clip-000013.decoder.json": {
+        "bytes": 2979,
+        "sha256": "b1200d7ae3ba2162e8ff944a945707bd78c172f0b06e8f4886142f4ec5e9930d"
+      },
+      "sensevoice/sensevoice/clip-000013.receipt.json": {
+        "bytes": 792,
+        "sha256": "55e30367aba924b4b8751fb009505960e43a6a90746ddb9bfd4a6dea975e1220"
+      },
+      "sensevoice/sensevoice/clip-000013.started.json": {
+        "bytes": 502,
+        "sha256": "e5a9d996b195937dc24115f12d643ad6c395690fda2a275dc8633156cccc72a3"
+      },
+      "sensevoice/sensevoice/clip-000014.decoder.json": {
+        "bytes": 2920,
+        "sha256": "469e413c33f85653c8bf9b15fca5ff621cc7aebe5d7251c8f1979fa45a949e4c"
+      },
+      "sensevoice/sensevoice/clip-000014.receipt.json": {
+        "bytes": 780,
+        "sha256": "8f07922aff6f64fd56a0b490908fd0ae5c5b652fb1f535d53661f2f9c82d63c9"
+      },
+      "sensevoice/sensevoice/clip-000014.started.json": {
+        "bytes": 502,
+        "sha256": "7be5e3b597154d17d1f8bab85caf324cea4fb3a220c9e296397a902e22108a18"
+      },
+      "sensevoice/sensevoice/clip-000015.decoder.json": {
+        "bytes": 2978,
+        "sha256": "9fd654665013c934f9af9f5266d2d90dfbf481df4361b992cf92a35f16b52043"
+      },
+      "sensevoice/sensevoice/clip-000015.receipt.json": {
+        "bytes": 792,
+        "sha256": "16a26c5c5067c3e32a6ad672f5574f6828777e00a8fce6988fcbfc6f4b05e0f4"
+      },
+      "sensevoice/sensevoice/clip-000015.started.json": {
+        "bytes": 502,
+        "sha256": "04d83fbdea7d21027e85a92b7f0526596562a8313c84f0cbf4fe93848dd585b5"
+      },
+      "sensevoice/sensevoice/clip-000016.decoder.json": {
+        "bytes": 2918,
+        "sha256": "615dab66f808d0f436e9f044bb87a3e48eeb35e8cd56916773096efae3cbda92"
+      },
+      "sensevoice/sensevoice/clip-000016.receipt.json": {
+        "bytes": 780,
+        "sha256": "6f580be6b464ab94ea9798d75ddebcf535a872f42d6bd47112de60ff9f2498fd"
+      },
+      "sensevoice/sensevoice/clip-000016.started.json": {
+        "bytes": 502,
+        "sha256": "09ee1dcd10c472d59b48dcff6be0ff17bafca78d1efbdb757ad3f8d8b53a29c1"
+      },
+      "sensevoice/sensevoice/contract.json": {
+        "bytes": 860,
+        "sha256": "0cbf9d4432971927548c69aef0b9e3185323bc19e01dcb30f93d2c95595d5e9c"
+      },
+      "sensevoice/sensevoice/decoder-inputs.json": {
+        "bytes": 18685,
+        "sha256": "3a61e9c35018c63d7117f791b3fd84ea7a32cbba5167891ef00f4271dc9dad1e"
+      },
+      "sensevoice/sensevoice/environment.json": {
+        "bytes": 485,
+        "sha256": "6b429663a65cb33ea9eae6b83a32155605559bef2abee186d337705ecae17c30"
+      },
+      "sensevoice/sensevoice/model-load-started.json": {
+        "bytes": 201,
+        "sha256": "5d9e0f84c2c92471677e35bfdf2fb936d79bdd48d6702521256f321cd13a8ae5"
+      },
+      "sensevoice/sensevoice/model-load.json": {
+        "bytes": 487373,
+        "sha256": "669bc1d16f5d04d9b2c728ba46e2aaaac0181afb66b1004b438cea6fb5d8cca3"
+      },
+      "sensevoice/sensevoice/outcomes.0001.json": {
+        "bytes": 3590,
+        "sha256": "a91ac067b21107933429be7566f9c8719e7d184d6643aaaceaa91e1fb4ccea50"
+      },
+      "sensevoice/sensevoice/outcomes.0002.json": {
+        "bytes": 3675,
+        "sha256": "199e075e29b5a3642f73153a989fd60fbae854a3ce51b9d35b14a9acf58a2f58"
+      },
+      "sensevoice/sensevoice/outcomes.0003.json": {
+        "bytes": 3760,
+        "sha256": "e00a872b4912fc9ffc73dc3a2b1b62f1de9e1c06e85c2d02b176af61e02ab76e"
+      },
+      "sensevoice/sensevoice/outcomes.0004.json": {
+        "bytes": 3845,
+        "sha256": "0c6451787c72cf815eb8f17edcac68dfd847f0b7fd6cae7e99453d103d67842d"
+      },
+      "sensevoice/sensevoice/outcomes.0005.json": {
+        "bytes": 3930,
+        "sha256": "84365dd2067f715623aaa746fa860db1049589fdd8e75d183e99e6964b6d659a"
+      },
+      "sensevoice/sensevoice/outcomes.0006.json": {
+        "bytes": 4015,
+        "sha256": "49735460f15a75ca92271a74325cf5a1484fe84455bca48798372d4b7352685f"
+      },
+      "sensevoice/sensevoice/outcomes.0007.json": {
+        "bytes": 4100,
+        "sha256": "f295f3cd5b0629de584d279529d44044d3adc69fb8ce2621f5ccda2d7df78429"
+      },
+      "sensevoice/sensevoice/outcomes.0008.json": {
+        "bytes": 4185,
+        "sha256": "5c4a1991addff0603e1a50f650abd6d234df94c5ebdd9d4967d2f919e48a9b99"
+      },
+      "sensevoice/sensevoice/outcomes.0009.json": {
+        "bytes": 4270,
+        "sha256": "7609700f31d743696b4bdc9cc9717058a9c9f697baa102d718b5fb7bafcda666"
+      },
+      "sensevoice/sensevoice/outcomes.0010.json": {
+        "bytes": 4355,
+        "sha256": "0c3ede3e405d00c601996b49de8f0f0db3261fcd94c0b9bf2a08bdb3ae8c3fe4"
+      },
+      "sensevoice/sensevoice/outcomes.0011.json": {
+        "bytes": 4440,
+        "sha256": "699783b89d43a14cd49b7ca8542c4beddac39f60782676b3abcd130ec8dd2aa7"
+      },
+      "sensevoice/sensevoice/outcomes.0012.json": {
+        "bytes": 4525,
+        "sha256": "fa8072d5922c671cd200e504e991e092c9c87a5440066f9cb0197fb91e3aef97"
+      },
+      "sensevoice/sensevoice/outcomes.0013.json": {
+        "bytes": 4610,
+        "sha256": "4ce9ca4e45c0fe288094f3c691d535b97b10a325009fb4e663d13549a556411e"
+      },
+      "sensevoice/sensevoice/outcomes.0014.json": {
+        "bytes": 4683,
+        "sha256": "9a3fbb3b17b4fb396fc293cd613a3f020c752175a3b855bd2e3aeef1392e6b3f"
+      },
+      "sensevoice/sensevoice/outcomes.0015.json": {
+        "bytes": 4768,
+        "sha256": "e3aa395b067f8d1e54614e71b1539b674a632a5e89fd1d9a98c24598ace728a5"
+      },
+      "sensevoice/sensevoice/outcomes.0016.json": {
+        "bytes": 4841,
+        "sha256": "500f7cb287504d68d14c17c6b61e8a29cc27d59260864181ef246bb4d948f661"
+      },
+      "sensevoice/sensevoice/outcomes.initial.json": {
+        "bytes": 3505,
+        "sha256": "0d20832542b525838340a7cf93e20d44163dae9bdb11f29daaed75aab16a107c"
+      },
+      "sensevoice/sensevoice/outcomes.json": {
+        "bytes": 4841,
+        "sha256": "500f7cb287504d68d14c17c6b61e8a29cc27d59260864181ef246bb4d948f661"
+      },
+      "sensevoice/sensevoice/raw-freeze.json": {
+        "bytes": 6950,
+        "sha256": "50f169a709b1dc9ceaf88dbd9d9a1ee0d5913c38126f53d5392830513e88429c"
+      },
+      "sensevoice/sensevoice/scope.json": {
+        "bytes": 321,
+        "sha256": "4f0f43b9baf82f35d16756be4359947f39f9a59f6063774b33527280cedf94fa"
+      },
+      "sensevoice/sensevoice/source-identity.json": {
+        "bytes": 2558,
+        "sha256": "e9e1571ce8e530cb920be9bef1e02124cfd2364710b32944abfa2c0a08c6afef"
+      },
+      "sensevoice/sensevoice/summary.json": {
+        "bytes": 634,
+        "sha256": "622fc9328a84e2989761f92e330b8eeab957d390b55efe5557ea116af655daaa"
+      },
+      "sensevoice/terminal-outcomes.json": {
+        "bytes": 6569,
+        "sha256": "df0ac2860ba350e6bac5bfe97f690d9454258cc87ae95ee0074ab3a59e12806a"
+      },
+      "sensevoice/terminal-summary.json": {
+        "bytes": 388,
+        "sha256": "2b31ef4cf6edc778bc40d979129c038137b5a0599b4057ea80eb5c7b263744d1"
+      },
+      "setup-public.json": {
+        "bytes": 207,
+        "sha256": "f4794c60a4b204a9146be7cc1d0379361930bb8aad416d78a99cecc7041b3de6"
+      }
+    }
+  },
+  "retention_policy": "All169 unmodified public artifact members retained byte-for-byte under asr/. The79 reused Qwen members are intentionally retained in this complete artifact and verified identical to original v3 bytes; they are not new decodes. Audio remains in original v3 retention with identical WAV/PCM hashes. Archive container body is represented by verified size/SHA, not reconstructed.",
+  "reused_qwen_member_count": 79,
+  "reused_qwen_member_bytes": 806896,
+  "executed_source_policy": "All74 frozen source files remain unchanged. All three main release files stay false; no active execution workflow is included.",
+  "boundaries": {
+    "human_review": "PENDING",
+    "human_actual_labels_obtained": 0,
+    "human_gold": false,
+    "training_admitted": false,
+    "shipping_approved": false,
+    "batch_training_ready": false,
+    "acoustic_completeness": "UNKNOWN",
+    "d20": "FAIL",
+    "d90": "NOT_RUN",
+    "new_execution_authorized_by_this_record": false
+  }
+}
