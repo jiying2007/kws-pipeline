@@ -1,3 +1,14 @@
+> Current status, 2026-10-11: the first and second campaign attempts have both
+> finished with setup failures and zero audio attempts. Their retained freezes,
+> releases, evidence, and run identities are historical and must not be refreshed
+> or reactivated. The shared setup now contains dormant dependency-first source
+> changes, so the old freezes intentionally reject it as source drift. The
+> preparation/activation instructions below describe historical preparation only.
+> Do not run either old `prepare_freeze.py` to refresh those records.
+> The separately authorized third attempt has not run: its official-pip transport
+> remains blocked pending equivalent acquisition bounds. See
+> [the current transport review](../attempt-3/PIP_TRANSPORT_REVIEW.md).
+
 # Separately authorized second campaign attempt
 
 This is a new, single campaign attempt after run `38105471896` failed in setup.

@@ -503,6 +503,88 @@ class SetupDiagnosticTests(unittest.TestCase):
         with self.assertRaises(FileExistsError): other.enter('entry')
         self.assertEqual((self.output / 'setup-progress.json').read_bytes(), original)
 
+    def test_runtime_failure_prevents_all_model_acquisition(self):
+        # Execute only stdlib orchestration over tiny fake files. Every download,
+        # venv and subprocess operation is replaced; no package/model is fetched.
+        from types import SimpleNamespace
+        for failure in ('wheel_download', 'install_wheels', 'check_dependencies',
+                        'installed_inventory', 'model_download', None):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp); code = root / 'code'; runtime = root / 'runtime'; output = root / 'output'
+                for directory in (code, runtime, output): directory.mkdir()
+                source_rows = [{'path': 'whisper/assets/fake.json', 'sha256': 'a' * 64}]
+                wheels = [{'name': name, 'filename': name + '.whl', 'sha256': 'b' * 64}
+                          for name in ('fixture-one', 'fixture-two')]
+                write_once(code / 'source-lock.json', {'source_revision': common.SOURCE_REVISION, 'files': source_rows})
+                write_once(code / 'runtime-lock.json', {'files': wheels})
+                diag = self.setup.SetupDiagnostics(output); calls = []; events = []
+                downloader = mock.Mock(total=21)
+                def get(row, target):
+                    kind = target.relative_to(runtime).parts[0]
+                    calls.append(kind); events.append('get:' + kind)
+                    if failure == 'wheel_download' and kind == 'wheels': raise RuntimeError('injected')
+                    if failure == 'model_download' and kind == 'model': raise RuntimeError('injected')
+                    target.parent.mkdir(parents=True, exist_ok=True); target.write_bytes(b'fixture')
+                    return identity(target)
+                downloader.get.side_effect = get
+                def create(path):
+                    installed = path / 'lib/python3.12/site-packages'; installed.mkdir(parents=True)
+                    (installed / 'fixture.txt').write_bytes(b'fixture')
+                def run(args, **kwargs):
+                    stage = 'install_wheels' if 'install' in args else 'check_dependencies'
+                    events.append(stage)
+                    if failure == stage: raise RuntimeError('injected')
+                def inventory(path, members):
+                    events.append('installed_inventory')
+                    if failure == 'installed_inventory': raise RuntimeError('injected')
+                    verify_inventory(path, members)
+                actual_path = Path
+                def paths(value):
+                    return {'/runtime': runtime, '/output': output,
+                            '/code/research/source-screen32-whisper-v1': code}.get(str(value), actual_path(value))
+                builder = mock.Mock(); builder.create.side_effect = create
+                with mock.patch.object(self.setup, 'HERE', code), mock.patch.object(self.setup, 'Path', side_effect=paths), \
+                     mock.patch.object(self.setup, 'sys', SimpleNamespace(version_info=(3, 12), argv=['fixture'])), \
+                     mock.patch.object(self.setup, 'verify_runtime_scope', return_value={'fixture': True}), \
+                     mock.patch.object(self.setup.shutil, 'disk_usage', return_value=mock.Mock(free=20 * 1024**3)), \
+                     mock.patch.object(self.setup, 'Downloader', return_value=downloader), \
+                     mock.patch.object(self.setup.venv, 'EnvBuilder', return_value=builder), \
+                     mock.patch.object(self.setup.subprocess, 'run', side_effect=run), \
+                     mock.patch.object(self.setup, 'verify_inventory', side_effect=inventory), \
+                     mock.patch.dict(self.setup.os.environ, {}, clear=True):
+                    if failure:
+                        with self.assertRaises(RuntimeError): self.setup.execute_setup(diag)
+                    else:
+                        self.setup.execute_setup(diag)
+                if failure in ('wheel_download', 'install_wheels', 'check_dependencies', 'installed_inventory'):
+                    self.assertNotIn('model', calls)
+                    self.assertFalse((runtime / 'model').exists())
+                else:
+                    self.assertEqual(calls.count('model'), 1)
+                    self.assertLess(events.index('check_dependencies'), events.index('get:model'))
+                    self.assertLess(events.index('installed_inventory'), events.index('get:model'))
+                self.assertEqual((output / 'download-receipt.json').exists(), failure is None)
+                self.assertEqual((output / 'setup-receipt.json').exists(), failure is None)
+                if failure is None:
+                    receipt = read_json(output / 'download-receipt.json')
+                    self.assertEqual(len(receipt['files']), 4)
+                    self.assertEqual(receipt['retry_count'], 0)
+                    self.assertFalse(receipt['model_loaded'])
+
+    def test_failfast_is_only_a_source_stage_reorder(self):
+        source = (HERE / 'setup_runtime.py').read_text()
+        tree = ast.parse(source)
+        setup = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'execute_setup')
+        stages = [n.value.args[0].value for n in setup.body if isinstance(n, ast.Expr) and
+                  isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Attribute) and
+                  n.value.func.attr == 'enter']
+        self.assertLess(stages.index('wheel_download'), stages.index('model_download'))
+        self.assertLess(stages.index('check_dependencies'), stages.index('model_download'))
+        self.assertLess(stages.index('installed_inventory'), stages.index('model_download'))
+        self.assertLess(stages.index('model_download'), stages.index('download_receipt'))
+        self.assertEqual(stages.count('model_download'), 1)
+        self.assertEqual(stages.count('wheel_download'), 1)
+
     def test_first_failed_run_public_evidence_is_immutable_and_zero_attempt(self):
         directory = HERE / 'evidence/run-38105471896'
         provenance = read_json(directory / 'provenance.json')
@@ -530,15 +612,20 @@ class SecondAttemptTests(unittest.TestCase):
         cls.retry = importlib.util.module_from_spec(spec); spec.loader.exec_module(cls.retry)
 
     @contextlib.contextmanager
-    def fixture(self):
+    def fixture(self, refresh_fixture_freeze=True):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); base = root / 'research/source-screen32-whisper-v1'; here = base / 'attempt-2'
             freeze = read_json(HERE / 'attempt-2/execution-freeze.json')
             for name in freeze['files']:
                 dest = root / name; dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(ROOT / name, dest)
-            shutil.copyfile(HERE / 'attempt-2/execution-freeze.json', here / 'execution-freeze.json')
+            # Positive admission tests use a synthetic, explicitly reviewed fixture.
+            # Production attempt-2 freeze stays unchanged and is separately rejected.
+            if refresh_fixture_freeze:
+                freeze['files'] = {name: file_hash(root / name) for name in freeze['files']}
+            write_once(here / 'execution-freeze.json', freeze)
             release = read_json(HERE / 'attempt-2/execution-release.json'); release['approved'] = True
+            release['source_freeze_sha256'] = file_hash(here / 'execution-freeze.json')
             write_once(here / 'execution-release.json', release)
             active = root / self.retry.WORKFLOW; active.parent.mkdir(parents=True)
             shutil.copyfile(here / 'workflow.yml', active)
@@ -673,7 +760,7 @@ class SecondAttemptTests(unittest.TestCase):
                 with self.assertRaises(ValueError): self.retry.main(env)
                 execute.assert_not_called()
 
-    def test_second_freeze_preserves_old_history_and_exact_blind_bytes(self):
+    def test_second_freeze_preserves_history_with_explicit_setup_retirement(self):
         freeze = read_json(HERE / 'attempt-2/execution-freeze.json')
         original = read_json(HERE / 'execution-freeze.json')
         self.assertEqual(file_hash(HERE / 'execution-freeze.json'),
@@ -682,12 +769,24 @@ class SecondAttemptTests(unittest.TestCase):
         self.assertEqual(freeze['blind_code'], original['blind_code'])
         self.assertEqual(len(freeze['blind_code']), 8)
         for name in freeze['blind_code']:
-            self.assertEqual(file_hash(ROOT / name), original['files'][name])
             self.assertEqual(freeze['files'][name], original['files'][name])
+            if name.endswith('/setup_runtime.py'):
+                self.assertNotEqual(file_hash(ROOT / name), original['files'][name])
+            else:
+                self.assertEqual(file_hash(ROOT / name), original['files'][name])
         self.assertTrue(set(original['files']) <= set(freeze['files']))
         self.assertFalse(any('/attempt-2/' in name or '/evidence/' in name for name in freeze['blind_code']))
         self.assertEqual(sum('/evidence/run-38105471896/' in name for name in freeze['files']), 8)
-        for name, digest in freeze['files'].items(): self.assertEqual(file_hash(ROOT / name), digest)
+        drift = {name for name, digest in freeze['files'].items() if file_hash(ROOT / name) != digest}
+        self.assertEqual(drift, {'research/source-screen32-whisper-v1/setup_runtime.py',
+                                 'research/source-screen32-whisper-v1/test_contract.py',
+                                 'research/source-screen32-whisper-v1/README.md',
+                                 'research/source-screen32-whisper-v1/attempt-2/README.md'})
+        self.assertEqual(file_hash(HERE / 'attempt-2/execution-freeze.json'),
+                         '543bc71585522dc318b2c954ee715b779b696876a5030b04f921a36214870f2a')
+        with self.fixture(refresh_fixture_freeze=False) as (_, _, _, env, _, _):
+            with self.assertRaisesRegex(ValueError, 'reviewed source drift'):
+                self.retry.admission(env)
 
     def test_second_workflow_identity_and_budgets_remain_fixed(self):
         workflow = (HERE / 'attempt-2/workflow.yml').read_text()
@@ -700,6 +799,36 @@ class SecondAttemptTests(unittest.TestCase):
         self.assertEqual(LIMITS['job_seconds'], 2400)
         self.assertEqual(LIMITS['new_whisper_calls'], 16)
         self.assertEqual(self.retry.runtime, host)
+
+
+class ThirdAttemptPreparationTests(unittest.TestCase):
+    def test_original_locks_unchanged(self):
+        for name, digest in {
+            'runtime-lock.json': '881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d',
+            'source-lock.json': '0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649',
+        }.items():
+            self.assertEqual(file_hash(HERE / name), digest)
+
+    def test_candidate_exact_lock_rows(self):
+        rows = json.loads((HERE / 'runtime-lock.json').read_text())['files']
+        actual = [line for line in (HERE / 'attempt-3/locked-download-requirements.txt').read_text().splitlines()
+                  if line and not line.startswith('#')]
+        self.assertEqual(actual, [f"{r['name']} @ {r['url']} --hash=sha256:{r['sha256']}" for r in rows])
+        self.assertEqual(len(actual), len({r['name'] for r in rows}))
+
+    def test_torch_identity(self):
+        rows = json.loads((HERE / 'runtime-lock.json').read_text())['files']
+        torch = next(r for r in rows if r['name'] == 'torch')
+        self.assertEqual(torch['version'], '2.12.1+cpu')
+        self.assertEqual(torch['size_bytes'], 192268841)
+        self.assertEqual(torch['sha256'], 'ae4bb28409f5370852bd71af221066236c38d647f780d9b0a7240c330a9c12df')
+        self.assertEqual(torch['url'], 'https://download-r2.pytorch.org/whl/cpu/torch-2.12.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl')
+
+    def test_preparation_does_not_admit_execution(self):
+        for name in ('execution-freeze.json', 'execution-release.json', 'workflow.yml', 'continue_once.py'):
+            self.assertFalse((HERE / 'attempt-3' / name).exists())
+        for directory in (HERE, HERE / 'attempt-2'):
+            self.assertIs(json.loads((directory / 'execution-release.json').read_text())['approved'], False)
 
 
 if __name__ == '__main__':
