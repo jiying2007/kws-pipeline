@@ -101,3 +101,64 @@ copies the byte-identical workflow template to
 `.github/workflows/source-screen32-whisper-third-v1.yml` on the one-shot branch.
 Creating that branch is the execution boundary. The prepare commit itself does
 not authorize or trigger dispatch. There is no automatic retry after a failed run.
+
+## First attempt retained; setup diagnostics revision
+
+The first authorized run, [38105471896](https://github.com/jiying2007/kws-pipeline/actions/runs/38105471896),
+ended during setup. Its exact seven artifact JSON members and a separate provenance
+record are retained under [evidence/run-38105471896](evidence/run-38105471896/provenance.json).
+The original ZIP was 11,518 bytes with SHA256
+`04b6b23c85f25e0b29520972654c2d59f18f22506cf1b77c9fd1056bd357b0ff`;
+executed head was `48a8135fc00489075ffeb456bb51aea6afef3cdd`, tree
+`19ca10175c32b377ceefdff865219aef68811d8f`. The old receipt retains its original
+`fdfb8a9040a10ec380ac7a658662d2d2935296301ee4269ac0ce79309cc48c2e`
+source-freeze identity unchanged. All 16 rows are not-run with zero attempts.
+
+The container exited 1, was not OOM-killed, and cleanup completed. Its setup
+artifact contained only the two copied locks, without a download or setup
+receipt. The host's `ValueError` came from its supervisor detecting the failed
+container; it does not identify the setup process's inner exception. Exact
+failure item, cause, and partial download byte count are unknown. The old host
+started and inspected the container without attaching stdout or collecting its
+log, then removed it; the old setup process printed only an exception class and
+had no durable failure receipt. That explains the diagnostic gap, not the
+underlying acquisition failure.
+
+The revision adds only fail-closed setup observability:
+
+- An exclusive first progress-file claim preserves the fresh-output boundary.
+  Fixed stage names and completed-stage names are durable before each operation.
+- Each source/model/wheel item is identified by its group, ordinal in the retained
+  lock, expected per-asset SHA256 and expected size. Whole source/runtime lock SHA256
+  identities are recorded separately after the locks are read. No arbitrary path
+  or URL is copied.
+  Verified items and the current incomplete item are distinguished.
+- HTTP status and bytes actually returned to Python are recorded before hash
+  checks. These body-byte counts exclude protocol traffic, redirect/error bodies not
+  returned to the downloader, and bytes buffered internally but not returned; they are never called total network traffic.
+- Exact observed file hashes are recorded only after reading completes. Length,
+  hash, source-revision, host allowlist, byte, CPU/RAM and time limits remain
+  unchanged. No retry or alternative source/model is introduced.
+- Failures produce `setup-failure.json` with fixed reason categories and bounded
+  HTTP status/errno/return-code integers. Exception messages, commands, URLs,
+  response headers, raw logs, credentials and file bodies are never copied.
+  A killed process may leave only the last durable progress snapshot, which stays
+  partial rather than becoming a fabricated failure detail or success receipt.
+  Container launch failures, Python import failures before handler entry, SIGKILL,
+  and an unwritable output mount can leave no diagnostic. Handled constructor or
+  signal-registration failures emit only a fixed safe summary if a receipt cannot
+  be written; diagnostic persistence is never claimed without a successful write.
+
+Current, separate source-preparation HEAD-only observations between 02:38 and
+02:41 UTC on 2026-10-11 returned 200 for all 22 source URLs, 21 ordinary wheel
+URLs, and the model URL; the locked Torch wheel host returned 403. No redirects
+were followed and no wheel/model bodies were requested. This different
+execution environment and later HEAD response cannot establish which item or
+failure occurred in the first GitHub run. No URL or allowlist was changed and no
+access denial was bypassed.
+
+The retained failed-run evidence is outside the source freeze and blind code
+mount. The revised freeze describes prospective code only and remains unapproved.
+It neither changes the old run nor authorizes a second attempt. The existing
+one-shot guards stay unchanged; another attempt requires separate user approval
+and a separately reviewed activation.
