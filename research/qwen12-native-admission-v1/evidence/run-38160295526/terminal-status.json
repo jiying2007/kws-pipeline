@@ -1,0 +1,171 @@
+{
+  "schema": "qwen12-native-terminal-status-v1",
+  "scope": "Public source and machine-evidence metadata only; failed recovery execution, no recognition, admission, training or acoustic qualification result.",
+  "repository": "jiying2007/kws-pipeline",
+  "source": {
+    "commit": "e9297163a21f8f7c2f960301ff05f1894617d2cf",
+    "tree": "20e9ff3b33b894807ee1973810afb7645df5d7bd",
+    "freeze_sha256": "4b4fcb7dbabde3f4306cb0c363b7298be2c66382bd38359c6701d29a3a282342"
+  },
+  "run": {
+    "id": 38160295526,
+    "attempt": 1,
+    "job_id": 114531695348,
+    "job_key": "qwen12",
+    "event": "push",
+    "head_branch": "research/qwen12-native-admission-recovery1",
+    "url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38160295526",
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38160295526/job/114531695348",
+    "status": "completed",
+    "conclusion": "failure",
+    "host_status": "cleanup_unconfirmed"
+  },
+  "failure": {
+    "host_stage": "asr_setup",
+    "host_error_type": "TimeoutExpired",
+    "setup_body_completed": true,
+    "cleanup_confirmed": false,
+    "observed_cleanup_errors": [
+      {
+        "attempt": 1,
+        "error_type": "TimeoutExpired",
+        "status": "removal_unconfirmed",
+        "seconds": 5.036801980999996
+      },
+      {
+        "attempt": 2,
+        "error_type": "CalledProcessError",
+        "status": "removal_unconfirmed",
+        "seconds": 0.011261977999993178
+      }
+    ],
+    "source_control_flow_inference": {
+      "first_timeout_command_family": "docker rm --force of the setup container, with a 5-second command timeout",
+      "first_timeout_basis": "The CPU ledger is closed and final_verified; immutable MeteredDocker.remove writes this only after acknowledged pause and inspect, immediately before rm.",
+      "later_called_process_error_stage": "second cleanup pause or inspect; no second rm was reached, and the precise failed substage was not retained",
+      "daemon_removal_completion_established": false,
+      "earlier_primary_error_masked_by_finally_excluded": false,
+      "command_stderr_or_timeout_payload_retained": false
+    },
+    "host_setup_or_cpu_budget_exhaustion_established": false,
+    "original_run_permission_error_root_cause_established": false
+  },
+  "recognition_slots": {
+    "planned": 36,
+    "started": 0,
+    "completed": 0,
+    "error": 0,
+    "not_run": 36,
+    "by_family": {
+      "qwen06": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      },
+      "sensevoice": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      },
+      "whisper": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      }
+    }
+  },
+  "setup_evidence": {
+    "body_status": "complete",
+    "commands_completed": 22,
+    "all_commands_success": true,
+    "body_wall_seconds": 133.834176304,
+    "model_calls": 0,
+    "guarded_import_status": "success",
+    "guarded_import_model_constructions": 0,
+    "guarded_import_weight_loads": 0,
+    "guarded_import_forward_calls": 0,
+    "optional_ffmpeg_policy": {
+      "completed": true,
+      "intercepted_probes": 1,
+      "external_process_executed": false,
+      "module_backend_enabled": false
+    },
+    "asr_acquisition_response_body_bytes": 3340966447,
+    "host_combined_setup_seconds_recorded": 0,
+    "host_combined_setup_seconds_interpretation": "Incomplete accumulator because supervised setup did not return; not zero setup work or elapsed time."
+  },
+  "runtime_evidence": {
+    "host_stages": {
+      "asr_setup": "error",
+      "qwen06": "not_run",
+      "sensevoice": "not_run",
+      "whisper": "not_run",
+      "whisper_setup": "not_run"
+    },
+    "all_three_prepare_only_loads_reached": false,
+    "all_three_policy_freeze_present": false,
+    "package_budget_preflight_present": false,
+    "fresh_decode_workers_started": false,
+    "prepared_native_source_locks": 0,
+    "host_wall_seconds": 151.293698272,
+    "controlled_cpu_seconds": 103.355741,
+    "cpu_threshold_exceeded": false,
+    "controlled_container_count": 1,
+    "cpu_final_usage_verified": true,
+    "cpu_usage_scope": "controlled container cgroups through acknowledged pause before removal; excludes host/image/log/cleanup after pause",
+    "post_pause_container_stopped_or_removed_proven": false,
+    "all_containers_removed": false,
+    "runner_job_terminal": true,
+    "runner_orphan_cleanup_proves_specific_container_removal": false
+  },
+  "evidence": {
+    "commit": "d843cc59113c7fd3ac89a0b4be9db71e5950ea20",
+    "tree": "5a99386e3803a44ecf35b647e9c0e4f75fb30b0a",
+    "branch": "evidence/qwen12-native-admission-recovery1",
+    "path": "research/qwen12-native-admission-v1/evidence/recovery1",
+    "url": "https://github.com/jiying2007/kws-pipeline/tree/d843cc59113c7fd3ac89a0b4be9db71e5950ea20/research/qwen12-native-admission-v1/evidence/recovery1",
+    "archive_bytes": 86754,
+    "archive_sha256": "9b063d2c92ccf88d67678b032d391bf01e0ceb1a626d5cf23a3f11c0fd250d39",
+    "chunk_count": 1,
+    "retrieved_file_count": 3,
+    "evidence_member_count": 6,
+    "member_count_including_manifest": 7,
+    "outer_manifest_sha256": "68c9f70a2fdea110ccc333e9c08d348943f3fb1689eb0c2e2812f4a316e1cfec",
+    "member_manifest_sha256": "aa1cd0b739152f3292ae12217c01eda3ca68f0e8be1c3675baf6c1259ecf5ee0",
+    "custody_result": "PASS_CUSTODY_ONLY",
+    "all_chunk_sha256_verified": true,
+    "all_git_blob_sha1_verified": true,
+    "all_member_sha256_verified": true,
+    "all_zip_crc_verified": true,
+    "run_attempt_source_job_binding_verified": true,
+    "normal_O_OO_readback_identical": true,
+    "frozen_public_source_files_bound_to_immutable_tree": 65,
+    "runtime_native_closure_created": false
+  },
+  "predecessor": {
+    "run_id": 38154869005,
+    "attempt": 1,
+    "source_commit": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
+    "evidence_commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
+    "recognition_started": 0,
+    "recognition_completed": 0,
+    "source_ref_deleted_by_cleanup": true,
+    "source_ref_restoration_permitted": false
+  },
+  "cumulative_recognition": {
+    "original_and_recovery_runs": 2,
+    "unique_fixed_slots": 36,
+    "started": 0,
+    "completed": 0,
+    "interpretation": "Both consumed executions stopped before recognition. Repeated terminal accounting does not create 72 distinct input/recognizer slots."
+  },
+  "admission_established": false,
+  "training_performed": false,
+  "historical_identity_policy": "Preserve both consumed runs, source commits and evidence commits. Preserve existing recovery source/evidence refs. Never overwrite evidence, rerun either campaign or delete/recreate a consumed execution ref. This terminal record grants no further execution authority."
+}

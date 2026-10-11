@@ -28,8 +28,63 @@ Git blob, chunk, archive/member hashes, ZIP CRC and source/run/attempt/job bindi
 passed; all 323 members including the manifest were accounted for. This is
 `PASS_CUSTODY_ONLY`, not successful recognition, admission or acoustic evidence.
 The [terminal metadata](evidence/run-38154869005/terminal-status.json) retains
-the exact identities, counts and evidence limits. Preserve the original source
-and evidence refs; do not rerun or delete/recreate this consumed campaign.
+the exact identities, counts and evidence limits. The source ref was subsequently
+removed by cleanup as recorded below; the consumed campaign remains consumed.
+Preserve the immutable source/run/evidence identities and existing evidence ref.
+Do not restore the deleted source ref or rerun this campaign.
+
+### Source-ref retention deviation: 2026-10-11
+
+[Cleanup run 38159168064, job 114528278831](https://github.com/jiying2007/kws-pipeline/actions/runs/38159168064/job/114528278831)
+executed main `e9297163a21f8f7c2f960301ff05f1894617d2cf` and deleted only
+`research/qwen12-native-admission-v1` at `2026-10-11T17:19:44.6256799Z`.
+The workflow considered its tip already contained in main; this one-shot branch
+was absent from the retention roster. A later source-ref API read returned 404.
+The immutable source commit, original failed run and evidence commit remain
+available. Evidence commit `8e05b507e8239ed70191c56ff13216690d6c3049` has the
+original source `3528118f3cdedf391519a5f8c3365ac15eac16a8` as its sole parent.
+The [dated lifecycle record](evidence/run-38154869005/source-ref-lifecycle-2026-10-11.json)
+binds the deletion and subsequent observations without rewriting terminal data.
+
+Cleanup now has a separate exact-name retention guard for the original source,
+recovery1 source and consumed synthetic-preflight source before retired,
+ancestor or closed-PR deletion eligibility. It does not recreate a missing ref,
+reset a consumed campaign, or establish autonomous replay prevention against
+arbitrary external deletion/recreation. Any later execution remains a separate
+reviewed operation; a missing ref is never proof that a campaign is unused.
+
+## Terminal result: recovery 1, run 38160295526
+
+[Run 38160295526, attempt 1, job 114531695348](https://github.com/jiying2007/kws-pipeline/actions/runs/38160295526/job/114531695348)
+executed source `e9297163a21f8f7c2f960301ff05f1894617d2cf`. All 22 ASR setup
+commands completed, including the guarded pre-model dependency import. The
+scoped FFmpeg policy intercepted exactly one probe; the preflight recorded zero
+model construction, weight loading and audio forward calls. The original
+source-level compatibility fix therefore passed this actual import check.
+
+The setup container's pause and final CPU close succeeded at 103.355741 controlled
+CPU seconds. Its first `rm --force` client wait timed out after about 5.037 seconds.
+Final cleanup re-entered pause or inspect and failed; it did not reach a second
+remove command. The retained records do not establish whether the daemon had
+already removed the container. The cleanup `finally` path could also have
+replaced an earlier supervision error, and its gate result was not retained.
+Consequently this is `cleanup_unconfirmed`, not proof of successful supervision.
+
+The setup child recorded 133.834176304 seconds. The host's zero combined-setup
+accumulator is not an elapsed-time measurement: cleanup failed before that
+addition returned. No native prepare, Whisper setup or recognition occurred;
+all 36 slots are `not_run`. Across both consumed executions there are zero
+started and zero completed recognitions. No training admission has been created.
+
+Immutable [evidence commit d843cc59113c7fd3ac89a0b4be9db71e5950ea20](https://github.com/jiying2007/kws-pipeline/tree/d843cc59113c7fd3ac89a0b4be9db71e5950ea20/research/qwen12-native-admission-v1/evidence/recovery1)
+retains the 86,754-byte ZIP, SHA-256
+`9b063d2c92ccf88d67678b032d391bf01e0ceb1a626d5cf23a3f11c0fd250d39`.
+Its three repository files and seven ZIP members including the manifest passed
+independent source/run/job, blob, chunk, member and CRC verification. The
+[terminal metadata](evidence/run-38160295526/terminal-status.json) records the
+observations and uncertainty without rewriting either execution's evidence.
+Both campaign identities are consumed; this cleanup-only source disables native
+execution and introduces no third identity or capture authorization.
 
 ## New executable path
 
@@ -132,8 +187,8 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-This reviewed recovery activation removes the native workflow literal-false stop
-and sets the exact reviewed release enabled state. Dispatch still requires literal JSON true for
+This cleanup-only source restores the native workflow literal-false stop and
+sets release.enabled=false; both consumed execution identities remain unchanged. Dispatch still requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
 approvals. Missing, false, integer or string substitutes fail before Docker,
@@ -165,10 +220,11 @@ platform, model load or evidence omission is introduced.
 
 The activation procedure below records the original pre-run requirements.
 The source was reviewed, passed exact-head CI and was merged before the one-shot
-campaign ran and stopped as recorded above. Its source and evidence refs now
-exist and must remain unchanged; this historical procedure does not authorize a
-second run. Source review PRs run read-only fixtures and cannot run either
-contents-write publication job.
+campaign ran and stopped as recorded above. Its source ref was later deleted
+by cleanup as recorded above and must not be restored; the evidence ref must
+remain unchanged. This historical procedure does not authorize a second run.
+Source review PRs run read-only fixtures and cannot run either contents-write
+publication job.
 
 The zero-model repository-chunk preflight has passed actual connector readback:
 [run 38152411613, attempt 1, job 114508486242](https://github.com/jiying2007/kws-pipeline/actions/runs/38152411613/job/114508486242)
@@ -217,13 +273,14 @@ retained error/not_run evidence. Source-CI run_number is unrelated and is kept
 as supplied by Actions. Do not create a training source root until actual native
 results have independently passed the unchanged resolver and admission checks.
 
-## Recovery 1 reviewed activation source
+## Recovery 1 activation history (now consumed)
 
-The original execution and evidence refs remain immutable. A separately reviewed
-single continuation may use `research/qwen12-native-admission-recovery1`, with
+Original source/run/evidence identities remain immutable; the deleted original
+source ref must not be restored. The separately reviewed single continuation used `research/qwen12-native-admission-recovery1`, with
 create-only evidence ref `evidence/qwen12-native-admission-recovery1` and directory
-`research/qwen12-native-admission-v1/evidence/recovery1`. The native workflow literal stop is removed and all static release approvals
-are enabled in this reviewed source. No recovery execution has occurred. Before activation, recheck the predecessor's zero recognition
+`research/qwen12-native-admission-v1/evidence/recovery1`. The reviewed activation source ran once as recorded above. This current cleanup-only
+source restores the native literal stop and disables the release; no third
+execution identity or recognition attempt is authorized. Its pre-run review checked the predecessor's zero recognition
 consumption, absence of the new refs/run, exact source CI, budget and independent
 review. `execution-release.json` binds the original run, source, evidence commit,
 archive hash and 0/0/36 accounting. Across both executions, the same twelve clips
@@ -254,6 +311,7 @@ errno, fixed stage and bounded source-relative frames, never exception text,
 source lines, locals or environment values. Raw setup child stderr can exist
 transiently in excluded runtime logs; only safe projections enter public evidence.
 
+The following records the reviewed recovery budget, not a new execution allowance.
 Resource accounting is per execution, not a reset of history. The predecessor
 measured 454.195425 controlled-cgroup CPU seconds, 708.389337012 capture-host wall
 seconds and 700.114547769 combined setup seconds. Recovery retains the same
@@ -274,3 +332,59 @@ reservation must not be presented as a two-run total or exact network traffic.
 Only standard public GitHub-hosted runners are permitted; no artifact/cache/LFS
 storage or paid runner is added. A failed recovery stops and publishes available
 bounded failure evidence; it does not silently authorize another execution.
+
+
+## Cleanup-state correction and zero-model CI smoke
+
+The host binds each successful create to its complete container ID and uses
+that identity for subsequent lifecycle commands. An uncertain create without a
+verified ID does not authorize removal by name. Final CPU accounting is attempted
+at most once; successful removal cannot erase invalid or unverified accounting.
+A pause, inspect or CPU-close error still permits bounded cleanup of an already
+owned ID. The original supervision error and cleanup error are retained separately
+as bounded metadata; no raw Docker error text or listing is published.
+
+Removal is attempted once. If its client result is uncertain, one bounded,
+successful exact-ID query must positively report absence before cleanup is
+confirmed. A present container, malformed response or daemon error remains a
+failure. Finalization consumes this stored state rather than repeating pause,
+CPU close or removal. Cleanup operations have a single 15-second best-effort window with
+individual calls bounded to five seconds, including when the primary host
+deadline has expired. Receipt persistence follows those operations and is included
+in the supervision cleanup-phase timing, not a strict 15-second total. This limited
+cleanup can extend observed wall time; it
+does not extend setup, model or recognition work, waive a deadline, or validate
+missing final CPU usage. Failed-phase elapsed time and available gate results
+are retained independently of cleanup success.
+
+A read-only `cleanup-lifecycle-smoke` job is prepared for exactly the first
+`pull_request` `opened` event, `run_attempt=1`, in the canonical public repository
+with same-repository head branch `fix/qwen12-native-cleanup-source-20261011`.
+It needs the contracts job and checks out the exact reviewed PR head. The receipt
+keeps both that executed head and the original Actions PR-merge SHA. It does not
+run on synchronize, reopen, ready-for-review or manual reruns. A failed initial
+contracts job leaves this smoke unverified; later code changes cannot reuse an
+old head's smoke as proof of the changed head. A further test requires a separate
+reviewed decision, not an automatic retry.
+
+The smoke acquires the same pinned official Python image once and runs only a
+static Python `pass` through the production gate and owned-container cleanup.
+It mounts only the gate helper and empty scoped directories, with no packages,
+models, audio, repository credentials or token. It checks the actual CPU, memory,
+swap, PID, capability, seccomp and nonroot scope before releasing the child.
+No artifact, cache or LFS object is created. Its bounded public receipt is at
+most 32KiB, and records success, failure or uncertain cleanup without raw errors.
+
+This CI test adds one image acquisition and a small lifecycle operation on the
+standard free public `ubuntu-24.04` runner. The job ceiling is five minutes; the
+helper host deadline is 180 seconds, image-client phase 120 seconds and lifecycle
+phase 30 seconds. Failed image-client termination may use the existing bounded
+20-second cleanup and never proceeds to the lifecycle. Individual ordinary
+Docker calls are at most five seconds. The smoke's controlled container uses the
+same four-CPU/12GiB/no-swap envelope and a sampled 60-CPU-second stop threshold;
+image acquisition, host work and Docker daemon CPU are outside that ledger.
+The existing observed image-interface reservation is not a hard network-wire
+cap. One independent 15-second cleanup-operation window, followed by receipt
+persistence, may exceed a primary deadline;
+that overrun remains a failure. This source prepares the test; it does not claim
+that a hosted smoke or any third ASR execution has passed.

@@ -7,6 +7,9 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
+import subprocess
 import wave
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
@@ -378,7 +381,7 @@ class CpuTests(unittest.TestCase):
     def test_final_close_only_exceed_still_removes_then_fails(self):
         with tempfile.TemporaryDirectory() as d:
             docker=host.MeteredDocker(d,999999999999);docker.gate('last-whisper')
-            row=docker.names['last-whisper'];row.update(created=True,registered=True,reader=lambda:1800000001)
+            row=docker.names['last-whisper'];row.update(create_attempted=True,created=True,container_id='a'*64,start_attempted=True,registered=True,reader=lambda:1800000001)
             docker.ledger.register('last-whisper','whisper',lambda:1799999999)
             calls=[]
             def raw(*args,**kwargs):
@@ -386,7 +389,7 @@ class CpuTests(unittest.TestCase):
                 return '{"Paused":true}' if args[0]=='inspect' else ''
             docker.raw=raw
             with self.assertRaises(ValueError):docker.remove('last-whisper')
-            self.assertTrue(row['removed']);self.assertIn(('rm','--force','last-whisper'),calls)
+            self.assertTrue(row['removed']);self.assertIn(('rm','--force','a'*64),calls)
             with self.assertRaises(ValueError):docker.finish()
 
     def test_seccomp_syscall_dispatch(self):
@@ -405,6 +408,264 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(run(0),0x7fff0000)
         for nr in (0x40000000|56,0x40000000|57,0x40000000|58):self.assertEqual(run(nr),0x80000000)
         self.assertEqual(run(0,arch=0x40000003),0x80000000)
+
+
+class CleanupStateTests(unittest.TestCase):
+    """No Docker, network, model imports or credentials: fixed subprocess mocks."""
+    def setUp(self):
+        self.temporary=tempfile.TemporaryDirectory();self.addCleanup(self.temporary.cleanup)
+        self.now=[100.0];clock=patch.object(host.time,'monotonic',side_effect=lambda:self.now[0]);clock.start();self.addCleanup(clock.stop)
+        no_process=patch.object(host.subprocess,'run',side_effect=AssertionError('no real subprocess allowed'))
+        no_process.start();self.addCleanup(no_process.stop)
+        self.docker=host.MeteredDocker(self.temporary.name,200);self.docker.check=lambda:None
+        self.cid='a'*64;self.calls=[];self.replies={};self.docker.raw=self.raw
+    def raw(self,*args,timeout=5):
+        self.calls.append((args,timeout));self.assertGreater(timeout,0);self.assertLessEqual(timeout,5)
+        value=self.replies.get(args[0])
+        if callable(value):return value(args,timeout)
+        if isinstance(value,BaseException):raise value
+        if value is not None:return value
+        return {'create':self.cid+'\n','inspect':'{"Paused":true}','ps':''}.get(args[0],'')
+    def owned(self,registered=True):
+        self.docker.gate('owned');self.docker('create','--name','owned','image')
+        row=self.docker.names['owned']
+        if registered:
+            row.update(start_attempted=True,registered=True,reader=lambda:12)
+            self.docker.ledger.register('owned','setup',lambda:10)
+        self.calls.clear();return row
+    def uncertain_remove(self,output=''):
+        self.replies['rm']=subprocess.TimeoutExpired(['PRIVATE_ARGV'],5,output=b'PRIVATE_STDOUT',stderr=b'PRIVATE_STDERR')
+        self.replies['ps']=output
+    def test_cleanup_success_closes_once_and_finish_is_read_only(self):
+        row=self.owned();self.docker.remove('owned');first=list(self.calls)
+        self.docker.remove('owned');self.docker.finish();self.docker.finish()
+        self.assertEqual(self.calls,first);self.assertTrue(row['cpu_closed']);self.assertTrue(row['removed'])
+        self.assertEqual([a[0] for a,t in self.calls],['pause','inspect','rm'])
+        self.assertTrue(all(a[-1]==self.cid for a,t in self.calls))
+    def test_rm_timeout_empty_daemon_query_proves_absence(self):
+        row=self.owned();self.uncertain_remove();self.docker.remove('owned');self.docker.finish()
+        self.assertTrue(row['removed']);self.assertTrue(row['cleanup_ok'])
+        self.assertEqual(self.calls[-1][0],('ps','--all','--no-trunc','--filter','id='+self.cid,'--format','{{.ID}}'))
+        self.assertEqual(self.docker.cleanup[0]['removal_proof'],'successful_empty_exact_id_query')
+        encoded=c.canonical(self.docker.cleanup).decode()
+        for private in ('PRIVATE_ARGV','PRIVATE_STDOUT','PRIVATE_STDERR'):self.assertNotIn(private,encoded)
+        self.assertEqual(self.docker.cleanup[0]['operations'][-2]['error_type'],'TimeoutExpired')
+    def test_nonempty_wrong_id_whitespace_and_failed_query_never_prove_absence(self):
+        values=[self.cid+'\n','b'*64+'\n','\n',' ',self.cid[:12]+'\n',
+            subprocess.CalledProcessError(1,['PRIVATE_ARGV'],stderr=b'PRIVATE_STDERR'),
+            subprocess.TimeoutExpired(['PRIVATE_ARGV'],5)]
+        for value in values:
+            with self.subTest(value=type(value).__name__),tempfile.TemporaryDirectory() as d:
+                self.docker=host.MeteredDocker(d,200);self.docker.check=lambda:None;self.docker.raw=self.raw
+                self.replies={};row=self.owned();self.uncertain_remove(value)
+                with self.assertRaises(ValueError):self.docker.remove('owned')
+                first=list(self.calls)
+                for _ in range(2):
+                    with self.assertRaises(ValueError):self.docker.finish()
+                    with self.assertRaises(ValueError):self.docker.remove('owned')
+                self.assertEqual(first,self.calls);self.assertFalse(row['removed']);self.assertTrue(row['cpu_closed'])
+                self.assertEqual(sum(a[0]=='rm' for a,t in self.calls),1)
+                self.assertEqual(sum(a[0]=='ps' for a,t in self.calls),1)
+    def test_failed_create_never_removes_name_or_unowned_id(self):
+        for value in ('not-an-id','b'*12,'b'*64+'\nextra','b'*64+' ',
+                subprocess.TimeoutExpired(['PRIVATE_ARGV'],5),subprocess.CalledProcessError(1,['PRIVATE_ARGV'])):
+            with self.subTest(value=type(value).__name__),tempfile.TemporaryDirectory() as d:
+                self.docker=host.MeteredDocker(d,200);self.docker.check=lambda:None;self.docker.raw=self.raw
+                self.replies={'create':value};self.calls=[];self.docker.gate('owned')
+                with self.assertRaises((ValueError,subprocess.SubprocessError)):self.docker('create','--name','owned','image')
+                with self.assertRaises(ValueError):self.docker.finish()
+                self.assertEqual([a[0] for a,t in self.calls],['create'])
+                self.assertEqual(self.docker.cleanup[0]['ownership'],'unknown')
+                self.assertIsNone(self.docker.names['owned']['container_id'])
+    def test_duplicate_returned_id_cannot_grant_second_ownership(self):
+        self.owned(False);self.docker.gate('other')
+        with self.assertRaises(ValueError):self.docker('create','--name','other','image')
+        with self.assertRaises(ValueError):self.docker.finish()
+        self.assertFalse(self.docker.names['other']['created'])
+        self.assertEqual(sum(a[0]=='rm' for a,t in self.calls),1)
+    def test_reused_name_is_never_sent_after_create_and_wrong_inspect_id_stops(self):
+        self.owned(False);self.replies['inspect']=json.dumps([{'Id':'b'*64}])
+        with self.assertRaises(ValueError):self.docker('inspect','owned')
+        self.docker('kill','--signal=USR1','owned');self.docker.remove('owned')
+        self.assertEqual([a[-1] for a,t in self.calls],[self.cid]*3)
+    def test_start_wrong_id_cannot_open_gate_or_claim_cpu_accounting(self):
+        row=self.owned(False);self.replies['inspect']=json.dumps([{'Id':'b'*64}])
+        with self.assertRaises(ValueError):self.docker('start','owned')
+        with self.assertRaises(ValueError):self.docker.remove('owned')
+        self.assertTrue(row['removed']);self.assertFalse(row['registered']);self.assertFalse((row['gate']/'go').exists())
+        self.assertEqual(self.docker.cleanup[0]['accounting_status'],'final_usage_unverified')
+        self.assertTrue(all(a[-1]==self.cid for a,t in self.calls))
+    def test_start_and_whisper_call_shape_use_owned_id(self):
+        row=self.owned(False)
+        self.replies['inspect']=json.dumps([{'Id':self.cid,'State':{'Pid':123,'Running':True}}])
+        def read(path,*a,**k):return '0::/mock-scope\n' if str(path).startswith('/proc/') else 'usage_usec 10\n'
+        with patch.object(Path,'read_text',read),patch.object(Path,'stat',return_value=SimpleNamespace(st_ino=42)), \
+                patch.object(Path,'is_symlink',return_value=False):
+            self.docker('start','owned',timeout=30)
+        self.assertTrue(row['registered']);self.assertTrue((row['gate']/'go').exists())
+        self.replies['inspect']='{"Paused":true}';row['reader']=lambda:12
+        self.docker('rm','--force','owned',timeout=.75)
+        self.assertTrue(all(t<=.75 for a,t in self.calls if a[0] in ('pause','rm')))
+        self.assertTrue(all(a[-1]==self.cid for a,t in self.calls))
+    def test_pause_inspect_or_cpu_failure_still_removes_but_accounting_stays_invalid(self):
+        for failing in ('pause','inspect','cpu'):
+            with self.subTest(operation=failing),tempfile.TemporaryDirectory() as d:
+                self.docker=host.MeteredDocker(d,200);self.docker.check=lambda:None;self.docker.raw=self.raw
+                self.replies={};row=self.owned()
+                if failing=='cpu':row['reader']=lambda:(_ for _ in ()).throw(ValueError('PRIVATE_CPU'))
+                else:self.replies[failing]=subprocess.CalledProcessError(7,['PRIVATE_ARGV'],stderr=b'PRIVATE_STDERR')
+                with self.assertRaises(ValueError):self.docker.remove('owned')
+                self.assertTrue(row['removed']);self.assertFalse(row['cleanup_ok']);self.assertFalse(row['cpu_closed'])
+                self.assertEqual(self.calls[-1][0],('rm','--force',self.cid))
+                with self.assertRaises(ValueError):self.docker.finish()
+    def test_final_cpu_invalid_is_not_repaired_by_proved_absence(self):
+        row=self.owned();row['reader']=lambda:0;self.uncertain_remove()
+        with self.assertRaises(ValueError):self.docker.remove('owned')
+        self.assertTrue(row['removed']);self.assertFalse(row['cleanup_ok']);self.assertFalse(row['cpu_closed'])
+    def test_cleanup_shared_fifteen_second_budget_has_no_retry(self):
+        self.owned()
+        def slow(args,timeout):
+            self.now[0]+=timeout
+            if args[0]=='inspect':return '{"Paused":true}'
+            if args[0]=='rm':raise subprocess.TimeoutExpired(['PRIVATE_ARGV'],timeout)
+            return ''
+        self.replies={key:slow for key in ('pause','inspect','rm','ps')}
+        with self.assertRaises(ValueError):self.docker.remove('owned')
+        self.assertEqual(self.now[0],115);self.assertEqual([a[0] for a,t in self.calls],['pause','inspect','rm'])
+        self.assertFalse(self.docker.names['owned']['removed'])
+    def test_absence_query_uses_remaining_budget_not_new_five_seconds(self):
+        self.owned()
+        def slow(args,timeout):
+            self.now[0]+=4 if args[0] in ('pause','inspect') else timeout
+            if args[0]=='inspect':return '{"Paused":true}'
+            if args[0]=='rm':raise subprocess.TimeoutExpired(['PRIVATE_ARGV'],timeout)
+            return ''
+        self.replies={key:slow for key in ('pause','inspect','rm','ps')};self.docker.remove('owned')
+        self.assertEqual(self.calls[-1][1],2);self.assertEqual(self.now[0],115)
+    def test_main_deadline_expiry_still_attempts_owned_cleanup_and_fails(self):
+        for expire_at in ('before','pause','inspect'):
+            with self.subTest(expire_at=expire_at),tempfile.TemporaryDirectory() as d:
+                self.docker=host.MeteredDocker(d,self.now[0]+1);self.docker.check=lambda:None;self.docker.raw=self.raw
+                self.replies={};self.owned()
+                if expire_at=='before':self.now[0]+=2
+                else:
+                    def expire(args,timeout):
+                        self.now[0]+=2;return '{"Paused":true}' if args[0]=='inspect' else ''
+                    self.replies[expire_at]=expire
+                with self.assertRaises(ValueError):self.docker.remove('owned')
+                self.assertEqual(self.calls[-1][0],('rm','--force',self.cid))
+                self.assertTrue(self.docker.cleanup[0]['host_deadline_overrun'])
+    def test_cleanup_receipt_write_failure_stays_failed_without_repeating_removal(self):
+        for filename in ('cpu-receipt.json','cleanup-receipt.json'):
+            with self.subTest(filename=filename),tempfile.TemporaryDirectory() as d:
+                self.docker=host.MeteredDocker(d,200);self.docker.check=lambda:None;self.docker.raw=self.raw
+                self.replies={};row=self.owned();write=host.atomic
+                def fail_receipt(path,value):
+                    if path.name==filename:raise OSError('PRIVATE_RECEIPT_PATH')
+                    return write(path,value)
+                with patch.object(host,'atomic',side_effect=fail_receipt),self.assertRaises(ValueError):
+                    self.docker.remove('owned')
+                self.assertTrue(row['removed']);self.assertFalse(row['cleanup_ok']);first=list(self.calls)
+                with self.assertRaises(ValueError):self.docker.finish()
+                self.assertEqual(self.calls,first)
+                self.assertEqual(self.docker.cleanup[0]['receipt_errors'][0]['error_type'],'OSError')
+                self.assertNotIn('PRIVATE_',c.canonical(self.docker.cleanup).decode())
+    def test_accounting_operations_reserve_time_for_one_stop(self):
+        row=self.owned()
+        def slow(args,timeout):
+            self.now[0]+=timeout
+            return '{"Paused":true}' if args[0]=='inspect' else ''
+        self.replies={key:slow for key in ('pause','inspect','rm')}
+        with self.assertRaises(ValueError):self.docker.remove('owned')
+        self.assertEqual([a[0] for a,t in self.calls],['pause','inspect','rm'])
+        self.assertTrue(row['removed']);self.assertFalse(row['cpu_closed']);self.assertEqual(self.now[0],115)
+
+    def test_gate_result_is_strict_small_safe_projection(self):
+        row=self.owned();path=row['gate']/'result.json'
+        for value in ({'schema':'qwen12-gated-command-v1','exit_code':True},
+                {'schema':'qwen12-gated-command-v1','exit_code':256},
+                {'schema':'qwen12-gated-command-v1','exit_code':0,'private':'PRIVATE_GATE'}):
+            c.atomic(path,value);self.assertEqual(self.docker.gate_result('owned')['status'],'invalid')
+            with self.assertRaises(ValueError):self.docker.completed('owned')
+        path.write_text('{"private":"PRIVATE_GATE"');self.assertEqual(self.docker.gate_result('owned')['status'],'invalid')
+        c.atomic(path,{'schema':'qwen12-gated-command-v1','exit_code':7})
+        with self.assertRaises(ValueError):self.docker.completed('owned')
+        self.docker.remove('owned')
+        self.assertEqual(self.docker.cleanup[0]['gate_result']['exit_code'],7)
+        self.assertNotIn('PRIVATE_GATE',c.canonical(self.docker.cleanup).decode())
+    def test_execute_failed_setup_charges_elapsed_for_asr_and_whisper(self):
+        # Exercise the actual execute accumulator with both setup callbacks failing.
+        for fail_stage in ('asr','whisper'):
+            with self.subTest(stage=fail_stage),tempfile.TemporaryDirectory() as d:
+                self.now[0]=100
+                original=SimpleNamespace(host_capacity=lambda:{},pull_image=lambda *a:None)
+                def setup(*args,**kwargs):
+                    self.now[0]+=7
+                    if fail_stage=='asr':raise RuntimeError('PRIVATE_SETUP')
+                    c.atomic(args[3]/'setup-receipt.json',{'actual_download_bytes':0,'commands':[]})
+                def whisper(*args,**kwargs):self.now[0]+=11;raise RuntimeError('PRIVATE_WHISPER')
+                run={'run_id':'1','head_sha':'a'*40}
+                with patch.object(sys,'path',list(sys.path)),patch.object(host,'fresh_run',return_value=run),patch.object(host,'load',return_value=original), \
+                        patch.object(host.signal,'signal'),patch.object(host.signal,'setitimer'), \
+                        patch.object(host.shutil,'disk_usage',return_value=SimpleNamespace(free=20*c.GIB)), \
+                        patch.object(host,'fetch_blind',return_value={}),patch.object(host,'validate_blind',return_value={}), \
+                        patch.object(host,'stage'),patch.object(host.shutil,'copyfile'), \
+                        patch.object(host,'supervise',side_effect=setup),patch.object(host,'whisper_setup',side_effect=whisper), \
+                        patch.object(host,'denominator',return_value=[]):
+                    status=host.execute({'RUNNER_TEMP':d},{},{},{'inference_code':{},'setup_code':{}})
+                receipt=c.read_json(Path(d)/(host.EXPERIMENT+'-1')/'host-receipt.json')
+                self.assertEqual(status,1)
+                self.assertEqual(receipt['combined_setup_seconds'],7 if fail_stage=='asr' else 18)
+                self.assertEqual(receipt['stages']['asr_setup' if fail_stage=='asr' else 'whisper_setup'],'error')
+                self.assertEqual(receipt['primary_error'],{'error_type':'RuntimeError'})
+                self.assertNotIn('PRIVATE_',c.canonical(receipt).decode())
+
+    def test_supervision_primary_cleanup_combinations_keep_original_error(self):
+        image=c.read_json(host.ROOT/'research/source-screen32-v1/container-lock.json')['image']
+        for primary_fails in (False,True):
+            for cleanup_fails,retention_fails in ((False,False),(False,True),(True,False),(True,True)):
+                with self.subTest(primary=primary_fails,cleanup=cleanup_fails,retention=retention_fails),tempfile.TemporaryDirectory() as d:
+                    self.docker=host.MeteredDocker(d,200);self.docker.check=lambda:None;self.docker.raw=self.raw
+                    self.replies={};self.calls=[];primary=RuntimeError('PRIVATE_PRIMARY')
+                    original=SimpleNamespace(container_args=lambda name,image,*a:['create','--name',name,image,'old'],
+                        validate_container_inspect=lambda *a:None)
+                    captured={}
+                    def create(args,timeout):captured['args']=args;return self.cid+'\n'
+                    def inspect(args,timeout):
+                        name=next(iter(self.docker.names));row=self.docker.names[name]
+                        if '--format' in args:return '{"Paused":true}'
+                        return json.dumps([{'Id':self.cid,'Mounts':[{'Destination':'/gate','Source':str(row['gate']),'RW':True}],
+                            'Config':{'Cmd':list(captured['args'][captured['args'].index(image)+1:]),'Image':image,'Entrypoint':None}}])
+                    self.replies.update(create=create,inspect=inspect)
+                    real_call=host.MeteredDocker.__call__
+                    def call(docker,*args,**kwargs):
+                        if args[0]!='start':return real_call(docker,*args,**kwargs)
+                        self.now[0]+=3
+                        if primary_fails:raise primary
+                        row=docker.names[args[-1]];row.update(start_attempted=True,registered=True,reader=lambda:12)
+                        docker.ledger.register(args[-1],'setup',lambda:10)
+                        c.atomic(row['gate']/'result.json',{'schema':'qwen12-gated-command-v1','exit_code':0})
+                        return ''
+                    if cleanup_fails:self.uncertain_remove(self.cid+'\n')
+                    write=host.atomic
+                    def retain(path,value):
+                        if retention_fails and path.name=='supervision-receipt.json':raise OSError('PRIVATE_RETENTION')
+                        return write(path,value)
+                    with patch.object(host,'atomic',side_effect=retain),patch.object(host.MeteredDocker,'__call__',call),patch.dict(os.environ,{'GITHUB_SHA':'a'*40,'GITHUB_RUN_ID':'1'}):
+                        if primary_fails or cleanup_fails or retention_fails:
+                            expected=RuntimeError if primary_fails else ValueError if cleanup_fails else OSError
+                            with self.assertRaises(expected) as caught:
+                                host.supervise(original,self.docker,Path(d),Path(d),Path(d),Path(d),'setup',200)
+                            if primary_fails:self.assertIs(caught.exception,primary)
+                        else:host.supervise(original,self.docker,Path(d),Path(d),Path(d),Path(d),'setup',200)
+                    record=(self.docker.supervisions[0] if retention_fails else
+                        c.read_json(Path(d)/'supervision-receipt.json')['stages'][0])
+                    self.assertEqual(record['primary_error'] is not None,primary_fails)
+                    self.assertEqual(record['cleanup_error'] is not None,cleanup_fails)
+                    self.assertGreaterEqual(record['wall_seconds'],3);self.assertEqual(record['phase_wall_seconds']['start'],3)
+                    self.assertEqual('supervision-receipt.json' in host.collect(Path(d)),not retention_fails)
+                    self.assertEqual('retention_error' in record,retention_fails)
+                    self.assertNotIn('PRIVATE_',c.canonical(record).decode())
 
 
 class FailureDiagnosticTests(unittest.TestCase):

@@ -80,6 +80,116 @@ class CleanupRetentionTests(unittest.TestCase):
             self.assertEqual([x for x in run.stdout.splitlines() if x.startswith("DELETE_ELIGIBLE:")],
                              ["DELETE_ELIGIBLE:research/not-in-snapshot"])
 
+    def test_exact_separate_execution_roster(self):
+        expected = [
+            "research/qwen12-native-admission-v1",
+            "research/qwen12-native-admission-recovery1",
+            "research/qwen12-native-transport-preflight-v1",
+        ]
+        self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
+        self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
+        loop = WORKFLOW[WORKFLOW.index('          for row in "${branch_rows[@]}"; do'):]
+        guard = loop.index('if is_retained_execution "${branch}"; then')
+        for suffix in ('is_retained_consolidation "${branch}"', 'is_safe_prefix "${branch}"',
+                       'is_explicitly_retired "${branch}"', 'merge-base --is-ancestor',
+                       'closed_prs_json=', ' push '):
+            self.assertLess(guard, loop.index(suffix))
+        self.assertIn('echo "skip execution retention: ${branch}"\n              continue', loop)
+        self.assertIn('retained_execution=${retained_execution}', loop)
+
+    def cleanup_loop(self, branch, scenario, conclusion):
+        # Execute the real workflow functions and complete branch loop. The only
+        # replacements are external GitHub/Git commands; no network or real
+        # repository deletion is reachable. Real jq parses the mocked API data.
+        functions = WORKFLOW[WORKFLOW.index('          is_safe_prefix() {'):
+                             WORKFLOW.index('          dry_run=false')]
+        loop = WORKFLOW[WORKFLOW.index('          for row in "${branch_rows[@]}"; do'):]
+        mocks = r'''
+          gh() {
+            echo "GH_QUERY:$*" >&2
+            case "$*" in
+              *actions/runs*)
+                printf '[{"total_count":1,"workflow_runs":[{"id":1,"head_branch":"%s","status":"completed","conclusion":"%s"}]}]\n' "$TEST_BRANCH" "$CONCLUSION" ;;
+              *state=open*) echo 0 ;;
+              *state=closed*)
+                case "$SCENARIO" in
+                  merged-pr) printf '[{"merged_at":"2020-01-01T00:00:00Z","head":{"sha":"%s"}}]\n' "$SHA" ;;
+                  closed-pr) printf '[{"merged_at":null,"closed_at":"2020-01-01T00:00:00Z","head":{"sha":"%s"}}]\n' "$SHA" ;;
+                  *) echo '[]' ;;
+                esac ;;
+              *) return 90 ;;
+            esac
+          }
+          git() {
+            echo "GIT_QUERY:$*" >&2
+            case "$*" in
+              *show-ref*) return 0 ;;
+              *merge-base*) [[ "$SCENARIO" == ancestor ]] ;;
+              ls-remote*) printf '%s\trefs/heads/%s\n' "$SHA" "$TEST_BRANCH" ;;
+              *" push "*) printf 'MOCK_DELETE:%s\n' "$TEST_BRANCH" ;;
+              *) return 91 ;;
+            esac
+          }
+          default_branch=main owner=owner graph=unused remote=unused
+          default_ref=refs/remotes/origin/main dry_run=false
+          deleted=0 candidates=0 manual_review=0 retained_design=0
+          retained_consolidation=0 retained_execution=0
+          branch_rows=("$(printf '%s\t%s\tfalse' "$TEST_BRANCH" "$SHA")")
+          if [[ "$SCENARIO" == retired ]]; then RETIRED_BRANCHES="$TEST_BRANCH"; fi
+        '''
+        env = {
+            "PATH": "/usr/bin:/bin", "GITHUB_REPOSITORY": "fixture/fixture",
+            "SAFE_BRANCH_PREFIXES": re.search(r'^  SAFE_BRANCH_PREFIXES: "([^"\n]+)"', WORKFLOW, re.M).group(1),
+            "RETIRED_BRANCHES": "",
+            "RETAINED_CONSOLIDATION_BRANCHES": " ".join(folded_env("RETAINED_CONSOLIDATION_BRANCHES")),
+            "RETAINED_EXECUTION_BRANCHES": " ".join(folded_env("RETAINED_EXECUTION_BRANCHES")),
+            "RETAINED_DESIGN_BRANCHES": " ".join(folded_env("RETAINED_DESIGN_BRANCHES")),
+            "CLOSED_PR_RETENTION_DAYS": "7", "SHA": "b" * 40,
+            "TEST_BRANCH": branch, "SCENARIO": scenario, "CONCLUSION": conclusion,
+        }
+        return subprocess.run(["bash", "-euo", "pipefail", "-c", functions + mocks + loop],
+                              env=env, text=True, capture_output=True, check=True)
+
+    def test_execution_retention_precedes_all_actual_deletion_paths(self):
+        for branch in folded_env("RETAINED_EXECUTION_BRANCHES"):
+            for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
+                for conclusion in ("failure", "success"):
+                    with self.subTest(branch=branch, scenario=scenario, conclusion=conclusion):
+                        run = self.cleanup_loop(branch, scenario, conclusion)
+                        self.assertIn("skip execution retention: " + branch, run.stdout)
+                        self.assertIn("candidates=0 deleted=0", run.stdout)
+                        self.assertIn("retained_execution=1", run.stdout)
+                        self.assertNotIn("MOCK_DELETE:", run.stdout)
+                        self.assertEqual(run.stderr, "")
+
+    def test_unretained_branches_still_follow_actual_deletion_paths(self):
+        # Exact matching must not silently retain future similarly named branches.
+        controls = ["fix/ordinary-ephemeral", "research/qwen12-native-admission-v1-extra",
+                    "research/qwen12-native-admission-recovery10",
+                    "research/qwen12-native-transport-preflight-v10"]
+        for branch in controls:
+            for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
+                with self.subTest(branch=branch, scenario=scenario):
+                    run = self.cleanup_loop(branch, scenario, "failure")
+                    self.assertIn("MOCK_DELETE:" + branch, run.stdout)
+                    self.assertIn("candidates=1 deleted=1", run.stdout)
+                    self.assertIn("retained_execution=0", run.stdout)
+                    self.assertIn("--force-with-lease=refs/heads/" + branch + ":" + "b" * 40, run.stderr)
+        run = self.cleanup_loop("research/no-exact-closed-provenance", "diverged", "failure")
+        self.assertIn("manual_review=1", run.stdout)
+        self.assertNotIn("MOCK_DELETE:", run.stdout)
+
+    def test_evidence_refs_remain_outside_cleanup_scope(self):
+        for branch in ("evidence/qwen12-native-admission-v1",
+                       "evidence/qwen12-native-admission-recovery1",
+                       "evidence/qwen12-native-transport-preflight-v1"):
+            for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
+                with self.subTest(branch=branch, scenario=scenario):
+                    run = self.cleanup_loop(branch, scenario, "failure")
+                    self.assertIn("candidates=0 deleted=0", run.stdout)
+                    self.assertEqual(run.stderr, "")
+
+
 
 if __name__ == "__main__":
     unittest.main()

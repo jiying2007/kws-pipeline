@@ -27,7 +27,7 @@ def build(root=ROOT):
     common|={'tools/asr_native_contracts.py','tools/speech_asr_consensus.py','tools/speech_label_admission.py'}
     setup=common|{wh+'attempt-3/'+n for n in ('bounded_host.py','bounded_connect.py','pip_acquire.py','pip_compatibility.py','phased_setup.py')}
     host=setup|{old+n for n in ('hosted_run.py','contract.py','container-lock.json')}
-    host|={new+n for n in ('hosted_run.py','log_transport.py','branch_transport.py','evidence_publisher.py','emit_synthetic_branch_fixture.py','public-inputs.json','acquisition-plan.json','workflow.yml','prepare_freeze.py')}
+    host|={new+n for n in ('hosted_run.py','log_transport.py','branch_transport.py','evidence_publisher.py','emit_synthetic_branch_fixture.py','cleanup_lifecycle_smoke.py','public-inputs.json','acquisition-plan.json','workflow.yml','prepare_freeze.py')}
     # The actual workflow is reviewed and separately bound, never an arbitrary entrypoint.
     workflow='.github/workflows/qwen12-native-admission-v1.yml'
     if (root/workflow).exists():host.add(workflow)
