@@ -5,9 +5,9 @@
 > changes, so the old freezes intentionally reject it as source drift. The
 > preparation/activation instructions below describe historical preparation only.
 > Do not run either old `prepare_freeze.py` to refresh those records.
-> The separately authorized third attempt has not run: its official-pip transport
-> remains blocked pending equivalent acquisition bounds. See
-> [the current transport review](attempt-3/PIP_TRANSPORT_REVIEW.md).
+> The separately authorized third attempt has not run: its bounded official-pip transport
+> is source-prepared under the revised acquisition contract. See
+> [the current transport review](attempt-3/README.md).
 
 # Qwen16 Whisper small third-route screen
 
