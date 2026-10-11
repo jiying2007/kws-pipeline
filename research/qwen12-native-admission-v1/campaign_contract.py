@@ -9,7 +9,9 @@ import stat
 import wave
 
 EXPERIMENT = 'qwen12-native-admission-v1'
-BRANCH = 'research/' + EXPERIMENT
+BRANCH = 'research/qwen12-native-admission-recovery1'
+# Public predecessor custody, not a claim that the historical cause is known.
+PREDECESSOR_ZERO_RECOGNITION = {'run_id': 38154869005, 'run_attempt': 1, 'executed_head_sha': '3528118f3cdedf391519a5f8c3365ac15eac16a8', 'evidence_commit': '8e05b507e8239ed70191c56ff13216690d6c3049', 'archive_sha256': '1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13', 'started': 0, 'completed': 0, 'not_run': 36, 'cross_execution_recognition_limit': 36}
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 MIB = 1024**2
 GIB = 1024**3
@@ -172,6 +174,8 @@ def fresh_run(env, event, release):
             and release.get('evidence_transport') == 'github-repository-zip-chunks-v1'
             and 'activation_blockers' not in release
             and 'maximum_log_api_readback_approved' not in release, 'fixed required runtime preconditions or evidence transport drift')
+    require(canonical(release.get('predecessor_zero_recognition')) == canonical(PREDECESSOR_ZERO_RECOGNITION),
+            'exact immutable predecessor and cumulative recognition cap required')
     require(env.get('GITHUB_REPOSITORY')=='jiying2007/kws-pipeline' and
         env.get('GITHUB_REF')=='refs/heads/'+BRANCH and env.get('GITHUB_EVENT_NAME')=='push' and
         env.get('GITHUB_RUN_ATTEMPT')=='1' and re.fullmatch('[1-9][0-9]*',env.get('GITHUB_RUN_NUMBER','')) and

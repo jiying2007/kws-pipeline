@@ -93,7 +93,7 @@ class PublisherTests(unittest.TestCase):
         self.assertEqual(result["numeric_job_id"], 456)
         self.assertEqual(result["evidence_commit"], "d" * 40)
         self.assertEqual(self.api.calls[-1], ("POST", p.BASE + "/git/refs",
-            {"ref": "refs/heads/evidence/qwen12-native-admission-v1", "sha": "d" * 40}, 201))
+            {"ref": "refs/heads/evidence/qwen12-native-admission-recovery1", "sha": "d" * 40}, 201))
         self.assertEqual([method for method, _, _, _ in self.api.calls[:6]], ["GET"] * 6)
         tree_call = next(c for c in self.api.calls if c[1] == p.BASE + "/git/trees")
         self.assertEqual(tree_call[2]["base_tree"], "b" * 40)

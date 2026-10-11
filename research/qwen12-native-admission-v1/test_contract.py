@@ -45,6 +45,33 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(len(c.validate_wav(raw,r)),200)
         r['pcm_sha256']='0'*64
         with self.assertRaises(ValueError):c.validate_wav(raw,r)
+    def test_pre_model_guard_and_failure_records_retained_with_hash(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);runtime=root/'runtime';runtime.mkdir()
+            c.write_once(runtime/'setup-receipt.json',{'commands':[]})
+            names=('import-process-guard.json','import-optional-tool-policy.json','import-preflight-failure.json')
+            for name in names:c.write_once(runtime/name,{'schema':'synthetic-'+name})
+            host.asr_setup_projection(runtime,root/'public.json')
+            value=c.read_json(root/'public.json')['pre_model_process_compatibility']
+            self.assertEqual(set(value),set(names))
+            for name in names:
+                self.assertEqual({k:value[name][k] for k in ('bytes','sha256')},c.identity(runtime/name))
+                self.assertEqual(value[name]['record'],c.read_json(runtime/name))
+
+    def test_optional_policy_closure_is_exact_and_dynamic_receipt_retained(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);out=root/'output/sensevoice';(out/'retained-source').mkdir(parents=True)
+            member='output/sensevoice/retained-source/optional-tool-policy.json'
+            c.write_once(root/member,{'schema':'synthetic-stable-policy'})
+            row={'path':member,**c.identity(root/member),'role':'runtime-execution-policy'}
+            c.write_once(out/'native-source-lock.json',{'files':[row]})
+            c.write_once(out/'optional-tool-probes.json',{'schema':'synthetic-dynamic-probes'})
+            self.assertEqual(set(host.collect(root)),{member,'output/sensevoice/native-source-lock.json',
+                'output/sensevoice/optional-tool-probes.json'})
+            row['role']='unapproved'
+            (out/'native-source-lock.json').write_bytes(c.canonical({'files':[row]}))
+            with self.assertRaises(ValueError):host.collect(root)
+
     def test_release_disabled_before_any_effect(self):
         _,_,release=self.dispatch_fixture();release['enabled']=False
         with self.assertRaisesRegex(ValueError,'dispatch approval'):c.fresh_run({}, {}, release)
@@ -52,6 +79,7 @@ class ContractTests(unittest.TestCase):
         env={'GITHUB_REPOSITORY':'jiying2007/kws-pipeline','GITHUB_REF':'refs/heads/'+c.BRANCH,'GITHUB_EVENT_NAME':'push','GITHUB_RUN_ATTEMPT':'1','GITHUB_RUN_NUMBER':'7','GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
         event={'created':True,'repository':{'private':False},'after':'a'*40}
         release={k:True for k in c.DISPATCH_APPROVALS}
+        release['predecessor_zero_recognition']=copy.deepcopy(c.PREDECESSOR_ZERO_RECOGNITION)
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         self.assertEqual(c.fresh_run(env,event,release)['run_number'],7)
@@ -63,9 +91,21 @@ class ContractTests(unittest.TestCase):
             'GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
         event={'created':True,'repository':{'private':False},'after':'a'*40}
         release={k:True for k in c.DISPATCH_APPROVALS}
+        release['predecessor_zero_recognition']=copy.deepcopy(c.PREDECESSOR_ZERO_RECOGNITION)
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         return env,event,release
+    def test_recovery_predecessor_is_fixed_and_original_ref_rejected(self):
+        for value in (None, {}, True, dict(c.PREDECESSOR_ZERO_RECOGNITION, started=True),
+                      dict(c.PREDECESSOR_ZERO_RECOGNITION, started=1),
+                      dict(c.PREDECESSOR_ZERO_RECOGNITION, cross_execution_recognition_limit=72)):
+            env,event,release=self.dispatch_fixture();release['predecessor_zero_recognition']=value
+            with self.subTest(value=value),self.assertRaisesRegex(ValueError,'predecessor'):
+                c.fresh_run(env,event,release)
+        env,event,release=self.dispatch_fixture()
+        env['GITHUB_REF']='refs/heads/research/qwen12-native-admission-v1'
+        with self.assertRaises(ValueError):c.fresh_run(env,event,release)
+
     def test_all_dispatch_approvals_require_literal_true(self):
         for key in c.DISPATCH_APPROVALS:
             for value in (False,0,1,None,'true',[],{}):
@@ -365,6 +405,226 @@ class CpuTests(unittest.TestCase):
         self.assertEqual(run(0),0x7fff0000)
         for nr in (0x40000000|56,0x40000000|57,0x40000000|58):self.assertEqual(run(nr),0x80000000)
         self.assertEqual(run(0,arch=0x40000003),0x80000000)
+
+
+class FailureDiagnosticTests(unittest.TestCase):
+    def setUp(self):
+        import native_worker
+        self.worker=native_worker
+        self.context=native_worker._FAILURE_CONTEXT
+        self.probe=native_worker._DIAGNOSTIC_PROBE_CODE
+        native_worker._DIAGNOSTIC_PROBE_CODE=None
+        native_worker._diagnostic_stage('load_model')
+    def tearDown(self):
+        self.worker._FAILURE_CONTEXT=self.context
+        self.worker._DIAGNOSTIC_PROBE_CODE=self.probe
+    def diagnostic(self,error):return self.worker._failure_diagnostic(error)
+    def encoded(self,value):return c.canonical(value).decode()
+    @staticmethod
+    def raised_error(filename,function='probe',message='private payload'):
+        # Synthetic code metadata and messages only; no model or external call.
+        scope={'failure':PermissionError(13,message)}
+        exec(compile('def '+function+'():\n    raise failure\n',filename,'exec'),scope)
+        try:scope[function]()
+        except PermissionError as error:return error
+    def test_missing_traceback_errno_and_context_are_safe(self):
+        self.worker._FAILURE_CONTEXT=None
+        value=self.diagnostic(PermissionError())
+        self.assertEqual((value['stage'],value['index'],value['frames']),('unknown',None,[]))
+        self.assertNotIn('errno',value)
+        self.assertFalse(value['frames_truncated'])
+    def test_stage_index_are_fixed_bounded_values(self):
+        for context in ((),('https://private.invalid/token',1),('infer',True),('infer',-1),
+                        ('infer',13),('infer','/home/private'),('infer',2**1000),(['secret'],[])):
+            self.worker._FAILURE_CONTEXT=context
+            value=self.diagnostic(ValueError('/home/private/audio.wav'))
+            self.assertNotIn('private',self.encoded(value))
+            self.assertNotIn('secret',self.encoded(value))
+            if type(context) is tuple and len(context)==2 and context[0]=='infer':
+                self.assertEqual(value['stage'],'infer');self.assertIsNone(value['index'])
+        self.worker._diagnostic_stage('infer',12)
+        value=self.diagnostic(ValueError())
+        self.assertEqual((value['stage'],value['index']),('infer',12))
+    def test_builtin_errno_without_message_or_filename(self):
+        error=PermissionError(13,'token=secret transcript','/home/private/audio.wav')
+        value=self.diagnostic(error)
+        self.assertEqual(value['errno'],13)
+        self.assertEqual(self.worker._safe_error_type(error),'PermissionError')
+        for text in ('secret','transcript','private','audio.wav'):self.assertNotIn(text,self.encoded(value))
+    def test_untrusted_errno_values_are_omitted(self):
+        for number in (None,False,True,-1,0,4096,2**1000,'https://private.invalid/token'):
+            error=OSError();error.errno=number
+            self.assertNotIn('errno',self.diagnostic(error))
+    def test_custom_exception_hooks_names_and_chains_are_not_read(self):
+        class Hostile(PermissionError):
+            def __str__(self):raise RuntimeError('do not stringify')
+            def __getattribute__(self,name):
+                if name in ('__traceback__','__cause__','__context__','errno','args','filename'):
+                    raise RuntimeError('do not inspect payload')
+                return super().__getattribute__(name)
+        Hostile.__name__='token_SECRET_https://private.invalid/transcript'
+        error=Hostile(13,'private payload','/home/private/audio.wav')
+        self.assertEqual(self.worker._safe_error_type(error),'OtherException')
+        self.assertEqual(self.diagnostic(error)['errno'],13)
+        self.assertNotIn('private',self.encoded(self.diagnostic(error)))
+    def test_trusted_code_identity_emits_only_relative_metadata(self):
+        from unittest.mock import patch
+        import linecache
+        with patch.object(linecache,'getline',side_effect=AssertionError('source line read')):
+            try:self.worker.require(False,'token_SECRET /home/private/audio.wav transcript')
+            except ValueError as error:value=self.diagnostic(error)
+        frame=value['frames'][-1]
+        self.assertEqual(frame['file'],'research/qwen12-native-admission-v1/campaign_contract.py')
+        self.assertEqual(frame['function'],'require');self.assertGreater(frame['line'],0)
+        for text in ('token_SECRET','/home/private','audio.wav','transcript',str(HERE.parents[1])):
+            self.assertNotIn(text,self.encoded(value))
+        for key in ('message_disclosed','source_lines_disclosed','locals_disclosed','chain_followed'):
+            self.assertIs(value[key],False)
+    def test_unknown_and_forged_paths_and_function_names_are_redacted(self):
+        filenames=('/home/private/audio.wav','https://private.invalid/token_SECRET',
+            str(HERE/'native_worker.py'),str(HERE/'../qwen12-native-admission-v1/native_worker.py'),
+            '/runtime/venv/lib/python3.12/site-packages/funasr/utils/../utils/load_utils.py')
+        for filename in filenames:
+            for function in ('token_SECRET_transcript','main'):
+                with self.subTest(filename=filename,function=function):
+                    value=self.diagnostic(self.raised_error(filename,function))
+                    self.assertTrue(all(row=={'file':'<redacted>','function':'<redacted>','line':None}
+                                        for row in value['frames']))
+                    for text in ('token_SECRET','transcript','private',str(HERE)):
+                        self.assertNotIn(text,self.encoded(value))
+    def test_changed_function_cannot_join_registered_source(self):
+        from unittest.mock import patch
+        import types
+        error=self.raised_error(str(HERE/'native_worker.py'),'token_SECRET_transcript')
+        trace=error.__traceback__
+        while trace.tb_next:trace=trace.tb_next
+        function=types.FunctionType(trace.tb_frame.f_code,{'failure':error})
+        with patch.object(self.worker,'alarm',function):self.worker._register_diagnostic_codes()
+        self.assertNotIn(id(function.__code__),self.worker._DIAGNOSTIC_CODES)
+        self.assertEqual(self.diagnostic(error)['frames'][-1]['file'],'<redacted>')
+    def test_fixed_locked_runtime_and_subprocess_locations(self):
+        import subprocess
+        from unittest.mock import patch
+        self.worker._register_diagnostic_codes()
+        candidates=[getattr(subprocess,name) for name in ('run','call','check_call','check_output')]
+        candidates.extend(getattr(subprocess.Popen,name) for name in ('__init__','_execute_child','_posix_spawn'))
+        for function in candidates:
+            code=function.__code__;known=self.worker._DIAGNOSTIC_CODES.get(id(code))
+            self.assertIsNotNone(known);self.assertIs(known[0],code)
+            self.assertEqual(known[1:],('stdlib/subprocess.py',code.co_name))
+        # Real stdlib code rejects stdout before Popen. Never start a process.
+        with patch.object(subprocess,'Popen') as popen:
+            try:subprocess.check_output(['unused'],stdout='token_SECRET')
+            except ValueError as error:value=self.diagnostic(error)
+            else:self.fail('check_output did not reject stdout')
+            popen.assert_not_called()
+        self.assertEqual(value['frames'][-1]['file'],'stdlib/subprocess.py')
+        self.assertEqual(value['frames'][-1]['function'],'check_output')
+        self.assertGreater(value['frames'][-1]['line'],0)
+        for text in ('token_SECRET',str(Path(subprocess.__file__).parent)):self.assertNotIn(text,self.encoded(value))
+        for filename in (subprocess.__file__,'/usr/local/lib/python3.12/subprocess.py',
+                         '/home/private/subprocess.py'):
+            for name in ('check_output','__init__','_execute_child','_posix_spawn','token_SECRET_transcript'):
+                bad=self.diagnostic(self.raised_error(filename,name))
+                self.assertEqual(bad['frames'][-1],{'file':'<redacted>','function':'<redacted>','line':None})
+    def test_subprocess_snapshot_does_not_register_replacement_function(self):
+        import subprocess
+        import types
+        from unittest.mock import patch
+        self.worker._register_diagnostic_codes()
+        error=self.raised_error(subprocess.__file__,'check_output')
+        trace=error.__traceback__
+        while trace.tb_next:trace=trace.tb_next
+        function=types.FunctionType(trace.tb_frame.f_code,{'failure':error,'__name__':'subprocess'})
+        with patch.object(subprocess,'check_output',function):self.worker._register_diagnostic_codes()
+        self.assertNotIn(id(function.__code__),self.worker._DIAGNOSTIC_CODES)
+        self.assertEqual(self.diagnostic(error)['frames'][-1]['file'],'<redacted>')
+    def test_locked_probe_code_survives_missing_module_and_rejects_forgery(self):
+        import types
+        filename='/runtime/venv/lib/python3.12/site-packages/funasr/utils/load_utils.py'
+        source='def is_ffmpeg_installed():\n    raise failure\n'
+        expected=next(code for code in compile(source,filename,'exec').co_consts if type(code) is types.CodeType)
+        error=self.raised_error(filename,'is_ffmpeg_installed')
+        self.assertNotIn('funasr.utils.load_utils',sys.modules)
+        self.assertEqual(self.diagnostic(error)['frames'][-1]['file'],'<redacted>')
+        self.worker.register_optional_probe_code(expected)
+        value=self.diagnostic(error)
+        self.assertEqual(value['frames'][-1],{'file':'runtime/site-packages/funasr/utils/load_utils.py',
+            'function':'is_ffmpeg_installed','line':2})
+        other=self.raised_error('/home/private/load_utils.py','is_ffmpeg_installed')
+        self.assertEqual(self.diagnostic(other)['frames'][-1]['file'],'<redacted>')
+        scope={'failure':PermissionError(13,'token_SECRET')}
+        exec(compile(source.replace('raise failure','raise failure from None'),filename,'exec'),scope)
+        try:scope['is_ffmpeg_installed']()
+        except PermissionError as changed:self.assertEqual(self.diagnostic(changed)['frames'][-1]['file'],'<redacted>')
+    def test_registered_optional_contextmanager_includes_wrapped_code(self):
+        import optional_tools
+        self.worker._register_diagnostic_codes()
+        code=optional_tools.unavailable_ffmpeg.__wrapped__.__code__
+        row=self.worker._DIAGNOSTIC_CODES.get(id(code))
+        self.assertIsNotNone(row);self.assertIs(row[0],code)
+        self.assertEqual(row[1],'research/qwen12-native-admission-v1/optional_tools.py')
+    def test_long_traceback_has_scan_frame_and_byte_bounds(self):
+        def recurse(count):
+            if count:recurse(count-1)
+            else:raise PermissionError(1,'token_SECRET')
+        try:recurse(200)
+        except PermissionError as error:value=self.diagnostic(error)
+        self.assertEqual(len(value['frames']),self.worker.MAX_DIAGNOSTIC_FRAMES)
+        self.assertIs(value['frames_truncated'],True)
+        self.assertLessEqual(len(c.canonical(value)),self.worker.MAX_DIAGNOSTIC_BYTES)
+        self.assertNotIn('token_SECRET',self.encoded(value))
+    def test_long_and_cyclic_exception_chains_are_not_traversed(self):
+        error=PermissionError(13,'outer private payload');previous=error
+        for _ in range(2000):
+            following=RuntimeError('inner token_SECRET');previous.__cause__=following;previous=following
+        previous.__cause__=error;error.__context__=previous
+        value=self.diagnostic(error)
+        self.assertFalse(value['chain_followed']);self.assertEqual(value['frames'],[])
+        self.assertNotIn('token_SECRET',self.encoded(value))
+    def test_diagnostic_failure_preserves_original_terminal_record(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(self.worker,'_failure_diagnostic',side_effect=MemoryError('private payload')):
+                self.worker.write_failure(PermissionError(13,'secret'),Path(d))
+            value=c.read_json(Path(d)/'worker-failure.json')
+        self.assertEqual(value['status'],'failed_no_retry');self.assertEqual(value['error_type'],'PermissionError')
+        self.assertEqual(value['diagnostic'],{'schema':'qwen12-bounded-failure-v1','status':'unavailable'})
+        self.assertFalse(value['training_admitted']);self.assertNotIn('private',self.encoded(value))
+    def test_failure_is_write_once_and_preserves_boundary(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'worker-failure.json'
+            self.worker.write_failure(PermissionError(13,'secret'),Path(d));original=path.read_bytes()
+            self.worker.write_failure(RuntimeError('different private payload'),Path(d))
+            self.assertEqual(path.read_bytes(),original)
+            value=c.read_json(path)
+        self.assertEqual(value['error_type'],'PermissionError')
+        self.assertEqual(value['diagnostic']['stage'],'load_model')
+        self.assertEqual(value['diagnostic']['index'],0)
+        self.assertLessEqual(len(original),self.worker.MAX_DIAGNOSTIC_BYTES)
+        self.assertEqual({key:value[key] for key in c.BOUNDARY},c.BOUNDARY)
+    def test_timer_and_diagnostic_write_failure_still_exit_one_quietly(self):
+        from unittest.mock import patch
+        from contextlib import redirect_stdout,redirect_stderr
+        output=io.StringIO()
+        with patch.object(self.worker,'main',side_effect=PermissionError(13,'token_SECRET')), \
+             patch.object(self.worker.signal,'setitimer',side_effect=RuntimeError('private cleanup')), \
+             patch.object(self.worker,'write_once',side_effect=OSError('private output')), \
+             redirect_stdout(output),redirect_stderr(output):
+            result=self.worker.run()
+        self.assertEqual(result,1);self.assertEqual(output.getvalue(),'')
+    def test_failure_handler_crash_still_exits_one(self):
+        from unittest.mock import patch
+        with patch.object(self.worker,'main',side_effect=KeyboardInterrupt('secret')), \
+             patch.object(self.worker,'write_failure',side_effect=SystemExit(0)), \
+             patch.object(self.worker.signal,'setitimer'):
+            self.assertEqual(self.worker.run(),1)
+    def test_success_does_not_write_failure(self):
+        from unittest.mock import patch
+        with patch.object(self.worker,'main'),patch.object(self.worker,'write_failure') as failure:
+            self.assertEqual(self.worker.run(),0);failure.assert_not_called()
+    def test_native_worker_import_does_not_load_models(self):
+        self.assertFalse(any(name in sys.modules for name in ('torch','transformers','funasr','whisper')))
 
 
 if __name__=='__main__':unittest.main()
