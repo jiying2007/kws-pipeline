@@ -98,11 +98,12 @@ class ContractTests(unittest.TestCase):
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         return env,event,release
-    def test_both_consumed_predecessors_match_terminal_evidence(self):
+    def test_all_three_consumed_predecessors_match_terminal_evidence(self):
         proof=c.PREDECESSOR_ZERO_RECOGNITION
         self.assertEqual(set(proof),{'executions','cross_execution_recognition_limit'})
         self.assertEqual(proof['cross_execution_recognition_limit'],36)
-        self.assertEqual([row['run_id'] for row in proof['executions']],[38154869005,38160295526])
+        self.assertEqual([row['run_id'] for row in proof['executions']],
+                         [38154869005,38160295526,38167052146])
         for row in proof['executions']:
             terminal=c.read_json(HERE/'evidence'/('run-'+str(row['run_id']))/'terminal-status.json')
             self.assertEqual(row,{
@@ -129,11 +130,15 @@ class ContractTests(unittest.TestCase):
         env,event,release=self.dispatch_fixture()
         del release['predecessor_zero_recognition']
         with self.assertRaisesRegex(ValueError,'predecessor'):c.fresh_run(env,event,release)
-    def test_either_predecessor_changed_nonzero_or_omitted_is_rejected(self):
+    def test_each_predecessor_changed_nonzero_or_omitted_is_rejected(self):
         changes={'run_id':38160295527,'run_attempt':2,'executed_head_sha':'a'*40,
                  'evidence_commit':'b'*40,'archive_sha256':'c'*64,
                  'started':1,'completed':1,'not_run':35}
-        for index in (0,1):
+        for index in range(3):
+            env,event,release=self.dispatch_fixture()
+            del release['predecessor_zero_recognition']['executions'][index]
+            with self.subTest(predecessor=index,missing=True),self.assertRaisesRegex(ValueError,'predecessor'):
+                c.fresh_run(env,event,release)
             for key,value in changes.items():
                 for mode in ('changed','omitted'):
                     env,event,release=self.dispatch_fixture()
@@ -142,20 +147,27 @@ class ContractTests(unittest.TestCase):
                     else:row[key]=value
                     with self.subTest(predecessor=index,key=key,mode=mode),self.assertRaisesRegex(ValueError,'predecessor'):
                         c.fresh_run(env,event,release)
-            for key in ('started','completed'):
-                env,event,release=self.dispatch_fixture()
-                release['predecessor_zero_recognition']['executions'][index][key]=False
-                with self.subTest(predecessor=index,key=key,type='bool'),self.assertRaisesRegex(ValueError,'predecessor'):
-                    c.fresh_run(env,event,release)
-    def test_only_new_recovery2_source_identity_is_accepted(self):
-        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-recovery2')
+            for key in ('run_id','run_attempt','started','completed','not_run'):
+                original=c.PREDECESSOR_ZERO_RECOGNITION['executions'][index][key]
+                for value in (bool(original),float(original),str(original),None):
+                    env,event,release=self.dispatch_fixture()
+                    release['predecessor_zero_recognition']['executions'][index][key]=value
+                    with self.subTest(predecessor=index,key=key,value=value),self.assertRaisesRegex(ValueError,'predecessor'):
+                        c.fresh_run(env,event,release)
+    def test_only_new_recovery3_source_identity_is_accepted(self):
+        import branch_transport
+        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-recovery3')
+        self.assertEqual(branch_transport.purpose_policy('native')['source_branch'],c.BRANCH)
         for branch in ('research/qwen12-native-admission-v1',
                        'research/qwen12-native-admission-recovery1',
+                       'research/qwen12-native-admission-recovery2',
                        'research/qwen12-native-transport-preflight-v1',
-                       'research/qwen12-native-admission-recovery20'):
+                       'research/qwen12-native-transport-preflight-12m-v1',
+                       'research/qwen12-native-admission-recovery30',
+                       'research/qwen12-native-admission-recovery3-extra'):
             env,event,release=self.dispatch_fixture();env['GITHUB_REF']='refs/heads/'+branch
             with self.subTest(branch=branch),self.assertRaises(ValueError):c.fresh_run(env,event,release)
-    def test_recovery2_still_rejects_rerun_and_existing_branch_push(self):
+    def test_recovery3_still_rejects_rerun_and_existing_branch_push(self):
         for target,key,value in (('env','GITHUB_RUN_ATTEMPT','2'),('env','GITHUB_EVENT_NAME','workflow_dispatch'),
                                  ('event','created',False),('event','created',1)):
             env,event,release=self.dispatch_fixture();(env if target=='env' else event)[key]=value
@@ -195,6 +207,12 @@ class ContractTests(unittest.TestCase):
         self.assertIs(release['new_transcripts_publication_approved'],True)
         if release['enabled']:
             for key in c.DISPATCH_APPROVALS:self.assertIs(release[key],True,key)
+        else:
+            for key in c.DISPATCH_APPROVALS:
+                if key!='new_transcripts_publication_approved':self.assertIs(release[key],False,key)
+        push=text.split('  push:\n',1)[1].split('  pull_request:\n',1)[0]
+        self.assertEqual(push,'    branches:\n      - '+c.BRANCH+'\n'+
+                         '      - research/qwen12-native-transport-preflight-12m-v1\n')
         self.assertEqual(text.count('  qwen12:\n'),1)
         self.assertEqual(text.count('  contracts:\n'),1)
         native=text.split('  qwen12:\n',1)[1].split('  contracts:\n',1)[0]
@@ -220,6 +238,12 @@ class ContractTests(unittest.TestCase):
     def test_committed_release_and_workflow_have_consistent_reviewed_state(self):
         self.assert_source_activation_state(c.read_json(HERE/'execution-release.json'),
                                             (HERE/'workflow.yml').read_text())
+    def test_disabled_recovery3_fixture_has_no_native_approvals(self):
+        release,text=self.source_state_fixture(False)
+        for key in c.DISPATCH_APPROVALS:
+            with self.subTest(key=key):
+                self.assertIs(release[key],key=='new_transcripts_publication_approved')
+        self.assertIn(self.native_gate(False),text)
     def test_disabled_and_activated_source_fixtures(self):
         for enabled in (False,True):
             with self.subTest(enabled=enabled):self.assert_source_activation_state(*self.source_state_fixture(enabled))
@@ -243,11 +267,31 @@ class ContractTests(unittest.TestCase):
                 self.assert_source_activation_state(release,text)
         release,text=self.source_state_fixture(False);release['new_transcripts_publication_approved']=False
         with self.assertRaises(AssertionError):self.assert_source_activation_state(release,text)
+    def test_disabled_source_rejects_premature_native_approvals(self):
+        for key in c.DISPATCH_APPROVALS:
+            if key=='new_transcripts_publication_approved':continue
+            release,text=self.source_state_fixture(False);release[key]=True
+            with self.subTest(key=key),self.assertRaises(AssertionError):
+                self.assert_source_activation_state(release,text)
     def test_source_rejects_mixed_activation_gates(self):
         for enabled in (False,True):
             release,_=self.source_state_fixture(enabled);_,text=self.source_state_fixture(not enabled)
             with self.subTest(enabled=enabled),self.assertRaises(AssertionError):
                 self.assert_source_activation_state(release,text)
+    def test_source_rejects_consumed_or_mixed_workflow_identity(self):
+        for enabled in (False,True):
+            release,text=self.source_state_fixture(enabled)
+            for old in ('research/qwen12-native-admission-v1',
+                        'research/qwen12-native-admission-recovery1',
+                        'research/qwen12-native-admission-recovery2'):
+                for part in ('trigger','guard','both'):
+                    changed=text
+                    if part in ('trigger','both'):
+                        changed=changed.replace('      - '+c.BRANCH+'\n','      - '+old+'\n')
+                    if part in ('guard','both'):
+                        changed=changed.replace('refs/heads/'+c.BRANCH,'refs/heads/'+old)
+                    with self.subTest(enabled=enabled,old=old,part=part),self.assertRaises(AssertionError):
+                        self.assert_source_activation_state(release,changed)
     def test_source_rejects_missing_or_weakened_native_workflow_guards(self):
         for enabled in (False,True):
             release,text=self.source_state_fixture(enabled);gate=self.native_gate(enabled)

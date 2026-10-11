@@ -1,0 +1,127 @@
+{
+  "actual_checkout_verified_from_numeric_job_log": true,
+  "all_chunk_sha256_verified": true,
+  "all_git_blob_sha1_verified": true,
+  "all_member_sha256_verified": true,
+  "all_zip_crc_verified": true,
+  "archive_bytes": 12522365,
+  "archive_sha256": "72fa969479341bfddaa712b600325745d35edad3dae18203d5e2819b17b92424",
+  "asr_success_or_training_established": false,
+  "audio_forwards": 0,
+  "chunk_count": 48,
+  "evidence_commit": "4b0c01cbd825802dd5c373dab33332402a6af01f",
+  "evidence_parent_source_sha": "8c4d430ce1077aa9eefa8de130450319c64e545e",
+  "evidence_tree_sha": "a1cba129a7b1989063716ec737c1253d2aaf55db",
+  "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/4b0c01cbd825802dd5c373dab33332402a6af01f/research/qwen12-native-admission-v1/evidence/synthetic-12m-v1",
+  "fixture_job_log_bytes": 17691,
+  "fixture_job_log_sha256": "634ea17568158ec9fd17ce3df1282537f356069940482fd001f4a6030935becc",
+  "full_synthetic_fixed_seed_bytes_match": true,
+  "github_actions_artifacts": [],
+  "identity": {
+    "executed_head_sha": "8c4d430ce1077aa9eefa8de130450319c64e545e",
+    "job_key": "transport-fixture",
+    "repository": "jiying2007/kws-pipeline",
+    "run_attempt": 1,
+    "run_id": 38170753261
+  },
+  "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38170753261/job/114562800402",
+  "limits": {
+    "chunk_bytes": 262144,
+    "chunks": 48,
+    "compressed_bytes": 12582912,
+    "expanded_bytes": 33554432,
+    "member_bytes": 8388608,
+    "members": 4096,
+    "outer_manifest_bytes": 16384
+  },
+  "member_manifest_sha256": "c097af0ef2753aa79216b3631f670540f9cfc20d1df939fe3fe41f1034af68ab",
+  "model_downloads": 0,
+  "model_loads": 0,
+  "native_execution_approved": false,
+  "native_job": "skipped",
+  "negative_cases": {
+    "corrupt_first_chunk": "rejected",
+    "duplicate_first_chunk": "rejected",
+    "extra_last_chunk": "rejected",
+    "invalid_base64_character": "rejected",
+    "missing_last_chunk": "rejected",
+    "reordered_first_two_chunks": "rejected",
+    "truncated_last_chunk": "rejected",
+    "wrong_executed_head_sha": "rejected",
+    "wrong_job_key": "rejected",
+    "wrong_numeric_job_id": "rejected",
+    "wrong_purpose_native": "rejected",
+    "wrong_purpose_synthetic": "rejected",
+    "wrong_run_attempt": "rejected",
+    "wrong_run_id": "rejected"
+  },
+  "numeric_job_id": 114562800402,
+  "numeric_job_id_external_binding_verified": true,
+  "outer_manifest_bytes": 9748,
+  "outer_manifest_sha256": "d7d15767a923104e4a6194d31ee597cb24661ab66e786f1d10e55d8adde6d506",
+  "publication_bytes": 585,
+  "publication_sha256": "3ef6ea4e05e2cbce0a4e7ad202b43c28344671a538a4fe76afb8f85a17803a9d",
+  "publisher_seconds": 34.0,
+  "purpose": "synthetic12m",
+  "recognition_attempts": 0,
+  "retrieved_file_count": 50,
+  "retrieved_total_bytes": 12532698,
+  "runtime_installs": 0,
+  "same_immutable_commit_used_for_all_files": true,
+  "schema": "qwen12-12m-transport-public-custody-v1",
+  "scope": [
+    "Live fixed-seed synthetic transport at its exact source/run/job only.",
+    "Publisher seconds are included in whole fixture job seconds, not additive.",
+    "Neither field measures controlled native CPU, all network bytes or all CI usage.",
+    "Native recovery3 identity has not run; its local fixtures and separate release review remain required.",
+    "No model weights, audio, private reviews, credentials or local paths are included."
+  ],
+  "source_files": {
+    "research/qwen12-native-admission-v1/branch_transport.py": {
+      "bytes": 9332,
+      "git_blob_sha": "4d2ac99160b3a21e49990ef0dd613322bda9962c",
+      "sha256": "7973dc787d1316cae727037ef66149d4d7c47cca9498e764001d1218817e3722"
+    },
+    "research/qwen12-native-admission-v1/emit_synthetic_branch_fixture.py": {
+      "bytes": 3138,
+      "git_blob_sha": "fe809f387a6305871895588aa7973f26c08c0be3",
+      "sha256": "c93751e8a5b50cbe789ebb6c346928a101e840576ac664ea16b991949c9006e0"
+    },
+    "research/qwen12-native-admission-v1/evidence_publisher.py": {
+      "bytes": 17418,
+      "git_blob_sha": "4fcec5bd14fdee31e6cf252a79342f04c43687f8",
+      "sha256": "ba4b37daa2d2f0cd20160ecd7a5c2093283aec57ddfcf3d692872345731e9eb4"
+    },
+    "research/qwen12-native-admission-v1/execution-freeze.json": {
+      "bytes": 23455,
+      "git_blob_sha": "dcc8bffbc13285cce0cf593700341957def9824c",
+      "sha256": "f676fb46a69b28ab4906cb60fc482c929da7e55b643f6c777400eb13ee239131"
+    },
+    "research/qwen12-native-admission-v1/execution-release.json": {
+      "bytes": 2128,
+      "git_blob_sha": "98df925634441e7fedbcf9cfc476161beb6e744c",
+      "sha256": "7fd85b788e2715d1b017917b4d47c24d8f046aa27adfb7d93c5b480b448c70c4"
+    },
+    "research/qwen12-native-admission-v1/log_transport.py": {
+      "bytes": 15034,
+      "git_blob_sha": "e519501b026a1e946d7f0d5c7fd3a3995e5334bb",
+      "sha256": "430f05356d2131cd9c69ba0e18a146519fd6028003e797b18b45a339c0321989"
+    },
+    "research/qwen12-native-admission-v1/workflow.yml": {
+      "bytes": 5284,
+      "git_blob_sha": "bd69aea0f5b9ae13feb337764e1193032f44d142",
+      "sha256": "487eda96cdd872478e6ab9232c808c5337ac578388867a37f869e399c95c7606"
+    }
+  },
+  "source_tree_sha": "e12cc9ac532b30057703261b741a1870b8f477ce",
+  "status": "PASS_CUSTODY_ONLY",
+  "training_runs": 0,
+  "transport": "github-repository-zip-chunks-v1",
+  "uncompressed_archive_bytes": 12518324,
+  "verification_python_modes": [
+    "normal",
+    "-O",
+    "-OO"
+  ],
+  "whole_fixture_job_seconds": 39.0
+}
