@@ -22,14 +22,111 @@ p = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(p)
 
 
+def good_capability(version='25.2'):
+    return {'schema': 'bounded-pip-capability-v1', 'pip_version': version,
+            'help_exit_code': 0, 'missing_options': [], 'policy': 'explicit-zero-resume',
+            'reviewed_source_matches': None}
+
+
+def good_contract():
+    return {'retry_argv': ['--retries', '0', '--resume-retries', '0'],
+            'evidence': good_capability()}
+
+
 class WorkerTests(unittest.TestCase):
+    def compat_runner(self, version, flags, exit_code=0):
+        def run(argv, env, deadline):
+            if argv[-1] == '--version':
+                return 0, ('pip '+version+' from /private/location (python 3.12)').encode(), b''
+            if argv[-1] == '--help':
+                return exit_code, ('\n'.join(flags)).encode(), b'private diagnostics discarded'
+            return 0, b'', b''
+        return run
+
+    def test_audited_exact_version_and_hash_proof_omit_resume_only(self):
+        compatibility = p.load_compatibility()
+        with patch.object(p, 'load_compatibility', return_value=compatibility), \
+                patch.object(compatibility, '_source_matches', return_value=True) as checked:
+            contract = p.probe_capabilities({}, 50,
+                self.compat_runner('25.0.1', p.REQUIRED_OPTIONS[1:]), pip_root='/audited-fixture')
+        checked.assert_called_once_with('/audited-fixture')
+        argv = p.pip_argv('/work', contract=contract)
+        self.assertNotIn('--resume-retries', argv)
+        self.assertEqual(argv[argv.index('--retries')+1], '0')
+        self.assertTrue(contract['evidence']['reviewed_source_matches'])
+        self.assertEqual(contract['evidence']['missing_options'], ['--resume-retries'])
+
+    def test_tampered_audited_sources_stop_and_retain_fixed_diagnostics(self):
+        compatibility = p.load_compatibility()
+        with tempfile.TemporaryDirectory() as td:
+            evidence = p.Evidence(td)
+            with patch.object(p, 'load_compatibility', return_value=compatibility), \
+                    patch.object(compatibility, '_source_matches', return_value=False):
+                with self.assertRaisesRegex(p.WorkerFailure, 'pip_capability_probe'):
+                    p.probe_capabilities({}, 50,
+                        self.compat_runner('25.0.1', p.REQUIRED_OPTIONS[1:]),
+                        evidence, '/changed-fixture')
+            self.assertFalse(evidence.capability['reviewed_source_matches'])
+            result = p.safe_result(0, evidence.stage, evidence.pip_version,
+                                  reason='pip_capability_probe', capability=evidence.capability)
+            self.assertEqual(result['help_exit_code'], 0)
+            self.assertEqual(result['missing_options'], ['--resume-retries'])
+            self.assertNotIn('private', json.dumps(result))
+
+    def test_unaudited_old_versions_fail_without_resume_option(self):
+        compatibility = p.load_compatibility()
+        for version in ('24.3.1', '25.0', '25.1', '25.2', '99.0'):
+            with patch.object(p, 'load_compatibility', return_value=compatibility), \
+                    patch.object(compatibility, '_source_matches') as check:
+                with self.assertRaisesRegex(p.WorkerFailure, 'pip_capability_probe'):
+                    p.probe_capabilities({}, 50, self.compat_runner(version, p.REQUIRED_OPTIONS[1:]))
+                check.assert_not_called()
+                contract = p.probe_capabilities({}, 50, self.compat_runner(version, p.REQUIRED_OPTIONS))
+                argv = p.pip_argv('/work', contract=contract)
+                self.assertEqual(argv[argv.index('--resume-retries')+1], '0')
+                self.assertEqual(argv[argv.index('--retries')+1], '0')
+
+    def test_argv_cannot_omit_resume_on_version_only_claim(self):
+        contract = {'retry_argv': ['--retries', '0'],
+                    'evidence': {**good_capability('25.0.1'),
+                                 'policy': 'audited-25.0.1-no-resume',
+                                 'reviewed_source_matches': False}}
+        with self.assertRaisesRegex(p.WorkerFailure, 'pip_capability_probe'):
+            p.pip_argv('/work', contract=contract)
+
+    def test_failed_help_exit_and_missing_options_are_structured(self):
+        with tempfile.TemporaryDirectory() as td:
+            evidence = p.Evidence(td)
+            with self.assertRaises(p.WorkerFailure):
+                p.probe_capabilities({}, 50, self.compat_runner('25.2', ('--retries',), 2), evidence)
+            result = p.safe_result(0, evidence.stage, evidence.pip_version,
+                                  reason='pip_capability_probe', capability=evidence.capability)
+            self.assertEqual(result['help_exit_code'], 2)
+            self.assertEqual(result['missing_options'], [flag for flag in p.REQUIRED_OPTIONS if flag != '--retries'])
+            self.assertNotIn('private', json.dumps(result))
+
+    def test_installed_root_resolves_same_interpreter_without_pip_import(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / 'pip'; root.mkdir()
+            package = SimpleNamespace(submodule_search_locations=[str(root)], origin=str(root / '__init__.py'))
+            with patch.object(p.importlib.util, 'find_spec', return_value=package) as find:
+                self.assertEqual(p.installed_pip_root(), root)
+            find.assert_called_once_with('pip')
+            package.submodule_search_locations.append('/other')
+            with patch.object(p.importlib.util, 'find_spec', return_value=package):
+                with self.assertRaises(p.WorkerFailure):
+                    p.installed_pip_root()
+
     def test_result_schema_rejects_unknown_fields_and_reason(self):
         value = p.safe_result(2, 'acquisition', '25.2', reason='pip_acquisition_failed')
         self.assertEqual(set(value), p.RESULT_FIELDS)
         self.assertEqual(value['filename'], None)
         for changed in ({**value, 'raw_log': 'secret'}, {**value, 'schema': 'other'},
                         {**value, 'reason': 'HTTP 403 secret'}, {**value, 'stage': 'raw URL'},
-                        {**value, 'asset_index': True}):
+                        {**value, 'asset_index': True}, {**value, 'help_exit_code': True},
+                        {**value, 'missing_options': ['--unreviewed-option']},
+                        {**value, 'resume_policy': 'version-only-bypass'},
+                        {**value, 'reviewed_source_matches': 'true'}):
             with self.assertRaises(p.WorkerFailure):
                 p.validate_result(changed)
         sanitized = p.safe_result(-1, 'https://secret', 'secret', reason='HTTP 403 secret')
@@ -42,7 +139,7 @@ class WorkerTests(unittest.TestCase):
         row = p.read_asset(HERE.parent / 'runtime-lock.json', 0)
         outcome = {key: row[key] for key in ('filename', 'size_bytes', 'sha256')}
         outcome.update(status='ok', asset_index=0, pip_version='25.2')
-        result = p.safe_result(0, 'export', '25.2', outcome)
+        result = p.safe_result(0, 'export', '25.2', outcome, capability=good_capability())
         self.assertEqual(result['stage'], 'complete')
         self.assertEqual(result['filename'], row['filename'])
         self.assertIsNone(result['reason'])
@@ -75,7 +172,7 @@ class WorkerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             evidence = p.Evidence(td)
             def success(*args):
-                args[-1].mark('export'); args[-1].pip_version = '25.2'
+                args[-1].mark('export'); args[-1].pip_version = '25.2'; args[-1].capability = good_capability()
                 return outcome
             argv = ['pip_acquire.py', '--asset-index', '0', '--manifest', '/lock',
                     '--output-root', '/tmpfs', '--broker-socket', '/sock', '--candidate-root', '/candidate']
@@ -192,7 +289,7 @@ class WorkerTests(unittest.TestCase):
         return 0, b'', b''
 
     def test_capabilities_are_actual_runtime_probes_mocked_here(self):
-        self.assertEqual(p.probe_capabilities({}, 50, self.good_runner), '25.2')
+        self.assertEqual(p.probe_capabilities({}, 50, self.good_runner), good_contract())
 
     def test_missing_resume_flag_is_fatal(self):
         def fake(argv, env, deadline):
@@ -298,7 +395,7 @@ class WorkerTests(unittest.TestCase):
             def __exit__(self, *args): return False
         with tempfile.TemporaryDirectory() as td, \
                 patch.object(p, 'verify_worker_scope'), patch.object(p, 'worker_deadline', return_value=time.monotonic()+300), patch.object(p, 'ensure_tmpfs'), patch.object(p, 'ensure_no_configs'), \
-                patch.object(p, 'probe_capabilities', return_value='25.2'), \
+                patch.object(p, 'probe_capabilities', return_value=good_contract()), \
                 patch.object(p, 'shim', return_value=Context()), \
                 patch.object(p, 'run_capped', return_value=(1, b'HTTP 403 secret', b'secret')) as runner, \
                 patch.object(p, 'verify_output') as verify:

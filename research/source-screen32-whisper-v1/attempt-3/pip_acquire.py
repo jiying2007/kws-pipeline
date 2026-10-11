@@ -40,7 +40,7 @@ def require(value, code):
         raise WorkerFailure(code)
 
 
-RESULT_SCHEMA = 'bounded-pip-worker-result-v1'
+RESULT_SCHEMA = 'bounded-pip-worker-result-v2'
 SCOPE_SCHEMA = 'bounded-kernel-scope-v1'
 STAGES = frozenset(('scope', 'deadline', 'manifest', 'storage', 'config',
                     'pip_version_probe', 'pip_help_probe', 'pip_config_probe',
@@ -55,7 +55,9 @@ REASONS = frozenset(('worker_internal_failure', 'worker_scope', 'deadline_bound'
     'output_size', 'output_hash', 'candidate_path', 'candidate_size',
     'evidence_path', 'evidence_write_failed'))
 RESULT_FIELDS = frozenset(('schema', 'status', 'stage', 'reason', 'asset_index',
-                           'pip_version', 'filename', 'size_bytes', 'sha256'))
+                           'pip_version', 'filename', 'size_bytes', 'sha256',
+                           'help_exit_code', 'missing_options', 'resume_policy',
+                           'reviewed_source_matches'))
 
 
 def validate_result(value):
@@ -68,12 +70,32 @@ def validate_result(value):
     require(value['pip_version'] is None or (type(value['pip_version']) is str and
             re.fullmatch(r'[0-9]{1,6}\.[0-9]{1,6}(?:\.[0-9]{1,6})?', value['pip_version'])),
             'evidence_write_failed')
+    require(value['help_exit_code'] is None or (type(value['help_exit_code']) is int and
+            -255 <= value['help_exit_code'] <= 255), 'evidence_write_failed')
+    require(type(value['missing_options']) is list and
+            all(type(flag) is str and flag in REQUIRED_OPTIONS for flag in value['missing_options']) and
+            len(set(value['missing_options'])) == len(value['missing_options']), 'evidence_write_failed')
+    require(value['resume_policy'] in (None, 'explicit-zero-resume', 'audited-25.0.1-no-resume') and
+            (value['reviewed_source_matches'] is None or type(value['reviewed_source_matches']) is bool),
+            'evidence_write_failed')
+    if value['resume_policy'] == 'audited-25.0.1-no-resume':
+        require(value['pip_version'] == '25.0.1' and type(value['reviewed_source_matches']) is bool,
+                'evidence_write_failed')
+    else:
+        require(value['reviewed_source_matches'] is None and
+                (value['resume_policy'] is None or value['pip_version'] != '25.0.1'),
+                'evidence_write_failed')
     if value['status'] == 'failed':
         require(value['reason'] in REASONS and all(value[x] is None for x in
                 ('filename', 'size_bytes', 'sha256')), 'evidence_write_failed')
     else:
         require(value['reason'] is None and value['stage'] == 'complete' and
                 value['asset_index'] is not None and value['pip_version'] is not None and
+                value['help_exit_code'] == 0 and
+                (not value['missing_options'] or (value['resume_policy'] == 'audited-25.0.1-no-resume' and
+                 value['missing_options'] == ['--resume-retries'])) and
+                value['resume_policy'] is not None and
+                (value['resume_policy'] != 'audited-25.0.1-no-resume' or value['reviewed_source_matches'] is True) and
                 type(value['filename']) is str and len(value['filename']) <= 255 and
                 re.fullmatch(r'[A-Za-z0-9_.+-]+\.whl', value['filename']) and
                 type(value['size_bytes']) is int and 0 < value['size_bytes'] < QUOTA and
@@ -82,7 +104,7 @@ def validate_result(value):
     return value
 
 
-def safe_result(index, stage, version, outcome=None, reason=None):
+def safe_result(index, stage, version, outcome=None, reason=None, capability=None):
     value = {'schema': RESULT_SCHEMA, 'status': 'ok' if outcome is not None else 'failed',
              'stage': stage if stage in STAGES else 'scope',
              'reason': None if outcome is not None else
@@ -90,7 +112,18 @@ def safe_result(index, stage, version, outcome=None, reason=None):
              'asset_index': index if type(index) is int and 0 <= index < 22 else None,
              'pip_version': version if type(version) is str and
                  re.fullmatch(r'[0-9]{1,6}\.[0-9]{1,6}(?:\.[0-9]{1,6})?', version) else None,
-             'filename': None, 'size_bytes': None, 'sha256': None}
+             'filename': None, 'size_bytes': None, 'sha256': None,
+             'help_exit_code': None, 'missing_options': [], 'resume_policy': None,
+             'reviewed_source_matches': None}
+    if capability is not None:
+        require(set(capability) == {'schema', 'pip_version', 'help_exit_code', 'missing_options',
+                                    'policy', 'reviewed_source_matches'} and
+                capability['schema'] == 'bounded-pip-capability-v1' and
+                capability['pip_version'] == value['pip_version'], 'evidence_write_failed')
+        value.update(help_exit_code=capability['help_exit_code'],
+                     missing_options=capability['missing_options'],
+                     resume_policy=capability['policy'],
+                     reviewed_source_matches=capability['reviewed_source_matches'])
     if outcome is not None:
         require(set(outcome) == {'status', 'asset_index', 'pip_version', 'filename',
                                 'size_bytes', 'sha256'}, 'evidence_write_failed')
@@ -129,6 +162,7 @@ class Evidence:
                 self.root.is_dir() and not any(self.root.iterdir()), 'evidence_path')
         self.stage = 'scope'
         self.pip_version = None
+        self.capability = None
 
     def mark(self, stage):
         require(stage in STAGES, 'evidence_write_failed')
@@ -215,14 +249,51 @@ def base_argv(python=sys.executable):
             '--no-input', '--no-cache-dir']
 
 
-def pip_argv(root, python=sys.executable):
+def pip_argv(root, python=sys.executable, contract=None):
     root = Path(root)
+    retries = ['--retries', '0', '--resume-retries', '0']
+    if contract is not None:
+        require(set(contract) == {'retry_argv', 'evidence'}, 'pip_capability_probe')
+        retries = contract['retry_argv']
+        evidence = contract['evidence']
+        require(retries in (['--retries', '0'], ['--retries', '0', '--resume-retries', '0']),
+                'pip_capability_probe')
+        require(evidence['help_exit_code'] == 0, 'pip_capability_probe')
+        if retries != ['--retries', '0']:
+            require(not evidence['missing_options'] and evidence['policy'] == 'explicit-zero-resume' and
+                    evidence['reviewed_source_matches'] is None and evidence['pip_version'] != '25.0.1',
+                    'pip_capability_probe')
+        if retries == ['--retries', '0']:
+            require(evidence['pip_version'] == '25.0.1' and
+                    evidence['policy'] == 'audited-25.0.1-no-resume' and
+                    evidence['reviewed_source_matches'] is True and
+                    evidence['missing_options'] in ([], ['--resume-retries']), 'pip_capability_probe')
     return base_argv(python) + [
         'download', '--no-index', '--no-deps', '--require-hashes',
-        '--only-binary=:all:', '--retries', '0', '--resume-retries', '0',
+        '--only-binary=:all:'] + retries + [
         '--keyring-provider', 'disabled', '--proxy', PROXY,
         '--timeout', '30', '--progress-bar', 'off',
         '--dest', str(root / 'output'), '--requirement', str(root / 'one.txt')]
+
+
+def load_compatibility():
+    path = Path(__file__).resolve().with_name('pip_compatibility.py')
+    spec = importlib.util.spec_from_file_location('_trusted_pip_compatibility', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def installed_pip_root():
+    """Locate without importing/executing pip, in this exact isolated interpreter."""
+    spec = importlib.util.find_spec('pip')
+    require(spec is not None and spec.submodule_search_locations is not None and
+            len(spec.submodule_search_locations) == 1 and spec.origin is not None,
+            'pip_capability_probe')
+    root = Path(spec.submodule_search_locations[0])
+    require(root.is_absolute() and root.resolve() == root and root.is_dir() and
+            Path(spec.origin) == root / '__init__.py', 'pip_capability_probe')
+    return root
 
 
 def requirement(row):
@@ -277,7 +348,7 @@ def run_capped(argv, env, deadline, file_limit=None, popen=subprocess.Popen):
         proc.stderr.close()
 
 
-def probe_capabilities(env, deadline, runner=run_capped, reporter=None):
+def probe_capabilities(env, deadline, runner=run_capped, reporter=None, pip_root=None):
     if reporter: reporter.mark('pip_version_probe')
     code, version, error = runner(base_argv() + ['--version'], env, deadline)
     match = re.match(rb'^pip ([0-9]+\.[0-9]+(?:\.[0-9]+)?) ', version)
@@ -287,13 +358,23 @@ def probe_capabilities(env, deadline, runner=run_capped, reporter=None):
         reporter.pip_version = version_text
         reporter.mark('pip_help_probe')
     code, help_text, _ = runner(base_argv() + ['download', '--help'], env, deadline)
-    require(code == 0 and all(x.encode() in help_text for x in REQUIRED_OPTIONS),
-            'pip_capability_probe')
+    compatibility = load_compatibility()
+    if version_text == compatibility.AUDITED_VERSION and pip_root is None:
+        try:
+            pip_root = installed_pip_root()
+        except (WorkerFailure, OSError):
+            pip_root = None  # The audited contract fails closed and retains help diagnostics.
+    try:
+        contract = compatibility.select_contract(version_text, code, help_text, pip_root)
+    except compatibility.CompatibilityFailure as error:
+        if reporter: reporter.capability = error.evidence
+        raise WorkerFailure('pip_capability_probe') from None
+    if reporter: reporter.capability = contract['evidence']
     if reporter: reporter.mark('pip_config_probe')
     code, config, error = runner(base_argv() + ['config', 'list'], env, deadline)
     require(code == 0 and not config.strip() and not error.strip(),
             'pip_effective_config')
-    return version_text
+    return contract
 
 
 def ensure_tmpfs(root, mountinfo='/proc/self/mountinfo'):
@@ -498,11 +579,12 @@ def acquire(index, manifest, root, broker_socket, candidate_root, seconds=300, r
     env = clean_env(root)
     if reporter: reporter.mark('config')
     ensure_no_configs(env)
-    version = probe_capabilities(env, min(deadline, time.monotonic() + 30), reporter=reporter)
+    contract = probe_capabilities(env, min(deadline, time.monotonic() + 30), reporter=reporter)
+    version = contract['evidence']['pip_version']
     (root / 'one.txt').write_text(requirement(row), encoding='ascii')
     if reporter: reporter.mark('acquisition')
     with shim(broker_socket, deadline):
-        code, _, _ = run_capped(pip_argv(root), env, deadline, row['size_bytes'])
+        code, _, _ = run_capped(pip_argv(root, contract=contract), env, deadline, row['size_bytes'])
         # TLS is opaque to the broker: do not infer status 403 from pip logs.
         require(code == 0, 'pip_acquisition_failed')
         if reporter: reporter.mark('verification')
@@ -537,13 +619,14 @@ def main():
     except BaseException:
         reason = 'worker_internal_failure'
     result = safe_result(args.asset_index, reporter.stage if reporter else 'scope',
-                         reporter.pip_version if reporter else None, outcome, reason)
+                         reporter.pip_version if reporter else None, outcome, reason,
+                         reporter.capability if reporter else None)
     if reporter:
         try:
             reporter.write('worker-result.json', result)
         except BaseException:
             result = safe_result(args.asset_index, reporter.stage, reporter.pip_version,
-                                 reason='evidence_write_failed')
+                                 reason='evidence_write_failed', capability=reporter.capability)
     print(json.dumps(result, sort_keys=True), flush=True)
     return 0 if result['status'] == 'ok' else 1
 

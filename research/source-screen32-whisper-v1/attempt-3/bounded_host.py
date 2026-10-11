@@ -21,6 +21,8 @@ PROFILES = {
     'worker': {'memory': 12*1024**3-256*MIB, 'cpus': 3, 'pids': 240, 'network': 'none'},
     'offline': {'memory': 12*1024**3, 'cpus': 4, 'pids': 256, 'network': 'none'},
 }
+SETUP_SIBLING_MODULES = ('bounded_host.py', 'bounded_connect.py', 'pip_acquire.py',
+                         'pip_compatibility.py', 'phased_setup.py')
 
 
 def require(value, reason):
@@ -47,6 +49,19 @@ def regular(path, maximum=None):
     require(stat.S_ISREG(s.st_mode) and s.st_nlink == 1, 'single regular file')
     require(maximum is None or s.st_size <= maximum, 'file bound')
     return s
+
+
+def validate_setup_closure(setup_code):
+    """Check the current worker's sibling bundle without importing or running it.
+
+    This is a presence/type preflight, not source identity or activation approval.
+    A future campaign must separately freeze these files and invoke this before
+    image acquisition. Historical campaign mount rosters remain unchanged.
+    """
+    code = Path(setup_code) / 'research/source-screen32-whisper-v1/attempt-3'
+    for name in SETUP_SIBLING_MODULES:
+        require(regular(code / name, MIB).st_size > 0, 'complete setup module bundle')
+    return code
 
 
 def write_once(path, value):
@@ -414,7 +429,7 @@ def acquire_runtime(*,docker,setup_code,runtime,output,root,job_deadline,run_id,
     require(type(job_deadline) in (int,float) and math.isfinite(job_deadline) and clock()<job_deadline<=clock()+2400,'host deadline')
     deadline=min(clock()+1200,job_deadline)
     setup_code=Path(setup_code); runtime=Path(runtime); output=Path(output); root=Path(root)
-    code=setup_code/'research/source-screen32-whisper-v1/attempt-3'
+    code=validate_setup_closure(setup_code)
     base=code.parent; manifest=base/'runtime-lock.json'
     wheels=read_json(manifest)['files']; sources=read_json(base/'source-lock.json')['files']
     require(len(wheels)==22 and len(sources)==22,'fixed locked asset roster')

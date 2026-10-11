@@ -835,7 +835,7 @@ def load_tests(loader, tests, pattern):
     directory = HERE / 'attempt-3'
     sys.path.insert(0, str(directory))
     for name in ('test_bounded_connect', 'test_pip_acquire', 'test_bounded_host',
-                 'test_phased_setup', 'test_campaign'):
+                 'test_phased_setup', 'test_campaign', 'test_pip_compatibility'):
         qualified = 'whisper_third_' + name
         spec = importlib.util.spec_from_file_location(qualified, directory / (name + '.py'))
         module = importlib.util.module_from_spec(spec)

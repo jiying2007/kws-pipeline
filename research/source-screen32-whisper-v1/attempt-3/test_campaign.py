@@ -14,6 +14,10 @@ import campaign_host as runner
 prepare_freeze = gate.freeze_builder
 from common import canonical, file_hash, BOUNDARY
 
+# Source-only future-bundle fixture; never rewrite the historical third gate.
+CURRENT_SETUP_FIXTURE = sorted(set(gate.SETUP_CODE) | {
+    'research/source-screen32-whisper-v1/attempt-3/pip_compatibility.py'})
+
 
 class CampaignTests(unittest.TestCase):
     def test_prior_archives_are_exact_and_zero_attempt(self):
@@ -107,7 +111,7 @@ class CampaignTests(unittest.TestCase):
              patch.object(runner.shutil, 'disk_usage', return_value=types.SimpleNamespace(free=20 * 1024**3)), \
              patch.object(runner, 'collect_public'), patch.object(runner.signal, 'signal'):
             env = {'RUNNER_TEMP': tmp, 'GITHUB_RUN_ID': '99999999', 'GITHUB_SHA': 'a' * 40}
-            rc = runner.execute(env, {'inference_code': gate.INFERENCE_CODE, 'setup_code': gate.SETUP_CODE},
+            rc = runner.execute(env, {'inference_code': gate.INFERENCE_CODE, 'setup_code': CURRENT_SETUP_FIXTURE},
                                 runner.time.monotonic(), gate.EXPERIMENT, 'f' * 64, gate.verify_prior())
             self.assertEqual(rc, 1); acquire.assert_called_once(); host.supervise_container.assert_not_called()
             root = Path(tmp) / (gate.EXPERIMENT + '-99999999')
@@ -116,7 +120,7 @@ class CampaignTests(unittest.TestCase):
             self.assertEqual(receipt['stages'], {'setup': 'failed_no_retry', 'whisper': 'not_run'})
             self.assertEqual(len(gate.read_json(root / 'terminal-outcomes.json')), 16)
             self.assertEqual({p.relative_to(root / 'code').as_posix() for p in (root / 'code').rglob('*') if p.is_file()}, set(gate.INFERENCE_CODE))
-            self.assertEqual({p.relative_to(root / 'setup-code').as_posix() for p in (root / 'setup-code').rglob('*') if p.is_file()}, set(gate.SETUP_CODE))
+            self.assertEqual({p.relative_to(root / 'setup-code').as_posix() for p in (root / 'setup-code').rglob('*') if p.is_file()}, set(CURRENT_SETUP_FIXTURE))
 
     def test_success_uses_original_offline_constructor_after_setup(self):
         historical = runner.original.historical_host()
@@ -136,7 +140,7 @@ class CampaignTests(unittest.TestCase):
              patch.object(runner.shutil, 'disk_usage', return_value=types.SimpleNamespace(free=20 * 1024**3)), \
              patch.object(runner, 'collect_public'), patch.object(runner.signal, 'signal'):
             env = {'RUNNER_TEMP': tmp, 'GITHUB_RUN_ID': '99999999', 'GITHUB_SHA': 'a' * 40}
-            rc = runner.execute(env, {'inference_code': gate.INFERENCE_CODE, 'setup_code': gate.SETUP_CODE},
+            rc = runner.execute(env, {'inference_code': gate.INFERENCE_CODE, 'setup_code': CURRENT_SETUP_FIXTURE},
                                 runner.time.monotonic(), gate.EXPERIMENT, 'f' * 64, gate.verify_prior())
             self.assertEqual(rc, 0); self.assertEqual(order, ['setup', 'inference'])
             args = host.supervise_container.call_args.args[0]
@@ -150,6 +154,30 @@ class CampaignTests(unittest.TestCase):
             receipt = gate.read_json(root / 'host-receipt.json')
             self.assertEqual(receipt['attempts'], 16); self.assertEqual(receipt['completed'], 16)
             self.assertFalse(receipt['training_admitted']); self.assertFalse(receipt['shipping_approved'])
+
+    def test_missing_current_helper_fails_before_image_or_docker(self):
+        host = Mock()
+        fake = types.ModuleType('sense_continuation')
+        fake.load_lock = lambda h: {}; fake.verify_retained = lambda *a: None
+        fake.prepare_input = lambda inputs, *a: inputs.mkdir()
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.dict(sys.modules, {'sense_continuation': fake}), \
+             patch.object(runner.original, 'historical_host', return_value=host), \
+             patch.object(runner.bounded_host, 'acquire_runtime') as acquire:
+            env = {'RUNNER_TEMP': tmp, 'GITHUB_RUN_ID': '99999999', 'GITHUB_SHA': 'a' * 40}
+            with self.assertRaises(FileNotFoundError):
+                runner.execute(env, {'inference_code': gate.INFERENCE_CODE,
+                                     'setup_code': gate.SETUP_CODE},
+                    runner.time.monotonic(), gate.EXPERIMENT, 'f' * 64)
+            host.host_capacity.assert_not_called()
+            host.pull_image.assert_not_called()
+            host.docker.assert_not_called()
+            host.supervise_container.assert_not_called()
+            acquire.assert_not_called()
+            root = Path(tmp) / (gate.EXPERIMENT + '-99999999')
+            self.assertEqual({p.relative_to(root / 'code').as_posix()
+                              for p in (root / 'code').rglob('*') if p.is_file()},
+                             set(gate.INFERENCE_CODE))
 
     def test_broker_seal_adapter_with_real_historical_allowlist(self):
         historical = runner.original.historical_host()

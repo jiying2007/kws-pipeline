@@ -117,6 +117,10 @@ def execute(env, freeze, started, experiment, source_freeze_sha256, campaign=Non
         for name in freeze[kind]:
             target = destination / name; target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
+    # Current reusable worker source has additional sibling dependencies. Fail
+    # on an incomplete future bundle before image acquisition or any Docker call;
+    # this does not change or admit the historical third campaign freeze.
+    bounded_host.validate_setup_closure(setup_code)
     deadline = started + LIMITS['job_seconds']
     receipt = {'schema': 'whisper-screen-host-receipt-v1', 'status': 'started',
         'experiment': experiment, 'head_sha': env['GITHUB_SHA'], 'run_id': env['GITHUB_RUN_ID'],
