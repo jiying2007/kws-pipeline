@@ -16937,6 +16937,31 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "operation_id": "qwen12-reviewed-native-activation-20261011",
+      "scope": "Remove only the native capture job literal-false gate after reviewed dispatch approvals and successful bounded repository evidence readback. Preserve fixed fresh public branch, first-attempt, contracts dependency, runtime obligations and all resource limits.",
+      "rationale": "Public code and CI identity metadata only. Preserve all historical workflow/source identities, retained evidence and original consolidation base. This receipt records source activation preparation; it does not claim any future runtime precondition passed or authorize training.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 4248,
+            "sha256": "0455162e5e94325e8cda80bbf349f03d72b6479a259cae340219dcf6df08d6c5",
+            "git_blob_sha1": "62d04f975a0d4084d2c0ecc0180e1ad5a2306609"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 4239,
+            "sha256": "2180904ca0e1f2e733ef9dccec47f861682ea6a1d092c3f67d3eec97a79106db",
+            "git_blob_sha1": "abd870d11994514f137bd4f6f763847c010634ae"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -16950,9 +16975,9 @@
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
       "mode": "100644",
-      "bytes": 4248,
-      "sha256": "0455162e5e94325e8cda80bbf349f03d72b6479a259cae340219dcf6df08d6c5",
-      "git_blob_sha1": "62d04f975a0d4084d2c0ecc0180e1ad5a2306609"
+      "bytes": 4239,
+      "sha256": "2180904ca0e1f2e733ef9dccec47f861682ea6a1d092c3f67d3eec97a79106db",
+      "git_blob_sha1": "abd870d11994514f137bd4f6f763847c010634ae"
     }
   ]
 }

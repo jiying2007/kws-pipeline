@@ -46,7 +46,8 @@ class ContractTests(unittest.TestCase):
         r['pcm_sha256']='0'*64
         with self.assertRaises(ValueError):c.validate_wav(raw,r)
     def test_release_disabled_before_any_effect(self):
-        with self.assertRaises(ValueError):c.fresh_run({}, {}, c.read_json(HERE/'execution-release.json'))
+        _,_,release=self.dispatch_fixture();release['enabled']=False
+        with self.assertRaisesRegex(ValueError,'dispatch approval'):c.fresh_run({}, {}, release)
     def test_real_run_number_preserved(self):
         env={'GITHUB_REPOSITORY':'jiying2007/kws-pipeline','GITHUB_REF':'refs/heads/'+c.BRANCH,'GITHUB_EVENT_NAME':'push','GITHUB_RUN_ATTEMPT':'1','GITHUB_RUN_NUMBER':'7','GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
         event={'created':True,'repository':{'private':False},'after':'a'*40}
@@ -85,13 +86,85 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'runtime preconditions'):c.fresh_run(env,event,release)
         env,event,release=self.dispatch_fixture();release['activation_blockers']=[]
         with self.assertRaisesRegex(ValueError,'runtime preconditions'):c.fresh_run(env,event,release)
-    def test_committed_release_keeps_real_execution_closed(self):
-        release=c.read_json(HERE/'execution-release.json')
+    @staticmethod
+    def native_gate(enabled):
+        # Only the separately reviewed literal false differs between source states.
+        return ("    if: ${{ "+('' if enabled else 'false && ')+
+            "github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && "+
+            "github.ref == 'refs/heads/"+c.BRANCH+"' && github.event.created == true && "+
+            "github.event.repository.private == false && github.run_attempt == 1 }}")
+    def assert_source_activation_state(self,release,text):
+        # Test-only source consistency, never approval or proof of live runtime checks.
+        self.assertIs(type(release),dict);self.assertIs(type(text),str)
+        for key in c.DISPATCH_APPROVALS:self.assertIs(type(release.get(key)),bool,key)
         self.assertIs(release['new_transcripts_publication_approved'],True)
-        for key in c.DISPATCH_APPROVALS:
-            if key!='new_transcripts_publication_approved':self.assertIs(release[key],False)
+        if release['enabled']:
+            for key in c.DISPATCH_APPROVALS:self.assertIs(release[key],True,key)
+        self.assertEqual(text.count('  qwen12:\n'),1)
+        self.assertEqual(text.count('  contracts:\n'),1)
+        native=text.split('  qwen12:\n',1)[1].split('  contracts:\n',1)[0]
+        for field,expected in (('if',self.native_gate(release['enabled'])),
+                ('needs','    needs: contracts'),('runs-on','    runs-on: ubuntu-24.04'),
+                ('timeout-minutes','    timeout-minutes: 70')):
+            self.assertEqual([line for line in native.splitlines() if line.startswith('    '+field+':')],
+                             [expected])
         self.assertEqual(release['required_runtime_preconditions'],list(c.REQUIRED_RUNTIME_PRECONDITIONS))
+        self.assertEqual(release['evidence_transport'],'github-repository-zip-chunks-v1')
         self.assertNotIn('activation_blockers',release)
+        self.assertNotIn('maximum_log_api_readback_approved',release)
+    def source_state_fixture(self,enabled):
+        # Construct both states only in memory, independent of the committed state.
+        release=c.read_json(HERE/'execution-release.json')
+        release.update(dict.fromkeys(c.DISPATCH_APPROVALS,enabled))
+        release['new_transcripts_publication_approved']=True
+        text=(HERE/'workflow.yml').read_text()
+        text=text.replace(self.native_gate(not enabled),self.native_gate(enabled))
+        return release,text
+    def test_committed_release_and_workflow_have_consistent_reviewed_state(self):
+        self.assert_source_activation_state(c.read_json(HERE/'execution-release.json'),
+                                            (HERE/'workflow.yml').read_text())
+    def test_disabled_and_activated_source_fixtures(self):
+        for enabled in (False,True):
+            with self.subTest(enabled=enabled):self.assert_source_activation_state(*self.source_state_fixture(enabled))
+    def test_source_approvals_must_be_present_and_strict_booleans(self):
+        for enabled in (False,True):
+            for key in c.DISPATCH_APPROVALS:
+                for value in (None,0,1,'false','true',[],{}):
+                    release,text=self.source_state_fixture(enabled);release[key]=value
+                    with self.subTest(enabled=enabled,key=key,value=value),self.assertRaises(AssertionError):
+                        self.assert_source_activation_state(release,text)
+                release,text=self.source_state_fixture(enabled);del release[key]
+                with self.subTest(enabled=enabled,key=key,missing=True),self.assertRaises(AssertionError):
+                    self.assert_source_activation_state(release,text)
+        for value in (None,False,1,'approved',[]):
+            with self.subTest(release=value),self.assertRaises(AssertionError):
+                self.assert_source_activation_state(value,self.source_state_fixture(False)[1])
+    def test_activated_source_requires_every_approval(self):
+        for key in c.DISPATCH_APPROVALS:
+            release,text=self.source_state_fixture(True);release[key]=False
+            with self.subTest(key=key),self.assertRaises(AssertionError):
+                self.assert_source_activation_state(release,text)
+        release,text=self.source_state_fixture(False);release['new_transcripts_publication_approved']=False
+        with self.assertRaises(AssertionError):self.assert_source_activation_state(release,text)
+    def test_source_rejects_mixed_activation_gates(self):
+        for enabled in (False,True):
+            release,_=self.source_state_fixture(enabled);_,text=self.source_state_fixture(not enabled)
+            with self.subTest(enabled=enabled),self.assertRaises(AssertionError):
+                self.assert_source_activation_state(release,text)
+    def test_source_rejects_missing_or_weakened_native_workflow_guards(self):
+        for enabled in (False,True):
+            release,text=self.source_state_fixture(enabled);gate=self.native_gate(enabled)
+            mutations=[(gate,''),(gate,gate+'\n'+gate),(gate,gate.replace(' }}',' || true }}')),
+                ("github.repository == 'jiying2007/kws-pipeline'","github.repository == 'other/repository'"),
+                ("github.event_name == 'push'","github.event_name == 'workflow_dispatch'"),
+                ("refs/heads/"+c.BRANCH,"refs/heads/main"),('github.event.created == true','github.event.created == 1'),
+                ('github.event.repository.private == false','github.event.repository.private == 0'),
+                ('github.run_attempt == 1','github.run_attempt == 2'),('    needs: contracts','    needs: []'),
+                ('    runs-on: ubuntu-24.04','    runs-on: self-hosted'),
+                ('    timeout-minutes: 70','    timeout-minutes: 71')]
+            for before,after in mutations:
+                with self.subTest(enabled=enabled,guard=before),self.assertRaises(AssertionError):
+                    self.assert_source_activation_state(release,text.replace(before,after,1))
     def test_source_freeze_binds_current_files(self):
         import prepare_freeze
         freeze=c.read_json(HERE/'execution-freeze.json')
@@ -151,9 +224,9 @@ class ContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):c.read_json(p/'alias')
     def test_no_model_import_on_contract(self):
         self.assertFalse(any(x in sys.modules for x in ('torch','transformers','funasr','whisper')))
-    def test_dormant_workflow_no_artifact_action(self):
+    def test_workflow_no_artifact_action(self):
         text=(HERE/'workflow.yml').read_text()
-        self.assertIn('false &&',text);self.assertIn('runs-on: ubuntu-24.04',text)
+        self.assertIn('runs-on: ubuntu-24.04',text)
         self.assertNotIn('uses: actions/upload-artifact',text);self.assertNotIn('uses: actions/cache',text)
     def test_gate_unique_and_no_path_injection(self):
         with tempfile.TemporaryDirectory() as d:

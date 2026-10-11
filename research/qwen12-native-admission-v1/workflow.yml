@@ -17,7 +17,7 @@ concurrency:
 jobs:
   qwen12:
     # Reviewed release must separately remove this literal false before activation.
-    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
