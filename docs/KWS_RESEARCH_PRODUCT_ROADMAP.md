@@ -7,6 +7,10 @@
 > 开始；公开证据交付见[归档与恢复](../research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。
 > 产品机器权威仍为 `configs/shipping.xiaowo.json` 与 `commercial/*.policy.json`。
 
+## 2026-10-11：隔离的 C0/C1 源码准备
+
+[候选源码入口](../research/candidate_encoders/README.md)提供显式 C0 实例适配、C1 因果卷积与有界缓存源码及纯结构校验。当前未执行候选数值推理或训练，未建立 C 导出等价与效果证据；下列既有日期计划及正式策略保持原范围。
+
 ## 2026-10-10：并行候选审查入口
 
 新增 [并行优化评审](KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md) 与独立的

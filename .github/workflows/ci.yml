@@ -89,6 +89,16 @@ jobs:
           python3 -S -B -OO tests/test_parallel_candidate_plan.py
       - name: Verify tracked worktree after Disabled parallel candidate plan metadata
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Disabled parallel candidate plan metadata"'
+      - name: Candidate encoder source contracts without model execution
+        run: |
+          python3 -S -B tests/test_candidate_encoder_contract.py
+          python3 -S -B -O tests/test_candidate_encoder_contract.py
+          python3 -S -B -OO tests/test_candidate_encoder_contract.py
+          python3 -S -B tests/test_candidate_encoder_source.py
+          python3 -S -B -O tests/test_candidate_encoder_source.py
+          python3 -S -B -OO tests/test_candidate_encoder_source.py
+      - name: Verify tracked worktree after Candidate encoder source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Candidate encoder source contracts"'
       - name: GitHub hosted resource probe contract
         run: python3 tests/test_github_hosted_resource_probe.py
       - name: Verify tracked worktree after GitHub hosted resource probe contract
