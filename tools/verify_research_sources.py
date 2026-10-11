@@ -106,7 +106,8 @@ def verify(root, manifest):
         check_file(root, row)
         paths.add(row['path'])
     additions = manifest.get('allowed_new_active_workflows')
-    approved = ['.github/workflows/research-source-consolidation.yml']
+    approved = ['.github/workflows/research-source-consolidation.yml',
+                '.github/workflows/qwen12-native-admission-v1.yml']
     if additions != approved:
         raise ValueError('unexpected active workflow addition')
     # The original 54-workflow baseline and the separately allowed addition

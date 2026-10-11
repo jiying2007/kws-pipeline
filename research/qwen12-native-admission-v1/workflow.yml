@@ -1,0 +1,65 @@
+name: Qwen12 prospective native admission v1
+on:
+  push:
+    branches: [research/qwen12-native-admission-v1]
+  pull_request:
+    paths:
+      - "research/qwen12-native-admission-v1/**"
+      - "research/source-screen32-v1/native_v2_adapter.py"
+      - ".github/workflows/qwen12-native-admission-v1.yml"
+permissions:
+  contents: read
+concurrency:
+  group: qwen12-native-admission-v1
+  cancel-in-progress: false
+jobs:
+  qwen12:
+    # Reviewed release must separately remove this literal false before activation.
+    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run reviewed twelve by three native captures once
+        timeout-minutes: 65
+        run: python3 -I -B research/qwen12-native-admission-v1/hosted_run.py
+      # No artifact upload, cache action, paid runner, model/audio upload or retry.
+      # Bounded evidence transport uses job-log chunks after explicit publication approval.
+  contracts:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Stdlib-only contract and transport fixtures
+        run: |
+          for flags in '' '-O' '-OO'; do
+            python3 -B $flags research/qwen12-native-admission-v1/test_contract.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_log_transport.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_native_v2_adapter.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_whisper_binding.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_native_locks.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_worker_receipts.py
+          done
+          python3 -B tools/test_inventory.py --root research/qwen12-native-admission-v1 --workflow .github/workflows/qwen12-native-admission-v1.yml
+  transport-fixture:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Public synthetic maximum-size log roundtrip; zero ASR calls
+        run: python3 -I -B research/qwen12-native-admission-v1/emit_synthetic_log_fixture.py

@@ -1,0 +1,18 @@
+{
+  "activation_blockers": [
+    "root_source_budget_review",
+    "independent_review",
+    "real_host_caps_and_seccomp_validation",
+    "actual_complete_closure_worsttrace_dry_package",
+    "maximum_log_actual_api_readback",
+    "prior_campaign_history_and_unique_claim",
+    "activated_source_freeze_and_retention_revalidation"
+  ],
+  "approval_scope": "At most36 new native records from12 existing public synthetic clips; same repository Actions job logs and public evidence directory; noartifact/cache storage, model weights, audio or private reviews",
+  "budget_review_approved": false,
+  "enabled": false,
+  "new_transcripts_publication_approved": true,
+  "schema": "qwen12-native-admission-release-v1",
+  "source_freeze_sha256": "621379f7f472177ee71acc68b5c1d55c502189d5a08b836330747e4a2c6b8bc5",
+  "source_review_approved": false
+}

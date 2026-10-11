@@ -15630,7 +15630,8 @@
     }
   ],
   "allowed_new_active_workflows": [
-    ".github/workflows/research-source-consolidation.yml"
+    ".github/workflows/research-source-consolidation.yml",
+    ".github/workflows/qwen12-native-admission-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -16920,6 +16921,13 @@
       "git_blob_sha1": "65c53193fb52ce18a93b27c9dca5708f67ab2c62",
       "sha256": "45aacd71cdf36210fb9e075c68c1c2f8c7fc8b9e70b676f5ff413cc49198d8ea",
       "bytes": 3719
+    },
+    {
+      "path": ".github/workflows/qwen12-native-admission-v1.yml",
+      "mode": "100644",
+      "bytes": 2988,
+      "sha256": "30493347cf2b2569580bca93b5a5c59d09a509895a370f3af48c0ce50818596e",
+      "git_blob_sha1": "5642e94ccdb979c0b197972c2dd9b80da7b1e633"
     }
   ]
 }

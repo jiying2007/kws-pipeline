@@ -1,0 +1,46 @@
+{
+  "schema": "qwen12-locked-acquisition-proposal-v1",
+  "status": "disabled_pending_review",
+  "qwen_sense": {
+    "runtime_inputs": 124,
+    "wheel_count": 119,
+    "sdist_count": 5,
+    "runtime_input_bytes": 523723580,
+    "source_builds_once_offline": [
+      "antlr4-python3-runtime-4.9.3.tar.gz",
+      "crcmod-1.7.tar.gz",
+      "jieba-0.42.1.tar.gz",
+      "oss2-2.19.1.tar.gz",
+      "sox-1.5.0.tar.gz"
+    ],
+    "model_asset_bytes": 2817242867,
+    "largest_model_asset_bytes": 1876091704
+  },
+  "whisper": {
+    "wheels": 22,
+    "wheel_bytes": 287213471,
+    "source_files": 22,
+    "source_bytes": 1874441,
+    "checkpoint_bytes": 483617219
+  },
+  "audio_bytes": 776208,
+  "download_cap_bytes": 6442450944,
+  "image_reservation_bytes": 134217728,
+  "image_reservation_is_hard_cap": false,
+  "runtime_separation": [
+    "qwen_sense",
+    "whisper"
+  ],
+  "acquisition_attempts_per_asset": 1,
+  "resolve_new_versions": false,
+  "retries": 0,
+  "network_transport_ready": true,
+  "accounting_scope": "Reserved mixed scopes; not hard total network wire bytes",
+  "reservation_components_bytes": {
+    "asr_response_bodies": 4294967296,
+    "whisper_tunnel_recv": 1610612736,
+    "image_observed_reservation": 134217728,
+    "audio_response_bodies": 1048576
+  },
+  "reservation_sum_bytes": 6040846336
+}
