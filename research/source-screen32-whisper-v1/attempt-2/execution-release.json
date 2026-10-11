@@ -1,1 +1,1 @@
-{"approved":false,"campaign_attempt":2,"experiment":"qwen16-whisper-small-third-attempt-2-v1","prior_run_id":38105471896,"schema":"whisper-screen-second-execution-release-v1","source_freeze_sha256":"543bc71585522dc318b2c954ee715b779b696876a5030b04f921a36214870f2a"}
+{"approved":true,"campaign_attempt":2,"experiment":"qwen16-whisper-small-third-attempt-2-v1","prior_run_id":38105471896,"schema":"whisper-screen-second-execution-release-v1","source_freeze_sha256":"543bc71585522dc318b2c954ee715b779b696876a5030b04f921a36214870f2a"}
