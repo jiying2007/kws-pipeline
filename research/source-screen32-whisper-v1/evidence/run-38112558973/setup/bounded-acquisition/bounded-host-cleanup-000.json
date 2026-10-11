@@ -1,0 +1,1 @@
+{"containers":[{"container":"kws-bound-38112558973-wheel-01-worker","deadline_overrun":false,"status":"removed"},{"container":"kws-bound-38112558973-wheel-01-broker","deadline_overrun":false,"status":"removed"}],"schema":"bounded-host-cleanup-v1","status":"complete"}

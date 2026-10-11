@@ -1,0 +1,1 @@
+{"argv_sha256":"17e57d8256190f41bbe89bcc8b45b4920d914f28b4b57a6c3e2dff984414d890","limits":{"cpus":1,"memory":268435456,"network":"bridge","pids":16},"role":"broker","schema":"bounded-container-inspect-v1","socket_mounted":true,"status":"verified"}

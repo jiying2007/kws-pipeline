@@ -1,0 +1,1 @@
+{"argv_sha256":"c34eafa7fd3c47f44cdf8a394c066c78e062a66017d5bba8f01d4541ad23b9c0","limits":{"cpus":3,"memory":12616466432,"network":"none","pids":240},"role":"worker","schema":"bounded-container-inspect-v1","socket_mounted":true,"status":"verified"}
