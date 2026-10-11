@@ -187,12 +187,17 @@ def main(env=None):
     started = time.monotonic()
     env = os.environ if env is None else env
     freeze = admission(env)  # No acquisition/runtime calls before this gate.
+    return execute(env, freeze, started, EXPERIMENT, file_hash(HERE / 'execution-freeze.json'))
+
+
+def execute(env, freeze, started, experiment, source_freeze_sha256, campaign=None):
+    """Shared fixed runtime, called only after an entry point's reviewed admission."""
     host = historical_host()
     sys.path.insert(0, str(ROOT / 'research/source-screen32-v1'))
     import sense_continuation
     lock = sense_continuation.load_lock(host)
     sense_continuation.verify_retained(lock, host)
-    root = Path(env['RUNNER_TEMP']) / (EXPERIMENT + '-' + env['GITHUB_RUN_ID']); root.mkdir()
+    root = Path(env['RUNNER_TEMP']) / (experiment + '-' + env['GITHUB_RUN_ID']); root.mkdir()
     code, runtime, inputs = root / 'code', root / 'runtime', root / 'input'
     code.mkdir(); runtime.mkdir()
     sense_continuation.prepare_input(inputs, lock, host)
@@ -201,13 +206,16 @@ def main(env=None):
         shutil.copyfile(ROOT / name, target)
     deadline = started + LIMITS['job_seconds']
     receipt = {'schema': 'whisper-screen-host-receipt-v1', 'status': 'started',
-        'experiment': EXPERIMENT, 'head_sha': env['GITHUB_SHA'], 'run_id': env['GITHUB_RUN_ID'],
-        'run_attempt': 1, 'run_number': 1, 'source_freeze_sha256': file_hash(HERE / 'execution-freeze.json'),
+        'experiment': experiment, 'head_sha': env['GITHUB_SHA'], 'run_id': env['GITHUB_RUN_ID'],
+        'run_attempt': 1, 'run_number': 1, 'source_freeze_sha256': source_freeze_sha256,
         'fixed_model': 'openai/whisper-small-native', 'new_model_selection_after_results': False,
         'prospective_three_model_roster': False,
         'interpretation': 'third model selected after historical two-route screen; exploratory source-screen comparison',
         'prior_runs_unchanged': [38018029787, 38021467257], 'limits': LIMITS,
         'stages': {'setup': 'not_run', 'whisper': 'not_run'}, **BOUNDARY}
+    if campaign is not None:
+        receipt['campaign'] = campaign
+        receipt['prior_runs_unchanged'].append(campaign['prior_run_id'])
     atomic(root / 'host-receipt.json', receipt)
     # Expose destination early, so completed partial evidence can upload after failure.
     if env.get('GITHUB_OUTPUT'):
@@ -225,7 +233,7 @@ def main(env=None):
         for stage, label in (('setup', 'setup'), ('sensevoice', 'whisper')):
             host.host_capacity()
             output = root / label; output.mkdir()
-            name = EXPERIMENT + '-' + env['GITHUB_RUN_ID'] + '-' + label
+            name = experiment + '-' + env['GITHUB_RUN_ID'] + '-' + label
             args = container_command(host, name, image_lock['image'], code, runtime, output, stage, inputs)
             receipt['stages'][label] = 'started'; atomic(root / 'host-receipt.json', receipt)
             receipt.setdefault('container_argv_sha256', {})[label] = __import__('hashlib').sha256(canonical(args)).hexdigest()

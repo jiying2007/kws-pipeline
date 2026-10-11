@@ -1,0 +1,33 @@
+name: Qwen16 Whisper small third route campaign attempt 2 v1
+on:
+  push:
+    branches: [research/qwen16-whisper-small-third-attempt-2-v1]
+permissions:
+  contents: read
+concurrency:
+  group: qwen16-whisper-small-third-attempt-2-v1
+  cancel-in-progress: false
+jobs:
+  whisper:
+    if: github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_number == 1 && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Run frozen Whisper small once on sixteen retained WAVs
+        id: run
+        timeout-minutes: 42
+        run: python3 -I -B research/source-screen32-whisper-v1/attempt-2/continue_once.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always() && steps.run.outputs.evidence_root != ''
+        with:
+          name: qwen16-whisper-small-third-attempt-2-terminal-v1
+          path: ${{ steps.run.outputs.evidence_root }}/artifact/
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: false
