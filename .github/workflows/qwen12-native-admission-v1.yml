@@ -1,7 +1,9 @@
 name: Qwen12 prospective native admission v1
 on:
   push:
-    branches: [research/qwen12-native-admission-v1]
+    branches:
+      - research/qwen12-native-admission-v1
+      - research/qwen12-native-transport-preflight-v1
   pull_request:
     paths:
       - "research/qwen12-native-admission-v1/**"
@@ -15,7 +17,11 @@ concurrency:
 jobs:
   qwen12:
     # Reviewed release must separately remove this literal false before activation.
-    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    needs: contracts
+    permissions:
+      contents: write
+      actions: read
     runs-on: ubuntu-24.04
     timeout-minutes: 70
     steps:
@@ -28,8 +34,14 @@ jobs:
       - name: Run reviewed twelve by three native captures once
         timeout-minutes: 65
         run: python3 -I -B research/qwen12-native-admission-v1/hosted_run.py
-      # No artifact upload, cache action, paid runner, model/audio upload or retry.
-      # Bounded evidence transport uses job-log chunks after explicit publication approval.
+      - name: Publish complete bounded native evidence, including failed or partial runs
+        if: ${{ always() }}
+        timeout-minutes: 4
+        env:
+          KWS_EVIDENCE_TOKEN: ${{ github.token }}
+        run: python3 -I -B research/qwen12-native-admission-v1/evidence_publisher.py native
+      # Only this poststep receives the token; no worker mount or environment does.
+      # No artifact/cache/LFS upload; evidence ref creation cannot overwrite a ref.
   contracts:
     if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false
     runs-on: ubuntu-24.04
@@ -45,6 +57,8 @@ jobs:
           for flags in '' '-O' '-OO'; do
             python3 -B $flags research/qwen12-native-admission-v1/test_contract.py
             python3 -B $flags research/qwen12-native-admission-v1/test_log_transport.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_branch_transport.py
+            python3 -B $flags research/qwen12-native-admission-v1/test_evidence_publisher.py
             python3 -B $flags research/qwen12-native-admission-v1/test_native_v2_adapter.py
             python3 -B $flags research/qwen12-native-admission-v1/test_whisper_binding.py
             python3 -B $flags research/qwen12-native-admission-v1/test_native_locks.py
@@ -52,7 +66,11 @@ jobs:
           done
           python3 -B tools/test_inventory.py --root research/qwen12-native-admission-v1 --workflow .github/workflows/qwen12-native-admission-v1.yml
   transport-fixture:
-    if: github.repository == 'jiying2007/kws-pipeline' && github.event.repository.private == false
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-transport-preflight-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    needs: contracts
+    permissions:
+      contents: write
+      actions: read
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -61,5 +79,11 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 1
-      - name: Public synthetic maximum-size log roundtrip; zero ASR calls
-        run: python3 -I -B research/qwen12-native-admission-v1/emit_synthetic_log_fixture.py
+      - name: Prepare public synthetic maximum-size package; zero ASR calls
+        run: python3 -I -B research/qwen12-native-admission-v1/emit_synthetic_branch_fixture.py
+      - name: Publish synthetic package once to its separate evidence branch
+        if: ${{ always() }}
+        timeout-minutes: 4
+        env:
+          KWS_EVIDENCE_TOKEN: ${{ github.token }}
+        run: python3 -I -B research/qwen12-native-admission-v1/evidence_publisher.py synthetic

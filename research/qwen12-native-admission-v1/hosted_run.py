@@ -459,8 +459,14 @@ def execute(env,event,release,freeze):
             from log_transport import build_package
             transport={'repository':'jiying2007/kws-pipeline','run_id':int(run['run_id']),'run_attempt':1,
                 'job_key':env['GITHUB_JOB'],'executed_head_sha':run['head_sha']}
-            _,_,lines=build_package(root,collect(root),transport)
-            for line in lines:print(line,flush=True)
+            from branch_transport import write_package
+            payload,_,_=build_package(root,collect(root),transport)
+            # The next trusted host step alone receives the publication token.
+            # An error/partial native run still retains its complete bounded package.
+            write_package(env['RUNNER_TEMP'],payload,transport,'native')
+            print(json.dumps({'schema':'qwen12-local-evidence-package-ready-v1',
+                'archive_bytes':len(payload),'archive_sha256':digest(payload),
+                'publication':'pending_separate_host_step','native_run_failed':failed},sort_keys=True),flush=True)
     signal.setitimer(signal.ITIMER_REAL,0)
     return int(failed)
 

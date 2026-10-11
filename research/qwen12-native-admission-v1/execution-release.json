@@ -1,18 +1,21 @@
 {
-  "activation_blockers": [
-    "root_source_budget_review",
-    "independent_review",
-    "real_host_caps_and_seccomp_validation",
-    "actual_complete_closure_worsttrace_dry_package",
-    "maximum_log_actual_api_readback",
-    "prior_campaign_history_and_unique_claim",
-    "activated_source_freeze_and_retention_revalidation"
-  ],
   "approval_scope": "At most36 new native records from12 existing public synthetic clips; same repository Actions job logs and public evidence directory; noartifact/cache storage, model weights, audio or private reviews",
+  "bounded_evidence_transport_readback_approved": false,
   "budget_review_approved": false,
   "enabled": false,
+  "evidence_transport": "github-repository-zip-chunks-v1",
+  "independent_review_approved": false,
   "new_transcripts_publication_approved": true,
+  "prior_campaign_history_and_unique_claim_approved": false,
+  "required_runtime_preconditions": [
+    "current_run_host_capacity_and_kernel_scope_checks",
+    "current_run_both_runtime_installs_before_prepare",
+    "current_run_all_three_prepare_only_loads_with_kernel_cpu_guards_and_zero_audio_forward",
+    "current_run_full_policy_and_prepare_configs_frozen_before_first_audio_forward",
+    "current_run_actual_complete_closure_worsttrace_dry_package_before_first_audio_forward",
+    "each_fresh_decode_worker_kernel_cpu_guard_and_frozen_config_recheck_before_its_first_audio_forward"
+  ],
   "schema": "qwen12-native-admission-release-v1",
-  "source_freeze_sha256": "621379f7f472177ee71acc68b5c1d55c502189d5a08b836330747e4a2c6b8bc5",
+  "source_freeze_sha256": "744d8331beb85b50fa99f4d403aa8886b5a57bf8a67939a5a6db301a5382c536",
   "source_review_approved": false
 }

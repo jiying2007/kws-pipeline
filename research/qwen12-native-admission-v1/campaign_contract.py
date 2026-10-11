@@ -24,6 +24,17 @@ LIMITS = {'clips': 12, 'attempts': 36, 'workspace_bytes': 10*GIB,
 BOUNDARY = {'scope': EXPERIMENT, 'training_admitted': False, 'human_gold': False,
             'shipping_approved': False, 'acoustic_verbatim_completeness': 'unknown'}
 SOURCE_COMMIT = '7af8f8597b0b7fbe8761c9a2400f2e4028395551'
+DISPATCH_APPROVALS = ('enabled', 'new_transcripts_publication_approved',
+    'budget_review_approved', 'source_review_approved', 'independent_review_approved',
+    'bounded_evidence_transport_readback_approved', 'prior_campaign_history_and_unique_claim_approved')
+# A fixed obligation roster, never declarations that future runtime work passed.
+REQUIRED_RUNTIME_PRECONDITIONS = (
+    'current_run_host_capacity_and_kernel_scope_checks',
+    'current_run_both_runtime_installs_before_prepare',
+    'current_run_all_three_prepare_only_loads_with_kernel_cpu_guards_and_zero_audio_forward',
+    'current_run_full_policy_and_prepare_configs_frozen_before_first_audio_forward',
+    'current_run_actual_complete_closure_worsttrace_dry_package_before_first_audio_forward',
+    'each_fresh_decode_worker_kernel_cpu_guard_and_frozen_config_recheck_before_its_first_audio_forward')
 
 
 def require(value, reason):
@@ -153,9 +164,14 @@ def fetch_blind(value, root, opener):
 
 
 def fresh_run(env, event, release):
-    require(release.get('enabled') is True and release.get('new_transcripts_publication_approved') is True
-            and release.get('budget_review_approved') is True and release.get('source_review_approved') is True,
-            'release disabled or missing explicit approval')
+    require(type(release) is dict and all(release.get(key) is True for key in DISPATCH_APPROVALS),
+            'release disabled or missing explicit dispatch approval')
+    preconditions = release.get('required_runtime_preconditions')
+    require(type(preconditions) is list and all(type(value) is str for value in preconditions)
+            and preconditions == list(REQUIRED_RUNTIME_PRECONDITIONS)
+            and release.get('evidence_transport') == 'github-repository-zip-chunks-v1'
+            and 'activation_blockers' not in release
+            and 'maximum_log_api_readback_approved' not in release, 'fixed required runtime preconditions or evidence transport drift')
     require(env.get('GITHUB_REPOSITORY')=='jiying2007/kws-pipeline' and
         env.get('GITHUB_REF')=='refs/heads/'+BRANCH and env.get('GITHUB_EVENT_NAME')=='push' and
         env.get('GITHUB_RUN_ATTEMPT')=='1' and re.fullmatch('[1-9][0-9]*',env.get('GITHUB_RUN_NUMBER','')) and

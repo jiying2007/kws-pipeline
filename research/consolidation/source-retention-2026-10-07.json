@@ -16912,6 +16912,31 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "operation_id": "qwen12-repository-evidence-transport-20261011",
+      "scope": "Replace large-log transport with fixed bounded repository evidence chunks and zero-model fresh-branch synthetic transport preflight. Real ASR remains disabled.",
+      "rationale": "Public code and CI identity metadata only; preserve historical workflow/source identities. No Actions artifact, cache or LFS storage, private reviews, audio or model publication.",
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 2988,
+            "sha256": "30493347cf2b2569580bca93b5a5c59d09a509895a370f3af48c0ce50818596e",
+            "git_blob_sha1": "5642e94ccdb979c0b197972c2dd9b80da7b1e633"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 4248,
+            "sha256": "0455162e5e94325e8cda80bbf349f03d72b6479a259cae340219dcf6df08d6c5",
+            "git_blob_sha1": "62d04f975a0d4084d2c0ecc0180e1ad5a2306609"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -16925,9 +16950,9 @@
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
       "mode": "100644",
-      "bytes": 2988,
-      "sha256": "30493347cf2b2569580bca93b5a5c59d09a509895a370f3af48c0ce50818596e",
-      "git_blob_sha1": "5642e94ccdb979c0b197972c2dd9b80da7b1e633"
+      "bytes": 4248,
+      "sha256": "0455162e5e94325e8cda80bbf349f03d72b6479a259cae340219dcf6df08d6c5",
+      "git_blob_sha1": "62d04f975a0d4084d2c0ecc0180e1ad5a2306609"
     }
   ]
 }

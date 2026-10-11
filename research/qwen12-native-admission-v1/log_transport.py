@@ -71,7 +71,8 @@ def relative(name):
         ".kwm", ".safetensors", ".whl", ".pem", ".key", ".pkl", ".pickle"}, "audio/weights/credential member prohibited")
     return name
 
-def _read(root, name):
+def _read(root, name, cap=MAX_MEMBER):
+    require(type(cap) is int and 0 < cap <= MAX_MEMBER, "read cap")
     parts = PurePosixPath(relative(name)).parts
     directory = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     fd = None
@@ -82,10 +83,10 @@ def _read(root, name):
             directory = new
         fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
         before = os.fstat(fd)
-        require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_size <= MAX_MEMBER, "bounded unaliased member required")
+        require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_size <= cap, "bounded unaliased member required")
         with os.fdopen(fd, "rb") as stream:
             fd = None
-            raw = stream.read(MAX_MEMBER + 1)
+            raw = stream.read(cap + 1)
             after = os.fstat(stream.fileno())
         fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
         require(len(raw) == before.st_size and all(getattr(before, k) == getattr(after, k) for k in fields), "member changed during read")
@@ -135,6 +136,52 @@ def build_package(root, allowed_members, run_identity):
     records.append({"kind": "end", "header_sha256": h, "archive_sha256": sha(payload), "chunk_count": len(chunks)})
     return payload, manifest, [PREFIX + canonical(record).decode("ascii") for record in records]
 
+def validate_archive(payload, expected_identity, binding=None):
+    """Pure bounded validation shared by log and Git transports; never extract.
+
+    binding, if supplied, contains externally authenticated size/digest fields.
+    None measures those fields while still validating every exact member.
+    """
+    identity(expected_identity)
+    require(type(payload) is bytes and 1 <= len(payload) <= MAX_COMPRESSED,
+            "compressed archive cap/type")
+    require(binding is None or type(binding) is dict, "archive binding type")
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        infos = archive.infolist()
+        require(2 <= len(infos) <= MAX_MEMBERS + 1, "archive member count cap")
+        measured_header = {"archive_bytes": len(payload), "archive_sha256": sha(payload),
+            "member_count": len(infos) - 1,
+            "uncompressed_bytes": sum(i.file_size for i in infos)}
+        require(1 <= measured_header["uncompressed_bytes"] <= MAX_UNCOMPRESSED,
+                "archive expanded size cap")
+        header = measured_header if binding is None else binding
+        for key, value in measured_header.items():
+            require(type(header.get(key)) is type(value) and header[key] == value,
+                    "archive identity/size mismatch")
+        require(len(infos) == header["member_count"] + 1 and len({i.filename for i in infos}) == len(infos), "archive members duplicate/count")
+        require(sum(i.file_size for i in infos) == header["uncompressed_bytes"], "archive expanded size")
+        files = {}
+        for info in infos:
+            relative(info.filename)
+            require(not info.is_dir() and not info.flag_bits & 1 and info.compress_type == zipfile.ZIP_DEFLATED
+                    and stat.S_IFMT(info.external_attr >> 16) == stat.S_IFREG
+                    and info.file_size <= MAX_MEMBER, "unsafe archive member")
+            with archive.open(info) as stream:
+                body = stream.read(MAX_MEMBER + 1)
+            require(len(body) == info.file_size, "archive member size")
+            files[info.filename] = body
+    require(MANIFEST in files, "member manifest missing")
+    measured_header["manifest_sha256"] = sha(files[MANIFEST])
+    if binding is not None:
+        require(measured_header["manifest_sha256"] == binding.get("manifest_sha256"), "member manifest binding")
+    manifest = decode(files.pop(MANIFEST))
+    require(type(manifest) is dict and set(manifest) == {"schema", "identity", "members"}
+            and manifest["schema"] == "native-evidence-member-manifest-v1"
+            and canonical(manifest["identity"]) == canonical(expected_identity), "manifest identity")
+    measured = {name: {"bytes": len(raw), "sha256": sha(raw)} for name, raw in files.items()}
+    require(canonical(manifest["members"]) == canonical(measured), "exact member identities")
+    return manifest, measured_header
+
 def parse_job_log(log_text, expected_identity):
     identity(expected_identity)
     require(type(log_text) is str and len(log_text.encode("utf-8")) <= MAX_LOG_BYTES, "decoded job log cap/type")
@@ -176,28 +223,7 @@ def parse_job_log(log_text, expected_identity):
         require(row["data_sha256"] == sha(chunk.encode("ascii")), "chunk digest")
         chunks.append(chunk)
     payload = base64.b64decode("".join(chunks), validate=True)
-    require(len(payload) == header["archive_bytes"] and sha(payload) == header["archive_sha256"], "archive identity mismatch")
-    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-        infos = archive.infolist()
-        require(len(infos) == header["member_count"] + 1 and len({i.filename for i in infos}) == len(infos), "archive members duplicate/count")
-        require(sum(i.file_size for i in infos) == header["uncompressed_bytes"], "archive expanded size")
-        files = {}
-        for info in infos:
-            relative(info.filename)
-            require(not info.is_dir() and not info.flag_bits & 1 and info.compress_type == zipfile.ZIP_DEFLATED
-                    and stat.S_IFMT(info.external_attr >> 16) == stat.S_IFREG
-                    and info.file_size <= MAX_MEMBER, "unsafe archive member")
-            with archive.open(info) as stream:
-                body = stream.read(MAX_MEMBER + 1)
-            require(len(body) == info.file_size, "archive member size")
-            files[info.filename] = body
-    require(MANIFEST in files and sha(files[MANIFEST]) == header["manifest_sha256"], "member manifest binding")
-    manifest = decode(files.pop(MANIFEST))
-    require(type(manifest) is dict and set(manifest) == {"schema", "identity", "members"}
-            and manifest["schema"] == "native-evidence-member-manifest-v1"
-            and canonical(manifest["identity"]) == canonical(expected_identity), "manifest identity")
-    measured = {name: {"bytes": len(raw), "sha256": sha(raw)} for name, raw in files.items()}
-    require(canonical(manifest["members"]) == canonical(measured), "exact member identities")
+    manifest, _ = validate_archive(payload, expected_identity, header)
     return payload, manifest, {"transport": TRANSPORT, "identity": expected_identity,
         "decoded_log_sha256": sha(log_text.encode("utf-8")), "archive_sha256": sha(payload),
         "archive_bytes": len(payload), "member_manifest_sha256": header["manifest_sha256"],
