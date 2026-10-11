@@ -109,6 +109,19 @@ jobs:
           python3 -S -B -OO tests/test_training_admission.py ThreeASRTrainerMetadataTests
       - name: Verify tracked worktree after Three-ASR pending label metadata
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Three-ASR pending label metadata"'
+      - name: Trusted ASR source and native adapter metadata
+        run: |
+          python3 -S -B tests/test_asr_source_resolver.py
+          python3 -S -B -O tests/test_asr_source_resolver.py
+          python3 -S -B -OO tests/test_asr_source_resolver.py
+          python3 -S -B tests/test_asr_producer_metadata.py
+          python3 -S -B -O tests/test_asr_producer_metadata.py
+          python3 -S -B -OO tests/test_asr_producer_metadata.py
+          python3 -S -B tests/test_asr_native_contracts.py
+          python3 -S -B -O tests/test_asr_native_contracts.py
+          python3 -S -B -OO tests/test_asr_native_contracts.py
+      - name: Verify tracked worktree after Trusted ASR source and native adapter metadata
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Trusted ASR source and native adapter metadata"'
       - name: GitHub hosted resource probe contract
         run: python3 tests/test_github_hosted_resource_probe.py
       - name: Verify tracked worktree after GitHub hosted resource probe contract

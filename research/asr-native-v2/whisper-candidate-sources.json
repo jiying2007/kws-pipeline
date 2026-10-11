@@ -1,0 +1,64 @@
+{
+  "schema": "asr-native-unactivated-candidate-sources-v1",
+  "status": "public-source-research-only",
+  "activated": false,
+  "model_family": "whisper",
+  "adapter_id": "openai-whisper-decode-short",
+  "adapter_version": 1,
+  "native_contract_schema_version": 2,
+  "source_repository": "https://github.com/openai/whisper",
+  "source_revision": "86098128c0b4f24f0e2aa2994de830614b474227",
+  "source_paths": [
+    "LICENSE",
+    "README.md",
+    "whisper/__init__.py",
+    "whisper/audio.py",
+    "whisper/decoding.py",
+    "whisper/tokenizer.py",
+    "whisper/assets/multilingual.tiktoken",
+    "whisper/assets/mel_filters.npz"
+  ],
+  "source_license": "MIT",
+  "native_checkpoint_license": "MIT",
+  "license_url": "https://github.com/openai/whisper/blob/86098128c0b4f24f0e2aa2994de830614b474227/LICENSE",
+  "checkpoint_registry_url": "https://github.com/openai/whisper/blob/86098128c0b4f24f0e2aa2994de830614b474227/whisper/__init__.py",
+  "checkpoint_hash_provenance": "Expected SHA256 published in the pinned official loader URLs; not downloaded or independently hashed here.",
+  "candidates": [
+    {
+      "model_id": "openai/whisper-small-native",
+      "variant": "small",
+      "multilingual": true,
+      "parameter_count_millions": 244,
+      "preference": "first-candidate",
+      "checkpoint_filename": "small.pt",
+      "expected_checkpoint_sha256": "9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794",
+      "checkpoint_downloaded": false,
+      "checkpoint_bytes_verified": false
+    },
+    {
+      "model_id": "openai/whisper-base-native",
+      "variant": "base",
+      "multilingual": true,
+      "parameter_count_millions": 74,
+      "preference": "lower-size-alternative",
+      "checkpoint_filename": "base.pt",
+      "expected_checkpoint_sha256": "ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e",
+      "checkpoint_downloaded": false,
+      "checkpoint_bytes_verified": false
+    }
+  ],
+  "family_vote_limit": 1,
+  "cpu_latency_status": "not_measured",
+  "cpu_ram_status": "not_measured",
+  "keyword_accuracy_status": "not_measured",
+  "qualification_status": "not_qualified",
+  "limitations": [
+    "This candidate metadata is not an asset-verification receipt, runtime source lock, captured ASR observation, execution authorization, or training-admission authority.",
+    "The native OpenAI .pt checkpoints are the selected distribution. Licenses or conversions from other distributors are not substituted into this source chain.",
+    "Official README GPU VRAM figures are not CPU RAM measurements.",
+    "Small and base are alternatives within one model family and cannot supply two consensus votes. Different families do not establish statistical error independence.",
+    "The existing source-screen recordings retain their original two ASR observations and source-screen-only role.",
+    "Whisper public DecodingResult tokens/text cannot prove natural EOS. A trusted pre-finalize greedy trace is required by native-v2.",
+    "Full-source input processing and decoder completion do not prove acoustic verbatim completeness."
+  ]
+}

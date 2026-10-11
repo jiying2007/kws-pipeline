@@ -153,7 +153,8 @@ def fixture_admission() -> dict:
 def validate_admission(admission: object, *, mode: str, source_id: str,
                        file_sha256: str, pcm_sha256: str, text: object, tokens: object,
                        kind: str, keyword_id: object, provenance: dict,
-                       split: object = None, frames: object = None) -> None:
+                       split: object = None, frames: object = None, evidence_dir=None,
+                       verification_session=None) -> None:
     if not isinstance(admission, dict) or admission.get("mode") != mode:
         raise ValueError("mandatory audio admission mode is missing or mismatched")
     if mode == FIXTURE_MODE:
@@ -167,19 +168,23 @@ def validate_admission(admission: object, *, mode: str, source_id: str,
     if has_machine_consensus(admission):
         # Structural eligibility cannot authenticate a recognizer. In particular,
         # flipping a caller-authored verified/allowed flag never grants training.
-        validate_consensus_admission(admission, split=split, frames=frames, for_training=True)
-        return
-    require_training_label_authority(provenance)
+        latest = validate_consensus_admission(admission, split=split, frames=frames, for_training=True,
+                                               evidence_dir=evidence_dir, verification_session=verification_session)
+        for field, expected in latest["source_provenance"].items():
+            if provenance.get(field) != expected or type(provenance.get(field)) is not type(expected):
+                raise ValueError(f"machine admission {field} differs from source provenance")
+    else:
+        require_training_label_authority(provenance)
+        require_sha(admission.get("review_sha256"), "admission.review_sha256")
+        latest = latest_review(admission.get("review_history"))
+        if canonical_sha256(latest) != admission.get("review_record_sha256"):
+            raise ValueError("audio admission review record hash mismatch")
     if admission.get("ctc_training_allowed") is not True or admission.get("allowed_purpose") != "ctc-training-only":
         raise ValueError("audio admission is not allowed for CTC training")
-    require_sha(admission.get("review_sha256"), "admission.review_sha256")
-    latest = latest_review(admission.get("review_history"))
-    if canonical_sha256(latest) != admission.get("review_record_sha256"):
-        raise ValueError("audio admission review record hash mismatch")
     for field, value in (("source_id", source_id), ("file_sha256", file_sha256), ("pcm_sha256", pcm_sha256),
                          ("actual_text", text), ("actual_tokens", tokens), ("kind", kind), ("keyword_id", keyword_id)):
-        if latest.get(field) != value:
+        if type(latest.get(field)) is not type(value) or canonical_sha256(latest.get(field)) != canonical_sha256(value):
             raise ValueError(f"audio admission {field} mismatch")
     for field in LINEAGE_FIELDS:
-        if latest.get(field) != provenance.get(field):
+        if type(latest.get(field)) is not type(provenance.get(field)) or canonical_sha256(latest.get(field)) != canonical_sha256(provenance.get(field)):
             raise ValueError(f"audio admission {field} mismatch")

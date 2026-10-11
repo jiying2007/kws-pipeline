@@ -227,6 +227,8 @@ def training_environment() -> dict:
         ROOT / "training" / "audit_dataset.py",
         ROOT / "tools" / "speech_label_admission.py",
         ROOT / "tools" / "speech_asr_consensus.py",
+        ROOT / "tools" / "asr_source_resolver.py",
+        ROOT / "tools" / "asr_native_contracts.py",
         ROOT / "tools" / "corpus_identity.py",
         ROOT / "tools" / "model_provenance.py",
         ROOT / "tools" / "qualification_common.py",

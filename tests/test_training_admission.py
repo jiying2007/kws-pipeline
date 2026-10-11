@@ -707,5 +707,361 @@ class QualificationAdmissionMetadataTests(unittest.TestCase):
         self.assertEqual(read()["training"]["warm_start_binding"], training["warm_start_binding"])
 
 
+class LabelEvidenceAncestryMetadataTests(unittest.TestCase):
+    """Only invented metadata and tiny stdlib containers, never actual ASR/model work."""
+
+    @staticmethod
+    def machine_manifest(fixture, *, suffix=".jsonl", rows=None):
+        from corpus_identity import inspect_pcm16_wav
+        from speech_asr_consensus import LABEL_SOURCE
+        rendered = fixture.root / "invented-rendered.wav"
+        with wave.open(str(rendered), "wb") as output:
+            output.setnchannels(1); output.setsampwidth(2); output.setframerate(16000)
+            output.writeframes(b"\x01\x00" * 320)
+        record = fixture.record
+        row = {
+            "path": rendered.name, "source_path": fixture.source.name,
+            "wav_sha256": inspect_pcm16_wav(rendered)["file_sha256"],
+            "source_wav_sha256": record["file_sha256"], "source_pcm_sha256": record["pcm_sha256"],
+            "source_id": record["source_id"], "source_family_id": record["source_family_id"],
+            "actual_text": record["actual_text"], "tokens": copy.deepcopy(record["actual_tokens"]),
+            "target_ids": [1, 2, 3, 4], "kind": record["kind"], "keyword_id": record["keyword_id"],
+            "split": "train", "admission": fixture.admission(),
+            "speech_like_provenance": {
+                **copy.deepcopy(record["source_provenance"]), "source_id": record["source_id"],
+                "source_family_id": record["source_family_id"],
+                "label_origin": "machine-consensus", "label_source": LABEL_SOURCE,
+            },
+        }
+        manifest = fixture.root / ("train" + suffix)
+        LabelEvidenceAncestryMetadataTests.write_rows(manifest, [row] if rows is None else rows)
+        return manifest, row
+
+    @staticmethod
+    def write_rows(manifest, rows):
+        if manifest.suffix == ".jsonl":
+            manifest.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows))
+        else:
+            manifest.write_text("".join(row["path"] + "\t" + " ".join(map(str, row["target_ids"])) + "\n"
+                                        for row in rows))
+            write_lineage_sidecar(manifest, rows)
+
+    @staticmethod
+    def train_fixture(manifest, evidence_dir):
+        return verify_training_manifests([manifest], {"<blk>": 0, "ni3": 1, "hao3": 2, "xiao3": 3, "wo1": 4},
+                                         evidence_dir=evidence_dir)
+
+    def test_real_resolver_trainer_binds_original_frames_and_serializes_verified_basis(self):
+        from asr_resolver_fixtures import trusted_fixture
+        from corpus_identity import inspect_pcm16_wav
+        # Only the test trust-root registry is patched by this helper. The
+        # resolver, ZIP/WAV parsing and central/trainer validators run for real.
+        for suffix in (".tsv", ".jsonl"):
+            with self.subTest(suffix=suffix), trusted_fixture() as fixture:
+                manifest, row = self.machine_manifest(fixture, suffix=suffix)
+                self.assertNotEqual(inspect_pcm16_wav(fixture.source)["frames"],
+                                    inspect_pcm16_wav(fixture.root / row["path"])["frames"])
+                value = self.train_fixture(manifest, fixture.store)
+                summary = value["manifests"][0]["label_evidence"]
+                self.assertEqual((summary["row_count"], summary["human_review_rows"],
+                                  summary["machine_consensus_rows"]), (1, 0, 1))
+                proof = row["admission"]["source_verification"]
+                expected = {"row_index": 1, **{key: proof[key] for key in (
+                    "record_sha256", "proof_sha256", "source_root_id", "provenance_sha256", "trust_root_commit")}}
+                self.assertEqual(summary["machine_records"], [expected])
+                self.assertEqual(proof["record_sha256"], canonical_hash(fixture.record))
+                self.assertEqual(value["dataset_ancestry"]["stages"][0]["manifests"], value["manifests"])
+                self.assertTrue(value["promotion_allowed"])
+                require_promotable_admission(value)
+
+    def test_real_resolver_trainer_rechecks_store_instead_of_trusting_serialized_proof(self):
+        from asr_resolver_fixtures import trusted_fixture
+        for corruption in ("missing-store", "changed-archive", "edited-proof"):
+            with self.subTest(corruption=corruption), trusted_fixture() as fixture:
+                manifest, row = self.machine_manifest(fixture)
+                store = fixture.store
+                if corruption == "missing-store": store = fixture.root / "missing-store"
+                elif corruption == "changed-archive": fixture.archive.write_bytes(fixture.archive.read_bytes() + b"changed")
+                else:
+                    row["admission"]["source_verification"]["proof_sha256"] = "0" * 64
+                    self.write_rows(manifest, [row])
+                with self.assertRaises(ValueError):
+                    self.train_fixture(manifest, store)
+
+    def test_real_resolver_mixed_manifest_keeps_exact_machine_row_position(self):
+        from asr_resolver_fixtures import trusted_fixture
+        human_fixture = AdmissionTests()
+        human_fixture.setUp()
+        self.addCleanup(human_fixture.doCleanups)
+        with trusted_fixture() as fixture:
+            manifest, machine = self.machine_manifest(fixture)
+            (fixture.root / human_fixture.wav.name).write_bytes(human_fixture.wav.read_bytes())
+            human = copy.deepcopy(human_fixture.row)
+            self.write_rows(manifest, [human, machine])
+            value = self.train_fixture(manifest, fixture.store)
+            summary = value["manifests"][0]["label_evidence"]
+            self.assertEqual((summary["row_count"], summary["human_review_rows"],
+                              summary["machine_consensus_rows"]), (2, 1, 1))
+            self.assertEqual(summary["machine_records"][0]["row_index"], 2)
+            require_promotable_admission(value)
+
+    def test_real_resolver_trainer_rejects_exact_row_and_origin_transplants(self):
+        from asr_resolver_fixtures import trusted_fixture
+        changes = ("text", "tokens", "target_ids", "source_id", "source_family_id", "speaker_id",
+                   "kind", "keyword_bool", "keyword_float", "split", "synthetic", "source_type",
+                   "source_role", "license_id", "rights_evidence_sha256", "label_origin", "label_source")
+        with trusted_fixture() as fixture:
+            manifest, original = self.machine_manifest(fixture)
+            for change in changes:
+                row = copy.deepcopy(original)
+                if change == "text": row["actual_text"] = "小窝小窝"
+                elif change == "tokens":
+                    row["tokens"] = ["xiao3", "wo1", "xiao3", "wo1"]
+                    row["target_ids"] = [3, 4, 3, 4]
+                elif change == "target_ids": row["target_ids"] = [1, 2, 4, 3]
+                elif change in ("source_id", "source_family_id", "speaker_id"):
+                    row[change] = row["speech_like_provenance"][change] = "different-identity"
+                elif change == "kind": row["kind"] = "negative"; row["keyword_id"] = None
+                elif change == "keyword_bool": row["keyword_id"] = True
+                elif change == "keyword_float": row["keyword_id"] = 1.0
+                elif change == "split": row["split"] = "qualification"
+                else:
+                    row["speech_like_provenance"][change] = {
+                        "synthetic": False, "source_type": "recorded-speech", "source_role": "source_screen_only",
+                        "license_id": "different-license", "rights_evidence_sha256": "0" * 64,
+                        "label_origin": "human", "label_source": "human-review",
+                    }[change]
+                self.write_rows(manifest, [row])
+                with self.subTest(change=change), self.assertRaises(ValueError):
+                    self.train_fixture(manifest, fixture.store)
+
+    def test_real_resolver_trainer_never_substitutes_augmented_source_for_complete_capture(self):
+        from asr_resolver_fixtures import trusted_fixture
+        from corpus_identity import inspect_pcm16_wav
+        with trusted_fixture() as fixture:
+            manifest, row = self.machine_manifest(fixture)
+            row["source_path"] = row["path"]
+            different = inspect_pcm16_wav(fixture.root / row["path"])
+            row["source_wav_sha256"] = different["file_sha256"]
+            row["source_pcm_sha256"] = different["pcm_sha256"]
+            self.write_rows(manifest, [row])
+            # Both lineage hashes describe the selected local WAV, but it is
+            # still not the original complete recording captured by the ASRs.
+            with self.assertRaisesRegex(ValueError, "frame coverage|file_sha256|pcm_sha256"):
+                self.train_fixture(manifest, fixture.store)
+
+    def test_new_human_consumption_records_basis_without_needing_evidence_store(self):
+        import os
+        from unittest.mock import patch
+        fixture = AdmissionTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        with patch.dict(os.environ, {"KWS_ASR_EVIDENCE_DIR": str(fixture.root / "missing-store")}):
+            value = fixture.validate()
+        summary = value["manifests"][0]["label_evidence"]
+        self.assertEqual(summary, self.summary(human=1, machine=0))
+        self.assertEqual(value["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"], summary)
+        require_promotable_admission(value)
+
+    @staticmethod
+    def summary(human=0, machine=1):
+        return {
+            "schema_version": 1, "policy": "training-label-evidence-v1",
+            "row_count": human + machine, "human_review_rows": human,
+            "machine_consensus_rows": machine,
+            "machine_records": [
+                {"row_index": human + index + 1, "record_sha256": str(index + 1) * 64,
+                 "proof_sha256": "b" * 64, "source_root_id": "invented-metadata-root",
+                 "provenance_sha256": "c" * 64, "trust_root_commit": "d" * 40}
+                for index in range(machine)
+            ],
+        }
+
+    @staticmethod
+    def training(name="train.tsv", count=1, summary=None):
+        binding = {"name": name, "sha256": "1" * 64, "lineage_sha256": "2" * 64}
+        if summary is not None:
+            binding["label_evidence"] = copy.deepcopy(summary)
+        recordings = [
+            {"recording": f"manifest-0:{index + 1}", "manifest": name,
+             "path": f"unused-{index}.wav", "file_sha256": "a" * 64,
+             "pcm_sha256": "b" * 64, "frames": 160, "duration_s": 0.01}
+            for index in range(count)
+        ]
+        corpus = {"schema_version": 1, "corpus_sha256": corpus_digest(recordings),
+                  "recordings": recordings}
+        admission = {
+            "policy": "reviewed-source-training-consumption-v1",
+            "purpose": "reviewed-ctc-training", "promotion_allowed": True,
+            "reviewed_rows": count, "listener_authenticity_verified": False,
+            "manifests": [binding],
+            "dataset_ancestry": initial_dataset_ancestry([binding], corpus, count),
+        }
+        return {"admission": admission, "manifests": [{"name": name, "sha256": "1" * 64}],
+                "corpus_identity": corpus}
+
+    @staticmethod
+    def inherit(child, parent):
+        source = canonical_hash(parent)
+        inherit_warm_start_admission(
+            child["admission"], parent["admission"], source_checkpoint_sha256=source,
+            ancestor_manifests=parent["manifests"], ancestor_corpus_identity=parent["corpus_identity"],
+            ancestor_warm_start_binding=parent.get("warm_start_binding"),
+        )
+        child["warm_start_binding"] = {"source_checkpoint_sha256": source}
+        return child
+
+    @staticmethod
+    def resign(admission):
+        # Recompute metadata digests to reach independent schema validation.
+        # This is deliberate receipt forgery, never a trusted resolver fixture.
+        stages = admission["dataset_ancestry"]["stages"]
+        for index, stage in enumerate(stages):
+            if index:
+                stage["parent_ancestry_sha256"] = canonical_hash({"schema_version": 1,
+                                                                  "stages": stages[:index]})
+        admission["dataset_ancestry"]["sha256"] = canonical_hash({"schema_version": 1, "stages": stages})
+        admission["manifests"] = copy.deepcopy(stages[-1]["manifests"])
+
+    def test_missing_historical_summary_is_unknown_without_changing_digest(self):
+        from training_admission import manifest_label_basis
+        parent = self.training()
+        original = copy.deepcopy(parent["admission"]["dataset_ancestry"])
+        self.assertEqual(manifest_label_basis(parent["admission"]["manifests"][0], row_count=1),
+                         "legacy-unknown")
+        require_promotable_admission(parent["admission"])
+        self.assertEqual(parent["admission"]["dataset_ancestry"], original)
+        child = self.inherit(self.training("child.tsv", summary=self.summary(human=1, machine=0)), parent)
+        stages = validate_dataset_ancestry(child["admission"])
+        self.assertEqual(stages[0], original["stages"][0])
+        self.assertEqual(stages[1]["parent_ancestry_sha256"], original["sha256"])
+        self.assertNotIn("label_evidence", stages[0]["manifests"][0])
+        self.assertEqual(manifest_label_basis(stages[0]["manifests"][0], row_count=1), "legacy-unknown")
+
+    def test_present_summary_distinguishes_human_machine_and_mixed(self):
+        from training_admission import manifest_label_basis
+        for human, machine, expected in ((1, 0, "human-review"), (0, 1, "machine-consensus"),
+                                          (1, 1, "mixed-human-and-machine")):
+            value = self.training(count=human + machine, summary=self.summary(human, machine))
+            self.assertEqual(manifest_label_basis(value["admission"]["manifests"][0], row_count=human + machine),
+                             expected)
+            require_promotable_admission(value["admission"])
+
+    def test_machine_training_basis_does_not_replace_or_block_independent_qualification(self):
+        fixture = QualificationAdmissionMetadataTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.admission["manifests"][0]["label_evidence"] = self.summary()
+        fixture.refresh_ancestry()
+        fixture.check()
+        fixture.producer_admission_check()
+        # Existing separate reference-audit requirements remain mandatory.
+        fixture.audit["manifest_bindings"].pop()
+        fixture.audit["audited_manifest_sha256s"].pop()
+        with self.assertRaisesRegex(ValueError, "every selected"):
+            fixture.check()
+
+    def test_machine_basis_survives_multihop_and_does_not_taint_model_promotion(self):
+        parent = self.training(summary=self.summary())
+        initial = copy.deepcopy(parent["admission"]["dataset_ancestry"])
+        child = self.inherit(self.training("child.tsv", summary=self.summary(human=1, machine=0)), parent)
+        grandchild = self.inherit(self.training("grandchild.tsv", summary=self.summary(human=1, machine=1),
+                                             count=2), child)
+        require_promotable_admission(grandchild["admission"])
+        stages = require_current_dataset(grandchild["admission"], grandchild["manifests"],
+                                         grandchild["corpus_identity"],
+                                         warm_start_binding=grandchild["warm_start_binding"])
+        self.assertEqual(len(stages), 3)
+        self.assertEqual(stages[0], initial["stages"][0])
+        self.assertEqual(stages[1]["parent_ancestry_sha256"], initial["sha256"])
+        self.assertTrue(grandchild["admission"]["promotion_allowed"])
+        self.assertNotIn("ancestor_admission", grandchild["admission"])
+        parent["admission"]["manifests"][0]["label_evidence"]["machine_records"].clear()
+        self.assertEqual(stages[0]["manifests"][0]["label_evidence"], self.summary())
+
+    def test_summary_counts_must_be_exact_canonical_and_match_each_manifest(self):
+        for field, bad in (("row_count", True), ("row_count", 2), ("human_review_rows", -1),
+                           ("human_review_rows", 1.0), ("machine_consensus_rows", False),
+                           ("machine_consensus_rows", 0), ("machine_records", [])):
+            value = self.training(summary=self.summary())
+            value["admission"]["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"][field] = bad
+            self.resign(value["admission"])
+            with self.subTest(field=field, bad=bad), self.assertRaisesRegex(ValueError, "label|proof"):
+                require_promotable_admission(value["admission"])
+        # Stage total alone cannot stand in for individual manifest row counts.
+        value = self.training(count=2, summary=self.summary(machine=2))
+        stage = value["admission"]["dataset_ancestry"]["stages"][0]
+        second = copy.deepcopy(stage["manifests"][0]); second["name"] = "second.tsv"
+        second["label_evidence"] = self.summary(machine=0, human=1)
+        stage["manifests"].append(second)
+        stage["corpus_identity"]["recordings"][1].update(recording="manifest-1:1", manifest="second.tsv")
+        stage["corpus_identity"]["corpus_sha256"] = corpus_digest(stage["corpus_identity"]["recordings"])
+        self.resign(value["admission"])
+        with self.assertRaisesRegex(ValueError, "label evidence counts"):
+            require_promotable_admission(value["admission"])
+
+    def test_present_summary_never_falls_back_to_legacy_unknown(self):
+        for bad in (None, {}, True, {**self.summary(), "unexpected": True},
+                    {**self.summary(), "schema_version": True},
+                    {**self.summary(), "policy": "caller-trusted"}):
+            value = self.training()
+            value["admission"]["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"] = bad
+            self.resign(value["admission"])
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "label evidence"):
+                require_promotable_admission(value["admission"])
+
+    def test_machine_proof_fields_and_row_positions_are_strict(self):
+        for field, bad in (("row_index", True), ("row_index", 0), ("row_index", 2),
+                           ("record_sha256", "A" * 64), ("proof_sha256", None),
+                           ("provenance_sha256", "g" * 64), ("source_root_id", "  "),
+                           ("trust_root_commit", "a" * 64), ("trust_root_commit", "D" * 40)):
+            value = self.training(summary=self.summary())
+            proof = value["admission"]["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"]["machine_records"][0]
+            proof[field] = bad
+            self.resign(value["admission"])
+            with self.subTest(field=field, bad=bad), self.assertRaisesRegex(ValueError, "proof"):
+                require_promotable_admission(value["admission"])
+        for change in ("duplicate", "reverse", "missing-field", "extra-field"):
+            summary = self.summary(machine=2)
+            records = summary["machine_records"]
+            if change == "duplicate": records[1]["row_index"] = records[0]["row_index"]
+            elif change == "reverse": records.reverse()
+            elif change == "missing-field": del records[0]["proof_sha256"]
+            else: records[0]["verified"] = True
+            value = self.training(count=2, summary=summary)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "proof"):
+                require_promotable_admission(value["admission"])
+
+    def test_all_ancestor_summaries_are_validated_even_after_redigest(self):
+        parent = self.training(summary=self.summary())
+        child = self.inherit(self.training("child.tsv", summary=self.summary(human=1, machine=0)), parent)
+        grandchild = self.inherit(self.training("grandchild.tsv", summary=self.summary()), child)
+        for index in (0, 1, 2):
+            broken = copy.deepcopy(grandchild["admission"])
+            broken["dataset_ancestry"]["stages"][index]["manifests"][0]["label_evidence"]["row_count"] = 9
+            self.resign(broken)
+            with self.subTest(index=index), self.assertRaisesRegex(ValueError, "label evidence"):
+                require_promotable_admission(broken)
+        # Even internally rehashed malformed ancestor metadata cannot become a
+        # clean warm-start input. The existing diagnostic taint is unchanged.
+        broken = copy.deepcopy(parent)
+        broken["admission"]["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"]["machine_records"] = []
+        self.resign(broken["admission"])
+        descendant = self.inherit(self.training("child.tsv"), broken)
+        self.assertFalse(descendant["admission"]["promotion_allowed"])
+        self.assertEqual(descendant["admission"]["ancestor_admission"], "diagnostic-or-unverified")
+
+    def test_label_evidence_mutation_requires_ancestry_digest_and_current_equality(self):
+        value = self.training(summary=self.summary())
+        broken = copy.deepcopy(value["admission"])
+        broken["dataset_ancestry"]["stages"][0]["manifests"][0]["label_evidence"]["machine_records"][0]["proof_sha256"] = "e" * 64
+        with self.assertRaisesRegex(ValueError, "digest"):
+            require_promotable_admission(broken)
+        broken = copy.deepcopy(value["admission"])
+        broken["manifests"][0]["label_evidence"]["machine_records"][0]["proof_sha256"] = "e" * 64
+        with self.assertRaisesRegex(ValueError, "final ancestry stage"):
+            require_promotable_admission(broken)
+
+
 if __name__ == "__main__":
     unittest.main()
