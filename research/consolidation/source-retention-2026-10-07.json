@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "8e477f47a5febfe9315fb8d04d5f924b819880a6",
-      "sha256": "9ebaa1b348a9e5bc7a54647acbb8f64b9ef6a5b4eeabb6bacec9c3abe32909fb",
-      "bytes": 35777
+      "git_blob_sha1": "fc238c0225840a15a4d0a92d0b8cef379807ab7a",
+      "sha256": "6604c8810f4655f03f91286030e51b846e0b56515ef244f03a4fdd3aaac94309",
+      "bytes": 36435
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16597,6 +16597,33 @@
             "git_blob_sha1": "8e477f47a5febfe9315fb8d04d5f924b819880a6",
             "sha256": "9ebaa1b348a9e5bc7a54647acbb8f64b9ef6a5b4eeabb6bacec9c3abe32909fb",
             "bytes": 35777
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "fdd616be55190ece294e67a92ea8c4e14511705a",
+      "from_tree": "ab31989d959d8f1c47a7328f9636defc61aafe25",
+      "operation_id": "candidate-encoder-source-static-contracts-20261011",
+      "scope": "Add isolated C0 adapter and C1 causal depthwise source contract checks to existing required CI using stdlib metadata, AST and fake-shape fixtures in normal, -O and -OO modes.",
+      "rationale": "Public code and CI identity metadata only. New commands do not import Torch, instantiate numeric tensors, train, infer, export weights, probe resources or execute audio. Source implementation presence and symbolic shapes do not establish numerical or C-export parity, measured target cost, dataset admission or shipping approval. No active workflow is added; original retained sources, archives, permissions and historical receipts are preserved.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8e477f47a5febfe9315fb8d04d5f924b819880a6",
+            "sha256": "9ebaa1b348a9e5bc7a54647acbb8f64b9ef6a5b4eeabb6bacec9c3abe32909fb",
+            "bytes": 35777
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "fc238c0225840a15a4d0a92d0b8cef379807ab7a",
+            "sha256": "6604c8810f4655f03f91286030e51b846e0b56515ef244f03a4fdd3aaac94309",
+            "bytes": 36435
           }
         }
       ]
