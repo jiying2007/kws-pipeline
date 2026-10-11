@@ -8,6 +8,7 @@ import sys
 import wave
 
 from corpus_identity import corpus_digest, inspect_pcm16_wav
+from speech_asr_consensus import require_independent_reference_labels
 from qualification_common import (
     FRAME_HOP_SAMPLES,
     FRAME_LENGTH_SAMPLES,
@@ -83,7 +84,9 @@ def validate_event_metrics(summary: dict, raw_inputs: dict, hashes: dict) -> dic
             raise ValueError(f"evaluation scoring_inputs.{key} must be text")
         if hashlib.sha256(raw.encode("utf-8")).hexdigest() != hashes[f"{key}_sha256"]:
             raise ValueError(f"evaluation scoring_inputs.{key} hash does not match selected file")
-    recordings = validate_recordings(_jsonl_text(raw_inputs["references"], "references"))
+    references = _jsonl_text(raw_inputs["references"], "references")
+    require_independent_reference_labels(references)
+    recordings = validate_recordings(references)
     detections = validate_detections(_jsonl_text(raw_inputs["detections"], "detections"), recordings)
     canonical, _, _ = score(
         recordings, detections,

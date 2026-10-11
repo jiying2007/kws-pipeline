@@ -14,6 +14,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from speech_label_admission import LINEAGE_FIELDS, REAL_MODE, validate_admission, require_sha
+from speech_asr_consensus import require_training_label_authority
 from audit_dataset import verify_manifest_lineage, lineage_path
 from corpus_identity import (IDENTITY_FIELDS, audio_identity, canonical_hash, corpus_digest,
                              training_corpus_identity, training_manifest_audio_bindings,
@@ -46,6 +47,7 @@ def verify_training_manifests(paths: list[pathlib.Path], token_map: dict[str, in
             if not rows:
                 raise ValueError("reviewed training manifest must not be empty")
             for row in rows:
+                require_training_label_authority(row)
                 provenance = row.get("speech_like_provenance")
                 if not isinstance(provenance, dict):
                     raise ValueError("reviewed source provenance missing before CTC training")
@@ -71,7 +73,7 @@ def verify_training_manifests(paths: list[pathlib.Path], token_map: dict[str, in
                     pcm_sha256=row.get("source_pcm_sha256"),
                     text=row.get("actual_text"), tokens=tokens,
                     kind=row.get("kind"), keyword_id=row.get("keyword_id"),
-                    provenance=provenance,
+                    provenance=provenance, split=row.get("split"),
                 )
                 count += 1
             entry["lineage_sha256"] = digest(path if path.suffix.lower() == ".jsonl" else lineage_path(path))

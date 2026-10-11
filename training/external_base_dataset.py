@@ -15,6 +15,7 @@ from kws_vocab import load_tokens  # noqa: E402
 from corpus_identity import canonical_audio_path, inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
                                     LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
+from speech_asr_consensus import require_training_label_authority
 from materialize_speech_like_base_index import corpus_sha  # noqa: E402
 
 from synthetic_audio import contains_subsequence, parse_keywords  # noqa: E402
@@ -241,6 +242,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         normalized_rows: list[dict] = []
         index_root = index_path.parent.resolve()
         for idx, row in enumerate(split_rows):
+            require_training_label_authority(row)
             wav_sha, voice, source = _identity(row, split, idx)
             _validate_label(row, split, idx, token_map, wake_keywords)
             raw_audio = canonical_audio_path(row, f"external base {split} row {idx}")
@@ -281,7 +283,7 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                 validate_admission(row.get("admission"), mode=admission_mode, source_id=source,
                                    file_sha256=wav_sha, pcm_sha256=pcm_sha, text=row.get("actual_text"),
                                    tokens=row["tokens"], kind=row["kind"], keyword_id=row.get("keyword_id"),
-                                   provenance=provenance)
+                                   provenance=provenance, split=split, frames=inspected["frames"])
             elif "admission" in row:
                 raise ValueError("historical frozen rows cannot claim new review admission")
             for field in LINEAGE_FIELDS:

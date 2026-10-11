@@ -1,7 +1,10 @@
 # Speech base admission
 
-Future real-speech/real-TTS CTC bases require supplied actual-audio review. A
-requested utterance, deterministic generation, or file checksum alone does not
+Future real-speech/real-TTS CTC bases require supplied actual-audio label evidence.
+Human review v2 remains the operational admission route. Three independent ASRs
+may establish a prospective training label under the bounded policy below, but
+self-authored metadata cannot authenticate those ASRs or admit training. A
+requested utterance, deterministic generation, or checksum alone does not
 establish what was spoken. Existing corpus and release identities are unchanged.
 
 ## Three explicit lanes
@@ -57,6 +60,103 @@ a complete wake token path, even with intervening tokens. Unknown text or OOV
 requires exclusion or an explicitly reviewed vocabulary/mapper extension; it
 must not become an empty CTC target. Empty background targets require an empty
 actual transcript and explicit reviewed absence of speech.
+
+## Three-ASR machine-consensus training-label policy v1
+
+The user's three-ASR agreement rule is represented by
+`speech-three-asr-consensus-v1` records and
+`speech-three-asr-training-admission-v1` receipt envelopes. These are distinct
+from human review v2: `label_origin=machine-consensus` and
+`label_source=machine-three-asr-consensus-v1`. The outer `reviewed-real-v1` name
+continues to describe the audio-bearing lane, not a human source or human gold.
+TTS stays synthetic; recorded and synthetic source provenance must not be
+rewritten by a labeling decision.
+
+This version implements structural label eligibility only. Every constructed
+machine receipt has `label_eligible=true`, `ctc_training_allowed=false`,
+`authentication_independently_verified=false`, and
+`status=PENDING_EXTERNAL_VERIFICATION`. No trusted out-of-band authentication
+route is connected. The base materializer, external loader and trainer reject
+these receipts, including one pending row in an otherwise human-reviewed
+manifest. Changing `verified=true`, admission flags, or an outer evidence tag
+cannot enable training. Explicit diagnostic runs remain non-promotable under
+the existing warm-start taint rules. No machine-labeled stage can currently
+enter promotable dataset ancestry, so its schema is unchanged.
+
+Requirements checked without executing ASR:
+
+- Exactly three actual, successful, complete-source ASR observations, each from
+  one member of a frozen `speech-three-asr-recognizer-policy-v1` roster. Missing
+  outputs, repeated passes, or a human observation as the third vote fail.
+- Distinct recognizer IDs, provider/model identities, model-artifact digests and
+  model families. Provider names alone do not establish independence. Versions,
+  model digests and decode configuration are bound to each observation.
+- Fixed Mandarin transcription settings, beam size and temperature; empty
+  prompts and hotword lists; no target conditioning. The complete v1 decode
+  fields are hashed; changing settings changes policy identity. The effective
+  decoding recipe is distinct from the provider's native parameter names:
+  `native_decode_config_sha256` binds the actual retained native configuration.
+  A width-one/greedy decoder may use effective `beam_size=1` only when that
+  mapping is established by its pinned decoder contract and retained settings;
+  never invent a provider API parameter or fill an unobserved default. If a
+  setting cannot be represented or verified, it is unsupported by this v1
+  structural gate and must await genuine configuration evidence or a separately
+  reviewed policy revision. A matching digest alone does not authenticate it.
+- Every result binds the same source ID, WAV SHA-256, decoded PCM SHA-256 and
+  positive frame count, with coverage from frame zero to the measured end.
+  `coverage_complete`/`transcript_complete` are machine-result claims. They do
+  not establish human acoustic completeness or prove that a source utterance
+  was not clipped. No human `acoustic_complete` field is fabricated.
+- Unanimity after only the existing fixed punctuation/whitespace removal.
+  Raw transcripts remain in the observations. No synonym, homophone, Unicode,
+  or simplified/traditional substitutions are allowed; “屋” never becomes “窝”.
+  The existing five-token vocabulary and positive/negative wake-path checks
+  still apply. Voiced OOV is quarantined, never blank or `wo1`.
+- Three empty outputs cannot establish silence. This policy only labels nonempty
+  speech; background/absence-of-speech still needs independent evidence.
+- The hash-bound `source_provenance` contains the actual `synthetic` flag,
+  `source_type`, train-only `source_role`, `license_id` and
+  `rights_evidence_sha256`. Inspection requires exact equality with source
+  metadata. Fixture, screen-only and held-out roles cannot become training
+  sources by labeling them. Rights-reference consistency is not a rights audit.
+- All supplied human revisions are retained verbatim in `human_review_history`.
+  A current disagreement/rejection/uncertainty quarantines the machine label;
+  it never overwrites what the listener heard. `human_conflict` and
+  `historical_human_conflict` are recomputed, retaining earlier conflict even
+  after a valid later human correction. Supplied history cannot prove global
+  freshness or absence of omitted observations.
+
+An optional `speech-asr-authentication-verification-v1` report may name its
+issuer, trust policy, UTC verification time and evidence digest, and bind the
+frozen roster plus complete observations. Null explicitly means no report was
+supplied. A supplied report is checked for internal consistency only; its JSON
+claims do not establish an independent authority, signatures or authentication.
+No verification facility, recognizer output or signature is fabricated.
+
+For already retained sources, the read-only command is:
+
+```bash
+python3 tools/speech_like_corpus_plan.py inspect-three-asr \
+  --intents /controlled/train-intents.jsonl \
+  --generated-root /controlled/generated \
+  --consensus-receipts /controlled/three-asr-receipts.jsonl \
+  --expected-count 3
+```
+
+It compares supplied receipts against measured original source WAV/PCM/frames,
+source roles and provenance, then reports eligibility and zero admitted rows.
+It does not run ASR, create labels/bundles, revise human history or start training.
+The existing two-ASR Qwen observations remain insufficient; this implementation
+creates no third output and admits no existing rows.
+
+`evaluation_gold_allowed=false` and `qualification_allowed=false` apply to these
+machine labels. Generic development diagnostics may inspect them, but release
+metric validation, real-human corpus intake, final-qualification AFE input and real-human qualification scoring
+reject machine-only gold, including nested provenance. This restriction does not
+permanently disqualify a model trained on independently admitted machine labels:
+a future model can still undergo independent human qualification. Source rights,
+split isolation, lineage/ancestry, coverage, resources and shipping gates remain
+separate requirements; no label consensus authorizes a model run or deployment.
 
 ## Binding and consumption
 

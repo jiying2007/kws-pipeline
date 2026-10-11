@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "fc238c0225840a15a4d0a92d0b8cef379807ab7a",
-      "sha256": "6604c8810f4655f03f91286030e51b846e0b56515ef244f03a4fdd3aaac94309",
-      "bytes": 36435
+      "git_blob_sha1": "03806f9e9adc6afee4bb010fcfc02ba21de72ecc",
+      "sha256": "c61185511ab3a6705b6885ba04b35e1b61df2fd4995e30f96075c09316766a81",
+      "bytes": 37219
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16624,6 +16624,33 @@
             "git_blob_sha1": "fc238c0225840a15a4d0a92d0b8cef379807ab7a",
             "sha256": "6604c8810f4655f03f91286030e51b846e0b56515ef244f03a4fdd3aaac94309",
             "bytes": 36435
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "8df029115638b16416470296642001b4780fcc62",
+      "from_tree": "6794f8e77efff78913fca3e3c2ce738c2add2209",
+      "operation_id": "three-asr-pending-label-metadata-contracts-20261011",
+      "scope": "Add the existing ThreeASRMetadataTests and ThreeASRTrainerMetadataTests classes to required python-contracts CI in normal, -O and -OO modes, retaining the tracked-worktree integrity guard.",
+      "rationale": "Public source and CI identity metadata only. The added commands check invented metadata, mocked source/lineage bindings, provenance restrictions and AST contracts without importing models or running ASR, TTS, audio rendering, inference, training, numerical benchmarks or resource probes. Three-ASR structural label eligibility remains PENDING_EXTERNAL_VERIFICATION with ctc_training_allowed=false; no actual data is admitted. No workflow is added or activated, and all retained source bytes, archives, historical receipts and existing CI commands remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "fc238c0225840a15a4d0a92d0b8cef379807ab7a",
+            "sha256": "6604c8810f4655f03f91286030e51b846e0b56515ef244f03a4fdd3aaac94309",
+            "bytes": 36435
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "03806f9e9adc6afee4bb010fcfc02ba21de72ecc",
+            "sha256": "c61185511ab3a6705b6885ba04b35e1b61df2fd4995e30f96075c09316766a81",
+            "bytes": 37219
           }
         }
       ]

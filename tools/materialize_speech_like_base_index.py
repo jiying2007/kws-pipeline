@@ -17,6 +17,7 @@ from kws_vocab import load_tokens  # noqa: E402
 from synthetic_audio import SPLITS, activity_bounds, parse_keywords, sha256_file, contains_subsequence  # noqa: E402
 
 from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, fixture_admission, validate_admission)
+from speech_asr_consensus import require_training_label_authority
 
 MANIFEST_CLASS = "speech-like-synthetic-recording-v1"
 ALLOWED_KINDS = {"positive", "confusable", "negative", "background"}
@@ -122,6 +123,7 @@ def materialize(
             raise ValueError(f"{label}: speech-like manifest identity mismatch")
         if source.get("provider_kind") == "tone":
             raise ValueError(f"{label}: tone provider is forbidden for speech-like ingestion")
+        require_training_label_authority(source)
         kind = str(source.get("kind", ""))
         if kind not in ALLOWED_KINDS:
             raise ValueError(f"{label}: missing/invalid immutable training kind")
@@ -192,7 +194,8 @@ def materialize(
             admission = fixture_admission()
         validate_admission(admission, mode=admission_mode, source_id=provenance["source_id"],
                            file_sha256=file_sha, pcm_sha256=pcm_sha, text=source.get("actual_text"),
-                           tokens=tokens, kind=kind, keyword_id=keyword_id, provenance=provenance)
+                           tokens=tokens, kind=kind, keyword_id=keyword_id, provenance=provenance,
+                           split=split, frames=len(samples))
         stored_path = str(audio)
         if portable_dir is not None and portable_root is not None:
             target = portable_dir / f"recording-{index-1:06d}-{file_sha[:12]}.wav"

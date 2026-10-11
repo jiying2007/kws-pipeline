@@ -22,6 +22,46 @@ from corpus_identity import (canonical_audio_path, corpus_digest, audio_identity
                              training_manifest_audio_bindings, canonical_hash, training_corpus_identity)
 
 
+class ThreeASRTrainerMetadataTests(unittest.TestCase):
+    """No audio/model work: exercise the consumer using invented lineage only."""
+    def test_pending_machine_row_blocks_mixed_training_and_flag_forgery(self):
+        from unittest.mock import patch
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import admission_from_consensus
+        record = consensus_fixture(); admission = admission_from_consensus(record, 'f' * 64)
+        row = dict(split='train', source_id=record['source_id'], source_family_id=record['source_family_id'],
+                   source_wav_sha256=record['file_sha256'], source_pcm_sha256=record['pcm_sha256'],
+                   actual_text=record['actual_text'], tokens=record['actual_tokens'], target_ids=[1, 2, 3, 4],
+                   kind='positive', keyword_id=1, speech_like_provenance={
+                       'source_id': record['source_id'], 'source_family_id': record['source_family_id']}, admission=admission)
+        human = dict(schema_version=2, evidence_class='speech-like-audio-review-v2',
+            source_id=record['source_id'], file_sha256=record['file_sha256'], pcm_sha256=record['pcm_sha256'],
+            source_family_id=record['source_family_id'], intended_text=record['intended_text'],
+            reviewer_id='invented-human', review_origin='human', review_revision=1,
+            supersedes_review_sha256=None, allowed_purpose='ctc-training-only',
+            transcript_policy='xiaowo-four-syllable-transcript-v1', verdict='accepted', acoustic_complete=True,
+            speech_present=True, kind='positive', keyword_id=1, actual_text=record['actual_text'],
+            actual_tokens=record['actual_tokens'])
+        human_row = {**copy.deepcopy(row), 'admission': admission_from_reviews([human], 'e' * 64)}
+        tokens = {'<blk>': 0, 'ni3': 1, 'hao3': 2, 'xiao3': 3, 'wo1': 4}
+        with patch('training_admission.digest', return_value='d' * 64), \
+             patch('training_admission.verify_manifest_lineage', return_value=[human_row, row]):
+            with self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+                verify_training_manifests([pathlib.Path('/invented/train.tsv')], tokens)
+            machine_admission = row['admission']
+            row['admission'] = human_row['admission']
+            row['speech_like_provenance']['label_origin'] = 'machine-consensus'
+            with self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+                verify_training_manifests([pathlib.Path('/invented/train.tsv')], tokens)
+            del row['speech_like_provenance']['label_origin']; row['admission'] = machine_admission
+            admission['ctc_training_allowed'] = True
+            with self.assertRaises(ValueError):
+                verify_training_manifests([pathlib.Path('/invented/train.tsv')], tokens)
+            diagnostic = verify_training_manifests([pathlib.Path('/invented/train.tsv')], tokens, diagnostic=True)
+            self.assertFalse(diagnostic['promotion_allowed'])
+            with self.assertRaises(ValueError): require_promotable_admission(diagnostic)
+
+
 class AdmissionTests(unittest.TestCase):
     def test_reproducibility_smoke_explicitly_declares_fixture_lane(self):
         import ast

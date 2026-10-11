@@ -414,5 +414,208 @@ class AdmissionTests(unittest.TestCase):
 
 
 
+class ThreeASRMetadataTests(unittest.TestCase):
+    """Pure invented metadata; do not execute ASR or synthesize speech."""
+    def test_unanimous_train_only_without_human_assertion(self):
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import admission_from_consensus, validate_consensus_admission
+        record = consensus_fixture()
+        admission = admission_from_consensus(record, 'f' * 64)
+        self.assertEqual(admission['label_origin'], 'machine-consensus')
+        self.assertNotIn('review_history', admission)
+        self.assertFalse(admission['authentication_independently_verified'])
+        self.assertFalse(admission['ctc_training_allowed'])
+        self.assertEqual(admission['status'], 'PENDING_EXTERNAL_VERIFICATION')
+        with self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+            validate_consensus_admission(admission, split='train', for_training=True)
+        forged = copy.deepcopy(admission); forged['ctc_training_allowed'] = True
+        with self.assertRaises(ValueError): validate_consensus_admission(forged, split='train')
+        validate_consensus_admission(admission, split='train', frames=160)
+        for role in (None, 'test', 'calibration', 'qualification', 'source_screen_only'):
+            with self.subTest(role=role), self.assertRaises(ValueError):
+                validate_consensus_admission(admission, split=role)
+        with self.assertRaises(ValueError):
+            validate_consensus_admission(admission, split='train', frames=159)
+
+    def test_missing_duplicate_failed_partial_biased_or_human_vote_rejected(self):
+        from asr_consensus_fixtures import consensus_fixture, rebind_fixture
+        from speech_asr_consensus import validate_consensus_record
+        changes = [
+            lambda r: r['observations'].pop(),
+            lambda r: r['recognizer_policy']['recognizers'].__setitem__(2, copy.deepcopy(r['recognizer_policy']['recognizers'][0])),
+            lambda r: r['recognizer_policy']['recognizers'][2].update(model_family='invented-family-0'),
+            lambda r: r['recognizer_policy']['recognizers'][2].update(model_sha256='1' * 64),
+            lambda r: r['observations'][2].update(status='error'),
+            lambda r: r['observations'][2].update(origin='human'),
+            lambda r: r['observations'][2].update(transcript_complete=False),
+            lambda r: r['observations'][2].update(coverage_complete=False),
+            lambda r: r['observations'][2].update(end_frame=159),
+            lambda r: r['observations'][2].update(pcm_sha256='c' * 64),
+            lambda r: r['observations'][2].update(source_id='other-source'),
+            lambda r: r['recognizer_policy']['recognizers'][0]['decode_config'].update(hotwords=['小窝']),
+            lambda r: r['authentication_verification'].update(verified=False),
+        ]
+        for index, change in enumerate(changes):
+            record = consensus_fixture(); change(record); rebind_fixture(record)
+            with self.subTest(index=index), self.assertRaises(ValueError): validate_consensus_record(record)
+
+    def test_disagreement_oov_empty_and_wake_negative_rejected(self):
+        from asr_consensus_fixtures import consensus_fixture, rebind_fixture
+        from speech_asr_consensus import validate_consensus_record
+        record = consensus_fixture(); record['observations'][2]['actual_text'] = '你好小屋'
+        with self.assertRaisesRegex(ValueError, 'not unanimous'):
+            validate_consensus_record(rebind_fixture(record))
+        for text in ('你好小屋', '你好小挖', ''):
+            record = consensus_fixture(); record['actual_text'] = text
+            for row in record['observations']: row['actual_text'] = text
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                validate_consensus_record(rebind_fixture(record))
+        record = consensus_fixture(); record.update(kind='negative', keyword_id=None)
+        with self.assertRaisesRegex(ValueError, 'wake path'): validate_consensus_record(record)
+
+    def test_human_observation_not_rewritten_or_used_as_third_vote(self):
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import validate_consensus_record
+        record = consensus_fixture()
+        human = dict(schema_version=2, evidence_class='speech-like-audio-review-v2',
+            source_id=record['source_id'], file_sha256=record['file_sha256'], pcm_sha256=record['pcm_sha256'],
+            source_family_id=record['source_family_id'], intended_text=record['intended_text'],
+            reviewer_id='invented-human', review_origin='human', review_revision=1,
+            supersedes_review_sha256=None, allowed_purpose='ctc-training-only',
+            transcript_policy=TRANSCRIPT_POLICY, verdict='rejected', acoustic_complete=True,
+            speech_present=True, kind='positive', keyword_id=1, actual_text='你好小屋', actual_tokens=[])
+        record.update(human_review_history=[human], human_conflict=True, historical_human_conflict=True)
+        before = copy.deepcopy(record)
+        with self.assertRaisesRegex(ValueError, 'latest human observation'): validate_consensus_record(record)
+        self.assertEqual(record, before)
+        second = {**human, 'review_revision': 2, 'supersedes_review_sha256': canonical_sha256(human),
+                  'verdict': 'accepted', 'actual_text': record['actual_text'], 'actual_tokens': record['actual_tokens']}
+        record['human_review_history'].append(second); record['human_conflict'] = False
+        validate_consensus_record(record)
+        self.assertEqual(record['human_review_history'][0]['actual_text'], '你好小屋')
+
+
+    def test_pending_machine_receipt_cannot_use_existing_human_admission(self):
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import admission_from_consensus
+        from speech_label_admission import validate_admission, validate_review_record
+        record = consensus_fixture(); admission = admission_from_consensus(record, 'f' * 64)
+        args = dict(mode=REAL_MODE, source_id=record['source_id'], file_sha256=record['file_sha256'],
+                    pcm_sha256=record['pcm_sha256'], text=record['actual_text'], tokens=record['actual_tokens'],
+                    kind=record['kind'], keyword_id=record['keyword_id'], provenance=record, split='train', frames=160)
+        with self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+            validate_admission(admission, **args)
+        for mutation in ({'ctc_training_allowed': True}, {'evidence_class': 'speech-like-audio-review-v2'},
+                         {'label_origin': 'human'}, {'authentication_independently_verified': True}):
+            altered = {**admission, **mutation}
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError): validate_admission(altered, **args)
+        with self.assertRaisesRegex(ValueError, 'review v2'): validate_review_record(record)
+        # A human-looking outer envelope cannot erase explicit machine lineage.
+        human_envelope = {'mode': REAL_MODE, 'ctc_training_allowed': True, 'allowed_purpose': 'ctc-training-only'}
+        for provenance in ({'label_origin': 'machine-consensus'}, {'label_source': 'machine-three-asr-consensus-v1'},
+                           {'consensus_record': record}, {'status': 'PENDING_EXTERNAL_VERIFICATION'}):
+            with self.subTest(provenance=provenance), self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+                validate_admission(human_envelope, **{**args, 'provenance': provenance})
+
+    def test_human_producer_cannot_overwrite_pending_source_receipt(self):
+        from unittest.mock import patch
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import admission_from_consensus
+        record = consensus_fixture()
+        source = {'source_id': record['source_id'], 'file_sha256': record['file_sha256'],
+                  'pcm_sha256': record['pcm_sha256'], 'source_family_id': record['source_family_id'],
+                  'admission': admission_from_consensus(record, 'f' * 64)}
+        human = dict(schema_version=2, evidence_class='speech-like-audio-review-v2',
+            source_id=record['source_id'], file_sha256=record['file_sha256'], pcm_sha256=record['pcm_sha256'],
+            source_family_id=record['source_family_id'], intended_text=record['intended_text'],
+            reviewer_id='invented-human', review_origin='human', review_revision=1,
+            supersedes_review_sha256=None, allowed_purpose='ctc-training-only', transcript_policy=TRANSCRIPT_POLICY,
+            verdict='accepted', acoustic_complete=True, speech_present=True, kind='positive', keyword_id=1,
+            actual_text=record['actual_text'], actual_tokens=record['actual_tokens'])
+        before = copy.deepcopy(source)
+        with patch.object(plan, 'load_jsonl', return_value=[human]), \
+             patch.object(plan, 'sha256_file', return_value='f' * 64):
+            with self.assertRaisesRegex(ValueError, 'PENDING_EXTERNAL_VERIFICATION'):
+                plan._review_admissions(pathlib.Path('/invented/review'),
+                                        {'key': {'text': record['intended_text']}}, {'key': source})
+        self.assertEqual(source, before)
+
+    def test_readonly_inspector_binds_source_role_origin_rights_and_frames(self):
+        from unittest.mock import patch
+        from asr_consensus_fixtures import consensus_fixture
+        record = consensus_fixture()
+        source = {**record['source_provenance'], 'source_id': record['source_id'],
+                  'source_family_id': record['source_family_id'], 'file_sha256': record['file_sha256'],
+                  'pcm_sha256': record['pcm_sha256'], 'audio': '/invented/unused.wav'}
+        measured = {'file_sha256': record['file_sha256'], 'pcm_sha256': record['pcm_sha256'], 'frames': 160}
+        intent = {'split': 'train', 'provider_group': 'train', 'text': record['intended_text']}
+        with patch.object(plan, 'load_planned_recordings', return_value=({'key': intent}, {'key': source}, {})), \
+             patch.object(plan, 'load_jsonl', return_value=[record]), \
+             patch.object(plan, 'sha256_file', return_value='f' * 64), \
+             patch.object(plan, 'inspect_pcm16_wav', return_value=measured):
+            result = plan.inspect_consensus_recordings(pathlib.Path('/invented/intents'), pathlib.Path('/invented'),
+                                                       pathlib.Path('/invented/receipts'), expected_count=1)
+            self.assertEqual(result['label_eligible_recordings'], 1)
+            self.assertEqual(result['training_admitted_recordings'], 0)
+            self.assertFalse(result['ctc_training_allowed'])
+            for field, changed in [('synthetic', False), ('source_role', 'source_screen_only'),
+                                   ('rights_evidence_sha256', '8' * 64), ('source_type', 'recorded-speech')]:
+                original = source[field]; source[field] = changed
+                with self.subTest(field=field), self.assertRaises(ValueError):
+                    plan.inspect_consensus_recordings(pathlib.Path('/invented/intents'), pathlib.Path('/invented'),
+                                                      pathlib.Path('/invented/receipts'))
+                source[field] = original
+            for metadata in (source, intent):
+                for field in ('role', 'allowed_role', 'split_role'):
+                    metadata[field] = 'source_screen_only'
+                    with self.subTest(field=field), self.assertRaises(ValueError):
+                        plan.inspect_consensus_recordings(pathlib.Path('/invented/intents'), pathlib.Path('/invented'),
+                                                          pathlib.Path('/invented/receipts'))
+                    del metadata[field]
+            measured['frames'] = 159
+            with self.assertRaises(ValueError):
+                plan.inspect_consensus_recordings(pathlib.Path('/invented/intents'), pathlib.Path('/invented'),
+                                                  pathlib.Path('/invented/receipts'))
+
+    def test_diagnostic_reference_projection_preserves_machine_markers(self):
+        from render_domains import domain_reference_row
+        from speech_asr_consensus import require_independent_reference_labels
+        for marker in ({'evidence_class': 'speech-three-asr-consensus-v1'},
+                       {'label_origin': 'machine-consensus'}, {'label_source': 'machine-three-asr-consensus-v1'},
+                       {'status': 'PENDING_EXTERNAL_VERIFICATION'}, {'consensus_record': {'fixture': True}},
+                       {'source_provenance': {'label_origin': 'machine-consensus'}},
+                       {'label_provenance': {'label_origin': 'machine-consensus'}}):
+            row = dict(path='/invented/unused.wav', kind='negative', scene={}, domain_id='invented', **marker)
+            reference = domain_reference_row(row, recording='invented', frames=160)
+            for key, value in marker.items(): self.assertEqual(reference[key], value)
+            with self.assertRaisesRegex(ValueError, 'independent reference'):
+                require_independent_reference_labels([reference])
+
+    def test_qualification_paths_reject_machine_gold_but_diagnostics_remain_available(self):
+        import ast
+        import hashlib
+        from asr_consensus_fixtures import consensus_fixture
+        from speech_asr_consensus import admission_from_consensus, require_independent_reference_labels
+        from qualification_metrics import validate_event_metrics
+        admission = admission_from_consensus(consensus_fixture(), 'f' * 64)
+        for row in ({'admission': admission}, {'speech_like_provenance': {'label_origin': 'machine-consensus'}},
+                    {'label_source': 'machine-three-asr-consensus-v1'},
+                    {'admission': {'review_history': [{'label_origin': 'machine-consensus'}]}}):
+            with self.subTest(row=row), self.assertRaisesRegex(ValueError, 'independent reference'):
+                require_independent_reference_labels([row])
+        raw = {'references': json.dumps({'admission': admission}) + '\n', 'detections': ''}
+        hashes = {key + '_sha256': hashlib.sha256(value.encode()).hexdigest() for key, value in raw.items()}
+        with self.assertRaisesRegex(ValueError, 'independent reference'):
+            validate_event_metrics({}, raw, hashes)
+        for filename, minimum in [('validate_real_human_corpus.py', 1), ('score_real_human_qualification.py', 2),
+                                  ('run_final_afe_corpus.py', 1)]:
+            tree = ast.parse((ROOT / 'tools' / filename).read_text())
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                     and isinstance(node.func, ast.Name) and node.func.id == 'require_independent_reference_labels']
+            self.assertGreaterEqual(len(calls), minimum)
+        # Generic score_events stays available for development diagnostics.
+        self.assertNotIn('require_independent_reference_labels', (ROOT / 'eval/score_events.py').read_text())
+
+
 if __name__ == '__main__':
     unittest.main()

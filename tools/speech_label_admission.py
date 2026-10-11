@@ -152,7 +152,8 @@ def fixture_admission() -> dict:
 
 def validate_admission(admission: object, *, mode: str, source_id: str,
                        file_sha256: str, pcm_sha256: str, text: object, tokens: object,
-                       kind: str, keyword_id: object, provenance: dict) -> None:
+                       kind: str, keyword_id: object, provenance: dict,
+                       split: object = None, frames: object = None) -> None:
     if not isinstance(admission, dict) or admission.get("mode") != mode:
         raise ValueError("mandatory audio admission mode is missing or mismatched")
     if mode == FIXTURE_MODE:
@@ -161,6 +162,14 @@ def validate_admission(admission: object, *, mode: str, source_id: str,
         return
     if mode != REAL_MODE:
         raise ValueError("historical frozen data cannot be newly materialized")
+    from speech_asr_consensus import (has_machine_consensus, validate_consensus_admission,
+                                      require_training_label_authority)
+    if has_machine_consensus(admission):
+        # Structural eligibility cannot authenticate a recognizer. In particular,
+        # flipping a caller-authored verified/allowed flag never grants training.
+        validate_consensus_admission(admission, split=split, frames=frames, for_training=True)
+        return
+    require_training_label_authority(provenance)
     if admission.get("ctc_training_allowed") is not True or admission.get("allowed_purpose") != "ctc-training-only":
         raise ValueError("audio admission is not allowed for CTC training")
     require_sha(admission.get("review_sha256"), "admission.review_sha256")
