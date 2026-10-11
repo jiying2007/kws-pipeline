@@ -53,6 +53,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`run_speech_like_corpus_generation.py`](run_speech_like_corpus_generation.py)
 - [`speech_like_corpus_plan.py`](speech_like_corpus_plan.py)
 - [`speech_label_admission.py`](speech_label_admission.py) — Validate supplied actual-label review receipts; it does not authenticate a listener.
+- [`speech_asr_consensus.py`](speech_asr_consensus.py) — Check prospective three-ASR machine-label consistency; pending external authentication is never training admission or qualification gold.
 - [`speech_like_vits_resample_adapter.py`](speech_like_vits_resample_adapter.py)
 - [`validate_speech_like_synthetic.py`](validate_speech_like_synthetic.py)
 - [`verify_speech_like_backend_bundle.py`](verify_speech_like_backend_bundle.py)

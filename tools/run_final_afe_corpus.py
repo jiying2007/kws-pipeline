@@ -12,6 +12,7 @@ import wave
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from final_afe_identity import canonical_sha, inspect_adapter, sha256_file  # noqa: E402
+from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
 
 SAMPLE_RATE_HZ = 16000
 
@@ -106,6 +107,7 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    require_independent_reference_labels(manifest.get("recordings", []))
     if manifest.get("schema_version") != 1:
         raise ValueError("manifest schema_version must be 1")
     adapter, executable, identity = inspect_adapter(args.adapter)

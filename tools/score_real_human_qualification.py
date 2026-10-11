@@ -17,6 +17,7 @@ from score_events import (  # noqa: E402
     validate_recordings,
 )
 from statistical_bounds import poisson_rate_upper, wilson_upper  # noqa: E402
+from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
 
 
 def sha256_file(path: pathlib.Path) -> str:
@@ -73,6 +74,8 @@ def main() -> int:
     intake = json.loads(args.intake_summary.read_text(encoding="utf-8"))
     afe = json.loads(args.afe_summary.read_text(encoding="utf-8"))
     references_rows = load_jsonl(args.references)
+    require_independent_reference_labels(manifest.get("recordings", []))
+    require_independent_reference_labels(references_rows)
     score = json.loads(args.score_summary.read_text(encoding="utf-8"))
     false_accepts = load_jsonl(args.false_accepts)
     false_rejects = load_jsonl(args.false_rejects)

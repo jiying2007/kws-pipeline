@@ -10,6 +10,8 @@ import sys
 import wave
 from collections import Counter, defaultdict
 
+from speech_asr_consensus import require_independent_reference_labels
+
 FORBIDDEN_FIELDS = {"name", "full_name", "email", "phone", "address", "id_number"}
 IDENTITY_FIELDS = ("speaker_id", "session_id", "source_id", "room_id", "device_id")
 
@@ -91,6 +93,8 @@ def main() -> int:
     recordings = manifest.get("recordings")
     if not isinstance(recordings, list) or not recordings:
         raise ValueError("recordings must be a non-empty list")
+
+    require_independent_reference_labels(recordings)
 
     seen_names: set[str] = set()
     seen_hashes: set[str] = set()

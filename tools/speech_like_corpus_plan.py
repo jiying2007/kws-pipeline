@@ -17,6 +17,9 @@ from corpus_identity import inspect_pcm16_wav, rebind_audio_path  # noqa: E402
 from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, admission_from_reviews,
                                     fixture_admission, latest_review, validate_review_record)  # noqa: E402
 
+from speech_asr_consensus import (admission_from_consensus, validate_consensus_admission,
+                                  validate_consensus_record, require_training_label_authority)
+
 POLICY = "speech-like-corpus-plan-v1"
 VOICE_CLASS = "speech-like-provider-voice-slot-v1"
 INTENT_CLASS = "speech-like-request-label-intent-v1"
@@ -317,6 +320,7 @@ def _review_admissions(path: pathlib.Path, intent_map: dict, generated: dict) ->
     review_sha = sha256_file(path)
     for key, intent in intent_map.items():
         source = generated[key]
+        require_training_label_authority(source)
         identity = (source["source_id"], source["file_sha256"])
         latest = latest_review(histories[identity])
         if latest.get("intended_text") != intent["text"]:
@@ -384,6 +388,70 @@ def load_planned_recordings(intents_path: pathlib.Path, generated_root: pathlib.
         raise ValueError(f"generated corpus does not match planned requests; missing={len(missing)} extra={len(extra)}")
 
     return intent_map, generated, source_manifest_sha
+
+
+def inspect_consensus_recordings(intents_path: pathlib.Path, generated_root: pathlib.Path,
+                                 receipts_path: pathlib.Path, *, expected_count: int | None = None) -> dict:
+    """Read-only eligibility check, never an authenticated training admission."""
+    intent_map, generated, manifests = load_planned_recordings(
+        intents_path, generated_root, planned_groups_only=True)
+    if expected_count is not None and (expected_count < 1 or len(generated) != expected_count):
+        raise ValueError("recording count differs from expected count")
+    receipts = {}
+    for record in load_jsonl(receipts_path):
+        validate_consensus_record(record)
+        identity = (record["source_id"], record["file_sha256"])
+        if identity in receipts:
+            raise ValueError("duplicate machine-consensus recording")
+        receipts[identity] = record
+    if set(receipts) != {(row["source_id"], row["file_sha256"]) for row in generated.values()}:
+        raise ValueError("machine consensus contains missing, unplanned or stale recordings")
+    seen_pcm, seen_sources = set(), set()
+    receipt_sha = sha256_file(receipts_path)
+    for key, intent in intent_map.items():
+        source = generated[key]
+        record = receipts[(source["source_id"], source["file_sha256"])]
+        if intent["split"] != "train" or intent["provider_group"] != "train":
+            raise ValueError("machine consensus only labels train-role source audio")
+        for metadata in (source, intent):
+            for field in ("role", "allowed_role", "split_role", "source_role", "split"):
+                if field in metadata and metadata[field] != "train":
+                    raise ValueError(f"machine consensus cannot reclassify source/intent {field}")
+            if (metadata.get("source_screen_only") is True or metadata.get("human_gold") is True
+                    or metadata.get("review_origin") == "human"):
+                raise ValueError("machine consensus cannot reclassify protected roles or human gold")
+        if source.get("synthetic") is not True:
+            raise ValueError("this synthetic-source inspector requires explicit synthetic=true")
+        if source.get("admission") is not None:
+            raise ValueError("machine consensus cannot relabel an already admitted/fixture/historical source")
+        inspected = inspect_pcm16_wav(pathlib.Path(source["audio"]))
+        for field in ("file_sha256", "pcm_sha256"):
+            if source.get(field) != inspected[field] or record[field] != inspected[field]:
+                raise ValueError(f"machine consensus {field} differs from measured WAV")
+        if source["source_id"] in seen_sources or inspected["pcm_sha256"] in seen_pcm:
+            raise ValueError("duplicate machine-consensus source/decoded PCM")
+        seen_sources.add(source["source_id"]); seen_pcm.add(inspected["pcm_sha256"])
+        if record["intended_text"] != intent["text"]:
+            raise ValueError("machine consensus intended text differs from original plan")
+        for field in LINEAGE_FIELDS:
+            if source.get(field) != record.get(field):
+                raise ValueError(f"machine consensus {field} differs from source provenance")
+        for field, value in record["source_provenance"].items():
+            if source.get(field) != value or type(source.get(field)) is not type(value):
+                raise ValueError(f"machine consensus {field} differs from source origin/rights/role")
+        admission = admission_from_consensus(record, receipt_sha)
+        validate_consensus_admission(admission, split=intent["split"], frames=inspected["frames"])
+    return {"schema_version": 1, "evidence_class": "speech-three-asr-eligibility-inspection-v1",
+            "status": "PENDING_EXTERNAL_VERIFICATION", "label_eligible_recordings": len(receipts),
+            "training_admitted_recordings": 0, "ctc_training_allowed": False,
+            "qualification_allowed": False, "evaluation_gold_allowed": False,
+            "authentication_independently_verified": False,
+            "consensus_receipt_sha256": receipt_sha, "intents_sha256": sha256_file(intents_path),
+            "source_manifests": manifests,
+            "limits": ["Self-authored verified=true and hashes do not authenticate recognizers or outputs.",
+                       "Rights references and source roles are checked for consistency, not independently certified.",
+                       "Frame coverage does not prove human acoustic completeness or absence of shared ASR error.",
+                       "Existing split, rights, coverage, ancestry, resource and independent qualification gates remain required."]}
 
 
 def admit_reviewed_recordings(intents_path: pathlib.Path, generated_root: pathlib.Path,
@@ -461,6 +529,7 @@ def materialize_labels(intents_path: pathlib.Path, generated_root: pathlib.Path,
     split_rows: dict[str, list[dict]] = {split: [] for split in SPLITS}
     split_labels: dict[str, list[dict]] = {split: [] for split in SPLITS}
     for key, intent in intent_map.items():
+        require_training_label_authority(generated[key])
         row = dict(generated[key])
         if row.get("synthetic") is not True:
             raise ValueError("speech-like materialization requires explicit synthetic=true")
@@ -566,7 +635,18 @@ def main() -> int:
     admission.add_argument("--audio-review", required=True, type=pathlib.Path)
     admission.add_argument("--expected-count", required=True, type=int)
 
+    consensus = sub.add_parser("inspect-three-asr", help="Read-only prospective machine-label check; never training admission")
+    consensus.add_argument("--intents", required=True, type=pathlib.Path)
+    consensus.add_argument("--generated-root", required=True, type=pathlib.Path)
+    consensus.add_argument("--consensus-receipts", required=True, type=pathlib.Path)
+    consensus.add_argument("--expected-count", required=True, type=int)
+
     args = parser.parse_args()
+    if args.command == "inspect-three-asr":
+        summary = inspect_consensus_recordings(args.intents.resolve(), args.generated_root.resolve(),
+                                               args.consensus_receipts.resolve(), expected_count=args.expected_count)
+        print(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2))
+        return 0
     if args.command == "admit-reviewed":
         summary = admit_reviewed_recordings(args.intents.resolve(), args.generated_root.resolve(),
                                             args.audio_review.resolve(), expected_count=args.expected_count)
