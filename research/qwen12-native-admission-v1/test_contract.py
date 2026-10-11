@@ -281,7 +281,7 @@ class ContractTests(unittest.TestCase):
         native=text.split('  qwen12:\n',1)[1].split('  contracts:\n',1)[0]
         fixture=text.split('  transport-fixture:\n',1)[1]
         for block,branch,purpose in ((native,c.BRANCH,'native'),
-                (fixture,'research/qwen12-native-transport-preflight-v1','synthetic')):
+                (fixture,'research/qwen12-native-transport-preflight-12m-v1','synthetic12m')):
             self.assertIn("github.event_name == 'push'",block)
             self.assertIn("github.ref == 'refs/heads/"+branch+"'",block)
             self.assertIn('github.event.created == true',block)
@@ -726,6 +726,168 @@ class CleanupStateTests(unittest.TestCase):
                     self.assertEqual('supervision-receipt.json' in host.collect(Path(d)),not retention_fails)
                     self.assertEqual('retention_error' in record,retention_fails)
                     self.assertNotIn('PRIVATE_',c.canonical(record).decode())
+
+
+class PackageFailureDiagnosticTests(unittest.TestCase):
+    identity={'repository':'jiying2007/kws-pipeline','run_id':1,'run_attempt':1,
+        'job_key':'qwen12','executed_head_sha':'a'*40}
+    secret='PRIVATE_TOKEN /home/private/audio.wav transcript env=secret argv=secret'
+
+    def limit_error(self):
+        from log_transport import PackageLimitError
+        error=PackageLimitError('compressed_cap',compressed_bytes=12*c.MIB+1,
+            expanded_bytes=24*c.MIB,member_count=3100)
+        error.args=(self.secret,)
+        return error
+
+    def test_completed_zip_rejection_retains_actual_counts_and_original_error(self):
+        import log_transport,zipfile
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);c.write_once(root/'host-receipt.json',{'schema':'synthetic-only'})
+            payload,_,_=log_transport.build_package(root,['host-receipt.json'],self.identity)
+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                expanded=sum(row.file_size for row in archive.infolist())
+            observed=[]
+            def refused(*args):
+                try:return log_transport.build_package(root,['host-receipt.json'],self.identity)
+                except log_transport.PackageLimitError as error:
+                    observed.append(error);raise
+            with patch.object(log_transport,'MAX_COMPRESSED',len(payload)-1), \
+                 patch.object(host,'_package_budget_preflight',side_effect=refused), \
+                 self.assertRaises(log_transport.PackageLimitError) as caught:
+                host.package_budget_preflight(root,self.identity)
+            self.assertIs(caught.exception,observed[0])
+            result=c.read_json(root/'package-budget-preflight.json')
+            self.assertEqual(result['status'],'rejected_before_any_audio_forward')
+            self.assertEqual(result['new_native_calls'],0)
+            diagnostic=result['diagnostic']
+            self.assertEqual(diagnostic['reason_code'],'compressed_cap')
+            self.assertEqual(diagnostic['stage'],'package_budget_preflight')
+            self.assertEqual((diagnostic['compressed_bytes'],diagnostic['expanded_bytes'],diagnostic['member_count']),
+                             (len(payload),expanded,1))
+            self.assertIn('package-budget-preflight.json',host.collect(root))
+            self.assertLess(len(c.canonical(result)),1024)
+
+    def test_only_exact_known_exception_type_can_supply_sizing_fields(self):
+        from log_transport import PackageLimitError
+        class Hostile(PackageLimitError):
+            def __str__(self):raise AssertionError('exception must not be stringified')
+            def __repr__(self):raise AssertionError('exception must not be represented')
+            def __getattribute__(self,name):
+                if name in ('reason_code','compressed_bytes','expanded_bytes','member_count','args','__dict__','__traceback__'):
+                    raise AssertionError('untrusted attributes must not be read')
+                return super().__getattribute__(name)
+        for error in (ValueError(self.secret),Hostile('compressed_cap',compressed_bytes=123)):
+            error.reason_code='compressed_cap';error.compressed_bytes=123
+            value=host.host_failure_diagnostic(error,'package_budget_preflight')
+            self.assertEqual(value['reason_code'],'unknown_failure')
+            self.assertTrue(all(value[key] is None for key in ('compressed_bytes','expanded_bytes','member_count')))
+            self.assertNotIn('PRIVATE_',c.canonical(value).decode())
+
+    def test_untrusted_reason_counts_and_stage_are_bounded_or_unknown(self):
+        for number in (None,True,False,-1,2**63,2**1000,1.5,self.secret,[],{}):
+            error=self.limit_error()
+            for key in ('compressed_bytes','expanded_bytes','member_count'):setattr(error,key,number)
+            value=host.host_failure_diagnostic(error,self.secret)
+            self.assertEqual(value['stage'],'unknown')
+            self.assertTrue(all(value[key] is None for key in ('compressed_bytes','expanded_bytes','member_count')))
+            self.assertLess(len(c.canonical(value)),1024)
+            self.assertNotIn('PRIVATE_',c.canonical(value).decode())
+        error=self.limit_error();error.reason_code=self.secret
+        value=host.host_failure_diagnostic(error,'package_budget_preflight')
+        self.assertEqual(value['reason_code'],'unknown_failure')
+        self.assertTrue(all(value[key] is None for key in ('compressed_bytes','expanded_bytes','member_count')))
+        self.assertNotIn('PRIVATE_',c.canonical(value).decode())
+
+    def test_early_limits_leave_unmeasured_aggregate_fields_unknown(self):
+        from log_transport import PackageLimitError
+        for reason in ('expanded_cap','member_cap','member_count_cap'):
+            value=host.host_failure_diagnostic(PackageLimitError(reason,member_count=4097),'package_budget_preflight')
+            self.assertEqual(value['reason_code'],reason);self.assertEqual(value['member_count'],4097)
+            self.assertIsNone(value['compressed_bytes']);self.assertIsNone(value['expanded_bytes'])
+
+    def test_unknown_preflight_failure_remains_failure_without_exception_payload(self):
+        error=ValueError(self.secret)
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            with patch.object(host,'_package_budget_preflight',side_effect=error),self.assertRaises(ValueError) as caught:
+                host.package_budget_preflight(root,self.identity)
+            self.assertIs(caught.exception,error)
+            value=c.read_json(root/'package-budget-preflight.json')
+            self.assertEqual(value['status'],'rejected_before_any_audio_forward')
+            self.assertEqual(value['diagnostic']['reason_code'],'unknown_failure')
+            self.assertNotIn('PRIVATE_',c.canonical(value).decode())
+
+    def test_preflight_receipt_or_diagnostic_failure_does_not_replace_original(self):
+        error=self.limit_error()
+        for target in ('write_once','host_failure_diagnostic'):
+            with self.subTest(target=target),tempfile.TemporaryDirectory() as d:
+                with patch.object(host,'_package_budget_preflight',side_effect=error), \
+                     patch.object(host,target,side_effect=OSError(self.secret)), \
+                     self.assertRaises(type(error)) as caught:
+                    host.package_budget_preflight(Path(d),self.identity)
+                self.assertIs(caught.exception,error)
+
+    def test_host_retains_safe_diagnostic_and_complete_failure_package(self):
+        import branch_transport,worker_receipts,zipfile
+        from contextlib import ExitStack,redirect_stdout,redirect_stderr
+        # No subprocess/model/network: only the host orchestration and local codec run.
+        for typed,receipt_fails,diagnostic_fails in ((True,False,False),(True,True,False),
+                (False,False,False),(True,False,True)):
+            with self.subTest(typed=typed,receipt_fails=receipt_fails,diagnostic_fails=diagnostic_fails),tempfile.TemporaryDirectory() as d:
+                error=self.limit_error() if typed else ValueError(self.secret)
+                original=SimpleNamespace(host_capacity=lambda:{},pull_image=lambda *a:None)
+                calls=[]
+                def setup(*args,**kwargs):
+                    family=args[6];calls.append((family,kwargs.get('mode')))
+                    if family=='setup':
+                        c.atomic(args[3]/'setup-receipt.json',{'actual_download_bytes':0,'commands':[]})
+                    else:
+                        self.assertEqual(kwargs.get('mode'),'prepare')
+                        c.write_once(args[5]/'native-config.json',{})
+                        c.write_once(args[5]/'prepared.json',{'audio_forward_calls':0})
+                        c.write_once(args[5]/'worker-complete.json',{'calls':0})
+                    return 0
+                write=host.write_once;diagnostic=host.host_failure_diagnostic
+                def retain(path,value):
+                    if receipt_fails and path.name=='package-budget-preflight.json':raise OSError(self.secret)
+                    return write(path,value)
+                def project(*args):
+                    if diagnostic_fails:raise MemoryError(self.secret)
+                    return diagnostic(*args)
+                output=io.StringIO();run={'run_id':'1','head_sha':'a'*40}
+                job=c.blind_job(c.read_json(HERE/'public-inputs.json')['records'])
+                with ExitStack() as stack:
+                    for context in (patch.object(sys,'path',list(sys.path)),patch.object(host,'fresh_run',return_value=run),
+                        patch.object(host,'load',return_value=original),patch.object(host.signal,'signal'),
+                        patch.object(host.signal,'setitimer'),patch.object(host.shutil,'disk_usage',return_value=SimpleNamespace(free=20*c.GIB)),
+                        patch.object(host,'fetch_blind',return_value={}),patch.object(host,'validate_blind',return_value=job),
+                        patch.object(host,'stage'),patch.object(host.shutil,'copyfile'),patch.object(host,'supervise',side_effect=setup),
+                        patch.object(host,'whisper_setup',return_value={}),patch.object(worker_receipts,'build_policy',return_value={}),
+                        patch.object(host,'_package_budget_preflight',side_effect=error),patch.object(host,'write_once',side_effect=retain),
+                        patch.object(host,'host_failure_diagnostic',side_effect=project),redirect_stdout(output),redirect_stderr(output)):
+                        stack.enter_context(context)
+                    package=stack.enter_context(patch.object(branch_transport,'write_package'))
+                    status=host.execute({'RUNNER_TEMP':d,'GITHUB_JOB':'qwen12'},{},
+                        {'new_transcripts_publication_approved':True},{'inference_code':{},'setup_code':{}})
+                self.assertEqual(status,1)
+                self.assertEqual(calls,[('setup',None)]+[(family,'prepare') for family in c.FAMILIES])
+                package.assert_called_once();payload=package.call_args.args[1]
+                with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                    receipt=json.loads(archive.read('host-receipt.json'))
+                    outcomes=json.loads(archive.read('terminal-outcomes.json'))
+                    self.assertEqual('package-budget-preflight.json' in archive.namelist(),not (receipt_fails or diagnostic_fails))
+                    if not (receipt_fails or diagnostic_fails):
+                        self.assertEqual(json.loads(archive.read('package-budget-preflight.json'))['diagnostic'],receipt['diagnostic'])
+                    self.assertTrue(all(self.secret.encode() not in archive.read(name) for name in archive.namelist()))
+                self.assertEqual(receipt['status'],'stopped_no_retry')
+                self.assertEqual(receipt['primary_error'],{'error_type':'ValueError'})
+                self.assertEqual(receipt['diagnostic']['stage'],'package_budget_preflight')
+                self.assertEqual(receipt['diagnostic']['reason_code'],
+                    'diagnostic_unavailable' if diagnostic_fails else 'compressed_cap' if typed else 'unknown_failure')
+                self.assertEqual(len(outcomes),36);self.assertTrue(all(row['status']=='not_run' for row in outcomes))
+                self.assertTrue(all(receipt['stages'][family]=='not_run' for family in c.FAMILIES))
+                self.assertNotIn('PRIVATE_',output.getvalue())
 
 
 class FailureDiagnosticTests(unittest.TestCase):

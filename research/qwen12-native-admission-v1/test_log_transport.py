@@ -8,6 +8,7 @@ import random
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -118,13 +119,61 @@ class TransportTests(unittest.TestCase):
 
     def test_oversized_member(self):
         (self.root / 'large.json').write_bytes(b'x' * (t.MAX_MEMBER+1))
-        with self.assertRaises(ValueError): t.build_package(self.root, ['large.json'], IDENTITY)
+        with self.assertRaises(t.PackageLimitError) as caught:
+            t.build_package(self.root, ['large.json'], IDENTITY)
+        self.assertEqual(caught.exception.reason_code, 'member_cap')
+        self.assertEqual(caught.exception.member_count, 1)
+        self.assertIsNone(caught.exception.compressed_bytes)
+        self.assertIsNone(caught.exception.expanded_bytes)
 
     def test_compressed_cap(self):
         for seed, name in [(9, 'random-a.json'), (10, 'random-b.json')]:
             (self.root / name).write_bytes(random.Random(seed).randbytes(t.MAX_COMPRESSED//2+5000))
-        with self.assertRaisesRegex(ValueError, 'compressed evidence cap'):
+        with self.assertRaises(t.PackageLimitError) as caught:
             t.build_package(self.root, ['random-a.json', 'random-b.json'], IDENTITY)
+        error = caught.exception
+        self.assertEqual(error.reason_code, 'compressed_cap')
+        self.assertGreater(error.compressed_bytes, t.MAX_COMPRESSED)
+        self.assertGreater(error.expanded_bytes, t.MAX_COMPRESSED + 10000)
+        self.assertEqual(error.member_count, 2)
+        self.assertEqual(str(error), t.PACKAGE_LIMIT_REASONS['compressed_cap'])
+
+    def test_package_count_and_expanded_caps_have_safe_measurements(self):
+        with self.assertRaises(t.PackageLimitError) as caught:
+            t.build_package(self.root, ['unused'] * (t.MAX_MEMBERS + 1), IDENTITY)
+        self.assertEqual(caught.exception.reason_code, 'member_count_cap')
+        self.assertEqual(caught.exception.member_count, t.MAX_MEMBERS + 1)
+        self.assertIsNone(caught.exception.expanded_bytes)
+        with mock.patch.object(t, 'MAX_UNCOMPRESSED', 1):
+            with self.assertRaises(t.PackageLimitError) as caught:
+                t.build_package(self.root, self.allowed, IDENTITY)
+        self.assertEqual(caught.exception.reason_code, 'expanded_cap')
+        self.assertEqual(caught.exception.member_count, 1)
+        self.assertIsNone(caught.exception.compressed_bytes)
+        self.assertIsNone(caught.exception.expanded_bytes)
+        size = (self.root / self.allowed[0]).stat().st_size
+        with mock.patch.object(t, 'MAX_UNCOMPRESSED', size):
+            with self.assertRaises(t.PackageLimitError) as caught:
+                t.build_package(self.root, self.allowed, IDENTITY)
+        self.assertEqual(caught.exception.reason_code, 'expanded_cap')
+        self.assertGreater(caught.exception.expanded_bytes, size)
+        self.assertIsNone(caught.exception.compressed_bytes)
+
+    def test_package_limit_diagnostics_reject_arbitrary_text_and_types(self):
+        for reason in ('raw error with secret', None, True, []):
+            with self.assertRaises(ValueError): t.PackageLimitError(reason)
+        for key in ('compressed_bytes', 'expanded_bytes', 'member_count'):
+            for value in (True, -1, 'secret', 1.5):
+                with self.assertRaises(ValueError): t.PackageLimitError('compressed_cap', **{key: value})
+
+    def test_legacy_log_fixture_stays_below_unchanged_member_cap(self):
+        from emit_synthetic_log_fixture import emit
+        stream = io.StringIO()
+        receipt = emit(IDENTITY, stream)
+        self.assertGreaterEqual(receipt['archive_bytes'], t.MAX_MEMBER * 98 // 100)
+        self.assertLessEqual(receipt['archive_bytes'], t.MAX_MEMBER)
+        self.assertEqual(t.parse_job_log(stream.getvalue(), IDENTITY)[2]['archive_sha256'],
+                         receipt['archive_sha256'])
 
     def test_large_timestamped_log_roundtrip(self):
         (self.root / 'large-fixture.json').write_text(json.dumps({'synthetic_fixture': True,

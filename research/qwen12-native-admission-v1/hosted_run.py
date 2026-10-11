@@ -48,6 +48,31 @@ def safe_error(error):
     return value
 
 
+HOST_FAILURE_STAGES=('setup','asr_setup','whisper_setup','prepare','policy_freeze',
+    'package_budget_preflight','prepared_retention','decode','unknown')
+
+
+def host_failure_diagnostic(error,stage):
+    """Only trusted size-error fields; unknown failures disclose no payload."""
+    value={'schema':'qwen12-host-failure-v1',
+        'stage':stage if type(stage) is str and stage in HOST_FAILURE_STAGES else 'unknown',
+        'reason_code':'unknown_failure','compressed_bytes':None,'expanded_bytes':None,'member_count':None}
+    try:
+        from log_transport import PackageLimitError
+        if type(error) is PackageLimitError:
+            fields=BaseException.__getattribute__(error,'__dict__')
+            reason=fields.get('reason_code')
+            if type(reason) is str and reason in ('compressed_cap','expanded_cap','member_cap','member_count_cap'):
+                value['reason_code']=reason
+                for name in ('compressed_bytes','expanded_bytes','member_count'):
+                    number=fields.get(name)
+                    if type(number) is int and 0<=number<=2**63-1:value[name]=number
+    except BaseException:
+        # This optional projection must never replace the primary failure.
+        value.update(reason_code='diagnostic_unavailable',compressed_bytes=None,expanded_bytes=None,member_count=None)
+    return value
+
+
 class MeteredDocker:
     """Immutable owned IDs; one bounded cleanup and one final CPU close per scope."""
     def __init__(self,root,deadline):
@@ -453,6 +478,18 @@ def recognition_stages(prepare,freeze_policy,decode,*,setup_seconds=0,clock=time
 
 
 def package_budget_preflight(root,transport):
+    try:return _package_budget_preflight(root,transport)
+    except BaseException as error:
+        try:
+            write_once(root/'package-budget-preflight.json',{
+                'schema':'qwen12-predecode-package-budget-v1',
+                'status':'rejected_before_any_audio_forward','new_native_calls':0,
+                'diagnostic':host_failure_diagnostic(error,'package_budget_preflight')})
+        except BaseException:pass  # Receipt failure cannot mask the original error.
+        raise
+
+
+def _package_budget_preflight(root,transport):
     """Actual complete prepared closure plus bounded synthetic worst-prefix traces.
 
     This tests retained source/inventory bytes without any recognizer forward.
@@ -520,7 +557,7 @@ def execute(env,event,release,freeze):
         'workspace_budget_scope':'sampled logical task tree only; excludes Docker image/layers/tmpfs; not a filesystem hard quota',
         'wall_budget_scope':'host supervised thresholds; cleanup and kernel scheduling may overshoot'}
     atomic(root/'host-receipt.json',receipt);inputs=root/'input';output=root/'output';output.mkdir()
-    job=None;failed=False;setup_elapsed=0
+    job=None;failed=False;setup_elapsed=0;host_stage='setup'
     try:
         require(shutil.disk_usage(root).free>=12*GIB,'initial12GiB free reserve')
         receipt['capacity']=original.host_capacity();atomic(root/'host-receipt.json',receipt)
@@ -531,7 +568,7 @@ def execute(env,event,release,freeze):
         # New gate is a separately frozen source, not a historical file edit.
         shutil.copyfile(HERE/'cpu_gate.py',setup_code/'research/source-screen32-whisper-v1/attempt-3/cpu_gate.py')
         runtime=root/'asr-runtime';runtime.mkdir();stage_output=root/'asr-setup';stage_output.mkdir()
-        receipt['stages']['asr_setup']='started';atomic(root/'host-receipt.json',receipt)
+        host_stage='asr_setup';receipt['stages']['asr_setup']='started';atomic(root/'host-receipt.json',receipt)
         setup_began=time.monotonic()
         try:supervise(original,docker,setup_code,runtime,inputs,stage_output,'setup',min(docker.deadline,time.monotonic()+1800))
         finally:
@@ -547,7 +584,7 @@ def execute(env,event,release,freeze):
         asr_runtime=runtime
         runtime=root/'whisper-runtime';runtime.mkdir();out=root/'whisper-setup';out.mkdir();docker.stage='setup'
         remaining=1800-setup_elapsed;require(remaining>0,'combined setup1800s remaining')
-        receipt['stages']['whisper_setup']='started';atomic(root/'host-receipt.json',receipt)
+        host_stage='whisper_setup';receipt['stages']['whisper_setup']='started';atomic(root/'host-receipt.json',receipt)
         third=ROOT/'research/source-screen32-whisper-v1/attempt-3';sys.path.insert(0,str(third))
         bounded=load('qwen12_bounded_host',third/'bounded_host.py')
         setup_began=time.monotonic()
@@ -561,12 +598,16 @@ def execute(env,event,release,freeze):
         transport={'repository':'jiying2007/kws-pipeline','run_id':int(run['run_id']),'run_attempt':1,
             'job_key':env['GITHUB_JOB'],'executed_head_sha':run['head_sha']}
         def prepare(family,seconds):
+            nonlocal host_stage
+            host_stage='prepare'
             docker.stage='setup';out=output/family;out.mkdir();receipt['stages'][family+'_prepare']='started';atomic(root/'host-receipt.json',receipt)
             supervise(original,docker,code,runtimes[family],inputs,out,family,min(docker.deadline,time.monotonic()+seconds),mode='prepare')
             require(read_json(out/'worker-complete.json')['calls']==0 and read_json(out/'prepared.json')['audio_forward_calls']==0,'pureload preparation only')
             require(not any(out.glob('clip-*/started.json')),'no consumed attempt during preparation')
             receipt['stages'][family+'_prepare']='complete'
         def freeze_policy():
+            nonlocal host_stage
+            host_stage='policy_freeze'
             from worker_receipts import build_policy
             policy=build_policy({family:output/family for family in FAMILIES})
             write_once(policy_dir/'policy.json',policy)
@@ -575,10 +616,14 @@ def execute(env,event,release,freeze):
                 'recognizer_policy_sha256':receipt['recognizer_policy_sha256'],'native_calls_started':0,
                 'prepared_config_files':{family:identity(output/family/'native-config.json') for family in FAMILIES},
                 'frozen_monotonic':time.monotonic(),'run_id':run['run_id'],'executed_head_sha':run['head_sha']})
+            host_stage='package_budget_preflight'
             receipt['package_budget']=package_budget_preflight(root,transport)
+            host_stage='prepared_retention'
             for family in FAMILIES:(output/family).rename(frozen_root/family)
             receipt['all3_policy_frozen_before_recognition']=True;atomic(root/'host-receipt.json',receipt)
         def decode(family,seconds):
+            nonlocal host_stage
+            host_stage='decode'
             docker.stage=family;out=output/family;out.mkdir();receipt['stages'][family]='started';atomic(root/'host-receipt.json',receipt)
             supervise(original,docker,code,runtimes[family],inputs,out,family,min(docker.deadline,time.monotonic()+seconds),
                 mode='decode',frozen=frozen_root/family,policy=policy_dir)
@@ -588,6 +633,10 @@ def execute(env,event,release,freeze):
         setup_elapsed=receipt['combined_setup_seconds'];receipt['status']='all36_native_calls_complete'
     except BaseException as error:
         failed=True;receipt.update(status='stopped_no_retry',primary_error=safe_error(error),**safe_error(error))
+        try:receipt['diagnostic']=host_failure_diagnostic(error,host_stage)
+        except BaseException:
+            receipt['diagnostic']={'schema':'qwen12-host-failure-v1','stage':host_stage,
+                'reason_code':'diagnostic_unavailable'}
         if docker.supervision_failure is not None and docker.supervision_failure[0] is error:
             observed=docker.supervision_failure[1]
             receipt.update(primary_error=observed['primary_error'],cleanup_error=observed['cleanup_error'])

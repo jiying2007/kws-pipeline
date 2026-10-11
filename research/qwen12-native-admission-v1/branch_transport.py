@@ -13,7 +13,7 @@ from log_transport import (HEAD, MAX_COMPRESSED, MAX_MEMBERS, MAX_UNCOMPRESSED,
 
 TRANSPORT = "github-repository-zip-chunks-v1"
 MAX_CHUNK = 256 * 1024
-MAX_CHUNKS = 32
+MAX_CHUNKS = 48
 MAX_MANIFEST = 16 * 1024
 REPOSITORY = "jiying2007/kws-pipeline"
 PURPOSES = {
@@ -21,6 +21,10 @@ PURPOSES = {
         "evidence_branch": "evidence/qwen12-native-transport-synthetic-v1",
         "directory": "research/qwen12-native-admission-v1/evidence/synthetic-v1",
         "scope": "qwen12-native-transport-preflight-v1", "job_key": "transport-fixture"},
+    "synthetic12m": {"source_branch": "research/qwen12-native-transport-preflight-12m-v1",
+        "evidence_branch": "evidence/qwen12-native-transport-synthetic-12m-v1",
+        "directory": "research/qwen12-native-admission-v1/evidence/synthetic-12m-v1",
+        "scope": "qwen12-native-transport-preflight-12m-v1", "job_key": "transport-fixture"},
     "native": {"source_branch": "research/qwen12-native-admission-recovery2",
         "evidence_branch": "evidence/qwen12-native-admission-recovery2",
         "directory": "research/qwen12-native-admission-v1/evidence/recovery2",
