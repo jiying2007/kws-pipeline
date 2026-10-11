@@ -825,10 +825,24 @@ class ThirdAttemptPreparationTests(unittest.TestCase):
         self.assertEqual(torch['url'], 'https://download-r2.pytorch.org/whl/cpu/torch-2.12.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl')
 
     def test_preparation_does_not_admit_execution(self):
-        for name in ('execution-freeze.json', 'execution-release.json', 'workflow.yml', 'continue_once.py'):
-            self.assertFalse((HERE / 'attempt-3' / name).exists())
-        for directory in (HERE, HERE / 'attempt-2'):
+        self.assertFalse((ROOT / '.github/workflows/source-screen32-whisper-third-attempt-3-v1.yml').exists())
+        for directory in (HERE, HERE / 'attempt-2', HERE / 'attempt-3'):
             self.assertIs(json.loads((directory / 'execution-release.json').read_text())['approved'], False)
+
+
+def load_tests(loader, tests, pattern):
+    # These source-only suites run in the existing normal/-O/-OO CI gate.
+    directory = HERE / 'attempt-3'
+    sys.path.insert(0, str(directory))
+    for name in ('test_bounded_connect', 'test_pip_acquire', 'test_bounded_host',
+                 'test_phased_setup', 'test_campaign'):
+        qualified = 'whisper_third_' + name
+        spec = importlib.util.spec_from_file_location(qualified, directory / (name + '.py'))
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[qualified] = module
+        spec.loader.exec_module(module)
+        tests.addTests(loader.loadTestsFromModule(module))
+    return tests
 
 
 if __name__ == '__main__':

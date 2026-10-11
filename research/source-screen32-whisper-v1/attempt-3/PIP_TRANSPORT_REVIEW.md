@@ -1,3 +1,8 @@
+> Historical stock-pip review. The approved replacement now uses a bounded
+> CONNECT broker with explicitly changed byte-accounting semantics; see
+> [the current implementation contract](README.md). The original limitations
+> below still apply to stock pip alone. No success of an actual third run is claimed.
+
 # Third phased attempt: acquisition design blocked
 
 This is source-only preparation for the separately authorized third campaign
