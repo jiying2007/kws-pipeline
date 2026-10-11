@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "1b1df381b0c55eb10e1377b955d4c2a433716095",
-      "sha256": "1e2ff6413a7d708047374e82cd2ec72be7a4cec3d73a14137b821dd9ea7bab7d",
-      "bytes": 25069
+      "git_blob_sha1": "858d9e0195db3ffee7c39e5ed5d8be563dcf28c2",
+      "sha256": "678698b5cd2c88794e0e2020272a9a53b1d6baf8bd83a759cda72b18025949ee",
+      "bytes": 28048
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -16705,6 +16705,33 @@
             "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444",
             "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
             "bytes": 11835
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "d899c65c9b89b7d3b23b197b879f7d9afa688c58",
+      "from_tree": "018f2a8d4ab8ad29672b03997bf2eb9dc52bae2e",
+      "operation_id": "candidate-encoder-bounded-numeric-contracts-20261011",
+      "scope": "Reuse the existing pinned CPU objective-math runtime for one fixed-seed random-feature C0/C1 numeric contract with a five-minute step and single-thread math; preserve complete existing product-trigger scope.",
+      "rationale": "Public source and CI metadata only. Candidate-only paths do not initiate product-data download or reproducibility-training jobs. Any original product path in a mixed change still requires all original jobs, and shared workflow or selector edits exercise them. No audio, pretrained weights, optimizer updates, candidate selection, shipping/runtime changes or new active research workflow are introduced. Numeric execution must be established by an actual CI receipt and does not grant training admission, acoustic effectiveness or SSC305 qualification.",
+      "files": [
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "1b1df381b0c55eb10e1377b955d4c2a433716095",
+            "sha256": "1e2ff6413a7d708047374e82cd2ec72be7a4cec3d73a14137b821dd9ea7bab7d",
+            "bytes": 25069
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "858d9e0195db3ffee7c39e5ed5d8be563dcf28c2",
+            "sha256": "678698b5cd2c88794e0e2020272a9a53b1d6baf8bd83a759cda72b18025949ee",
+            "bytes": 28048
           }
         }
       ]

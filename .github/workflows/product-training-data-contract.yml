@@ -31,6 +31,12 @@ on:
       - "training/ctc_primary.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
+      - "research/candidate_encoders/**"
+      - "tests/test_candidate_encoder_numeric.py"
+      - "tests/test_candidate_encoder_numeric_ci.py"
+      - "tools/candidate_numeric_ci_changes.py"
+      - "tools/research_ci_changes.py"
+      - "tools/check_workflow_path_filters.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
       - "training/feature_cached_trainer.py"
@@ -85,6 +91,12 @@ on:
       - "training/ctc_primary.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
+      - "research/candidate_encoders/**"
+      - "tests/test_candidate_encoder_numeric.py"
+      - "tests/test_candidate_encoder_numeric_ci.py"
+      - "tools/candidate_numeric_ci_changes.py"
+      - "tools/research_ci_changes.py"
+      - "tools/check_workflow_path_filters.py"
       - "training/sitecustomize.py"
       - "training/frontend.py"
       - "training/feature_cached_trainer.py"
@@ -118,7 +130,31 @@ permissions:
   actions: read
 
 jobs:
+  select-scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      existing_required: ${{ steps.scope.outputs.existing_required }}
+      candidate_required: ${{ steps.scope.outputs.candidate_required }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Select complete product and candidate change scopes
+        id: scope
+        run: python3 -B tools/candidate_numeric_ci_changes.py
+      - name: Candidate numeric CI scope and source contracts
+        run: |
+          python3 -S -B tests/test_candidate_encoder_numeric_ci.py
+          python3 -S -B -O tests/test_candidate_encoder_numeric_ci.py
+          python3 -S -B -OO tests/test_candidate_encoder_numeric_ci.py
+          python3 -S -B tests/test_research_ci_changes.py
+          python3 tools/check_workflow_path_filters.py
+
   contract:
+    needs: select-scope
+    if: ${{ needs.select-scope.outputs.existing_required == 'true' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -254,6 +290,17 @@ jobs:
         run: git diff --exit-code -- .
 
   objective-math:
+    needs: select-scope
+    timeout-minutes: 15
+    env:
+      PYTHONHASHSEED: "0"
+      OMP_NUM_THREADS: "1"
+      OMP_DYNAMIC: "FALSE"
+      MKL_NUM_THREADS: "1"
+      MKL_CBWR: COMPATIBLE
+      OPENBLAS_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      ATEN_CPU_CAPABILITY: default
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -266,12 +313,29 @@ jobs:
           .venv-objective/bin/python -m pip install --disable-pip-version-check --no-input \
             torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
       - name: Decoder-aligned objective math contract
+        if: ${{ needs.select-scope.outputs.existing_required == 'true' }}
         run: |
           .venv-objective/bin/python training/test_sequence_margin.py
           .venv-objective/bin/python training/test_ctc_primary.py
           .venv-objective/bin/python tests/test_suffix_root_objective.py
+      - name: Candidate encoder random-feature numeric contracts
+        if: ${{ needs.select-scope.outputs.candidate_required == 'true' }}
+        timeout-minutes: 5
+        run: |
+          .venv-objective/bin/python -B tests/test_candidate_encoder_numeric.py \
+            --report build/candidate-encoder-numeric.json
+      - name: Retain candidate numeric contract receipt
+        if: ${{ always() && needs.select-scope.outputs.candidate_required == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: candidate-encoder-numeric-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/candidate-encoder-numeric.json
+          if-no-files-found: error
+          retention-days: 14
 
   live-base-binding:
+    needs: select-scope
+    if: ${{ needs.select-scope.outputs.existing_required == 'true' }}
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ github.token }}
@@ -338,6 +402,8 @@ jobs:
 
 
   training-reproducibility-replica:
+    needs: select-scope
+    if: ${{ needs.select-scope.outputs.existing_required == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
@@ -393,8 +459,8 @@ jobs:
           retention-days: 7
 
   training-reproducibility-compare:
-    needs: training-reproducibility-replica
-    if: always()
+    needs: [select-scope, training-reproducibility-replica]
+    if: ${{ always() && needs.select-scope.outputs.existing_required == 'true' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
