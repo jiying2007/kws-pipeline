@@ -93,6 +93,27 @@ class RetentionTests(unittest.TestCase):
         # not silently replace it with the maintained active CI source.
         self.assertFalse((projected / ".github/workflows/ci.yml").exists())
 
+    def test_original_native_a20_admission_sources_are_retained_separately(self):
+        core = json.loads((ROOT / "research/consolidation/core-2026-10-07.json").read_text())
+        names = {"README.md", "PROVENANCE.json", "SOURCE_MANIFEST.json", "build.py",
+                 "ctypes_api.py", "export_a20.py", "generate_twiddles.py",
+                 "tests/check_manifest.py", "tests/test_build_driver.py"}
+        for name in names:
+            original = "research/native_a20/" + name
+            row = next(item for item in core["files"] if item.get("source_path") == original)
+            self.assertEqual(row["path"], f"research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/{original}")
+            archived = (ROOT / row["path"]).read_bytes()
+            self.assertEqual(hashlib.sha256(archived).hexdigest(), row["sha256"])
+            self.assertNotEqual(archived, (ROOT / original).read_bytes())
+        provenance = json.loads((ROOT / "research/native_a20/PROVENANCE.json").read_text())
+        self.assertNotIn("ctypes_api.py", {row["path"] for row in provenance["preserved_native_sources"]})
+        maintained = next(row for row in provenance["transported_or_summarized_files"]
+                          if row["path"] == "ctypes_api.py")
+        self.assertEqual(maintained["original_source_sha256"],
+                         "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0")
+        self.assertEqual(maintained["public_sha256"],
+                         hashlib.sha256((ROOT / "research/native_a20/ctypes_api.py").read_bytes()).hexdigest())
+
     def test_exact_source(self):
         self.assertEqual(RETENTION.verify(self.root, self.manifest), 1)
 

@@ -279,7 +279,7 @@ def main() -> int:
         fake_afe.write_text(
             "#!/usr/bin/env python3\n"
             "import json, shutil, sys\n"
-            "_, src, dst, result = sys.argv\n"
+            "_, src, dst, result, config = sys.argv\n"
             "shutil.copyfile(src, dst)\n"
             "open(result, 'w', encoding='utf-8').write(json.dumps({'latency_samples': 0}) + '\\n')\n",
             encoding="utf-8",
@@ -295,6 +295,7 @@ def main() -> int:
                 "{input}",
                 "{output}",
                 "{result}",
+                str(config),
             ],
             "config_files": [str(config)],
             "pipeline_source_sha": "1" * 40,

@@ -108,6 +108,13 @@ approval. Those remain separate pending evidence gates.
 `export_a20.py --checkpoint INPUT --output NEW_DIRECTORY` exports only the
 pinned checkpoint identity, using an already installed PyTorch runtime with
 `weights_only=True`. It does not fetch dependencies, train or run the model.
+Checkpoint, tensor, CMVN, payload, ABI/resource, source-manifest and certificate
+checks use explicit exceptions and remain active under `python -O` / `-OO`.
+An invalid checkpoint is rejected before Torch import or output creation. The
+stdlib `tests/test_python_admission.py` suite uses fake tensors and mocked CDLL
+only; it is not numerical validation or a real checkpoint export. Historical
+archived copies keep their original bytes and are not the hardened entrypoints.
+
 Checkpoint SHA256 is
 `5b347c0ce7df6e8ad3649c9186a11acab4b3e35971950934490c511d2b04bc39`;
 state SHA256 is

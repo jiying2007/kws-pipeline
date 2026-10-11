@@ -119,7 +119,7 @@ def replay_cases(runner: pathlib.Path) -> None:
         adapter = root / "adapter.json"
         adapter.write_text(json.dumps({"schema_version": 1, "executable_path": str(executable),
             "config_files": [str(config_file)],
-            "command_argv": ["{executable}", "{input}", "{output}", "{result}"],
+            "command_argv": ["{executable}", "{input}", "{output}", "{result}", str(config_file)],
             **{field: "synthetic-fixture" for field in
                ("sku", "microphone_revision", "enclosure_revision", "audio_route", "toolchain")}}))
         _, _, identity = inspect_adapter(adapter)

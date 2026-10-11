@@ -135,7 +135,11 @@ int main(int argc, char **argv) {
         model_sha256, trace_sha256, (unsigned long long)last_frame_number,
         (unsigned)model.vocab_size);
   }
-  exit_code = ferror(stdout) != 0 ? 1 : 0;
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    goto cleanup;
+  }
+  exit_code = 0;
 
 cleanup:
   if (writer_open != 0) {

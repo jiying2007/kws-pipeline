@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "base_tree": "fafd0721c71f619f8af6327b22746b2598557b09",
+  "base_tree": "b9b7896b2d489f50e60a8ab87fc9d06bcdeb8bf0",
   "research_guard": "KWS_RESEARCH_CHILD_ADMISSION",
   "source_sha256": {
     "src/decoder.c": "c1cef85ba33ab37dd2e278f7c4a1f0d398b128e5508e86cfff3933819e2b78e9",
     "src/decoder.h": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
     "src/kws.c": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
     "src/kws_debug.h": "f5f84746df743ef8d6601e383014413fcee302fdf315445bfd7ff76a9d8c0b16",
-    "tools/kws_decoder_replay.c": "2307b05546dbce28fb8b0291512db90e36fb66305467a2a34c59b7010b232074",
+    "tools/kws_decoder_replay.c": "86ff25540faa33c54b275ca943bdb8bfc7b96893c4542da2c78fd1340bae8483",
     "include/kws_pipeline/kws.h": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
     "src/frontend.c": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
     "src/frontend.h": "1c9a3663970e60d2a83e862e6a13aa04860c466ab9f54a7dbdc56864e4de63dd",
@@ -143,7 +143,7 @@
       ]
     },
     "tools/kws_decoder_replay.c": {
-      "derived_sha256": "aae05fc0fe7d2e79e803726f3ebb70bd34a27107085b28f5f9e28cfae6bedabe",
+      "derived_sha256": "2f3cf7680ef13a29d3b5ecf174f1bc2087b6471c13986d176ddb8a64a54f358b",
       "replacements": [
         {
           "old": "#include <stdlib.h>\n#include <string.h>\n\nstatic int parse_float(const char *text, float *out) {\n  char *end = NULL;\n  float value;\n",

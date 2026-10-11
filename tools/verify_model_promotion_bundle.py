@@ -13,11 +13,13 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "training"))
 
-from ctc_primary import normalize_label_prior_contract  # noqa: E402
+from ctc_label_prior_contract import normalize_label_prior_contract  # noqa: E402
 from feature_cached_trainer import (  # noqa: E402
     CACHE_POLICY, feature_cache_max_bytes, feature_cache_max_items, normalize_feature_cache,
 )
 from training_admission import require_promotable_admission  # noqa: E402
+from qualification_common import json_int, finite  # noqa: E402
+from model_provenance import boolean  # noqa: E402
 
 HEX = set("0123456789abcdef")
 PREFLIGHT_POLICY = "shadow-adversarial-failure-formal-preflight-v2"
@@ -38,6 +40,18 @@ EXPECTED_PREFIX_ANCHORS = {
     ("xiao3", "wo1"),
     ("xiao3", "wo1", "xiao3"),
 }
+
+
+def count(value):
+    return json_int(value, "promotion evidence count")
+
+
+def verdict(value):
+    return boolean(value, "promotion evidence verdict")
+
+
+def number(value):
+    return finite(value, "promotion evidence number")
 
 
 def require_promotable_training(training_provenance: object) -> dict:
@@ -77,7 +91,20 @@ def require_file(path: pathlib.Path, label: str, *, allow_empty: bool = False) -
 
 
 def load_json(path: pathlib.Path, label: str) -> dict:
-    value = json.loads(require_file(path, label).read_text(encoding="utf-8"))
+    def unique(pairs):
+        result = {}
+        for key, item in pairs:
+            if key in result:
+                raise ValueError("duplicate promotion evidence JSON key")
+            result[key] = item
+        return result
+
+    def reject_constant(_):
+        raise ValueError("nonfinite promotion evidence JSON")
+
+    value = json.loads(require_file(path, label).read_text(encoding="utf-8"),
+                       object_pairs_hook=unique, parse_constant=reject_constant,
+                       parse_float=lambda text: number(float(text)))
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be an object")
     return value
@@ -92,10 +119,10 @@ def require_sha(value: object, label: str) -> str:
 
 def require_zero_error(summary: dict, *, expected: int, label: str) -> None:
     if (
-        int(summary.get("expected", -1)) != expected
-        or int(summary.get("matched", -1)) != expected
-        or int(summary.get("false_rejects", -1)) != 0
-        or int(summary.get("false_accepts", -1)) != 0
+        count(summary.get("expected", -1)) != expected
+        or count(summary.get("matched", -1)) != expected
+        or count(summary.get("false_rejects", -1)) != 0
+        or count(summary.get("false_accepts", -1)) != 0
     ):
         raise ValueError(f"{label} is not strict {expected}/{expected} zero-error")
 
@@ -224,7 +251,7 @@ def verify(args: argparse.Namespace) -> dict:
         raise ValueError("model provenance checkpoint SHA does not match promoted model.pt")
 
     training = load_json(dist / "training-run-summary.json", "training summary")
-    if not bool(training.get("qualified")):
+    if not verdict(training.get("qualified")):
         raise ValueError("training summary is not qualified")
     artifacts = training.get("artifacts", {})
     for name, target in {
@@ -269,7 +296,7 @@ def verify(args: argparse.Namespace) -> dict:
             dist / "training-invocation.json",
             "governed training invocation",
         )
-        if int(invocation.get("schema_version", 0)) != 1:
+        if count(invocation.get("schema_version", 0)) != 1:
             raise ValueError("governed training invocation schema mismatch")
         if str(invocation.get("evidence_class") or "") != "governed-model-training-invocation-v1":
             raise ValueError("governed training invocation evidence class mismatch")
@@ -347,6 +374,18 @@ def verify(args: argparse.Namespace) -> dict:
             )
         prior = training_provenance.get("ctc_label_prior")
         if expected_primary_policy == "label-prior-v1":
+            # The shared historical normalizer preserves its old read semantics.
+            # New promotion evidence must carry canonical typed JSON before any
+            # normalization can erase a malformed count or numeric declaration.
+            if not isinstance(prior, dict):
+                raise ValueError("promoted label-prior metadata must be an object")
+            count(prior.get("schema_version"))
+            count(prior.get("frame_count"))
+            number(prior.get("alpha"))
+            if not isinstance(prior.get("values"), list):
+                raise ValueError("promoted label-prior values must be a list")
+            for value in prior["values"]:
+                number(value)
             normalized_prior = normalize_label_prior_contract(prior)
             corpus = training_provenance.get("corpus_identity")
             if (
@@ -420,12 +459,12 @@ def verify(args: argparse.Namespace) -> dict:
         normalization = weighting.get("normalization")
         if (
             not isinstance(normalization, dict)
-            or int(normalization.get("schema_version", 0)) != 1
+            or count(normalization.get("schema_version", 0)) != 1
             or normalization.get("policy") != "dataset-mean-sample-weight-v1"
-            or int(normalization.get("rows", 0)) <= 0
-            or not 0 < int(normalization.get("nonempty_rows", 0)) <= int(normalization.get("rows", 0))
-            or float(normalization.get("all_mean_weight", 0.0)) <= 0.0
-            or float(normalization.get("nonempty_mean_weight", 0.0)) <= 0.0
+            or count(normalization.get("rows", 0)) <= 0
+            or not 0 < count(normalization.get("nonempty_rows", 0)) <= count(normalization.get("rows", 0))
+            or number(normalization.get("all_mean_weight", 0.0)) <= 0.0
+            or number(normalization.get("nonempty_mean_weight", 0.0)) <= 0.0
         ):
             raise ValueError("promoted product candidate lacks dataset-mean sample-weight normalization")
         training_environment = provenance.get("training", {}).get("environment")
@@ -487,15 +526,15 @@ def verify(args: argparse.Namespace) -> dict:
         )
 
     robustness = load_json(dist / "robustness-summary.json", "robustness summary")
-    if not bool(robustness.get("qualified")) or robustness.get("failures") != []:
+    if not verdict(robustness.get("qualified")) or robustness.get("failures") != []:
         raise ValueError("robustness evidence is not qualified with zero failures")
 
     continuous_far = load_json(dist / "continuous-far-summary.json", "continuous FAR summary")
     if (
-        not bool(continuous_far.get("qualified"))
-        or int(continuous_far.get("false_accepts", -1)) != 0
-        or float(continuous_far.get("far_per_hour", -1.0)) != 0.0
-        or not bool(continuous_far.get("full_negative_manifest_coverage"))
+        not verdict(continuous_far.get("qualified"))
+        or count(continuous_far.get("false_accepts", -1)) != 0
+        or number(continuous_far.get("far_per_hour", -1.0)) != 0.0
+        or not verdict(continuous_far.get("full_negative_manifest_coverage"))
     ):
         raise ValueError("continuous FAR evidence is not strict zero-error/full-coverage")
     if continuous_far.get("model_sha256") != files["xiaowo-model.kwm"]["sha256"]:
@@ -504,40 +543,40 @@ def verify(args: argparse.Namespace) -> dict:
     stream = load_json(dist / "continuous-far-stream-contract.json", "continuous FAR stream contract")
     if stream.get("model_sha256") != files["xiaowo-model.kwm"]["sha256"]:
         raise ValueError("continuous FAR stream contract model SHA mismatch")
-    if not bool(stream.get("full_negative_manifest_coverage")):
+    if not verdict(stream.get("full_negative_manifest_coverage")):
         raise ValueError("continuous FAR stream contract lacks full coverage")
-    if float(stream.get("observed_min_payload_gap_seconds", 0.0)) < float(
+    if number(stream.get("observed_min_payload_gap_seconds", 0.0)) < number(
         stream.get("decoder_retention_proof_window_seconds", 1.6)
     ):
         raise ValueError("continuous FAR payload gap does not clear decoder retention window")
 
     cohort = load_json(dist / "qualification-cohort.json", "qualification cohort")
-    if not bool(cohort.get("generated_after_training")) or not bool(cohort.get("seed_disjoint")):
+    if not verdict(cohort.get("generated_after_training")) or not verdict(cohort.get("seed_disjoint")):
         raise ValueError("qualification cohort is not untouched/disjoint")
-    if not bool(cohort.get("strict_development_candidate_required")):
+    if not verdict(cohort.get("strict_development_candidate_required")):
         raise ValueError("qualification cohort lacks strict development prerequisite evidence")
     development_manifest_sha = require_sha(
         cohort.get("development_manifest_sha256"), "qualification cohort development manifest SHA"
     )
     if str(cohort.get("development_candidate_policy")) != "latest-strict-gate-passing-round":
         raise ValueError("qualification cohort development candidate policy is not strict/latest")
-    selected_round = int(training.get("best_round", -2))
+    selected_round = count(training.get("best_round", -2))
     selected_frontend = str(training.get("best_frontend") or "")
-    if int(cohort.get("development_selected_round", -1)) != selected_round:
+    if count(cohort.get("development_selected_round", -1)) != selected_round:
         raise ValueError("qualification cohort development round differs from finalized model")
     if str(cohort.get("development_selected_frontend") or "") != selected_frontend:
         raise ValueError("qualification cohort development frontend differs from finalized model")
-    if int(cohort.get("expected_wakes", -1)) != 256:
+    if count(cohort.get("expected_wakes", -1)) != 256:
         raise ValueError("qualification cohort expected-wake count is not 256")
     for key in (
         "overlapping_development_active_wav_sha256",
         "overlapping_exposed_active_wav_sha256",
         "overlapping_retired_active_wav_sha256",
     ):
-        if int(cohort.get(key, -1)) != 0:
+        if count(cohort.get(key, -1)) != 0:
             raise ValueError(f"qualification cohort overlap is non-zero: {key}")
-    qualification_seed = int(cohort.get("qualification_seed", -1))
-    retired = [int(value) for value in cohort.get("retired_exposed_qualification_seeds", [])]
+    qualification_seed = count(cohort.get("qualification_seed", -1))
+    retired = [count(value) for value in cohort.get("retired_exposed_qualification_seeds", [])]
     if qualification_seed < 0 or qualification_seed in retired:
         raise ValueError("qualification seed is invalid or already retired in its own cohort evidence")
 
@@ -552,13 +591,13 @@ def verify(args: argparse.Namespace) -> dict:
         "failure_replay_required",
         "model_provenance_failure_replay_manifest_verified",
     ):
-        if not bool(cohort.get(key)):
+        if not verdict(cohort.get(key)):
             raise ValueError(f"qualification cohort prerequisite is false: {key}")
-    if bool(cohort.get("adversarial_formal_qualification_used", True)):
+    if verdict(cohort.get("adversarial_formal_qualification_used", True)):
         raise ValueError("qualification cohort says adversarial training used formal qualification")
-    if bool(cohort.get("failure_replay_formal_qualification_used", True)):
+    if verdict(cohort.get("failure_replay_formal_qualification_used", True)):
         raise ValueError("qualification cohort says failure replay used formal qualification")
-    if bool(cohort.get("failure_replay_development_source_wav_bytes_copied", True)):
+    if verdict(cohort.get("failure_replay_development_source_wav_bytes_copied", True)):
         raise ValueError("qualification cohort says failure replay copied development WAV bytes")
 
     shadow = load_json(dist / "shadow-qualification-summary.json", "shadow qualification summary")
@@ -579,47 +618,47 @@ def verify(args: argparse.Namespace) -> dict:
             raise ValueError(f"qualification cohort {field} does not match promoted evidence")
 
     if (
-        int(shadow.get("schema_version", 0)) != 1
+        count(shadow.get("schema_version", 0)) != 1
         or str(shadow.get("evidence_class")) != "development-only-shadow-qualification"
-        or not bool(shadow.get("qualified"))
-        or bool(shadow.get("formal_qualification_seed_consumed", True))
+        or not verdict(shadow.get("qualified"))
+        or verdict(shadow.get("formal_qualification_seed_consumed", True))
     ):
         raise ValueError("shadow qualification evidence contract failed")
     if str(shadow.get("development_manifest_sha256") or "") != development_manifest_sha:
         raise ValueError("shadow qualification development manifest SHA mismatch")
-    if int(shadow.get("development_selected_round", -1)) != selected_round:
+    if count(shadow.get("development_selected_round", -1)) != selected_round:
         raise ValueError("shadow qualification selected round mismatch")
     if str(shadow.get("development_selected_frontend") or "") != selected_frontend:
         raise ValueError("shadow qualification selected frontend mismatch")
     shadow_results = shadow.get("results")
-    if not isinstance(shadow_results, list) or len(shadow_results) != int(cohort.get("shadow_seed_count", -1)):
+    if not isinstance(shadow_results, list) or len(shadow_results) != count(cohort.get("shadow_seed_count", -1)):
         raise ValueError("shadow qualification result count differs from cohort")
     if len(shadow_results) < 8:
         raise ValueError("shadow qualification arena is smaller than eight seeds")
-    gap_floor = float(cohort.get("shadow_min_surrogate_separation", -1.0))
-    if gap_floor <= 0.0 or abs(float(shadow.get("min_surrogate_separation", -2.0)) - gap_floor) > 1.0e-12:
+    gap_floor = number(cohort.get("shadow_min_surrogate_separation", -1.0))
+    if gap_floor <= 0.0 or abs(number(shadow.get("min_surrogate_separation", -2.0)) - gap_floor) > 1.0e-12:
         raise ValueError("shadow surrogate separation policy mismatch")
     for row in shadow_results:
         if (
             not isinstance(row, dict)
-            or not bool(row.get("qualified"))
-            or not bool(row.get("runtime_qualified"))
-            or not bool(row.get("surrogate_separation_qualified"))
+            or not verdict(row.get("qualified"))
+            or not verdict(row.get("runtime_qualified"))
+            or not verdict(row.get("surrogate_separation_qualified"))
         ):
             raise ValueError("shadow qualification contains a non-qualified seed")
         require_zero_error(row.get("qualification", {}), expected=256, label="shadow seed qualification")
-        if float(row.get("surrogate", {}).get("minimum_separation", -1.0)) < gap_floor:
+        if number(row.get("surrogate", {}).get("minimum_separation", -1.0)) < gap_floor:
             raise ValueError("shadow seed surrogate separation fell below the promoted floor")
 
     if (
         str(refinement.get("policy")) != "post-domain-adversarial-refinement-v1"
-        or not bool(refinement.get("qualified"))
-        or bool(refinement.get("formal_qualification_used", True))
+        or not verdict(refinement.get("qualified"))
+        or verdict(refinement.get("formal_qualification_used", True))
     ):
         raise ValueError("adversarial refinement evidence contract failed")
     if str(refinement.get("output_development_manifest_sha256") or "") != development_manifest_sha:
         raise ValueError("adversarial refinement output development manifest SHA mismatch")
-    if int(refinement.get("refinement_round", -1)) != selected_round:
+    if count(refinement.get("refinement_round", -1)) != selected_round:
         raise ValueError("adversarial refinement round differs from promoted model")
     if str(refinement.get("frontend") or "") != selected_frontend:
         raise ValueError("adversarial refinement frontend differs from promoted model")
@@ -627,16 +666,16 @@ def verify(args: argparse.Namespace) -> dict:
     wake_balance = refinement.get("wake_balance")
     if (
         not isinstance(wake_balance, dict)
-        or int(wake_balance.get("schema_version", 0)) != 3
+        or count(wake_balance.get("schema_version", 0)) != 3
         or str(wake_balance.get("policy")) != "per-keyword-provenance-pressure-balance-v3"
         or str(wake_balance.get("pressure_assignment"))
         != "explicit-replay-focus-then-token-edit-distance-v2"
-        or float(wake_balance.get("default_wake_example_weight", -1.0)) != 1.0
+        or number(wake_balance.get("default_wake_example_weight", -1.0)) != 1.0
     ):
         raise ValueError("adversarial refinement wake-pressure balance evidence drifted")
-    explicit_focus_rows = int(wake_balance.get("explicit_focus_nonwake_rows", -1))
-    fallback_rows = int(wake_balance.get("fallback_edit_distance_nonwake_rows", -1))
-    total_nonwake_rows = int(wake_balance.get("tokenized_nonwake_rows", -1)) + int(
+    explicit_focus_rows = count(wake_balance.get("explicit_focus_nonwake_rows", -1))
+    fallback_rows = count(wake_balance.get("fallback_edit_distance_nonwake_rows", -1))
+    total_nonwake_rows = count(wake_balance.get("tokenized_nonwake_rows", -1)) + count(
         wake_balance.get("empty_nonwake_rows", -1)
     )
     if (
@@ -654,14 +693,14 @@ def verify(args: argparse.Namespace) -> dict:
         raise ValueError("adversarial refinement wake-pressure keyword set drifted")
     normalized_wake_keyword_weights: dict[str, float] = {}
     for keyword_id, raw_weight in wake_keyword_weights.items():
-        weight = float(raw_weight)
+        weight = number(raw_weight)
         if not math.isfinite(weight) or not 1.0 <= weight <= 12.0:
             raise ValueError("adversarial refinement wake-pressure weight is invalid")
         normalized_wake_keyword_weights[str(keyword_id)] = weight
     sample_weighting = provenance.get("training", {}).get("sample_weighting", {})
     if not isinstance(sample_weighting, dict):
         raise ValueError("model provenance lacks sample weighting for refinement")
-    if float(sample_weighting.get("wake_example_weight", -1.0)) != 1.0:
+    if number(sample_weighting.get("wake_example_weight", -1.0)) != 1.0:
         raise ValueError("model provenance refinement default wake weight drifted")
     if (
         sample_weighting.get("wake_example_weight_semantics")
@@ -672,7 +711,7 @@ def verify(args: argparse.Namespace) -> dict:
     if not isinstance(provenance_keyword_weights, dict):
         raise ValueError("model provenance lacks per-keyword wake weights")
     normalized_provenance_weights = {
-        str(keyword_id): float(weight)
+        str(keyword_id): number(weight)
         for keyword_id, weight in provenance_keyword_weights.items()
     }
     if normalized_provenance_weights != normalized_wake_keyword_weights:
@@ -680,22 +719,29 @@ def verify(args: argparse.Namespace) -> dict:
 
     if (
         str(adversarial.get("evidence_class")) != "development-only-adversarial-lexicon"
-        or bool(adversarial.get("formal_qualification_used", True))
+        or verdict(adversarial.get("formal_qualification_used", True))
         or str(adversarial.get("data_augmentation_policy")) != DATA_POLICY
         or str(adversarial.get("selection_policy")) != ADVERSARIAL_POLICY
-        or int(adversarial.get("max_length", -1)) != 5
-        or int(adversarial.get("enumerated_sequences", -1)) != EXPECTED_SAFE_LEXICAL_POOL
-        or int(adversarial.get("top_k", -1)) != EXPECTED_ADVERSARIAL_TOP_K
-        or int(adversarial.get("probes_per_sequence", -1)) != EXPECTED_ADVERSARIAL_PROBES
-        or int(adversarial.get("replay_examples_per_sequence", -1)) != EXPECTED_ADVERSARIAL_REPLAY_PER_SEQUENCE
-        or int(adversarial.get("replay_examples", -1)) != EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES
-        or int(adversarial.get("min_per_keyword", -1)) != EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD
+        or count(adversarial.get("max_length", -1)) != 5
+        or count(adversarial.get("enumerated_sequences", -1)) != EXPECTED_SAFE_LEXICAL_POOL
+        or count(adversarial.get("top_k", -1)) != EXPECTED_ADVERSARIAL_TOP_K
+        or count(adversarial.get("probes_per_sequence", -1)) != EXPECTED_ADVERSARIAL_PROBES
+        or count(adversarial.get("replay_examples_per_sequence", -1)) != EXPECTED_ADVERSARIAL_REPLAY_PER_SEQUENCE
+        or count(adversarial.get("replay_examples", -1)) != EXPECTED_ADVERSARIAL_REPLAY_EXAMPLES
+        or count(adversarial.get("min_per_keyword", -1)) != EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD
     ):
         raise ValueError("adversarial lexicon Data V3 policy contract failed")
     per_keyword_selected = adversarial.get("per_keyword_selected", {})
+    cohort_per_keyword_selected = cohort.get("adversarial_per_keyword_selected", {})
+    if (not isinstance(per_keyword_selected, dict)
+            or not isinstance(cohort_per_keyword_selected, dict)
+            or set(per_keyword_selected) != {"1", "2"}
+            or set(cohort_per_keyword_selected) != {"1", "2"}):
+        raise ValueError("adversarial per-keyword selection requires both keyword counts")
     for keyword_id in ("1", "2"):
-        if int(per_keyword_selected.get(keyword_id, 0)) < EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD:
+        if count(per_keyword_selected.get(keyword_id, 0)) < EXPECTED_ADVERSARIAL_MIN_PER_KEYWORD:
             raise ValueError(f"adversarial keyword {keyword_id} quota is below Data V3 minimum")
+        count(cohort_per_keyword_selected[keyword_id])
     anchors = {
         tuple(str(token) for token in item)
         for item in adversarial.get("strict_prefix_anchors", [])
@@ -711,9 +757,9 @@ def verify(args: argparse.Namespace) -> dict:
         "replay_examples",
         "min_per_keyword",
     ):
-        if int(adversarial.get(field, -1)) != int(cohort.get(f"adversarial_{field}", -2)):
+        if count(adversarial.get(field, -1)) != count(cohort.get(f"adversarial_{field}", -2)):
             raise ValueError(f"adversarial {field} differs from formal cohort")
-    if dict(per_keyword_selected) != dict(cohort.get("adversarial_per_keyword_selected", {})):
+    if per_keyword_selected != cohort_per_keyword_selected:
         raise ValueError("adversarial per-keyword selection differs from formal cohort")
     if list(adversarial.get("strict_prefix_anchors", [])) != list(
         cohort.get("adversarial_strict_prefix_anchors", [])
@@ -734,9 +780,9 @@ def verify(args: argparse.Namespace) -> dict:
     if (
         str(failure.get("evidence_class")) != "development-only-failure-resynthesis"
         or str(failure.get("policy")) != FAILURE_REPLAY_POLICY
-        or not bool(failure.get("enabled"))
-        or bool(failure.get("formal_qualification_used", True))
-        or bool(failure.get("development_source_wav_bytes_copied", True))
+        or not verdict(failure.get("enabled"))
+        or verdict(failure.get("formal_qualification_used", True))
+        or verdict(failure.get("development_source_wav_bytes_copied", True))
         or list(failure.get("source_splits", [])) != ["calibration", "test"]
     ):
         raise ValueError("development failure replay evidence contract failed")
@@ -750,10 +796,10 @@ def verify(args: argparse.Namespace) -> dict:
         "observed_unique_failures",
         "selected_unique_failures",
     ):
-        if int(failure.get(field, -1)) != int(cohort.get(f"failure_replay_{field}", -2)):
+        if count(failure.get(field, -1)) != count(cohort.get(f"failure_replay_{field}", -2)):
             raise ValueError(f"failure replay {field} differs from formal cohort")
-    failure_examples = int(failure.get("examples", 0))
-    if bool(cohort.get("failure_replay_overlap_guard_included")) != (failure_examples > 0):
+    failure_examples = count(failure.get("examples", 0))
+    if verdict(cohort.get("failure_replay_overlap_guard_included")) != (failure_examples > 0):
         raise ValueError("failure replay overlap-guard state disagrees with replay support")
 
     if str(preflight.get("policy")) != PREFLIGHT_POLICY:
@@ -771,11 +817,11 @@ def verify(args: argparse.Namespace) -> dict:
         "failure_replay_examples": failure_examples,
     }
     for field, expected in scalar_preflight_bindings.items():
-        if preflight.get(field) != expected:
+        if type(preflight.get(field)) is not type(expected) or preflight.get(field) != expected:
             raise ValueError(f"formal preflight {field} mismatch")
-    if not bool(preflight.get("model_provenance_adversarial_manifest_verified")):
+    if not verdict(preflight.get("model_provenance_adversarial_manifest_verified")):
         raise ValueError("formal preflight lacks adversarial training provenance proof")
-    if not bool(preflight.get("model_provenance_failure_replay_manifest_verified")):
+    if not verdict(preflight.get("model_provenance_failure_replay_manifest_verified")):
         raise ValueError("formal preflight lacks failure-replay training provenance proof")
 
     if provenance_manifest_count(
@@ -806,7 +852,7 @@ def verify(args: argparse.Namespace) -> dict:
             len(row) < 4
             or row[0] != expected[0]
             or row[1] != expected[1]
-            or abs(float(row[2]) - expected[2]) > 1.0e-9
+            or abs(number(float(row[2])) - expected[2]) > 1.0e-9
             or row[3] != expected[3]
         ):
             raise ValueError(f"promoted keyword contract drifted: {row!r}")

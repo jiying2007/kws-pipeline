@@ -17,12 +17,12 @@
       "sha256": "753bc8bf27e3fa8de42cf1ce067202a21e5ce7e28ba2d71b4f635c57d71a5199"
     },
     "PROVENANCE.json": {
-      "bytes": 12536,
-      "sha256": "f389f31edae9139f718e85bbbd39929b4e5c5768e318e7259ee0bb0b80f7e389"
+      "bytes": 15524,
+      "sha256": "af262d356b6fdd1a7fa9c837fea6e5f49a070a208ceb2d4553125cc4fc0bfdd5"
     },
     "README.md": {
-      "bytes": 10624,
-      "sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5"
+      "bytes": 11097,
+      "sha256": "bb26b201a91f4a204a2707817df2da6cf5a0996664732b1b3b7c39c95b80b049"
     },
     "baseline/LICENSE": {
       "bytes": 9108,
@@ -133,20 +133,20 @@
       "sha256": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723"
     },
     "build.py": {
-      "bytes": 14397,
-      "sha256": "fe6f92977a0a77cb2b5f82895afac3581faa0ee3320b0919b9b8443dbe8afa0f"
+      "bytes": 14781,
+      "sha256": "31b88b914dd8d326bb1debf426ac020c8eb3a0fdf964f0e3ae2e0db444c3d189"
     },
     "ctypes_api.py": {
-      "bytes": 3915,
-      "sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0"
+      "bytes": 4312,
+      "sha256": "34a7c69690f95b586952892d382676e5318e889d26754fa1528c0e946243c3c4"
     },
     "export_a20.py": {
-      "bytes": 2795,
-      "sha256": "248d980115b767b29f830bf46e17093f5fc7069bb3946d9bc650e116e7375646"
+      "bytes": 3370,
+      "sha256": "5062c21c09ce04497063f2626cb866d756636ae0d4012d50bf2712f2e155edcb"
     },
     "generate_twiddles.py": {
-      "bytes": 4534,
-      "sha256": "878ada29dc7b7a819a68eaa210d34a638be1aee0e801c25a391f80d894a84607"
+      "bytes": 5150,
+      "sha256": "728d9d9f85b02edd2729d290675c622206cdbe54db0d67a8d13cce4b01a78755"
     },
     "resource_sizes.c": {
       "bytes": 3202,
@@ -189,12 +189,12 @@
       "sha256": "426d1789e79ce44b844ed3bf09a781f7c6af1ecfa2d587e27baa01fbb89d99c9"
     },
     "tests/check_manifest.py": {
-      "bytes": 1701,
-      "sha256": "87e7346a44c251a2c94ca4ea475b95ee528cf9635063edf7c989dc1e56b05f05"
+      "bytes": 2171,
+      "sha256": "091bee8c355c09c3cb6b554df4d14dfa4cc5caed66d78c65575b57989908431e"
     },
     "tests/test_build_driver.py": {
-      "bytes": 24185,
-      "sha256": "64863b5f3483f69a71da41fa5d93675d013ac09846c047ee4dbd009a58c960d2"
+      "bytes": 25868,
+      "sha256": "beee38946d0fa25dbbc7fbe7d3b4630b090f12c7d3440b9db9a84533b1c32fed"
     },
     "tests/test_decoder.c": {
       "bytes": 3796,
@@ -215,6 +215,10 @@
     "tests/test_model.c": {
       "bytes": 2951,
       "sha256": "0b9b543dc886e84e309461dba25545eec5e4fa88cbda5c32e4a4eaee8975424a"
+    },
+    "tests/test_python_admission.py": {
+      "bytes": 8877,
+      "sha256": "19d45b8f1e8cb61a95dfdc91506f120f0c90ab4f0c9df1c14d5e2030bbcda01a"
     },
     "twiddle-certificate-summary.json": {
       "bytes": 817,

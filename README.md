@@ -4,6 +4,8 @@
 
 Research: [reusable modules, retained results and qualification boundaries](research/README.md)
 
+Latest source research: [completed three-ASR source screen](research/source-screen32-whisper-v1/evidence/run-38126849922/README.md) and [near-pronunciation source tooling](research/near_pronunciation_v1/README.md). Agreement and source/synthetic checks do not establish real-world FAR or recall improvement; see the [current evidence scopes](docs/KWS_LANDING_STATUS.md#current-entry-points).
+
 Current archive delivery: [complete public archive, index and verified restoration](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md). The old expanded-copy target is cancelled; its historical status remains NOT_PUSHED. D20 numerical failure and D90 not yet tested, fixed50 inconclusive support and the old-model nightly failure remain separate; human/device qualification is deferred.
 
 > **Evidence boundary — read this before quoting any number below.**

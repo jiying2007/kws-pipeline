@@ -150,6 +150,37 @@ class DriverTests(unittest.TestCase):
         self.assertEqual(self.receipt()['invented_tests'], list(build.TESTS))
         self.assertEqual(self.receipt()['ctypes_abi'], 'PASS')
 
+    def test_native_resource_mismatch_never_issues_success_receipt(self):
+        self.target = self.host
+        original = self.fake_run
+        def bad_resources(command, **kwargs):
+            result = original(command, **kwargs)
+            if Path(command[0]).name == 'resource_sizes':
+                result.stdout = json.dumps({'model_cache_bytes': 1, 'weights_bytes': 1565280})
+            return result
+        with mock.patch.object(build.subprocess, 'run', side_effect=bad_resources):
+            with self.assertRaisesRegex(ValueError, 'resource size mismatch'):
+                self.invoke(self.args())
+        self.assertEqual(self.load_calls, [])
+        self.assertFalse((self.out/'receipt.json').exists())
+
+    def test_twiddle_header_mismatch_fails_before_compiler(self):
+        certificate = json.loads((build.ROOT/'twiddle-certificate-summary.json').read_text())
+        certificate['certificates'] = []
+        with mock.patch.object(build.generate_twiddles, 'generate', return_value=('wrong', certificate)):
+            with self.assertRaisesRegex(ValueError, 'twiddle header mismatch'):
+                self.invoke(self.cross())
+        self.assertEqual(len(self.calls), 1)
+        self.assert_not_run()
+
+    def test_twiddle_certificate_mismatch_fails_before_compiler(self):
+        header = (build.ROOT/'src/fft64_twiddles.h').read_text()
+        with mock.patch.object(build.generate_twiddles, 'generate', return_value=(header, {'certificates': []})):
+            with self.assertRaisesRegex(ValueError, 'twiddle certificate mismatch'):
+                self.invoke(self.cross())
+        self.assertEqual(len(self.calls), 1)
+        self.assert_not_run()
+
     def test_native_sanitize_keeps_prior_ctypes_skip(self):
         self.target = self.host
         self.invoke(self.args(['--sanitize']))

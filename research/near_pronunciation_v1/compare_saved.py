@@ -73,12 +73,15 @@ def compare_saved(plan, manifest, receipts, results_root, *, reference_receipt=N
 
 
 def score_qualified(manifest, detections, *, split, arm, threshold, replay):
-    """Future event scoring only, given saved full-replay provenance.
+    """Score fabricated contracts only; actual byte-bound measurement is not implemented.
 
-    Not invoked by the current mechanism CLI. No threshold is derived by filtering
-    detections. The fixture tests do not establish a real measurement.
+    A caller-authored contract and arbitrary receipt hash are not execution or
+    exposure evidence. This legacy helper name cannot grant measured authority.
     """
     validate_manifest(manifest)
+    require(manifest["purpose"] == "qualified_event_evaluation_fixture",
+            "UNVERIFIED_QUALIFIED_EVIDENCE: actual trace/audio/output/receipt verification "
+            "is not implemented; only explicit contract fixtures may be scored")
     require(split in ("dev", "test") and arm in ARMS, "qualified split/arm required")
     number(threshold, "threshold")
     require(0 < threshold <= 1, "threshold must be in (0,1]")
@@ -98,6 +101,9 @@ def score_qualified(manifest, detections, *, split, arm, threshold, replay):
     require(replay.get("contract") == expected_replay and is_sha(replay.get("receipt_sha256")),
             "each threshold needs its own complete saved decoder replay receipt; filtering is forbidden")
     validate_detection_values(detections)
+    for event in detections:
+        require(event["confidence"] >= threshold - .000000500001,
+                "detection confidence below declared replay threshold")
     refs = score_events.validate_recordings(rows)
     found = score_events.validate_detections(detections, refs)
     summary, _, _ = score_events.score(refs, found,
@@ -107,7 +113,8 @@ def score_qualified(manifest, detections, *, split, arm, threshold, replay):
     if summary["expected"] == 0:
         summary["frr"] = None
     enough = summary["expected"] > 0 and summary["negative_recording_audio_hours"] > 0
-    return {"status": "QUALIFIED_RESEARCH_MEASUREMENT" if enough else "INSUFFICIENT_EVIDENCE",
+    return {"status": "FIXTURE_ONLY_MEASUREMENT" if enough else "INSUFFICIENT_EVIDENCE",
+            "fixture_only": True, "actual_evidence_verified": False,
             "split": split, "arm": arm, "threshold": threshold,
             "manifest_canonical_sha256": canonical_sha(manifest),
             "denominator_sha256": canonical_sha(rows), "replay_receipt_sha256": replay["receipt_sha256"],
@@ -129,7 +136,13 @@ def validate_measurement_report(report):
 
 
 def select_dev_thresholds(reports, *, max_negative_far_upper95_per_hour):
-    """Future dev-only selection under the same caller-supplied upper95 FAR budget."""
+    """Real-data selection stays disabled until actual evidence verification exists."""
+    raise ContractError("UNVERIFIED_QUALIFIED_EVIDENCE: real-data threshold selection is disabled; "
+                        "declared receipts and contract fixtures are not measurements")
+
+
+def select_fixture_dev_thresholds(reports, *, max_negative_far_upper95_per_hour):
+    """Exercise selection logic on fabricated contracts; never freeze real thresholds."""
     budget = number(max_negative_far_upper95_per_hour, "explicit caller FAR budget")
     require(isinstance(reports, list) and reports, "development reports required")
     groups = {arm: [] for arm in ARMS}
@@ -138,7 +151,7 @@ def select_dev_thresholds(reports, *, max_negative_far_upper95_per_hour):
         require(report.get("split") == "dev", "test-set threshold selection forbidden")
         require(report.get("arm") in ARMS and report.get("full_decoder_replay") is True and
                 is_sha(report.get("replay_receipt_sha256")), "full decoder replay report required")
-        require(report.get("status") == "QUALIFIED_RESEARCH_MEASUREMENT", "INSUFFICIENT_EVIDENCE")
+        require(report.get("status") == "FIXTURE_ONLY_MEASUREMENT", "INSUFFICIENT_EVIDENCE")
         contract = report.get("replay_contract", {})
         require(contract.get("threshold") == report["threshold"] and contract.get("arm") == report["arm"]
                 and contract.get("split") == "dev" and
@@ -173,12 +186,13 @@ def select_dev_thresholds(reports, *, max_negative_far_upper95_per_hour):
             if bound <= budget:
                 eligible.append(report)
         if not eligible:
-            return {"status": "NO_DEVELOPMENT_THRESHOLD_MEETS_BUDGET", "selected": None,
-                    "max_negative_far_upper95_per_hour": budget}
+            return {"status": "FIXTURE_NO_DEVELOPMENT_THRESHOLD_MEETS_BUDGET", "selected": None,
+                    "max_negative_far_upper95_per_hour": budget, "fixture_only": True,
+                    "actual_evidence_verified": False, "qualification_claimed": False}
         winner = min(eligible, key=lambda r: (r["summary"]["frr"],
                        r["summary"]["negative_recording_far_upper_95_per_hour"], r["threshold"]))
         selected[arm] = winner["threshold"]
-    return {"status": "DEVELOPMENT_THRESHOLDS_FROZEN", "selected": selected,
+    return {"status": "FIXTURE_DEVELOPMENT_THRESHOLDS_FROZEN", "selected": selected,
             "max_negative_far_upper95_per_hour": budget,
             "manifest_canonical_sha256": reports[0]["manifest_canonical_sha256"],
             "development_reports_sha256": canonical_sha(reports),
@@ -186,14 +200,21 @@ def select_dev_thresholds(reports, *, max_negative_far_upper95_per_hour):
             "decoder_executable_sha256": reports[0]["replay_contract"]["decoder_executable_sha256"],
             "shared_controls_sha256": reports[0]["replay_contract"]["shared_controls_sha256"],
             "tie_break": "lowest FRR, then lowest negative-only upper95 FAR, then lowest threshold",
-            "test_selection_allowed": False}
+            "test_selection_allowed": False, "fixture_only": True,
+            "actual_evidence_verified": False, "qualification_claimed": False}
 
 
 def evaluate_frozen_test(selection, reports):
-    """Accept exactly one held-out replay at each already frozen arm threshold."""
+    """Real-data test evaluation stays disabled until actual evidence verification exists."""
+    raise ContractError("UNVERIFIED_QUALIFIED_EVIDENCE: real-data test evaluation is disabled; "
+                        "declared receipts and contract fixtures are not measurements")
+
+
+def evaluate_fixture_frozen_test(selection, reports):
+    """Exercise frozen-test contracts on fixtures without accepting actual evidence."""
     require(isinstance(selection, dict), "selection must be an object")
-    require(selection.get("status") == "DEVELOPMENT_THRESHOLDS_FROZEN", "development selection not frozen")
-    recomputed = select_dev_thresholds(selection.get("development_reports"),
+    require(selection.get("status") == "FIXTURE_DEVELOPMENT_THRESHOLDS_FROZEN", "development selection not frozen")
+    recomputed = select_fixture_dev_thresholds(selection.get("development_reports"),
         max_negative_far_upper95_per_hour=selection.get("max_negative_far_upper95_per_hour"))
     require(selection == recomputed, "frozen development selection differs from retained development evidence")
     require(isinstance(reports, list) and len(reports) == 2 and all(isinstance(r, dict) for r in reports)
@@ -204,7 +225,7 @@ def evaluate_frozen_test(selection, reports):
     require(all(is_sha(value) for value in all_receipts) and len(set(all_receipts)) == len(all_receipts),
             "distinct dev/test/arm/threshold contracts cannot reuse one replay receipt")
     for report in reports:
-        require(report.get("status") == "QUALIFIED_RESEARCH_MEASUREMENT", "INSUFFICIENT_EVIDENCE: frozen test measurements incomplete")
+        require(report.get("status") == "FIXTURE_ONLY_MEASUREMENT", "INSUFFICIENT_EVIDENCE: frozen test measurements incomplete")
         require(report.get("split") == "test" and report.get("threshold") == selection["selected"][report["arm"]],
                 "test threshold must equal development-frozen threshold")
         require(report.get("manifest_canonical_sha256") == selection["manifest_canonical_sha256"] and
@@ -218,8 +239,8 @@ def evaluate_frozen_test(selection, reports):
                 "test decoder executable/policy differs from development freeze")
         validate_measurement_report(report)
     require(reports[0]["denominator_sha256"] == reports[1]["denominator_sha256"], "test arm denominators differ")
-    return {"status": "FROZEN_TEST_REPORTED", "selection": selection, "arms": reports,
-            "qualification_claimed": False}
+    return {"status": "FIXTURE_FROZEN_TEST_REPORTED", "selection": selection, "arms": reports,
+            "qualification_claimed": False, "fixture_only": True, "actual_evidence_verified": False}
 
 
 def main(argv=None):

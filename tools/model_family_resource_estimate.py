@@ -16,12 +16,9 @@ def align4(value: int) -> int:
 
 
 def _positive_int(value: object, label: str) -> int:
-    if isinstance(value, bool):
-        raise ValueError(f"{label} must be a positive integer")
-    result = int(value)
-    if result <= 0:
-        raise ValueError(f"{label} must be a positive integer")
-    return result
+    if type(value) is not int or value <= 0:
+        raise ValueError(f"{label} must be an exact positive integer")
+    return value
 
 
 def estimate_model_bytes(family: str, feature_dim: int, hidden_dim: int, vocab_size: int) -> int:
@@ -98,7 +95,7 @@ def load_contract(path: pathlib.Path) -> dict:
 
 
 def build_report(contract: dict) -> dict:
-    feature_dim = int(contract["feature_dim"])
+    feature_dim = _positive_int(contract["feature_dim"], "feature_dim")
     steps_per_second = float(contract["steps_per_second"])
     vocabularies = []
     seen_vocab_names: set[str] = set()

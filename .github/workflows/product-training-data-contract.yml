@@ -29,6 +29,7 @@ on:
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
       - "training/ctc_primary.py"
+      - "training/ctc_label_prior_contract.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
       - "research/candidate_encoders/**"
@@ -89,6 +90,7 @@ on:
       - "training/adversarial_refinement.py"
       - "training/train_ctc.py"
       - "training/ctc_primary.py"
+      - "training/ctc_label_prior_contract.py"
       - "training/test_ctc_primary.py"
       - "training/model.py"
       - "research/candidate_encoders/**"
@@ -183,6 +185,7 @@ jobs:
           training/adversarial_refinement.py
           training/train_ctc.py
           training/ctc_primary.py
+          training/ctc_label_prior_contract.py
           training/test_ctc_primary.py
           training/objective_config.py
           training/objective_contract.py

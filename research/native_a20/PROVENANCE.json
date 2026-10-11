@@ -11,8 +11,8 @@
       }
     ],
     "path": "README.md",
-    "public_sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5",
-    "transformation": "new public technical summary from reviewed aggregate records; private control/delivery information omitted"
+    "public_sha256": "bb26b201a91f4a204a2707817df2da6cf5a0996664732b1b3b7c39c95b80b049",
+    "transformation": "new public technical summary from reviewed aggregate records; private control/delivery information omitted; documents current Python admission hardening separately from unchanged historical numerical outcomes"
   },
   "base_repository": "jiying2007/kws-pipeline",
   "base_sha": "55a4e23379ad7072db507dbe419b38d8898e17fa",
@@ -33,7 +33,8 @@
     "tests/check_manifest.py",
     "tests/test_identity.c",
     "PROVENANCE.json",
-    "SOURCE_MANIFEST.json"
+    "SOURCE_MANIFEST.json",
+    "tests/test_python_admission.py"
   ],
   "original_tested_library_sha256": "68457311f93540405dfa0bf5fdc1cd74421fea22b44d5920fec465be5de4d912",
   "preserved_native_sources": [
@@ -221,13 +222,54 @@
       "path": "resource_sizes.c",
       "publication": "byte-identical",
       "source_sha256": "591873e92becf9c2f4c78fc52053e8cee6d776d0828ff682521c6040a383c9dc"
-    },
-    {
-      "path": "ctypes_api.py",
-      "publication": "byte-identical",
-      "source_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0"
     }
   ],
+  "python_admission_maintenance": {
+    "based_on_commit": "9b3cf00417c084d3f729df2a41531c33f4186610",
+    "changed_existing_files": [
+      {
+        "after_sha256": "bb26b201a91f4a204a2707817df2da6cf5a0996664732b1b3b7c39c95b80b049",
+        "before_sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5",
+        "path": "README.md"
+      },
+      {
+        "after_sha256": "31b88b914dd8d326bb1debf426ac020c8eb3a0fdf964f0e3ae2e0db444c3d189",
+        "before_sha256": "fe6f92977a0a77cb2b5f82895afac3581faa0ee3320b0919b9b8443dbe8afa0f",
+        "path": "build.py"
+      },
+      {
+        "after_sha256": "34a7c69690f95b586952892d382676e5318e889d26754fa1528c0e946243c3c4",
+        "before_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
+        "path": "ctypes_api.py"
+      },
+      {
+        "after_sha256": "5062c21c09ce04497063f2626cb866d756636ae0d4012d50bf2712f2e155edcb",
+        "before_sha256": "248d980115b767b29f830bf46e17093f5fc7069bb3946d9bc650e116e7375646",
+        "path": "export_a20.py"
+      },
+      {
+        "after_sha256": "728d9d9f85b02edd2729d290675c622206cdbe54db0d67a8d13cce4b01a78755",
+        "before_sha256": "878ada29dc7b7a819a68eaa210d34a638be1aee0e801c25a391f80d894a84607",
+        "path": "generate_twiddles.py"
+      },
+      {
+        "after_sha256": "091bee8c355c09c3cb6b554df4d14dfa4cc5caed66d78c65575b57989908431e",
+        "before_sha256": "87e7346a44c251a2c94ca4ea475b95ee528cf9635063edf7c989dc1e56b05f05",
+        "path": "tests/check_manifest.py"
+      },
+      {
+        "after_sha256": "beee38946d0fa25dbbc7fbe7d3b4630b090f12c7d3440b9db9a84533b1c32fed",
+        "before_sha256": "64863b5f3483f69a71da41fa5d93675d013ac09846c047ee4dbd009a58c960d2",
+        "path": "tests/test_build_driver.py"
+      }
+    ],
+    "date": "2026-10-11",
+    "new_tests": [
+      "tests/test_python_admission.py"
+    ],
+    "original_source_retention": "research/consolidation/core-2026-10-07.json source_path rows retain the previous public source bytes in maintained-sources archives",
+    "scope": "Optimization-safe Python export, ABI/resource, build/source/certificate guards; stdlib fake-object regressions only. No native C, weights, numerical tolerances, recorded outcomes or shipping admission changes."
+  },
   "schema": "a20-public-source-provenance-v1",
   "shipping_files_changed": false,
   "transport_changes": [
@@ -241,14 +283,14 @@
     {
       "original_source_sha256": "0823234fc098adeab6efbcc75d2e18e552e2be4fd98a6585f82c78c1b8b0b13c",
       "path": "export_a20.py",
-      "public_sha256": "248d980115b767b29f830bf46e17093f5fc7069bb3946d9bc650e116e7375646",
-      "transformation": "caller-supplied input/output arguments; exact export semantics and pins retained"
+      "public_sha256": "5062c21c09ce04497063f2626cb866d756636ae0d4012d50bf2712f2e155edcb",
+      "transformation": "caller-supplied input/output arguments; exact export semantics and pins retained; maintained explicit input/digest/finite/CMVN/byte-count errors remain active under Python optimization; checkpoint pin checked before Torch import or output creation"
     },
     {
       "original_source_sha256": "681af8d98ce3d19826c82d59f6cf5fc8d9c74c992b28405e59d18879fa53a662",
       "path": "generate_twiddles.py",
-      "public_sha256": "878ada29dc7b7a819a68eaa210d34a638be1aee0e801c25a391f80d894a84607",
-      "transformation": "public docstring rewrite only; generator math unchanged"
+      "public_sha256": "728d9d9f85b02edd2729d290675c622206cdbe54db0d67a8d13cce4b01a78755",
+      "transformation": "public docstring rewrite and maintained non-removable explicit invariant errors; generator interval arithmetic, stored roots and certificate results unchanged"
     },
     {
       "original_source_sha256": "9f9168930a90b117f9bb8c7ef95a746985ada665f830794260a8b86d56547545",
@@ -297,6 +339,12 @@
       "path": "NOTICE.md",
       "public_sha256": "acf0359353f1b3d6bcfdacd3ed15eb3b9c1264bdf4ee7f84552272464e3375ff",
       "transformation": "newly authored public notice preserving licenses; historical private distribution boundaries not copied"
+    },
+    {
+      "original_source_sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
+      "path": "ctypes_api.py",
+      "public_sha256": "34a7c69690f95b586952892d382676e5318e889d26754fa1528c0e946243c3c4",
+      "transformation": "Maintained Python ABI/arena admission checks use explicit exceptions and strict integer validation; original byte-identical source remains in the core retention archive. Native C ABI/layout unchanged."
     }
   ]
 }

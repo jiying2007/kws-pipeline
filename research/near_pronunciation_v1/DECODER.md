@@ -4,8 +4,8 @@ This is a source-preparation and synthetic-logit test component, not an acoustic
 
 ## Isolation and build contract
 
-- All tracked shipping files, public headers, CMake targets, installed SDK, model bytes, defaults, and archived experiments are untouched.
-- `decoder_overlay.json` binds the original source/dependencies to SHA-256 values from source tree `fafd0721c71f619f8af6327b22746b2598557b09`. It stores surgical replacement hunks, not a second complete decoder implementation.
+- The research overlay does not modify shipping source. Public headers, CMake targets, the installed SDK, model bytes, defaults, and archived experiments remain unchanged. The shared hosted replay CLI includes the separately reviewed stdout-flush fix.
+- `decoder_overlay.json` binds original source/dependencies through the exact `source_sha256` per-file allowlist. Its `base_tree` (`b9b7896b2d489f50e60a8ab87fc9d06bcdeb8bf0`) identifies a locally reproducible source snapshot, not a published GitHub source or publication proof. A final integration tree may differ while every bound input must still match. The overlay stores surgical replacement hunks, not a second complete decoder implementation.
 - `prepare_decoder.py` requires every original hash and each unique patch context to match, verifies derived hashes, and emits five derived files into a fresh output directory. Source drift, ambiguous contexts, derived drift, and existing output fail closed. There is no automatic fallback, fetch, compilation, model loading, or inference.
 - The derived files require explicit `-DKWS_RESEARCH_CHILD_ADMISSION=1` to enable research behavior. Defining the guard to another value is an error. Omitting it retains the original layout and behavior.
 - `verify_decoder.py` resolves each translation unit's local include dependencies using the same compiler before building. Every local dependency, including the generated parameter header, must be in the exact hash-bound allowlist. Untracked quote-include shadows are rejected, and all bound input hashes are rechecked at the end. Installed system/compiler headers are outside this local-source closure.
@@ -61,7 +61,7 @@ The research CLI rejects missing, unknown, or duplicate modes and all other tuni
 
 The saved-pair harness must additionally bind the exact keyword-pack hash and identical trace bytes, recording boundaries, initial state, model, controls, and recording ID in both arms. The replay tool does not acquire missing inputs or run acoustic inference on a cache miss.
 
-Stdout remains JSONL detections with `recording`, `keyword_id`, `time_s`, and `confidence`. No hits means no detection lines. Capture exit status and stderr: partial stdout from a rejected/truncated trace is not an accepted replay result. Mode and executable identity belong in the enclosing per-arm receipt, not in a fabricated acoustic producer identity.
+Stdout remains JSONL detections with `recording`, `keyword_id`, `time_s`, and `confidence`. No hits means no detection lines. A successful exit requires flushing buffered stdout successfully; write failures report `cannot write stdout` and return nonzero. Capture exit status and stderr: partial stdout from a rejected/truncated trace is not an accepted replay result. Mode and executable identity belong in the enclosing per-arm receipt, not in a fabricated acoustic producer identity.
 
 ## Verification scope
 
@@ -80,3 +80,23 @@ The verifier checks:
 LeakSanitizer is explicitly disabled because the hosted verification environment runs under ptrace; no leak-check claim is made. No real acoustic, FAR/FRR, CPU timing, board, or release qualification follows from these source/unit checks.
 
 On the verified x86-64 GCC host, shipping and guard-off engine size is 23,792 bytes. The research engine is 32,024 bytes (+8,232); decoder size is 11,648 vs 19,876 bytes. Public struct sizes and original trie-node size are unchanged. These are hosted type-layout observations, not board RAM/stack/latency evidence.
+
+## Hosted stdout repair and historical identity
+
+The 2026-10-11 stdout repair changes hosted output finalization only. A previous
+`ferror(stdout)` check could report success before a buffered write failed during
+process shutdown. `tests/test_cli_stdout.py` uses test-only compute/hash/timing
+providers and invented containers to exercise eight hosted CLIs plus the research
+replay CLI. It checks normal stdout bytes against a generated pre-fix negative
+control, and verifies `/dev/full` failures report stderr and a nonzero status.
+These are synthetic/stub I/O-path tests, not acoustic or board measurements.
+
+The overlay's current source and derived hashes bind the repaired CLI. Rebuild
+current tools and generate a new verification receipt before new replay work.
+Do not overwrite the executable/source identities, stdout, or receipts from the
+previously saved replay batches. The original overlay binding remains in repository
+history (source tree `fafd0721c71f619f8af6327b22746b2598557b09`, replay-source SHA256
+`2307b05546dbce28fb8b0291512db90e36fb66305467a2a34c59b7010b232074`).
+The historical `frozen-far-source-replay.yml` source-parity gate intentionally
+continues to reject modified hosted tools; historical reproduction requires its
+original source checkout. No historical freeze or execution receipt is rebased.

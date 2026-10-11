@@ -107,6 +107,10 @@ jobs:
           python3 -B tools/test_inventory.py --root research/near_pronunciation_v1/tests --workflow .github/workflows/ci.yml
       - name: Verify tracked worktree after Near-pronunciation source contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation source contracts"'
+      - name: Hosted CLI stdout contracts without model execution
+        run: python3 -S -B tests/test_cli_stdout.py
+      - name: Verify tracked worktree after Hosted CLI stdout contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Hosted CLI stdout contracts"'
       - name: Near-pronunciation isolated decoder synthetic verification
         run: |
           command -v cc
@@ -456,6 +460,13 @@ jobs:
         run: python3 tests/test_target_evidence.py
       - name: Verify tracked worktree after Target evidence collector contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Target evidence collector contract"'
+      - name: Final AFE execution identity and fresh-output contracts
+        run: |
+          python3 -S -B tests/test_final_afe_execution_contract.py
+          python3 -S -B -O tests/test_final_afe_execution_contract.py
+          python3 -S -B -OO tests/test_final_afe_execution_contract.py
+      - name: Verify tracked worktree after Final AFE execution contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Final AFE execution contracts"'
       - name: Audio discontinuity contract
         run: python3 tests/test_audio_discontinuity_contract.py
       - name: Verify tracked worktree after Audio discontinuity contract
@@ -467,9 +478,22 @@ jobs:
       - name: Model promotion contract
         run: |
           python3 tests/test_model_promotion.py
+          python3 -S -B tests/test_model_promotion_admission.py
+          python3 -S -B -O tests/test_model_promotion_admission.py
+          python3 -S -B -OO tests/test_model_promotion_admission.py
+          python3 -S -B tests/test_model_promotion_source.py
+          python3 -S -B -O tests/test_model_promotion_source.py
+          python3 -S -B -OO tests/test_model_promotion_source.py
           python3 tests/test_feature_cache_contract.py
       - name: Verify tracked worktree after Model promotion contract
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model promotion contract"'
+      - name: Model family resource dimension contracts
+        run: |
+          python3 -S -B tests/test_model_family_resource_estimate.py
+          python3 -S -B -O tests/test_model_family_resource_estimate.py
+          python3 -S -B -OO tests/test_model_family_resource_estimate.py
+      - name: Verify tracked worktree after Model family resource dimension contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Model family resource dimension contracts"'
       - name: Reproducibility tool contract
         run: |
           python3 tests/test_reproducible_sdk.py

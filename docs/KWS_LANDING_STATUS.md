@@ -69,6 +69,30 @@ new numerical execution, model calls, acquisition, training or qualification.
 The [earlier roadmap](KWS_RESEARCH_PRODUCT_ROADMAP.md) and
 [execution record](KWS_LANDING_EXECUTION.md) retain their historical context.
 
+The current source-research additions have distinct evidence scopes:
+
+- [Completed fourth Whisper run and durable archive](../research/source-screen32-whisper-v1/evidence/run-38126849922/README.md)
+  ([PR #535](https://github.com/jiying2007/kws-pipeline/pull/535)): run
+  `38126849922` completed all 16 inputs with verified pre-finalization natural EOT.
+  The [three-ASR comparison](../research/source-screen32-whisper-v1/evidence/run-38126849922/comparison/README.md)
+  records 6/16 punctuation-only agreement, or 7/16 under the secondary
+  punctuation-plus-whitespace policy, including two common target mismatches.
+  Agreement coverage is not acoustic accuracy; these rows remain screen-only,
+  without human gold or training admission. The Whisper root/attempt READMEs
+  are historical preparation snapshots, including superseded unexecuted and
+  publication-blocker text. The completed archive above supplies the current
+  outcome; the [earlier two-ASR result](../research/source-screen32-v1/evidence/run-38021467257/README.md)
+  remains a separate historical observation.
+- [Near-pronunciation saved-pair source and contracts](../research/near_pronunciation_v1/README.md)
+  ([PR #536](https://github.com/jiying2007/kws-pipeline/pull/536)) and its
+  [isolated synthetic-logit C verification](../research/near_pronunciation_v1/DECODER.md)
+  provide research-only tooling. The public integration contains no actual
+  saved-trace replay result, and its prepared/NOT_RUN annotations are scoped to
+  source preparation. Contract/synthetic tests do not supply ordinary real-world
+  negative exposure or independent accent/far-field positives. Matched-FAR and
+  recall improvement remain unestablished; model, shipping decoder, thresholds
+  and `shipping_approved=false` are unchanged.
+
 Product authority remains `configs/shipping.xiaowo.json` and
 `commercial/*.policy.json`. Phase A requires final product microphones/enclosure,
 final AFE, real human speech, 3–5 m coverage, rear direction, playback, double-talk,
