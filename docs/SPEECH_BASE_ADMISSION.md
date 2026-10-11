@@ -1,9 +1,10 @@
 # Speech base admission
 
 Future real-speech/real-TTS CTC bases require supplied actual-audio label evidence.
-Human review v2 remains the operational admission route. Three independent ASRs
-may establish a prospective training label under the bounded policy below, but
-self-authored metadata cannot authenticate those ASRs or admit training. A
+Human review v2 and code-rooted three-ASR source verification are distinct label
+routes. The three-ASR verification and consumption path is implemented, with
+**zero production train roots and zero newly admitted real recordings** today.
+Self-authored metadata cannot authenticate ASRs or admit training. A
 requested utterance, deterministic generation, or checksum alone does not
 establish what was spoken. Existing corpus and release identities are unchanged.
 
@@ -72,16 +73,14 @@ continues to describe the audio-bearing lane, not a human source or human gold.
 TTS stays synthetic; recorded and synthetic source provenance must not be
 rewritten by a labeling decision.
 
-This version implements structural label eligibility only. Every constructed
-machine receipt has `label_eligible=true`, `ctc_training_allowed=false`,
-`authentication_independently_verified=false`, and
-`status=PENDING_EXTERNAL_VERIFICATION`. No trusted out-of-band authentication
-route is connected. The base materializer, external loader and trainer reject
-these receipts, including one pending row in an otherwise human-reviewed
-manifest. Changing `verified=true`, admission flags, or an outer evidence tag
-cannot enable training. Explicit diagnostic runs remain non-promotable under
-the existing warm-start taint rules. No machine-labeled stage can currently
-enter promotable dataset ancestry, so its schema is unchanged.
+A JSON-only eligibility check constructs `label_eligible=true`,
+`ctc_training_allowed=false`, `authentication_independently_verified=false`, and
+`status=PENDING_EXTERNAL_VERIFICATION`. Caller `verified=true` or edited receipt
+flags are never authority. A separate controlled resolver can construct
+`VERIFIED_SOURCE_TRAIN_LABEL` only after the source evidence checks below; every
+consumer re-resolves the original evidence. This is exercised with invented
+container fixtures, not real ASR executions. The two existing retained source
+roots are permanently registered as `source_screen_only`, not train roots.
 
 Requirements checked without executing ASR:
 
@@ -158,10 +157,114 @@ a future model can still undergo independent human qualification. Source rights,
 split isolation, lineage/ancestry, coverage, resources and shipping gates remain
 separate requirements; no label consensus authorizes a model run or deployment.
 
+## Native v2 and the user's three-ASR preference
+
+New native captures use `speech-three-asr-consensus-v2` and the explicit
+`label_selection_policy=trusted-three-asr-preferred-training-v2`. Three trusted,
+distinct frozen model families with conservative unanimous nonempty canonical text
+may supply a train-only label even when a listener's ordinary observation is
+uncertain, rejected, or different. Both current and historical human conflicts
+remain audited. The source/rights/explicit sample-use ban still wins; a listening
+verdict alone is not a usage ban. V1's prior disagreement rule is unchanged.
+
+The native config and capture validators distinguish Qwen3-ASR generation,
+SenseVoice full-input greedy CTC, and short-input Whisper decoding. They preserve
+native null/auto/absent parameter semantics; they do not invent a generic beam,
+temperature, language, or hotword API. A complete frozen configuration, resolved
+runtime configuration, actual loaded asset/source locks, and captured completion
+are required. Effective configuration dependency digests must resolve to retained
+bytes: Qwen's actual resolved GenerationConfig snapshot, SenseVoice's tokenizer,
+parser and frontend, and Whisper's tokenizer. The latter dependencies must also
+match the loaded asset/executed source inventory. No model is imported or run by
+these validators.
+
+Full original PCM input coverage, decoder termination without truncation, and
+acoustic word-for-word completeness are distinct. V2 requires captured native
+termination evidence and leaves `acoustic_verbatim_completeness=unknown`.
+Whisper's final returned text/tokens cannot prove natural EOT: finalize can insert
+EOT and strip it from the result. Its supported contract therefore requires the
+pre-finalize decoder-update trace and actual stop reason; missing/unknown capture
+is rejected. The public Whisper candidate source lock is **inactive**; expected
+weight hashes are published source metadata, not downloaded/verified assets.
+Small/base are the same family and can contribute only one vote. Distinct model
+families can still share errors; three votes do not establish statistical error
+independence. No CPU, memory,
+latency or accuracy result is claimed.
+
+V2 persisted consensus records require empty inline `human_review_history` and
+retain `human_observation_history` as exact private artifact references and
+hashes only. A source-bound wrapper can reference an unchanged unstructured note
+with `certainty=unknown` and `observed_text=null`; no reviewer ID, training purpose,
+accepted verdict, acoustic-complete flag, or mappable tokens are fabricated.
+Recognized original human-review-v2 JSON must use `original_format=human-review-v2`:
+the resolver validates its full original revision chain, usage prohibitions and
+conflicts, while the admission carries no original body. Known typed history
+cannot be hidden as an opaque raw note. Original OOV “屋” remains “屋”. All wrappers,
+original byte hashes and conflict flags are bound to the controlled source policy.
+Later trusted history changes require a reviewed replacement/revocation of the
+old root, not an additional alias that leaves stale receipts enabled. This
+invalidates stale receipts rather than silently removing observations. The current roots do
+not import any private listening notes. Publishing any original note, source
+identity, path or transcript requires separate authorization; the implementation
+and public tests contain invented metadata only.
+
+## Controlled retained-source resolver
+
+`tools/asr_source_resolver.py` contains a small code-owned root index: root ID,
+control-plane `trust_root_commit`, existing provenance path/SHA, source role, and
+supported capture contract. The existing provenance remains the only archive and
+exact-member inventory. Its `executed_head_sha` and run ID describe the actual
+execution separately from the control-plane commit. Adding a genuine train root
+requires reviewed code and independently checked source/rights/capture provenance;
+there is no receipt, environment variable, CLI, or config option to supply a root.
+The schema parser does not invent signatures or establish external authority on
+its own. Authority is the reviewed immutable root, not a caller's verified report.
+
+The operator may supply storage through `--asr-evidence-dir` at producer/base
+entry points or `KWS_ASR_EVIDENCE_DIR` at independent loaders/trainers. This is a
+portable **location only**. Archive names are `<archive-sha256>.zip` and must match
+the pinned provenance. The resolver checks exact member paths and hashes, source
+WAV/PCM/frame identity, source role/origin/rights, complete source-bound history,
+three distinct model/source locks, actual native configurations, starts,
+completions and complete raw outputs. Unsupported/partial historical captures
+cannot be repaired by defaults or a third invented output.
+
+Each independent entry opens a new bounded verification session. It uses no-follow
+directory/file descriptors, regular-file checks and bounded actual reads; ZIP
+members are also size-limited before and during reads. A batch shares immutable
+byte snapshots instead of rereading a large archive per row. Before output effects
+and at successful session exit, watched paths are reopened and strongly rehashed.
+The current conservative limits are 128 MiB per compressed archive, 32 MiB per
+member and 256 MiB total retained snapshot bytes; larger evidence is unsupported
+until a separately reviewed bounded-streaming design exists. This is not a
+writable-filesystem lock: later consumers independently recheck, and any detected
+change aborts. Closed, cross-record and caller-JSON contexts are rejected.
+
+`admit-reviewed` and `materialize` accept optional `--asr-consensus` beside human
+`--audio-review`; the two files must cover disjoint records and jointly cover the
+entire intended batch. Only machine train rows are eligible. This producer labels
+previously unlabeled generated sources (`text` is the original request). An
+existing admission or fixed source `actual_text` is an immutable labeled artifact;
+relabeling it requires a separately designed source-bound supersession that retains
+the old value and record hash. Ordinary differing/uncertain human observations
+belong in trusted private history references, not in that fixed source field, and
+do not veto native-v2 selection. All source identities, roles, origin and rights
+must remain exact. Generic generation manifests do not yet establish all of
+`source_role`, `source_type`, `rights_evidence_sha256` and source lineage. Future
+onboarding must bind those facts to the reviewed source policy and retained rights
+evidence; the producer never fills a missing `train` role, license or lineage with
+a default. The base materializer, four-split
+external loader and trainer independently verify source evidence before admission;
+the trainer binds the original source frames, not an augmented scene's duration.
+`inspect-three-asr` remains read-only structural eligibility with zero admissions.
+No existing screen-only source is automatically upgraded.
+
 ## Binding and consumption
 
 Materialized rows retain original `intended_text`/`intended_tokens`, then use the
-reviewed actual text/tokens as CTC labels. `admission.review_history` embeds full
+admitted actual text/tokens as CTC labels. Machine rows retain their typed
+admission, source origin/rights/role, label provenance and verified source proof;
+they cannot be replaced with a human-looking or fixture receipt. For human rows, `admission.review_history` embeds full
 revision records, `review_record_sha256` binds the latest canonical record, and
 `review_sha256` records the original supplied review-file hash. Downstream code
 can validate the embedded chain without access to the review-file path; that
@@ -195,6 +298,16 @@ canonical SHA-256. A cold start has one stage and no parent; each warm start
 copies all validated stages and appends the current stage. Recording indices
 remain scoped to their stage, including when different manifests share a name.
 This binds supplied evidence, not listener or checkpoint-author authenticity.
+New per-manifest `label_evidence` summaries identify human-review and verified
+machine-consensus row counts plus each machine row's record/proof/root/provenance
+hashes. Every ancestry stage validates these summaries. Legacy absent summaries
+remain `legacy-unknown`, not presumed human or machine-free; their bytes, schema-v1
+parent hashes and digest rules are unchanged. The compatibility field
+`reviewed_rows` counts admitted rows, not necessarily human-reviewed rows.
+`training.admission` is the authoritative preserved carrier through export and
+warm starts; corpus normalization intentionally remains identity-only. Machine
+training does not make `promotion_allowed=false`; an independently human-qualified
+model is still eligible, subject to all existing source isolation and release gates.
 
 `training_manifests`, `training_corpus_identity`, and the admission's top-level
 `manifests` continue to describe only the current optimization inputs. They are

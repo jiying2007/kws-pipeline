@@ -1,6 +1,7 @@
-"""Consume reviewed source receipts before optimization, independent of Torch.
+"""Consume human-review or trusted-source label receipts before optimization.
 
-These checks bind supplied review records; they do not authenticate a listener.
+These Torch-independent checks bind label records, not listener authenticity.
+Machine labels remain training-only; models can qualify on independent evidence.
 The diagnostic lane is deliberately non-promotable, including its descendants.
 """
 from __future__ import annotations
@@ -14,17 +15,19 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from speech_label_admission import LINEAGE_FIELDS, REAL_MODE, validate_admission, require_sha
-from speech_asr_consensus import require_training_label_authority
+from speech_asr_consensus import require_training_label_authority, has_machine_consensus
+from asr_source_resolver import source_verification_session
 from audit_dataset import verify_manifest_lineage, lineage_path
 from corpus_identity import (IDENTITY_FIELDS, audio_identity, canonical_hash, corpus_digest,
                              training_corpus_identity, training_manifest_audio_bindings,
-                             require_audited_audio, validate_audio_identity)
+                             require_audited_audio, validate_audio_identity, inspect_pcm16_wav)
 from model_provenance import normalize_corpus
 
 POLICY = "reviewed-source-training-consumption-v1"
 DIAGNOSTIC = "synthetic-contract-test-only"
 ANCESTRY_SCHEMA = 1
 ANCESTRY_CORPUS_POLICY = "hashed-path-and-metadata-v1"
+LABEL_EVIDENCE_POLICY = "training-label-evidence-v1"
 
 
 def digest(path: pathlib.Path) -> str:
@@ -32,7 +35,8 @@ def digest(path: pathlib.Path) -> str:
 
 
 def verify_training_manifests(paths: list[pathlib.Path], token_map: dict[str, int],
-                              *, diagnostic: bool = False) -> dict:
+                              *, diagnostic: bool = False,
+                              evidence_dir: pathlib.Path | str | None = None) -> dict:
     if not paths:
         raise ValueError("training admission requires manifests")
     receipts = []
@@ -46,36 +50,72 @@ def verify_training_manifests(paths: list[pathlib.Path], token_map: dict[str, in
             rows = verify_manifest_lineage(path)
             if not rows:
                 raise ValueError("reviewed training manifest must not be empty")
-            for row in rows:
-                require_training_label_authority(row)
-                provenance = row.get("speech_like_provenance")
-                if not isinstance(provenance, dict):
-                    raise ValueError("reviewed source provenance missing before CTC training")
-                tokens = row.get("tokens")
-                if not isinstance(tokens, list) or any(
-                    not isinstance(token, str) or token not in token_map for token in tokens
-                ):
-                    raise ValueError("reviewed transcript contains unknown token")
-                targets = row.get("target_ids")
-                if not isinstance(targets, list) or any(type(item) is not int for item in targets):
-                    raise ValueError("reviewed training target_ids must be canonical integers")
-                if [token_map[token] for token in tokens] != targets or any(item <= 0 for item in targets):
-                    raise ValueError("training targets differ from reviewed transcript")
-                for field in LINEAGE_FIELDS:
-                    if row.get(field) != provenance.get(field):
-                        raise ValueError(f"training lineage {field} differs from reviewed source")
-                if "source_id" in row and row["source_id"] != provenance.get("source_id"):
-                    raise ValueError("training lineage source_id differs from reviewed source")
-                validate_admission(
-                    row.get("admission"), mode=REAL_MODE,
-                    source_id=provenance.get("source_id"),
-                    file_sha256=row.get("source_wav_sha256"),
-                    pcm_sha256=row.get("source_pcm_sha256"),
-                    text=row.get("actual_text"), tokens=tokens,
-                    kind=row.get("kind"), keyword_id=row.get("keyword_id"),
-                    provenance=provenance, split=row.get("split"),
-                )
-                count += 1
+            machine_records = []
+            with source_verification_session(evidence_dir) as session:
+                # Reject disguised machine labels before projecting any row or
+                # losing machine markers. Human-only sessions need no store.
+                for row in rows:
+                    require_training_label_authority(
+                        row, allow_machine=True, split=row.get("split"),
+                        evidence_dir=evidence_dir, verification_session=session,
+                    )
+                for row_index, row in enumerate(rows, 1):
+                    provenance = row.get("speech_like_provenance")
+                    if not isinstance(provenance, dict):
+                        raise ValueError("reviewed source provenance missing before CTC training")
+                    tokens = row.get("tokens")
+                    if not isinstance(tokens, list) or any(
+                        not isinstance(token, str) or token not in token_map for token in tokens
+                    ):
+                        raise ValueError("reviewed transcript contains unknown token")
+                    targets = row.get("target_ids")
+                    if not isinstance(targets, list) or any(type(item) is not int for item in targets):
+                        raise ValueError("reviewed training target_ids must be canonical integers")
+                    if [token_map[token] for token in tokens] != targets or any(item <= 0 for item in targets):
+                        raise ValueError("training targets differ from reviewed transcript")
+                    for field in LINEAGE_FIELDS:
+                        if row.get(field) != provenance.get(field):
+                            raise ValueError(f"training lineage {field} differs from reviewed source")
+                    if "source_id" in row and row["source_id"] != provenance.get("source_id"):
+                        raise ValueError("training lineage source_id differs from reviewed source")
+                    # Augmentation may change duration. Complete-source ASR
+                    # coverage must bind the original, never the rendered WAV.
+                    source = row.get("source_path")
+                    if not isinstance(source, str) or not source.strip():
+                        raise ValueError("training original source_path is missing")
+                    source = pathlib.Path(source)
+                    measured = inspect_pcm16_wav(source if source.is_absolute() else path.parent / source)
+                    if (measured["file_sha256"] != row.get("source_wav_sha256")
+                            or measured["pcm_sha256"] != row.get("source_pcm_sha256")):
+                        raise ValueError("training original source WAV/PCM identity mismatch")
+                    validate_admission(
+                        row.get("admission"), mode=REAL_MODE,
+                        source_id=provenance.get("source_id"),
+                        file_sha256=measured["file_sha256"], pcm_sha256=measured["pcm_sha256"],
+                        text=row.get("actual_text"), tokens=tokens,
+                        kind=row.get("kind"), keyword_id=row.get("keyword_id"),
+                        provenance=provenance, split=row.get("split"), frames=measured["frames"],
+                        evidence_dir=evidence_dir, verification_session=session,
+                    )
+                    if has_machine_consensus(row):
+                        # This projection follows live resolver and exact-row
+                        # validation. Serialized proof is retained evidence,
+                        # never authority for future training admission.
+                        proof = row["admission"].get("source_verification")
+                        if not isinstance(proof, dict):
+                            raise ValueError("validated machine source proof is missing")
+                        machine_records.append({"row_index": row_index, **{
+                            key: proof.get(key) for key in (
+                                "record_sha256", "proof_sha256", "source_root_id",
+                                "provenance_sha256", "trust_root_commit",
+                            )}})
+                    count += 1
+            entry["label_evidence"] = {
+                "schema_version": 1, "policy": LABEL_EVIDENCE_POLICY,
+                "row_count": len(rows), "human_review_rows": len(rows) - len(machine_records),
+                "machine_consensus_rows": len(machine_records), "machine_records": machine_records,
+            }
+            manifest_label_basis(entry, row_count=len(rows))
             entry["lineage_sha256"] = digest(path if path.suffix.lower() == ".jsonl" else lineage_path(path))
         receipts.append(entry)
     result = {"policy": POLICY, "purpose": DIAGNOSTIC if diagnostic else "reviewed-ctc-training",
@@ -111,6 +151,57 @@ def require_promotable_admission(value: object) -> dict:
                 raise ValueError("training admission hash binding invalid")
     validate_dataset_ancestry(value)
     return value
+
+
+def manifest_label_basis(manifest: dict, *, row_count: int) -> str:
+    """Validate retained label metadata without claiming listener authenticity.
+
+    Missing historical summaries remain legacy-unknown. Do not insert a default
+    into an old manifest: that would rewrite an already-linked stage digest.
+    Machine evidence is a training-label basis, not a permanent model taint;
+    qualification still requires its own independent reference labels.
+    """
+    if type(row_count) is not int or row_count < 1:
+        raise ValueError("label evidence requires a positive manifest row count")
+    if "label_evidence" not in manifest:
+        return "legacy-unknown"
+    summary = manifest["label_evidence"]
+    fields = {"schema_version", "policy", "row_count", "human_review_rows",
+              "machine_consensus_rows", "machine_records"}
+    if (not isinstance(summary, dict) or set(summary) != fields
+            or type(summary.get("schema_version")) is not int
+            or summary["schema_version"] != 1
+            or summary.get("policy") != LABEL_EVIDENCE_POLICY):
+        raise ValueError("training label evidence summary fields/policy are invalid")
+    for field in ("row_count", "human_review_rows", "machine_consensus_rows"):
+        if type(summary[field]) is not int or summary[field] < 0:
+            raise ValueError("training label evidence counts must be canonical nonnegative integers")
+    human, machine = summary["human_review_rows"], summary["machine_consensus_rows"]
+    if summary["row_count"] != row_count or human + machine != row_count:
+        raise ValueError("training label evidence counts differ from manifest rows")
+    records = summary["machine_records"]
+    if not isinstance(records, list) or len(records) != machine:
+        raise ValueError("training machine label proof count differs from summary")
+    record_fields = {"row_index", "record_sha256", "proof_sha256", "source_root_id",
+                     "provenance_sha256", "trust_root_commit"}
+    previous = 0
+    for record in records:
+        if not isinstance(record, dict) or set(record) != record_fields:
+            raise ValueError("training machine label proof binding fields are invalid")
+        position = record["row_index"]
+        if type(position) is not int or not previous < position <= row_count:
+            raise ValueError("training machine label proof row indices must be unique and ordered")
+        previous = position
+        for field in ("record_sha256", "proof_sha256", "provenance_sha256"):
+            require_sha(record[field], f"training machine proof {field}")
+        root = record["source_root_id"]
+        if not isinstance(root, str) or not root or root.strip() != root:
+            raise ValueError("training machine proof source_root_id is invalid")
+        commit = record["trust_root_commit"]
+        if (not isinstance(commit, str) or len(commit) != 40
+                or any(char not in "0123456789abcdef" for char in commit)):
+            raise ValueError("training machine proof trust_root_commit must be a lowercase commit SHA")
+    return "mixed-human-and-machine" if human and machine else "machine-consensus" if machine else "human-review"
 
 
 def _manifest_bindings(value: object, label: str, *, lineage: bool = False,
@@ -219,7 +310,9 @@ def validate_dataset_ancestry(admission: dict) -> list[dict]:
             raise ValueError("ancestor reviewed rows differ from consumed corpus")
         # Check membership, row ordering, and exact recording coverage without
         # relying on an ancestor's manifest basename being globally unique.
-        training_manifest_audio_bindings(stage["manifests"], corpus)
+        bindings = training_manifest_audio_bindings(stage["manifests"], corpus)
+        for manifest, binding in zip(stage["manifests"], bindings):
+            manifest_label_basis(manifest, row_count=len(binding["audio_identity"]["recordings"]))
         if index == 0:
             if stage["parent_checkpoint_sha256"] is not None or stage["parent_ancestry_sha256"] is not None:
                 raise ValueError("cold-start ancestry must not omit an earlier stage")

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "03806f9e9adc6afee4bb010fcfc02ba21de72ecc",
-      "sha256": "c61185511ab3a6705b6885ba04b35e1b61df2fd4995e30f96075c09316766a81",
-      "bytes": 37219
+      "git_blob_sha1": "8faaf0b73a2dbe218684d7827f9fd35dbc2354cc",
+      "sha256": "b020b2027597776c1a26a3643c2cbb8e69ddc4e56c46aab85245ed97f15a1034",
+      "bytes": 38043
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16651,6 +16651,33 @@
             "git_blob_sha1": "03806f9e9adc6afee4bb010fcfc02ba21de72ecc",
             "sha256": "c61185511ab3a6705b6885ba04b35e1b61df2fd4995e30f96075c09316766a81",
             "bytes": 37219
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "d899c65c9b89b7d3b23b197b879f7d9afa688c58",
+      "from_tree": "018f2a8d4ab8ad29672b03997bf2eb9dc52bae2e",
+      "operation_id": "trusted-asr-resolver-native-contracts-20261011",
+      "scope": "Run trusted ASR source resolver, producer and native adapter metadata tests in existing required python-contracts CI, including normal, -O and -OO modes and tracked-worktree guards.",
+      "rationale": "Public source and CI identity metadata only. Tests use invented records and bounded standard-library ZIP/WAV byte fixtures without any model import, model download, recognition, training, candidate numerical execution or resource probe. Existing source-screen-only data remains unadmitted; no production train source root is added. No new workflow or model execution path is activated, and historical retention entries are unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "03806f9e9adc6afee4bb010fcfc02ba21de72ecc",
+            "sha256": "c61185511ab3a6705b6885ba04b35e1b61df2fd4995e30f96075c09316766a81",
+            "bytes": 37219
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8faaf0b73a2dbe218684d7827f9fd35dbc2354cc",
+            "sha256": "b020b2027597776c1a26a3643c2cbb8e69ddc4e56c46aab85245ed97f15a1034",
+            "bytes": 38043
           }
         }
       ]

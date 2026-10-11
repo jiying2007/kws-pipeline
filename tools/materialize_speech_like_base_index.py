@@ -17,7 +17,8 @@ from kws_vocab import load_tokens  # noqa: E402
 from synthetic_audio import SPLITS, activity_bounds, parse_keywords, sha256_file, contains_subsequence  # noqa: E402
 
 from speech_label_admission import (REAL_MODE, FIXTURE_MODE, LINEAGE_FIELDS, fixture_admission, validate_admission)
-from speech_asr_consensus import require_training_label_authority
+from speech_asr_consensus import require_training_label_authority, has_machine_consensus, LABEL_SOURCE
+from asr_source_resolver import source_verification_session
 
 MANIFEST_CLASS = "speech-like-synthetic-recording-v1"
 ALLOWED_KINDS = {"positive", "confusable", "negative", "background"}
@@ -92,7 +93,13 @@ def materialize(
     portable_audio_dir: pathlib.Path | None = None,
     path_base: pathlib.Path | None = None,
     admission_mode: str = REAL_MODE,
+    evidence_dir=None, verification_session=None,
 ) -> tuple[list[dict], dict]:
+    if verification_session is None:
+        with source_verification_session(evidence_dir) as session:
+            return materialize(manifest=manifest, split=split, tokens_path=tokens_path, keywords_path=keywords_path,
+                               portable_audio_dir=portable_audio_dir, path_base=path_base, admission_mode=admission_mode,
+                               evidence_dir=evidence_dir, verification_session=session)
     if split not in SPLITS:
         raise ValueError(f"unsupported split: {split}")
     if admission_mode not in {REAL_MODE, FIXTURE_MODE}:
@@ -111,10 +118,10 @@ def materialize(
             portable_dir.relative_to(portable_root)
         except ValueError as exc:
             raise ValueError("portable_audio_dir must stay under the dataset-index directory") from exc
-        portable_dir.mkdir(parents=True, exist_ok=True)
     elif path_base is not None:
         raise ValueError("path_base is only valid with portable_audio_dir")
     rows: list[dict] = []
+    copies = []
     seen_audio: set[str] = set()
     seen_pcm: set[str] = set()
     for index, source in enumerate(load_jsonl(manifest), 1):
@@ -123,7 +130,8 @@ def materialize(
             raise ValueError(f"{label}: speech-like manifest identity mismatch")
         if source.get("provider_kind") == "tone":
             raise ValueError(f"{label}: tone provider is forbidden for speech-like ingestion")
-        require_training_label_authority(source)
+        require_training_label_authority(source, allow_machine=True, split=split,
+                                         evidence_dir=evidence_dir, verification_session=verification_session)
         kind = str(source.get("kind", ""))
         if kind not in ALLOWED_KINDS:
             raise ValueError(f"{label}: missing/invalid immutable training kind")
@@ -183,6 +191,9 @@ def materialize(
             "pcm_sha256": pcm_sha,
             **{field: source[field] for field in LINEAGE_FIELDS if field in source},
         }
+        if has_machine_consensus(source):
+            provenance.update(source["admission"]["consensus_record"]["source_provenance"])
+            provenance.update(label_origin="machine-consensus", label_source=LABEL_SOURCE)
         for field in ("provider_kind", "provider_name", "provider_version", "license_id", "voice_id", "source_id", "generation_config_sha256"):
             value = provenance[field]
             if not isinstance(value, str) or not value.strip():
@@ -195,15 +206,14 @@ def materialize(
         validate_admission(admission, mode=admission_mode, source_id=provenance["source_id"],
                            file_sha256=file_sha, pcm_sha256=pcm_sha, text=source.get("actual_text"),
                            tokens=tokens, kind=kind, keyword_id=keyword_id, provenance=provenance,
-                           split=split, frames=len(samples))
+                           split=split, frames=len(samples), evidence_dir=evidence_dir,
+                           verification_session=verification_session)
         stored_path = str(audio)
         if portable_dir is not None and portable_root is not None:
             target = portable_dir / f"recording-{index-1:06d}-{file_sha[:12]}.wav"
             if target.exists():
                 raise ValueError(f"{label}: portable audio target already exists: {target}")
-            shutil.copyfile(audio, target)
-            if sha256_file(target) != file_sha:
-                raise ValueError(f"{label}: portable WAV sha256 mismatch after copy")
+            copies.append((audio, target, file_sha))
             stored_path = target.relative_to(portable_root).as_posix()
         rows.append({
             "split": split,
@@ -220,8 +230,25 @@ def materialize(
             "path": stored_path,
             "speech_like_provenance": provenance,
             "admission": admission,
+            **({"label_origin": "machine-consensus", "label_source": LABEL_SOURCE,
+                **admission["consensus_record"]["source_provenance"]} if has_machine_consensus(source) else {}),
             **({"actual_text": source["actual_text"]} if admission_mode == REAL_MODE else {}),
         })
+    # Validate the complete batch and rehash trusted storage before any output
+    # directory/copy side effect. The outer session rechecks again on return.
+    verification_session.checkpoint()
+    if copies:
+        portable_dir.mkdir(parents=True, exist_ok=True)
+        for audio, target, file_sha in copies:
+            with target.open("xb") as output, audio.open("rb") as source_audio:
+                shutil.copyfileobj(source_audio, output)
+            if sha256_file(target) != file_sha:
+                raise ValueError("portable WAV sha256 mismatch after copy")
+        # A later copy must not mutate an earlier target unnoticed. Rehash all
+        # copies once before preparing a successful result.
+        for _, target, file_sha in copies:
+            if sha256_file(target) != file_sha:
+                raise ValueError("portable WAV changed before materialization completed")
     summary = {
         "schema_version": 1,
         "evidence_class": "speech-like-base-dataset-v1",
@@ -251,6 +278,7 @@ def main() -> int:
     parser.add_argument("--output-index", required=True, type=pathlib.Path)
     parser.add_argument("--output-summary", required=True, type=pathlib.Path)
     parser.add_argument("--portable-audio-dir", type=pathlib.Path)
+    parser.add_argument("--asr-evidence-dir", type=pathlib.Path, help="Local content-addressed evidence storage, never a trust root")
     parser.add_argument("--admission-mode", choices=(REAL_MODE, FIXTURE_MODE), default=REAL_MODE)
     args = parser.parse_args()
     output_index = args.output_index.resolve()
@@ -260,7 +288,7 @@ def main() -> int:
         tokens_path=args.tokens.resolve(), keywords_path=args.keywords.resolve(),
         portable_audio_dir=args.portable_audio_dir,
         path_base=output_index.parent if args.portable_audio_dir is not None else None,
-        admission_mode=args.admission_mode,
+        admission_mode=args.admission_mode, evidence_dir=args.asr_evidence_dir,
     )
     output_index.parent.mkdir(parents=True, exist_ok=True)
     output_index.write_text("\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows) + "\n", encoding="utf-8")

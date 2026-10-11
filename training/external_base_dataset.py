@@ -16,6 +16,7 @@ from corpus_identity import canonical_audio_path, inspect_pcm16_wav, rebind_audi
 from speech_label_admission import (REAL_MODE, HISTORICAL_MODE, MODES,
                                     LINEAGE_FIELDS, validate_admission, require_text)  # noqa: E402
 from speech_asr_consensus import require_training_label_authority
+from asr_source_resolver import source_verification_session
 from materialize_speech_like_base_index import corpus_sha  # noqa: E402
 
 from synthetic_audio import contains_subsequence, parse_keywords  # noqa: E402
@@ -155,7 +156,11 @@ def _validate_audio_format(path: pathlib.Path, frames: int, label: str) -> None:
             raise ValueError(f"{label}: audio format/frames mismatch")
 
 
-def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[list[dict], dict] | None:
+def load_external_base_bundle(config_path: pathlib.Path, config: dict, *, evidence_dir=None,
+                              verification_session=None) -> tuple[list[dict], dict] | None:
+    if verification_session is None:
+        with source_verification_session(evidence_dir) as session:
+            return load_external_base_bundle(config_path, config, evidence_dir=evidence_dir, verification_session=session)
     generator = config.get("generator")
     if not isinstance(generator, dict):
         return None
@@ -242,7 +247,8 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
         normalized_rows: list[dict] = []
         index_root = index_path.parent.resolve()
         for idx, row in enumerate(split_rows):
-            require_training_label_authority(row)
+            require_training_label_authority(row, allow_machine=True, split=split,
+                                             evidence_dir=evidence_dir, verification_session=verification_session)
             wav_sha, voice, source = _identity(row, split, idx)
             _validate_label(row, split, idx, token_map, wake_keywords)
             raw_audio = canonical_audio_path(row, f"external base {split} row {idx}")
@@ -283,7 +289,8 @@ def load_external_base_bundle(config_path: pathlib.Path, config: dict) -> tuple[
                 validate_admission(row.get("admission"), mode=admission_mode, source_id=source,
                                    file_sha256=wav_sha, pcm_sha256=pcm_sha, text=row.get("actual_text"),
                                    tokens=row["tokens"], kind=row["kind"], keyword_id=row.get("keyword_id"),
-                                   provenance=provenance, split=split, frames=inspected["frames"])
+                                   provenance=provenance, split=split, frames=inspected["frames"],
+                                   evidence_dir=evidence_dir, verification_session=verification_session)
             elif "admission" in row:
                 raise ValueError("historical frozen rows cannot claim new review admission")
             for field in LINEAGE_FIELDS:
