@@ -37,6 +37,35 @@ def inspect(role,mounts,command,limit=123):
 
 
 class Contracts(unittest.TestCase):
+    def test_current_setup_bundle_requires_compatibility_helper_before_docker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); setup=root/'code'
+            code=setup/'research/source-screen32-whisper-v1/attempt-3'
+            code.mkdir(parents=True)
+            for name in h.SETUP_SIBLING_MODULES:
+                (code/name).write_text('# inert source fixture\n')
+            self.assertEqual(h.validate_setup_closure(setup),code)
+            (code/'pip_compatibility.py').unlink()
+            calls=[]
+            with self.assertRaises(FileNotFoundError):
+                h.acquire_runtime(docker=lambda *a,**kw:calls.append(a),setup_code=setup,
+                    runtime=root/'runtime',output=root/'output',root=root,
+                    job_deadline=2000,run_id='1',clock=lambda:1,uid=1000,gid=1000)
+            self.assertEqual(calls,[])
+            self.assertFalse((root/'bounded-setup').exists())
+            self.assertFalse((root/'output').exists())
+
+    def test_current_setup_bundle_rejects_empty_or_aliased_modules(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); code=root/'research/source-screen32-whisper-v1/attempt-3'
+            code.mkdir(parents=True)
+            for name in h.SETUP_SIBLING_MODULES:
+                (code/name).write_text('# inert source fixture\n')
+            target=code/'pip_compatibility.py'; target.write_bytes(b'')
+            with self.assertRaises(ValueError):h.validate_setup_closure(root)
+            target.unlink(); target.symlink_to(code/'pip_acquire.py')
+            with self.assertRaises(ValueError):h.validate_setup_closure(root)
+
     def test_sum_resource_envelope(self):
         self.assertEqual(sum(h.PROFILES[r]['memory'] for r in ('broker','worker')),12*1024**3)
         self.assertEqual(sum(h.PROFILES[r]['cpus'] for r in ('broker','worker')),4)
@@ -249,8 +278,10 @@ class Contracts(unittest.TestCase):
             with self.subTest(status=status),tempfile.TemporaryDirectory() as tmp:
                 root=Path(tmp);source=root/'source';source.mkdir();output=root/'output';output.mkdir()
                 row={'filename':'one.whl','size_bytes':3,'sha256':hashlib.sha256(b'abc').hexdigest()}
-                value={'schema':'bounded-pip-worker-result-v1','status':status,'stage':'complete' if status=='ok' else 'pip_help_probe',
+                value={'schema':'bounded-pip-worker-result-v2','status':status,'stage':'complete' if status=='ok' else 'pip_help_probe',
                     'reason':None if status=='ok' else 'pip_capability_probe','asset_index':0,'pip_version':'26.1',
+                    'help_exit_code':0,'missing_options':[] if status=='ok' else ['--resume-retries'],
+                    'resume_policy':'explicit-zero-resume','reviewed_source_matches':None,
                     **(row if status=='ok' else dict.fromkeys(row))}
                 h.write_once(source/'worker-result.json',value);h.write_once(source/'worker-scope.json',kernel('worker'))
                 h.retain_worker_evidence(source,output,'wheel-01',1000,row,required=status=='ok')

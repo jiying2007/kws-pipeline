@@ -1,0 +1,72 @@
+{
+  "tag": "25.0.1",
+  "commit": "bc7c88cb3de9c9af769c51517833ea48bbe70d9a",
+  "files": [
+    {
+      "path": "src/pip/_internal/cli/index_command.py",
+      "git_blob_sha1": "295108ed605d678c6d26f0a489481eb381d02e7e",
+      "sha256": "8bfb203653e65c2e621d4698f9d9a6ac728a4e07393b8856ce2b2be40975aebd",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/cli/index_command.py"
+    },
+    {
+      "path": "src/pip/_internal/cli/cmdoptions.py",
+      "git_blob_sha1": "eeb7e651b792b0c6c2d40ad6934216b05dd8354b",
+      "sha256": "577041db6178feffd1907699e689d69ecce16c1b63619bcd85b9fd33434ed072",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/cli/cmdoptions.py"
+    },
+    {
+      "path": "src/pip/_internal/network/session.py",
+      "git_blob_sha1": "5e10f8f56154032bd06400db48afc890326dc5f6",
+      "sha256": "9ac3387acd7a2e698d118364ad8ca0f1f4dcee00076ca165b5ac1f28fdbb2ce2",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/network/session.py"
+    },
+    {
+      "path": "src/pip/_internal/network/download.py",
+      "git_blob_sha1": "5c3bce3d2fd0cd0678ab4af066dea803b7064067",
+      "sha256": "14b38fdbd74f6040818808bb7848ef01b364cb368a36a6f28ce4f69bc1cf5bc5",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/network/download.py"
+    },
+    {
+      "path": "src/pip/_internal/network/utils.py",
+      "git_blob_sha1": "bba4c265e89b1ce570ceeeebf1a321eebec919b4",
+      "sha256": "2276b17a5f8dc41bb83d05a48f212b7677dec2c1427201e987b773475f856e86",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/network/utils.py"
+    },
+    {
+      "path": "src/pip/_vendor/requests/adapters.py",
+      "git_blob_sha1": "7030777465fb2823ebb72e89b11d5a36824330da",
+      "sha256": "27b55e571281bdac1bb655f60c4455a34e49f415d371660b30735dd4169af9b9",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_vendor/requests/adapters.py"
+    },
+    {
+      "path": "src/pip/_vendor/urllib3/util/retry.py",
+      "git_blob_sha1": "9a1e90d0b236420d7f8b4c5c0325a7c17a1f3703",
+      "sha256": "e8436f399f0f043ce1f24822c69aa5f6522b6f67711fe93b66605a9c9176360e",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_vendor/urllib3/util/retry.py"
+    },
+    {
+      "path": "src/pip/_vendor/urllib3/connectionpool.py",
+      "git_blob_sha1": "0872ed770117096a8decf02e099a5c4148e018f3",
+      "sha256": "7b67a203035b14d08ac63e1bc0328d2bec3b1c8752cf73a633153f4c8b7e7af4",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_vendor/urllib3/connectionpool.py"
+    },
+    {
+      "path": "src/pip/_vendor/requests/sessions.py",
+      "git_blob_sha1": "b387bc36df7bc064b502adcb3c1a4527dd401fda",
+      "sha256": "ca44c8f145864a5b4e7c7d3b1caa25947ee44c11b0e168620556901a67244f0e",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_vendor/requests/sessions.py"
+    },
+    {
+      "path": "src/pip/_internal/commands/download.py",
+      "git_blob_sha1": "917bbb91d83cbb81a5814d510b5dd3bdd6c0f510",
+      "sha256": "d2a0749f2b3a6443eca20e39d650ec8cbe41c7b67deedf81f34a0564a869cca3",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/commands/download.py"
+    },
+    {
+      "path": "src/pip/_internal/network/auth.py",
+      "git_blob_sha1": "1a2606ed080463dc36d34d5a4ff33b8937839823",
+      "sha256": "0f88004a352baa80c5952b7a810efaeca0008efe8f532254d29b839615cd5511",
+      "url": "https://github.com/pypa/pip/blob/bc7c88cb3de9c9af769c51517833ea48bbe70d9a/src/pip/_internal/network/auth.py"
+    }
+  ]
+}

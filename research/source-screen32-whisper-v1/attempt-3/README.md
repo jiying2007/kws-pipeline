@@ -1,5 +1,24 @@
 # Bounded official-pip acquisition and third campaign
 
+## Historical campaign and current source
+
+The one-shot third campaign was consumed by run
+[38112558973](https://github.com/jiying2007/kws-pipeline/actions/runs/38112558973)
+at activation commit `f17670af7da490bfe2d292661fbe3f5114d5eb4e`.
+It stopped at the bootstrap pip capability probe before acquisition or audio
+inference. All 16 clips remained NOT_RUN. The retained evidence identifies pip
+25.0.1 and the probe failure, but does not retain the help command exit status
+or individual missing options.
+
+Current source adds the audited [pip compatibility policy](../pip-compatibility/README.md)
+and structured worker-result v2 diagnostics. The historical third execution
+freeze and release record are deliberately not regenerated. They no longer
+qualify the changed source for execution. No new active workflow is added.
+Any future separately authorized campaign must have its own reviewed source
+freeze and include `pip_compatibility.py` in its setup-only code bundle; the
+unchanged inference bundle must remain blind to setup and peer-label context.
+
+
 This is a reusable repository mechanism. Its containers, private Unix sockets,
 relay processes and scratch directories exist only for one admitted job and are
 removed afterward. It does not establish a permanent proxy, credential grant,
