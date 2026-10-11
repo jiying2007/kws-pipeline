@@ -98,16 +98,68 @@ class ContractTests(unittest.TestCase):
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         return env,event,release
-    def test_recovery_predecessor_is_fixed_and_original_ref_rejected(self):
-        for value in (None, {}, True, dict(c.PREDECESSOR_ZERO_RECOGNITION, started=True),
-                      dict(c.PREDECESSOR_ZERO_RECOGNITION, started=1),
-                      dict(c.PREDECESSOR_ZERO_RECOGNITION, cross_execution_recognition_limit=72)):
+    def test_both_consumed_predecessors_match_terminal_evidence(self):
+        proof=c.PREDECESSOR_ZERO_RECOGNITION
+        self.assertEqual(set(proof),{'executions','cross_execution_recognition_limit'})
+        self.assertEqual(proof['cross_execution_recognition_limit'],36)
+        self.assertEqual([row['run_id'] for row in proof['executions']],[38154869005,38160295526])
+        for row in proof['executions']:
+            terminal=c.read_json(HERE/'evidence'/('run-'+str(row['run_id']))/'terminal-status.json')
+            self.assertEqual(row,{
+                'run_id':terminal['run']['id'],'run_attempt':terminal['run']['attempt'],
+                'executed_head_sha':terminal['source']['commit'],
+                'evidence_commit':terminal['evidence']['commit'],
+                'archive_sha256':terminal['evidence']['archive_sha256'],
+                **{key:terminal['recognition_slots'][key] for key in ('started','completed','not_run')}})
+            self.assertEqual((row['started'],row['completed'],row['not_run']),(0,0,36))
+        self.assertEqual(sum(row['started'] for row in proof['executions'])+c.LIMITS['attempts'],
+                         proof['cross_execution_recognition_limit'])
+    def test_recovery_predecessor_roster_is_exact(self):
+        proof=c.PREDECESSOR_ZERO_RECOGNITION
+        for value in (None, {}, True, proof['executions'][0],
+                      dict(proof,executions=proof['executions'][:1]),
+                      dict(proof,executions=proof['executions'][1:]),
+                      dict(proof,executions=proof['executions'][::-1]),
+                      dict(proof,executions=proof['executions']+[proof['executions'][0]]),
+                      dict(proof,cross_execution_recognition_limit=72),
+                      dict(proof,cross_execution_recognition_limit=True)):
             env,event,release=self.dispatch_fixture();release['predecessor_zero_recognition']=value
             with self.subTest(value=value),self.assertRaisesRegex(ValueError,'predecessor'):
                 c.fresh_run(env,event,release)
         env,event,release=self.dispatch_fixture()
-        env['GITHUB_REF']='refs/heads/research/qwen12-native-admission-v1'
-        with self.assertRaises(ValueError):c.fresh_run(env,event,release)
+        del release['predecessor_zero_recognition']
+        with self.assertRaisesRegex(ValueError,'predecessor'):c.fresh_run(env,event,release)
+    def test_either_predecessor_changed_nonzero_or_omitted_is_rejected(self):
+        changes={'run_id':38160295527,'run_attempt':2,'executed_head_sha':'a'*40,
+                 'evidence_commit':'b'*40,'archive_sha256':'c'*64,
+                 'started':1,'completed':1,'not_run':35}
+        for index in (0,1):
+            for key,value in changes.items():
+                for mode in ('changed','omitted'):
+                    env,event,release=self.dispatch_fixture()
+                    row=release['predecessor_zero_recognition']['executions'][index]
+                    if mode=='omitted':del row[key]
+                    else:row[key]=value
+                    with self.subTest(predecessor=index,key=key,mode=mode),self.assertRaisesRegex(ValueError,'predecessor'):
+                        c.fresh_run(env,event,release)
+            for key in ('started','completed'):
+                env,event,release=self.dispatch_fixture()
+                release['predecessor_zero_recognition']['executions'][index][key]=False
+                with self.subTest(predecessor=index,key=key,type='bool'),self.assertRaisesRegex(ValueError,'predecessor'):
+                    c.fresh_run(env,event,release)
+    def test_only_new_recovery2_source_identity_is_accepted(self):
+        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-recovery2')
+        for branch in ('research/qwen12-native-admission-v1',
+                       'research/qwen12-native-admission-recovery1',
+                       'research/qwen12-native-transport-preflight-v1',
+                       'research/qwen12-native-admission-recovery20'):
+            env,event,release=self.dispatch_fixture();env['GITHUB_REF']='refs/heads/'+branch
+            with self.subTest(branch=branch),self.assertRaises(ValueError):c.fresh_run(env,event,release)
+    def test_recovery2_still_rejects_rerun_and_existing_branch_push(self):
+        for target,key,value in (('env','GITHUB_RUN_ATTEMPT','2'),('env','GITHUB_EVENT_NAME','workflow_dispatch'),
+                                 ('event','created',False),('event','created',1)):
+            env,event,release=self.dispatch_fixture();(env if target=='env' else event)[key]=value
+            with self.subTest(key=key,value=value),self.assertRaises(ValueError):c.fresh_run(env,event,release)
 
     def test_all_dispatch_approvals_require_literal_true(self):
         for key in c.DISPATCH_APPROVALS:
@@ -152,6 +204,8 @@ class ContractTests(unittest.TestCase):
             self.assertEqual([line for line in native.splitlines() if line.startswith('    '+field+':')],
                              [expected])
         self.assertEqual(release['required_runtime_preconditions'],list(c.REQUIRED_RUNTIME_PRECONDITIONS))
+        self.assertEqual(c.canonical(release['predecessor_zero_recognition']),
+                         c.canonical(c.PREDECESSOR_ZERO_RECOGNITION))
         self.assertEqual(release['evidence_transport'],'github-repository-zip-chunks-v1')
         self.assertNotIn('activation_blockers',release)
         self.assertNotIn('maximum_log_api_readback_approved',release)
@@ -277,6 +331,12 @@ class ContractTests(unittest.TestCase):
             docker.gate('once')
             with self.assertRaises(ValueError):docker.gate('once')
             with self.assertRaises(ValueError):docker.gate('../escape')
+    def test_recovery_identity_does_not_reset_consumed_local_gate(self):
+        with tempfile.TemporaryDirectory() as d,patch.object(host.MeteredDocker,'raw') as raw:
+            docker=host.MeteredDocker(d,999999999999);gate=docker.gate('once')
+            with self.assertRaises(ValueError):docker.gate('once')
+            with self.assertRaises(FileExistsError):host.MeteredDocker(d,999999999999)
+            self.assertTrue(gate.is_dir());raw.assert_not_called()
     def test_unapproved_output_excluded(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);(root/'weight.pt').write_bytes(b'secret');(root/'audio.wav').write_bytes(b'private')
