@@ -93,7 +93,7 @@ class PublisherTests(unittest.TestCase):
         self.assertEqual(result["numeric_job_id"], 456)
         self.assertEqual(result["evidence_commit"], "d" * 40)
         self.assertEqual(self.api.calls[-1], ("POST", p.BASE + "/git/refs",
-            {"ref": "refs/heads/evidence/qwen12-native-admission-remaining35-v1", "sha": "d" * 40}, 201))
+            {"ref": "refs/heads/evidence/qwen12-native-admission-remaining35-r1-v1", "sha": "d" * 40}, 201))
         self.assertEqual([method for method, _, _, _ in self.api.calls[:6]], ["GET"] * 6)
         tree_call = next(c for c in self.api.calls if c[1] == p.BASE + "/git/trees")
         self.assertEqual(tree_call[2]["base_tree"], "b" * 40)
@@ -134,7 +134,9 @@ class PublisherTests(unittest.TestCase):
     def test_consumed_and_mixed_source_refs_rejected_before_any_api(self):
         for old in ("research/qwen12-native-admission-v1",
                     "research/qwen12-native-admission-recovery1",
-                    "research/qwen12-native-admission-recovery2"):
+                    "research/qwen12-native-admission-recovery2",
+                    "research/qwen12-native-admission-recovery3",
+                    "research/qwen12-native-admission-remaining35-v1"):
             for part in ("env", "event", "both"):
                 env,event=copy.deepcopy(self.env),copy.deepcopy(self.event)
                 if part in ("env", "both"):env["GITHUB_REF"]="refs/heads/"+old
@@ -146,7 +148,9 @@ class PublisherTests(unittest.TestCase):
     def test_consumed_run_or_job_head_branch_rejected_before_writes(self):
         for old in ("research/qwen12-native-admission-v1",
                     "research/qwen12-native-admission-recovery1",
-                    "research/qwen12-native-admission-recovery2"):
+                    "research/qwen12-native-admission-recovery2",
+                    "research/qwen12-native-admission-recovery3",
+                    "research/qwen12-native-admission-remaining35-v1"):
             for part in ("run", "job", "both"):
                 api=MockAPI(self.env,self.event)
                 if part in ("run", "both"):api.run["head_branch"]=old
@@ -158,9 +162,10 @@ class PublisherTests(unittest.TestCase):
     def test_consumed_evidence_endpoints_are_not_authorized(self):
         api=p.GitHubAPI("public-test-fixture-not-a-credential",IDENTITY,"native")
         paths=p.endpoints(IDENTITY,"native")
-        self.assertEqual(paths["ref"],p.BASE+"/git/ref/heads/evidence/qwen12-native-admission-remaining35-v1")
-        self.assertEqual(paths["directory"],p.BASE+"/contents/research/qwen12-native-admission-v1/evidence/remaining35-v1?ref="+"a"*40)
-        for old,directory in (("v1","native-v1"),("recovery1","recovery1"),("recovery2","recovery2")):
+        self.assertEqual(paths["ref"],p.BASE+"/git/ref/heads/evidence/qwen12-native-admission-remaining35-r1-v1")
+        self.assertEqual(paths["directory"],p.BASE+"/contents/research/qwen12-native-admission-v1/evidence/remaining35-r1-v1?ref="+"a"*40)
+        for old,directory in (("v1","native-v1"),("recovery1","recovery1"),("recovery2","recovery2"),("recovery3","recovery3"),
+                              ("remaining35-v1","remaining35-v1")):
             for path in (p.BASE+"/git/ref/heads/evidence/qwen12-native-admission-"+old,
                          p.BASE+"/contents/research/qwen12-native-admission-v1/evidence/"+directory+"?ref="+"a"*40):
                 with self.subTest(path=path),patch.object(p.http.client,"HTTPSConnection") as connection:

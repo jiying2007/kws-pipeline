@@ -16,10 +16,10 @@
     "each_fresh_decode_worker_kernel_cpu_guard_and_frozen_config_recheck_before_its_first_audio_forward"
   ],
   "schema": "qwen12-native-admission-release-v1",
-  "source_freeze_sha256": "d3ae5e03d458e0c7fdf27a4bcccd696fa3504a86c18dccce53e9e4587c5becd1",
+  "source_freeze_sha256": "b2e6101faf3653960c40047e5c5e20f7bc851eac61cc56ef2e9c27ea19590342",
   "source_review_approved": true,
   "remaining_slot_contract": {
-    "schema": "qwen12-fixed-remaining35-v1",
+    "schema": "qwen12-fixed-remaining35-r1-v1",
     "executions": [
       {
         "archive_bytes": 1597173,
@@ -118,6 +118,68 @@
           "path": "terminal-outcomes.json",
           "sha256": "04fa63ff6dbc12f3e64934ba0ed708ea74d994d7375b9b648dd4201cd45fe45f"
         }
+      },
+      {
+        "archive_bytes": 42908,
+        "archive_sha256": "2ecd301f1da3d1bcd5ffa5292fd1b60bad51b6aabfaad3f544c42214cf248c39",
+        "completed": 0,
+        "cumulative_started": 1,
+        "current_completed": 0,
+        "current_started": 0,
+        "error": 1,
+        "evidence_commit": "51f5d07c0ebf2ebab5bf9580347ab81cd0ea7a51",
+        "evidence_tree_sha": "d72e0af46e3d179fb8d8c008cc61c0e38936d1e6",
+        "executed_head_sha": "7dcb09208798298ec5a7e2d44b6c5611524fe0ba",
+        "job_id": 114590686389,
+        "job_key": "qwen12",
+        "not_run": 35,
+        "repository": "jiying2007/kws-pipeline",
+        "run_attempt": 1,
+        "run_id": 38180060677,
+        "source_freeze_sha256": "d3ae5e03d458e0c7fdf27a4bcccd696fa3504a86c18dccce53e9e4587c5becd1",
+        "source_tree_sha": "36d26b58c7113371363ee30b57cfaade745cba4b",
+        "started": 0,
+        "started_members": [],
+        "terminal_historical_references": [
+          {
+            "attempts": 1,
+            "audio_id": "clip-000001",
+            "family": "qwen06",
+            "historical_evidence": {
+              "archive_sha256": "9d371985530e8d5e32c915b8853f6e945ded1bfdbb6dad0b53fcbba4772e5bf5",
+              "audio_frames": 35840,
+              "audio_id": "clip-000001",
+              "evidence_commit": "8c25805e226ca23d55bd698b52ba5b45acd9195a",
+              "executed_head_sha": "80009f412987aeaaaf401894677299724ed0490d",
+              "family": "qwen06",
+              "job_id": 114572506731,
+              "model_lock_sha256": "051c0091294246642882676c1d6e26ecb4508436392c2ad1dcaec56ee5f0a1da",
+              "native_decode_config_sha256": "70828c08d53241e2170e5483137d9d518935e5358103b7941cf5ec302be927fb",
+              "pcm_sha256": "a3829a5a2a25aa4adee963582ff19a0b850629b3c1db5aedf9bba0816fcf4bae",
+              "recognizer_policy_sha256": "fa697f0e93852716d7309e6206bd056eb0135099d58af49f3236e1af8842238e",
+              "request_id": "qwen12-38173984595-qwen06-clip-000001",
+              "run_attempt": 1,
+              "run_id": "38173984595",
+              "source_id": "qwen12-02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+              "source_lock_sha256": "8a8ce266b03288f370797df3fc628349c468e9804180b3f3d7b6a3773e3af2b3",
+              "started_member": {
+                "bytes": 930,
+                "path": "output/qwen06/clip-000001/started.json",
+                "sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38"
+              },
+              "status": "error",
+              "wav_sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915"
+            },
+            "origin": "historical",
+            "status": "error"
+          }
+        ],
+        "terminal_outcomes": {
+          "bytes": 21143,
+          "path": "terminal-outcomes.json",
+          "sha256": "588e0f4786d7d716770583d28edabca773031f953a65f394c224bfc028cadbfa"
+        },
+        "terminal_reported_attempt_sum": 1
       }
     ],
     "public_inputs_sha256": "cd56eb66043a487c151107445bdccbe627f958110b142bea341bf221193e14fe",
