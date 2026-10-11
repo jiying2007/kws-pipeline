@@ -231,6 +231,11 @@ jobs:
           python3 -B research/source-screen32-v1/test_contract.py
           python3 -B -O research/source-screen32-v1/test_contract.py
           python3 -B -OO research/source-screen32-v1/test_contract.py
+      - name: Dormant Whisper third-route offline contracts
+        run: |
+          python3 -S -B research/source-screen32-whisper-v1/test_contract.py
+          python3 -S -B -O research/source-screen32-whisper-v1/test_contract.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/test_contract.py
       - name: Verify tracked worktree after Bounded source-screen historical review and live guard contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bounded source-screen historical review and live guard contracts"'
       # Explicit stdlib-only suites run once per Python mode in the required

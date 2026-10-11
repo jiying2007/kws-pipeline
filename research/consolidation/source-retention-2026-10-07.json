@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "8faaf0b73a2dbe218684d7827f9fd35dbc2354cc",
-      "sha256": "b020b2027597776c1a26a3643c2cbb8e69ddc4e56c46aab85245ed97f15a1034",
-      "bytes": 38043
+      "git_blob_sha1": "fa5928bb4a5d5e7358ee62cfd27cb05ac49c6c4c",
+      "sha256": "5953d047f9c284781fc0879f71d708583682c5637b7e8e3c388cf8e907c10953",
+      "bytes": 38356
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16732,6 +16732,33 @@
             "git_blob_sha1": "858d9e0195db3ffee7c39e5ed5d8be563dcf28c2",
             "sha256": "678698b5cd2c88794e0e2020272a9a53b1d6baf8bd83a759cda72b18025949ee",
             "bytes": 28048
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "cde35652ce35ded3f19f0f3fbab6e9d09bcfdf67",
+      "from_tree": "42f7733fa050b57c44bd32c5bd352770733ff625",
+      "operation_id": "whisper-third-route-dormant-contracts-20261011",
+      "scope": "Add dormant Whisper third-route standard-library contracts to existing required CI in normal, -O and -OO modes, preserving existing resolver, producer and native contracts without duplicate commands.",
+      "rationale": "Public source and CI identity metadata only. Tests authenticate retained public source bytes, fake metadata/tensors, isolation arguments, stop traces and truthful partial accounting without installing, importing or running models. No experiment workflow is activated; source-screen-only, training false and shipping false boundaries remain unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "8faaf0b73a2dbe218684d7827f9fd35dbc2354cc",
+            "sha256": "b020b2027597776c1a26a3643c2cbb8e69ddc4e56c46aab85245ed97f15a1034",
+            "bytes": 38043
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "fa5928bb4a5d5e7358ee62cfd27cb05ac49c6c4c",
+            "sha256": "5953d047f9c284781fc0879f71d708583682c5637b7e8e3c388cf8e907c10953",
+            "bytes": 38356
           }
         }
       ]
