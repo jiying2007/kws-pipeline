@@ -1,0 +1,2175 @@
+{
+  "schema": "whisper-screen-compact-archive-v1",
+  "archive_bytes": 1843987,
+  "archive_sha256": "b938916aeee60210863fb2f86bf7d1de89663dc9a1775e7910d702a64af14cf4",
+  "logical_bytes": 4636835,
+  "chunks": [
+    {
+      "path": "chunks/terminal.zip.part-000",
+      "bytes": 1048576,
+      "sha256": "a0558bc6b53db253d1003fbefc4e1133369ca402920a682b931820c8d99ae8f2"
+    },
+    {
+      "path": "chunks/terminal.zip.part-001",
+      "bytes": 795411,
+      "sha256": "d8f5bbba590bfd99fda96cfe0411690d2e7c81051dccd98e4059fec7073b4967"
+    }
+  ],
+  "members": [
+    {
+      "path": "artifact-freeze.json",
+      "bytes": 58723,
+      "sha256": "c761a456bfc2146a0bbcf3ddc1ba1fc5e1f57f0e9d6baccb823fec1fcf3e1a25"
+    },
+    {
+      "path": "container-sensevoice.json",
+      "bytes": 557,
+      "sha256": "69d2a93e8b1f10577bb599e59e531dc6103fa63ef3beef99bb0fad2bceeae42e"
+    },
+    {
+      "path": "host-receipt.json",
+      "bytes": 2332,
+      "sha256": "71f56f2aba3334201f9dbc5ad55424ea66636400ff8309f81e42a197d04f5256"
+    },
+    {
+      "path": "image-transfer.json",
+      "bytes": 1299,
+      "sha256": "0828d2a253a90730d1d930fe58985ec040ad654dcde3801837a2121f1aaa78b2"
+    },
+    {
+      "path": "setup/asset-lock.json",
+      "bytes": 587,
+      "sha256": "bd98abdeaeb95fa025a8a6aeb58a8b92b7fa4bfe73e2e07a65f98de4440a6fc2"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-000.json",
+      "bytes": 267,
+      "sha256": "edd19eb6c1b21263d89210766a493a8075ff3565461c0d68e160c8a6a0bc1a6a"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-001.json",
+      "bytes": 267,
+      "sha256": "671e012aab4cf0c0954df389196f7ce417451729b82bbc228f9f4657c579b0de"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-002.json",
+      "bytes": 267,
+      "sha256": "3132fd4388835f7414a79628539351ded792321078e324b15b27284895f1eb96"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-003.json",
+      "bytes": 267,
+      "sha256": "249a1615dfe14aafb52556d1df23f82b30b72dc395415c500be418d2ed69f222"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-004.json",
+      "bytes": 267,
+      "sha256": "266ddd431f56b25e42b5262e0006e07babc1f636ee7d2e9a049cc2a7bdcf083d"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-005.json",
+      "bytes": 267,
+      "sha256": "0390e85d3258cbc77fd4715f86bdf603bcd76c451d02a6ab971e3933a5efcaf5"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-006.json",
+      "bytes": 267,
+      "sha256": "cf3c075b213749542b66189e7784152d630ed3f67f48b55a996b3beb2f07ca01"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-007.json",
+      "bytes": 267,
+      "sha256": "a122718887b39e1ec420fedba2d388ca80e8adb3b1609000a4c133fb4ac3b91c"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-008.json",
+      "bytes": 267,
+      "sha256": "f8599b6c802fe0c3ed5fcf45493d4f717bce3142867b16611716eab1e490202c"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-009.json",
+      "bytes": 267,
+      "sha256": "ec14477d6c12e0f015c86cf99a06940d3ea39fc9ca1e6a02416595c2675017bf"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-010.json",
+      "bytes": 267,
+      "sha256": "4c78a01ed776f7ef7d0827584a88380cdb882c485fdc85140f530f40b1b9b819"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-011.json",
+      "bytes": 267,
+      "sha256": "486fbbbe4e9438602cee3ab1ce7b1c4b939d46c72f685f87edfbdff5f2388789"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-012.json",
+      "bytes": 267,
+      "sha256": "e03c383ebb392ef3426e11ca50b8bb3c85b022ddb278405cbbbd479d9644e8f2"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-013.json",
+      "bytes": 267,
+      "sha256": "24265f8574825e0cbabc5c142beec9a912d499baedb6f77d904bb6c8e54aebed"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-014.json",
+      "bytes": 267,
+      "sha256": "c3eec4b2f6243f6362eb169685b04d53fb46e3d71c9b43ca3ba25df03611c6e4"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-015.json",
+      "bytes": 267,
+      "sha256": "5bf30a0e12ebf69d5e66a04f3ce09ff049fba4541c0db55e1fe8ff0a569360cf"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-016.json",
+      "bytes": 267,
+      "sha256": "22f69b5d397f86e5f29211ebb42ea53e8874cde490e11f1923fa48ce3d3f737e"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-017.json",
+      "bytes": 267,
+      "sha256": "f27d5d0dcf1326dcd99480f3de28aa74c756a017a1f6c75911fb61c5d646d9a4"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-018.json",
+      "bytes": 267,
+      "sha256": "a8c1f57ea30715df8512e53b433b0546a676eabdc6cf4ab65c9bddbfad5cd89a"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-019.json",
+      "bytes": 267,
+      "sha256": "4a64efd3800e57b784db5b9c8989529fca5fdb855c8a95aa4ef61dd44c34a399"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-020.json",
+      "bytes": 267,
+      "sha256": "86c03e9648acb72fa17e55b108a01761c6134b22dfe3cdd45ac3dfeb5cd8b4da"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-021.json",
+      "bytes": 267,
+      "sha256": "46f78e2109b3835da99befc702ab5b903b3f587db9b3234e1feeeb333a2a63e7"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-022.json",
+      "bytes": 169,
+      "sha256": "6371375ad194021f7e2f59d5746f88a01811b9dbad704db30414c369edf0f78c"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-023.json",
+      "bytes": 263,
+      "sha256": "0e27c17c9c4afff0d286e73b9657118723e81452943d47d929b947861685e4ff"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-024.json",
+      "bytes": 261,
+      "sha256": "2cfebade9ff009de339f0903dc3cdddbd97db4218135c7e8a6e5295aca6ef816"
+    },
+    {
+      "path": "setup/bounded-acquisition/bounded-host-cleanup-025.json",
+      "bytes": 170,
+      "sha256": "975b96da28c8ff5fd3d2ec64d542dc9de918d07df34050e6d788a60431d4ff1f"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-000-final.json",
+      "bytes": 167,
+      "sha256": "b323d76140ee2e3c75e75d69c14d23901f8aa0f83ff8b7cb311b37cd62a68071"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-000-started.json",
+      "bytes": 77,
+      "sha256": "25e01e55613d7295660f7b169ed6399d0c420866b76a1d3dcb284acd26a5985a"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-001-final.json",
+      "bytes": 167,
+      "sha256": "22b0f7912af13d82a16b581f7757c3f72dabf9d75e713e34e630302038193060"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-001-started.json",
+      "bytes": 77,
+      "sha256": "54092f6ceab10fb0f250d427e55cb9080c77c5309f32da678226a038d3ed89b5"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-002-final.json",
+      "bytes": 167,
+      "sha256": "d1290e92f193d8c7ba3d0b696a77c4d12104da7ff10cb165d8f391ab48aaf7fd"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-002-started.json",
+      "bytes": 77,
+      "sha256": "f9b6514434d4f9d96de50bca6b9642292579aa3a82d9593d1985e7dd00446df7"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-003-final.json",
+      "bytes": 167,
+      "sha256": "4c6bb09d1a59dc7a2501b3e313c61211f21e5ad76fd162b1fc4f96f33fdab2c2"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-003-started.json",
+      "bytes": 77,
+      "sha256": "1e495f40a8712145bba11bd2c3ba3ad216bfd9cce0c12f9d006767816d66cb96"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-004-final.json",
+      "bytes": 165,
+      "sha256": "b21156ba350276ad60c94f11e438cd5433ddc5ad8d64de0acaf6ea1d438fe1f9"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-004-started.json",
+      "bytes": 77,
+      "sha256": "97cce89a1f8a3e3d35e809bc9ba752e7e2c34af121b60aeebcb154a524474cff"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-005-final.json",
+      "bytes": 167,
+      "sha256": "5ae31019bdcb71a8367ec9e3809e1dd3aab8d6077e1c81c9f4e3f4c892910366"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-005-started.json",
+      "bytes": 77,
+      "sha256": "7c9ff74e23e6b3678a2f9c29b9b016f590b196a490aacce0fdb17cf5c6fbca36"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-006-final.json",
+      "bytes": 172,
+      "sha256": "78ba58b757536613502a6cc583886817fff8afcafe462e075b29407b4eb17ccc"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-006-started.json",
+      "bytes": 78,
+      "sha256": "5ba6bbdcf23d888c6397452ab4459fb868531f5411aca7250f9e2f8881e68f72"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-007-final.json",
+      "bytes": 165,
+      "sha256": "39028ab256e20cc13e28d2b0cff0314b869741335988eed2c85c836ff939feb2"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-007-started.json",
+      "bytes": 77,
+      "sha256": "253aa28ba18ef718adc2976bbf311b4026696bc9777f1a464f5ddfc5bf3b4f66"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-008-final.json",
+      "bytes": 165,
+      "sha256": "824f23842d60748cdf49005391a71f75e693424c1253e5ff473703ade098616b"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-008-started.json",
+      "bytes": 77,
+      "sha256": "fa1079e78b50c18c2b9bc93db3ff29302ec168c816c59f6ca312fa143abfa0a5"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-009-final.json",
+      "bytes": 167,
+      "sha256": "d810db2a344b44c770e67b0512c691d087013ae6e0260af786fce202ca1a89cd"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-009-started.json",
+      "bytes": 77,
+      "sha256": "e39ddf09d5ecde0d90fad8a45b35cd4b1ec9573b7aaaedb77efc3c5345696888"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-010-final.json",
+      "bytes": 169,
+      "sha256": "864eb372290d6519a3df23a7c629c4162fe2b7a003b0402e8488697111f94d9e"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-010-started.json",
+      "bytes": 77,
+      "sha256": "c57f6cec1e421d67f2156e59d2899f174225f0ced6a641319af6708f10c1798e"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-011-final.json",
+      "bytes": 169,
+      "sha256": "ddf0b2381f10311403b8bf5f42c513e9ee8f85ac1c1005789a923a15f97731df"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-011-started.json",
+      "bytes": 77,
+      "sha256": "7ba30413bdf909116d43a4a6757373dc4675e7e997a3319f5a98008b94fa94b2"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-012-final.json",
+      "bytes": 172,
+      "sha256": "e7324682349c298bdf0e44953776b615022c0d866eb24b1344369631bda1c864"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-012-started.json",
+      "bytes": 78,
+      "sha256": "7667a858bb72cbd77a3f1ff4026cd414d2af83981b2211ad67817b87ca842294"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-013-final.json",
+      "bytes": 167,
+      "sha256": "6d743058d8d8e3bd66954081e1ff7cc008d258cef4c0679fc8c42fb7abac41cb"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-013-started.json",
+      "bytes": 77,
+      "sha256": "a6e9e7057cf0e67ed1d8fb9009121348a6b63fdc5a1d90f025109774af29ce20"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-014-final.json",
+      "bytes": 165,
+      "sha256": "13cf125aa78a4ef1bf040e675baf0d087bd974a64348ac43f66092cc07bd1f91"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-014-started.json",
+      "bytes": 77,
+      "sha256": "af90ebbecbdcd99faecfb0e41680fce8ef5d6a7a2b67d56b1698581b825aa7fa"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-015-final.json",
+      "bytes": 169,
+      "sha256": "81387028c30770a8223a058ff2e68a453e574625c22fa5a470d553ed2342991a"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-015-started.json",
+      "bytes": 77,
+      "sha256": "5196c5242a27e05817062c29f282a4b4f4a53922c35c74c92b311b978d2dc4a0"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-016-final.json",
+      "bytes": 169,
+      "sha256": "9362e205d350b9cedd8839a83d74149dacd74be8afdc54fba897c5ad89ca37cd"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-016-started.json",
+      "bytes": 77,
+      "sha256": "8d647b14f0990d497789bbe71f125729fe0fe3d8d9b55e5cb071b733db60f3d4"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-017-final.json",
+      "bytes": 169,
+      "sha256": "0a42b9dbb1c6eba86b3fc4ccc7072b9bf7ccd88e8585a49b1c71b25ce36aebd7"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-017-started.json",
+      "bytes": 77,
+      "sha256": "fd6c6fa437ed7d198c7db3b52ff3a05bd51ef830214894540800fdbcba75e503"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-018-final.json",
+      "bytes": 175,
+      "sha256": "a6d99a694b4472fe9fa97071ec21ae6ab84c24072d4f1007bf5f04a89fecc31d"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-018-started.json",
+      "bytes": 79,
+      "sha256": "1dd6b2ab944b9d1613b477425efbc6141c3e6eac7550a4d4834b76d020e9e03c"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-019-final.json",
+      "bytes": 165,
+      "sha256": "0b94bb4ecc52ae44d205f23812c922b5826d9fe8c6e4e7870078d0d1e85b13f3"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-019-started.json",
+      "bytes": 77,
+      "sha256": "41c183261675975599ab564875b095dea00748753e774b5092eac5c0e77d1dae"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-020-final.json",
+      "bytes": 165,
+      "sha256": "c483faa3f7e4d36d087222ddcae1569010dcce1207e3aa6bd3116d248b22a9ab"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-020-started.json",
+      "bytes": 77,
+      "sha256": "6fa4490101214885ead41bc673a938e0e8e40b994a1a3af9cd5bf67f7869ef5b"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-021-final.json",
+      "bytes": 167,
+      "sha256": "e9db0c3d30ee7c05940278afbbf69828ed80a442e0322324bdee5a0176a8634d"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-021-started.json",
+      "bytes": 77,
+      "sha256": "b535264b4b18fae5241b65a4bf6d9f9c90f4fb9a3a4da7b44b23d8b6de140526"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-022-final.json",
+      "bytes": 171,
+      "sha256": "0469bde82de11a6adbdb09fd77c2a348c1b8cc95b476a7953bd6a9661555d125"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-022-started.json",
+      "bytes": 79,
+      "sha256": "cdb7dc45cbe4118add8455ce8cf573e5940bf387fc3e383593449fc86975bd02"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-023-final.json",
+      "bytes": 173,
+      "sha256": "5f9c0ec2ef5dc0fa3f2639a95222c9aee7f61bd0adb6cb268fcc365dcef987ff"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-023-started.json",
+      "bytes": 77,
+      "sha256": "4a1445c24bcc9b296b42386b32e535894b524ad0d815c659f60d211cccc303f8"
+    },
+    {
+      "path": "setup/bounded-acquisition/budget-initial.json",
+      "bytes": 52,
+      "sha256": "8fe01687f837c466e1567e39d52f1a11682eff61e08d664fbe5b29a70506beb4"
+    },
+    {
+      "path": "setup/bounded-acquisition/finalize-offline-scope.json",
+      "bytes": 251,
+      "sha256": "dcc84eb6e59a757c8df1a252886ebc781426909f74ff02bf8c999232612787ea"
+    },
+    {
+      "path": "setup/bounded-acquisition/install-offline-scope.json",
+      "bytes": 251,
+      "sha256": "0187deb1cee300c0e71e6e432bceb4817f78bee5fdfe92e0bae0d31ebd80f717"
+    },
+    {
+      "path": "setup/bounded-acquisition/model-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/model-broker-scope.json",
+      "bytes": 248,
+      "sha256": "2209c5a2b563dba4e508452af42985f61c062b117669900cb8e3f778715b7b14"
+    },
+    {
+      "path": "setup/bounded-acquisition/model-broker.json",
+      "bytes": 534,
+      "sha256": "8b5064d810385bc6a1c060c05751f13df0fdde814d135bffdad7e98a32fb944a"
+    },
+    {
+      "path": "setup/bounded-acquisition/model-worker-scope.json",
+      "bytes": 249,
+      "sha256": "4fe94c629a7ef9618692e19524899fb78f36126da14a5b29d38d8081e77553a8"
+    },
+    {
+      "path": "setup/bounded-acquisition/receipt.json",
+      "bytes": 4251,
+      "sha256": "ecd04f1b80145953094294407504b4cdd2ef7db125ad8ff0b6b9c1a2d1fdcd4f"
+    },
+    {
+      "path": "setup/bounded-acquisition/source-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/source-broker-scope.json",
+      "bytes": 248,
+      "sha256": "563a48812649df590ffb96464a1d9b37f5a3292373afe31f674736137a17dfd5"
+    },
+    {
+      "path": "setup/bounded-acquisition/source-broker.json",
+      "bytes": 532,
+      "sha256": "c3f47bd627b58b5ed18aad5efb33b54b7ec50c9bb6b0e0ec5dad55a8a7f3b636"
+    },
+    {
+      "path": "setup/bounded-acquisition/source-worker-scope.json",
+      "bytes": 249,
+      "sha256": "f03fb374d29cc05f240793ebfd3db3e51b063cced3cd9640d7ce0b6888b76187"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-broker-scope.json",
+      "bytes": 248,
+      "sha256": "b9ad46bd32ccc026649a3f6146014a222afe722ca6cbf6c2e44c7b8f5e303b0a"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-broker.json",
+      "bytes": 514,
+      "sha256": "a6b9890d14307fb2d8c5ef518fdd93b40aa94dd43fa1bc4a4af267ea8e0623c6"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-worker-result.json",
+      "bytes": 403,
+      "sha256": "35f33fb555158773df8c08280a70f4f38f4cd133b9a64794ffa57387d44477a0"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-01-worker-scope.json",
+      "bytes": 249,
+      "sha256": "193cf3ce398477f30f499b474f7dc0926e2e70ef664c7ef5066daa8e66af0d36"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-broker-scope.json",
+      "bytes": 248,
+      "sha256": "3ba32dbca6d76b5fcd5d0028408e520fa50e550ca0c5e7cff3c7a5284d520035"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-broker.json",
+      "bytes": 519,
+      "sha256": "d6980166a800a5a0fae33bf58b5bb92731a540bc8ac6be15cc73d59d705a220e"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-worker-result.json",
+      "bytes": 474,
+      "sha256": "cd59e6fa6413336fc10216c5dec4b120cdd2cfd57f1a8166fe3373aaeba0485f"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-02-worker-scope.json",
+      "bytes": 249,
+      "sha256": "4d86f1088538cf9aee8c4b869dc08d4fd3a88de91f714f591ba7af6352e07fb2"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-broker-scope.json",
+      "bytes": 248,
+      "sha256": "1bc0684cb89f6b9a501530ef62124f32650dc9d84cba05006c7170d773788f4d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-broker.json",
+      "bytes": 519,
+      "sha256": "12f23ade75522e71fc44a0d65b7ec1e34baf17b082f44474484343abc5b76de3"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-worker-result.json",
+      "bytes": 400,
+      "sha256": "b59f1b873e8f680fbea66b668626bf2496eec8892250c2ceceb881e7f3e70e21"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-03-worker-scope.json",
+      "bytes": 249,
+      "sha256": "79f056aec08e52eb7092fab1d015740a20bf9f4b097fad8f8c2da977684437cd"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-broker-scope.json",
+      "bytes": 248,
+      "sha256": "c4bf6305c60ef58cca673e4f97326b1bb3919c8171ab17affa53cea2ce36f539"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-broker.json",
+      "bytes": 519,
+      "sha256": "0e4a5e81c7bd2f1bb332cc396cf8a3551a56fc7584087021aafd7b36c21ff7ae"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-worker-result.json",
+      "bytes": 401,
+      "sha256": "06875a043f507bd6cf250f8ed785f9e55f659c8e25c7680624e195a7b1be663f"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-04-worker-scope.json",
+      "bytes": 249,
+      "sha256": "fbea0ea77318597b36ee9df8cbf772ba0bfcfa33dac285d741381682155c25aa"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-broker-scope.json",
+      "bytes": 248,
+      "sha256": "753f63dc900cc87f197ae0ddbff6d5eddc142767567a338e9081bfff9c2751bb"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-broker.json",
+      "bytes": 515,
+      "sha256": "c51ee68bcd2886177d9855a73bcb094435aa21a46ced792d226c623c388e6035"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-worker-result.json",
+      "bytes": 394,
+      "sha256": "cadf8c63a68bf8f1eb9037c2bd65a24f4fc52f6027931d4b6a29da387efe2564"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-05-worker-scope.json",
+      "bytes": 249,
+      "sha256": "b0827f748a673f363787fd7d13629c46aca9cc74a59bef4245cddf62248f754d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-broker-scope.json",
+      "bytes": 248,
+      "sha256": "67b8044188902f67de585335725aab80171a0d13b70009c61bf353377cff3a26"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-broker.json",
+      "bytes": 519,
+      "sha256": "a3ca6284032b0c1c7c6496ef64c41d4b8a9508f6b0c04d31bcdb183a3c353fd9"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-worker-result.json",
+      "bytes": 398,
+      "sha256": "90785842d9aed12f184654fbdc1c12d35d46ae9d03bb18c4b91a4330045d9e94"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-06-worker-scope.json",
+      "bytes": 249,
+      "sha256": "9792a968d1c3aff4280b7c36a0d4b6a41c160676ac953f9baafc5375b618bff9"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-broker-scope.json",
+      "bytes": 248,
+      "sha256": "b0dfab8966009f4e2c2e7e93c1ae35a7f220c3c9131358280fa1de2f9f04bb77"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-broker.json",
+      "bytes": 530,
+      "sha256": "461f953f325f5330f66d08973bcaf0e8b5edc283ec2ad6ea90a360686b505413"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-worker-result.json",
+      "bytes": 446,
+      "sha256": "d7729e45a33e64b4d278c206d34a5d04f8524662a65d15800b90274dba7006ec"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-07-worker-scope.json",
+      "bytes": 249,
+      "sha256": "09570c6a73cc265dd7a97ffb984e8f6d5936c0db5a94535bbf62e10011285e5f"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-broker-scope.json",
+      "bytes": 248,
+      "sha256": "34537534cd3a34989a3241ab3da149123374eb6642efa6c66d3bbf775e571420"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-broker.json",
+      "bytes": 519,
+      "sha256": "d14032d8b17197c3b1181c92c3acf0a0a3f4209afaa227089709c8e2e19e8332"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-worker-result.json",
+      "bytes": 465,
+      "sha256": "fdb7a1ee57726f31262df427e79fdfe194f51a269cdcacfc1f94754280201dbe"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-08-worker-scope.json",
+      "bytes": 249,
+      "sha256": "d70f85ed421d104ac4c66490e347569659abaacb81a5319f52bbbf89983b3ec3"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-broker-scope.json",
+      "bytes": 248,
+      "sha256": "38b580bb753e50b9a8a4508798365538a37bd884dac11311f4fb2b1a7b927998"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-broker.json",
+      "bytes": 519,
+      "sha256": "d8456a4c26b9dee8726b902dc621babd228fa384dc442cc40e1347f6aaff8f72"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-worker-result.json",
+      "bytes": 406,
+      "sha256": "2a5c699a2d54d826558c2679429c4b89033667ec352a111985ca6a405a32ea4d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-09-worker-scope.json",
+      "bytes": 249,
+      "sha256": "c2fa352d8c4409f0fc128a794f5c8cf72deafe6ac06cfa6349a1579e705f78e2"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-broker-scope.json",
+      "bytes": 248,
+      "sha256": "58055632e6802013883accd745610076118c39d5311b10437c4b576840e5e0a2"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-broker.json",
+      "bytes": 523,
+      "sha256": "fe9d0853184cd2f6c5e8dc141c1693f92af731d2307a8e5dd4bb44b70ab0fbb8"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-worker-result.json",
+      "bytes": 398,
+      "sha256": "ca7697d0160f9437fb05546b8cd309ab7f0fa1016262468042997c7340e3f00d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-10-worker-scope.json",
+      "bytes": 249,
+      "sha256": "2af4e35ec7ce6157471c306cef4663097df8cd70ce4ed0b1c8cf92ca800f0e9b"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-broker-scope.json",
+      "bytes": 248,
+      "sha256": "f8c07458b128cfa8cf772eaf9ffe7fe5138bcd9b3b977a9bbb978ea60a04154d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-broker.json",
+      "bytes": 527,
+      "sha256": "2752a99d0e7c1fa1ec70a831c878bb088de4a38ec3b0b18003528335c7eb2318"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-worker-result.json",
+      "bytes": 400,
+      "sha256": "caa2c9f4eecc1c53bc6945fa266ce42ddd22fc27c97b492a23c0e3e4be25d826"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-11-worker-scope.json",
+      "bytes": 249,
+      "sha256": "e6b60eb2a48144d0e9d4542d63ff75819888c02f230504115cdd9f09036c47ff"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-broker-scope.json",
+      "bytes": 248,
+      "sha256": "26646e21e6b57334b175ec258113c944f343ac414a9f8ee9255ed2a639a0f8c9"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-broker.json",
+      "bytes": 527,
+      "sha256": "6512c8be52567c419306f6df8a0ab2f8b7a438861ded37aad5d1ed2490529a91"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-worker-result.json",
+      "bytes": 443,
+      "sha256": "aaf6419fe94664c40b542fb81a76f10108f7e6dc728bd9be049f10234e92d8f1"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-12-worker-scope.json",
+      "bytes": 249,
+      "sha256": "c2edd6a883592c6ee50eb939f37a79f4ad8a6efd257d37abab4b943d0dbea916"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-broker-scope.json",
+      "bytes": 248,
+      "sha256": "fd96233f96b27f9939e1360da520e0ae65b5b29bf85a58da62c14eab495bb019"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-broker.json",
+      "bytes": 532,
+      "sha256": "eb961d8cc401f65d7c0583a3890c232c280ea27a960715ac5645a40a6b8322b5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-worker-result.json",
+      "bytes": 443,
+      "sha256": "6276eae396f1a22d2bdb53aafadc87459e1b4069198cc6779f588b75b68df7da"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-13-worker-scope.json",
+      "bytes": 249,
+      "sha256": "177b86185a1d811688cf9015c370ca466669ce9be0d4af5bb4b2e3576de93305"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-broker-scope.json",
+      "bytes": 248,
+      "sha256": "f8c0b5605220edb3ae2725550349bbbbc4ba262f71973c39f513936c72a32bbb"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-broker.json",
+      "bytes": 523,
+      "sha256": "720eb0f9aa7e1a8305228fee9184f387cc43b8d90b5134707e19143312460e9b"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-worker-result.json",
+      "bytes": 466,
+      "sha256": "b7c7ff1276fd6104b3af5082a2e45055caf3052c1ad9bcc9fc6e507647dce399"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-14-worker-scope.json",
+      "bytes": 249,
+      "sha256": "ac9378d9c92a8980ff118941344f929c2f416e62d233803dac638c847ad8eab0"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-broker-scope.json",
+      "bytes": 248,
+      "sha256": "ef5f99a24b4215be5dd34200c0551130271cdcea907f2ad0812b38347d62f28f"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-broker.json",
+      "bytes": 519,
+      "sha256": "9007716d9e4cd6eb0b78a3448fbd122c585af5ccc3927d048575671ed5744398"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-worker-result.json",
+      "bytes": 401,
+      "sha256": "491dd5bad81adc0f8ca917eff021679afc8359d3e4587b2c25169cd9bcfea581"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-15-worker-scope.json",
+      "bytes": 249,
+      "sha256": "312fea91079abe37119cd7f77678dcc126808e222a73c0b27aac40e53acffb8a"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-broker-scope.json",
+      "bytes": 248,
+      "sha256": "a8ac3d829f67d837a75aff13392110de1f64f82415d1364c19ac83d8fe4f4215"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-broker.json",
+      "bytes": 527,
+      "sha256": "45a86a9882f07243e162bcedb2c29dbbda53efbf26eb6644cc7b35235496d060"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-worker-result.json",
+      "bytes": 405,
+      "sha256": "502e49147b56daf19632e827c20eec2289bc890e709541dc80982f54a8fd3155"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-16-worker-scope.json",
+      "bytes": 249,
+      "sha256": "fa1746d9064260b2c65293d26c6f40797a3222b9ed8bb93c9b17daf39aed0299"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-broker-scope.json",
+      "bytes": 248,
+      "sha256": "fa204d1e5d4a28c9d04363fa90763173163adbd13cc2f8901faf783d89aa2046"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-broker.json",
+      "bytes": 527,
+      "sha256": "92557c22c5f9f24693560999b706cc2951833e2144a6790bd744e405526fd985"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-worker-result.json",
+      "bytes": 400,
+      "sha256": "faf9eff1fcb2c602bd2953db3002a469f83c94838e7082e78b7c1945937cecdd"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-17-worker-scope.json",
+      "bytes": 249,
+      "sha256": "30b8c60bbbdfaac821d1cfc1820d8265c99461094ede193fd908b2d4cd114b81"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-broker-scope.json",
+      "bytes": 248,
+      "sha256": "77fd2cbc1fca087a6d9a7bc218b840e228ba11dda16806046906d7e21faedfe2"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-broker.json",
+      "bytes": 527,
+      "sha256": "294fcb04d2e393c6411774ed6599a1e3fb28f5f0ede93d9d534a7cc29c65adda"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-worker-result.json",
+      "bytes": 424,
+      "sha256": "6bc743335a08a3320a173561e8b3e36e34f8868395fa99b14360a5954f4fe800"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-18-worker-scope.json",
+      "bytes": 249,
+      "sha256": "d541f4b06b96d2c07958634fda5cb6e288c82764723e4aeb48614043fed5d949"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-broker-scope.json",
+      "bytes": 248,
+      "sha256": "0599cf0e3d2da473e87e4508508f68c731099f7247899a694e3c411ba615fe52"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-broker.json",
+      "bytes": 538,
+      "sha256": "b027c5e31a0b72bb5d1fc440ec5ab5535f76dc3cb8e077c1419e7718b8c6041d"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-worker-result.json",
+      "bytes": 427,
+      "sha256": "689c8d9ee4e9eccf1dcbc6e38f64a256af9ab34586720f7d88a0a3028622a7f2"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-19-worker-scope.json",
+      "bytes": 249,
+      "sha256": "ecd90fcbceae2785de3cc60ed45ad0e1d6967ad59140d100b7615546a06ec7f9"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-broker-scope.json",
+      "bytes": 248,
+      "sha256": "ee6047f9dccc26d329cfcf7ac7d78dc9f315e9950853059bfdf47d01da4d4ee5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-broker.json",
+      "bytes": 521,
+      "sha256": "aa885c78b25e631ad562fcffe8695e04ecbfa9a3831c54cd1bd19f93954e2cb9"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-worker-result.json",
+      "bytes": 397,
+      "sha256": "be6ed755f1348280476d1c41656629ebdad82dbcc3d7d79a712e544a61ec2111"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-20-worker-scope.json",
+      "bytes": 249,
+      "sha256": "6c91a80171e4decd0ee245ffee98ba46a76b7885a8ae7d73874a12e93f6b6b79"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-broker-scope.json",
+      "bytes": 248,
+      "sha256": "951d24af6cf6a4ba591e51855389c4d8ae6ddf8fcbb505564896976951a15df5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-broker.json",
+      "bytes": 521,
+      "sha256": "32c319d74445940645fb3122bec02537c6d1624b461863c3485c0abbbfe50ba4"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-worker-result.json",
+      "bytes": 410,
+      "sha256": "dc4352797db422a52004f3f828bd65ed8d2215bb9f23f155d13caa62d92ee4b1"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-21-worker-scope.json",
+      "bytes": 249,
+      "sha256": "0718cd9677e0993dc317dbe9b2f92f5c34c593366f5feeac1940ea0e858909ed"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-broker-kernel.json",
+      "bytes": 452,
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-broker-scope.json",
+      "bytes": 248,
+      "sha256": "2ab5b947c52e0dcfc6133977c44ec9a550a745f079d037a6c5e9ebcc6e0c77fc"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-broker.json",
+      "bytes": 525,
+      "sha256": "9c6ac5e9fb9e969ddb29445c37900f653a0a62c66f0ab646a198fe4a3fa49be3"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-worker-kernel.json",
+      "bytes": 448,
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-worker-result.json",
+      "bytes": 400,
+      "sha256": "5111a48b100924fc585dea8aab59dde3ce972542bcf9c07019ed2ffa488ffc84"
+    },
+    {
+      "path": "setup/bounded-acquisition/wheel-22-worker-scope.json",
+      "bytes": 249,
+      "sha256": "00ea98d1174939a6161855ee77951a8f5dab05bdc1e0d8b85d26cc4f125ff3bd"
+    },
+    {
+      "path": "setup/download-receipt.json",
+      "bytes": 9380,
+      "sha256": "66d308b14e0d9e51ed11c423bfb9e0a27d7b7484daa7c3863ddb649ac5180b9b"
+    },
+    {
+      "path": "setup/installed-inventory.json",
+      "bytes": 2455235,
+      "sha256": "4e9cd4f8ed979961e0edfe10fb5974d0ce9118b3a0169cee2f251846b8bc7f70"
+    },
+    {
+      "path": "setup/official-source/LICENSE",
+      "bytes": 1063,
+      "sha256": "b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d"
+    },
+    {
+      "path": "setup/official-source/README.md",
+      "bytes": 8246,
+      "sha256": "38c180c2a8d8ba628a3e131ad42bf06c8a51bb681efb30fbe28d5a0f4b65f288"
+    },
+    {
+      "path": "setup/official-source/pyproject.toml",
+      "bytes": 1418,
+      "sha256": "9c8111da3701070095304ea5e12b6301eddcca3bb65e491a982b102d6042b1c4"
+    },
+    {
+      "path": "setup/official-source/requirements.txt",
+      "bytes": 140,
+      "sha256": "70063b7cde70331c8d9187bb459c27fbe87bf3335cebc3ee55675b9d91262599"
+    },
+    {
+      "path": "setup/official-source/whisper/__init__.py",
+      "bytes": 7432,
+      "sha256": "79ecbed714783b6230931a3dba6d5da6d386e2d44f9fc27256e4fc72751e1f62"
+    },
+    {
+      "path": "setup/official-source/whisper/__main__.py",
+      "bytes": 35,
+      "sha256": "c519d586c3a6b639f64e59d2d6fd6b591a67ecd739f9727492911fc4ce4d545a"
+    },
+    {
+      "path": "setup/official-source/whisper/assets/gpt2.tiktoken",
+      "bytes": 835554,
+      "sha256": "306cd27f03c1a714eca7108e03d66b7dc042abe8c258b44c199a7ed9838dd930"
+    },
+    {
+      "path": "setup/official-source/whisper/assets/mel_filters.npz",
+      "bytes": 4271,
+      "sha256": "7450ae70723a5ef9d341e3cee628c7cb0177f36ce42c44b7ed2bf3325f0f6d4c"
+    },
+    {
+      "path": "setup/official-source/whisper/assets/multilingual.tiktoken",
+      "bytes": 816730,
+      "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126"
+    },
+    {
+      "path": "setup/official-source/whisper/audio.py",
+      "bytes": 4945,
+      "sha256": "36ed287b2de3eaf40207cd2a44a8d45d57ea5c212a39df07401d4fcb4d5a5a1a"
+    },
+    {
+      "path": "setup/official-source/whisper/decoding.py",
+      "bytes": 32155,
+      "sha256": "94084fedc5af74cabf8e1883a85552700057081f00ea669ad49435ecb29039db"
+    },
+    {
+      "path": "setup/official-source/whisper/model.py",
+      "bytes": 12209,
+      "sha256": "f82b0f40e29076506f1e34607a8008782f0586750a8e8bd6d8e1cee5c41b9329"
+    },
+    {
+      "path": "setup/official-source/whisper/normalizers/__init__.py",
+      "bytes": 130,
+      "sha256": "f18fcdce4caee7f2e80e4c01ab0457d3a080a872a29489542c6d23c4b0bba572"
+    },
+    {
+      "path": "setup/official-source/whisper/normalizers/basic.py",
+      "bytes": 2064,
+      "sha256": "4742eaa040e0657fa1247a1361e0d856c62317a43326ea59a40c2e9edd8d2c38"
+    },
+    {
+      "path": "setup/official-source/whisper/normalizers/english.json",
+      "bytes": 56128,
+      "sha256": "6607f948be9824d2e1b2fa2223cd94c06c45afa4e05ea0e3d5e1f2bdffde2465"
+    },
+    {
+      "path": "setup/official-source/whisper/normalizers/english.py",
+      "bytes": 21001,
+      "sha256": "d31a52685b5b42628ea4e3343c3a7925ce5b2f317e6c0ec4575677dd5c8b5d2c"
+    },
+    {
+      "path": "setup/official-source/whisper/timing.py",
+      "bytes": 12697,
+      "sha256": "bb091c973c428697012f0f8d1b4f5f3a605cd93c5d1c129957f712a6a878a59c"
+    },
+    {
+      "path": "setup/official-source/whisper/tokenizer.py",
+      "bytes": 12338,
+      "sha256": "3b48e361a7e95b4ec0356ca6d72bba635778aa10269153136ee7bc34cae30b85"
+    },
+    {
+      "path": "setup/official-source/whisper/transcribe.py",
+      "bytes": 30375,
+      "sha256": "176f5ab30e961bec2a7872f5701a1f5bf3cbfc77946e50512f0f0cf00a1ceacf"
+    },
+    {
+      "path": "setup/official-source/whisper/triton_ops.py",
+      "bytes": 3646,
+      "sha256": "26c5082f029bbd2b7ae77ecf5a3f7f196f220e5850e2c9d0ec42961caf0dde4c"
+    },
+    {
+      "path": "setup/official-source/whisper/utils.py",
+      "bytes": 11839,
+      "sha256": "f46aa555363ab42a455cd7c7f8c108dc2f69c5a94c6354c73ae96d671d9b1c37"
+    },
+    {
+      "path": "setup/official-source/whisper/version.py",
+      "bytes": 25,
+      "sha256": "c4d27ecccdd52a9cded762f1a82da3152db12cbc0aa6ea781f945446a143cfaf"
+    },
+    {
+      "path": "setup/phase-finalize-complete.json",
+      "bytes": 493,
+      "sha256": "1de05a51eef4f4077b1fe47fb0bb5d5e3e446e61378ab9bfa89b16722fc2408a"
+    },
+    {
+      "path": "setup/phase-finalize-progress.json",
+      "bytes": 724,
+      "sha256": "935a7d30de5f84a7503472d060e6989ef026ccd7526405195d60b2fed6d491f8"
+    },
+    {
+      "path": "setup/phase-install-complete.json",
+      "bytes": 492,
+      "sha256": "c0fedee36c8092a5a6ef7f73bd88e2c8edd27e12914c954737e1abf314006709"
+    },
+    {
+      "path": "setup/phase-install-progress.json",
+      "bytes": 796,
+      "sha256": "91c38cd2283c98d96523da1783d682779eabd5d473c12525f80f4afd9a28b804"
+    },
+    {
+      "path": "setup/phase-model-complete.json",
+      "bytes": 498,
+      "sha256": "68087458f93b09c1841f165ec79c99e68c4e7a62a3d39e76c88721dcb505efd6"
+    },
+    {
+      "path": "setup/phase-model-progress.json",
+      "bytes": 1347,
+      "sha256": "8f80f80b13b302d08ddb14e452716335c025643a0ab3a3846c408c2dd19c53ec"
+    },
+    {
+      "path": "setup/phase-source-complete.json",
+      "bytes": 497,
+      "sha256": "ceb91652c3780b672799de5f62b299c539656cb6de3b3bb1a9af81ec9087966f"
+    },
+    {
+      "path": "setup/phase-source-progress.json",
+      "bytes": 7547,
+      "sha256": "ca1f7c74a72c06f93c3cb22ae94a863c3131be4c778b03719ea91138677e12f9"
+    },
+    {
+      "path": "setup/runtime-lock.json",
+      "bytes": 21952,
+      "sha256": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d"
+    },
+    {
+      "path": "setup/setup-receipt.json",
+      "bytes": 3928,
+      "sha256": "d14be71a46eb171f6d8b41f7b4fd86bc2649109e7bd955d29167c0cd7ab80e3f"
+    },
+    {
+      "path": "setup/source-lock.json",
+      "bytes": 6780,
+      "sha256": "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649"
+    },
+    {
+      "path": "terminal-outcomes.json",
+      "bytes": 7300,
+      "sha256": "115773be9a64ee04cb0d5bb5002268528e9a4573ef094d754565187f95942a10"
+    },
+    {
+      "path": "whisper/blind-job.json",
+      "bytes": 3203,
+      "sha256": "a06ed76bbb4cf21dd736acf66b1e329fd16108f242100574bf6ef03ff51a5748"
+    },
+    {
+      "path": "whisper/clip-000001/completed.json",
+      "bytes": 664,
+      "sha256": "003bb234525902c622a3ecddc16b7f2c999e0c81a115aeaac2f3ecd957c728ee"
+    },
+    {
+      "path": "whisper/clip-000001/input-capture.json",
+      "bytes": 803,
+      "sha256": "5d5b4e6bb0b043af4c7d524065d47f5a3673938cd8a893e0f68cbdbf704fddde"
+    },
+    {
+      "path": "whisper/clip-000001/pre-finalize.json",
+      "bytes": 120,
+      "sha256": "62c53b6f5fec19d8608c5121a7d781982f3e1020d2f40d4edd03cb740264dee7"
+    },
+    {
+      "path": "whisper/clip-000001/raw-output.json",
+      "bytes": 3599,
+      "sha256": "5efc3a5d82ecd54b8a0eebd455ec939047daf508511211d3b69b87dc1eee15a8"
+    },
+    {
+      "path": "whisper/clip-000001/started.json",
+      "bytes": 825,
+      "sha256": "743c62c05313ac6d59b0f77a18f63725f573d06132bd728fd12c8d95a3955cc1"
+    },
+    {
+      "path": "whisper/clip-000001/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000001/update-002.json",
+      "bytes": 77,
+      "sha256": "bfa480614f8dc4764df65a118226e7c49fb31d8132992560ca3ff7a65b25f3eb"
+    },
+    {
+      "path": "whisper/clip-000001/update-003.json",
+      "bytes": 81,
+      "sha256": "c4b45a5ea6d162c6805ab5eb5eebed705fb24f1914e9110975fa614b0dd62e85"
+    },
+    {
+      "path": "whisper/clip-000001/update-004.json",
+      "bytes": 86,
+      "sha256": "6c805aa0ac5d3a166880fcab84272025533aaf3e22cf9ede008dc243b6326632"
+    },
+    {
+      "path": "whisper/clip-000001/update-005.json",
+      "bytes": 92,
+      "sha256": "12492bc55fc83faa362e6ae81cdd45ff844dc761f36f5d679edc5238b1e95a77"
+    },
+    {
+      "path": "whisper/clip-000001/update-006.json",
+      "bytes": 96,
+      "sha256": "e5e2d1a1706ecc54e8b934ec6812c523f185e7ff9bb52015aa5b779da1b50c18"
+    },
+    {
+      "path": "whisper/clip-000001/update-007.json",
+      "bytes": 101,
+      "sha256": "6b4774c02485aa9e855216801c15d02ae117b8b1a3df786230e7ae08dbece5ee"
+    },
+    {
+      "path": "whisper/clip-000002/completed.json",
+      "bytes": 664,
+      "sha256": "b41ca12125b46a9bd21c5a74330f7c66c66e678c8be1ecadd0150133f0fa0bad"
+    },
+    {
+      "path": "whisper/clip-000002/input-capture.json",
+      "bytes": 803,
+      "sha256": "eb89149b24c45c29a383f806fd1f8bf55b938d0eecf9f3ac4525c9cafec03450"
+    },
+    {
+      "path": "whisper/clip-000002/pre-finalize.json",
+      "bytes": 115,
+      "sha256": "0d53f77858dcd45f1488824878263ae0c59913a984b544d309c3806d3413d0f7"
+    },
+    {
+      "path": "whisper/clip-000002/raw-output.json",
+      "bytes": 3580,
+      "sha256": "13314730a210240bc37c056ea63d6c9fd56e73d58d33d2dbcd29b3d8c9fda0c0"
+    },
+    {
+      "path": "whisper/clip-000002/started.json",
+      "bytes": 825,
+      "sha256": "5b67d1e03ea39437dc3c679595f8cae2e9983d57edc009e78de35ba03a92969a"
+    },
+    {
+      "path": "whisper/clip-000002/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000002/update-002.json",
+      "bytes": 77,
+      "sha256": "802a61ea5d62ef34b7e11dd39ec6f6469fe5f24ad4256c4a879b54f1c0b9955b"
+    },
+    {
+      "path": "whisper/clip-000002/update-003.json",
+      "bytes": 82,
+      "sha256": "feaced3af06f5a427475b482950271e191c8cce998556c7fd4cd094b16d7c1a5"
+    },
+    {
+      "path": "whisper/clip-000002/update-004.json",
+      "bytes": 86,
+      "sha256": "9e4f2842d9baa5207d01226d17b61419a9a92a7ff33b7049f196047907c31682"
+    },
+    {
+      "path": "whisper/clip-000002/update-005.json",
+      "bytes": 91,
+      "sha256": "18efb2125bb5066886bd1cef2b0c042b705f86f37038ce8fcb90ddf623008ec4"
+    },
+    {
+      "path": "whisper/clip-000002/update-006.json",
+      "bytes": 96,
+      "sha256": "34e4fcf9d346198b7e2c6db6237b7cbe089516ee51fe07f5dcdac54afd455e58"
+    },
+    {
+      "path": "whisper/clip-000003/completed.json",
+      "bytes": 664,
+      "sha256": "d2d45543e06de72afcf9d708fed4ff083d0c41900636d70bc2118e7266d006b5"
+    },
+    {
+      "path": "whisper/clip-000003/input-capture.json",
+      "bytes": 803,
+      "sha256": "20d1ffb13565572a3f0406d1f25fa1e1babe55a1d0a63a4bc760493765694f9a"
+    },
+    {
+      "path": "whisper/clip-000003/pre-finalize.json",
+      "bytes": 110,
+      "sha256": "fde06519fb2334c172680c3ceae3ffffc716274957b4e4985284f0b6d97164a0"
+    },
+    {
+      "path": "whisper/clip-000003/raw-output.json",
+      "bytes": 3579,
+      "sha256": "2a9af4797bc4dd111bf200c5cca7c31c8ee5de7d29c35fe0512714bddfe5cbde"
+    },
+    {
+      "path": "whisper/clip-000003/started.json",
+      "bytes": 825,
+      "sha256": "2a914d445b14cb18c002de9f3d20ee265260f6e028809b1cf4ffad9c3e2dd9a1"
+    },
+    {
+      "path": "whisper/clip-000003/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000003/update-002.json",
+      "bytes": 76,
+      "sha256": "8ca8aec46a81492f6ff6b3c494491b244d2043037be0234d446d4eb04d53ef75"
+    },
+    {
+      "path": "whisper/clip-000003/update-003.json",
+      "bytes": 81,
+      "sha256": "9cf9163a129d3af7a81cdebd8a2e9354c27c6931652147a06ff2aeb71dabed9f"
+    },
+    {
+      "path": "whisper/clip-000003/update-004.json",
+      "bytes": 86,
+      "sha256": "d843a2122b6f643374563f30eceb129f910f4a3e25f7dd67c575008becddb742"
+    },
+    {
+      "path": "whisper/clip-000003/update-005.json",
+      "bytes": 91,
+      "sha256": "b787e999e33ef7c7bbf4f770eb553667aa65af3dc304d768fc224121e479ff78"
+    },
+    {
+      "path": "whisper/clip-000004/completed.json",
+      "bytes": 664,
+      "sha256": "d720fddf0ea3a0afd44ab2bab4fe4e3bba39deaca775ebd9475e563b98df83a7"
+    },
+    {
+      "path": "whisper/clip-000004/input-capture.json",
+      "bytes": 803,
+      "sha256": "f15ec9b9bc24d59ccb0aa3ca9c39354a142c492a95939755d3c277e810b4ac25"
+    },
+    {
+      "path": "whisper/clip-000004/pre-finalize.json",
+      "bytes": 118,
+      "sha256": "fff9a9a4bb5d2d7c1161f10f82e9120a26c6c73183cf921b570c152ab6abfaa8"
+    },
+    {
+      "path": "whisper/clip-000004/raw-output.json",
+      "bytes": 3596,
+      "sha256": "86e76fae42e6443a9c1c64cd400c2a363c0ffae3a4eb5ba1560923297d3b2be6"
+    },
+    {
+      "path": "whisper/clip-000004/started.json",
+      "bytes": 825,
+      "sha256": "0b5be6ca4c6604ff7bb606486f8ccc6d514384c8899aff48160781a3804b8847"
+    },
+    {
+      "path": "whisper/clip-000004/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000004/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000004/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000004/update-004.json",
+      "bytes": 85,
+      "sha256": "4eec45b150cc33400124d81df618b58d0dc2b5d5b71157ca1ce518549c0d2c75"
+    },
+    {
+      "path": "whisper/clip-000004/update-005.json",
+      "bytes": 90,
+      "sha256": "1e63ea91e5adaf1c913bd08fea74e40edb1dfa1d4a97c2dfa517d6286b7c94d3"
+    },
+    {
+      "path": "whisper/clip-000004/update-006.json",
+      "bytes": 94,
+      "sha256": "0ad2158dddf07fcb6fa024d54a6e0e99e2ce3d9bf619232dceb7bc8d53c12b29"
+    },
+    {
+      "path": "whisper/clip-000004/update-007.json",
+      "bytes": 99,
+      "sha256": "f79cb482d472c944b11adc5de01b509bf733c7e39380c9e45049c6a26c318858"
+    },
+    {
+      "path": "whisper/clip-000005/completed.json",
+      "bytes": 664,
+      "sha256": "ef91a52e48842721ca29db00374338a8ad6518c48ff6ad1ffc93dfc78f54160c"
+    },
+    {
+      "path": "whisper/clip-000005/input-capture.json",
+      "bytes": 803,
+      "sha256": "2c21d6271ffdee7907da1847dc86c038960b0bbd341230d941de4bc60759c2c8"
+    },
+    {
+      "path": "whisper/clip-000005/pre-finalize.json",
+      "bytes": 107,
+      "sha256": "0da28fb6fc800baab1c112116c3db473997b98afc79a5ac592d73f250a2d78ad"
+    },
+    {
+      "path": "whisper/clip-000005/raw-output.json",
+      "bytes": 3574,
+      "sha256": "4713a9bf9681b6b1595bfd8c799e626f4d1c817a1d62c21aa2d1e89d4b3f2e51"
+    },
+    {
+      "path": "whisper/clip-000005/started.json",
+      "bytes": 825,
+      "sha256": "aac0331c47739b1aef340c12757b4f1c4611d0f56002812c9def31932d8c98e2"
+    },
+    {
+      "path": "whisper/clip-000005/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000005/update-002.json",
+      "bytes": 78,
+      "sha256": "e4c21e0e1f91e861375a50669906080ca0c588c13c730f54ef6eb70afa762981"
+    },
+    {
+      "path": "whisper/clip-000005/update-003.json",
+      "bytes": 83,
+      "sha256": "26032a8892edfc5bdd300908176c40ab70b39b34a2178d59cb416ac93f7d9bf3"
+    },
+    {
+      "path": "whisper/clip-000005/update-004.json",
+      "bytes": 88,
+      "sha256": "0c95b42016c05c175f3a3172b9b9d1857ab702ee973af6989f0e9aba8635b2eb"
+    },
+    {
+      "path": "whisper/clip-000006/completed.json",
+      "bytes": 664,
+      "sha256": "daf74a1ad25bd08b08da58599b321ae799b05d8bc94d34b7b2b41e92763b2265"
+    },
+    {
+      "path": "whisper/clip-000006/input-capture.json",
+      "bytes": 803,
+      "sha256": "0353840a44ffa54ae34f3f4afe25c4ec8f59e9e4198699375ca105c2a2f5e708"
+    },
+    {
+      "path": "whisper/clip-000006/pre-finalize.json",
+      "bytes": 118,
+      "sha256": "fff9a9a4bb5d2d7c1161f10f82e9120a26c6c73183cf921b570c152ab6abfaa8"
+    },
+    {
+      "path": "whisper/clip-000006/raw-output.json",
+      "bytes": 3596,
+      "sha256": "d56b5d99c59fd482c8ba835f02d0f1e469a69b848db1aa2e1a586fc1b361db24"
+    },
+    {
+      "path": "whisper/clip-000006/started.json",
+      "bytes": 825,
+      "sha256": "bfd6205aa4ed1b94c6b2ed17975d34eec7c41e4e77179c95c07bda296db30c61"
+    },
+    {
+      "path": "whisper/clip-000006/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000006/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000006/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000006/update-004.json",
+      "bytes": 85,
+      "sha256": "4eec45b150cc33400124d81df618b58d0dc2b5d5b71157ca1ce518549c0d2c75"
+    },
+    {
+      "path": "whisper/clip-000006/update-005.json",
+      "bytes": 90,
+      "sha256": "1e63ea91e5adaf1c913bd08fea74e40edb1dfa1d4a97c2dfa517d6286b7c94d3"
+    },
+    {
+      "path": "whisper/clip-000006/update-006.json",
+      "bytes": 94,
+      "sha256": "0ad2158dddf07fcb6fa024d54a6e0e99e2ce3d9bf619232dceb7bc8d53c12b29"
+    },
+    {
+      "path": "whisper/clip-000006/update-007.json",
+      "bytes": 99,
+      "sha256": "f79cb482d472c944b11adc5de01b509bf733c7e39380c9e45049c6a26c318858"
+    },
+    {
+      "path": "whisper/clip-000007/completed.json",
+      "bytes": 664,
+      "sha256": "ac055885d09ea94eb8a1521946a36187b477e99e4ad2455998b3b79061d1e375"
+    },
+    {
+      "path": "whisper/clip-000007/input-capture.json",
+      "bytes": 803,
+      "sha256": "d7b86b56b443bfbf25b02dcd09d0154458155f1aeef463e8fa6abf87bcdf0459"
+    },
+    {
+      "path": "whisper/clip-000007/pre-finalize.json",
+      "bytes": 106,
+      "sha256": "573aa41f1286b6f3c4fc5c26e571f204b77b5a0d6edd713de25462fab14e4705"
+    },
+    {
+      "path": "whisper/clip-000007/raw-output.json",
+      "bytes": 3570,
+      "sha256": "50d7ff2f33c4a87c3e6af8626d946d3c415d4185b448801bd70dbf107599c80a"
+    },
+    {
+      "path": "whisper/clip-000007/started.json",
+      "bytes": 825,
+      "sha256": "170762d734e5b3df97f65d4f05a72516cfeacd8579fe5074eb60b3a77d67d966"
+    },
+    {
+      "path": "whisper/clip-000007/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000007/update-002.json",
+      "bytes": 77,
+      "sha256": "802a61ea5d62ef34b7e11dd39ec6f6469fe5f24ad4256c4a879b54f1c0b9955b"
+    },
+    {
+      "path": "whisper/clip-000007/update-003.json",
+      "bytes": 82,
+      "sha256": "85d0001b2c4593e66ea8192a31293d7395ffdd5827a82e8ec3945a5d0b0aae10"
+    },
+    {
+      "path": "whisper/clip-000007/update-004.json",
+      "bytes": 87,
+      "sha256": "9ac21fe430200f3cb1b481cfdced1dba0a1207f3c72a0c4077c524c47a6c2a2d"
+    },
+    {
+      "path": "whisper/clip-000008/completed.json",
+      "bytes": 664,
+      "sha256": "c08127214f8c4dc82f73068d261b820e85a68d1228cca99cba5b5956b32518d0"
+    },
+    {
+      "path": "whisper/clip-000008/input-capture.json",
+      "bytes": 803,
+      "sha256": "7d5b3c2b1bc49bb0f7367dacdde64a9ad2376dd35a5624d73d225aad096f4b95"
+    },
+    {
+      "path": "whisper/clip-000008/pre-finalize.json",
+      "bytes": 102,
+      "sha256": "0d8e315ed7e57b7390ada47b23dc83d2b6b96cfb77d70734f6fd249168a3951d"
+    },
+    {
+      "path": "whisper/clip-000008/raw-output.json",
+      "bytes": 3564,
+      "sha256": "a18bdfe73c4f0fb0ba4502df3c35aa23e5d55215b057f4d7c0607a4043e80dc2"
+    },
+    {
+      "path": "whisper/clip-000008/started.json",
+      "bytes": 825,
+      "sha256": "6cb88cbe52da8de591fd31b4060304ce14f68117093524681327136e8b6ffaaa"
+    },
+    {
+      "path": "whisper/clip-000008/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000008/update-002.json",
+      "bytes": 78,
+      "sha256": "651ab397468ac005252a0eea3726e71b345c8b3b90ceeb1c7a8e9c01e1723c9d"
+    },
+    {
+      "path": "whisper/clip-000008/update-003.json",
+      "bytes": 83,
+      "sha256": "d6c9990b632cd00fe7c43a2311c3c5f7477b8754b145b2084a2d0146e08d54af"
+    },
+    {
+      "path": "whisper/clip-000009/completed.json",
+      "bytes": 664,
+      "sha256": "81f1520f2d49203b9171236bec84b0e24083754b0a7d30d531a7d41d81369b48"
+    },
+    {
+      "path": "whisper/clip-000009/input-capture.json",
+      "bytes": 803,
+      "sha256": "1012fe1356a118fea55431cb2f2059e659e7d83a87ec34631d1e993ace8924bf"
+    },
+    {
+      "path": "whisper/clip-000009/pre-finalize.json",
+      "bytes": 118,
+      "sha256": "fff9a9a4bb5d2d7c1161f10f82e9120a26c6c73183cf921b570c152ab6abfaa8"
+    },
+    {
+      "path": "whisper/clip-000009/raw-output.json",
+      "bytes": 3596,
+      "sha256": "fe6e5d6b2988c1692d53e5baee6d7b9b40769cb55dae1709c3897f047b67ea01"
+    },
+    {
+      "path": "whisper/clip-000009/started.json",
+      "bytes": 825,
+      "sha256": "50267f1f5295e57703e392840644ca9cce79ebf7df5b951c7cbd4834729bc0c1"
+    },
+    {
+      "path": "whisper/clip-000009/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000009/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000009/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000009/update-004.json",
+      "bytes": 85,
+      "sha256": "4eec45b150cc33400124d81df618b58d0dc2b5d5b71157ca1ce518549c0d2c75"
+    },
+    {
+      "path": "whisper/clip-000009/update-005.json",
+      "bytes": 90,
+      "sha256": "1e63ea91e5adaf1c913bd08fea74e40edb1dfa1d4a97c2dfa517d6286b7c94d3"
+    },
+    {
+      "path": "whisper/clip-000009/update-006.json",
+      "bytes": 94,
+      "sha256": "0ad2158dddf07fcb6fa024d54a6e0e99e2ce3d9bf619232dceb7bc8d53c12b29"
+    },
+    {
+      "path": "whisper/clip-000009/update-007.json",
+      "bytes": 99,
+      "sha256": "f79cb482d472c944b11adc5de01b509bf733c7e39380c9e45049c6a26c318858"
+    },
+    {
+      "path": "whisper/clip-000010/completed.json",
+      "bytes": 664,
+      "sha256": "ce305009b5bb21edf2a2b3e100105290d778523d814ab51a49e16583d88ee555"
+    },
+    {
+      "path": "whisper/clip-000010/input-capture.json",
+      "bytes": 803,
+      "sha256": "c91ad9dbcd1c6badcda7e6f9b57f3a2d809c8bf2b8da10d6aaafbdd132c39a93"
+    },
+    {
+      "path": "whisper/clip-000010/pre-finalize.json",
+      "bytes": 111,
+      "sha256": "a5a7bdebda7b8f7aab1a59ae75043a9d479bdc27712a994d34f99688d8bcba7c"
+    },
+    {
+      "path": "whisper/clip-000010/raw-output.json",
+      "bytes": 3579,
+      "sha256": "a21f685b880289cc90236c5a14e20aa607caf3895067ba5d79db804cc9ac3de0"
+    },
+    {
+      "path": "whisper/clip-000010/started.json",
+      "bytes": 825,
+      "sha256": "ef5a4d6df74222f02162057f219ce014d92d3caf63f89810a32d9398fb398115"
+    },
+    {
+      "path": "whisper/clip-000010/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000010/update-002.json",
+      "bytes": 78,
+      "sha256": "c4e196998f7db2fb700d4b0b015726a8b9af1495565cc7bf4e8cb2220fa8b360"
+    },
+    {
+      "path": "whisper/clip-000010/update-003.json",
+      "bytes": 83,
+      "sha256": "cd4271fb682bc63dc8c0fde69df20c5fecdf6d1d3144c279c157a0e28aeacc5e"
+    },
+    {
+      "path": "whisper/clip-000010/update-004.json",
+      "bytes": 87,
+      "sha256": "4c1caae97463f54f0883086056b9756665f9aeba15896f2025f9fa5bb52ef970"
+    },
+    {
+      "path": "whisper/clip-000010/update-005.json",
+      "bytes": 92,
+      "sha256": "902edf320b48fe0f22815e238f627e0b40acf41922eec96189f62343bb419af6"
+    },
+    {
+      "path": "whisper/clip-000011/completed.json",
+      "bytes": 664,
+      "sha256": "9a854a982095aeeeb17d74a139fd8449238912bd47d6cc99d26f05a65d83770b"
+    },
+    {
+      "path": "whisper/clip-000011/input-capture.json",
+      "bytes": 803,
+      "sha256": "6b4487f9b730999837e675df877256906cd89c8d7630684fbcf920166252c942"
+    },
+    {
+      "path": "whisper/clip-000011/pre-finalize.json",
+      "bytes": 110,
+      "sha256": "c3c2ce03673e40cda22ea358d68baa601ddad73efd6d062ce47714720ed22785"
+    },
+    {
+      "path": "whisper/clip-000011/raw-output.json",
+      "bytes": 3578,
+      "sha256": "3569fa508c67ae32c9ab534f31c57f0f74c97f4a9641ad305edd5d06c782c7ec"
+    },
+    {
+      "path": "whisper/clip-000011/started.json",
+      "bytes": 825,
+      "sha256": "3b2b3156ba7cc54e1938243052032db1044c7344c84c98670facd28208d46111"
+    },
+    {
+      "path": "whisper/clip-000011/update-001.json",
+      "bytes": 72,
+      "sha256": "39b5fa109943c67667757ca17c366fdac923d78b3284fe8b681bf76baca7ad5b"
+    },
+    {
+      "path": "whisper/clip-000011/update-002.json",
+      "bytes": 77,
+      "sha256": "802a61ea5d62ef34b7e11dd39ec6f6469fe5f24ad4256c4a879b54f1c0b9955b"
+    },
+    {
+      "path": "whisper/clip-000011/update-003.json",
+      "bytes": 82,
+      "sha256": "feaced3af06f5a427475b482950271e191c8cce998556c7fd4cd094b16d7c1a5"
+    },
+    {
+      "path": "whisper/clip-000011/update-004.json",
+      "bytes": 86,
+      "sha256": "9e4f2842d9baa5207d01226d17b61419a9a92a7ff33b7049f196047907c31682"
+    },
+    {
+      "path": "whisper/clip-000011/update-005.json",
+      "bytes": 91,
+      "sha256": "d6428289041712eb25c8a7f3340a78853568b02ca14b6699f248b2a0b5ff0d2b"
+    },
+    {
+      "path": "whisper/clip-000012/completed.json",
+      "bytes": 664,
+      "sha256": "a24bd7bb41c054073cc942130c7763370f6a46efa8eb8a186a64446ae45ecf1f"
+    },
+    {
+      "path": "whisper/clip-000012/input-capture.json",
+      "bytes": 803,
+      "sha256": "4f36e802ab1aedc7782d676e9afc99c39a55979c2c3667097c2599fbf6fd4429"
+    },
+    {
+      "path": "whisper/clip-000012/pre-finalize.json",
+      "bytes": 104,
+      "sha256": "7f5e70793b8a638e4ab7d5b5b4eecc9ea141d76be7e4480d956fb37697a7cae3"
+    },
+    {
+      "path": "whisper/clip-000012/raw-output.json",
+      "bytes": 3560,
+      "sha256": "6528dd41426a0c5a0f43620497eaf6da4665f1ffe16a6b7f61789a9636b07748"
+    },
+    {
+      "path": "whisper/clip-000012/started.json",
+      "bytes": 825,
+      "sha256": "a6e28c12d574de405efcae7a9b167b8b2ba2f26a57e58e58dc5e28060b37774e"
+    },
+    {
+      "path": "whisper/clip-000012/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000012/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000012/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000012/update-004.json",
+      "bytes": 85,
+      "sha256": "98f4e1dbf445c73f6afb4a01922a98a33cc82f70c0f0b06d4d6912b1a73650ff"
+    },
+    {
+      "path": "whisper/clip-000013/completed.json",
+      "bytes": 664,
+      "sha256": "02bdd3b7fff8737cbec78588a13dca8cfed72bca5aa5d42df625b43123635e8b"
+    },
+    {
+      "path": "whisper/clip-000013/input-capture.json",
+      "bytes": 803,
+      "sha256": "50ea701a667d771672e64314285947b62633abfe32b944505224dd8df63ac0a5"
+    },
+    {
+      "path": "whisper/clip-000013/pre-finalize.json",
+      "bytes": 118,
+      "sha256": "fff9a9a4bb5d2d7c1161f10f82e9120a26c6c73183cf921b570c152ab6abfaa8"
+    },
+    {
+      "path": "whisper/clip-000013/raw-output.json",
+      "bytes": 3592,
+      "sha256": "718605bcde4cb880c3a9437b26b2a16d9da2f072a48039082396af64be53fd04"
+    },
+    {
+      "path": "whisper/clip-000013/started.json",
+      "bytes": 825,
+      "sha256": "1f06d3f244138f45aa9df769f6025074327e73f859398ce498770c5b75b2b3a3"
+    },
+    {
+      "path": "whisper/clip-000013/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000013/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000013/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000013/update-004.json",
+      "bytes": 85,
+      "sha256": "4eec45b150cc33400124d81df618b58d0dc2b5d5b71157ca1ce518549c0d2c75"
+    },
+    {
+      "path": "whisper/clip-000013/update-005.json",
+      "bytes": 90,
+      "sha256": "1e63ea91e5adaf1c913bd08fea74e40edb1dfa1d4a97c2dfa517d6286b7c94d3"
+    },
+    {
+      "path": "whisper/clip-000013/update-006.json",
+      "bytes": 94,
+      "sha256": "0ad2158dddf07fcb6fa024d54a6e0e99e2ce3d9bf619232dceb7bc8d53c12b29"
+    },
+    {
+      "path": "whisper/clip-000013/update-007.json",
+      "bytes": 99,
+      "sha256": "f79cb482d472c944b11adc5de01b509bf733c7e39380c9e45049c6a26c318858"
+    },
+    {
+      "path": "whisper/clip-000014/completed.json",
+      "bytes": 664,
+      "sha256": "11b618f4b8a2b71894d63eb806fd058cc2b0fbffeaaa794d89d6cf3f8ce3abee"
+    },
+    {
+      "path": "whisper/clip-000014/input-capture.json",
+      "bytes": 803,
+      "sha256": "d3d862ff54718d1352f468f05c2ab0697a93db3e2e880a652e5451b06ee1572d"
+    },
+    {
+      "path": "whisper/clip-000014/pre-finalize.json",
+      "bytes": 104,
+      "sha256": "7f5e70793b8a638e4ab7d5b5b4eecc9ea141d76be7e4480d956fb37697a7cae3"
+    },
+    {
+      "path": "whisper/clip-000014/raw-output.json",
+      "bytes": 3561,
+      "sha256": "1f74c842dba48fe134be393b4323a503b06c180d3dffdcd04b8bb60656862353"
+    },
+    {
+      "path": "whisper/clip-000014/started.json",
+      "bytes": 825,
+      "sha256": "20e9580813bc9075da5e12c482548e1e05926eb04980c8cd4b8718d2753ec814"
+    },
+    {
+      "path": "whisper/clip-000014/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000014/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000014/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000014/update-004.json",
+      "bytes": 85,
+      "sha256": "98f4e1dbf445c73f6afb4a01922a98a33cc82f70c0f0b06d4d6912b1a73650ff"
+    },
+    {
+      "path": "whisper/clip-000015/completed.json",
+      "bytes": 664,
+      "sha256": "49979b0f6bb3f215ccfe48f5725ebfd785f096624f5bd0542caba55f408f0658"
+    },
+    {
+      "path": "whisper/clip-000015/input-capture.json",
+      "bytes": 803,
+      "sha256": "f2c981a2a7573fd59dadc2950e2f29b34123060d3c06f52db3ce2365715529a9"
+    },
+    {
+      "path": "whisper/clip-000015/pre-finalize.json",
+      "bytes": 118,
+      "sha256": "fff9a9a4bb5d2d7c1161f10f82e9120a26c6c73183cf921b570c152ab6abfaa8"
+    },
+    {
+      "path": "whisper/clip-000015/raw-output.json",
+      "bytes": 3595,
+      "sha256": "2af659fd41ce0372541e28b51b40a0144f4a59ff3aed1bec827fccaaa71ff944"
+    },
+    {
+      "path": "whisper/clip-000015/started.json",
+      "bytes": 825,
+      "sha256": "1f99dc71dc0ddff7e105415b37ca53294ba4f45eb171c6ec062ba0ed700a897b"
+    },
+    {
+      "path": "whisper/clip-000015/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000015/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000015/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000015/update-004.json",
+      "bytes": 85,
+      "sha256": "4eec45b150cc33400124d81df618b58d0dc2b5d5b71157ca1ce518549c0d2c75"
+    },
+    {
+      "path": "whisper/clip-000015/update-005.json",
+      "bytes": 90,
+      "sha256": "1e63ea91e5adaf1c913bd08fea74e40edb1dfa1d4a97c2dfa517d6286b7c94d3"
+    },
+    {
+      "path": "whisper/clip-000015/update-006.json",
+      "bytes": 94,
+      "sha256": "0ad2158dddf07fcb6fa024d54a6e0e99e2ce3d9bf619232dceb7bc8d53c12b29"
+    },
+    {
+      "path": "whisper/clip-000015/update-007.json",
+      "bytes": 99,
+      "sha256": "f79cb482d472c944b11adc5de01b509bf733c7e39380c9e45049c6a26c318858"
+    },
+    {
+      "path": "whisper/clip-000016/completed.json",
+      "bytes": 664,
+      "sha256": "93f2e1899855b398c31451e21926963dd4af28362c2fc35068fed674b37ef18f"
+    },
+    {
+      "path": "whisper/clip-000016/input-capture.json",
+      "bytes": 803,
+      "sha256": "c6194a5357429366e53355ac67d1cd1c1d0eafc906f9133be172cc4e4189210f"
+    },
+    {
+      "path": "whisper/clip-000016/pre-finalize.json",
+      "bytes": 104,
+      "sha256": "7f5e70793b8a638e4ab7d5b5b4eecc9ea141d76be7e4480d956fb37697a7cae3"
+    },
+    {
+      "path": "whisper/clip-000016/raw-output.json",
+      "bytes": 3562,
+      "sha256": "f6ed00f299fd86329aee4f57f9cbf9fd0b5a288959aba35c7f0cd70d9f873000"
+    },
+    {
+      "path": "whisper/clip-000016/started.json",
+      "bytes": 825,
+      "sha256": "942f8de9eb0f3879ccc9cd1143edd7ec7fe81798a39feceb18b849b582c35575"
+    },
+    {
+      "path": "whisper/clip-000016/update-001.json",
+      "bytes": 71,
+      "sha256": "781f21225a3c68e8c35607748ecd637edc134fcbccfce90d037cd768f4587b0e"
+    },
+    {
+      "path": "whisper/clip-000016/update-002.json",
+      "bytes": 76,
+      "sha256": "13db19359ea2edbea5fede4bf0c80ed45a1aa38675a5de345b28529ccee5fd3a"
+    },
+    {
+      "path": "whisper/clip-000016/update-003.json",
+      "bytes": 80,
+      "sha256": "2537005a589165dba1f94ebf3f9adeac812c7d1367395e4a7a27d5e5e4f2c594"
+    },
+    {
+      "path": "whisper/clip-000016/update-004.json",
+      "bytes": 85,
+      "sha256": "98f4e1dbf445c73f6afb4a01922a98a33cc82f70c0f0b06d4d6912b1a73650ff"
+    },
+    {
+      "path": "whisper/kernel-scope.json",
+      "bytes": 321,
+      "sha256": "4f0f43b9baf82f35d16756be4359947f39f9a59f6063774b33527280cedf94fa"
+    },
+    {
+      "path": "whisper/load-receipt.json",
+      "bytes": 754,
+      "sha256": "04e9a0400d2c8c4a361ffb01fcf3cba39b7b77b9af7acf1c94d1a82c95fa157b"
+    },
+    {
+      "path": "whisper/native-config.json",
+      "bytes": 2687,
+      "sha256": "d3d01a43cd12d37bb2a1b6211eb8186027662142e3fbac21880cc5f9568fcfe7"
+    },
+    {
+      "path": "whisper/progress.json",
+      "bytes": 61,
+      "sha256": "372cd3003517e2b8e4069c5f7682ecece6bb8ef91fdb935237837c6bcaa25a38"
+    },
+    {
+      "path": "whisper/worker-complete.json",
+      "bytes": 210,
+      "sha256": "a227b9d9d91908fc25f25737507ffc04bd40d4abb070859ced31879eb03f73cb"
+    }
+  ]
+}

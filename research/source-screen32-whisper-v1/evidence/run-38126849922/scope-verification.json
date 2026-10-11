@@ -1,0 +1,14 @@
+{
+  "schema": "fourth-supplemental-scope-verification-v1",
+  "run_id": 38126849922,
+  "unique_branch_runs_at_terminal_check": 1,
+  "run_attempt": 1,
+  "container_inspect_resource_scopes_verified": 50,
+  "kernel_resource_scopes_verified": 46,
+  "source_model_worker_kernel_record_limitation": "No standalone source/model worker kernel records are retained; both worker inspect scopes are verified, and the frozen phase worker gates and terminal receipts provide control-flow evidence.",
+  "download_receipt_exact_locked_members_verified": 45,
+  "official_source_http_200_body_records_verified": 22,
+  "model_http_200_body_records_verified": 1,
+  "main_verification_receipt_sha256": "4e40bff753892fef4cd5754f786fa35a759f6f1dbfdb59243ceacf0dbe09845e",
+  "model_execution": false
+}
