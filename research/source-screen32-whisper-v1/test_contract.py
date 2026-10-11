@@ -2,6 +2,7 @@
 from pathlib import Path
 import ast
 import copy
+import contextlib
 import importlib.util
 import json
 import os
@@ -195,7 +196,9 @@ class ContractTests(unittest.TestCase):
             write_once(root / 'event.json', {'created': True, 'deleted': False, 'after': 'a' * 40,
                        'repository': {'private': False, 'full_name': 'jiying2007/kws-pipeline'}})
             with mock.patch.object(host, 'ROOT', root), mock.patch.object(host, 'HERE', here):
-                self.assertEqual(host.admission(env), freeze)
+                # The old freeze is retained unchanged; the extracted shared host
+                # now belongs only to the independently reviewed second freeze.
+                with self.assertRaisesRegex(ValueError, 'reviewed source drift'): host.admission(env)
                 for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_RUN_NUMBER', '2'),
                                    ('RUNNER_ENVIRONMENT', 'self-hosted'), ('GITHUB_EVENT_NAME', 'workflow_dispatch')):
                     with self.subTest(key=key), self.assertRaises(ValueError):
@@ -517,6 +520,186 @@ class SetupDiagnosticTests(unittest.TestCase):
         freeze = read_json(HERE / 'execution-freeze.json')
         self.assertFalse(any('source-screen32-whisper-v1/evidence/' in p for p in freeze['files']))
         self.assertFalse(any('/evidence/' in p for p in freeze['blind_code']))
+
+
+class SecondAttemptTests(unittest.TestCase):
+    """No runtime acquisition: mocked execution and exact public metadata only."""
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location('whisper_second_attempt', HERE / 'attempt-2/continue_once.py')
+        cls.retry = importlib.util.module_from_spec(spec); spec.loader.exec_module(cls.retry)
+
+    @contextlib.contextmanager
+    def fixture(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); base = root / 'research/source-screen32-whisper-v1'; here = base / 'attempt-2'
+            freeze = read_json(HERE / 'attempt-2/execution-freeze.json')
+            for name in freeze['files']:
+                dest = root / name; dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / name, dest)
+            shutil.copyfile(HERE / 'attempt-2/execution-freeze.json', here / 'execution-freeze.json')
+            release = read_json(HERE / 'attempt-2/execution-release.json'); release['approved'] = True
+            write_once(here / 'execution-release.json', release)
+            active = root / self.retry.WORKFLOW; active.parent.mkdir(parents=True)
+            shutil.copyfile(here / 'workflow.yml', active)
+            event = {'created': True, 'deleted': False, 'after': 'a' * 40,
+                     'repository': {'private': False, 'full_name': 'jiying2007/kws-pipeline'}}
+            write_once(root / 'event.json', event)
+            env = {'GITHUB_REPOSITORY': 'jiying2007/kws-pipeline', 'GITHUB_REF': 'refs/heads/' + self.retry.BRANCH,
+                   'GITHUB_EVENT_NAME': 'push', 'GITHUB_RUN_ATTEMPT': '1', 'GITHUB_RUN_NUMBER': '1',
+                   'RUNNER_ENVIRONMENT': 'github-hosted', 'RUNNER_OS': 'Linux',
+                   'GITHUB_SHA': 'a' * 40, 'GITHUB_RUN_ID': '38105471897', 'GITHUB_EVENT_PATH': str(root / 'event.json')}
+            with mock.patch.object(self.retry, 'ROOT', root), mock.patch.object(self.retry, 'BASE', base), \
+                 mock.patch.object(self.retry, 'HERE', here):
+                yield root, base, here, env, event, freeze
+
+    def test_second_gate_disarmed_and_execution_never_called(self):
+        with mock.patch.object(self.retry.runtime, 'execute') as execute:
+            with self.assertRaises(ValueError): self.retry.main({})
+            execute.assert_not_called()
+        release = read_json(HERE / 'attempt-2/execution-release.json')
+        self.assertIs(release['approved'], False)
+        self.assertEqual(release['campaign_attempt'], 2)
+        self.assertEqual(release['prior_run_id'], 38105471896)
+        self.assertFalse((ROOT / self.retry.WORKFLOW).exists())
+
+    def test_second_admission_binds_first_zero_attempt_and_exact_denominator(self):
+        with self.fixture() as (_, _, _, env, _, freeze):
+            actual, campaign = self.retry.admission(env)
+            self.assertEqual(actual, freeze)
+            self.assertEqual(campaign['campaign_attempt'], 2)
+            self.assertEqual(campaign['prior_run_id'], 38105471896)
+            self.assertEqual(campaign['prior_audio_attempts'], 0)
+            self.assertFalse(campaign['automatic_retry'])
+            self.assertEqual(campaign['prior_terminal_outcomes_sha256'],
+                             '8905df1649d4f84bb1ae4cdc97bbaee501e4e42c986c7b049e5ede945fb4c7d9')
+
+    def test_second_rejects_old_identity_and_all_rerun_counters(self):
+        with self.fixture() as (_, _, _, env, _, _):
+            for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_RUN_NUMBER', '2'),
+                    ('GITHUB_RUN_ID', '38105471896'), ('GITHUB_REF', 'refs/heads/' + common.BRANCH),
+                    ('GITHUB_EVENT_NAME', 'workflow_dispatch'), ('RUNNER_ENVIRONMENT', 'self-hosted'),
+                    ('GITHUB_REPOSITORY', 'other/repo'), ('RUNNER_OS', 'Windows')):
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    self.retry.admission({**env, key: value})
+
+    def test_second_rejects_branch_update_delete_private_and_drift(self):
+        with self.fixture() as (root, _, _, env, event, _):
+            for changed in ({**event, 'created': False}, {**event, 'deleted': True},
+                            {**event, 'after': 'b' * 40},
+                            {**event, 'repository': {**event['repository'], 'private': True}}):
+                (root / 'event.json').write_bytes(canonical(changed))
+                with self.assertRaises(ValueError): self.retry.admission(env)
+            (root / 'event.json').write_bytes(canonical(event))
+            with (root / self.retry.WORKFLOW).open('a') as stream: stream.write('\n# changed\n')
+            with self.assertRaises(ValueError): self.retry.admission(env)
+
+    def test_second_rejects_first_activation_and_source_or_prior_evidence_drift(self):
+        for mutation in ('first_active', 'first_release', 'shared_source', 'prior_evidence', 'new_wrapper'):
+            with self.subTest(mutation=mutation), self.fixture() as (root, base, here, env, _, _):
+                if mutation == 'first_active':
+                    (root / '.github/workflows/source-screen32-whisper-third-v1.yml').write_bytes(b'fixture')
+                else:
+                    target = {'first_release': base / 'execution-release.json',
+                              'shared_source': base / 'hosted_run.py',
+                              'prior_evidence': base / 'evidence/run-38105471896/terminal-outcomes.json',
+                              'new_wrapper': here / 'continue_once.py'}[mutation]
+                    with target.open('ab') as stream: stream.write(b' ')
+                with self.assertRaises(ValueError): self.retry.admission(env)
+
+    def test_second_every_prior_member_and_provenance_byte_drift_rejected(self):
+        names = ['provenance.json'] + list(read_json(HERE / 'evidence/run-38105471896/provenance.json')['files'])
+        for name in names:
+            with self.subTest(member=name), self.fixture() as (_, base, _, env, _, _):
+                with (base / 'evidence/run-38105471896' / name).open('ab') as stream: stream.write(b' ')
+                with mock.patch.object(self.retry.runtime, 'execute') as execute:
+                    with self.assertRaises(ValueError): self.retry.main(env)
+                    execute.assert_not_called()
+
+    def test_second_shared_failure_receipt_keeps_distinct_campaign_identity(self):
+        old = host.historical_host()
+        import sense_continuation
+        fake_host = mock.Mock()
+        fake_host.host_capacity.return_value = {'fixture': True}
+        fake_host.pull_image.side_effect = RuntimeError('injected-before-container')
+        campaign = self.retry.verify_prior()
+        freeze = read_json(HERE / 'attempt-2/execution-freeze.json')
+        with tempfile.TemporaryDirectory() as temp, \
+             mock.patch.object(host, 'historical_host', return_value=fake_host), \
+             mock.patch.object(sense_continuation, 'load_lock', return_value={}), \
+             mock.patch.object(sense_continuation, 'verify_retained'), \
+             mock.patch.object(sense_continuation, 'prepare_input'), \
+             mock.patch.object(host, 'terminal_rows', return_value=read_json(HERE / 'evidence/run-38105471896/terminal-outcomes.json')), \
+             mock.patch.object(host.shutil, 'disk_usage', return_value=mock.Mock(free=20 * 1024**3)), \
+             mock.patch.object(host.signal, 'signal'):
+            env = {'RUNNER_TEMP': temp, 'GITHUB_RUN_ID': '38105471897', 'GITHUB_SHA': 'a' * 40}
+            digest = file_hash(HERE / 'attempt-2/execution-freeze.json')
+            self.assertEqual(host.execute(env, freeze, 123.5, self.retry.EXPERIMENT, digest, campaign), 1)
+            root = Path(temp) / (self.retry.EXPERIMENT + '-' + env['GITHUB_RUN_ID'])
+            receipt = read_json(root / 'artifact/host-receipt.json')
+            self.assertEqual(receipt['experiment'], self.retry.EXPERIMENT)
+            self.assertEqual(receipt['source_freeze_sha256'], digest)
+            self.assertEqual(receipt['campaign'], campaign)
+            self.assertEqual(receipt['prior_runs_unchanged'], [38018029787, 38021467257, 38105471896])
+            self.assertEqual(receipt['attempts'], 0)
+            self.assertEqual(receipt['completed'], 0)
+            self.assertEqual(receipt['limits'], LIMITS)
+            fake_host.supervise_container.assert_not_called()
+
+    def test_second_semantic_zero_attempt_gate_rejects_false_claims(self):
+        original_read = self.retry.read_json
+        for field, value in (('attempts', 1), ('attempts', False), ('status', 'completed_native_eot'),
+                             ('raw_text', 'fixture'), ('wav_sha256', '0' * 64),
+                             ('training_admitted', True), ('validation_errors', ['fixture'])):
+            def changed(path):
+                data = original_read(path)
+                if Path(path).name == 'terminal-outcomes.json': data[0][field] = value
+                return data
+            with self.subTest(field=field, value=value), mock.patch.object(self.retry, 'read_json', side_effect=changed):
+                with self.assertRaises(ValueError): self.retry.verify_prior()
+
+    def test_second_calls_identical_shared_execution_after_admission_only(self):
+        with self.fixture() as (_, _, here, env, _, freeze):
+            with mock.patch.object(self.retry.time, 'monotonic', return_value=123.5), \
+                 mock.patch.object(self.retry.runtime, 'execute', return_value=7) as execute:
+                self.assertEqual(self.retry.main(env), 7)
+                args = execute.call_args.args
+                self.assertEqual(args[:5], (env, freeze, 123.5, self.retry.EXPERIMENT,
+                                           file_hash(here / 'execution-freeze.json')))
+                self.assertEqual(args[5]['campaign_attempt'], 2)
+                self.assertEqual(execute.call_count, 1)
+            with mock.patch.object(self.retry, 'verify_prior', side_effect=ValueError('fixture')), \
+                 mock.patch.object(self.retry.runtime, 'execute') as execute:
+                with self.assertRaises(ValueError): self.retry.main(env)
+                execute.assert_not_called()
+
+    def test_second_freeze_preserves_old_history_and_exact_blind_bytes(self):
+        freeze = read_json(HERE / 'attempt-2/execution-freeze.json')
+        original = read_json(HERE / 'execution-freeze.json')
+        self.assertEqual(file_hash(HERE / 'execution-freeze.json'),
+                         '58670d456b1ecbf3c8e7dc9471795a14b0df5a741eef2ef8b71da9de854fd303')
+        self.assertFalse(read_json(HERE / 'execution-release.json')['approved'])
+        self.assertEqual(freeze['blind_code'], original['blind_code'])
+        self.assertEqual(len(freeze['blind_code']), 8)
+        for name in freeze['blind_code']:
+            self.assertEqual(file_hash(ROOT / name), original['files'][name])
+            self.assertEqual(freeze['files'][name], original['files'][name])
+        self.assertTrue(set(original['files']) <= set(freeze['files']))
+        self.assertFalse(any('/attempt-2/' in name or '/evidence/' in name for name in freeze['blind_code']))
+        self.assertEqual(sum('/evidence/run-38105471896/' in name for name in freeze['files']), 8)
+        for name, digest in freeze['files'].items(): self.assertEqual(file_hash(ROOT / name), digest)
+
+    def test_second_workflow_identity_and_budgets_remain_fixed(self):
+        workflow = (HERE / 'attempt-2/workflow.yml').read_text()
+        for text in ('timeout-minutes: 45', 'timeout-minutes: 42', 'timeout-minutes: 2',
+                     'github.run_number == 1', 'github.run_attempt == 1', 'github.event.created == true',
+                     'runs-on: ubuntu-24.04', 'branches: [' + self.retry.BRANCH + ']',
+                     'qwen16-whisper-small-third-attempt-2-terminal-v1'):
+            self.assertIn(text, workflow)
+        self.assertNotIn('workflow_dispatch:', workflow)
+        self.assertEqual(LIMITS['job_seconds'], 2400)
+        self.assertEqual(LIMITS['new_whisper_calls'], 16)
+        self.assertEqual(self.retry.runtime, host)
 
 
 if __name__ == '__main__':
