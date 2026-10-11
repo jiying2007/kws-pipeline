@@ -236,6 +236,17 @@ jobs:
           python3 -S -B research/source-screen32-whisper-v1/test_contract.py
           python3 -S -B -O research/source-screen32-whisper-v1/test_contract.py
           python3 -S -B -OO research/source-screen32-whisper-v1/test_contract.py
+      - name: Retained fourth Whisper evidence and three-ASR comparison
+        run: |
+          python3 -S -B research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -O research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/evidence/test_fourth_archive.py
+          python3 -S -B -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B -O -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B -OO -m unittest discover -s research/source-screen32-whisper-v1/evidence/run-38126849922/comparison -p 'test_compare*.py'
+          python3 -S -B research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
+          python3 -S -B -O research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
+          python3 -S -B -OO research/source-screen32-whisper-v1/evidence/test_saved_comparison.py
       - name: Verify tracked worktree after Bounded source-screen historical review and live guard contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Bounded source-screen historical review and live guard contracts"'
       # Explicit stdlib-only suites run once per Python mode in the required

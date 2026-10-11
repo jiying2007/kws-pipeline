@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "fa5928bb4a5d5e7358ee62cfd27cb05ac49c6c4c",
-      "sha256": "5953d047f9c284781fc0879f71d708583682c5637b7e8e3c388cf8e907c10953",
-      "bytes": 38356
+      "git_blob_sha1": "329b8bad2a1c2a345ac8746d0d7c50e848f21d08",
+      "sha256": "0c926a6957e11ea0132270aa42684ac704758656ae33bfccd0f55e4212730a33",
+      "bytes": 39448
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16759,6 +16759,33 @@
             "git_blob_sha1": "fa5928bb4a5d5e7358ee62cfd27cb05ac49c6c4c",
             "sha256": "5953d047f9c284781fc0879f71d708583682c5637b7e8e3c388cf8e907c10953",
             "bytes": 38356
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "12636dd843873776183eab4436da080d3075b760",
+      "from_tree": "fafd0721c71f619f8af6327b22746b2598557b09",
+      "operation_id": "whisper-fourth-saved-evidence-archive-20261011",
+      "scope": "Add standard-library saved fourth-run archive and three-ASR comparison checks to existing CI in normal, -O and -OO modes; preserve historical frozen execution files and prior runs.",
+      "rationale": "Public evidence, source and CI identity metadata only. No model, package install, acquisition, new audio, experiment activation, label merging, training admission or shipping approval. Archive tests verify exact retained ZIP bytes, source/native/input chains and diagnostic receipts. Comparison retains punctuation-only 6/16 and explicit whitespace-secondary 7/16 agreement.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "fa5928bb4a5d5e7358ee62cfd27cb05ac49c6c4c",
+            "sha256": "5953d047f9c284781fc0879f71d708583682c5637b7e8e3c388cf8e907c10953",
+            "bytes": 38356
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "329b8bad2a1c2a345ac8746d0d7c50e848f21d08",
+            "sha256": "0c926a6957e11ea0132270aa42684ac704758656ae33bfccd0f55e4212730a33",
+            "bytes": 39448
           }
         }
       ]

@@ -1,0 +1,1383 @@
+{
+  "schema": "exploratory-three-asr-comparison-v2",
+  "status": "EXPLORATORY_COMPARISON",
+  "normalization": "Remove Unicode category P punctuation only; preserve whitespace, case, script, homophones, symbols, OOV and all other characters. No Unicode normalization.",
+  "unicode_database_version": "15.0.0",
+  "counts": {
+    "fixed_denominator": 16,
+    "qwen_sense_literal_agreement": 0,
+    "qwen_sense_normalized_agreement": 13,
+    "third_valid_outputs": 16,
+    "all_three_valid_outputs": 16,
+    "literal_three_way_agreement": 0,
+    "normalized_three_way_agreement": 6,
+    "normalized_three_way_agreement_matches_target": 4,
+    "normalized_three_way_agreement_differs_from_target": 2,
+    "normalized_three_way_disagreement": 10,
+    "incomplete_three_way": 0,
+    "third_terminal_rows_present": 16,
+    "third_native_eot_outputs": 16,
+    "third_native_eot_nonlexical_outputs": 0
+  },
+  "rates_fixed_16": {
+    "qwen_sense_literal_agreement": 0.0,
+    "qwen_sense_normalized_agreement": 0.8125,
+    "third_valid_outputs": 1.0,
+    "all_three_valid_outputs": 1.0,
+    "literal_three_way_agreement": 0.0,
+    "normalized_three_way_agreement": 0.375,
+    "normalized_three_way_agreement_matches_target": 0.25,
+    "normalized_three_way_agreement_differs_from_target": 0.125,
+    "normalized_three_way_disagreement": 0.625,
+    "incomplete_three_way": 0.0,
+    "third_terminal_rows_present": 1.0,
+    "third_native_eot_outputs": 1.0,
+    "third_native_eot_nonlexical_outputs": 0.0
+  },
+  "preregistered_three_asr_roster": false,
+  "native_artifact_validation": "PERFORMED_SEPARATELY_BY_FROZEN_HOST_VALIDATOR_AND_VERIFIER; see validation file and its hash",
+  "role": "source_screen_only",
+  "human_gold": false,
+  "training_admitted": false,
+  "rows": [
+    {
+      "audio_id": "clip-000001",
+      "wav_sha256": "0a1a68e143821d04926004c63414e455f787d4f1018ab5196504b2f5892a86b2",
+      "pcm_sha256": "f1a2e81006858d41bfdd5eb702449fb7812c8f8bad69e3a2d548995599da6411",
+      "target_text": "小窝小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小窝小窝",
+        "whisper": "小窝小窝"
+      },
+      "original_sensevoice_status": "failed_no_retry",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": true,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小窝小窝",
+        "whisper": "小窝小窝"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小窝小窝",
+        "whisper": "小窝小窝"
+      },
+      "normalized_target_text": "小窝小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "5efc3a5d82ecd54b8a0eebd455ec939047daf508511211d3b69b87dc1eee15a8",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-010.wav",
+      "category": "unanimous_matches_target",
+      "unanimous_normalized_text": "小窝小窝",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小窝小窝",
+        "whisper": "小窝小窝"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "unanimous_matches_target"
+    },
+    {
+      "audio_id": "clip-000002",
+      "wav_sha256": "237a42368f0260f9e7f70198d803a0fb83239da0bc31db985424bb707ed960d9",
+      "pcm_sha256": "dcc72c61550ad67d58e59321a25bcc52a7c600b06b890ce692c4bdba57ba19b3",
+      "target_text": "你好小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，小屋。",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小屋。"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，小屋。",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小屋。"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好小屋",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小屋"
+      },
+      "normalized_target_text": "你好小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "13314730a210240bc37c056ea63d6c9fd56e73d58d33d2dbcd29b3d8c9fda0c0",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-003.wav",
+      "category": "unanimous_matches_target",
+      "unanimous_normalized_text": "你好小屋",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好小屋",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "unanimous_matches_target"
+    },
+    {
+      "audio_id": "clip-000003",
+      "wav_sha256": "2ac554d6a67e5e304b44a9929fa8e54bb4951ebde1bbb6bada119b4f0df23add",
+      "pcm_sha256": "66bb67a8a0c36c4fa09171ce74c582b41a361f6d8d305003558fe22d21a9160f",
+      "target_text": "小窝小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小窝小窝",
+        "whisper": "小我小我"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小窝小窝",
+        "whisper": "小我小我"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小窝小窝",
+        "whisper": "小我小我"
+      },
+      "normalized_target_text": "小窝小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "2a9af4797bc4dd111bf200c5cca7c31c8ee5de7d29c35fe0512714bddfe5cbde",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-002.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小窝小窝",
+        "whisper": "小我小我"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000004",
+      "wav_sha256": "4425fcf0ec8e0d440d692a310899b41279563e693f6fa7abf0b53330d28f9bb2",
+      "pcm_sha256": "cd8b7cf050eb6d811b68a2b88a5e7350a7df9c191051f3543875fe20f13d6c9b",
+      "target_text": "小屋小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": false,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小窝，小窝。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_target_text": "小屋小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "86e76fae42e6443a9c1c64cd400c2a363c0ffae3a4eb5ba1560923297d3b2be6",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-006.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小窝小窝",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000005",
+      "wav_sha256": "5a63e0f9967147fce1f7d39ddb86bede41d95d438453b191e14c511ae2d8098f",
+      "pcm_sha256": "a28754d8d088d66eb9cb18b4ce0351f2a6e2aa2af5863b29cdf3d254dcecbaf9",
+      "target_text": "你好你好",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，你好。",
+        "sensevoice": "你好你好",
+        "whisper": "你好 你好"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，你好。",
+        "sensevoice": "你好你好",
+        "whisper": "你好 你好"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好你好",
+        "sensevoice": "你好你好",
+        "whisper": "你好 你好"
+      },
+      "normalized_target_text": "你好你好",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "4713a9bf9681b6b1595bfd8c799e626f4d1c817a1d62c21aa2d1e89d4b3f2e51",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-015.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好你好",
+        "sensevoice": "你好你好",
+        "whisper": "你好你好"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "unanimous_matches_target"
+    },
+    {
+      "audio_id": "clip-000006",
+      "wav_sha256": "5cf8303a75d4a8d5e9876ffb19705172047a1217bd3f2cbef57a3a28644f62c8",
+      "pcm_sha256": "5b7ce655d8f8392f66f695cd4c9267c5dff6afab361621100c7dc80124014e2f",
+      "target_text": "小窝小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_target_text": "小窝小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "d56b5d99c59fd482c8ba835f02d0f1e469a69b848db1aa2e1a586fc1b361db24",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-005.wav",
+      "category": "unanimous_differs_from_target",
+      "unanimous_normalized_text": "小屋小屋",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "unanimous_differs_from_target"
+    },
+    {
+      "audio_id": "clip-000007",
+      "wav_sha256": "6302ce9b370875370dbe06ec769e1d9c828a867ff0c5f7c4eaf0934b88dcbdf3",
+      "pcm_sha256": "366e37f305ef00a32c9fa9f822fcac36b4def12dcc9c71c3a2da3dcdca69561d",
+      "target_text": "你好小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，小窝。",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小我"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": false,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，小窝。",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小我"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好小窝",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小我"
+      },
+      "normalized_target_text": "你好小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "50d7ff2f33c4a87c3e6af8626d946d3c415d4185b448801bd70dbf107599c80a",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-009.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好小窝",
+        "sensevoice": "你好小屋",
+        "whisper": "你好小我"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000008",
+      "wav_sha256": "68bd0f8e42230659f11fd2ee7e20508ebc290c1c591befab3e0d8fbfad8ef17e",
+      "pcm_sha256": "b91d4a7965826e6fcd4b509384ff12198ff060561f36430d95dd59ecd0052bd2",
+      "target_text": "你好你好",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，你好。",
+        "sensevoice": "你好你好",
+        "whisper": "你好你好"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": true,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，你好。",
+        "sensevoice": "你好你好",
+        "whisper": "你好你好"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好你好",
+        "sensevoice": "你好你好",
+        "whisper": "你好你好"
+      },
+      "normalized_target_text": "你好你好",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "a18bdfe73c4f0fb0ba4502df3c35aa23e5d55215b057f4d7c0607a4043e80dc2",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-007.wav",
+      "category": "unanimous_matches_target",
+      "unanimous_normalized_text": "你好你好",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好你好",
+        "sensevoice": "你好你好",
+        "whisper": "你好你好"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "unanimous_matches_target"
+    },
+    {
+      "audio_id": "clip-000009",
+      "wav_sha256": "8d06cfa2452559fcd4840bbf9b97ea11936eb69ccde5fe639e3650bd6931796a",
+      "pcm_sha256": "7caf2ecc679561d64566d19accf566e5b3fec9c3cc1c40bb7560770f9e39558c",
+      "target_text": "小屋小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": true,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_target_text": "小屋小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "fe6e5d6b2988c1692d53e5baee6d7b9b40769cb55dae1709c3897f047b67ea01",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-012.wav",
+      "category": "unanimous_matches_target",
+      "unanimous_normalized_text": "小屋小屋",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "unanimous_matches_target"
+    },
+    {
+      "audio_id": "clip-000010",
+      "wav_sha256": "9040a0927a11d788b16410be3daf2c3ddb70e4c4bc2c23920eac3a824e3800c0",
+      "pcm_sha256": "d5bee4fd6cabeda5e433e5391d745ef64a2d3ea5cb18fb8706c65100e199cb00",
+      "target_text": "你好小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，小窝。",
+        "sensevoice": "你好小窝",
+        "whisper": "你好 小沃"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，小窝。",
+        "sensevoice": "你好小窝",
+        "whisper": "你好 小沃"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好小窝",
+        "sensevoice": "你好小窝",
+        "whisper": "你好 小沃"
+      },
+      "normalized_target_text": "你好小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "a21f685b880289cc90236c5a14e20aa607caf3895067ba5d79db804cc9ac3de0",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-001.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好小窝",
+        "sensevoice": "你好小窝",
+        "whisper": "你好小沃"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000011",
+      "wav_sha256": "9b2d7469925da75588dd6abaf9e094c4a4b36afb9fd29f9d1dcfa430aaeb4e82",
+      "pcm_sha256": "a09237af9fe3c2221f8e8834dc19d792a74c49cb4c3ff8d8627f6a023d9d1f99",
+      "target_text": "你好小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "你好，小吴。",
+        "sensevoice": "你好小吴",
+        "whisper": "你好小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": true,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "你好，小吴。",
+        "sensevoice": "你好小吴",
+        "whisper": "你好小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "你好小吴",
+        "sensevoice": "你好小吴",
+        "whisper": "你好小屋"
+      },
+      "normalized_target_text": "你好小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "3569fa508c67ae32c9ab534f31c57f0f74c97f4a9641ad305edd5d06c782c7ec",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-011.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "你好小吴",
+        "sensevoice": "你好小吴",
+        "whisper": "你好小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000012",
+      "wav_sha256": "a4a3fea20516c844df2f669984f42cf8df869afedef1eb66228f6fb873272b5c",
+      "pcm_sha256": "f1754642aef7435f9a8e3730c54ab5557043e672aa2b1f6b9b0e6ea065fa01df",
+      "target_text": "小屋小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小屋，小屋。",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋"
+      },
+      "normalized_target_text": "小屋小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "6528dd41426a0c5a0f43620497eaf6da4665f1ffe16a6b7f61789a9636b07748",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-014.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小屋小屋",
+        "sensevoice": "小屋小屋",
+        "whisper": "小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000013",
+      "wav_sha256": "c4b60888290ecd2ce414d8691e7d9e3587d373c0bb1e75c9af44421835ec8815",
+      "pcm_sha256": "5708e42803144ff341f4db38fcd7bbefda948510c0eac0b905785986d22d479e",
+      "target_text": "小窝小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小窝，小屋。",
+        "sensevoice": "小窝小屋",
+        "whisper": "小屋小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": true
+        },
+        "sensevoice": {
+          "literal_match": true,
+          "normalized_match": true
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小窝，小屋。",
+        "sensevoice": "小窝小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小窝小屋",
+        "sensevoice": "小窝小屋",
+        "whisper": "小屋小屋"
+      },
+      "normalized_target_text": "小窝小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "718605bcde4cb880c3a9437b26b2a16d9da2f072a48039082396af64be53fd04",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-013.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小窝小屋",
+        "sensevoice": "小窝小屋",
+        "whisper": "小屋小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": true,
+        "sensevoice": true,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000014",
+      "wav_sha256": "c8f9b3cc58ebbfc5e625fe406735e237b9fd4a1d5546a43e47f5814e95a4ec12",
+      "pcm_sha256": "51c5e513c9284b05a302b6a5f7d089fae1cedc1626849975ab6bad7511223a42",
+      "target_text": "小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小屋。",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": true,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小屋。",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小屋",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "normalized_target_text": "小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "1f74c842dba48fe134be393b4323a503b06c180d3dffdcd04b8bb60656862353",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-008.wav",
+      "category": "unanimous_differs_from_target",
+      "unanimous_normalized_text": "小屋",
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小屋",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": true,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "unanimous_differs_from_target"
+    },
+    {
+      "audio_id": "clip-000015",
+      "wav_sha256": "e5441a983de8f42c08a1308c377e47e12fc6078117a3c06cc4caa28a8e16a6ff",
+      "pcm_sha256": "c57b5e3599e13b31303ada55f2ed8781e4321d67ccda8d35c0844a69a8106332",
+      "target_text": "小屋小屋",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小吴，小吴。",
+        "sensevoice": "小吴小吴",
+        "whisper": "小屋小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": true,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": true,
+          "normalized_match": true
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小吴，小吴。",
+        "sensevoice": "小吴小吴",
+        "whisper": "小屋小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小吴小吴",
+        "sensevoice": "小吴小吴",
+        "whisper": "小屋小屋"
+      },
+      "normalized_target_text": "小屋小屋",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "2af659fd41ce0372541e28b51b40a0144f4a59ff3aed1bec827fccaaa71ff944",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-004.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小吴小吴",
+        "sensevoice": "小吴小吴",
+        "whisper": "小屋小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": true
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    },
+    {
+      "audio_id": "clip-000016",
+      "wav_sha256": "fd066f4c59e36960efc5ebbc3ebf1c670727b478c649e6179638a2c763d0a187",
+      "pcm_sha256": "0f353807ca003457d2b94c04661077a0c43aad5b9060e52613529b0c8be3a823",
+      "target_text": "小窝",
+      "statuses": {
+        "qwen06": "success",
+        "sensevoice": "success",
+        "whisper": "completed_native_eot"
+      },
+      "valid_literal_votes": {
+        "qwen06": "小吴。",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "original_sensevoice_status": "not_run",
+      "qwen_sense_literal_agreement": false,
+      "qwen_sense_normalized_agreement": false,
+      "literal_three_way_agreement": false,
+      "normalized_three_way_agreement": false,
+      "per_asr_vs_target": {
+        "qwen06": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "sensevoice": {
+          "literal_match": false,
+          "normalized_match": false
+        },
+        "whisper": {
+          "literal_match": false,
+          "normalized_match": false
+        }
+      },
+      "role": "source_screen_only",
+      "human_gold": false,
+      "training_admitted": false,
+      "raw_texts": {
+        "qwen06": "小吴。",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "normalized_valid_votes": {
+        "qwen06": "小吴",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "normalized_target_text": "小窝",
+      "whisper_evidence": {
+        "status": "completed_native_eot",
+        "attempts": 1,
+        "stop_reason": "eot",
+        "validation_errors": [],
+        "raw_output_sha256": "f6ed00f299fd86329aee4f57f9cbf9fd0b5a288959aba35c7f0cd70d9f873000",
+        "decoder_trace_sha256": null,
+        "execution_receipt_sha256": null
+      },
+      "public_wav_path": "research/source-screen32-v1/evidence/run-38018029787/generation/tts/screen32-016.wav",
+      "category": "three_way_disagreement",
+      "unanimous_normalized_text": null,
+      "punctuation_whitespace_valid_votes": {
+        "qwen06": "小吴",
+        "sensevoice": "小屋",
+        "whisper": "小屋"
+      },
+      "punctuation_whitespace_three_way_agreement": false,
+      "punctuation_whitespace_per_asr_matches_target": {
+        "qwen06": false,
+        "sensevoice": false,
+        "whisper": false
+      },
+      "punctuation_whitespace_category": "three_way_disagreement"
+    }
+  ],
+  "observed_valid_triple_denominator": 16,
+  "agreement_rates_observed_valid_triples": {
+    "literal_three_way_agreement": 0.0,
+    "normalized_three_way_agreement": 0.375,
+    "normalized_three_way_agreement_matches_target": 0.25,
+    "normalized_three_way_agreement_differs_from_target": 0.125,
+    "normalized_three_way_disagreement": 0.625
+  },
+  "rate_interpretation": "Fixed-16 values are roster fractions. Observed agreement rates use only valid triples and are null with zero valid triples. Neither is genuine acoustic accuracy.",
+  "third_status_counts": {
+    "completed_native_eot": 16
+  },
+  "third_native_eot_coverage": {
+    "count": 16,
+    "denominator": 16,
+    "rate": 1.0
+  },
+  "target_interpretation": "Generated intended text is a separate comparison reference, not human truth and never a replacement for any ASR output.",
+  "working_truth_policy": "Three independent ASR unanimous text may be a working-truth candidate only under provenance, rights, role and OOV gates. This retrospective screen does not implement or pass training admission.",
+  "original_human_observations": "Preserved privately; neither consulted nor copied into this public-source comparison.",
+  "categories": {
+    "unanimous_matches_target": [
+      "clip-000001",
+      "clip-000002",
+      "clip-000008",
+      "clip-000009"
+    ],
+    "unanimous_differs_from_target": [
+      "clip-000006",
+      "clip-000014"
+    ],
+    "three_way_disagreement": [
+      "clip-000003",
+      "clip-000004",
+      "clip-000005",
+      "clip-000007",
+      "clip-000010",
+      "clip-000011",
+      "clip-000012",
+      "clip-000013",
+      "clip-000015",
+      "clip-000016"
+    ],
+    "incomplete_three_way": []
+  },
+  "per_asr_vs_target_summary": {
+    "qwen06": {
+      "valid_outputs": 16,
+      "literal_target_matches": 0,
+      "normalized_target_matches": 9,
+      "literal_target_match_rate_observed": 0.0,
+      "normalized_target_match_rate_observed": 0.5625,
+      "normalized_target_match_fraction_fixed_16": 0.5625
+    },
+    "sensevoice": {
+      "valid_outputs": 16,
+      "literal_target_matches": 8,
+      "normalized_target_matches": 8,
+      "literal_target_match_rate_observed": 0.5,
+      "normalized_target_match_rate_observed": 0.5,
+      "normalized_target_match_fraction_fixed_16": 0.5
+    },
+    "whisper": {
+      "valid_outputs": 16,
+      "literal_target_matches": 5,
+      "normalized_target_matches": 6,
+      "literal_target_match_rate_observed": 0.3125,
+      "normalized_target_match_rate_observed": 0.375,
+      "normalized_target_match_fraction_fixed_16": 0.375
+    }
+  },
+  "shipping_approved": false,
+  "acoustic_verbatim_completeness": "unknown",
+  "punctuation_whitespace_comparison": {
+    "normalization": "Remove Unicode category P punctuation and characters for which str.isspace() is true; preserve case, script, homophones, symbols, OOV and every other character. No Unicode normalization.",
+    "fixed_denominator": 16,
+    "observed_valid_triple_denominator": 16,
+    "counts": {
+      "unanimous_matches_target": 5,
+      "unanimous_differs_from_target": 2,
+      "three_way_disagreement": 9,
+      "incomplete_three_way": 0,
+      "normalized_three_way_agreement": 7
+    },
+    "rates_fixed_16": {
+      "unanimous_matches_target": 0.3125,
+      "unanimous_differs_from_target": 0.125,
+      "three_way_disagreement": 0.5625,
+      "incomplete_three_way": 0.0,
+      "normalized_three_way_agreement": 0.4375
+    },
+    "agreement_rates_observed_valid_triples": {
+      "unanimous_matches_target": 0.3125,
+      "unanimous_differs_from_target": 0.125,
+      "three_way_disagreement": 0.5625,
+      "normalized_three_way_agreement": 0.4375
+    },
+    "categories": {
+      "unanimous_matches_target": [
+        "clip-000001",
+        "clip-000002",
+        "clip-000005",
+        "clip-000008",
+        "clip-000009"
+      ],
+      "unanimous_differs_from_target": [
+        "clip-000006",
+        "clip-000014"
+      ],
+      "three_way_disagreement": [
+        "clip-000003",
+        "clip-000004",
+        "clip-000007",
+        "clip-000010",
+        "clip-000011",
+        "clip-000012",
+        "clip-000013",
+        "clip-000015",
+        "clip-000016"
+      ],
+      "incomplete_three_way": []
+    },
+    "per_asr_target_matches": {
+      "qwen06": 9,
+      "sensevoice": 8,
+      "whisper": 7
+    },
+    "additional_agreement_ids_vs_punctuation_only": [
+      "clip-000005"
+    ]
+  },
+  "provenance": {
+    "repository": "jiying2007/kws-pipeline",
+    "retained_source_commit": "988edd238546ebac900a4593fbaec227a93a8661",
+    "retained_reviewed_tree": "b6faa2940f8b18fccfd02f2f651b5b871c6a11bb",
+    "source_run_urls": {
+      "qwen06": "https://github.com/jiying2007/kws-pipeline/actions/runs/38018029787",
+      "sensevoice": "https://github.com/jiying2007/kws-pipeline/actions/runs/38021467257",
+      "original_sensevoice": "https://github.com/jiying2007/kws-pipeline/actions/runs/38018029787"
+    },
+    "comparison_input_file": "research/source-screen32-whisper-v1/evidence/run-38126849922/comparison/comparison-input.json",
+    "comparison_input_sha256": "e45b6620c8491b204234ddb9e506ec93b947807e43e1b7fc1cf17ecb95bee51e",
+    "retained_authentication_file": "research/source-screen32-whisper-v1/evidence/run-38126849922/comparison/authentication.json",
+    "retained_authentication_sha256": "8b9ee6b410974d6f81d322644b173bbb12f26394d86bdab48408d62440cd8acf",
+    "whisper_run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38126849922",
+    "whisper_run_id": "38126849922",
+    "whisper_head_sha": "1986acbeb790833a92f5014fccb88a931c0f3e7f",
+    "whisper_executed_tree": "8c0088d93e4b1e9fd8d28e92dc0ea48794f4a015",
+    "whisper_artifact_id": 11696898706,
+    "whisper_artifact_zip_sha256": "b938916aeee60210863fb2f86bf7d1de89663dc9a1775e7910d702a64af14cf4",
+    "whisper_terminal_sha256": "115773be9a64ee04cb0d5bb5002268528e9a4573ef094d754565187f95942a10",
+    "whisper_validation_file": "research/source-screen32-whisper-v1/evidence/run-38126849922/verification-receipt.json",
+    "whisper_validation_sha256": "4e40bff753892fef4cd5754f786fa35a759f6f1dbfdb59243ceacf0dbe09845e",
+    "comparison_script_sha256": "f47076af0efef8c67f1eedca4dacbeaa1965059d109fffe621c301766472a9ba",
+    "inherited_comparator_sha256": "ea692d2c4169c90be1ba3a4d89396790d48a6706a5e4df13936cf1b9d5dcf632",
+    "whisper_terminal_archive_member": "terminal-outcomes.json",
+    "whisper_terminal_archive_manifest": "research/source-screen32-whisper-v1/evidence/run-38126849922/ARCHIVE.json",
+    "path_convention": "Repository-relative public files; terminal-outcomes.json is a logical member of the exact retained ZIP, not an expanded repository file."
+  },
+  "retained_reauthentication": {
+    "retained_files_rechecked": 170,
+    "archive_members_rechecked": 335,
+    "wav_pcm_identities_rechecked": 16,
+    "successful_receipt_literal_bindings_rechecked": 32,
+    "original_sensevoice_records_preserved": {
+      "failed_no_retry": 1,
+      "not_run": 15
+    },
+    "private_human_observation_bodies_read_or_copied": false,
+    "limitation": "Byte-level authentication against retained public freezes and receipts, not independent attestation of original service execution."
+  }
+}
