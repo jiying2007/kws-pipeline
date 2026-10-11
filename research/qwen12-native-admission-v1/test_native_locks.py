@@ -1084,7 +1084,15 @@ class CleanupLifecycleSmokeTests(unittest.TestCase):
             self.assertEqual(self.smoke.execute(self.env, self.event), 1)
         acquire.assert_called_once()
         lifecycle.assert_not_called()
-        self.assertEqual(retained[0]['primary_error'], {'error_type': 'TimeoutError'})
+        error = retained[0]['primary_error']
+        self.assertEqual(set(error), {'error_type', 'frames', 'frames_truncated'})
+        self.assertEqual(error['error_type'], 'TimeoutError')
+        self.assertIs(error['frames_truncated'], False)
+        self.assertGreater(len(error['frames']), 0)
+        self.assertLessEqual(len(error['frames']), self.smoke.host.MAX_HOST_ERROR_FRAMES)
+        self.assertTrue(all(frame == {'file': '<redacted>', 'function': '<redacted>', 'line': None}
+                            for frame in error['frames']))
+        self.assertLessEqual(len(json.dumps(error).encode()), self.smoke.host.MAX_HOST_ERROR_BYTES)
         self.assertEqual(retained[0]['model_calls'], 0)
         self.assertNotIn('private image failure', json.dumps(retained))
 

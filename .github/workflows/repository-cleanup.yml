@@ -161,6 +161,7 @@ env:
     research/qwen12-native-transport-preflight-12m-v1
     research/qwen12-native-admission-recovery3
     research/qwen12-native-admission-remaining35-v1
+    research/qwen12-native-admission-remaining35-r1-v1
   RETAINED_DESIGN_BRANCHES: >-
     feat/decoder-boundary-requalification-v1
     training/keyword-set-contract-v1

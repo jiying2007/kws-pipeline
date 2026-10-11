@@ -49,11 +49,11 @@ class BranchTransportTests(unittest.TestCase):
         self.assertEqual(receipt["evidence_commit"], "e" * 40)
         self.assertIsNone(receipt["github_actions_artifact_id"])
 
-    def test_native_policy_is_exact_remaining35_identity(self):
+    def test_native_policy_is_exact_remaining35_r1_identity(self):
         self.assertEqual(b.purpose_policy("native"), {
-            "source_branch": "research/qwen12-native-admission-remaining35-v1",
-            "evidence_branch": "evidence/qwen12-native-admission-remaining35-v1",
-            "directory": "research/qwen12-native-admission-v1/evidence/remaining35-v1",
+            "source_branch": "research/qwen12-native-admission-remaining35-r1-v1",
+            "evidence_branch": "evidence/qwen12-native-admission-remaining35-r1-v1",
+            "directory": "research/qwen12-native-admission-v1/evidence/remaining35-r1-v1",
             "scope": "qwen12-native-admission-v1", "job_key": "qwen12"})
         self.assertEqual(b.purpose_policy("synthetic"), {
             "source_branch": "research/qwen12-native-transport-preflight-v1",
@@ -79,20 +79,20 @@ class BranchTransportTests(unittest.TestCase):
             with self.assertRaises(ValueError): b.chunk_path("synthetic12m", index)
 
     def test_consumed_evidence_directories_cannot_be_reused(self):
-        for old in ("native-v1", "recovery1", "recovery2", "recovery3"):
+        for old in ("native-v1", "recovery1", "recovery2", "recovery3", "remaining35-v1"):
             bad=copy.deepcopy(self.manifest)
-            for row in bad["chunks"]:row["path"]=row["path"].replace("/remaining35-v1/", "/"+old+"/")
-            chunks=[(name.replace("/remaining35-v1/", "/"+old+"/"), raw) for name,raw in self.chunks]
+            for row in bad["chunks"]:row["path"]=row["path"].replace("/remaining35-r1-v1/", "/"+old+"/")
+            chunks=[(name.replace("/remaining35-r1-v1/", "/"+old+"/"), raw) for name,raw in self.chunks]
             with self.subTest(directory=old),self.assertRaises(ValueError):self.parse(bad,chunks)
 
     def test_mixed_old_and_remaining35_chunks_fail_closed(self):
-        for old in ("native-v1", "recovery1", "recovery2", "recovery3"):
+        for old in ("native-v1", "recovery1", "recovery2", "recovery3", "remaining35-v1"):
             for part in ("manifest", "chunks", "both"):
                 bad=copy.deepcopy(self.manifest);chunks=list(self.chunks)
                 if part in ("manifest", "both"):
-                    bad["chunks"][0]["path"]=bad["chunks"][0]["path"].replace("/remaining35-v1/", "/"+old+"/")
+                    bad["chunks"][0]["path"]=bad["chunks"][0]["path"].replace("/remaining35-r1-v1/", "/"+old+"/")
                 if part in ("chunks", "both"):
-                    name,raw=chunks[0];chunks[0]=(name.replace("/remaining35-v1/", "/"+old+"/"),raw)
+                    name,raw=chunks[0];chunks[0]=(name.replace("/remaining35-r1-v1/", "/"+old+"/"),raw)
                 with self.subTest(directory=old,part=part),self.assertRaises(ValueError):self.parse(bad,chunks)
 
     def test_missing_duplicate_extra_reordered_chunks(self):

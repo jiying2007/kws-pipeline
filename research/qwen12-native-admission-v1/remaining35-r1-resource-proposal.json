@@ -1,0 +1,1097 @@
+{
+  "schema": "qwen12-remaining35-r1-resource-proposal-v1",
+  "repository": "jiying2007/kws-pipeline",
+  "status": "disabled_source_proposal_only",
+  "execution_enabled": false,
+  "root_resource_review_status": "PENDING",
+  "root_execution_release_status": "PENDING",
+  "source_baseline": {
+    "executed_head_sha": "7dcb09208798298ec5a7e2d44b6c5611524fe0ba",
+    "source_tree_sha": "36d26b58c7113371363ee30b57cfaade745cba4b",
+    "url": "https://github.com/jiying2007/kws-pipeline/tree/7dcb09208798298ec5a7e2d44b6c5611524fe0ba",
+    "role": "Actual fifth executed source and last verified public main; retained source observation, no fresh remote read in this preparation."
+  },
+  "preserved_historical_proposal": {
+    "path": "research/qwen12-native-admission-v1/remaining35-resource-proposal.json",
+    "bytes": 40104,
+    "sha256": "14395223cd05a2dc1c2b5627e6a27d16500a0131a86530a272cb8e3e3915997d",
+    "unchanged": true
+  },
+  "prior_native_executions": [
+    {
+      "label": "native_v1",
+      "run_id": 38154869005,
+      "run_attempt": 1,
+      "job_key": "qwen12",
+      "numeric_job_id": 114515750086,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38154869005/job/114515750086",
+      "executed_head_sha": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
+      "source_tree_sha": "3b754bcc98511971c1c21382f6a48d01dab38e9c",
+      "source_freeze_sha256": "f6d24914a930a94776fa4051f54c3d4b87569ff355d1ffa687016c8f6e6988e5",
+      "source_branch": "research/qwen12-native-admission-v1",
+      "evidence_commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
+      "evidence_tree_sha": "a3010beecc5fbab259875f8db3b175c569c04692",
+      "evidence_branch": "evidence/qwen12-native-admission-v1",
+      "evidence_directory": "research/qwen12-native-admission-v1/evidence/native-v1",
+      "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/8e05b507e8239ed70191c56ff13216690d6c3049/research/qwen12-native-admission-v1/evidence/native-v1",
+      "archive_bytes": 1597173,
+      "archive_sha256": "1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13",
+      "started": 0,
+      "completed": 0,
+      "not_run": 36,
+      "consumed": true,
+      "cleanup_status": "REMOVED_CONFIRMED",
+      "cleanup_all_removed_observation": true,
+      "post_pause_cpu_accounted": false,
+      "terminal_status_path": "research/qwen12-native-admission-v1/evidence/run-38154869005/terminal-status.json",
+      "terminal_status_sha256": "90c650d77ca43e7fd937e5078594020849a9753e8e3d3a3da4074f40c69735e8",
+      "terminal_status_url": "https://github.com/jiying2007/kws-pipeline/blob/8c4d430ce1077aa9eefa8de130450319c64e545e/research/qwen12-native-admission-v1/evidence/run-38154869005/terminal-status.json",
+      "recorded_or_source_inferred_resource": {
+        "qwen_sense_response_body_bytes": 3340966447,
+        "image_observed_default_interface_receive_delta_bytes": 45704322,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 454.195425,
+        "host_capture_receipt_wall_seconds": 708.389337012,
+        "audio_response_body_bytes": 776208,
+        "whisper_bidirectional_tunnel_recv_bytes": 774060234
+      },
+      "resource_measurement_kind": {
+        "qwen_sense_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "image_observed_default_interface_receive_delta_bytes": "OBSERVED_INTERFACE_DELTA",
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "MEASURED_RETAINED_RECEIPT",
+        "host_capture_receipt_wall_seconds": "MEASURED_RETAINED_RECEIPT",
+        "audio_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "whisper_bidirectional_tunnel_recv_bytes": "MEASURED_RETAINED_RECEIPT"
+      },
+      "public_archive_resource_members": {
+        "acquisition-receipt.json": {
+          "bytes": 581,
+          "sha256": "ca5e080cbfe2c058382ce4984d232e9d7ddc1cb2a5f8eae49e4f01a4905b567a"
+        },
+        "asr-setup-public.json": {
+          "bytes": 385087,
+          "sha256": "4b410e4fb9528108833d925110aa91c3e5d2d2b6fe780417a7983fdb26d46b1f"
+        },
+        "cleanup-receipt.json": {
+          "bytes": 6523,
+          "sha256": "3fb5d71f56c1498cd63beb1cc397d4c23d69c5b9e4cedf126f31db100e79077d"
+        },
+        "cpu-receipt.json": {
+          "bytes": 6766,
+          "sha256": "2228b4578f682a4fec08a90b5b3505fc6355be37c2818cb08ef6fb656c04ce8a"
+        },
+        "host-receipt.json": {
+          "bytes": 1591,
+          "sha256": "7ee689da4fbcad99b9ef9b9d7c1b8395c8211164021cf84c5467722c4d861bc5"
+        },
+        "image-transfer.json": {
+          "bytes": 1299,
+          "sha256": "6da909131abcae57302f4c1be521f2af17b27149333cd9bf234d8e7874e5e560"
+        },
+        "whisper-setup/bounded-acquisition/receipt.json": {
+          "bytes": 4251,
+          "sha256": "22fdbf6fef800e222b85d73b96c357b287dc0574e32ed34d87d80fa6f985c604"
+        }
+      },
+      "qualification": "Audio body bytes are measured in the retained acquisition receipt. Container removal is confirmed; CPU after the acknowledged accounting pause is excluded.",
+      "host_wall_scope": "Setup and preparation through the host-receipt snapshot, before final evidence ZIP packaging and publisher.",
+      "error": 0,
+      "terminal_outcomes_member": {
+        "path": "terminal-outcomes.json",
+        "bytes": 12373,
+        "sha256": "d86b904ad806cd614a65e20bc3d7e2193ae6758a683307ed4eda40ea945f03dc"
+      },
+      "original_started_members": [],
+      "actual_started_count": 0,
+      "terminal_reported_attempt_sum": 0,
+      "terminal_historical_reference_count": 0
+    },
+    {
+      "label": "recovery1",
+      "run_id": 38160295526,
+      "run_attempt": 1,
+      "job_key": "qwen12",
+      "numeric_job_id": 114531695348,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38160295526/job/114531695348",
+      "executed_head_sha": "e9297163a21f8f7c2f960301ff05f1894617d2cf",
+      "source_tree_sha": "20e9ff3b33b894807ee1973810afb7645df5d7bd",
+      "source_freeze_sha256": "4b4fcb7dbabde3f4306cb0c363b7298be2c66382bd38359c6701d29a3a282342",
+      "source_branch": "research/qwen12-native-admission-recovery1",
+      "evidence_commit": "d843cc59113c7fd3ac89a0b4be9db71e5950ea20",
+      "evidence_tree_sha": "5a99386e3803a44ecf35b647e9c0e4f75fb30b0a",
+      "evidence_branch": "evidence/qwen12-native-admission-recovery1",
+      "evidence_directory": "research/qwen12-native-admission-v1/evidence/recovery1",
+      "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/d843cc59113c7fd3ac89a0b4be9db71e5950ea20/research/qwen12-native-admission-v1/evidence/recovery1",
+      "archive_bytes": 86754,
+      "archive_sha256": "9b063d2c92ccf88d67678b032d391bf01e0ceb1a626d5cf23a3f11c0fd250d39",
+      "started": 0,
+      "completed": 0,
+      "not_run": 36,
+      "consumed": true,
+      "cleanup_status": "UNKNOWN",
+      "cleanup_all_removed_observation": false,
+      "post_pause_cpu_accounted": false,
+      "terminal_status_path": "research/qwen12-native-admission-v1/evidence/run-38160295526/terminal-status.json",
+      "terminal_status_sha256": "f2e8744e593b9c1fa77f4e11e9f62ae110301d4ef76268c027f48086b1516cd5",
+      "terminal_status_url": "https://github.com/jiying2007/kws-pipeline/blob/8c4d430ce1077aa9eefa8de130450319c64e545e/research/qwen12-native-admission-v1/evidence/run-38160295526/terminal-status.json",
+      "recorded_or_source_inferred_resource": {
+        "qwen_sense_response_body_bytes": 3340966447,
+        "image_observed_default_interface_receive_delta_bytes": 45707668,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 103.355741,
+        "host_capture_receipt_wall_seconds": 151.293698272,
+        "audio_response_body_bytes": 776208,
+        "whisper_bidirectional_tunnel_recv_bytes": 0
+      },
+      "resource_measurement_kind": {
+        "qwen_sense_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "image_observed_default_interface_receive_delta_bytes": "OBSERVED_INTERFACE_DELTA",
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "MEASURED_RETAINED_RECEIPT",
+        "host_capture_receipt_wall_seconds": "MEASURED_RETAINED_RECEIPT",
+        "audio_response_body_bytes": "SOURCE_FLOW_INFERRED",
+        "whisper_bidirectional_tunnel_recv_bytes": "SOURCE_FLOW_INFERRED"
+      },
+      "public_archive_resource_members": {
+        "asr-setup-public.json": {
+          "bytes": 386373,
+          "sha256": "494174db0c457352b89994d59a60b56b57b7f0c1d045737e4203028253e4fcc5"
+        },
+        "cleanup-receipt.json": {
+          "bytes": 381,
+          "sha256": "2c391686d3f592362b91832be04d227a307f786262225430b0451a5722a596dc"
+        },
+        "cpu-receipt.json": {
+          "bytes": 778,
+          "sha256": "8d9c0e4d38342fb4cceb9c7a88b205f4471344e04c21bde1787638cb6369f88e"
+        },
+        "host-receipt.json": {
+          "bytes": 1423,
+          "sha256": "5e373f302a352e67e8ac6645a7ecec1d389f147e272f910b83ef15de32f7498b"
+        },
+        "image-transfer.json": {
+          "bytes": 1301,
+          "sha256": "c9a5db74c44ce8ff93db26f98b9188307a0c360a8d84ef271be44bff3d60c111"
+        }
+      },
+      "qualification": "Audio 776208 is source-flow inference: verified fixed-input fetch precedes supervised ASR setup; the standalone acquisition receipt was not written. Whisper 0 is source-flow inference from never-entered setup, not a missing-counter zero substitution. Removal remains UNKNOWN; all_removed=false does not prove that the container remained.",
+      "host_wall_scope": "Setup and preparation through the host-receipt snapshot, before final evidence ZIP packaging and publisher.",
+      "error": 0,
+      "terminal_outcomes_member": {
+        "path": "terminal-outcomes.json",
+        "bytes": 12373,
+        "sha256": "d86b904ad806cd614a65e20bc3d7e2193ae6758a683307ed4eda40ea945f03dc"
+      },
+      "original_started_members": [],
+      "actual_started_count": 0,
+      "terminal_reported_attempt_sum": 0,
+      "terminal_historical_reference_count": 0
+    },
+    {
+      "label": "recovery2",
+      "run_id": 38167052146,
+      "run_attempt": 1,
+      "job_key": "qwen12",
+      "numeric_job_id": 114551789796,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38167052146/job/114551789796",
+      "executed_head_sha": "42b333f8b96c4c9fcca63c9e275d26a4519737c8",
+      "source_tree_sha": "6e91e77b1e60e19956664da2eab80f0a929e02af",
+      "source_freeze_sha256": "ee821f44e1ac4bba36089eea751b5f6ae075b8c7bf4a614c49a7e4f21b50cc96",
+      "source_branch": "research/qwen12-native-admission-recovery2",
+      "evidence_commit": "43113646c12fc9d6c112481bab6818c96f2ce789",
+      "evidence_tree_sha": "d011c11b02f6273a79520f4f0cc18b9a2f8b115f",
+      "evidence_branch": "evidence/qwen12-native-admission-recovery2",
+      "evidence_directory": "research/qwen12-native-admission-v1/evidence/recovery2",
+      "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/43113646c12fc9d6c112481bab6818c96f2ce789/research/qwen12-native-admission-v1/evidence/recovery2",
+      "archive_bytes": 2656120,
+      "archive_sha256": "140a18c7429b16674b5a1dc8e1f65f4a1be6b0dd4ecb324b0a4c1ccaff11d157",
+      "started": 0,
+      "completed": 0,
+      "not_run": 36,
+      "consumed": true,
+      "cleanup_status": "REMOVED_CONFIRMED",
+      "cleanup_all_removed_observation": true,
+      "post_pause_cpu_accounted": false,
+      "terminal_status_path": "research/qwen12-native-admission-v1/evidence/run-38167052146/terminal-status.json",
+      "terminal_status_sha256": "017bcc3325c4ffb1572c20287d82a95f0be5089c052c8406384ed9f7772da60a",
+      "terminal_status_url": "https://github.com/jiying2007/kws-pipeline/blob/8c4d430ce1077aa9eefa8de130450319c64e545e/research/qwen12-native-admission-v1/evidence/run-38167052146/terminal-status.json",
+      "recorded_or_source_inferred_resource": {
+        "qwen_sense_response_body_bytes": 3340966447,
+        "image_observed_default_interface_receive_delta_bytes": 45710666,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 477.281264,
+        "host_capture_receipt_wall_seconds": 759.388826281,
+        "audio_response_body_bytes": 776208,
+        "whisper_bidirectional_tunnel_recv_bytes": 774056598
+      },
+      "resource_measurement_kind": {
+        "qwen_sense_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "image_observed_default_interface_receive_delta_bytes": "OBSERVED_INTERFACE_DELTA",
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "MEASURED_RETAINED_RECEIPT",
+        "host_capture_receipt_wall_seconds": "MEASURED_RETAINED_RECEIPT",
+        "audio_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "whisper_bidirectional_tunnel_recv_bytes": "MEASURED_RETAINED_RECEIPT"
+      },
+      "public_archive_resource_members": {
+        "acquisition-receipt.json": {
+          "bytes": 581,
+          "sha256": "fe18cc641861b5d0772698c8427138668e0c27bc8abca24f0f434d8091ac1dad"
+        },
+        "asr-setup-public.json": {
+          "bytes": 386364,
+          "sha256": "e7d17feb45a9d6f87e303094ca1ad541bff8a31041a31a7bbf1a5a4c998776bc"
+        },
+        "cleanup-receipt.json": {
+          "bytes": 56968,
+          "sha256": "0709cb574e3a0010261d700482f623672100c40ec1334fc8a4e52271611951d2"
+        },
+        "cpu-receipt.json": {
+          "bytes": 6899,
+          "sha256": "6885aa8f8356419f06f6c93a200f3c4d5e2069a28ab1a7aec048118b910ee7e2"
+        },
+        "host-receipt.json": {
+          "bytes": 60572,
+          "sha256": "4ee1654daf96ed3c2f30aac541ed54e571e25706b3ee97370134003d240f4110"
+        },
+        "image-transfer.json": {
+          "bytes": 1299,
+          "sha256": "05d20fdf779cbc11647c5535b388199b36cdd4945e5a7cad40a39a79bedf18c5"
+        },
+        "whisper-setup/bounded-acquisition/receipt.json": {
+          "bytes": 4251,
+          "sha256": "1889b01a7125d7c62492edc6a144334e122bac22c4e15158ce3bfbd84beb47ad"
+        }
+      },
+      "qualification": "Audio body bytes are measured in the retained acquisition receipt. Container removal is confirmed; CPU after the acknowledged accounting pause is excluded.",
+      "host_wall_scope": "Includes setup, prepare-only loads, failed package-budget preflight ZIP construction, and cleanup through the host-receipt snapshot; excludes subsequent final evidence ZIP packaging and publisher.",
+      "error": 0,
+      "terminal_outcomes_member": {
+        "path": "terminal-outcomes.json",
+        "bytes": 12373,
+        "sha256": "d86b904ad806cd614a65e20bc3d7e2193ae6758a683307ed4eda40ea945f03dc"
+      },
+      "original_started_members": [],
+      "actual_started_count": 0,
+      "terminal_reported_attempt_sum": 0,
+      "terminal_historical_reference_count": 0
+    },
+    {
+      "label": "recovery3",
+      "run_id": 38173984595,
+      "run_attempt": 1,
+      "job_key": "qwen12",
+      "numeric_job_id": 114572506731,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38173984595/job/114572506731",
+      "executed_head_sha": "80009f412987aeaaaf401894677299724ed0490d",
+      "source_tree_sha": "b6722270d54de525556c602b92b1a29ce9ebd0ef",
+      "source_freeze_sha256": "2888f0a1a60abf11e3c8a12caf71085a859fb7a3636f6825b163afdf6809060c",
+      "source_branch": "research/qwen12-native-admission-recovery3",
+      "evidence_commit": "8c25805e226ca23d55bd698b52ba5b45acd9195a",
+      "evidence_tree_sha": "0da1f6122023bc374fb378c76de339571d391714",
+      "evidence_branch": "evidence/qwen12-native-admission-recovery3",
+      "evidence_directory": "research/qwen12-native-admission-v1/evidence/recovery3",
+      "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/8c25805e226ca23d55bd698b52ba5b45acd9195a/research/qwen12-native-admission-v1/evidence/recovery3",
+      "archive_bytes": 4210336,
+      "archive_sha256": "9d371985530e8d5e32c915b8853f6e945ded1bfdbb6dad0b53fcbba4772e5bf5",
+      "started": 1,
+      "completed": 0,
+      "error": 1,
+      "not_run": 35,
+      "consumed": true,
+      "cleanup_status": "REMOVED_CONFIRMED",
+      "cleanup_all_removed_observation": true,
+      "post_pause_cpu_accounted": false,
+      "recorded_or_source_inferred_resource": {
+        "qwen_sense_response_body_bytes": 3340966447,
+        "whisper_bidirectional_tunnel_recv_bytes": 774057502,
+        "image_observed_default_interface_receive_delta_bytes": 47721686,
+        "audio_response_body_bytes": 776208,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 630.456231,
+        "host_capture_receipt_wall_seconds": 912.944030658
+      },
+      "resource_measurement_kind": {
+        "qwen_sense_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "whisper_bidirectional_tunnel_recv_bytes": "MEASURED_RETAINED_RECEIPT",
+        "image_observed_default_interface_receive_delta_bytes": "OBSERVED_INTERFACE_DELTA",
+        "audio_response_body_bytes": "MEASURED_RETAINED_RECEIPT",
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "MEASURED_RETAINED_RECEIPT",
+        "host_capture_receipt_wall_seconds": "MEASURED_RETAINED_RECEIPT"
+      },
+      "public_archive_resource_members": {
+        "acquisition-receipt.json": {
+          "bytes": 581,
+          "sha256": "52f2970d3177624a74c7c5ea150b62d2ef7f3abaecde5e7e18d07280330240df"
+        },
+        "asr-setup-public.json": {
+          "bytes": 386369,
+          "sha256": "24ad50608ef29ecd6ef39b4c26d1a1ea7dc315abba8b515e00cedd3469c27886"
+        },
+        "cleanup-receipt.json": {
+          "bytes": 58012,
+          "sha256": "ad161ba7ffdab7382fdc5dffb5677a785bfd3d18d470c7a5a5bdf59fb3579dd7"
+        },
+        "cpu-receipt.json": {
+          "bytes": 7032,
+          "sha256": "fe1f19f94cc9a65276a02dff4bd0a5f7f911c442249ef0a841db3d80ca8c1bfd"
+        },
+        "host-receipt.json": {
+          "bytes": 62812,
+          "sha256": "beb3dc5c0b13b3d3c709fcd2c7a9300962a030436062141b6d8ec46537b80378"
+        },
+        "image-transfer.json": {
+          "bytes": 1197,
+          "sha256": "9b1181b67b938e26dac5643dcd3872face2bf2bdc6bd5b2d7e1fd2fe1db86cca"
+        },
+        "whisper-setup/bounded-acquisition/receipt.json": {
+          "bytes": 4251,
+          "sha256": "3565a5d81d12d3142dbc4a9d1d7f8d2d6bc6dc15e4985cddb9a2f6c99a7c91b5"
+        }
+      },
+      "qualification": "All six named counters are retained measurements or the explicitly scoped image interface observation. All 55 controlled containers have verified final paused-cgroup accounting and confirmed removal; CPU after accounting pause remains excluded.",
+      "host_wall_scope": "Includes setup, all-three prepare-only loads, successful package-budget preflight, the first failed Qwen call and cleanup through the host-receipt snapshot; excludes subsequent final evidence ZIP packaging and publisher.",
+      "terminal_outcomes_member": {
+        "path": "terminal-outcomes.json",
+        "bytes": 12371,
+        "sha256": "04fa63ff6dbc12f3e64934ba0ed708ea74d994d7375b9b648dd4201cd45fe45f"
+      },
+      "original_started_members": [
+        {
+          "path": "output/qwen06/clip-000001/started.json",
+          "bytes": 930,
+          "sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38"
+        }
+      ],
+      "controlled_containers": 55,
+      "cpu_stage_containers": {
+        "setup": 54,
+        "qwen06": 1
+      },
+      "all_final_cpu_usage_verified": true,
+      "all_cleanup_verified": true,
+      "host_capacity_not_peak_memory_usage": {
+        "available_memory_bytes": 15320907776,
+        "cgroup_version": "2",
+        "cpu_count": 4
+      },
+      "actual_started_count": 1,
+      "terminal_reported_attempt_sum": 1,
+      "terminal_historical_reference_count": 0
+    },
+    {
+      "label": "remaining35_v1",
+      "run_id": 38180060677,
+      "run_attempt": 1,
+      "job_key": "qwen12",
+      "numeric_job_id": 114590686389,
+      "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38180060677/job/114590686389",
+      "executed_head_sha": "7dcb09208798298ec5a7e2d44b6c5611524fe0ba",
+      "source_tree_sha": "36d26b58c7113371363ee30b57cfaade745cba4b",
+      "source_freeze_sha256": "d3ae5e03d458e0c7fdf27a4bcccd696fa3504a86c18dccce53e9e4587c5becd1",
+      "source_branch": "research/qwen12-native-admission-remaining35-v1",
+      "evidence_commit": "51f5d07c0ebf2ebab5bf9580347ab81cd0ea7a51",
+      "evidence_tree_sha": "d72e0af46e3d179fb8d8c008cc61c0e38936d1e6",
+      "evidence_branch": "evidence/qwen12-native-admission-remaining35-v1",
+      "evidence_directory": "research/qwen12-native-admission-v1/evidence/remaining35-v1",
+      "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/51f5d07c0ebf2ebab5bf9580347ab81cd0ea7a51/research/qwen12-native-admission-v1/evidence/remaining35-v1",
+      "archive_bytes": 42908,
+      "archive_sha256": "2ecd301f1da3d1bcd5ffa5292fd1b60bad51b6aabfaad3f544c42214cf248c39",
+      "started": 0,
+      "completed": 0,
+      "error": 0,
+      "not_run": 35,
+      "consumed": true,
+      "cleanup_status": "REMOVED_CONFIRMED",
+      "cleanup_all_removed_observation": true,
+      "post_pause_cpu_accounted": false,
+      "recorded_or_source_inferred_resource": {
+        "qwen_sense_response_body_bytes": null,
+        "image_observed_default_interface_receive_delta_bytes": 45728311,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 18.847088,
+        "host_capture_receipt_wall_seconds": 32.97841454,
+        "audio_response_body_bytes": 776208,
+        "whisper_bidirectional_tunnel_recv_bytes": 0
+      },
+      "recorded_only_resource": {
+        "qwen_sense_response_body_bytes": null,
+        "image_observed_default_interface_receive_delta_bytes": 45728311,
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 18.847088,
+        "host_capture_receipt_wall_seconds": 32.97841454,
+        "audio_response_body_bytes": null,
+        "whisper_bidirectional_tunnel_recv_bytes": null
+      },
+      "resource_measurement_kind": {
+        "qwen_sense_response_body_bytes": "UNKNOWN_FINAL_COUNTER",
+        "image_observed_default_interface_receive_delta_bytes": "OBSERVED_INTERFACE_DELTA",
+        "controlled_cgroup_cpu_seconds_through_acknowledged_pause": "MEASURED_RETAINED_RECEIPT",
+        "host_capture_receipt_wall_seconds": "MEASURED_RETAINED_RECEIPT",
+        "audio_response_body_bytes": "SOURCE_FLOW_INFERRED",
+        "whisper_bidirectional_tunnel_recv_bytes": "SOURCE_FLOW_INFERRED"
+      },
+      "public_archive_resource_members": {
+        "asr-setup-public.json": {
+          "bytes": 132319,
+          "sha256": "cee9ad0392d33989bc538c26aa0d370fc13fc633a3b4af111c990caed515b16a"
+        },
+        "cleanup-receipt.json": {
+          "bytes": 1067,
+          "sha256": "a7f5eda79f106bb3183ebdf39c8b8eabec7d2e884a9c6e8e8eba3957f2c279d3"
+        },
+        "cpu-receipt.json": {
+          "bytes": 777,
+          "sha256": "399535045a5cc813955474c620185b953267f6dbffeaec02ae68222c4694dd7c"
+        },
+        "host-receipt.json": {
+          "bytes": 19391,
+          "sha256": "540ddcace32237ec1b82df10c9d4492f387cc3dc5464ac72f3de297005b5a047"
+        },
+        "image-transfer.json": {
+          "bytes": 1301,
+          "sha256": "8b76268cd11f6625555e028229c3155dc92e0d020c66ed4783e1144df69d6c8a"
+        },
+        "supervision-receipt.json": {
+          "bytes": 491,
+          "sha256": "d2b8307a793b5f97697303b526d5b60bb8b92e3db0f2100c95753939566d3a68"
+        }
+      },
+      "qualification": "No current started/completed receipts. Terminal error=1 is the recovery3 historical reference, not a second physical start. Final ASR Downloader counter is absent and stays unknown. Audio 776208 is inferred from successful fixed-input fetch preceding reached ASR setup; Whisper 0 is inferred from never-entered setup. Neither is a retained current measurement. The one owned setup container was confirmed removed; post-pause CPU remains excluded.",
+      "host_wall_scope": "Host capture snapshot through cleanup; before final evidence ZIP packaging and publisher, not whole job time.",
+      "terminal_outcomes_member": {
+        "path": "terminal-outcomes.json",
+        "bytes": 21143,
+        "sha256": "588e0f4786d7d716770583d28edabca773031f953a65f394c224bfc028cadbfa"
+      },
+      "original_started_members": [],
+      "actual_started_count": 0,
+      "terminal_reported_attempt_sum": 1,
+      "terminal_historical_reference_count": 1,
+      "terminal_status_counts": {
+        "error": 1,
+        "not_run": 35
+      },
+      "terminal_historical_reference": {
+        "family": "qwen06",
+        "audio_id": "clip-000001",
+        "origin": "historical",
+        "status": "error",
+        "attempts": 1,
+        "historical_evidence": {
+          "archive_sha256": "9d371985530e8d5e32c915b8853f6e945ded1bfdbb6dad0b53fcbba4772e5bf5",
+          "audio_frames": 35840,
+          "audio_id": "clip-000001",
+          "evidence_commit": "8c25805e226ca23d55bd698b52ba5b45acd9195a",
+          "executed_head_sha": "80009f412987aeaaaf401894677299724ed0490d",
+          "family": "qwen06",
+          "job_id": 114572506731,
+          "model_lock_sha256": "051c0091294246642882676c1d6e26ecb4508436392c2ad1dcaec56ee5f0a1da",
+          "native_decode_config_sha256": "70828c08d53241e2170e5483137d9d518935e5358103b7941cf5ec302be927fb",
+          "pcm_sha256": "a3829a5a2a25aa4adee963582ff19a0b850629b3c1db5aedf9bba0816fcf4bae",
+          "recognizer_policy_sha256": "fa697f0e93852716d7309e6206bd056eb0135099d58af49f3236e1af8842238e",
+          "request_id": "qwen12-38173984595-qwen06-clip-000001",
+          "run_attempt": 1,
+          "run_id": "38173984595",
+          "source_id": "qwen12-02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+          "source_lock_sha256": "8a8ce266b03288f370797df3fc628349c468e9804180b3f3d7b6a3773e3af2b3",
+          "started_member": {
+            "bytes": 930,
+            "path": "output/qwen06/clip-000001/started.json",
+            "sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38"
+          },
+          "status": "error",
+          "wav_sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915"
+        }
+      },
+      "setup_final_body_counter_present": false,
+      "all_actual_asr_network_proven_to_flow_through_downloader": false
+    }
+  ],
+  "cumulative_recognition": {
+    "consumed_native_executions": 5,
+    "same_original_public_synthetic_clips": 12,
+    "recognizers": 3,
+    "unique_fixed_slots": 36,
+    "cross_execution_actual_recognition_limit": 36,
+    "started": 1,
+    "completed": 0,
+    "error": 1,
+    "not_run": 35,
+    "maximum_new_starts": 35,
+    "planned_new_family_slots": {
+      "qwen06": 11,
+      "sensevoice": 12,
+      "whisper": 12
+    },
+    "maximum_future_complete_triplets": 11,
+    "interpretation": "Five consumed execution identities share the same 36 logical slots. Actual started files are [0,0,0,1,0]; the fifth terminal historical error repeats recovery3 and cannot be counted again. One unique failed start permanently consumes its slot. The same 35 never-started slots remain; maximum complete triplets is 11, without automatic admission.",
+    "actual_start_counts_by_run": [
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "terminal_attempt_sums_by_run": [
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "slot_key_fields": [
+      "family",
+      "wav_sha256",
+      "pcm_sha256"
+    ]
+  },
+  "historical_consumed_slot": {
+    "family": "qwen06",
+    "audio_id": "clip-000001",
+    "wav_sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+    "pcm_sha256": "a3829a5a2a25aa4adee963582ff19a0b850629b3c1db5aedf9bba0816fcf4bae",
+    "frames": 35840,
+    "run_id": 38173984595,
+    "terminal_status": "error",
+    "started_member": {
+      "path": "output/qwen06/clip-000001/started.json",
+      "bytes": 930,
+      "sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38"
+    },
+    "new_attempt_permitted": false
+  },
+  "fixed_new_plan": {
+    "qwen06": [
+      "clip-000002",
+      "clip-000003",
+      "clip-000004",
+      "clip-000005",
+      "clip-000006",
+      "clip-000007",
+      "clip-000008",
+      "clip-000009",
+      "clip-000010",
+      "clip-000011",
+      "clip-000012"
+    ],
+    "sensevoice": [
+      "clip-000001",
+      "clip-000002",
+      "clip-000003",
+      "clip-000004",
+      "clip-000005",
+      "clip-000006",
+      "clip-000007",
+      "clip-000008",
+      "clip-000009",
+      "clip-000010",
+      "clip-000011",
+      "clip-000012"
+    ],
+    "whisper": [
+      "clip-000001",
+      "clip-000002",
+      "clip-000003",
+      "clip-000004",
+      "clip-000005",
+      "clip-000006",
+      "clip-000007",
+      "clip-000008",
+      "clip-000009",
+      "clip-000010",
+      "clip-000011",
+      "clip-000012"
+    ]
+  },
+  "cross_execution_recognition_limit": 36,
+  "maximum_new_recognition_starts": 35,
+  "same_original_public_inputs_sha256": "cd56eb66043a487c151107445bdccbe627f958110b142bea341bf221193e14fe",
+  "maximum_new_execution_claims": 1,
+  "automatic_retry": false,
+  "stop_on_first_failure": true,
+  "proposed_per_run_limits": {
+    "root_prior_budget": {
+      "runner": "public standard ubuntu-24.04",
+      "paid_resources": false,
+      "artifacts_or_cache": false,
+      "container_cpu": 4,
+      "container_memory_gib": 12,
+      "swap_bytes": 0,
+      "pids": 256,
+      "setup_wall_seconds": 1800,
+      "family_prepare_plus_decode_wall_seconds": 600,
+      "host_wall_seconds": 3600,
+      "workflow_minutes": 70,
+      "cgroup_cpu_sampled_stop_seconds": 6600,
+      "workspace_sampled_logical_gib": 10
+    },
+    "host_limits_exact": {
+      "acquisition_cap_bytes": 6442450944,
+      "acquisition_reserved_bytes": 6040846336,
+      "clip_seconds": 120,
+      "clips": 12,
+      "cpu_poll_seconds": 0.2,
+      "cpu_threshold_seconds": {
+        "qwen06": 600,
+        "sensevoice": 600,
+        "setup": 3600,
+        "whisper": 1800
+      },
+      "cpu_total_threshold_seconds": 6600,
+      "engine_seconds": 600,
+      "host_seconds": 3600,
+      "initial_free_bytes": 12884901888,
+      "kill_command_seconds": 5,
+      "output_bytes": 33554432,
+      "setup_seconds": 1800,
+      "workflow_minutes": 70,
+      "workspace_bytes": 10737418240,
+      "campaign_slots": 36,
+      "historical_starts": 1,
+      "new_starts": 35,
+      "cumulative_starts": 36
+    },
+    "separate_acquisition_reservations_bytes": {
+      "qwen_sense_response_body_bytes": 4294967296,
+      "whisper_bidirectional_tunnel_recv_bytes": 1610612736,
+      "image_receive_observation_reservation": 134217728,
+      "audio_response_body_bytes": 1048576
+    },
+    "reservation_sum_bytes": 6040846336,
+    "mixed_scope_envelope_bytes": 6442450944,
+    "hard_total_wire_byte_cap": false,
+    "container_limit_qualifications": "4 CPU, 12 GiB memory, zero swap and 256 PIDs are per-controlled-container settings; workspace 10 GiB is a sampled logical task tree excluding Docker image/layers/tmpfs, not a filesystem hard quota. Available host memory is capacity, not measured usage.",
+    "family_wall_scope": "Prepare-only plus decode share each family 600-second envelope; each clip has 120-second supervised stop; setup plus preparation shares 1800-second setup envelope.",
+    "cpu_pool_seconds": {
+      "setup_including_prepare": 3600,
+      "qwen06_decode": 600,
+      "sensevoice_decode": 600,
+      "whisper_decode": 1800
+    },
+    "workflow_scope": "70-minute native qwen12 job setting; not cumulative CI allowance. No paid resources, artifact/cache storage, extra platform, data expansion or training.",
+    "recognition_limit_field_migration": {
+      "previous_recovery3_attempts": 36,
+      "previous_attempts_field_retained": false,
+      "replacement_fields": {
+        "campaign_slots": 36,
+        "historical_starts": 1,
+        "new_starts": 35,
+        "cumulative_starts": 36
+      },
+      "all_non_recognition_resource_fields_unchanged": true
+    },
+    "recognition_accounting": {
+      "campaign_slot_denominator": 36,
+      "historical_started_slots": 1,
+      "maximum_new_recognition_starts": 35,
+      "maximum_cumulative_recognition_starts": 36,
+      "planned_new_family_slots": {
+        "qwen06": 11,
+        "sensevoice": 12,
+        "whisper": 12
+      },
+      "stop_on_first_failure": true,
+      "all_three_prepare_only_loads_still_required": true,
+      "worst_trace_package_reservation_slots": 36,
+      "package_reservation_authorizes_extra_starts": false
+    }
+  },
+  "complete_evidence_transport_limits": {
+    "compressed_archive_bytes": 12582912,
+    "maximum_chunks": 48,
+    "chunk_bytes": 262144,
+    "expanded_archive_including_manifest_bytes": 33554432,
+    "payload_member_count": 4096,
+    "archive_entries_including_manifest_maximum": 4097,
+    "individual_member_bytes": 8388608,
+    "publisher_wall_seconds": 180,
+    "publisher_step_minutes": 4,
+    "static_source_range_only": true,
+    "unchanged_other_limits": true,
+    "qualification": "Unchanged: complete compressed ZIP 12 MiB / 48 chunks, expanded archive including manifest 32 MiB, member 8 MiB, 4096 payload members plus manifest, publisher 180 seconds and 4-minute step. Retained live 12 MiB custody proof is tied to its old identity. New identity tests, if later passed locally, are not a live hosted roundtrip. The candidate source closure and worst-trace package must fit before any later model call. No model, input, CPU, wall, memory or output expansion.",
+    "historical_recovery3_increase": {
+      "compressed_archive_bytes_from": 8388608,
+      "compressed_archive_bytes_to": 12582912,
+      "maximum_chunks_from": 32,
+      "maximum_chunks_to": 48
+    },
+    "retained_live_roundtrip_verification": "PASS_CUSTODY_ONLY",
+    "change_from_consumed_recovery3": false,
+    "change_from_consumed_remaining35_v1": false,
+    "new_identity_live_roundtrip_verified": false,
+    "new_identity_local_validation_status": "PENDING"
+  },
+  "separate_scope_old_plus_new_accounting": [
+    {
+      "scope": "qwen_sense_response_body_bytes",
+      "native_v1": 3340966447,
+      "recovery1": 3340966447,
+      "recovery2": 3340966447,
+      "recovery3": 3340966447,
+      "new_unchanged_per_run_reservation_or_threshold": 4294967296,
+      "new_budget_kind": "named_downloader_returned_body_counter_cap_not_all_ASR_network_cap",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Fifth final counter and exact five-run total stay unknown. The historical interval is source-derived for the named Downloader only; adding the unchanged 4 GiB counter allowance is planning-only in that counter scope. This is not measured consumption, all-ASR network, all-wire traffic, or permission to execute. Offline-configured third-party subprocesses are not kernel network-isolated.",
+      "remaining35_v1": null,
+      "all_five_measured": false,
+      "prior_four_measured_body_bytes": 13363865788,
+      "old_five_recorded_or_source_inferred_subtotal": null,
+      "old_five_source_proven_counter_interval_bytes": [
+        13887589368,
+        16704832236
+      ],
+      "old_subtotal_plus_new_budget": null,
+      "old_interval_plus_new_unchanged_counter_budget_bytes": [
+        18182556664,
+        20999799532
+      ],
+      "plan_not_actual_global_hard_ceiling": true
+    },
+    {
+      "scope": "whisper_bidirectional_tunnel_recv_bytes",
+      "native_v1": 774060234,
+      "recovery1": 0,
+      "recovery2": 774056598,
+      "recovery3": 774057502,
+      "new_unchanged_per_run_reservation_or_threshold": 1610612736,
+      "new_budget_kind": "tunnel_recv_cap",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Recovery1 and remaining35-v1 zeros are explicit SOURCE_FLOW_INFERRED because Whisper setup was never entered. Retained measured runs plus these control-flow inferences total 2322174334. Adding the unchanged tunnel-recv cap is planning-only in this scope, excluding CONNECT headers, kernel buffering and other network overhead.",
+      "remaining35_v1": 0,
+      "all_five_measured": false,
+      "old_five_recorded_or_source_inferred_subtotal": 2322174334,
+      "old_subtotal_plus_new_budget": 3932787070,
+      "plan_not_actual_global_hard_ceiling": true
+    },
+    {
+      "scope": "image_observed_default_interface_receive_delta_bytes",
+      "native_v1": 45704322,
+      "recovery1": 45707668,
+      "recovery2": 45710666,
+      "recovery3": 47721686,
+      "new_unchanged_per_run_reservation_or_threshold": 134217728,
+      "new_budget_kind": "receive_observation_reservation_not_hard_cap",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Each old value is a default-interface receive observation; the future value is an observation reservation, not a hard transfer cap. Protocol and unrelated traffic may be included.",
+      "remaining35_v1": 45728311,
+      "all_five_measured": true,
+      "old_five_recorded_or_source_inferred_subtotal": 230572653,
+      "old_subtotal_plus_new_budget": 364790381,
+      "plan_not_actual_global_hard_ceiling": true
+    },
+    {
+      "scope": "audio_response_body_bytes",
+      "native_v1": 776208,
+      "recovery1": 776208,
+      "recovery2": 776208,
+      "recovery3": 776208,
+      "new_unchanged_per_run_reservation_or_threshold": 1048576,
+      "new_budget_kind": "response_body_cap",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Native-v1, recovery2 and recovery3 audio body counts are retained measurements. Recovery1 and remaining35-v1 each infer 776208 from fixed-input success before reached ASR setup; neither has a standalone acquisition receipt. The 3881040 subtotal mixes measurement and explicit inference. Adding the unchanged body allowance is planning-only, never all-network wire accounting.",
+      "remaining35_v1": 776208,
+      "all_five_measured": false,
+      "old_five_recorded_or_source_inferred_subtotal": 3881040,
+      "old_subtotal_plus_new_budget": 4929616,
+      "plan_not_actual_global_hard_ceiling": true
+    },
+    {
+      "scope": "controlled_cgroup_cpu_seconds_through_acknowledged_pause",
+      "native_v1": 454.195425,
+      "recovery1": 103.355741,
+      "recovery2": 477.281264,
+      "recovery3": 630.456231,
+      "new_unchanged_per_run_reservation_or_threshold": 6600,
+      "new_budget_kind": "sampled_stop_threshold_not_hard_quota",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Five controlled-cgroup counters through acknowledged pause total 1684.135749 seconds. Plus unchanged 6600 yields 8284.135749 planning CPU seconds only. Host/image/log/post-pause cleanup CPU is excluded; recovery1 termination remains unknown. 6600 is a sampled-stop threshold, not a cumulative kernel quota, and gives no unconditional finite global overshoot bound.",
+      "remaining35_v1": 18.847088,
+      "all_five_measured": true,
+      "old_five_recorded_or_source_inferred_subtotal": 1684.135749,
+      "old_subtotal_plus_new_budget": 8284.135749,
+      "plan_not_actual_global_hard_ceiling": true
+    },
+    {
+      "scope": "host_capture_receipt_wall_seconds",
+      "native_v1": 708.389337012,
+      "recovery1": 151.293698272,
+      "recovery2": 759.388826281,
+      "recovery3": 912.944030658,
+      "new_unchanged_per_run_reservation_or_threshold": 3600,
+      "new_budget_kind": "host_timer_threshold_scope_differs_from_receipt_endpoint",
+      "hard_complete_all_run_total_ceiling": false,
+      "qualification": "Five historical host receipt intervals sum exactly to 2564.994306763 seconds. Receipt endpoints exclude final ZIP and publisher; the prospective 3600-second host timer includes local ZIP and excludes publisher/job time. Their mechanical sum 6164.994306763 seconds is recorded only as planning arithmetic with different endpoints, not a same-scope total or whole-CI ceiling. Scheduling and cleanup can overshoot.",
+      "remaining35_v1": 32.97841454,
+      "all_five_measured": true,
+      "old_five_recorded_or_source_inferred_subtotal": 2564.994306763,
+      "old_subtotal_plus_new_budget": null,
+      "receipt_plus_timer_arithmetic_only_seconds": "6164.994306763",
+      "arithmetic_only_is_same_endpoint_total": false,
+      "plan_not_actual_global_hard_ceiling": true
+    }
+  ],
+  "setup_wall_scope_warning": {
+    "native_v1_combined_host_accumulator_seconds": 700.1145477690001,
+    "recovery1_incomplete_host_accumulator_seconds": 0,
+    "recovery1_asr_child_seconds": 133.834176304,
+    "recovery2_combined_host_accumulator_seconds": 745.7734024,
+    "same_scope_exact_combined_setup_old_total_seconds": null,
+    "same_scope_setup_old_plus_new_ceiling_seconds": null,
+    "do_not_add_host_combined_and_child_as_if_equal_scopes": true,
+    "recovery1_zero_means_no_setup_work": false,
+    "qualification": "Recovery1 combined-host accumulator is incomplete because supervised setup did not return; the child interval is 133.834176304 seconds and is not the same scope as a combined host accumulator. No sum of these different setup intervals is offered.",
+    "recovery3_combined_host_accumulator_seconds": 743.6844492099999,
+    "remaining35_v1_combined_host_accumulator_seconds": 27.83261287100001,
+    "remaining35_v1_combined_host_accumulator_is_partial": true
+  },
+  "unmeasured_all_native_run_actuals": {
+    "all_cpu_seconds_including_host_and_post_pause": null,
+    "total_network_wire_bytes": null,
+    "peak_memory_bytes": null,
+    "complete_wall_seconds_including_final_zip_and_publishers": null,
+    "missing_resource_counters_are_zero": false,
+    "hard_complete_all_run_total_ceiling": false,
+    "exact_fifth_asr_downloader_counter_bytes": null,
+    "exact_five_run_asr_downloader_counter_total_bytes": null,
+    "all_ASR_third_party_network_bytes": null,
+    "complete_storage_and_IO_cost": null,
+    "recovery1_final_cleanup_status": "UNKNOWN"
+  },
+  "zero_model_smoke_separate_verified": {
+    "status": "PASS_ZERO_MODEL_CLEANUP_ONLY",
+    "run_id": 38163142188,
+    "run_attempt": 1,
+    "job_key": "cleanup-lifecycle-smoke",
+    "numeric_job_id": 114540172806,
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38163142188/job/114540172806",
+    "executed_head_sha": "63968444f30d77e712fb74e207fda87119ae3831",
+    "source_tree_sha": "7ab29f9d564033790741697a8758678bb8a70c59",
+    "github_event_merge_sha": "7f473ad4158d9551669c0bcdd81e61cdef072b8e",
+    "receipt_bytes": 7374,
+    "receipt_sha256": "f5c0a179b87ef7cd03294d83aa6c48b83c561052917102546adf70501bacd087",
+    "job_log_sha256": "9ed0131826b5118fa1e94bf63b71fab413cc805b6b89183f28601aaa0ec5a988",
+    "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 0.135884,
+    "host_wall_seconds_raw": 4.012934520999991,
+    "host_wall_seconds_rounded_nanoseconds": 4.012934521,
+    "image_observed_default_interface_receive_delta_bytes": 45782793,
+    "model_calls": 0,
+    "audio_files": 0,
+    "package_installs": 0,
+    "all_removed": true,
+    "all_cleanup_verified": true,
+    "scope": "Retained zero-model cleanup-lifecycle smoke at the explicitly bound historical source only. Current local monitor-cleanup changes are not a new hosted smoke or exact-head live validation. CPU excludes host/image/Docker daemon; image receive is an observation, not exact wire bytes.",
+    "proves_only_same_source_cleanup_component": false,
+    "establishes_old_recovery1_cleanup": false,
+    "establishes_ASR_admission_or_training": false,
+    "authorizes_recovery2": false,
+    "source_component_sha256": "8f9887a83b45152c7cec6f281bd680fb69d61808368ab3cbed7464a8de855656",
+    "authorizes_recovery3": false,
+    "authorizes_remaining35": false,
+    "included_in_old_five_native_run_subtotals": false,
+    "proves_historical_source_cleanup_component_only": true,
+    "proves_current_modified_cleanup_component": false,
+    "new_exact_head_hosted_smoke_status": "NOT_RUN",
+    "authorizes_remaining35_r1": false
+  },
+  "zero_model_12m_transport_separate": {
+    "run_id": 38170753261,
+    "run_attempt": 1,
+    "job_key": "transport-fixture",
+    "numeric_job_id": 114562800402,
+    "executed_head_sha": "8c4d430ce1077aa9eefa8de130450319c64e545e",
+    "source_tree_sha": "e12cc9ac532b30057703261b741a1870b8f477ce",
+    "url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38170753261",
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38170753261/job/114562800402",
+    "github_run_status": "completed",
+    "github_run_conclusion": "success",
+    "full_evidence_readback_status": "PASS_CUSTODY_ONLY",
+    "evidence_commit": "4b0c01cbd825802dd5c373dab33332402a6af01f",
+    "evidence_tree_sha": "a1cba129a7b1989063716ec737c1253d2aaf55db",
+    "evidence_sole_parent": "8c4d430ce1077aa9eefa8de130450319c64e545e",
+    "evidence_branch": "evidence/qwen12-native-transport-synthetic-12m-v1",
+    "evidence_url": "https://github.com/jiying2007/kws-pipeline/tree/4b0c01cbd825802dd5c373dab33332402a6af01f/research/qwen12-native-admission-v1/evidence/synthetic-12m-v1",
+    "archive_bytes": 12522365,
+    "archive_sha256": "72fa969479341bfddaa712b600325745d35edad3dae18203d5e2819b17b92424",
+    "retrieved_file_count": 50,
+    "chunk_count": 48,
+    "all_chunk_sha256_verified": true,
+    "all_git_blob_sha1_verified": true,
+    "all_member_sha256_verified": true,
+    "all_zip_crc_verified": true,
+    "fixed_seed_bytes_verified": true,
+    "normal_O_OO_readback_identical": true,
+    "negative_cases_rejected_per_mode": 14,
+    "source_job_binding_verified": true,
+    "separate_job_wall_observations": {
+      "whole_fixture_job_seconds": 39.0,
+      "publisher_step_seconds": 34.0,
+      "publisher_step_contained_within_whole_job": true,
+      "add_job_and_publisher_seconds": false,
+      "scope": "API job/step wall observations for the synthetic12m transport job; separate from native host-capture receipt intervals and the 3600-second native host timer."
+    },
+    "unmeasured_resource_actuals": {
+      "controlled_cgroup_cpu_seconds": null,
+      "total_network_wire_bytes": null,
+      "peak_memory_bytes": null
+    },
+    "missing_resource_counters_are_zero": false,
+    "is_total_ci_resource_accounting": false,
+    "model_downloads": 0,
+    "model_loads": 0,
+    "audio_forwards": 0,
+    "recognition_attempts": 0,
+    "training_runs": 0,
+    "runtime_installs": 0,
+    "github_actions_artifact_count": 0,
+    "real_asr_job": "skipped",
+    "establishes_ASR_admission_or_training": false,
+    "authorizes_recovery3": false,
+    "qualification": "Retained verified complete 12 MiB-range synthetic repository-chunk custody only at the bound historical identity. Whole-job 39 seconds includes publisher-step 34 seconds; they are never added together or into native scope totals. CPU, exact network-wire total and peak memory remain unmeasured. Any new identity local tests do not replace a new live roundtrip. This is not whole-CI accounting or an execution release.",
+    "authorizes_remaining35": false,
+    "included_in_old_five_native_run_subtotals": false,
+    "authorizes_remaining35_r1": false,
+    "proves_new_identity_live_roundtrip": false
+  },
+  "execution_identity": {
+    "source_branch": "research/qwen12-native-admission-remaining35-r1-v1",
+    "evidence_branch": "evidence/qwen12-native-admission-remaining35-r1-v1",
+    "directory": "research/qwen12-native-admission-v1/evidence/remaining35-r1-v1",
+    "status": "disabled_proposed_destinations_only",
+    "run_id": null,
+    "executed_head_sha": null,
+    "claim_created": false,
+    "release_approved": false,
+    "run_attempt": null,
+    "numeric_job_id": null,
+    "source_tree_sha": null,
+    "training_approved": false
+  },
+  "historical_identity_policy": {
+    "consumed_run_ids": [
+      38154869005,
+      38160295526,
+      38167052146,
+      38173984595,
+      38180060677
+    ],
+    "preserve_original_source_and_evidence_commits": true,
+    "preserve_original_archive_bytes": true,
+    "preserve_existing_source_and_evidence_refs": true,
+    "original_source_ref": "refs/heads/research/qwen12-native-admission-v1",
+    "original_source_ref_last_recorded_http_status": 404,
+    "original_source_campaign_consumed": true,
+    "restore_original_source_ref": false,
+    "delete_and_recreate_consumed_execution_ref": false,
+    "rerun_consumed_campaign": false,
+    "original_source_ref_http_status_is_retained_observation_not_fresh_check": true
+  },
+  "qualifications": [
+    "Five actual native executions, actual started counts [0,0,0,1,0], one unique consumed original slot. Fifth terminal attempts repeat a historical error and are not an extra physical start.",
+    "Fifth final ASR Downloader counter and exact five-run total are unknown. Source-derived interval 523723580..3340966448 applies only to the named counter; five-run interval is 13887589368..16704832236.",
+    "The bound uses 137 exact inputs totaling 3340966447 bytes plus at most one fail-fast excess byte; it does not tighten the final value to the 119 retained wheel metadata bytes or the last persisted install phase.",
+    "Reviewed orchestration has no designed pip/source fallback, but networked setup is offline-configured rather than kernel network-isolated. Complete actual third-party ASR network and all-network wire totals remain unknown.",
+    "The 6040846336-byte reservation sum and 6442450944-byte mixed-scope acquisition envelope remain planning controls, not an exact hard all-wire quota. Unlike network scopes are never summed into one actual total.",
+    "The five measured paused-cgroup counters total 1684.135749 seconds. Plus the unchanged prospective 6600-second sampled stop is 8284.135749 planning seconds, not a hard cumulative kernel or global CPU quota.",
+    "Recovery1 and remaining35-v1 audio 776208 and never-entered Whisper zero are explicit SOURCE_FLOW_INFERRED. Missing final counters, all CPU, wire or peak-memory measurements are never silently zeroed.",
+    "Recovery1 cleanup remains UNKNOWN. Confirmed removal in later executions and the historical zero-model smoke do not repair that old unknown.",
+    "Five host receipt intervals total 2564.994306763 seconds exactly. Adding prospective host timer3600 is only arithmetic with mismatched endpoints: 6164.994306763, not a same-endpoint total or all-CI ceiling.",
+    "Setup host accumulators and child intervals have noninterchangeable scopes. No exact combined all-history setup total or global storage/I/O measurement is asserted.",
+    "Historical smoke and live 12 MiB proof remain old-identity evidence. Current local monitor-cleanup edits and any new-identity local transport tests are not new hosted exact-head proof.",
+    "The same public12 and original36 denominator are immutable; only original remaining35 (Qwen11/Sense12/Whisper12) are proposed. Historical Qwen clip-000001 stays error and cannot be refunded by source, request, configuration or identity changes. Maximum complete triplets11 gives no automatic admission.",
+    "All prospective execution approvals remain disabled/pending. Future actual run, job, executed head and source tree are null. This proposal makes no claim, enables no execution and approves no training, human gold or shipping.",
+    "Public code and machine-evidence metadata only; no audio payload, model weight, credential, private report, private filesystem path, user conversation or private corpus content."
+  ],
+  "sixth_native_execution_released": false,
+  "training_admitted": false,
+  "shipping_approved": false,
+  "human_gold": false,
+  "local_preparation_baseline": {
+    "commit": "a50bb88c75aed7a35278a30227acaed2cf367d33",
+    "tree_sha": "2e9c95eb0fbd8878576b530a32d0f96101ad1aaa",
+    "role": "Reviewed local monitor-cleanup checkpoint; not public main and not a new hosted execution.",
+    "published_public_source": false,
+    "exact_head_hosted_smoke_verified": false
+  },
+  "missing_fifth_asr_download_counter": {
+    "exact_measured_current": null,
+    "exact_measured_five_run_total": null,
+    "prior_four_measured_body_bytes": 13363865788,
+    "current_source_flow_lower_bound_bytes": 523723580,
+    "current_source_proven_counter_upper_bound_bytes": 3340966448,
+    "five_run_source_proven_interval_bytes": [
+      13887589368,
+      16704832236
+    ],
+    "global_counter_read_budget_bytes": 4294967296,
+    "sum_of137_locked_input_sizes_bytes": 3340966447,
+    "maximum_single_failing_fetch_excess_read_byte": 1,
+    "upper_bound_kind": "source-proven bound on bytes returned in successful response.read blocks and added to the exact pinned Downloader counter; not a measured final value or total wire traffic",
+    "upper_bound_proof": "Each successful fetch returns only after exact expected length/hash. A failing fetch requests at most remaining expected bytes plus1 and at most remaining global cap. First oversize raises; the sequential setup has no catch-and-continue or retry. Consequently all137 expected input bytes plus at most one terminal excess byte bounds that counter; min with4GiB applies. The source bound is separate from CPU/wall sampled-stop thresholds.",
+    "source_bindings": [
+      {
+        "path": "research/qwen6_asr/setup_locked.py",
+        "sha256": "d7c580b59b0bd249bc62c9093b9de5f8842170510cf11e7e61c29057e6287af4",
+        "lines": "32; 164-243; 595-624; 667-691",
+        "role": "global budget, one-attempt fetch, bounded read, first failure propagates, sequential package/model roster and final counter persistence",
+        "url": "https://github.com/jiying2007/kws-pipeline/blob/7dcb09208798298ec5a7e2d44b6c5611524fe0ba/research/qwen6_asr/setup_locked.py"
+      },
+      {
+        "path": "research/qwen12-native-admission-v1/setup_adapter.py",
+        "sha256": "ac52c8e029105be5a11f9a81c4fbe0660b933ad93ca0c163cea8be98661213dc",
+        "lines": "142-177; 222; 301-314",
+        "role": "actual ASR profile binds the pinned downloader to4GiB; no fetch override",
+        "url": "https://github.com/jiying2007/kws-pipeline/blob/7dcb09208798298ec5a7e2d44b6c5611524fe0ba/research/qwen12-native-admission-v1/setup_adapter.py"
+      },
+      {
+        "path": "research/qwen6_asr/runtime-lock.json",
+        "sha256": "2d496a76bd0e044a6812bfc9afdd8965474bf135bd21f3a24f71695638d1183f",
+        "role": "124 exact package inputs",
+        "url": "https://github.com/jiying2007/kws-pipeline/blob/7dcb09208798298ec5a7e2d44b6c5611524fe0ba/research/qwen6_asr/runtime-lock.json"
+      },
+      {
+        "path": "research/qwen6_asr/model-locks.json",
+        "sha256": "8b0813aba3c2447c7dc30b47e856e4ce9a619a98d32ed6dfa9f44dc6646714e4",
+        "role": "13 exact model asset inputs",
+        "url": "https://github.com/jiying2007/kws-pipeline/blob/7dcb09208798298ec5a7e2d44b6c5611524fe0ba/research/qwen6_asr/model-locks.json"
+      }
+    ],
+    "cannot_tighten_to_package_total_from_last_saved_phase_alone": true,
+    "same_scope_upper_bound_not_resource_budget_permission": true,
+    "five_run_coarse4GiB_counter_upper_bytes": 17658833084,
+    "scope_name": "Pinned Downloader.actual_bytes: bytes successfully returned by response.read and added to this counter only.",
+    "all_actual_asr_network_bytes": null,
+    "all_actual_asr_network_proven_to_flow_through_downloader": false,
+    "lower_bound_evidence": {
+      "public_archive_sha256": "2ecd301f1da3d1bcd5ffa5292fd1b60bad51b6aabfaad3f544c42214cf248c39",
+      "public_member": {
+        "path": "asr-setup-public.json",
+        "bytes": 132319,
+        "sha256": "cee9ad0392d33989bc538c26aa0d370fc13fc633a3b4af111c990caed515b16a"
+      },
+      "retained_verified_wheel_identity_count": 119,
+      "retained_verified_wheel_file_bytes": 503939954,
+      "retained_wheel_bytes_are_final_download_total": false,
+      "source_flow_inferred_completed_package_count": 124,
+      "source_flow_inferred_completed_package_bytes": 523723580,
+      "qualification": "All 124 exact-size/hash package fetches precede the retained successful bootstrap. The 119 wheel identities are retained file metadata, not the final download counter. The last saved install phase does not prove a final stop point; later unsaved progress remains possible."
+    }
+  },
+  "asr_acquisition_path_coverage": {
+    "designed_direct_artifact_fetch_sites": [
+      "setup_locked.py:598 (124 package inputs)",
+      "setup_locked.py:673 (13 model assets)"
+    ],
+    "shared_single_downloader": "setup_locked.py:586",
+    "pip_source_fallback_in_designed_pipeline": false,
+    "pip_proof": "setup_locked.py:292-296 rejects nonabsolute/non-wheel arguments; --isolated --no-index --no-deps --no-cache-dir --disable-pip-version-check --no-compile; local tool/runtime/built wheels at622,624,657",
+    "bootstrap_proof": "setup_locked.py:600-611 uses exactly one interpreter-bundled ensurepip wheel, not a downloaded package",
+    "source_build_proof": "setup_locked.py:626-656 uses downloaded local sdists and build --wheel --no-isolation; dependencies checked against installed packages, no resolver fallback",
+    "child_environment_proof": "setup_locked.py:276-288,319 set offline HF and pip environment; setup_adapter.py:179-209,222-238 preserve bound allowlisted child modules/helper calls, no override of fetch method",
+    "kernel_isolated_network": false,
+    "unmodeled_third_party_child_network_excluded_from_bound": true,
+    "all_actual_asr_network_proven_to_flow_through_downloader": false,
+    "qualification": "The reviewed orchestration has no extra package/model download path or pip/source fallback. Networked setup remains offline-configured rather than kernel network-isolated (setup_locked.py:582; setup_adapter.py:92-96,267). The proof therefore bounds the named Downloader counter only, not every possible third-party subprocess socket or all ASR network consumption.",
+    "excluded_from_named_counter_bound": [
+      "redirect/error response bodies",
+      "metadata requests",
+      "HTTP headers and framing",
+      "TLS/TCP overhead and retransmission",
+      "kernel or HTTP buffering/read-ahead",
+      "bytes consumed internally by a read that raises without returning",
+      "other third-party child-process network"
+    ]
+  }
+}

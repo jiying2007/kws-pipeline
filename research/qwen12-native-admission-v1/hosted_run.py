@@ -1,6 +1,8 @@
 """Disabled prospective Qwen12×3 hosted host; no old result reuse or gate edits."""
 from pathlib import Path
 import importlib.util
+import errno
+import stat
 import json
 import os
 import re
@@ -29,23 +31,159 @@ def load(name,path):
     sys.modules[name]=m;spec.loader.exec_module(m);return m
 
 
-def tree_bytes(root):
-    total=0
-    for p in Path(root).rglob('*'):
-        # Count symlink inode bytes without following them (fresh venv uses symlinks).
-        if p.is_symlink():total+=p.lstat().st_size
-        elif p.is_file():total+=p.stat().st_size
-    return total
+def close_sample_fd(fd, observation, primary):
+    """Close once; a secondary close failure cannot replace a primary scan error."""
+    try:os.close(fd)
+    except BaseException as error:
+        observation['fd_close_error_count']=observation.get('fd_close_error_count',0)+1
+        if 'fd_close_first_error' not in observation:observation['fd_close_first_error']=safe_error(error)
+        return primary if primary is not None else error
+    return primary
+
+
+def tree_bytes(root, observation=None, *, root_json_only=False, expected_root_identity=None,
+        parent_fd=None, deadline=None, limit=None):
+    """One non-atomic, nofollow sample; only ENOENT may make it incomplete."""
+    seen={} if observation is None else observation
+    seen.update(observed_bytes=0,regular_files=0,symlinks=0,directories=0,
+        vanished_entries=0,missing_root=False,root_missing_at_start=False,root_observed=False,
+        complete=False,coverage='incomplete_lower_bound',stop_reason=None)
+    flags=os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC
+    if parent_fd is not None:require(type(root) is str and '/' not in root and root!='..','fixed relative sampling root')
+    def guard():
+        if deadline is not None and time.monotonic()>=deadline:
+            seen['stop_reason']='deadline_exhausted'
+            raise ValueError('host wall ceiling during filesystem sample')
+    def add_bytes(info,kind):
+        seen['observed_bytes']+=info.st_size;seen[kind]+=1
+        if limit is not None and seen['observed_bytes']>limit:
+            seen['stop_reason']='cap_exceeded'
+            raise ValueError('filesystem stop threshold exceeded')
+    def vanished(error, root=False):
+        # A failed filesystem call is skippable only for a genuine ENOENT.
+        if seen.get('fd_close_error_count',0) or type(OSError.errno.__get__(error)) is not int or OSError.errno.__get__(error)!=errno.ENOENT:raise error
+        seen['vanished_entries']+=1
+        if root:seen['missing_root']=True
+    def walk(fd):
+        try:
+            guard()
+            with os.scandir(fd) as entries:
+                for entry in entries:
+                    guard()
+                    try:info=os.stat(entry.name,dir_fd=fd,follow_symlinks=False)
+                    except OSError as error:
+                        vanished(error);continue
+                    mode=info.st_mode
+                    if stat.S_ISREG(mode) or stat.S_ISLNK(mode):
+                        if not root_json_only or (stat.S_ISREG(mode) and entry.name.endswith('.json')):
+                            add_bytes(info,'regular_files' if stat.S_ISREG(mode) else 'symlinks')
+                    elif stat.S_ISDIR(mode) and not root_json_only:
+                        child=None;child_error=None
+                        try:
+                            try:
+                                guard();child=os.open(entry.name,flags,dir_fd=fd)
+                                actual=os.fstat(child)
+                                require(stat.S_ISDIR(actual.st_mode) and
+                                    (actual.st_dev,actual.st_ino)==(info.st_dev,info.st_ino),
+                                    'sample directory identity changed')
+                                seen['directories']+=1;walk(child)
+                            except OSError as error:vanished(error)
+                        except BaseException as error:child_error=error;raise
+                        finally:
+                            if child is not None:
+                                failure=close_sample_fd(child,seen,child_error)
+                                if child_error is None and failure is not None:raise failure
+        except OSError as error:vanished(error)
+    fd=None;root_info=None;root_error=None
+    try:
+        guard()
+        try:root_info=os.stat(root,dir_fd=parent_fd,follow_symlinks=False)
+        except OSError as error:
+            vanished(error,root=True);seen['root_missing_at_start']=True;seen['vanished_entries']-=1
+        if root_info is not None:
+            seen['root_observed']=True
+            if expected_root_identity is not None:
+                require((root_info.st_dev,root_info.st_ino)==expected_root_identity,'sample workspace identity changed')
+            guard();fd=os.open(root,flags,dir_fd=parent_fd)
+            actual=os.fstat(fd)
+            require(stat.S_ISDIR(actual.st_mode) and
+                (actual.st_dev,actual.st_ino)==(root_info.st_dev,root_info.st_ino),
+                'sample root directory identity changed')
+            walk(fd)
+    except OSError as error:
+        try:vanished(error,root=fd is None)
+        except BaseException as failure:root_error=failure;raise
+    except BaseException as error:root_error=error;raise
+    finally:
+        if fd is not None:
+            failure=close_sample_fd(fd,seen,root_error)
+            if root_error is None and failure is not None:raise failure
+    seen['complete']=seen['vanished_entries']==0 and not seen['missing_root']
+    seen['coverage']='complete_non_atomic_sample' if seen['complete'] else 'incomplete_lower_bound'
+    return seen['observed_bytes']
+
+
+FILESYSTEM_SAMPLE_SCOPES=('workspace','public_output','public_frozen','public_whisper_setup',
+    'public_policy','public_asr_setup','public_root_json','phase_output')
+
+
+# Fixed Linux filesystem/process errno values; other numbers are not public data.
+_HOST_ERROR_ERRNOS=frozenset((1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,20,21,
+    22,23,24,26,27,28,29,30,31,32,35,36,38,39,40,75,95,110,116,122))
+MAX_HOST_ERROR_FRAMES=8
+MAX_HOST_ERROR_SCAN=32
+MAX_HOST_ERROR_BYTES=2048
+
+
+def _host_diagnostic_codes(module_code):
+    """Snapshot only this executing, frozen source's actual code objects once."""
+    pending=[module_code];result={}
+    for _ in range(512):
+        if not pending:break
+        code=pending.pop()
+        result[id(code)]=(code,code.co_name)
+        pending.extend(value for value in code.co_consts if type(value) is type(module_code))
+    return result
+
+
+def _host_error_frames(error):
+    # Built-in traceback slots bypass subclass properties. No frame locals,
+    # source lines, exception chains, filenames or external names are inspected.
+    frames=[];truncated=False;trace=BaseException.__traceback__.__get__(error)
+    for _ in range(MAX_HOST_ERROR_SCAN):
+        if trace is None:break
+        code=trace.tb_frame.f_code;known=_HOST_DIAGNOSTIC_CODES.get(id(code))
+        frame={'file':'<redacted>','function':'<redacted>','line':None}
+        if known is not None and known[0] is code:
+            line=trace.tb_lineno
+            frame={'file':'research/qwen12-native-admission-v1/hosted_run.py',
+                'function':known[1],'line':line if type(line) is int and 1<=line<=1000000 else None}
+        frames.append(frame)
+        if len(frames)>MAX_HOST_ERROR_FRAMES:del frames[0];truncated=True
+        trace=trace.tb_next
+    return {'frames':frames,'frames_truncated':truncated or trace is not None}
 
 
 def safe_error(error):
-    """Fixed public metadata only; never exception text, argv, output or paths."""
+    """Bounded fixed public metadata; diagnostic failure never replaces error."""
     kinds=(subprocess.TimeoutExpired,subprocess.CalledProcessError,TimeoutError,
         ValueError,TypeError,KeyError,OSError,RuntimeError,KeyboardInterrupt,SystemExit)
-    kind=next((t.__name__ for t in kinds if isinstance(error,t)),'OtherError')
+    # issubclass on the actual type cannot consult a hostile error.__class__.
+    kind=next((t.__name__ for t in kinds if issubclass(type(error),t)),'OtherError')
     value={'error_type':kind}
-    if isinstance(error,subprocess.CalledProcessError) and type(error.returncode) is int and -255<=error.returncode<=255:
-        value['returncode']=error.returncode
+    if kind=='OtherError':return value
+    try:
+        if issubclass(type(error),subprocess.CalledProcessError):
+            fields=BaseException.__dict__['__dict__'].__get__(error)
+            number=dict.get(fields,'returncode')
+            if type(number) is int and -255<=number<=255:value['returncode']=number
+        diagnostic={}
+        if issubclass(type(error),OSError):
+            number=OSError.errno.__get__(error)
+            if type(number) is int and number in _HOST_ERROR_ERRNOS:diagnostic['errno']=number
+        diagnostic.update(_host_error_frames(error))
+        if len(canonical({**value,**diagnostic}))<=MAX_HOST_ERROR_BYTES:value.update(diagnostic)
+    except BaseException:pass
     return value
 
 
@@ -77,9 +215,14 @@ def host_failure_diagnostic(error,stage):
 class MeteredDocker:
     """Immutable owned IDs; one bounded cleanup and one final CPU close per scope."""
     def __init__(self,root,deadline):
-        self.root=Path(root);self.gates=self.root/'gates';self.gates.mkdir()
+        self.root=Path(root);root_stat=os.stat(self.root,follow_symlinks=False)
+        require(stat.S_ISDIR(root_stat.st_mode),'owned workspace directory')
+        self.root_identity=(root_stat.st_dev,root_stat.st_ino)
+        self.gates=self.root/'gates';self.gates.mkdir()
         self.deadline=deadline;self.stage='setup';self.names={};self.ledger=CpuLedger();self.cleanup=[]
         self.supervisions=[];self.supervision_failure=None
+        self.filesystem_sampling={'schema':'qwen12-filesystem-sampling-v1',
+            'semantics':'non_atomic_observed_bytes_not_peak_or_quota','maximum_scans_per_check_scope':2,'scopes':{}}
 
     def raw(self,*args,timeout=5):
         require(args and args[0] in ('create','inspect','start','rm','pause','kill','ps'),'fixed Docker operation')
@@ -101,11 +244,83 @@ class MeteredDocker:
         require(remaining>0,'Docker operation deadline exhausted')
         return min(timeout,5,remaining)
 
+    def sample_bytes(self,root,scope,limit,*,root_json_only=False,optional_root=False):
+        require(scope in FILESYSTEM_SAMPLE_SCOPES and type(limit) is int and limit>=0,'fixed sampling scope/cap')
+        scopes=self.filesystem_sampling['scopes']
+        row=scopes.setdefault(scope,{'checks':0,'scans':0,'incomplete_scans':0,'vanished_entries':0,
+            'absent_optional_roots':0,'observed_root_once':False,'last_samples':[],'selected_sample':None,'status':'not_started'})
+        row.update(checks=row['checks']+1,last_samples=[],selected_sample=None,status='started')
+        for attempt in range(2):
+            if time.monotonic()>=self.deadline:
+                row['status']='deadline_exhausted'
+                raise ValueError('host wall ceiling before filesystem sample')
+            sample={'attempt':attempt+1,'status':'started'};row['last_samples'].append(sample);row['scans']+=1
+            try:
+                # Resolve only fixed local scope roots from a verified workspace FD.
+                workspace=parent=None;anchor_error=None
+                try:
+                    flags=os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC
+                    workspace=os.open(self.root,flags)
+                    anchor=os.fstat(workspace)
+                    require(stat.S_ISDIR(anchor.st_mode) and
+                        (anchor.st_dev,anchor.st_ino)==self.root_identity,'sample workspace identity changed')
+                    if Path(root)==self.root:
+                        relative='.';parent=workspace
+                    elif Path(root).parent==self.root:
+                        relative=Path(root).name;parent=workspace
+                        require(relative in ('output','frozen','whisper-setup','policy','asr-setup'),'fixed public sampling child')
+                    else:
+                        require(scope=='phase_output' and Path(root).parent==self.root/'output' and
+                            Path(root).name in FAMILIES,'fixed family sampling child')
+                        info=os.stat('output',dir_fd=workspace,follow_symlinks=False)
+                        require(time.monotonic()<self.deadline,'host wall ceiling before output sampling root')
+                        parent=os.open('output',flags,dir_fd=workspace);actual=os.fstat(parent)
+                        require(stat.S_ISDIR(actual.st_mode) and
+                            (actual.st_dev,actual.st_ino)==(info.st_dev,info.st_ino),'sample output parent identity changed')
+                        relative=Path(root).name
+                    amount=tree_bytes(relative,sample,root_json_only=root_json_only,
+                        expected_root_identity=self.root_identity if parent==workspace and relative=='.' else None,
+                        parent_fd=parent,deadline=self.deadline,limit=limit)
+                except BaseException as error:anchor_error=error;raise
+                finally:
+                    failure=anchor_error
+                    if parent is not None and parent!=workspace:failure=close_sample_fd(parent,sample,failure)
+                    if workspace is not None:failure=close_sample_fd(workspace,sample,failure)
+                    if anchor_error is None and failure is not None:raise failure
+                # Missing optional output roots are explicit absence, not partial subtrees.
+                if optional_root and sample['root_missing_at_start'] and not row['observed_root_once']:
+                    sample.update(complete=True,coverage='absent_optional_root');row['absent_optional_roots']+=1
+                elif sample['missing_root']:
+                    row['status']='root_missing'
+                    raise ValueError('required or previously observed sample root missing')
+                sample['status']='observed'
+                if amount>limit:
+                    row['status']='cap_exceeded';sample['status']='cap_exceeded'
+                    raise ValueError('workspace stop threshold exceeded' if scope=='workspace' else 'output stop threshold exceeded')
+                if sample['complete']:
+                    require(time.monotonic()<self.deadline,'host wall ceiling after filesystem sample')
+                    row.update(selected_sample=attempt+1,status='complete')
+                    return amount
+            except BaseException as error:
+                sample['error']=safe_error(error)
+                if sample['status']!='cap_exceeded':sample['status']='failed'
+                if row['status']=='started':row['status']=sample.get('stop_reason') or 'failed'
+                raise
+            finally:
+                row['observed_root_once']=row['observed_root_once'] or sample.get('root_observed',False)
+                row['vanished_entries']+=sample.get('vanished_entries',0)
+                if sample.get('complete') is not True:row['incomplete_scans']+=1
+        row['status']='incomplete_after_one_resample'
+        raise ValueError('filesystem sample incomplete after one bounded resample')
+
     def check(self):
         require(time.monotonic()<self.deadline,'host wall ceiling')
-        require(tree_bytes(self.root)<=LIMITS['workspace_bytes'],'task10GiB workspace stop threshold')
-        public_bytes=sum(tree_bytes(self.root/n) for n in ('output','frozen','whisper-setup','policy','asr-setup'))
-        public_bytes+=sum(p.stat().st_size for p in self.root.glob('*.json') if p.is_file() and not p.is_symlink())
+        self.sample_bytes(self.root,'workspace',LIMITS['workspace_bytes'])
+        public_bytes=0
+        for name,scope in (('output','public_output'),('frozen','public_frozen'),
+                ('whisper-setup','public_whisper_setup'),('policy','public_policy'),('asr-setup','public_asr_setup')):
+            public_bytes+=self.sample_bytes(self.root/name,scope,LIMITS['output_bytes']-public_bytes,optional_root=True)
+        public_bytes+=self.sample_bytes(self.root,'public_root_json',LIMITS['output_bytes']-public_bytes,root_json_only=True)
         require(public_bytes<=LIMITS['output_bytes'],'campaign32MiB output stop threshold')
         exceeded=self.ledger.sample();atomic(self.root/'cpu-receipt.json',self.ledger.receipt())
         require(not exceeded,'cumulative CPU threshold exceeded')
@@ -325,7 +540,7 @@ def supervise(original,docker,code,runtime,inputs,output,family,deadline,mode=No
         next_phase('start');docker('start',name);next_phase('wait')
         while not docker.completed(name):
             now=time.monotonic();require(now<deadline,'phase wall ceiling')
-            require(tree_bytes(output)<=LIMITS['output_bytes'],'output32MiB stop threshold')
+            docker.sample_bytes(output,'phase_output',LIMITS['output_bytes'])
             if family!='setup' and (output/'progress.json').exists():
                 p=read_json(output/'progress.json',4096)
                 require(set(p)=={'stage','index','started_monotonic'} and p['stage'] in ('load','cell') and
@@ -703,7 +918,7 @@ def execute(env,event,release,freeze):
         failed=failed or accounting_invalid
         write_once(root/'terminal-outcomes.json',outcomes)
         receipt.update(wall_seconds=time.monotonic()-started,combined_setup_seconds=setup_elapsed,
-            supervision=docker.supervisions,cleanup=docker.cleanup)
+            supervision=docker.supervisions,cleanup=docker.cleanup,filesystem_sampling=docker.filesystem_sampling)
         atomic(root/'host-receipt.json',receipt)
         if release.get('new_transcripts_publication_approved') is True:
             from log_transport import build_package
@@ -730,7 +945,11 @@ def main():
     return execute(dict(os.environ),event,release,freeze)
 
 
+# Capture the real module code tree before any host operation or later patching.
+_HOST_DIAGNOSTIC_CODES=_host_diagnostic_codes(sys._getframe().f_code)
+
+
 if __name__=='__main__':
     try:raise SystemExit(main())
     except Exception as error:
-        print(json.dumps({'status':'blocked_no_retry','error_type':type(error).__name__}));raise SystemExit(2)
+        print(json.dumps({'status':'blocked_no_retry',**safe_error(error)}));raise SystemExit(2)

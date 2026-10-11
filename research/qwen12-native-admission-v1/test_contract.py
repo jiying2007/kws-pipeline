@@ -98,21 +98,104 @@ class ContractTests(unittest.TestCase):
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         return env,event,release
-    def test_all_four_consumed_predecessors_match_terminal_evidence(self):
+    def test_all_five_consumed_predecessors_match_terminal_evidence(self):
         proof=c.remaining_slot_contract()
         self.assertEqual([row['run_id'] for row in proof['executions']],
-                         [38154869005,38160295526,38167052146,38173984595])
+                         [38154869005,38160295526,38167052146,38173984595,38180060677])
         for index,row in enumerate(proof['executions']):
             if index<3:
                 terminal=c.read_json(HERE/'evidence'/('run-'+str(row['run_id']))/'terminal-status.json')
                 self.assertEqual(row['executed_head_sha'],terminal['source']['commit'])
                 self.assertEqual(row['archive_sha256'],terminal['evidence']['archive_sha256'])
             self.assertEqual((row['started'],row['completed'],row['error'],row['not_run']),
-                             (1,0,1,35) if index==3 else (0,0,0,36))
+                             [(0,0,0,36),(0,0,0,36),(0,0,0,36),(1,0,1,35),(0,0,1,35)][index])
             self.assertEqual(len(row['started_members']),int(index==3))
         self.assertEqual(sum(row['started'] for row in proof['executions'])+c.LIMITS['new_starts'],36)
         self.assertEqual(proof['historical_consumed'][0],c.historical_slot())
         self.assertEqual(proof['executions'][3]['started_members'],[c.historical_slot()['started_member']])
+    def test_original_four_and_historical_canonical_bytes_unchanged(self):
+        proof=c.remaining_slot_contract()
+        self.assertEqual(c.digest(c.canonical(proof['executions'][:4])),
+                         '394f7d58b020500f14ba516fdfe39eda835b2393592441862430b995e89da86f')
+        self.assertEqual(c.digest(c.canonical(c.historical_slot())),
+                         'efd9d4d295de76ac3726f3598ef068ab8f3d7bb1635963ae51d4e2383af27cbb')
+        self.assertEqual(c.canonical(c.historical_slot()),c._HISTORICAL_BYTES)
+
+    def test_fifth_zero_actual_start_is_exact_inherited_error_reference(self):
+        proof=c.remaining_slot_contract();fifth=proof['executions'][4]
+        self.assertEqual(proof['schema'],'qwen12-fixed-remaining35-r1-v1')
+        self.assertEqual(c.digest(c.canonical(fifth)),
+                         '6d7d8203a86bfccc62d73ee05cca4072effbea8430ea8a8d93c4dcab5517810e')
+        self.assertEqual([row['started'] for row in proof['executions']],[0,0,0,1,0])
+        self.assertEqual([row['completed'] for row in proof['executions']],[0,0,0,0,0])
+        self.assertEqual(fifth['started_members'],[])
+        self.assertEqual((fifth['current_started'],fifth['current_completed'],fifth['cumulative_started']),
+                         (0,0,1))
+        self.assertEqual((fifth['terminal_reported_attempt_sum'],fifth['error'],fifth['not_run']),(1,1,35))
+        self.assertEqual(fifth['terminal_outcomes'],{'path':'terminal-outcomes.json','bytes':21143,
+                         'sha256':'588e0f4786d7d716770583d28edabca773031f953a65f394c224bfc028cadbfa'})
+        self.assertEqual(fifth['terminal_historical_references'],[{
+            'family':'qwen06','audio_id':'clip-000001','origin':'historical','status':'error','attempts':1,
+            'historical_evidence':c.historical_slot()}])
+        self.assertEqual(fifth['terminal_historical_references'][0]['historical_evidence']['started_member'],
+                         proof['executions'][3]['started_members'][0])
+        self.assertEqual(sum(row['started'] for row in proof['executions']),1)
+        self.assertEqual(len(proof['historical_consumed']),1)
+        self.assertEqual(proof['historical_starts'],1)
+        self.assertEqual(proof['campaign_slots'],36)
+        self.assertEqual(proof['maximum_new_starts'],35)
+        self.assertEqual(proof['maximum_cumulative_starts'],36)
+
+    def test_old_four_only_schema_and_release_are_rejected(self):
+        for old_schema in ('qwen12-fixed-remaining35-v1','qwen12-fixed-remaining35-r1-v1'):
+            for length in (4,5):
+                if old_schema=='qwen12-fixed-remaining35-r1-v1' and length==5:continue
+                env,event,release=self.dispatch_fixture()
+                release['remaining_slot_contract']['schema']=old_schema
+                release['remaining_slot_contract']['executions']=release['remaining_slot_contract']['executions'][:length]
+                with self.subTest(schema=old_schema,length=length),self.assertRaisesRegex(ValueError,'predecessor'):
+                    c.fresh_run(env,event,release)
+
+    def test_fifth_historical_reference_never_becomes_a_second_start(self):
+        changes=[{'started':1},{'completed':1},{'started_members':[c.historical_slot()['started_member']]},
+                 {'current_started':1},{'current_completed':1},{'cumulative_started':2},
+                 {'terminal_reported_attempt_sum':0},{'error':0},{'not_run':36},
+                 {'terminal_historical_references':[]},
+                 {'terminal_historical_references':[c.historical_slot()]}]
+        for change in changes:
+            env,event,release=self.dispatch_fixture()
+            release['remaining_slot_contract']['executions'][4].update(change)
+            with self.subTest(change=change),self.assertRaisesRegex(ValueError,'predecessor'):
+                c.fresh_run(env,event,release)
+        env,event,release=self.dispatch_fixture()
+        fifth=release['remaining_slot_contract']['executions'][4]
+        fifth['started']=fifth['current_started']=1;fifth['cumulative_started']=2
+        fifth['started_members']=[copy.deepcopy(c.historical_slot()['started_member'])]
+        release['remaining_slot_contract']['historical_starts']=2
+        release['remaining_slot_contract']['maximum_new_starts']=34
+        release['remaining_slot_contract']['historical_consumed'].append(c.historical_slot())
+        with self.assertRaisesRegex(ValueError,'predecessor'):c.fresh_run(env,event,release)
+
+    def test_fifth_historical_role_original_member_and_terminal_census_are_fixed(self):
+        for key,value in (('origin','current_run'),('status','not_run'),('attempts',0),
+                          ('family','sensevoice'),('audio_id','clip-000002')):
+            env,event,release=self.dispatch_fixture()
+            release['remaining_slot_contract']['executions'][4]['terminal_historical_references'][0][key]=value
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'predecessor'):
+                c.fresh_run(env,event,release)
+        for field in ('terminal_historical_references','started_members'):
+            env,event,release=self.dispatch_fixture()
+            fifth=release['remaining_slot_contract']['executions'][4]
+            fifth[field].append(copy.deepcopy(fifth['terminal_historical_references'][0]))
+            with self.subTest(field=field),self.assertRaisesRegex(ValueError,'predecessor'):
+                c.fresh_run(env,event,release)
+
+    def test_every_consumed_run_id_is_rejected_with_new_ref(self):
+        for row in c.remaining_slot_contract()['executions']:
+            env,event,release=self.dispatch_fixture();env['GITHUB_RUN_ID']=str(row['run_id'])
+            with self.subTest(run_id=row['run_id']),self.assertRaisesRegex(ValueError,'historical execution'):
+                c.fresh_run(env,event,release)
+
     def test_recovery_predecessor_roster_is_exact(self):
         proof=c.remaining_slot_contract()
         for value in (None, {}, True, proof['executions'][0],
@@ -134,7 +217,7 @@ class ContractTests(unittest.TestCase):
         changes={'run_id':38160295527,'run_attempt':2,'executed_head_sha':'a'*40,
                  'evidence_commit':'b'*40,'archive_sha256':'c'*64,
                  'started':1,'completed':1,'not_run':35}
-        for index in range(4):
+        for index in range(5):
             env,event,release=self.dispatch_fixture()
             del release['remaining_slot_contract']['executions'][index]
             with self.subTest(predecessor=index,missing=True),self.assertRaisesRegex(ValueError,'predecessor'):
@@ -154,9 +237,9 @@ class ContractTests(unittest.TestCase):
                     release['remaining_slot_contract']['executions'][index][key]=value
                     with self.subTest(predecessor=index,key=key,value=value),self.assertRaisesRegex(ValueError,'predecessor'):
                         c.fresh_run(env,event,release)
-    def test_only_new_recovery3_source_identity_is_accepted(self):
+    def test_only_new_remaining35_r1_source_identity_is_accepted(self):
         import branch_transport
-        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-remaining35-v1')
+        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-remaining35-r1-v1')
         self.assertEqual(branch_transport.purpose_policy('native')['source_branch'],c.BRANCH)
         for branch in ('research/qwen12-native-admission-v1',
                        'research/qwen12-native-admission-recovery1',
@@ -165,10 +248,13 @@ class ContractTests(unittest.TestCase):
                        'research/qwen12-native-transport-preflight-12m-v1',
                        'research/qwen12-native-admission-recovery3',
                        'research/qwen12-native-admission-recovery30',
-                       'research/qwen12-native-admission-recovery3-extra'):
+                       'research/qwen12-native-admission-recovery3-extra',
+                       'research/qwen12-native-admission-remaining35-v1',
+                       'research/qwen12-native-admission-remaining35-r1',
+                       'research/qwen12-native-admission-remaining35-r1-v1-extra'):
             env,event,release=self.dispatch_fixture();env['GITHUB_REF']='refs/heads/'+branch
             with self.subTest(branch=branch),self.assertRaises(ValueError):c.fresh_run(env,event,release)
-    def test_recovery3_still_rejects_rerun_and_existing_branch_push(self):
+    def test_remaining35_r1_still_rejects_rerun_and_existing_branch_push(self):
         for target,key,value in (('env','GITHUB_RUN_ATTEMPT','2'),('env','GITHUB_EVENT_NAME','workflow_dispatch'),
                                  ('event','created',False),('event','created',1)):
             env,event,release=self.dispatch_fixture();(env if target=='env' else event)[key]=value
@@ -239,7 +325,7 @@ class ContractTests(unittest.TestCase):
     def test_committed_release_and_workflow_have_consistent_reviewed_state(self):
         self.assert_source_activation_state(c.read_json(HERE/'execution-release.json'),
                                             (HERE/'workflow.yml').read_text())
-    def test_disabled_recovery3_fixture_has_no_native_approvals(self):
+    def test_disabled_remaining35_r1_fixture_has_no_native_approvals(self):
         release,text=self.source_state_fixture(False)
         for key in c.DISPATCH_APPROVALS:
             with self.subTest(key=key):
@@ -284,7 +370,9 @@ class ContractTests(unittest.TestCase):
             release,text=self.source_state_fixture(enabled)
             for old in ('research/qwen12-native-admission-v1',
                         'research/qwen12-native-admission-recovery1',
-                        'research/qwen12-native-admission-recovery2'):
+                        'research/qwen12-native-admission-recovery2',
+                        'research/qwen12-native-admission-recovery3',
+                        'research/qwen12-native-admission-remaining35-v1'):
                 for part in ('trigger','guard','both'):
                     changed=text
                     if part in ('trigger','both'):
@@ -395,7 +483,7 @@ class ContractTests(unittest.TestCase):
             root=Path(d);docker=host.MeteredDocker(root,999999999999)
             (root/'whisper-setup').mkdir()
             with (root/'whisper-setup'/'large.json').open('wb') as f:f.truncate(c.LIMITS['output_bytes']+1)
-            with self.assertRaisesRegex(ValueError,'output stop threshold'):docker.check()
+            with self.assertRaisesRegex(ValueError,'stop threshold'):docker.check()
     def test_fresh_load_failure_retains_prepared_source(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);f=root/'frozen/qwen06';f.mkdir(parents=True)
@@ -724,7 +812,7 @@ class CleanupStateTests(unittest.TestCase):
                 self.assertEqual(status,1)
                 self.assertEqual(receipt['combined_setup_seconds'],7 if fail_stage=='asr' else 18)
                 self.assertEqual(receipt['stages']['asr_setup' if fail_stage=='asr' else 'whisper_setup'],'error')
-                self.assertEqual(receipt['primary_error'],{'error_type':'RuntimeError'})
+                self.assertEqual(receipt['primary_error']['error_type'],'RuntimeError')
                 self.assertNotIn('PRIVATE_',c.canonical(receipt).decode())
 
     def test_supervision_primary_cleanup_combinations_keep_original_error(self):
@@ -773,6 +861,139 @@ class CleanupStateTests(unittest.TestCase):
                     self.assertEqual('supervision-receipt.json' in host.collect(Path(d)),not retention_fails)
                     self.assertEqual('retention_error' in record,retention_fails)
                     self.assertNotIn('PRIVATE_',c.canonical(record).decode())
+
+
+class HostErrorDiagnosticTests(unittest.TestCase):
+    secret='PRIVATE_TOKEN /home/private/audio.wav transcript argv=secret env=secret'
+    redacted={'file':'<redacted>','function':'<redacted>','line':None}
+
+    def assert_safe(self,value):
+        raw=c.canonical(value).decode()
+        self.assertLessEqual(len(raw.encode()),host.MAX_HOST_ERROR_BYTES)
+        self.assertLessEqual(len(value.get('frames',[])),host.MAX_HOST_ERROR_FRAMES)
+        self.assertLessEqual(set(value),{'error_type','returncode','errno','frames','frames_truncated'})
+        for token in ('PRIVATE_','/home/private','transcript','argv=','env=',str(HERE)):
+            self.assertNotIn(token,raw)
+        return value
+
+    def raised(self,error,function=None):
+        try:
+            if function is None:raise error
+            function()
+        except BaseException as caught:return caught
+
+    def test_errno_is_fixed_integer_allowlist_without_filename_or_message(self):
+        for number in (2,5,10,13,28,116):
+            value=self.assert_safe(host.safe_error(OSError(number,self.secret,self.secret)))
+            self.assertEqual(value['errno'],number);self.assertEqual(value['frames'],[])
+        class PrivateInt(int):
+            def __str__(self):raise AssertionError('do not convert')
+        for number in (None,False,True,-1,0,4095,4096,2**1000,self.secret,PrivateInt(13)):
+            error=OSError();error.errno=number
+            self.assertNotIn('errno',self.assert_safe(host.safe_error(error)))
+
+    def test_exception_subclass_hooks_and_private_class_names_are_ignored(self):
+        class Hostile(OSError):
+            def __str__(self):raise AssertionError('do not stringify')
+            def __repr__(self):raise AssertionError('do not represent')
+            def __getattribute__(self,name):raise AssertionError('do not read '+name)
+            @property
+            def errno(self):raise AssertionError('do not read errno property')
+            @property
+            def __traceback__(self):raise AssertionError('do not read traceback property')
+        Hostile.__name__=self.secret
+        error=Hostile(13,self.secret,self.secret)
+        value=self.assert_safe(host.safe_error(self.raised(error)))
+        self.assertEqual((value['error_type'],value['errno']),('OSError',13))
+        self.assertEqual(value['frames'],[self.redacted])
+        class Unknown(BaseException):
+            def __str__(self):raise AssertionError('do not stringify')
+            def __getattribute__(self,name):raise AssertionError('do not inspect')
+        Unknown.__name__=self.secret
+        self.assertEqual(host.safe_error(Unknown(self.secret)),{'error_type':'OtherError'})
+        self.assertEqual(host.safe_error(object()),{'error_type':'OtherError'})
+
+    def test_returncode_uses_bounded_stored_integer_without_subclass_properties(self):
+        class Hostile(subprocess.CalledProcessError):
+            def __getattribute__(self,name):raise AssertionError('do not inspect '+name)
+            def __str__(self):raise AssertionError('do not stringify')
+            @property
+            def __dict__(self):raise AssertionError('do not read dict property')
+        for number in (-255,-1,0,255,True,256,2**1000,self.secret):
+            error=Hostile(number,[self.secret],output=self.secret,stderr=self.secret)
+            value=self.assert_safe(host.safe_error(error))
+            self.assertEqual(value['error_type'],'CalledProcessError')
+            self.assertEqual('returncode' in value,type(number) is int and -255<=number<=255)
+        class HostileFields(dict):
+            def get(self,*args):raise AssertionError('do not call overridden dict method')
+        error=subprocess.CalledProcessError(7,[self.secret])
+        error.__dict__=HostileFields(returncode=7)
+        self.assertEqual(self.assert_safe(host.safe_error(error))['returncode'],7)
+        self.assertEqual(self.assert_safe(host.safe_error(subprocess.TimeoutExpired([self.secret],5,
+            output=self.secret,stderr=self.secret)))['error_type'],'TimeoutExpired')
+
+    def test_trusted_host_method_frame_uses_only_fixed_relative_source(self):
+        import linecache,traceback
+        error=OSError(5,self.secret,self.secret)
+        with patch.object(host.subprocess,'run',side_effect=error), \
+                patch.object(linecache,'getline',side_effect=AssertionError('source line read')), \
+                patch.object(traceback,'format_exception',side_effect=AssertionError('traceback formatting')):
+            observed=self.raised(error,lambda:host.MeteredDocker.raw(None,'inspect','owned'))
+            value=self.assert_safe(host.safe_error(observed))
+        trusted=[frame for frame in value['frames'] if frame['file']!='<redacted>']
+        self.assertEqual(len(trusted),1)
+        self.assertEqual((trusted[0]['file'],trusted[0]['function']),
+            ('research/qwen12-native-admission-v1/hosted_run.py','raw'))
+        self.assertGreater(trusted[0]['line'],0);self.assertEqual(value['errno'],5)
+
+    def test_forged_source_names_and_equal_code_copies_are_not_trusted(self):
+        import types
+        for filename in (self.secret,str(HERE/'hosted_run.py')):
+            scope={'error':OSError(13,self.secret)}
+            exec(compile('def raw():\n    raise error\n',filename,'exec'),scope)
+            value=self.assert_safe(host.safe_error(self.raised(scope['error'],scope['raw'])))
+            self.assertTrue(all(frame==self.redacted for frame in value['frames']))
+        original=host.MeteredDocker.raw.__code__;clone=original.replace()
+        self.assertIsNot(clone,original);self.assertEqual(clone,original)
+        replacement=types.FunctionType(clone,host.__dict__)
+        error=OSError(13,self.secret)
+        with patch.object(host.MeteredDocker,'raw',replacement),patch.object(host.subprocess,'run',side_effect=error):
+            value=self.assert_safe(host.safe_error(self.raised(error,lambda:host.MeteredDocker.raw(None,'inspect','owned'))))
+        self.assertTrue(all(frame==self.redacted for frame in value['frames']))
+        self.assertNotIn(id(clone),host._HOST_DIAGNOSTIC_CODES)
+
+    def test_long_traceback_and_cyclic_chains_are_bounded_and_not_followed(self):
+        def recurse(count):
+            if count:return recurse(count-1)
+            raise OSError(5,self.secret)
+        error=self.raised(None,lambda:recurse(200))
+        error.__cause__=error;error.__context__=OSError(13,self.secret)
+        value=self.assert_safe(host.safe_error(error))
+        self.assertEqual(len(value['frames']),host.MAX_HOST_ERROR_FRAMES)
+        self.assertIs(value['frames_truncated'],True);self.assertEqual(value['errno'],5)
+        self.assertTrue(all(frame==self.redacted for frame in value['frames']))
+
+    def test_diagnostic_failure_and_oversize_fall_back_to_primary_type(self):
+        error=OSError(5,self.secret)
+        with patch.object(host,'_host_error_frames',side_effect=MemoryError(self.secret)):
+            self.assertEqual(host.safe_error(error),{'error_type':'OSError'})
+        with patch.object(host,'MAX_HOST_ERROR_BYTES',1):
+            self.assertEqual(host.safe_error(error),{'error_type':'OSError'})
+        process=subprocess.CalledProcessError(7,[self.secret])
+        with patch.object(host,'_host_error_frames',side_effect=MemoryError(self.secret)):
+            self.assertEqual(host.safe_error(process),{'error_type':'CalledProcessError','returncode':7})
+
+    def test_primary_and_cleanup_have_independent_errno_and_frames(self):
+        primary=OSError(5,self.secret);cleanup=OSError(13,self.secret)
+        with patch.object(host.subprocess,'run',side_effect=primary):
+            first=self.assert_safe(host.safe_error(self.raised(primary,
+                lambda:host.MeteredDocker.raw(None,'inspect','owned'))))
+        with patch.object(host.subprocess,'run',side_effect=cleanup):
+            second=self.assert_safe(host.safe_error(self.raised(cleanup,
+                lambda:host.MeteredDocker.raw(None,'rm','--force','owned'))))
+        self.assertEqual((first['errno'],second['errno']),(5,13))
+        self.assertIsNot(first['frames'],second['frames'])
+        self.assertEqual(host.safe_error(primary),first)
 
 
 class PackageFailureDiagnosticTests(unittest.TestCase):
@@ -928,7 +1149,7 @@ class PackageFailureDiagnosticTests(unittest.TestCase):
                         self.assertEqual(json.loads(archive.read('package-budget-preflight.json'))['diagnostic'],receipt['diagnostic'])
                     self.assertTrue(all(self.secret.encode() not in archive.read(name) for name in archive.namelist()))
                 self.assertEqual(receipt['status'],'stopped_no_retry')
-                self.assertEqual(receipt['primary_error'],{'error_type':'ValueError'})
+                self.assertEqual(receipt['primary_error']['error_type'],'ValueError')
                 self.assertEqual(receipt['diagnostic']['stage'],'package_budget_preflight')
                 self.assertEqual(receipt['diagnostic']['reason_code'],
                     'diagnostic_unavailable' if diagnostic_fails else 'compressed_cap' if typed else 'unknown_failure')
@@ -1217,7 +1438,7 @@ class RemainingSlotTests(unittest.TestCase):
     def test_changed_or_unknown_started_rosters_and_historical_key_reject(self):
         env,event,release=self.dispatch()
         mutations=[]
-        for index in range(4):
+        for index in range(5):
             bad=copy.deepcopy(release)
             bad['remaining_slot_contract']['executions'][index]['started_members'].append(
                 {'path':'output/whisper/clip-000001/started.json','bytes':930,'sha256':'a'*64})
@@ -1396,8 +1617,8 @@ class RemainingSlotTests(unittest.TestCase):
                     receipt=json.loads(archive.read('host-receipt.json'))
                     outcomes=json.loads(archive.read('terminal-outcomes.json'))
                 self.assertEqual(receipt['status'],'accounting_invalid')
-                self.assertEqual(receipt['primary_error'],{'error_type':'RuntimeError'})
-                self.assertEqual(receipt['accounting_error'],{'error_type':'ValueError'})
+                self.assertEqual(receipt['primary_error']['error_type'],'RuntimeError')
+                self.assertEqual(receipt['accounting_error']['error_type'],'ValueError')
                 self.assertEqual(receipt['stages']['qwen06'],'error')
                 self.assertEqual(receipt['stages']['sensevoice'],'not_run')
                 self.assertEqual(receipt['stages']['whisper'],'not_run')
@@ -1520,5 +1741,256 @@ class NativePlannedLoopTests(unittest.TestCase):
                 self.assertIsInstance(error,ValueError);self.assertEqual(events,[])
                 self.assertEqual(names,[]);self.assertEqual(loads,0)
 
+
+class FilesystemSamplingTests(unittest.TestCase):
+    def docker(self,root):return host.MeteredDocker(root,host.time.monotonic()+30)
+    def partial(self,n=3):return dict(observed_bytes=n,vanished_entries=1,complete=False,missing_root=False,root_missing_at_start=False,coverage='incomplete_lower_bound')
+    def test_static_bytes_and_root_json_keep_nofollow_rules(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();(r/'a.json').write_bytes(b'abc');(r/'b').write_bytes(b'12345');o=Path(td)/'outside';o.write_bytes(b'x'*4096);(r/'link.json').symlink_to(o);(r/'sub').mkdir();(r/'sub/c.json').write_bytes(b'zz')
+            s={};self.assertEqual(host.tree_bytes(r,s),10+len(str(o)));self.assertTrue(s['complete']);self.assertEqual(s['symlinks'],1);self.assertEqual(host.tree_bytes(r,{},root_json_only=True),3)
+    def test_one_nofollow_stat_per_entry(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);(r/'item').write_bytes(b'x');real=host.os.stat;calls=[]
+            def observe(p,*a,**kw):
+                if p=='item':calls.append(kw.copy())
+                return real(p,*a,**kw)
+            with patch.object(host.os,'stat',observe):self.assertEqual(host.tree_bytes(r),1)
+            self.assertEqual(len(calls),1);self.assertIs(calls[0]['follow_symlinks'],False);self.assertIsInstance(calls[0]['dir_fd'],int)
+    def test_real_unlink_then_stable_resample_returns_only_second(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);p=r/'vanish';p.write_bytes(b'1234');(r/'stable').write_bytes(b'abc');real=host.os.stat;done=False
+            def observe(name,*a,**kw):
+                nonlocal done
+                if name=='vanish' and not done:done=True;p.unlink()
+                return real(name,*a,**kw)
+            with patch.object(host.os,'stat',observe):self.assertEqual(d.sample_bytes(r,'workspace',100),3)
+            row=d.filesystem_sampling['scopes']['workspace'];self.assertEqual((row['scans'],row['selected_sample']),(2,2));self.assertEqual(row['last_samples'][0]['vanished_entries'],1);self.assertFalse(row['last_samples'][0]['complete']);self.assertEqual(row['last_samples'][1]['observed_bytes'],3)
+    def test_two_partial_samples_fail_without_third(self):
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td);calls=[]
+            def sample(root,obs,**kw):calls.append(1);obs.update(self.partial());return 3
+            with patch.object(host,'tree_bytes',sample),self.assertRaisesRegex(ValueError,'one bounded resample'):d.sample_bytes(td,'workspace',10)
+            row=d.filesystem_sampling['scopes']['workspace'];self.assertEqual(len(calls),2);self.assertIsNone(row['selected_sample']);self.assertEqual(row['vanished_entries'],2)
+    def test_partial_over_cap_stops_before_resampling(self):
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td);calls=[]
+            def sample(root,obs,**kw):calls.append(1);obs.update(self.partial(11));return 11
+            with patch.object(host,'tree_bytes',sample),self.assertRaises(ValueError):d.sample_bytes(td,'workspace',10)
+            self.assertEqual(len(calls),1);self.assertEqual(d.filesystem_sampling['scopes']['workspace']['status'],'cap_exceeded')
+    def test_complete_real_over_cap_stops(self):
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td);(Path(td)/'large').write_bytes(b'x'*11)
+            with self.assertRaises(ValueError):d.sample_bytes(td,'workspace',10)
+            self.assertEqual(d.filesystem_sampling['scopes']['workspace']['scans'],1)
+    def test_deadline_exhausted_does_not_start_resample(self):
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td);calls=[]
+            def sample(root,obs,**kw):calls.append(1);obs.update(self.partial());return 3
+            with patch.object(host,'tree_bytes',sample),patch.object(host.time,'monotonic',side_effect=[d.deadline-1,d.deadline]),self.assertRaisesRegex(ValueError,'wall ceiling'):d.sample_bytes(td,'workspace',10)
+            self.assertEqual(len(calls),1);self.assertEqual(d.filesystem_sampling['scopes']['workspace']['status'],'deadline_exhausted')
+    def test_non_enoent_fail_closed_and_keep_original_exception(self):
+        import errno
+        for number in (errno.EACCES,errno.EIO,errno.ELOOP,errno.ENOTDIR,None,9999):
+            with self.subTest(errno=number),tempfile.TemporaryDirectory() as td:
+                d=self.docker(td);(Path(td)/'item').write_bytes(b'x');real=host.os.stat;error=OSError(number,'PRIVATE','/PRIVATE')
+                def stat(p,*a,**kw):
+                    if p=='item':raise error
+                    return real(p,*a,**kw)
+                with patch.object(host.os,'stat',stat),self.assertRaises(OSError) as caught:d.sample_bytes(td,'workspace',100)
+                self.assertIs(caught.exception,error);self.assertEqual(d.filesystem_sampling['scopes']['workspace']['scans'],1);self.assertNotIn('PRIVATE',c.canonical(d.filesystem_sampling).decode())
+    def test_partial_before_eio_preserves_counters_and_lower_bound(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td)
+            def sample(root,obs,**kw):obs.update(self.partial(7));raise OSError(errno.EIO,'PRIVATE')
+            with patch.object(host,'tree_bytes',sample),self.assertRaises(OSError):d.sample_bytes(td,'workspace',100)
+            row=d.filesystem_sampling['scopes']['workspace'];self.assertEqual((row['vanished_entries'],row['incomplete_scans']),(1,1));self.assertEqual(row['last_samples'][0]['observed_bytes'],7)
+    def test_optional_absence_and_required_workspace_missing_differ(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();d=self.docker(r);self.assertEqual(d.sample_bytes(r/'output','public_output',100,optional_root=True),0)
+            row=d.filesystem_sampling['scopes']['public_output'];self.assertEqual(row['scans'],1);self.assertEqual(row['last_samples'][0]['coverage'],'absent_optional_root')
+            r.rename(Path(td)/'moved')
+            with self.assertRaises(OSError):d.sample_bytes(r,'workspace',100)
+            self.assertEqual(d.filesystem_sampling['scopes']['workspace']['scans'],1)
+    def test_owned_workspace_replaced_between_samples_rejects(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();d=self.docker(r);r.rename(Path(td)/'old');r.mkdir()
+            with self.assertRaisesRegex(ValueError,'workspace identity'):d.sample_bytes(r,'workspace',100)
+    def test_root_lstat_open_replacement_rejects_and_closes(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();real=host.os.open;opened=[]
+            def change(p,*a,**kw):
+                if Path(p)==r:r.rename(Path(td)/'old');r.mkdir()
+                fd=real(p,*a,**kw);opened.append(fd);return fd
+            with patch.object(host.os,'open',change),self.assertRaisesRegex(ValueError,'root directory identity'):host.tree_bytes(r)
+            for fd in opened:
+                with self.assertRaises(OSError):os.fstat(fd)
+    def test_optional_root_seen_then_deleted_is_not_initial_absence(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);out=r/'output';out.mkdir();real=host.os.open
+            def change(p,*a,**kw):
+                if p=='output':out.rmdir()
+                return real(p,*a,**kw)
+            with patch.object(host.os,'open',change),self.assertRaisesRegex(ValueError,'root missing'):d.sample_bytes(out,'public_output',100,optional_root=True)
+            row=d.filesystem_sampling['scopes']['public_output'];self.assertFalse(row['last_samples'][0]['root_missing_at_start']);self.assertEqual(row['absent_optional_roots'],0)
+    def test_child_directory_replaced_by_symlink_or_other_directory_rejects(self):
+        for symlink in (True,False):
+            with self.subTest(symlink=symlink),tempfile.TemporaryDirectory() as td:
+                r=Path(td)/'task';r.mkdir();sub=r/'sub';sub.mkdir();out=Path(td)/'outside';out.mkdir();(out/'private').write_bytes(b'x'*10000);real=host.os.open
+                def change(p,*a,**kw):
+                    if p=='sub':
+                        sub.rename(r/'old')
+                        if symlink:sub.symlink_to(out,target_is_directory=True)
+                        else:sub.mkdir()
+                    return real(p,*a,**kw)
+                with patch.object(host.os,'open',change),self.assertRaises((OSError,ValueError)):host.tree_bytes(r)
+    def test_file_to_symlink_after_stat_counts_observed_file_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();p=r/'item';p.write_bytes(b'1234567');out=Path(td)/'outside';out.write_bytes(b'x'*10000);real=host.os.stat
+            def change(name,*a,**kw):
+                info=real(name,*a,**kw)
+                if name=='item':p.unlink();p.symlink_to(out)
+                return info
+            with patch.object(host.os,'stat',change):self.assertEqual(host.tree_bytes(r),7)
+            self.assertEqual(host.tree_bytes(r),len(str(out)))
+    def test_all_descriptors_close_on_traversal_success_or_eio(self):
+        import errno
+        for fail in (False,True):
+            with self.subTest(fail=fail),tempfile.TemporaryDirectory() as td:
+                r=Path(td);(r/'sub').mkdir();(r/'sub/item').write_bytes(b'x');opened=[];realopen=host.os.open;realstat=host.os.stat
+                def observe(*a,**kw):fd=realopen(*a,**kw);opened.append(fd);return fd
+                def stat(p,*a,**kw):
+                    if fail and p=='item':raise OSError(errno.EIO,'PRIVATE')
+                    return realstat(p,*a,**kw)
+                with patch.object(host.os,'open',observe),patch.object(host.os,'stat',stat):
+                    if fail:
+                        with self.assertRaises(OSError):host.tree_bytes(r)
+                    else:self.assertEqual(host.tree_bytes(r),1)
+                self.assertGreaterEqual(len(opened),2)
+                for fd in opened:
+                    with self.assertRaises(OSError):os.fstat(fd)
+    def test_real_concurrent_mutation_retains_non_atomic_sampling_semantics(self):
+        import threading
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);paths=[r/str(i) for i in range(16)]
+            for p in paths:p.write_bytes(b'x'*16)
+            stop=threading.Event();errors=[]
+            def churn():
+                try:
+                    while not stop.is_set():
+                        for p in paths:
+                            if stop.is_set():break
+                            p.unlink();p.write_bytes(b'x'*16)
+                except BaseException as error:errors.append(type(error).__name__)
+            t=threading.Thread(target=churn);t.start()
+            try:
+                for _ in range(20):
+                    obs={};amount=host.tree_bytes(r,obs);self.assertEqual(amount,obs['observed_bytes']);self.assertLessEqual(amount,256);self.assertEqual(obs['complete'],obs['vanished_entries']==0)
+            finally:stop.set();t.join(2)
+            self.assertFalse(t.is_alive());self.assertEqual(errors,[])
+    def test_source_input_integrity_still_strict_for_missing_or_symlink(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);(r/'link').symlink_to('missing')
+            for p in (r/'missing',r/'link'):
+                with self.assertRaises((OSError,ValueError)):c.identity(p)
+                with self.assertRaises((OSError,ValueError)):c.read_json(p)
+
+    def test_early_cap_never_stats_the_next_entry(self):
+        from contextlib import contextmanager
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);(r/'a_big').write_bytes(b'x'*11);(r/'z_after').write_bytes(b'x');scan=host.os.scandir;real=host.os.stat
+            @contextmanager
+            def ordered(fd):
+                with scan(fd) as entries:yield iter(sorted(entries,key=lambda e:e.name))
+            def stat(p,*a,**kw):
+                if p=='z_after':raise AssertionError('read after known cap')
+                return real(p,*a,**kw)
+            obs={}
+            with patch.object(host.os,'scandir',ordered),patch.object(host.os,'stat',stat),self.assertRaisesRegex(ValueError,'stop threshold'):host.tree_bytes(r,obs,limit=10)
+            self.assertEqual(obs['observed_bytes'],11);self.assertEqual(obs['stop_reason'],'cap_exceeded')
+    def test_entry_deadline_prevents_entry_metadata_access(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);(r/'item').write_bytes(b'x');real=host.os.stat
+            def stat(p,*a,**kw):
+                if p=='item':raise AssertionError('read after deadline')
+                return real(p,*a,**kw)
+            obs={}
+            with patch.object(host.time,'monotonic',side_effect=[0,0,0,1]),patch.object(host.os,'stat',stat),self.assertRaisesRegex(ValueError,'wall ceiling'):host.tree_bytes(r,obs,deadline=1)
+            self.assertEqual(obs['stop_reason'],'deadline_exhausted')
+    def test_seen_optional_root_cannot_later_be_absent(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);out=r/'output';out.mkdir();self.assertEqual(d.sample_bytes(out,'public_output',10,optional_root=True),0);out.rmdir()
+            with self.assertRaisesRegex(ValueError,'root missing'):d.sample_bytes(out,'public_output',10,optional_root=True)
+            row=d.filesystem_sampling['scopes']['public_output'];self.assertTrue(row['observed_root_once']);self.assertEqual(row['absent_optional_roots'],0)
+    def test_legal_output_to_frozen_and_new_output_inode_is_allowed(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);out=r/'output';out.mkdir();(out/'old').write_bytes(b'123');self.assertEqual(d.sample_bytes(out,'public_output',10,optional_root=True),3)
+            out.rename(r/'frozen');out.mkdir();(out/'new').write_bytes(b'45');self.assertEqual(d.sample_bytes(out,'public_output',10,optional_root=True),2)
+            self.assertEqual(d.sample_bytes(r/'frozen','public_frozen',10,optional_root=True),3)
+    def test_public_child_uses_open_workspace_fd_after_ancestor_rename(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td)/'task';r.mkdir();d=self.docker(r);(r/'output').mkdir();(r/'output/old').write_bytes(b'123');outside=Path(td)/'outside';outside.mkdir();(outside/'output').mkdir();(outside/'output/private').write_bytes(b'x'*10000)
+            real=host.os.open;changed=False
+            def move(p,*a,**kw):
+                nonlocal changed
+                fd=real(p,*a,**kw)
+                if Path(p)==r and not changed:changed=True;r.rename(Path(td)/'oldtask');r.symlink_to(outside,target_is_directory=True)
+                return fd
+            with patch.object(host.os,'open',move):self.assertEqual(d.sample_bytes(r/'output','public_output',100,optional_root=True),3)
+            with self.assertRaises(OSError):d.sample_bytes(r/'output','public_output',100,optional_root=True)
+    def test_public_aggregate_cap_does_not_reset_each_scope(self):
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);(r/'output').mkdir();(r/'output/a').write_bytes(b'x'*6);(r/'whisper-setup').mkdir();(r/'whisper-setup/b').write_bytes(b'x'*5)
+            with patch.dict(host.LIMITS,{'output_bytes':10}),self.assertRaisesRegex(ValueError,'stop threshold'):d.check()
+            row=d.filesystem_sampling['scopes']['public_whisper_setup'];self.assertEqual(row['status'],'cap_exceeded');self.assertEqual(row['last_samples'][0]['observed_bytes'],5)
+
+    def test_primary_scan_error_is_not_replaced_by_fd_cleanup_error(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);(r/'sub').mkdir();(r/'sub/item').write_bytes(b'x');realstat=host.os.stat;realclose=host.os.close;primary=OSError(errno.EACCES,'PRIVATE_PRIMARY');obs={}
+            def stat(p,*a,**kw):
+                if p=='item':raise primary
+                return realstat(p,*a,**kw)
+            def close(fd):realclose(fd);raise OSError(errno.EIO,'PRIVATE_CLOSE')
+            with patch.object(host.os,'stat',stat),patch.object(host.os,'close',close),self.assertRaises(OSError) as caught:host.tree_bytes(r,obs)
+            self.assertIs(caught.exception,primary);self.assertEqual(obs['fd_close_error_count'],2);self.assertEqual(obs['fd_close_first_error']['errno'],errno.EIO);self.assertNotIn('PRIVATE',c.canonical(obs).decode())
+    def test_fd_cleanup_error_without_primary_is_fatal(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            realclose=host.os.close;error=OSError(errno.EIO,'PRIVATE_CLOSE');obs={}
+            def close(fd):realclose(fd);raise error
+            with patch.object(host.os,'close',close),self.assertRaises(OSError) as caught:host.tree_bytes(Path(td),obs)
+            self.assertIs(caught.exception,error);self.assertEqual(obs['fd_close_error_count'],1)
+
+    def test_close_enoent_is_never_treated_as_a_vanished_entry(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);(r/'sub').mkdir();realclose=host.os.close
+            def close(fd):realclose(fd);raise OSError(errno.ENOENT,'PRIVATE_CLOSE')
+            with patch.object(host.os,'close',close),self.assertRaises(OSError):d.sample_bytes(r,'workspace',100)
+            row=d.filesystem_sampling['scopes']['workspace'];self.assertEqual(row['scans'],1);self.assertEqual(row['vanished_entries'],0);self.assertGreater(row['last_samples'][0]['fd_close_error_count'],0)
+    def test_parent_close_failure_still_closes_workspace_anchor(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            r=Path(td);d=self.docker(r);(r/'output/qwen06').mkdir(parents=True);realopen=host.os.open;realclose=host.os.close;opened=[];closed=[];error=OSError(errno.EIO,'PRIVATE_PARENT_CLOSE')
+            def openfd(*a,**kw):fd=realopen(*a,**kw);opened.append(fd);return fd
+            def close(fd):
+                realclose(fd);closed.append(fd)
+                if fd==opened[1]:raise error
+            with patch.object(host.os,'open',openfd),patch.object(host.os,'close',close),self.assertRaises(OSError) as caught:d.sample_bytes(r/'output/qwen06','phase_output',100)
+            self.assertIs(caught.exception,error);self.assertEqual(set(opened),set(closed));self.assertEqual(len(opened),len(closed))
+            for fd in opened:
+                with self.assertRaises(OSError):os.fstat(fd)
+
+    def test_handled_ambient_exception_does_not_hide_close_only_failure(self):
+        import errno
+        with tempfile.TemporaryDirectory() as td:
+            d=self.docker(td);realclose=host.os.close;error=OSError(errno.EIO,'PRIVATE_CLOSE')
+            def close(fd):realclose(fd);raise error
+            try:raise ValueError('PRIVATE_HANDLED')
+            except ValueError:
+                with patch.object(host.os,'close',close),self.assertRaises(OSError) as caught:d.sample_bytes(Path(td),'workspace',100)
+            self.assertIs(caught.exception,error);self.assertIsNone(d.filesystem_sampling['scopes']['workspace']['selected_sample'])
 
 if __name__=='__main__':unittest.main()

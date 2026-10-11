@@ -1,19 +1,20 @@
 # Qwen12 one-shot controlled native admission capture
 
-Current source state: four native executions are consumed. The first three
-recorded zero starts; recovery 3 recorded one Qwen start, zero completions and
-35 not-run slots. That Qwen slot remains consumed. This reviewed static activation
-removes the literal native stop in both workflow mirrors and sets all six native
-approval/enable bits true. Existing bounded publication permission is unchanged.
-Only the fixed remaining35 fresh-branch push can trigger after final source PR,
-protected merge, fresh-main CI and immediate history checks. No execution claim
-has been created and no later runtime prerequisite is marked passed.
+Current source state: five native execution identities are consumed. Their actual
+new-start counts are [0, 0, 0, 1, 0]; only the recovery 3 Qwen clip-000001 slot
+was consumed. The remaining35 execution's historical reference is that same
+error, not a second start. This reviewed static activation removes the native
+workflow stops and sets all six native approval/enable bits true for the fixed
+remaining35-r1-v1 continuation. Existing bounded publication permission remains
+unchanged. Only its exact fresh branch can trigger after source PR, protected
+merge, fresh-main CI and immediate history checks. No new execution has been
+created, and future runtime prerequisites have not been marked passed.
 
 The 12MiB transport was independently verified by zero-model run 38170753261 and
 used successfully to retain recovery 3 failure evidence. Models, input clips,
 generation parameters, token budget, stop/completion rules, resource thresholds,
-host cleanup and ZIP/chunk transport remain unchanged by this fix. The change is
-a narrow observational projector for four runtime token fields in Qwen's active
+host cleanup and ZIP/chunk transport algorithms remain unchanged by the new
+identity proposal. The earlier scientific fix is a narrow observational projector for four runtime token fields in Qwen's active
 GenerationConfig. Prepared JSON serialization and identity remain unchanged.
 The full remaining active configuration must match the frozen prepared snapshot,
 except max_length must equal the independently observed input-token length +256.
@@ -208,9 +209,9 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-The current static release removes the native condition's literal `false && `
-and sets `release.enabled=true` plus its five review bits true. All four consumed
-source/run/evidence identities remain unchanged. Dispatch requires literal JSON true for
+The current five-predecessor static release removes the native condition's
+literal `false && ` and sets `release.enabled=true` plus its five review bits true.
+All five consumed source/run/evidence identities remain unchanged. Dispatch requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
 approvals. Missing, false, integer or string substitutes fail before Docker,
@@ -685,7 +686,7 @@ adapter source is bound by new source/native-config locks and source freeze;
 those enclosing identities are not claimed equal to the historical run. Missing fields, drift, non-JSON objects,
 NaN/infinity, fake tensors and incorrect token tensor metadata fail closed.
 
-## Fixed remaining35 controlled static activation
+## Fixed remaining35 static activation history (now consumed)
 
 The selected plan keeps every original 12×3 slot. The historical Qwen
 `clip-000001` error is permanently consumed; exactly the other 35 slots are
@@ -696,16 +697,16 @@ complete that source's three-recognizer chain. This plan does not select or
 remove clips based on future recognition results. Any failure stops subsequent
 work without retry or a replacement call; 35 is a maximum, not promised success.
 
-The single permitted source is `research/qwen12-native-admission-remaining35-v1`, with
+The consumed source is `research/qwen12-native-admission-remaining35-v1`, with
 create-only evidence branch `evidence/qwen12-native-admission-remaining35-v1`
 and directory `research/qwen12-native-admission-v1/evidence/remaining35-v1`.
 The exact source name joins the separate cleanup retention roster. All four
 consumed source/run/evidence identities and surviving refs remain preserved;
 the deleted original source ref must never be restored. Both native workflow
 mirrors require the exact canonical public repository, fresh fixed-branch push,
-first run attempt and successful contracts. The release's six native approval/enable
-bits are true; prior bounded publication permission remains true. These are
-static approvals, not passed future runtime checks.
+first run attempt and successful contracts. The historical activation set six
+native approval/enable bits true. This repair restores all six to false and the
+literal workflow stop; prior bounded publication permission remains true.
 
 The new fixed consumed-slot contract replaces the old zero-recognition-only
 release field. It binds all four archive/source/run/attempt identities, their
@@ -766,10 +767,159 @@ new remaining35 identity has only a local near-limit roundtrip proof. Retained
 old prepare bytes plus complete current-source reserves fit the unchanged full
 stress locally; every real run must still pass its actual closure preflight.
 
+Those static approvals preceded the single remaining35 execution below. They
+do not authorize reusing its source or evidence identity. Any later continuation
+would need a separately reviewed fixed claim and five-predecessor ledger, exact
+source PR/protected merge/fresh-main CI and immediate historical-consumption and
+new-ref checks. That monitoring-repair checkpoint preserved the historical four-predecessor
+contract as consumed-release context. The subsequent fixed five-predecessor
+continuation is described below; its execution remains subject to final checks.
+
+
+## Terminal result: remaining35, run 38180060677
+
+[Run 38180060677, attempt 1, job 114590686389](https://github.com/jiying2007/kws-pipeline/actions/runs/38180060677/job/114590686389)
+executed source `7dcb09208798298ec5a7e2d44b6c5611524fe0ba`. It stopped during
+ASR runtime setup supervision, in the host wait phase with `OSError`. The
+`install_runtime_wheels` command has a started record but no retained return code;
+this does not establish a pip failure. No prepare, projector or recognizer ran.
+Current starts/completions are both zero. The original 36-slot census remains
+one immutable historical Qwen error plus 35 not-run slots; the historical reference
+is not another new start and must never be double-counted or reset.
+
+The one setup container has verified pause, final CPU close and removal. Its
+controlled-cgroup CPU through pause was 18.847088 seconds. Host-receipt wall was
+32.97841454 seconds, excluding the later final ZIP and publisher. The final ASR
+response-body counter was not retained, so that exact total remains unknown.
+119 retained wheel identities do not supply an exact download total or wire total.
+
+Immutable [evidence commit 51f5d07c0ebf2ebab5bf9580347ab81cd0ea7a51](https://github.com/jiying2007/kws-pipeline/tree/51f5d07c0ebf2ebab5bf9580347ab81cd0ea7a51/research/qwen12-native-admission-v1/evidence/remaining35-v1)
+retains a 42,908-byte ZIP, SHA-256
+`2ecd301f1da3d1bcd5ffa5292fd1b60bad51b6aabfaad3f544c42214cf248c39`.
+The original exception lacks errno and traceback; its precise cause remains
+unknown. A separate zero-model replay of the original host source reproduced
+real concurrent unlink, rename and symlink races between its metadata predicates
+and later stat calls. That defect is compatible with the observed error, not a
+recovered original traceback or proof of its unique cause.
+
+### Disabled mutable-workspace monitoring repair
+
+Resource sampling now opens directories without following symlinks and checks
+same-open device/inode identity. Each entry has one nofollow metadata observation;
+regular files and symlink inode sizes are counted without reading link targets.
+Fixed public child scopes resolve from an identity-verified workspace descriptor.
+The owned workspace identity is stable; optional child identities are not pinned
+across legitimate output-to-frozen staging and recreation. An initially absent
+optional scope is explicit zero at that observation, but a previously observed
+scope that disappears fails closed.
+
+Every entry/directory visit checks the same host deadline. Each byte addition
+checks the same remaining scope threshold, and already-observed excess stops
+immediately. Only genuine ENOENT during a mutable sample can produce an incomplete
+byte lower bound. Such a sample may be followed by at most one fresh sample within
+the same deadline; another incomplete sample stops. Two samples are never added
+together. Non-ENOENT errors, type/identity replacement or an exhausted deadline
+stop without another scan. Sustained concurrent installation may therefore still
+stop safely. File-descriptor cleanup closes once and cannot replace the primary
+scan error; separate bounded close diagnostics remain recorded.
+
+The existing host receipt records fixed-scope cumulative counters, the latest
+at-most-two observations, completeness/absence, selected sample and failure state.
+Sampling is not atomic, a peak-size measurement or a kernel quota. Blocking
+filesystem calls and scheduling do not gain a new hard per-call timeout claim.
+Workspace/output thresholds, CPU accounting and all global time budgets remain
+unchanged. Source, input, hash, lock and evidence integrity reads retain their
+strict behavior and receive none of this mutable-sampling tolerance.
+
+Exception projections add only a fixed errno allowlist and at most eight frames
+from the actual executing frozen host code objects, with all external frames
+redacted. They inspect neither error messages, paths, source lines, locals,
+arguments nor environment. Primary, descriptor-close and Docker-cleanup failures
+remain separate. Diagnostic failure cannot manufacture success or replace the
+primary exception. Models, audio, token limits, frozen-config rules, stop/native
+completion, the historical consumed slot and training coverage are unchanged.
+This repair remains unchanged in the reviewed static continuation below and
+establishes no additional recognition, admission or training result.
+
+
+## Fixed remaining35-r1-v1 controlled static activation
+
+This proposal uses fixed source `research/qwen12-native-admission-remaining35-r1-v1`,
+create-only evidence branch `evidence/qwen12-native-admission-remaining35-r1-v1`
+and directory `research/qwen12-native-admission-v1/evidence/remaining35-r1-v1`.
+The new source name is separately retained by exact name. No remote ref or new
+run is created by source preparation. All five consumed source/run/evidence
+identities and existing refs remain preserved; the deleted original source ref
+must never be restored. The source baseline is public main
+`7dcb09208798298ec5a7e2d44b6c5611524fe0ba`; the reviewed disabled monitoring
+repair is included without further changes to its runtime implementation.
+
+The fixed `qwen12-fixed-remaining35-r1-v1` contract binds all five immutable
+archives, original started-member rosters and terminal hashes. The fifth archive
+has zero actual started members and current starts/completions zero, while its
+cumulative count is one. Its one inherited error must point to the exact same
+recovery 3 started member and hash. It contributes no second consumed slot.
+Old four-predecessor releases, old source identities, changed fifth-run counts,
+missing/duplicated historical references and altered archive bindings fail closed.
+The original four rows and the unique historical-slot identity are preserved.
+
+The planned new roster remains exactly Qwen clips 2 through 12, all 12 SenseVoice
+slots and all 12 Whisper slots: 11/12/12, at most 35 new starts. Both selection and
+started-receipt emission reject the consumed Qwen slot. The denominator remains
+36 with one permanently historical error; no old receipt is copied as a new
+attempt. The unchanged first-failure stop, frozen input/policy/native-completion
+checks and original four-group training coverage still apply. At most 11 full
+three-ASR groups can be produced; actual admission remains unestablished.
+
+The [five-run resource proposal](remaining35-r1-resource-proposal.json) remains
+the immutable disabled-stage planning snapshot, SHA-256
+`dbde171c804b38ebc7bd5cf4f91423dceceb051ee27ac2211e2a94d15b6d96c0`.
+Its disabled/pending fields describe that earlier proposal, not the current
+static release or an actual execution result. The earlier
+[remaining35 proposal](remaining35-resource-proposal.json) remains byte-identical.
+Five pause-bounded controlled-cgroup CPU observations total 1684.135749 seconds;
+host-receipt intervals total 2564.994306763 seconds. The latter exclude final ZIP
+work whereas the future 3600-second host timer includes it, so their addition is
+planning arithmetic with different endpoints, not a whole-workflow ceiling.
+Image observations total 230572653 bytes. Qualified measured-plus-source-flow
+figures are 3881040 audio bytes and 2322174334 Whisper tunnel bytes. These scopes
+are distinct and never summed into network wire bytes.
+
+The first four ASR response-body counters total 13363865788 bytes. The fifth
+final counter remains unknown. Source-backed control flow bounds that named
+Downloader counter to [523723580, 3340966448] bytes, and its five-run aggregate
+to [13887589368, 16704832236]; these are derived intervals, not actual measured
+values. The fifth upper bound is the sum of 137 pinned expected input sizes plus
+one terminal excess byte, since both input loops share one fail-closed Downloader.
+It excludes response/error/transport overhead and third-party process network
+traffic. Local-wheel/offline-configured installation is not kernel network
+isolation; total ASR network and all-wire traffic remain unknown. Recovery 1's
+cleanup uncertainty and all other historical unknowns remain unchanged.
+
+Future per-run reservations, sampled thresholds and wall limits stay unchanged:
+4GiB named ASR acquisition counter, 1.5GiB Whisper tunnel, 128MiB image observation,
+1MiB audio acquisition, 6600 sampled cgroup CPU seconds, 3600-second capture-host
+timer and 10GiB sampled workspace. The full evidence cap remains 12MiB compressed,
+32MiB expanded, 4096 members and 8MiB per member, in at most 48 chunks. These are
+scope-specific controls, not an atomic resource or wire quota. The historical
+cleanup smoke proves only its unchanged cleanup component at its executed head;
+no new-head live smoke is claimed. The actual 12MiB live readback remains bound
+to its old source identity. This new destination has local synthetic roundtrip
+proofs only; the publisher and codec algorithms are unchanged.
+
+The six-file static activation changes only both workflow conditions/comments,
+six strict native dispatch bits, source-freeze identities and binding, this
+README and append-only retention metadata. Runtime, tests, fixed five-predecessor
+contract, resource proposal, source/input identities and all limits remain
+byte-identical to the independently reviewed disabled checkpoint. Actual
+bounded-transport approval uses the prior live12MiB proof with unchanged codec
+and publisher algorithms; the new identity has only a local near-limit proof.
+
 Source, budget, independent review, bounded-transport readback and historical
-uniqueness have static approval. Before any execution, the final exact source
-must pass source PR, protected merge and fresh-main CI, followed by immediate
-refresh of all four consumed histories and new source/evidence ref/unique-claim
-checks. Only root may then create the single fixed fresh source ref on that
-approved main. No execution was performed by preparing this source, and it
-establishes no actual admission or training result.
+uniqueness have static approval, with `enabled=true`; publication approval remains
+true. Every runtime prerequisite remains required for the actual run, never
+pre-marked passed. Before execution the exact source must pass source PR,
+protected merge and fresh-main CI, followed by immediate checks of all five
+consumed histories and unused new source/evidence refs. Only root may then
+create one fixed fresh source ref at that approved main. No execution is performed
+by this static preparation. There is no automatic next identity or replay mechanism.

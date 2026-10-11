@@ -25,9 +25,9 @@ PURPOSES = {
         "evidence_branch": "evidence/qwen12-native-transport-synthetic-12m-v1",
         "directory": "research/qwen12-native-admission-v1/evidence/synthetic-12m-v1",
         "scope": "qwen12-native-transport-preflight-12m-v1", "job_key": "transport-fixture"},
-    "native": {"source_branch": "research/qwen12-native-admission-remaining35-v1",
-        "evidence_branch": "evidence/qwen12-native-admission-remaining35-v1",
-        "directory": "research/qwen12-native-admission-v1/evidence/remaining35-v1",
+    "native": {"source_branch": "research/qwen12-native-admission-remaining35-r1-v1",
+        "evidence_branch": "evidence/qwen12-native-admission-remaining35-r1-v1",
+        "directory": "research/qwen12-native-admission-v1/evidence/remaining35-r1-v1",
         "scope": "qwen12-native-admission-v1", "job_key": "qwen12"},
 }
 
