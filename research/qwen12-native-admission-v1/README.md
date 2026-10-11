@@ -8,12 +8,35 @@ Setup and inference see only explicitly frozen public code, locked model/runtime
 assets and safe run/head provenance. No human labels, target text, peer output,
 GitHub token or host environment is mounted/passed into a worker.
 
+## Terminal result: run 38154869005
+
+The one-shot campaign has been consumed. [Run 38154869005, attempt 1, job
+114515750086](https://github.com/jiying2007/kws-pipeline/actions/runs/38154869005/job/114515750086)
+executed source `3528118f3cdedf391519a5f8c3365ac15eac16a8` and stopped during
+SenseVoice prepare, at load/index 0, with worker `PermissionError` and host
+`stopped_no_retry` / `ValueError`. The exception message and traceback were not
+retained, so the specific failed operation and root cause remain unestablished.
+There are 0 started and 0 completed recognition slots; all 36 slots (12 per
+family) are `not_run`. Three-family policy freeze and package-budget preflight
+did not complete. No native admission or training result was established.
+
+The failed-run evidence was independently read at immutable [evidence commit
+8e05b507e8239ed70191c56ff13216690d6c3049](https://github.com/jiying2007/kws-pipeline/tree/8e05b507e8239ed70191c56ff13216690d6c3049/research/qwen12-native-admission-v1/evidence/native-v1).
+All seven chunks and two metadata files reconstructed the 1,597,173-byte ZIP,
+SHA-256 `1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13`.
+Git blob, chunk, archive/member hashes, ZIP CRC and source/run/attempt/job binding
+passed; all 323 members including the manifest were accounted for. This is
+`PASS_CUSTODY_ONLY`, not successful recognition, admission or acoustic evidence.
+The [terminal metadata](evidence/run-38154869005/terminal-status.json) retains
+the exact identities, counts and evidence limits. Preserve the original source
+and evidence refs; do not rerun or delete/recreate this consumed campaign.
+
 ## New executable path
 
 `hosted_run.py` uses the existing official Python image/host-capacity/kernel
 scope checks. The fresh `setup_adapter.py` is the reviewed source-screen setup
-binding copied to this new scope with only task workspace/initial-free limits
-changed to 10/12GiB. It retains 124 locked Qwen/Sense package inputs (119 wheels,
+binding copied to this new scope with task workspace/initial-free limits
+changed to 10/12GiB; the recovery section records its additional guarded import policy. It retains 124 locked Qwen/Sense package inputs (119 wheels,
 five named sdists built once offline), pinned models, exact package metadata and
 source-member checks. No resolver/version upgrades are allowed.
 
@@ -109,8 +132,8 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-This activation source removes the native workflow literal-false stop and sets
-the reviewed release enabled state. Dispatch still requires literal JSON true for
+This reviewed recovery activation removes the native workflow literal-false stop
+and sets the exact reviewed release enabled state. Dispatch still requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
 approvals. Missing, false, integer or string substitutes fail before Docker,
@@ -140,10 +163,12 @@ platform, model load or evidence omission is introduced.
 
 ## Activation handoff
 
-As of this activation source commit, this twelve-by-three native ASR campaign
-has not run. The final activated source still requires exact-head source CI and
-independent review before the real campaign branch is created. Source review PRs
-run read-only fixtures and cannot run either contents-write publication job.
+The activation procedure below records the original pre-run requirements.
+The source was reviewed, passed exact-head CI and was merged before the one-shot
+campaign ran and stopped as recorded above. Its source and evidence refs now
+exist and must remain unchanged; this historical procedure does not authorize a
+second run. Source review PRs run read-only fixtures and cannot run either
+contents-write publication job.
 
 The zero-model repository-chunk preflight has passed actual connector readback:
 [run 38152411613, attempt 1, job 114508486242](https://github.com/jiying2007/kws-pipeline/actions/runs/38152411613/job/114508486242)
@@ -191,3 +216,61 @@ the campaign branch or rerun a failed campaign; a failure requires review of its
 retained error/not_run evidence. Source-CI run_number is unrelated and is kept
 as supplied by Actions. Do not create a training source root until actual native
 results have independently passed the unchanged resolver and admission checks.
+
+## Recovery 1 reviewed activation source
+
+The original execution and evidence refs remain immutable. A separately reviewed
+single continuation may use `research/qwen12-native-admission-recovery1`, with
+create-only evidence ref `evidence/qwen12-native-admission-recovery1` and directory
+`research/qwen12-native-admission-v1/evidence/recovery1`. The native workflow literal stop is removed and all static release approvals
+are enabled in this reviewed source. No recovery execution has occurred. Before activation, recheck the predecessor's zero recognition
+consumption, absence of the new refs/run, exact source CI, budget and independent
+review. `execution-release.json` binds the original run, source, evidence commit,
+archive hash and 0/0/36 accounting. Across both executions, the same twelve clips
+still permit at most 36 recognition attempts; no automatic retry or ref reuse.
+
+A separate source-level compatibility finding is reproducible without a model:
+locked FunASR `load_utils.py` calls an external FFmpeg version probe during
+import, while the capture process guard rejects non-thread process creation.
+The old run retained no exception stack, so this does not retrospectively prove
+its unique failing operation. The new narrow `optional_tools.py` policy verifies
+the original source SHA, compiled function, caller path/spec and exact arguments;
+only that unused external-backend probe follows the library's unavailable branch.
+It declares `disabled_by_capture_policy`, preserves installation status as unknown,
+and records actual intercepted probes. Other commands and exceptions retain their
+original behavior under the unchanged guard. Original dependency bytes and
+scientific loader bodies remain unchanged. The policy does not handle SoX:
+there is no established SoX import on the selected SenseVoice path.
+
+The existing zero-model import preflight now runs under that process guard and
+policy before model acquisition. It remains a setup child with setup accounting,
+network and writable runtime; it is not evidence of the later inference
+container's read-only/network-none scope. Its additional per-process 600 CPU
+second limit is within the unchanged setup and whole-run thresholds. Every fresh
+prepare/decode still verifies the original full kernel scope. Stable optional
+policy bytes join the native source lock; separate bounded receipts record
+actual probe counts. Native and preflight failures retain safe exception type,
+errno, fixed stage and bounded source-relative frames, never exception text,
+source lines, locals or environment values. Raw setup child stderr can exist
+transiently in excluded runtime logs; only safe projections enter public evidence.
+
+Resource accounting is per execution, not a reset of history. The predecessor
+measured 454.195425 controlled-cgroup CPU seconds, 708.389337012 capture-host wall
+seconds and 700.114547769 combined setup seconds. Recovery retains the same
+6600 CPU sampled stop threshold, 3600 host wall timer and 1800 setup threshold;
+old measurements plus these new thresholds are 7054.195425, 4308.389337012 and
+2500.114547769 seconds respectively, not zero-overshoot aggregate guarantees.
+RAM, disk, output and per-family/per-clip limits are unchanged.
+
+Keep acquisition scopes separate. Previously measured Qwen/Sense response bodies
+were 3,340,966,447 bytes; one recovery retains the 4,294,967,296-byte body cap
+(combined same-scope ceiling 7,635,933,743 bytes). Previously measured Whisper
+tunnel receive bytes were 774,060,234; the new cap is 1,610,612,736 (combined
+2,384,672,970). Prior audio bodies were 776,208 bytes and the same twelve inputs
+add at most 776,208 (combined 1,552,416). Prior image-interface observation was
+45,704,322 bytes; the new 134,217,728-byte image reservation is an observation
+reservation, not a hard wire-byte bound. The per-run 6GiB mixed-scope acquisition
+reservation must not be presented as a two-run total or exact network traffic.
+Only standard public GitHub-hosted runners are permitted; no artifact/cache/LFS
+storage or paid runner is added. A failed recovery stops and publishes available
+bounded failure evidence; it does not silently authorize another execution.

@@ -248,7 +248,42 @@ def _run_child(profile, runtime, role, arguments):
     elif role in ("verify_before_models", "verify_after_models"):
         print(json.dumps(helper.verify_setup(root, _during_setup=True, _before_models=role == "verify_before_models")))
     elif role == "preflight":
-        sys.modules["import_preflight"].execute(profile, root, root / "import-preflight.json")
+        execute = sys.modules["import_preflight"].execute
+        if profile == "asr":
+            # This existing import-only child runs before model acquisition.
+            # Install before execute imports torch or creates native threads.
+            from cpu_budget import install_inference_guard
+            from campaign_contract import write_once
+            from optional_tools import unavailable_ffmpeg
+            guard = install_inference_guard("sensevoice")
+            import native_worker as diagnostics  # Stdlib-only; never invoke main.
+            diagnostics._register_diagnostic_codes()
+            diagnostics._diagnostic_stage("pre_model_import")
+            try:
+                write_once(root / "import-process-guard.json", {
+                    "schema": "qwen12-import-process-guard-v1", "guard": guard,
+                    "cpu_accounting": "setup", "extra_child_cpu_limit_seconds": guard["rlimit_cpu_seconds"],
+                    "container_matches_decode_scope": False,
+                    "scope": "existing pre-model setup import child; setup network and writable runtime remain"})
+                with unavailable_ffmpeg(root, guard, lambda value:
+                        write_once(root / "import-optional-tool-policy.json", value),
+                        register_code=diagnostics.register_optional_probe_code):
+                    execute(profile, root, root / "import-preflight.json")
+            except BaseException as error:
+                try:
+                    record = {"schema": "qwen12-import-preflight-failure-v1", "stage": "pre_model_import",
+                        "family": "shared_qwen_sense", "error_type": diagnostics._safe_error_type(error)}
+                    try:
+                        diagnostics._register_diagnostic_codes()
+                        record["diagnostic"] = diagnostics._failure_diagnostic(error)
+                    except BaseException:
+                        record["diagnostic"] = {"schema": "qwen12-bounded-failure-v1", "status": "unavailable"}
+                    write_once(root / "import-preflight-failure.json", record)
+                except BaseException:
+                    pass  # Preserve the original import/policy failure, including failed evidence writes.
+                raise
+        else:
+            execute(profile, root, root / "import-preflight.json")
     else:
         raise ValueError("Unknown setup child role")
 

@@ -18,7 +18,7 @@ sys.path.insert(0,str(HERE))
 from campaign_contract import (BOUNDARY, EXPERIMENT, FAMILIES, LIMITS, MIB, GIB, atomic, canonical,
     denominator,digest,fetch_blind,fresh_run,identity,read_json,regular,require,validate_blind,write_once)
 from cpu_budget import CpuLedger,parse_cpu_stat
-PREPARED_METADATA=('prepared.json','kernel-scope.json','cpu-process-guard.json','blind-job.json','run-identity.json',
+PREPARED_METADATA=('prepared.json','optional-tool-probes.json','kernel-scope.json','cpu-process-guard.json','blind-job.json','run-identity.json',
     'native-source-lock.json','native-asset-lock.json','native-config.json','native-resolved-generation-config.json',
     'native-frontend-config.json','model-load.json','load-receipt.json','worker-complete.json','progress.json')
 
@@ -227,6 +227,13 @@ def asr_setup_projection(runtime, destination):
         for r in raw.get('commands',[])]
     value['downloads']=[{k:r[k] for k in ('filename','bytes','sha256') if k in r} for r in raw.get('downloads',[])]
     if 'exception' in raw:value['error_type']=raw['exception'].get('type')
+    value['pre_model_process_compatibility'] = {}
+    for name in ('import-process-guard.json', 'import-optional-tool-policy.json',
+                 'import-preflight-failure.json'):
+        extra = Path(runtime) / name
+        if extra.exists():
+            value['pre_model_process_compatibility'][name] = {
+                **identity(extra), 'record': read_json(extra, 65536)}
     atomic(destination,value)
 
 
@@ -235,7 +242,7 @@ def collect(root):
     allowed=['host-receipt.json','cpu-receipt.json','cleanup-receipt.json','terminal-outcomes.json','acquisition-receipt.json','image-transfer.json','asr-setup-public.json','policy/policy.json','policy/policy-freeze.json','package-budget-preflight.json']
     shared={'prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json','blind-job.json','progress.json','contract.json','decoder-inputs.json',
         'model-load.json','native-source-lock.json','native-asset-lock.json','native-config.json','native-resolved-generation-config.json',
-        'native-frontend-config.json','load-receipt.json','worker-complete.json','worker-failure.json'}
+        'native-frontend-config.json','optional-tool-probes.json','load-receipt.json','worker-complete.json','worker-failure.json'}
     clip={'started.json','completed.json','raw-output.json','raw-native-output.json','raw-transcript.json','raw-native-row.json','input-capture.json','pre-finalize.json'}
     for family in FAMILIES:
         allowed += ['output/'+family+'/'+n for n in sorted(shared)]
@@ -266,7 +273,9 @@ def collect(root):
                 member=row['path']
                 require(type(member) is str and member.startswith(prefix) and '..' not in Path(member).parts and
                     not Path(member).is_absolute(),'same-family public dependency path')
-                if field=='files':require(member.startswith(prefix+'retained-source/') and member.endswith('.py'),'public source body only')
+                if field=='files':require((member.startswith(prefix+'retained-source/') and member.endswith('.py')) or
+                    (family=='sensevoice' and member==prefix+'retained-source/optional-tool-policy.json' and
+                     row.get('role')=='runtime-execution-policy'),'public source body or exact optional policy only')
                 else:require(member.startswith(prefix+'retained-assets/') or member==prefix+'native-frontend-config.json','bounded native asset path')
                 require(not member.endswith(('.pt','.safetensors','.wav','.whl','.tar.gz')),'no weights/audio/package bodies')
                 physical=member if storage=='output' else 'frozen/'+member[len('output/'):]

@@ -1,0 +1,108 @@
+{
+  "schema": "qwen12-native-terminal-status-v1",
+  "scope": "Public source and machine-evidence metadata only; no recognition, admission, training or acoustic qualification result.",
+  "repository": "jiying2007/kws-pipeline",
+  "source": {
+    "commit": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
+    "tree": "3b754bcc98511971c1c21382f6a48d01dab38e9c",
+    "freeze_sha256": "f6d24914a930a94776fa4051f54c3d4b87569ff355d1ffa687016c8f6e6988e5"
+  },
+  "run": {
+    "id": 38154869005,
+    "attempt": 1,
+    "job_id": 114515750086,
+    "job_key": "qwen12",
+    "event": "push",
+    "head_branch": "research/qwen12-native-admission-v1",
+    "url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38154869005",
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38154869005/job/114515750086",
+    "status": "completed",
+    "conclusion": "failure",
+    "host_status": "stopped_no_retry"
+  },
+  "failure": {
+    "family": "sensevoice",
+    "phase": "prepare",
+    "stage": "load",
+    "index": 0,
+    "worker_error_type": "PermissionError",
+    "host_error_type": "ValueError",
+    "specific_failed_operation_established": false,
+    "exception_message_retained": false,
+    "traceback_retained": false,
+    "cpu_guard_causation_established": false
+  },
+  "recognition_slots": {
+    "planned": 36,
+    "started": 0,
+    "completed": 0,
+    "error": 0,
+    "not_run": 36,
+    "by_family": {
+      "qwen06": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      },
+      "sensevoice": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      },
+      "whisper": {
+        "planned": 12,
+        "started": 0,
+        "completed": 0,
+        "error": 0,
+        "not_run": 12
+      }
+    }
+  },
+  "runtime_evidence": {
+    "host_stages": {
+      "asr_setup": "complete",
+      "qwen06": "not_run",
+      "qwen06_prepare": "complete",
+      "sensevoice": "not_run",
+      "sensevoice_prepare": "error",
+      "whisper": "not_run",
+      "whisper_setup": "complete"
+    },
+    "all_three_policy_freeze_present": false,
+    "package_budget_preflight_present": false,
+    "host_wall_seconds": 708.389337012,
+    "controlled_cpu_seconds": 454.195425,
+    "cpu_threshold_exceeded": false,
+    "controlled_container_count": 53,
+    "cpu_final_usage_verified": true,
+    "all_containers_removed": true
+  },
+  "evidence": {
+    "commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
+    "tree": "a3010beecc5fbab259875f8db3b175c569c04692",
+    "branch": "evidence/qwen12-native-admission-v1",
+    "path": "research/qwen12-native-admission-v1/evidence/native-v1",
+    "url": "https://github.com/jiying2007/kws-pipeline/tree/8e05b507e8239ed70191c56ff13216690d6c3049/research/qwen12-native-admission-v1/evidence/native-v1",
+    "archive_bytes": 1597173,
+    "archive_sha256": "1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13",
+    "chunk_count": 7,
+    "retrieved_file_count": 9,
+    "member_count_including_manifest": 323,
+    "outer_manifest_sha256": "bb69aa825831b24fa8d030c82e3285948ff45bb2d6e283713d13aee5c06eb374",
+    "member_manifest_sha256": "a77e90bc85cc9ec1a395e32d2b3c6b61eafa4294ebd2e1c1ceed65e060bc2495",
+    "custody_result": "PASS_CUSTODY_ONLY",
+    "all_chunk_sha256_verified": true,
+    "all_git_blob_sha1_verified": true,
+    "all_member_sha256_verified": true,
+    "all_zip_crc_verified": true,
+    "run_attempt_source_job_binding_verified": true,
+    "normal_O_OO_readback_identical": true
+  },
+  "admission_established": false,
+  "training_performed": false,
+  "historical_identity_policy": "Preserve the original run, source and evidence identities. Do not overwrite evidence, rerun this campaign or delete/recreate its consumed source/evidence refs. Any separately reviewed future work must not be represented as this run."
+}

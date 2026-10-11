@@ -198,7 +198,7 @@ def validate_run(executed_head_sha, run_id):
 
 def build_native_locks(runtime, lock, output, *, family, code_root, loaded_receipt,
                        verified_runtime, executed_head_sha, run_id,
-                       installed_source_inventory=None, frontend_config_bytes=None):
+                       installed_source_inventory=None, frontend_config_bytes=None, execution_policy_bytes=None):
     """Retain source/model locks before NativeCaptureAdapter freezes config.
 
     Returns (source_lock_bytes, model_lock_bytes), also writes native-source-lock
@@ -244,6 +244,7 @@ def build_native_locks(runtime, lock, output, *, family, code_root, loaded_recei
         names.add(name)
         selected.append((name, verified[name], pin["distribution"]))
     if family == "qwen06":
+        require(execution_policy_bytes is None, "Qwen does not consume Sense optional-tool policy")
         require(frontend_config_bytes is None, "Qwen does not consume SenseVoice frontend snapshot")
         require(type(installed_source_inventory) is dict and set(installed_source_inventory) == set(QWEN_EXTENSIONS),
                 "verified Qwen generation/processing source extensions required")
@@ -278,6 +279,14 @@ def build_native_locks(runtime, lock, output, *, family, code_root, loaded_recei
                            "kind": "weights" if weights else ("model-tokenizer-asset" if name in ("merges.txt", "vocab.json", TOKENIZER) else "model-asset"),
                            "body_retained": keep_body})
     if family == "sensevoice":
+        from optional_tools import policy_config
+        require(type(execution_policy_bytes) is bytes and
+                canonical(policy_config()) == execution_policy_bytes,
+                "exact pre-import optional-tool policy required")
+        target = "retained-source/optional-tool-policy.json"
+        retain(output, target, execution_policy_bytes)
+        files.append({"path": prefix + "/" + target, **identity(execution_policy_bytes),
+                      "role": "runtime-execution-policy"})
         require(type(frontend_config_bytes) is bytes and frontend_config_bytes,
                 "actual pre-audio frontend config bytes required")
         require(canonical(json.loads(frontend_config_bytes)) == frontend_config_bytes,

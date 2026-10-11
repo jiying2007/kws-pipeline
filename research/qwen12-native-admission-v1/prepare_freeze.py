@@ -19,7 +19,7 @@ def retained_pins(path):
 
 def build(root=ROOT):
     root=Path(root);new='research/qwen12-native-admission-v1/';old='research/source-screen32-v1/';wh='research/source-screen32-whisper-v1/'
-    native=['campaign_contract.py','cpu_budget.py','cpu_gate.py','native_worker.py','runtime_scope.py','setup_adapter.py','native_locks.py','whisper_binding.py','worker_receipts.py']
+    native=['campaign_contract.py','cpu_budget.py','cpu_gate.py','native_worker.py','runtime_scope.py','setup_adapter.py','native_locks.py','whisper_binding.py','worker_receipts.py','optional_tools.py']
     common={new+n for n in native}
     common|={old+n for n in ('asr_worker.py','runtime_scope.py','sense_adapter.py','native_v2_adapter.py')}
     common|={'research/qwen6_asr/'+n for n in retained_pins(root/old/'asr_worker.py')}
