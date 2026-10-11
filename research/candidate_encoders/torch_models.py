@@ -1,4 +1,4 @@
-"""Unexecuted research-only streaming source, outside the product model path.
+"""Research-only streaming source, outside the product model path.
 
 Importing this module only defines functions and imports the stdlib-only spec.
 PyTorch is imported only by an explicit ``build_encoder`` call. This source has
@@ -16,8 +16,9 @@ at a session change, discontinuity or batch-row reorder. There is no internal
 session cache. ``forward`` starts a new sequence; ``forward_chunk`` never resets
 silently. An empty chunk inserts no frames and preserves the supplied state.
 
-This source has not established numerical parity, training correctness, target
-cost, allocation bounds for activations/autograd, or product qualification.
+Separate fixed-fixture numeric contracts can check this source API; they do not
+establish C/export parity, training correctness, target cost, allocation bounds
+for activations/autograd, or product qualification.
 State tensor *storage* is bounded by the spec; autograd history is deliberately
 not detached and can grow while the caller retains a computation graph.
 """

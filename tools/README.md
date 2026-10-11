@@ -129,6 +129,7 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Repository verification and maintenance
 
+- [`candidate_numeric_ci_changes.py`](candidate_numeric_ci_changes.py) — Select bounded candidate numeric checks while preserving existing product and training CI scopes; no model execution.
 - [`cleanup_bootstrap_branch.sh`](cleanup_bootstrap_branch.sh) — Exact-trigger-SHA cleanup after successful publication.
 - [`check_bench_signal.py`](check_bench_signal.py)
 - [`check_deferred_verdicts.py`](check_deferred_verdicts.py)

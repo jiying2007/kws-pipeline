@@ -1,9 +1,11 @@
 # Isolated C0/C1 streaming encoder source
 
-This is **source implementation preparation**, not a trained candidate or an
-executable experiment admission. The dated [parallel comparison plan](../../configs/research/parallel-candidate-screen-2026-10-10.json)
-remains disabled and unchanged. Numerical Torch/C parity, trained weights,
-continuous-event quality and SSC305 measurements are **NOT_RUN** here.
+This is **isolated source and bounded numeric-contract preparation**, not a
+trained candidate or admission to a training/quality experiment. The dated [parallel comparison plan](../../configs/research/parallel-candidate-screen-2026-10-10.json)
+remains disabled and unchanged. Training, Torch/C or integer parity, trained
+weights, continuous-event quality and SSC305 measurements remain **NOT_RUN**.
+Numeric API results require a successful exact-source CI receipt; test presence
+alone is not a numeric pass.
 
 ## What is implemented
 
@@ -14,9 +16,12 @@ continuous-event quality and SSC305 measurements are **NOT_RUN** here.
   upstream published model or its reported accuracy.
 - Standard-library contract, AST and shape-only checks in existing CI. Shape-only
   objects are not numerical tensors and do not establish inference correctness.
+- An explicitly authorized, fixed-seed random-feature CPU numeric contract in the
+  existing pinned-Torch `objective-math` job. It has no audio or optimizer updates.
 
-There is no automatic training, inference, model download, runtime registration,
-weights loader or runner. No product `.kwm` file is generated. Current
+The package has no automatic execution on import, training loop, model download,
+runtime registration, weights loader or product runner. The separate numeric
+test explicitly constructs random models. No product `.kwm` file is generated. Current
 `training/model.py`, the product trainer/exporter, C runtime, model registry,
 thresholds and shipping policies are unchanged.
 
@@ -90,25 +95,66 @@ source weights must not be described as W8A8 or as verified integer inference.
 A future export design needs an explicit version and matching parser/kernel,
 quantization, alignment and numerical/event equivalence evidence.
 
+## Bounded numeric contract
+
+`tests/test_candidate_encoder_numeric.py` checks only float32 CPU source behavior.
+It runs in the existing `product-training-data-contract.yml` `objective-math` job,
+reusing its pinned Torch runtime. The numeric step has a five-minute timeout;
+Torch intra/inter-op and BLAS pools use one thread, with deterministic algorithms
+and MKLDNN disabled. Missing Torch fails rather than silently skipping the suite.
+
+The fixed fixture uses model seed 20261011, feature seed 20261012 and initial-state
+seed 20261013; batch 2, 13 frames, and chunks `(2, 0, 1, 4, 0, 6)`. C0 keeps the
+required 32×64×5 reference. C1 uses one toy width-8 topology, kernels `(3, 1, 2)`
+and dilations `(1, 3, 2)`, exercising a zero-history kernel and causal dilation.
+These are test fixtures, not selected candidate dimensions or a search/sweep.
+
+The checks cover:
+
+- C0 reference-source blob identity and direct reference output/gradient parity
+- Whole-sequence, frame-step and uneven chunks from zero and nonzero state
+- C1 independent literal temporal-tap oracle for convolution order and gradients
+- Empty chunks, fresh reset, row/session isolation and zero future-frame context
+- Finite input, initial-state and parameter gradients, equal across layouts;
+  cross-chunk autograd connectivity without any optimizer or parameter update
+- Independent compact returned-state storage, no input/state mutation, and the
+  real zero-history storage/gradient case
+- Rejected malformed state, dtype, input shape and padded-length arguments
+
+Float32 comparisons use absolute/relative tolerances 2e-6/2e-5 for outputs/state
+and 2e-5/1e-4 for gradients. This is tolerance-based equality, not byte identity.
+A public numeric-only JSON receipt records source hashes, exact CI identity,
+versions, seeds, dimensions, check counts, errors and observed differences. CI
+retains the receipt as `candidate-encoder-numeric-<run_id>-<attempt>` for 14 days.
+Until that receipt is inspected, numerical execution remains **NOT_RUN**.
+
+A stdlib scope selector uses the full PR merge delta or complete push delta.
+Candidate-only source/test/doc changes run this bounded numeric check without
+starting the existing product data-download or reproducibility-training jobs.
+Any original product-trigger path in the same change preserves those original
+jobs; shared workflow/selector changes exercise the original gates as well.
+No new research workflow is introduced and the disabled comparison plan is not
+changed. Static CI scope tests do not substitute for the numeric receipt.
+
 ## Verification boundary and next step
 
-Only pure metadata, syntax/AST and fake-shape tests are run for this addition.
-They catch specification drift, invalid shapes and unbounded-history mistakes;
-they cannot verify numerical convolution ordering, gradient correctness, actual
-Torch compatibility, accuracy or performance. Existing canonical product CI
-continues to cover the unchanged product path, not these candidate numerics.
+Metadata/AST/fake-shape checks remain separate from the real Torch numeric suite.
+A successful numeric receipt would establish only the tested source/API contracts
+at this one fixed fixture and tolerance, not accuracy, training convergence,
+resource feasibility, C/export parity or product qualification.
 
-Before any candidate experiment:
+Before any trained candidate comparison:
 
 1. Freeze an exact topology and fair sample-exposure/compute budget after review.
 2. Supply a reviewed, rights-cleared training base with actual-label/PCM lineage
    and independent train/calibration/selection groups.
-3. Admit explicit numerical tests for reference step/chunk/sequence equivalence,
-   reset/discontinuity/tail cases and gradients, then implement/version export and
-   verify the actual C path. Do not claim success from these source-only tests.
+3. Implement/version export and verify the actual C path; add further numerical
+   coverage for that design. Source-only numeric tests cannot certify it.
 4. Follow the existing paired comparison, calibration and fresh final-qualification
-   policies. No new winner, seed consumption or product approval is recorded here.
+   policies. No candidate winner, model-selection seed consumption or product
+   approval is recorded here.
 
-中文摘要：本目录把 C0/C1 从候选描述推进到隔离的源码准备。C0 委托调用者显式提供的
-既有 RNN；C1 有独立的因果卷积与有界状态源码。当前测试仅涉及结构、语法和形状，
-未执行候选数值推理、训练或板测，不代表流式数值等价、真实导出或唤醒效果通过。
+中文摘要：本目录增加了隔离的 C0/C1 随机特征数值合同测试，固定种子、单线程、
+五分钟上限，不读语音、不下载权重、不做优化器更新。数值通过必须以实际 CI 回执
+为准；源码或静态检查存在不代表执行通过。候选代码单独变更不会额外触发训练，
+原有训练/数据路径变更仍保留既有检查。数值合同不代表唤醒效果、C 导出或 SSC305 资格。
