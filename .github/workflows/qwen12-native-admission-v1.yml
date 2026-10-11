@@ -17,7 +17,7 @@ concurrency:
 jobs:
   qwen12:
     # Reviewed release must separately remove this literal false before activation.
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
@@ -87,3 +87,20 @@ jobs:
         env:
           KWS_EVIDENCE_TOKEN: ${{ github.token }}
         run: python3 -I -B research/qwen12-native-admission-v1/evidence_publisher.py synthetic
+  cleanup-lifecycle-smoke:
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.repository.private == false && github.event.pull_request.head.repo.full_name == 'jiying2007/kws-pipeline' && github.event.pull_request.head.ref == 'fix/qwen12-native-cleanup-source-20261011' && github.run_attempt == 1 }}
+    needs: contracts
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: One zero-model owned-container cleanup lifecycle
+        timeout-minutes: 4
+        run: python3 -I -B research/qwen12-native-admission-v1/cleanup_lifecycle_smoke.py

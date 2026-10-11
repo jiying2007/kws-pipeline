@@ -150,6 +150,13 @@ env:
     research/single-k1-followed-wu-v1
     training/keyword-set-contract-v1
     training/keyword-set-identity-v1
+  # One-shot execution names remain consumed after terminal success or failure.
+  # Retention is independent of the historical consolidation inventory. A missing
+  # consumed ref must never be recreated; this list only prevents future cleanup.
+  RETAINED_EXECUTION_BRANCHES: >-
+    research/qwen12-native-admission-v1
+    research/qwen12-native-admission-recovery1
+    research/qwen12-native-transport-preflight-v1
   RETAINED_DESIGN_BRANCHES: >-
     feat/decoder-boundary-requalification-v1
     training/keyword-set-contract-v1
@@ -194,6 +201,15 @@ jobs:
             local candidate="$1"
             local retained
             for retained in ${RETAINED_CONSOLIDATION_BRANCHES}; do
+              [[ "${candidate}" == "${retained}" ]] && return 0
+            done
+            return 1
+          }
+
+          is_retained_execution() {
+            local candidate="$1"
+            local retained
+            for retained in ${RETAINED_EXECUTION_BRANCHES}; do
               [[ "${candidate}" == "${retained}" ]] && return 0
             done
             return 1
@@ -277,6 +293,7 @@ jobs:
           manual_review=0
           retained_design=0
           retained_consolidation=0
+          retained_execution=0
           mapfile -t branch_rows < <(
             jq -r '.[][] | [.name, .commit.sha, .protected] | @tsv' <<<"${branches_json}"
           )
@@ -284,6 +301,11 @@ jobs:
           for row in "${branch_rows[@]}"; do
             IFS=$'\t' read -r branch sha protected <<<"${row}"
             [[ "${branch}" == "${default_branch}" ]] && continue
+            if is_retained_execution "${branch}"; then
+              retained_execution=$((retained_execution + 1))
+              echo "skip execution retention: ${branch}"
+              continue
+            fi
             if is_retained_consolidation "${branch}"; then
               retained_consolidation=$((retained_consolidation + 1))
               echo "skip consolidation retention: ${branch}"
@@ -379,4 +401,4 @@ jobs:
             echo "deleted: ${branch}"
           done
 
-          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} retained_design=${retained_design} retained_consolidation=${retained_consolidation} dry_run=${dry_run}"
+          echo "summary: candidates=${candidates} deleted=${deleted} manual_review=${manual_review} retained_design=${retained_design} retained_consolidation=${retained_consolidation} retained_execution=${retained_execution} dry_run=${dry_run}"

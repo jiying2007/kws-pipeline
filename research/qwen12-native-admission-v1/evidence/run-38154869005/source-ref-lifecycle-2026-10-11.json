@@ -1,0 +1,75 @@
+{
+  "schema": "qwen12-consumed-source-ref-lifecycle-v1",
+  "date": "2026-10-11",
+  "repository": "jiying2007/kws-pipeline",
+  "scope": "Public source and machine-evidence metadata; no change to original terminal outcome or execution authority.",
+  "cleanup": {
+    "run_id": 38159168064,
+    "job_id": 114528278831,
+    "source_commit": "e9297163a21f8f7c2f960301ff05f1894617d2cf",
+    "source_tree": "20e9ff3b33b894807ee1973810afb7645df5d7bd",
+    "workflow": ".github/workflows/repository-cleanup.yml",
+    "workflow_sha256": "803c6600aab27777807f4e734ff618cea337fa358616ccd94a5e4ee93e46f7d9",
+    "job_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38159168064/job/114528278831",
+    "candidate_at": "2026-10-11T17:19:43.0334958Z",
+    "deleted_at": "2026-10-11T17:19:44.6256799Z",
+    "reason": "branch tip is already contained in main",
+    "deleted_count": 1,
+    "deleted_branches": [
+      "research/qwen12-native-admission-v1"
+    ],
+    "manual_review_retained_count": 11,
+    "retained_consolidation_count": 3
+  },
+  "cleanup_log": {
+    "bytes": 25949,
+    "sha256": "471ce42258cc254d0b07e76f0980385fd8d10f76018e6bc21bae918a5cd05cc6"
+  },
+  "source": {
+    "ref": "refs/heads/research/qwen12-native-admission-v1",
+    "observed_http_status_after_cleanup": 404,
+    "commit": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
+    "tree": "3b754bcc98511971c1c21382f6a48d01dab38e9c",
+    "commit_remained_readable": true,
+    "ref_preserved": false,
+    "ref_restoration_permitted": false
+  },
+  "original_run": {
+    "id": 38154869005,
+    "attempt": 1,
+    "observed_branch_run_count": 1,
+    "conclusion": "failure",
+    "recognition_started": 0,
+    "recognition_completed": 0,
+    "recognition_not_run": 36
+  },
+  "evidence": {
+    "ref": "refs/heads/evidence/qwen12-native-admission-v1",
+    "commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
+    "tree": "a3010beecc5fbab259875f8db3b175c569c04692",
+    "parents": [
+      "3528118f3cdedf391519a5f8c3365ac15eac16a8"
+    ],
+    "archive_sha256": "1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13",
+    "custody_result": "PASS_CUSTODY_ONLY"
+  },
+  "claim": {
+    "original_campaign_consumed": true,
+    "missing_ref_means_unused": false,
+    "recreate_original_source_ref": false,
+    "rerun_original_campaign": false
+  },
+  "cleanup_correction": {
+    "independent_roster": "RETAINED_EXECUTION_BRANCHES",
+    "exact_names": [
+      "research/qwen12-native-admission-v1",
+      "research/qwen12-native-admission-recovery1",
+      "research/qwen12-native-transport-preflight-v1"
+    ],
+    "precedes_all_deletion_eligibility": true,
+    "restores_missing_refs": false,
+    "guarantees_replay_prevention_against_external_ref_deletion_and_recreation": false
+  },
+  "immutable_terminal_record": "research/qwen12-native-admission-v1/evidence/run-38154869005/terminal-status.json",
+  "immutable_terminal_sha256": "90c650d77ca43e7fd937e5078594020849a9753e8e3d3a3da4074f40c69735e8"
+}

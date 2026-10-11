@@ -37,22 +37,43 @@ def tree_bytes(root):
     return total
 
 
+def safe_error(error):
+    """Fixed public metadata only; never exception text, argv, output or paths."""
+    kinds=(subprocess.TimeoutExpired,subprocess.CalledProcessError,TimeoutError,
+        ValueError,TypeError,KeyError,OSError,RuntimeError,KeyboardInterrupt,SystemExit)
+    kind=next((t.__name__ for t in kinds if isinstance(error,t)),'OtherError')
+    value={'error_type':kind}
+    if isinstance(error,subprocess.CalledProcessError) and type(error.returncode) is int and -255<=error.returncode<=255:
+        value['returncode']=error.returncode
+    return value
+
+
 class MeteredDocker:
-    """Gate every container before child imports; pause/read final usage before rm."""
+    """Immutable owned IDs; one bounded cleanup and one final CPU close per scope."""
     def __init__(self,root,deadline):
         self.root=Path(root);self.gates=self.root/'gates';self.gates.mkdir()
         self.deadline=deadline;self.stage='setup';self.names={};self.ledger=CpuLedger();self.cleanup=[]
+        self.supervisions=[];self.supervision_failure=None
 
     def raw(self,*args,timeout=5):
-        require(args and args[0] in ('create','inspect','start','rm','pause','kill'),'fixed Docker operation')
+        require(args and args[0] in ('create','inspect','start','rm','pause','kill','ps'),'fixed Docker operation')
+        require(0<timeout<=5,'bounded Docker timeout')
         p=subprocess.run(['docker',*args],timeout=timeout,check=True,capture_output=True)
         require(len(p.stdout)+len(p.stderr)<=2*MIB,'bounded Docker response');return p.stdout.decode()
 
     def gate(self,name):
         require(re.fullmatch('[a-z0-9_.-]{1,120}',name) and name not in self.names,'new container only')
+        require(self.stage in LIMITS['cpu_threshold_seconds'],'fixed metered stage')
         gate=self.gates/name;gate.mkdir(mode=0o700)
-        self.names[name]={'gate':gate,'stage':self.stage,'created':False,'registered':False,'removed':False}
+        self.names[name]={'gate':gate,'stage':self.stage,'create_attempted':False,'created':False,
+            'container_id':None,'start_attempted':False,'registered':False,'cpu_closed':False,
+            'removed':False,'cleanup_started':False,'cleanup_ok':False}
         return gate
+
+    def remaining_timeout(self,timeout=5):
+        remaining=self.deadline-time.monotonic()
+        require(remaining>0,'Docker operation deadline exhausted')
+        return min(timeout,5,remaining)
 
     def check(self):
         require(time.monotonic()<self.deadline,'host wall ceiling')
@@ -64,16 +85,33 @@ class MeteredDocker:
         require(not exceeded,'cumulative CPU threshold exceeded')
 
     def __call__(self,*args,timeout=5):
-        if args[0]=='rm':return self.remove(args[-1])
-        self.check(); timeout=min(timeout,5,max(.1,self.deadline-time.monotonic()))
+        require(args and args[0] in ('create','inspect','start','rm','kill'),'fixed supervised operation')
+        if args[0]=='rm':return self.remove(args[-1],timeout=timeout)
+        self.check()
         if args[0]=='create':
             name=args[args.index('--name')+1];require(name in self.names,'registered gate')
-            # Mark before calling Docker: uncertain create is also cleaned up.
-            self.names[name]['created']=True
-        result=self.raw(*args,timeout=timeout)
+            row=self.names[name];require(not row['create_attempted'],'single create attempt')
+            row['create_attempted']=True
+            result=self.raw(*args,timeout=self.remaining_timeout(timeout))
+            # A failed/uncertain create cannot prove ownership of a reusable name.
+            require(re.fullmatch(r'[0-9a-f]{64}\n?',result) is not None,'full created container ID')
+            cid=result.rstrip('\n')
+            require(all(r['container_id']!=cid for r in self.names.values()),'unique created container ID')
+            row.update(created=True,container_id=cid)
+            return result
+        name=args[-1];require(name in self.names,'own registered container')
+        row=self.names[name];cid=row['container_id']
+        require(row['created'] and not row['cleanup_started'] and re.fullmatch('[0-9a-f]{64}',cid),'owned live container ID')
         if args[0]=='start':
-            name=args[-1];row=self.names[name]
-            r=json.loads(self.raw('inspect',name))[0];pid=r['State']['Pid']
+            require(not row['start_attempted'],'single start attempt');row['start_attempted']=True
+        result=self.raw(*args[:-1],cid,timeout=self.remaining_timeout(timeout))
+        if args[0]=='inspect' and '--format' not in args:
+            inspected=json.loads(result)
+            require(len(inspected)==1 and inspected[0].get('Id')==cid,'inspected owned immutable ID')
+        if args[0]=='start':
+            inspected=json.loads(self.raw('inspect',cid,timeout=self.remaining_timeout()))
+            require(len(inspected)==1 and inspected[0].get('Id')==cid,'started owned immutable ID')
+            r=inspected[0];pid=r['State']['Pid']
             require(type(pid) is int and pid>0 and r['State']['Running'],'live gated PID')
             lines=Path('/proc/'+str(pid)+'/cgroup').read_text().splitlines()
             require(len(lines)==1 and lines[0].startswith('0::/'),'host cgroupv2 path')
@@ -89,43 +127,116 @@ class MeteredDocker:
             with (row['gate']/'go').open('x') as f:f.write('one-shot')
         return result
 
+    def gate_result(self,name):
+        p=self.names[name]['gate']/'result.json'
+        try:
+            if not p.exists() and not p.is_symlink():return {'status':'missing'}
+            result=read_json(p,4096)
+            require(type(result) is dict and set(result)=={'schema','exit_code'} and
+                result['schema']=='qwen12-gated-command-v1' and type(result['exit_code']) is int and
+                -255<=result['exit_code']<=255,'bounded gate result')
+            return {'status':'valid',**result}
+        except BaseException as error:return {'status':'invalid',**safe_error(error)}
+
     def completed(self,name):
-        self.check();row=self.names[name];p=row['gate']/'result.json'
-        if not p.exists():
-            state=json.loads(self.raw('inspect','--format','{{json .State}}',name))
+        self.check();result=self.gate_result(name)
+        if result['status']=='missing':
+            row=self.names[name];require(row['created'] and not row['cleanup_started'],'live owned gate')
+            state=json.loads(self.raw('inspect','--format','{{json .State}}',row['container_id'],timeout=self.remaining_timeout()))
             require(state['Running'] is True and state['OOMKilled'] is False,'gated process unexpectedly exited')
             return False
-        result=read_json(p,4096);require(set(result)=={'schema','exit_code'} and
-            result['schema']=='qwen12-gated-command-v1' and result['exit_code']==0,'child failure; no retry')
+        require(result['status']=='valid' and result['exit_code']==0,'child failure; no retry')
         return True
 
-    def remove(self,name):
+    def remove(self,name,timeout=5):
         require(name in self.names,'only own container cleanup');row=self.names[name]
-        if row['removed']:return ''
-        started=time.monotonic();record={'name':name,'status':'removal_unconfirmed','stage':row['stage']}
+        if row['cleanup_started']:
+            require(row['cleanup_ok'],'previous cleanup unconfirmed or accounting invalid')
+            return ''
+        row['cleanup_started']=True;started=time.monotonic();deadline=started+15
+        cid=row['container_id'];errors=[]
+        record={'name':name,'container_id':cid,'status':'removal_unconfirmed','stage':row['stage'],
+            'ownership':'verified' if row['created'] else 'unknown','operations':[],
+            'cleanup_budget_seconds':15,'host_deadline_expired_at_start':started>=self.deadline,
+            'host_deadline_overrun':started>=self.deadline,'pause_acknowledged':False,'errors':errors}
+        self.cleanup.append(record)
+        def operation(kind,*args):
+            before=time.monotonic();item={'operation':kind,'status':'not_started','timeout_seconds':0}
+            record['operations'].append(item)
+            try:
+                # Reserve the last five seconds for stopping, before optional absence proof.
+                operation_deadline=deadline-5 if kind in ('pause','inspect_paused') else deadline
+                remaining=operation_deadline-time.monotonic();require(remaining>0,'cleanup deadline exhausted')
+                allowance=min(timeout,5,remaining);item['timeout_seconds']=allowance
+                item['status']='started';value=self.raw(*args,timeout=allowance)
+                item.update(status='succeeded',returncode=0);return value
+            except BaseException as error:
+                item.update(status='failed',**safe_error(error));raise
+            finally:item['wall_seconds']=time.monotonic()-before
         try:
-            if row['registered']:
-                self.raw('pause',name,timeout=5)
-                state=json.loads(self.raw('inspect','--format','{{json .State}}',name,timeout=5))
-                require(state.get('Paused') is True,'pause acknowledged before final CPU sample')
-                self.ledger.close(name,row['reader']())
-            self.raw('rm','--force',name,timeout=5);row['removed']=True;record['status']='removed'
-        except BaseException as error:
-            record['error_type']=type(error).__name__;raise
+            require(row['created'] and re.fullmatch('[0-9a-f]{64}',cid),'container ownership unknown')
+            if row['registered'] and not row['cpu_closed']:
+                try:
+                    operation('pause','pause',cid)
+                    state=json.loads(operation('inspect_paused','inspect','--format','{{json .State}}',cid))
+                    require(state.get('Paused') is True,'pause acknowledged before final CPU sample')
+                    record['pause_acknowledged']=True
+                    before=time.monotonic();item={'operation':'final_cpu_close','status':'started'}
+                    record['operations'].append(item)
+                    try:
+                        require(time.monotonic()<deadline-5,'final CPU stop reserve')
+                        self.ledger.close(name,row['reader']());row['cpu_closed']=True
+                        item['status']='succeeded'
+                    except BaseException as error:item.update(status='failed',**safe_error(error));raise
+                    finally:item['wall_seconds']=time.monotonic()-before
+                except BaseException as error:errors.append({'operation':'final_accounting',**safe_error(error)})
+            # Even invalid accounting must not knowingly leave an owned scope running.
+            try:
+                operation('force_remove','rm','--force',cid);row['removed']=True
+                record['removal_proof']='acknowledged_remove'
+            except BaseException as error:
+                errors.append({'operation':'force_remove',**safe_error(error)})
+                try:
+                    listed=operation('verify_absence','ps','--all','--no-trunc','--filter','id='+cid,'--format','{{.ID}}')
+                    require(listed=='','exact owned ID absence unconfirmed')
+                    row['removed']=True;record['removal_proof']='successful_empty_exact_id_query'
+                except BaseException as verification_error:
+                    errors.append({'operation':'verify_absence',**safe_error(verification_error)})
+        except BaseException as error:errors.append({'operation':'ownership',**safe_error(error)})
         finally:
-            record['cleanup_seconds']=time.monotonic()-started;self.cleanup.append(record)
-            atomic(self.root/'cleanup-receipt.json',{'containers':self.cleanup,'all_removed':all(r['removed'] for r in self.names.values())})
-            atomic(self.root/'cpu-receipt.json',self.ledger.receipt())
-        require(not self.ledger.failed,'final paused CPU sample exceeded budget')
+            accounting_ok=row['cpu_closed'] if row['start_attempted'] or row['registered'] else row['created']
+            record['accounting_status']=('final_usage_verified' if row['cpu_closed'] else
+                ('not_started' if accounting_ok else 'final_usage_unverified'))
+            record['gate_result']=self.gate_result(name)
+            record['cleanup_seconds']=time.monotonic()-started
+            record['cleanup_overrun_seconds']=max(0,time.monotonic()-deadline)
+            record['host_deadline_overrun']=record['host_deadline_overrun'] or time.monotonic()>=self.deadline
+            row['cleanup_ok']=row['removed'] and accounting_ok and not self.ledger.failed and time.monotonic()<=deadline and not record['host_deadline_overrun']
+            record['status']='removed' if row['removed'] else 'removal_unconfirmed'
+            record['cleanup_ok']=row['cleanup_ok']
+            # Receipt I/O must not discard the operation outcome or suppress stopping.
+            record['receipt_errors']=[]
+            try:atomic(self.root/'cpu-receipt.json',self.ledger.receipt())
+            except BaseException as error:
+                row['cleanup_ok']=record['cleanup_ok']=False
+                record['receipt_errors'].append({'operation':'cpu_receipt',**safe_error(error)})
+            try:atomic(self.root/'cleanup-receipt.json',{'containers':self.cleanup,
+                'all_removed':all(r['removed'] for r in self.names.values() if r['create_attempted']),
+                'all_cleanup_verified':all(r['cleanup_ok'] for r in self.names.values() if r['create_attempted'])})
+            except BaseException as error:
+                row['cleanup_ok']=record['cleanup_ok']=False
+                record['receipt_errors'].append({'operation':'cleanup_receipt',**safe_error(error)})
+        require(row['cleanup_ok'],'cleanup unconfirmed or final cumulative CPU accounting invalid')
         return ''
 
     def finish(self):
         failed=False
         for name,row in reversed(list(self.names.items())):
-            if row['created'] and not row['removed']:
+            if row['create_attempted'] and not row['cleanup_started']:
                 try:self.remove(name)
                 except BaseException:failed=True
-        require(not failed,'cleanup unconfirmed')
+            if row['create_attempted'] and not row['cleanup_ok']:failed=True
+        require(not failed,'cleanup unconfirmed or accounting invalid')
         require(not self.ledger.failed and self.ledger.receipt()['all_final_usage_verified'],'final cumulative CPU budget/accounting invalid')
 
 
@@ -161,10 +272,18 @@ def supervise(original,docker,code,runtime,inputs,output,family,deadline,mode=No
     args=args[:image_index]+extras+['--env','KWS_EXECUTED_HEAD_SHA='+os.environ['GITHUB_SHA'],
         '--env','KWS_RUN_ID='+os.environ['GITHUB_RUN_ID']]+args[image_index:image_index+1]+command
     args=gated_arguments(args,name,docker,'/code/research/'+EXPERIMENT+'/cpu_gate.py')
-    began=time.monotonic();phase=None;phase_start=began
+    began=time.monotonic();phase=None;phase_start=began;active='create';phase_began=began
+    primary=cleanup_error=retention_error=None
+    record={'name':name,'family':family,'mode':mode,'status':'started','phase_wall_seconds':{},
+        'primary_error':None,'cleanup_error':None}
+    docker.supervisions.append(record);docker.supervision_failure=None
+    def next_phase(value):
+        nonlocal active,phase_began
+        now=time.monotonic();record['phase_wall_seconds'][active]=now-phase_began
+        active=value;phase_began=now
     try:
-        docker(*args)
-        inspected=json.loads(docker('inspect',name))[0]
+        docker(*args);next_phase('inspect')
+        inspected=json.loads(docker('inspect',name))[0];next_phase('validate')
         # Validate old scope plus the one separately checked gate mount/command.
         mounts=inspected['Mounts'];gate=[m for m in mounts if m['Destination']=='/gate']
         require(len(gate)==1 and gate[0]['Source']==str(docker.names[name]['gate']) and gate[0]['RW'] is True,'exact host gate bind')
@@ -177,7 +296,7 @@ def supervise(original,docker,code,runtime,inputs,output,family,deadline,mode=No
         original.validate_container_inspect(projected,stage_name)
         require(inspected['Config']['Cmd']==args[args.index(inspected['Config']['Image'])+1:] and
                 inspected['Config']['Entrypoint'] in (None,[]),'exact gated child command')
-        docker('start',name)
+        next_phase('start');docker('start',name);next_phase('wait')
         while not docker.completed(name):
             now=time.monotonic();require(now<deadline,'phase wall ceiling')
             require(tree_bytes(output)<=LIMITS['output_bytes'],'output32MiB stop threshold')
@@ -191,9 +310,27 @@ def supervise(original,docker,code,runtime,inputs,output,family,deadline,mode=No
                     phase=current;phase_start=now
                 require(phase[0]!='cell' or now-phase_start<120,'outer perclip120s stop')
             time.sleep(.2)
+    except BaseException as error:
+        primary=error;record['primary_error']={'phase':active,**safe_error(error)}
     finally:
-        if name in docker.names and docker.names[name]['created']:docker.remove(name)
-    return time.monotonic()-began
+        next_phase('cleanup')
+        try:
+            if name in docker.names and docker.names[name]['create_attempted']:docker.remove(name)
+        except BaseException as error:
+            cleanup_error=error;record['cleanup_error']=safe_error(error)
+        record['phase_wall_seconds']['cleanup']=time.monotonic()-phase_began
+        record['wall_seconds']=time.monotonic()-began
+        record['gate_result']=docker.gate_result(name)
+        record['status']='failed' if primary is not None or cleanup_error is not None else 'complete'
+        try:atomic(docker.root/'supervision-receipt.json',{'schema':'qwen12-supervision-v1','stages':docker.supervisions})
+        except BaseException as error:
+            retention_error=error;record.update(status='failed',retention_error=safe_error(error))
+    # Preserve the original supervision exception, independent of cleanup outcome.
+    error=primary if primary is not None else cleanup_error if cleanup_error is not None else retention_error
+    if error is not None:
+        docker.supervision_failure=(error,record)
+        raise error.with_traceback(error.__traceback__)
+    return record['wall_seconds']
 
 
 def whisper_setup(bounded,docker,code,runtime,output,root,run_id,deadline):
@@ -239,7 +376,7 @@ def asr_setup_projection(runtime, destination):
 
 def collect(root):
     """Explicit public raw/source/native dependency closure, never audio or weights."""
-    allowed=['host-receipt.json','cpu-receipt.json','cleanup-receipt.json','terminal-outcomes.json','acquisition-receipt.json','image-transfer.json','asr-setup-public.json','policy/policy.json','policy/policy-freeze.json','package-budget-preflight.json']
+    allowed=['host-receipt.json','cpu-receipt.json','cleanup-receipt.json','supervision-receipt.json','terminal-outcomes.json','acquisition-receipt.json','image-transfer.json','asr-setup-public.json','policy/policy.json','policy/policy-freeze.json','package-budget-preflight.json']
     shared={'prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json','blind-job.json','progress.json','contract.json','decoder-inputs.json',
         'model-load.json','native-source-lock.json','native-asset-lock.json','native-config.json','native-resolved-generation-config.json',
         'native-frontend-config.json','optional-tool-probes.json','load-receipt.json','worker-complete.json','worker-failure.json'}
@@ -395,7 +532,10 @@ def execute(env,event,release,freeze):
         shutil.copyfile(HERE/'cpu_gate.py',setup_code/'research/source-screen32-whisper-v1/attempt-3/cpu_gate.py')
         runtime=root/'asr-runtime';runtime.mkdir();stage_output=root/'asr-setup';stage_output.mkdir()
         receipt['stages']['asr_setup']='started';atomic(root/'host-receipt.json',receipt)
-        setup_elapsed+=supervise(original,docker,setup_code,runtime,inputs,stage_output,'setup',min(docker.deadline,time.monotonic()+1800))
+        setup_began=time.monotonic()
+        try:supervise(original,docker,setup_code,runtime,inputs,stage_output,'setup',min(docker.deadline,time.monotonic()+1800))
+        finally:
+            setup_elapsed+=time.monotonic()-setup_began;receipt['combined_setup_seconds']=setup_elapsed
         asr_setup_projection(runtime,root/'asr-setup-public.json')
         setup_receipt=read_json(runtime/'setup-receipt.json',32*MIB)
         require(type(setup_receipt['actual_download_bytes']) is int and setup_receipt['actual_download_bytes']<=4*GIB,'ASR acquisition cap')
@@ -410,8 +550,11 @@ def execute(env,event,release,freeze):
         receipt['stages']['whisper_setup']='started';atomic(root/'host-receipt.json',receipt)
         third=ROOT/'research/source-screen32-whisper-v1/attempt-3';sys.path.insert(0,str(third))
         bounded=load('qwen12_bounded_host',third/'bounded_host.py')
-        setup_began=time.monotonic();acquired['whisper']=whisper_setup(bounded,docker,setup_code,runtime,out,root,run['run_id'],min(docker.deadline,time.monotonic()+remaining))
-        setup_elapsed+=time.monotonic()-setup_began;require(setup_elapsed<=1800,'combined setup1800s total')
+        setup_began=time.monotonic()
+        try:acquired['whisper']=whisper_setup(bounded,docker,setup_code,runtime,out,root,run['run_id'],min(docker.deadline,time.monotonic()+remaining))
+        finally:
+            setup_elapsed+=time.monotonic()-setup_began;receipt['combined_setup_seconds']=setup_elapsed
+        require(setup_elapsed<=1800,'combined setup1800s total')
         atomic(root/'acquisition-receipt.json',acquired);receipt['stages']['whisper_setup']='complete'
         runtimes={'qwen06':asr_runtime,'sensevoice':asr_runtime,'whisper':runtime}
         policy_dir=root/'policy';policy_dir.mkdir();frozen_root=root/'frozen';frozen_root.mkdir()
@@ -444,7 +587,10 @@ def execute(env,event,release,freeze):
         recognition_stages(prepare,freeze_policy,decode,setup_seconds=setup_elapsed,record=receipt)
         setup_elapsed=receipt['combined_setup_seconds'];receipt['status']='all36_native_calls_complete'
     except BaseException as error:
-        failed=True;receipt.update(status='stopped_no_retry',error_type=type(error).__name__)
+        failed=True;receipt.update(status='stopped_no_retry',primary_error=safe_error(error),**safe_error(error))
+        if docker.supervision_failure is not None and docker.supervision_failure[0] is error:
+            observed=docker.supervision_failure[1]
+            receipt.update(primary_error=observed['primary_error'],cleanup_error=observed['cleanup_error'])
         for k,v in receipt['stages'].items():
             if v=='started':receipt['stages'][k]='error'
     finally:
@@ -452,7 +598,9 @@ def execute(env,event,release,freeze):
             try:asr_setup_projection(root/'asr-runtime',root/'asr-setup-public.json')
             except BaseException:receipt['asr_setup_projection']='invalid_not_published'
         try:docker.finish()
-        except BaseException:failed=True;receipt['status']='cleanup_unconfirmed'
+        except BaseException as error:
+            failed=True;receipt.update(status='cleanup_unconfirmed',finish_error=safe_error(error))
+            if receipt.get('cleanup_error') is None:receipt['cleanup_error']=safe_error(error)
         # Preserve prepared-only metadata/source for never-run families without inventing attempts.
         for family in FAMILIES:
             frozen=root/'frozen'/family
@@ -462,7 +610,8 @@ def execute(env,event,release,freeze):
             from campaign_contract import blind_job,validate_public
             job=blind_job(validate_public(read_json(HERE/'public-inputs.json')))
         write_once(root/'terminal-outcomes.json',denominator(job,output))
-        receipt.update(wall_seconds=time.monotonic()-started,combined_setup_seconds=setup_elapsed)
+        receipt.update(wall_seconds=time.monotonic()-started,combined_setup_seconds=setup_elapsed,
+            supervision=docker.supervisions,cleanup=docker.cleanup)
         atomic(root/'host-receipt.json',receipt)
         if release.get('new_transcripts_publication_approved') is True:
             from log_transport import build_package
