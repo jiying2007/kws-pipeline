@@ -842,6 +842,12 @@ def load_tests(loader, tests, pattern):
         sys.modules[qualified] = module
         spec.loader.exec_module(module)
         tests.addTests(loader.loadTestsFromModule(module))
+    spec = importlib.util.spec_from_file_location('whisper_fourth_test_campaign',
+        HERE / 'attempt-4/test_fourth_campaign.py')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    tests.addTests(loader.loadTestsFromModule(module))
     return tests
 
 

@@ -1,0 +1,126 @@
+{
+  "schema": "whisper-screen-failed-third-run-retention-v1",
+  "run_id": 38112558973,
+  "run_url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38112558973",
+  "head_sha": "f17670af7da490bfe2d292661fbe3f5114d5eb4e",
+  "tree": "67fa8ba025959b20649992248078062de545219a",
+  "run_attempt": 1,
+  "run_number": 1,
+  "campaign_attempt": 3,
+  "prior_run_ids": [
+    38105471896,
+    38107706348
+  ],
+  "artifact_id": 11692750251,
+  "artifact_name": "qwen16-whisper-small-third-attempt-3-terminal-v1",
+  "zip_sha256": "96be915aea519f2ab3126168c8d19994c37f962b9797cb352ddd574d1774cf2f",
+  "zip_bytes": 7468,
+  "source_freeze_sha256": "16901d0d47d10486a8754568cb03020a3a155a9034ccc4e522fb796929a48ad4",
+  "source_freeze_entry_count": 234,
+  "source_verification_basis": "All 234 executed source-freeze entries were independently checked against the executed tree and rechecked unchanged in this archival base. The archival base is not the executed remote head.",
+  "failure_status": "setup_failed_before_any_whisper_attempt",
+  "failed_asset": "wheel-01",
+  "failed_stage": "pip_help_probe",
+  "failure_reason": "pip_capability_probe",
+  "pip_version": "25.0.1",
+  "cause_limit": "Fixed reason does not distinguish nonzero help exit from a missing required option; no retained help/stdout/stderr. No HTTP status is established.",
+  "http_status": null,
+  "attempts": 0,
+  "completed": 0,
+  "not_run": 16,
+  "proven_stages": [
+    "image_pull_completed_observed_within_reservation",
+    "broker_container_inspect",
+    "broker_kernel_scope",
+    "broker_ready_and_owned_unix_socket_check_implied_by_control_flow",
+    "worker_container_inspect",
+    "worker_kernel_scope",
+    "pip_version_probe"
+  ],
+  "not_run_stages": [
+    "pip_effective_config_probe",
+    "pip_download_acquisition",
+    "wheel_output_hash_size_verification",
+    "offline_dependency_install",
+    "official_source_acquisition",
+    "model_acquisition",
+    "model_load",
+    "audio_inference",
+    "native_natural_eos_validation"
+  ],
+  "missing_receipts": [
+    "wheel-01-broker.json",
+    "bounded-acquisition/receipt.json",
+    "install-offline-scope.json",
+    "finalize-offline-scope.json",
+    "setup-receipt.json"
+  ],
+  "budget_charge_bytes": 1188299,
+  "budget_charge_kind": "conservative_reserved_allowance",
+  "observed_ciphertext_bytes": null,
+  "network_transfer_total_known": false,
+  "image_transfer_scope": "Separate default-interface receive observation; includes protocol and unrelated host traffic, not exact daemon accounting or cumulative wire bytes.",
+  "cleanup": "Both broker and worker containers removed; no deadline overrun.",
+  "files": {
+    "artifact-freeze.json": {
+      "sha256": "e8d920e969adc9031d3903804a1af7e57e1c6a5f3f57d0c21da07d94995380e9",
+      "bytes": 2041
+    },
+    "host-receipt.json": {
+      "sha256": "7979ed43b70066b6efe313f41fcac58bce9fe935cef748db41349e10eddbd092",
+      "bytes": 1973
+    },
+    "image-transfer.json": {
+      "sha256": "fc7253fd261d8ef605ea7978bc93da707e3a01b362a9cab56e7a871012a18eb4",
+      "bytes": 1297
+    },
+    "setup/bounded-acquisition/bounded-host-cleanup-000.json": {
+      "sha256": "bf5bcce0de1f53c47618ce8c47170df8243ba507596a92617757f94c1742f820",
+      "bytes": 267
+    },
+    "setup/bounded-acquisition/budget-000-final.json": {
+      "sha256": "634a96352169e5781258bb0facc5a015c7ff83f541d6d93a113fd3a8a066f673",
+      "bytes": 196
+    },
+    "setup/bounded-acquisition/budget-000-started.json": {
+      "sha256": "25e01e55613d7295660f7b169ed6399d0c420866b76a1d3dcb284acd26a5985a",
+      "bytes": 77
+    },
+    "setup/bounded-acquisition/budget-initial.json": {
+      "sha256": "8fe01687f837c466e1567e39d52f1a11682eff61e08d664fbe5b29a70506beb4",
+      "bytes": 52
+    },
+    "setup/bounded-acquisition/wheel-01-broker-kernel.json": {
+      "sha256": "cb8cabb263bb1376e9eee7e8f386597303714cb67a6472ffbac06f56854531c5",
+      "bytes": 452
+    },
+    "setup/bounded-acquisition/wheel-01-broker-scope.json": {
+      "sha256": "c658facd35b0d73d5a8d6f587c0a515b15f72596ecd8bdd1427adcb69ee87af8",
+      "bytes": 248
+    },
+    "setup/bounded-acquisition/wheel-01-failure.json": {
+      "sha256": "3821d978ecb5de62f0609af3933a9e92ceedf61c754b6d15f01b7ff69075fe8f",
+      "bytes": 213
+    },
+    "setup/bounded-acquisition/wheel-01-worker-kernel.json": {
+      "sha256": "31ac191c2615cdda9b12d3c043b685c987004bba27eda3ede030efa4639bec48",
+      "bytes": 448
+    },
+    "setup/bounded-acquisition/wheel-01-worker-result.json": {
+      "sha256": "a3be7547b9dd4af2c86521afa2a0ccd18f3518fd8c711d43562171d95414e3ca",
+      "bytes": 203
+    },
+    "setup/bounded-acquisition/wheel-01-worker-scope.json": {
+      "sha256": "427f185386963169ce416148f480ac162ee97e4155e9dd81550b4db77dbe84f7",
+      "bytes": 249
+    },
+    "terminal-outcomes.json": {
+      "sha256": "8905df1649d4f84bb1ae4cdc97bbaee501e4e42c986c7b049e5ede945fb4c7d9",
+      "bytes": 5937
+    }
+  },
+  "source_role": "source_screen_only",
+  "training_admitted": false,
+  "shipping_approved": false,
+  "human_gold": false
+}
