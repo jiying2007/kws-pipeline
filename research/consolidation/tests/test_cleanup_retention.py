@@ -85,6 +85,7 @@ class CleanupRetentionTests(unittest.TestCase):
             "research/qwen12-native-admission-v1",
             "research/qwen12-native-admission-recovery1",
             "research/qwen12-native-transport-preflight-v1",
+            "research/qwen12-native-admission-recovery2",
         ]
         self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
         self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
@@ -166,6 +167,8 @@ class CleanupRetentionTests(unittest.TestCase):
         # Exact matching must not silently retain future similarly named branches.
         controls = ["fix/ordinary-ephemeral", "research/qwen12-native-admission-v1-extra",
                     "research/qwen12-native-admission-recovery10",
+                    "research/qwen12-native-admission-recovery20",
+                    "research/qwen12-native-admission-recovery2-extra",
                     "research/qwen12-native-transport-preflight-v10"]
         for branch in controls:
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
@@ -182,6 +185,7 @@ class CleanupRetentionTests(unittest.TestCase):
     def test_evidence_refs_remain_outside_cleanup_scope(self):
         for branch in ("evidence/qwen12-native-admission-v1",
                        "evidence/qwen12-native-admission-recovery1",
+                       "evidence/qwen12-native-admission-recovery2",
                        "evidence/qwen12-native-transport-preflight-v1"):
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
                 with self.subTest(branch=branch, scenario=scenario):

@@ -2,20 +2,34 @@
   "approval_scope": "At most36 new native records from12 existing public synthetic clips; same repository Actions job logs and public evidence directory; noartifact/cache storage, model weights, audio or private reviews",
   "bounded_evidence_transport_readback_approved": true,
   "budget_review_approved": true,
-  "enabled": false,
+  "enabled": true,
   "evidence_transport": "github-repository-zip-chunks-v1",
   "independent_review_approved": true,
   "new_transcripts_publication_approved": true,
   "predecessor_zero_recognition": {
-    "archive_sha256": "1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13",
-    "completed": 0,
     "cross_execution_recognition_limit": 36,
-    "evidence_commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
-    "executed_head_sha": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
-    "not_run": 36,
-    "run_attempt": 1,
-    "run_id": 38154869005,
-    "started": 0
+    "executions": [
+      {
+        "archive_sha256": "1992682c1a1301a43c06143db0fd034a9ed976252f55bef4c32799fff13dae13",
+        "completed": 0,
+        "evidence_commit": "8e05b507e8239ed70191c56ff13216690d6c3049",
+        "executed_head_sha": "3528118f3cdedf391519a5f8c3365ac15eac16a8",
+        "not_run": 36,
+        "run_attempt": 1,
+        "run_id": 38154869005,
+        "started": 0
+      },
+      {
+        "archive_sha256": "9b063d2c92ccf88d67678b032d391bf01e0ceb1a626d5cf23a3f11c0fd250d39",
+        "completed": 0,
+        "evidence_commit": "d843cc59113c7fd3ac89a0b4be9db71e5950ea20",
+        "executed_head_sha": "e9297163a21f8f7c2f960301ff05f1894617d2cf",
+        "not_run": 36,
+        "run_attempt": 1,
+        "run_id": 38160295526,
+        "started": 0
+      }
+    ]
   },
   "prior_campaign_history_and_unique_claim_approved": true,
   "required_runtime_preconditions": [
@@ -27,6 +41,6 @@
     "each_fresh_decode_worker_kernel_cpu_guard_and_frozen_config_recheck_before_its_first_audio_forward"
   ],
   "schema": "qwen12-native-admission-release-v1",
-  "source_freeze_sha256": "a9a9da48ef33bfb76946678f796fd2c6390fd59373e4d87c623b99b41b7b9cae",
+  "source_freeze_sha256": "ee821f44e1ac4bba36089eea751b5f6ae075b8c7bf4a614c49a7e4f21b50cc96",
   "source_review_approved": true
 }

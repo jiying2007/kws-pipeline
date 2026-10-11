@@ -1,5 +1,18 @@
 # Qwen12 one-shot controlled native admission capture
 
+Current source state: recovery 2 has static source, budget, independent,
+bounded-transport and historical-uniqueness approval for one separately reviewed
+execution within the existing scope. The native workflow literal stop is removed
+and all dispatch approval bits are true; bounded public transcript publication
+approval is retained. Both earlier attempts remain consumed, with zero started
+and zero completed recognitions across the same twelve clips' cumulative maximum
+36 attempts. No recovery 2 source or evidence ref has been created by this
+preparation. Root's actual execution-ref release remains pending: the final exact
+protected-main source/tree must pass CI, followed immediately by a fresh review
+of both predecessor histories and zero-use evidence, absence of both new refs
+and any recovery 2 run, and the single new campaign claim before branch creation.
+Static approval does not establish that any runtime precondition has passed.
+
 This new scope consumes exactly twelve pre-existing, public Qwen WAVs from the
 pinned `kws-data` commit. It does not regenerate audio, reuse historical Qwen16
 outputs as Qwen12 results, or change any historical freeze, gate or evidence.
@@ -83,8 +96,10 @@ Its three repository files and seven ZIP members including the manifest passed
 independent source/run/job, blob, chunk, member and CRC verification. The
 [terminal metadata](evidence/run-38160295526/terminal-status.json) records the
 observations and uncertainty without rewriting either execution's evidence.
-Both campaign identities are consumed; this cleanup-only source disables native
-execution and introduces no third identity or capture authorization.
+Both campaign identities are consumed. The cleanup correction disabled native
+execution at that historical source. Recovery 2's current static approval is
+recorded below; actual execution-ref release is still held for exact-main CI
+and the immediate root history/ref/zero-use check.
 
 ## New executable path
 
@@ -187,8 +202,9 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-This cleanup-only source restores the native workflow literal-false stop and
-sets release.enabled=false; both consumed execution identities remain unchanged. Dispatch still requires literal JSON true for
+The current recovery 2 source removes only the native condition's literal
+`false && ` and sets `release.enabled=true` plus its five pending review bits.
+Both consumed execution identities remain unchanged. Dispatch requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
 approvals. Missing, false, integer or string substitutes fail before Docker,
@@ -216,7 +232,7 @@ release approval or synthetic fixture cannot replace actual runtime evidence.
 The exact collector continues retaining those records; no new proof schema,
 platform, model load or evidence omission is introduced.
 
-## Activation handoff
+## Original activation handoff (historical, consumed)
 
 The activation procedure below records the original pre-run requirements.
 The source was reviewed, passed exact-head CI and was merged before the one-shot
@@ -278,12 +294,13 @@ results have independently passed the unchanged resolver and admission checks.
 Original source/run/evidence identities remain immutable; the deleted original
 source ref must not be restored. The separately reviewed single continuation used `research/qwen12-native-admission-recovery1`, with
 create-only evidence ref `evidence/qwen12-native-admission-recovery1` and directory
-`research/qwen12-native-admission-v1/evidence/recovery1`. The reviewed activation source ran once as recorded above. This current cleanup-only
-source restores the native literal stop and disables the release; no third
-execution identity or recognition attempt is authorized. Its pre-run review checked the predecessor's zero recognition
-consumption, absence of the new refs/run, exact source CI, budget and independent
-review. `execution-release.json` binds the original run, source, evidence commit,
-archive hash and 0/0/36 accounting. Across both executions, the same twelve clips
+`research/qwen12-native-admission-v1/evidence/recovery1`. The reviewed activation source ran once as recorded above. The subsequent cleanup-only
+source restored the native literal stop and disabled the release. Recovery 2's
+current static approval below does not release its execution ref. Recovery 1's
+pre-run review checked the predecessor's zero recognition consumption, absence
+of the new refs/run, exact source CI, budget and independent review. Its release
+bound the original run, source, evidence commit, archive hash and 0/0/36
+accounting; the current release preserves both consumed predecessors. Across both executions, the same twelve clips
 still permit at most 36 recognition attempts; no automatic retry or ref reuse.
 
 A separate source-level compatibility finding is reproducible without a model:
@@ -386,5 +403,116 @@ image acquisition, host work and Docker daemon CPU are outside that ledger.
 The existing observed image-interface reservation is not a hard network-wire
 cap. One independent 15-second cleanup-operation window, followed by receipt
 persistence, may exceed a primary deadline;
-that overrun remains a failure. This source prepares the test; it does not claim
-that a hosted smoke or any third ASR execution has passed.
+that overrun remains a failure. That source prepared the test. The subsequent hosted smoke is evidence only
+for its executed head and unchanged cleanup components; it does not establish
+that a later head or a third ASR execution has passed.
+
+
+## Observed zero-model cleanup smoke
+
+[Run 38163142188, attempt 1, job 114540172806](https://github.com/jiying2007/kws-pipeline/actions/runs/38163142188/job/114540172806)
+completed the one-shot lifecycle on source
+`63968444f30d77e712fb74e207fda87119ae3831`, tree
+`7ab29f9d564033790741697a8758678bb8a70c59`. The
+[exact public receipt](evidence/run-38163142188/cleanup-lifecycle-smoke.json),
+SHA-256 `f5c0a179b87ef7cd03294d83aa6c48b83c561052917102546adf70501bacd087`,
+binds thirteen source files, the static `pass` command, the actual head and
+Actions merge SHA. Independent API/log/source readback passed. Pause, paused
+inspect, final CPU close and force removal succeeded; all owned containers were
+removed and cleanup verified. Controlled-container CPU through pause was
+0.135884 seconds; helper wall was 4.012934521 seconds. Model, audio and package
+counts were all zero. These are separate CI observations, not part of either
+ASR run's measured resource account and not total CI CPU or traffic.
+
+Recovery 2 keeps the cleanup helper, host cleanup code, CPU gate and CPU ledger
+byte-for-byte identical to this executed source. Its changed workflow, release
+and campaign constants are separately reviewed identities; this smoke does not
+claim to have executed the future recovery 2 head, any model, or old failed
+containers. The consumed smoke event is not automatically repeated.
+
+## Recovery 2 current static activation and held execution release
+
+The only prospective source identity is
+`research/qwen12-native-admission-recovery2`, with create-only evidence ref
+`evidence/qwen12-native-admission-recovery2` and evidence directory
+`research/qwen12-native-admission-v1/evidence/recovery2`. This exact source ref
+joins the independent execution-ref retention list. The three existing retained
+names stay unchanged. A missing original source ref means neither unused budget
+nor permission to restore the consumed execution.
+
+The existing release binding now pins both immutable predecessor run/source/
+evidence/archive identities and their 0 started, 0 completed and 36 not-run
+counts. The cross-execution recognition allowance remains 36 for the same twelve
+public inputs. Neither failed setup counts as a recognition attempt, but both
+resource histories remain part of the proposal. Neither cleanup history is
+rewritten: recovery 1 removal remains unconfirmed.
+
+The current release records source, independent, budget, selected-transport and
+historical-uniqueness approvals as true, with `enabled=true`; original bounded
+public transcript publication approval remains true. The runtime precondition
+list is unchanged and remains required, never pre-passed. This is a six-file
+static activation delta from the local disabled preparation snapshot
+`fe61c4a999922be4ceb298e5d715ad67526afb35`, tree
+`f1f500b1303e7d1877694365475ddc27f7eda52f`. It changes only the two workflow
+mirrors' native literal stop, current release flags/freeze binding, regenerated
+freeze, this README and append-only source-retention maintenance/current native
+workflow identity. The disabled baseline and all historical retention entries
+remain intact. The unchanged workflow comment about removing the literal stop
+records the prior activation requirement; the condition and release show the
+current static state.
+
+The public-main preparation base was
+`eb910345b1572f172269819ac015d7e44180726a`, tree
+`7ab29f9d564033790741697a8758678bb8a70c59`. Approval here does not claim final
+activation-tree CI or merge has already succeeded. Before the unique execution
+branch is created, root must verify CI success for the final exact protected-main
+commit/tree and immediately recheck both consumed run histories and complete
+zero-use evidence, absence of the new source/evidence refs and recovery 2 run
+history, and the single campaign claim. The source branch must point to that
+exact approved main commit. Its canonical public-repository push must have
+`event.created=true` and `run_attempt=1`, with the contracts job successful.
+No execution ref is released by preparing or publishing this source. No conflict,
+uncertain create result or failed execution permits an automatic retry, ref
+reuse, deletion/recreation or another identity. Existing same-twelve cumulative
+recognition and bounded public-source/evidence authority is unchanged.
+
+Scientific model/input/configuration, process guard, all runtime and host cleanup
+code, ZIP/chunk codec and publisher code are byte-identical to the disabled
+baseline. Transport approval is grounded in the unchanged codec and publisher's
+actual live near-8MiB repository readback plus both real native failure archives,
+with their immutable identities retained above. The new recovery 2 identity has
+also passed a local near-8MiB full roundtrip in normal, `-O` and `-OO` modes. That
+local identity proof is not live recovery 2 publication or readback; no recovery 2
+native archive exists yet. Neither synthetic transport nor the consumed
+zero-model Docker smoke is rerun by this activation. The historical smoke proves
+only its executed head and byte-identical cleanup components, never future ASR
+runtime readiness or cleanup of old failed containers.
+
+
+The [resource proposal](recovery2-resource-proposal.json) remains byte-identical
+to the disabled, independently reviewed historical budget snapshot. Its false
+disabled/pending status fields describe proposal preparation, not the current
+static approvals in `execution-release.json`; they are deliberately not rewritten.
+It keeps prior actuals and one future unchanged reservation separate by measurement scope. ASR response
+bodies were 3,340,966,447 bytes in each old run; with a new 4GiB body cap the
+same-scope planning total is 10,976,900,190 bytes. Whisper tunnel receive was
+774,060,234 bytes in the first run and the second never entered that stage;
+adding the unchanged 1.5GiB cap gives 2,384,672,970 bytes. The two image-interface
+observations, 45,704,322 and 45,707,668 bytes, plus the 128MiB observation reserve
+sum to 225,629,718 bytes, not a daemon or wire-byte cap. Audio body accounting
+uses 776,208 bytes for each old run, with recovery 1 explicitly inferred from
+successful source control flow rather than a standalone receipt; a new 1MiB
+reservation gives 2,600,992 bytes. These different scopes must not be added into
+one download total.
+
+The two paused-cgroup measurements total 557.551166 CPU seconds; adding one
+6600-second sampled stop threshold gives planning arithmetic of 7157.551166,
+not an unconditional CPU ceiling. Recovery 1 post-pause/cleanup resource use
+remains unknown. The old capture-host receipts total 859.683035284 seconds;
+adding a new 3600-second host timer gives 4459.683035284 for planning only:
+old receipts precede ZIP construction, while the future timer includes it.
+Separate publisher and job time, scheduling and cleanup overshoot are not thereby
+bounded. Setup host-accumulator and child intervals differ, so no exact combined
+setup total is invented. The successful zero-model smoke's resource observations
+are listed separately and do not measure all other CI work. No per-run capacity,
+acquisition, memory, output, wall or CPU threshold is raised by this proposal.

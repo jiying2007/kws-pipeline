@@ -48,6 +48,25 @@ class BranchTransportTests(unittest.TestCase):
         self.assertEqual(receipt["evidence_commit"], "e" * 40)
         self.assertIsNone(receipt["github_actions_artifact_id"])
 
+    def test_native_policy_is_exact_recovery2_identity(self):
+        self.assertEqual(b.purpose_policy("native"), {
+            "source_branch": "research/qwen12-native-admission-recovery2",
+            "evidence_branch": "evidence/qwen12-native-admission-recovery2",
+            "directory": "research/qwen12-native-admission-v1/evidence/recovery2",
+            "scope": "qwen12-native-admission-v1", "job_key": "qwen12"})
+        self.assertEqual(b.purpose_policy("synthetic"), {
+            "source_branch": "research/qwen12-native-transport-preflight-v1",
+            "evidence_branch": "evidence/qwen12-native-transport-synthetic-v1",
+            "directory": "research/qwen12-native-admission-v1/evidence/synthetic-v1",
+            "scope": "qwen12-native-transport-preflight-v1", "job_key": "transport-fixture"})
+
+    def test_consumed_evidence_directories_cannot_be_reused(self):
+        for old in ("native-v1", "recovery1"):
+            bad=copy.deepcopy(self.manifest)
+            for row in bad["chunks"]:row["path"]=row["path"].replace("/recovery2/", "/"+old+"/")
+            chunks=[(name.replace("/recovery2/", "/"+old+"/"), raw) for name,raw in self.chunks]
+            with self.subTest(directory=old),self.assertRaises(ValueError):self.parse(bad,chunks)
+
     def test_missing_duplicate_extra_reordered_chunks(self):
         bad = [self.chunks[:-1], self.chunks + [self.chunks[-1]],
             [self.chunks[0], self.chunks[0], *self.chunks[2:]], self.chunks[::-1]]
