@@ -29,5 +29,12 @@
     ],
     "historical_source_unmodified": true
   },
-  "source_manifest_sha256": "7b78434574af4227239a524cec92fc6a21fbefaeea2a52b3f6793875f80f3efc"
+  "source_manifest_sha256": "2c7b72ffd5c14ba7a22d2a2bd0479fc9fb92238930d1a58be0e2e71058ed66a3",
+  "source_manifest_maintenance": {
+    "date": "2026-10-11",
+    "maintained_source_commit": "a68d04884f863150bc9fb87747bb21149642dd71",
+    "previous_source_manifest_sha256": "7b78434574af4227239a524cec92fc6a21fbefaeea2a52b3f6793875f80f3efc",
+    "previous_source_manifest_path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/SOURCE_MANIFEST.json",
+    "scope": "Advance the exact active manifest pin after A20 Python admission maintenance. Original source identity and host results remain historical; all copied native source, decoder-test, resource-size and license bytes, decoder hashes and scratch patch are unchanged."
+  }
 }

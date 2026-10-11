@@ -21,6 +21,18 @@ class DriverGuards(unittest.TestCase):
   cc,log=self.wrapper(True);source=ROOT.parent/'native_a20/baseline/decoder';target=self.out/'diff';p=self.invoke([ROOT/'test_decoder.py','--cc',cc,'--original',source,'--optimized',source,'--output',target]);self.assertNotEqual(p.returncode,0);self.assertIn('ELF machine=',p.stderr);self.assertFalse((target/'decoder-test-results.json').exists());self.assertEqual(len(log.read_text().splitlines()),1)
  def source_copy(self):
   source=self.out/'source';shutil.copytree(ROOT.parent/'native_a20',source,ignore=shutil.ignore_patterns('__pycache__'));return source
+ def test_active_manifest_pin_preserves_historical_build_inputs(self):
+  deriv=json.loads((ROOT/'DERIVATION.json').read_text());maintenance=deriv['source_manifest_maintenance']
+  current=ROOT.parent/'native_a20/SOURCE_MANIFEST.json'
+  previous=ROOT.parents[1]/maintenance['previous_source_manifest_path']
+  sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+  self.assertEqual(sha(current),deriv['source_manifest_sha256'])
+  self.assertEqual(sha(previous),maintenance['previous_source_manifest_sha256'])
+  historical=json.loads((ROOT/'HOST_SYNTHETIC_RESULTS.json').read_text())
+  self.assertEqual(historical['input_source_manifest_sha256'],sha(previous))
+  active=json.loads(current.read_text())['files'];retained=json.loads(previous.read_text())['files']
+  inputs=lambda rows:{name:row for name,row in rows.items() if name.startswith(('baseline/','src/')) or name in ('tests/test_decoder.c','resource_sizes.c','LICENSE','NOTICE.md')}
+  self.assertEqual(inputs(active),inputs(retained))
  def test_self_consistent_changed_manifest_rejected(self):
   source=self.source_copy();p=source/'README.md';p.write_text(p.read_text()+'\nchanged\n');mp=source/'SOURCE_MANIFEST.json';manifest=json.loads(mp.read_text());manifest['files']['README.md']={'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()};mp.write_text(json.dumps(manifest));r=self.invoke([ROOT/'build.py','--source',source,'--output',self.out/'build']);self.assertNotEqual(r.returncode,0);self.assertIn('pinned source manifest mismatch',r.stderr);self.assertNotIn('PASS exact',r.stdout);self.assertFalse((self.out/'build').exists())
  def test_changed_checker_is_never_executed(self):
