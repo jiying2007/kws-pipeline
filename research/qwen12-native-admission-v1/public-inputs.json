@@ -1,0 +1,143 @@
+{
+  "schema": "qwen12-existing-public-audio-v1",
+  "count": 12,
+  "audio_bytes": 776208,
+  "frames": 387840,
+  "sample_rate_hz": 16000,
+  "channels": 1,
+  "sample_width_bytes": 2,
+  "records": [
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-uncle_fu.wav",
+      "bytes": 71724,
+      "sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+      "git_blob_sha1": "6d2171c3c1338c3fd6e6e130f4ec3a7987571a4c",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw2-uncle_fu.wav",
+      "pcm_sha256": "a3829a5a2a25aa4adee963582ff19a0b850629b3c1db5aedf9bba0816fcf4bae",
+      "frames": 35840
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-vivian.wav",
+      "bytes": 51244,
+      "sha256": "06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980",
+      "git_blob_sha1": "b6c69d0764381d0d409e228119c752de915e9723",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-vivian.wav",
+      "pcm_sha256": "6db96131a891c95e12769defa9bee0c55ab74316c0da45d138626ca2301aeea4",
+      "frames": 25600
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-vivian.wav",
+      "bytes": 66604,
+      "sha256": "3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25",
+      "git_blob_sha1": "d4be472bf6b211eb1a1e92e6a3db3541e89b5bf6",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw2-vivian.wav",
+      "pcm_sha256": "636705536d4d78fc892cc7bbfae3dca227b26d494157b3c480d63268c5cd8631",
+      "frames": 33280
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-dylan.wav",
+      "bytes": 61484,
+      "sha256": "514bca4b4dc77a10dac3d66f38231dbd7203e193fa5d515857db6826813bcda5",
+      "git_blob_sha1": "1e805f3dac7e734d90380dbba3d4ecc9bf829166",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw1-dylan.wav",
+      "pcm_sha256": "f2c212d2a54f124535a6ac7ce6e2fc272a99dd878030c8765064dca8f30ec037",
+      "frames": 30720
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-uncle_fu.wav",
+      "bytes": 92204,
+      "sha256": "7100eaf6994960cee1d5da192020ffcdfae367d17b401c9b9efbacf7172a5ddd",
+      "git_blob_sha1": "f142406a5b342f5b834262b303dce13793ccc93e",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-uncle_fu.wav",
+      "pcm_sha256": "d56f7352a238d43e30a1019d1fc8b8bb3064d5e671556519af54b8386119002a",
+      "frames": 46080
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-dylan.wav",
+      "bytes": 56364,
+      "sha256": "7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4",
+      "git_blob_sha1": "c8f8e0406505590dca1d3873712d5ecd1c96e4ab",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-dylan.wav",
+      "pcm_sha256": "86e51482ca5b41c81e7c10e3eaf52df4be6bb3979e0725ed328dc35c5c085d47",
+      "frames": 28160
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-uncle_fu.wav",
+      "bytes": 81964,
+      "sha256": "a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229",
+      "git_blob_sha1": "839a54d31b5fdfc9ab0081545a3e586bee12b98f",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-repeat-nihao-uncle_fu.wav",
+      "pcm_sha256": "1f23e6b5c70a59b93142dddea93dc86765657fe7f3f42804a94cd970dfe511da",
+      "frames": 40960
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-dylan.wav",
+      "bytes": 51244,
+      "sha256": "ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20",
+      "git_blob_sha1": "d1109db2a11c56fe91476ce66144cb644ffb9080",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-dylan.wav",
+      "pcm_sha256": "366f8ea0c0e0d31103bcbdc42675481a4827be8b2991e1ed691c4ee7fb3010af",
+      "frames": 25600
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-vivian.wav",
+      "bytes": 64044,
+      "sha256": "b01a04cc168f8c9de314c9ddb22f3f191e6c0a7138ac78c3cf63831d2bbbf26e",
+      "git_blob_sha1": "c670d45c23655cb37c72fe8c0921faec1c3bcb59",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-suffix-kw2-vivian.wav",
+      "pcm_sha256": "423b2c1b9502a6a877fba41e24f18b8e965e2db0ac78c8a9a8832d601d5743bc",
+      "frames": 32000
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-uncle_fu.wav",
+      "bytes": 58924,
+      "sha256": "b6902e14b699ca504f34d7b4bdba66a4c9805a0fd3403f5633cbb891872d9d51",
+      "git_blob_sha1": "12f0919ee229d656c63ffe6530865df42bb20f19",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw1-uncle_fu.wav",
+      "pcm_sha256": "61dcec8fc60753686a363a3ace40109a26df37cf556733c046b8c6cbc757ce02",
+      "frames": 29440
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw1-vivian.wav",
+      "bytes": 58924,
+      "sha256": "db85999b9d7a36f2a8633a58e5279c2ed5dda8f61f8bf7cf45c72beef6871261",
+      "git_blob_sha1": "20d001de2f0ba091c987dd4469306545c1cd0024",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw1-vivian.wav",
+      "pcm_sha256": "4d5db9285d3bd10fae13345b4ccd3ad081b748257eff03d1c01e211865b7926d",
+      "frames": 29440
+    },
+    {
+      "repository": "jiying2007/kws-data",
+      "commit": "7af8f8597b0b7fbe8761c9a2400f2e4028395551",
+      "path": "datasets/qwen3-reviewed-v1/audio/qwen3-kw2-dylan.wav",
+      "bytes": 61484,
+      "sha256": "f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db",
+      "git_blob_sha1": "f044671a71562b83fae810ed7b75e5e5a4113879",
+      "raw_url": "https://raw.githubusercontent.com/jiying2007/kws-data/7af8f8597b0b7fbe8761c9a2400f2e4028395551/datasets/qwen3-reviewed-v1/audio/qwen3-kw2-dylan.wav",
+      "pcm_sha256": "453ad37fc9203ea9796b6933bd538a331944cb140218e39035ead2682b320d8d",
+      "frames": 30720
+    }
+  ]
+}

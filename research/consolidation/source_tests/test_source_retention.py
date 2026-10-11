@@ -27,6 +27,7 @@ class RetentionTests(unittest.TestCase):
         archived = file('research/consolidation/archive/workflows/example.yml', b'name: historical\n')
         baseline = file('.github/workflows/base.yml', b'name: unchanged\n')
         added = file('.github/workflows/research-source-consolidation.yml', b'name: offline\n')
+        admission = file('.github/workflows/qwen12-native-admission-v1.yml', b'name: disabled native; pure source CI\n')
         file(ARM, json.dumps(DISABLED_ARM).encode())
         provenance = dict(archived, source_commit='a'*40, original_path='.github/workflows/old.yml')
         provenance['source_url'] = 'https://github.com/jiying2007/kws-pipeline/blob/'+'a'*40+'/.github/workflows/old.yml'
@@ -34,8 +35,9 @@ class RetentionTests(unittest.TestCase):
             base_commit='b'*40, files=[archived], provenance=[provenance],
             source_projections=[dict(original_path='.github/workflows/old.yml', archive_path=archived['path'],
                 source_commit='a'*40, **{k:archived[k] for k in ('bytes','sha256','git_blob_sha1')})],
-            baseline_active_workflows=[baseline], current_added_active_workflows=[added], pointer_only=[],
-            allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml'])
+            baseline_active_workflows=[baseline], current_added_active_workflows=[added, admission], pointer_only=[],
+            allowed_new_active_workflows=['.github/workflows/research-source-consolidation.yml',
+                '.github/workflows/qwen12-native-admission-v1.yml'])
     def test_valid_retention(self):
         self.assertEqual(verify(self.root,self.manifest),1)
     def test_changed_bytes(self):
@@ -131,11 +133,11 @@ class RetentionTests(unittest.TestCase):
     def test_reviewed_current_workflow_update_does_not_rewrite_history(self):
         previous = copy.deepcopy(self.manifest['current_added_active_workflows'][0])
         updated = self.file(previous['path'], b'name: reviewed current source\n')
-        self.manifest['current_added_active_workflows'] = [updated]
+        self.manifest['current_added_active_workflows'][0] = updated
         self.manifest['active_workflow_maintenance'] = [{'files': [{'path': previous['path'], 'before': previous, 'after': updated}]}]
         self.assertEqual(verify(self.root, self.manifest), 1)
         self.assertNotEqual(previous['sha256'], updated['sha256'])
-    def test_non_singleton_allowance_rejected(self):
+    def test_non_exact_allowance_rejected(self):
         original = self.manifest['allowed_new_active_workflows']
         for bad in ([], original + original,
                     original + ['.github/workflows/archive-branches-once-20261007.yml'],

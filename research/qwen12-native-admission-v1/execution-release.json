@@ -1,0 +1,21 @@
+{
+  "approval_scope": "At most36 new native records from12 existing public synthetic clips; same repository Actions job logs and public evidence directory; noartifact/cache storage, model weights, audio or private reviews",
+  "bounded_evidence_transport_readback_approved": true,
+  "budget_review_approved": true,
+  "enabled": true,
+  "evidence_transport": "github-repository-zip-chunks-v1",
+  "independent_review_approved": true,
+  "new_transcripts_publication_approved": true,
+  "prior_campaign_history_and_unique_claim_approved": true,
+  "required_runtime_preconditions": [
+    "current_run_host_capacity_and_kernel_scope_checks",
+    "current_run_both_runtime_installs_before_prepare",
+    "current_run_all_three_prepare_only_loads_with_kernel_cpu_guards_and_zero_audio_forward",
+    "current_run_full_policy_and_prepare_configs_frozen_before_first_audio_forward",
+    "current_run_actual_complete_closure_worsttrace_dry_package_before_first_audio_forward",
+    "each_fresh_decode_worker_kernel_cpu_guard_and_frozen_config_recheck_before_its_first_audio_forward"
+  ],
+  "schema": "qwen12-native-admission-release-v1",
+  "source_freeze_sha256": "f6d24914a930a94776fa4051f54c3d4b87569ff355d1ffa687016c8f6e6988e5",
+  "source_review_approved": true
+}
