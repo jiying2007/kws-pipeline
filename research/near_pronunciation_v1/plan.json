@@ -1,0 +1,106 @@
+{
+  "schema": "kws-near-pronunciation-plan-v1",
+  "status": "PREPARED_NOT_RUN",
+  "purpose": "saved_synthetic_mechanism_regression",
+  "thresholds": [
+    0.55
+  ],
+  "arms": [
+    "strict_children",
+    "single_fuzzy_wo"
+  ],
+  "model": {
+    "path": "models/registry/model-749187ec1d66/xiaowo-model.kwm",
+    "sha256": "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402",
+    "bytes": 6812,
+    "feature_dim": 32,
+    "hidden_dim": 64,
+    "vocab_size": 5,
+    "architecture": "int8-weight tanh recurrent model",
+    "vocab_fingerprint": "0x316aea1a94b303bf",
+    "tokens": [
+      "<blk>",
+      "ni3",
+      "hao3",
+      "xiao3",
+      "wo1"
+    ]
+  },
+  "keyword_pack": {
+    "path": "models/registry/model-749187ec1d66/xiaowo-keywords.kwk",
+    "sha256": "370ee3eeba27b1d62b38f32f53d8302b47c2b762392101e6ca7eb0ccf8dfb723",
+    "paths": {
+      "1": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "2": [
+        3,
+        4,
+        3,
+        4
+      ]
+    }
+  },
+  "shared_controls": {
+    "root_nonblank_margin": 0.5,
+    "fuzzy_child_cost_log": -8.25,
+    "retention_budget_log": -16.0,
+    "vad": "saved speech_active unchanged",
+    "blank": "unchanged production rule",
+    "ctc_repeat": "unchanged production rule",
+    "state_retention": "unchanged production default",
+    "refractory": "unchanged production default",
+    "initial_decoder_state": "reset at each trace start",
+    "threshold": 0.55
+  },
+  "arm_semantics": {
+    "strict_children": "Only top-1 children; no non-top-1 child transitions.",
+    "single_fuzzy_wo": "At most one non-top-1 wo1 (token 4) transition per full path; all remaining child transitions must be top-1. The fuzzy lane uses exactly one such transition; the strict lane remains available."
+  },
+  "execution": {
+    "saved_only": true,
+    "acoustic_forward_allowed": false,
+    "cache_miss": "STOP",
+    "decoder_execution_by_comparator": false,
+    "threshold_sweep_allowed": false,
+    "full_decoder_replay_per_threshold_required": true,
+    "receipt_schema": "kws-saved-paired-arm-v1"
+  },
+  "evidence_policy": {
+    "literal_wu_recognition_claimed": false,
+    "historical_initial_state_equivalence_established": false,
+    "independent_test_claimed": false,
+    "historical_data_training_admission": false,
+    "tts16_role": "screen_only; neither gold truth nor training admission",
+    "asr_raw_text_policy": "preserve verbatim; never normalize 窝 and 屋 into agreement"
+  },
+  "qualification": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "ordinary_real_negative_hours": 0.0,
+    "independent_accent_positives": 0,
+    "independent_farfield_positives": 0,
+    "matched_far_status": "NOT_RUN",
+    "accent_status": "NOT_RUN",
+    "farfield_status": "NOT_RUN"
+  },
+  "future_matched_far": {
+    "status": "NOT_RUN",
+    "selector": "select_dev_thresholds in compare_saved.py (fixture-tested only)",
+    "far_metric": "negative-only-recordings-poisson-upper-v1",
+    "confidence": 0.95,
+    "budget_upper95_per_hour": null,
+    "caller_budget_required": true,
+    "selection_split": "dev",
+    "test_policy": "freeze development-selected thresholds; never select on test",
+    "same_data_model_truth_denominators_required": true,
+    "score_source": "eval/score_events.py",
+    "threshold_evaluation": "full decoder replay for every threshold; never filter earlier detections"
+  },
+  "source_pointers": [
+    "research/diagnostic-readiness-2026-10-09/DURABLE-TRACE.json",
+    "research/diagnostic-readiness-2026-10-09/PUBLIC-READINESS-SUMMARY.json"
+  ]
+}

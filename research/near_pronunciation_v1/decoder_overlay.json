@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "base_tree": "fafd0721c71f619f8af6327b22746b2598557b09",
+  "research_guard": "KWS_RESEARCH_CHILD_ADMISSION",
+  "source_sha256": {
+    "src/decoder.c": "c1cef85ba33ab37dd2e278f7c4a1f0d398b128e5508e86cfff3933819e2b78e9",
+    "src/decoder.h": "3357a957cd2b07108bdb7fa7657b8c807db347950eeeda94f490a0505604c76b",
+    "src/kws.c": "cb7fbffd0ff8617b78ad4d7afd5557c1c13fec06250acfdc10713c463d54f171",
+    "src/kws_debug.h": "f5f84746df743ef8d6601e383014413fcee302fdf315445bfd7ff76a9d8c0b16",
+    "tools/kws_decoder_replay.c": "2307b05546dbce28fb8b0291512db90e36fb66305467a2a34c59b7010b232074",
+    "include/kws_pipeline/kws.h": "3405855e97cde28cf2842bb9c607e931347395790fe3ed268617e662af676496",
+    "src/frontend.c": "4b15da591837859232a91200b81a70ffc683a79f08bf12b0adb368ae5e680b27",
+    "src/frontend.h": "1c9a3663970e60d2a83e862e6a13aa04860c466ab9f54a7dbdc56864e4de63dd",
+    "src/model.c": "af783d7123126f40f7c30f576290cc961ecfc2c987e7abb1c24c633a138adf83",
+    "src/model.h": "a3d9286d5653c340b0b6d513b0987feefc51d7f9a9e550480026d36b2664f12d",
+    "src/keyword_pack.c": "967f415850a7fbf87ad088f310ed0b2fdd78317c9ca07fc1128622cabdcc9b57",
+    "tools/kws_trace_io.c": "2f66cf4e8181462dc35e4a5d45a2b3578411b712db1ef22fca048c86232fab96",
+    "tools/kws_trace_io.h": "b8a28a5257294ebebc44e52bd65f03d8f175ae855e0da4cc8422a363221a1349",
+    "tools/tool_io.c": "c8aef71ea35ced4b6e1648eb9154420c861d0e4daf8ae2758f930160d295d114",
+    "tools/tool_io.h": "a321ab3bb2c7520a6e31cb9f20f2873d30b4059c390021705ac82e8cc2dd4c95",
+    "tools/sha256.c": "46b3262566d0670d6053b600da8255e86206ae5867858fcee1c0979dc8dbc066",
+    "tools/sha256.h": "84414ccf4eeed99e58f92a975b0629836f4f1e7686cbb1013ab0a7022787c723",
+    "configs/parameter-contract.json": "3171898c0c76367ca2fecfd31279ba2d25cfcd2029ebf1d9495337a5d5fbef06",
+    "tools/gen_parameter_limits.py": "a7fc02bcd26962f0c1a91b221651f7329465ea760076b775577d5918e02fbcb8",
+    "tests/test_decoder.c": "7d70c111c9292bc8697871508746e465477ed8142e69f77056c603dcccbe9109",
+    "tests/test_decoder_retention.c": "2b87723d3ce6fc096ef4506dd4f188373abac6236c2e50a1df41b5fcfa7d50d2"
+  },
+  "files": {
+    "src/decoder.c": {
+      "derived_sha256": "ad774a4c5890d57c3e4dbabb7383fef819af4307be09de3f8c3d66b4d86a6b5e",
+      "replacements": [
+        {
+          "old": "#include \"kws_parameter_limits.h\"\n\n#define NEG_INF (-1.0e30f)\n\nstatic float fast_exp_nonpos(float x) {\n  float y;\n",
+          "new": "#include \"kws_parameter_limits.h\"\n\n#define NEG_INF (-1.0e30f)\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n#define PATH_FIELD(d, i, field) \\\n  (*(lane == 0u ? &(d)->nodes[i].field : &(d)->research_used_paths[i].field))\n#define CHILD_FIELD(d, i, field) \\\n  (*(target_lane == 0u ? &(d)->nodes[i].field : &(d)->research_used_paths[i].field))\nstatic void research_clear_used_paths(kws_decoder_t *d) {\n  for (uint16_t i = 0u; i < KWS_MAX_TRIE_NODES; ++i) {\n    kws_research_path_state_t *s = &d->research_used_paths[i];\n    s->score = s->blank_score = s->next_score = s->next_blank_score = NEG_INF;\n    s->acoustic_score = s->blank_acoustic_score = NEG_INF;\n    s->next_acoustic_score = s->next_blank_acoustic_score = NEG_INF;\n  }\n}\n#else\n#define PATH_FIELD(d, i, field) ((d)->nodes[i].field)\n#define CHILD_FIELD(d, i, field) ((d)->nodes[i].field)\n#endif\n\nstatic float fast_exp_nonpos(float x) {\n  float y;\n"
+        },
+        {
+          "old": "                           float token_boost,\n                           float retention_log) {\n  memset(d, 0, sizeof(*d));\n  d->token_boost = token_boost;\n  d->retention_log = retention_log;\n  d->silence_retention_log = KWS_SILENCE_RETENTION_LOG;\n",
+          "new": "                           float token_boost,\n                           float retention_log) {\n  memset(d, 0, sizeof(*d));\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  research_clear_used_paths(d);\n#endif\n  d->token_boost = token_boost;\n  d->retention_log = retention_log;\n  d->silence_retention_log = KWS_SILENCE_RETENTION_LOG;\n"
+        },
+        {
+          "old": "      fuzzy_child_cost_log < KWS_MIN_PATH_RETENTION_LOG) {\n    return KWS_EINVAL;\n  }\n  d->silence_retention_log = logf(blank_retention);\n  d->fuzzy_child_retention_cost_log = fuzzy_child_cost_log;\n  kws_decoder_reset(d);\n",
+          "new": "      fuzzy_child_cost_log < KWS_MIN_PATH_RETENTION_LOG) {\n    return KWS_EINVAL;\n  }\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  if (d->research_child_admission != 0u) {\n    return KWS_EINVAL;\n  }\n#endif\n  d->silence_retention_log = logf(blank_retention);\n  d->fuzzy_child_retention_cost_log = fuzzy_child_cost_log;\n  kws_decoder_reset(d);\n"
+        },
+        {
+          "old": "                                      uint16_t vocab_size) {\n  float boost;\n  float retention_log;\n  kws_status_t validation;\n\n  validation = validate_keywords(keywords, count, vocab_size);\n",
+          "new": "                                      uint16_t vocab_size) {\n  float boost;\n  float retention_log;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  uint8_t research_mode = d->research_child_admission;\n#endif\n  kws_status_t validation;\n\n  validation = validate_keywords(keywords, count, vocab_size);\n"
+        },
+        {
+          "old": "  boost = d->token_boost;\n  retention_log = d->retention_log;\n  init_structure(d, boost, retention_log);\n  d->keyword_count = (uint16_t)count;\n\n  for (size_t k = 0u; k < count; ++k) {\n",
+          "new": "  boost = d->token_boost;\n  retention_log = d->retention_log;\n  init_structure(d, boost, retention_log);\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  d->research_child_admission = research_mode;\n#endif\n  d->keyword_count = (uint16_t)count;\n\n  for (size_t k = 0u; k < count; ++k) {\n"
+        },
+        {
+          "old": "         * keeps running, so a partial trie would silently match a prefix of\n         * the caller's intent. */\n        init_structure(d, boost, retention_log);\n        return KWS_ENOMEM;\n      }\n    }\n",
+          "new": "         * keeps running, so a partial trie would silently match a prefix of\n         * the caller's intent. */\n        init_structure(d, boost, retention_log);\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n        d->research_child_admission = research_mode;\n#endif\n        return KWS_ENOMEM;\n      }\n    }\n"
+        },
+        {
+          "old": "}\n\nstatic void reset_paths(kws_decoder_t *d) {\n  memset(d->immediate_confidences, 0, sizeof(d->immediate_confidences));\n  memset(d->immediate_blank_frames, 0, sizeof(d->immediate_blank_frames));\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n",
+          "new": "}\n\nstatic void reset_paths(kws_decoder_t *d) {\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  research_clear_used_paths(d);\n#endif\n  memset(d->immediate_confidences, 0, sizeof(d->immediate_confidences));\n  memset(d->immediate_blank_frames, 0, sizeof(d->immediate_blank_frames));\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n"
+        },
+        {
+          "old": "  reset_paths(d);\n  d->inactive_frames = 0u;\n}\n\nstatic int immediate_better(const kws_decoder_t *d,\n                            int candidate,\n",
+          "new": "  reset_paths(d);\n  d->inactive_frames = 0u;\n}\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\nkws_status_t kws_decoder_research_set_child_admission(\n    kws_decoder_t *d, kws_research_child_admission_t mode) {\n  if (d == NULL || (mode != KWS_RESEARCH_STRICT_CHILDREN &&\n                    mode != KWS_RESEARCH_SINGLE_FUZZY_WO) ||\n      d->fuzzy_child_retention_cost_log != KWS_FUZZY_CHILD_RETENTION_COST_LOG ||\n      d->silence_retention_log != KWS_SILENCE_RETENTION_LOG) {\n    return KWS_EINVAL;\n  }\n  d->research_child_admission = (uint8_t)mode;\n  kws_decoder_reset(d);\n  return KWS_OK;\n}\n#endif\n\nstatic int immediate_better(const kws_decoder_t *d,\n                            int candidate,\n"
+        },
+        {
+          "old": "    d->nodes[i].next_blank_score = NEG_INF;\n    d->nodes[i].next_acoustic_score = NEG_INF;\n    d->nodes[i].next_blank_acoustic_score = NEG_INF;\n  }\n  d->nodes[0].next_score = 0.0f;\n  d->nodes[0].next_acoustic_score = 0.0f;\n\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n    float nonblank = (i == 0u) ? 0.0f : d->nodes[i].score;\n    float separated = (i == 0u) ? NEG_INF : d->nodes[i].blank_score;\n    float nonblank_acoustic =\n        (i == 0u) ? 0.0f : d->nodes[i].acoustic_score;\n    float separated_acoustic =\n        (i == 0u) ? NEG_INF : d->nodes[i].blank_acoustic_score;\n    uint16_t child;\n\n    if (i != 0u) {\n      if (nonblank > NEG_INF / 2.0f) {\n",
+          "new": "    d->nodes[i].next_blank_score = NEG_INF;\n    d->nodes[i].next_acoustic_score = NEG_INF;\n    d->nodes[i].next_blank_acoustic_score = NEG_INF;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n    d->research_used_paths[i].next_score = NEG_INF;\n    d->research_used_paths[i].next_blank_score = NEG_INF;\n    d->research_used_paths[i].next_acoustic_score = NEG_INF;\n    d->research_used_paths[i].next_blank_acoustic_score = NEG_INF;\n#endif\n  }\n  d->nodes[0].next_score = 0.0f;\n  d->nodes[0].next_acoustic_score = 0.0f;\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  for (unsigned lane = 0u;\n       lane < (d->research_child_admission == KWS_RESEARCH_SINGLE_FUZZY_WO ? 2u : 1u);\n       ++lane) {\n#endif\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n    float nonblank = (i == 0u) ? 0.0f : PATH_FIELD(d, i, score);\n    float separated = (i == 0u) ? NEG_INF : PATH_FIELD(d, i, blank_score);\n    float nonblank_acoustic =\n        (i == 0u) ? 0.0f : PATH_FIELD(d, i, acoustic_score);\n    float separated_acoustic =\n        (i == 0u) ? NEG_INF : PATH_FIELD(d, i, blank_acoustic_score);\n    uint16_t child;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n    if (i == 0u && lane != 0u) {\n      nonblank = nonblank_acoustic = NEG_INF;\n    }\n#endif\n\n    if (i != 0u) {\n      if (nonblank > NEG_INF / 2.0f) {\n"
+        },
+        {
+          "old": "          /* Decoder blank evidence is the reliable utterance-boundary signal.\n           * Do not let a noisy/VAD-active frame keep an old keyword prefix\n           * alive at the slower speech retention rate. */\n          max_assign_pair(&d->nodes[i].next_blank_score,\n                          &d->nodes[i].next_blank_acoustic_score,\n                          nonblank + d->silence_retention_log, nonblank_acoustic);\n        } else if (top_token == d->nodes[i].token) {\n          max_assign_pair(&d->nodes[i].next_score,\n                          &d->nodes[i].next_acoustic_score,\n                          nonblank + decay, nonblank_acoustic);\n        }\n      }\n      if (separated > NEG_INF / 2.0f && blank_dominant != 0) {\n        max_assign_pair(&d->nodes[i].next_blank_score,\n                        &d->nodes[i].next_blank_acoustic_score,\n                        separated + d->silence_retention_log, separated_acoustic);\n      }\n    }\n",
+          "new": "          /* Decoder blank evidence is the reliable utterance-boundary signal.\n           * Do not let a noisy/VAD-active frame keep an old keyword prefix\n           * alive at the slower speech retention rate. */\n          max_assign_pair(&PATH_FIELD(d, i, next_blank_score),\n                          &PATH_FIELD(d, i, next_blank_acoustic_score),\n                          nonblank + d->silence_retention_log, nonblank_acoustic);\n        } else if (top_token == d->nodes[i].token) {\n          max_assign_pair(&PATH_FIELD(d, i, next_score),\n                          &PATH_FIELD(d, i, next_acoustic_score),\n                          nonblank + decay, nonblank_acoustic);\n        }\n      }\n      if (separated > NEG_INF / 2.0f && blank_dominant != 0) {\n        max_assign_pair(&PATH_FIELD(d, i, next_blank_score),\n                        &PATH_FIELD(d, i, next_blank_acoustic_score),\n                        separated + d->silence_retention_log, separated_acoustic);\n      }\n    }\n"
+        },
+        {
+          "old": "      int repeated_token = i != 0u && token == d->nodes[i].token;\n      float base;\n      float base_acoustic;\n\n      if (repeated_token != 0) {\n        base = separated;\n",
+          "new": "      int repeated_token = i != 0u && token == d->nodes[i].token;\n      float base;\n      float base_acoustic;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n      unsigned target_lane = lane;\n      if (i != 0u && top_token != token && d->research_child_admission != 0u) {\n        if (d->research_child_admission != KWS_RESEARCH_SINGLE_FUZZY_WO ||\n            token != 4u || lane != 0u) {\n          child = d->nodes[child].next_sibling;\n          continue;\n        }\n        target_lane = 1u;\n      }\n#endif\n\n      if (repeated_token != 0) {\n        base = separated;\n"
+        },
+        {
+          "old": "        if (i != 0u && top_token != token) {\n          search_log_probability += d->fuzzy_child_retention_cost_log;\n        }\n        max_assign_pair(&d->nodes[child].next_score,\n                        &d->nodes[child].next_acoustic_score,\n                        base + search_log_probability,\n                        base_acoustic + acoustic_log_probability);\n      }\n",
+          "new": "        if (i != 0u && top_token != token) {\n          search_log_probability += d->fuzzy_child_retention_cost_log;\n        }\n        max_assign_pair(&CHILD_FIELD(d, child, next_score),\n                        &CHILD_FIELD(d, child, next_acoustic_score),\n                        base + search_log_probability,\n                        base_acoustic + acoustic_log_probability);\n      }\n"
+        },
+        {
+          "old": "    }\n  }\n\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n    float terminal_score;\n    float terminal_acoustic;\n    d->nodes[i].score = d->nodes[i].next_score;\n    d->nodes[i].blank_score = d->nodes[i].next_blank_score;\n    d->nodes[i].acoustic_score = d->nodes[i].next_acoustic_score;\n    d->nodes[i].blank_acoustic_score =\n        d->nodes[i].next_blank_acoustic_score;\n    if (d->nodes[i].score >= d->nodes[i].blank_score) {\n      terminal_score = d->nodes[i].score;\n      terminal_acoustic = d->nodes[i].acoustic_score;\n    } else {\n      terminal_score = d->nodes[i].blank_score;\n      terminal_acoustic = d->nodes[i].blank_acoustic_score;\n    }\n    if (speech_active && d->nodes[i].terminal_keyword >= 0 &&\n        terminal_score > NEG_INF / 2.0f &&\n",
+          "new": "    }\n  }\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  }\n#endif\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  for (unsigned lane = 0u;\n       lane < (d->research_child_admission == KWS_RESEARCH_SINGLE_FUZZY_WO ? 2u : 1u);\n       ++lane) {\n#endif\n  for (uint16_t i = 0u; i < d->node_count; ++i) {\n    float terminal_score;\n    float terminal_acoustic;\n    PATH_FIELD(d, i, score) = PATH_FIELD(d, i, next_score);\n    PATH_FIELD(d, i, blank_score) = PATH_FIELD(d, i, next_blank_score);\n    PATH_FIELD(d, i, acoustic_score) = PATH_FIELD(d, i, next_acoustic_score);\n    PATH_FIELD(d, i, blank_acoustic_score) =\n        PATH_FIELD(d, i, next_blank_acoustic_score);\n    if (PATH_FIELD(d, i, score) >= PATH_FIELD(d, i, blank_score)) {\n      terminal_score = PATH_FIELD(d, i, score);\n      terminal_acoustic = PATH_FIELD(d, i, acoustic_score);\n    } else {\n      terminal_score = PATH_FIELD(d, i, blank_score);\n      terminal_acoustic = PATH_FIELD(d, i, blank_acoustic_score);\n    }\n    if (speech_active && d->nodes[i].terminal_keyword >= 0 &&\n        terminal_score > NEG_INF / 2.0f &&\n"
+        },
+        {
+          "old": "    }\n  }\n\n  /* Resolve the entire frame before mutating the held candidate. Otherwise\n   * traversal order can briefly replace it and reset its grace age, even when\n   * the same keyword ultimately wins with refreshed confidence. */\n",
+          "new": "    }\n  }\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  }\n#endif\n\n  /* Resolve the entire frame before mutating the held candidate. Otherwise\n   * traversal order can briefly replace it and reset its grace age, even when\n   * the same keyword ultimately wins with refreshed confidence. */\n"
+        },
+        {
+          "old": "      float score = use_nonblank != 0 ? terminal->score : terminal->blank_score;\n      float acoustic = use_nonblank != 0 ? terminal->acoustic_score\n                                         : terminal->blank_acoustic_score;\n      if (score <= NEG_INF / 2.0f || acoustic <= NEG_INF / 2.0f ||\n          score - acoustic < KWS_MIN_PATH_RETENTION_LOG) {\n        d->immediate_confidences[k] = 0.0f;\n",
+          "new": "      float score = use_nonblank != 0 ? terminal->score : terminal->blank_score;\n      float acoustic = use_nonblank != 0 ? terminal->acoustic_score\n                                         : terminal->blank_acoustic_score;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n      if (d->research_child_admission == KWS_RESEARCH_SINGLE_FUZZY_WO) {\n        const kws_research_path_state_t *used =\n            &d->research_used_paths[d->terminal_nodes[k]];\n        int used_nonblank = used->score >= used->blank_score;\n        float used_score = used_nonblank != 0 ? used->score : used->blank_score;\n        float used_acoustic = used_nonblank != 0 ? used->acoustic_score\n                                                : used->blank_acoustic_score;\n        if (used_score > NEG_INF / 2.0f && used_acoustic > NEG_INF / 2.0f &&\n            used_score - used_acoustic >= KWS_MIN_PATH_RETENTION_LOG &&\n            (score <= NEG_INF / 2.0f || acoustic <= NEG_INF / 2.0f ||\n             score - acoustic < KWS_MIN_PATH_RETENTION_LOG || used_score > score)) {\n          score = used_score;\n          acoustic = used_acoustic;\n        }\n      }\n#endif\n      if (score <= NEG_INF / 2.0f || acoustic <= NEG_INF / 2.0f ||\n          score - acoustic < KWS_MIN_PATH_RETENTION_LOG) {\n        d->immediate_confidences[k] = 0.0f;\n"
+        }
+      ]
+    },
+    "src/decoder.h": {
+      "derived_sha256": "e7d79a59c578fda0070826715f949d5f96e516442e6c91819f125b3020469d6d",
+      "replacements": [
+        {
+          "old": "#include <stdint.h>\n\n#include \"kws_pipeline/kws.h\"\n\ntypedef struct kws_trie_node {\n  uint16_t token;\n",
+          "new": "#include <stdint.h>\n\n#include \"kws_pipeline/kws.h\"\n\n#if defined(KWS_RESEARCH_CHILD_ADMISSION) && KWS_RESEARCH_CHILD_ADMISSION != 1\n#error KWS_RESEARCH_CHILD_ADMISSION must be explicitly enabled as 1 or omitted.\n#endif\n\ntypedef struct kws_trie_node {\n  uint16_t token;\n"
+        },
+        {
+          "old": "  float next_acoustic_score;\n  float next_blank_acoustic_score;\n} kws_trie_node_t;\n\ntypedef struct kws_decoder {\n  kws_trie_node_t nodes[KWS_MAX_TRIE_NODES];\n",
+          "new": "  float next_acoustic_score;\n  float next_blank_acoustic_score;\n} kws_trie_node_t;\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n#include \"kws_debug.h\"\ntypedef struct kws_research_path_state {\n  float score;\n  float blank_score;\n  float next_score;\n  float next_blank_score;\n  float acoustic_score;\n  float blank_acoustic_score;\n  float next_acoustic_score;\n  float next_blank_acoustic_score;\n} kws_research_path_state_t;\n#endif\n\ntypedef struct kws_decoder {\n  kws_trie_node_t nodes[KWS_MAX_TRIE_NODES];\n"
+        },
+        {
+          "old": "  uint16_t pending_depth;\n  uint16_t pending_age_frames;\n  uint16_t pending_blank_frames;\n} kws_decoder_t;\n\nvoid kws_decoder_init(kws_decoder_t *d,\n                      float token_boost,\n",
+          "new": "  uint16_t pending_depth;\n  uint16_t pending_age_frames;\n  uint16_t pending_blank_frames;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  /* The original node states form budget lane 0. Lane 1 has used exactly one\n   * non-top1 wo child. Never merge lanes: their future legal moves differ. */\n  kws_research_path_state_t research_used_paths[KWS_MAX_TRIE_NODES];\n  uint8_t research_child_admission; /* 0 preserves the unmodified decoder. */\n#endif\n} kws_decoder_t;\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\nkws_status_t kws_decoder_research_set_child_admission(\n    kws_decoder_t *d, kws_research_child_admission_t mode);\n#endif\n\nvoid kws_decoder_init(kws_decoder_t *d,\n                      float token_boost,\n"
+        }
+      ]
+    },
+    "src/kws.c": {
+      "derived_sha256": "9ee4493160919dd7193c4c54fb244c0a6d50846ee7760ec99079be700853685e",
+      "replacements": [
+        {
+          "old": "  out_state->silence_retention_log = engine->decoder.silence_retention_log;\n  out_state->fuzzy_child_retention_cost_log =\n      engine->decoder.fuzzy_child_retention_cost_log;\n\n  for (uint16_t i = 0u; i < engine->decoder.node_count; ++i) {\n    const kws_trie_node_t *src = &engine->decoder.nodes[i];\n",
+          "new": "  out_state->silence_retention_log = engine->decoder.silence_retention_log;\n  out_state->fuzzy_child_retention_cost_log =\n      engine->decoder.fuzzy_child_retention_cost_log;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  out_state->research_child_admission = engine->decoder.research_child_admission;\n#endif\n\n  for (uint16_t i = 0u; i < engine->decoder.node_count; ++i) {\n    const kws_trie_node_t *src = &engine->decoder.nodes[i];\n"
+        },
+        {
+          "old": "    dst->blank_score = src->blank_score;\n    dst->acoustic_score = src->acoustic_score;\n    dst->blank_acoustic_score = src->blank_acoustic_score;\n  }\n\n  return KWS_OK;\n",
+          "new": "    dst->blank_score = src->blank_score;\n    dst->acoustic_score = src->acoustic_score;\n    dst->blank_acoustic_score = src->blank_acoustic_score;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n    const kws_research_path_state_t *used = &engine->decoder.research_used_paths[i];\n    dst->research_used_score = used->score;\n    dst->research_used_blank_score = used->blank_score;\n    dst->research_used_acoustic_score = used->acoustic_score;\n    dst->research_used_blank_acoustic_score = used->blank_acoustic_score;\n#endif\n  }\n\n  return KWS_OK;\n"
+        },
+        {
+          "old": "  return kws_decoder_debug_set_search_policy(\n      &engine->decoder, blank_retention, fuzzy_child_cost_log);\n}\n\nkws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,\n                                           const float *logits,\n",
+          "new": "  return kws_decoder_debug_set_search_policy(\n      &engine->decoder, blank_retention, fuzzy_child_cost_log);\n}\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\nkws_status_t kws_engine_research_set_child_admission(\n    kws_engine_t *engine, kws_research_child_admission_t mode) {\n  if (engine == NULL || engine->model.feature_dim != 32u ||\n      engine->model.hidden_dim != 64u || engine->model.vocab_size != 5u ||\n      engine->model.vocab_fingerprint != UINT64_C(0x316aea1a94b303bf)) {\n    return KWS_EINVAL;\n  }\n  return kws_decoder_research_set_child_admission(&engine->decoder, mode);\n}\n#endif\n\nkws_status_t kws_engine_debug_replay_frame(kws_engine_t *engine,\n                                           const float *logits,\n"
+        }
+      ]
+    },
+    "src/kws_debug.h": {
+      "derived_sha256": "1dd63719276769536ded35f820030a194c24fdb2d02539fd8c9773ebc2ec0c2f",
+      "replacements": [
+        {
+          "old": "#include <stdint.h>\n\n#include \"kws_pipeline/kws.h\"\n\n/*\n * Development-only, repo-internal acoustic/decoder bridge.\n",
+          "new": "#include <stdint.h>\n\n#include \"kws_pipeline/kws.h\"\n\n#if defined(KWS_RESEARCH_CHILD_ADMISSION) && KWS_RESEARCH_CHILD_ADMISSION != 1\n#error KWS_RESEARCH_CHILD_ADMISSION must be explicitly enabled as 1 or omitted.\n#endif\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n/* Offline research only. No wu token or pronunciation-recognition claim. */\ntypedef enum kws_research_child_admission {\n  KWS_RESEARCH_STRICT_CHILDREN = 1,\n  KWS_RESEARCH_SINGLE_FUZZY_WO = 2\n} kws_research_child_admission_t;\nkws_status_t kws_engine_research_set_child_admission(\n    kws_engine_t *engine, kws_research_child_admission_t mode);\n#endif\n\n/*\n * Development-only, repo-internal acoustic/decoder bridge.\n"
+        },
+        {
+          "old": "  float blank_score;\n  float acoustic_score;\n  float blank_acoustic_score;\n} kws_decoder_debug_node_state_t;\n\ntypedef struct kws_decoder_debug_state {\n",
+          "new": "  float blank_score;\n  float acoustic_score;\n  float blank_acoustic_score;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  float research_used_score;\n  float research_used_blank_score;\n  float research_used_acoustic_score;\n  float research_used_blank_acoustic_score;\n#endif\n} kws_decoder_debug_node_state_t;\n\ntypedef struct kws_decoder_debug_state {\n"
+        },
+        {
+          "old": "  float retention_log;\n  float silence_retention_log;\n  float fuzzy_child_retention_cost_log;\n} kws_decoder_debug_state_t;\n\nint kws_engine_debug_copy_last_frame(const kws_engine_t *engine,\n",
+          "new": "  float retention_log;\n  float silence_retention_log;\n  float fuzzy_child_retention_cost_log;\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  uint8_t research_child_admission;\n#endif\n} kws_decoder_debug_state_t;\n\nint kws_engine_debug_copy_last_frame(const kws_engine_t *engine,\n"
+        }
+      ]
+    },
+    "tools/kws_decoder_replay.c": {
+      "derived_sha256": "aae05fc0fe7d2e79e803726f3ebb70bd34a27107085b28f5f9e28cfae6bedabe",
+      "replacements": [
+        {
+          "old": "#include <stdlib.h>\n#include <string.h>\n\nstatic int parse_float(const char *text, float *out) {\n  char *end = NULL;\n  float value;\n",
+          "new": "#include <stdlib.h>\n#include <string.h>\n\n#ifndef KWS_RESEARCH_CHILD_ADMISSION\nstatic int parse_float(const char *text, float *out) {\n  char *end = NULL;\n  float value;\n"
+        },
+        {
+          "old": "  return 1;\n}\n\nint main(int argc, char **argv) {\n  uint8_t *model_blob = NULL;\n  uint8_t *pack_blob = NULL;\n",
+          "new": "  return 1;\n}\n\n#endif\n\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\nstatic int research_inputs_valid(const kws_model_t *model,\n                                 const kws_keyword_pack_t *pack,\n                                 const char *model_sha256) {\n  static const uint16_t tokens[2][4] = {{1u, 2u, 3u, 4u}, {3u, 4u, 3u, 4u}};\n  unsigned seen = 0u;\n  if (model->feature_dim != 32u || model->hidden_dim != 64u ||\n      model->vocab_size != 5u ||\n      model->vocab_fingerprint != UINT64_C(0x316aea1a94b303bf) ||\n      strcmp(model_sha256,\n             \"ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402\") != 0 ||\n      pack->keyword_count != 2u) {\n    return 0;\n  }\n  for (size_t k = 0u; k < pack->keyword_count; ++k) {\n    const kws_keyword_t *kw = &pack->keywords[k];\n    if (kw->id < 1u || kw->id > 2u || kw->num_tokens != 4u ||\n        kw->threshold != 0.55f || kw->min_trailing_blanks != 0u ||\n        kw->priority != 0u || kw->prefix_policy != KWS_PREFIX_IMMEDIATE ||\n        kw->grace_frames != 0u ||\n        memcmp(kw->tokens, tokens[kw->id - 1u], sizeof(tokens[0])) != 0 ||\n        (seen & (1u << kw->id)) != 0u) {\n      return 0;\n    }\n    seen |= 1u << kw->id;\n  }\n  return seen == 6u;\n}\n#endif\n\nint main(int argc, char **argv) {\n  uint8_t *model_blob = NULL;\n  uint8_t *pack_blob = NULL;\n"
+        },
+        {
+          "old": "  kws_model_t model;\n  kws_keyword_pack_t pack;\n  kws_config_t config = kws_default_config();\n  float blank_retention = expf(KWS_SILENCE_RETENTION_LOG);\n  float fuzzy_child_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;\n  int search_policy_override = 0;\n  kws_engine_t *engine = NULL;\n  void *arena = NULL;\n  kws_trace_reader_t reader = {0};\n",
+          "new": "  kws_model_t model;\n  kws_keyword_pack_t pack;\n  kws_config_t config = kws_default_config();\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  kws_research_child_admission_t child_admission = 0;\n#else\n  float blank_retention = expf(KWS_SILENCE_RETENTION_LOG);\n  float fuzzy_child_cost_log = KWS_FUZZY_CHILD_RETENTION_COST_LOG;\n  int search_policy_override = 0;\n#endif\n  kws_engine_t *engine = NULL;\n  void *arena = NULL;\n  kws_trace_reader_t reader = {0};\n"
+        },
+        {
+          "old": "  if (argc < 5 || ((argc - 5) % 2) != 0) {\n    fprintf(stderr,\n            \"usage: %s model.kwm keywords.kwk trace.kwtr recording-id \"\n            \"[--state-retention value] [--refractory-ms value] \"\n            \"[--blank-retention value] [--fuzzy-child-cost-log value]\\n\",\n            argv[0]);\n    return 2;\n  }\n  for (int i = 5; i < argc; i += 2) {\n    if (strcmp(argv[i], \"--state-retention\") == 0) {\n      if (!parse_float(argv[i + 1], &config.state_retention)) {\n        fprintf(stderr, \"invalid --state-retention\\n\");\n",
+          "new": "  if (argc < 5 || ((argc - 5) % 2) != 0) {\n    fprintf(stderr,\n            \"usage: %s model.kwm keywords.kwk trace.kwtr recording-id \"\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n            \"--child-admission strict_children|single_fuzzy_wo\\n\",\n#else\n            \"[--state-retention value] [--refractory-ms value] \"\n            \"[--blank-retention value] [--fuzzy-child-cost-log value]\\n\",\n#endif\n            argv[0]);\n    return 2;\n  }\n  for (int i = 5; i < argc; i += 2) {\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n    if (strcmp(argv[i], \"--child-admission\") != 0 || child_admission != 0) {\n      fprintf(stderr, \"research replay requires one --child-admission mode\\n\");\n      return 2;\n    }\n    if (strcmp(argv[i + 1], \"strict_children\") == 0) {\n      child_admission = KWS_RESEARCH_STRICT_CHILDREN;\n    } else if (strcmp(argv[i + 1], \"single_fuzzy_wo\") == 0) {\n      child_admission = KWS_RESEARCH_SINGLE_FUZZY_WO;\n    } else {\n      fprintf(stderr, \"invalid research --child-admission mode\\n\");\n      return 2;\n    }\n#else\n    if (strcmp(argv[i], \"--state-retention\") == 0) {\n      if (!parse_float(argv[i + 1], &config.state_retention)) {\n        fprintf(stderr, \"invalid --state-retention\\n\");\n"
+        },
+        {
+          "old": "      fprintf(stderr, \"unknown option: %s\\n\", argv[i]);\n      return 2;\n    }\n  }\n\n  if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||\n      kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0 ||\n",
+          "new": "      fprintf(stderr, \"unknown option: %s\\n\", argv[i]);\n      return 2;\n    }\n#endif\n  }\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  if (child_admission == 0) {\n    fprintf(stderr, \"research --child-admission mode is required\\n\");\n    return 2;\n  }\n#endif\n\n  if (kws_tool_read_file(argv[1], &model_blob, &model_bytes) == 0 ||\n      kws_tool_read_file(argv[2], &pack_blob, &pack_bytes) == 0 ||\n"
+        },
+        {
+          "old": "    fprintf(stderr, \"cannot open model/keyword pack\\n\");\n    goto cleanup;\n  }\n  if (!kws_trace_reader_open(&reader, argv[3], &trace)) {\n    fprintf(stderr, \"cannot open acoustic trace: %s\\n\", argv[3]);\n    goto cleanup;\n",
+          "new": "    fprintf(stderr, \"cannot open model/keyword pack\\n\");\n    goto cleanup;\n  }\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  if (!research_inputs_valid(&model, &pack, model_sha256)) {\n    fprintf(stderr, \"research replay requires pinned F32/H64/V5 model and dual full-keyword pack\\n\");\n    goto cleanup;\n  }\n#endif\n  if (!kws_trace_reader_open(&reader, argv[3], &trace)) {\n    fprintf(stderr, \"cannot open acoustic trace: %s\\n\", argv[3]);\n    goto cleanup;\n"
+        },
+        {
+          "old": "    fprintf(stderr, \"cannot initialize replay engine\\n\");\n    goto cleanup;\n  }\n  if (search_policy_override != 0 &&\n      kws_engine_debug_set_decoder_search_policy(\n          engine, blank_retention, fuzzy_child_cost_log) != KWS_OK) {\n    fprintf(stderr, \"invalid decoder search-policy override\\n\");\n    goto cleanup;\n  }\n\n  for (;;) {\n    uint64_t end_sample = 0u;\n",
+          "new": "    fprintf(stderr, \"cannot initialize replay engine\\n\");\n    goto cleanup;\n  }\n#ifdef KWS_RESEARCH_CHILD_ADMISSION\n  if (kws_engine_research_set_child_admission(engine, child_admission) != KWS_OK) {\n    fprintf(stderr, \"invalid research child-admission policy\\n\");\n    goto cleanup;\n  }\n#else\n  if (search_policy_override != 0 &&\n      kws_engine_debug_set_decoder_search_policy(\n          engine, blank_retention, fuzzy_child_cost_log) != KWS_OK) {\n    fprintf(stderr, \"invalid decoder search-policy override\\n\");\n    goto cleanup;\n  }\n#endif\n\n  for (;;) {\n    uint64_t end_sample = 0u;\n"
+        }
+      ]
+    }
+  }
+}

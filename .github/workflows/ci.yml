@@ -99,6 +99,21 @@ jobs:
           python3 -S -B -OO tests/test_candidate_encoder_source.py
       - name: Verify tracked worktree after Candidate encoder source contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Candidate encoder source contracts"'
+      - name: Near-pronunciation saved-pair source contracts without inference
+        run: |
+          python3 -S -B research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -S -B -O research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -S -B -OO research/near_pronunciation_v1/tests/test_saved_pair.py
+          python3 -B tools/test_inventory.py --root research/near_pronunciation_v1/tests --workflow .github/workflows/ci.yml
+      - name: Verify tracked worktree after Near-pronunciation source contracts
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation source contracts"'
+      - name: Near-pronunciation isolated decoder synthetic verification
+        run: |
+          command -v cc
+          python3 -S -B research/near_pronunciation_v1/verify_decoder.py \
+            --source-root . --output-dir "$RUNNER_TEMP/near-pronunciation-decoder-verify"
+      - name: Verify tracked worktree after Near-pronunciation decoder verification
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "Near-pronunciation decoder verification"'
       - name: Three-ASR pending label metadata without model execution
         run: |
           python3 -S -B tests/test_reviewed_corpus_admission.py ThreeASRMetadataTests

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "git_blob_sha1": "329b8bad2a1c2a345ac8746d0d7c50e848f21d08",
-      "sha256": "0c926a6957e11ea0132270aa42684ac704758656ae33bfccd0f55e4212730a33",
-      "bytes": 39448
+      "bytes": 40547,
+      "git_blob_sha1": "d67b09c8b9ce9e34b4c17e5ba22a7bdf09598d58",
+      "sha256": "ae4e218c7eb050cc0a8735f207128295f2deb77254218a754bf7577470cacc41"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -16786,6 +16786,33 @@
             "git_blob_sha1": "329b8bad2a1c2a345ac8746d0d7c50e848f21d08",
             "sha256": "0c926a6957e11ea0132270aa42684ac704758656ae33bfccd0f55e4212730a33",
             "bytes": 39448
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "946d50c29247e71d8dff8a688a293dcac5ee01fd",
+      "from_tree": "dd1ca5b0292179fbf351d61b29a2ba5e1892883e",
+      "operation_id": "near-pronunciation-source-and-synthetic-contracts-20261011",
+      "scope": "Register fixed-input near-pronunciation saved-pair standard-library source contracts in normal, -O and -OO modes and isolated compiler-only synthetic decoder verification in existing CI. Preserve all fourth-run archive and shipping source bytes.",
+      "rationale": "Public source and CI identity metadata only. The checks do not read model files, run acoustic inference, replay user traces, train, install packages, publish data, activate an experiment workflow, or alter shipping defaults. Source-only tests and synthetic decoder tests do not establish FAR/FRR, pronunciation coverage or board qualification. Existing retention/provenance and execution authority stay unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "git_blob_sha1": "329b8bad2a1c2a345ac8746d0d7c50e848f21d08",
+            "sha256": "0c926a6957e11ea0132270aa42684ac704758656ae33bfccd0f55e4212730a33",
+            "bytes": 39448
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 40547,
+            "git_blob_sha1": "d67b09c8b9ce9e34b4c17e5ba22a7bdf09598d58",
+            "sha256": "ae4e218c7eb050cc0a8735f207128295f2deb77254218a754bf7577470cacc41"
           }
         }
       ]
