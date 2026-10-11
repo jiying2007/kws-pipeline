@@ -249,10 +249,6 @@ def execute_setup(diagnostic):
         name = row['path']
         check(not Path(name).is_absolute() and '..' not in Path(name).parts, 'source_path')
         acquired['source/' + name] = download.get(row, root / 'source' / name)
-    diagnostic.enter('model_download')
-    model = {'url': MODEL_URL, 'sha256': MODEL_SHA}
-    diagnostic.begin_asset('model', 1, model)
-    acquired['model/small.pt'] = download.get(model, root / 'model/small.pt')
     diagnostic.enter('wheel_lock_validation')
     wheels = locks['runtime-lock.json']['files']
     check(len(wheels) == len({row['name'] for row in wheels}), 'wheel_set')
@@ -261,10 +257,6 @@ def execute_setup(diagnostic):
         diagnostic.begin_asset('wheel', index, row)
         check(Path(row['filename']).name == row['filename'] and row['filename'].endswith('.whl'), 'wheel_filename')
         acquired['wheels/' + row['filename']] = download.get(row, root / 'wheels' / row['filename'])
-    diagnostic.enter('download_receipt')
-    write_once(output / 'download-receipt.json', {'schema': 'whisper-screen-download-v1',
-        'files': acquired, 'total_download_bytes': download.total, 'retry_count': 0,
-        'model_loaded': False, **BOUNDARY})
     diagnostic.enter('runtime_environment')
     os.environ.update(HOME='/runtime/home', TMPDIR='/runtime/tmp', PIP_NO_INDEX='1',
                       PIP_DISABLE_PIP_VERSION_CHECK='1', PYTHONDONTWRITEBYTECODE='1')
@@ -288,6 +280,15 @@ def execute_setup(diagnostic):
     inventory = {'schema': 'whisper-screen-installed-runtime-v1', 'files': members}
     write_once(root / 'installed-inventory.json', inventory)
     shutil.copyfile(root / 'installed-inventory.json', output / 'installed-inventory.json')
+    # Fail before acquiring checkpoint bytes if any locked runtime dependency fails.
+    diagnostic.enter('model_download')
+    model = {'url': MODEL_URL, 'sha256': MODEL_SHA}
+    diagnostic.begin_asset('model', 1, model)
+    acquired['model/small.pt'] = download.get(model, root / 'model/small.pt')
+    diagnostic.enter('download_receipt')
+    write_once(output / 'download-receipt.json', {'schema': 'whisper-screen-download-v1',
+        'files': acquired, 'total_download_bytes': download.total, 'retry_count': 0,
+        'model_loaded': False, **BOUNDARY})
     # Public source/tokenizer/frontend bytes only. The checkpoint is never an artifact.
     diagnostic.enter('retain_public_source')
     shutil.copytree(root / 'source', output / 'official-source')
