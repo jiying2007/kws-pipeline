@@ -1,21 +1,23 @@
 # Qwen12 one-shot controlled native admission capture
 
-Current source state: all three native executions are consumed, with zero
-started and zero completed recognitions. Recovery 2 stopped before its first
-recognition. A separate source-backed replay identified the unchanged complete
-package-budget stress exceeding the former 8MiB compressed limit. The native job again has its literal stop, and
-`execution-release.json` has `enabled=false` and all native review flags false;
-existing bounded publication permission remains true. No recovery 3 identity or
-new native execution is prepared here. The same twelve clips' cumulative maximum
-remains 36 actual recognition attempts.
+Current source state: three native executions are consumed with zero started
+and zero completed recognitions. Recovery 3 static source activation is approved
+for the same twelve public clips and cumulative maximum 36 actual recognition
+attempts. Both workflow mirrors remove only the native literal stop and update
+its status comments. The release sets `enabled=true` and all five native review
+bits true; bounded publication permission remains true. Actual execution-ref
+creation remains held until final source review, exact-head CI, protected merge,
+fresh-main CI and immediate history/ref/zero-use/unique-claim checks. Preparing
+this source does not create that ref, start recognition or authorize training.
 
-This source prepares only a separately reviewed zero-model 12MiB transport
-preflight. It retains the complete original evidence and stress fixture, raises
-only the compressed ZIP cap to 12MiB and chunk count to 48, and keeps the 32MiB
-expanded, 4096-member and 8MiB single-member limits. The new fixed synthetic
-identity cannot reuse either old preflight ref. Actual live readback has not yet
-passed for this capacity. Local fixtures or publication alone do not approve a
-future native run.
+The separately reviewed 12MiB transport source is already public. Its one-shot
+zero-model preflight ran as 38170753261, attempt 1, and complete immutable
+connector readback passed. The 12MiB compressed /
+48-chunk limit is the only prior static capacity change. All expanded/member
+limits, models, inputs, runtime, host cleanup, CPU and wall thresholds remain
+unchanged. The real 12MiB custody result is recorded below. That transport proof
+is one basis of the separate static approval; it does not establish native
+runtime readiness or release the held execution ref.
 
 This new scope consumes exactly twelve pre-existing, public Qwen WAVs from the
 pinned `kws-data` commit. It does not regenerate audio, reuse historical Qwen16
@@ -102,8 +104,9 @@ independent source/run/job, blob, chunk, member and CRC verification. The
 observations and uncertainty without rewriting either execution's evidence.
 Both campaign identities are consumed. The cleanup correction disabled native
 execution at that historical source. Recovery 2 subsequently ran once and is
-also consumed; its terminal outcome is recorded below. Native execution is now
-disabled again.
+also consumed; its terminal outcome is recorded below. Native execution was
+disabled at the subsequent transport-source snapshot; the current recovery 3
+static release and held execution ref are described below.
 
 ## New executable path
 
@@ -206,8 +209,8 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-The current source restores the native condition's literal `false && ` and
-sets `release.enabled=false` plus its five review bits false. All three consumed
+The current static release removes the native condition's literal `false && `
+and sets `release.enabled=true` plus its five review bits true. All three consumed
 source/run/evidence identities remain unchanged. Dispatch requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
@@ -303,11 +306,11 @@ source ref must not be restored. The separately reviewed single continuation use
 create-only evidence ref `evidence/qwen12-native-admission-recovery1` and directory
 `research/qwen12-native-admission-v1/evidence/recovery1`. The reviewed activation source ran once as recorded above. The subsequent cleanup-only
 source restored the native literal stop and disabled the release. Recovery 2
-also ran once and has now been disabled again. Recovery 1's
+also ran once and was disabled before the 12MiB transport repair. Recovery 1's
 pre-run review checked the predecessor's zero recognition consumption, absence
 of the new refs/run, exact source CI, budget and independent review. Its release
 bound the original run, source, evidence commit, archive hash and 0/0/36
-accounting; the current release preserves both consumed predecessors. Across both executions, the same twelve clips
+accounting; the recovery 2 release later preserved both predecessors. Across those two executions, the same twelve clips
 still permit at most 36 recognition attempts; no automatic retry or ref reuse.
 
 A separate source-level compatibility finding is reproducible without a model:
@@ -434,7 +437,7 @@ ASR run's measured resource account and not total CI CPU or traffic.
 Recovery 2 keeps the cleanup helper, host cleanup code, CPU gate and CPU ledger
 byte-for-byte identical to this executed source. Its changed workflow, release
 and campaign constants are separately reviewed identities; this smoke does not
-claim to have executed the future recovery 2 head, any model, or old failed
+claim to have executed a later recovery 2 head, any model, or old failed
 containers. The consumed smoke event is not automatically repeated.
 
 ## Recovery 2 terminal result: run 38167052146
@@ -478,9 +481,9 @@ Whisper bidirectional tunnel receive 774,056,598 bytes; image default-interface
 observed receive delta 45,710,666 bytes; and audio response bodies 776,208 bytes.
 These separate scopes must not be added into an alleged all-network total.
 
-## New 12MiB zero-model transport preflight
+## 12MiB zero-model transport preflight (separate execution)
 
-The sole new source identity is
+The separate synthetic source identity is
 `research/qwen12-native-transport-preflight-12m-v1`. Its create-only evidence
 branch is `evidence/qwen12-native-transport-synthetic-12m-v1`, directory
 `research/qwen12-native-admission-v1/evidence/synthetic-12m-v1`, and fixed purpose
@@ -499,22 +502,33 @@ No artifact, cache or LFS storage is used. The standard Ubuntu job retains its
 create-only evidence ref. This adds bounded synthetic CPU and repository transfer,
 not another model-acquisition reservation or native execution allowance.
 
-The source base is actual public main
-`42b333f8b96c4c9fcca63c9e275d26a4519737c8`. The original stress fixture and all
+That transport repair used public main
+`42b333f8b96c4c9fcca63c9e275d26a4519737c8` as its base. The original stress fixture and all
 scientific/runtime/cleanup behavior remain unchanged. ZIP/chunk limit constants,
 explicit synthetic-purpose selection and safe package-failure diagnostics are
 the only executable changes. Complete source/tokenizer evidence is never dropped
 to meet a size cap. Local replay must pass the unchanged full prepared closure
 at 12MiB, reject it at the historical 8MiB bound, and reject new over-limit data.
 
-A source review and exact-head CI must complete before root considers one fresh
-zero-model preflight branch. Its entire immutable evidence commit must then be
-read back independently, including all 48 chunks, Git blobs, archive/member
-hashes/CRC, fixed seed, and actual run/job/source binding. No live 12MiB readback
-is claimed yet; the former 8MiB proof cannot replace it. Conflict, unknown write
-outcome or failure ends that one preflight without automatic retry. Native
-approvals remain false until a separately reviewed decision; no recovery 3
-source or evidence identity is introduced by this repair.
+The transport source was separately reviewed, merged as public main
+`8c4d430ce1077aa9eefa8de130450319c64e545e`, and passed fresh-main checks before
+its one-shot zero-model run 38170753261 began. Its entire immutable evidence
+commit has been independently read back, including all 48 chunks, Git blobs,
+archive/member hashes/CRC, fixed seed, and actual run/job/source binding. The
+[public custody metadata](evidence/run-38170753261/transport-readback.json) binds
+source `8c4d430ce1077aa9eefa8de130450319c64e545e`, job 114562800402 and evidence
+commit `4b0c01cbd825802dd5c373dab33332402a6af01f`, whose sole parent is that source.
+All 50 files reconstructed the 12,522,365-byte ZIP, SHA-256
+`72fa969479341bfddaa712b600325745d35edad3dae18203d5e2819b17b92424`.
+Normal, `-O` and `-OO` verification agreed; all 14 negative cases were rejected.
+The publisher took 34 seconds within the 39-second fixture job; these intervals
+are not additive and do not measure native CPU or total network usage. There
+were no models, runtime installs, audio forwards, ASR calls, training or artifacts.
+This live result proves bounded synthetic transport, not native readiness. Conflict, unknown write
+outcome or failure ends that one preflight without automatic retry. The custody
+record's `native_execution_approved=false` and other status fields describe that
+historical zero-model run. They remain unchanged and do not describe current
+static release approval. Recovery 3 does not rerun this consumed synthetic identity.
 
 ## Historical recovery 2 budget proposal
 
@@ -547,3 +561,76 @@ bounded. Setup host-accumulator and child intervals differ, so no exact combined
 setup total is invented. The successful zero-model smoke's resource observations
 are listed separately and do not measure all other CI work. No per-run capacity,
 acquisition, memory, output, wall or CPU threshold is raised by this proposal.
+
+
+## Recovery 3 static activation and held execution ref
+
+Actual public-main base: `8c4d430ce1077aa9eefa8de130450319c64e545e`, tree
+`e12cc9ac532b30057703261b741a1870b8f477ce`. The seven-file static activation delta
+uses local disabled preparation `fbeccd8913502307aec11004f6c00a387884fd58`, tree
+`6c527bc35ec7491711cf7c77c44fb11bb8626bcd`, as its separate comparison baseline;
+that local snapshot was not public main. The proposed single native source is
+`research/qwen12-native-admission-recovery3`, with create-only evidence branch
+`evidence/qwen12-native-admission-recovery3` and directory
+`research/qwen12-native-admission-v1/evidence/recovery3`. This exact source name
+joins the independent cleanup retention list without changing its existing
+entries. All immutable old source/run/evidence identities and surviving refs
+remain preserved. The deleted original source ref stays consumed and must not
+be recreated.
+
+The fixed release and campaign contract bind all three prior immutable runs,
+their exact source heads, evidence commits, archive hashes, first attempts and
+0 started / 0 completed / 36 not-run records. A new identity does not reset the
+same-twelve cumulative 36-recognition limit. There is at most one proposed new
+claim, no automatic retry, no unbounded continuation and no inherited success.
+Recovery 1 cleanup remains unconfirmed; the later successful cleanup and smoke
+do not repair that historical unknown. All three current evidence archives
+remain unchanged.
+
+The [recovery 3 resource proposal](recovery3-resource-proposal.json) remains the
+immutable disabled-stage budget snapshot, SHA-256
+`5010e980e75b590fa62331a5bf1fd5ad1e65d916c093a9789eaf2ce4106003d9`.
+Its false and pending fields describe that historical proposal, not current
+static approval. It separately records three prior native observations and one
+unchanged per-run reservation
+for each measurement scope. It does not add ASR response bodies, Whisper tunnel
+traffic, image-interface observations and audio response bodies into an alleged
+wire-byte total. Recovery 1 audio and its never-entered Whisper stage retain
+their source-control-flow inference qualifications. Paused-cgroup CPU excludes
+host/image/final packaging/publisher and post-pause cleanup; sampled thresholds
+have no unconditional finite overshoot bound. Old host receipt endpoints and a
+future host timer covering final packaging differ; their sum is planning only.
+Setup child and host intervals are not silently added. Separate smoke and
+synthetic CI resource use is not included as an invented zero or all-CI total.
+The historical recovery 2 proposal remains byte-for-byte unchanged.
+
+The disabled preparation changed only native identity constants, the exact
+three-predecessor roster, synthetic contract fixtures, source metadata and its
+resource proposal from the public base. This static delta changes only both
+workflow gates/status comments, release approvals and freeze binding, the
+disabled-state test fixture, this README and append-only source-retention
+maintenance/current native workflow hash. The committed-source state and all
+strict gate/approval negative tests remain required.
+Scientific/input/worker/runtime, host cleanup, full stress fixture,
+ZIP/chunk codec and publisher algorithms and budgets are unchanged. The current
+12MiB limit must retain complete evidence; it permits no dropped trace, source,
+completion or failure records. No admission, independent evaluation or training
+result is implied by successful preparation or synthetic transport.
+
+Source, budget, independent review, selected bounded-transport readback and
+historical-uniqueness static approvals are now literal JSON true, together with
+`enabled`; existing bounded publication permission stays true. The three prior
+zero-use records, cumulative limit and exact runtime prerequisite roster remain
+unchanged. Static approval does not mark any future runtime prerequisite passed.
+The bounded-transport approval uses the completed live 12MiB proof at its exact
+public source with unchanged codec/publisher algorithms. The new recovery 3
+native identity has only local fixture coverage and has not executed.
+
+Actual execution-ref creation remains held. The final exact source tree must
+pass review and tests, one source-review PR's exact-head CI, protected merge and
+fresh-main CI. Root must then immediately recheck every consumed history,
+zero-use evidence, surviving refs, absent recovery 3 source/evidence refs and
+prior runs before its single create-only claim. Preliminary absence checks do
+not replace those immediate checks. Any conflict, uncertain create or failure
+stops that claim without retry. Source preparation or publication alone does
+not release the ref, run recognition, establish admission or authorize training.

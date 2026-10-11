@@ -87,6 +87,7 @@ class CleanupRetentionTests(unittest.TestCase):
             "research/qwen12-native-transport-preflight-v1",
             "research/qwen12-native-admission-recovery2",
             "research/qwen12-native-transport-preflight-12m-v1",
+            "research/qwen12-native-admission-recovery3",
         ]
         self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
         self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
@@ -170,6 +171,8 @@ class CleanupRetentionTests(unittest.TestCase):
                     "research/qwen12-native-admission-recovery10",
                     "research/qwen12-native-admission-recovery20",
                     "research/qwen12-native-admission-recovery2-extra",
+                    "research/qwen12-native-admission-recovery30",
+                    "research/qwen12-native-admission-recovery3-extra",
                     "research/qwen12-native-transport-preflight-12m-v10",
                     "research/qwen12-native-transport-preflight-12m-v1-extra",
                     "research/qwen12-native-transport-preflight-v10"]
@@ -189,6 +192,7 @@ class CleanupRetentionTests(unittest.TestCase):
         for branch in ("evidence/qwen12-native-admission-v1",
                        "evidence/qwen12-native-admission-recovery1",
                        "evidence/qwen12-native-admission-recovery2",
+                       "evidence/qwen12-native-admission-recovery3",
                        "evidence/qwen12-native-transport-preflight-v1"):
             for scenario in ("retired", "ancestor", "merged-pr", "closed-pr"):
                 with self.subTest(branch=branch, scenario=scenario):

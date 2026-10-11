@@ -9,8 +9,8 @@ import stat
 import wave
 
 EXPERIMENT = 'qwen12-native-admission-v1'
-BRANCH = 'research/qwen12-native-admission-recovery2'
-# Both consumed public predecessors remain bound; neither identity may be reused.
+BRANCH = 'research/qwen12-native-admission-recovery3'
+# All three consumed public predecessors remain bound; none may be reused.
 # Bind public zero-recognition records; do not infer historical failure causes.
 PREDECESSOR_ZERO_RECOGNITION = {
     'executions': [
@@ -23,6 +23,11 @@ PREDECESSOR_ZERO_RECOGNITION = {
          'executed_head_sha': 'e9297163a21f8f7c2f960301ff05f1894617d2cf',
          'evidence_commit': 'd843cc59113c7fd3ac89a0b4be9db71e5950ea20',
          'archive_sha256': '9b063d2c92ccf88d67678b032d391bf01e0ceb1a626d5cf23a3f11c0fd250d39',
+         'started': 0, 'completed': 0, 'not_run': 36},
+        {'run_id': 38167052146, 'run_attempt': 1,
+         'executed_head_sha': '42b333f8b96c4c9fcca63c9e275d26a4519737c8',
+         'evidence_commit': '43113646c12fc9d6c112481bab6818c96f2ce789',
+         'archive_sha256': '140a18c7429b16674b5a1dc8e1f65f4a1be6b0dd4ecb324b0a4c1ccaff11d157',
          'started': 0, 'completed': 0, 'not_run': 36},
     ],
     'cross_execution_recognition_limit': 36,

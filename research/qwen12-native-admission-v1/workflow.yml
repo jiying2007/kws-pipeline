@@ -2,7 +2,7 @@ name: Qwen12 prospective native admission v1
 on:
   push:
     branches:
-      - research/qwen12-native-admission-recovery2
+      - research/qwen12-native-admission-recovery3
       - research/qwen12-native-transport-preflight-12m-v1
   pull_request:
     paths:
@@ -16,9 +16,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   qwen12:
-    # Consumed recovery2 remains disabled; no further native identity is prepared.
-    # Reviewed release must separately remove this literal false before activation.
-    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery2' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    # Recovery3 static release is approved; all three predecessors are consumed.
+    # Actual execution ref remains held for final CI and immediate unique-claim checks.
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery3' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
