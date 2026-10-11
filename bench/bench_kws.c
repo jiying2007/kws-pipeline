@@ -211,5 +211,9 @@ int main(void) {
   for (size_t i = 0u; i < sizeof(cases) / sizeof(cases[0]); ++i) {
     run_case(&cases[i]);
   }
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    return 1;
+  }
   return 0;
 }

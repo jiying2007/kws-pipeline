@@ -74,13 +74,15 @@
       "source_commit": "d8453ae8b2b2c620716b32c96d9647834ce96746"
     },
     {
-      "path": ".github/workflows/research-native-a20.yml",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/.github/workflows/research-native-a20.yml",
       "mode": "100644",
       "git_blob_sha1": "0a3f2058f2b246caa494e4447f9934cea895c99f",
       "sha256": "fe0956839fe5cd1f3c3785aba20ead22ca39fc207af1eca9e644bc1748c0818f",
       "bytes": 3402,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": ".github/workflows/research-native-a20.yml",
+      "relocation_reason": "Preserve original public A20 workflow bytes while adding optimization-safe admission regression tests to the active workflow. Original PR, commit and byte identities remain unchanged; current active workflow identity is maintained in source-retention-2026-10-07.json."
     },
     {
       "path": "research/consolidation/maintained-sources/pr-485/CONTRIBUTING.md",
@@ -368,31 +370,37 @@
       "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
     },
     {
-      "path": "research/native_a20/PROVENANCE.json",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/PROVENANCE.json",
       "mode": "100644",
       "git_blob_sha1": "b23221bbe8405eb742902feddc5bc090b44dada7",
       "sha256": "f389f31edae9139f718e85bbbd39929b4e5c5768e318e7259ee0bb0b80f7e389",
       "bytes": 12536,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": "research/native_a20/PROVENANCE.json",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/README.md",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/README.md",
       "mode": "100644",
       "git_blob_sha1": "86ae20891fd7d20b4a8a9291aebea1021a8152b2",
       "sha256": "accd31969a38377acfc2e7eba7a99a2cec3437d546618bafc122eaed5b293ed5",
       "bytes": 10624,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": "research/native_a20/README.md",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/SOURCE_MANIFEST.json",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/SOURCE_MANIFEST.json",
       "mode": "100644",
       "git_blob_sha1": "db2d1efa9479680a99015de9f870fe60950d7b6c",
       "sha256": "7b78434574af4227239a524cec92fc6a21fbefaeea2a52b3f6793875f80f3efc",
       "bytes": 8123,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": "research/native_a20/SOURCE_MANIFEST.json",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
       "path": "research/native_a20/baseline/LICENSE",
@@ -638,40 +646,48 @@
       "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
     },
     {
-      "path": "research/native_a20/build.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/build.py",
       "mode": "100644",
       "git_blob_sha1": "d6735848313fc3bb1017aeaa7f9ef26398bd4e42",
       "sha256": "fe6f92977a0a77cb2b5f82895afac3581faa0ee3320b0919b9b8443dbe8afa0f",
       "bytes": 14397,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": "research/native_a20/build.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/ctypes_api.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/ctypes_api.py",
       "mode": "100644",
       "git_blob_sha1": "25b941947da47d81ed65775d415b05e0755449da",
       "sha256": "9ee1baf4d8022c4048cf1dc1e5a05ce0da3bebeecebbb576f34c04569cfe3cd0",
       "bytes": 3915,
       "source_pr": 463,
-      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
+      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "source_path": "research/native_a20/ctypes_api.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/export_a20.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/export_a20.py",
       "mode": "100644",
       "git_blob_sha1": "869e99c5bed8f262c6c6459b83a06c689d736c96",
       "sha256": "248d980115b767b29f830bf46e17093f5fc7069bb3946d9bc650e116e7375646",
       "bytes": 2795,
       "source_pr": 463,
-      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
+      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "source_path": "research/native_a20/export_a20.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/generate_twiddles.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/generate_twiddles.py",
       "mode": "100644",
       "git_blob_sha1": "cc7d8f25872be2c9bfed2b4acb16af96b7710978",
       "sha256": "878ada29dc7b7a819a68eaa210d34a638be1aee0e801c25a391f80d894a84607",
       "bytes": 4534,
       "source_pr": 463,
-      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
+      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "source_path": "research/native_a20/generate_twiddles.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
       "path": "research/native_a20/resource_sizes.c",
@@ -764,22 +780,26 @@
       "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
     },
     {
-      "path": "research/native_a20/tests/check_manifest.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/tests/check_manifest.py",
       "mode": "100644",
       "git_blob_sha1": "52892a1565b28237815214e1c0ffc97808dd50d3",
       "sha256": "87e7346a44c251a2c94ca4ea475b95ee528cf9635063edf7c989dc1e56b05f05",
       "bytes": 1701,
       "source_pr": 463,
-      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88"
+      "source_commit": "804553286fd9caa294769cc4d44cc0c43dc66e88",
+      "source_path": "research/native_a20/tests/check_manifest.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
-      "path": "research/native_a20/tests/test_build_driver.py",
+      "path": "research/consolidation/maintained-sources/native-a20-admission-audit-2026-10-11/research/native_a20/tests/test_build_driver.py",
       "mode": "100644",
       "git_blob_sha1": "28e3ae0439dbec147005f67b9a9a07bb1409809e",
       "sha256": "64863b5f3483f69a71da41fa5d93675d013ac09846c047ee4dbd009a58c960d2",
       "bytes": 24185,
       "source_pr": 464,
-      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5"
+      "source_commit": "dbbd7b5235c1d5ea4924a07499b2f5047037a3d5",
+      "source_path": "research/native_a20/tests/test_build_driver.py",
+      "relocation_reason": "Preserve original public A20 source bytes after optimization-safe Python admission maintenance. Current active research source is independently described by research/native_a20/SOURCE_MANIFEST.json and PROVENANCE.json; historical outcomes and native C bytes are unchanged."
     },
     {
       "path": "research/native_a20/tests/test_decoder.c",

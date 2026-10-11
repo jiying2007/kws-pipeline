@@ -154,7 +154,11 @@ int main(int argc, char **argv) {
     fprintf(stderr, "WAV data byte count is not PCM16 aligned\n");
     goto cleanup;
   }
-  exit_code = ferror(stdout) != 0 ? 1 : 0;
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    goto cleanup;
+  }
+  exit_code = 0;
 
 cleanup:
   if (wav != NULL) {

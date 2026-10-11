@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 40547,
-      "git_blob_sha1": "d67b09c8b9ce9e34b4c17e5ba22a7bdf09598d58",
-      "sha256": "ae4e218c7eb050cc0a8735f207128295f2deb77254218a754bf7577470cacc41"
+      "bytes": 42138,
+      "git_blob_sha1": "1d403befe4c7d19632dbdb142fc91e43fd3bdf47",
+      "sha256": "d8823d98a57ca8bb35f3727d6fca65760c19f3a76020aad0c7e0348e1a4160ec"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15337,16 +15337,16 @@
     {
       "path": ".github/workflows/model-family-resource-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "3d3242a40718d7599764f2875a1d4f19fc6d0f3b",
-      "sha256": "28c48b467b63cc8e55c39d1746fc079c8850f2bf042a89defd00dbcb5c5c07f5",
-      "bytes": 2276
+      "bytes": 2667,
+      "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441",
+      "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8"
     },
     {
       "path": ".github/workflows/model-promotion.yml",
       "mode": "100644",
-      "git_blob_sha1": "e08425a6be731ee2811dc1b902ee06d1bb4bb1f1",
-      "sha256": "24613f3de0158ddc94e44d8905a093cfd70cc4c7886e5fe433f056589902f14a",
-      "bytes": 14130
+      "bytes": 13177,
+      "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd",
+      "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91"
     },
     {
       "path": ".github/workflows/model-registry-contract.yml",
@@ -15400,9 +15400,9 @@
     {
       "path": ".github/workflows/product-training-data-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "858d9e0195db3ffee7c39e5ed5d8be563dcf28c2",
-      "sha256": "678698b5cd2c88794e0e2020272a9a53b1d6baf8bd83a759cda72b18025949ee",
-      "bytes": 28048
+      "bytes": 28189,
+      "git_blob_sha1": "8423b42042240cf5dfea17fdaa43bb714fb3ce23",
+      "sha256": "3e56c260d97b5d54c2b2485f8a98767ba414572e0b8056dc936e09bc580a7a35"
     },
     {
       "path": ".github/workflows/real-human-qualification.yml",
@@ -15463,9 +15463,9 @@
     {
       "path": ".github/workflows/research-native-a20.yml",
       "mode": "100644",
-      "git_blob_sha1": "0a3f2058f2b246caa494e4447f9934cea895c99f",
-      "sha256": "fe0956839fe5cd1f3c3785aba20ead22ca39fc207af1eca9e644bc1748c0818f",
-      "bytes": 3402
+      "bytes": 3635,
+      "git_blob_sha1": "abc9df041c6cef99cb3d92bc75ff344601cf0ebf",
+      "sha256": "6671553244346cb530db44d043d5855f0437b8d8b4f0a89c01357ceeb340067b"
     },
     {
       "path": ".github/workflows/research-sherpa-host.yml",
@@ -16813,6 +16813,101 @@
             "bytes": 40547,
             "git_blob_sha1": "d67b09c8b9ce9e34b4c17e5ba22a7bdf09598d58",
             "sha256": "ae4e218c7eb050cc0a8735f207128295f2deb77254218a754bf7577470cacc41"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "222a75c906c169a35b97489009af3dc6c73b135f",
+      "from_tree": "762af4a9ec779f4d5f42deca98cfa775b94a5dc4",
+      "operation_id": "comprehensive-admission-output-audit-20261011",
+      "scope": "Bind model-promotion producer/artifact provenance and safe extraction; add source-only promotion, final AFE, native A20 optimized-mode, eight hosted CLI output, and integer resource contract tests.",
+      "rationale": "Public code and current CI identity metadata only. Preserve all historical results and retired execution gates. No training request, ASR dispatch, new data acquisition, shipping model or production decoder change. Existing CPU objective-math CI remains a synthetic regression gate.",
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 40547,
+            "git_blob_sha1": "d67b09c8b9ce9e34b4c17e5ba22a7bdf09598d58",
+            "sha256": "ae4e218c7eb050cc0a8735f207128295f2deb77254218a754bf7577470cacc41"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 42138,
+            "git_blob_sha1": "1d403befe4c7d19632dbdb142fc91e43fd3bdf47",
+            "sha256": "d8823d98a57ca8bb35f3727d6fca65760c19f3a76020aad0c7e0348e1a4160ec"
+          }
+        },
+        {
+          "path": ".github/workflows/model-family-resource-contract.yml",
+          "before": {
+            "path": ".github/workflows/model-family-resource-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "3d3242a40718d7599764f2875a1d4f19fc6d0f3b",
+            "sha256": "28c48b467b63cc8e55c39d1746fc079c8850f2bf042a89defd00dbcb5c5c07f5",
+            "bytes": 2276
+          },
+          "after": {
+            "path": ".github/workflows/model-family-resource-contract.yml",
+            "mode": "100644",
+            "bytes": 2667,
+            "git_blob_sha1": "b43d837d6cdd4faadc2f9754b6079100b1ac9441",
+            "sha256": "419ec0f21bf2754f4c3c7500d1b3e74c6a4bdff09189c26fb594927433716db8"
+          }
+        },
+        {
+          "path": ".github/workflows/model-promotion.yml",
+          "before": {
+            "path": ".github/workflows/model-promotion.yml",
+            "mode": "100644",
+            "git_blob_sha1": "e08425a6be731ee2811dc1b902ee06d1bb4bb1f1",
+            "sha256": "24613f3de0158ddc94e44d8905a093cfd70cc4c7886e5fe433f056589902f14a",
+            "bytes": 14130
+          },
+          "after": {
+            "path": ".github/workflows/model-promotion.yml",
+            "mode": "100644",
+            "bytes": 13177,
+            "git_blob_sha1": "b551452f1baa827ef3a4947f0f84e0446d2b5dcd",
+            "sha256": "ba0eaa7ceeac336a1edb68344ae031cb164612dce6d94a8587f1ef964e59bc91"
+          }
+        },
+        {
+          "path": ".github/workflows/product-training-data-contract.yml",
+          "before": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "858d9e0195db3ffee7c39e5ed5d8be563dcf28c2",
+            "sha256": "678698b5cd2c88794e0e2020272a9a53b1d6baf8bd83a759cda72b18025949ee",
+            "bytes": 28048
+          },
+          "after": {
+            "path": ".github/workflows/product-training-data-contract.yml",
+            "mode": "100644",
+            "bytes": 28189,
+            "git_blob_sha1": "8423b42042240cf5dfea17fdaa43bb714fb3ce23",
+            "sha256": "3e56c260d97b5d54c2b2485f8a98767ba414572e0b8056dc936e09bc580a7a35"
+          }
+        },
+        {
+          "path": ".github/workflows/research-native-a20.yml",
+          "before": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "git_blob_sha1": "0a3f2058f2b246caa494e4447f9934cea895c99f",
+            "sha256": "fe0956839fe5cd1f3c3785aba20ead22ca39fc207af1eca9e644bc1748c0818f",
+            "bytes": 3402
+          },
+          "after": {
+            "path": ".github/workflows/research-native-a20.yml",
+            "mode": "100644",
+            "bytes": 3635,
+            "git_blob_sha1": "abc9df041c6cef99cb3d92bc75ff344601cf0ebf",
+            "sha256": "6671553244346cb530db44d043d5855f0437b8d8b4f0a89c01357ceeb340067b"
           }
         }
       ]

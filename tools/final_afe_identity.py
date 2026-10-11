@@ -41,11 +41,15 @@ def inspect_adapter(path: pathlib.Path) -> tuple[dict, pathlib.Path, dict]:
         or any(not isinstance(item, str) or not item for item in template)
     ):
         raise ValueError("AFE command_argv must be a non-empty string array")
+    if template[0] != "{executable}":
+        raise ValueError("AFE command_argv[0] must be exactly {executable}")
     joined = "\n".join(template)
     required = ("{executable}", "{input}", "{output}", "{result}")
     missing = [token for token in required if token not in joined]
     if missing:
         raise ValueError(f"AFE command template is missing placeholders: {missing}")
+    if any(joined.count(token) != 1 for token in required):
+        raise ValueError("AFE command placeholders must each occur exactly once")
 
     config_paths = [
         pathlib.Path(str(item)).resolve(strict=True)
@@ -53,11 +57,17 @@ def inspect_adapter(path: pathlib.Path) -> tuple[dict, pathlib.Path, dict]:
     ]
     if not config_paths:
         raise ValueError("AFE adapter config_files must not be empty")
+    # Only explicit, canonical config arguments are identity-bound. A wrapper
+    # or an undeclared implicit/default configuration is not this contract.
+    argument_values = {token.split("=", 1)[1] if token.startswith("-") and "=" in token
+                       else token for token in template[1:]}
     config_rows = []
     seen_names: set[str] = set()
     for config in config_paths:
         if not config.is_file():
             raise ValueError(f"AFE config is not a file: {config}")
+        if str(config) not in argument_values:
+            raise ValueError("every AFE config must be an explicit canonical command argument")
         name = config.name
         if name in seen_names:
             raise ValueError(f"AFE config bundle has duplicate basename: {name}")

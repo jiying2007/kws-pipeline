@@ -14,7 +14,7 @@ From the repository root, with Python 3, a C11 compiler, GNU patch and libm:
 python3 -B research/decoder_scratch_v1/build.py --output /tmp/decoder-scratch-v1
 ```
 
-The output must be new. The command first pins the original SOURCE_MANIFEST.json hash, then verifies the closed source inventory (excluding Python bytecode caches) and every file hash before executing the now-verified checker. It
+The output must be new. The command first pins the exact active SOURCE_MANIFEST.json hash, then verifies the closed source inventory (excluding Python bytecode caches) and every file hash before executing the now-verified checker. It
 verifies pinned decoder hashes and patch hash, applies the patch with zero fuzz,
 verifies derived decoder hashes and writes a new derived manifest/provenance.
 It compiles a complete research shared runtime, executes original and optimized
@@ -27,6 +27,13 @@ command. Build receipts include compiler version, exact flags and commands, outp
 binary hashes. The standalone differential receipt records both original and
 optimized library commands, source/header hashes and library hashes; the build
 receipt embeds and hashes that receipt.
+
+The active manifest pin was advanced on 2026-10-11 after the native A20 Python
+admission checks were maintained. `DERIVATION.json` records both exact identities
+and links the previous manifest preserved by the core retention inventory.
+All native source, decoder-test, resource-size and license bytes used here remain
+unchanged. `HOST_SYNTHETIC_RESULTS.json` still binds the original manifest and
+recorded host run; it is not relabeled as a run of the maintained source tree.
 
 ## Why the change is safe within this scope
 
@@ -68,7 +75,7 @@ module checks its ELF class, machine, byte order, OSABI/version and relevant ARM
 ABI flags against the running Python process's actual ELF. Foreign targets are
 rejected before execution even when binfmt emulation is installed; this module
 has no cross-target execution mode. The parser/comparison functions are reused
-from the unchanged public native build driver, with their source hash recorded
+from the original public native build driver retained in the core archive, with its source hash recorded
 in DERIVATION.json. This checks ELF compatibility, not full CPU-instruction or
 vendor-loader qualification. Every compiler/test subprocess has a 120-second
 timeout. A failed guard or timeout produces no passing receipt.
@@ -87,7 +94,8 @@ both differential libraries. Python assertion optimization remains rejected.
 
 Source admission additionally rejects symlinks, self-consistent rewrites of the
 source manifest, modified checker bytes before execution, and unlisted files.
-The eight driver tests include those three source-admission negatives, required
+The nine driver tests include the active/historical manifest relationship,
+those three source-admission negatives, required
 floating-point policy checks, and rejection of unsupported strict flags by both
 drivers. The selected-compiler test checks all eight compilations and verifies
 that both differential library hashes and command receipts match the build.

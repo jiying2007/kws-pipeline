@@ -5,6 +5,7 @@ import argparse
 import json
 import math
 import pathlib
+import stat
 import subprocess
 import sys
 import wave
@@ -15,6 +16,12 @@ from final_afe_identity import canonical_sha, inspect_adapter, sha256_file  # no
 from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
 
 SAMPLE_RATE_HZ = 16000
+
+
+def require_regular_file(path: pathlib.Path) -> None:
+    if (not path.exists() or not stat.S_ISREG(path.lstat().st_mode)
+            or path.parent.resolve() != path.parent):
+        raise ValueError("AFE command must create regular output/result files in fixed directories")
 
 
 def inspect_output(path: pathlib.Path) -> dict:
@@ -115,19 +122,36 @@ def main() -> int:
     if identity != expected_identity:
         raise ValueError("final AFE identity drifted after held-out corpus exposure")
     template = adapter["command_argv"]
+    # Keep private execution paths/content local. Equal public content hashes
+    # must not let a rewritten adapter redirect checks away from cached argv.
+    execution_binding = (adapter, executable, identity)
+    adapter_sha256 = sha256_file(args.adapter)
 
+    # Each invocation owns a fresh private output directory. Never accept a
+    # previous run's WAV/sidecar when a command returns success without writing.
+    recordings = manifest.get("recordings", [])
+    seen_recordings = set()
+    for row in recordings:
+        recording = row.get("recording")
+        if (not isinstance(recording, str) or not recording or recording != recording.strip()
+                or recording in (".", "..") or "/" in recording or "\\" in recording
+                or "\0" in recording or recording in seen_recordings):
+            raise ValueError("recording IDs must be unique safe filenames")
+        seen_recordings.add(recording)
     output_dir = args.output_dir.resolve()
+    output_dir.mkdir(parents=True, exist_ok=False, mode=0o700)
     post_root = output_dir / "post-afe"
     result_root = output_dir / "result-sidecars"
-    post_root.mkdir(parents=True, exist_ok=True)
-    result_root.mkdir(parents=True, exist_ok=True)
+    post_root.mkdir(mode=0o700)
+    result_root.mkdir(mode=0o700)
 
     references = []
     evidence_rows = []
     output_identity = []
     latency_samples_all = []
+    retained_bindings = []
 
-    for index, row in enumerate(manifest.get("recordings", [])):
+    for index, row in enumerate(recordings):
         recording = str(row.get("recording", "")).strip()
         if not recording:
             raise ValueError(f"recordings[{index}] has no recording ID")
@@ -148,6 +172,12 @@ def main() -> int:
                 "result": str(result_path),
             },
         )
+        if (sha256_file(args.adapter) != adapter_sha256
+                or inspect_adapter(args.adapter) != execution_binding
+                or sha256_file(executable) != identity["executable_sha256"]):
+            raise ValueError("final AFE identity drifted before recording execution")
+        if output_path.exists() or output_path.is_symlink() or result_path.exists() or result_path.is_symlink():
+            raise ValueError(f"{recording}: AFE output paths must be fresh")
         completed = subprocess.run(
             argv,
             check=False,
@@ -160,8 +190,14 @@ def main() -> int:
                 f"{recording}: AFE command failed ({completed.returncode}): "
                 f"{completed.stderr[-1000:]}"
             )
-        if not output_path.is_file() or not result_path.is_file():
-            raise ValueError(f"{recording}: AFE command did not create output/result")
+        if (sha256_file(args.adapter) != adapter_sha256
+                or inspect_adapter(args.adapter) != execution_binding
+                or sha256_file(executable) != identity["executable_sha256"]):
+            raise ValueError("final AFE identity drifted during recording execution")
+        if sha256_file(input_path) != row["input_sha256"]:
+            raise ValueError(f"{recording}: raw input changed during AFE execution")
+        for path in (output_path, result_path):
+            require_regular_file(path)
 
         output_geometry = inspect_output(output_path)
         sidecar = json.loads(result_path.read_text(encoding="utf-8"))
@@ -217,6 +253,10 @@ def main() -> int:
 
         output_sha = sha256_file(output_path)
         result_sha = sha256_file(result_path)
+        retained_bindings.extend(((input_path, row["input_sha256"]),
+                                  (output_path, output_sha), (result_path, result_sha)))
+        if aligned_fields:
+            retained_bindings.append((metadata_path, aligned_fields["metadata_sha256"]))
         references.append(
             {
                 "recording": recording,
@@ -273,6 +313,16 @@ def main() -> int:
 
     if not references:
         raise ValueError("manifest contains no recordings")
+    # A later adapter invocation can touch earlier files. Recheck the complete
+    # retained set before publishing any success evidence, not just the last row.
+    for path, digest in retained_bindings:
+        require_regular_file(path)
+        if sha256_file(path) != digest:
+            raise ValueError("AFE bound input/output changed before evidence publication")
+    if (sha256_file(args.adapter) != adapter_sha256
+            or inspect_adapter(args.adapter) != execution_binding
+            or sha256_file(executable) != identity["executable_sha256"]):
+        raise ValueError("final AFE identity drifted before evidence publication")
     write_jsonl(output_dir / "references.post-afe.jsonl", references)
     write_jsonl(output_dir / "afe-evidence.jsonl", evidence_rows)
     summary = {

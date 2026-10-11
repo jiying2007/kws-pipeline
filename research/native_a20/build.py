@@ -172,9 +172,11 @@ def main(argv=None):
 
     run([sys.executable, '-B', str(ROOT/'tests/check_manifest.py')])
     header, certificate = generate_twiddles.generate()
-    assert header.encode() == (ROOT/'src/fft64_twiddles.h').read_bytes()
+    if header.encode() != (ROOT/'src/fft64_twiddles.h').read_bytes():
+        raise ValueError('generated A20 twiddle header mismatch')
     certificate.pop('certificates')
-    assert certificate == json.loads((ROOT/'twiddle-certificate-summary.json').read_text())
+    if certificate != json.loads((ROOT/'twiddle-certificate-summary.json').read_text()):
+        raise ValueError('generated A20 twiddle certificate mismatch')
     compiler = run([args.cc, '--version']).splitlines()[0]
     triple = run([args.cc, '-dumpmachine']).strip()
     target_options = args.target_flag[:]
@@ -219,11 +221,14 @@ def main(argv=None):
     if args.mode == 'native-test':
         sizes = json.loads(run([str(sizes_binary)])); executions += 1
         (out/'resource-sizes.json').write_text(json.dumps(sizes, indent=2, sort_keys=True)+'\n')
-        assert sizes['model_cache_bytes'] == 22528 and sizes['weights_bytes'] == 1565280
+        if (type(sizes.get('model_cache_bytes')) is not int or sizes['model_cache_bytes'] != 22528
+                or type(sizes.get('weights_bytes')) is not int or sizes['weights_bytes'] != 1565280):
+            raise ValueError('A20 model cache/weights resource size mismatch')
         if not args.sanitize:
             _, checked = ctypes_api.load(shared); dlopens += 1
             arena = ctypes_api.Aligned_Arena(checked['stream_bytes'], checked['stream_alignment'])
-            assert arena.pointer.value % arena.alignment == 0
+            if arena.pointer.value % arena.alignment != 0:
+                raise ValueError('A20 arena alignment mismatch')
         env = dict(os.environ, ASAN_OPTIONS='detect_leaks=0:halt_on_error=1', UBSAN_OPTIONS='halt_on_error=1')
         for name in TESTS:
             print(run([str(out/('test_'+name))], env=env), end=''); executions += 1

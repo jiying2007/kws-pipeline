@@ -2,6 +2,7 @@
 """Offline contracts for release commands and atomic bootstrap cleanup."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / '.github/workflows'
@@ -275,11 +277,11 @@ class PromotionControlPlane(unittest.TestCase):
         guard_name = 'Require exact current protected main control plane'
         guard = command(source, guard_name)
         self.assertEqual(guard, 'bash governance/require_current_main.sh')
-        for name in ('Verify requested training run', 'Download exact trained-model artifact',
+        for name in ('Verify requested training run', 'Resolve exact trained-model artifact',
+                     'Download exact trained-model artifact',
                      'Freeze and verify deployable model evidence', 'Attest promoted model assets',
                      'Publish trained model release', 'Mirror promoted model into Git registry'):
             self.assertLess(source.index(guard_name), source.index(name))
-        self.assertIn("run.get('head_sha') != expected", source)
         with tempfile.TemporaryDirectory(prefix='promotion-control-plane-') as tmp:
             root = Path(tmp)
             (root / 'bin').mkdir()
@@ -324,6 +326,76 @@ class PromotionControlPlane(unittest.TestCase):
                                         cwd=root, env=env, text=True, capture_output=True)
                 self.assertEqual(result.returncode == 0, allowed, result.stderr)
                 self.assertEqual(marker.exists(), allowed)
+
+    def test_workflow_source_helper_binds_historical_training_sha(self):
+        source = (WORKFLOWS / 'model-promotion.yml').read_text()
+        repository = {'id': 123, 'full_name': 'jiying2007/kws-pipeline'}
+        training_sha = 'c' * 40
+        run = dict(id=456, workflow_id=321, path='.github/workflows/model-training.yml',
+                   status='completed', conclusion='success', head_sha=training_sha,
+                   head_branch='main', event='workflow_dispatch', repository=repository,
+                   head_repository=repository)
+        workflow = dict(id=321, path=run['path'])
+        # Execute each real workflow command independently so select rejecting a
+        # mismatch cannot conceal a missing binding in extract. Only transport is
+        # stubbed; the production helper validates real JSON and ZIP bytes.
+        for name in ('Resolve exact trained-model artifact', 'Download exact trained-model artifact'):
+            for expected_sha in (training_sha, 'b' * 40):
+                with self.subTest(step=name, expected_sha=expected_sha), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    (root / 'bin').mkdir()
+                    (root / 'tools').mkdir()
+                    shutil.copyfile(ROOT / 'tools/verify_model_promotion_source.py',
+                                    root / 'tools/verify_model_promotion_source.py')
+                    (root / 'bin/python3').symlink_to(sys.executable)
+                    with zipfile.ZipFile(root / 'fixture.zip', 'w') as archive:
+                        archive.writestr('evidence.json', b'{}\n')
+                    raw = (root / 'fixture.zip').read_bytes()
+                    artifact = dict(id=789, name='xiaowo-torch-domain-model', expired=False,
+                                    size_in_bytes=len(raw), digest='sha256:' + hashlib.sha256(raw).hexdigest(),
+                                    workflow_run=dict(id=456, repository_id=123, head_repository_id=123,
+                                                      head_sha=training_sha, head_branch='main'))
+                    documents = {'run.json': run, 'training-workflow.json': workflow,
+                                 'artifacts.json': [dict(total_count=1, artifacts=[artifact])]}
+                    for filename, value in documents.items():
+                        (root / filename).write_text(json.dumps(value))
+                    gh = root / 'bin/gh'
+                    gh.write_text(f'#!{sys.executable}\n' + textwrap.dedent('''
+                        import json, sys
+                        if sys.argv[1:] != ['api', '--paginate', '--slurp',
+                            'repos/jiying2007/kws-pipeline/actions/runs/456/artifacts?per_page=100']:
+                            sys.exit(91)
+                        print(json.dumps(json.load(open('transport.json'))))
+                    '''))
+                    shutil.copyfile(root / 'artifacts.json', root / 'transport.json')
+                    curl = root / 'bin/curl'
+                    curl.write_text(f'#!{sys.executable}\n' + textwrap.dedent('''
+                        import shutil, sys
+                        if 'https://api.github.com/repos/jiying2007/kws-pipeline/actions/artifacts/789/zip' not in sys.argv:
+                            sys.exit(92)
+                        shutil.copyfile('fixture.zip', sys.argv[sys.argv.index('--output') + 1])
+                    '''))
+                    gh.chmod(0o755)
+                    curl.chmod(0o755)
+                    output = root / 'github-output'
+                    output.touch()
+                    env = dict(os.environ, PATH=f'{root / "bin"}:/usr/bin:/bin', GH_TOKEN='offline-fixture',
+                               GITHUB_REPOSITORY=repository['full_name'], GITHUB_REPOSITORY_ID='123',
+                               GITHUB_SHA='b' * 40, TRAINING_RUN_ID='456', EXPECTED_HEAD_SHA=expected_sha,
+                               ARTIFACT_ID='789', GITHUB_OUTPUT=str(output),
+                               PYTHONOPTIMIZE=str(sys.flags.optimize))
+                    result = subprocess.run(['bash', '-euo', 'pipefail', '-c', command(source, name)],
+                                            cwd=root, env=env, text=True, capture_output=True)
+                    allowed = expected_sha == training_sha
+                    self.assertEqual(result.returncode == 0, allowed, result.stderr)
+                    if name == 'Resolve exact trained-model artifact':
+                        expected = (f"artifact_id=789\nartifact_digest={artifact['digest']}\n"
+                                    f"artifact_size={len(raw)}\n") if allowed else ''
+                        self.assertEqual(output.read_text(), expected)
+                    else:
+                        self.assertEqual((root / 'artifact').exists(), allowed)
+                        if allowed:
+                            self.assertEqual((root / 'artifact/evidence.json').read_bytes(), b'{}\n')
 
 
 class WorkflowProvenance(unittest.TestCase):

@@ -280,7 +280,11 @@ int main(int argc, char **argv) {
             kws_engine_required_bytes(&model), total_process_us, mean_us,
             p50_us, p95_us, p99_us, max_process_us, rtf, p99_headroom);
   }
-  exit_code = ferror(stdout) != 0 ? 1 : 0;
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    goto cleanup;
+  }
+  exit_code = 0;
 
 cleanup:
   if (wav != NULL) {

@@ -179,9 +179,28 @@ this controlled reference because original session-state equivalence is unknown.
 
 ## Future qualified development/test evaluation
 
-The small pure helpers `score_qualified`, `select_dev_thresholds` and
-`evaluate_frozen_test` are **fixture-tested contracts, not a current runner or
-qualification result**. The CLI cannot trigger this path.
+The legacy `score_qualified` helper now accepts only explicitly fabricated
+`qualified_event_evaluation_fixture` inputs and returns `FIXTURE_ONLY_MEASUREMENT`
+(or `INSUFFICIENT_EVIDENCE`), with `fixture_only=true` and
+`actual_evidence_verified=false`. It never reports a qualified measurement.
+An arbitrary receipt hash and self-consistent metadata do not authenticate
+source audio, trace coverage, output bytes or actual execution. In particular,
+changing a declared duration and its source interval cannot establish FAR exposure.
+
+The real-data `select_dev_thresholds` and `evaluate_frozen_test` entry points are
+fail-closed with `UNVERIFIED_QUALIFIED_EVIDENCE` until actual byte-bound evidence
+verification is implemented. Callers cannot unlock them by changing status or
+verified flags. The separate `select_fixture_dev_thresholds` and
+`evaluate_fixture_frozen_test` helpers exercise only fabricated contracts and
+return explicitly `FIXTURE_...` states. They cannot freeze real thresholds.
+
+This tightens the previously unconnected future-helper API, not the saved-only
+CLI or historical paired outputs. The frozen plan, manifest and saved results
+are unchanged. Explicit machine-consensus labels, nested weak/screen provenance
+and declarations forbidding gold/qualification are rejected as independent gold;
+weak-label screening remains available under its original role. Even fixture
+detections must meet their declared threshold, allowing only half a six-decimal
+serialization unit. The CLI cannot trigger this future path.
 
 Future admission requires independent real-human recordings, explicit complete
 event truth (`[]` only for a documented negative), truth-source hashes, known
@@ -193,20 +212,20 @@ These source declarations need trustworthy provenance; this contract cannot
 discover undocumented transformations of a recording. Protected historical trace hashes cannot be
 relabeled gold, training, ordinary negatives or independent test evidence.
 
-The helpers reuse `eval/score_events.py` for maximum-cardinality event matching,
+The fixture helpers reuse `eval/score_events.py` for maximum-cardinality event matching,
 negative-only FAR and the Poisson 95% upper bound. Missing truth or zero negative
 hours cannot become a zero FAR. No-positive FRR is null. Every threshold must
 have a separately retained full decoder replay contract/receipt; confidence
 filtering old detections cannot reproduce threshold-dependent decoder state.
 
-Future reports retain their scoring inputs and are recomputed before selection;
+Fixture reports retain their scoring inputs and are recomputed before selection;
 a mutated summary cannot silently change the selection. Both arms and all
 thresholds must bind one decoder executable and unchanged shared controls, in
 addition to the same model, keyword pack, data and truth denominators. This is
 a future evaluation contract; the current fixed-threshold C runner does not
 implement a threshold sweep.
 
-The caller must specify the same maximum negative-only upper95 FAR/hour budget
+In fixture-only selection, the caller must specify the same maximum negative-only upper95 FAR/hour budget
 for both arms. Only development may select thresholds, over the same fully
 replayed grid and same denominators, minimizing FRR among feasible thresholds.
 Ties use lower upper95 FAR, then lower threshold. No feasible threshold is a

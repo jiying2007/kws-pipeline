@@ -51,54 +51,19 @@ jobs:
           [[ "$TRAINING_RUN_ID" =~ ^[0-9]+$ ]]
           [[ "$EXPECTED_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
           gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}" > run.json
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          run = json.loads(Path('run.json').read_text(encoding='utf-8'))
-          expected = os.environ['EXPECTED_HEAD_SHA']
-          if run.get('name') != 'model-training':
-              raise SystemExit(f"unexpected workflow name: {run.get('name')!r}")
-          if run.get('status') != 'completed' or run.get('conclusion') != 'success':
-              raise SystemExit(
-                  f"training run is not completed/success: "
-                  f"status={run.get('status')} conclusion={run.get('conclusion')}"
-              )
-          if run.get('head_sha') != expected:
-              raise SystemExit(
-                  f"training run head mismatch: expected={expected} actual={run.get('head_sha')}"
-              )
-          print(
-              f"verified model-training run id={run['id']} "
-              f"event={run.get('event')} head={run['head_sha']}"
-          )
-          PY
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/model-training.yml" > training-workflow.json
 
       - name: Resolve exact trained-model artifact
         id: artifact
         shell: bash
         run: |
           set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}/artifacts?per_page=100" > artifacts.json
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          from pathlib import Path
-
-          payload = json.loads(Path('artifacts.json').read_text(encoding='utf-8'))
-          matches = [
-              row for row in payload.get('artifacts', [])
-              if row.get('name') == 'xiaowo-torch-domain-model' and not row.get('expired', False)
-          ]
-          if len(matches) != 1:
-              raise SystemExit(
-                  f"expected exactly one live xiaowo-torch-domain-model artifact, got {len(matches)}"
-              )
-          row = matches[0]
-          print(f"artifact_id={row['id']}")
-          print(f"artifact_digest={row.get('digest') or ''}")
-          print(f"artifact_size={row.get('size_in_bytes') or 0}")
-          PY
+          gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/actions/runs/${TRAINING_RUN_ID}/artifacts?per_page=100" > artifacts.json
+          python3 -S -B tools/verify_model_promotion_source.py select \
+            --repository "$GITHUB_REPOSITORY" --repository-id "$GITHUB_REPOSITORY_ID" \
+            --training-run-id "$TRAINING_RUN_ID" --expected-head-sha "$EXPECTED_HEAD_SHA" \
+            --run-json run.json --workflow-json training-workflow.json \
+            --artifacts-json artifacts.json >> "$GITHUB_OUTPUT"
 
       - name: Download exact trained-model artifact
         shell: bash
@@ -112,9 +77,11 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
             --output trained-model.zip
-          test -s trained-model.zip
-          mkdir artifact
-          unzip -q trained-model.zip -d artifact
+          python3 -S -B tools/verify_model_promotion_source.py extract \
+            --repository "$GITHUB_REPOSITORY" --repository-id "$GITHUB_REPOSITORY_ID" \
+            --training-run-id "$TRAINING_RUN_ID" --expected-head-sha "$EXPECTED_HEAD_SHA" \
+            --run-json run.json --workflow-json training-workflow.json \
+            --artifacts-json artifacts.json --zip trained-model.zip --output artifact
 
       - name: Freeze and verify deployable model evidence
         id: assets

@@ -23,7 +23,12 @@ jobs:
         with:
           persist-credentials: false
       - name: Offline build-driver safety contracts
-        run: python3 -B research/native_a20/tests/test_build_driver.py
+        run: |
+          for mode in '' -O -OO; do
+            python3 -S -B $mode research/native_a20/tests/test_build_driver.py
+            python3 -S -B $mode research/native_a20/tests/test_python_admission.py
+            python3 -S -B $mode research/native_a20/tests/check_manifest.py
+          done
       - name: Compile research runtime and test invented inputs only
         run: python3 -B research/native_a20/build.py --cc ${{ matrix.cc }} --output "$RUNNER_TEMP/native-a20"
       - name: Address and undefined behavior sanitizer invented contracts

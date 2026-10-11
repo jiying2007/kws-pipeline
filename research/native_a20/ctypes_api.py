@@ -36,7 +36,9 @@ Trace_Callback = C.CFUNCTYPE(None, C.c_void_p, C.c_uint64, C.c_size_t, F32P, F32
 
 class Aligned_Arena:
     def __init__(self, size, alignment):
-        assert size > 0 and alignment > 0 and alignment & (alignment-1) == 0
+        if (type(size) is not int or type(alignment) is not int or size <= 0
+                or alignment <= 0 or alignment & (alignment-1)):
+            raise ValueError("arena size/alignment must be positive integers with power-of-two alignment")
         self.backing = C.create_string_buffer(size+alignment-1)
         address = (C.addressof(self.backing)+alignment-1) & -alignment
         self.pointer = C.c_void_p(address)
@@ -67,13 +69,20 @@ def load(path, resource_path=None):
     if resource_path is None:
         resource_path = Path(path).with_name('resource-sizes.json')
     sizes = json.loads(Path(resource_path).read_text())
-    assert C.sizeof(PCM_Batch) == sizes['pcm_batch_bytes']
-    assert C.sizeof(Stream_Batch) == sizes['stream_batch_bytes']
-    assert C.sizeof(Decoder_Result) == sizes['decoder_result_bytes']
-    assert lib.a20fft64s_state_bytes() == sizes['stream_bytes']
-    assert lib.a20fft64s_state_alignment() == sizes['stream_alignment']
-    assert lib.donor_fft64_pcm_state_bytes() == sizes['pcm_bytes']
-    assert lib.donor_fft64_pcm_state_alignment() == sizes['pcm_alignment']
-    assert lib.donor_fft64_state_bytes() == sizes['frontend_bytes']
-    assert lib.donor_fft64_state_alignment() == sizes['frontend_alignment']
+    actual = {
+        'pcm_batch_bytes': C.sizeof(PCM_Batch),
+        'stream_batch_bytes': C.sizeof(Stream_Batch),
+        'decoder_result_bytes': C.sizeof(Decoder_Result),
+        'stream_bytes': lib.a20fft64s_state_bytes(),
+        'stream_alignment': lib.a20fft64s_state_alignment(),
+        'pcm_bytes': lib.donor_fft64_pcm_state_bytes(),
+        'pcm_alignment': lib.donor_fft64_pcm_state_alignment(),
+        'frontend_bytes': lib.donor_fft64_state_bytes(),
+        'frontend_alignment': lib.donor_fft64_state_alignment(),
+    }
+    if not isinstance(sizes, dict):
+        raise ValueError("A20 resource sizes must be an object")
+    for name, value in actual.items():
+        if type(sizes.get(name)) is not int or sizes[name] <= 0 or sizes[name] != value:
+            raise ValueError("A20 ctypes ABI/resource mismatch: " + name)
     return lib, sizes

@@ -32,7 +32,8 @@ def mul(a, b):
 
 
 def div_positive(a, b):
-    assert b[0] > 0
+    if not (b[0] > 0):
+        raise ValueError('A20 invariant failed: b[0] > 0')
     reciprocal = LO.divide(D(1), b[1]), HI.divide(D(1), b[0])
     return mul(a, reciprocal)
 
@@ -50,7 +51,8 @@ def atan_inverse(q, terms):
 
 
 def trig(x, sine):
-    assert D(0) <= x[0] <= x[1] < D(2)
+    if not (D(0) <= x[0] <= x[1] < D(2)):
+        raise ValueError('A20 invariant failed: D(0) <= x[0] <= x[1] < D(2)')
     xx = mul(x, x)
     term = x if sine else point(1)
     total = term
@@ -58,8 +60,10 @@ def trig(x, sine):
         denominator = (2*n)*(2*n+1) if sine else (2*n-1)*(2*n)
         term = div_positive(mul(term, xx), point(denominator))
         total = add(total, term if n % 2 == 0 else neg(term))
-    assert Fraction(2**200, math.factorial(200)) < Fraction(1, 10**300)
-    assert Fraction(2**201, math.factorial(201)) < Fraction(1, 10**300)
+    if not (Fraction(2 ** 200, math.factorial(200)) < Fraction(1, 10 ** 300)):
+        raise ValueError('A20 invariant failed: Fraction(2 ** 200, math.factorial(200)) < Fraction(1, 10 ** 300)')
+    if not (Fraction(2 ** 201, math.factorial(201)) < Fraction(1, 10 ** 300)):
+        raise ValueError('A20 invariant failed: Fraction(2 ** 201, math.factorial(201)) < Fraction(1, 10 ** 300)')
     return add(total, (D('-1e-300'), D('1e-300')))
 
 
@@ -79,7 +83,8 @@ def certify_rne(interval):
 
 def generate():
     pi = sub(mul(point(16), atan_inverse(5, 90)), mul(point(4), atan_inverse(239, 30)))
-    assert D(3) < pi[0] <= pi[1] < D(4)
+    if not (D(3) < pi[0] <= pi[1] < D(4)):
+        raise ValueError('A20 invariant failed: D(3) < pi[0] <= pi[1] < D(4)')
     cosines, sines, certificates, margins = [], [], [], []
     for k in range(256):
         if k == 0:
@@ -116,7 +121,8 @@ def generate():
 if __name__ == '__main__':
     root = Path(__file__).resolve().parent
     header, report = generate()
-    assert report['header_sha256'] == 'aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074'
+    if not (report['header_sha256'] == 'aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074'):
+        raise ValueError("A20 invariant failed: report['header_sha256'] == 'aed3eea430d875049ae160eba9bd8fe0589a5ab42758f9d56a37913792d26074'")
     with (root/'src/fft64_twiddles.h').open('x') as f:
         f.write(header)
     with (root/'twiddle-certificate.json').open('x') as f:

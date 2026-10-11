@@ -165,7 +165,11 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
   reader_open = 0;
-  exit_code = ferror(stdout) != 0 ? 1 : 0;
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    goto cleanup;
+  }
+  exit_code = 0;
 
 cleanup:
   if (reader_open != 0) {

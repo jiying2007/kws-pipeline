@@ -122,6 +122,7 @@ make collected measurements auditable and do not substitute for those measuremen
 - [`materialize_model_registry.py`](materialize_model_registry.py)
 - [`model_family_resource_estimate.py`](model_family_resource_estimate.py)
 - [`model_provenance.py`](model_provenance.py)
+- [`verify_model_promotion_source.py`](verify_model_promotion_source.py) — Authenticate the governed training producer and safely verify/extract its exact artifact carrier.
 - [`verify_model_promotion_bundle.py`](verify_model_promotion_bundle.py)
 - [`verify_model_registry.py`](verify_model_registry.py)
 - [`verify_model_release.py`](verify_model_release.py)

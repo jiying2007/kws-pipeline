@@ -339,6 +339,97 @@ class FutureSelectorFixtureTest(unittest.TestCase):
         return [future_report(self.manifest, arm, threshold)
                 for arm in c.ARMS for threshold in (.55, .65)]
 
+    def test_fixture_measurement_never_claims_verified_evidence(self):
+        report = future_report(self.manifest, c.ARMS[0], .55)
+        self.assertEqual(report["status"], "FIXTURE_ONLY_MEASUREMENT")
+        self.assertIs(report["fixture_only"], True)
+        self.assertIs(report["actual_evidence_verified"], False)
+        self.assertIs(report["qualification_claimed"], False)
+        compare.validate_measurement_report(report)
+
+    def test_real_purpose_rejects_unverified_receipts_and_inflated_exposure(self):
+        for duration in (36000, 36000000):
+            manifest = deepcopy(self.manifest)
+            manifest["purpose"] = "qualified_event_evaluation"
+            for row in manifest["recordings"]:
+                if not row["expected"]:
+                    row["duration_s"] = duration
+                    row["source_interval_s"] = [0, duration]
+            # Recomputed hashes and internally consistent declarations cannot
+            # authenticate even the original denominator, let alone inflation.
+            with self.subTest(duration=duration), self.assertRaisesRegex(
+                    c.ContractError, "UNVERIFIED_QUALIFIED_EVIDENCE"):
+                future_report(manifest, c.ARMS[0], .55)
+
+    def test_real_selector_and_test_reject_fixtures_and_status_laundering(self):
+        reports = self.candidates()
+        selection = compare.select_fixture_dev_thresholds(
+            reports, max_negative_far_upper95_per_hour=.4)
+        test = [future_report(self.manifest, arm, .55, split="test") for arm in c.ARMS]
+        for forged in (False, True):
+            if forged:
+                for report in reports + test:
+                    report.update(status="QUALIFIED_RESEARCH_MEASUREMENT",
+                                  fixture_only=False, actual_evidence_verified=True)
+                selection.update(status="DEVELOPMENT_THRESHOLDS_FROZEN",
+                                 fixture_only=False, actual_evidence_verified=True)
+            with self.subTest(forged=forged), self.assertRaisesRegex(
+                    c.ContractError, "UNVERIFIED_QUALIFIED_EVIDENCE"):
+                compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            with self.subTest(forged=forged), self.assertRaisesRegex(
+                    c.ContractError, "UNVERIFIED_QUALIFIED_EVIDENCE"):
+                compare.evaluate_frozen_test(selection, test)
+
+    def test_fixture_status_and_evidence_flags_cannot_be_laundered(self):
+        for change in ({"status": "QUALIFIED_RESEARCH_MEASUREMENT"},
+                       {"fixture_only": False}, {"actual_evidence_verified": True}):
+            report = future_report(self.manifest, c.ARMS[0], .55)
+            report.update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(
+                    c.ContractError, "recomputed scoring inputs"):
+                compare.validate_measurement_report(report)
+
+    def test_known_machine_or_forbidden_gold_labels_rejected_at_every_depth(self):
+        markers = [{"label_origin": "machine-consensus"},
+                   {"label_source": "machine-three-asr-consensus-v1"},
+                   {"evidence_class": "speech-three-asr-consensus-v1"},
+                   {"evidence_class": "speech-three-asr-consensus-v2"},
+                   {"evidence_class": "speech-three-asr-training-admission-v1"},
+                   {"consensus_record": {}}, {"evaluation_gold_allowed": False},
+                   {"qualification_allowed": False}, {"human_gold": False},
+                   {"source_screen_only": True}, {"evaluation_gold_allowed": None}]
+        for marker in markers:
+            for placement in ("top", "truth_source", "nested"):
+                manifest = deepcopy(self.manifest)
+                row = manifest["recordings"][0]
+                if placement == "top":
+                    row.update(marker)
+                elif placement == "truth_source":
+                    row["truth_source"].update(marker)
+                else:
+                    row["truth_source"]["label_provenance"] = {"observations": [marker]}
+                with self.subTest(marker=marker, placement=placement), self.assertRaisesRegex(
+                        c.ContractError, "independent reference labels|screen-only"):
+                    c.validate_manifest(manifest)
+
+    def test_screen_weak_label_annotations_are_not_globally_forbidden(self):
+        manifest = deepcopy(self.manifest)
+        manifest["recordings"] = [manifest["recordings"][0]]
+        manifest["recordings"][0].update(split="screen", annotation_role="screen_only",
+            expected=None, annotation_status="unknown", independent_exposure=False,
+            label_origin="machine-consensus", evaluation_gold_allowed=False)
+        c.validate_manifest(manifest)
+
+    def test_future_threshold_confidence_and_rounding_contract(self):
+        for threshold, accepted in ((.55, True), (.9, True), (.90000049, True),
+                                    (.90000051, False), (.99, False)):
+            with self.subTest(threshold=threshold):
+                if accepted:
+                    future_report(self.manifest, c.ARMS[0], threshold)
+                else:
+                    with self.assertRaisesRegex(c.ContractError, "below declared replay threshold"):
+                        future_report(self.manifest, c.ARMS[0], threshold)
+
     def test_qualified_fixture_is_valid(self):
         c.validate_manifest(self.manifest)
 
@@ -379,7 +470,7 @@ class FutureSelectorFixtureTest(unittest.TestCase):
         self.assertIsNone(report["summary"]["negative_recording_far_per_hour"])
         self.assertIsNone(report["summary"]["negative_recording_far_upper_95_per_hour"])
         with self.assertRaisesRegex(c.ContractError, "INSUFFICIENT_EVIDENCE"):
-            compare.select_dev_thresholds([report], max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds([report], max_negative_far_upper95_per_hour=.4)
 
     def test_positive_false_accept_not_in_negative_only_far(self):
         rows = [row for row in self.manifest["recordings"] if row["split"] == "dev"]
@@ -392,38 +483,38 @@ class FutureSelectorFixtureTest(unittest.TestCase):
         self.assertAlmostEqual(summary["negative_recording_far_upper_95_per_hour"], .299573227355399, places=12)
 
     def test_same_explicit_budget_and_frozen_test(self):
-        result = compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
+        result = compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
         self.assertEqual(result["selected"], {arm: .55 for arm in c.ARMS})
         test = [future_report(self.manifest, arm, .55, split="test") for arm in c.ARMS]
-        self.assertEqual(compare.evaluate_frozen_test(result, test)["status"], "FROZEN_TEST_REPORTED")
+        self.assertEqual(compare.evaluate_fixture_frozen_test(result, test)["status"], "FIXTURE_FROZEN_TEST_REPORTED")
         test[0]["threshold"] = .65
         with self.assertRaisesRegex(c.ContractError, "development-frozen"):
-            compare.evaluate_frozen_test(result, test)
+            compare.evaluate_fixture_frozen_test(result, test)
 
     def test_test_selection_rejected(self):
         reports = self.candidates()
         reports[0]["split"] = "test"
         with self.assertRaisesRegex(c.ContractError, "test-set threshold selection"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
 
     def test_missing_budget_rejected(self):
         with self.assertRaisesRegex(c.ContractError, "explicit caller FAR budget"):
-            compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=None)
+            compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=None)
 
     def test_no_threshold_passes_budget(self):
-        result = compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.1)
-        self.assertEqual(result["status"], "NO_DEVELOPMENT_THRESHOLD_MEETS_BUDGET")
+        result = compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.1)
+        self.assertEqual(result["status"], "FIXTURE_NO_DEVELOPMENT_THRESHOLD_MEETS_BUDGET")
         self.assertIsNone(result["selected"])
 
     def test_same_threshold_grid_and_denominators_required(self):
         reports = self.candidates()
         reports.pop()
         with self.assertRaisesRegex(c.ContractError, "same unique"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
         reports = self.candidates()
         reports[0]["denominator_sha256"] = "a" * 64
         with self.assertRaisesRegex(c.ContractError, "recomputed scoring inputs|inputs/denominators"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
 
     def test_zero_positive_truth_not_zero_frr(self):
         self.manifest["recordings"] = [row for row in self.manifest["recordings"] if not row["expected"]]
@@ -435,12 +526,12 @@ class FutureSelectorFixtureTest(unittest.TestCase):
         reports = self.candidates()
         reports[0]["threshold"] = .6
         with self.assertRaisesRegex(c.ContractError, "differs from its full replay"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
 
     def test_frr_selection_only_among_budget_feasible_thresholds(self):
         reports = [future_report(self.manifest, arm, .55, negative_events=4) for arm in c.ARMS]
         reports += [future_report(self.manifest, arm, .65, hit=False) for arm in c.ARMS]
-        selection = compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+        selection = compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
         self.assertEqual(selection["selected"], {arm: .65 for arm in c.ARMS})
 
     def test_exact_trace_content_cannot_leak_with_renamed_groups(self):
@@ -482,48 +573,48 @@ class FutureSelectorFixtureTest(unittest.TestCase):
             reports = self.candidates()
             mutate(reports[0])
             with self.assertRaises(c.ContractError):
-                compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+                compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
 
     def test_future_decoder_identity_shared_between_arms(self):
         reports = self.candidates()
         reports[0]["replay_contract"]["decoder_executable_sha256"] = "b" * 64
         with self.assertRaisesRegex(c.ContractError, "paired decoder executable"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
 
     def test_frozen_test_requires_complete_measurement_and_development_decoder(self):
-        selection = compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
+        selection = compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
         reports = [future_report(self.manifest, arm, .55, split="test") for arm in c.ARMS]
         reports[0]["status"] = "INSUFFICIENT_EVIDENCE"
         with self.assertRaisesRegex(c.ContractError, "INSUFFICIENT_EVIDENCE"):
-            compare.evaluate_frozen_test(selection, reports)
+            compare.evaluate_fixture_frozen_test(selection, reports)
         reports[0] = future_report(self.manifest, c.ARMS[0], .55, split="test")
         reports[0]["replay_contract"]["decoder_executable_sha256"] = "b" * 64
         with self.assertRaisesRegex(c.ContractError, "differs from development freeze"):
-            compare.evaluate_frozen_test(selection, reports)
+            compare.evaluate_fixture_frozen_test(selection, reports)
 
     def test_frozen_selection_recomputed_from_development_evidence(self):
-        selection = compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
+        selection = compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
         selection["selected"] = {arm: .65 for arm in c.ARMS}
         reports = [future_report(self.manifest, arm, .65, split="test") for arm in c.ARMS]
         with self.assertRaisesRegex(c.ContractError, "frozen development selection differs"):
-            compare.evaluate_frozen_test(selection, reports)
+            compare.evaluate_fixture_frozen_test(selection, reports)
 
     def test_replay_receipt_not_reused_across_distinct_contracts(self):
         reports = self.candidates()
         reports[1]["replay_receipt_sha256"] = reports[0]["replay_receipt_sha256"]
         with self.assertRaisesRegex(c.ContractError, "cannot reuse one replay receipt"):
-            compare.select_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
-        selection = compare.select_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds(reports, max_negative_far_upper95_per_hour=.4)
+        selection = compare.select_fixture_dev_thresholds(self.candidates(), max_negative_far_upper95_per_hour=.4)
         test = [future_report(self.manifest, arm, .55, split="test") for arm in c.ARMS]
         test[0]["replay_receipt_sha256"] = selection["development_reports"][0]["replay_receipt_sha256"]
         with self.assertRaisesRegex(c.ContractError, "cannot reuse one replay receipt"):
-            compare.evaluate_frozen_test(selection, test)
+            compare.evaluate_fixture_frozen_test(selection, test)
 
     def test_each_threshold_requires_own_full_replay(self):
         row = future_report(self.manifest, c.ARMS[0], .55)
         row["full_decoder_replay"] = False
         with self.assertRaisesRegex(c.ContractError, "full decoder replay"):
-            compare.select_dev_thresholds([row], max_negative_far_upper95_per_hour=.4)
+            compare.select_fixture_dev_thresholds([row], max_negative_far_upper95_per_hour=.4)
 
 
 if __name__ == "__main__":

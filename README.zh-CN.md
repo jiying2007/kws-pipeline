@@ -4,6 +4,8 @@
 
 研究入口：[可复用模块、保留的实验结论与资格边界](research/README.md)
 
+最新源码研究：[已完成的三路 ASR 来源筛查](research/source-screen32-whisper-v1/evidence/run-38126849922/README.md)与[近音机制研究工具](research/near_pronunciation_v1/README.md)。一致率、源码及合成测试不代表真实 FAR 或召回改善；详见[当前证据范围](docs/KWS_LANDING_STATUS.md#current-entry-points)。
+
 当前归档交付：[完整公开归档、索引与可验证恢复](research/consolidation/ARCHIVE_DELIVERY_2026-10-09.md)。旧展开副本目标已取消；历史状态仍为 NOT_PUSHED。D20 数值失败、D90 尚未执行数值验证、fixed50 支持不足、旧模型 nightly 失败分别保留；真人与实机验证暂缓。
 
 > **证据边界 —— 引用下方任何数字前请先读这一段。**

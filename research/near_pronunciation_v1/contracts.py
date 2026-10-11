@@ -15,7 +15,9 @@ import sys
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(REPO / "tools"))
 from eval import score_events  # noqa: E402; existing dependency-free event semantics
+from speech_asr_consensus import require_independent_reference_labels  # noqa: E402
 
 ARMS = ("strict_children", "single_fuzzy_wo")
 MODEL_SHA = "ece44b47bd378c20dd254220b368e41143ec678cbab9dc56901513026ed8d402"
@@ -173,6 +175,29 @@ def validate_detection_values(events):
         require(number(event.get("confidence"), "detection confidence") <= 1.0, "confidence must be <= 1")
 
 
+def require_independent_truth(value):
+    """Reject known weak/forbidden label evidence, including nested truth sources.
+
+    This is a negative authority check, not authentication of a human or source.
+    The existing shared guard owns machine-consensus marker semantics.
+    """
+    if isinstance(value, dict):
+        try:
+            require_independent_reference_labels([value])
+        except ValueError as exc:
+            raise ContractError(str(exc)) from exc
+        for flag in ("evaluation_gold_allowed", "qualification_allowed", "human_gold"):
+            require(flag not in value or value[flag] is True,
+                    f"independent reference labels forbid false/unknown {flag}")
+        require(value.get("source_screen_only") is not True,
+                "screen-only source cannot become independent reference labels")
+        for nested in value.values():
+            require_independent_truth(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            require_independent_truth(nested)
+
+
 def validate_manifest(manifest):
     require(isinstance(manifest, dict), "manifest must be an object")
     require(manifest.get("schema") == "kws-near-pronunciation-data-v1", "unsupported data manifest")
@@ -263,6 +288,7 @@ def validate_manifest(manifest):
                         number(event[key], f"{name}: {key}")
             score_events.validate_recordings([row])
         if row["split"] in ("dev", "test"):
+            require_independent_truth(row)
             require(row["annotation_role"] == f"gold_{row['split']}" and row["expected"] is not None,
                     f"{name}: qualified split needs complete gold truth")
             require(row["origin"] == "real_human" and row["independent_exposure"] is True,

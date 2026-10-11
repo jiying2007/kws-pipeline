@@ -5,11 +5,13 @@ on:
     branches: [main, "codex/**"]
     paths:
       - "tools/model_family_resource_estimate.py"
+      - "tests/test_model_family_resource_estimate.py"
       - "configs/training/model-family-resource-contract-v1.json"
       - ".github/workflows/model-family-resource-contract.yml"
   pull_request:
     paths:
       - "tools/model_family_resource_estimate.py"
+      - "tests/test_model_family_resource_estimate.py"
       - "configs/training/model-family-resource-contract-v1.json"
       - ".github/workflows/model-family-resource-contract.yml"
   workflow_dispatch:
@@ -24,6 +26,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Reject noninteger resource dimensions
+        run: |
+          python3 -S -B tests/test_model_family_resource_estimate.py
+          python3 -S -B -O tests/test_model_family_resource_estimate.py
+          python3 -S -B -OO tests/test_model_family_resource_estimate.py
       - name: Verify static RNN/GRU resource contract
         run: |
           set -euo pipefail

@@ -179,7 +179,35 @@ Before the corpus is consumed, `tools/final_afe_identity.py` resolves the real e
 - pipeline source SHA where supplied;
 - SKU/microphone/enclosure/audio-route/toolchain identity.
 
-The command text itself is not copied into public evidence. `tools/run_final_afe_corpus.py` recomputes the identity before execution and refuses any drift.
+The command text itself is not copied into public evidence. The first command
+argument must be exactly `{executable}`; unhashed launchers/wrappers are rejected.
+Each declared config must occur as its resolved absolute path in a command
+argument (a separate argument or `--flag=/absolute/path`), and each placeholder
+must occur exactly once. A declared config path cannot be omitted from the command. This does not
+prove how the application consumes an argument or resolves overlapping options;
+the controlled runner must verify those semantics. Profiles relying on implicit/default configs need an explicit
+config argument before qualification. This binds the declared executable and
+configs; it is not a claim to freeze an interpreter, shared libraries or hidden
+application dependencies. The controlled runner remains responsible for those.
+
+`tools/run_final_afe_corpus.py` recomputes the frozen identity before and after
+each recording, and rechecks the input hash after execution. A private in-process
+binding also freezes the adapter bytes, resolved executable path and configuration
+paths. Editing the adapter to point at a same-byte backup cannot redirect checks
+away from the actual cached command. Before publishing success, every retained
+input, WAV, sidecar and optional timeline is rechecked for regular-file/path
+identity and its recorded hash, so a later command cannot silently alter an
+earlier result. These local paths are not published. This detects drift at the
+checked boundaries; it does not sandbox arbitrary same-user concurrent programs. Its output directory
+must be new and is created with private access. Existing output, duplicate or
+path-like recording IDs, symlink/nonregular outputs and changed input/config
+bytes fail closed without a success summary. A successful no-op command cannot
+reuse old WAV/sidecar files. A failed run remains consumed under the no-retry
+policy; choosing a new output directory does not restore corpus freshness.
+
+`tests/test_final_afe_execution_contract.py` uses only invented files and mocked
+commands, including optimized Python modes. It does not run an AFE or KWS model
+and establishes no acoustic or target qualification.
 
 ## Fresh holdout / no-retry rule
 

@@ -184,6 +184,10 @@ int main(int argc, char **argv) {
       return 1;
     }
     puts("kws_trace_slice self-test: PASS");
+    if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+      fprintf(stderr, "cannot write stdout\n");
+      return 1;
+    }
     return 0;
   }
   if (argc != 5 || !parse_u64(argv[3], &start_sample) ||
@@ -203,5 +207,9 @@ int main(int argc, char **argv) {
          (unsigned long long)frames,
          (unsigned long long)start_sample,
          (unsigned long long)end_sample);
-  return ferror(stdout) != 0 ? 1 : 0;
+  if (fflush(stdout) != 0 || ferror(stdout) != 0) {
+    fprintf(stderr, "cannot write stdout\n");
+    return 1;
+  }
+  return 0;
 }

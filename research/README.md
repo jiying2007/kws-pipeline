@@ -10,12 +10,42 @@ are unchanged by this consolidation.
 
 ## Current research and retention / 当前研究与保留状态
 
+**2026-10-11 source/evidence audit:** [Confirmed defects, corrections and verification boundaries](../docs/KWS_AUDIT_2026-10-11.md) covers output reliability, AFE and promotion admission, optimized-mode guards and fixture-only evaluation. It does not qualify acoustic performance.
+
+**2026-10-11 completed three-ASR source screen ([PR #535](https://github.com/jiying2007/kws-pipeline/pull/535)):**
+The [durable fourth-run archive](source-screen32-whisper-v1/evidence/run-38126849922/README.md)
+retains run `38126849922`: all 16 original inputs completed with natural Whisper
+EOT verified before finalization. The [original 16-row comparison](source-screen32-whisper-v1/evidence/run-38126849922/comparison/README.md)
+([Chinese report](source-screen32-whisper-v1/evidence/run-38126849922/comparison/report.zh.txt))
+records 6/16 punctuation-only triple agreement and 7/16 under the explicitly
+secondary punctuation-plus-whitespace policy; both include two common target
+mismatches. These are agreement coverage, not acoustic accuracy or verbatim
+completeness. All rows remain source-screen-only, without human gold, training
+admission or shipping approval. The Whisper root and attempt READMEs preserve
+historical preparation, failure and publication-blocker snapshots; the linked
+completed archive is the current result. No frozen snapshot or old execution
+permission is refreshed by this entry.
+
+**2026-10-11 near-pronunciation source integration ([PR #536](https://github.com/jiying2007/kws-pipeline/pull/536)):**
+[Saved-pair contracts](near_pronunciation_v1/README.md) and the
+[isolated C decoder overlay](near_pronunciation_v1/DECODER.md) compare strict
+child admission with one permitted weak `wo1` transition per complete keyword
+path. CI covers fabricated contract tests in normal, `-O` and `-OO` modes and
+separate synthetic-logit C verification. Future real-data scoring and threshold
+selection remain fail-closed until actual input and execution evidence can be verified;
+fixture-only scoring does not establish measurement eligibility. This public source integration does not
+publish an actual saved-trace replay result. The prepared/NOT_RUN annotations
+in its source documents describe source preparation. Ordinary real-negative
+exposure and independent accent/far-field positive evidence remain absent, so
+matched-FAR and recall improvement are unestablished. Model, shipping decoder
+and thresholds are unchanged.
+
 **2026-10-11 C0/C1 source preparation:** [Isolated streaming encoder source](candidate_encoders/README.md) adds a caller-injected RNN adapter, causal DS-TCN research source and symbolic state/layout checks. Candidate numerical execution, C export parity, training and acoustic qualification remain NOT_RUN; the dated disabled comparison plan is unchanged.
 
 **2026-10-10 parallel candidate review:** [Evidence-based optimization review](../docs/KWS_PARALLEL_OPTIMIZATION_REVIEW_2026-10-10.md) and [disabled candidate plan](../configs/research/parallel-candidate-screen-2026-10-10.json) separate a fresh same-data RNN64 control, causal DS-TCN and conditional causal FSMN from the historical shipping anchor. The proposed 6+2 fit ceiling is not a run permit, a verified fair budget or a measured result. Original-FA causal attribution, native-A20 admission, actual-label/PCM data admission and final product gates retain their own boundaries.
 
-**2026-10-10 retained public source-screen result:** [Completed SenseVoice continuation and full joint table](source-screen32-v1/evidence/run-38021467257/README.md).
-The existing 16 WAVs now have both recognizers' outputs: 13/16 transcripts agree,
+**2026-10-10 historical two-ASR source-screen result:** [Completed SenseVoice continuation and full joint table](source-screen32-v1/evidence/run-38021467257/README.md).
+That comparison retains both recognizers' outputs for the 16 WAVs: 13/16 transcripts agree,
 but only 8/16 pairs match the intended phrase; 5 agree on a different phrase and
 3 disagree. These are machine observations, not actual-word truth or training
 admission. Current listening/screening tools are linked below; the public packet
@@ -65,7 +95,7 @@ logs totaling 59,574 bytes, then checks their size and SHA-256. The test itself
 never downloads or silently skips missing evidence. See each module for its
 complete tests and exact scope; the CTC workflow runs both independent oracles.
 
-## Current opt-in engineering tools (2026-10-10)
+## Current opt-in engineering tools (2026-10-11)
 
 - [Saved-only evidence safety](offline-evidence-safety-v1/README.md): explicit preflight,
   real saved-reference admission, and failure capture. Tests fetch a pinned public
