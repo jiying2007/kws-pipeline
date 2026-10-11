@@ -271,5 +271,253 @@ class ContractTests(unittest.TestCase):
         self.assertFalse(read_json(HERE / 'execution-release.json')['approved'])
 
 
+class SetupDiagnosticTests(unittest.TestCase):
+    """Injected byte fixtures and exceptions only; no network/install/model calls."""
+    def setUp(self):
+        import setup_runtime
+        self.setup = setup_runtime
+        self.temporary = tempfile.TemporaryDirectory(); self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name); self.output = self.root / 'output'; self.output.mkdir()
+        self.diag = setup_runtime.SetupDiagnostics(self.output)
+        self.diag.enter('source_download')
+
+    def row(self, body=b'fixture', **overrides):
+        import hashlib
+        return {'url': 'https://raw.githubusercontent.com/official/pinned/fixture',
+                'sha256': hashlib.sha256(body).hexdigest(), 'size_bytes': len(body), **overrides}
+
+    def download(self, row, response=None, error=None, index=1):
+        import io
+        self.diag.begin_asset('source', index, row)
+        downloader = self.setup.Downloader(self.diag)
+        downloader.opener = mock.Mock()
+        downloader.opener.open.return_value = io.BytesIO(b'fixture') if response is None else response
+        if error is not None: downloader.opener.open.side_effect = error
+        return downloader, self.root / ('asset-' + str(index))
+
+    def assert_safe(self, sentinel='DO_NOT_DISCLOSE'):
+        raw = b''.join(p.read_bytes() for p in self.output.iterdir() if p.is_file())
+        self.assertNotIn(sentinel.encode(), raw)
+        return read_json(self.output / 'setup-failure.json')
+
+    def test_download_success_has_observed_bytes_and_verified_identity(self):
+        row = self.row(); downloader, target = self.download(row)
+        self.assertEqual(downloader.get(row, target), {'bytes': 7, 'sha256': row['sha256']})
+        progress = read_json(self.output / 'setup-progress.json')
+        self.assertEqual(progress['response_body_bytes_observed'], 7)
+        self.assertEqual(progress['verified_assets'], 1)
+        self.assertEqual(progress['asset']['observed_sha256'], row['sha256'])
+        self.assertEqual(progress['asset']['status'], 'verified')
+        self.assertFalse(progress['network_transfer_total_known'])
+        self.assertEqual(downloader.opener.open.call_count, 1)
+
+    def test_hash_failure_retains_actual_hash_without_promoting_verification(self):
+        row = self.row(sha256='0' * 64); downloader, target = self.download(row)
+        with self.assertRaises(self.setup.SetupFault) as caught: downloader.get(row, target)
+        self.diag.fail(caught.exception); failure = self.assert_safe()
+        self.assertEqual(failure['failure']['reason_code'], 'sha256_mismatch')
+        self.assertEqual(failure['response_body_bytes_observed'], 7)
+        self.assertEqual(failure['verified_assets'], 0)
+        self.assertNotEqual(failure['asset']['observed_sha256'], row['sha256'])
+        self.assertEqual(downloader.opener.open.call_count, 1)
+
+    def test_length_and_byte_cap_fail_closed(self):
+        for code, row, limit in (('declared_length', self.row(size_bytes=8), LIMITS['download_bytes']),
+                                 ('byte_cap', self.row(), 3)):
+            with self.subTest(code=code):
+                # Distinct fixture destination and fresh ledger per independent test case.
+                out = self.root / code; out.mkdir()
+                self.diag = self.setup.SetupDiagnostics(out); self.output = out
+                self.diag.enter('source_download')
+                downloader, target = self.download(row)
+                target = target.with_name(code + '.fixture')
+                with mock.patch.dict(self.setup.LIMITS, download_bytes=limit):
+                    with self.assertRaises(self.setup.SetupFault) as caught: downloader.get(row, target)
+                self.diag.fail(caught.exception)
+                self.assertEqual(self.assert_safe()['failure']['reason_code'], code)
+                self.assertEqual(self.diag.state['verified_assets'], 0)
+
+    def test_partial_read_timeout_is_durable_and_not_retried(self):
+        class Partial:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, maximum):
+                if not hasattr(self, 'read_once'):
+                    self.read_once = True; return b'part'
+                raise TimeoutError('DO_NOT_DISCLOSE credential in transport context')
+        row = self.row(size_bytes=10); downloader, target = self.download(row, Partial())
+        with self.assertRaises(TimeoutError) as caught: downloader.get(row, target)
+        # Progress was durable even before the exception handler ran.
+        self.assertEqual(read_json(self.output / 'setup-progress.json')['response_body_bytes_observed'], 4)
+        self.diag.fail(caught.exception); failure = self.assert_safe()
+        self.assertEqual(failure['failure']['reason_code'], 'timeout')
+        self.assertEqual(failure['asset']['response_body_bytes_observed'], 4)
+        self.assertEqual(failure['retry_count'], 0)
+        self.assertEqual(downloader.opener.open.call_count, 1)
+
+    def test_http_error_exposes_only_bounded_status(self):
+        import urllib.error
+        error = urllib.error.HTTPError('https://DO_NOT_DISCLOSE/path?token=DO_NOT_DISCLOSE', 403,
+                                       'DO_NOT_DISCLOSE', {'Cookie': 'DO_NOT_DISCLOSE'}, None)
+        row = self.row(); downloader, target = self.download(row, error=error)
+        with self.assertRaises(urllib.error.HTTPError) as caught: downloader.get(row, target)
+        self.diag.fail(caught.exception); failure = self.assert_safe()
+        self.assertEqual(failure['failure'], {'reason_code': 'http_error', 'http_status': 403})
+        self.assertEqual(failure['response_body_bytes_observed'], 0)
+        self.assertEqual(failure['asset']['http_status'], 403)
+        self.assertEqual(failure['asset']['expected_sha256'], row['sha256'])
+        self.assertNotIn('url', failure['asset'])
+
+    def test_exception_categories_never_copy_messages_commands_or_headers(self):
+        import ssl
+        import subprocess
+        import urllib.error
+        cases = [(urllib.error.URLError('DO_NOT_DISCLOSE'), 'url_error'),
+                 (urllib.error.URLError(ssl.SSLError('DO_NOT_DISCLOSE')), 'tls_error'),
+                 (subprocess.CalledProcessError(1, ['DO_NOT_DISCLOSE'], 'DO_NOT_DISCLOSE', 'DO_NOT_DISCLOSE'), 'subprocess_exit'),
+                 (subprocess.TimeoutExpired(['DO_NOT_DISCLOSE'], 1, 'DO_NOT_DISCLOSE'), 'timeout'),
+                 (PermissionError(13, 'DO_NOT_DISCLOSE', '/DO_NOT_DISCLOSE'), 'permission_denied'),
+                 (ValueError('DO_NOT_DISCLOSE'), 'validation_rejected'),
+                 (RuntimeError('DO_NOT_DISCLOSE'), 'runtime_error'),
+                 (Exception('DO_NOT_DISCLOSE'), 'unexpected_exception')]
+        for error, expected in cases:
+            with self.subTest(expected=expected):
+                value = self.setup.public_reason(error)
+                self.assertEqual(value['reason_code'], expected)
+                self.assertNotIn('DO_NOT_DISCLOSE', json.dumps(value))
+
+    def test_unapproved_redirect_and_url_still_rejected(self):
+        import urllib.request
+        handler = self.setup.FixedRedirect()
+        request = urllib.request.Request('https://raw.githubusercontent.com/official/pinned')
+        with self.assertRaises(self.setup.SetupFault) as caught:
+            handler.redirect_request(request, None, 302, 'DO_NOT_DISCLOSE', {},
+                                     'https://DO_NOT_DISCLOSE.example/private')
+        self.assertEqual(caught.exception.code, 'unapproved_redirect')
+        row = self.row(url='https://DO_NOT_DISCLOSE.example/private')
+        downloader, target = self.download(row)
+        with self.assertRaises(self.setup.SetupFault) as caught: downloader.get(row, target)
+        self.diag.fail(caught.exception)
+        self.assertEqual(self.assert_safe()['failure']['reason_code'], 'unapproved_url')
+        downloader.opener.open.assert_not_called()
+        self.assertEqual(self.setup.HOSTS, {'raw.githubusercontent.com', 'files.pythonhosted.org',
+            'download.pytorch.org', 'download-r2.pytorch.org', 'openaipublic.azureedge.net'})
+
+    def test_every_phase_failure_emits_fixed_phase_without_running_setup(self):
+        import contextlib
+        import io
+        for index, stage in enumerate(sorted(self.setup.STAGES)):
+            with self.subTest(stage=stage):
+                output = self.root / str(index); output.mkdir()
+                diag = self.setup.SetupDiagnostics(output)
+                def injected(diagnostic):
+                    diagnostic.enter(stage)
+                    raise RuntimeError('DO_NOT_DISCLOSE')
+                with mock.patch.object(self.setup, 'SetupDiagnostics', return_value=diag), \
+                     mock.patch.object(self.setup, 'execute_setup', side_effect=injected), \
+                     mock.patch.object(self.setup.signal, 'signal'), contextlib.redirect_stdout(io.StringIO()) as stream:
+                    self.assertEqual(self.setup.main(), 1)
+                value = read_json(output / 'setup-failure.json')
+                self.assertEqual(value['stage'], stage)
+                self.assertEqual(value['model_calls'], 0)
+                self.assertEqual(value['status'], 'failed_no_retry')
+                self.assertNotIn('DO_NOT_DISCLOSE', stream.getvalue())
+                self.assertNotIn('DO_NOT_DISCLOSE', json.dumps(value))
+
+    def test_diagnostic_write_failure_does_not_emit_primary_text(self):
+        import contextlib
+        import io
+        with mock.patch.object(self.setup, 'SetupDiagnostics', return_value=self.diag), \
+             mock.patch.object(self.setup, 'execute_setup', side_effect=self.setup.SetupFault('sha256_mismatch')), \
+             mock.patch.object(self.diag, 'fail', side_effect=OSError('DO_NOT_DISCLOSE')), \
+             mock.patch.object(self.setup.signal, 'signal'), contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(self.setup.main(), 1)
+        self.assertIn('sha256_mismatch', output.getvalue())
+        self.assertIn("'diagnostic_saved': False", output.getvalue())
+        self.assertNotIn('DO_NOT_DISCLOSE', output.getvalue())
+
+    def test_constructor_signal_and_first_save_failures_are_sanitized(self):
+        import contextlib
+        import io
+        cases = ('constructor', 'signal', 'first_save', 'atomic_save')
+        for index, case in enumerate(cases):
+            with self.subTest(case=case):
+                output = self.root / ('startup-' + str(index)); output.mkdir()
+                diagnostic = self.setup.SetupDiagnostics(output)
+                if case == 'atomic_save': diagnostic.enter('entry')
+                def injected(diag): diag.enter('entry')
+                with contextlib.ExitStack() as stack:
+                    constructor = stack.enter_context(mock.patch.object(self.setup, 'SetupDiagnostics', return_value=diagnostic))
+                    signals = stack.enter_context(mock.patch.object(self.setup.signal, 'signal'))
+                    execute = stack.enter_context(mock.patch.object(self.setup, 'execute_setup', side_effect=injected))
+                    stream = stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+                    if case == 'constructor': constructor.side_effect = RuntimeError('DO_NOT_DISCLOSE')
+                    elif case == 'signal': signals.side_effect = ValueError('DO_NOT_DISCLOSE')
+                    elif case == 'first_save': stack.enter_context(mock.patch.object(self.setup, 'write_once', side_effect=OSError('DO_NOT_DISCLOSE')))
+                    else: stack.enter_context(mock.patch.object(self.setup, 'atomic', side_effect=OSError('DO_NOT_DISCLOSE')))
+                    self.assertEqual(self.setup.main(), 1)
+                    self.assertNotIn('DO_NOT_DISCLOSE', stream.getvalue())
+                    if case in ('constructor', 'signal'): execute.assert_not_called()
+                self.assertFalse((output / 'setup-receipt.json').exists())
+
+    def test_lock_identity_http_headers_and_completed_stages_are_fixed_metadata(self):
+        self.diag.bind_locks({'source-lock.json': 'a' * 64, 'runtime-lock.json': 'b' * 64})
+        self.diag.enter('model_download')
+        self.diag.enter('wheel_download')
+        self.assertIn('source_download', self.diag.state['completed_stages'])
+        self.assertIn('model_download', self.diag.state['completed_stages'])
+        self.assertNotIn('wheel_download', self.diag.state['completed_stages'])
+        row = self.row(); downloader, target = self.download(row)
+        self.diag.http_response(200)
+        self.assertEqual(read_json(self.output / 'setup-progress.json')['asset']['http_status'], 200)
+        self.assertEqual(self.diag.state['lock_sha256']['runtime-lock.json'], 'b' * 64)
+        with self.assertRaises(self.setup.SetupFault): self.diag.bind_locks({'DO_NOT_DISCLOSE': 'a' * 64})
+
+    def test_read_connection_reset_and_incomplete_read_are_not_filesystem_claims(self):
+        import http.client
+        for index, (error, reason) in enumerate(((ConnectionResetError('DO_NOT_DISCLOSE'), 'connection_error'),
+                (http.client.IncompleteRead(b'DO_NOT_DISCLOSE'), 'incomplete_read')), 1):
+            with self.subTest(reason=reason):
+                output = self.root / ('transport-' + str(index)); output.mkdir()
+                self.output = output; self.diag = self.setup.SetupDiagnostics(output)
+                self.diag.enter('source_download')
+                class Response:
+                    status = 200
+                    def __enter__(self): return self
+                    def __exit__(self, *args): return False
+                    def read(self, maximum): raise error
+                row = self.row(); downloader, target = self.download(row, response=Response())
+                with self.assertRaises(type(error)) as caught: downloader.get(row, target.with_name(reason))
+                self.diag.fail(caught.exception); failure = self.assert_safe()
+                self.assertEqual(failure['failure']['reason_code'], reason)
+                self.assertEqual(failure['asset']['http_status'], 200)
+                self.assertEqual(failure['response_body_bytes_observed'], 0)
+                self.assertFalse(failure['network_transfer_total_known'])
+
+    def test_existing_progress_cannot_be_overwritten_as_fresh_setup(self):
+        original = (self.output / 'setup-progress.json').read_bytes()
+        other = self.setup.SetupDiagnostics(self.output)
+        with self.assertRaises(FileExistsError): other.enter('entry')
+        self.assertEqual((self.output / 'setup-progress.json').read_bytes(), original)
+
+    def test_first_failed_run_public_evidence_is_immutable_and_zero_attempt(self):
+        directory = HERE / 'evidence/run-38105471896'
+        provenance = read_json(directory / 'provenance.json')
+        self.assertEqual(provenance['zip_sha256'], '04b6b23c85f25e0b29520972654c2d59f18f22506cf1b77c9fd1056bd357b0ff')
+        self.assertEqual(provenance['zip_bytes'], 11518)
+        self.assertEqual(len(provenance['files']), 7)
+        for name, expected in provenance['files'].items():
+            self.assertEqual(identity(directory / name), expected)
+        receipt = read_json(directory / 'host-receipt.json')
+        self.assertEqual(receipt['source_freeze_sha256'], 'fdfb8a9040a10ec380ac7a658662d2d2935296301ee4269ac0ce79309cc48c2e')
+        self.assertEqual(receipt['stages']['whisper'], 'not_run')
+        rows = read_json(directory / 'terminal-outcomes.json')
+        self.assertEqual(len(rows), 16)
+        self.assertTrue(all(r['attempts'] == 0 and r['status'] == 'not_run' for r in rows))
+        freeze = read_json(HERE / 'execution-freeze.json')
+        self.assertFalse(any('source-screen32-whisper-v1/evidence/' in p for p in freeze['files']))
+        self.assertFalse(any('/evidence/' in p for p in freeze['blind_code']))
+
+
 if __name__ == '__main__':
     unittest.main()
