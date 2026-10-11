@@ -45,6 +45,8 @@ make collected measurements auditable and do not substitute for those measuremen
 
 ## Speech-like source preparation and admission
 
+- [`asr_native_contracts.py`](asr_native_contracts.py) — Validate frozen native-ASR configuration and capture metadata without running recognition.
+- [`asr_source_resolver.py`](asr_source_resolver.py) — Verify retained evidence against code-owned source roots; production train roots are currently empty.
 - [`attach_speech_like_labels.py`](attach_speech_like_labels.py)
 - [`bootstrap_speech_like_stage_a.py`](bootstrap_speech_like_stage_a.py)
 - [`generate_speech_like_command_provider.py`](generate_speech_like_command_provider.py)
