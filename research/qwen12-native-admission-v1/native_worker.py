@@ -10,7 +10,7 @@ import types
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
-from campaign_contract import BOUNDARY, canonical, digest, identity, read_json, require, validate_blind, write_once, atomic
+from campaign_contract import BOUNDARY, canonical, digest, identity, read_json, require, validate_blind, write_once, atomic, planned_clips, validate_original_job, remaining_plan, current_family_counts
 from cpu_budget import install_inference_guard
 from worker_receipts import bind_predecode,emit_start,emit_completion
 
@@ -197,6 +197,7 @@ def prepared_or_compare(output,mode):
 
 
 def qwen_sense(family,runtime,inputs,output,job,mode):
+    planned = planned_clips(job,family)
     _diagnostic_stage('import_worker')
     old=ROOT/'research/source-screen32-v1';sys.path.insert(0,str(old))
     worker=module('qwen12_retained_worker',old/'asr_worker.py')
@@ -208,6 +209,7 @@ def qwen_sense(family,runtime,inputs,output,job,mode):
     _register_diagnostic_codes()
     _diagnostic_stage('bind_inputs')
     _,job_raw,decoder_raw=worker.bind_inputs(inputs)
+    require(job_raw==canonical(validate_original_job(job)), 'original job differs from decoder input')
     # Explicitly use the new setup binding, including the fresh10GiB/12GiB limits.
     _diagnostic_stage('verify_runtime')
     setup=module('qwen12_setup_binding',HERE/'setup_adapter.py');verified=setup.verify_runtime(runtime,'asr')
@@ -252,10 +254,11 @@ def qwen_sense(family,runtime,inputs,output,job,mode):
     _diagnostic_stage('bind_predecode')
     binding=bind_predecode(recognizer_id=family,policy_path=Path('/policy/policy.json'),
         expected_policy_sha256=os.environ['KWS_POLICY_SHA256'],frozen_dir=Path('/frozen'),current_dir=output,
-        run_id=os.environ['KWS_RUN_ID'],executed_head_sha=os.environ['KWS_EXECUTED_HEAD_SHA'])
+        run_id=os.environ['KWS_RUN_ID'],executed_head_sha=os.environ['KWS_EXECUTED_HEAD_SHA'],original_job=job)
     _diagnostic_stage('decoder')
     bindings=worker.validate_decoder(decoder_raw,digest(decoder_raw))
-    for index,clip in enumerate(job['clips'],1):
+    for clip in planned:
+        index=int(clip['audio_id'].split('-')[1])
         _diagnostic_stage('bind_audio',index)
         worker.verify_scope();descriptor=bindings[clip['audio_id']]['descriptor']
         bound=worker.bind_wave(str(inputs/'audio'),worker.WaveExpectation(clip['audio_id'],clip['wav_sha256']+'.wav',
@@ -263,7 +266,7 @@ def qwen_sense(family,runtime,inputs,output,job,mode):
         require(bound.descriptor==descriptor,'full bound PCM unchanged')
         directory=output/clip['audio_id'];directory.mkdir();progress(output,'cell',index)
         _diagnostic_stage('start_attempt',index)
-        attempt=emit_start(binding,directory,wav_path=inputs/clip['audio_path'],expected_file_sha256=clip['wav_sha256'],
+        attempt=emit_start(binding,directory,wav_path=inputs/clip['audio_path'],expected_file_sha256=clip['wav_sha256'],audio_id=clip['audio_id'],
             request_id='qwen12-'+os.environ['KWS_RUN_ID']+'-'+family+'-'+clip['audio_id'])
         _diagnostic_stage('infer',index)
         signal.setitimer(signal.ITIMER_REAL,120)
@@ -274,6 +277,7 @@ def qwen_sense(family,runtime,inputs,output,job,mode):
 
 
 def whisper(runtime,inputs,output,job,mode):
+    planned = planned_clips(job,'whisper')
     _diagnostic_stage('import_adapter')
     base=ROOT/'research/source-screen32-whisper-v1';sys.path.insert(0,str(base))
     adapter=module('qwen12_whisper_adapter',base/'adapter.py')
@@ -289,14 +293,15 @@ def whisper(runtime,inputs,output,job,mode):
     _diagnostic_stage('bind_predecode')
     binding=bind_predecode(recognizer_id='whisper',policy_path=Path('/policy/policy.json'),
         expected_policy_sha256=os.environ['KWS_POLICY_SHA256'],frozen_dir=Path('/frozen'),current_dir=output,
-        run_id=os.environ['KWS_RUN_ID'],executed_head_sha=os.environ['KWS_EXECUTED_HEAD_SHA'])
+        run_id=os.environ['KWS_RUN_ID'],executed_head_sha=os.environ['KWS_EXECUTED_HEAD_SHA'],original_job=job)
     common=sys.modules['common']
-    for index,clip in enumerate(job['clips'],1):
+    for clip in planned:
+        index=int(clip['audio_id'].split('-')[1])
         _diagnostic_stage('bind_audio',index)
         pcm,frames=common.wav_bytes(inputs/clip['audio_path'],clip['wav_sha256'])
         directory=output/clip['audio_id'];directory.mkdir();progress(output,'cell',index)
         _diagnostic_stage('start_attempt',index)
-        attempt=emit_start(binding,directory,wav_path=inputs/clip['audio_path'],expected_file_sha256=clip['wav_sha256'],
+        attempt=emit_start(binding,directory,wav_path=inputs/clip['audio_path'],expected_file_sha256=clip['wav_sha256'],audio_id=clip['audio_id'],
             request_id='qwen12-'+os.environ['KWS_RUN_ID']+'-whisper-'+clip['audio_id'])
         _diagnostic_stage('infer',index)
         signal.setitimer(signal.ITIMER_REAL,120)
@@ -304,6 +309,17 @@ def whisper(runtime,inputs,output,job,mode):
         signal.setitimer(signal.ITIMER_REAL,0)
         _diagnostic_stage('complete_attempt',index)
         emit_completion(attempt,row=None,raw=raw)
+
+
+def worker_completion(job,output,family,mode):
+    expected=[row['audio_id'] for row in remaining_plan(job,family)]
+    if mode=='prepare':
+        require(not any(output.glob('clip-*')), 'prepare cannot produce recognition output')
+        return {'calls':0,'completed':0,'audio_ids':[], 'status':'prepared_no_recognition',**BOUNDARY}
+    counts=current_family_counts(job,output,family,isolated=True)
+    require(counts == {'calls':len(expected),'completed':len(expected),'audio_ids':expected},
+            'actual completed family roster differs from fixed remaining plan')
+    return {**counts,'status':'all_planned_native_v2_complete',**BOUNDARY}
 
 
 def main():
@@ -331,7 +347,7 @@ def main():
     signal.signal(signal.SIGALRM,alarm)
     (whisper if family=='whisper' else lambda *a:qwen_sense(family,*a))(runtime,inputs,output,job,mode)
     _diagnostic_stage('worker_complete')
-    write_once(output/'worker-complete.json',{'calls':0 if mode=='prepare' else 12,'status':'prepared_no_recognition' if mode=='prepare' else 'all12_native_v2_complete',**BOUNDARY})
+    write_once(output/'worker-complete.json',worker_completion(job,output,family,mode))
 
 
 def run():

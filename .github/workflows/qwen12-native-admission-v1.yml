@@ -2,7 +2,7 @@ name: Qwen12 prospective native admission v1
 on:
   push:
     branches:
-      - research/qwen12-native-admission-recovery3
+      - research/qwen12-native-admission-remaining35-v1
       - research/qwen12-native-transport-preflight-12m-v1
   pull_request:
     paths:
@@ -16,9 +16,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   qwen12:
-    # Recovery3 static release is approved; all three predecessors are consumed.
-    # Actual execution ref remains held for final CI and immediate unique-claim checks.
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery3' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    # Reviewed fixed remaining35 claim; all four predecessors remain consumed.
+    # Only this fresh branch can trigger; runtime prerequisites are verified in this run.
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-remaining35-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
@@ -32,7 +32,7 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
           fetch-depth: 1
-      - name: Run reviewed twelve by three native captures once
+      - name: Run reviewed fixed remaining35 native captures once
         timeout-minutes: 65
         run: python3 -I -B research/qwen12-native-admission-v1/hosted_run.py
       - name: Publish complete bounded native evidence, including failed or partial runs

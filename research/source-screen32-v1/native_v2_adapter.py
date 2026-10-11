@@ -61,6 +61,55 @@ def generation_snapshot(config):
     return snapshot
 
 
+def active_generation_snapshot(config, prepared, input_ids_seq_length):
+    """Project only the pinned Transformers 4.57.6 runtime token fields.
+
+    The prepared JSON identity stays strict. For this decoder-only request,
+    _prepare_special_tokens derives pad from the first EOS, and
+    _prepare_generated_length adds the observed prompt length to the budget.
+    No other public or private config field may change or become non-JSON.
+    """
+    torch = sys.modules.get("torch")
+    require(torch is not None, "missing loaded Qwen torch runtime")
+    require(type(input_ids_seq_length) is int and input_ids_seq_length > 0,
+            "missing observed Qwen generation input length")
+    expected = clone(prepared)
+    for key in ("bos_token_id", "eos_token_id", "pad_token_id", "decoder_start_token_id", "max_length"):
+        require(key in expected, "missing frozen Qwen active control: " + key)
+    require(expected["bos_token_id"] is None and expected["pad_token_id"] is None
+            and expected["decoder_start_token_id"] is None, "unreviewed Qwen special-token derivation")
+    same(expected["eos_token_id"], QWEN_REQUEST["eos_token_id"], "Qwen frozen EOS drift")
+    same(expected["max_new_tokens"], 256, "Qwen frozen token budget drift")
+    expected["max_length"] = input_ids_seq_length + 256
+    snapshot = config.to_dict()
+    require(type(snapshot) is dict, "Qwen active config must be a dictionary")
+    snapshot = dict(snapshot)  # Remove keys only from our detached mapping.
+    runtime_tokens = {}
+    for key, value in (("_bos_token_tensor", None),
+                       ("_eos_token_tensor", expected["eos_token_id"]),
+                       ("_pad_token_tensor", expected["eos_token_id"][0]),
+                       ("_decoder_start_token_tensor", None)):
+        require(key in snapshot, "missing Qwen runtime token field: " + key)
+        actual = snapshot.pop(key)
+        if value is None:
+            require(actual is None, "Qwen runtime token must be None: " + key)
+            runtime_tokens[key] = None
+            continue
+        require(type(actual) is torch.Tensor, "Qwen runtime token must be an exact Tensor: " + key)
+        require(actual.device.type == "cpu" and actual.dtype is torch.int64,
+                "Qwen runtime token must be CPU int64: " + key)
+        shape = list(actual.shape)
+        same(shape, [len(value)] if type(value) is list else [], "Qwen runtime token shape drift: " + key)
+        values = clone(actual.tolist())
+        require((type(values) is list and all(type(token) is int for token in values))
+                if type(value) is list else type(values) is int, "Qwen runtime token value drift: " + key)
+        same(values, value, "Qwen runtime token value drift: " + key)
+        runtime_tokens[key] = {"device": "cpu", "dtype": "torch.int64", "shape": shape, "values": values}
+    snapshot = clone(snapshot)  # Unknown tensors/private fields and NaN still fail.
+    same(snapshot, expected, "Qwen active generation config drift")
+    return snapshot, runtime_tokens
+
+
 def qwen_effective(config, execution_observed, custom_processors, custom_stops):
     snapshot = generation_snapshot(config)
     require(custom_processors is not None and custom_stops is not None,
@@ -242,7 +291,13 @@ class NativeCaptureAdapter:
             observed["generation_mode"] = result[0].get_generation_mode().value
             return result
         def generation_return(original, args, kwargs):
-            require("generation_returned" not in observed, "exactly one Qwen generation return")
+            require("generation_input_ids_seq_length" not in observed, "exactly one Qwen generation return")
+            require("input_ids" in kwargs, "missing observed Qwen generation input_ids")
+            input_shape = list(kwargs["input_ids"].shape)
+            require(len(input_shape) == 2 and all(type(size) is int for size in input_shape)
+                    and input_shape[0] == 1 and input_shape[1] > 0, "Qwen generation input_ids shape")
+            prefix = input_shape[1]
+            observed["generation_input_ids_seq_length"] = prefix
             output = original(*args, **kwargs)
             observed["generation_returned"] = True
             sequence = output.sequences
@@ -250,7 +305,6 @@ class NativeCaptureAdapter:
             require(len(shape) == 2 and shape[0] == 1, "Qwen returned sequence shape")
             # Persist before retained batch_decode/parsing/PCM-postcheck. A
             # malformed huge result keeps a bounded prefix, explicitly marked.
-            prefix = kwargs["input_ids"].shape[1]
             ids = sequence[0, :65536].tolist()
             self.retain(bound.opaque_id + ".native-generation-return.json", {
                 "sequence_shape": shape, "prompt_token_count": prefix,
@@ -267,14 +321,22 @@ class NativeCaptureAdapter:
                 values = arguments[name]
                 require(len(values) == 0, "unreviewed Qwen custom controls")
                 active = arguments["generation_config"]
-                active_snapshot = generation_snapshot(active)
-                # Native generate may resolve max_length from prompt length;
-                # retain that actual config too, without changing the pre-audio
-                # GenerationConfig identity or inventing inherited controls.
-                for field in (*QWEN_CONTROLS, "max_new_tokens", "do_sample", "eos_token_id"):
-                    same(active_snapshot[field], self.snapshot[field], "Qwen active control drift: " + field)
+                require("generation_input_ids_seq_length" in observed,
+                        "missing observed Qwen generation input length")
+                prefix = observed["generation_input_ids_seq_length"]
+                if name == "logits_processor":
+                    require("input_ids_seq_length" in arguments, "missing Qwen logits input length")
+                    same(arguments["input_ids_seq_length"], prefix, "Qwen logits input length drift")
+                    observed["logits_input_ids_seq_length"] = arguments["input_ids_seq_length"]
+                else:
+                    require("logits_input_ids_seq_length" in observed, "missing Qwen logits input length")
+                    same(observed["logits_input_ids_seq_length"], prefix, "Qwen stopping input length drift")
+                    if "input_ids_seq_length" in arguments:
+                        same(arguments["input_ids_seq_length"], prefix, "Qwen stopping input length drift")
+                active_snapshot, runtime_tokens = active_generation_snapshot(active, self.snapshot, prefix)
                 require(active.get_generation_mode().value == observed["generation_mode"], "Qwen active mode drift")
                 observed[key + "_resolved_generation_config"] = active_snapshot
+                observed[key + "_runtime_special_tokens"] = runtime_tokens
                 observed[key] = []
                 return original(*args, **kwargs)
             return capture
