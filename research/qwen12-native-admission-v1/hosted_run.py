@@ -16,7 +16,8 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
 from campaign_contract import (BOUNDARY, EXPERIMENT, FAMILIES, LIMITS, MIB, GIB, atomic, canonical,
-    denominator,digest,fetch_blind,fresh_run,identity,read_json,regular,require,validate_blind,write_once)
+    denominator,digest,fetch_blind,fresh_run,identity,read_json,regular,require,validate_blind,write_once,remaining_slot_contract,remaining_plan,current_family_counts,terminal_summary,
+    original_job,original_slots,historical_slot,slot_key,validate_public,PUBLIC_INPUTS_SHA256)
 from cpu_budget import CpuLedger,parse_cpu_stat
 PREPARED_METADATA=('prepared.json','optional-tool-probes.json','kernel-scope.json','cpu-process-guard.json','blind-job.json','run-identity.json',
     'native-source-lock.json','native-asset-lock.json','native-config.json','native-resolved-generation-config.json',
@@ -541,8 +542,49 @@ def _package_budget_preflight(root,transport):
     return result
 
 
+def terminal_accounting(job,output,receipt):
+    """Preserve a failed accounting check without hiding the original failure."""
+    try:
+        outcomes=denominator(job,output)
+        receipt['recognition_accounting']=terminal_summary(outcomes)
+        return outcomes,False
+    except BaseException as error:
+        receipt.update(status='accounting_invalid',accounting_error=safe_error(error),
+                       accounting_reason='output_does_not_satisfy_fixed_remaining35_contract')
+        if receipt.get('primary_error') is None:receipt['primary_error']=safe_error(error)
+        historical=historical_slot();outcomes=[]
+        for slot in original_slots(original_job()):
+            row={**slot,'attempts':None,'status':'accounting_invalid','origin':'current_run',
+                 'source_resolver_admission':False,**BOUNDARY}
+            if slot_key(slot)==slot_key(historical):
+                row.update(attempts=1,status='error',origin='historical',actual_text=None,
+                           historical_evidence=historical)
+            outcomes.append(row)
+        receipt['recognition_accounting']={'status':'invalid','campaign_slots':36,
+            'historical_started':1,'historical_errors':1,'current_started':None,
+            'current_completed':None,'current_errors':None,'not_run':None,
+            'cumulative_started':None,'complete_triplets':None,
+            'planned35_complete':False,'source_resolver_admission':False,'training_admitted':False}
+        return outcomes,True
+
+
+def validate_worker_completion(job,output,family):
+    expected=[row['audio_id'] for row in remaining_plan(job,family)]
+    actual=current_family_counts(job,output,family)
+    required={'calls':len(expected),'completed':len(expected),'audio_ids':expected}
+    require(canonical(actual)==canonical(required),'exact actual fixed family completed roster required')
+    receipt=read_json(Path(output)/family/'worker-complete.json')
+    require(canonical({key:receipt.get(key) for key in required})==canonical(required)
+            and receipt.get('status')=='all_planned_native_v2_complete',
+            'worker completion declaration differs from actual fixed family roster')
+    return actual
+
+
 def execute(env,event,release,freeze):
-    run=fresh_run(env,event,release);started=time.monotonic()
+    run=fresh_run(env,event,release)
+    require(identity(HERE/'public-inputs.json')['sha256']==PUBLIC_INPUTS_SHA256,'original public-input bytes')
+    validate_public(read_json(HERE/'public-inputs.json'))
+    contract=remaining_slot_contract();started=time.monotonic()
     def interrupted(signum,frame):raise TimeoutError('host interrupted or3600s wall ceiling')
     for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGALRM):signal.signal(sig,interrupted)
     signal.setitimer(signal.ITIMER_REAL,3600)
@@ -552,6 +594,7 @@ def execute(env,event,release,freeze):
     root=Path(env['RUNNER_TEMP'])/(EXPERIMENT+'-'+run['run_id']);root.mkdir(mode=0o700)
     docker=MeteredDocker(root,started+3600)
     receipt={'schema':'qwen12-host-receipt-v1',**run,**BOUNDARY,'status':'started','limits':LIMITS,
+        'remaining_slot_contract':contract,'remaining_slot_contract_sha256':digest(canonical(contract)),
         'stages':{s:'not_run' for s in ('asr_setup','qwen06','sensevoice','whisper_setup','whisper')},
         'source_freeze_sha256':identity(HERE/'execution-freeze.json')['sha256'],'storage':'no_artifact_no_cache',
         'workspace_budget_scope':'sampled logical task tree only; excludes Docker image/layers/tmpfs; not a filesystem hard quota',
@@ -627,10 +670,10 @@ def execute(env,event,release,freeze):
             docker.stage=family;out=output/family;out.mkdir();receipt['stages'][family]='started';atomic(root/'host-receipt.json',receipt)
             supervise(original,docker,code,runtimes[family],inputs,out,family,min(docker.deadline,time.monotonic()+seconds),
                 mode='decode',frozen=frozen_root/family,policy=policy_dir)
-            require(read_json(out/'worker-complete.json')['calls']==12,'exact12 single native calls')
+            validate_worker_completion(job,output,family)
             receipt['stages'][family]='complete'
         recognition_stages(prepare,freeze_policy,decode,setup_seconds=setup_elapsed,record=receipt)
-        setup_elapsed=receipt['combined_setup_seconds'];receipt['status']='all36_native_calls_complete'
+        setup_elapsed=receipt['combined_setup_seconds'];receipt['status']='all35_planned_native_calls_complete_with_historical_error'
     except BaseException as error:
         failed=True;receipt.update(status='stopped_no_retry',primary_error=safe_error(error),**safe_error(error))
         try:receipt['diagnostic']=host_failure_diagnostic(error,host_stage)
@@ -655,10 +698,10 @@ def execute(env,event,release,freeze):
             frozen=root/'frozen'/family
             if frozen.exists() and not (output/family).exists():shutil.copytree(frozen,output/family)
         setup_elapsed=receipt.get('combined_setup_seconds',setup_elapsed)
-        if job is None:
-            from campaign_contract import blind_job,validate_public
-            job=blind_job(validate_public(read_json(HERE/'public-inputs.json')))
-        write_once(root/'terminal-outcomes.json',denominator(job,output))
+        if job is None:job=original_job()
+        outcomes,accounting_invalid=terminal_accounting(job,output,receipt)
+        failed=failed or accounting_invalid
+        write_once(root/'terminal-outcomes.json',outcomes)
         receipt.update(wall_seconds=time.monotonic()-started,combined_setup_seconds=setup_elapsed,
             supervision=docker.supervisions,cleanup=docker.cleanup)
         atomic(root/'host-receipt.json',receipt)

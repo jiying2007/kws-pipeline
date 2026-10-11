@@ -88,6 +88,7 @@ class CleanupRetentionTests(unittest.TestCase):
             "research/qwen12-native-admission-recovery2",
             "research/qwen12-native-transport-preflight-12m-v1",
             "research/qwen12-native-admission-recovery3",
+            "research/qwen12-native-admission-remaining35-v1",
         ]
         self.assertEqual(folded_env("RETAINED_EXECUTION_BRANCHES"), expected)
         self.assertTrue(set(expected).isdisjoint(folded_env("RETAINED_CONSOLIDATION_BRANCHES")))
@@ -173,6 +174,8 @@ class CleanupRetentionTests(unittest.TestCase):
                     "research/qwen12-native-admission-recovery2-extra",
                     "research/qwen12-native-admission-recovery30",
                     "research/qwen12-native-admission-recovery3-extra",
+                    "research/qwen12-native-admission-remaining35-v10",
+                    "research/qwen12-native-admission-remaining35-v1-extra",
                     "research/qwen12-native-transport-preflight-12m-v10",
                     "research/qwen12-native-transport-preflight-12m-v1-extra",
                     "research/qwen12-native-transport-preflight-v10"]

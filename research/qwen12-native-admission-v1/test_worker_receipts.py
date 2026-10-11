@@ -23,6 +23,8 @@ BASE = Path(os.environ.get("KWS_NATIVE_BASE", str(DEFAULT_BASE)))
 SOURCE = HERE / "source" if (HERE / "source").is_dir() else BASE
 for folder in (BASE / "tools", BASE / "tests", BASE / "research/qwen6_asr", BASE / "research/qwen6_asr/core"):
     sys.path.insert(0, str(folder))
+sys.path.insert(0, str(SOURCE / "research/qwen12-native-admission-v1"))
+import campaign_contract as campaign
 spec = importlib.util.spec_from_file_location("prospective_worker_receipts", SOURCE / "research/qwen12-native-admission-v1/worker_receipts.py")
 w = importlib.util.module_from_spec(spec); sys.modules[spec.name] = w; spec.loader.exec_module(w)
 from asr_resolver_fixtures import TrustedFixture
@@ -40,6 +42,16 @@ class ReceiptTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.fixture = f = TrustedFixture(self.root)
         f.use_native_v2()
+        # Only this synthetic receipt fixture replaces one permitted source in
+        # the in-memory pins. Production constants and exclusion remain strict;
+        # unpatched original-cohort negatives are covered in FixedSlotTests.
+        sources=list(campaign.ORIGINAL_SOURCES)
+        sources[1]=('clip-000002',w.digest(f.audio),w.digest(b"\xe8\x03"*160),160)
+        patcher=patch.object(campaign,'ORIGINAL_SOURCES',tuple(sources));patcher.start();self.addCleanup(patcher.stop)
+        self.job=campaign.original_job()
+        for field,value in (('ORIGINAL_JOB_SHA256',w.digest(w.canonical(self.job))),
+                            ('ORIGINAL_JOB_BYTES',len(w.canonical(self.job)))):
+            patcher=patch.object(campaign,field,value);patcher.start();self.addCleanup(patcher.stop)
         self.prepared = {}; self.current = {}; self.bindings = {}
         source_id = "qwen12-" + w.digest(f.audio)
         for value in (f.record, f.documents["rights.json"], f.documents["source-policy.json"], *f.record["observations"]):
@@ -73,6 +85,7 @@ class ReceiptTests(unittest.TestCase):
         f.source.chmod(0o444)
         for index, family in enumerate(w.FAMILIES):
             observation = f.record["observations"][index]
+            observation["request_id"] = "qwen12-1-"+family+"-clip-000002"
             observation["recognizer_id"] = family
             observation["recognizer_policy_sha256"] = self.policy_sha
             observation["recognizer_identity_sha256"] = w.digest(w.canonical(self.policy["recognizers"][index]))
@@ -85,7 +98,7 @@ class ReceiptTests(unittest.TestCase):
     def bind(self, family):
         return w.bind_predecode(recognizer_id=family, policy_path=self.policy_path,
             expected_policy_sha256=self.policy_sha, frozen_dir=self.prepared[family],
-            current_dir=self.current[family], run_id="1", executed_head_sha="a" * 40)
+            current_dir=self.current[family], run_id="1", executed_head_sha="a" * 40, original_job=self.job)
 
     def start(self, family="qwen06", name=None):
         directory = self.root / (name or "call-" + family)
@@ -93,7 +106,7 @@ class ReceiptTests(unittest.TestCase):
         index = w.FAMILIES.index(family)
         return w.emit_start(self.bindings[family], directory, wav_path=self.fixture.source,
             expected_file_sha256=w.digest(self.fixture.audio),
-            request_id=self.fixture.record["observations"][index]["request_id"])
+            request_id=self.fixture.record["observations"][index]["request_id"],audio_id="clip-000002")
 
     def result(self, family):
         index = w.FAMILIES.index(family)
@@ -186,7 +199,7 @@ class ReceiptTests(unittest.TestCase):
         attempt = self.start(); self.bindings["qwen06"] = self.bind("qwen06")
         with self.assertRaisesRegex(ValueError, "existing attempt"):
             w.emit_start(self.bindings["qwen06"], attempt.directory, wav_path=self.fixture.source,
-                expected_file_sha256=w.digest(self.fixture.audio), request_id="new-request")
+                expected_file_sha256=w.digest(self.fixture.audio),request_id="qwen12-1-qwen06-clip-000002",audio_id="clip-000002")
 
     def test_duplicate_completion_rejected(self):
         attempt, _ = self.finish()
@@ -216,7 +229,7 @@ class ReceiptTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "full-policy hash"):
             w.bind_predecode(recognizer_id="qwen06", policy_path=self.policy_path,
                 expected_policy_sha256="0" * 64, frozen_dir=self.prepared["qwen06"],
-                current_dir=self.current["qwen06"], run_id="1", executed_head_sha="a" * 40)
+                current_dir=self.current["qwen06"], run_id="1", executed_head_sha="a" * 40,original_job=self.job)
 
     def mutate(self, path, value):
         path.chmod(0o644); path.write_bytes(w.canonical(value)); path.chmod(0o444)
@@ -275,7 +288,7 @@ class ReceiptTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "lineage"):
             w.bind_predecode(recognizer_id="qwen06", policy_path=self.policy_path,
                 expected_policy_sha256=self.policy_sha, frozen_dir=self.prepared["qwen06"],
-                current_dir=self.current["qwen06"], run_id="2", executed_head_sha="a" * 40)
+                current_dir=self.current["qwen06"], run_id="2", executed_head_sha="a" * 40,original_job=self.job)
 
     def test_raw_row_text_mismatch_rejected(self):
         for family in ("qwen06", "sensevoice"):
@@ -335,6 +348,55 @@ class ReceiptTests(unittest.TestCase):
         with patch.object(resolver, "_REPO_ROOT", f.root), patch.object(resolver, "_SOURCE_ROOTS", (f.trust_root,)):
             with self.assertRaisesRegex(ValueError, "completion"):
                 resolver.resolve_source_context(f.record, evidence_dir=f.store)
+
+    def test_historical_slot_writer_denies_fresh_paths_requests_and_aliases(self):
+        old=campaign.historical_slot()
+        measured={'file_sha256':old['wav_sha256'],'pcm_sha256':old['pcm_sha256'],
+                  'audio_frames':old['audio_frames']}
+        for index,(audio_id,source_id,request_id,pcm) in enumerate((
+                ('clip-000001',old['source_id'],'qwen12-1-qwen06-clip-000001',old['pcm_sha256']),
+                ('clip-000002',old['source_id'],'qwen12-1-qwen06-clip-000002',old['pcm_sha256']),
+                ('clip-000002','renamed-source','fresh-request',old['pcm_sha256']),
+                ('clip-000002',old['source_id'],'qwen12-1-qwen06-clip-000002','0'*64))):
+            directory=self.root/f'old-slot-new-path-{index}';directory.mkdir()
+            binding=self.bind('qwen06')
+            with patch.object(w,'_wave',return_value={**measured,'pcm_sha256':pcm}):
+                with self.subTest(audio_id=audio_id,source_id=source_id,request_id=request_id),                     self.assertRaisesRegex(ValueError,'historical consumed'):
+                    w.emit_start(binding,directory,wav_path=self.fixture.source,
+                        expected_file_sha256=old['wav_sha256'],request_id=request_id,
+                        audio_id=audio_id,source_id=source_id)
+            self.assertEqual(list(directory.iterdir()),[])
+            self.assertFalse(binding._requests);self.assertFalse(binding._sources)
+
+    def test_writer_original_identity_frames_alias_and_request_drift_reject(self):
+        base={'file_sha256':w.digest(self.fixture.audio),'pcm_sha256':w.digest(b"\xe8\x03"*160),
+              'audio_frames':160}
+        cases=[('file_sha256','0'*64),('pcm_sha256','0'*64),('audio_frames',159),
+               ('audio_frames',160.0),('audio_frames',True),('audio_id','clip-000003'),
+               ('source_id','renamed-source'),('request_id','new-request')]
+        for index,(field,value) in enumerate(cases):
+            directory=self.root/f'identity-drift-{index}';directory.mkdir()
+            measured=dict(base);kwargs={'audio_id':'clip-000002','source_id':'qwen12-'+base['file_sha256'],
+                                      'request_id':'qwen12-1-qwen06-clip-000002'}
+            (measured if field in measured else kwargs)[field]=value
+            with patch.object(w,'_wave',return_value=measured):
+                with self.subTest(field=field,value=value),self.assertRaises(ValueError):
+                    w.emit_start(self.bind('qwen06'),directory,wav_path=self.fixture.source,
+                        expected_file_sha256=base['file_sha256'],**kwargs)
+            self.assertFalse((directory/'started.json').exists())
+
+    def test_binding_original_job_snapshot_is_immutable_and_exact(self):
+        for rows in (self.job['clips'][1:],self.job['clips'][::-1],self.job['clips']+[self.job['clips'][0]]):
+            bad=copy.deepcopy(self.job);bad['clips']=rows
+            with self.assertRaisesRegex(ValueError,'original anonymous job'):
+                w.bind_predecode(recognizer_id='qwen06',policy_path=self.policy_path,
+                    expected_policy_sha256=self.policy_sha,frozen_dir=self.prepared['qwen06'],
+                    current_dir=self.current['qwen06'],run_id='1',executed_head_sha='a'*40,original_job=bad)
+        snapshot=self.bindings['qwen06'].original_job_bytes
+        self.job['clips'][0]['audio_id']='renamed'
+        self.assertEqual(self.bindings['qwen06'].original_job_bytes,snapshot)
+        self.assertEqual(json.loads(snapshot)['clips'][0]['audio_id'],'clip-000001')
+        self.start()  # Existing binding was not weakened by caller mutation.
 
     def test_build_policy_without_all_prepare_outputs_rejected(self):
         with self.assertRaisesRegex(ValueError, "three"):

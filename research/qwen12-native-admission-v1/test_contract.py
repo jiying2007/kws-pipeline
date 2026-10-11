@@ -82,7 +82,7 @@ class ContractTests(unittest.TestCase):
         env={'GITHUB_REPOSITORY':'jiying2007/kws-pipeline','GITHUB_REF':'refs/heads/'+c.BRANCH,'GITHUB_EVENT_NAME':'push','GITHUB_RUN_ATTEMPT':'1','GITHUB_RUN_NUMBER':'7','GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
         event={'created':True,'repository':{'private':False},'after':'a'*40}
         release={k:True for k in c.DISPATCH_APPROVALS}
-        release['predecessor_zero_recognition']=copy.deepcopy(c.PREDECESSOR_ZERO_RECOGNITION)
+        release['remaining_slot_contract']=copy.deepcopy(c.remaining_slot_contract())
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         self.assertEqual(c.fresh_run(env,event,release)['run_number'],7)
@@ -94,75 +94,76 @@ class ContractTests(unittest.TestCase):
             'GITHUB_RUN_ID':'123','GITHUB_SHA':'a'*40}
         event={'created':True,'repository':{'private':False},'after':'a'*40}
         release={k:True for k in c.DISPATCH_APPROVALS}
-        release['predecessor_zero_recognition']=copy.deepcopy(c.PREDECESSOR_ZERO_RECOGNITION)
+        release['remaining_slot_contract']=copy.deepcopy(c.remaining_slot_contract())
         release['required_runtime_preconditions']=list(c.REQUIRED_RUNTIME_PRECONDITIONS)
         release['evidence_transport']='github-repository-zip-chunks-v1'
         return env,event,release
-    def test_all_three_consumed_predecessors_match_terminal_evidence(self):
-        proof=c.PREDECESSOR_ZERO_RECOGNITION
-        self.assertEqual(set(proof),{'executions','cross_execution_recognition_limit'})
-        self.assertEqual(proof['cross_execution_recognition_limit'],36)
+    def test_all_four_consumed_predecessors_match_terminal_evidence(self):
+        proof=c.remaining_slot_contract()
         self.assertEqual([row['run_id'] for row in proof['executions']],
-                         [38154869005,38160295526,38167052146])
-        for row in proof['executions']:
-            terminal=c.read_json(HERE/'evidence'/('run-'+str(row['run_id']))/'terminal-status.json')
-            self.assertEqual(row,{
-                'run_id':terminal['run']['id'],'run_attempt':terminal['run']['attempt'],
-                'executed_head_sha':terminal['source']['commit'],
-                'evidence_commit':terminal['evidence']['commit'],
-                'archive_sha256':terminal['evidence']['archive_sha256'],
-                **{key:terminal['recognition_slots'][key] for key in ('started','completed','not_run')}})
-            self.assertEqual((row['started'],row['completed'],row['not_run']),(0,0,36))
-        self.assertEqual(sum(row['started'] for row in proof['executions'])+c.LIMITS['attempts'],
-                         proof['cross_execution_recognition_limit'])
+                         [38154869005,38160295526,38167052146,38173984595])
+        for index,row in enumerate(proof['executions']):
+            if index<3:
+                terminal=c.read_json(HERE/'evidence'/('run-'+str(row['run_id']))/'terminal-status.json')
+                self.assertEqual(row['executed_head_sha'],terminal['source']['commit'])
+                self.assertEqual(row['archive_sha256'],terminal['evidence']['archive_sha256'])
+            self.assertEqual((row['started'],row['completed'],row['error'],row['not_run']),
+                             (1,0,1,35) if index==3 else (0,0,0,36))
+            self.assertEqual(len(row['started_members']),int(index==3))
+        self.assertEqual(sum(row['started'] for row in proof['executions'])+c.LIMITS['new_starts'],36)
+        self.assertEqual(proof['historical_consumed'][0],c.historical_slot())
+        self.assertEqual(proof['executions'][3]['started_members'],[c.historical_slot()['started_member']])
     def test_recovery_predecessor_roster_is_exact(self):
-        proof=c.PREDECESSOR_ZERO_RECOGNITION
+        proof=c.remaining_slot_contract()
         for value in (None, {}, True, proof['executions'][0],
                       dict(proof,executions=proof['executions'][:1]),
                       dict(proof,executions=proof['executions'][1:]),
                       dict(proof,executions=proof['executions'][::-1]),
                       dict(proof,executions=proof['executions']+[proof['executions'][0]]),
-                      dict(proof,cross_execution_recognition_limit=72),
-                      dict(proof,cross_execution_recognition_limit=True)):
-            env,event,release=self.dispatch_fixture();release['predecessor_zero_recognition']=value
+                      dict(proof,maximum_cumulative_starts=72),
+                      dict(proof,maximum_cumulative_starts=True),
+                      dict(proof,executions=tuple(proof['executions'])),
+                      dict(proof,planned_new_slots=tuple(proof['planned_new_slots']))):
+            env,event,release=self.dispatch_fixture();release['remaining_slot_contract']=value
             with self.subTest(value=value),self.assertRaisesRegex(ValueError,'predecessor'):
                 c.fresh_run(env,event,release)
         env,event,release=self.dispatch_fixture()
-        del release['predecessor_zero_recognition']
+        del release['remaining_slot_contract']
         with self.assertRaisesRegex(ValueError,'predecessor'):c.fresh_run(env,event,release)
     def test_each_predecessor_changed_nonzero_or_omitted_is_rejected(self):
         changes={'run_id':38160295527,'run_attempt':2,'executed_head_sha':'a'*40,
                  'evidence_commit':'b'*40,'archive_sha256':'c'*64,
                  'started':1,'completed':1,'not_run':35}
-        for index in range(3):
+        for index in range(4):
             env,event,release=self.dispatch_fixture()
-            del release['predecessor_zero_recognition']['executions'][index]
+            del release['remaining_slot_contract']['executions'][index]
             with self.subTest(predecessor=index,missing=True),self.assertRaisesRegex(ValueError,'predecessor'):
                 c.fresh_run(env,event,release)
             for key,value in changes.items():
                 for mode in ('changed','omitted'):
                     env,event,release=self.dispatch_fixture()
-                    row=release['predecessor_zero_recognition']['executions'][index]
+                    row=release['remaining_slot_contract']['executions'][index]
                     if mode=='omitted':del row[key]
-                    else:row[key]=value
+                    else:row[key]=value if row[key]!=value else str(value)
                     with self.subTest(predecessor=index,key=key,mode=mode),self.assertRaisesRegex(ValueError,'predecessor'):
                         c.fresh_run(env,event,release)
             for key in ('run_id','run_attempt','started','completed','not_run'):
-                original=c.PREDECESSOR_ZERO_RECOGNITION['executions'][index][key]
+                original=c.remaining_slot_contract()['executions'][index][key]
                 for value in (bool(original),float(original),str(original),None):
                     env,event,release=self.dispatch_fixture()
-                    release['predecessor_zero_recognition']['executions'][index][key]=value
+                    release['remaining_slot_contract']['executions'][index][key]=value
                     with self.subTest(predecessor=index,key=key,value=value),self.assertRaisesRegex(ValueError,'predecessor'):
                         c.fresh_run(env,event,release)
     def test_only_new_recovery3_source_identity_is_accepted(self):
         import branch_transport
-        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-recovery3')
+        self.assertEqual(c.BRANCH,'research/qwen12-native-admission-remaining35-v1')
         self.assertEqual(branch_transport.purpose_policy('native')['source_branch'],c.BRANCH)
         for branch in ('research/qwen12-native-admission-v1',
                        'research/qwen12-native-admission-recovery1',
                        'research/qwen12-native-admission-recovery2',
                        'research/qwen12-native-transport-preflight-v1',
                        'research/qwen12-native-transport-preflight-12m-v1',
+                       'research/qwen12-native-admission-recovery3',
                        'research/qwen12-native-admission-recovery30',
                        'research/qwen12-native-admission-recovery3-extra'):
             env,event,release=self.dispatch_fixture();env['GITHUB_REF']='refs/heads/'+branch
@@ -222,8 +223,8 @@ class ContractTests(unittest.TestCase):
             self.assertEqual([line for line in native.splitlines() if line.startswith('    '+field+':')],
                              [expected])
         self.assertEqual(release['required_runtime_preconditions'],list(c.REQUIRED_RUNTIME_PRECONDITIONS))
-        self.assertEqual(c.canonical(release['predecessor_zero_recognition']),
-                         c.canonical(c.PREDECESSOR_ZERO_RECOGNITION))
+        self.assertEqual(c.canonical(release['remaining_slot_contract']),
+                         c.canonical(c.remaining_slot_contract()))
         self.assertEqual(release['evidence_transport'],'github-repository-zip-chunks-v1')
         self.assertNotIn('activation_blockers',release)
         self.assertNotIn('maximum_log_api_readback_approved',release)
@@ -343,15 +344,17 @@ class ContractTests(unittest.TestCase):
         self.assertNotIn('contents: write',contracts);self.assertNotIn('TOKEN',contracts)
         self.assertNotIn('pull_request_target:',text)
         self.assertNotIn('emit_synthetic_log_fixture.py',text)
-    def test_all36_missing_remain_not_run(self):
+    def test_setup_failure_preserves_historical_error_and35_not_run(self):
         with tempfile.TemporaryDirectory() as d:
             rows=c.denominator(c.blind_job(self.public['records']),d)
-            self.assertEqual(len(rows),36);self.assertTrue(all(r['status']=='not_run' for r in rows))
+            self.assertEqual(len(rows),36);self.assertEqual(rows[0]['status'],'error')
+            self.assertEqual(rows[0]['origin'],'historical');self.assertEqual(rows[0]['historical_evidence'],c.historical_slot())
+            self.assertTrue(all(r['status']=='not_run' for r in rows[1:]))
     def test_consumed_attempt_stays_error(self):
         with tempfile.TemporaryDirectory() as d:
-            p=Path(d)/'qwen06'/'clip-000001';p.mkdir(parents=True);c.write_once(p/'started.json',{})
+            p=Path(d)/'qwen06'/'clip-000002';p.mkdir(parents=True);c.write_once(p/'started.json',{})
             rows=c.denominator(c.blind_job(self.public['records']),d)
-            self.assertEqual(rows[0]['attempts'],1);self.assertEqual(rows[0]['status'],'error')
+            self.assertEqual(rows[1]['attempts'],1);self.assertEqual(rows[1]['status'],'error')
     def test_budget_reservations_less_than6gib(self):self.assertLess(c.LIMITS['acquisition_reserved_bytes'],6*c.GIB)
     def test_json_duplicate_nonfinite_rejected(self):
         with tempfile.TemporaryDirectory() as d:
@@ -929,7 +932,9 @@ class PackageFailureDiagnosticTests(unittest.TestCase):
                 self.assertEqual(receipt['diagnostic']['stage'],'package_budget_preflight')
                 self.assertEqual(receipt['diagnostic']['reason_code'],
                     'diagnostic_unavailable' if diagnostic_fails else 'compressed_cap' if typed else 'unknown_failure')
-                self.assertEqual(len(outcomes),36);self.assertTrue(all(row['status']=='not_run' for row in outcomes))
+                self.assertEqual(len(outcomes),36);self.assertEqual(outcomes[0]['status'],'error')
+                self.assertEqual(outcomes[0]['origin'],'historical')
+                self.assertTrue(all(row['status']=='not_run' for row in outcomes[1:]))
                 self.assertTrue(all(receipt['stages'][family]=='not_run' for family in c.FAMILIES))
                 self.assertNotIn('PRIVATE_',output.getvalue())
 
@@ -1152,6 +1157,368 @@ class FailureDiagnosticTests(unittest.TestCase):
             self.assertEqual(self.worker.run(),0);failure.assert_not_called()
     def test_native_worker_import_does_not_load_models(self):
         self.assertFalse(any(name in sys.modules for name in ('torch','transformers','funasr','whisper')))
+
+
+class RemainingSlotTests(unittest.TestCase):
+    """Pure metadata/control-flow mocks. No audio/model/network and no admission."""
+    def setUp(self):
+        self.job=c.original_job()
+
+    def dispatch(self):
+        return ContractTests().dispatch_fixture()
+
+    def test_exact35_plan_partition_and_original_pins(self):
+        all_slots=c.original_slots(self.job);plan=c.remaining_plan(self.job)
+        self.assertEqual((len(all_slots),len(plan)),(36,35))
+        old={c.slot_key(c.historical_slot())};new={c.slot_key(row) for row in plan}
+        self.assertFalse(old & new);self.assertEqual(len(old|new),36)
+        self.assertEqual([len(c.remaining_plan(self.job,f)) for f in c.FAMILIES],[11,12,12])
+        self.assertEqual([r['audio_id'] for r in c.planned_clips(self.job,'qwen06')],
+                         [f'clip-{i:06d}' for i in range(2,13)])
+        self.assertEqual(len(c.canonical(self.job)),2415)
+        self.assertEqual(c.digest(c.canonical(self.job)),c.ORIGINAL_JOB_SHA256)
+        self.assertEqual(c.identity(HERE/'public-inputs.json')['sha256'],c.PUBLIC_INPUTS_SHA256)
+
+    def test_original_job_all_alias_subset_order_and_extra_changes_reject(self):
+        changes=[]
+        for key,value in (('audio_id','clip-000001'),('wav_sha256','0'*64),
+                          ('audio_path','audio/alias.wav'),('source_id','alias'),
+                          ('pcm_sha256','0'*64),('audio_frames',1),('family','sensevoice')):
+            job=copy.deepcopy(self.job);job['clips'][1][key]=value;changes.append(job)
+        for rows in (self.job['clips'][::-1],self.job['clips'][1:],
+                     self.job['clips']+[self.job['clips'][0]],self.job['clips'][1:]+self.job['clips'][:1],tuple(self.job['clips'])):
+            job=copy.deepcopy(self.job);job['clips']=rows;changes.append(job)
+        for job in changes:
+            with self.subTest(job=job),self.assertRaises(ValueError):c.remaining_plan(job)
+        for family in ('qwen','Qwen06',None,True):
+            if family is None:continue
+            with self.subTest(family=family),self.assertRaises(ValueError):c.planned_clips(self.job,family)
+
+    def test_every_predecessor_and_plan_leaf_is_exact_and_typed(self):
+        env,event,release=self.dispatch();contract=release['remaining_slot_contract']
+        def leaves(value,path=()):
+            if type(value) is dict:
+                for key,child in value.items():yield from leaves(child,path+(key,))
+            elif type(value) is list:
+                for index,child in enumerate(value):yield from leaves(child,path+(index,))
+            else:yield path,value
+        for path,value in leaves(contract):
+            mutations=(True,float(value),str(value)) if type(value) is int else ('unexpected',None)
+            for bad_value in mutations:
+                bad=copy.deepcopy(release);parent=bad['remaining_slot_contract']
+                for key in path[:-1]:parent=parent[key]
+                parent[path[-1]]=bad_value
+                with self.subTest(path=path,value=bad_value),self.assertRaisesRegex(ValueError,'predecessor'):
+                    c.fresh_run(env,event,bad)
+        for key in contract:
+            bad=copy.deepcopy(release);del bad['remaining_slot_contract'][key]
+            with self.subTest(missing=key),self.assertRaises(ValueError):c.fresh_run(env,event,bad)
+
+    def test_changed_or_unknown_started_rosters_and_historical_key_reject(self):
+        env,event,release=self.dispatch()
+        mutations=[]
+        for index in range(4):
+            bad=copy.deepcopy(release)
+            bad['remaining_slot_contract']['executions'][index]['started_members'].append(
+                {'path':'output/whisper/clip-000001/started.json','bytes':930,'sha256':'a'*64})
+            mutations.append(bad)
+        for field in ('executions','historical_consumed','planned_new_slots'):
+            bad=copy.deepcopy(release);bad['remaining_slot_contract'][field].reverse();mutations.append(bad)
+            bad=copy.deepcopy(release);bad['remaining_slot_contract'][field].append(copy.deepcopy(bad['remaining_slot_contract'][field][0]));mutations.append(bad)
+        # A one-row list's reversal is not a mutation.
+        for bad in mutations:
+            if c.canonical(bad)==c.canonical(release):continue
+            with self.assertRaises(ValueError):c.fresh_run(env,event,bad)
+        release['predecessor_zero_recognition']={}
+        with self.assertRaises(ValueError):c.fresh_run(env,event,release)
+
+    def test_invalid_release_precedes_all_host_effects(self):
+        env,event,release=self.dispatch();release['remaining_slot_contract']['maximum_new_starts']=36
+        with patch.object(host,'load') as load,patch.object(host.time,'monotonic') as clock,             patch.object(host.urllib.request,'build_opener') as opener,patch.object(host,'MeteredDocker') as docker:
+            with self.assertRaises(ValueError):host.execute(env,event,release,{})
+            for mocked in (load,clock,opener,docker):mocked.assert_not_called()
+        env,event,release=self.dispatch();env['GITHUB_RUN_ID']='38173984595'
+        with self.assertRaisesRegex(ValueError,'historical execution'):c.fresh_run(env,event,release)
+
+    def test_excluded_and_unknown_outputs_are_fatal(self):
+        for name in ('qwen06/clip-000001/started.json','qwen06/clip-000001/completed.json',
+                     'qwen06/clip-000001/raw-native-output.json','qwen06/clip-000001.native-observation.json',
+                     'qwen06/clip-000013/started.json','fake/clip-000002/started.json',
+                     'qwen06/renamed/started.json','qwen06/clip-000002/unknown.json','qwen06/unknown.json'):
+            with tempfile.TemporaryDirectory() as d:
+                p=Path(d)/name;p.parent.mkdir(parents=True);c.write_once(p,{})
+                with self.subTest(name=name),self.assertRaises(ValueError):c.denominator(self.job,d)
+
+    def mock_slot(self,root,slot,complete=True):
+        directory=Path(root)/slot['family']/slot['audio_id'];directory.mkdir(parents=True)
+        start={'schema':'retained-asr-started-v1','recognizer_id':slot['family'],
+               'audio_id':slot['audio_id'],'file_sha256':slot['wav_sha256'],
+               'pcm_sha256':slot['pcm_sha256'],'audio_frames':slot['audio_frames'],
+               'source_id':slot['source_id'],'run_id':'999','executed_head_sha':'a'*40,
+               'request_id':'qwen12-999-'+slot['family']+'-'+slot['audio_id'],
+               'original_job_sha256':c.ORIGINAL_JOB_SHA256,
+               'remaining_plan_sha256':c.digest(c.canonical(c.remaining_plan(self.job,slot['family'])))}
+        c.write_once(directory/'started.json',start)
+        if complete:
+            c.write_once(directory/'raw-transcript.json',{'fixture':'invented-no-native-model-call'})
+            c.write_once(directory/'completed.json',{**start,'schema':'retained-asr-completed-v1',
+                'started_sha256':c.identity(directory/'started.json')['sha256'],
+                'raw_output_sha256':c.identity(directory/'raw-transcript.json')['sha256'],
+                'status':'success','decoder_completed':True})
+
+    def test_mock35_complete_retains_old_error_and_only11_triplets(self):
+        import native_worker
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            for slot in c.remaining_plan(self.job):self.mock_slot(root,slot)
+            for family in c.FAMILIES:
+                completed=native_worker.worker_completion(self.job,root/family,family,'decode')
+                c.write_once(root/family/'worker-complete.json',completed)
+                actual=host.validate_worker_completion(self.job,root,family)
+                self.assertEqual(actual['calls'],11 if family=='qwen06' else 12)
+            rows=c.denominator(self.job,root);summary=c.terminal_summary(rows)
+            self.assertEqual((summary['current_started'],summary['current_completed'],summary['cumulative_started']), (35,35,36))
+            self.assertEqual(summary['complete_triplets'],11);self.assertTrue(summary['planned35_complete'])
+            self.assertEqual(rows[0]['status'],'error');self.assertEqual(rows[0]['historical_evidence'],c.historical_slot())
+            self.assertFalse((root/'qwen06/clip-000001').exists());self.assertEqual(len(list(root.glob('*/clip-*/started.json'))),35)
+            self.assertEqual(len(rows),36);self.assertFalse(summary['training_admitted'])
+
+    def test_mock_first_middle_final_failure_stops_no_later_calls(self):
+        for failure_index in (0,4,17,23,34):
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);calls=[]
+                def decode(family,seconds):
+                    for slot in c.remaining_plan(self.job,family):
+                        index=len(calls);calls.append((family,slot['audio_id']))
+                        self.mock_slot(root,slot,complete=index!=failure_index)
+                        if index==failure_index:raise ValueError('synthetic stop first failure')
+                with self.assertRaisesRegex(ValueError,'synthetic stop'):
+                    host.recognition_stages(lambda *a:None,lambda:None,decode)
+                summary=c.terminal_summary(c.denominator(self.job,root))
+                self.assertEqual(len(calls),failure_index+1)
+                self.assertEqual(summary['current_started'],failure_index+1)
+                self.assertEqual(summary['current_completed'],failure_index)
+                self.assertEqual(summary['current_errors'],1);self.assertEqual(summary['historical_errors'],1)
+                self.assertEqual(summary['not_run'],34-failure_index)
+                self.assertFalse(summary['planned35_complete'])
+                self.assertFalse((root/'qwen06/clip-000001').exists())
+
+    def test_invalid_accounting_preserves_primary_known_bytes_and_safe_package(self):
+        import log_transport
+        for illegal in ('qwen06/clip-000001/started.json','qwen06/clip-000002/unknown-private.json'):
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);output=root/'output';output.mkdir()
+                self.mock_slot(output,c.remaining_plan(self.job)[0],complete=False)
+                original=(output/'qwen06/clip-000002/started.json').read_bytes()
+                path=output/illegal;path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_bytes(c.canonical({'fixture':'unapproved-unknown-body' if 'unknown' in illegal else 'known-public-invalid-slot'}))
+                primary={'error_type':'RuntimeError'};receipt={'primary_error':primary,'status':'stopped_no_retry'}
+                outcomes,invalid=host.terminal_accounting(self.job,output,receipt)
+                self.assertTrue(invalid);self.assertIs(receipt['primary_error'],primary)
+                self.assertEqual(receipt['status'],'accounting_invalid');self.assertEqual(len(outcomes),36)
+                self.assertEqual(outcomes[0]['status'],'error')
+                self.assertTrue(all(row['status']=='accounting_invalid' and row['attempts'] is None for row in outcomes[1:]))
+                self.assertIsNone(receipt['recognition_accounting']['current_started'])
+                self.assertFalse(receipt['recognition_accounting']['planned35_complete'])
+                c.write_once(root/'host-receipt.json',receipt);c.write_once(root/'terminal-outcomes.json',outcomes)
+                allowed=host.collect(root)
+                self.assertNotIn('output/qwen06/clip-000002/unknown-private.json',allowed)
+                transport={'repository':'jiying2007/kws-pipeline','run_id':999,'run_attempt':1,
+                           'job_key':'qwen12','executed_head_sha':'a'*40}
+                payload,manifest,lines=log_transport.build_package(root,allowed,transport)
+                recovered=log_transport.parse_job_log('\n'.join(lines),transport)
+                self.assertEqual(recovered[0],payload)
+                self.assertEqual(recovered[2]['archive_sha256'],c.digest(payload))
+                import zipfile
+                with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                    self.assertEqual(archive.read('output/qwen06/clip-000002/started.json'),original)
+                    self.assertIn('terminal-outcomes.json',archive.namelist())
+                self.assertNotIn('unapproved-unknown-body',c.canonical(receipt).decode())
+
+    def test_invalid_job_fallback_uses_only_fixed_trusted_original_roster(self):
+        with tempfile.TemporaryDirectory() as d:
+            receipt={'primary_error':{'error_type':'RuntimeError'}}
+            bad=c.original_job();bad['clips'].reverse()
+            outcomes,invalid=host.terminal_accounting(bad,Path(d),receipt)
+            self.assertTrue(invalid);self.assertEqual(len(outcomes),36)
+            self.assertEqual([row['audio_id'] for row in outcomes[:12]],
+                             [f'clip-{i:06d}' for i in range(1,13)])
+            self.assertEqual(receipt['primary_error'],{'error_type':'RuntimeError'})
+            self.assertIsNone(receipt['recognition_accounting']['current_errors'])
+            self.assertIsNone(receipt['recognition_accounting']['not_run'])
+
+    def test_execute_invalid_accounting_stops_and_retains_complete_safe_package(self):
+        import branch_transport,worker_receipts,zipfile,log_transport
+        from contextlib import ExitStack,redirect_stdout
+        for illegal in ('qwen06/clip-000001/started.json','qwen06/clip-000002/unknown-private.json'):
+            with tempfile.TemporaryDirectory() as d:
+                calls=[];original_bytes=[]
+                original=SimpleNamespace(host_capacity=lambda:{},pull_image=lambda *a:None)
+                def supervise(*args,**kwargs):
+                    family=args[6];mode=kwargs.get('mode');calls.append((family,mode))
+                    if family=='setup':c.atomic(args[3]/'setup-receipt.json',{'actual_download_bytes':0,'commands':[]})
+                    elif mode=='prepare':
+                        c.write_once(args[5]/'native-config.json',{})
+                        c.write_once(args[5]/'prepared.json',{'audio_forward_calls':0})
+                        c.write_once(args[5]/'worker-complete.json',{'calls':0})
+                    else:
+                        self.assertEqual((family,mode),('qwen06','decode'))
+                        self.mock_slot(args[5].parent,c.remaining_plan(self.job)[0],complete=False)
+                        original_bytes.append((args[5]/'clip-000002/started.json').read_bytes())
+                        path=args[5].parent/illegal;path.parent.mkdir(parents=True,exist_ok=True)
+                        c.write_once(path,{'fixture':'PRIVATE_UNKNOWN_BODY' if 'unknown' in illegal else 'public-invalid-slot'})
+                        raise RuntimeError('PRIVATE_PRIMARY_ERROR')
+                actual_copyfile=host.shutil.copyfile
+                def copyfile(source,destination,*args,**kwargs):
+                    if Path(source).name=='cpu_gate.py':return None
+                    return actual_copyfile(source,destination,*args,**kwargs)
+                with ExitStack() as stack:
+                    for context in (patch.object(sys,'path',list(sys.path)),
+                        patch.object(host,'fresh_run',return_value={'run_id':'999','head_sha':'a'*40}),
+                        patch.object(host,'load',return_value=original),patch.object(host.signal,'signal'),
+                        patch.object(host.signal,'setitimer'),patch.object(host.shutil,'disk_usage',return_value=SimpleNamespace(free=20*c.GIB)),
+                        patch.object(host,'fetch_blind',return_value={}),patch.object(host,'validate_blind',return_value=self.job),
+                        patch.object(host,'stage'),patch.object(host.shutil,'copyfile',side_effect=copyfile),patch.object(host,'supervise',side_effect=supervise),
+                        patch.object(host,'whisper_setup',return_value={}),patch.object(worker_receipts,'build_policy',return_value={}),
+                        patch.object(host,'package_budget_preflight',return_value={}),redirect_stdout(io.StringIO())):
+                        stack.enter_context(context)
+                    package=stack.enter_context(patch.object(branch_transport,'write_package'))
+                    status=host.execute({'RUNNER_TEMP':d,'GITHUB_JOB':'qwen12'},{},
+                        {'new_transcripts_publication_approved':True},{'inference_code':{},'setup_code':{}})
+                self.assertEqual(status,1)
+                self.assertEqual(calls,[('setup',None)]+[(f,'prepare') for f in c.FAMILIES]+[('qwen06','decode')])
+                package.assert_called_once();payload=package.call_args.args[1];transport=package.call_args.args[2]
+                log_transport.validate_archive(payload,transport)
+                with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                    self.assertEqual(archive.read('output/qwen06/clip-000002/started.json'),original_bytes[0])
+                    self.assertNotIn('output/qwen06/clip-000002/unknown-private.json',archive.namelist())
+                    self.assertTrue(all(b'PRIVATE_' not in archive.read(name) for name in archive.namelist()))
+                    receipt=json.loads(archive.read('host-receipt.json'))
+                    outcomes=json.loads(archive.read('terminal-outcomes.json'))
+                self.assertEqual(receipt['status'],'accounting_invalid')
+                self.assertEqual(receipt['primary_error'],{'error_type':'RuntimeError'})
+                self.assertEqual(receipt['accounting_error'],{'error_type':'ValueError'})
+                self.assertEqual(receipt['stages']['qwen06'],'error')
+                self.assertEqual(receipt['stages']['sensevoice'],'not_run')
+                self.assertEqual(receipt['stages']['whisper'],'not_run')
+                self.assertIsNone(receipt['recognition_accounting']['cumulative_started'])
+                self.assertEqual(outcomes[0]['status'],'error')
+                self.assertTrue(all(r['status']=='accounting_invalid' and r['attempts'] is None for r in outcomes[1:]))
+
+    def test_count_only_or_wrong_family_member_completion_is_rejected(self):
+        import native_worker
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'qwen06').mkdir()
+            c.write_once(root/'qwen06/worker-complete.json',{'calls':11,'completed':11,
+                'audio_ids':[r['audio_id'] for r in c.remaining_plan(self.job,'qwen06')],
+                'status':'all_planned_native_v2_complete'})
+            with self.assertRaises(ValueError):host.validate_worker_completion(self.job,root,'qwen06')
+            with self.assertRaises(ValueError):native_worker.worker_completion(self.job,root/'qwen06','qwen06','decode')
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            for row in c.remaining_plan(self.job,'qwen06'):self.mock_slot(root,row)
+            receipt=native_worker.worker_completion(self.job,root/'qwen06','qwen06','decode')
+            for field,value in (('calls',True),('calls',11.0),('completed',12),('audio_ids',receipt['audio_ids'][::-1])):
+                bad=dict(receipt);bad[field]=value
+                (root/'qwen06/worker-complete.json').write_bytes(c.canonical(bad))
+                with self.subTest(field=field,value=value),self.assertRaises(ValueError):host.validate_worker_completion(self.job,root,'qwen06')
+
+
+class NativePlannedLoopTests(unittest.TestCase):
+    """Exercise real loop bodies with only stdlib fakes, never model/audio I/O."""
+    def run_loop(self,family='qwen06',fail=None,job=None):
+        import contextlib
+        import native_worker as n
+        import native_locks
+        import whisper_binding
+        from unittest.mock import Mock
+        job=c.original_job() if job is None else job
+        events=[];sources={oid:(wav,pcm,frames) for oid,wav,pcm,frames in c.ORIGINAL_SOURCES}
+        descriptors={oid:{'wav':{'bytes':44+2*frames},'raw_pcm16':{'frame_count':frames}}
+                     for oid,(wav,pcm,frames) in sources.items()}
+        def bind_wave(root,expect):
+            events.append(('bind',expect.audio_id))
+            return SimpleNamespace(descriptor=descriptors[expect.audio_id],audio_id=expect.audio_id)
+        def infer(bound,*args):
+            events.append(('infer',bound.audio_id))
+            if bound.audio_id==fail:raise RuntimeError('invented middle failure')
+            return {},{}
+        def start(binding,directory,**kwargs):
+            oid=kwargs['audio_id'];wav,pcm,frames=sources[oid]
+            c.validate_start_slot(job,family,audio_id=oid,measured={'file_sha256':wav,'pcm_sha256':pcm,'audio_frames':frames},
+                source_id='qwen12-'+wav,request_id=kwargs['request_id'],run_id='999')
+            events.append(('start',oid));c.write_once(directory/'started.json',{'fixture':'only'})
+            return SimpleNamespace(directory=directory,audio_id=oid)
+        def complete(attempt,**kwargs):events.append(('complete',attempt.audio_id))
+        locks={name:{'asset_lock':{},'asset_lock_sha256':'a'*64,'source_lock':{},'source_lock_sha256':'b'*64} for name in c.FAMILIES}
+        worker=SimpleNamespace(THREAD_ENV={},OFFLINE_ENV={},RETAINED=HERE,
+            verify_scope=lambda:None,prepare_caches=lambda:None,verify_sources=lambda:None,
+            import_helpers=lambda:(None,None),bind_inputs=lambda p:(job,c.canonical(job),b'{}'),
+            decode=lambda body,*a:json.loads(body),read_regular=lambda *a:c.canonical(locks),
+            execution_contract=lambda *a:{},load_qwen_after_approval=lambda *a:SimpleNamespace(receipt={}),
+            load_sense_after_approval=lambda *a:SimpleNamespace(receipt={}),
+            validate_decoder=lambda *a:{oid:{'descriptor':descriptor} for oid,descriptor in descriptors.items()},
+            WaveExpectation=lambda oid,*a:SimpleNamespace(audio_id=oid),bind_wave=bind_wave)
+        adapter=SimpleNamespace(NativeCaptureAdapter=lambda *a,**k:SimpleNamespace(infer=infer))
+        modules={'qwen12_retained_worker':worker,'qwen12_setup_binding':SimpleNamespace(verify_runtime=lambda *a:{}),
+                 'qwen12_native_adapter':adapter,'qwen12_whisper_adapter':SimpleNamespace()}
+        def pcm(path,wav):
+            oid=next(oid for oid,row in sources.items() if row[0]==wav)
+            events.append(('bind',oid));return oid,sources[oid][2]
+        def whisper_decode(oid,frames,directory):
+            events.append(('infer',oid))
+            if oid==fail:raise RuntimeError('invented middle failure')
+            return {}
+        with tempfile.TemporaryDirectory() as d,contextlib.ExitStack() as stack:
+            root=Path(d);output=root/'output';output.mkdir()
+            stack.enter_context(patch.dict(os.environ,{'KWS_RUN_ID':'999','KWS_EXECUTED_HEAD_SHA':'a'*40,'KWS_POLICY_SHA256':'b'*64}))
+            stack.enter_context(patch.dict(sys.modules,{'common':SimpleNamespace(wav_bytes=pcm)}))
+            module=stack.enter_context(patch.object(n,'module',side_effect=lambda name,path:modules[name]))
+            for name,replacement in (('read_json',lambda *a:{}),('prepared_or_compare',lambda *a:False),
+                    ('bind_predecode',lambda **kwargs:object()),('emit_start',start),('emit_completion',complete)):
+                stack.enter_context(patch.object(n,name,side_effect=replacement))
+            stack.enter_context(patch.object(n.signal,'setitimer'))
+            stack.enter_context(patch.object(native_locks,'verify_installed_extension_sources',return_value={}))
+            stack.enter_context(patch.object(native_locks,'build_native_locks',return_value=(b'{}',b'{}')))
+            stack.enter_context(patch.object(native_locks,'build_whisper_locks',return_value=(b'{}',b'{}')))
+            stack.enter_context(patch.object(whisper_binding,'construct_whisper',return_value=SimpleNamespace(decode=whisper_decode)))
+            try:
+                (n.whisper if family=='whisper' else lambda *a:n.qwen_sense(family,*a))(root/'runtime',root/'input',output,job,'decode')
+            except BaseException as error:
+                return events,error,sorted(p.name for p in output.iterdir()),module.call_count
+            return events,None,sorted(p.name for p in output.iterdir()),module.call_count
+
+    def test_real_qwen_loop_skips_old_before_binding_directory_and_call(self):
+        events,error,names,_=self.run_loop()
+        self.assertIsNone(error)
+        expected=[f'clip-{i:06d}' for i in range(2,13)]
+        for operation in ('bind','start','infer','complete'):
+            self.assertEqual([oid for op,oid in events if op==operation],expected)
+        self.assertNotIn('clip-000001',names)
+
+    def test_real_qwen_loop_middle_failure_consumes_once_and_stops(self):
+        events,error,names,_=self.run_loop(fail='clip-000005')
+        self.assertIsInstance(error,RuntimeError)
+        self.assertEqual([oid for op,oid in events if op=='infer'],[f'clip-{i:06d}' for i in range(2,6)])
+        self.assertEqual([oid for op,oid in events if op=='complete'],[f'clip-{i:06d}' for i in range(2,5)])
+        self.assertNotIn('clip-000001',names);self.assertNotIn('clip-000006',names)
+
+    def test_real_whisper_loop_keeps_original12_and_stops_on_first_error(self):
+        events,error,names,_=self.run_loop(family='whisper')
+        self.assertIsNone(error)
+        self.assertEqual([oid for op,oid in events if op=='infer'],[f'clip-{i:06d}' for i in range(1,13)])
+        events,error,names,_=self.run_loop(family='whisper',fail='clip-000003')
+        self.assertIsInstance(error,RuntimeError)
+        self.assertEqual([oid for op,oid in events if op=='infer'],[f'clip-{i:06d}' for i in range(1,4)])
+        self.assertNotIn('clip-000004',names)
+
+    def test_fake_subset_or_reordered_loop_job_rejects_before_load_or_bind(self):
+        for clips in (c.original_job()['clips'][:1],c.original_job()['clips'][1:],c.original_job()['clips'][::-1]):
+            for family in ('qwen06','whisper'):
+                job=c.original_job();job['clips']=clips
+                events,error,names,loads=self.run_loop(family=family,job=job)
+                self.assertIsInstance(error,ValueError);self.assertEqual(events,[])
+                self.assertEqual(names,[]);self.assertEqual(loads,0)
 
 
 if __name__=='__main__':unittest.main()

@@ -24,6 +24,8 @@ from asr_native_contracts import (QWEN_ADAPTER, SENSE_ADAPTER, WHISPER_ADAPTER,
 from speech_asr_consensus import (NORMALIZATION, POLICY_CLASS_V2,
                                   validate_recognizer_policy)
 
+from campaign_contract import validate_original_job, remaining_plan, validate_start_slot
+
 FILES = ("native-source-lock.json", "native-asset-lock.json", "native-config.json")
 FAMILIES = ("qwen06", "sensevoice", "whisper")
 ADAPTERS = dict(zip(FAMILIES, (QWEN_ADAPTER, SENSE_ADAPTER, WHISPER_ADAPTER)))
@@ -183,12 +185,14 @@ class Binding:
     prepared_bytes: tuple
     run_id: str
     executed_head_sha: str
+    original_job_bytes: bytes
+    remaining_plan_bytes: bytes
     _requests: set = field(default_factory=set, repr=False, compare=False)
     _sources: set = field(default_factory=set, repr=False, compare=False)
 
 
 def bind_predecode(*, recognizer_id, policy_path, expected_policy_sha256, frozen_dir,
-                   current_dir, run_id, executed_head_sha):
+                   current_dir, run_id, executed_head_sha, original_job):
     """Before any call, compare fresh-load bytes to read-only prepared copies."""
     require(type(run_id) is str and re.fullmatch(r"[1-9][0-9]*", run_id), "actual run ID required")
     body = _read(policy_path, readonly=True)
@@ -200,12 +204,18 @@ def bind_predecode(*, recognizer_id, policy_path, expected_policy_sha256, frozen
     require(canonical(current[4]) == canonical(identities[recognizer_id]), "own identity differs from full policy")
     require(current[1]["executed_head_sha"] == executed_head_sha and
             current[1]["workflow_run_id"] == run_id, "actual run/source lineage drift")
+    job_bytes = canonical(validate_original_job(original_job))
+    plan_bytes = canonical(remaining_plan(original_job, recognizer_id))
     return Binding(recognizer_id, Path(policy_path), body, Path(frozen_dir), Path(current_dir),
-                   frozen[0], run_id, executed_head_sha)
+                   frozen[0], run_id, executed_head_sha, job_bytes, plan_bytes)
 
 
 def _unchanged(binding):
     require(type(binding) is Binding, "predecode binding required")
+    job = _json(binding.original_job_bytes)
+    validate_original_job(job)
+    require(canonical(remaining_plan(job, binding.recognizer_id)) == binding.remaining_plan_bytes,
+            "fixed original job/remaining plan binding drift")
     require(_read(binding.policy_path, readonly=True) == binding.policy_bytes, "full-policy bytes drift")
     identities = _policy(binding.policy_bytes)
     for directory, readonly in ((binding.frozen_dir, True), (binding.current_dir, False)):
@@ -238,7 +248,7 @@ class Attempt:
     _completion_attempted: set = field(default_factory=set, repr=False, compare=False)
 
 
-def emit_start(binding, directory, *, wav_path, expected_file_sha256, request_id, source_id=None):
+def emit_start(binding, directory, *, wav_path, expected_file_sha256, request_id, audio_id, source_id=None):
     """Exclusive FIRST-ATTEMPT start. Call immediately before the actual model."""
     identity = _unchanged(binding)
     measured = _wave(wav_path, expected_file_sha256)
@@ -247,6 +257,8 @@ def emit_start(binding, directory, *, wav_path, expected_file_sha256, request_id
             "opaque non-target source ID required")
     require(type(request_id) is str and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}", request_id),
             "opaque request ID required")
+    validate_start_slot(_json(binding.original_job_bytes), binding.recognizer_id, audio_id=audio_id,
+        measured=measured, source_id=source_id, request_id=request_id, run_id=binding.run_id)
     require(request_id not in binding._requests and measured["file_sha256"] not in binding._sources,
             "duplicate source/request attempt prohibited")
     directory = _safe_path(directory)
@@ -256,6 +268,8 @@ def emit_start(binding, directory, *, wav_path, expected_file_sha256, request_id
     binding._requests.add(request_id); binding._sources.add(measured["file_sha256"])
     source_raw, model_raw, config_raw = binding.prepared_bytes
     started = {"schema": "retained-asr-started-v1", "source_id": source_id, **measured,
+        "audio_id": audio_id, "original_job_sha256": digest(binding.original_job_bytes),
+        "remaining_plan_sha256": digest(binding.remaining_plan_bytes),
         "request_id": request_id, "recognizer_id": binding.recognizer_id,
         "recognizer_identity_sha256": digest(canonical(identity)),
         "recognizer_policy_sha256": digest(binding.policy_bytes), "model_lock_sha256": digest(model_raw),

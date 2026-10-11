@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "git_blob_sha1": "da047676f806c495a4fff1e1481d9433dc5e2205",
-      "sha256": "523839f00998f75e1949fd4eb6debbb7e8ff5e102991773f1f459f7bf845b923",
-      "bytes": 17727
+      "bytes": 17779,
+      "sha256": "14489d5c490d3ddf492e3626357e3cb26d77e07d63dd8f685af99cfb8dcb5496",
+      "git_blob_sha1": "f0371805a729a791669038e433141d22afba9067"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -18651,6 +18651,543 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "operation_id": "qwen12-active-generation-config-projector-disabled-20261011",
+      "from_commit": "80009f412987aeaaaf401894677299724ed0490d",
+      "from_tree": "b6722270d54de525556c602b92b1a29ce9ebd0ef",
+      "scope": "Source-only active Qwen GenerationConfig projector and synthetic tests; native double-disabled; machine terminal metadata for consumed recovery3; refreeze and current workflow identity.",
+      "rationale": "Validate and retain only four exact runtime special-token fields as CPU int64 JSON observations; strict full remaining config equality allows only locked input-length max_length derivation. Prepared generation serialization, model/request/budgets/stop/completion, host cleanup and transport algorithms are unchanged. Four consumed immutable source/run/evidence identities are preserved, including one historical Qwen started error that may never be rerun. No new execution identity or remaining-slot contract is implemented. Original failure observations and separate source-backed local reproduction remain distinct.",
+      "workflow_source_changed": true,
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "95b1347d6373cc559ddacd2c525eecb48d94c53782337131034e297700537916",
+            "git_blob_sha1": "84ec7b8106c7cd06baed5e0ee42bbfc011fc94b9"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "881513d34bc699ab5104529d0c15ba46b38c1f01d7d9a224b81c24070b4d7fc2",
+            "git_blob_sha1": "92e13889bb45f3e2c903306feabf31061af5b3ad"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/README.md",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 43727,
+            "sha256": "f0b2cf719674af10e6a66eab408f0d918e984e3077c46994de6d02c64698fef2",
+            "git_blob_sha1": "fe076b3cd9122136372ae38e9cbe176b452c5e73"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 47589,
+            "sha256": "972f2bda731acc88e1fa6eae1f8d1a1ba205549f0e95584b16e9744d1ee04294",
+            "git_blob_sha1": "dcf857d511531b138f9930d32f46f52ddbf0395c"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "2888f0a1a60abf11e3c8a12caf71085a859fb7a3636f6825b163afdf6809060c",
+            "git_blob_sha1": "d349fb6b6470c863ec613da39280764cb01cbfe7"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "51710f9bc68671b4781c8e21e4ffc8edcc504ca06c56026c50b2f7f450dcce69",
+            "git_blob_sha1": "463ead2c8ac6dd62cd5c2a808c8bdc01fd7cbf4d"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-release.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 2502,
+            "sha256": "17c3edbc57568dbc3677eac51c8e57b3e3ae8d1a7614fceff4ea1bb328487ccd",
+            "git_blob_sha1": "205d1b10d370eab3f41fbf2dfb04349932422fa6"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 2508,
+            "sha256": "a149cb624e1d1bffaad76bc6aca7060960f746789e1ac71ce78ff610be899693",
+            "git_blob_sha1": "43a8e8dece97e88f32abc825386c72d2c6a46a46"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_native_v2_adapter.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_native_v2_adapter.py",
+            "mode": "100644",
+            "bytes": 21572,
+            "sha256": "d32116096f20f9a8f70c40261670ea227db40f15d911b4de49cf93ba8255ed2c",
+            "git_blob_sha1": "3c9a69fb1fd8411e809928983eebb3229ad77c38"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_native_v2_adapter.py",
+            "mode": "100644",
+            "bytes": 44768,
+            "sha256": "ed8affaba15cbae0e3cbd12be375fe62bf84035e856c8fcbb0e9614228adbebb",
+            "git_blob_sha1": "0251477d41adaf8982a1fad4e03e2012d99f5db6"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/workflow.yml",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "95b1347d6373cc559ddacd2c525eecb48d94c53782337131034e297700537916",
+            "git_blob_sha1": "84ec7b8106c7cd06baed5e0ee42bbfc011fc94b9"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "881513d34bc699ab5104529d0c15ba46b38c1f01d7d9a224b81c24070b4d7fc2",
+            "git_blob_sha1": "92e13889bb45f3e2c903306feabf31061af5b3ad"
+          }
+        },
+        {
+          "path": "research/source-screen32-v1/native_v2_adapter.py",
+          "before": {
+            "path": "research/source-screen32-v1/native_v2_adapter.py",
+            "mode": "100644",
+            "bytes": 24121,
+            "sha256": "b991c0778e973d1cc1ee27fb4f786f0eea6095443c7e5916fabba8a272560ffe",
+            "git_blob_sha1": "397c1e411c93f0593f9ba608d44c24355278b68d"
+          },
+          "after": {
+            "path": "research/source-screen32-v1/native_v2_adapter.py",
+            "mode": "100644",
+            "bytes": 28222,
+            "sha256": "071ba45333b113fa598404e2a7eff6d960f88969f8d8e3dec9be3992b7340a0c",
+            "git_blob_sha1": "e1cdf87366f06aa63bae5b92b28ac163e2ab019a"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/evidence/run-38173984595/terminal-status.json",
+          "before": null,
+          "after": {
+            "path": "research/qwen12-native-admission-v1/evidence/run-38173984595/terminal-status.json",
+            "mode": "100644",
+            "bytes": 7191,
+            "sha256": "153c6e27f1108722f2d1daccd14d96752ecf4354385dff4f3f143b602afec7e3",
+            "git_blob_sha1": "e9c63b65d28d1c1c5444da69247faf5d50a214cb"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "operation_id": "qwen12-fixed-remaining35-disabled-source-20261011",
+      "baseline_kind": "local reviewed Qwen active-config source checkpoint; not public main",
+      "public_main_base_commit": "80009f412987aeaaaf401894677299724ed0490d",
+      "public_main_base_tree": "b6722270d54de525556c602b92b1a29ce9ebd0ef",
+      "from_commit": "f3834d79b4d47b3976e5a1f8b7deaceffb706c43",
+      "from_tree": "96f416e7e1b115bcd24b9f47fad7be71edb9dc08",
+      "scope": "Disabled fixed remaining35 proposal: four-predecessor consumed-slot contract; exact original12 blind identities; Qwen11/Sense12/Whisper12 plan; worker and receipt-writer historical-slot rejection; actual per-family completion census; permanent historical error in36-slot denominator; synthetic negatives; new identity constants and exact cleanup retention; four-run same-scope resource proposal; current metadata and freeze binding.",
+      "rationale": "One prior Qwen start remains consumed permanently. No old source/run/archive/member is rewritten or reclassified. Maximum35 new starts plus1 historical start remains36. All original36 slots remain visible; a complete remaining plan is35 successes plus1 historical error, never36 successes. Native double-disabled and all six enable/review bits false, publication scope unchanged. No execution/ref/model/training occurs by preparing this source; source/CPU/model/token/stop/completion/coverage controls and transport algorithms are not relaxed.",
+      "workflow_source_changed": true,
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "881513d34bc699ab5104529d0c15ba46b38c1f01d7d9a224b81c24070b4d7fc2",
+            "git_blob_sha1": "92e13889bb45f3e2c903306feabf31061af5b3ad"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5308,
+            "sha256": "d5ebd93d7a8291f73c3ac0be3a2b91cc862b09ddc5e96252643cd2d66b2e0787",
+            "git_blob_sha1": "ce1071535ab14bc465b887d36955818b2c4d3ecf"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17727,
+            "sha256": "523839f00998f75e1949fd4eb6debbb7e8ff5e102991773f1f459f7bf845b923",
+            "git_blob_sha1": "da047676f806c495a4fff1e1481d9433dc5e2205"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17779,
+            "sha256": "14489d5c490d3ddf492e3626357e3cb26d77e07d63dd8f685af99cfb8dcb5496",
+            "git_blob_sha1": "f0371805a729a791669038e433141d22afba9067"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 11972,
+            "sha256": "7c891990d4082304905e82e447fe859af521f81ab81dddb0308ac42971c8b154",
+            "git_blob_sha1": "47f4d9b9678747cade36ceb691b5f799e46ff605"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 12184,
+            "sha256": "c3f45a397bf861b55f4444a88dd3f8f9327326f168bc872d0b6a549e96c99451",
+            "git_blob_sha1": "f40d54eca07841a4e88b68723059bc8802b2e39b"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/README.md",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 47589,
+            "sha256": "972f2bda731acc88e1fa6eae1f8d1a1ba205549f0e95584b16e9744d1ee04294",
+            "git_blob_sha1": "dcf857d511531b138f9930d32f46f52ddbf0395c"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 51940,
+            "sha256": "377a7b551c5975f74c6a5567561a3c1d3fb7ee6ee205cbe18f212cab8a41c89f",
+            "git_blob_sha1": "4dce16738d7d2d864c0edf75dc31ef36063c9cd6"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/branch_transport.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/branch_transport.py",
+            "mode": "100644",
+            "bytes": 9332,
+            "sha256": "f164226510534f695fe75f8668a260953b5c80f6c7ee688ffef27e64b4867a46",
+            "git_blob_sha1": "49be83052f349f9c434a6be50db693f30009ecc3"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/branch_transport.py",
+            "mode": "100644",
+            "bytes": 9347,
+            "sha256": "2046f9da8466e0661d507c9441d566b318152bb2291c760d04d633be779ebfc5",
+            "git_blob_sha1": "8b64673320745da00674f6778630ec96ad875fcc"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/campaign_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/campaign_contract.py",
+            "mode": "100644",
+            "bytes": 12851,
+            "sha256": "6c976a40adb02713e36ceae3711e16bce90113da17564df82433bab5ec316541",
+            "git_blob_sha1": "32b7456d095cee1eba01cd4c19f4a54d6b85e3af"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/campaign_contract.py",
+            "mode": "100644",
+            "bytes": 27699,
+            "sha256": "ddd5023a8f27fb9ba48d4af51041c42aa8beda4fcc2b825470218e1c69cf120e",
+            "git_blob_sha1": "d9209e3977234f8a9be1f54c1176c2347dc8df67"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "51710f9bc68671b4781c8e21e4ffc8edcc504ca06c56026c50b2f7f450dcce69",
+            "git_blob_sha1": "463ead2c8ac6dd62cd5c2a808c8bdc01fd7cbf4d"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "d83eb60868f79b8ec38becb0f60c4d0bc11576fd1d9777eb38c617cd73218f45",
+            "git_blob_sha1": "0f44cca7ca44d5945dccb5e4b224aa7c19bcc7a8"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-release.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 2508,
+            "sha256": "a149cb624e1d1bffaad76bc6aca7060960f746789e1ac71ce78ff610be899693",
+            "git_blob_sha1": "43a8e8dece97e88f32abc825386c72d2c6a46a46"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 21056,
+            "sha256": "55722182d97735c598e8e58469824d7cc37f1eec4415c94ad1c56091ca7a9304",
+            "git_blob_sha1": "2e1aeae23da00725f9855eea04216681814f00e5"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/hosted_run.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/hosted_run.py",
+            "mode": "100644",
+            "bytes": 45800,
+            "sha256": "c6dbc34012b938266788a365cdd0c56ad771b50d3ea5d2b4f4167acd536b29a2",
+            "git_blob_sha1": "d3cfc9ce4ac49088cb40c58a69f797f4d1e9af42"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/hosted_run.py",
+            "mode": "100644",
+            "bytes": 48451,
+            "sha256": "14f0a6248d79c47dc32c786b07276137b6987d428b5dcfdff176e92011f9be14",
+            "git_blob_sha1": "42ff7c992857a3e5e4a4a63ec67f2bf2c4ca6c1d"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/native_worker.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/native_worker.py",
+            "mode": "100644",
+            "bytes": 19615,
+            "sha256": "9936fdf0e6f76076ffcfa612e0fe8f4f2ab26bbe97542d9a0ef2784a7689aa7e",
+            "git_blob_sha1": "627a5749e5830f5515e4aeff7a9801b1f8a645ab"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/native_worker.py",
+            "mode": "100644",
+            "bytes": 20575,
+            "sha256": "e09c206a92ea83be6050c40f508f64770c4e7cc941f1ea503b6d5da28eb30caf",
+            "git_blob_sha1": "ef618dafb9db929bbacdb426a57394d0a071a112"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/remaining35-resource-proposal.json",
+          "before": null,
+          "after": {
+            "path": "research/qwen12-native-admission-v1/remaining35-resource-proposal.json",
+            "mode": "100644",
+            "bytes": 40104,
+            "sha256": "14395223cd05a2dc1c2b5627e6a27d16500a0131a86530a272cb8e3e3915997d",
+            "git_blob_sha1": "7ce2c9e53e1df66c29a9efea534e55d44fcf605e"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_branch_transport.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_branch_transport.py",
+            "mode": "100644",
+            "bytes": 15655,
+            "sha256": "3a7eda257c4a3cc9bd9b2db83532e085ea557f38f0900faee2802ab1a2730a4a",
+            "git_blob_sha1": "f402f6cccbf1cdbcfc41be764d20c4e1f2d3d480"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_branch_transport.py",
+            "mode": "100644",
+            "bytes": 15720,
+            "sha256": "e077eb098be46ca5558df35356e68c8e8391244b3e74961e885f068268fae06d",
+            "git_blob_sha1": "4899e2dc9af97a623befb567116db81498974cb8"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 80405,
+            "sha256": "41dcd523852e9210e25cdb42e3ff2ff03ebe105ab39a70364e7b2a5b949756cb",
+            "git_blob_sha1": "1043b4f8cb24c0b529bc8cbc2cba3f2155c1e320"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 107042,
+            "sha256": "b2425bfd0ff835205f0f3367274568e10a1bf621dee5aace34235562e86a0bd3",
+            "git_blob_sha1": "cf6cf2054efb74e83fad2c37c5f998cbd580f8bb"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_evidence_publisher.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 22919,
+            "sha256": "1d1406b056244efb260366c296c1fd8eedf070026b552e92d93bc0a82975839d",
+            "git_blob_sha1": "2e34f3fb994d24c075a76305eb6b075148b7ad8a"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_evidence_publisher.py",
+            "mode": "100644",
+            "bytes": 22934,
+            "sha256": "06133fd144298deda5f97ed5b80369dc32e7fe6ead03788f43d60b9f31739a43",
+            "git_blob_sha1": "6d918648486195aabb45744c50ecd4cf2b26e02a"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_worker_receipts.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_worker_receipts.py",
+            "mode": "100644",
+            "bytes": 20268,
+            "sha256": "89ec63ed3bae1262190d8777fb80d5c3ffa2add63a292febd82cc0f294e12e7d",
+            "git_blob_sha1": "502f85a86a1b00c228e8a0acc6bac8b3c1eb8261"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_worker_receipts.py",
+            "mode": "100644",
+            "bytes": 25018,
+            "sha256": "35ae85f5fb6c74e1b30827a2cd118d724fb0442971326b435e4db8bfe8209ff3",
+            "git_blob_sha1": "6e12a244ba95d5206076e77daad296dc9e8fdb7f"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/worker_receipts.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/worker_receipts.py",
+            "mode": "100644",
+            "bytes": 19146,
+            "sha256": "6e55b780cb09eb7099b6c530e58be5e16abcfe04b2484fb7ab634ff4cb1f22d6",
+            "git_blob_sha1": "b1c8f4a01b6fe9afbfc3dbe640ab02a4c6bc14cc"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/worker_receipts.py",
+            "mode": "100644",
+            "bytes": 20072,
+            "sha256": "a8160ab6972f8018a283e08ec8f06e87d21ebe461a28ee8641c4ab5d75769764",
+            "git_blob_sha1": "0ba964e1293817714df0c89047167befb8dfbdc5"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/workflow.yml",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5277,
+            "sha256": "881513d34bc699ab5104529d0c15ba46b38c1f01d7d9a224b81c24070b4d7fc2",
+            "git_blob_sha1": "92e13889bb45f3e2c903306feabf31061af5b3ad"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5308,
+            "sha256": "d5ebd93d7a8291f73c3ac0be3a2b91cc862b09ddc5e96252643cd2d66b2e0787",
+            "git_blob_sha1": "ce1071535ab14bc465b887d36955818b2c4d3ecf"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "operation_id": "qwen12-fixed-remaining35-static-activation-20261011",
+      "baseline_kind": "local reviewed disabled remaining35 source checkpoint; not public main",
+      "public_main_base_commit": "80009f412987aeaaaf401894677299724ed0490d",
+      "public_main_base_tree": "b6722270d54de525556c602b92b1a29ce9ebd0ef",
+      "from_commit": "f886592b5c5c974098ee4c52d7f067a73d23759b",
+      "from_tree": "d85810c4fa32f1759a3c73927f6d85deb1a1c198",
+      "scope": "Six-file reviewed static activation: both native workflow conditions/comments, six strict native enable/review bits, generated source freeze and release binding, README and append-only source metadata.",
+      "rationale": "Four consumed source/run/archive identities and the permanent historical Qwen error remain immutable. At most35 new starts plus1 historical start in the original36-slot denominator. Runtime, tests, fixed consumed-slot contract, inputs, scientific settings, budgets and historical disabled-stage resource proposal bytes are unchanged. Static review does not assert future runtime checks passed or execute the claim; exact source PR, protected merge, fresh-main CI and immediate unique-claim/history checks remain required before a single root-created execution ref.",
+      "workflow_source_changed": true,
+      "files": [
+        {
+          "path": ".github/workflows/qwen12-native-admission-v1.yml",
+          "before": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5308,
+            "sha256": "d5ebd93d7a8291f73c3ac0be3a2b91cc862b09ddc5e96252643cd2d66b2e0787",
+            "git_blob_sha1": "ce1071535ab14bc465b887d36955818b2c4d3ecf"
+          },
+          "after": {
+            "path": ".github/workflows/qwen12-native-admission-v1.yml",
+            "mode": "100644",
+            "bytes": 5289,
+            "sha256": "a92081a5edfdf0797af5eb8bb7c698ca975e08d66787138c3434233b781e66fd",
+            "git_blob_sha1": "e03d747cfbefa3e9af28324223235389ec1c01ed"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/README.md",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 51940,
+            "sha256": "377a7b551c5975f74c6a5567561a3c1d3fb7ee6ee205cbe18f212cab8a41c89f",
+            "git_blob_sha1": "4dce16738d7d2d864c0edf75dc31ef36063c9cd6"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/README.md",
+            "mode": "100644",
+            "bytes": 53338,
+            "sha256": "5c9b1adaf0de221699ecb5a2dc5dfb48d04b77f14ff8250dd1d16c406aab7930",
+            "git_blob_sha1": "a53817f448d95299c7812feda31fbbd2833984e9"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "d83eb60868f79b8ec38becb0f60c4d0bc11576fd1d9777eb38c617cd73218f45",
+            "git_blob_sha1": "0f44cca7ca44d5945dccb5e4b224aa7c19bcc7a8"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 23455,
+            "sha256": "d3ae5e03d458e0c7fdf27a4bcccd696fa3504a86c18dccce53e9e4587c5becd1",
+            "git_blob_sha1": "345186428fe4786f5a9a70cab59519e1ad015618"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/execution-release.json",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 21056,
+            "sha256": "55722182d97735c598e8e58469824d7cc37f1eec4415c94ad1c56091ca7a9304",
+            "git_blob_sha1": "2e1aeae23da00725f9855eea04216681814f00e5"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/execution-release.json",
+            "mode": "100644",
+            "bytes": 21050,
+            "sha256": "a66af32bce1d68c52898692bf88cb5bb07ac7c644c82ebed14795486ce5c86cf",
+            "git_blob_sha1": "313275a0446db7374c93e4910f97b907084fb8c6"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/workflow.yml",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5308,
+            "sha256": "d5ebd93d7a8291f73c3ac0be3a2b91cc862b09ddc5e96252643cd2d66b2e0787",
+            "git_blob_sha1": "ce1071535ab14bc465b887d36955818b2c4d3ecf"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 5289,
+            "sha256": "a92081a5edfdf0797af5eb8bb7c698ca975e08d66787138c3434233b781e66fd",
+            "git_blob_sha1": "e03d747cfbefa3e9af28324223235389ec1c01ed"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -18664,9 +19201,9 @@
     {
       "path": ".github/workflows/qwen12-native-admission-v1.yml",
       "mode": "100644",
-      "bytes": 5277,
-      "sha256": "95b1347d6373cc559ddacd2c525eecb48d94c53782337131034e297700537916",
-      "git_blob_sha1": "84ec7b8106c7cd06baed5e0ee42bbfc011fc94b9"
+      "bytes": 5289,
+      "sha256": "a92081a5edfdf0797af5eb8bb7c698ca975e08d66787138c3434233b781e66fd",
+      "git_blob_sha1": "e03d747cfbefa3e9af28324223235389ec1c01ed"
     }
   ]
 }

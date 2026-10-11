@@ -1,0 +1,178 @@
+{
+  "schema": "qwen12-native-terminal-status-v1",
+  "scope": "Public source and machine-evidence metadata only; consumed recovery3, no native completion, transcript, admission or training result.",
+  "repository": "jiying2007/kws-pipeline",
+  "source": {
+    "commit": "80009f412987aeaaaf401894677299724ed0490d",
+    "tree": "b6722270d54de525556c602b92b1a29ce9ebd0ef",
+    "freeze_sha256": "2888f0a1a60abf11e3c8a12caf71085a859fb7a3636f6825b163afdf6809060c"
+  },
+  "run": {
+    "id": 38173984595,
+    "attempt": 1,
+    "job_id": 114572506731,
+    "job_key": "qwen12",
+    "event": "push",
+    "head_branch": "research/qwen12-native-admission-recovery3",
+    "url": "https://github.com/jiying2007/kws-pipeline/actions/runs/38173984595",
+    "conclusion": "failure",
+    "host_status": "stopped_no_retry"
+  },
+  "evidence": {
+    "commit": "8c25805e226ca23d55bd698b52ba5b45acd9195a",
+    "tree": "0da1f6122023bc374fb378c76de339571d391714",
+    "directory": "research/qwen12-native-admission-v1/evidence/recovery3",
+    "archive_bytes": 4210336,
+    "archive_sha256": "9d371985530e8d5e32c915b8853f6e945ded1bfdbb6dad0b53fcbba4772e5bf5",
+    "chunks": 17,
+    "remote_files": 19,
+    "payload_members": 664,
+    "custody_status": "PASS_CUSTODY_ONLY",
+    "all_git_blob_chunk_member_sha256_and_zip_crc_verified": true,
+    "source_run_attempt_numeric_job_verified": true
+  },
+  "recognition_slots": {
+    "original_clips": 12,
+    "recognizers": 3,
+    "planned": 36,
+    "started": 1,
+    "completed": 0,
+    "raw_transcripts": 0,
+    "error": 1,
+    "not_run": 35,
+    "prior_three_started": 0,
+    "cumulative_started": 1,
+    "cross_execution_limit": 36,
+    "maximum_unconsumed_slots": 35,
+    "consumed_slot": {
+      "family": "qwen06",
+      "audio_id": "clip-000001",
+      "source_id": "qwen12-02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+      "wav_sha256": "02e864a17e72e72ad62d13f6c04b18788a59ef08d121f6a676c89ff1b39cc915",
+      "pcm_sha256": "a3829a5a2a25aa4adee963582ff19a0b850629b3c1db5aedf9bba0816fcf4bae",
+      "started_receipt_sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38",
+      "status": "error",
+      "may_retry": false
+    },
+    "recognition_started_is_conservative_consumption_not_completed_model_forward_proof": true
+  },
+  "failure": {
+    "observed_worker_error_type": "ValueError",
+    "observed_stage": "infer",
+    "observed_family": "qwen06",
+    "observed_index": 1,
+    "observed_bounded_stack_functions": [
+      "generation_snapshot",
+      "clone"
+    ],
+    "next_call_from_retained_source": "canonical_sha256",
+    "exception_message_retained": false,
+    "full_stack_retained": false,
+    "failed_active_object_retained": false,
+    "generation_return_retained": false,
+    "prepared_config_and_frontend_observations_retained": true,
+    "separate_source_backed_reproduction": {
+      "method": "Exact retained Transformers method AST, actual prepared JSON and synthetic non-JSON Tensor fixtures; no model or audio execution.",
+      "finding": "Transformers 4.57.6 adds four runtime token fields before logits-hook observation; GenerationConfig.to_dict retains Tensor values that strict JSON cloning rejects.",
+      "qualification": "Source-backed local reproduction consistent with the bounded original stack; the unretained original failed value and exact exception message are not recovered.",
+      "private_tensor_fields": [
+        "_bos_token_tensor",
+        "_eos_token_tensor",
+        "_pad_token_tensor",
+        "_decoder_start_token_tensor"
+      ]
+    }
+  },
+  "preconditions": {
+    "both_runtime_installs_complete": true,
+    "three_prepare_only_loads_complete": true,
+    "prepare_audio_forward_calls": 0,
+    "whole_policy_written_and_bound": true,
+    "actual_package_preflight": {
+      "actual_prepared_members": 453,
+      "compressed_bytes": 10184728,
+      "expanded_member_bytes": 23962216,
+      "extra_json_reserve_bytes": 1048576,
+      "log_text_bytes": 14332019,
+      "new_native_calls": 0,
+      "schema": "qwen12-predecode-package-budget-v1",
+      "status": "passed_before_any_audio_forward",
+      "transcript_copies_per_clip": 2,
+      "transcript_reserve_characters_each_copy": 32768,
+      "whisper_full_prefix_steps_per_clip": 224,
+      "worst_fixture_members": 3494
+    },
+    "prepared_directories_frozen": true,
+    "all3_predecode_armed": true,
+    "fresh_qwen_source_model_config_matches_frozen": true,
+    "sensevoice_decode_started": false,
+    "whisper_decode_started": false
+  },
+  "cleanup": {
+    "controlled_containers": 55,
+    "all_removed": true,
+    "all_final_cpu_verified": true,
+    "all_cleanup_verified": true,
+    "historical_recovery1_removal_remains_unknown": true
+  },
+  "resources": {
+    "observations": {
+      "qwen_sense_response_body_bytes": 3340966447,
+      "whisper_bidirectional_tunnel_recv_bytes": 774057502,
+      "image_observed_default_interface_receive_delta_bytes": 47721686,
+      "audio_response_body_bytes": 776208,
+      "controlled_cgroup_cpu_seconds_through_acknowledged_pause": 630.456231,
+      "host_capture_receipt_wall_seconds": 912.944030658
+    },
+    "cpu_scope": "controlled container cgroups through acknowledged pause before removal; excludes host/image/log/cleanup after pause",
+    "host_wall_scope": "Capture receipt interval includes the successful predecode stress-package construction and cleanup; excludes the later final evidence ZIP construction and publisher.",
+    "network_scopes_are_distinct_not_wire_total": true,
+    "cpu_threshold_triggered": false
+  },
+  "original_member_references": {
+    "host-receipt.json": {
+      "bytes": 62812,
+      "sha256": "beb3dc5c0b13b3d3c709fcd2c7a9300962a030436062141b6d8ec46537b80378"
+    },
+    "output/qwen06/worker-failure.json": {
+      "bytes": 1618,
+      "sha256": "4dc8329ebbf35959abb5ed52d33095e6dbcaeda9e62963f981a553bec7b34d54"
+    },
+    "output/qwen06/clip-000001.native-observation.json": {
+      "bytes": 2235,
+      "sha256": "e9143a0c2ab284a6bc1ada8f27c3e267a3bc754d8189672b326f353b94b97def"
+    },
+    "output/qwen06/clip-000001/started.json": {
+      "bytes": 930,
+      "sha256": "0f8886197d615cdd2cc240cff5f46e194380950856d82e495eb3458f019a6c38"
+    },
+    "package-budget-preflight.json": {
+      "bytes": 412,
+      "sha256": "b35fcc5b3611a031dda0800549148d394b5caaf5226fb6087cb251bc4c203562"
+    },
+    "policy/policy-freeze.json": {
+      "bytes": 619,
+      "sha256": "57da9337b6f0645bf77792952c96a0e15430ba42823dc1cda6514038805db298"
+    },
+    "supervision-receipt.json": {
+      "bytes": 2430,
+      "sha256": "129a7097a07100dd257f3bd8e54bc8baa043329073581da7f3b26ca862e1694b"
+    },
+    "cpu-receipt.json": {
+      "bytes": 7032,
+      "sha256": "fe1f19f94cc9a65276a02dff4bd0a5f7f911c442249ef0a841db3d80ca8c1bfd"
+    },
+    "cleanup-receipt.json": {
+      "bytes": 58012,
+      "sha256": "ad161ba7ffdab7382fdc5dffb5677a785bfd3d18d470c7a5a5bdf59fb3579dd7"
+    }
+  },
+  "boundary": {
+    "human_gold": false,
+    "acoustic_verbatim_completeness": "unknown",
+    "training_admitted": false,
+    "training_performed": false,
+    "shipping_approved": false,
+    "remaining_slot_execution_approved_by_this_record": false
+  }
+}
