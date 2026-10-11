@@ -1,0 +1,142 @@
+{
+  "schema": "whisper-screen-official-source-lock-v1",
+  "source_repository": "https://github.com/openai/whisper",
+  "source_revision": "86098128c0b4f24f0e2aa2994de830614b474227",
+  "source_license": "MIT",
+  "source_bytes_verified": true,
+  "local_preparation_scope": "Public official source/tokenizer/frontend bytes only; no checkpoint acquisition, installation, import, or model execution.",
+  "files": [
+    {
+      "path": "LICENSE",
+      "size_bytes": 1063,
+      "sha256": "b5d65a59060e68c4ff940e1eddfa6f94b2d68fdf58ed7f4dd57721c997e35e9d",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/LICENSE"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 8246,
+      "sha256": "38c180c2a8d8ba628a3e131ad42bf06c8a51bb681efb30fbe28d5a0f4b65f288",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/README.md"
+    },
+    {
+      "path": "pyproject.toml",
+      "size_bytes": 1418,
+      "sha256": "9c8111da3701070095304ea5e12b6301eddcca3bb65e491a982b102d6042b1c4",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/pyproject.toml"
+    },
+    {
+      "path": "requirements.txt",
+      "size_bytes": 140,
+      "sha256": "70063b7cde70331c8d9187bb459c27fbe87bf3335cebc3ee55675b9d91262599",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/requirements.txt"
+    },
+    {
+      "path": "whisper/__init__.py",
+      "size_bytes": 7432,
+      "sha256": "79ecbed714783b6230931a3dba6d5da6d386e2d44f9fc27256e4fc72751e1f62",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/__init__.py"
+    },
+    {
+      "path": "whisper/__main__.py",
+      "size_bytes": 35,
+      "sha256": "c519d586c3a6b639f64e59d2d6fd6b591a67ecd739f9727492911fc4ce4d545a",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/__main__.py"
+    },
+    {
+      "path": "whisper/assets/gpt2.tiktoken",
+      "size_bytes": 835554,
+      "sha256": "306cd27f03c1a714eca7108e03d66b7dc042abe8c258b44c199a7ed9838dd930",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/assets/gpt2.tiktoken"
+    },
+    {
+      "path": "whisper/assets/mel_filters.npz",
+      "size_bytes": 4271,
+      "sha256": "7450ae70723a5ef9d341e3cee628c7cb0177f36ce42c44b7ed2bf3325f0f6d4c",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/assets/mel_filters.npz"
+    },
+    {
+      "path": "whisper/assets/multilingual.tiktoken",
+      "size_bytes": 816730,
+      "sha256": "b34b360dbb493e781e479794586d661700670d65564001f23024971d1f2fa126",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/assets/multilingual.tiktoken"
+    },
+    {
+      "path": "whisper/audio.py",
+      "size_bytes": 4945,
+      "sha256": "36ed287b2de3eaf40207cd2a44a8d45d57ea5c212a39df07401d4fcb4d5a5a1a",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/audio.py"
+    },
+    {
+      "path": "whisper/decoding.py",
+      "size_bytes": 32155,
+      "sha256": "94084fedc5af74cabf8e1883a85552700057081f00ea669ad49435ecb29039db",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/decoding.py"
+    },
+    {
+      "path": "whisper/model.py",
+      "size_bytes": 12209,
+      "sha256": "f82b0f40e29076506f1e34607a8008782f0586750a8e8bd6d8e1cee5c41b9329",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/model.py"
+    },
+    {
+      "path": "whisper/normalizers/__init__.py",
+      "size_bytes": 130,
+      "sha256": "f18fcdce4caee7f2e80e4c01ab0457d3a080a872a29489542c6d23c4b0bba572",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/normalizers/__init__.py"
+    },
+    {
+      "path": "whisper/normalizers/basic.py",
+      "size_bytes": 2064,
+      "sha256": "4742eaa040e0657fa1247a1361e0d856c62317a43326ea59a40c2e9edd8d2c38",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/normalizers/basic.py"
+    },
+    {
+      "path": "whisper/normalizers/english.json",
+      "size_bytes": 56128,
+      "sha256": "6607f948be9824d2e1b2fa2223cd94c06c45afa4e05ea0e3d5e1f2bdffde2465",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/normalizers/english.json"
+    },
+    {
+      "path": "whisper/normalizers/english.py",
+      "size_bytes": 21001,
+      "sha256": "d31a52685b5b42628ea4e3343c3a7925ce5b2f317e6c0ec4575677dd5c8b5d2c",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/normalizers/english.py"
+    },
+    {
+      "path": "whisper/timing.py",
+      "size_bytes": 12697,
+      "sha256": "bb091c973c428697012f0f8d1b4f5f3a605cd93c5d1c129957f712a6a878a59c",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/timing.py"
+    },
+    {
+      "path": "whisper/tokenizer.py",
+      "size_bytes": 12338,
+      "sha256": "3b48e361a7e95b4ec0356ca6d72bba635778aa10269153136ee7bc34cae30b85",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/tokenizer.py"
+    },
+    {
+      "path": "whisper/transcribe.py",
+      "size_bytes": 30375,
+      "sha256": "176f5ab30e961bec2a7872f5701a1f5bf3cbfc77946e50512f0f0cf00a1ceacf",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/transcribe.py"
+    },
+    {
+      "path": "whisper/triton_ops.py",
+      "size_bytes": 3646,
+      "sha256": "26c5082f029bbd2b7ae77ecf5a3f7f196f220e5850e2c9d0ec42961caf0dde4c",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/triton_ops.py"
+    },
+    {
+      "path": "whisper/utils.py",
+      "size_bytes": 11839,
+      "sha256": "f46aa555363ab42a455cd7c7f8c108dc2f69c5a94c6354c73ae96d671d9b1c37",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/utils.py"
+    },
+    {
+      "path": "whisper/version.py",
+      "size_bytes": 25,
+      "sha256": "c4d27ecccdd52a9cded762f1a82da3152db12cbc0aa6ea781f945446a143cfaf",
+      "url": "https://raw.githubusercontent.com/openai/whisper/86098128c0b4f24f0e2aa2994de830614b474227/whisper/version.py"
+    }
+  ]
+}

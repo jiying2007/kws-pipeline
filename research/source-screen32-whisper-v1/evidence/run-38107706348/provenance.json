@@ -1,0 +1,81 @@
+{
+  "schema": "whisper-screen-failed-second-run-retention-v1",
+  "run_id": 38107706348,
+  "head_sha": "733fbb90a98b3d39242594cebea378f790bc5775",
+  "tree": "44ca7a527542982823294eda6f8d189d98122873",
+  "run_attempt": 1,
+  "run_number": 1,
+  "campaign_attempt": 2,
+  "prior_run_id": 38105471896,
+  "artifact_id": 11690174265,
+  "artifact_name": "qwen16-whisper-small-third-attempt-2-terminal-v1",
+  "zip_sha256": "ffa2a7201133f6cb3f916538ddc96291806c43ad8b0f1a19090b6405999ee491",
+  "zip_bytes": 18353,
+  "source_freeze_sha256": "543bc71585522dc318b2c954ee715b779b696876a5030b04f921a36214870f2a",
+  "terminal_outcomes_sha256": "8905df1649d4f84bb1ae4cdc97bbaee501e4e42c986c7b049e5ede945fb4c7d9",
+  "failure_status": "setup_failed_before_any_whisper_attempt",
+  "setup_stage": "wheel_download",
+  "attempts": 0,
+  "not_run": 16,
+  "failed_wheel": {
+    "index": 19,
+    "name": "torch",
+    "version": "2.12.1+cpu",
+    "http_status": 403
+  },
+  "underlying_403_cause": "unknown",
+  "first_run_root_cause": "unknown_not_retained",
+  "verified_assets": 41,
+  "verified_asset_groups": {
+    "source": 22,
+    "model": 1,
+    "wheel": 18
+  },
+  "model_response_body_bytes": 483617219,
+  "model_sha256": "9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794",
+  "selected_response_body_bytes": 580174803,
+  "network_transfer_total_known": false,
+  "source_verification_basis": "All 205 source-freeze entries were verified against the executed receipt freeze; the local activation tree matched the executed tree. The archival base has the same frozen source bytes. No claim that the archival commit was the executed remote head.",
+  "files": {
+    "artifact-freeze.json": {
+      "sha256": "6ead7ac142bd4748c01a94e0ee4d4aa1dee8238d3df512fcbf2ae91ee438a02e",
+      "bytes": 1194
+    },
+    "container-setup.json": {
+      "sha256": "82ceb2e803c508f8545d2f37609e01136cd2a0f1fd4b8e8d2a32cab81c155018",
+      "bytes": 1044
+    },
+    "host-receipt.json": {
+      "sha256": "f337877c1b66d98d6676e52a0e2e0f46dcdcce0081cb4695bbc73311ccb1b5a5",
+      "bytes": 1843
+    },
+    "image-transfer.json": {
+      "sha256": "a50bec7f59cd7dd9afc77ef68dec4322dd74759236a8e2b3861ecb6880dcbd02",
+      "bytes": 1299
+    },
+    "setup/runtime-lock.json": {
+      "sha256": "881443c6e66acb99223137bd8342788468f814d0a1c3e73ba33a27da3ad1fe6d",
+      "bytes": 21952
+    },
+    "setup/setup-failure.json": {
+      "sha256": "48b567da2aadc073a5d97b00745898deeb4defe64f958cdd245883656f405c63",
+      "bytes": 13707
+    },
+    "setup/setup-progress.json": {
+      "sha256": "fe7ae11a5e66c7a50a81c6e3da62c76bc17056c186765a99858465b2d7e5ad23",
+      "bytes": 13708
+    },
+    "setup/source-lock.json": {
+      "sha256": "0635fb8759fb56439f59db6956612f78cc8903c239f81f3eb7f9b0c47eb99649",
+      "bytes": 6780
+    },
+    "terminal-outcomes.json": {
+      "sha256": "8905df1649d4f84bb1ae4cdc97bbaee501e4e42c986c7b049e5ede945fb4c7d9",
+      "bytes": 5937
+    }
+  },
+  "source_role": "source_screen_only",
+  "training_admitted": false,
+  "shipping_approved": false,
+  "human_gold": false
+}
