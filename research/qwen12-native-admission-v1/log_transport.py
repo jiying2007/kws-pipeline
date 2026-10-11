@@ -18,7 +18,7 @@ import stat
 import zipfile
 
 PREFIX = "KWS_NATIVE_EVIDENCE_V1 "
-MAX_COMPRESSED = 8 * 1024 * 1024
+MAX_COMPRESSED = 12 * 1024 * 1024
 MAX_UNCOMPRESSED = 32 * 1024 * 1024
 MAX_MEMBER = 8 * 1024 * 1024
 MAX_MEMBERS = 4096
@@ -29,6 +29,29 @@ TRANSPORT = "github-job-log-chunks-v1"
 TIMESTAMP = re.compile(r"^\ufeff?\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z ")
 SHA = re.compile(r"[a-f0-9]{64}\Z")
 HEAD = re.compile(r"[a-f0-9]{40}\Z")
+
+PACKAGE_LIMIT_REASONS = {
+    "compressed_cap": "compressed evidence cap; do not omit native evidence",
+    "expanded_cap": "uncompressed evidence cap",
+    "member_cap": "bounded member size cap",
+    "member_count_cap": "explicit bounded member allowlist required",
+}
+
+
+class PackageLimitError(ValueError):
+    """Fixed, public sizing diagnostics; unknown aggregate measurements are None."""
+    def __init__(self, reason_code, *, compressed_bytes=None, expanded_bytes=None,
+                 member_count=None):
+        if type(reason_code) is not str or reason_code not in PACKAGE_LIMIT_REASONS:
+            raise ValueError("package limit reason")
+        if any(value is not None and (type(value) is not int or value < 0)
+               for value in (compressed_bytes, expanded_bytes, member_count)):
+            raise ValueError("package limit measurement")
+        self.reason_code = reason_code
+        self.compressed_bytes = compressed_bytes
+        self.expanded_bytes = expanded_bytes
+        self.member_count = member_count
+        super().__init__(PACKAGE_LIMIT_REASONS[reason_code])
 
 def require(condition, message):
     if not condition:
@@ -83,7 +106,9 @@ def _read(root, name, cap=MAX_MEMBER):
             directory = new
         fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
         before = os.fstat(fd)
-        require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_size <= cap, "bounded unaliased member required")
+        require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1, "bounded unaliased member required")
+        if before.st_size > cap:
+            raise PackageLimitError("member_cap")
         with os.fdopen(fd, "rb") as stream:
             fd = None
             raw = stream.read(cap + 1)
@@ -99,19 +124,32 @@ def _read(root, name, cap=MAX_MEMBER):
 
 def build_package(root, allowed_members, run_identity):
     identity(run_identity)
-    require(type(allowed_members) is list and 1 <= len(allowed_members) <= MAX_MEMBERS, "explicit bounded member allowlist required")
+    require(type(allowed_members) is list and 1 <= len(allowed_members), "explicit bounded member allowlist required")
+    if len(allowed_members) > MAX_MEMBERS:
+        raise PackageLimitError("member_count_cap", member_count=len(allowed_members))
     names = [relative(name) for name in allowed_members]
     require(names == sorted(set(names)) and MANIFEST not in names, "canonical unique member allowlist required")
     files, total = {}, 0
     for name in names:
-        raw = _read(root, name)
+        try:
+            raw = _read(root, name)
+        except PackageLimitError as error:
+            raise PackageLimitError(error.reason_code, member_count=len(names)) from None
         total += len(raw)
-        require(total <= MAX_UNCOMPRESSED, "uncompressed evidence cap")
+        if total > MAX_UNCOMPRESSED:
+            # Stop before reading the remainder; do not present a partial sum as
+            # the complete package's expanded size.
+            raise PackageLimitError("expanded_cap", member_count=len(names))
         files[name] = raw
     manifest = {"schema": "native-evidence-member-manifest-v1", "identity": run_identity,
                 "members": {name: {"bytes": len(raw), "sha256": sha(raw)} for name, raw in files.items()}}
     manifest_raw = canonical(manifest)
-    require(len(manifest_raw) <= MAX_MEMBER and total + len(manifest_raw) <= MAX_UNCOMPRESSED, "manifest/evidence cap")
+    if len(manifest_raw) > MAX_MEMBER:
+        raise PackageLimitError("member_cap", expanded_bytes=total + len(manifest_raw),
+                                member_count=len(names))
+    if total + len(manifest_raw) > MAX_UNCOMPRESSED:
+        raise PackageLimitError("expanded_cap", expanded_bytes=total + len(manifest_raw),
+                                member_count=len(names))
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, raw in [(MANIFEST, manifest_raw), *files.items()]:
@@ -120,7 +158,9 @@ def build_package(root, allowed_members, run_identity):
             info.external_attr = 0o100600 << 16
             archive.writestr(info, raw)
     payload = buffer.getvalue()
-    require(len(payload) <= MAX_COMPRESSED, "compressed evidence cap; do not omit native evidence")
+    if len(payload) > MAX_COMPRESSED:
+        raise PackageLimitError("compressed_cap", compressed_bytes=len(payload),
+                                expanded_bytes=total + len(manifest_raw), member_count=len(names))
     encoded = base64.b64encode(payload).decode("ascii")
     chunks = [encoded[i:i + CHUNK_CHARS] for i in range(0, len(encoded), CHUNK_CHARS)]
     header = {"kind": "header", "transport": TRANSPORT, "identity": run_identity,

@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - research/qwen12-native-admission-recovery2
-      - research/qwen12-native-transport-preflight-v1
+      - research/qwen12-native-transport-preflight-12m-v1
   pull_request:
     paths:
       - "research/qwen12-native-admission-v1/**"
@@ -16,8 +16,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   qwen12:
+    # Consumed recovery2 remains disabled; no further native identity is prepared.
     # Reviewed release must separately remove this literal false before activation.
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery2' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ false && github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-admission-recovery2' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
@@ -66,7 +67,7 @@ jobs:
           done
           python3 -B tools/test_inventory.py --root research/qwen12-native-admission-v1 --workflow .github/workflows/qwen12-native-admission-v1.yml
   transport-fixture:
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-transport-preflight-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/qwen12-native-transport-preflight-12m-v1' && github.event.created == true && github.event.repository.private == false && github.run_attempt == 1 }}
     needs: contracts
     permissions:
       contents: write
@@ -86,7 +87,7 @@ jobs:
         timeout-minutes: 4
         env:
           KWS_EVIDENCE_TOKEN: ${{ github.token }}
-        run: python3 -I -B research/qwen12-native-admission-v1/evidence_publisher.py synthetic
+        run: python3 -I -B research/qwen12-native-admission-v1/evidence_publisher.py synthetic12m
   cleanup-lifecycle-smoke:
     if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'pull_request' && github.event.action == 'opened' && github.event.repository.private == false && github.event.pull_request.head.repo.full_name == 'jiying2007/kws-pipeline' && github.event.pull_request.head.ref == 'fix/qwen12-native-cleanup-source-20261011' && github.run_attempt == 1 }}
     needs: contracts

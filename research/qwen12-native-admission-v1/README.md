@@ -1,17 +1,21 @@
 # Qwen12 one-shot controlled native admission capture
 
-Current source state: recovery 2 has static source, budget, independent,
-bounded-transport and historical-uniqueness approval for one separately reviewed
-execution within the existing scope. The native workflow literal stop is removed
-and all dispatch approval bits are true; bounded public transcript publication
-approval is retained. Both earlier attempts remain consumed, with zero started
-and zero completed recognitions across the same twelve clips' cumulative maximum
-36 attempts. No recovery 2 source or evidence ref has been created by this
-preparation. Root's actual execution-ref release remains pending: the final exact
-protected-main source/tree must pass CI, followed immediately by a fresh review
-of both predecessor histories and zero-use evidence, absence of both new refs
-and any recovery 2 run, and the single new campaign claim before branch creation.
-Static approval does not establish that any runtime precondition has passed.
+Current source state: all three native executions are consumed, with zero
+started and zero completed recognitions. Recovery 2 stopped before its first
+recognition. A separate source-backed replay identified the unchanged complete
+package-budget stress exceeding the former 8MiB compressed limit. The native job again has its literal stop, and
+`execution-release.json` has `enabled=false` and all native review flags false;
+existing bounded publication permission remains true. No recovery 3 identity or
+new native execution is prepared here. The same twelve clips' cumulative maximum
+remains 36 actual recognition attempts.
+
+This source prepares only a separately reviewed zero-model 12MiB transport
+preflight. It retains the complete original evidence and stress fixture, raises
+only the compressed ZIP cap to 12MiB and chunk count to 48, and keeps the 32MiB
+expanded, 4096-member and 8MiB single-member limits. The new fixed synthetic
+identity cannot reuse either old preflight ref. Actual live readback has not yet
+passed for this capacity. Local fixtures or publication alone do not approve a
+future native run.
 
 This new scope consumes exactly twelve pre-existing, public Qwen WAVs from the
 pinned `kws-data` commit. It does not regenerate audio, reuse historical Qwen16
@@ -97,9 +101,9 @@ independent source/run/job, blob, chunk, member and CRC verification. The
 [terminal metadata](evidence/run-38160295526/terminal-status.json) records the
 observations and uncertainty without rewriting either execution's evidence.
 Both campaign identities are consumed. The cleanup correction disabled native
-execution at that historical source. Recovery 2's current static approval is
-recorded below; actual execution-ref release is still held for exact-main CI
-and the immediate root history/ref/zero-use check.
+execution at that historical source. Recovery 2 subsequently ran once and is
+also consumed; its terminal outcome is recorded below. Native execution is now
+disabled again.
 
 ## New executable path
 
@@ -161,7 +165,7 @@ admission; immutable resolver review must still pass before a training root exis
 
 No Actions artifact, cache or Git LFS is used. The complete bounded ZIP and its
 exact internal member manifest are preserved. Repository transport divides that
-ZIP into at most 32 raw chunks of at most 256KiB. Its small outer manifest binds
+ZIP into at most 48 raw chunks of at most 256KiB, under the 12MiB compressed cap. Its small outer manifest binds
 the actual repository/run/attempt/job-key/source head, total bytes/SHA256 and
 ordered chunk indices/lengths/SHA256. The reader pins the final evidence commit,
 verifies independent GitHub run/job metadata, then reassembles and applies the
@@ -202,9 +206,9 @@ adapter/Whisper-binding/lock, repository transport and publisher mock tests. `pr
 runs only after all source is integrated in a separate checkout; it hashes the
 exact source/role roster and does not enable execution.
 
-The current recovery 2 source removes only the native condition's literal
-`false && ` and sets `release.enabled=true` plus its five pending review bits.
-Both consumed execution identities remain unchanged. Dispatch requires literal JSON true for
+The current source restores the native condition's literal `false && ` and
+sets `release.enabled=false` plus its five review bits false. All three consumed
+source/run/evidence identities remain unchanged. Dispatch requires literal JSON true for
 source, budget, independent review, actual complete selected-transport readback,
 historical campaign uniqueness, and bounded public transcript publication
 approvals. Missing, false, integer or string substitutes fail before Docker,
@@ -226,11 +230,14 @@ its first forward; later workers are never reported as having passed in advance.
 
 Existing same-run `policy-freeze.json`, prepare run/kernel/CPU/config and zero-call
 records, `package-budget-preflight.json`, and the host receipt retain these facts.
-The unchanged sequential host path propagates any prepare/freeze/package failure
+The sequential host path propagates any prepare/freeze/package failure
 before its decode loop; fresh-worker verification remains mandatory. A static
 release approval or synthetic fixture cannot replace actual runtime evidence.
-The exact collector continues retaining those records; no new proof schema,
-platform, model load or evidence omission is introduced.
+The exact collector continues retaining those records. A rejected package check
+now retains a small structured failure record with a fixed reason code and
+measured compressed/expanded byte and member counts when available; unknown
+failures remain failures. No exception text, paths, environment, model load or
+evidence omission is introduced.
 
 ## Original activation handoff (historical, consumed)
 
@@ -251,7 +258,7 @@ commit; Git blob identities, chunk hashes, ZIP members/CRCs, fixed synthetic
 seed, independently fetched run/job metadata and checkout identity passed.
 The reconstructed ZIP is 8,326,571 bytes with SHA-256
 `0e2b26a972a06dee180ac0a4f6cad13166164a64e8c4918c181b75d086e4f466`.
-This proves the selected bounded repository transport. The previous large-log
+This proves the historical 8MiB repository transport, not the new 12MiB bound. The previous large-log
 readback route remains unsuccessful. The used synthetic source/evidence branches
 must not be rerun, updated or deleted/recreated.
 
@@ -295,8 +302,8 @@ Original source/run/evidence identities remain immutable; the deleted original
 source ref must not be restored. The separately reviewed single continuation used `research/qwen12-native-admission-recovery1`, with
 create-only evidence ref `evidence/qwen12-native-admission-recovery1` and directory
 `research/qwen12-native-admission-v1/evidence/recovery1`. The reviewed activation source ran once as recorded above. The subsequent cleanup-only
-source restored the native literal stop and disabled the release. Recovery 2's
-current static approval below does not release its execution ref. Recovery 1's
+source restored the native literal stop and disabled the release. Recovery 2
+also ran once and has now been disabled again. Recovery 1's
 pre-run review checked the predecessor's zero recognition consumption, absence
 of the new refs/run, exact source CI, budget and independent review. Its release
 bound the original run, source, evidence commit, archive hash and 0/0/36
@@ -430,70 +437,94 @@ and campaign constants are separately reviewed identities; this smoke does not
 claim to have executed the future recovery 2 head, any model, or old failed
 containers. The consumed smoke event is not automatically repeated.
 
-## Recovery 2 current static activation and held execution release
+## Recovery 2 terminal result: run 38167052146
 
-The only prospective source identity is
-`research/qwen12-native-admission-recovery2`, with create-only evidence ref
-`evidence/qwen12-native-admission-recovery2` and evidence directory
-`research/qwen12-native-admission-v1/evidence/recovery2`. This exact source ref
-joins the independent execution-ref retention list. The three existing retained
-names stay unchanged. A missing original source ref means neither unused budget
-nor permission to restore the consumed execution.
+[Run 38167052146, attempt 1, job 114551789796](https://github.com/jiying2007/kws-pipeline/actions/runs/38167052146/job/114551789796)
+executed source `42b333f8b96c4c9fcca63c9e275d26a4519737c8`, tree
+`6e91e77b1e60e19956664da2eab80f0a929e02af`. Both runtime setups and all three
+prepare-only loads completed, with zero audio forward calls. The full policy
+was written, but package-budget preflight did not complete. No decode worker
+was armed: 0 started, 0 completed and all 36 slots not run. All 54 controlled
+containers have confirmed cleanup and final CPU accounting in this run.
+Recovery 1's earlier uncertain cleanup is not changed by this observation.
 
-The existing release binding now pins both immutable predecessor run/source/
-evidence/archive identities and their 0 started, 0 completed and 36 not-run
-counts. The cross-execution recognition allowance remains 36 for the same twelve
-public inputs. Neither failed setup counts as a recognition attempt, but both
-resource histories remain part of the proposal. Neither cleanup history is
-rewritten: recovery 1 removal remains unconfirmed.
+The original host retained only `ValueError`, without its message or traceback.
+A separate no-model replay rebuilt the policy byte-for-byte from the retained
+source and complete prepare closure. The unchanged full-prefix stress produced
+10,191,849 compressed bytes, above the former 8,388,608-byte cap. It contained
+3,495 payload members plus the internal manifest and 24,521,115 expanded bytes
+including that manifest. Omitting the two post-terminal host/outcome records
+in a diagnostic copy still produced 10,183,205 compressed bytes. These are
+replay measurements, not a recovered original traceback or the exact historical
+preflight byte count. They establish a reproducible capacity mismatch without
+changing the original records or shortening the stress check.
 
-The current release records source, independent, budget, selected-transport and
-historical-uniqueness approvals as true, with `enabled=true`; original bounded
-public transcript publication approval remains true. The runtime precondition
-list is unchanged and remains required, never pre-passed. This is a six-file
-static activation delta from the local disabled preparation snapshot
-`fe61c4a999922be4ceb298e5d715ad67526afb35`, tree
-`f1f500b1303e7d1877694365475ddc27f7eda52f`. It changes only the two workflow
-mirrors' native literal stop, current release flags/freeze binding, regenerated
-freeze, this README and append-only source-retention maintenance/current native
-workflow identity. The disabled baseline and all historical retention entries
-remain intact. The unchanged workflow comment about removing the literal stop
-records the prior activation requirement; the condition and release show the
-current static state.
+Immutable [evidence commit 43113646c12fc9d6c112481bab6818c96f2ce789](https://github.com/jiying2007/kws-pipeline/tree/43113646c12fc9d6c112481bab6818c96f2ce789/research/qwen12-native-admission-v1/evidence/recovery2)
+retains the 2,656,120-byte terminal ZIP, SHA-256
+`140a18c7429b16674b5a1dc8e1f65f4a1be6b0dd4ecb324b0a4c1ccaff11d157`.
+All 455 ZIP members including the manifest, source closure, 36-slot census and
+actual run/job/source bindings passed independent custody checks in normal,
+`-O` and `-OO` modes. The [terminal metadata](evidence/run-38167052146/terminal-status.json)
+records the observed failure separately from replay-based diagnosis. This is
+custody and preflight evidence; no acoustic admission or training is established.
+The consumed recovery 2 source and evidence refs must not be reused or changed.
+All three executions still have zero actual recognition attempts in aggregate.
 
-The public-main preparation base was
-`eb910345b1572f172269819ac015d7e44180726a`, tree
-`7ab29f9d564033790741697a8758678bb8a70c59`. Approval here does not claim final
-activation-tree CI or merge has already succeeded. Before the unique execution
-branch is created, root must verify CI success for the final exact protected-main
-commit/tree and immediately recheck both consumed run histories and complete
-zero-use evidence, absence of the new source/evidence refs and recovery 2 run
-history, and the single campaign claim. The source branch must point to that
-exact approved main commit. Its canonical public-repository push must have
-`event.created=true` and `run_attempt=1`, with the contracts job successful.
-No execution ref is released by preparing or publishing this source. No conflict,
-uncertain create result or failed execution permits an automatic retry, ref
-reuse, deletion/recreation or another identity. Existing same-twelve cumulative
-recognition and bounded public-source/evidence authority is unchanged.
+Recovery 2 recorded 477.281264 controlled-cgroup CPU seconds through acknowledged
+pause and 759.388826281 capture-host receipt seconds. This wall interval includes
+the failed preflight ZIP construction and excludes later final evidence ZIP
+preparation/publication. Its ASR response bodies total 3,340,966,447 bytes;
+Whisper bidirectional tunnel receive 774,056,598 bytes; image default-interface
+observed receive delta 45,710,666 bytes; and audio response bodies 776,208 bytes.
+These separate scopes must not be added into an alleged all-network total.
 
-Scientific model/input/configuration, process guard, all runtime and host cleanup
-code, ZIP/chunk codec and publisher code are byte-identical to the disabled
-baseline. Transport approval is grounded in the unchanged codec and publisher's
-actual live near-8MiB repository readback plus both real native failure archives,
-with their immutable identities retained above. The new recovery 2 identity has
-also passed a local near-8MiB full roundtrip in normal, `-O` and `-OO` modes. That
-local identity proof is not live recovery 2 publication or readback; no recovery 2
-native archive exists yet. Neither synthetic transport nor the consumed
-zero-model Docker smoke is rerun by this activation. The historical smoke proves
-only its executed head and byte-identical cleanup components, never future ASR
-runtime readiness or cleanup of old failed containers.
+## New 12MiB zero-model transport preflight
 
+The sole new source identity is
+`research/qwen12-native-transport-preflight-12m-v1`. Its create-only evidence
+branch is `evidence/qwen12-native-transport-synthetic-12m-v1`, directory
+`research/qwen12-native-admission-v1/evidence/synthetic-12m-v1`, and fixed purpose
+is `synthetic12m`. The source ref joins the separate cleanup retention roster.
+The old `synthetic` purpose and original fixed seed/size remain supported for
+reading prior evidence; neither old preflight ref is created again or updated.
+
+Only the canonical public repository's fresh push with `event.created=true` and
+`run_attempt=1` can run this `transport-fixture` job after contracts succeed.
+Pull requests have read-only source tests and cannot publish. The fixture uses
+multiple fixed-public-seed byte members, each at most 8MiB, to produce a near-12MiB
+ZIP and all 48 chunks without models, audio, Docker, package installation or ASR.
+No artifact, cache or LFS storage is used. The standard Ubuntu job retains its
+10-minute final ceiling; the publisher retains its 180-second deadline and
+4-minute step timeout, fixed HTTPS destinations, bounded requests/responses and
+create-only evidence ref. This adds bounded synthetic CPU and repository transfer,
+not another model-acquisition reservation or native execution allowance.
+
+The source base is actual public main
+`42b333f8b96c4c9fcca63c9e275d26a4519737c8`. The original stress fixture and all
+scientific/runtime/cleanup behavior remain unchanged. ZIP/chunk limit constants,
+explicit synthetic-purpose selection and safe package-failure diagnostics are
+the only executable changes. Complete source/tokenizer evidence is never dropped
+to meet a size cap. Local replay must pass the unchanged full prepared closure
+at 12MiB, reject it at the historical 8MiB bound, and reject new over-limit data.
+
+A source review and exact-head CI must complete before root considers one fresh
+zero-model preflight branch. Its entire immutable evidence commit must then be
+read back independently, including all 48 chunks, Git blobs, archive/member
+hashes/CRC, fixed seed, and actual run/job/source binding. No live 12MiB readback
+is claimed yet; the former 8MiB proof cannot replace it. Conflict, unknown write
+outcome or failure ends that one preflight without automatic retry. Native
+approvals remain false until a separately reviewed decision; no recovery 3
+source or evidence identity is introduced by this repair.
+
+## Historical recovery 2 budget proposal
 
 The [resource proposal](recovery2-resource-proposal.json) remains byte-identical
 to the disabled, independently reviewed historical budget snapshot. Its false
-disabled/pending status fields describe proposal preparation, not the current
-static approvals in `execution-release.json`; they are deliberately not rewritten.
-It keeps prior actuals and one future unchanged reservation separate by measurement scope. ASR response
+disabled/pending status fields describe that historical proposal, and are
+deliberately not rewritten as execution results or current release approvals.
+It kept the first two actuals and one then-future recovery 2 reservation separate
+by measurement scope. The following arithmetic is historical planning, not a
+new run reservation or the final three-run consumption total. ASR response
 bodies were 3,340,966,447 bytes in each old run; with a new 4GiB body cap the
 same-scope planning total is 10,976,900,190 bytes. Whisper tunnel receive was
 774,060,234 bytes in the first run and the second never entered that stage;

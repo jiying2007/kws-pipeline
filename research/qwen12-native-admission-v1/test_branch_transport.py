@@ -9,6 +9,7 @@ import stat
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -59,6 +60,23 @@ class BranchTransportTests(unittest.TestCase):
             "evidence_branch": "evidence/qwen12-native-transport-synthetic-v1",
             "directory": "research/qwen12-native-admission-v1/evidence/synthetic-v1",
             "scope": "qwen12-native-transport-preflight-v1", "job_key": "transport-fixture"})
+        self.assertEqual(b.purpose_policy("synthetic12m"), {
+            "source_branch": "research/qwen12-native-transport-preflight-12m-v1",
+            "evidence_branch": "evidence/qwen12-native-transport-synthetic-12m-v1",
+            "directory": "research/qwen12-native-admission-v1/evidence/synthetic-12m-v1",
+            "scope": "qwen12-native-transport-preflight-12m-v1", "job_key": "transport-fixture"})
+
+    def test_exact_transport_limits_and_chunk_boundary(self):
+        self.assertEqual(t.MAX_COMPRESSED, 12 * 1024 * 1024)
+        self.assertEqual(t.MAX_UNCOMPRESSED, 32 * 1024 * 1024)
+        self.assertEqual(t.MAX_MEMBER, 8 * 1024 * 1024)
+        self.assertEqual(t.MAX_MEMBERS, 4096)
+        self.assertEqual(b.MAX_CHUNKS, 48)
+        self.assertEqual(b.MAX_CHUNK, 256 * 1024)
+        self.assertEqual(b.MAX_CHUNKS * b.MAX_CHUNK, t.MAX_COMPRESSED)
+        self.assertTrue(b.chunk_path("synthetic12m", 47).endswith("/0047.bin"))
+        for index in (-1, 48, True):
+            with self.assertRaises(ValueError): b.chunk_path("synthetic12m", index)
 
     def test_consumed_evidence_directories_cannot_be_reused(self):
         for old in ("native-v1", "recovery1"):
@@ -100,7 +118,7 @@ class BranchTransportTests(unittest.TestCase):
     def test_manifest_strict_types_bounds_and_binding(self):
         alterations = {"archive_bytes": [True, 0, b.MAX_COMPRESSED + 1, "600000"],
             "uncompressed_bytes": [True, 0, b.MAX_UNCOMPRESSED + 1],
-            "member_count": [True, 0, b.MAX_MEMBERS + 1], "chunk_count": [True, 0, 33],
+            "member_count": [True, 0, b.MAX_MEMBERS + 1], "chunk_count": [True, 0, b.MAX_CHUNKS + 1],
             "chunk_bytes": [True, b.MAX_CHUNK - 1], "chunks": [{}, [], True],
             "archive_sha256": [True, "A" * 64, "0" * 64], "manifest_sha256": [None, "0" * 64],
             "purpose": ["synthetic", False], "transport": ["github-job-log-chunks-v1"]}
@@ -180,12 +198,54 @@ class BranchTransportTests(unittest.TestCase):
         files = b.build_file_set(payload, identity, "synthetic")
         raw = files[b.manifest_path("synthetic")]; manifest = b.parse_manifest(raw, identity, "synthetic")
         self.assertEqual(manifest["chunk_count"], 32)
-        self.assertGreaterEqual(len(payload), b.MAX_COMPRESSED * 98 // 100)
+        self.assertGreaterEqual(len(payload), (8 * 1024 * 1024) * 98 // 100)
+        self.assertLessEqual(len(payload), 8 * 1024 * 1024)
         self.assertTrue(all(len(files[r["path"]]) <= b.MAX_CHUNK for r in manifest["chunks"]))
         actual, measured, _ = b.reassemble_file_set(raw, [(r["path"], files[r["path"]]) for r in manifest["chunks"]], identity, "synthetic")
         self.assertEqual(actual, payload); self.assertEqual(measured, internal)
         verify_synthetic(payload, identity)
         with self.assertRaises(ValueError): verify_synthetic(payload[:-1], identity)
+
+    def test_new_public_near_12m_fixture_and_exact_48_chunk_cap(self):
+        identity = dict(IDENTITY, job_key="transport-fixture")
+        payload, internal = build_synthetic_package(identity, "synthetic12m")
+        self.assertGreaterEqual(len(payload), b.MAX_COMPRESSED * 98 // 100)
+        self.assertLessEqual(len(payload), b.MAX_COMPRESSED)
+        self.assertEqual(len(internal["members"]), 3)
+        self.assertTrue(all(row["bytes"] <= t.MAX_MEMBER for row in internal["members"].values()))
+        verify_synthetic(payload, identity, "synthetic12m")
+        with self.assertRaises(ValueError): verify_synthetic(payload, identity, "synthetic")
+        with mock.patch.object(t, "MAX_COMPRESSED", 8 * 1024 * 1024):
+            with self.assertRaises(t.PackageLimitError) as caught:
+                build_synthetic_package(identity, "synthetic12m")
+        self.assertEqual(caught.exception.reason_code, "compressed_cap")
+        self.assertEqual(caught.exception.compressed_bytes, len(payload))
+        self.assertEqual(caught.exception.member_count, 3)
+        self.assertGreater(caught.exception.expanded_bytes, 8 * 1024 * 1024)
+
+        # A bounded ZIP comment fills the genuine near-cap archive to the exact
+        # accepted limit without changing or omitting any evidence member.
+        buffer = io.BytesIO(payload)
+        with zipfile.ZipFile(buffer, "a") as archive:
+            archive.comment = b"x" * (t.MAX_COMPRESSED - len(payload))
+        exact = buffer.getvalue()
+        self.assertEqual(len(exact), t.MAX_COMPRESSED)
+        for candidate in (payload, exact):
+            files = b.build_file_set(candidate, identity, "synthetic12m")
+            raw = files[b.manifest_path("synthetic12m")]
+            self.assertLessEqual(len(raw), b.MAX_MANIFEST)
+            manifest = b.parse_manifest(raw, identity, "synthetic12m")
+            self.assertEqual(manifest["chunk_count"], 48)
+            self.assertTrue(all(len(files[row["path"]]) <= b.MAX_CHUNK for row in manifest["chunks"]))
+            observed, measured, _ = b.reassemble_file_set(raw,
+                [(row["path"], files[row["path"]]) for row in manifest["chunks"]], identity, "synthetic12m")
+            self.assertEqual(observed, candidate)
+            self.assertEqual(measured, internal)
+            with self.assertRaises(ValueError): b.parse_manifest(raw, identity, "synthetic")
+        self.assertTrue(all(row["bytes"] == b.MAX_CHUNK for row in manifest["chunks"]))
+        with self.assertRaises(ValueError): b.build_file_set(exact + b"x", identity, "synthetic12m")
+        manifest["archive_bytes"] += 1
+        with self.assertRaises(ValueError): b.parse_manifest(t.canonical(manifest), identity, "synthetic12m")
 
 
 if __name__ == "__main__": unittest.main(verbosity=2)

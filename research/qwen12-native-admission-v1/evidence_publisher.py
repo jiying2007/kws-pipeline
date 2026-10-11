@@ -161,9 +161,9 @@ def publish(env, event, purpose, api, progress=None):
     run_identity = context(env, event, purpose)
     policy = purpose_policy(purpose)
     files, payload, _, custody = read_package(env["RUNNER_TEMP"], run_identity, purpose)
-    if purpose == "synthetic":
+    if purpose in ("synthetic", "synthetic12m"):
         from emit_synthetic_branch_fixture import verify_synthetic
-        verify_synthetic(payload, run_identity)
+        verify_synthetic(payload, run_identity, purpose)
     paths = endpoints(run_identity, purpose)
     progress["stage"] = "verify_api_identity"
     repository = api("GET", paths["repo"])
@@ -268,7 +268,7 @@ def _deadline_expired(_signum, _frame):
 
 
 def main():
-    require(len(sys.argv) == 2 and sys.argv[1] in ("synthetic", "native"), "fixed publisher purpose only")
+    require(len(sys.argv) == 2 and sys.argv[1] in ("synthetic", "synthetic12m", "native"), "fixed publisher purpose only")
     purpose = sys.argv[1]
     # Copy only explicitly needed nonsecret CI values. Never dump the environment.
     names = ("GITHUB_REPOSITORY", "GITHUB_REF", "GITHUB_EVENT_NAME", "GITHUB_RUN_ATTEMPT",

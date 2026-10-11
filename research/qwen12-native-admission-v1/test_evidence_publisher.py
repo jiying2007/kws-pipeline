@@ -219,6 +219,47 @@ class PublisherTests(unittest.TestCase):
         self.assertEqual(result["evidence_branch"], "evidence/qwen12-native-transport-synthetic-v1")
         self.assertEqual(sum(c[1] == p.BASE + "/git/blobs" for c in api.calls), 34)
 
+    def test_synthetic12m_full_48_chunk_mock_publication_and_readback(self):
+        from emit_synthetic_branch_fixture import build_synthetic_package, verify_synthetic
+        env, event = fixtures(self.root, "synthetic12m")
+        identity = p.context(env, event, "synthetic12m")
+        payload, _ = build_synthetic_package(identity, "synthetic12m")
+        b.write_package(self.root, payload, identity, "synthetic12m")
+        api = MockAPI(env, event, "synthetic12m")
+        result = p.run_once(env, event, "synthetic12m", api)
+        self.assertEqual(result["file_count"], 50)
+        self.assertEqual(result["evidence_branch"], "evidence/qwen12-native-transport-synthetic-12m-v1")
+        self.assertEqual(sum(c[1] == p.BASE + "/git/blobs" for c in api.calls), 50)
+        files = {row["path"]: api.blobs[row["sha"]] for row in api.tree_rows}
+        outer = files[b.manifest_path("synthetic12m")]
+        manifest = b.parse_manifest(outer, identity, "synthetic12m")
+        self.assertEqual(manifest["chunk_count"], 48)
+        self.assertLessEqual(len(outer), b.MAX_MANIFEST)
+        raw, _, _ = b.reassemble_file_set(outer,
+            [(row["path"], files[row["path"]]) for row in manifest["chunks"]],
+            identity, "synthetic12m", evidence_commit="d" * 40)
+        self.assertEqual(raw, payload)
+        verify_synthetic(raw, identity, "synthetic12m")
+        p.validate_publication(files[p.publication_path("synthetic12m")],
+            identity, "synthetic12m", 456, outer)
+
+    def test_synthetic_scopes_and_payloads_cannot_be_relabelled(self):
+        from emit_synthetic_branch_fixture import build_synthetic_package
+        for original, other in [("synthetic", "synthetic12m"), ("synthetic12m", "synthetic")]:
+            with self.subTest(original=original), tempfile.TemporaryDirectory() as directory:
+                env, event = fixtures(directory, original)
+                with self.assertRaises(ValueError): p.context(env, event, other)
+                original_identity = p.context(env, event, original)
+                payload, _ = build_synthetic_package(original_identity, original)
+                # Both fixtures intentionally use the same job-key. The different
+                # seed/member recipe still must fail before any remote API call.
+                env, event = fixtures(directory, other)
+                identity = p.context(env, event, other)
+                b.write_package(directory, payload, identity, other)
+                api = MockAPI(env, event, other)
+                with self.assertRaises(ValueError): p.publish(env, event, other, api)
+                self.assertFalse(api.calls)
+
     def test_freeze_whitelist_includes_actual_tools_and_workflow(self):
         import campaign_contract as c
         freeze = t.decode((p.HERE / "execution-freeze.json").read_bytes())

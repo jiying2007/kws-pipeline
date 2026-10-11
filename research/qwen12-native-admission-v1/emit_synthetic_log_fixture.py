@@ -1,4 +1,4 @@
-"""Public deterministic max-size transport CI fixture, with no ASR dependencies.
+"""Public deterministic legacy log transport fixture, with no ASR dependencies.
 
 This test does not open the real campaign's claim or read real audio/models.
 Every payload byte is generated from a fixed public seed or this test's source.
@@ -13,14 +13,15 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from log_transport import MAX_COMPRESSED, build_package, canonical, parse_job_log, sha
+from log_transport import MAX_COMPRESSED, MAX_MEMBER, build_package, canonical, parse_job_log, sha
 
 SEED = 20261011
 
 def emit(run_identity, stream):
     # Near-incompressible deterministic synthetic bytes exercise >98% of the
-    # final ZIP cap without requiring third-party packages or real-user data.
-    size = MAX_COMPRESSED - 65536
+    # original 8MiB ZIP cap without changing the historical log fixture route.
+    cap = min(MAX_COMPRESSED, MAX_MEMBER)
+    size = cap - 65536
     raw = random.Random(SEED).randbytes(size)
     with tempfile.TemporaryDirectory(prefix="kws-synthetic-log-") as directory:
         root = Path(directory)
@@ -33,7 +34,7 @@ def emit(run_identity, stream):
             "training_runs": 0, "real_batch_claim_touched": False}))
         payload, manifest, lines = build_package(root,
             ["synthetic-description.json", "synthetic-payload.fixture"], run_identity)
-    if not MAX_COMPRESSED * 98 // 100 <= len(payload) <= MAX_COMPRESSED:
+    if not cap * 98 // 100 <= len(payload) <= cap:
         raise ValueError("synthetic package did not exercise the admitted maximum-size range")
     parsed, parsed_manifest, receipt = parse_job_log("\n".join(lines), run_identity)
     if parsed != payload or parsed_manifest != manifest:
