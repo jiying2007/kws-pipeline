@@ -15561,9 +15561,9 @@
     {
       "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
       "mode": "100644",
-      "git_blob_sha1": "bf579f1153c845a45a9f1f6447fecbcfa2a9ca26",
-      "sha256": "ae37981fc25f4ff1c9dd3c59f23bcb7d5a0f5c18207e31f3a5205e8410b1b24a",
-      "bytes": 10648
+      "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444",
+      "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
+      "bytes": 11835
     },
     {
       "path": ".github/workflows/speech-like-external-base-bundle-contract.yml",
@@ -16678,6 +16678,33 @@
             "git_blob_sha1": "8faaf0b73a2dbe218684d7827f9fd35dbc2354cc",
             "sha256": "b020b2027597776c1a26a3643c2cbb8e69ddc4e56c46aab85245ed97f15a1034",
             "bytes": 38043
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "from_commit": "d899c65c9b89b7d3b23b197b879f7d9afa688c58",
+      "from_tree": "018f2a8d4ab8ad29672b03997bf2eb9dc52bae2e",
+      "operation_id": "speech-like-plan-valid-pcm-fixtures-20261011",
+      "scope": "Repair the existing speech-like corpus plan contract fixture to write tiny valid mono 16-kHz PCM16 WAV containers with measured file/PCM hashes and frame counts. Verify decoded PCM identity and fixture-only admission after materialization.",
+      "rationale": "Public workflow and CI identity metadata only. The previous text bytes named .wav were correctly rejected by the new real-WAV validation. This repair keeps that production gate strict, uses standard-library invented 160-frame containers only, and adds no ASR, model execution, training, new workflow, real speech or source-role upgrade. Original retained sources, historical workflow receipts and execution authority are unchanged.",
+      "files": [
+        {
+          "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+          "before": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "bf579f1153c845a45a9f1f6447fecbcfa2a9ca26",
+            "sha256": "ae37981fc25f4ff1c9dd3c59f23bcb7d5a0f5c18207e31f3a5205e8410b1b24a",
+            "bytes": 10648
+          },
+          "after": {
+            "path": ".github/workflows/speech-like-corpus-plan-contract.yml",
+            "mode": "100644",
+            "git_blob_sha1": "d5a7f4f4e111301f90b74cee96d4bb249ec79444",
+            "sha256": "53f657113c919d8829792065946ad44d0f9b6a0e8c5bab74e7b1fd58c4d84d93",
+            "bytes": 11835
           }
         }
       ]

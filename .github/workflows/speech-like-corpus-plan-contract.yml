@@ -83,7 +83,7 @@ jobs:
       - name: Simulate hash-bound provider manifests
         run: |
           python3 - <<'PY'
-          import hashlib, json, os, pathlib
+          import hashlib, json, os, pathlib, struct, wave
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
           requests = [json.loads(x) for x in (root / 'requests.jsonl').read_text().splitlines() if x.strip()]
           by_group = {}
@@ -94,8 +94,14 @@ jobs:
               group_root.mkdir(parents=True, exist_ok=True)
               audio_name = f'recording-{index:06d}.wav'
               audio = group_root / audio_name
-              payload = f'fixture-audio-{index}\n'.encode()
-              audio.write_bytes(payload)
+              # Tiny invented PCM containers, never speech/model evidence.
+              pcm = struct.pack('<160h', *([index + 1] * 160))
+              with wave.open(str(audio), 'wb') as output:
+                  output.setnchannels(1)
+                  output.setsampwidth(2)
+                  output.setframerate(16000)
+                  output.writeframes(pcm)
+              payload = audio.read_bytes()
               by_group.setdefault(group, []).append({
                   'schema_version': 1,
                   'evidence_class': 'speech-like-synthetic-recording-v1',
@@ -112,7 +118,9 @@ jobs:
                   'generation_config_sha256': hashlib.sha256(f'generation-{index}'.encode()).hexdigest(),
                   'audio': audio_name,
                   'file_sha256': hashlib.sha256(payload).hexdigest(),
-                  'pcm_sha256': hashlib.sha256(f'pcm-{index}'.encode()).hexdigest(),
+                  'pcm_sha256': hashlib.sha256(pcm).hexdigest(),
+                  'frames': len(pcm) // 2,
+                  'duration_s': len(pcm) / (2 * 16000),
               })
           for group, rows in by_group.items():
               path = generated / group / 'manifest.jsonl'
@@ -129,10 +137,11 @@ jobs:
             --output-root "$root/materialized" \
             --summary "$root/materialized-summary.json"
           python3 - <<'PY'
-          import hashlib, json, os, pathlib
+          import hashlib, json, os, pathlib, wave
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'speech-like-corpus-plan'
           summary = json.loads((root / 'materialized-summary.json').read_text())
           assert summary['recordings'] == 384
+          assert summary['ctc_training_allowed'] is False
           expected = {
               'train': (128, 32),
               'calibration': (64, 16),
@@ -156,6 +165,15 @@ jobs:
                   audio = root / 'materialized' / split / audio_ref
                   assert audio.is_file()
                   assert hashlib.sha256(audio.read_bytes()).hexdigest() == row['file_sha256']
+                  with wave.open(str(audio), 'rb') as reader:
+                      assert (reader.getnchannels(), reader.getsampwidth(), reader.getframerate(), reader.getcomptype()) == (1, 2, 16000, 'NONE')
+                      assert reader.getnframes() == row['frames'] == 160
+                      pcm = reader.readframes(reader.getnframes() + 1)
+                  assert len(pcm) == row['frames'] * 2
+                  assert hashlib.sha256(pcm).hexdigest() == row['pcm_sha256']
+                  assert row['duration_s'] == row['frames'] / 16000
+                  assert row['admission']['ctc_training_allowed'] is False
+                  assert row['admission']['allowed_purpose'] == 'synthetic-contract-test-only'
           splits = list(expected)
           for i, left in enumerate(splits):
               for right in splits[i + 1:]:
