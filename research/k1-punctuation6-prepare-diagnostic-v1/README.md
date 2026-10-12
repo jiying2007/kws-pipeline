@@ -1,6 +1,6 @@
 # Fixed prepare-only diagnostic
 
-This candidate prepares the three already locked models for the same six completed TTS inputs. It permits no ASR, no TTS, no training, no warmup audio and no retry. It is an infrastructure check after two sealed failed ASR runs, not a new recognition round. Its only hosted identity is `research/k1-punctuation6-prepare-diagnostic-v1`, with one fresh-created push and attempt one; results use `evidence/k1-punctuation6-prepare-diagnostic-v1`. Publication or merging source does not create either ref. The separate ASR execution/publication controls remain false.
+This consumed diagnostic was intended to prepare the three already locked models for the same six completed TTS inputs. Its checked-in execution and publication controls are now disabled. It permits no ASR, no TTS, no training, no warmup audio and no retry. It is an infrastructure check after two sealed failed ASR runs, not a new recognition round. Its consumed hosted identity is `research/k1-punctuation6-prepare-diagnostic-v1`, with one fresh-created push and attempt one; results use `evidence/k1-punctuation6-prepare-diagnostic-v1`. Publication or merging source does not create either ref. The separate ASR execution/publication controls remain false.
 
 ## Fixed flow and authority
 
@@ -22,4 +22,19 @@ All failures retain fixed stage/error codes and complete bounded safe diagnostic
 
 Only public standard Ubuntu 24.04 hosted resources and the existing locked CPU models/runtime are used. The original 4-CPU, 12 GiB memory, zero-swap, PID, CPU, host wall, workspace and acquisition bounds are unchanged; setup plus preparation remain within the original combined setup budget. No persistent token or cross-repository writer is introduced. Only the separate publisher receives a short-lived same-repository token; Git, setup and model subprocess environments exclude it. No Actions artifacts or base64 log transport are used.
 
-The checked-in prepare-only controls form a local review candidate. Deployment requires exact source review, source PR/main CI and a separately authorized single creation of the new diagnostic ref. They do not authorize a new eighteen-call ASR round. The two failed ASR identities, six completed TTS identities, finite-history privacy boundary and original training coverage failure remain unchanged.
+The consumed prepare-only controls and both old ASR controls are disabled. This source-only maintenance adds a fixed Docker create/inspect/remove regression to ordinary CI with the existing pinned official Python image; it performs no container start, run or exec, model construction, audio processing or recognition. It creates no diagnostic execution ref, grants no retry and does not authorize a new eighteen-call ASR round. The two failed ASR identities, six completed TTS identities, finite-history privacy boundary and original training coverage failure remain unchanged.
+
+
+## Consumed diagnostic result and launch repair
+
+[Run 38234429437](https://github.com/jiying2007/kws-pipeline/actions/runs/38234429437), job 114761501186, used source commit `54ee9ee80e88c172cd04611474ded2613d956745`. Its audio-free evidence was published successfully at [commit 97141cea41cc5cc18fac3f5a434777991bfd4864](https://github.com/jiying2007/kws-pipeline/commit/97141cea41cc5cc18fac3f5a434777991bfd4864): the complete 2,489,719-byte ZIP contains 397 content members plus its member manifest, SHA-256 `e0b3feb338c5ed5f12ccac726f7c8b19574bed5ad0173cca1aaa476bee527883`.
+
+Setup and finalization completed. Qwen reached container creation but not start, as supported by the cleanup `not_started` record and fixed-source control flow; the later two model stages were `not_run`. There are zero completed constructor receipts, and neither prepare completion nor capacity success was established. The original host `asr_forward_calls` remains null, as do consumption states for both sealed failed ASR rounds.
+
+The actual raw Docker inspect response is unavailable. The corrected tmpfs predicate is a sufficient launch-blocking source defect; the evidence does not establish it as the unique first exception. The new no-start regression validates the actual production common launch arguments and inspect predicate against Docker on the hosted Ubuntu 24.04 CI runner. Local stdlib mocks do not substitute for that hosted result.
+
+The repaired host updates the same live observer immediately before each fixed Qwen, SenseVoice and Whisper preparation stage. Launch-failure diagnostics map only a fixed set of safe predicate codes; unknown messages and exception types remain generic. These changes do not reconstruct the unavailable historical inspect response or change historical consumption counts.
+
+The no-start CI step has an eight-minute timeout. Its fixed maximum command path is one pull at 180 seconds plus six commands at 30 seconds each (version, create, inspect, cleanup inspect, remove, absence check), totaling 360 seconds and leaving two minutes of cleanup margin. This changes only the no-start regression timeout, not any model/resource budget. SIGKILL or runner loss can still prevent the local finally block from completing.
+
+This revision updates the current prepare host/run source paths, the shared ASR failure-observer path, and their current tests/freezes. The historical executed source commits, source refs, run identities and published result remain unchanged; their original frozen source snapshots are preserved byte for byte. All checked-in diagnostic and ASR execution/publication controls are false. Only the ordinary CI route can run the fixed zero-start Docker regression.

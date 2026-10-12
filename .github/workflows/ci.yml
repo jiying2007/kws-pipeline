@@ -16,7 +16,7 @@ jobs:
   python-contracts:
     outputs:
       research_required: ${{ steps.research_changes.outputs.required }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -92,12 +92,18 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted", "test_prepare_launch_ci")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
           python3 -I -S -B -c "$prepare_tests"
           python3 -I -S -B -O -c "$prepare_tests"
           python3 -I -S -B -OO -c "$prepare_tests"
       - name: Verify tracked worktree after K1 prepare diagnostic contracts
         run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare diagnostic contracts"'
+      - name: K1 prepare Docker create inspect remove regression
+        id: prepare_launch_ci
+        timeout-minutes: 8
+        run: python3 -I -S -B research/k1-punctuation6-prepare-diagnostic-v1/prepare_launch_ci.py
+      - name: Verify tracked worktree after K1 prepare launch regression
+        run: '"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare launch regression"'
       - name: Workflow exact path-filter integrity
         run: |
           python3 tools/check_workflow_path_filters.py --self-test

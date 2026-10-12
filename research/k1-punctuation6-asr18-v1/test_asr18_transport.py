@@ -946,15 +946,16 @@ class RealHostTransportIntegration(unittest.TestCase):
 class CompleteSourceLicenseIntegration(unittest.TestCase):
     """Full real source roster; native results are explicitly synthetic only.
 
-    All-notrun uses all 113 current source bodies and actual input metadata.
+    All-notrun uses all 114 current source bodies and actual input metadata.
     Native semantic cases reuse the existing zero-model host fixture and replace
     exactly three metadata bodies, listed below, to bind its invented inputs.
     No actual ASR identity/result, model, download or remote claim is created.
     """
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
-    # Parent-rebuilt candidate freeze after the reviewed narrow license delta.
-    FROZEN_SOURCE_SHA256='5bfbc146c886c99995456fc1be9271107180635b1d9ed59828af146d35998499'
+    # Exact current disabled-source closure after the reviewed observer repair.
+    # Historical executed snapshots remain immutable; this is a synthetic fixture.
+    FROZEN_SOURCE_SHA256='38fb1194d0f816fe3f7a088da62136c02cc6f1f6ae672f411acd1aa9284d0787'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
 
     def setUp(self):
@@ -1077,7 +1078,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_full_114_actual_r1_source_all_notrun_and_license_negatives(self):
+    def test_full_114_current_disabled_source_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)

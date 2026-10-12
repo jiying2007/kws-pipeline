@@ -195,23 +195,29 @@ class TransportTests(unittest.TestCase):
             local=Path(directory);(local/'publication-release.json').write_bytes(t.canonical(p.disabled_publication_release()))
             with mock.patch.object(p,'HERE',local),mock.patch.object(p.os,'environ',Poison()),mock.patch.object(p,'GitHubAPI',side_effect=AssertionError('network attempted')):
                 with self.assertRaises(p.PublicationDisabled):p.main([])
-    def test_active_gate_rejects_invalid_context_before_any_api(self):
+    def test_positive_publication_fixture_rejects_invalid_context_before_any_api(self):
         control=t.decode((HERE/'publication-release.json').read_bytes())
-        self.assertTrue(all(control[k] is True for k in ('enabled','root_publication_release','independent_source_review')))
+        self.assertTrue(all(control[k] is False for k in ('enabled','root_publication_release','independent_source_review')))
+        with self.assertRaises(p.PublicationDisabled):p.publication_gate(control)
+        for key in ('enabled','root_publication_release','independent_source_review'):control[key]=True
         p.publication_gate(control)
         files,run,release,env,event,source=fixture();payload=t._zip_files(files,run)[0]
         for key,value in (('GITHUB_REPOSITORY','other/repo'),('GITHUB_JOB','asr18'),('GITHUB_EVENT_NAME','workflow_dispatch'),('GITHUB_RUN_ATTEMPT','2')):
             bad=dict(env);bad[key]=value;api=mock.Mock(side_effect=AssertionError('API touched before context validation'))
             with self.subTest(key=key),self.assertRaises(ValueError):p.publish(bad,event,release,payload,api,mock.Mock())
             api.assert_not_called()
-    def test_active_cli_rejects_extra_arguments_before_environment(self):
-        p.publication_gate(t.decode((HERE/'publication-release.json').read_bytes()))
+    def test_positive_fixture_cli_rejects_extra_arguments_before_environment(self):
+        control=t.decode((HERE/'publication-release.json').read_bytes())
+        for key in ('enabled','root_publication_release','independent_source_review'):control[key]=True
+        p.publication_gate(control)
         class Poison(dict):
             def __getitem__(self,key):raise AssertionError('environment touched')
             def get(self,*args):raise AssertionError('token touched')
             def __contains__(self,key):raise AssertionError('environment touched')
-        with mock.patch.object(p.os,'environ',Poison()),mock.patch.object(p,'GitHubAPI',side_effect=AssertionError('network attempted')):
-            with self.assertRaises(ValueError):p.main(['--unapproved'])
+        with tempfile.TemporaryDirectory() as directory:
+            local=Path(directory);(local/'publication-release.json').write_bytes(t.canonical(control))
+            with mock.patch.object(p,'HERE',local),mock.patch.object(p.os,'environ',Poison()),mock.patch.object(p,'GitHubAPI',side_effect=AssertionError('network attempted')):
+                with self.assertRaises(ValueError):p.main(['--unapproved'])
     def test_old_identity_and_ref_cannot_enter(self):
         files,run,release,env,event,_=fixture()
         for key,value in (('job_key','asr18'),('run_attempt',2),('repository','other/repo')):

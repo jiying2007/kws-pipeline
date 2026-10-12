@@ -28,7 +28,7 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
+          prepare_tests='import sys,unittest; from pathlib import Path; sys.path.insert(0,str(Path("research/k1-punctuation6-prepare-diagnostic-v1").resolve())); suite=unittest.defaultTestLoader.loadTestsFromNames(("test_prepare_only", "test_prepare_transport", "test_prepare_hosted", "test_prepare_launch_ci")); result=unittest.TextTestRunner(verbosity=2).run(suite); raise SystemExit(not result.wasSuccessful())'
           python3 -I -S -B -c "$prepare_tests"
           python3 -I -S -B -O -c "$prepare_tests"
           python3 -I -S -B -OO -c "$prepare_tests"

@@ -450,7 +450,7 @@ class ASR18CIContracts(unittest.TestCase):
 
 
 
-PREPARE_MODULES = ('test_prepare_only', 'test_prepare_transport', 'test_prepare_hosted')
+PREPARE_MODULES = ('test_prepare_only', 'test_prepare_transport', 'test_prepare_hosted', 'test_prepare_launch_ci')
 PREPARE_PATH = 'research/k1-punctuation6-prepare-diagnostic-v1'
 PREPARE_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
 PREPARE_HOST_IF = "${{ success() && steps.prepare_contracts.outcome == 'success' }}"
@@ -483,6 +483,17 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
         self.assertIn('concurrency:\n  group: k1-punctuation6-prepare-diagnostic-v1\n  cancel-in-progress: false\n', workflow)
         shared = jobs(ci)['python-contracts']
         self.assertNotIn('    if:', shared)
+        self.assertIn('    runs-on: ubuntu-24.04\n', shared)
+        launch = named_step(shared, 'K1 prepare Docker create inspect remove regression')
+        self.assertEqual(launch,
+            'name: K1 prepare Docker create inspect remove regression\n'
+            '        id: prepare_launch_ci\n'
+            '        timeout-minutes: 8\n'
+            '        run: python3 -I -S -B ' + PREPARE_PATH + '/prepare_launch_ci.py\n')
+        self.assertEqual(ci.count('/prepare_launch_ci.py'), 1)
+        self.assertNotIn('/prepare_launch_ci.py', workflow)
+        self.assertLess(shared.index('id: prepare_contracts'), shared.index('id: prepare_launch_ci'))
+        self.assertIn('"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 prepare launch regression"', shared)
         for name, body in (('ci', shared), ('prepare', execution)):
             step = named_step(body, 'K1 punctuation6 prepare diagnostic offline source contracts')
             self.assertIn('        id: prepare_contracts\n', step)
@@ -512,18 +523,22 @@ class PrepareDiagnosticCIContracts(unittest.TestCase):
                           'workflow_call:', 'pull_request:', 'schedule:', 'workflow_run:'):
             self.assertNotIn(forbidden, workflow)
 
-    def test_fixed_three_modules_run_in_required_ci_and_before_prepare(self):
+    def test_fixed_four_modules_run_in_required_ci_and_before_prepare(self):
         self.check_wiring(self.ci, self.workflow, self.template)
         actual = {p.stem for p in (ROOT / PREPARE_PATH).iterdir()
                   if p.is_file() and p.name.startswith('test_') and p.suffix == '.py'}
         self.assertEqual(actual, set(PREPARE_MODULES))
-        self.assertEqual(len(PREPARE_MODULES), 3)
+        self.assertEqual(len(PREPARE_MODULES), 4)
 
     def test_rejects_missing_modes_discovery_skips_and_bypassed_routes(self):
         mutations = (
             ('ci', 'python3 -I -S -B -OO -c "$prepare_tests"', 'true'),
             ('ci', 'loadTestsFromNames', 'discover'),
             ('ci', 'test_prepare_hosted', 'test_prepare_unreviewed'),
+            ('ci', '    runs-on: ubuntu-24.04', '    runs-on: ubuntu-latest'),
+            ('ci', '        id: prepare_launch_ci\n', '        id: prepare_launch_ci\n        if: false\n'),
+            ('ci', '/prepare_launch_ci.py', '/prepare_run.py'),
+            ('ci', '        id: prepare_launch_ci\n', '        id: prepare_launch_ci\n        env:\n          GITHUB_TOKEN: ${{ github.token }}\n'),
             ('ci', '        id: prepare_contracts\n', '        id: prepare_contracts\n        if: false\n'),
             ('workflow', PREPARE_HOST_IF, '${{ always() }}'),
             ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),

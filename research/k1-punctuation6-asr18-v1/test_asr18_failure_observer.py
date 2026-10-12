@@ -359,7 +359,8 @@ class StaticValidationCodeTests(unittest.TestCase):
     def test_codes_are_unique_static_gate_messages_in_reviewed_sources(self):
         import ast
         messages=set()
-        for name in ('hosted_run.py','evidence_transport.py','evidence_publisher.py'):
+        for name in ('hosted_run.py','evidence_transport.py','evidence_publisher.py',
+                     '../k1-punctuation6-prepare-diagnostic-v1/prepare_host.py'):
             for node in ast.walk(ast.parse((HERE/name).read_bytes())):
                 if isinstance(node,ast.Call) and len(node.args)>1 and isinstance(node.args[1],ast.Constant):
                     if isinstance(node.func,ast.Name) and node.func.id=='require' or isinstance(node.func,ast.Attribute) and node.func.attr=='require':
