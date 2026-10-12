@@ -21,7 +21,7 @@ def build(root=ROOT):
     setup=dict(old['setup_code'])
     host=dict(old['host_code']);host.update(worker);host.update(setup)
     host.update({NEW+name:c.identity(root/NEW/name) for name in HOST})
-    return {'schema':'k1-prepare-source-freeze-v1','experiment':'k1-punctuation6-prepare-diagnostic-r1',
+    return {'schema':'k1-prepare-source-freeze-v1','experiment':'k1-punctuation6-prepare-diagnostic-r2',
         'worker_code':dict(sorted(worker.items())),'inference_code':dict(sorted(worker.items())),
         'setup_code':dict(sorted(setup.items())),'host_code':dict(sorted(host.items()))}
 

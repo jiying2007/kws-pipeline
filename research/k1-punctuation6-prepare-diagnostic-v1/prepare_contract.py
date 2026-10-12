@@ -16,11 +16,13 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 REL = 'research/k1-punctuation6-prepare-diagnostic-v1/'
 OLD = 'research/k1-punctuation6-asr18-v1/'
-EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-r1'
+EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-r2'
 WORKFLOW = '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml'
-SEALED_RUN_IDS = frozenset((38207026177, 38219171568, 38234429437))
+SEALED_RUN_IDS = frozenset((38207026177, 38219171568, 38234429437, 38251170134))
 SEALED_PREPARE_SOURCE = '54ee9ee80e88c172cd04611474ded2613d956745'
 SEALED_PREPARE_RESULT = '97141cea41cc5cc18fac3f5a434777991bfd4864'
+SEALED_PREPARE_R1_SOURCE = 'd6ca13151f98a8fc80c2fbb1f21832a9524191db'
+SEALED_PREPARE_R1_RESULT = 'f25fd13109aa7e3b6e8bea8df61cff3ec2e74c2d'
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 PACKET_NAMES = frozenset(('job.json', 'decoder-inputs.json', 'worker-input-binding.json',
                           'execution-plan.json', 'host-binding.json'))
@@ -100,7 +102,8 @@ def validate_identity(value):
         value['run_id'] not in SEALED_RUN_IDS and type(value['run_attempt']) is int and
         value['run_attempt'] == 1 and type(value['executed_head_sha']) is str and
         re.fullmatch('[0-9a-f]{40}', value['executed_head_sha']) and
-        value['executed_head_sha'] not in (SEALED_PREPARE_SOURCE, SEALED_PREPARE_RESULT),
+        value['executed_head_sha'] not in (SEALED_PREPARE_SOURCE, SEALED_PREPARE_RESULT,
+            SEALED_PREPARE_R1_SOURCE, SEALED_PREPARE_R1_RESULT),
         'new_prepare_identity_only')
     return dict(value)
 

@@ -11,7 +11,7 @@ import asr18_metadata as metadata
 
 HERE = Path(__file__).resolve().parent
 NEW = 'research/k1-punctuation6-asr18-v1/'
-EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-r1'
+EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-r2'
 REPOSITORY = 'jiying2007/kws-pipeline'
 WORKFLOW = '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml'
 INPUT_KEYS = ('actual_input_freeze_sha256', 'actual_tts_authority_sha256',
@@ -28,9 +28,11 @@ POSTERIOR_KEYS = ('evidence_kind', 'identity', 'numeric_job_id', 'result_commit'
     'zero_forward_scope')
 BINDING_KEYS = ('source_ref', 'result_ref', 'workflow', 'prepare_freeze_sha256', 'posterior_policy_sha256',
     'input_authorities', 'scientific_source_sha256', 'acceptance')
-SEALED_RUNS = (38207026177, 38219171568, 38234429437)
+SEALED_RUNS = (38207026177, 38219171568, 38234429437, 38251170134)
 SEALED_SOURCES = ('0f3cc89a3235c4b3af294dc6b5816ff9877c0f42',
-    '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd', '54ee9ee80e88c172cd04611474ded2613d956745')
+    '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd', '54ee9ee80e88c172cd04611474ded2613d956745',
+    '97141cea41cc5cc18fac3f5a434777991bfd4864', 'd6ca13151f98a8fc80c2fbb1f21832a9524191db',
+    'f25fd13109aa7e3b6e8bea8df61cff3ec2e74c2d')
 
 
 def disabled_receipt():

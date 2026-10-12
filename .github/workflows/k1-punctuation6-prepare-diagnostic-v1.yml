@@ -2,15 +2,15 @@ name: K1 prepare-only diagnostic once
 on:
   push:
     branches:
-      - research/k1-punctuation6-prepare-diagnostic-r1
+      - research/k1-punctuation6-prepare-diagnostic-r2
 permissions:
   contents: read
 concurrency:
-  group: k1-punctuation6-prepare-diagnostic-r1
+  group: k1-punctuation6-prepare-diagnostic-r2
   cancel-in-progress: false
 jobs:
   prepare_diagnostic:
-    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-r1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
+    if: ${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-prepare-diagnostic-r2' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}
     runs-on: ubuntu-24.04
     timeout-minutes: 70
     permissions:

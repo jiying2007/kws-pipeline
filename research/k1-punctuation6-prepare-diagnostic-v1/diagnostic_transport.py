@@ -29,7 +29,7 @@ _spec = importlib.util.spec_from_file_location("_k1_diagnostic_reviewed_transpor
 legacy = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(legacy)
 REPOSITORY = "jiying2007/kws-pipeline"
-EXPERIMENT = "k1-punctuation6-prepare-diagnostic-r1"
+EXPERIMENT = "k1-punctuation6-prepare-diagnostic-r2"
 SOURCE_REL = "research/k1-punctuation6-prepare-diagnostic-v1/"
 PURPOSE = "prepare_diagnostic"
 MIB = 1024 ** 2
