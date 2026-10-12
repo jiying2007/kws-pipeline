@@ -577,8 +577,8 @@ if violations or any(name.split('.')[0] in native_roots for name in sys.modules)
     raise RuntimeError('side effect observed')
 print('exact production authority gate; zero side effects')
 '''
-        for extra,reason in (({},'lowercase SHA256 required'),
-                ({'KWS_SOURCE_FREEZE_SHA256':freeze_sha},'trusted Actions poststep only')):
+        for extra,reason in (({},'actual execution authority unavailable'),
+                ({'KWS_SOURCE_FREEZE_SHA256':freeze_sha},'actual execution authority unavailable')):
             with self.subTest(reason=reason):
                 isolated_env={**env,**extra}
                 direct=subprocess.run(['python3','-I','-B',str(source/'evidence_publisher.py')],cwd=cwd,
@@ -948,15 +948,15 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
 
     All-notrun uses all 114 current source bodies and actual input metadata.
     Native semantic cases reuse the existing zero-model host fixture and replace
-    exactly three metadata bodies, listed below, to bind its invented inputs.
+    exactly four metadata bodies, listed below, to bind its invented inputs.
     No actual ASR identity/result, model, download or remote claim is created.
     """
     LICENSE='source/research/qwen6_asr/FUNASR_MODEL_LICENSE'
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Exact current disabled-source closure after the reviewed observer repair.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='38fb1194d0f816fe3f7a088da62136c02cc6f1f6ae672f411acd1aa9284d0787'
-    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json'))
+    FROZEN_SOURCE_SHA256='b293bd8ff2177e19feac8a810b0973234e073400335f79bbeba4b224c89a5d15'
+    SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
 
     def setUp(self):
         import hosted_run
@@ -966,7 +966,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.guard=mock.patch('http.client.HTTPSConnection',side_effect=AssertionError('no live network'))
         self.guard.start();self.addCleanup(self.guard.stop)
         self.roster=self.freezer.declared_rosters(ROOT)['host_code']
-        self.assertEqual(len(self.roster),114)
+        self.assertEqual(len(self.roster),116)
         self.assertEqual(t.SOURCE_TEXT_EXCEPTIONS,{self.LICENSE:self.LICENSE_ID})
 
     def full_fixture(self, *, synthetic_native=False):
@@ -979,6 +979,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             files,run=self.host_tests.public_fixture()
             inp=t.decode(files['input-freeze.json'])
             substitutions={'execution-release.json':files['source/'+self.host.NEW+'execution-release.json'],
+                'prepare-prerequisite.json':files['source/'+self.host.NEW+'prepare-prerequisite.json'],
                 'input-freeze.json':files['input-freeze.json'],
                 'tts-source-authority.json':t.canonical(inp['actual_screening_receipt']['tts_authority'])}
             self.assertEqual(set(substitutions),self.SYNTHETIC_CONTROLS)
@@ -993,6 +994,12 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             release=c.read_json(HERE/'execution-release.json')
             self.assertFalse(release['enabled'])
             for key in c.RELEASE_APPROVALS:release[key]=True
+            from test_control_fixture import synthetic_prerequisite
+            proof=synthetic_prerequisite(release,root=ROOT,freeze=freeze)
+            proof_name=self.host.NEW+'prepare-prerequisite.json'
+            source['source/'+proof_name]=proof
+            for role in ('host_code','setup_code','inference_code'):
+                freeze[role][proof_name]={'bytes':len(proof),'sha256':t.sha(proof)}
             name=self.host.NEW+'execution-release.json';body=t.canonical(release)
             source['source/'+name]=body
             for role in ('host_code','setup_code','inference_code'):
@@ -1029,7 +1036,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
         self.assertEqual({'bytes':len(files[self.LICENSE]),'sha256':t.sha(files[self.LICENSE])},self.LICENSE_ID)
         files[self.LICENSE].decode('utf-8')
         differences={name for name in self.roster if files['source/'+name]!=c.read_bytes(ROOT/name)}
-        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json'})
+        self.assertEqual(differences,{self.host.NEW+leaf for leaf in self.SYNTHETIC_CONTROLS} if synthetic_native else {self.host.NEW+'execution-release.json',self.host.NEW+'prepare-prerequisite.json'})
 
     def materialize(self, root, files):
         for name,body in files.items():
@@ -1078,7 +1085,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):operation(root,run)
 
-    def test_full_114_current_disabled_source_all_notrun_and_license_negatives(self):
+    def test_full_116_current_disabled_source_all_notrun_and_license_negatives(self):
         files,run=self.full_fixture()
         with tempfile.TemporaryDirectory(prefix='synthetic-run-real-source-all-notrun-') as temp:
             root=Path(temp);self.materialize(root,files)
@@ -1122,10 +1129,10 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
             case.run_case(fail_native=fail_native)
         self.assertEqual(observed,['prepared','final'])
 
-    def test_full_114_roster_prepared_and_synthetic_18_success_license_negatives(self):
+    def test_full_116_roster_prepared_and_synthetic_18_success_license_negatives(self):
         self.full_native_case(False)
 
-    def test_full_114_roster_prepared_and_synthetic_first_failure_license_negatives(self):
+    def test_full_116_roster_prepared_and_synthetic_first_failure_license_negatives(self):
         self.full_native_case(True)
 
 

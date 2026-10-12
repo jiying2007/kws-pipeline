@@ -42,6 +42,13 @@ def failure(observer,error):
 def prior_history_identity():
     return {'schema':'k1-prepare-prior-public-history-v1','repository':REPOSITORY,'source_branch':SOURCE_REF,
         'workflow':WORKFLOW,'prior_runs':[],'prior_runs_scope':'only_new_diagnostic_source_branch_and_workflow',
+        'observation_status':'public_read_observed','observed_at':'2026-10-12T11:34:40.014Z',
+        'source_ref_absent':True,'evidence_ref_absent':True,'all_branch_push_history_count':0,
+        'sealed_prepare_runs':[{'run_id':38234429437,'source_branch':'research/k1-punctuation6-prepare-diagnostic-v1',
+            'source_sha':pc.SEALED_PREPARE_SOURCE,'result_branch':'evidence/k1-punctuation6-prepare-diagnostic-v1',
+            'result_sha':pc.SEALED_PREPARE_RESULT,'conclusion':'failure','consumed':True,'retry_authorized':False,
+            'reusable_slots':0,'completed_constructor_receipts':0,'prepare_completion_established':False,
+            'capacity_success_established':False,'asr_forward_calls':None}],
         'sealed_asr_runs':[{'run_id':38207026177,'actual_consumed_attempts':None,'reusable_slots':0},
             {'run_id':38219171568,'actual_consumed_attempts':None,'reusable_slots':0}]}
 
@@ -52,7 +59,7 @@ def event_identity(env, event):
     require(all(env.get(k) == v for k, v in fixed.items()), 'fixed public standard ubuntu24.04 first-attempt job')
     head, run = env.get('GITHUB_SHA', ''), env.get('GITHUB_RUN_ID', '')
     require(c.HEAD.fullmatch(head) and re.fullmatch('[1-9][0-9]{0,19}', run), 'actual run/source identity')
-    require(int(run) not in (38207026177,38219171568), 'sealed earlier campaign run cannot become a new authority')
+    require(int(run) not in pc.SEALED_RUN_IDS, 'sealed earlier campaign run cannot become a new authority')
     require(env.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + WORKFLOW + '@refs/heads/' + SOURCE_REF and
             env.get('GITHUB_WORKFLOW_SHA') == head, 'fixed source workflow identity')
     require(type(event) is dict and event.get('created') is True and event.get('deleted') is False and
@@ -60,11 +67,12 @@ def event_identity(env, event):
         event.get('ref') == 'refs/heads/' + SOURCE_REF and
         event.get('repository', {}).get('full_name') == REPOSITORY and
         event.get('repository', {}).get('private') is False, 'first public source creation event')
-    return {'repository': REPOSITORY, 'run_id': int(run), 'run_attempt': 1,
-            'job_key': 'prepare_diagnostic', 'executed_head_sha': head}
+    return pc.validate_identity({'repository': REPOSITORY, 'run_id': int(run), 'run_attempt': 1,
+            'job_key': 'prepare_diagnostic', 'executed_head_sha': head})
 
 
 def api_preflight(api, run, release):
+    pc.validate_identity(run)
     base = '/repos/' + REPOSITORY
     current = api.get(base + '/actions/runs/' + str(run['run_id']))
     require(current.get('id') == run['run_id'] and type(current.get('run_attempt')) is int and current.get('run_attempt') == 1 and
@@ -80,7 +88,10 @@ def api_preflight(api, run, release):
     branch = urllib.parse.quote(SOURCE_REF, safe='')
     history = _unique_page(api, base + '/actions/workflows/' + str(current['workflow_id']) + '/runs?branch=' + branch, 'workflow_runs')
     require(len(history) == 1 and history[0].get('id') == run['run_id'] and
-            history[0].get('head_sha') == run['executed_head_sha'] and history[0].get('run_attempt') == 1,
+            history[0].get('head_sha') == run['executed_head_sha'] and
+            type(history[0].get('run_attempt')) is int and history[0].get('run_attempt') == 1 and
+            history[0].get('head_branch') == SOURCE_REF and history[0].get('path') == WORKFLOW and
+            history[0].get('event') == 'push',
             'unique complete workflow/source-branch history required; deleted refs never reset authority')
     require(digest(canonical(prior_history_identity())) == release['prior_prepare_history_sha256'],
             'independently released prior public claim history')

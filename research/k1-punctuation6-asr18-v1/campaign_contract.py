@@ -13,7 +13,10 @@ import stat
 
 import asr18_metadata as metadata
 
-EXPERIMENT = 'k1-punctuation6-asr18-r1'
+EXPERIMENT = 'k1-punctuation6-asr18-r2'
+SEALED_ASR_RUNS = (38207026177, 38219171568)
+SEALED_ASR_SOURCES = ('0f3cc89a3235c4b3af294dc6b5816ff9877c0f42',
+                      '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd')
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 CELLS = metadata.CELLS
 MIB, GIB = 1024 ** 2, 1024 ** 3
@@ -314,7 +317,7 @@ RELEASE_APPROVALS = ('enabled', 'root_execution_release', 'independent_source_re
                      'historical_screening_reviewed')
 RELEASE_AUTHORITIES = ('actual_input_freeze_sha256', 'actual_tts_authority_sha256',
     'actual_screening_receipt_sha256', 'actual_worker_binding_sha256',
-    'actual_opaque_order_sha256', 'prior_public_claim_history_sha256')
+    'actual_opaque_order_sha256', 'prior_public_claim_history_sha256', 'prepare_prerequisite_sha256')
 
 
 def disabled_release():
@@ -322,8 +325,8 @@ def disabled_release():
     return {'schema': 'k1-asr18-execution-release-v1', 'experiment': EXPERIMENT,
         **{key: False for key in RELEASE_APPROVALS}, **{key: None for key in RELEASE_AUTHORITIES},
         'max_new_asr_calls': 18, 'old_calls_allowed': 0, 'retries': 0, 'run_attempt': 1,
-        'source_ref': 'research/k1-punctuation6-asr18-r1',
-        'evidence_ref': 'evidence/k1-punctuation6-asr18-r1',
+        'source_ref': 'research/k1-punctuation6-asr18-r2',
+        'evidence_ref': 'evidence/k1-punctuation6-asr18-r2',
         'workflow': '.github/workflows/k1-punctuation6-asr18-v1.yml', 'job_key': 'asr18'}
 
 
@@ -340,7 +343,8 @@ def validate_release_shape(value):
     return value
 
 
-def require_execution_release(release=None, source_freeze=None, *, expected_freeze_sha256=None):
+def require_execution_release(release=None, source_freeze=None, *, expected_freeze_sha256=None,
+                              prepare_prerequisite_raw=None, source_root=None, source_members=None):
     """Gate fixed source-local control plane; no CLI path or self-trusted digest.
 
     Tests can exercise this pure check with explicit synthetic values. Production
@@ -357,6 +361,12 @@ def require_execution_release(release=None, source_freeze=None, *, expected_free
     source_freeze = read_json(here / 'execution-freeze.json') if source_freeze is None else source_freeze
     require(digest(canonical(source_freeze)) == expected_freeze_sha256,
             'independently approved complete source-freeze identity required')
+    import prepare_prerequisite
+    require(Path(prepare_prerequisite.__file__).resolve() == here / 'prepare_prerequisite.py',
+            'fixed prerequisite verifier origin')
+    raw = read_bytes(here / 'prepare-prerequisite.json', cap=65536) if prepare_prerequisite_raw is None else prepare_prerequisite_raw
+    prepare_prerequisite.validate_receipt(raw, release, source_freeze=source_freeze,
+        source_root=source_root, source_members=source_members)
     return release
 
 
@@ -423,6 +433,8 @@ def validate_source_claim(claim_raw, *, expected_sha256, release, source_freeze_
     sha(source_freeze_sha256)
     require(type(run_id) is str and re.fullmatch(r'[1-9][0-9]{0,19}', run_id), 'actual run identity required')
     require(type(executed_head_sha) is str and HEAD.fullmatch(executed_head_sha), 'actual executed head required')
+    require(int(run_id) not in SEALED_ASR_RUNS and executed_head_sha not in SEALED_ASR_SOURCES,
+            'sealed earlier ASR identity is not reusable')
     fields = {'schema', 'identity', 'source_freeze_sha256', 'release_sha256', 'source_branch',
         'result_branch', 'workflow', 'numeric_job_id', 'prior_public_claim_history_sha256',
         'api_preflight_verified', 'source_branch_workflow_runs', 'maximum_new_asr_calls',

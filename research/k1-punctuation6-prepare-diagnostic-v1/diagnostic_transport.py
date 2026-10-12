@@ -29,7 +29,8 @@ _spec = importlib.util.spec_from_file_location("_k1_diagnostic_reviewed_transpor
 legacy = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(legacy)
 REPOSITORY = "jiying2007/kws-pipeline"
-EXPERIMENT = "k1-punctuation6-prepare-diagnostic-v1"
+EXPERIMENT = "k1-punctuation6-prepare-diagnostic-r1"
+SOURCE_REL = "research/k1-punctuation6-prepare-diagnostic-v1/"
 PURPOSE = "prepare_diagnostic"
 MIB = 1024 ** 2
 MAX_ARCHIVE = MAX_COMPRESSED = 12 * MIB
@@ -45,12 +46,12 @@ MEMBER_MANIFEST = "__prepare_diagnostic_member_manifest__.json"
 POLICY = {"source_branch": "research/" + EXPERIMENT,
     "result_branch": "evidence/" + EXPERIMENT,
     "directory": "research/" + EXPERIMENT + "/evidence/prepare-diagnostic-v1",
-    "workflow": ".github/workflows/" + EXPERIMENT + ".yml", "job_key": PURPOSE}
+    "workflow": ".github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml", "job_key": PURPOSE}
 require, canonical, decode, sha = legacy.require, legacy.canonical, legacy.decode, legacy.sha
 path, git_sha, tree_identity = legacy.path, legacy.git_sha, legacy.tree_identity
 FAMILIES = ("qwen06", "sensevoice", "whisper")
 FREEZE = "authority/prepare-freeze.json"
-SOURCE_FREEZE = "source/research/" + EXPERIMENT + "/prepare-freeze.json"
+SOURCE_FREEZE = "source/" + SOURCE_REL + "prepare-freeze.json"
 PACKET_NAMES = frozenset(("job.json", "decoder-inputs.json", "worker-input-binding.json", "execution-plan.json", "host-binding.json"))
 ROOT_JSON = frozenset(("prepare-host-receipt.json", "prepare-run-preflight.json", "input-freeze.json",
     "public-screening-receipt.json", "acquisition-receipt.json", "image-transfer.json", "asr-setup-public.json",
@@ -73,6 +74,7 @@ def identity(value, purpose=PURPOSE):
     require(value["repository"] == REPOSITORY and value["job_key"] == PURPOSE, "same repo independent prepare job")
     require(type(value["run_id"]) is int and 0 < value["run_id"] < 10 ** 20 and type(value["run_attempt"]) is int and value["run_attempt"] == 1, "actual run attempt one")
     require(type(value["executed_head_sha"]) is str and HEAD.fullmatch(value["executed_head_sha"]), "source Git identity")
+    _prepare_contract().validate_identity(value)
 
 def _fields(value, keys, reason):
     require(type(value) is dict and set(value) == set(keys), reason)
@@ -247,7 +249,7 @@ def package_path(runner_temp, run_identity):
     identity(run_identity)
     root = c.safe_path(runner_temp)
     require(root.is_dir(), "existing trusted runner temporary directory")
-    return root / ("k1-prepare-diagnostic-evidence-" + str(run_identity["run_id"]) + "-attempt-1-" +
+    return root / (EXPERIMENT + "-evidence-" + str(run_identity["run_id"]) + "-attempt-1-" +
         run_identity["executed_head_sha"] + ".zip")
 
 
@@ -359,11 +361,11 @@ def _require_completed_layout(files, host, prepared, phase):
 
 def validate_roots(files, run, *, phase="final"):
     required = {"prepare-host-receipt.json", "prepare-run-preflight.json", "input-freeze.json", "public-screening-receipt.json", FREEZE,
-                "source/research/" + EXPERIMENT + "/prepare-release.json"}
+                "source/" + SOURCE_REL + "prepare-release.json"}
     require(required <= set(files), "complete independent prepare evidence core")
     val = lambda name: decode(files[name])
     pc = _prepare_contract()
-    release = val("source/research/" + EXPERIMENT + "/prepare-release.json")
+    release = val("source/" + SOURCE_REL + "prepare-release.json")
     pc.validate_release(release)
     host = val("prepare-host-receipt.json")
     _fields(host, {"schema", "identity", "source_freeze_sha256", "executed_tree_sha", "source_claim_sha256", "screening_receipt_sha256", "input_verified", "status", "stage", "stages", "max_asr_calls", "asr_forward_calls", "tts_calls", "prepared_families", "primary_error", "cleanup_error", "cleanup_verified"}, "exact independent host receipt")

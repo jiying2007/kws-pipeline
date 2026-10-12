@@ -28,8 +28,8 @@ from campaign_contract import require, canonical, digest, read_json, read_bytes,
 REPOSITORY = 'jiying2007/kws-pipeline'
 NEW = 'research/k1-punctuation6-asr18-v1/'
 WORKFLOW = '.github/workflows/k1-punctuation6-asr18-v1.yml'
-SOURCE_REF = 'research/k1-punctuation6-asr18-r1'
-EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r1'
+SOURCE_REF = 'research/k1-punctuation6-asr18-r2'
+EVIDENCE_REF = 'evidence/k1-punctuation6-asr18-r2'
 HOST_STAGES = ('admitted', 'input', 'setup', 'prepare', 'policy_freeze', 'capacity_proof', 'decode', 'cleanup', 'package')
 SHARED = frozenset(('prepared.json','run-identity.json','kernel-scope.json','cpu-process-guard.json',
     'blind-job.json','execution-plan.json','progress.json','contract.json','decoder-inputs.json',
@@ -54,6 +54,9 @@ def release_first():
     c.validate_release_shape(release)
     require(all(release[key] is True for key in c.RELEASE_APPROVALS), 'execution release disabled or review absent')
     require(all(release[key] is not None for key in c.RELEASE_AUTHORITIES), 'actual authority unavailable')
+    import prepare_prerequisite
+    prepare_prerequisite.validate_receipt(read_bytes(HERE / 'prepare-prerequisite.json', cap=65536), release,
+        source_freeze=read_json(HERE / 'execution-freeze.json'), source_root=ROOT)
     return release
 
 
@@ -99,7 +102,8 @@ def event_identity(env, event):
     require(all(env.get(k) == v for k, v in fixed.items()), 'fixed public standard ubuntu24.04 first-attempt job')
     head, run = env.get('GITHUB_SHA', ''), env.get('GITHUB_RUN_ID', '')
     require(c.HEAD.fullmatch(head) and re.fullmatch('[1-9][0-9]{0,19}', run), 'actual run/source identity')
-    require(int(run) != 38207026177, 'sealed earlier campaign run cannot become a new authority')
+    require(int(run) not in c.SEALED_ASR_RUNS and head not in c.SEALED_ASR_SOURCES,
+            'sealed earlier campaign run or source cannot become a new authority')
     require(env.get('GITHUB_WORKFLOW_REF') == REPOSITORY + '/' + WORKFLOW + '@refs/heads/' + SOURCE_REF and
             env.get('GITHUB_WORKFLOW_SHA') == head, 'fixed source workflow identity')
     require(type(event) is dict and event.get('created') is True and event.get('deleted') is False and
@@ -129,6 +133,13 @@ def prior_history_identity():
                 'result_branch': 'evidence/k1-punctuation6-asr18-v1',
                 'run_id': 38207026177, 'run_attempt': 1,
                 'executed_head_sha': '0f3cc89a3235c4b3af294dc6b5816ff9877c0f42',
+                'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
+                'status': 'failed_consumption_unknown_sealed'},
+                {'observation': 'frozen_existing_public_failure_observation', 'experiment': 'k1-punctuation6-asr18-r1',
+                'source_branch': 'research/k1-punctuation6-asr18-r1',
+                'result_branch': 'evidence/k1-punctuation6-asr18-r1',
+                'run_id': 38219171568, 'run_attempt': 1,
+                'executed_head_sha': '054213c551eb83494b9a4ba8cd6d3ca4c1f488dd',
                 'planned_slots': 18, 'actual_consumed_attempts': None, 'reusable_slots': 0,
                 'status': 'failed_consumption_unknown_sealed'}]}
 
@@ -191,7 +202,8 @@ def source_authority(run, release):
     freeze = c.decode_json(frozen_bytes)
     expected_sha = digest(frozen_bytes)
     require(read_bytes(HERE / 'execution-freeze.json') == frozen_bytes, 'working source freeze differs from independent immutable blob')
-    c.require_execution_release(release, freeze, expected_freeze_sha256=expected_sha)
+    c.require_execution_release(release, freeze, expected_freeze_sha256=expected_sha,
+        prepare_prerequisite_raw=read_bytes(HERE / 'prepare-prerequisite.json', cap=65536), source_root=ROOT)
     require(read_bytes(HERE / 'execution-release.json') == git_read('cat-file', 'blob', head + ':' + NEW + 'execution-release.json'), 'committed exact release bytes')
     from prepare_freeze import declared_rosters
     rosters = declared_rosters(ROOT)
@@ -556,7 +568,8 @@ def validate_public_evidence(files, run_identity, *, phase='final'):
     freeze=value('authority/execution-freeze.json'); freeze_sha=digest(canonical(freeze))
     require(host['source_freeze_sha256']==freeze_sha and c.HEAD.fullmatch(host['executed_tree_sha']), 'actual source freeze/head binding')
     release=c.decode_json(files['source/'+NEW+'execution-release.json'], require_canonical=False)
-    c.require_execution_release(release,freeze,expected_freeze_sha256=freeze_sha)
+    c.require_execution_release(release,freeze,expected_freeze_sha256=freeze_sha,
+        prepare_prerequisite_raw=files['source/'+NEW+'prepare-prerequisite.json'], source_members=files)
     preflight=value('run-preflight.json')
     expected={'schema':'k1-asr18-run-preflight-v1','identity':run_identity,'numeric_job_id':preflight.get('numeric_job_id'),
         'workflow':WORKFLOW,'source_branch':SOURCE_REF,'evidence_branch':EVIDENCE_REF,'source_branch_workflow_runs':1,
