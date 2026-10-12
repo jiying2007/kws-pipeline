@@ -27,14 +27,24 @@ def fixture():
 
 
 class PreparePrerequisite(unittest.TestCase):
-    def test_checked_in_unestablished_and_all_execution_disabled(self):
-        self.assertEqual(c.read_json(HERE/'prepare-prerequisite.json'),p.disabled_receipt())
+    def test_checked_in_complete_prerequisite_is_exactly_pinned_and_asr_released(self):
+        # Read the actual root-reviewed projection; never synthesize its proof.
+        raw=c.read_bytes(HERE/'prepare-prerequisite.json',cap=65536)
         release=c.read_json(HERE/'execution-release.json')
-        self.assertIsNone(release['prepare_prerequisite_sha256'])
-        for key in ('enabled','root_execution_release','independent_source_review'):
-            self.assertIs(release[key],False)
+        freeze=c.read_json(HERE/'execution-freeze.json')
+        self.assertEqual(c.digest(raw),release['prepare_prerequisite_sha256'])
+        value=p.validate_receipt(raw,release,source_freeze=freeze,source_root=ROOT)
+        self.assertEqual(value['outcome'],'complete_prepare_verified')
+        self.assertEqual(value['diagnostic_forward_calls'],0)
+        for key in c.RELEASE_APPROVALS:self.assertIs(release[key],True)
         for key in ('enabled','root_publication_release','independent_source_review'):
-            self.assertIs(c.read_json(HERE/'publication-release.json')[key],False)
+            self.assertIs(c.read_json(HERE/'publication-release.json')[key],True)
+
+    def test_explicit_unestablished_prerequisite_template_remains_closed(self):
+        release=c.disabled_release()
+        self.assertIsNone(release['prepare_prerequisite_sha256'])
+        with self.assertRaisesRegex(ValueError,'unestablished'):
+            p.validate_receipt(c.canonical(p.disabled_receipt()),release)
 
     def test_real_pure_gate_accepts_only_exact_root_pinned_complete_projection(self):
         release,freeze,raw=fixture()

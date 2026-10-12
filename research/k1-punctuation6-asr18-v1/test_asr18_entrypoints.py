@@ -15,7 +15,7 @@ import unittest
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
-from test_control_fixture import DISABLED_APPROVALS, synthetic_enabled_source
+from test_control_fixture import APPROVALS, synthetic_enabled_source
 OPT=['-'+'O'*sys.flags.optimize] if sys.flags.optimize else []
 SENTINELS={key:'SYNTHETIC_'+key+'_NOT_A_CREDENTIAL' for key in
     ('GITHUB_TOKEN','GH_TOKEN','KWS_EVIDENCE_TOKEN','ACTIONS_RUNTIME_TOKEN','ACTIONS_ID_TOKEN_REQUEST_TOKEN')}
@@ -83,10 +83,10 @@ class ActualEntrypoints(unittest.TestCase):
         self.assertEqual(error['detail'],{'error_type':'UnlistedError' if stages==['publication_gate'] else 'ValueError',
             'error_text':'omitted_by_fixed_privacy_policy'})
 
-    def test_checked_in_controls_remain_disabled(self):
-        for filename,keys in DISABLED_APPROVALS.items():
+    def test_checked_in_asr_controls_are_explicitly_released(self):
+        for filename,keys in APPROVALS.items():
             value=json.loads((HERE/filename).read_bytes())
-            self.assertTrue(all(value[key] is False for key in keys))
+            self.assertTrue(all(value[key] is True for key in keys))
 
     def call(self,path,args=()):
         with tempfile.TemporaryDirectory(prefix='k1-entry-negative-') as name:
@@ -113,7 +113,14 @@ class ActualEntrypoints(unittest.TestCase):
 
 
     def test_synthetic_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
-        # Observe real gates in a complete temporary enabled/refrozen source copy.
+        with synthetic_enabled_source(HERE) as source:
+            self.check_enabled_workflow_commands_reject_nonexecution_context(source)
+
+    def test_checked_in_enabled_workflow_commands_reject_nonexecution_context_without_effects(self):
+        # Actual checked-in release/proof bytes must pass the real gate first.
+        self.check_enabled_workflow_commands_reject_nonexecution_context(HERE)
+
+    def check_enabled_workflow_commands_reject_nonexecution_context(self,source):
         # No gate patch, import-path injection or network blocker in the child.
         program='''import hashlib,json,os,pathlib,runpy,sys
 path=pathlib.Path(sys.argv[1]);seen=[];effects=[]
@@ -129,35 +136,34 @@ except SystemExit as e:code=e.code
 finally:sys.setprofile(None)
 print(json.dumps({'code':code,'seen':seen,'effects':effects}))
 '''
-        with synthetic_enabled_source(HERE) as source:
-            for filename in ('hosted_run.py','evidence_publisher.py'):
-                with self.subTest(filename=filename),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
-                    temp=Path(name);event=temp/'event.json';event.write_text('{}')
-                    expected=hashlib.sha256((source/'execution-freeze.json').read_bytes()).hexdigest()
-                    env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
-                        'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**SENTINELS}
-                    value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(source/filename)],
-                        cwd=temp,env=env,capture_output=True,timeout=20)
-                    self.assertEqual(value.returncode,0,value.stderr.decode())
-                    chunks=value.stdout.splitlines(keepends=True)
-                    observation=json.loads(chunks[-1])
-                    self.check_diagnostic(b''.join(chunks[:-1]),
-                        role='host' if filename=='hosted_run.py' else 'publisher',
-                        stages=['release','arguments','event_read','context'] if filename=='hosted_run.py' else
-                               ['publication_gate','arguments','event_read','source_release'],
-                        terminal=filename=='hosted_run.py')
-                    self.assertEqual(observation['effects'],[])
-                    self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
-                    calls={row[1] for row in observation['seen'] if row[0]=='call'}
-                    self.assertFalse(calls & {'_source_git','execute','run_once'})
-                    if filename=='hosted_run.py':
-                        self.assertEqual(observation['code'],2)
-                        self.assertTrue({'release_first','event_identity'}<=calls)
-                    else:
-                        self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
-                        self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
-                        self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
-                    for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
+        for filename in ('hosted_run.py','evidence_publisher.py'):
+            with self.subTest(filename=filename),tempfile.TemporaryDirectory(prefix='k1-enabled-cli-') as name:
+                temp=Path(name);event=temp/'event.json';event.write_text('{}')
+                expected=hashlib.sha256((source/'execution-freeze.json').read_bytes()).hexdigest()
+                env={'PATH':'/usr/bin:/bin','HOME':'/nonexistent','RUNNER_TEMP':name,
+                    'GITHUB_EVENT_PATH':str(event),'GITHUB_ACTIONS':'false','KWS_SOURCE_FREEZE_SHA256':expected,**SENTINELS}
+                value=subprocess.run([sys.executable,'-I','-B',*OPT,'-c',program,str(source/filename)],
+                    cwd=temp,env=env,capture_output=True,timeout=20)
+                self.assertEqual(value.returncode,0,value.stderr.decode())
+                chunks=value.stdout.splitlines(keepends=True)
+                observation=json.loads(chunks[-1])
+                self.check_diagnostic(b''.join(chunks[:-1]),
+                    role='host' if filename=='hosted_run.py' else 'publisher',
+                    stages=['release','arguments','event_read','context'] if filename=='hosted_run.py' else
+                           ['publication_gate','arguments','event_read','source_release'],
+                    terminal=filename=='hosted_run.py')
+                self.assertEqual(observation['effects'],[])
+                self.assertEqual(sorted(x.name for x in temp.iterdir()),['event.json'])
+                calls={row[1] for row in observation['seen'] if row[0]=='call'}
+                self.assertFalse(calls & {'_source_git','execute','run_once'})
+                if filename=='hosted_run.py':
+                    self.assertEqual(observation['code'],2)
+                    self.assertTrue({'release_first','event_identity'}<=calls)
+                else:
+                    self.assertEqual(observation['code'],'ASR18 publication blocked or unconfirmed; no retry.')
+                    self.assertTrue({'publication_gate','bound_release','require_execution_release'}<=calls)
+                    self.assertIn(['return','require_execution_release',str(source/'campaign_contract.py')],observation['seen'])
+                for secret in SENTINELS.values():self.assertNotIn(secret.encode(),value.stdout+value.stderr)
 
     def test_real_native_family_mode_commands_import_and_reject(self):
         for family in ('qwen06','sensevoice','whisper'):

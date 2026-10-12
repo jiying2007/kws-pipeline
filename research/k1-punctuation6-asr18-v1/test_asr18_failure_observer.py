@@ -72,16 +72,19 @@ class ObserverTests(unittest.TestCase):
         self.assertIsNone(rows[1]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 
-    def test_actual_disabled_cli_rejects_before_event_or_sideeffects(self):
-        proc=subprocess.run([sys.executable,'-I','-B',str(HERE/'hosted_run.py')],env={'PATH':'/usr/bin:/bin',
-            'GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':SECRET},capture_output=True,text=True,timeout=10)
+    def test_actual_enabled_cli_rejects_missing_event_without_sideeffects(self):
+        with tempfile.TemporaryDirectory(prefix='k1-actual-enabled-no-event-') as name:
+            proc=subprocess.run([sys.executable,'-I','-B',str(HERE/'hosted_run.py')],cwd=name,
+                env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'GH_TOKEN':SECRET,'RUNNER_TEMP':name},
+                capture_output=True,text=True,timeout=10)
+            self.assertEqual(list(Path(name).iterdir()),[])
         self.assertEqual(proc.returncode,2)
         self.assertNotIn(SECRET,proc.stdout+proc.stderr)
         rows=[json.loads(line) for line in proc.stdout.splitlines()]
         self.assertEqual(rows[0]['stage'],'release')
         self.assertEqual([row['stage'] for row in rows if row.get('schema')=='k1-asr18-safe-checkpoint-v1'],
-                         ['release'])
-        self.assertEqual(rows[-2]['record']['stage'],'release')
+                         ['release','arguments','event_read'])
+        self.assertEqual(rows[-2]['record']['stage'],'event_read')
         self.assertIsNone(rows[-2]['record']['identity'])
         self.assertEqual(rows[-1],{'status':'blocked_no_retry'})
 

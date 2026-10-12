@@ -46,6 +46,18 @@ def explicit_disabled_source_copy():
         yield root,fixed
 
 
+@contextmanager
+def explicit_enabled_source_copy():
+    """Temporary positive controls; no checked-in authority is changed."""
+    with explicit_disabled_source_copy() as (root,fixed):
+        (fixed/'prepare-release.json').write_bytes(pc.canonical(positive_release_fixture()))
+        control=h.read_json(fixed/'publication-release.json')
+        for key in ('enabled','independent_source_review','root_publication_release'):control[key]=True
+        (fixed/'publication-release.json').write_bytes(pc.canonical(control))
+        (fixed/'prepare-freeze.json').write_bytes(pc.canonical(freezer.build(root)))
+        yield root,fixed
+
+
 def context(head='c'*40):
     env={'GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+h.SOURCE_REF,'GITHUB_EVENT_NAME':'push',
         'GITHUB_RUN_ATTEMPT':'1','GITHUB_JOB':'prepare_diagnostic','RUNNER_ENVIRONMENT':'github-hosted',
@@ -80,19 +92,14 @@ class API:
 
 
 class HostedTests(unittest.TestCase):
-    def test_checked_in_prepare_controls_are_coherent_and_asr_stays_disabled(self):
+    def test_checked_in_prepare_is_closed_and_asr_has_separate_pinned_release(self):
         release=pc.decode(pc.regular(HERE/'prepare-release.json'))
         control=h.read_json(HERE/'publication-release.json')
         flags=[release[k] for k in ('enabled','independent_source_review','source_closure_ready')]
         flags += [control[k] for k in ('enabled','independent_source_review','root_publication_release')]
-        self.assertTrue(all(type(value) is bool for value in flags))
-        self.assertIn(tuple(flags),((False,)*6,(True,)*6))
-        if flags[0]:
-            self.assertEqual(pc.release_first(),release)
-            publisher.publication_gate(control)
-        else:
-            with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):pc.release_first()
-            with self.assertRaises(publisher.PublicationDisabled):publisher.publication_gate(control)
+        self.assertTrue(all(value is False for value in flags))
+        with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):pc.release_first()
+        with self.assertRaises(publisher.PublicationDisabled):publisher.publication_gate(control)
         self.assertEqual(release['max_new_asr_calls'],0);self.assertFalse(release['audio_forward_allowed'])
         self.assertNotEqual(release['prior_prepare_history_sha256'],'0'*64)
         self.assertEqual(release['prior_prepare_history_sha256'],pc.digest(pc.canonical(h.prior_history_identity())))
@@ -105,13 +112,10 @@ class HostedTests(unittest.TestCase):
         for name,keys in (('execution-release.json',('enabled','independent_source_review','root_execution_release')),
                           ('publication-release.json',('enabled','independent_source_review','root_publication_release'))):
             value=h.read_json(h.ASR/name)
-            self.assertTrue(all(value[k] is False for k in keys))
-            if name=='execution-release.json' and value['experiment']=='k1-punctuation6-asr18-r2':
-                self.assertIsNone(value['prepare_prerequisite_sha256'])
-                witness=h.read_json(h.ASR/'prepare-prerequisite.json')
-                fixed={'schema','prepare_experiment','source_ref','result_ref','workflow','input_authorities'}
-                self.assertTrue(all(v is None for k,v in witness.items() if k not in fixed))
-                self.assertTrue(all(v is None for v in witness['input_authorities'].values()))
+            self.assertTrue(all(value[k] is True for k in keys))
+            if name=='execution-release.json':
+                self.assertEqual(value['experiment'],'k1-punctuation6-asr18-r2')
+                self.assertEqual(h.retained_host.release_first(),value)
         self.assertEqual([r['run_id'] for r in h.prior_history_identity()['sealed_asr_runs']],[38207026177,38219171568])
         self.assertTrue(all(r['actual_consumed_attempts'] is None and r['reusable_slots']==0 for r in h.prior_history_identity()['sealed_asr_runs']))
 
@@ -263,20 +267,38 @@ class HostedTests(unittest.TestCase):
                 'RUNNER_TEMP':str(root/'forbidden-output')})
             self.assertEqual(before,{p.relative_to(root).as_posix() for p in root.rglob('*')})
 
-    def test_actual_checked_in_cli_rejects_invalid_context_without_side_effects(self):
-        # The real source-local gate may be all-false or prepare-only all-true.
-        # This deliberately non-hosted context cannot reach Git, API or runtime.
+    def test_actual_checked_in_disabled_cli_rejects_at_release_without_side_effects(self):
+        # Closed prepare controls must reject before event/Git/API/runtime.
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);event=root/'event.json';event.write_bytes(b'{}')
             env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'RUNNER_TEMP':str(root/'forbidden-output'),
                 'GITHUB_EVENT_PATH':str(event),'GITHUB_REPOSITORY':'invalid/offline-fixture',
                 'RUNNER_ENVIRONMENT':'self-hosted','GITHUB_ACTIONS':'false'}
             records=self.check_rejected_cli(HERE,root,env)
-            enabled=pc.decode(pc.regular(HERE/'prepare-release.json'))['enabled']
-            self.assertEqual(records['prepare_run.py']['stage'],'context' if enabled else 'release')
-            self.assertEqual(records['diagnostic_publisher.py']['stage'],'source_release' if enabled else 'publication_gate')
+            self.assertEqual(records['prepare_run.py']['stage'],'release')
+            self.assertEqual(records['diagnostic_publisher.py']['stage'],'publication_gate')
             self.assertEqual({p.name for p in root.iterdir()},{'event.json'})
             self.assertEqual(event.read_bytes(),b'{}')
+
+    def test_explicit_enabled_copy_passes_real_gates_then_rejects_context_without_side_effects(self):
+        # Preserve the former enabled-path coverage using real temporary controls.
+        # Only the source path changes; no release validator is mocked.
+        with explicit_enabled_source_copy() as (source,fixed),tempfile.TemporaryDirectory() as temp:
+            release=h.read_json(fixed/'prepare-release.json')
+            with patch.object(pc,'HERE',fixed):self.assertEqual(pc.release_first(),release)
+            publisher.publication_gate(h.read_json(fixed/'publication-release.json'))
+            before={p.relative_to(source).as_posix():p.read_bytes() for p in source.rglob('*') if p.is_file()}
+            root=Path(temp);event=root/'event.json';event.write_bytes(b'{}')
+            env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'RUNNER_TEMP':str(root/'forbidden-output'),
+                'GITHUB_EVENT_PATH':str(event),'GITHUB_REPOSITORY':'invalid/offline-fixture',
+                'RUNNER_ENVIRONMENT':'self-hosted','GITHUB_ACTIONS':'false',
+                'KWS_PREPARE_FREEZE_SHA256':pc.digest((fixed/'prepare-freeze.json').read_bytes())}
+            records=self.check_rejected_cli(fixed,root,env)
+            self.assertEqual(records['prepare_run.py']['stage'],'context')
+            self.assertEqual(records['diagnostic_publisher.py']['stage'],'source_release')
+            self.assertEqual({p.name for p in root.iterdir()},{'event.json'})
+            self.assertEqual(event.read_bytes(),b'{}')
+            self.assertEqual(before,{p.relative_to(source).as_posix():p.read_bytes() for p in source.rglob('*') if p.is_file()})
 
     def test_explicit_disabled_gates_precede_environment_api_git_and_runtime(self):
         class Poison(dict):
