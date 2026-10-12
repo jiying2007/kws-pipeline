@@ -275,4 +275,249 @@ class AllowlistTests(unittest.TestCase):
         r=self.row();r['cwd']='../outside'
         with self.assertRaises(ValueError):selected_checks([r],'synthetic')
 
+
+
+# Narrow current-revision maintenance tests; original retention suite above stays intact.
+import os
+import verify_research_sources as HOTPATH_RETENTION
+from run_research_source_checks import make_projection as hotpath_make_projection
+HOTPATH_ROOT = Path(__file__).resolve().parents[3]
+
+
+def hotpath_identity(path, raw, mode='100644'):
+    return {'path': path, 'mode': mode, 'bytes': len(raw),
+        'sha256': hashlib.sha256(raw).hexdigest(),
+        'git_blob_sha1': hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()}
+
+
+class SourceRevisionTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix='retention-revision-offline-')
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.manifest = json.loads((HOTPATH_ROOT / HOTPATH_RETENTION.MANIFEST).read_text())
+        self.manifest.pop('current_source_revision', None)
+        old_path = HOTPATH_ROOT / HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE
+        if not old_path.is_file():
+            old_path = HOTPATH_ROOT / HOTPATH_RETENTION.CURRENT_REVISION_PATH
+        self.old_raw = old_path.read_bytes()
+        self.assertEqual(hotpath_identity(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.old_raw), HOTPATH_RETENTION.ORIGINAL_SOURCE)
+        # This is explicitly synthetic changed text; no scientific behavior or
+        # production identity is inferred from it.
+        self.current_raw = self.old_raw + b'\n# SYNTHETIC TEST REVISION ONLY\n'
+        self.revision = {'revision_id': HOTPATH_RETENTION.CURRENT_REVISION_ID,
+            'path': HOTPATH_RETENTION.CURRENT_REVISION_PATH,
+            'archive_path': HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE,
+            'supersedes_commit': HOTPATH_RETENTION.CURRENT_REVISION_SUPERSEDES,
+            'original': copy.deepcopy(HOTPATH_RETENTION.ORIGINAL_SOURCE),
+            'original_provenance': [copy.deepcopy(row) for row in self.manifest['provenance']
+                if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH],
+            'current': hotpath_identity(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.current_raw)}
+        self.manifest['current_source_revision'] = self.revision
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE, self.old_raw)
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.current_raw)
+
+    def write(self, name, raw, mode='100644'):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        path.chmod(0o755 if mode == '100755' else 0o644)
+        return path
+
+    def check(self):
+        return HOTPATH_RETENTION.validate_current_source_revision(self.root, self.manifest)
+
+    def populate_complete_fixture(self):
+        for group in ('files', 'baseline_active_workflows', 'current_added_active_workflows'):
+            for row in self.manifest[group]:
+                if row['path'] == HOTPATH_RETENTION.CURRENT_REVISION_PATH:
+                    continue
+                self.write(row['path'], (HOTPATH_ROOT / row['path']).read_bytes(), row['mode'])
+        self.write(HOTPATH_RETENTION.ARM, (HOTPATH_ROOT / HOTPATH_RETENTION.ARM).read_bytes())
+
+    def test_current_and_archive_are_independently_exact(self):
+        self.assertEqual(self.check(), self.revision)
+        self.assertEqual(HOTPATH_RETENTION.retained_source_path(self.manifest, HOTPATH_RETENTION.CURRENT_REVISION_PATH),
+            HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE)
+        other = 'research/fixed30_asr/core/vendor/qwen_loading_gate_v2.py'
+        self.assertEqual(HOTPATH_RETENTION.retained_source_path(self.manifest, other), other)
+
+    def test_complete_inventory_stays_718_and_historical_projection_path_keeps_original_bytes(self):
+        self.populate_complete_fixture()
+        self.assertEqual(HOTPATH_RETENTION.verify(self.root, self.manifest), 718)
+        projected_source = self.root / HOTPATH_RETENTION.retained_source_path(self.manifest, HOTPATH_RETENTION.CURRENT_REVISION_PATH)
+        self.assertEqual(projected_source.read_bytes(), self.old_raw)
+        self.assertNotEqual(projected_source.read_bytes(), (self.root / HOTPATH_RETENTION.CURRENT_REVISION_PATH).read_bytes())
+
+    def test_original_without_revision_retains_existing_strict_behavior(self):
+        self.populate_complete_fixture()
+        del self.manifest['current_source_revision']
+        with self.assertRaises(ValueError):
+            HOTPATH_RETENTION.verify(self.root, self.manifest)
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.old_raw)
+        self.assertEqual(HOTPATH_RETENTION.verify(self.root, self.manifest), 718)
+
+    def test_no_generic_path_or_archive_override(self):
+        for key in ('path', 'archive_path'):
+            for value in ('research/other.py', '../escape.py', '/absolute.py', './noncanonical.py',
+                          'research//doubled.py', 'research\\backslash.py'):
+                with self.subTest(key=key, value=value):
+                    original = self.revision[key]
+                    self.revision[key] = value
+                    with self.assertRaisesRegex(ValueError, 'fixed scope'):
+                        self.check()
+                    self.revision[key] = original
+
+    def test_revision_identity_and_superseded_commit_are_fixed(self):
+        for key in ('revision_id', 'supersedes_commit'):
+            old = self.revision[key]
+            self.revision[key] = 'a' * 40
+            with self.assertRaisesRegex(ValueError, 'fixed scope'):
+                self.check()
+            self.revision[key] = old
+
+    def test_missing_or_additional_revision_fields(self):
+        saved = copy.deepcopy(self.revision)
+        for key in saved:
+            self.revision.pop(key)
+            with self.assertRaisesRegex(ValueError, 'revision fields'):
+                self.check()
+            self.revision[key] = saved[key]
+        self.revision['source_commit'] = 'f' * 40
+        with self.assertRaisesRegex(ValueError, 'revision fields'):
+            self.check()
+
+    def test_no_null_list_or_multiple_revisions(self):
+        for value in (None, [], [self.revision], [self.revision, self.revision], 'revision'):
+            self.manifest['current_source_revision'] = value
+            with self.assertRaises(ValueError):
+                self.check()
+
+    def test_missing_or_changed_original_archive_rejected(self):
+        path = self.root / HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'missing retained file'):
+            self.check()
+        path.write_bytes(self.old_raw + b'changed')
+        with self.assertRaises(ValueError):
+            self.check()
+        path.write_bytes(bytes([self.old_raw[0] ^ 1]) + self.old_raw[1:])
+        with self.assertRaisesRegex(ValueError, 'identity changed'):
+            self.check()
+
+    def test_current_tamper_is_not_hidden_by_valid_archive(self):
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.current_raw + b'changed')
+        with self.assertRaisesRegex(ValueError, 'byte count'):
+            self.check()
+
+    def test_current_sha256_and_git_blob_are_both_checked(self):
+        for key, fake in (('sha256', '0' * 64), ('git_blob_sha1', '0' * 40)):
+            old = self.revision['current'][key]
+            self.revision['current'][key] = fake
+            with self.assertRaisesRegex(ValueError, 'identity changed'):
+                self.check()
+            self.revision['current'][key] = old
+
+    def test_current_identity_shape_types_and_mode_are_exact(self):
+        for key, bad in (('bytes', True), ('bytes', -1), ('sha256', None), ('sha256', 'x' * 64),
+                         ('git_blob_sha1', 'main'), ('mode', '100755'), ('path', 'research/other.py')):
+            old = self.revision['current'][key]
+            self.revision['current'][key] = bad
+            with self.assertRaisesRegex(ValueError, 'exact identity fields'):
+                self.check()
+            self.revision['current'][key] = old
+        self.revision['current']['source_commit'] = 'f' * 40
+        with self.assertRaisesRegex(ValueError, 'exact identity fields'):
+            self.check()
+
+    def test_old_bytes_cannot_be_claimed_as_current_revision(self):
+        self.revision['current'] = dict(HOTPATH_RETENTION.ORIGINAL_SOURCE)
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_PATH, self.old_raw)
+        with self.assertRaisesRegex(ValueError, 'distinct derived bytes'):
+            self.check()
+
+    def test_complete_original_row_cannot_be_rewritten(self):
+        for key in self.revision['original']:
+            old = self.revision['original'][key]
+            self.revision['original'][key] = None
+            with self.assertRaisesRegex(ValueError, 'original identity changed'):
+                self.check()
+            self.revision['original'][key] = old
+
+    def test_all_original_provenance_relations_are_retained(self):
+        self.revision['original_provenance'].pop()
+        with self.assertRaisesRegex(ValueError, 'original provenance changed'):
+            self.check()
+
+    def test_no_change_to_any_of_718_rows_or_provenance(self):
+        for group in ('files', 'provenance'):
+            original = copy.deepcopy(self.manifest[group])
+            for mutation in ('hash', 'remove', 'duplicate', 'order'):
+                with self.subTest(group=group, mutation=mutation):
+                    rows = self.manifest[group]
+                    if mutation == 'hash': rows[-1]['sha256'] = '0' * 64
+                    if mutation == 'remove': rows.pop()
+                    if mutation == 'duplicate': rows.append(copy.deepcopy(rows[-1]))
+                    if mutation == 'order': rows.reverse()
+                    with self.assertRaisesRegex(ValueError, 'original 718 inventory/provenance changed'):
+                        self.check()
+                    self.manifest[group] = copy.deepcopy(original)
+
+    def test_symlink_is_not_archival_retention_or_current_identity(self):
+        for name in (HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE, HOTPATH_RETENTION.CURRENT_REVISION_PATH):
+            path = self.root / name
+            raw = path.read_bytes()
+            target = self.root / 'symlink-target'
+            target.write_bytes(raw)
+            path.unlink()
+            path.symlink_to(target)
+            with self.assertRaisesRegex(ValueError, 'symlink'):
+                self.check()
+            path.unlink()
+            path.write_bytes(raw)
+
+    @unittest.skipUnless(os.name == 'posix', 'POSIX mode check')
+    def test_archive_or_current_mode_change_fails(self):
+        for name in (HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE, HOTPATH_RETENTION.CURRENT_REVISION_PATH):
+            path = self.root / name
+            path.chmod(0o755)
+            with self.assertRaisesRegex(ValueError, 'mode changed'):
+                self.check()
+            path.chmod(0o644)
+
+
+    def test_actual_projection_reads_original_archive_instead_of_current_vendor(self):
+        self.populate_complete_fixture()
+        core_name = 'research/consolidation/core-2026-10-07.json'
+        core = json.loads((HOTPATH_ROOT / core_name).read_text())
+        self.write(core_name, (HOTPATH_ROOT / core_name).read_bytes())
+        support = ('research/consolidation/source_tests/test_n1_companion_offline.py',
+            'research/consolidation/prepare_n1_saved_fixtures.py',
+            'research/consolidation/source_fixtures/n1-saved-inputs.json')
+        for row in core['files']:
+            self.write(row['path'], (HOTPATH_ROOT / row['path']).read_bytes(), row['mode'])
+        for name in support:
+            self.write(name, (HOTPATH_ROOT / name).read_bytes())
+        self.assertEqual(HOTPATH_RETENTION.verify(self.root, self.manifest), 718)
+        projected = self.root / 'projected'
+        projected.mkdir()
+        hotpath_make_projection(self.root, projected, self.manifest)
+        actual = (projected / HOTPATH_RETENTION.CURRENT_REVISION_PATH).read_bytes()
+        self.assertEqual(actual, self.old_raw)
+        self.assertNotEqual(actual, self.current_raw)
+        self.assertEqual(hotpath_identity(HOTPATH_RETENTION.CURRENT_REVISION_PATH, actual),
+            HOTPATH_RETENTION.ORIGINAL_SOURCE)
+
+    def test_wrong_archive_cannot_reach_historical_projection(self):
+        self.populate_complete_fixture()
+        self.write(HOTPATH_RETENTION.CURRENT_REVISION_ARCHIVE, self.current_raw)
+        projected = self.root / 'projected'
+        projected.mkdir()
+        # The runner's actual precondition is full verify() before make_projection().
+        with self.assertRaises(ValueError):
+            HOTPATH_RETENTION.verify(self.root, self.manifest)
+            hotpath_make_projection(self.root, projected, self.manifest)
+        self.assertFalse((projected / HOTPATH_RETENTION.CURRENT_REVISION_PATH).exists())
+
+
 if __name__=='__main__':unittest.main(verbosity=2)

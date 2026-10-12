@@ -21733,6 +21733,333 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "prepare-r1-finite-check-loop-disabled-repair-20261012",
+      "public_main_base_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+      "public_main_base_tree": "403b0a0212dc17549ede6697cdc74fd9cd915446",
+      "workflow_source_changed": false,
+      "scope": "Disable consumed prepare-r1 controls, retain its actual partial outcome, revise only Qwen _converted_chunk finite checks from generator expressions to equivalent explicit loops and the dependent worker source pin. Preserve the original vendor at a fixed public archive; a single exact current-source revision keeps all original inventory/provenance intact. Refresh derived source metadata, exact freezes and focused offline regressions.",
+      "rationale": "Pure stdlib tests prove bit/error/output equivalence and removal of per-element profile generator events. Actual loader internal stop was not observed, so this is not proof of the unique cause of the 600-second failure. No budget, guard, model/runtime/scientific parameter, new identity or execution is changed or authorized; ASR remains disabled with a null actual prerequisite. Historical projection reads the original archived vendor.",
+      "files": [
+        {
+          "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py",
+            "mode": "100644",
+            "bytes": 20790,
+            "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+            "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 17888,
+            "sha256": "0bc11acd61d3af8f4ef6ffcc183bb1f56472bfd57593d6ff84ac6c32fc890282",
+            "git_blob_sha1": "7539441b283fd80cbebcf1cc029068acf46445f4"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 30779,
+            "sha256": "be41a6fc620b4753e6b7390d7a098a3f0796eb4e24c4c9bc05748b83eefd3333",
+            "git_blob_sha1": "1aa6b401fb849d2e5e5d393f3fffd79d80f4942b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 32551,
+            "sha256": "b293bd8ff2177e19feac8a810b0973234e073400335f79bbeba4b224c89a5d15",
+            "git_blob_sha1": "f2e10fcbe280648a2efd7a198eabe4f90c61bc08"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/execution-freeze.json",
+            "mode": "100644",
+            "bytes": 32551,
+            "sha256": "589f763a2f3ec91b0ebac716b12187f8e06cd6166a8cdb95f74e296401a4011f",
+            "git_blob_sha1": "df6501168b12af39a9ef549e4bdd65eb5b6a195a"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/source-reuse-lock.json",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/source-reuse-lock.json",
+            "mode": "100644",
+            "bytes": 18271,
+            "sha256": "891dc0bec3292e98b4e00651da6214c01d863df8df62908ceac41d0b818a6544",
+            "git_blob_sha1": "48dc0cc22a1e0ce8f94ad5034a9121aab460f366"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/source-reuse-lock.json",
+            "mode": "100644",
+            "bytes": 20218,
+            "sha256": "d32ab09a881c72610e4aeb664c6606e62c39d16fbc39e8af452f57d4a9d8d2f8",
+            "git_blob_sha1": "83df3b505c6aba1b65149548f866b3476c3a48f6"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 93375,
+            "sha256": "c67fcc7a53cf56bf6dcafcda4a46045619ebef90b901be9f83fe0afca5ba0d96",
+            "git_blob_sha1": "e4e0ba5be4e9413351d32a5d69b37b31495500df"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/test_asr18_transport.py",
+            "mode": "100644",
+            "bytes": 93375,
+            "sha256": "ee4b0ddcbf8be1989771cdb59621acbca9ad827daf8d9665267553a8e4a449f7",
+            "git_blob_sha1": "a8ea19d956e30a3f0c6704b5a618cb51ac92b51b"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/FAILURE-38251170134.json",
+          "before": null,
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/FAILURE-38251170134.json",
+            "mode": "100644",
+            "bytes": 2280,
+            "sha256": "d1bfbe474402991908d6841ded360c10e64e867dd0401cfc64c94f7fad6ee224",
+            "git_blob_sha1": "6d723e34471e659de2e23e1eca11bd1eb5ea1a12"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 11706,
+            "sha256": "c4e9147ec82bf2fe6e368fbd521047d776f3608e1c12855ad68dfe2e03ce686a",
+            "git_blob_sha1": "12fc295fd6debc3582f2f18710d99fe63e8e54c3"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/README.md",
+            "mode": "100644",
+            "bytes": 4638,
+            "sha256": "458bb5bdbac88408e1a8f927163e5994bbae37c5ca7ea7aa4f3dfe5b85d5c298",
+            "git_blob_sha1": "7b1d5f9cb3c18b693c917738ec308122be500f41"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 42499,
+            "sha256": "fd517f162881453bd213d8a1095b5e364430cb2ab563d02ab2e4c02f714cb245",
+            "git_blob_sha1": "6af2c453a05b1b5cce3c2a6384f3e771177e9f71"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-freeze.json",
+            "mode": "100644",
+            "bytes": 42499,
+            "sha256": "aae54c168c707dd2ebafe9d15412af3b840063b3726ef8849c269ef91ce66624",
+            "git_blob_sha1": "927c3925c50e7813b7a5d4a4b099e8847d2d629c"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+            "mode": "100644",
+            "bytes": 1152,
+            "sha256": "9666f3e591d8d7ecdbf32839ec73405e24d3548b10c61e6c84a6b0cd7142626b",
+            "git_blob_sha1": "865eb9f18830a95b72679554df3c565d50bf992d"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/prepare-release.json",
+            "mode": "100644",
+            "bytes": 1155,
+            "sha256": "2fa040159762d22a487bb45c78698b358c3312e46c2be414c5b83772a1978740",
+            "git_blob_sha1": "3613a1d3045163fa1ab2e4a8992adb9ac9f12c44"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 456,
+            "sha256": "759bf0eb83621bc2bda7ba1c231ac33e270ec41f77ab6823c7cbcc78678838da",
+            "git_blob_sha1": "56b8216b2a1392dff709342ba9f77d35eba45215"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/publication-release.json",
+            "mode": "100644",
+            "bytes": 459,
+            "sha256": "ace897a808ca6996654f9adf29fe7b7809dbbb7dca80ff0ab4ea4d63f584077b",
+            "git_blob_sha1": "1f181716a9b528fc14a27b6947f3e90484f54fe7"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+          "before": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+            "mode": "100644",
+            "bytes": 49379,
+            "sha256": "245e2a2cb0251be6d50add2e78265418aac91b51922e641094443d9e391ce7ed",
+            "git_blob_sha1": "0cc348f25ca29418d110e2e1b00cda5663244366"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-prepare-diagnostic-v1/test_prepare_only.py",
+            "mode": "100644",
+            "bytes": 61985,
+            "sha256": "2fba13c1746bbddf72ec62f876f30eddf41717e65963f4a8aaeeec7860a372c4",
+            "git_blob_sha1": "74f2106c7af5753b9f55107473ae70cae44bee7f"
+          }
+        },
+        {
+          "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+          "before": {
+            "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+            "mode": "100644",
+            "bytes": 20790,
+            "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+            "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3"
+          },
+          "after": {
+            "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+            "mode": "100644",
+            "bytes": 20838,
+            "sha256": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
+            "git_blob_sha1": "31d33d8d81739d0e8717960a6339d93baff06a5e"
+          }
+        },
+        {
+          "path": "research/source-screen32-v1/asr_worker.py",
+          "before": {
+            "path": "research/source-screen32-v1/asr_worker.py",
+            "mode": "100644",
+            "bytes": 40928,
+            "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
+            "git_blob_sha1": "889d84aed0689572ce36924c824aaf2f3521d2c9"
+          },
+          "after": {
+            "path": "research/source-screen32-v1/asr_worker.py",
+            "mode": "100644",
+            "bytes": 40928,
+            "sha256": "b5cef29fe4e2c67f9121d93f83eb351f3e7a8ca14136ad684669832a77164f17",
+            "git_blob_sha1": "9b3e8888729f49fca54b3b737ca70840a87941b5"
+          }
+        },
+        {
+          "path": "tools/run_research_source_checks.py",
+          "before": {
+            "path": "tools/run_research_source_checks.py",
+            "mode": "100644",
+            "bytes": 6990,
+            "sha256": "dcd298ddf67bfebc960fd06dbb2eba2abb9a020163b463d698b0e7941778457a",
+            "git_blob_sha1": "2b2c723264253140549dd893433e6ce24fea538e"
+          },
+          "after": {
+            "path": "tools/run_research_source_checks.py",
+            "mode": "100644",
+            "bytes": 7044,
+            "sha256": "c743248288c6f2553b7d636c2f51a6666eec4bcc2e814d69d0558859daba572e",
+            "git_blob_sha1": "2ca9ee98f50074fcaa0b5c943a0afa60f0055113"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 9393,
+            "sha256": "a834e206da77ab1069cfaee0e140e16393bcdea289b55bd21f240b309316d8b7",
+            "git_blob_sha1": "0e84191721e6be9831807f5f9e0b9d48e71471aa"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 13924,
+            "sha256": "59a28719590e9b79eb6c852836b1f0e3922a23143bb914b0c887b6261637c3bc",
+            "git_blob_sha1": "1d6f4ad69a89df1c0fec886d05ccce83bcefd333"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "prepare-r1-hotpath-historical-review-projection-20261012",
+      "public_source_base_commit": "73ce27b16ca483fc45a262af7da9f462e78acb3c",
+      "public_source_base_tree": "39a2804e71713930ad136fef9f972e5b10e4d8da",
+      "workflow_source_changed": false,
+      "scope": "Preserve exact historical screen32 and qwen12 freeze semantics after the current Qwen finite-check revision. Archive the original asr_worker bytes, add two fixed historical review paths, and use an explicitly test-only historical qwen12 root projection.",
+      "rationale": "The original screen32 CI packet rejected current vendor and worker drift. Both historical freezes remain unchanged and still require their original byte identities. Production qwen12 build/admission/staging remain live-path-bound and continue rejecting drift; no fallback enters any execution path. Current prepare and ASR controls stay disabled, with no new identity or model execution.",
+      "files": [
+        {
+          "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py",
+          "before": null,
+          "after": {
+            "path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py",
+            "mode": "100644",
+            "bytes": 40928,
+            "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
+            "git_blob_sha1": "889d84aed0689572ce36924c824aaf2f3521d2c9"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/screen32_human_review.py",
+          "before": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 23859,
+            "sha256": "3aff945f0f56639dcb5a155ca8103ab01632e906262850fecb8e243da8cba870",
+            "git_blob_sha1": "18630199ab2b66d77d312a93c8afcc6e463dafba"
+          },
+          "after": {
+            "path": "research/experiment_quality_guards/screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 24182,
+            "sha256": "999420b342b1c388697f74017dd645b18458d54bf523ac00fbfea99cd4e5480d",
+            "git_blob_sha1": "cb9a711c117f2b509ca7f7acc1542d51d5fe381b"
+          }
+        },
+        {
+          "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+          "before": {
+            "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 32732,
+            "sha256": "58580992277ada3225d274f0d4c59685115c8141eb29898efe6cc0295bba604a",
+            "git_blob_sha1": "1a35f8ae05923e4a6028fbefc4ec3f32388c102a"
+          },
+          "after": {
+            "path": "research/experiment_quality_guards/tests/test_screen32_human_review.py",
+            "mode": "100644",
+            "bytes": 34240,
+            "sha256": "e588c2d96059cf2f819189a620cb97f9244f133ac05706caa37a27ee8c839c20",
+            "git_blob_sha1": "dfbbe44fd5f006518cf9f2ff9cfa32a34c7bc4e0"
+          }
+        },
+        {
+          "path": "research/qwen12-native-admission-v1/test_contract.py",
+          "before": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 140794,
+            "sha256": "2f16f2a41ad2ea1e4b54060a41ac187cb40fe25078e07fbfc800e065a5788e2d",
+            "git_blob_sha1": "58f108a28b8c79edf995c9a599670bcbfea959dd"
+          },
+          "after": {
+            "path": "research/qwen12-native-admission-v1/test_contract.py",
+            "mode": "100644",
+            "bytes": 143803,
+            "sha256": "f5968361854bc32196e277924af421513cebc641bfcd54e836b1663ccd48600e",
+            "git_blob_sha1": "ad9b997c86dd2352f5d8e0a84b207435fcd43f12"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -21764,5 +22091,63 @@
       "sha256": "7b6f8a5ffb6673b8ff2f5a749e797c108501d091c9f697d7c1fded06dd73ac28",
       "git_blob_sha1": "b8571e0f7238fc5aaec3340453becbe40af5c184"
     }
-  ]
+  ],
+  "current_source_revision": {
+    "revision_id": "prepare-r1-hotpath-20261012",
+    "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+    "archive_path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py",
+    "supersedes_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+    "original": {
+      "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "mode": "100644",
+      "bytes": 20790,
+      "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3",
+      "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb"
+    },
+    "original_provenance": [
+      {
+        "source_pr": 482,
+        "source_commit": "16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51",
+        "original_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3",
+        "mode": "100644",
+        "kind": "retained-source",
+        "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+        "bytes": 20790,
+        "source_url": "https://github.com/jiying2007/kws-pipeline/blob/16ba0941bd7d7d6705d1ee94bb433dbd4fc6aa51/research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py"
+      },
+      {
+        "source_pr": 480,
+        "source_commit": "cd30ecfb71d26c099055ca9c2f90f5c084f05b93",
+        "original_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3",
+        "mode": "100644",
+        "kind": "shared-exact-bytes",
+        "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+        "bytes": 20790,
+        "source_url": "https://github.com/jiying2007/kws-pipeline/blob/cd30ecfb71d26c099055ca9c2f90f5c084f05b93/research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py"
+      },
+      {
+        "source_pr": 481,
+        "source_commit": "480e4f013349917b0cea514633d3f7ae2d98c0b4",
+        "original_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "git_blob_sha1": "73557f9608f338b406c4135b38ccb3c81dfb05d3",
+        "mode": "100644",
+        "kind": "shared-exact-bytes",
+        "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+        "bytes": 20790,
+        "source_url": "https://github.com/jiying2007/kws-pipeline/blob/480e4f013349917b0cea514633d3f7ae2d98c0b4/research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py"
+      }
+    ],
+    "current": {
+      "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "mode": "100644",
+      "bytes": 20838,
+      "sha256": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
+      "git_blob_sha1": "31d33d8d81739d0e8717960a6339d93baff06a5e"
+    }
+  }
 }

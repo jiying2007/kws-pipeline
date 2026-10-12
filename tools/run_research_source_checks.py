@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-from verify_research_sources import MANIFEST, relative, verify
+from verify_research_sources import MANIFEST, relative, verify, retained_source_path
 
 ALLOWLIST = 'research/consolidation/source-offline-allowlist.json'
 SUPPORT = ['research/consolidation/source_tests/test_n1_companion_offline.py',
@@ -73,7 +73,7 @@ def make_projection(root, projected, manifest):
     paths = {r['path'] for r in manifest['files']} | {r['path'] for r in core['files']} | set(SUPPORT)
     for name in sorted(paths):
         relative(name)
-        source = root / name
+        source = root / retained_source_path(manifest, name)
         if not source.is_file() or source.is_symlink():
             raise ValueError('missing/nonregular projection source: ' + name)
         target = projected / name

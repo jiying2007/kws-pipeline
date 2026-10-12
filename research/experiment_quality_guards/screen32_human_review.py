@@ -31,6 +31,10 @@ PINS = {
 # Historical read-only evidence review only. Execution admission and staging
 # must continue checking the live source paths against the unchanged freeze.
 HISTORICAL_SOURCE_PATHS = {
+    "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py":
+        "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py",
+    "research/source-screen32-v1/asr_worker.py":
+        "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py",
     "research/experiment_quality_guards/quality_gates.py":
         "research/consolidation/maintained-sources/pr-479/research/experiment_quality_guards/quality_gates.py",
     "research/source-screen32-v1/test_contract.py":

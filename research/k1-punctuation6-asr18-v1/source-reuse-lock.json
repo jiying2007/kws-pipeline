@@ -126,9 +126,18 @@
     {
       "source_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
       "destination_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
-      "bytes": 20790,
-      "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
-      "treatment": "byte_identical"
+      "bytes": 20838,
+      "sha256": "b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad",
+      "treatment": "derived_revision",
+      "original": {
+        "source_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "destination_path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+        "bytes": 20790,
+        "sha256": "1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb",
+        "treatment": "byte_identical"
+      },
+      "original_public_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+      "revision": "equivalent explicit finite-bit loops"
     },
     {
       "source_path": "research/qwen6_asr/import_preflight.py",
@@ -183,8 +192,17 @@
       "source_path": "research/source-screen32-v1/asr_worker.py",
       "destination_path": "research/source-screen32-v1/asr_worker.py",
       "bytes": 40928,
-      "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
-      "treatment": "byte_identical"
+      "sha256": "b5cef29fe4e2c67f9121d93f83eb351f3e7a8ca14136ad684669832a77164f17",
+      "treatment": "derived_revision",
+      "original": {
+        "source_path": "research/source-screen32-v1/asr_worker.py",
+        "destination_path": "research/source-screen32-v1/asr_worker.py",
+        "bytes": 40928,
+        "sha256": "73aac9baae7c15bdc18e835fa0f3b70fe22627db9e078aef68d9febbd1b569e2",
+        "treatment": "byte_identical"
+      },
+      "original_public_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+      "revision": "sole dependent vendor SHA256 pin update"
     },
     {
       "source_path": "research/source-screen32-v1/container-lock.json",
@@ -405,6 +423,19 @@
       "path": "evidence_publisher.py",
       "source": "reviewed K1 TTS data_publisher.py",
       "treatment": "Fixed pipeline ASR18 source/result/workflow/job, retained strong Git identities and one-final-LF API presentation rule."
+    },
+    {
+      "path": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "source": "research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+      "source_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+      "original_archive_path": "research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py",
+      "treatment": "Only _converted_chunk replaces three any(generator) finite-bit checks with equivalent explicit for loops. NoForward, types, errors, bytes, model/runtime/scientific parameters and 600-second limit unchanged. Profile overhead reproduced offline; actual unique cause not established."
+    },
+    {
+      "path": "research/source-screen32-v1/asr_worker.py",
+      "source": "research/source-screen32-v1/asr_worker.py",
+      "source_commit": "d6ca13151f98a8fc80c2fbb1f21832a9524191db",
+      "treatment": "Only RETAINED_PINS vendor SHA256 follows the reviewed equivalent finite-loop source revision; all loader call logic unchanged."
     }
   ],
   "old_asr_quota_consumption": 0,

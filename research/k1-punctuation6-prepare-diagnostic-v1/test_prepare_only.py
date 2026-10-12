@@ -434,4 +434,235 @@ with worker.NoForward():
         self.assertFalse(any(n=='torch' or n.startswith(('torch.','qwen_asr','funasr','whisper.')) for n in sys.modules))
 
 
+
+class QwenConvertedChunkHotpathTests(unittest.TestCase):
+    """Only archived/current stdlib ASTs and the unchanged NoForward class.
+
+    Insert this class before the existing unittest.main() line. No real model,
+    checkpoint, package import, runtime constructor, or timing threshold is used.
+    """
+    ORACLE_REL = ('research/consolidation/archive/source-revisions/'
+                  'prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py')
+    CURRENT_REL = 'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py'
+    ORACLE_SHA256 = '1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb'
+    CURRENT_SHA256 = 'b21139d3d63467b910f13b4bc2045d08a737799f9d4bc4dae96972f2a9cd1dad'
+    GUARD_SEGMENT_SHA256 = '7e7d6a7c7841e6bc40196aebb8bf0fb705b3459cf0125971194cecc873b37472'
+
+    @classmethod
+    def setUpClass(cls):
+        import _thread
+        import os
+        import struct
+        import threading
+        cls.struct = struct
+        cls.root = HERE.parents[1]
+        cls.old_raw = (cls.root / cls.ORACLE_REL).read_bytes()
+        cls.new_raw = (cls.root / cls.CURRENT_REL).read_bytes()
+        if hashlib.sha256(cls.old_raw).hexdigest() != cls.ORACLE_SHA256:
+            raise AssertionError('changed immutable original Qwen gate oracle')
+        if hashlib.sha256(cls.new_raw).hexdigest() != cls.CURRENT_SHA256:
+            raise AssertionError('changed reviewed explicit-loop Qwen gate')
+        cls.old_tree = ast.parse(cls.old_raw)
+        cls.new_tree = ast.parse(cls.new_raw)
+        cls.namespaces = []
+        for tree, label in ((cls.old_tree, 'oracle'), (cls.new_tree, 'candidate')):
+            nodes = [node for node in tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+                     and node.name in ('QwenLoadGateError', '_converted_chunk')]
+            if len(nodes) != 2:
+                raise AssertionError('missing error or conversion AST')
+            namespace = {'__name__': 'vendor.qwen_loading_gate_v2', 'struct': struct}
+            exec(compile(ast.Module(body=nodes, type_ignores=[]),
+                         '/code/synthetic-qgate-' + label + '.py', 'exec'), namespace)
+            cls.namespaces.append(namespace)
+        # Store plain functions as staticmethod to avoid descriptor binding.
+        cls.original = staticmethod(cls.namespaces[0]['_converted_chunk'])
+        cls.candidate = staticmethod(cls.namespaces[1]['_converted_chunk'])
+        guard_source = (HERE / 'prepare_worker.py').read_text()
+        tree = ast.parse(guard_source)
+        guard_node = next(node for node in tree.body
+                          if isinstance(node, ast.ClassDef) and node.name == 'NoForward')
+        guard_segment = ast.get_source_segment(guard_source, guard_node).encode()
+        if hashlib.sha256(guard_segment).hexdigest() != cls.GUARD_SEGMENT_SHA256:
+            raise AssertionError('NoForward changed during hotpath repair')
+        names = next(node for node in tree.body if isinstance(node, ast.Assign)
+                     and getattr(node.targets[0], 'id', None) == '_FORBIDDEN_APPLICATION')
+        namespace = {'__name__': 'prepare_worker', '_thread': _thread, 'os': os,
+                     'sys': sys, 'threading': threading, 'c': c}
+        exec(compile(ast.Module(body=[names, guard_node], type_ignores=[]),
+                     '/code/research/k1-punctuation6-prepare-diagnostic-v1/prepare_worker.py',
+                     'exec'), namespace)
+        cls.Guard = namespace['NoForward']
+
+    @staticmethod
+    def outcome(function, raw, dtype):
+        try:
+            value = function(raw, dtype)
+            return ('ok', type(value).__name__, bytes(value), value is raw)
+        except Exception as error:
+            return ('error', type(error).__module__ + '.' + type(error).__qualname__, str(error))
+
+    def compare(self, raw, dtype):
+        original = self.outcome(self.original, raw, dtype)
+        self.assertEqual(original, self.outcome(self.candidate, raw, dtype))
+        return original
+
+    def test_only_three_finite_generators_are_replaced(self):
+        self.assertEqual(len(self.old_tree.body), len(self.new_tree.body))
+        changed = [getattr(old, 'name', '<other>')
+                   for old, new in zip(self.old_tree.body, self.new_tree.body)
+                   if ast.dump(old, include_attributes=False) != ast.dump(new, include_attributes=False)]
+        self.assertEqual(changed, ['_converted_chunk'])
+        old = next(node for node in self.old_tree.body if getattr(node, 'name', None) == '_converted_chunk')
+        new = next(node for node in self.new_tree.body if getattr(node, 'name', None) == '_converted_chunk')
+        self.assertEqual(sum(isinstance(node, ast.GeneratorExp) for node in ast.walk(old)), 3)
+        self.assertEqual(sum(isinstance(node, ast.GeneratorExp) for node in ast.walk(new)), 0)
+        self.assertEqual(sum(isinstance(node, ast.For) for node in ast.walk(new)), 3)
+
+    def test_exhaustive_bf16_words_keep_exact_little_endian_bits(self):
+        rejected = 0
+        with self.Guard() as guard:
+            for word in range(65536):
+                result = self.compare(self.struct.pack('<H', word), 'BF16')
+                nonfinite = (word & 0x7f80) == 0x7f80
+                self.assertEqual(result[0] == 'error', nonfinite)
+                if nonfinite:
+                    rejected += 1
+                    self.assertEqual(result[1:], ('vendor.qwen_loading_gate_v2.QwenLoadGateError',
+                                                 'Nonfinite BF16 checkpoint tensor'))
+                else:
+                    self.assertEqual(result, ('ok', 'bytearray', self.struct.pack('<I', word << 16), False))
+        self.assertEqual(rejected, 256)
+        self.assertEqual(guard.receipt()['forbidden_attempts'], 0)
+
+    def test_f32_exponent_edges_and_deterministic_random_finite(self):
+        import random
+        words = set()
+        for sign in (0, 1):
+            for exponent in (0, 1, 126, 127, 128, 253, 254, 255):
+                for mantissa in (0, 1, 0x3fffff, 0x400000, 0x7ffffe, 0x7fffff):
+                    words.add((sign << 31) | (exponent << 23) | mantissa)
+        random_source = random.Random(20261012)
+        for _ in range(2048):
+            word = random_source.getrandbits(32)
+            if (word & 0x7f800000) == 0x7f800000:
+                word ^= 0x00800000
+            words.add(word)
+        with self.Guard() as guard:
+            for word in sorted(words):
+                raw = self.struct.pack('<I', word)
+                result = self.compare(raw, 'F32')
+                nonfinite = (word & 0x7f800000) == 0x7f800000
+                self.assertEqual(result[0] == 'error', nonfinite)
+                if nonfinite:
+                    self.assertEqual(result[1:], ('vendor.qwen_loading_gate_v2.QwenLoadGateError',
+                                                 'Nonfinite F32 checkpoint tensor'))
+                else:
+                    self.assertEqual(result, ('ok', 'bytes', raw, True))
+        self.assertEqual(len(words), 2144)
+        self.assertEqual(guard.receipt()['forbidden_attempts'], 0)
+
+    def test_all_bool_bytes_and_empty_odd_or_misaligned_sizes(self):
+        lengths = (0, 1, 2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33, 255, 256, 257, 1023, 1024, 1025)
+        with self.Guard() as guard:
+            for value in range(256):
+                result = self.compare(bytes([value]), 'BOOL')
+                self.assertEqual(result[0] == 'error', value not in (0, 1))
+                if value not in (0, 1):
+                    self.assertEqual(result[1:], ('vendor.qwen_loading_gate_v2.QwenLoadGateError',
+                                                 'Noncanonical BOOL checkpoint tensor'))
+            for dtype in ('BF16', 'F32', 'BOOL', 'I8', 'unknown_passthrough'):
+                for length in lengths:
+                    for fill in (b'\x00', b'\xff'):
+                        self.compare(fill * length, dtype)
+            for dtype, finite, bad in (('BF16', b'\x00\x00', b'\x80\x7f'),
+                                       ('F32', b'\x00' * 4, b'\x00\x00\x80\x7f')):
+                for raw in (bad + finite, finite + bad, bad + finite + b'\x00', finite + bad + b'\x00'):
+                    result = self.compare(raw, dtype)
+                    if len(raw) % len(finite):
+                        self.assertEqual(result[1], 'struct.error')
+        self.assertEqual(guard.receipt()['forbidden_attempts'], 0)
+
+    def test_first_invalid_element_short_circuits_identically(self):
+        real_struct = self.struct
+        class RecordingStruct:
+            def __init__(self):
+                self.values = []
+            def iter_unpack(self, format_string, raw):
+                underlying = real_struct.iter_unpack(format_string, raw)
+                def observed():
+                    for item in underlying:
+                        self.values.append(item[0])
+                        yield item
+                return observed()
+        class RecordingBytes(bytes):
+            def __new__(cls, raw):
+                value = bytes.__new__(cls, raw)
+                value.values = []
+                return value
+            def __iter__(self):
+                for value in super().__iter__():
+                    self.values.append(value)
+                    yield value
+        with self.Guard() as guard:
+            for dtype, format_string, words in (
+                    ('BF16', '<HHHH', [0, 0x3f80, 0x7f80, 0x7fc1]),
+                    ('F32', '<IIII', [0, 0x3f800000, 0x7f800000, 0x7fc00001])):
+                observations = []
+                for namespace in self.namespaces:
+                    recorder = RecordingStruct()
+                    namespace['struct'] = recorder
+                    try:
+                        result = self.outcome(namespace['_converted_chunk'], real_struct.pack(format_string, *words), dtype)
+                    finally:
+                        namespace['struct'] = real_struct
+                    observations.append((result, recorder.values))
+                self.assertEqual(observations[0], observations[1])
+                self.assertEqual(observations[0][1], words[:3])
+            observations = []
+            for function in (self.original, self.candidate):
+                raw = RecordingBytes(b'\x00\x01\x02\xff')
+                observations.append((self.outcome(function, raw, 'BOOL'), raw.values))
+            self.assertEqual(observations[0], observations[1])
+            self.assertEqual(observations[0][1], [0, 1, 2])
+        self.assertEqual(guard.receipt()['forbidden_attempts'], 0)
+
+    def profiled_conversion_events(self, function, dtype, width, count):
+        events = {}
+        guard = self.Guard()
+        # A test-only observer delegates every event unchanged to the original
+        # profile method. Its lifetime/tamper checks remain fully active.
+        def observe(frame, event, arg):
+            guard.profile(frame, event, arg)
+            if frame.f_code.co_filename == function.__code__.co_filename:
+                key = (frame.f_code.co_name, event)
+                events[key] = events.get(key, 0) + 1
+        guard.bound_profile = observe
+        with guard:
+            function(bytes(count * width), dtype)
+        self.assertEqual(guard.receipt()['forbidden_attempts'], 0)
+        return events
+
+    def test_guard_profile_event_cost_is_constant_in_candidate(self):
+        for dtype, width in (('BF16', 2), ('F32', 4), ('BOOL', 1)):
+            candidate_events = []
+            for count in (32, 64, 256):
+                old = self.profiled_conversion_events(self.original, dtype, width, count)
+                new = self.profiled_conversion_events(self.candidate, dtype, width, count)
+                self.assertEqual(old.get(('<genexpr>', 'call')), count + 1)
+                self.assertEqual(old.get(('<genexpr>', 'return')), count + 1)
+                self.assertEqual(new.get(('<genexpr>', 'call'), 0), 0)
+                self.assertEqual(new.get(('<genexpr>', 'return'), 0), 0)
+                self.assertEqual(new.get(('_converted_chunk', 'call')), 1)
+                self.assertEqual(new.get(('_converted_chunk', 'return')), 1)
+                candidate_events.append(new)
+            self.assertEqual(candidate_events[0], candidate_events[1])
+            self.assertEqual(candidate_events[1], candidate_events[2])
+
+    def test_ast_tests_did_not_import_model_packages(self):
+        for name in sys.modules:
+            self.assertNotIn(name.split('.')[0],
+                             ('torch', 'numpy', 'qwen_asr', 'transformers', 'funasr', 'whisper', 'safetensors'))
+
+
+
 if __name__=='__main__': unittest.main()

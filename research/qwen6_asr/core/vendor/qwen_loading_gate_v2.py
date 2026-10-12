@@ -161,17 +161,21 @@ def validate_aliases(aliases, approved_sha256, schema):
 def _converted_chunk(raw, dtype):
     if dtype == 'BF16':
         # Exact little-endian IEEE BF16 to F32 expansion, no rounding.
-        if any((u & 0x7f80) == 0x7f80 for (u,) in struct.iter_unpack('<H', raw)):
-            raise QwenLoadGateError('Nonfinite BF16 checkpoint tensor')
+        for (u,) in struct.iter_unpack('<H', raw):
+            if (u & 0x7f80) == 0x7f80:
+                raise QwenLoadGateError('Nonfinite BF16 checkpoint tensor')
         expanded = bytearray(2 * len(raw))
         expanded[2::4] = raw[0::2]
         expanded[3::4] = raw[1::2]
         return expanded
     if dtype == 'F32':
-        if any((u & 0x7f800000) == 0x7f800000 for (u,) in struct.iter_unpack('<I', raw)):
-            raise QwenLoadGateError('Nonfinite F32 checkpoint tensor')
-    if dtype == 'BOOL' and any(v not in (0, 1) for v in raw):
-        raise QwenLoadGateError('Noncanonical BOOL checkpoint tensor')
+        for (u,) in struct.iter_unpack('<I', raw):
+            if (u & 0x7f800000) == 0x7f800000:
+                raise QwenLoadGateError('Nonfinite F32 checkpoint tensor')
+    if dtype == 'BOOL':
+        for v in raw:
+            if v not in (0, 1):
+                raise QwenLoadGateError('Noncanonical BOOL checkpoint tensor')
     return raw
 
 

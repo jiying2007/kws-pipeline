@@ -13,6 +13,79 @@ ARM = 'research/cosyvoice3_cross_voice/arm.json'
 DISABLED_ARM = {'mode': 'disabled', 'reviewed_parent_sha': None,
                 'payload_sha256': None, 'batch_id': 'cosy30-cross-voice-20261004-v1'}
 
+# A single reviewed source maintenance exception. Historical inventory/provenance
+# stay byte-for-byte semantically fixed; current code and the original archive
+# are checked separately. This is not a general path override facility.
+CURRENT_REVISION_PATH = 'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py'
+CURRENT_REVISION_ARCHIVE = 'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py'
+CURRENT_REVISION_ID = 'prepare-r1-hotpath-20261012'
+CURRENT_REVISION_SUPERSEDES = 'd6ca13151f98a8fc80c2fbb1f21832a9524191db'
+ORIGINAL_SOURCE = {'path': 'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py', 'mode': '100644', 'bytes': 20790, 'git_blob_sha1': '73557f9608f338b406c4135b38ccb3c81dfb05d3', 'sha256': '1b0cbd7b96e24925bfcf72438edea9dfb286860d2a990cdbad48104ae595d3fb'}
+ORIGINAL_FILES_SHA256 = '4aaccd87a86900a6cbc7301b078841713621544ed483e16213411574b986cd7a'
+ORIGINAL_PROVENANCE_SHA256 = 'e494ec723ff1570b36698eccb424ffb767e533d6c4acd7e4ba6078c2f9da3e7a'
+IDENTITY_FIELDS = frozenset(('path', 'mode', 'bytes', 'sha256', 'git_blob_sha1'))
+
+
+def canonical_sha256(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'),
+        ensure_ascii=True, allow_nan=False).encode()).hexdigest()
+
+
+def validate_current_source_revision(root, manifest):
+    revision = manifest.get('current_source_revision')
+    if revision is None:
+        if 'current_source_revision' in manifest:
+            raise ValueError('current source revision must be a fixed object')
+        return None
+    fields = {'revision_id', 'path', 'archive_path', 'supersedes_commit',
+              'original', 'original_provenance', 'current'}
+    if not isinstance(revision, dict) or set(revision) != fields:
+        raise ValueError('current source revision fields')
+    for key, wanted in (('revision_id', CURRENT_REVISION_ID),
+                        ('path', CURRENT_REVISION_PATH),
+                        ('archive_path', CURRENT_REVISION_ARCHIVE),
+                        ('supersedes_commit', CURRENT_REVISION_SUPERSEDES)):
+        if revision[key] != wanted:
+            raise ValueError('current source revision exceeds fixed scope: ' + key)
+    if (canonical_sha256(manifest.get('files')) != ORIGINAL_FILES_SHA256 or
+            canonical_sha256(manifest.get('provenance')) != ORIGINAL_PROVENANCE_SHA256):
+        raise ValueError('original 718 inventory/provenance changed')
+    original = revision['original']
+    if original != ORIGINAL_SOURCE or type(original.get('bytes')) is not int:
+        raise ValueError('current source revision original identity changed')
+    retained = [row for row in manifest['files'] if row['path'] == CURRENT_REVISION_PATH]
+    if retained != [original]:
+        raise ValueError('current source revision does not bind complete original row')
+    provenance = [row for row in manifest['provenance'] if row['path'] == CURRENT_REVISION_PATH]
+    if revision['original_provenance'] != provenance or len(provenance) != 3:
+        raise ValueError('current source revision original provenance changed')
+    archive = dict(original, path=CURRENT_REVISION_ARCHIVE)
+    check_file(root, archive)
+    current = revision['current']
+    if (not isinstance(current, dict) or set(current) != IDENTITY_FIELDS or
+            current.get('path') != CURRENT_REVISION_PATH or
+            current.get('mode') != original['mode'] or
+            type(current.get('bytes')) is not int or current['bytes'] <= 0 or
+            not isinstance(current.get('sha256'), str) or
+            not re.fullmatch('[0-9a-f]{64}', current['sha256']) or
+            not isinstance(current.get('git_blob_sha1'), str) or
+            not re.fullmatch('[0-9a-f]{40}', current['git_blob_sha1'])):
+        raise ValueError('current source revision exact identity fields')
+    if current['sha256'] == original['sha256'] or current['git_blob_sha1'] == original['git_blob_sha1']:
+        raise ValueError('current source revision must identify distinct derived bytes')
+    check_file(root, current)
+    return revision
+
+
+def retained_source_path(manifest, name):
+    """Fixed original-byte path for verification and historical test projection.
+
+    Callers must first validate the complete manifest with verify().
+    """
+    if manifest.get('current_source_revision') is not None and name == CURRENT_REVISION_PATH:
+        return CURRENT_REVISION_ARCHIVE
+    return name
+
 def relative(name):
     if not isinstance(name, str) or not name or '\\' in name:
         raise ValueError('invalid relative path')
@@ -52,13 +125,14 @@ def verify(root, manifest):
     files = manifest.get('files')
     if not isinstance(files, list) or not files:
         raise ValueError('retained files must be nonempty')
+    validate_current_source_revision(root, manifest)
     by_path = {}
     for row in files:
         if row['path'] in by_path:
             raise ValueError('duplicate retained file')
         if not row['path'].startswith('research/'):
             raise ValueError('source import outside isolated research tree')
-        check_file(root, row)
+        check_file(root, dict(row, path=retained_source_path(manifest, row['path'])))
         by_path[row['path']] = row
     mapped = set()
     source_ids = set()

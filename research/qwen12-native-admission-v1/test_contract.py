@@ -395,12 +395,61 @@ class ContractTests(unittest.TestCase):
             for before,after in mutations:
                 with self.subTest(enabled=enabled,guard=before),self.assertRaises(AssertionError):
                     self.assert_source_activation_state(release,text.replace(before,after,1))
-    def test_source_freeze_binds_current_files(self):
+    # This test-only projection reconstructs the original public source bytes.
+    # The execution freeze, prepare_freeze.build default, host ROOT and admission
+    # remain live-bound; no production caller imports or uses this projection.
+    def historical_freeze_build(self):
         import prepare_freeze
+        root=HERE.parents[1]
         freeze=c.read_json(HERE/'execution-freeze.json')
-        self.assertEqual(freeze,prepare_freeze.build())
+        originals={
+            'research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py':
+                'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/qwen_loading_gate_v2.py',
+            'research/source-screen32-v1/asr_worker.py':
+                'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012/asr_worker.py',
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            projection=Path(directory)
+            for name,row in freeze['host_code'].items():
+                source=root/originals.get(name,name)
+                self.assertFalse(source.is_symlink())
+                raw=source.read_bytes()
+                self.assertEqual({'bytes':len(raw),'sha256':c.digest(raw)},row)
+                target=projection/name;target.parent.mkdir(parents=True,exist_ok=True)
+                target.write_bytes(raw)
+            return prepare_freeze.build(projection)
+
+    def test_source_freeze_binds_exact_historical_files(self):
+        freeze=c.read_json(HERE/'execution-freeze.json')
+        self.assertEqual(freeze,self.historical_freeze_build())
         self.assertEqual(c.read_json(HERE/'execution-release.json')['source_freeze_sha256'],
                          c.identity(HERE/'execution-freeze.json')['sha256'])
+
+    def test_historical_projection_rejects_changed_missing_or_current_archive(self):
+        root=HERE.parents[1];read=Path.read_bytes
+        for name in ('qwen_loading_gate_v2.py','asr_worker.py'):
+            archive=root/'research/consolidation/archive/source-revisions/prepare-r1-hotpath-20261012'/name
+            live=root/('research/qwen6_asr/core/vendor/'+name if name.startswith('qwen_') else 'research/source-screen32-v1/'+name)
+            for replacement in (read(archive)+b' ',read(live)):
+                def changed(path,replacement=replacement):
+                    return replacement if path==archive else read(path)
+                with self.subTest(name=name),patch.object(Path,'read_bytes',changed),self.assertRaises(AssertionError):
+                    self.historical_freeze_build()
+            def absent(path):
+                if path==archive:raise FileNotFoundError(path)
+                return read(path)
+            with patch.object(Path,'read_bytes',absent),self.assertRaises(FileNotFoundError):
+                self.historical_freeze_build()
+
+    def test_live_freeze_and_stage_still_reject_revised_source(self):
+        import prepare_freeze
+        freeze=c.read_json(HERE/'execution-freeze.json')
+        self.assertNotEqual(freeze,prepare_freeze.build())
+        for name in ('research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py',
+                     'research/source-screen32-v1/asr_worker.py'):
+            with tempfile.TemporaryDirectory() as directory:
+                with self.assertRaisesRegex(ValueError,'frozen source identity'):
+                    host.stage({name:freeze['inference_code'][name]},Path(directory)/'not-admitted')
     def test_selected_repository_transport_rejects_log_claims(self):
         for value in (None,False,True,1,{},'github-job-log-chunks-v1'):
             env,event,release=self.dispatch_fixture();release['evidence_transport']=value

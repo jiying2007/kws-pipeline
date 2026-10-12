@@ -321,6 +321,31 @@ class Screen32HumanReviewTests(unittest.TestCase):
         with patch.object(Path, "read_bytes", changed_live):
             self.assertEqual(review.build_packet(ROOT), self.packet)
 
+    def test_hotpath_history_requires_both_exact_original_archives(self):
+        originals = ("research/qwen6_asr/core/vendor/qwen_loading_gate_v2.py",
+                     "research/source-screen32-v1/asr_worker.py")
+        read = Path.read_bytes
+        for original in originals:
+            archive = ROOT / review.HISTORICAL_SOURCE_PATHS[original]
+            self.assertNotEqual(read(archive), read(ROOT / original))
+            for replacement in (read(archive) + b" ", read(ROOT / original)):
+                def changed(path, replacement=replacement):
+                    return replacement if path == archive else read(path)
+                with self.subTest(original=original, case="changed"), patch.object(Path, "read_bytes", changed):
+                    with self.assertRaisesRegex(ValueError, "frozen source changed"):
+                        review.build_packet(ROOT)
+            def absent(path):
+                if path == archive:
+                    raise FileNotFoundError(path)
+                return read(path)
+            with self.subTest(original=original, case="missing"), patch.object(Path, "read_bytes", absent):
+                with self.assertRaises(FileNotFoundError):
+                    review.build_packet(ROOT)
+            def changed_live(path):
+                return read(path) + b" " if path == ROOT / original else read(path)
+            with patch.object(Path, "read_bytes", changed_live):
+                self.assertEqual(review.build_packet(ROOT), self.packet)
+
     def test_pending_reports_preserve_exact_preoptimization_canonical_bytes(self):
         expected = {review.source_report: "7891a59df8dd2bdb97be331174a2fe1c354ec9eb8fa5d307b59e58ac74712c10",
                     review.screening_report: "5ff67b095870b070c122c6e01a20e0abf542ac54260cac37da8faffdafd3250d"}
