@@ -64,6 +64,8 @@ class PreparePrerequisite(unittest.TestCase):
             ('diagnostic_forward_calls',None),('diagnostic_forward_calls',False),('diagnostic_forward_calls',1),
             ('source_ref','research/k1-punctuation6-prepare-diagnostic-v1'),
             ('result_ref','evidence/k1-punctuation6-prepare-diagnostic-v1'),
+            ('source_ref','research/k1-punctuation6-prepare-diagnostic-r1'),
+            ('result_ref','evidence/k1-punctuation6-prepare-diagnostic-r1'),
             ('workflow','.github/workflows/fixture.yml'),('acceptance',{}),('numeric_job_id',None),
             ('numeric_job_id',True),('result_commit',None),('archive_sha256',None),
             ('prepare_freeze_sha256',None),('posterior_policy_sha256',None)]

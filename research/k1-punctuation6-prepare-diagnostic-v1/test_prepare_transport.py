@@ -147,9 +147,10 @@ class TransportTests(unittest.TestCase):
     def test_wrong_current_or_history_run_cannot_publish_any_bytes(self):
         files,run,release,env,event,source=fixture();payload=t._zip_files(files,run)[0]
         for target in ('current','history'):
-            for key,value in (('id',124),('id',38234429437),('run_attempt',2),
+            for key,value in (('id',124),('id',38251170134),('id',38234429437),('run_attempt',2),
                     ('head_branch','research/k1-punctuation6-prepare-diagnostic-v1'),
                     ('head_sha',pc.SEALED_PREPARE_SOURCE),
+                    ('head_sha',pc.SEALED_PREPARE_R1_SOURCE),('head_sha',pc.SEALED_PREPARE_R1_RESULT),
                     ('path','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml')):
                 api=MockAPI(env,event,release,source)
                 row=api.run if target=='current' else api.history['workflow_runs'][0]
@@ -221,6 +222,9 @@ class TransportTests(unittest.TestCase):
         files,run,release,env,event,source=fixture();payload=t._zip_files(files,run)[0]
         for key,value in (('GITHUB_REPOSITORY','other/repo'),('GITHUB_JOB','asr18'),('GITHUB_EVENT_NAME','workflow_dispatch'),('GITHUB_RUN_ATTEMPT','2'),
                 ('GITHUB_REF','refs/heads/research/k1-punctuation6-prepare-diagnostic-v1'),
+                ('GITHUB_REF','refs/heads/research/k1-punctuation6-prepare-diagnostic-r1'),
+                ('GITHUB_RUN_ID','38251170134'),('GITHUB_SHA',pc.SEALED_PREPARE_R1_SOURCE),
+                ('GITHUB_SHA',pc.SEALED_PREPARE_R1_RESULT),
                 ('GITHUB_RUN_ID','38234429437'),('GITHUB_RUN_ID','38219171568'),('GITHUB_SHA',pc.SEALED_PREPARE_SOURCE)):
             bad=dict(env);bad[key]=value;api=mock.Mock(side_effect=AssertionError('API touched before context validation'))
             with self.subTest(key=key),self.assertRaises(ValueError):p.publish(bad,event,release,payload,api,mock.Mock())

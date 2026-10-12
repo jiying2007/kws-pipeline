@@ -955,7 +955,7 @@ class CompleteSourceLicenseIntegration(unittest.TestCase):
     LICENSE_ID={'bytes':5306,'sha256':'7dba975a2069691db4992b0592d70828b330d2f8a30a71450f4e152a554e84f8'}
     # Exact current disabled-source closure after the reviewed observer repair.
     # Historical executed snapshots remain immutable; this is a synthetic fixture.
-    FROZEN_SOURCE_SHA256='589f763a2f3ec91b0ebac716b12187f8e06cd6166a8cdb95f74e296401a4011f'
+    FROZEN_SOURCE_SHA256='5cce595e8df42805487b81f788e54e006764f327f9e022a3d741a721e0536d85'
     SYNTHETIC_CONTROLS=frozenset(('execution-release.json','input-freeze.json','tts-source-authority.json','prepare-prerequisite.json'))
 
     def setUp(self):

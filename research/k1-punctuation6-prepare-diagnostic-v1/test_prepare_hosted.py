@@ -98,7 +98,7 @@ class HostedTests(unittest.TestCase):
         self.assertEqual(release['prior_prepare_history_sha256'],pc.digest(pc.canonical(h.prior_history_identity())))
         history=h.prior_history_identity()
         self.assertEqual(history['observation_status'],'public_read_observed')
-        self.assertEqual(history['observed_at'],'2026-10-12T11:34:40.014Z')
+        self.assertRegex(history['observed_at'],r'^2026-10-12T[0-9:.]+Z$')
         self.assertEqual(history['prior_runs'],[])
         self.assertEqual(history['all_branch_push_history_count'],0)
         self.assertIs(history['source_ref_absent'],True);self.assertIs(history['evidence_ref_absent'],True)
@@ -120,11 +120,13 @@ class HostedTests(unittest.TestCase):
         result=h.api_preflight(api,run,release)
         self.assertEqual(len(api.calls),6);self.assertEqual(result['numeric_job_id'],999)
         key=next(k for k in api.rows if '/runs?branch=' in k)
-        for change in ('second','old','attempt2','consumed_prepare','wrong_ref'):
+        for change in ('second','old','attempt2','consumed_prepare','sealed_r1','wrong_ref','old_r1_ref'):
             bad=API(run)
             if change=='second':bad.rows[key]['total_count']=2;bad.rows[key]['workflow_runs']*=2
             elif change=='old':bad.rows[key]['workflow_runs'][0]['id']=38219171568
             elif change=='consumed_prepare':bad.rows[key]['workflow_runs'][0]['id']=38234429437
+            elif change=='sealed_r1':bad.rows[key]['workflow_runs'][0]['id']=38251170134
+            elif change=='old_r1_ref':bad.rows[key]['workflow_runs'][0]['head_branch']='research/k1-punctuation6-prepare-diagnostic-r1'
             elif change=='wrong_ref':bad.rows[key]['workflow_runs'][0]['head_branch']='research/k1-punctuation6-prepare-diagnostic-v1'
             else:bad.rows[key]['workflow_runs'][0]['run_attempt']=2
             with self.subTest(change=change),self.assertRaises(ValueError):h.api_preflight(bad,run,release)
@@ -135,12 +137,14 @@ class HostedTests(unittest.TestCase):
         env,event,_=context()
         for changed in ({'GITHUB_REF':'refs/heads/research/k1-punctuation6-asr18-r1'},
                         {'GITHUB_REF':'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1'},
+                        {'GITHUB_REF':'refs/heads/research/k1-punctuation6-prepare-diagnostic-r1'},
+                        {'GITHUB_RUN_ID':'38251170134'},
                         {'GITHUB_RUN_ID':'38234429437'}, {'GITHUB_RUN_ATTEMPT':'2'},
                         {'GITHUB_RUN_ID':'38219171568'},{'GITHUB_RUN_ID':'38207026177'},{'GITHUB_JOB':'asr18'}):
             with self.subTest(changed=changed),self.assertRaises(ValueError):h.event_identity({**env,**changed},event)
 
     def test_new_identity_retains_source_paths_workflow_and_historical_failure(self):
-        self.assertEqual(pc.EXPERIMENT,'k1-punctuation6-prepare-diagnostic-r1')
+        self.assertEqual(pc.EXPERIMENT,'k1-punctuation6-prepare-diagnostic-r2')
         self.assertEqual(pc.REL,'research/k1-punctuation6-prepare-diagnostic-v1/')
         self.assertEqual(h.WORKFLOW,'.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml')
         self.assertEqual(h.SOURCE_REF,'research/'+pc.EXPERIMENT)
@@ -151,7 +155,7 @@ class HostedTests(unittest.TestCase):
         self.assertEqual(transport.POLICY['result_branch'],h.EVIDENCE_REF)
         self.assertEqual(transport.SOURCE_FREEZE,'source/'+pc.REL+'prepare-freeze.json')
         old=h.prior_history_identity()['sealed_prepare_runs']
-        self.assertEqual(len(old),1)
+        self.assertEqual(len(old),2)
         self.assertEqual(old[0]['run_id'],38234429437)
         self.assertEqual(old[0]['source_sha'],'54ee9ee80e88c172cd04611474ded2613d956745')
         self.assertEqual(old[0]['result_sha'],'97141cea41cc5cc18fac3f5a434777991bfd4864')
@@ -161,6 +165,26 @@ class HostedTests(unittest.TestCase):
         self.assertFalse(old[0]['prepare_completion_established'])
         self.assertFalse(old[0]['capacity_success_established'])
         self.assertIsNone(old[0]['asr_forward_calls'])
+        r1=old[1]
+        self.assertEqual(r1['run_id'],38251170134)
+        self.assertEqual(r1['numeric_job_id'],114817557432)
+        self.assertEqual(r1['source_sha'],pc.SEALED_PREPARE_R1_SOURCE)
+        self.assertEqual(r1['result_sha'],pc.SEALED_PREPARE_R1_RESULT)
+        self.assertEqual(r1['archive_sha256'],'a10c27861d69a78d694de37b7cfe244eea87b91404591019832e87c880628984')
+        self.assertEqual(r1['conclusion'],'failure');self.assertEqual(r1['host_step'],'failure')
+        self.assertEqual(r1['publisher_step'],'success');self.assertTrue(r1['identity_sealed'])
+        self.assertFalse(r1['retry_authorized']);self.assertEqual(r1['reusable_slots'],0)
+        self.assertEqual(r1['completed_constructor_receipts'],0)
+        for key in ('consumed','constructor_entry_count','constructor_completion_count',
+                    'asr_forward_calls','consumed_asr_attempts'):
+            self.assertIsNone(r1[key])
+        self.assertFalse(r1['prepare_completion_established']);self.assertFalse(r1['capacity_success_established'])
+        failure=h.read_json(HERE/'FAILURE-38251170134.json')
+        self.assertEqual(failure['run_id'],r1['run_id'])
+        self.assertEqual(failure['source_commit'],r1['source_sha'])
+        self.assertEqual(failure['result_commit'],r1['result_sha'])
+        self.assertEqual(failure['archive_sha256'],r1['archive_sha256'])
+        self.assertEqual(pc.digest((HERE/'FAILURE-38251170134.json').read_bytes()),'d1bfbe474402991908d6841ded360c10e64e867dd0401cfc64c94f7fad6ee224')
         text=(HERE/'workflow.yml').read_text()
         self.assertIn('      - '+h.SOURCE_REF,text)
         self.assertIn('  group: '+pc.EXPERIMENT,text)
@@ -173,9 +197,10 @@ class HostedTests(unittest.TestCase):
         self.assertEqual(pc.validate_identity(run),run)
         self.assertEqual(obs.identity(run),run)
         transport.identity(run)
-        changes=[{'run_id':n} for n in (38207026177,38219171568,38234429437)]
+        changes=[{'run_id':n} for n in (38207026177,38219171568,38234429437,38251170134)]
         changes += [{'run_attempt':2},{'run_id':True},
-            {'executed_head_sha':pc.SEALED_PREPARE_SOURCE},{'executed_head_sha':pc.SEALED_PREPARE_RESULT}]
+            {'executed_head_sha':pc.SEALED_PREPARE_SOURCE},{'executed_head_sha':pc.SEALED_PREPARE_RESULT},
+            {'executed_head_sha':pc.SEALED_PREPARE_R1_SOURCE},{'executed_head_sha':pc.SEALED_PREPARE_R1_RESULT}]
         for change in changes:
             bad={**run,**change}
             for validator in (pc.validate_identity,obs.identity,transport.identity):
@@ -196,7 +221,10 @@ class HostedTests(unittest.TestCase):
                 self.assertEqual(observer.receipt_dir,root/(pc.EXPERIMENT+'-observation-12345-'+role))
 
     def test_old_release_refs_and_pending_history_do_not_authorize_new_run(self):
-        for key,value in (('experiment','k1-punctuation6-prepare-diagnostic-v1'),
+        for key,value in (('experiment','k1-punctuation6-prepare-diagnostic-r1'),
+            ('source_ref','research/k1-punctuation6-prepare-diagnostic-r1'),
+            ('evidence_ref','evidence/k1-punctuation6-prepare-diagnostic-r1'),
+            ('experiment','k1-punctuation6-prepare-diagnostic-v1'),
             ('source_ref','research/k1-punctuation6-prepare-diagnostic-v1'),
             ('evidence_ref','evidence/k1-punctuation6-prepare-diagnostic-v1'),
             ('workflow','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml'),
@@ -206,7 +234,9 @@ class HostedTests(unittest.TestCase):
         control=publisher.disabled_publication_release()
         for key in ('enabled','independent_source_review','root_publication_release'):control[key]=True
         publisher.publication_gate(control)
-        for key,value in (('source_branch','research/k1-punctuation6-prepare-diagnostic-v1'),
+        for key,value in (('source_branch','research/k1-punctuation6-prepare-diagnostic-r1'),
+            ('result_branch','evidence/k1-punctuation6-prepare-diagnostic-r1'),
+            ('source_branch','research/k1-punctuation6-prepare-diagnostic-v1'),
             ('result_branch','evidence/k1-punctuation6-prepare-diagnostic-v1'),
             ('workflow','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml')):
             with self.subTest(key=key),self.assertRaises(ValueError):publisher.publication_gate({**control,key:value})
