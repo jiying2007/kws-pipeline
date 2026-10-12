@@ -109,6 +109,25 @@ class ChangeSelectionTests(unittest.TestCase):
             self.assertEqual(run.call_args.args[0],
                              ['git', 'fetch', '--no-tags', '--depth=1', 'origin', 'a' * 40])
 
+    def test_host_verifier_source_exact_prefix_triggers_shared_gate(self):
+        for path in ('host-tts-verifier-source/synthetic.py',
+                     'host-tts-verifier-source/nested/test_synthetic.py'):
+            self.assertTrue(changes.relevant([path]), path)
+        for path in ('host-tts-verifier-source', 'host-tts-verifier-source-extra/file.py',
+                     'host-tts-verifier-sources/file.py', 'host-tts-verifier-source2/file.py',
+                     'other/host-tts-verifier-source/file.py', 'src/other.py'):
+            self.assertFalse(changes.relevant([path]), path)
+
+    def test_deleted_host_verifier_source_triggers_shared_gate(self):
+        self.commit('host-tts-verifier-source/synthetic.py', '# fixture')
+        before = self.git('rev-parse', 'HEAD')
+        Path('host-tts-verifier-source/synthetic.py').unlink()
+        self.git('add', '-A')
+        self.git('commit', '-m', 'delete host verifier fixture')
+        self.commit('README.md', 'later unrelated commit')
+        self.assertTrue(changes.relevant(changes.changed_paths(
+            'push', {'before': before}, 'refs/heads/main')))
+
     def test_original_event_scope_and_all_workflow_paths(self):
         self.assertFalse(changes.changed_paths('push', {}, 'refs/heads/feature/example'))
         for path in ('research/any/file', '.github/workflows/new.yml',

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Network-free contracts for required review coverage and source-retention CI."""
 from pathlib import Path
+import ast
+import os
+import tempfile
 import re
 import subprocess
 import textwrap
@@ -214,6 +217,165 @@ class CIContracts(unittest.TestCase):
         self.assertIn("hashFiles('research/offline-evidence-safety-v1/PUBLIC-DEPENDENCY.json')", self.source)
         self.assertNotIn('restore-keys:', self.source)
         self.assertIn('--fetch-helper --helper-cache-dir', self.source)
+
+
+
+ASR18_MODULES = (
+    'test_asr18_binding', 'test_asr18_contract', 'test_asr18_entrypoints',
+    'test_asr18_freeze', 'test_asr18_host', 'test_asr18_metadata',
+    'test_asr18_raw_data_reader', 'test_asr18_receipts', 'test_asr18_resources',
+    'test_asr18_transport', 'test_asr18_worker',
+)
+ASR18_JOB_IF = "${{ github.repository == 'jiying2007/kws-pipeline' && github.event_name == 'push' && github.ref == 'refs/heads/research/k1-punctuation6-asr18-v1' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1 }}"
+ASR18_HOST_IF = "${{ success() && steps.asr18_contracts.outcome == 'success' }}"
+ASR18_PUBLISH_IF = "${{ always() && steps.host.outputs.started == 'true' }}"
+
+
+def named_step(text, name):
+    matches = [part for part in text.split('      - ') if part.startswith('name: ' + name + '\n')]
+    if len(matches) != 1:
+        raise ValueError('missing or duplicate exact named step: ' + name)
+    return matches[0]
+
+
+def step_if(step):
+    return re.search(r'^        if: (.+)$', step, re.M).group(1)
+
+
+def contract_command(step):
+    return textwrap.dedent(step.split('        run: |\n', 1)[1])
+
+
+def outcome_route(condition, *, success=False, host='', contracts='', started=''):
+    """Only the fixed comparison grammar used by the actual two step guards."""
+    if not condition.startswith('${{ ') or not condition.endswith(' }}'):
+        raise ValueError('condition delimiters')
+    values = {'host': host, 'asr18_contracts': contracts}
+    results = []
+    for clause in condition[4:-3].split(' && '):
+        if clause == 'always()':
+            results.append(True)
+        elif clause == 'success()':
+            results.append(success)
+        elif clause == "steps.host.outputs.started == 'true'":
+            results.append(started == 'true')
+        else:
+            match = re.fullmatch(r"steps\.(host|asr18_contracts)\.outcome (==|!=) ('[^']*')", clause)
+            if not match:
+                raise ValueError('unsupported outcome clause')
+            value = ast.literal_eval(match[3])
+            results.append(values[match[1]] == value if match[2] == '==' else values[match[1]] != value)
+    return all(results)
+
+
+class ASR18CIContracts(unittest.TestCase):
+    def setUp(self):
+        self.ci = (ROOT / '.github/workflows/ci.yml').read_text()
+        self.workflow = (ROOT / '.github/workflows/k1-punctuation6-asr18-v1.yml').read_text()
+        self.template = (ROOT / 'research/k1-punctuation6-asr18-v1/workflow.yml').read_text()
+
+    def expected_command(self):
+        program = ('import sys,unittest; from pathlib import Path; '
+                   'sys.path.insert(0,str(Path("research/k1-punctuation6-asr18-v1").resolve())); '
+                   'suite=unittest.defaultTestLoader.loadTestsFromNames('
+                   + repr(ASR18_MODULES).replace("'", '"') + '); '
+                   'result=unittest.TextTestRunner(verbosity=2).run(suite); '
+                   'raise SystemExit(not result.wasSuccessful())')
+        return ("set -euo pipefail\nasr18_tests='" + program + "'\n" + ''.join(
+            'python3 -I -S -B' + mode + ' -c "$asr18_tests"\n' for mode in ('', ' -O', ' -OO')))
+
+    def check_wiring(self, ci, workflow, template):
+        self.assertEqual(workflow, template)
+        self.assertNotIn('INERT RESEARCH TEMPLATE', workflow)
+        shared = jobs(ci)['python-contracts']
+        self.assertNotIn('    if:', shared)
+        self.assertEqual(set(jobs(workflow)), {'asr18'})
+        execution = jobs(workflow)['asr18']
+        self.assertIn('    if: ' + ASR18_JOB_IF + '\n', execution)
+        self.assertIn('concurrency:\n  group: k1-punctuation6-asr18-v1\n  cancel-in-progress: false\n', workflow)
+        for name, body in (('ci', shared), ('asr18', execution)):
+            step = named_step(body, 'K1 punctuation6 ASR18 offline source contracts')
+            self.assertIn('        id: asr18_contracts\n', step)
+            self.assertNotIn('        if:', step)
+            self.assertNotIn('continue-on-error:', step)
+            self.assertNotIn('        env:', step)
+            self.assertEqual(contract_command(step), self.expected_command(), name)
+        host = named_step(execution, 'Admit complete new input and run fixed ASR18 once')
+        publish = named_step(execution, 'Publish complete audio-free bounded evidence')
+        self.assertIn('        id: host\n', host)
+        self.assertEqual(step_if(host), ASR18_HOST_IF)
+        self.assertEqual(step_if(publish), ASR18_PUBLISH_IF)
+        self.assertNotIn('continue-on-error:', execution)
+        self.assertLess(execution.index('id: asr18_contracts'), execution.index('id: host'))
+        self.assertLess(execution.index('id: host'), execution.index('name: Publish complete'))
+        self.assertEqual(contract_command(host), "printf 'started=true\\n' >> \"$GITHUB_OUTPUT\"\n"
+                         'python3 -I -B research/k1-punctuation6-asr18-v1/hosted_run.py\n')
+        self.assertIn('python3 -I -B research/k1-punctuation6-asr18-v1/evidence_publisher.py\n', publish)
+        self.assertIn('"$RUNNER_TEMP/check-tracked-worktree.sh" "K1 punctuation6 ASR18 contracts"', shared)
+
+    def test_fixed_all_modules_run_in_required_ci_and_before_execution(self):
+        self.check_wiring(self.ci, self.workflow, self.template)
+        actual = {p.stem for p in (ROOT / 'research/k1-punctuation6-asr18-v1').glob('test_asr18_*.py')}
+        self.assertEqual(actual, set(ASR18_MODULES))
+        self.assertEqual(len(ASR18_MODULES), 11)
+        for name in ASR18_MODULES:
+            self.assertTrue((ROOT / 'research/k1-punctuation6-asr18-v1' / (name + '.py')).is_file())
+
+    def test_rejects_missing_modes_discovery_skips_and_bypassed_routes(self):
+        mutations = (
+            ('ci', 'python3 -I -S -B -OO -c "$asr18_tests"', 'true'),
+            ('ci', 'loadTestsFromNames', 'discover'),
+            ('ci', 'test_asr18_worker', 'test_asr18_not_reviewed'),
+            ('ci', '        id: asr18_contracts\n', '        id: asr18_contracts\n        if: false\n'),
+            ('workflow', ASR18_HOST_IF, '${{ always() }}'),
+            ('workflow', ASR18_PUBLISH_IF, "${{ always() && steps.host.outcome != 'skipped' }}"),
+            ('workflow', "github.run_attempt == 1", 'github.run_attempt >= 1'),
+            ('workflow', 'id: host\n', 'id: host\n        continue-on-error: true\n'),
+        )
+        for target, before, after in mutations:
+            with self.subTest(target=target, before=before):
+                ci = self.ci.replace(before, after) if target == 'ci' else self.ci
+                workflow = self.workflow.replace(before, after) if target == 'workflow' else self.workflow
+                with self.assertRaises(AssertionError):
+                    self.check_wiring(ci, workflow, workflow)
+
+    def test_contract_shell_failure_stops_later_modes_and_host_marker(self):
+        command = contract_command(named_step(self.workflow, 'K1 punctuation6 ASR18 offline source contracts'))
+        host = contract_command(named_step(self.workflow, 'Admit complete new input and run fixed ASR18 once'))
+        with tempfile.TemporaryDirectory(prefix='asr18-ci-shell-') as name:
+            root = Path(name)
+            fake = root / 'python3'
+            fake.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n'
+                            'count=$(wc -l < "$CALL_LOG")\n'
+                            'if [ "$count" = "$FAIL_AT" ]; then exit 7; fi\n')
+            fake.chmod(0o755)
+            for fail_at in (0, 1, 2, 3, 4):
+                with self.subTest(fail_at=fail_at):
+                    log = root / ('calls-' + str(fail_at))
+                    output = root / ('output-' + str(fail_at))
+                    run = subprocess.run(['bash', '-c', command + host],
+                        env={'PATH': str(root) + os.pathsep + '/usr/bin:/bin',
+                             'CALL_LOG': str(log), 'FAIL_AT': str(fail_at), 'GITHUB_OUTPUT': str(output)},
+                        text=True, capture_output=True, check=False)
+                    self.assertEqual(len(log.read_text().splitlines()), fail_at or 4)
+                    self.assertEqual(run.returncode == 0, fail_at == 0)
+                    self.assertEqual(output.exists(), fail_at in (0, 4))
+                    if output.exists():
+                        self.assertEqual(output.read_text(), 'started=true\n')
+
+    def test_actual_step_guard_routing_requires_recorded_host_start(self):
+        host_if = step_if(named_step(self.workflow, 'Admit complete new input and run fixed ASR18 once'))
+        publish_if = step_if(named_step(self.workflow, 'Publish complete audio-free bounded evidence'))
+        for contracts in ('', 'success', 'failure', 'cancelled', 'skipped'):
+            for previous_success in (False, True):
+                with self.subTest(contracts=contracts, previous_success=previous_success):
+                    self.assertEqual(outcome_route(host_if, success=previous_success, contracts=contracts),
+                                     previous_success and contracts == 'success')
+        for host in ('', 'skipped', 'success', 'failure', 'cancelled'):
+            for started in ('', 'false', 'true'):
+                with self.subTest(host=host, started=started):
+                    # An outcome label alone never proves that the step began.
+                    self.assertEqual(outcome_route(publish_if, host=host, started=started), started == 'true')
 
 
 if __name__ == '__main__':

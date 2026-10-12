@@ -1,0 +1,93 @@
+name: K1 punctuation six bounded TTS
+on:
+  push:
+    branches:
+      - research/k1-punctuation6-writer-fixture-r1
+      - research/k1-punctuation6-tts-v1
+  pull_request:
+    paths:
+      - '.github/workflows/k1-punctuation6-tts-v1.yml'
+      - 'research/k1-punctuation6-v1/**'
+      - 'research/qwen6_tts/**'
+permissions:
+  contents: read
+concurrency:
+  group: k1-punctuation6-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  contracts:
+    if: github.repository == 'jiying2007/kws-data' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+      - name: Verify complete local source closure
+        run: python -I -B -c 'import pathlib,sys; sys.path.insert(0,str(pathlib.Path("research/k1-punctuation6-v1").resolve())); from tts_gate import verify_source; verify_source()'
+      - name: Run metadata and fake-operation tests in all three modes
+        run: |
+          for mode in '' '-O' '-OO'; do
+            python -I -B $mode -c 'import pathlib,sys,unittest; p=pathlib.Path("research/k1-punctuation6-v1").resolve(); sys.path.insert(0,str(p)); result=unittest.TextTestRunner(verbosity=1).run(unittest.defaultTestLoader.discover(str(p),pattern="test_*.py")); sys.exit(not result.wasSuccessful())'
+            python -I -B $mode -c 'import pathlib,sys,unittest; p=pathlib.Path("research/qwen6_tts").resolve(); sys.path.insert(0,str(p)); result=unittest.TextTestRunner(verbosity=1).run(unittest.defaultTestLoader.discover(str(p),pattern="test_*.py")); sys.exit(not result.wasSuccessful())'
+          done
+  writer-fixture:
+    needs: contracts
+    if: github.repository == 'jiying2007/kws-data' && github.ref == 'refs/heads/research/k1-punctuation6-writer-fixture-r1' && github.event_name == 'push' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+      - name: Publish once-only nonaudio fixture if separately released
+        timeout-minutes: 4
+        env:
+          KWS_DATA_TOKEN: ${{ github.token }}
+        run: python -I -B -c 'import pathlib,runpy,sys; p=pathlib.Path(sys.argv[1]).resolve(); sys.path.insert(0,str(p.parent)); sys.argv=sys.argv[1:]; runpy.run_path(str(p),run_name="__main__")' research/k1-punctuation6-v1/tts_publish.py --purpose fixture
+  k1-tts:
+    needs: contracts
+    if: github.repository == 'jiying2007/kws-data' && github.ref == 'refs/heads/research/k1-punctuation6-tts-v1' && github.event_name == 'push' && github.event.created == true && github.event.deleted == false && github.event.repository.private == false && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Start provisioning allowance
+        run: echo "K1_JOB_STARTED_UNIX_SECONDS=$(date +%s)" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        timeout-minutes: 3
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+      - name: Run exact six once if separately released
+        id: tts
+        run: python -I -B -c 'import pathlib,runpy,sys; p=pathlib.Path(sys.argv[1]).resolve(); sys.path.insert(0,str(p.parent)); sys.argv=sys.argv[1:]; runpy.run_path(str(p),run_name="__main__")' research/k1-punctuation6-v1/tts_host.py
+      - name: Preserve same-run bounded audio and machine receipts once
+        timeout-minutes: 4
+        if: always() && steps.tts.outcome != 'skipped'
+        env:
+          KWS_DATA_TOKEN: ${{ github.token }}
+        run: python -I -B -c 'import pathlib,runpy,sys; p=pathlib.Path(sys.argv[1]).resolve(); sys.path.insert(0,str(p.parent)); sys.argv=sys.argv[1:]; runpy.run_path(str(p),run_name="__main__")' research/k1-punctuation6-v1/tts_publish.py --purpose tts

@@ -15260,9 +15260,9 @@
     {
       "path": ".github/workflows/ci.yml",
       "mode": "100644",
-      "bytes": 42138,
-      "git_blob_sha1": "1d403befe4c7d19632dbdb142fc91e43fd3bdf47",
-      "sha256": "d8823d98a57ca8bb35f3727d6fca65760c19f3a76020aad0c7e0348e1a4160ec"
+      "bytes": 43165,
+      "sha256": "3d03a25c91800429e21b2cc97aa4ed990e9785406e24d80faf3f041a798b6082",
+      "git_blob_sha1": "ab054126699b025ab3beec1f5461d6e1ed1102c8"
     },
     {
       "path": ".github/workflows/dataset-driven-iteration.yml",
@@ -15421,9 +15421,9 @@
     {
       "path": ".github/workflows/repository-cleanup.yml",
       "mode": "100644",
-      "bytes": 17834,
-      "sha256": "0b6f64f14e1157968953b1ba0bb4cfc75cc9ea4ead898fbf975a5f4eb4bdb6f2",
-      "git_blob_sha1": "33252451d8c7a795073fcdadce70f912335c9ce5"
+      "bytes": 17872,
+      "sha256": "11a7535dade5c9e4e727b68e68f7c56470b5e615f7afa0bfeb416a33bfe6d20d",
+      "git_blob_sha1": "096bab28edefc6242b581d981bd672bd4685fb04"
     },
     {
       "path": ".github/workflows/research-arm-runtime.yml",
@@ -15631,7 +15631,8 @@
   ],
   "allowed_new_active_workflows": [
     ".github/workflows/research-source-consolidation.yml",
-    ".github/workflows/qwen12-native-admission-v1.yml"
+    ".github/workflows/qwen12-native-admission-v1.yml",
+    ".github/workflows/k1-punctuation6-asr18-v1.yml"
   ],
   "base_tree": "a9a07847b3c778a8385762b6bbf3ef2087db7e82",
   "active_workflow_maintenance": [
@@ -19708,6 +19709,211 @@
           }
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-punctuation6-asr18-exact-source-ci-retention-20261012",
+      "baseline_kind": "immutable public main readback and byte-equivalent local baseline",
+      "public_main_base_commit": "0113fcb295066b1ba3486053224c8e455ed861fc",
+      "public_main_base_tree": "3d0e9667dcf68bcaa58742278bd5332acdc89a21",
+      "scope": "Add only the exact K1 punctuation6 ASR18 workflow, consumed-source retention name, host verifier shared-gate prefix, and strict synthetic regression coverage.",
+      "rationale": "Preserve all 718 retained source rows, 834 provenance rows, 54 baseline workflow names, existing two added workflow identities, and all prior maintenance receipts. The separate ASR18 freeze owns new host-tts-verifier-source files; the research-only retained-source rule is unchanged. The new workflow is restricted to its unique source ref, which is not created here; the current ASR-only candidate has execution and publication controls enabled, still gated by that single fresh source ref and the source preflight. No execution ref is created by preparation. The missing consumed qwen12-native-admission-v1 ref must not be recreated.",
+      "workflow_source_changed": true,
+      "files": [
+        {
+          "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+          "before": null,
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 1890,
+            "sha256": "4278efb861db63f7f1e5ba3e5187bc731e5b161a688cee0f2dbdeef07585826f",
+            "git_blob_sha1": "294e5286c248f892a607abbcabb318c977fc0caa"
+          }
+        },
+        {
+          "path": ".github/workflows/repository-cleanup.yml",
+          "before": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17834,
+            "sha256": "0b6f64f14e1157968953b1ba0bb4cfc75cc9ea4ead898fbf975a5f4eb4bdb6f2",
+            "git_blob_sha1": "33252451d8c7a795073fcdadce70f912335c9ce5"
+          },
+          "after": {
+            "path": ".github/workflows/repository-cleanup.yml",
+            "mode": "100644",
+            "bytes": 17872,
+            "sha256": "11a7535dade5c9e4e727b68e68f7c56470b5e615f7afa0bfeb416a33bfe6d20d",
+            "git_blob_sha1": "096bab28edefc6242b581d981bd672bd4685fb04"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_source_retention.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 13669,
+            "sha256": "3c734672ecf7747c99188ba9a81305ee5d60f201a4e9982ca2d2f71d8c14c395",
+            "git_blob_sha1": "709ec8aa7e2d103dc30a582f309a9fdbe5b23057"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_source_retention.py",
+            "mode": "100644",
+            "bytes": 16058,
+            "sha256": "fe4a1655bb6aaded2c53e1190ba763c7cd849b10ec46c9b9c634f7810b59086a",
+            "git_blob_sha1": "d8c5e760504a4b9a8c3c0107bca9eccac8c5afb3"
+          }
+        },
+        {
+          "path": "research/consolidation/tests/test_cleanup_retention.py",
+          "before": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 12405,
+            "sha256": "098f50460e4b3d01960ae5d0a031a21d96fd37264624db2a9defd35d405c95d1",
+            "git_blob_sha1": "6a0305070b307e4edee5b084f388e85b263cd0ae"
+          },
+          "after": {
+            "path": "research/consolidation/tests/test_cleanup_retention.py",
+            "mode": "100644",
+            "bytes": 12692,
+            "sha256": "3c9d9f03e58ef0878161a0756354d26fe7b3a014d4492f5680de68268c845b47",
+            "git_blob_sha1": "74c7877c06540ef0265b54ef72a427f135e8ad4f"
+          }
+        },
+        {
+          "path": "tests/test_research_ci_changes.py",
+          "before": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 5902,
+            "sha256": "7cf58f533c76877f85c1c3858fbc654a6487124be9bab36ef5291d1eca8036ce",
+            "git_blob_sha1": "75d409a98ec9de59e0a3a42043709cb07c94d806"
+          },
+          "after": {
+            "path": "tests/test_research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 7036,
+            "sha256": "35e8e54ca76fc0ffa6c6cafe9077a6b96c84610db70b204a7d6015021b37f2a2",
+            "git_blob_sha1": "102e38841f16811df2e43dcbd88bb758630b5870"
+          }
+        },
+        {
+          "path": "tools/research_ci_changes.py",
+          "before": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 2877,
+            "sha256": "9f2f0112b852ba52147c0d00551c214178e17ece88d536d18d3c6b4a9c5c1b4d",
+            "git_blob_sha1": "d5a10b6db6a9e4cab628df5ea63f5954f8de7507"
+          },
+          "after": {
+            "path": "tools/research_ci_changes.py",
+            "mode": "100644",
+            "bytes": 2906,
+            "sha256": "f472ac131f4890a02faeb835f9ff0463900753518164bb1db60c3bb97529e4cb",
+            "git_blob_sha1": "d1d6cc0049ea7d701593dbf9c2ad195ff34c67f2"
+          }
+        },
+        {
+          "path": "tools/verify_research_sources.py",
+          "before": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 9247,
+            "sha256": "5f0b7bdf3473c257ccd1961c8c0ac60467c1e93938343e517a669a3aefb18009",
+            "git_blob_sha1": "c9cca6ba7562961e11711423155b42282b05c2c0"
+          },
+          "after": {
+            "path": "tools/verify_research_sources.py",
+            "mode": "100644",
+            "bytes": 9314,
+            "sha256": "f51e0dd7f804729b377e7a96ba74294f53e79e96c0772478cfbff129b86f937c",
+            "git_blob_sha1": "64f5d393dceff9fef6c4503c367ad566ccbabe6b"
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "operation_id": "k1-punctuation6-asr18-required-ci-wiring-20261012",
+      "baseline_kind": "local reviewed ASR-only candidate before remote publication",
+      "public_main_base_commit": "0113fcb295066b1ba3486053224c8e455ed861fc",
+      "public_main_base_tree": "3d0e9667dcf68bcaa58742278bd5332acdc89a21",
+      "scope": "Wire the fixed 11-module ASR18 stdlib suite in normal/-O/-OO into required python-contracts and the existing single execution job before the host; preserve exact fresh-push/first-attempt authority and all previous checks.",
+      "rationale": "Execution and publication controls in the current ASR-only source are enabled, but the unique execution ref has not been created. Contract failure blocks host startup; publisher runs only after the host step has emitted its exact started=true output before invoking the unchanged host command and this marker is not evidence of an ASR start or slot consumption, and the unchanged package gate remains fail-closed. Preserve every original 46 maintenance receipt. Correct only the immediately preceding unpublished ASR candidate receipt wording to reflect its actual enabled candidate stage; the original disabled candidate and 135-file activated candidate snapshots remain unchanged outside this tree.",
+      "workflow_source_changed": true,
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "before": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 42138,
+            "sha256": "d8823d98a57ca8bb35f3727d6fca65760c19f3a76020aad0c7e0348e1a4160ec",
+            "git_blob_sha1": "1d403befe4c7d19632dbdb142fc91e43fd3bdf47"
+          },
+          "after": {
+            "path": ".github/workflows/ci.yml",
+            "mode": "100644",
+            "bytes": 43165,
+            "sha256": "3d03a25c91800429e21b2cc97aa4ed990e9785406e24d80faf3f041a798b6082",
+            "git_blob_sha1": "ab054126699b025ab3beec1f5461d6e1ed1102c8"
+          }
+        },
+        {
+          "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+          "before": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 1890,
+            "sha256": "4278efb861db63f7f1e5ba3e5187bc731e5b161a688cee0f2dbdeef07585826f",
+            "git_blob_sha1": "294e5286c248f892a607abbcabb318c977fc0caa"
+          },
+          "after": {
+            "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+            "mode": "100644",
+            "bytes": 2866,
+            "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
+            "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
+          }
+        },
+        {
+          "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+          "before": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 1890,
+            "sha256": "4278efb861db63f7f1e5ba3e5187bc731e5b161a688cee0f2dbdeef07585826f",
+            "git_blob_sha1": "294e5286c248f892a607abbcabb318c977fc0caa"
+          },
+          "after": {
+            "path": "research/k1-punctuation6-asr18-v1/workflow.yml",
+            "mode": "100644",
+            "bytes": 2866,
+            "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
+            "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
+          }
+        },
+        {
+          "path": "research/consolidation/source_tests/test_ci_structure.py",
+          "before": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 13105,
+            "sha256": "f5968dd9ec2d2acb36d4d58fad3aed9eda793baf883bd725d94c36b8ea44c4b0",
+            "git_blob_sha1": "1b520cd112c8da25f9f3ab23b30074e94891fca3"
+          },
+          "after": {
+            "path": "research/consolidation/source_tests/test_ci_structure.py",
+            "mode": "100644",
+            "bytes": 22636,
+            "sha256": "2d668f7e9c9afa0553b2ae4a1d0c08b44e32c03adf55076dc43f4fd094dfcf4a",
+            "git_blob_sha1": "fd6517c3c8c555807e1232db5692985516840a61"
+          }
+        }
+      ]
     }
   ],
   "current_added_active_workflows": [
@@ -19724,6 +19930,13 @@
       "bytes": 5301,
       "sha256": "4f3dcbb478c27fcb9a22f7b21a758bc7e8b10036c409166ff6e14aa6f4beda1d",
       "git_blob_sha1": "58f2fbb53659c84df2fc5445ba30f92d36a2af0f"
+    },
+    {
+      "path": ".github/workflows/k1-punctuation6-asr18-v1.yml",
+      "mode": "100644",
+      "bytes": 2866,
+      "sha256": "d9d0a8e87f3056f8dd06341aadec466ea52c364fcd2aae89556a361b0d11faca",
+      "git_blob_sha1": "4ef6707ac0ed08d58782e42bcaa6521af1339bf0"
     }
   ]
 }

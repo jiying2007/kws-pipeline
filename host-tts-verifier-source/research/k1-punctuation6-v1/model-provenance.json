@@ -1,0 +1,190 @@
+{
+  "schema": "k1-punctuation6-public-generation-source-provenance-v1",
+  "model_id": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+  "model_revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+  "sources": [
+    {
+      "official_source_path": "qwen_tts/inference/qwen3_tts_model.py",
+      "sha256": "e1da450732857c1f5fe3e36ebab85db2f6dc6a48caaff6973f463384e30275e4",
+      "bytes": 37121,
+      "matches_original_source_lock": true,
+      "source_url": "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/inference/qwen3_tts_model.py",
+      "git_blob_oid": "f4d33bf3d60c404ee540e58488545ccf5347e25f",
+      "source_commit_sha": "022e286b98fbec7e1e916cb940cdf532cd9f488e"
+    },
+    {
+      "official_source_path": "qwen_tts/core/models/modeling_qwen3_tts.py",
+      "sha256": "25c42656bcf810f06ef6bc1839bd7083f3c8cfedac3a147c4060b4262b1c96a0",
+      "bytes": 100211,
+      "matches_original_source_lock": true,
+      "source_url": "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/modeling_qwen3_tts.py",
+      "git_blob_oid": "a3eb30a05771345c7511ca69eea8c96f3359ed66",
+      "source_commit_sha": "022e286b98fbec7e1e916cb940cdf532cd9f488e"
+    },
+    {
+      "official_source_path": "qwen_tts/inference/qwen3_tts_tokenizer.py",
+      "sha256": "ac2d855022a1bd21d33ab7b267ec952eef71f81d3f8d969a306139ff1a929515",
+      "bytes": 15699,
+      "matches_original_source_lock": true,
+      "source_url": "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/inference/qwen3_tts_tokenizer.py",
+      "git_blob_oid": "24f8768edb1ae2c89761529c3af479f6c3bc390d",
+      "source_commit_sha": "022e286b98fbec7e1e916cb940cdf532cd9f488e"
+    },
+    {
+      "official_source_path": "qwen_tts/core/models/configuration_qwen3_tts.py",
+      "sha256": "f52867f14fde06a416dd14864d503ce6d13d0a08d5f5da30191e1c80c13f5d18",
+      "bytes": 26428,
+      "matches_original_source_lock": true,
+      "source_url": "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/models/configuration_qwen3_tts.py",
+      "git_blob_oid": "0bd426db0fb6410a21b0649c7b5804739d600106",
+      "source_commit_sha": "022e286b98fbec7e1e916cb940cdf532cd9f488e"
+    },
+    {
+      "official_source_path": "qwen_tts/core/tokenizer_12hz/modeling_qwen3_tts_tokenizer_v2.py",
+      "sha256": "844e8dd8c0182ef9c6463c874631c22ef3c5a4fd1899dd657016164cc5379628",
+      "bytes": 40519,
+      "matches_original_source_lock": true,
+      "source_url": "https://github.com/QwenLM/Qwen3-TTS/blob/022e286b98fbec7e1e916cb940cdf532cd9f488e/qwen_tts/core/tokenizer_12hz/modeling_qwen3_tts_tokenizer_v2.py",
+      "git_blob_oid": "0c00fd345dbf39395d0d626059c50e463d9e8fb4",
+      "source_commit_sha": "022e286b98fbec7e1e916cb940cdf532cd9f488e"
+    },
+    {
+      "official_source_path": "config.json",
+      "sha256": "81aca2b6fac304944d8acf345272d8a9a727d5fc2e2e66b222ab4729340c7455",
+      "bytes": 4908,
+      "matches_original_model_lock": true,
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/config.json"
+    },
+    {
+      "official_source_path": "generation_config.json",
+      "sha256": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+      "bytes": 245,
+      "matches_original_model_lock": true,
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/generation_config.json"
+    },
+    {
+      "official_source_path": "speech_tokenizer/config.json",
+      "sha256": "ee65bb901c876664ab8707c487157aa1a6ee57c65969b28fb5ec9dc211e68167",
+      "bytes": 2336,
+      "matches_original_model_lock": true,
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/speech_tokenizer/config.json"
+    },
+    {
+      "official_source_path": "README.md",
+      "sha256": "1e3adeecc7a72d6756fdb77c2847f8e994195e105b51206a7a5c049b0dfa48a8",
+      "bytes": 3263,
+      "matches_original_model_lock": true,
+      "source_url": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/README.md"
+    }
+  ],
+  "transformers_generation_sources": [
+    {
+      "path": "transformers/generation/stopping_criteria.py",
+      "bytes": 28930,
+      "sha256": "495628e4c877f667fbbd9ed4cc83b680de9eac2abc97ec3903f6e9219af3ecd2",
+      "matches_github_version_tag": true,
+      "source_url": "https://github.com/huggingface/transformers/blob/47b0e478f324b54f177ea7998a0791870fdd0324/src/transformers/generation/stopping_criteria.py"
+    },
+    {
+      "path": "transformers/generation/utils.py",
+      "bytes": 210102,
+      "sha256": "a20024b1e82ed5361a524d238d2197be5407abc91297dd9888c57e8284d63fef",
+      "matches_github_version_tag": true,
+      "source_url": "https://github.com/huggingface/transformers/blob/47b0e478f324b54f177ea7998a0791870fdd0324/src/transformers/generation/utils.py"
+    }
+  ],
+  "transformers_wheel_reference": {
+    "url": "https://files.pythonhosted.org/packages/6a/6b/2f416568b3c4c91c96e5a365d164f8a4a4a88030aa8ab4644181fdadce97/transformers-4.57.3-py3-none-any.whl",
+    "locked_wheel_size_bytes": 11993463,
+    "locked_whole_wheel_sha256": "c77d353a4851b1880191603d36acb313411d3577f6e2897814f333841f7003f4",
+    "whole_wheel_downloaded": false,
+    "whole_wheel_hash_verified_this_audit": false
+  },
+  "model_config": {
+    "tts_model_size": "0b6",
+    "tts_model_type": "custom_voice",
+    "tokenizer_type": "qwen3_tts_tokenizer_12hz"
+  },
+  "talker_config": {
+    "codec_eos_token_id": 2150,
+    "num_code_groups": 16,
+    "spk_id": {
+      "serena": 3066,
+      "vivian": 3065,
+      "uncle_fu": 3010,
+      "ryan": 3061,
+      "aiden": 2861,
+      "ono_anna": 2873,
+      "sohee": 2864,
+      "eric": 2875,
+      "dylan": 2878
+    },
+    "spk_is_dialect": {
+      "serena": false,
+      "vivian": false,
+      "uncle_fu": false,
+      "ryan": false,
+      "aiden": false,
+      "ono_anna": false,
+      "sohee": false,
+      "eric": "sichuan_dialect",
+      "dylan": "beijing_dialect"
+    },
+    "codec_language_id": {
+      "chinese": 2055,
+      "english": 2050,
+      "german": 2053,
+      "italian": 2070,
+      "portuguese": 2071,
+      "spanish": 2054,
+      "japanese": 2058,
+      "korean": 2064,
+      "french": 2061,
+      "russian": 2069,
+      "beijing_dialect": 2074,
+      "sichuan_dialect": 2062
+    }
+  },
+  "speech_tokenizer_config": {
+    "model_type": "qwen3_tts_tokenizer_12hz",
+    "output_sample_rate": 24000,
+    "decode_upsample_rate": 1920
+  },
+  "experiment_speaker_conditioning": [
+    {
+      "speaker": "Dylan",
+      "config_key": "dylan",
+      "speaker_id": 2878,
+      "requested_language": "Chinese",
+      "effective_language_key": "beijing_dialect",
+      "effective_language_id": 2074
+    },
+    {
+      "speaker": "Uncle_Fu",
+      "config_key": "uncle_fu",
+      "speaker_id": 3010,
+      "requested_language": "Chinese",
+      "effective_language_key": "chinese",
+      "effective_language_id": 2055
+    },
+    {
+      "speaker": "Vivian",
+      "config_key": "vivian",
+      "speaker_id": 3065,
+      "requested_language": "Chinese",
+      "effective_language_key": "chinese",
+      "effective_language_id": 2055
+    }
+  ],
+  "native_output_boundary": "Exact float32 waveform returned by the official CustomVoice wrapper, after built-in decoder clamp[-1,1] and code-derived length slice; no additional application gain/trim",
+  "termination_contract": {
+    "singleton": true,
+    "eos_token_id": 2150,
+    "sequence_length_equals_hidden_state_iterations": true,
+    "final_eos_required": true,
+    "earlier_eos_prohibited": true,
+    "iterations_strictly_less_than": 120,
+    "cap_with_eos_still_rejected": true
+  },
+  "execution_performed": false
+}

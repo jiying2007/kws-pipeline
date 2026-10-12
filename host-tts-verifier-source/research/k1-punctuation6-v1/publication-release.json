@@ -1,0 +1,13 @@
+{
+  "schema": "k1-punctuation6-publication-release-v1",
+  "experiment": "k1-punctuation6-v1",
+  "enabled": true,
+  "purposes": {
+    "fixture": false,
+    "tts": true
+  },
+  "independent_source_review": true,
+  "root_publication_release": true,
+  "prior_claim_history_sha256": "feb7e5da14d08dec935fd4775b5a3d334a2fbadb7503a7d3866385c8e39eeae3",
+  "commit_timestamp": "2026-10-12T03:00:59Z"
+}

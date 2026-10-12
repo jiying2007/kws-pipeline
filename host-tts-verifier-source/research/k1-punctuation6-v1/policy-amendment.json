@@ -1,0 +1,37 @@
+{
+  "exact_contract_behavior_delta": {
+    "function": "validate_tts_barrier_metadata",
+    "other_algorithm_changes": [],
+    "quality_flags_allowed_added": [
+      "derived_pcm_silent"
+    ]
+  },
+  "exact_plan_additions": {
+    "derivation": {
+      "parent_contract_sha256": "aa860a9baa2b0aceb29d5a75f2693dec8c2bb150b68c60f49a68a08e8be017e0",
+      "parent_plan_sha256": "a799de29be9e41c283982942ed6eb2256e951d864c12104deb152bdcd4d1f229",
+      "parent_snapshot_manifest_sha256": "15bec2841e5cda32f556874a063afed42d498d173c0b1ac599559f3fd837934b",
+      "schema": "k1-punctuation6-derived-policy-v1",
+      "sole_behavior_change": "Exact all-zero final PCM16 bytes add derived_pcm_silent; quarantine as not_run_quality before ASR. No amplitude/SNR threshold, retry, changed generation or changed denominator."
+    },
+    "quality_policy": {
+      "asr_disposition": "not_run_quality unless an already-fixed duplicate quarantine also applies",
+      "derived_pcm_silent_definition": "All final decoded PCM16 sample bytes are zero; compute after WAV write/readback and independently recompute from published WAV. Any nonzero int16 sample, including +1 or -1, is not silent under this rule.",
+      "generation_status": "Natural generation may remain complete; quality exclusion is an independent pre-ASR disposition.",
+      "ordered_flags": [
+        "silent",
+        "source_peak_ge_one",
+        "normalized_peak_ge_one",
+        "derived_pcm_silent"
+      ]
+    }
+  },
+  "parent_contract_sha256": "aa860a9baa2b0aceb29d5a75f2693dec8c2bb150b68c60f49a68a08e8be017e0",
+  "parent_plan_sha256": "a799de29be9e41c283982942ed6eb2256e951d864c12104deb152bdcd4d1f229",
+  "parent_snapshot_manifest_sha256": "15bec2841e5cda32f556874a063afed42d498d173c0b1ac599559f3fd837934b",
+  "parent_snapshot_retained_unchanged": true,
+  "quotas_seeds_texts_voices_model_budget_normalization_unchanged": true,
+  "schema": "k1-punctuation6-policy-amendment-v1",
+  "sole_behavior_change": "Exact all-zero final PCM16 bytes add derived_pcm_silent; quarantine as not_run_quality before ASR. No amplitude/SNR threshold, retry, changed generation or changed denominator.",
+  "training_execution_enabled": false
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "k1-punctuation6-tts-release-v1",
+  "experiment": "k1-punctuation6-v1",
+  "enabled": true,
+  "fixture_write_readback_verified": true,
+  "fixture_result_commit": "15361a820219cdab709f2e1b5ac77b0f585accc3",
+  "fixture_publisher_source_hashes": {
+    "data_transport.py": "42dd0b5091714ed98d226db32d919ef458ae468aee82aee1d94beffa43a7e110",
+    "data_publisher.py": "61d3cdb5b56ab7dd2aa1d0fb527ca82c6b2b3944bf54896ebdd4faa2eb14d456",
+    "tts_publish.py": "afef406c241bc50de73cc23b141700837631b6ce479a41a49aae7153fe6599c0",
+    "tts_common.py": "3b53f16ee7eaeda8b1fe0d26cdb4b31964f7e802b8767f1bc291b9ee8814d7d3",
+    "tts_gate.py": "50fb28d89e556547e604be239af3449c961680b551b8132426719eea89f248a3"
+  },
+  "source_branch": "research/k1-punctuation6-tts-v1",
+  "result_branch": "data/k1-punctuation6-tts-v1",
+  "maximum_tts_attempts": 6,
+  "asr_enabled": false,
+  "training_enabled": false,
+  "independent_source_review": true,
+  "root_execution_release": true,
+  "historical_audio_inventory_frozen": true,
+  "fixture_source_commit": "b4a0ab44036a3d07a3a872f08f88fb69c32fa11b",
+  "fixture_archive_sha256": "359af0f238ffed856fe7fc2dd01c698c0468334de89e749dac42d7dff7618585"
+}

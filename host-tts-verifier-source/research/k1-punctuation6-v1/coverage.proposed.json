@@ -1,0 +1,144 @@
+{
+  "admission_policy": "Actual source/rights/history/native verification and genuine registered train-only roots remain required for both old and new rows. This proposal does not register roots or admit rows.",
+  "all_legally_admitted_rows_required": true,
+  "derived_recipe_required": {
+    "maximum_extra_neural_readback_passes": 36,
+    "old_24_24_second_bound_reused": false,
+    "preserve": [
+      "seed9101101",
+      "TinyStreamingRNN32x64x5/logmel",
+      "all objective weights",
+      "AdamW and learning rate/weight decay/gradient clip",
+      "1000 updates",
+      "single fit",
+      "last-only checkpoint",
+      "no augmentation",
+      "no warm start",
+      "thresholds0.55",
+      "no retry"
+    ],
+    "readback_formula": "N + 24 with N <= 12",
+    "recalculate_from_new_audio_geometry": true,
+    "training_execution_release": "separate future independent review; disabled",
+    "update_only": [
+      "new data identities",
+      "new coverage binding",
+      "source closure",
+      "analytic workload bounds",
+      "reviewed resource proposal"
+    ]
+  },
+  "execution_enabled": false,
+  "experiment": "k1-punctuation6-v1",
+  "historical_contract": {
+    "coverage_sha256": "83a0b0473049ca1b784274be5703ff38afd5e7d6922277350db3732265a2b128",
+    "mutate_old_contracts": false,
+    "old_asr_slots_exhausted": 36,
+    "old_group_candidate_counts": [
+      0,
+      2,
+      3,
+      1
+    ],
+    "old_twelve_status": "INSUFFICIENT_ADMITTED_COVERAGE",
+    "recipe_sha256": "bee9cc3d4a6c879705fe77e36195d2f2eeca2244e7ea01c5b2891e499eb4cd5f"
+  },
+  "maximum_training_rows": 12,
+  "member_policy": "Six new cells are preregistered before ASR. Every legally admitted new/old candidate is included, with real label/kind preserved. No ASR-dependent cell selection or cross-group coverage substitution.",
+  "minimum_support": [
+    {
+      "eligible_members": [
+        "k1p6-001",
+        "k1p6-002",
+        "k1p6-003",
+        "k1p6-004",
+        "k1p6-005",
+        "k1p6-006"
+      ],
+      "group": "new-k1",
+      "minimum_legally_admitted": 1,
+      "required_actual_text": "你好小窝"
+    },
+    {
+      "eligible_members": [
+        "qwen12-3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25",
+        "qwen12-f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db"
+      ],
+      "group": "old-k2",
+      "minimum_legally_admitted": 1,
+      "required_actual_text": "小窝小窝"
+    },
+    {
+      "eligible_members": [
+        "qwen12-06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980",
+        "qwen12-7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4",
+        "qwen12-a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229"
+      ],
+      "group": "old-repeat-nihao",
+      "minimum_legally_admitted": 1,
+      "required_actual_text": "你好你好"
+    },
+    {
+      "eligible_members": [
+        "qwen12-ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20"
+      ],
+      "group": "old-suffix-kw2",
+      "minimum_legally_admitted": 1,
+      "required_actual_text": "窝小窝"
+    }
+  ],
+  "new_cells": [
+    "k1p6-001",
+    "k1p6-002",
+    "k1p6-003",
+    "k1p6-004",
+    "k1p6-005",
+    "k1p6-006"
+  ],
+  "old_train_only_candidates": [
+    {
+      "audio_id": "clip-000003",
+      "formal_admission": false,
+      "group": "old-k2",
+      "required_actual_text": "小窝小窝",
+      "source_id": "qwen12-3660c72e7db7392d4a430b71cc224b65527037129ef45d4387627dc6e262ef25"
+    },
+    {
+      "audio_id": "clip-000012",
+      "formal_admission": false,
+      "group": "old-k2",
+      "required_actual_text": "小窝小窝",
+      "source_id": "qwen12-f96edce564f94ea7919c6de63613e88fe89ae07f01ad907097c4af095c3685db"
+    },
+    {
+      "audio_id": "clip-000002",
+      "formal_admission": false,
+      "group": "old-repeat-nihao",
+      "required_actual_text": "你好你好",
+      "source_id": "qwen12-06fd2d9f2186ad9c7d4386bbbfe13241a141bc792c7ea8e634b74cadea5e2980"
+    },
+    {
+      "audio_id": "clip-000006",
+      "formal_admission": false,
+      "group": "old-repeat-nihao",
+      "required_actual_text": "你好你好",
+      "source_id": "qwen12-7c091117d6ef772c960bd818c4188a1ece8db9219f540d35ecb6850493697af4"
+    },
+    {
+      "audio_id": "clip-000007",
+      "formal_admission": false,
+      "group": "old-repeat-nihao",
+      "required_actual_text": "你好你好",
+      "source_id": "qwen12-a9ddaa06fa6133cd9acdb37a761b0e3cc6b66e48a18c82a97b159738bdbc8229"
+    },
+    {
+      "audio_id": "clip-000008",
+      "formal_admission": false,
+      "group": "old-suffix-kw2",
+      "required_actual_text": "窝小窝",
+      "source_id": "qwen12-ae352e520daff27d394d726e3f35ea46b1745c6d8c0a335685e1f9b770227e20"
+    }
+  ],
+  "schema": "k1-punctuation6-training-coverage-proposal-v1",
+  "status": "disabled_pending_root_freeze_before_asr"
+}
