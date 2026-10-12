@@ -21,6 +21,7 @@ INFERENCE_NEW = (
     "asr18_metadata.py", "campaign_contract.py", "worker_receipts.py", "native_worker.py",
     "cpu_budget.py", "cpu_gate.py", "runtime_scope.py", "setup_adapter.py", "native_locks.py",
     "whisper_binding.py", "optional_tools.py", "execution-release.json",
+    "prepare_prerequisite.py", "prepare-prerequisite.json",
 )
 HOST_NEW = (
     "input_binding.py", "raw_data_reader.py", "hosted_run.py", "resource_host.py", "failure_observer.py",

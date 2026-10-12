@@ -99,8 +99,9 @@ class ContractTests(unittest.TestCase):
         freeze = {'synthetic': 'not actual execution authority'}
         with self.assertRaises(ValueError): c.require_execution_release(release, freeze)
         with self.assertRaises(ValueError): c.require_execution_release(release, freeze, expected_freeze_sha256='b' * 64)
-        self.assertEqual(c.require_execution_release(release, freeze,
-            expected_freeze_sha256=c.digest(c.canonical(freeze))), release)
+        # A self-consistent source digest is insufficient without actual prepare proof.
+        with self.assertRaises(ValueError):
+            c.require_execution_release(release, freeze, expected_freeze_sha256=c.digest(c.canonical(freeze)))
 
     def test_actual_input_module_anonymous_binding_integrates(self):
         from test_asr18_binding import setup_binding

@@ -119,14 +119,21 @@ class LaunchCITests(unittest.TestCase):
             output='/fixture/output', metadata='/fixture/metadata', authority='/fixture/authority',
             family='qwen06', run_identity={'executed_head_sha': 'a' * 40, 'run_id': 123},
             freeze_sha='b' * 64, claim_sha='c' * 64)
-        with patch.object(host.c, 'release_first', side_effect=ValueError('prepare_execution_disabled')), \
-                patch.object(host, '_worker_arguments', side_effect=AssertionError('builder reached')):
-            with self.assertRaisesRegex(ValueError, 'prepare_execution_disabled'):
-                host.worker_arguments(**kw)
-        # A one-function release fixture is used only for argv parity, never Docker execution.
-        with patch.object(host.c, 'release_first', return_value={}) as release:
-            production = host.worker_arguments(**kw)
-        release.assert_called_once_with()
+        # Real source-local gates run against explicit control files, never a
+        # mocked release return. Positive coverage constructs argv only.
+        release=host.c.decode(host.c.regular(HERE/'prepare-release.json'))
+        with tempfile.TemporaryDirectory() as temp:
+            fixed=Path(temp)
+            for key in ('enabled','independent_source_review','source_closure_ready'):release[key]=False
+            (fixed/'prepare-release.json').write_bytes(host.c.canonical(release))
+            with patch.object(host.c,'HERE',fixed), \
+                    patch.object(host,'_worker_arguments',side_effect=AssertionError('builder reached')):
+                with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):
+                    host.worker_arguments(**kw)
+            for key in ('enabled','independent_source_review','source_closure_ready'):release[key]=True
+            (fixed/'prepare-release.json').write_bytes(host.c.canonical(release))
+            with patch.object(host.c,'HERE',fixed):
+                production=host.worker_arguments(**kw)
         self.assertEqual(production, host._worker_arguments(**kw))
         with tempfile.TemporaryDirectory() as temp, \
                 patch.object(host.c, 'release_first', side_effect=AssertionError('release bypass attempted')), \

@@ -11,6 +11,8 @@ ASR=HERE.parent/'k1-punctuation6-asr18-v1'
 if str(ASR) not in sys.path:sys.path.insert(0,str(ASR))
 import campaign_contract as c
 from failure_observer import error_metadata
+if str(HERE) not in sys.path:sys.path.insert(0,str(HERE))
+import prepare_contract as pc
 
 STAGES=frozenset(('entry','release','arguments','event_read','context','api_preflight','source_authority','workspace',
     'input_authorities','source_stage','input','metadata','source_claim','setup','prepare_qwen06','prepare_sensevoice',
@@ -28,7 +30,7 @@ def identity(value):
         type(value['run_id']) is int and 0<value['run_id']<10**20 and type(value['run_attempt']) is int and
         value['run_attempt']==1 and type(value['executed_head_sha']) is str and c.HEAD.fullmatch(value['executed_head_sha']),
         'fixed prepare observation source')
-    return dict(value)
+    return pc.validate_identity(value)
 
 
 class Observation:
@@ -51,7 +53,7 @@ class Observation:
     def attach(self,value,runner_temp):
         c.require(self.identity is None,'prepare identity once')
         self.identity=identity(value)
-        try:self.receipt_dir=c.durable_mkdir(Path(runner_temp)/('k1-prepare-diagnostic-'+str(value['run_id'])+'-'+self.role))
+        try:self.receipt_dir=c.durable_mkdir(Path(runner_temp)/(pc.EXPERIMENT+'-observation-'+str(value['run_id'])+'-'+self.role))
         except BaseException as error:self.attachment_error=error_metadata(error);raise
     def failure(self,error):
         if any(error is old for old in self.seen):return

@@ -29,7 +29,7 @@ class MockAPI:
         self.repo = {"full_name": t.REPOSITORY, "private": False}
         self.run = {"id": 123, "run_attempt": 1, "head_sha": release["source_sha"], "head_branch": self.policy["source_branch"],
             "event": "push", "path": self.policy["workflow"], "status": "in_progress", "repository": self.repo}
-        self.history = {"total_count": 1, "workflow_runs": [self.run]}
+        self.history = {"total_count": 1, "workflow_runs": [copy.deepcopy(self.run)]}
         self.job = {"id": 456, "run_id": 123, "head_sha": release["source_sha"], "head_branch": self.policy["source_branch"],
             "name": self.policy["job_key"], "run_url": "https://api.github.com" + self.paths["run"], "status": "in_progress", "conclusion": None}
         self.jobs = {"total_count": 1, "jobs": [self.job]}
@@ -90,12 +90,12 @@ def fixture():
     run = {"repository": t.REPOSITORY, "run_id": 123, "run_attempt": 1, "job_key": t.PURPOSE, "executed_head_sha": "a"*40}
     release = {**pc.FIXED, **pc.BINDING_PINS, "enabled": True, "independent_source_review": True,
         "source_closure_ready": True, "prior_prepare_history_sha256": "c"*64}
-    code = {"research/"+t.EXPERIMENT+"/prepare-release.json": t.canonical(release), "README.md": b"public test fixture"}
+    code = {t.SOURCE_REL+"prepare-release.json": t.canonical(release), "README.md": b"public test fixture"}
     identities = {n: {"bytes": len(b), "sha256": t.sha(b)} for n,b in code.items()}
     freeze = {"schema": "k1-prepare-source-freeze-v1", "experiment": t.EXPERIMENT,
         **{k: identities for k in ("host_code", "setup_code", "inference_code", "worker_code")}}
     freeze_raw = t.canonical(freeze)
-    code["research/"+t.EXPERIMENT+"/prepare-freeze.json"] = freeze_raw
+    code[t.SOURCE_REL+"prepare-freeze.json"] = freeze_raw
     source = [{"path": n, "mode": "100644", "type": "blob", "sha": t.git_sha(raw)} for n,raw in sorted(code.items())]
     source_tree = t.tree_identity(source)[0]
     inp = (t.OLD/"input-freeze.json").read_bytes()
@@ -144,6 +144,23 @@ class TransportTests(unittest.TestCase):
         self.assertFalse(got["recognition_result"])
         self.assertLessEqual(len(api.raw_calls),49)
         self.assertEqual([x[0] for x in api.calls if x[0] not in ("GET","POST")],[])
+    def test_wrong_current_or_history_run_cannot_publish_any_bytes(self):
+        files,run,release,env,event,source=fixture();payload=t._zip_files(files,run)[0]
+        for target in ('current','history'):
+            for key,value in (('id',124),('id',38234429437),('run_attempt',2),
+                    ('head_branch','research/k1-punctuation6-prepare-diagnostic-v1'),
+                    ('head_sha',pc.SEALED_PREPARE_SOURCE),
+                    ('path','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml')):
+                api=MockAPI(env,event,release,source)
+                row=api.run if target=='current' else api.history['workflow_runs'][0]
+                row[key]=value
+                with self.subTest(target=target,key=key,value=value),self.assertRaises(ValueError):
+                    p.publish(env,event,release,payload,api,api.raw_factory)
+                self.assertTrue(all(method=='GET' for method,*_ in api.calls))
+                self.assertEqual(api.blobs,{})
+                self.assertIsNone(api.ref)
+        with self.assertRaises(ValueError):t.validate_archive(payload,{**run,'run_id':124})
+
     def test_all_asr_or_unknown_paths_rejected(self):
         files, run, *_ = fixture()
         for name in ("terminal-outcomes.json", "host-receipt.json", "output/qwen06/clip-000001/started.json", "frozen/qwen06/native-config.json", "output/qwen06/unlisted.json", "notes.txt", "output/qwen06/prepared.json"):
@@ -197,12 +214,14 @@ class TransportTests(unittest.TestCase):
                 with self.assertRaises(p.PublicationDisabled):p.main([])
     def test_positive_publication_fixture_rejects_invalid_context_before_any_api(self):
         control=t.decode((HERE/'publication-release.json').read_bytes())
-        self.assertTrue(all(control[k] is False for k in ('enabled','root_publication_release','independent_source_review')))
+        for key in ('enabled','root_publication_release','independent_source_review'):control[key]=False
         with self.assertRaises(p.PublicationDisabled):p.publication_gate(control)
         for key in ('enabled','root_publication_release','independent_source_review'):control[key]=True
         p.publication_gate(control)
         files,run,release,env,event,source=fixture();payload=t._zip_files(files,run)[0]
-        for key,value in (('GITHUB_REPOSITORY','other/repo'),('GITHUB_JOB','asr18'),('GITHUB_EVENT_NAME','workflow_dispatch'),('GITHUB_RUN_ATTEMPT','2')):
+        for key,value in (('GITHUB_REPOSITORY','other/repo'),('GITHUB_JOB','asr18'),('GITHUB_EVENT_NAME','workflow_dispatch'),('GITHUB_RUN_ATTEMPT','2'),
+                ('GITHUB_REF','refs/heads/research/k1-punctuation6-prepare-diagnostic-v1'),
+                ('GITHUB_RUN_ID','38234429437'),('GITHUB_RUN_ID','38219171568'),('GITHUB_SHA',pc.SEALED_PREPARE_SOURCE)):
             bad=dict(env);bad[key]=value;api=mock.Mock(side_effect=AssertionError('API touched before context validation'))
             with self.subTest(key=key),self.assertRaises(ValueError):p.publish(bad,event,release,payload,api,mock.Mock())
             api.assert_not_called()

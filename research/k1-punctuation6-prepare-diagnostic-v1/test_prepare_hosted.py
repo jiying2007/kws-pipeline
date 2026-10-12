@@ -1,5 +1,5 @@
 """Fixed source/Git/API/diagnostic integration. Stdlib; never ML or networking."""
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 import copy
 import io
 import json
@@ -23,10 +23,28 @@ import diagnostic_publisher as publisher
 SECRET='PRIVATE_DIAGNOSTIC_SENTINEL_TOKEN_AUDIO_HISTORY'
 
 def positive_release_fixture():
-    # Explicit source-only positive fixture. Checked-in authority stays disabled.
+    # Explicit source-only positive fixture; independent of checked-in approval state.
     release=pc.decode(pc.regular(HERE/'prepare-release.json'))
     for key in ('enabled','independent_source_review','source_closure_ready'):release[key]=True
+    release['prior_prepare_history_sha256']=pc.digest(pc.canonical(h.prior_history_identity()))
     return pc.validate_release(release)
+
+@contextmanager
+def explicit_disabled_source_copy():
+    """Actual source/control files, with real release validators left intact."""
+    with tempfile.TemporaryDirectory() as temp:
+        root=Path(temp)/'checkout';root.mkdir();fixed=root/pc.REL
+        names=set(freezer.build(h.ROOT)['host_code'])|{pc.REL+'prepare-freeze.json'}
+        for name in names:
+            target=root/name;target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes(h.read_bytes(h.ROOT/name))
+        for name,keys in (('prepare-release.json',('enabled','independent_source_review','source_closure_ready')),
+                ('publication-release.json',('enabled','independent_source_review','root_publication_release'))):
+            value=h.read_json(fixed/name)
+            for key in keys:value[key]=False
+            (fixed/name).write_bytes(pc.canonical(value))
+        yield root,fixed
+
 
 def context(head='c'*40):
     env={'GITHUB_REPOSITORY':h.REPOSITORY,'GITHUB_REF':'refs/heads/'+h.SOURCE_REF,'GITHUB_EVENT_NAME':'push',
@@ -45,7 +63,7 @@ class API:
             'head_branch':h.SOURCE_REF,'head_sha':head,'path':h.WORKFLOW,'workflow_id':8,
             'repository':{'full_name':h.REPOSITORY,'private':False},'head_repository':{'full_name':h.REPOSITORY}}
         self.rows={base+'/actions/runs/'+str(ident):current,base+'/actions/workflows/8':{'id':8,'path':h.WORKFLOW},
-            base+'/actions/workflows/8/runs?branch='+h.urllib.parse.quote(h.SOURCE_REF,safe='')+'&per_page=100&page=1':{'total_count':1,'workflow_runs':[current]},
+            base+'/actions/workflows/8/runs?branch='+h.urllib.parse.quote(h.SOURCE_REF,safe='')+'&per_page=100&page=1':{'total_count':1,'workflow_runs':[copy.deepcopy(current)]},
             base+'/actions/runs/'+str(ident)+'/attempts/1/jobs?per_page=100&page=1':{'total_count':1,'jobs':[{'id':999,'name':'prepare_diagnostic','run_id':ident,
                 'status':'in_progress','conclusion':None,'head_sha':head,'labels':['ubuntu-24.04'],'runner_name':'GitHub Actions 1','runner_group_name':'GitHub Actions'}]},
             base+'/git/ref/heads/'+h.SOURCE_REF:{'ref':'refs/heads/'+h.SOURCE_REF,'object':{'type':'commit','sha':head}},
@@ -62,19 +80,38 @@ class API:
 
 
 class HostedTests(unittest.TestCase):
-    def test_actual_consumed_prepare_and_sealed_asr_controls_remain_disabled(self):
+    def test_checked_in_prepare_controls_are_coherent_and_asr_stays_disabled(self):
         release=pc.decode(pc.regular(HERE/'prepare-release.json'))
-        self.assertTrue(all(release[k] is False for k in ('enabled','independent_source_review','source_closure_ready')))
-        with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):pc.release_first()
         control=h.read_json(HERE/'publication-release.json')
-        self.assertTrue(all(control[k] is False for k in ('enabled','independent_source_review','root_publication_release')))
-        with self.assertRaises(publisher.PublicationDisabled):publisher.publication_gate(control)
+        flags=[release[k] for k in ('enabled','independent_source_review','source_closure_ready')]
+        flags += [control[k] for k in ('enabled','independent_source_review','root_publication_release')]
+        self.assertTrue(all(type(value) is bool for value in flags))
+        self.assertIn(tuple(flags),((False,)*6,(True,)*6))
+        if flags[0]:
+            self.assertEqual(pc.release_first(),release)
+            publisher.publication_gate(control)
+        else:
+            with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):pc.release_first()
+            with self.assertRaises(publisher.PublicationDisabled):publisher.publication_gate(control)
         self.assertEqual(release['max_new_asr_calls'],0);self.assertFalse(release['audio_forward_allowed'])
+        self.assertNotEqual(release['prior_prepare_history_sha256'],'0'*64)
         self.assertEqual(release['prior_prepare_history_sha256'],pc.digest(pc.canonical(h.prior_history_identity())))
+        history=h.prior_history_identity()
+        self.assertEqual(history['observation_status'],'public_read_observed')
+        self.assertEqual(history['observed_at'],'2026-10-12T11:34:40.014Z')
+        self.assertEqual(history['prior_runs'],[])
+        self.assertEqual(history['all_branch_push_history_count'],0)
+        self.assertIs(history['source_ref_absent'],True);self.assertIs(history['evidence_ref_absent'],True)
         for name,keys in (('execution-release.json',('enabled','independent_source_review','root_execution_release')),
                           ('publication-release.json',('enabled','independent_source_review','root_publication_release'))):
             value=h.read_json(h.ASR/name)
             self.assertTrue(all(value[k] is False for k in keys))
+            if name=='execution-release.json' and value['experiment']=='k1-punctuation6-asr18-r2':
+                self.assertIsNone(value['prepare_prerequisite_sha256'])
+                witness=h.read_json(h.ASR/'prepare-prerequisite.json')
+                fixed={'schema','prepare_experiment','source_ref','result_ref','workflow','input_authorities'}
+                self.assertTrue(all(v is None for k,v in witness.items() if k not in fixed))
+                self.assertTrue(all(v is None for v in witness['input_authorities'].values()))
         self.assertEqual([r['run_id'] for r in h.prior_history_identity()['sealed_asr_runs']],[38207026177,38219171568])
         self.assertTrue(all(r['actual_consumed_attempts'] is None and r['reusable_slots']==0 for r in h.prior_history_identity()['sealed_asr_runs']))
 
@@ -83,10 +120,12 @@ class HostedTests(unittest.TestCase):
         result=h.api_preflight(api,run,release)
         self.assertEqual(len(api.calls),6);self.assertEqual(result['numeric_job_id'],999)
         key=next(k for k in api.rows if '/runs?branch=' in k)
-        for change in ('second','old','attempt2'):
+        for change in ('second','old','attempt2','consumed_prepare','wrong_ref'):
             bad=API(run)
             if change=='second':bad.rows[key]['total_count']=2;bad.rows[key]['workflow_runs']*=2
             elif change=='old':bad.rows[key]['workflow_runs'][0]['id']=38219171568
+            elif change=='consumed_prepare':bad.rows[key]['workflow_runs'][0]['id']=38234429437
+            elif change=='wrong_ref':bad.rows[key]['workflow_runs'][0]['head_branch']='research/k1-punctuation6-prepare-diagnostic-v1'
             else:bad.rows[key]['workflow_runs'][0]['run_attempt']=2
             with self.subTest(change=change),self.assertRaises(ValueError):h.api_preflight(bad,run,release)
         wrong=dict(release,prior_prepare_history_sha256=pc.digest(pc.canonical(h.prior_history_identity())+b'\n'))
@@ -94,32 +133,137 @@ class HostedTests(unittest.TestCase):
 
     def test_wrong_ref_old_run_and_attempt_reject_before_external_call(self):
         env,event,_=context()
-        for changed in ({'GITHUB_REF':'refs/heads/research/k1-punctuation6-asr18-r1'}, {'GITHUB_RUN_ATTEMPT':'2'},
+        for changed in ({'GITHUB_REF':'refs/heads/research/k1-punctuation6-asr18-r1'},
+                        {'GITHUB_REF':'refs/heads/research/k1-punctuation6-prepare-diagnostic-v1'},
+                        {'GITHUB_RUN_ID':'38234429437'}, {'GITHUB_RUN_ATTEMPT':'2'},
                         {'GITHUB_RUN_ID':'38219171568'},{'GITHUB_RUN_ID':'38207026177'},{'GITHUB_JOB':'asr18'}):
             with self.subTest(changed=changed),self.assertRaises(ValueError):h.event_identity({**env,**changed},event)
 
-    def test_actual_disabled_isolated_cli_rejects_before_runtime(self):
+    def test_new_identity_retains_source_paths_workflow_and_historical_failure(self):
+        self.assertEqual(pc.EXPERIMENT,'k1-punctuation6-prepare-diagnostic-r1')
+        self.assertEqual(pc.REL,'research/k1-punctuation6-prepare-diagnostic-v1/')
+        self.assertEqual(h.WORKFLOW,'.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml')
+        self.assertEqual(h.SOURCE_REF,'research/'+pc.EXPERIMENT)
+        self.assertEqual(h.EVIDENCE_REF,'evidence/'+pc.EXPERIMENT)
+        self.assertEqual(transport.SOURCE_REL,pc.REL)
+        self.assertEqual(transport.POLICY['workflow'],h.WORKFLOW)
+        self.assertEqual(transport.POLICY['source_branch'],h.SOURCE_REF)
+        self.assertEqual(transport.POLICY['result_branch'],h.EVIDENCE_REF)
+        self.assertEqual(transport.SOURCE_FREEZE,'source/'+pc.REL+'prepare-freeze.json')
+        old=h.prior_history_identity()['sealed_prepare_runs']
+        self.assertEqual(len(old),1)
+        self.assertEqual(old[0]['run_id'],38234429437)
+        self.assertEqual(old[0]['source_sha'],'54ee9ee80e88c172cd04611474ded2613d956745')
+        self.assertEqual(old[0]['result_sha'],'97141cea41cc5cc18fac3f5a434777991bfd4864')
+        self.assertTrue(old[0]['consumed']);self.assertFalse(old[0]['retry_authorized'])
+        self.assertEqual(old[0]['reusable_slots'],0)
+        self.assertEqual(old[0]['completed_constructor_receipts'],0)
+        self.assertFalse(old[0]['prepare_completion_established'])
+        self.assertFalse(old[0]['capacity_success_established'])
+        self.assertIsNone(old[0]['asr_forward_calls'])
+        text=(HERE/'workflow.yml').read_text()
+        self.assertIn('      - '+h.SOURCE_REF,text)
+        self.assertIn('  group: '+pc.EXPERIMENT,text)
+        self.assertIn("github.ref == 'refs/heads/"+h.SOURCE_REF+"'",text)
+        self.assertIn(pc.REL+'prepare_run.py',text)
+        self.assertNotIn('      - research/k1-punctuation6-prepare-diagnostic-v1',text)
+
+    def test_sealed_identity_rejected_by_contract_transport_observer_and_preflight(self):
+        _,_,run=context()
+        self.assertEqual(pc.validate_identity(run),run)
+        self.assertEqual(obs.identity(run),run)
+        transport.identity(run)
+        changes=[{'run_id':n} for n in (38207026177,38219171568,38234429437)]
+        changes += [{'run_attempt':2},{'run_id':True},
+            {'executed_head_sha':pc.SEALED_PREPARE_SOURCE},{'executed_head_sha':pc.SEALED_PREPARE_RESULT}]
+        for change in changes:
+            bad={**run,**change}
+            for validator in (pc.validate_identity,obs.identity,transport.identity):
+                with self.subTest(change=change,validator=validator.__module__),self.assertRaises(ValueError):validator(bad)
+            api=unittest.mock.Mock(side_effect=AssertionError('API touched before identity rejection'))
+            with self.subTest(change=change),self.assertRaises(ValueError):h.api_preflight(api,bad,positive_release_fixture())
+            self.assertEqual(api.mock_calls,[])
+
+    def test_new_evidence_and_observer_workspace_names_are_separate(self):
+        _,_,run=context()
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            package=transport.package_path(root,run)
+            self.assertTrue(package.name.startswith(pc.EXPERIMENT+'-evidence-12345-attempt-1-'))
+            for role in ('host','publisher'):
+                observer=obs.Observation(role)
+                observer.attach(run,root)
+                self.assertEqual(observer.receipt_dir,root/(pc.EXPERIMENT+'-observation-12345-'+role))
+
+    def test_old_release_refs_and_pending_history_do_not_authorize_new_run(self):
+        for key,value in (('experiment','k1-punctuation6-prepare-diagnostic-v1'),
+            ('source_ref','research/k1-punctuation6-prepare-diagnostic-v1'),
+            ('evidence_ref','evidence/k1-punctuation6-prepare-diagnostic-v1'),
+            ('workflow','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml'),
+            ('prior_prepare_history_sha256','0'*64)):
+            release=positive_release_fixture();release[key]=value
+            with self.subTest(key=key),self.assertRaises(ValueError):pc.validate_release(release)
+        control=publisher.disabled_publication_release()
+        for key in ('enabled','independent_source_review','root_publication_release'):control[key]=True
+        publisher.publication_gate(control)
+        for key,value in (('source_branch','research/k1-punctuation6-prepare-diagnostic-v1'),
+            ('result_branch','evidence/k1-punctuation6-prepare-diagnostic-v1'),
+            ('workflow','.github/workflows/k1-punctuation6-prepare-diagnostic-r1.yml')):
+            with self.subTest(key=key),self.assertRaises(ValueError):publisher.publication_gate({**control,key:value})
+
+    def check_rejected_cli(self, fixed, cwd, env, args=()):
+        records={}
         for filename in ('prepare_run.py','diagnostic_publisher.py'):
-            process=subprocess.run([sys.executable,'-I','-B',str(HERE/filename)],
-                env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'RUNNER_TEMP':SECRET},capture_output=True,text=True,timeout=10)
+            process=subprocess.run([sys.executable,'-I','-B',str(fixed/filename),*args],
+                env=env,cwd=cwd,capture_output=True,text=True,timeout=10)
             self.assertNotEqual(process.returncode,0);self.assertNotIn('Traceback',process.stderr)
             self.assertNotIn('ModuleNotFoundError',process.stderr);self.assertNotIn(SECRET,process.stdout+process.stderr)
             rows=[json.loads(x) for x in process.stdout.splitlines()]
             self.assertTrue(any('diagnostic' in row.get('schema','') for row in rows))
-            self.assertFalse(Path(SECRET).exists())
+            record=next(row['record'] for row in rows if row.get('schema')=='k1-prepare-independent-diagnostic-envelope-v1')
+            self.assertEqual(record['status'],'failed_or_unconfirmed')
+            self.assertIsNone(record['identity'])
+            records[filename]=record
+        return records
 
-    def test_actual_disabled_gates_precede_environment_api_git_and_runtime(self):
+    def test_explicit_disabled_isolated_cli_rejects_before_runtime(self):
+        with explicit_disabled_source_copy() as (root,fixed):
+            before={p.relative_to(root).as_posix() for p in root.rglob('*')}
+            self.check_rejected_cli(fixed,root,{'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,
+                'RUNNER_TEMP':str(root/'forbidden-output')})
+            self.assertEqual(before,{p.relative_to(root).as_posix() for p in root.rglob('*')})
+
+    def test_actual_checked_in_cli_rejects_invalid_context_without_side_effects(self):
+        # The real source-local gate may be all-false or prepare-only all-true.
+        # This deliberately non-hosted context cannot reach Git, API or runtime.
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);event=root/'event.json';event.write_bytes(b'{}')
+            env={'PATH':'/usr/bin:/bin','GITHUB_TOKEN':SECRET,'RUNNER_TEMP':str(root/'forbidden-output'),
+                'GITHUB_EVENT_PATH':str(event),'GITHUB_REPOSITORY':'invalid/offline-fixture',
+                'RUNNER_ENVIRONMENT':'self-hosted','GITHUB_ACTIONS':'false'}
+            records=self.check_rejected_cli(HERE,root,env)
+            enabled=pc.decode(pc.regular(HERE/'prepare-release.json'))['enabled']
+            self.assertEqual(records['prepare_run.py']['stage'],'context' if enabled else 'release')
+            self.assertEqual(records['diagnostic_publisher.py']['stage'],'source_release' if enabled else 'publication_gate')
+            self.assertEqual({p.name for p in root.iterdir()},{'event.json'})
+            self.assertEqual(event.read_bytes(),b'{}')
+
+    def test_explicit_disabled_gates_precede_environment_api_git_and_runtime(self):
         class Poison(dict):
             def __getitem__(self,key):raise AssertionError('environment touched')
             def get(self,*args):raise AssertionError('environment touched')
             def __contains__(self,key):raise AssertionError('environment touched')
             def keys(self):raise AssertionError('environment iterated')
-        with patch.object(h.os,'environ',Poison()),patch.object(h,'PublicAPI',side_effect=AssertionError('API')), \
-             patch.object(h,'git_read',side_effect=AssertionError('Git')),patch.object(h,'execute',side_effect=AssertionError('model')),redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):h.main([])
-        with patch.object(publisher.os,'environ',Poison()),patch.object(publisher,'GitHubAPI',side_effect=AssertionError('API')), \
-             patch.object(publisher,'_source_git',side_effect=AssertionError('Git')),redirect_stdout(io.StringIO()):
-            with self.assertRaises(publisher.PublicationDisabled):publisher.main([])
+        with explicit_disabled_source_copy() as (_,fixed):
+            with patch.object(pc,'HERE',fixed),patch.object(h.os,'environ',Poison()), \
+                 patch.object(h,'PublicAPI',side_effect=AssertionError('API')), \
+                 patch.object(h,'git_read',side_effect=AssertionError('Git')), \
+                 patch.object(h,'execute',side_effect=AssertionError('model')),redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):h.main([])
+            with patch.object(publisher,'HERE',fixed),patch.object(publisher.os,'environ',Poison()), \
+                 patch.object(publisher,'GitHubAPI',side_effect=AssertionError('API')), \
+                 patch.object(publisher,'_source_git',side_effect=AssertionError('Git')),redirect_stdout(io.StringIO()):
+                with self.assertRaises(publisher.PublicationDisabled):publisher.main([])
 
     def test_explicit_disabled_host_gate_precedes_api_git_runtime(self):
         release=pc.decode(pc.regular(HERE/'prepare-release.json'));release['enabled']=False

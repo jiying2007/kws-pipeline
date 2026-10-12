@@ -16,7 +16,11 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 REL = 'research/k1-punctuation6-prepare-diagnostic-v1/'
 OLD = 'research/k1-punctuation6-asr18-v1/'
-EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-v1'
+EXPERIMENT = 'k1-punctuation6-prepare-diagnostic-r1'
+WORKFLOW = '.github/workflows/k1-punctuation6-prepare-diagnostic-v1.yml'
+SEALED_RUN_IDS = frozenset((38207026177, 38219171568, 38234429437))
+SEALED_PREPARE_SOURCE = '54ee9ee80e88c172cd04611474ded2613d956745'
+SEALED_PREPARE_RESULT = '97141cea41cc5cc18fac3f5a434777991bfd4864'
 FAMILIES = ('qwen06', 'sensevoice', 'whisper')
 PACKET_NAMES = frozenset(('job.json', 'decoder-inputs.json', 'worker-input-binding.json',
                           'execution-plan.json', 'host-binding.json'))
@@ -24,7 +28,7 @@ MIB = 1024 ** 2
 SHA = re.compile(r'[0-9a-f]{64}\Z')
 FIXED = {'schema': 'k1-prepare-diagnostic-release-v1', 'experiment': EXPERIMENT,
          'source_ref': 'research/' + EXPERIMENT, 'evidence_ref': 'evidence/' + EXPERIMENT,
-         'workflow': '.github/workflows/' + EXPERIMENT + '.yml', 'job_key': 'prepare_diagnostic',
+         'workflow': WORKFLOW, 'job_key': 'prepare_diagnostic',
          'max_hosted_runs': 1, 'run_attempt': 1, 'retries': 0, 'max_model_constructions': 3,
          'max_model_constructions_per_family': 1, 'max_new_asr_calls': 0,
          'old_calls_allowed': 0, 'audio_forward_allowed': False}
@@ -88,6 +92,19 @@ def regular(path, cap=MIB):
         os.close(fd)
 
 
+def validate_identity(value):
+    require(type(value) is dict and set(value) == {'repository', 'run_id', 'run_attempt', 'job_key',
+        'executed_head_sha'}, 'fixed_prepare_identity')
+    require(value['repository'] == 'jiying2007/kws-pipeline' and value['job_key'] == 'prepare_diagnostic' and
+        type(value['run_id']) is int and 0 < value['run_id'] < 10 ** 20 and
+        value['run_id'] not in SEALED_RUN_IDS and type(value['run_attempt']) is int and
+        value['run_attempt'] == 1 and type(value['executed_head_sha']) is str and
+        re.fullmatch('[0-9a-f]{40}', value['executed_head_sha']) and
+        value['executed_head_sha'] not in (SEALED_PREPARE_SOURCE, SEALED_PREPARE_RESULT),
+        'new_prepare_identity_only')
+    return dict(value)
+
+
 def validate_release(value):
     require(type(value) is dict and set(value) == set(FIXED) | set(BINDING_PINS) |
             {'enabled', 'independent_source_review', 'source_closure_ready',
@@ -99,6 +116,7 @@ def validate_release(value):
     require(type(value['prior_prepare_history_sha256']) is str and
             SHA.fullmatch(value['prior_prepare_history_sha256']), 'prepare_history_identity')
     require(value['enabled'] is True, 'prepare_execution_disabled')
+    require(value['prior_prepare_history_sha256'] != '0' * 64, 'prepare_history_observation_pending')
     require(value['independent_source_review'] is True and value['source_closure_ready'] is True,
             'prepare_review_or_closure_incomplete')
     return value
@@ -224,7 +242,7 @@ def worker_admission(family):
         claim['prior_prepare_history_sha256'] == release['prior_prepare_history_sha256'] and
         claim['source_freeze_sha256'] == digest(freeze_raw) and
         claim['release_sha256'] == digest(canonical(release)), 'prepare_claim_only')
-    identity = claim['identity']
+    identity = validate_identity(claim['identity'])
     require(type(identity) is dict and set(identity) == {'repository', 'run_id', 'run_attempt', 'job_key', 'executed_head_sha'} and
         identity['repository'] == 'jiying2007/kws-pipeline' and identity['job_key'] == 'prepare_diagnostic' and
         type(identity['run_id']) is int and identity['run_id'] > 0 and

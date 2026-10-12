@@ -218,6 +218,7 @@ def _equal(record, expected, label):
 
 
 def verify_run(api, identity, release):
+    t.identity(identity, release['purpose'])
     routes = endpoints(identity, release); p = t.policy(release["purpose"])
     repo = api("GET", routes["repo"])
     _equal(repo, {"full_name": t.REPOSITORY, "private": False}, "API canonical public repository")
@@ -548,7 +549,7 @@ def main(argv=None):
         _observe(observer, "token_admission")
         api = GitHubAPI(os.environ.get("GITHUB_TOKEN"), run_identity, release)
         _observe(observer, "receipt_directory")
-        root = Path(env["RUNNER_TEMP"]) / ("k1-prepare-diagnostic-publication-" + str(run_identity["run_id"]))
+        root = Path(env["RUNNER_TEMP"]) / (t.EXPERIMENT + "-publication-" + str(run_identity["run_id"]))
         c.durable_mkdir(root)
         result = run_once(env, event, release, payload, api, RawReader, root, observer=observer)
     except BaseException as error:

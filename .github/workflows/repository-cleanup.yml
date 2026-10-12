@@ -165,6 +165,8 @@ env:
     research/k1-punctuation6-asr18-v1
     research/k1-punctuation6-asr18-r1
     research/k1-punctuation6-prepare-diagnostic-v1
+    research/k1-punctuation6-prepare-diagnostic-r1
+    research/k1-punctuation6-asr18-r2
   RETAINED_DESIGN_BRANCHES: >-
     feat/decoder-boundary-requalification-v1
     training/keyword-set-contract-v1

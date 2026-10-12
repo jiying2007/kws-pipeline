@@ -41,7 +41,7 @@ class PrepareContracts(unittest.TestCase):
     @contextmanager
     def disabled_release_file(self):
         value = c.decode(c.regular(HERE / 'prepare-release.json'))
-        value['enabled'] = False
+        for key in ('enabled','independent_source_review','source_closure_ready'):value[key]=False
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
             (root/'prepare-release.json').write_bytes(c.canonical(value))
@@ -50,22 +50,22 @@ class PrepareContracts(unittest.TestCase):
 
     @contextmanager
     def enabled_release_fixture(self):
-        # Positive constructor sentinels use a local fixture, never the consumed
-        # checked-in release. The real release parser/validator still executes.
+        # Positive constructor sentinels use an explicit local fixture, independent
+        # of checked-in approval state. The real release validator still executes.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'prepare-release.json').write_bytes(c.canonical(self.enabled()))
             with patch.object(c, 'HERE', root):
                 yield
 
-    def test_consumed_checked_in_release_disabled_before_worker_runtime(self):
+    def test_checked_in_release_scope_and_explicit_disabled_worker_runtime(self):
         value = c.decode(c.regular(HERE / 'prepare-release.json'))
-        self.assertIs(value['enabled'], False)
-        self.assertIs(value['independent_source_review'], False)
-        self.assertIs(value['source_closure_ready'], False)
+        flags=tuple(value[k] for k in ('enabled','independent_source_review','source_closure_ready'))
+        self.assertTrue(all(type(flag) is bool for flag in flags))
+        self.assertIn(flags,((False,)*3,(True,)*3))
         self.assertEqual(value['max_new_asr_calls'],0)
         self.assertIs(value['audio_forward_allowed'],False)
-        with patch.object(c,'fixed_module',side_effect=AssertionError('runtime reached')):
+        with self.disabled_release_file(),patch.object(c,'fixed_module',side_effect=AssertionError('runtime reached')):
             with self.assertRaisesRegex(ValueError,'prepare_execution_disabled'):
                 worker.main(['qwen06'])
 
